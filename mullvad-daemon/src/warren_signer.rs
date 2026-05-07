@@ -18,6 +18,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use ed25519_dalek::SigningKey;
 use mullvad_api::warren_auth::WarrenAuthSigner;
 
 /// Nom du fichier qui stocke la mnémonique BIP39 utilisateur dans
@@ -33,6 +34,21 @@ pub const MNEMONIC_FILENAME: &str = "warren_mnemonic.txt";
 /// mode Mullvad classique pendant la transition Phase 2.
 #[must_use]
 pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner>> {
+    let signing_key = load_or_create_signing_key(settings_dir)?;
+    Some(Arc::new(WarrenAuthSigner::new(signing_key)))
+}
+
+/// Charge ou crée la mnémonique BIP39 dans `settings_dir` et la dérive
+/// en [`SigningKey`] Ed25519, sans wrapper.
+///
+/// Cette fonction sœur de [`load_or_create_signer`] expose le matériel
+/// cryptographique brut nécessaire pour assembler des
+/// [`talpid_warren_iroh::WarrenIrohParameters`] (Phase 4.F).
+///
+/// **Politique no-log** : ne JAMAIS logger la `SigningKey` retournée
+/// (cf. règle Warren). Le caller doit la consommer puis la dropper.
+#[must_use]
+pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     let mnemonic_path = settings_dir.join(MNEMONIC_FILENAME);
     let mnemonic = match warren_identity::load_or_create_mnemonic(&mnemonic_path) {
         Ok(m) => m,
@@ -56,8 +72,7 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
             return None;
         }
     };
-    let signing_key = warren_identity::derive_node_key(&seed);
-    Some(Arc::new(WarrenAuthSigner::new(signing_key)))
+    Some(warren_identity::derive_node_key(&seed))
 }
 
 #[cfg(test)]

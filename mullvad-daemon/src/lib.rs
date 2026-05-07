@@ -29,6 +29,10 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Warren fork — Phase 4.F.1 : assemblage d'un
+/// `talpid_warren_iroh::WarrenIrohParameters` complet à partir du
+/// selector + signing_key + constantes (`n_connections`, `features`).
+pub mod warren_iroh_params;
 /// Warren fork — Phase 4.E : wrapper daemon-side autour de
 /// `warren_relay_selector::WarrenRelaySelector`. Sélectionne les
 /// composants Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
