@@ -6,6 +6,7 @@ use crate::{
     availability::ApiAvailability,
     https_client::{HttpsConnector, HttpsConnectorHandle, InnerConnectionMode},
     proxy::ConnectionModeProvider,
+    warren_auth::WarrenAuthSigner,
 };
 use futures::{
     channel::{mpsc, oneshot},
@@ -81,6 +82,23 @@ pub enum Error {
     /// Body exceeded size limit
     #[error("Body exceeded size limit")]
     BodyTooLarge,
+
+    /// Warren fork — Phase 2.A.3 : un helper `signed_*` a été appelé
+    /// sur une [`RequestFactory`] qui n'a pas de
+    /// [`crate::warren_auth::WarrenAuthSigner`] configuré (cf.
+    /// [`RequestFactory::with_warren_signer`]). Pas de fallback
+    /// silencieux : on refuse de poster une requête non-signée vers
+    /// `warren-api` (qui rejetterait avec 401).
+    #[error("Warren signer not configured on request factory")]
+    NoWarrenSigner,
+
+    /// Warren fork — Phase 2.A.3 : échec d'injection des headers
+    /// `X-Warren-*` sur une requête. En pratique impossible (les
+    /// valeurs sont hex ou décimal ASCII), gardé pour propagation
+    /// stricte du `Result` exposé par
+    /// [`crate::warren_auth::WarrenAuthSigner::apply_to_request`].
+    #[error("failed to inject Warren auth headers")]
+    WarrenAuthInjection(Arc<std::io::Error>),
 }
 
 impl From<Infallible> for Error {
@@ -378,6 +396,15 @@ impl<B: Body> Request<B> {
     pub fn uri(&self) -> &Uri {
         self.request.uri()
     }
+
+    /// Returns the headers of the underlying [`hyper::Request`].
+    ///
+    /// Warren fork — Phase 2.A.3 : utile pour l'inspection (tests,
+    /// logs, debug) après injection des headers `X-Warren-*` par
+    /// [`RequestFactory::signed_post_json_bytes`] et consorts.
+    pub fn headers(&self) -> &http::HeaderMap {
+        self.request.headers()
+    }
 }
 impl<B> Request<B> {
     /// Map the underlying [`hyper::Request`] type
@@ -556,6 +583,11 @@ pub struct RequestFactory {
     hostname: Cow<'static, str>,
     token_store: Option<AccessTokenStore>,
     default_timeout: Duration,
+    /// Warren fork — Phase 2.A.3 : signer optionnel injecté via
+    /// [`Self::with_warren_signer`]. Quand présent, les helpers
+    /// `signed_*` injectent les 4 headers `X-Warren-*` ; quand absent,
+    /// ces helpers retournent [`Error::NoWarrenSigner`].
+    warren_signer: Option<Arc<WarrenAuthSigner>>,
 }
 
 impl RequestFactory {
@@ -567,7 +599,19 @@ impl RequestFactory {
             hostname: hostname.into(),
             token_store,
             default_timeout: DEFAULT_TIMEOUT,
+            warren_signer: None,
         }
+    }
+
+    /// Warren fork — configure un [`WarrenAuthSigner`] sur la factory.
+    /// Tous les helpers `signed_*` ultérieurs utiliseront ce signer
+    /// pour produire les headers `X-Warren-*`. Le signer est partagé
+    /// via [`Arc`] parce qu'il sera typiquement détenu par
+    /// `MullvadRestHandle` et cloné dans plusieurs services daemon.
+    #[must_use]
+    pub fn with_warren_signer(mut self, signer: Arc<WarrenAuthSigner>) -> Self {
+        self.warren_signer = Some(signer);
+        self
     }
 
     pub fn request<B: Body + Default>(&self, path: &str, method: Method) -> Result<Request<B>> {
@@ -650,6 +694,127 @@ impl RequestFactory {
     ) -> Result<Request<Full<Bytes>>> {
         let json_body = serde_json::to_vec(&body)?;
         self.json_request_with_bytes(method, path, json_body)
+    }
+
+    /// Warren fork — Phase 2.A.3 : variante signée de [`Self::get`].
+    /// Aucun body (= sha256(b"") dans le canonical message) ; les 4
+    /// headers `X-Warren-*` sont posés sur la requête `Empty<Bytes>`.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    pub fn signed_get(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        self.signed_empty_body_request(path, Method::GET)
+    }
+
+    /// Warren fork — Phase 2.A.3 : variante signée de
+    /// [`Self::delete`]. Idem [`Self::signed_get`] mais avec
+    /// `method = DELETE` dans le canonical (anti-replay cross-method).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    pub fn signed_delete(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        self.signed_empty_body_request(path, Method::DELETE)
+    }
+
+    /// Helper privé : factorise les variantes `signed_get` /
+    /// `signed_delete` qui partagent le même body (`Empty<Bytes>`) et
+    /// la même mécanique de signature (sha256 sur body vide).
+    fn signed_empty_body_request(
+        &self,
+        path: &str,
+        method: Method,
+    ) -> Result<Request<Empty<Bytes>>> {
+        let mut request = self.hyper_request::<Empty<Bytes>>(path, method)?;
+        self.inject_warren_signature(&mut request, b"")?;
+        Ok(Request::new(request, None).timeout(self.default_timeout))
+    }
+
+    /// Helper privé partagé par tous les helpers `signed_*` : checke
+    /// la présence d'un signer Warren puis injecte les 4 headers
+    /// `X-Warren-*` sur la `hyper::Request` via
+    /// [`WarrenAuthSigner::apply_to_request`]. Mappe les erreurs
+    /// d'injection vers [`Error::WarrenAuthInjection`].
+    fn inject_warren_signature<B>(
+        &self,
+        request: &mut http::Request<B>,
+        body: &[u8],
+    ) -> Result<()> {
+        let signer = self
+            .warren_signer
+            .as_ref()
+            .ok_or(Error::NoWarrenSigner)?;
+        signer
+            .apply_to_request(request, body)
+            .map_err(|e| Error::WarrenAuthInjection(Arc::new(e)))?;
+        Ok(())
+    }
+
+    /// Warren fork — Phase 2.A.3 : variante signée de
+    /// [`Self::post_json`]. Sérialise `body` via `serde_json` puis
+    /// délègue à [`Self::signed_post_json_bytes`] (qui pose les 4
+    /// headers `X-Warren-*`).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::DeserializeError`] si la sérialisation `serde_json`
+    ///   échoue (cas exotiques : map à clé non-string).
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    pub fn signed_post_json<S: serde::Serialize>(
+        &self,
+        path: &str,
+        body: &S,
+    ) -> Result<Request<Full<Bytes>>> {
+        let json_body = serde_json::to_vec(body)?;
+        self.signed_post_json_bytes(path, json_body)
+    }
+
+    /// Warren fork — Phase 2.A.3 : variante de [`Self::post_json_bytes`]
+    /// qui injecte une signature Ed25519 (4 headers `X-Warren-*`)
+    /// produite par le [`WarrenAuthSigner`] configuré via
+    /// [`Self::with_warren_signer`].
+    ///
+    /// La requête résultante a les mêmes headers HTTP standard
+    /// (`Content-Type: application/json`, `Content-Length`) que
+    /// [`Self::post_json_bytes`], **plus** les 4 headers `X-Warren-*`
+    /// (cf. [`crate::warren_auth`] § format canonique).
+    ///
+    /// Le `token_store` n'est volontairement pas associé : Warren
+    /// remplace le modèle Bearer par signature de requête, donc
+    /// l'`Authorization` header ne doit pas être posé pour ces
+    /// endpoints (sinon le serveur tente une double-validation).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NoWarrenSigner`] si la factory n'a pas de signer
+    ///   configuré.
+    /// - Erreurs propagées de [`Self::hyper_request`] et de
+    ///   l'injection HTTP (impossibles en pratique : valeurs hex
+    ///   ASCII).
+    pub fn signed_post_json_bytes(
+        &self,
+        path: &str,
+        body: Vec<u8>,
+    ) -> Result<Request<Full<Bytes>>> {
+        let mut request = self.hyper_request::<Full<Bytes>>(path, Method::POST)?;
+        let body_length = body.len();
+
+        // Sign avec body bytes encore détenu en `Vec<u8>` — l'ordre
+        // évite un clone (`inject_warren_signature` lit le slice, pose
+        // les headers ; le body est inséré juste après).
+        self.inject_warren_signature(&mut request, &body)?;
+
+        *request.body_mut() = Full::new(Bytes::from(body));
+        let headers = request.headers_mut();
+        headers.insert(header::CONTENT_LENGTH, HeaderValue::from(body_length));
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+
+        // Pas de `token_store` : Warren ne combine pas Bearer + signature.
+        Ok(Request::new(request, None).timeout(self.default_timeout))
     }
 
     fn hyper_request<B: Default>(&self, path: &str, method: Method) -> Result<http::Request<B>> {
@@ -771,3 +936,276 @@ impl_into_arc_err!(hyper_util::client::legacy::Error);
 impl_into_arc_err!(serde_json::Error);
 impl_into_arc_err!(http::Error);
 impl_into_arc_err!(http::uri::InvalidUri);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::warren_auth::{
+        HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, WarrenAuthSigner,
+    };
+    use ed25519_dalek::SigningKey;
+
+    fn fixed_signer() -> Arc<WarrenAuthSigner> {
+        Arc::new(WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32])))
+    }
+
+    #[test]
+    fn signed_post_json_bytes_without_warren_signer_returns_error() {
+        // Phase 2.A.3 — un caller qui appelle un helper `signed_*` sur
+        // une factory qui n'a pas configuré de signer Warren doit
+        // recevoir une erreur explicite (pas de panic, pas de header
+        // injection silencieuse).
+        let factory = RequestFactory::new("api.example.test", None);
+        let res = factory.signed_post_json_bytes("v1/devices", b"{}".to_vec());
+        assert!(
+            matches!(res, Err(Error::NoWarrenSigner)),
+            "expected Err(NoWarrenSigner), got {res:?}"
+        );
+    }
+
+    #[test]
+    fn signed_post_json_bytes_with_warren_signer_injects_four_warren_headers() {
+        // Phase 2.A.3 — vrai chemin : factory configurée avec un
+        // signer doit produire une requête avec les 4 X-Warren-*
+        // headers (pubkey 64ch, sig 128ch, timestamp u64, nonce 32ch),
+        // **plus** les headers HTTP standard (content-length,
+        // content-type=application/json).
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let body = br#"{"key":"value"}"#.to_vec();
+        let req = factory
+            .signed_post_json_bytes("v1/devices", body.clone())
+            .expect("signed_post_json_bytes must succeed when signer is set");
+
+        let h = req.headers();
+        let pk = h.get(HEADER_PUBKEY).expect("X-Warren-PubKey present");
+        let sig = h.get(HEADER_SIGNATURE).expect("X-Warren-Sig present");
+        let ts = h.get(HEADER_TIMESTAMP).expect("X-Warren-Timestamp present");
+        let nonce = h.get(HEADER_NONCE).expect("X-Warren-Nonce present");
+        assert_eq!(pk.to_str().unwrap().len(), 64, "pubkey hex 64 chars");
+        assert_eq!(sig.to_str().unwrap().len(), 128, "sig hex 128 chars");
+        assert_eq!(nonce.to_str().unwrap().len(), 32, "nonce hex 32 chars");
+        ts.to_str()
+            .unwrap()
+            .parse::<u64>()
+            .expect("timestamp must parse as u64");
+
+        // Headers HTTP standard de json_request_with_bytes :
+        let cl = h
+            .get(http::header::CONTENT_LENGTH)
+            .expect("CONTENT_LENGTH set");
+        assert_eq!(
+            cl.to_str().unwrap().parse::<usize>().unwrap(),
+            body.len(),
+            "content-length doit refléter la taille du body"
+        );
+        let ct = h.get(http::header::CONTENT_TYPE).expect("CONTENT_TYPE set");
+        assert_eq!(ct, "application/json");
+    }
+
+    #[test]
+    fn signed_get_signs_with_empty_body_hash() {
+        // Phase 2.A.3 — pour les requêtes sans body (GET, DELETE,
+        // HEAD), le `body_hash` côté canonical_message est sha256(b"")
+        // = `e3b0c44...` (vector test figé dans warren_auth.rs). Ce
+        // test vérifie que `signed_get` produit bien une requête où
+        // la signature couvre cet empty-body-hash : on reconstitue
+        // canonical avec sha256("") et on vérifie via la pubkey.
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+        use sha2::{Digest, Sha256};
+
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let req = factory
+            .signed_get("v1/exits")
+            .expect("signed_get must succeed");
+        let h = req.headers();
+
+        // Pas de Content-Length sur GET (Empty<Bytes> body) :
+        assert!(
+            h.get(http::header::CONTENT_LENGTH).is_none(),
+            "GET ne doit pas poser Content-Length"
+        );
+        // 4 headers Warren présents :
+        for header in [HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, HEADER_NONCE] {
+            assert!(h.contains_key(header), "{header} doit être présent");
+        }
+
+        // E2E verify avec sha256(empty) :
+        let pk_hex = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
+        let sig_hex = h.get(HEADER_SIGNATURE).unwrap().to_str().unwrap();
+        let ts: u64 = h
+            .get(HEADER_TIMESTAMP)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let nonce_hex = h.get(HEADER_NONCE).unwrap().to_str().unwrap();
+        let pk_bytes: [u8; 32] = hex::decode(pk_hex).unwrap().try_into().unwrap();
+        let vk = VerifyingKey::from_bytes(&pk_bytes).unwrap();
+        let sig_bytes: [u8; 64] = hex::decode(sig_hex).unwrap().try_into().unwrap();
+        let sig = Signature::from_bytes(&sig_bytes);
+
+        let body_hash_hex = hex::encode(Sha256::digest(b""));
+        let path = req.uri().path();
+        let canonical = format!("GET\n{path}\n{ts}\n{nonce_hex}\n{body_hash_hex}");
+        vk.verify(canonical.as_bytes(), &sig)
+            .expect("signature GET avec empty body doit vérifier");
+    }
+
+    #[test]
+    fn signed_get_without_warren_signer_returns_error() {
+        // Symétrie avec `signed_post_json_bytes_without_warren_signer`
+        // : le helper signed_get doit aussi refuser sans signer.
+        let factory = RequestFactory::new("api.example.test", None);
+        assert!(matches!(
+            factory.signed_get("v1/exits"),
+            Err(Error::NoWarrenSigner)
+        ));
+    }
+
+    #[test]
+    fn signed_delete_signs_with_empty_body_and_correct_method() {
+        // DELETE = même mécanique que GET (Empty body) mais avec method
+        // "DELETE" qui doit apparaître dans le canonical message.
+        // Vérifie aussi que `signed_get` et `signed_delete` produisent
+        // des signatures DIFFÉRENTES sur le même path (anti-replay
+        // cross-method couvert par warren_auth.rs, ici on vérifie que
+        // c'est plumbed jusqu'au niveau factory).
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let req_get = factory.signed_get("v1/devices/abc").unwrap();
+        let req_del = factory.signed_delete("v1/devices/abc").unwrap();
+        let sig_get = req_get
+            .headers()
+            .get(HEADER_SIGNATURE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let sig_del = req_del
+            .headers()
+            .get(HEADER_SIGNATURE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        // Pubkey identique (même signer), sig différente (method
+        // différent dans le canonical) :
+        assert_eq!(
+            req_get.headers().get(HEADER_PUBKEY).unwrap(),
+            req_del.headers().get(HEADER_PUBKEY).unwrap()
+        );
+        assert_ne!(
+            sig_get, sig_del,
+            "GET et DELETE sur même path doivent produire signatures différentes"
+        );
+    }
+
+    #[test]
+    fn signed_post_json_serializes_serde_value_then_signs_canonical_bytes() {
+        // Phase 2.A.3 — `signed_post_json<S: Serialize>` doit produire
+        // exactement la même requête que `signed_post_json_bytes` une
+        // fois le body sérialisé via `serde_json::to_vec`. Test :
+        // signer un même payload via les deux helpers en figeant
+        // pubkey/timestamp/nonce indirectement (= via le même body
+        // sha256), puis comparer les fields de canonical_message
+        // (path, method, body_hash) qui sont les inputs déterministes.
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        #[derive(serde::Serialize)]
+        struct Payload<'a> {
+            exit_pubkey: &'a str,
+        }
+        let payload = Payload {
+            exit_pubkey: "abc",
+        };
+        let json_bytes = serde_json::to_vec(&payload).unwrap();
+
+        let req_serde = factory
+            .signed_post_json("v1/port-forward/request", &payload)
+            .expect("signed_post_json must succeed");
+        let req_bytes = factory
+            .signed_post_json_bytes("v1/port-forward/request", json_bytes.clone())
+            .expect("signed_post_json_bytes must succeed");
+
+        // Inputs déterministes :
+        assert_eq!(
+            req_serde.uri().path(),
+            req_bytes.uri().path(),
+            "path identique"
+        );
+        let h_serde = req_serde.headers();
+        let h_bytes = req_bytes.headers();
+        assert_eq!(
+            h_serde
+                .get(http::header::CONTENT_LENGTH)
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            h_bytes
+                .get(http::header::CONTENT_LENGTH)
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            "content-length identique (= taille body sérialisé)"
+        );
+        // 4 headers Warren présents dans les deux :
+        for header in [HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, HEADER_NONCE] {
+            assert!(h_serde.contains_key(header), "{header} sur req_serde");
+            assert!(h_bytes.contains_key(header), "{header} sur req_bytes");
+        }
+        // Pubkey identique (même signer) :
+        assert_eq!(
+            h_serde.get(HEADER_PUBKEY).unwrap(),
+            h_bytes.get(HEADER_PUBKEY).unwrap(),
+            "même signer = même pubkey hex"
+        );
+    }
+
+    #[test]
+    fn signed_post_json_bytes_signature_verifies_e2e_via_pubkey() {
+        // Phase 2.A.3 — test E2E qui mime ce que ferait le middleware
+        // axum côté `warren-api` : extraire pubkey/sig/nonce/timestamp
+        // depuis les headers, reconstituer le `canonical_message` à
+        // partir de (méthode, path-and-query, body sha256), et
+        // vérifier la signature. Si ce test passe, alors `warren-api`
+        // accepte les requêtes produites par cette factory.
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+        use sha2::{Digest, Sha256};
+
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let body = br#"{"exit_pubkey":"abc"}"#.to_vec();
+        let req = factory
+            .signed_post_json_bytes("v1/port-forward/request", body.clone())
+            .expect("must succeed");
+        let h = req.headers();
+
+        // Extraction comme côté serveur :
+        let pk_hex = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
+        let sig_hex = h.get(HEADER_SIGNATURE).unwrap().to_str().unwrap();
+        let ts: u64 = h
+            .get(HEADER_TIMESTAMP)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let nonce_hex = h.get(HEADER_NONCE).unwrap().to_str().unwrap();
+
+        let pk_bytes: [u8; 32] = hex::decode(pk_hex).unwrap().try_into().unwrap();
+        let vk = VerifyingKey::from_bytes(&pk_bytes).expect("valid pubkey");
+        let sig_bytes: [u8; 64] = hex::decode(sig_hex).unwrap().try_into().unwrap();
+        let sig = Signature::from_bytes(&sig_bytes);
+
+        // Reconstitution du canonical_message : la méthode est POST,
+        // le path inclut le préfixe `/` (hyper::Uri::path), et le body
+        // sha256 hex.
+        let body_hash_hex = hex::encode(Sha256::digest(&body));
+        let path = req.uri().path();
+        let canonical = format!("POST\n{path}\n{ts}\n{nonce_hex}\n{body_hash_hex}");
+
+        vk.verify(canonical.as_bytes(), &sig)
+            .expect("signature doit vérifier — sinon le wire format a divergé");
+    }
+}
