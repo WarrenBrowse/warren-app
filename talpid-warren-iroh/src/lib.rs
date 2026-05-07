@@ -131,11 +131,18 @@ pub struct WarrenIrohMonitor {
     /// Handle de la task pump bidirectionnel TUN ↔ datagrammes QUIC.
     /// `wait` l'abort sur close-signal pour teardown propre.
     pump_handle: tokio::task::JoinHandle<()>,
+    /// Receiver oneshot interne signalé par la task pump si elle
+    /// termine de façon anormale (erreur I/O TUN, session QUIC
+    /// fermée par l'exit). Permet à `wait` de différencier un close
+    /// externe propre d'un échec pump et de remonter l'erreur au
+    /// state machine pour déclencher un retry. Audit fix MEDIUM
+    /// (Phase 1.B.5) : avant on swallowait l'erreur dans un
+    /// `log::warn!`, ce qui empêchait la state machine de retry.
+    pump_error_rx: tokio::sync::oneshot::Receiver<String>,
     /// Hook d'émission events vers le daemon (state machine).
     event_hook: talpid_tunnel::EventHook,
     /// Receiver oneshot du daemon : signalé pour demander la
-    /// terminaison du tunnel. Phase 1.B.5 ajoutera aussi un signal
-    /// "tunnel pump failed" depuis l'intérieur.
+    /// terminaison du tunnel.
     close_rx: futures::channel::oneshot::Receiver<()>,
 }
 
@@ -221,72 +228,107 @@ impl WarrenIrohMonitor {
         // QUIC. La task tourne jusqu'à : (a) close de la session
         // (drop de `MultiSession` → connections QUIC closed) ou (b)
         // erreur I/O sur le TUN (interface descendue par le kernel).
-        // Phase 1.B.5 ajoutera un canal interne pour propager les
-        // erreurs du pump au `wait()` au lieu de les avaler.
+        //
+        // Phase 1.B.5 : on propage l'erreur du pump via un oneshot
+        // channel interne consommé dans `wait()` (au lieu de la
+        // swallow dans un `log::warn!`). Ainsi la state machine
+        // `connecting_state` peut décider de retry sur un échec pump.
+        let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
         let pump_handle = runtime.spawn(async move {
-            if let Err(e) = pump_multi_bidirectional(packet_device, session).await {
-                log::warn!("Warren pump terminated with error: {e:#}");
-            } else {
-                log::debug!("Warren pump terminated cleanly");
+            match pump_multi_bidirectional(packet_device, session).await {
+                Ok(()) => {
+                    log::debug!("Warren pump terminated cleanly");
+                }
+                Err(e) => {
+                    let msg = format!("{e:#}");
+                    log::warn!("Warren pump terminated with error: {msg}");
+                    // `send` peut échouer si le `wait()` a déjà drop
+                    // le receiver (= close externe arrivé en premier
+                    // et le teardown a `abort` le pump). Pas grave —
+                    // l'erreur du pump devient bénigne dans ce cas.
+                    let _ = pump_error_tx.send(msg);
+                }
             }
         });
 
-        let _ = metadata; // utile à terme pour 1.B.5 (re-émission sur MTU change)
+        let _ = metadata; // utile à terme pour re-émission sur MTU change
 
         Ok(Self {
             runtime,
             pump_handle,
+            pump_error_rx,
             event_hook,
             close_rx: args.tunnel_close_rx,
         })
     }
 
-    /// Bloque le thread courant jusqu'à ce que le daemon signale via
-    /// `tunnel_close_rx` la demande de terminaison du tunnel.
-    ///
-    /// Séquence teardown :
-    /// 1. Wait sur `close_rx`
-    /// 2. Émission `TunnelEvent::Down`
-    /// 3. Drop du `Tun` device (interface descend)
-    /// 4. Drop de la session (close graceful QUIC + wait_idle endpoint)
-    ///
-    /// Phase 1.B.5 ajoutera un `select!` avec un canal interne "pump
-    /// failed" pour détecter une fin anormale du pump et propager
-    /// l'erreur au lieu de retourner `Ok(())`.
+    /// Bloque le thread courant jusqu'à : (a) close-signal externe du
+    /// daemon, ou (b) terminaison anormale du pump (erreur I/O TUN,
+    /// session QUIC fermée). Émet [`TunnelEvent::Down`] dans tous les
+    /// cas, puis abort + drain la task pump pour libérer le fd TUN
+    /// avant que le `tun_provider` puisse être réutilisé.
     ///
     /// # Errors
     ///
-    /// Phase 1.B.4.a : aucune. Phase 1.B.5 retournera l'erreur du pump
-    /// si le tunnel termine anormalement avant le close signal.
+    /// [`Error::Backend`] si le pump termine anormalement avant le
+    /// close-signal externe (= cas où la state machine doit retry,
+    /// `is_recoverable()` retourne `false` pour rester conservatif —
+    /// raffiner en Phase 1.C selon la nature de l'erreur).
     pub fn wait(self) -> Result<(), Error> {
         let WarrenIrohMonitor {
             runtime,
             pump_handle,
+            pump_error_rx,
             mut event_hook,
             close_rx,
         } = self;
 
-        runtime.block_on(async move {
-            // futures::oneshot::Receiver est un Future, await direct.
-            // Err = Sender dropped (= daemon a oublié le canal) :
-            // traité comme un close implicite (pas d'erreur remontée).
-            let _ = close_rx.await;
+        let result = runtime.block_on(async move {
+            // `tokio::select!` race les deux signaux. Le premier
+            // arrivé "gagne" et la branche perdante est drop (= les
+            // futures internes annulées proprement, sans leak).
+            let outcome: Result<(), Error> = tokio::select! {
+                close_res = close_rx => {
+                    // Close externe : daemon demande shutdown. Err =
+                    // Sender dropped sans signaler (rare : daemon
+                    // crashé). On traite comme un close implicite
+                    // (pas d'erreur — le state machine continuera
+                    // son cycle normal).
+                    let _ = close_res;
+                    Ok(())
+                }
+                pump_res = pump_error_rx => {
+                    // Pump a terminé avant le close externe.
+                    // `Ok(msg)` : pump a explicitement send une erreur.
+                    // `Err(_)` : sender drop sans erreur = clean exit
+                    //            (= session QUIC fermée graceful par
+                    //             l'exit, ex: idle_timeout). Pas
+                    //             d'erreur à remonter.
+                    match pump_res {
+                        Ok(msg) => Err(Error::Backend(format!(
+                            "pump terminated abnormally: {msg}"
+                        ))),
+                        Err(_) => Ok(()),
+                    }
+                }
+            };
             event_hook.on_event(TunnelEvent::Down).await;
+            outcome
+        });
 
-            // Teardown : abort le pump pour libérer le device TUN +
-            // la session QUIC qu'il détient. `JoinHandle::abort`
-            // déclenche un cancel propre (la task se termine sur
-            // le prochain `await` cancellation point).
+        // Teardown : abort le pump pour libérer le device TUN + la
+        // session QUIC qu'il détient. `JoinHandle::abort` déclenche
+        // un cancel propre (la task se termine sur le prochain
+        // `await` cancellation point). On wait ensuite pour que le
+        // fd TUN soit effectivement fermé côté kernel avant de
+        // retourner — sinon un retry immédiat pourrait race avec un
+        // open_tun() sur le même nom d'interface.
+        runtime.block_on(async {
             pump_handle.abort();
-
-            // Wait that the pump task has actually terminated avant
-            // de retourner — sinon le `tun_provider` interne pourrait
-            // être ré-ouvert avec le même nom alors que le fd n'est
-            // pas encore fermé côté kernel.
             let _ = pump_handle.await;
         });
 
-        Ok(())
+        result
     }
 }
 
