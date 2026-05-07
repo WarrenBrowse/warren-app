@@ -33,6 +33,9 @@ pub mod version;
 /// `talpid_warren_iroh::WarrenIrohParameters` complet à partir du
 /// selector + signing_key + constantes (`n_connections`, `features`).
 pub mod warren_iroh_params;
+/// Warren fork — Phase 4.F.4 : détection du mode tunnel Warren via
+/// env var `WARREN_TUNNEL` (POC switch, pas de toggle UI pour l'instant).
+pub mod warren_mode;
 /// Warren fork — Phase 4.E : wrapper daemon-side autour de
 /// `warren_relay_selector::WarrenRelaySelector`. Sélectionne les
 /// composants Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
