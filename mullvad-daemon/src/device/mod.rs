@@ -34,7 +34,7 @@ use tokio::{
 
 mod api;
 mod service;
-pub(crate) use service::{AccountService, DeviceService};
+pub(crate) use service::{DeviceService, WarrenIdentityService};
 
 /// File that used to store account and device data.
 const DEVICE_CACHE_FILENAME: &str = "device.json";
@@ -344,7 +344,7 @@ enum AccountManagerCommand {
 #[derive(Clone)]
 pub(crate) struct AccountManagerHandle {
     cmd_tx: mpsc::UnboundedSender<AccountManagerCommand>,
-    pub account_service: AccountService,
+    pub warren_identity_service: WarrenIdentityService,
     pub device_service: DeviceService,
 }
 
@@ -434,7 +434,7 @@ impl AccountManagerHandle {
 
 pub(crate) struct AccountManager {
     cacher: DeviceCacher,
-    account_service: AccountService,
+    warren_identity_service: WarrenIdentityService,
     device_service: DeviceService,
     data: PrivateDeviceState,
     rotation_interval: RotationInterval,
@@ -458,15 +458,18 @@ impl AccountManager {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         let number = data.device().map(|state| state.account_number.clone());
         let api_availability = rest_handle.availability.clone();
-        let account_service =
-            service::spawn_account_service(rest_handle.clone(), number, api_availability.clone());
+        let warren_identity_service = service::spawn_warren_identity_service(
+            rest_handle.clone(),
+            number,
+            api_availability.clone(),
+        );
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
 
         let device_service = DeviceService::new(rest_handle, api_availability);
         let manager = AccountManager {
             cacher,
-            account_service: account_service.clone(),
+            warren_identity_service: warren_identity_service.clone(),
             device_service: device_service.clone(),
             data: data.clone(),
             rotation_interval: initial_rotation_interval,
@@ -481,7 +484,7 @@ impl AccountManager {
         tokio::spawn(manager.run(cmd_rx));
         let handle = AccountManagerHandle {
             cmd_tx,
-            account_service,
+            warren_identity_service,
             device_service,
         };
         Ok((handle, data))
@@ -637,9 +640,9 @@ impl AccountManager {
         let create_submission = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
             let account_number = old_config.account_number.clone();
-            let account_service = self.account_service.clone();
+            let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
-                account_service
+                warren_identity_service
                     .submit_voucher(account_number, voucher)
                     .await
             })
@@ -669,8 +672,12 @@ impl AccountManager {
         let init_play_purchase_api_call = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
             let account_number = old_config.account_number.clone();
-            let account_service = self.account_service.clone();
-            Ok(async move { account_service.init_play_purchase(account_number).await })
+            let warren_identity_service = self.warren_identity_service.clone();
+            Ok(async move {
+                warren_identity_service
+                    .init_play_purchase(account_number)
+                    .await
+            })
         };
 
         match init_play_purchase_api_call() {
@@ -723,9 +730,9 @@ impl AccountManager {
         let play_purchase_verify_api_call = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
             let account_number = old_config.account_number.clone();
-            let account_service = self.account_service.clone();
+            let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
-                account_service
+                warren_identity_service
                     .verify_play_purchase(account_number, play_purchase)
                     .await
             })
@@ -1075,7 +1082,7 @@ impl AccountManager {
             return;
         };
 
-        let service = self.account_service.clone();
+        let service = self.warren_identity_service.clone();
         match service
             .delete_account(old_config.clone().account_number)
             .await
@@ -1208,9 +1215,9 @@ impl AccountManager {
     ) -> Result<impl Future<Output = Result<chrono::DateTime<Utc>, Error>> + use<>, Error> {
         let old_config = self.data.device().ok_or(Error::NoDevice)?;
         let account_number = old_config.account_number.clone();
-        let account_service = self.account_service.clone();
+        let warren_identity_service = self.warren_identity_service.clone();
         Ok(async move {
-            account_service
+            warren_identity_service
                 .get_data_2(account_number)
                 .await
                 .map(|data| data.expiry)

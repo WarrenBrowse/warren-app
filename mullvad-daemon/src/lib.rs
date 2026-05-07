@@ -1923,7 +1923,7 @@ impl Daemon {
                     return Err(Error::AlreadyLoggedIn);
                 }
                 let token = account_manager
-                    .account_service
+                    .warren_identity_service
                     .create_account()
                     .await
                     .map_err(Error::RestError)?;
@@ -1948,7 +1948,7 @@ impl Daemon {
         tx: ResponseTx<AccountData, mullvad_api::rest::Error>,
         account_number: AccountNumber,
     ) {
-        let account = self.account_manager.account_service.clone();
+        let account = self.account_manager.warren_identity_service.clone();
         tokio::spawn(async move {
             let result = account.get_data(account_number).await;
             Self::oneshot_send(tx, result, "account data");
@@ -1960,7 +1960,7 @@ impl Daemon {
             Ok(Some(device)) => {
                 let future = self
                     .account_manager
-                    .account_service
+                    .warren_identity_service
                     .get_www_auth_token(device.account_number);
                 tokio::spawn(async {
                     Self::oneshot_send(

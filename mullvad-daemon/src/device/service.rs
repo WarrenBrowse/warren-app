@@ -281,13 +281,13 @@ impl DeviceService {
 }
 
 #[derive(Clone)]
-pub struct AccountService {
+pub struct WarrenIdentityService {
     api_availability: ApiAvailability,
     initial_check_abort_handle: AbortHandle,
     proxy: AccountsProxy,
 }
 
-impl AccountService {
+impl WarrenIdentityService {
     pub fn create_account(
         &self,
     ) -> impl Future<Output = Result<AccountNumber, rest::Error>> + use<> {
@@ -426,11 +426,11 @@ impl AccountService {
     }
 }
 
-pub fn spawn_account_service(
+pub fn spawn_warren_identity_service(
     api_handle: MullvadRestHandle,
     number: Option<AccountNumber>,
     api_availability: ApiAvailability,
-) -> AccountService {
+) -> WarrenIdentityService {
     let accounts_proxy = AccountsProxy::new(api_handle);
     api_availability.pause_background();
 
@@ -453,7 +453,7 @@ pub fn spawn_account_service(
     });
     tokio::spawn(future);
 
-    AccountService {
+    WarrenIdentityService {
         api_availability: api_availability_copy,
         initial_check_abort_handle,
         proxy: accounts_proxy_copy,
