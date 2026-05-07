@@ -33,6 +33,9 @@ pub mod version;
 /// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net pour le
 /// retry-loop initial `get_data` et la validation device).
 pub mod warren_account_mode;
+/// Bootstrap d'un `device.json` cohérent avec la mnémonique Warren —
+/// invoqué au boot en mode `WARREN_LOCAL_ACCOUNT=1`.
+pub mod warren_device_bootstrap;
 /// Assemble un `talpid_warren_iroh::WarrenIrohParameters` complet à
 /// partir du relay selector + signing_key + constantes côté config.
 pub mod warren_iroh_params;

@@ -37,7 +37,7 @@ mod service;
 pub(crate) use service::{DeviceService, WarrenIdentityService};
 
 /// File that used to store account and device data.
-const DEVICE_CACHE_FILENAME: &str = "device.json";
+pub(crate) const DEVICE_CACHE_FILENAME: &str = "device.json";
 
 /// How long to keep the known status for [AccountManagerHandle::validate_device].
 const VALIDITY_CACHE_TIMEOUT: Duration = Duration::from_secs(10);
