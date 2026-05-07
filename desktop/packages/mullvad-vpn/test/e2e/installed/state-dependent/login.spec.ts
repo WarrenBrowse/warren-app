@@ -8,15 +8,17 @@ import { expectDisconnected } from '../../shared/tunnel-state';
 import { TestUtils } from '../../utils';
 import { startInstalledApp } from '../installed-utils';
 
-// This test expects the daemon to be logged out and the account history to be cleared.
+// This test expects the daemon to be logged out and the public key history to be cleared.
 // Env parameters:
-//   `ACCOUNT_NUMBER`: Account number to use when logging in
+//   `ACCOUNT_NUMBER`: Warren pubkey (64-char hex) to use when logging in
 
 let page: Page;
 let util: TestUtils;
 let routes: RoutesObjectModel;
 
-let accountNumber: string;
+let pubkey: string;
+
+const INVALID_PUBKEY = '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234ZZZZ';
 
 test.beforeAll(async () => {
   ({ page, util } = await startInstalledApp());
@@ -34,15 +36,15 @@ test('App should fail to login', async () => {
   const subtitle = page.getByTestId('subtitle');
 
   await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your account number');
+  await expect(subtitle).toHaveText('Enter your public key');
 
-  await routes.login.fillAccountNumber('1234 1234 1324 1234');
+  await routes.login.fillPubKey(INVALID_PUBKEY);
   await routes.login.loginByPressingEnter();
 
   await expect(title).toHaveText('Login failed');
-  await expect(subtitle).toHaveText('Invalid account number');
+  await expect(subtitle).toHaveText('Invalid public key');
 
-  await routes.login.fillAccountNumber('');
+  await routes.login.fillPubKey('');
 });
 
 test('App should create account', async () => {
@@ -54,9 +56,10 @@ test('App should create account', async () => {
   const outOfTimeTitle = page.getByTestId('title');
   await expect(outOfTimeTitle).toHaveText('Congrats!');
 
-  const inputValue = await page.getByTestId('account-number').textContent();
-  expect(inputValue).toHaveLength(19);
-  accountNumber = inputValue!.replaceAll(' ', '');
+  const inputValue = await page.getByTestId('warren-pubkey').textContent();
+  // 64 hex chars + 7 spaces (8 groups of 8) = 71 visible chars
+  expect(inputValue).toHaveLength(71);
+  pubkey = inputValue!.replaceAll(' ', '');
 });
 
 test('App should become logged out', async () => {
@@ -71,13 +74,13 @@ test('App should log in', async () => {
   const subtitle = page.getByTestId('subtitle');
 
   await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your account number');
+  await expect(subtitle).toHaveText('Enter your public key');
 
-  await routes.login.fillAccountNumber(process.env.ACCOUNT_NUMBER!);
+  await routes.login.fillPubKey(process.env.ACCOUNT_NUMBER!);
   await routes.login.loginByClickingLoginButton();
 
   await expect(title).toHaveText('Logged in');
-  await expect(subtitle).toHaveText('Valid account number');
+  await expect(subtitle).toHaveText('Valid public key');
 
   await util.expectRoute(RoutePath.main);
 
@@ -95,7 +98,7 @@ test('App should log out', async () => {
   const title = page.locator('h1');
   const subtitle = page.getByTestId('subtitle');
   await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your account number');
+  await expect(subtitle).toHaveText('Enter your public key');
 });
 
 test('App should log in to expired account', async () => {
@@ -105,9 +108,9 @@ test('App should log in to expired account', async () => {
   const subtitle = page.getByTestId('subtitle');
 
   await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your account number');
+  await expect(subtitle).toHaveText('Enter your public key');
 
-  await routes.login.fillAccountNumber(accountNumber);
+  await routes.login.fillPubKey(pubkey);
 
   await routes.login.loginByPressingEnter();
   await util.expectRoute(RoutePath.expired);

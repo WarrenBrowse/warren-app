@@ -52,7 +52,9 @@ test.describe('Too many devices', () => {
         },
       ]);
 
-      await routes.login.fillAccountNumber('1234123412341234');
+      await routes.login.fillPubKey(
+        '1234123412341234123412341234123412341234123412341234123412341234',
+      );
       await routes.login.loginByPressingEnter();
 
       await routes.tooManyDevices.waitForRoute();

@@ -43,12 +43,16 @@ test.describe('Login view', () => {
     await util?.closePage();
   });
 
+  const VALID_PUBKEY_TYPED =
+    '12341234 12341234 12341234 12341234 12341234 12341234 12341234 12341234';
+  const VALID_PUBKEY_RAW = '1234123412341234123412341234123412341234123412341234123412341234';
+
   const setAccountHistory = async () => {
-    await util.ipc.accountHistory[''].notify('1234123412341234');
+    await util.ipc.accountHistory[''].notify(VALID_PUBKEY_RAW);
   };
 
   test('Should login when clicking login button', async () => {
-    await routes.login.fillAccountNumber('1234 1234 1234 1234');
+    await routes.login.fillPubKey(VALID_PUBKEY_TYPED);
 
     await Promise.all([util.ipc.account.login.expect(), routes.login.loginByClickingLoginButton()]);
     const header = routes.login.selectors.header();
@@ -72,7 +76,7 @@ test.describe('Login view', () => {
   });
 
   test('Should try to login when pressing enter', async () => {
-    await routes.login.fillAccountNumber('1234 1234 1234 1234');
+    await routes.login.fillPubKey(VALID_PUBKEY_TYPED);
 
     await Promise.all([util.ipc.account.login.expect(), routes.login.loginByPressingEnter()]);
     const header = routes.login.selectors.header();
@@ -84,7 +88,7 @@ test.describe('Login view', () => {
     const loginButton = routes.login.selectors.loginButton();
     await expect(loginButton).toBeDisabled();
 
-    await routes.login.fillAccountNumber('1234 1234');
+    await routes.login.fillPubKey('1234 1234');
     await expect(loginButton).toBeDisabled();
   });
 

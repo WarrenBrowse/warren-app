@@ -18,8 +18,8 @@ export class LoginRouteObjectModel {
     await this.utils.expectRoute(RoutePath.login);
   }
 
-  fillAccountNumber(accountNumber: string) {
-    return this.selectors.loginInput().fill(accountNumber);
+  fillPubKey(pubkey: string) {
+    return this.selectors.loginInput().fill(pubkey);
   }
 
   async loginByPressingEnter() {
