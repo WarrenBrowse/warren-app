@@ -705,6 +705,29 @@ impl RequestFactory {
         self.json_request_with_bytes(method, path, json_body)
     }
 
+    /// Warren fork — Phase 2.A.4 V5 : variante GET qui dispatch sur
+    /// [`Self::has_warren_signer`]. Si un signer Warren est configuré,
+    /// la requête est signée (headers `X-Warren-*`) ; sinon elle est
+    /// nue, comme avec [`Self::get`].
+    ///
+    /// Permet aux callers historiques (e.g. `RelayListProxy`) de
+    /// migrer vers la signature Warren sans brancher manuellement
+    /// la logique mode-warren-ou-pas à chaque site d'appel : un seul
+    /// helper centralise le dispatch.
+    ///
+    /// # Errors
+    ///
+    /// Mêmes erreurs que [`Self::get`] et [`Self::signed_get`] (URI
+    /// invalide, header injection ; ce dernier est en pratique
+    /// impossible).
+    pub fn get_or_signed(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        if self.has_warren_signer() {
+            self.signed_get(path)
+        } else {
+            self.get(path)
+        }
+    }
+
     /// Warren fork — Phase 2.A.3 : variante signée de [`Self::get`].
     /// Aucun body (= sha256(b"") dans le canonical message) ; les 4
     /// headers `X-Warren-*` sont posés sur la requête `Empty<Bytes>`.
@@ -953,6 +976,32 @@ mod tests {
 
     fn fixed_signer() -> Arc<WarrenAuthSigner> {
         Arc::new(WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32])))
+    }
+
+    #[test]
+    fn get_or_signed_dispatches_on_has_warren_signer() {
+        // Phase 2.A.4 V5 — `get_or_signed(path)` doit retourner une
+        // requête signée (headers X-Warren-*) quand un signer est
+        // configuré, et une requête nue (sans X-Warren-*) sinon. Le
+        // caller (e.g. RelayListProxy) appelle ce helper sans avoir
+        // à brancher lui-même la logique mode Warren vs Bearer.
+        let bare = RequestFactory::new("api.example.test", None);
+        let bare_req = bare.get_or_signed("app/v1/relays").unwrap();
+        assert!(
+            !bare_req.headers().contains_key(HEADER_PUBKEY),
+            "factory sans signer ne doit pas poser X-Warren-PubKey"
+        );
+
+        let warren =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let warren_req = warren.get_or_signed("app/v1/relays").unwrap();
+        assert!(
+            warren_req.headers().contains_key(HEADER_PUBKEY),
+            "factory avec signer doit poser X-Warren-PubKey"
+        );
+        assert!(warren_req.headers().contains_key(HEADER_SIGNATURE));
+        assert!(warren_req.headers().contains_key(HEADER_TIMESTAMP));
+        assert!(warren_req.headers().contains_key(HEADER_NONCE));
     }
 
     #[test]
