@@ -6,6 +6,10 @@ import {
   LockdownModeSetting,
   QuantumResistantSetting,
 } from '../../../features/tunnel/components';
+import {
+  WarrenLocalAccountSetting,
+  WarrenModeSetting,
+} from '../../../features/warren-mode/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
@@ -50,6 +54,11 @@ export function VpnSettingsView() {
                   </FlexColumn>
 
                   <AllowLanSetting />
+
+                  <FlexColumn gap="small">
+                    <WarrenModeSetting position="first" />
+                    <WarrenLocalAccountSetting position="last" />
+                  </FlexColumn>
 
                   <FlexColumn gap="small">
                     <DnsBlockerSettings position="solo" />

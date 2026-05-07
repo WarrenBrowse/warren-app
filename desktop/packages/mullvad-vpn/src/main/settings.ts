@@ -181,6 +181,14 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
+  // Warren fork — Phase H : exposition des toggles persistants Warren.
+  public get warrenMode() {
+    return this.settingsValue.warrenMode;
+  }
+  public get warrenLocalAccount() {
+    return this.settingsValue.warrenLocalAccount;
+  }
+
   public get gui() {
     return this.guiSettings;
   }

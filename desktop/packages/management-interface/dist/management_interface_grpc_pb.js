@@ -1534,6 +1534,30 @@ clearMigrationMessage: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
+  // Warren fork — Phase H : patch manuel des bindings JS.
+  // À régénérer via `bash scripts/container-run-generate-bindings.sh`.
+  setWarrenMode: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMode',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.BoolValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_BoolValue,
+    requestDeserialize: deserialize_google_protobuf_BoolValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  setWarrenLocalAccount: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenLocalAccount',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.BoolValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_BoolValue,
+    requestDeserialize: deserialize_google_protobuf_BoolValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
 };
 
 exports.ManagementServiceClient = grpc.makeGenericClientConstructor(ManagementServiceService, 'ManagementService');

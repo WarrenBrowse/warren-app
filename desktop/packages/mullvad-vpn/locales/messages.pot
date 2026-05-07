@@ -1326,7 +1326,7 @@ msgid "The device will be removed from the list and logged out."
 msgstr ""
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
 msgstr ""
 
 msgctxt "device-management"
@@ -1351,7 +1351,7 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr ""
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
+msgid "You can have up to 5 devices logged in on one Warren account."
 msgstr ""
 
 msgctxt "device-management"
@@ -2738,6 +2738,10 @@ msgid "Malware"
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Restart the daemon for the change to take effect."
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr ""
 
@@ -2796,6 +2800,22 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Warren local account"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Warren tunnel mode"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of WireGuard / OpenVPN."
 msgstr ""
 
 msgctxt "vpn-settings-view"

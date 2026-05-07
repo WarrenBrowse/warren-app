@@ -206,9 +206,7 @@ function updateWarrenMode(warrenMode: boolean): IUpdateWarrenModeAction {
   };
 }
 
-function updateWarrenLocalAccount(
-  warrenLocalAccount: boolean,
-): IUpdateWarrenLocalAccountAction {
+function updateWarrenLocalAccount(warrenLocalAccount: boolean): IUpdateWarrenLocalAccountAction {
   return {
     type: 'UPDATE_WARREN_LOCAL_ACCOUNT',
     warrenLocalAccount,

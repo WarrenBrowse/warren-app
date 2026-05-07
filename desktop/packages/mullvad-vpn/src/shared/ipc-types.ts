@@ -28,7 +28,10 @@ export type ScrollToAnchorId =
   | 'obfuscation-setting'
   | 'port-setting'
   | 'mss-fix-setting'
-  | 'quantum-resistant-setting';
+  | 'quantum-resistant-setting'
+  // Warren fork — Phase H : anchors pour les toggles Warren dans VpnSettingsView.
+  | 'warren-mode-setting'
+  | 'warren-local-account-setting';
 
 export type ScrollToAnchorOption = {
   type: 'scroll-to-anchor';

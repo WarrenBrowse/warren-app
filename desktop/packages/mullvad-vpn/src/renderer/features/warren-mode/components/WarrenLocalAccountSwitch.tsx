@@ -9,11 +9,7 @@ function WarrenLocalAccountSwitch({ children, ...props }: WarrenLocalAccountSwit
   const { warrenLocalAccount, setWarrenLocalAccount } = useWarrenLocalAccount();
 
   return (
-    <Switch
-      checked={warrenLocalAccount}
-      onCheckedChange={setWarrenLocalAccount}
-      {...props}
-    >
+    <Switch checked={warrenLocalAccount} onCheckedChange={setWarrenLocalAccount} {...props}>
       {children}
     </Switch>
   );
