@@ -1,4 +1,11 @@
 //! Abstracts over an active VPN tunnel.
+//!
+//! Warren fork (Phase 1.A) : le champ interne `monitor` a été remplacé
+//! par une enum [`TunnelBackend`] qui permet le dispatch entre le
+//! `WireguardMonitor` upstream et le `WarrenIrohMonitor` (POC Iroh).
+//! Le path WG existant est strictement préservé : aucun changement de
+//! comportement pour les déploiements production qui n'activent pas
+//! le backend Warren.
 use std::path;
 
 use talpid_tunnel::TunnelArgs;
@@ -6,6 +13,7 @@ use talpid_tunnel::TunnelArgs;
 use talpid_tunnel::tun_provider;
 use talpid_types::net::{wireguard as wireguard_types, wireguard::TunnelParameters};
 use talpid_types::tunnel::ErrorStateCause;
+use talpid_warren_iroh::{WarrenIrohMonitor, WarrenIrohParameters};
 use talpid_wireguard::WireguardMonitor;
 
 const WIREGUARD_LOG_FILENAME: &str = "wireguard.log";
@@ -31,6 +39,11 @@ pub enum Error {
     /// There was an error listening for events from the Wireguard tunnel
     #[error("Failed while listening for events from the Wireguard tunnel")]
     TunnelMonitoring(#[from] talpid_wireguard::Error),
+
+    /// There was an error listening for events from the Warren-Iroh tunnel.
+    /// Warren fork — Phase 1.A.
+    #[error("Failed while listening for events from the Warren-Iroh tunnel")]
+    WarrenIrohMonitoring(#[from] talpid_warren_iroh::Error),
 }
 
 impl From<Error> for ErrorStateCause {
@@ -96,6 +109,7 @@ impl Error {
     pub fn is_recoverable(&self) -> bool {
         match self {
             Error::TunnelMonitoring(error) => error.is_recoverable(),
+            Error::WarrenIrohMonitoring(error) => error.is_recoverable(),
             _ => false,
         }
     }
@@ -105,14 +119,37 @@ impl Error {
     pub fn get_tunnel_device_error(&self) -> Option<&std::io::Error> {
         match self {
             Error::TunnelMonitoring(error) => error.get_tunnel_device_error(),
+            // Warren-Iroh n'expose pas (encore) un `tunnel_device_error`
+            // équivalent ; Phase 1.B raffinera si nécessaire.
             _ => None,
         }
     }
 }
 
+/// Backend de tunnel sous-jacent — Warren fork Phase 1.A.
+///
+/// Enum dispatch statique entre les implémentations supportées. L'ajout
+/// d'un nouveau backend nécessite une variante ici + une factory dans
+/// [`TunnelMonitor`]. Cette approche est volontairement plus simple
+/// qu'un trait `Box<dyn Tunnel>` (cf. décision Phase 1.A) :
+/// - 2 backends connus (WG legacy + Warren-Iroh POC), pas N
+/// - préserve les API riches `is_recoverable()` et
+///   `get_tunnel_device_error()` sans gymnastique downcast
+/// - debug plus direct (pas de type erasure)
+enum TunnelBackend {
+    /// Backend historique WireGuard (path upstream Mullvad inchangé).
+    Wireguard(WireguardMonitor),
+    /// Backend Warren-Iroh POC. Phase 1.A : stub présent pour valider la
+    /// structure d'enum dispatch ; Phase 1.B câblera `warren-iroh-tunnel`.
+    /// `dead_code` autorisé tant qu'aucun call-site (state machine,
+    /// connecting_state) ne l'utilise — sera consommé en Phase 1.B.
+    #[allow(dead_code)]
+    WarrenIroh(WarrenIrohMonitor),
+}
+
 /// Abstraction for monitoring a VPN tunnel.
 pub struct TunnelMonitor {
-    monitor: WireguardMonitor,
+    backend: TunnelBackend,
 }
 
 impl TunnelMonitor {
@@ -129,13 +166,43 @@ impl TunnelMonitor {
         Self::start_wireguard_tunnel(tunnel_parameters, log_file, args)
     }
 
+    /// Démarre un tunnel via le backend Warren-Iroh — Warren fork Phase 1.A.
+    ///
+    /// Factory séparée de [`Self::start`] parce que les paramètres Iroh
+    /// divergent du `TunnelParameters` WireGuard (champs distincts, pas
+    /// d'`obfuscation`, pas de `wg_options`, etc.). Phase 1.B câblera la
+    /// vraie config (EndpointId, addresses candidate, secret_key…).
+    ///
+    /// **Phase 1.A** : factory disponible mais aucun call-site ne l'invoque
+    /// encore — l'intégration côté `connecting_state` viendra en Phase 1.B
+    /// après que `WarrenIrohMonitor` soit câblé sur le vrai backend Iroh.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WarrenIrohMonitoring`] si le backend Iroh échoue à
+    /// initialiser.
+    #[allow(dead_code)] // Phase 1.A : pas encore wiré dans connecting_state.
+    pub fn start_warren_iroh(
+        params: &WarrenIrohParameters,
+        log_dir: &Option<path::PathBuf>,
+        args: TunnelArgs<'_>,
+    ) -> Result<Self> {
+        let log_file = Self::prepare_tunnel_log_file(log_dir.as_ref())?;
+        let monitor = WarrenIrohMonitor::start(params, args, log_file.as_deref())?;
+        Ok(TunnelMonitor {
+            backend: TunnelBackend::WarrenIroh(monitor),
+        })
+    }
+
     fn start_wireguard_tunnel(
         params: &wireguard_types::TunnelParameters,
         log: Option<path::PathBuf>,
         args: TunnelArgs<'_>,
     ) -> Result<Self> {
         let monitor = talpid_wireguard::WireguardMonitor::start(params, args, log.as_deref())?;
-        Ok(TunnelMonitor { monitor })
+        Ok(TunnelMonitor {
+            backend: TunnelBackend::Wireguard(monitor),
+        })
     }
 
     fn ensure_ipv6_can_be_used_if_enabled(tunnel_parameters: &TunnelParameters) -> Result<()> {
@@ -166,7 +233,10 @@ impl TunnelMonitor {
 
     /// Consumes the monitor and blocks until the tunnel exits or there is an error.
     pub fn wait(self) -> Result<()> {
-        self.monitor.wait().map_err(Error::from)
+        match self.backend {
+            TunnelBackend::Wireguard(monitor) => monitor.wait().map_err(Error::from),
+            TunnelBackend::WarrenIroh(monitor) => monitor.wait().map_err(Error::from),
+        }
     }
 }
 

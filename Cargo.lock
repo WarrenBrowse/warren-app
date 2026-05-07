@@ -5423,6 +5423,7 @@ dependencies = [
  "talpid-routing",
  "talpid-tunnel",
  "talpid-types",
+ "talpid-warren-iroh",
  "talpid-windows",
  "talpid-wireguard",
  "test-log",
@@ -5605,6 +5606,16 @@ dependencies = [
  "thiserror 2.0.18",
  "x25519-dalek",
  "zeroize",
+]
+
+[[package]]
+name = "talpid-warren-iroh"
+version = "0.0.0"
+dependencies = [
+ "talpid-tunnel",
+ "talpid-types",
+ "thiserror 2.0.18",
+ "tokio",
 ]
 
 [[package]]

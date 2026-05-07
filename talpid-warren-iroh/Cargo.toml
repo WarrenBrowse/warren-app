@@ -1,0 +1,16 @@
+[package]
+name = "talpid-warren-iroh"
+edition.workspace = true
+rust-version.workspace = true
+description = "Warren — adaptateur Iroh pour le tunnel state machine talpid (POC)"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+talpid-tunnel = { path = "../talpid-tunnel" }
+talpid-types = { path = "../talpid-types" }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync"] }
+
+[lints]
+workspace = true

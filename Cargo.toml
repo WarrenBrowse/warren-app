@@ -39,6 +39,7 @@ members = [
   "talpid-time",
   "talpid-tunnel",
   "talpid-tunnel-config-client",
+  "talpid-warren-iroh",
   "talpid-windows",
   "talpid-wireguard",
   "tunnel-obfuscation",
