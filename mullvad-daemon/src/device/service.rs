@@ -440,6 +440,7 @@ pub fn spawn_warren_identity_service(
     api_handle: MullvadRestHandle,
     number: Option<AccountNumber>,
     api_availability: ApiAvailability,
+    local_account_mode: bool,
 ) -> WarrenIdentityService {
     let accounts_proxy = AccountsProxy::new(api_handle);
     api_availability.pause_background();
@@ -448,10 +449,20 @@ pub fn spawn_warren_identity_service(
     let accounts_proxy_copy = accounts_proxy.clone();
 
     let (future, initial_check_abort_handle) = abortable(async move {
-        let Some(number) = number else {
+        if !should_run_initial_check(local_account_mode, number.is_some()) {
+            // Mode local POC OU pas d'account_number connu : ne pas
+            // tenter `get_data` contre `api.mullvad.net`. On laisse
+            // l'`api_availability` en paused (déjà fait juste avant
+            // l'`abortable`), ce qui empêche aussi la rotation de
+            // clés Wireguard background tant qu'on n'est pas sûr de
+            // l'état du compte.
             api_availability.pause_background();
             return;
-        };
+        }
+
+        // SAFETY: la branche `should_run_initial_check` ci-dessus
+        // garantit que `number` est `Some` quand on arrive ici.
+        let number = number.expect("checked by should_run_initial_check");
 
         let future_generator = move || {
             let expiry_fut = api_availability.when_online(accounts_proxy.get_data(number.clone()));
@@ -468,6 +479,17 @@ pub fn spawn_warren_identity_service(
         initial_check_abort_handle,
         proxy: accounts_proxy_copy,
     }
+}
+
+/// Décide si la task initiale `get_data` retry-loop doit tourner.
+///
+/// Retourne `false` quand :
+/// - `local_account_mode = true` (= POC switch
+///   [`crate::warren_account_mode`] qui bypass `api.mullvad.net`), OU
+/// - aucun `AccountNumber` n'est disponible (cas Mullvad classique sur
+///   un fresh install pré-login).
+fn should_run_initial_check(local_account_mode: bool, has_account_number: bool) -> bool {
+    !local_account_mode && has_account_number
 }
 
 fn handle_account_data_result(
@@ -532,5 +554,41 @@ fn map_rest_error(error: rest::Error) -> Error {
             _ => Error::OtherRestError(error),
         },
         error => Error::OtherRestError(error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_run_initial_check;
+
+    /// Régression critique Warren fork B.3 : en mode local POC, la
+    /// task initiale `get_data` ne DOIT JAMAIS tourner — sinon le
+    /// daemon contacte `api.mullvad.net` alors qu'il a été configuré
+    /// explicitement pour l'éviter (= breaking de la promesse no-network
+    /// du mode POC).
+    #[test]
+    fn should_run_initial_check_returns_false_in_local_mode_even_with_account_number() {
+        assert!(!should_run_initial_check(true, true));
+        assert!(!should_run_initial_check(true, false));
+    }
+
+    /// Régression sur le path Mullvad standard : si `local=false` et
+    /// qu'on a un account_number, l'initial check DOIT tourner. Sinon
+    /// B.3 aurait introduit une régression silencieuse qui désactive
+    /// la rotation BG des clés Wireguard pour tous les utilisateurs
+    /// Mullvad standard, pas seulement les utilisateurs POC.
+    #[test]
+    fn should_run_initial_check_runs_in_remote_mode_when_account_number_present() {
+        assert!(should_run_initial_check(false, true));
+    }
+
+    /// Cas Mullvad classique fresh install pré-login : pas
+    /// d'`AccountNumber` en cache, donc rien à demander à l'API. La
+    /// fonction doit retourner `false` même en mode standard. Sinon
+    /// le daemon spawnerait un retry-loop sur un account number `None`
+    /// → boucle infinie d'erreurs côté logs.
+    #[test]
+    fn should_run_initial_check_returns_false_in_remote_mode_without_account_number() {
+        assert!(!should_run_initial_check(false, false));
     }
 }

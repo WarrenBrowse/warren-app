@@ -876,6 +876,9 @@ impl Daemon {
                 .rotation_interval
                 .unwrap_or_default(),
             internal_event_tx.to_specialized_sender(),
+            // Warren fork B.3 — temporairement `false`. Branché sur
+            // `warren_account_mode::is_enabled()` en Phase B.4.
+            false,
         )
         .await
         .map_err(Error::LoadAccountManager)?;
@@ -1132,7 +1135,13 @@ impl Daemon {
             migration_complete,
             settings,
             account_history,
-            device_checker: device::TunnelStateChangeHandler::new(account_manager.clone()),
+            device_checker: device::TunnelStateChangeHandler::new(
+                account_manager.clone(),
+                // Warren fork B.3 — temporairement `false` (path Mullvad
+                // standard préservé). Sera branché sur
+                // `warren_account_mode::is_enabled()` en Phase B.4.
+                false,
+            ),
             account_manager,
             access_mode_handler,
             api_runtime,

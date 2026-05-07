@@ -456,6 +456,7 @@ impl AccountManager {
         settings_dir: &Path,
         initial_rotation_interval: RotationInterval,
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
+        local_account_mode: bool,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         // Warren fork — Phase 2.D V8.b : `state.pubkey` est typé
@@ -468,6 +469,7 @@ impl AccountManager {
             rest_handle.clone(),
             number,
             api_availability.clone(),
+            local_account_mode,
         );
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
@@ -1354,18 +1356,24 @@ impl DeviceCacher {
 
 /// Checks if the current device is valid if a WireGuard tunnel cannot be set up
 /// after multiple attempts.
+///
+/// Warren fork — Phase B.3 : `local_account_mode` court-circuite la
+/// validation device contre `api.mullvad.net` quand le daemon tourne
+/// en mode account local POC (cf. [`crate::warren_account_mode`]).
 pub(crate) struct TunnelStateChangeHandler {
     manager: AccountManagerHandle,
     can_retry: Arc<AtomicBool>,
     wg_retry_attempt: usize,
+    local_account_mode: bool,
 }
 
 impl TunnelStateChangeHandler {
-    pub fn new(manager: AccountManagerHandle) -> Self {
+    pub fn new(manager: AccountManagerHandle, local_account_mode: bool) -> Self {
         Self {
             manager,
             can_retry: Arc::new(AtomicBool::new(true)),
             wg_retry_attempt: 0,
+            local_account_mode,
         }
     }
 
@@ -1375,13 +1383,31 @@ impl TunnelStateChangeHandler {
         self.wg_retry_attempt = Self::update_retry_counter(new_state, self.wg_retry_attempt);
         Self::update_retry_bool(new_state, self.can_retry.clone());
         // Check if a device-check should be triggered
-        if Self::should_check_device_validity(self.wg_retry_attempt, self.can_retry.clone()) {
+        if Self::should_trigger_device_check(
+            self.local_account_mode,
+            self.wg_retry_attempt,
+            self.can_retry.clone(),
+        ) {
             let handle = self.manager.clone();
             tokio::spawn(Self::check_device_validity(
                 self.can_retry.clone(),
                 move || Self::check_device_validity_inner(handle),
             ));
         }
+    }
+
+    /// Combine la décision standard de [`Self::should_check_device_validity`]
+    /// avec un court-circuit en `local_account_mode` qui retourne
+    /// **toujours** `false`. L'ordre `!local && check(...)` est délibéré :
+    /// le court-circuit `&&` empêche `should_check_device_validity` de
+    /// consommer `can_retry` (swap atomique) en mode local.
+    fn should_trigger_device_check(
+        local_account_mode: bool,
+        wireguard_retry_attempt: usize,
+        can_retry: Arc<AtomicBool>,
+    ) -> bool {
+        !local_account_mode
+            && Self::should_check_device_validity(wireguard_retry_attempt, can_retry)
     }
 
     /// Run `validate` when connecting to a WireGuard server.
@@ -1566,6 +1592,61 @@ mod test {
         assert!(
             !can_retry.load(Ordering::SeqCst),
             "device check should no longer happen after successful check"
+        );
+    }
+
+    /// Régression critique Warren fork B.3 : en `local_account_mode`,
+    /// le helper de décision DOIT toujours retourner `false`, même au
+    /// seuil de retry où en mode standard on déclencherait un check.
+    /// Sinon le daemon enverrait `validate_device` à api.mullvad.net
+    /// alors qu'il a été configuré explicitement pour ne pas le faire.
+    #[test]
+    fn should_trigger_device_check_returns_false_in_local_mode_at_threshold() {
+        let can_retry = Arc::new(AtomicBool::new(true));
+        let triggered = TunnelStateChangeHandler::should_trigger_device_check(
+            true,
+            WG_DEVICE_CHECK_THRESHOLD,
+            can_retry.clone(),
+        );
+        assert!(!triggered);
+    }
+
+    /// Régression critique Warren fork B.3 : en mode local, le
+    /// court-circuit `!local && ...` ne doit PAS consommer le swap
+    /// atomique de `can_retry`. Si on consommait `can_retry` à
+    /// chaque transition de state même en local, on aurait un effet
+    /// de bord silencieux qui casserait la sémantique de retry quand
+    /// on bascule entre modes (futur toggle gRPC).
+    #[test]
+    fn should_trigger_device_check_does_not_consume_can_retry_in_local_mode() {
+        let can_retry = Arc::new(AtomicBool::new(true));
+        let _ = TunnelStateChangeHandler::should_trigger_device_check(
+            true,
+            WG_DEVICE_CHECK_THRESHOLD,
+            can_retry.clone(),
+        );
+        assert!(
+            can_retry.load(Ordering::SeqCst),
+            "can_retry doit rester intact en mode local"
+        );
+    }
+
+    /// Régression sur le path standard non-local : si `local=false` au
+    /// seuil de retry, le helper doit déléguer à
+    /// `should_check_device_validity` et retourner `true` (= déclencher
+    /// le check). Sinon B.3 aurait introduit une régression silencieuse
+    /// qui désactive le device check en mode Mullvad standard.
+    #[test]
+    fn should_trigger_device_check_runs_in_non_local_mode_at_threshold() {
+        let can_retry = Arc::new(AtomicBool::new(true));
+        let triggered = TunnelStateChangeHandler::should_trigger_device_check(
+            false,
+            WG_DEVICE_CHECK_THRESHOLD,
+            can_retry.clone(),
+        );
+        assert!(
+            triggered,
+            "non-local mode au seuil doit déclencher le check"
         );
     }
 }
