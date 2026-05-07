@@ -158,6 +158,68 @@ impl WarrenAuthSigner {
         rand::rng().fill_bytes(&mut nonce);
         self.sign_request_at(method, path, body, timestamp, nonce)
     }
+
+    /// Applique les 4 headers X-Warren-* sur une `hyper::Request`
+    /// existante, en utilisant la méthode HTTP, le path et le body de
+    /// la requête comme entrées du `canonical_message`.
+    ///
+    /// **Pourquoi cette signature** : factorise l'extraction
+    /// (`method`, `path`, `body`) côté caller, qui doit fournir le
+    /// `body` en bytes parce que `hyper::Request<B>` n'expose pas le
+    /// body sans le consommer. En pratique le caller (rest.rs) a déjà
+    /// le body sérialisé en `Vec<u8>` avant de construire la requête.
+    ///
+    /// # Errors
+    ///
+    /// [`std::io::Error`] avec [`std::io::ErrorKind::InvalidData`] si
+    /// l'un des `HeaderValue` produits ne peut pas être parsé (cas
+    /// uniquement théorique : nos valeurs sont toutes hex ou décimal
+    /// ASCII).
+    pub fn apply_to_request<B>(
+        &self,
+        request: &mut http::Request<B>,
+        body: &[u8],
+    ) -> std::io::Result<()> {
+        let method = request.method().as_str();
+        // Path with query string. `path_and_query` retourne `path?query`
+        // ou juste `path` si pas de query — c'est ce qu'on veut signer
+        // pour anti-tampering.
+        let path = request
+            .uri()
+            .path_and_query()
+            .map(|pq| pq.as_str())
+            .unwrap_or(request.uri().path());
+
+        let headers = self.sign_request(method, path, body);
+        let map = request.headers_mut();
+
+        let invalid = |name: &'static str| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("invalid header value for {name}"),
+            )
+        };
+
+        map.insert(
+            HEADER_PUBKEY,
+            http::HeaderValue::from_str(&headers.pubkey_hex).map_err(|_| invalid(HEADER_PUBKEY))?,
+        );
+        map.insert(
+            HEADER_SIGNATURE,
+            http::HeaderValue::from_str(&headers.signature_hex)
+                .map_err(|_| invalid(HEADER_SIGNATURE))?,
+        );
+        map.insert(
+            HEADER_TIMESTAMP,
+            http::HeaderValue::from_str(&headers.timestamp.to_string())
+                .map_err(|_| invalid(HEADER_TIMESTAMP))?,
+        );
+        map.insert(
+            HEADER_NONCE,
+            http::HeaderValue::from_str(&headers.nonce_hex).map_err(|_| invalid(HEADER_NONCE))?,
+        );
+        Ok(())
+    }
 }
 
 /// Construit le `canonical_message` qui sera signé. Format figé par la
@@ -358,6 +420,70 @@ mod tests {
         let s = format!("{signer:?}");
         assert!(s.contains("<redacted>"));
         assert!(!s.contains(&signer.pubkey_hex()[..10])); // ne pas révéler les 10 premiers chars de pubkey
+    }
+
+    #[test]
+    fn apply_to_request_injects_all_four_headers() {
+        // Vérifie que `apply_to_request` ajoute exactement les 4
+        // headers X-Warren-* attendus par le serveur, avec le bon
+        // format de valeur (taille hex pour pubkey/sig/nonce, décimal
+        // ASCII pour timestamp).
+        let signer = fixed_signer();
+        let mut req = http::Request::builder()
+            .method("POST")
+            .uri("/v1/port-forward/request?dry=true")
+            .body(())
+            .expect("build request");
+
+        signer
+            .apply_to_request(&mut req, b"{\"exit_pubkey\":\"abc\"}")
+            .expect("apply_to_request must succeed");
+
+        let h = req.headers();
+        let pk = h.get(HEADER_PUBKEY).expect("pubkey present");
+        let sig = h.get(HEADER_SIGNATURE).expect("sig present");
+        let ts = h.get(HEADER_TIMESTAMP).expect("ts present");
+        let nonce = h.get(HEADER_NONCE).expect("nonce present");
+
+        assert_eq!(pk.to_str().unwrap().len(), 64);
+        assert_eq!(sig.to_str().unwrap().len(), 128);
+        assert_eq!(nonce.to_str().unwrap().len(), 32);
+        // Timestamp doit être un u64 décimal valide.
+        ts.to_str()
+            .unwrap()
+            .parse::<u64>()
+            .expect("timestamp must be a valid u64");
+    }
+
+    #[test]
+    fn apply_to_request_signs_with_path_and_query() {
+        // Anti-tampering : la signature doit couvrir le `?query` aussi.
+        // Un proxy malveillant qui retire un `?dry=true` ne doit pas
+        // produire une signature toujours valide.
+        let signer = fixed_signer();
+        let mut req_with_q = http::Request::builder()
+            .method("GET")
+            .uri("/v1/exits?region=eu")
+            .body(())
+            .unwrap();
+        let mut req_without_q = http::Request::builder()
+            .method("GET")
+            .uri("/v1/exits")
+            .body(())
+            .unwrap();
+
+        // On force le même timestamp + nonce pour pouvoir comparer
+        // uniquement l'effet du path. Pour ça on passe par
+        // `sign_request_at` directement et compare avec ce
+        // qu'`apply_to_request` injecterait.
+        let h_with = signer.sign_request_at("GET", "/v1/exits?region=eu", b"", 1, [0u8; 16]);
+        let h_without = signer.sign_request_at("GET", "/v1/exits", b"", 1, [0u8; 16]);
+        assert_ne!(h_with.signature_hex, h_without.signature_hex);
+
+        // Utilisation des `req_*` juste pour confirmer que `apply_to_request`
+        // ne crash pas sur les deux variantes path-only / path+query.
+        signer.apply_to_request(&mut req_with_q, b"").unwrap();
+        signer.apply_to_request(&mut req_without_q, b"").unwrap();
     }
 
     #[test]
