@@ -29,20 +29,21 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
-/// Warren fork — Phase 4.F.1 : assemblage d'un
-/// `talpid_warren_iroh::WarrenIrohParameters` complet à partir du
-/// selector + signing_key + constantes (`n_connections`, `features`).
+/// Assemble un `talpid_warren_iroh::WarrenIrohParameters` complet à
+/// partir du relay selector + signing_key + constantes côté config.
 pub mod warren_iroh_params;
-/// Warren fork — Phase 4.F.4 : détection du mode tunnel Warren via
-/// env var `WARREN_TUNNEL` (POC switch, pas de toggle UI pour l'instant).
+/// Détection du mode tunnel Warren via env var `WARREN_TUNNEL` (POC
+/// switch — pas de toggle UI/CLI pour l'instant).
 pub mod warren_mode;
-/// Warren fork — Phase 4.E : wrapper daemon-side autour de
-/// `warren_relay_selector::WarrenRelaySelector`. Sélectionne les
-/// composants Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
+/// Wrapper daemon-side autour de
+/// `warren_relay_selector::WarrenRelaySelector` : charge la
+/// `WarrenRelayList` depuis le `cache_dir`, sélectionne les composants
+/// Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
 pub mod warren_relay_selector;
-/// Warren fork — Phase 2.A.4 V4 : helper qui charge ou génère la
-/// mnémonique BIP39 utilisateur depuis `<settings_dir>/warren_mnemonic.txt`
-/// et la dérive en `WarrenAuthSigner` partagé.
+/// Charge ou génère la mnémonique BIP39 utilisateur depuis
+/// `<settings_dir>/warren_mnemonic.txt`, la dérive en `SigningKey`
+/// Ed25519 et expose un `WarrenAuthSigner` partagé pour les requêtes
+/// API authentifiées.
 pub mod warren_signer;
 
 use crate::{
@@ -823,12 +824,11 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        // Warren fork — Phase 2.A.4 V4 : charge / génère la mnémonique
-        // BIP39 dans `<settings_dir>/warren_mnemonic.txt` et la dérive
-        // en `WarrenAuthSigner` partagé. Si l'opération échoue, on log
-        // un warn et on retombe sur `None` (= mode Mullvad Bearer
-        // historique pendant la transition Phase 2). Cf.
-        // `warren_signer::load_or_create_signer`.
+        // Warren fork : charge ou génère la mnémonique BIP39 dans
+        // `<settings_dir>/warren_mnemonic.txt` et la dérive en
+        // `WarrenAuthSigner` partagé. En cas d'échec, retombe sur
+        // `None` (mode Bearer historique) ; le détail est loggé par
+        // `load_or_create_signer`.
         let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
@@ -905,14 +905,12 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        // Warren fork — Phase 4.F.5 : init des artefacts Warren-Iroh
-        // au boot. Si `WARREN_TUNNEL=1` est posé, on charge :
-        // - la `WarrenRelayList` depuis `<cache_dir>/warren-relays.json`
-        //   (fallback liste vide si absent),
-        // - la `SigningKey` BIP39 depuis `<settings_dir>/warren_mnemonic.txt`
-        //   (Phase 2.A.4 path).
-        // En mode désactivé, ces artefacts restent `None` et le path
-        // WireGuard upstream reste seul actif.
+        // Warren fork : init des artefacts Warren-Iroh au boot. Si
+        // `WARREN_TUNNEL=1`, on charge la `WarrenRelayList` depuis
+        // `<cache_dir>/warren-relays.json` (fallback liste vide si
+        // absent) et la `SigningKey` BIP39 depuis le settings dir.
+        // Sinon, ces artefacts restent `None` et le path WireGuard
+        // upstream reste seul actif.
         let (warren_relay_selector, warren_signing_key) = if warren_mode::is_enabled() {
             log::info!(
                 "Warren tunnel mode enabled (env var {}=1)",
@@ -1007,8 +1005,7 @@ impl Daemon {
             internal_event_tx.to_specialized_sender(),
             offline_state_tx,
             route_manager.clone(),
-            // Warren fork — Phase 4.F.5.c.2 : pass-through du flag
-            // détecté au boot (cf. warren_mode::is_enabled).
+            // Warren fork : pass-through du flag détecté au boot.
             warren_mode::is_enabled(),
             #[cfg(target_os = "windows")]
             volume_update_rx,

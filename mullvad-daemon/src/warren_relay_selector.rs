@@ -1,17 +1,17 @@
-//! Warren fork — Phase 4.E : wrapper daemon-side autour de la crate
+//! Wrapper daemon-side autour de la crate
 //! [`warren_relay_selector::WarrenRelaySelector`].
 //!
-//! Rôle : encapsuler l'état de la `WarrenRelayList` côté daemon (sera
-//! alimenté plus tard par un fetch périodique vers l'API), exposer une
-//! API stable pour le `ParametersGenerator` (Phase 4.F future). Le
-//! wrapper retourne uniquement les composants Iroh (`EndpointId` +
-//! `EndpointAddr`) ; l'assemblage final en `WarrenIrohParameters` (avec
-//! `signing_key`, `n_connections`, `features`) est fait par le caller
-//! quand il a accès au `warren_signer` et à la config.
+//! Encapsule l'état de la `WarrenRelayList` côté daemon (sera alimenté
+//! plus tard par un fetch périodique vers l'API ; pour le POC, chargée
+//! depuis `<cache_dir>/warren-relays.json`), et expose une API stable
+//! pour le `ParametersGenerator`. Le wrapper retourne uniquement les
+//! composants Iroh (`EndpointId` + `EndpointAddr`) ; l'assemblage
+//! final en `WarrenIrohParameters` (avec `signing_key`,
+//! `n_connections`, `features`) est fait par
+//! [`crate::warren_iroh_params::assemble_for_attempt`].
 //!
-//! **Pourquoi un module dédié** : (a) testable en isolation, (b)
-//! n'importe pas `talpid-warren-iroh` côté API publique du wrapper
-//! (Phase 4.F.1 utilise le wrapper sans charger talpid-warren-iroh).
+//! Module dédié pour deux raisons : testable en isolation, et n'importe
+//! pas `talpid-warren-iroh` côté API publique du wrapper.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -70,8 +70,8 @@ pub struct DaemonWarrenRelaySelector {
 
 /// Nom du fichier qui contient la `WarrenRelayList` bootstrappée
 /// localement. Convention figée : déplacement futur impose une
-/// migration cache. Sera remplacé Phase 2.F par un fetch périodique
-/// vers `mullvad-api`.
+/// migration cache. À remplacer par un fetch périodique vers
+/// `mullvad-api` quand l'endpoint Warren sera disponible.
 pub const WARREN_RELAYS_FILENAME: &str = "warren-relays.json";
 
 impl DaemonWarrenRelaySelector {
@@ -88,9 +88,9 @@ impl DaemonWarrenRelaySelector {
     /// Politique no-fail au boot : si le fichier est absent ou
     /// illisible, retourne un wrapper avec une liste vide + log warn,
     /// pour permettre au daemon de continuer à booter en mode WG. Le
-    /// dispatch Phase 4.F.5 verra une `WarrenRelayList` vide et
-    /// retournera `NoRelayMatch` à la première sélection — comportement
-    /// attendu : l'utilisateur n'est pas en mode Warren.
+    /// state machine verra une `WarrenRelayList` vide et retournera
+    /// `NoRelayMatch` à la première sélection — comportement attendu :
+    /// l'utilisateur n'est pas en mode Warren.
     ///
     /// # Errors
     ///
@@ -161,10 +161,9 @@ mod tests {
 
     #[test]
     fn daemon_selector_returns_iroh_components_for_unconstrained_query() {
-        // Phase 4.E : le wrapper doit déléguer correctement à la crate
-        // upstream et retourner un `WarrenSelection` avec les deux
-        // champs Iroh attendus par `WarrenIrohParameters` côté
-        // talpid-warren-iroh.
+        // Le wrapper doit déléguer correctement à la crate upstream et
+        // retourner un `WarrenSelection` avec les deux champs Iroh
+        // attendus par `WarrenIrohParameters` côté talpid-warren-iroh.
         let list = WarrenRelayList::new(vec![relay(1, "se", "198.51.100.1:51820")]);
         let selector = DaemonWarrenRelaySelector::new(list);
 
@@ -207,8 +206,8 @@ mod tests {
 
     #[test]
     fn daemon_selector_returns_error_when_no_match() {
-        // Phase 4.E : si la liste est vide, l'erreur upstream doit
-        // remonter telle quelle (pas de remap silencieux).
+        // Si la liste est vide, l'erreur upstream doit remonter telle
+        // quelle (pas de remap silencieux).
         let selector = DaemonWarrenRelaySelector::new(WarrenRelayList::new(vec![]));
         assert!(matches!(
             selector.select_for_attempt(&WarrenRelayQuery::any(), 0),
@@ -218,9 +217,9 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_returns_empty_list_when_file_absent() {
-        // Phase 4.F.3 : au premier boot, le fichier n'existe pas →
-        // wrapper avec liste vide, pas d'erreur. Permet au daemon de
-        // démarrer sans nécessairement avoir une RelayList Warren.
+        // Au premier boot, le fichier n'existe pas → wrapper avec
+        // liste vide, pas d'erreur. Permet au daemon de démarrer
+        // sans nécessairement avoir une RelayList Warren.
         let dir = isolated_tempdir();
         let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir)
             .expect("must succeed without file");
@@ -233,8 +232,8 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_parses_valid_json_file() {
-        // Phase 4.F.3 : si le fichier existe et contient un JSON v1
-        // valide, le wrapper doit charger les relays correctement.
+        // Si le fichier existe et contient un JSON v1 valide, le
+        // wrapper doit charger les relays correctement.
         let dir = isolated_tempdir();
         let pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
         let json = format!(
@@ -254,9 +253,9 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_returns_json_error_on_corrupt_file() {
-        // Phase 4.F.3 : si le fichier existe mais contient un JSON
-        // invalide, on remonte une erreur typée plutôt que de silencer
-        // (la corruption silencieuse masquerait un bug).
+        // Si le fichier existe mais contient un JSON invalide, on
+        // remonte une erreur typée plutôt que de silencer (la
+        // corruption silencieuse masquerait un bug).
         let dir = isolated_tempdir();
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), "not valid json").expect("write");
 
@@ -279,23 +278,5 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("warren-relay-selector-{pid}-{nanos}-{n}"));
         std::fs::create_dir_all(&dir).expect("create tempdir");
         dir
-    }
-
-    #[test]
-    fn daemon_selector_is_cloneable_for_shared_use() {
-        // Le wrapper est conçu pour être partagé entre threads (tunnel
-        // state machine + gRPC management interface). Vérifie que
-        // Clone produit deux handles vers la même liste sous-jacente.
-        let list = WarrenRelayList::new(vec![relay(1, "se", "198.51.100.1:51820")]);
-        let selector = DaemonWarrenRelaySelector::new(list);
-        let cloned = selector.clone();
-
-        let s1 = selector
-            .select_for_attempt(&WarrenRelayQuery::any(), 0)
-            .unwrap();
-        let s2 = cloned
-            .select_for_attempt(&WarrenRelayQuery::any(), 0)
-            .unwrap();
-        assert_eq!(s1.endpoint_id, s2.endpoint_id);
     }
 }

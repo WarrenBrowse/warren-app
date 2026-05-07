@@ -1,17 +1,14 @@
-//! Warren fork — Phase 4.F.1 : assemblage d'un
-//! [`talpid_warren_iroh::WarrenIrohParameters`] complet à partir des
-//! briques séparées (sélecteur Phase 4.E + signer Phase 2.A.4 +
-//! constantes config).
+//! Assemblage d'un [`talpid_warren_iroh::WarrenIrohParameters`]
+//! complet à partir des briques séparées (sélecteur Iroh + signing
+//! key BIP39 + constantes config).
 //!
-//! Pourquoi un module dédié : (a) testable en isolation,
-//! (b) point unique de décision pour les paramètres non-issus de la
-//! sélection (`n_connections`, `features`) qui peuvent évoluer
-//! indépendamment du selector et du signer.
+//! Module dédié pour deux raisons : testable en isolation, et point
+//! unique de décision pour les paramètres non-issus de la sélection
+//! (`n_connections`, `features`) qui peuvent évoluer indépendamment.
 //!
-//! Le caller ultime (Phase 4.F.5) sera
-//! `mullvad-daemon::tunnel::ParametersGenerator::generate_warren()` qui
-//! consomme le `WarrenIrohParameters` produit ici pour invoquer
-//! `TunnelMonitor::start_warren_iroh`.
+//! Caller : [`crate::tunnel::ParametersGenerator::produce_warren_iroh_params`],
+//! invoqué depuis le tunnel state machine quand le mode Warren est
+//! actif.
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_iroh::WarrenIrohParameters;
@@ -27,18 +24,15 @@ pub enum AssembleError {
     Selector(#[from] SelectorError),
 }
 
-/// Politique POC pour le nombre de connexions QUIC parallèles.
-///
-/// Phase 4.F.1 : valeur fixe `1` (mono-conn). Le multi-conn (bonding)
-/// arrive en Phase future quand les benchs justifieront la complexité
-/// + la résolution des bugs M3.E (cf. doc 13 perf research).
+/// Nombre de connexions QUIC parallèles. `1` = mono-conn (baseline) ;
+/// le multi-conn (bonding) sera activable quand les benchs justifieront
+/// la complexité + la résolution des bugs perf (cf.
+/// `warren-pocs/docs/13-M3-RADICAL-PERF-RESEARCH.md`).
 const DEFAULT_N_CONNECTIONS: u8 = 1;
 
-/// Politique POC pour le bitmask `features` annoncé dans le `Setup`.
-///
-/// Phase 4.F.1 : `0` = baseline IPv4 only, pas de port-forward, pas
-/// de multipath. Activable via Phase future quand les settings UI
-/// exposeront ces options.
+/// Bitmask `features` annoncé dans le `Setup` Warren. `0` = baseline
+/// IPv4 only, pas de port-forward, pas de multipath. À étendre quand
+/// les settings UI exposeront ces options.
 const DEFAULT_FEATURES: u32 = 0;
 
 /// Assemble un [`WarrenIrohParameters`] complet pour la tentative
@@ -86,10 +80,10 @@ mod tests {
 
     #[test]
     fn assemble_combines_selection_signing_key_and_constants() {
-        // Phase 4.F.1 : la fonction doit produire un
-        // `WarrenIrohParameters` dont `exit_id` + `exit_addr` viennent
-        // du selector, `signing_key` est passée telle quelle, et les
-        // 2 constantes `n_connections=1` + `features=0` sont posées.
+        // La fonction doit produire un `WarrenIrohParameters` dont
+        // `exit_id` + `exit_addr` viennent du selector, `signing_key`
+        // est passée telle quelle, et les 2 constantes
+        // `n_connections=1` + `features=0` sont posées.
         let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
         let selector = DaemonWarrenRelaySelector::new(list);
         let key = fixture_signing_key();

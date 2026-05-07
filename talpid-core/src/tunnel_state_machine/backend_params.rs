@@ -1,18 +1,12 @@
-//! Warren fork — Phase 4.F.5.d.1 : enum union des paramètres de
-//! tunnel pour les deux backends (WireGuard upstream + Warren-Iroh).
-//!
-//! Cette abstraction remplace le stockage WG-only de
-//! [`ConnectingState::tunnel_parameters`] et
-//! [`ConnectedState::tunnel_parameters`] : le state machine peut
-//! désormais transporter des `WarrenIrohParameters` sans dummy
-//! placeholder ni skip de firewall.
+//! Enum union des paramètres de tunnel pour les deux backends
+//! (WireGuard upstream + Warren-Iroh) — abstraction stockée par les
+//! états `ConnectingState` et `ConnectedState`.
 //!
 //! Les méthodes accessor (`get_tunnel_endpoint`,
-//! `get_next_hop_endpoints`, `get_exit_hop_endpoint`) sont la SEULE
-//! façon dont le state machine consomme les paramètres ; cf.
-//! cartographie Phase 4.F.5.d : aucun champ WG-spécifique
-//! (`private_key`, `addresses`, `daita`, …) n'est lu hors de
-//! `WireguardMonitor::start` qui reçoit le variant WG concret.
+//! `get_next_hop_endpoints`, `get_exit_hop_endpoint`) sont la seule
+//! façon dont le state machine consomme les paramètres : aucun champ
+//! WG-spécifique (`private_key`, `addresses`, `daita`, …) n'est lu
+//! hors de `WireguardMonitor::start` qui reçoit le variant WG concret.
 
 use std::net::SocketAddr;
 
@@ -27,25 +21,10 @@ use talpid_warren_iroh::WarrenIrohParameters;
 /// (firewall, transitions, affichage GUI) — la consommation
 /// backend-spécifique est faite en aval, dans
 /// `TunnelMonitor::start{,_warren_iroh}`.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum BackendParams {
     Wireguard(WireguardTunnelParameters),
     Warren(WarrenIrohParameters),
-}
-
-impl Clone for BackendParams {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Wireguard(p) => Self::Wireguard(p.clone()),
-            Self::Warren(p) => Self::Warren(WarrenIrohParameters {
-                exit_id: p.exit_id,
-                exit_addr: p.exit_addr.clone(),
-                signing_key: p.signing_key.clone(),
-                n_connections: p.n_connections,
-                features: p.features,
-            }),
-        }
-    }
 }
 
 impl BackendParams {
@@ -86,29 +65,6 @@ impl BackendParams {
             Self::Warren(_) => None,
         }
     }
-
-    /// Accès au variant WG concret. Actuellement utilisé uniquement
-    /// par les tests d'invariant ; gardé public pour permettre à un
-    /// call-site futur (e.g. management interface) d'introspecter le
-    /// type de tunnel actif.
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
-    pub fn as_wireguard(&self) -> Option<&WireguardTunnelParameters> {
-        match self {
-            Self::Wireguard(p) => Some(p),
-            Self::Warren(_) => None,
-        }
-    }
-
-    /// Symmetric : accès au variant Warren concret.
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
-    pub fn as_warren(&self) -> Option<&WarrenIrohParameters> {
-        match self {
-            Self::Warren(p) => Some(p),
-            Self::Wireguard(_) => None,
-        }
-    }
 }
 
 /// Construit le `TunnelEndpoint` exposé en transition pour un tunnel
@@ -136,11 +92,10 @@ fn warren_tunnel_endpoint(params: &WarrenIrohParameters) -> TunnelEndpoint {
 
 #[cfg(test)]
 mod tests {
-    //! Tests pertinents : valider que les méthodes accessor produisent
-    //! les bonnes données pour le path Warren (= ce que le firewall
-    //! et la GUI consommeront). Capturer un bug de mapping
-    //! `endpoint_addr.ip_addrs()` → firewall serait critique pour la
-    //! sécurité no-leak.
+    //! Régression sécurité : valider que les accessors produisent les
+    //! bonnes données pour le path Warren — un bug de mapping
+    //! `endpoint_addr.ip_addrs()` → firewall causerait un leak ou
+    //! l'impossibilité de handshake QUIC.
 
     use std::net::SocketAddr;
 
@@ -256,18 +211,5 @@ mod tests {
         let te = backend.get_tunnel_endpoint();
         assert_eq!(te.endpoint.address.port(), 0);
         assert!(te.endpoint.address.ip().is_unspecified());
-    }
-
-    #[test]
-    fn as_wireguard_and_as_warren_are_mutually_exclusive() {
-        // Invariant typage : un BackendParams ne peut pas être les
-        // deux à la fois. Bug catastrophique si l'enum était mal
-        // construit (ex: variant default qui ferait croire à du WG
-        // alors que c'est Warren).
-        let warren_params = fixture_warren(&["198.51.100.7:51820"]);
-        let backend = BackendParams::Warren(warren_params);
-
-        assert!(backend.as_wireguard().is_none());
-        assert!(backend.as_warren().is_some());
     }
 }

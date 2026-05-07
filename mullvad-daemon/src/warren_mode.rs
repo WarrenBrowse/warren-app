@@ -1,13 +1,11 @@
-//! Warren fork — Phase 4.F.4 : détection du mode tunnel Warren.
+//! Détection du mode tunnel Warren via env var au boot du daemon.
 //!
 //! POC switch pragmatique : pas de toggle UI/CLI/management-interface
-//! pour l'instant, juste une env var lue au boot du daemon. Le user
-//! qui veut tester le path Warren-Iroh exporte `WARREN_TUNNEL=1` avant
-//! de lancer `mullvad-daemon`. Le default reste WireGuard upstream
-//! (pas de breaking change pour les builds non-Warren).
-//!
-//! Ce module sera remplacé en Phase future par un setting persistant
-//! (`Settings::warren_mode: bool`) exposé via gRPC + GUI/CLI quand le
+//! pour l'instant. L'utilisateur qui veut tester le path Warren-Iroh
+//! exporte `WARREN_TUNNEL=1` avant de lancer `mullvad-daemon`. Le
+//! default reste le path WireGuard upstream (pas de breaking change
+//! pour les builds non-Warren). À remplacer par un setting persistant
+//! `Settings::warren_mode: bool` exposé via gRPC + GUI/CLI quand le
 //! POC sera consolidé.
 
 /// Nom de l'env var lue au boot. Convention figée pour la durée du

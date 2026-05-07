@@ -38,6 +38,7 @@ use adapter::MullvadTunPacketDevice;
 /// `mullvad-relay-selector` Warren-fork (Phase 4) ; la `signing_key`
 /// est dérivée de la mnémonique BIP39 utilisateur via
 /// `warren_identity::derive_node_key` (Phase 2 auth wallet).
+#[derive(Clone)]
 pub struct WarrenIrohParameters {
     /// Identité Ed25519 publique de l'exit Warren (clé `EndpointId`
     /// iroh = 32 octets dérivés de la pubkey).

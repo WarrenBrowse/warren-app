@@ -1,11 +1,10 @@
 //! Abstracts over an active VPN tunnel.
 //!
-//! Warren fork (Phase 1.A) : le champ interne `monitor` a été remplacé
-//! par une enum [`TunnelBackend`] qui permet le dispatch entre le
-//! `WireguardMonitor` upstream et le `WarrenIrohMonitor` (POC Iroh).
-//! Le path WG existant est strictement préservé : aucun changement de
-//! comportement pour les déploiements production qui n'activent pas
-//! le backend Warren.
+//! Warren fork : le backend interne est une enum [`TunnelBackend`]
+//! qui dispatche entre le `WireguardMonitor` upstream et le
+//! `WarrenIrohMonitor`. Le path WG est strictement préservé — aucun
+//! changement de comportement pour les déploiements qui n'activent
+//! pas le backend Warren via `WARREN_TUNNEL=1`.
 use std::path;
 
 use talpid_tunnel::TunnelArgs;
@@ -41,7 +40,6 @@ pub enum Error {
     TunnelMonitoring(#[from] talpid_wireguard::Error),
 
     /// There was an error listening for events from the Warren-Iroh tunnel.
-    /// Warren fork — Phase 1.A.
     #[error("Failed while listening for events from the Warren-Iroh tunnel")]
     WarrenIrohMonitoring(#[from] talpid_warren_iroh::Error),
 }
@@ -126,28 +124,18 @@ impl Error {
     }
 }
 
-/// Backend de tunnel sous-jacent — Warren fork Phase 1.A.
+/// Backend de tunnel sous-jacent — Warren fork.
 ///
 /// Enum dispatch statique entre les implémentations supportées. L'ajout
 /// d'un nouveau backend nécessite une variante ici + une factory dans
-/// [`TunnelMonitor`]. Cette approche est volontairement plus simple
-/// qu'un trait `Box<dyn Tunnel>` (cf. décision Phase 1.A) :
-/// - 2 backends connus (WG legacy + Warren-Iroh POC), pas N
-/// - préserve les API riches `is_recoverable()` et
-///   `get_tunnel_device_error()` sans gymnastique downcast
-/// - debug plus direct (pas de type erasure)
+/// [`TunnelMonitor`]. Approche choisie vs. `Box<dyn Tunnel>` : 2 backends
+/// connus (WG upstream + Warren-Iroh), API riches conservées
+/// (`is_recoverable`, `get_tunnel_device_error`) sans downcast.
 enum TunnelBackend {
     /// Backend historique WireGuard (path upstream Mullvad inchangé).
     Wireguard(WireguardMonitor),
-    /// Backend Warren-Iroh POC. Phase 1.A : stub présent pour valider la
-    /// structure d'enum dispatch. Le variant n'est jamais *construit*
-    /// tant que `connecting_state` n'appelle pas `start_warren_iroh`
-    /// (Phase 1.B). On suppress `dead_code` ; le `clippy::allow_attributes`
-    /// est aussi suppressé (limitation : `#[expect(dead_code)]` ne
-    /// satisfait pas le lint sur ce variant à cause d'un quirk
-    /// rustc/clippy concernant la détection de "never-constructed").
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
+    /// Backend Warren-Iroh, construit via [`TunnelMonitor::start_warren_iroh`]
+    /// quand `warren_mode` est actif côté state machine.
     WarrenIroh(WarrenIrohMonitor),
 }
 
@@ -170,23 +158,18 @@ impl TunnelMonitor {
         Self::start_wireguard_tunnel(tunnel_parameters, log_file, args)
     }
 
-    /// Démarre un tunnel via le backend Warren-Iroh — Warren fork Phase 1.A.
+    /// Démarre un tunnel via le backend Warren-Iroh.
     ///
     /// Factory séparée de [`Self::start`] parce que les paramètres Iroh
     /// divergent du `TunnelParameters` WireGuard (champs distincts, pas
-    /// d'`obfuscation`, pas de `wg_options`, etc.). Phase 1.B câblera la
-    /// vraie config (EndpointId, addresses candidate, secret_key…).
-    ///
-    /// **Phase 1.A** : factory disponible mais aucun call-site ne l'invoque
-    /// encore — l'intégration côté `connecting_state` viendra en Phase 1.B
-    /// après que `WarrenIrohMonitor` soit câblé sur le vrai backend Iroh.
+    /// d'obfuscation, pas d'options WG). Invoquée par
+    /// `connecting_state::start_tunnel_warren` quand `warren_mode` est
+    /// actif.
     ///
     /// # Errors
     ///
     /// [`Error::WarrenIrohMonitoring`] si le backend Iroh échoue à
     /// initialiser.
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)] // Phase 1.A : factory pas encore wirée dans connecting_state, viendra en Phase 1.B.
     pub fn start_warren_iroh(
         params: &WarrenIrohParameters,
         log_dir: &Option<path::PathBuf>,

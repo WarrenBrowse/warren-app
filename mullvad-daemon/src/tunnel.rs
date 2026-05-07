@@ -64,26 +64,16 @@ struct InnerParametersGenerator {
 
     last_generated_relays: Option<LastSelectedRelays>,
 
-    /// Warren fork — Phase 4.F.5 : artefacts pour le path Warren-Iroh
-    /// parallèle. `None` côté daemon non-Warren (= path WG seul) ;
-    /// `Some` quand `mullvad-daemon::warren_mode::is_enabled() == true`
-    /// au boot (cf. `lib.rs` Phase 4.F.5.c).
-    ///
-    /// `dead_code` allow autorisé : ces champs sont consommés par
-    /// `generate_warren_iroh_params` qui sera invoqué depuis le state
-    /// machine en Phase 4.F.5.b/c. Cf. règle dans CLAUDE.md sur le
-    /// double-allow workaround Phase 1.A.
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
+    /// Artefacts pour le path Warren-Iroh parallèle. `None` côté
+    /// daemon non-Warren (= path WG seul) ; `Some` quand
+    /// `warren_mode::is_enabled()` au boot.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
     warren_signing_key: Option<SigningKey>,
 }
 
 impl ParametersGenerator {
-    /// Constructs a tunnel parameters generator avec les artefacts
-    /// Warren-Iroh optionnels (Phase 4.F.5).
+    /// Construit un générateur de paramètres tunnel acceptant des
+    /// artefacts Warren-Iroh optionnels en plus du path WireGuard.
     ///
     /// Si `warren_relay_selector` ou `warren_signing_key` sont `None`,
     /// `generate_warren_iroh_params` retournera l'erreur typée
@@ -108,13 +98,13 @@ impl ParametersGenerator {
         })))
     }
 
-    /// Phase 4.F.5 — assemble un [`WarrenIrohParameters`] pour la
-    /// tentative `retry_attempt`, à partir des artefacts Warren stockés.
+    /// Assemble un [`WarrenIrohParameters`] pour la tentative
+    /// `retry_attempt`, à partir des artefacts Warren stockés.
     ///
     /// API miroir asymétrique de
     /// [`TunnelParametersGenerator::generate`] (qui produit du WG) :
-    /// le state machine choisit l'une OU l'autre selon le mode Warren
-    /// actif (cf. `warren_mode::is_enabled`).
+    /// le state machine choisit l'une OU l'autre selon
+    /// `warren_mode::is_enabled`.
     ///
     /// # Errors
     ///
@@ -307,10 +297,10 @@ impl TunnelParametersGenerator for ParametersGenerator {
         })
     }
 
-    /// Warren fork — Phase 4.F.5.c.1 : override du default trait method
-    /// pour brancher le path Warren-Iroh côté daemon. Délègue à la
-    /// méthode publique async existante (Phase 4.F.5.a) qui consomme
-    /// les artefacts Warren stockés dans `InnerParametersGenerator`.
+    /// Override du default trait method pour brancher le path
+    /// Warren-Iroh côté daemon. Délègue à
+    /// [`Self::produce_warren_iroh_params`] qui consomme les
+    /// artefacts Warren stockés dans `InnerParametersGenerator`.
     fn generate_warren_iroh_params(
         &mut self,
         retry_attempt: u32,
@@ -351,10 +341,9 @@ impl From<Error> for ParameterGenerationError {
             Error::NoAuthDetails | Error::SelectRelay(_) | Error::Device(_) => {
                 ParameterGenerationError::NoMatchingRelay
             }
-            // Phase 4.F.5 : les erreurs Warren sont remontées comme
-            // `NoMatchingRelay` côté state machine pour le moment ;
-            // une variante `WarrenAssemble` dédiée pourra être ajoutée
-            // si on veut un message d'erreur UI distinct.
+            // Erreurs Warren mappées sur `NoMatchingRelay` côté state
+            // machine. Une variante dédiée pourra être ajoutée si
+            // l'UI doit distinguer ces cas.
             Error::WarrenSelectorMissing
             | Error::WarrenSigningKeyMissing
             | Error::WarrenAssemble(_) => ParameterGenerationError::NoMatchingRelay,

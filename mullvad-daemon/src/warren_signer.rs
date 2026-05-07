@@ -1,19 +1,18 @@
-//! Warren fork — Phase 2.A.4 V4 : helper qui charge ou génère la
-//! mnémonique BIP39 utilisateur depuis `<settings_dir>/warren_mnemonic.txt`,
-//! la dérive en [`SigningKey`] Ed25519 via
-//! [`warren_identity::derive_node_key`], et la wrap dans un
-//! [`mullvad_api::warren_auth::WarrenAuthSigner`] partagé via [`Arc`].
+//! Charge ou génère la mnémonique BIP39 utilisateur depuis
+//! `<settings_dir>/warren_mnemonic.txt`, la dérive en [`SigningKey`]
+//! Ed25519 via [`warren_identity::derive_node_key`], et la wrap dans
+//! un [`mullvad_api::warren_auth::WarrenAuthSigner`] partagé via
+//! [`Arc`].
 //!
-//! **Pourquoi un module dédié** : la fonction est testable en
-//! isolation (vs `mullvad_daemon::lib.rs` qui orchestre tout le boot
-//! et est non-testable en unit). Permet aussi de wire/unwire la
-//! Warren auth via une seule modif de l'unique caller dans `lib.rs`.
+//! Module dédié pour permettre de wirer/unwirer la Warren auth via
+//! une seule modif de l'unique caller dans `lib.rs`, et tester la
+//! logique en isolation (vs `lib.rs` qui orchestre tout le boot et
+//! est non-testable en unit).
 //!
-//! **Politique d'erreur** : on log et on retourne `None` si la
-//! mnémonique est inaccessible / corrompue. Le boot continue en mode
-//! Mullvad Bearer historique. La désactivation totale de cette
-//! dégradation viendra en Phase 2.D quand toute la chaîne sera 100%
-//! Warren (= aucun fallback Bearer possible côté serveur).
+//! Politique d'erreur : on log et on retourne `None` si la mnémonique
+//! est inaccessible / corrompue. Le boot continue en mode Bearer
+//! historique. Cette dégradation disparaîtra quand la chaîne sera
+//! 100 % Warren (aucun fallback Bearer possible côté serveur).
 
 use std::path::Path;
 use std::sync::Arc;
@@ -41,9 +40,9 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
 /// Charge ou crée la mnémonique BIP39 dans `settings_dir` et la dérive
 /// en [`SigningKey`] Ed25519, sans wrapper.
 ///
-/// Cette fonction sœur de [`load_or_create_signer`] expose le matériel
+/// Sœur de [`load_or_create_signer`] : expose le matériel
 /// cryptographique brut nécessaire pour assembler des
-/// [`talpid_warren_iroh::WarrenIrohParameters`] (Phase 4.F).
+/// [`talpid_warren_iroh::WarrenIrohParameters`].
 ///
 /// **Politique no-log** : ne JAMAIS logger la `SigningKey` retournée
 /// (cf. règle Warren). Le caller doit la consommer puis la dropper.
@@ -100,7 +99,7 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_creates_mnemonic_on_first_call() {
-        // Phase 2.A.4 V4 — au premier boot du daemon (= settings_dir
+        // Au premier boot du daemon (= settings_dir
         // vide), la fonction doit générer une nouvelle mnémonique
         // BIP39, l'écrire sur disque, et retourner un signer valide.
         let dir = isolated_tempdir();
@@ -125,7 +124,7 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_is_idempotent_across_calls() {
-        // Phase 2.A.4 V4 — au reboot du daemon, la même mnémonique
+        // Au reboot du daemon, la même mnémonique
         // doit produire la même pubkey (= identité utilisateur stable).
         let dir = isolated_tempdir();
 
@@ -142,7 +141,7 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_returns_none_on_corrupt_mnemonic() {
-        // Phase 2.A.4 V4 — si le fichier mnemonic existe mais
+        // Si le fichier mnemonic existe mais
         // contient des données corrompues (= pas une mnémonique
         // BIP39 valide), on log et on retourne None plutôt que de
         // crasher le daemon.

@@ -142,8 +142,8 @@ pub async fn spawn(
     state_change_listener: impl Sender<TunnelStateTransition> + Send + 'static,
     offline_state_listener: mpsc::UnboundedSender<Connectivity>,
     route_manager: RouteManagerHandle,
-    // Warren fork — Phase 4.F.5.c.2 : si `true`, dispatche les
-    // démarrages de tunnel vers le path Warren-Iroh.
+    // Warren fork : si `true`, dispatche les démarrages de tunnel
+    // vers le path Warren-Iroh.
     warren_mode: bool,
     #[cfg(target_os = "windows")] volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")] android_context: AndroidContext,
@@ -351,11 +351,11 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     resource_dir: PathBuf,
     commands_rx: mpsc::UnboundedReceiver<TunnelCommand>,
     route_manager: RouteManagerHandle,
-    /// Warren fork — Phase 4.F.5.c.2 : si `true`, le state machine
-    /// dispatche les démarrages de tunnel vers le path Warren-Iroh
-    /// (`TunnelMonitor::start_warren_iroh`) au lieu du path WireGuard
-    /// upstream. Settable via env var `WARREN_TUNNEL=1` au boot du
-    /// daemon (cf. `mullvad-daemon::warren_mode`).
+    /// Warren fork : si `true`, le state machine dispatche les
+    /// démarrages de tunnel via `TunnelMonitor::start_warren_iroh`
+    /// au lieu du path WireGuard upstream. Settable via env var
+    /// `WARREN_TUNNEL=1` au boot du daemon (cf.
+    /// `mullvad-daemon::warren_mode`).
     warren_mode: bool,
     #[cfg(target_os = "windows")]
     volume_update_rx: mpsc::UnboundedReceiver<()>,
@@ -552,13 +552,11 @@ pub trait TunnelParametersGenerator: Send + 'static {
         ip_availability: IpAvailability,
     ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
 
-    /// Warren fork — Phase 4.F.5.c.1 : produit des
-    /// [`talpid_warren_iroh::WarrenIrohParameters`] pour la tentative
-    /// `retry_attempt` donnée.
+    /// Produit des [`talpid_warren_iroh::WarrenIrohParameters`] pour
+    /// la tentative `retry_attempt` donnée.
     ///
     /// Implémentation par défaut : retourne `NoMatchingRelay`. Les
-    /// implémenteurs qui ne supportent pas Warren (= la majorité des
-    /// builds upstream) n'ont rien à faire.
+    /// implémenteurs qui ne supportent pas Warren n'ont rien à faire.
     /// `mullvad-daemon::tunnel::ParametersGenerator` override cette
     /// méthode pour brancher le path Warren côté daemon.
     fn generate_warren_iroh_params(
@@ -612,11 +610,9 @@ struct SharedTunnelStateValues {
     /// Resource directory path.
     resource_dir: PathBuf,
 
-    /// Warren fork — Phase 4.F.5.c.2 : si `true`, le state machine
-    /// dispatche le démarrage de tunnel via `TunnelMonitor::start_warren_iroh`
-    /// (path Iroh). Sinon, path WireGuard upstream inchangé.
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
+    /// Warren fork : si `true`, dispatche le démarrage de tunnel via
+    /// `TunnelMonitor::start_warren_iroh` (path Iroh). Sinon, path
+    /// WireGuard upstream inchangé.
     warren_mode: bool,
 
     /// NetworkManager's connecitivity check state.
@@ -859,14 +855,11 @@ impl TunnelStateMachineHandle {
 
 #[cfg(test)]
 mod warren_trait_default_tests {
-    //! Phase 4.F.5.c.1 — un seul test pertinent : valider que le
-    //! default impl du trait pour `generate_warren_iroh_params`
-    //! retourne bien `NoMatchingRelay` (vs. `unimplemented!()` ou
-    //! panic). Important parce que les implémenteurs upstream Mullvad
-    //! ne savent rien de Warren ; ils doivent dégrader proprement.
-    //!
-    //! Pas de test creux ici (= "vérifie que la méthode est appelée") :
-    //! on teste le contrat exact du default body.
+    //! Valide que le default impl du trait pour
+    //! `generate_warren_iroh_params` retourne `NoMatchingRelay` (vs.
+    //! `unimplemented!()` ou panic). Critique parce que les
+    //! implémenteurs upstream Mullvad ne savent rien de Warren ; ils
+    //! doivent dégrader proprement.
     use std::future::Future;
     use std::pin::Pin;
     use talpid_types::net::IpAvailability;
