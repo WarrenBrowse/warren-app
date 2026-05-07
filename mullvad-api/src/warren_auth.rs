@@ -286,8 +286,20 @@ mod tests {
         // nonce) → même signature à coup sûr. Garde-fou wire format
         // figé — toute régression de format casse ce test.
         let signer = fixed_signer();
-        let h1 = signer.sign_request_at("POST", "/v1/port-forward/request", b"{}", 1_700_000_000, [1u8; 16]);
-        let h2 = signer.sign_request_at("POST", "/v1/port-forward/request", b"{}", 1_700_000_000, [1u8; 16]);
+        let h1 = signer.sign_request_at(
+            "POST",
+            "/v1/port-forward/request",
+            b"{}",
+            1_700_000_000,
+            [1u8; 16],
+        );
+        let h2 = signer.sign_request_at(
+            "POST",
+            "/v1/port-forward/request",
+            b"{}",
+            1_700_000_000,
+            [1u8; 16],
+        );
         assert_eq!(h1.signature_hex, h2.signature_hex);
         assert_eq!(h1.pubkey_hex, h2.pubkey_hex);
     }
@@ -349,7 +361,13 @@ mod tests {
         // fait pour authentifier une requête entrante.
         let signer = fixed_signer();
         let body = b"{\"exit_pubkey\":\"abc\"}";
-        let h = signer.sign_request_at("POST", "/v1/port-forward/request", body, 1_700_000_000, [42u8; 16]);
+        let h = signer.sign_request_at(
+            "POST",
+            "/v1/port-forward/request",
+            body,
+            1_700_000_000,
+            [42u8; 16],
+        );
 
         // Reconstitution serveur :
         let body_hash_hex = hex::encode(Sha256::digest(body));
@@ -365,8 +383,8 @@ mod tests {
             .expect("pubkey hex valid")
             .try_into()
             .expect("32 bytes");
-        let verifying_key = ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes)
-            .expect("valid pubkey on curve");
+        let verifying_key =
+            ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes).expect("valid pubkey on curve");
 
         let sig_bytes: [u8; 64] = hex::decode(&h.signature_hex)
             .expect("sig hex valid")

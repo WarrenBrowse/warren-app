@@ -741,10 +741,7 @@ impl RequestFactory {
         request: &mut http::Request<B>,
         body: &[u8],
     ) -> Result<()> {
-        let signer = self
-            .warren_signer
-            .as_ref()
-            .ok_or(Error::NoWarrenSigner)?;
+        let signer = self.warren_signer.as_ref().ok_or(Error::NoWarrenSigner)?;
         signer
             .apply_to_request(request, body)
             .map_err(|e| Error::WarrenAuthInjection(Arc::new(e)))?;
@@ -1027,7 +1024,12 @@ mod tests {
             "GET ne doit pas poser Content-Length"
         );
         // 4 headers Warren présents :
-        for header in [HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, HEADER_NONCE] {
+        for header in [
+            HEADER_PUBKEY,
+            HEADER_SIGNATURE,
+            HEADER_TIMESTAMP,
+            HEADER_NONCE,
+        ] {
             assert!(h.contains_key(header), "{header} doit être présent");
         }
 
@@ -1116,9 +1118,7 @@ mod tests {
         struct Payload<'a> {
             exit_pubkey: &'a str,
         }
-        let payload = Payload {
-            exit_pubkey: "abc",
-        };
+        let payload = Payload { exit_pubkey: "abc" };
         let json_bytes = serde_json::to_vec(&payload).unwrap();
 
         let req_serde = factory
@@ -1150,7 +1150,12 @@ mod tests {
             "content-length identique (= taille body sérialisé)"
         );
         // 4 headers Warren présents dans les deux :
-        for header in [HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, HEADER_NONCE] {
+        for header in [
+            HEADER_PUBKEY,
+            HEADER_SIGNATURE,
+            HEADER_TIMESTAMP,
+            HEADER_NONCE,
+        ] {
             assert!(h_serde.contains_key(header), "{header} sur req_serde");
             assert!(h_bytes.contains_key(header), "{header} sur req_bytes");
         }
