@@ -31,6 +31,13 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
+    // Warren fork — Phase H : IPC handlers pour les toggles Warren.
+    IpcMainEventChannel.settings.handleSetWarrenMode((enabled) =>
+      this.daemonRpc.setWarrenMode(enabled),
+    );
+    IpcMainEventChannel.settings.handleSetWarrenLocalAccount((enabled) =>
+      this.daemonRpc.setWarrenLocalAccount(enabled),
+    );
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
       this.daemonRpc.setShowBetaReleases(showBetaReleases),
     );

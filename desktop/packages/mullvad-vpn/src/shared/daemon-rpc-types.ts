@@ -490,6 +490,10 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
+  // Warren fork — Phase H : toggles persistants exposés via gRPC.
+  // Restart du daemon requis pour appliquer un changement.
+  warrenMode: boolean;
+  warrenLocalAccount: boolean;
 }
 
 export type SplitTunnelSettings = {

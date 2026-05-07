@@ -81,6 +81,9 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
+  // Warren fork — Phase H : toggles persistants exposés via gRPC.
+  warrenMode: boolean;
+  warrenLocalAccount: boolean;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -126,6 +129,8 @@ const initialState: ISettingsReduxState = {
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
+  warrenMode: false,
+  warrenLocalAccount: false,
   wireguard: {
     quantumResistant: true,
   },
@@ -201,6 +206,18 @@ export default function (
       return {
         ...state,
         allowLan: action.allowLan,
+      };
+
+    case 'UPDATE_WARREN_MODE':
+      return {
+        ...state,
+        warrenMode: action.warrenMode,
+      };
+
+    case 'UPDATE_WARREN_LOCAL_ACCOUNT':
+      return {
+        ...state,
+        warrenLocalAccount: action.warrenLocalAccount,
       };
 
     case 'UPDATE_ENABLE_IPV6':

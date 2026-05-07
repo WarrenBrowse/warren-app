@@ -880,6 +880,20 @@ impl Daemon {
         // le flag persistant `Settings::warren_local_account`. L'env
         // var, si setée, prend précédence (cf. `warren_account_mode::resolve`).
         let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
+        // Phase G : log structuré au boot pour faciliter le debug terrain.
+        // L'admin/dev voit immédiatement quels modes sont actifs et leur
+        // source (env override vs Settings persistant) sans avoir à
+        // grep dans des dizaines de log lines.
+        let warren_mode_active_for_log = warren_mode::resolve(settings.warren_mode);
+        log::info!(
+            "Warren modes at boot — tunnel={} (env={}, settings={}) ; local_account={} (env={}, settings={})",
+            warren_mode_active_for_log,
+            std::env::var(warren_mode::ENV_VAR_NAME).is_ok(),
+            settings.warren_mode,
+            local_account_mode,
+            std::env::var(warren_account_mode::ENV_VAR_NAME).is_ok(),
+            settings.warren_local_account,
+        );
         if local_account_mode {
             match warren_signer::load_or_create_signing_key(&config.settings_dir) {
                 Some(signing_key) => match warren_device_bootstrap::ensure_local_device(

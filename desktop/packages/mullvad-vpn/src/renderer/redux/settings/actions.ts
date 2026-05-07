@@ -38,6 +38,17 @@ export interface IUpdateAllowLanAction {
   allowLan: boolean;
 }
 
+// Warren fork — Phase H : actions de mise à jour des toggles Warren.
+export interface IUpdateWarrenModeAction {
+  type: 'UPDATE_WARREN_MODE';
+  warrenMode: boolean;
+}
+
+export interface IUpdateWarrenLocalAccountAction {
+  type: 'UPDATE_WARREN_LOCAL_ACCOUNT';
+  warrenLocalAccount: boolean;
+}
+
 export interface IUpdateEnableIpv6Action {
   type: 'UPDATE_ENABLE_IPV6';
   enableIpv6: boolean;
@@ -129,6 +140,8 @@ export type SettingsAction =
   | IUpdateRelayLocationsAction
   | IUpdateWireguardEndpointData
   | IUpdateAllowLanAction
+  | IUpdateWarrenModeAction
+  | IUpdateWarrenLocalAccountAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -183,6 +196,22 @@ function updateAllowLan(allowLan: boolean): IUpdateAllowLanAction {
   return {
     type: 'UPDATE_ALLOW_LAN',
     allowLan,
+  };
+}
+
+function updateWarrenMode(warrenMode: boolean): IUpdateWarrenModeAction {
+  return {
+    type: 'UPDATE_WARREN_MODE',
+    warrenMode,
+  };
+}
+
+function updateWarrenLocalAccount(
+  warrenLocalAccount: boolean,
+): IUpdateWarrenLocalAccountAction {
+  return {
+    type: 'UPDATE_WARREN_LOCAL_ACCOUNT',
+    warrenLocalAccount,
   };
 }
 
@@ -317,6 +346,8 @@ export default {
   updateRelayLocations,
   updateWireguardEndpointData,
   updateAllowLan,
+  updateWarrenMode,
+  updateWarrenLocalAccount,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

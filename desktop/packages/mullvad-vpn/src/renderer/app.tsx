@@ -609,6 +609,21 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
+  // Warren fork — Phase H : toggle persistant warren_mode (tunnel Iroh).
+  // Le restart du daemon est requis pour appliquer (cf. resolve()).
+  public setWarrenMode = async (warrenMode: boolean) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenMode(warrenMode);
+    actions.settings.updateWarrenMode(warrenMode);
+  };
+
+  // Warren fork — Phase H : toggle persistant warren_local_account.
+  public setWarrenLocalAccount = async (warrenLocalAccount: boolean) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenLocalAccount(warrenLocalAccount);
+    actions.settings.updateWarrenLocalAccount(warrenLocalAccount);
+  };
+
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setShowBetaReleases(showBetaReleases);
@@ -842,6 +857,8 @@ export default class AppRenderer {
     const reduxSettings = this.reduxActions.settings;
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
+    reduxSettings.updateWarrenMode(newSettings.warrenMode);
+    reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);

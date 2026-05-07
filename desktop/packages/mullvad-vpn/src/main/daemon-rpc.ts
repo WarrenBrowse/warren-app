@@ -289,6 +289,18 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAllowLan, allowLan);
   }
 
+  // Warren fork — Phase H : toggle persistant du mode tunnel Iroh.
+  // Le restart du daemon est requis pour appliquer (cf. resolve() côté Rust).
+  public async setWarrenMode(enabled: boolean): Promise<void> {
+    await this.callBool(this.client.setWarrenMode, enabled);
+  }
+
+  // Warren fork — Phase H : toggle persistant du mode account local
+  // (= no api.mullvad.net). Restart requis.
+  public async setWarrenLocalAccount(enabled: boolean): Promise<void> {
+    await this.callBool(this.client.setWarrenLocalAccount, enabled);
+  }
+
   public async setShowBetaReleases(showBetaReleases: boolean): Promise<void> {
     await this.callBool(this.client.setShowBetaReleases, showBetaReleases);
   }

@@ -193,6 +193,9 @@ export const ipcSchema = {
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
+    // Warren fork — Phase H : toggles persistants Warren mode.
+    setWarrenMode: invoke<boolean, void>(),
+    setWarrenLocalAccount: invoke<boolean, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
     setLockdownMode: invoke<boolean, void>(),
