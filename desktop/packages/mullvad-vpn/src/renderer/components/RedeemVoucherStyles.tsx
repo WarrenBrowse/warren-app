@@ -51,6 +51,6 @@ export const StyledTitle = styled.span(smallText, {
   marginBottom: '5px',
 });
 
-export const StyledAccountNumberInfo = styled(LabelTinySemiBold)({
+export const StyledWarrenPubKeyInfo = styled(LabelTinySemiBold)({
   marginTop: '8px',
 });

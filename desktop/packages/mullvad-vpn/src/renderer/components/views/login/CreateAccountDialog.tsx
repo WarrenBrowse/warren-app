@@ -32,7 +32,7 @@ export default function ClearAccountHistoryDialog(props: Props) {
           // TRANSLATORS: Text that informs the users about consequences of creating a new account.
           messages.pgettext(
             'login-view',
-            'You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone.',
+            'You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone.',
           )
         }
       </ModalMessage>

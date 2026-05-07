@@ -59,12 +59,12 @@ export default function ClipboardLabel(props: IProps) {
               obscured
                 ? // This line is here to prevent the following one to be moved up here by prettier
                   // TRANSLATORS: Provided to accessibility tools such as screenreaders to describe
-                  // TRANSLATORS: the button which unobscures the account number.
-                  messages.pgettext('accessibility', 'Show account number')
+                  // TRANSLATORS: the button which unobscures the public key.
+                  messages.pgettext('accessibility', 'Show public key')
                 : // This line is here to prevent the following one to be moved up here by prettier
                   // TRANSLATORS: Provided to accessibility tools such as screenreaders to describe
-                  // TRANSLATORS: the button which obscures the account number.
-                  messages.pgettext('accessibility', 'Hide account number')
+                  // TRANSLATORS: the button which obscures the public key.
+                  messages.pgettext('accessibility', 'Hide public key')
             }>
             {obscured ? <IconButton.Icon icon="show" /> : <IconButton.Icon icon="hide" />}
           </IconButton>
@@ -76,8 +76,8 @@ export default function ClipboardLabel(props: IProps) {
             onClick={onCopy}
             aria-label={
               // TRANSLATORS: Provided to accessibility tools such as screenreaders to describe a button
-              // TRANSLATORS: which copies the account number to the clipboard.
-              messages.pgettext('accessibility', 'Copy account number')
+              // TRANSLATORS: which copies the public key to the clipboard.
+              messages.pgettext('accessibility', 'Copy public key')
             }>
             <IconButton.Icon icon={'copy'} />
           </IconButton>

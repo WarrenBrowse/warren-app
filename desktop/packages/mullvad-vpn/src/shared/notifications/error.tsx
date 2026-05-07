@@ -152,7 +152,7 @@ export class ErrorNotificationProvider
             case AuthFailedError.invalidAccount:
               return messages.pgettext(
                 'auth-failure',
-                'You are logged in with an invalid account number. Please log out and try another one.',
+                'You are logged in with an invalid public key. Please log out and try another one.',
               );
 
             case AuthFailedError.expiredAccount:

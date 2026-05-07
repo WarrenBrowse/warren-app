@@ -235,14 +235,14 @@ class Login extends React.Component<IProps, IState> {
         return messages.pgettext('login-view', 'Too many devices');
       case 'logging in':
         return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Checking account number')
+          ? messages.pgettext('login-view', 'Checking public key')
           : messages.pgettext('login-view', 'Please wait');
       case 'ok':
         return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Valid account number')
+          ? messages.pgettext('login-view', 'Valid public key')
           : messages.pgettext('login-view', 'Logged in');
       default:
-        return messages.pgettext('login-view', 'Enter your account number');
+        return messages.pgettext('login-view', 'Enter your public key');
     }
   }
 
@@ -250,8 +250,8 @@ class Login extends React.Component<IProps, IState> {
     switch (error) {
       case 'invalid-account':
         // TRANSLATORS: Error message shown above login input when trying to login with a
-        // TRANSLATORS: non-existent account number.
-        return messages.pgettext('login-view', 'Invalid account number');
+        // TRANSLATORS: non-existent public key.
+        return messages.pgettext('login-view', 'Invalid public key');
       case 'too-many-devices':
         // TRANSLATORS: Error message shown above login input when trying to login to an account
         // TRANSLATORS: with too many registered devices.
@@ -518,12 +518,12 @@ function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdo
             onClick={handleSelect}
             type="button"
             aria-label={sprintf(
-              // TRANSLATORS: This is used by screenreaders to communicate logging in with a saved account number.
+              // TRANSLATORS: This is used by screenreaders to communicate logging in with a saved public key.
               // TRANSLATORS: Available placeholders:
-              // TRANSLATORS: %(accountNumber)s - the saved account number
-              messages.pgettext('accessibility', 'Login with account number %(accountNumber)s'),
+              // TRANSLATORS: %(pubkey)s - the saved public key
+              messages.pgettext('accessibility', 'Login with public key %(pubkey)s'),
               {
-                accountNumber: label,
+                pubkey: label,
               },
             )}>
             <TitleMedium color="blue80">{label}</TitleMedium>
@@ -534,12 +534,12 @@ function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdo
               type="button"
               aria-controls={itemId}
               aria-label={sprintf(
-                // TRANSLATORS: This is used by screenreaders to communicate the "x" button next to a saved account number.
+                // TRANSLATORS: This is used by screenreaders to communicate the "x" button next to a saved public key.
                 // TRANSLATORS: Available placeholders:
-                // TRANSLATORS: %(accountNumber)s - the account number to the left of the button
-                messages.pgettext('accessibility', 'Forget account number %(accountNumber)s'),
+                // TRANSLATORS: %(pubkey)s - the public key to the left of the button
+                messages.pgettext('accessibility', 'Forget public key %(pubkey)s'),
                 {
-                  accountNumber: label,
+                  pubkey: label,
                 },
               )}>
               <StyledIcon icon="cross-circle" size="small" />

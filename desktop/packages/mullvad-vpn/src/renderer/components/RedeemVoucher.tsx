@@ -5,20 +5,20 @@ import { formatDate } from '../../shared/account-expiry';
 import { VoucherResponse } from '../../shared/daemon-rpc-types';
 import { formatRelativeDate } from '../../shared/date-helper';
 import { messages } from '../../shared/gettext';
-import { isAccountNumber } from '../../shared/utils';
+import { isWarrenPubKey } from '../../shared/utils';
 import { useAppContext } from '../context';
 import { Button, ButtonProps, Flex, Spinner } from '../lib/components';
 import { IconBadge } from '../lib/icon-badge';
 import { useSelector } from '../redux/store';
 import { ModalAlert } from './Modal';
 import {
-  StyledAccountNumberInfo,
   StyledEmptyResponse,
   StyledErrorResponse,
   StyledInput,
   StyledLabel,
   StyledProgressResponse,
   StyledTitle,
+  StyledWarrenPubKeyInfo,
 } from './RedeemVoucherStyles';
 
 const MIN_VOUCHER_LENGTH = 16;
@@ -186,13 +186,13 @@ export function RedeemVoucherResponse() {
             <StyledErrorResponse>
               {messages.pgettext('redeem-voucher-view', 'Voucher code is invalid.')}
             </StyledErrorResponse>
-            {isAccountNumber(submittedValue) ? (
-              <StyledAccountNumberInfo>
+            {isWarrenPubKey(submittedValue) ? (
+              <StyledWarrenPubKeyInfo>
                 {messages.pgettext(
                   'redeem-voucher-view',
-                  'It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first.',
+                  'It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first.',
                 )}
-              </StyledAccountNumberInfo>
+              </StyledWarrenPubKeyInfo>
             ) : null}
           </>
         );

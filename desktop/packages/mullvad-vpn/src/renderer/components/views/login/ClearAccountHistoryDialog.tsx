@@ -30,17 +30,17 @@ export default function ClearAccountHistoryDialog(props: Props) {
       <ModalMessage>
         {
           // TRANSLATORS: Text that informs the user about the consequences of clearing the saved
-          // TRANSLATORS: account number.
+          // TRANSLATORS: public key.
           messages.pgettext(
             'login-view',
-            'Removing the saved account number from this device cannot be undone.',
+            'Removing the saved public key from this device cannot be undone.',
           )
         }
       </ModalMessage>
       <ModalMessage>
         {
-          // TRANSLATORS: Text that asks the user if they really want to remove the saved account.
-          messages.pgettext('login-view', 'Do you want to remove the saved account number?')
+          // TRANSLATORS: Text that asks the user if they really want to remove the saved public key.
+          messages.pgettext('login-view', 'Do you want to remove the saved public key?')
         }
       </ModalMessage>
     </ModalAlert>

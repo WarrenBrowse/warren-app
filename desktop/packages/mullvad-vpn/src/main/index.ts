@@ -989,7 +989,7 @@ class ApplicationMain
         log.info('Skip autoconnect because GUI setting is disabled');
       }
     } else {
-      log.info('Skip autoconnect because account number is not set');
+      log.info('Skip autoconnect because public key is not set');
     }
   }
 
