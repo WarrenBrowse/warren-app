@@ -2147,8 +2147,24 @@ impl Daemon {
                 .map(move |new_devices| {
                     // FIXME: We should be able to get away with only returning the removed ID,
                     //        and not have to request the list from the API.
+                    // Warren fork — Phase 2.B.3 V6.b : `RemoveDeviceEvent`
+                    // porte désormais une `WarrenPubKey`. On parse le
+                    // `account_number` (= String, possiblement non-hex
+                    // si ancien device.json Mullvad) avec fallback
+                    // dummy zero pubkey + warn (cohérent avec le From
+                    // impl côté `device::mod.rs`).
+                    use std::str::FromStr;
+                    let pubkey =
+                        mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account_number)
+                            .unwrap_or_else(|e| {
+                                log::warn!(
+                                    "RemoveDeviceEvent: account_number is not a valid Warren \
+                                     pubkey ({e}), fallback dummy zero pubkey"
+                                );
+                                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&[0u8; 32])
+                            });
                     notifier.notify_remove_device_event(RemoveDeviceEvent {
-                        account_number,
+                        pubkey,
                         new_devices,
                     });
                 });

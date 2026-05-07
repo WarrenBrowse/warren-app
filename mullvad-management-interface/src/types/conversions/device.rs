@@ -173,8 +173,11 @@ impl From<proto::device_event::Cause> for mullvad_types::device::DeviceEventCaus
 
 impl From<mullvad_types::device::RemoveDeviceEvent> for proto::RemoveDeviceEvent {
     fn from(event: mullvad_types::device::RemoveDeviceEvent) -> Self {
+        // Warren fork — Phase 2.B.3 V6.b : on émet la `pubkey` hex
+        // dans le field proto historique `account_number` pour rester
+        // compat des clients gRPC qui n'ont pas migré.
         proto::RemoveDeviceEvent {
-            account_number: event.account_number,
+            account_number: event.pubkey.as_str().to_owned(),
             new_device_list: event
                 .new_devices
                 .into_iter()
@@ -193,8 +196,23 @@ impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEv
             .into_iter()
             .map(mullvad_types::device::Device::try_from)
             .collect::<Result<Vec<_>, FromProtobufTypeError>>()?;
+        // Warren fork — Phase 2.B.3 V6.b : parse le field proto
+        // `account_number` en `WarrenPubKey` ; rejette si format
+        // non-Warren (= client gRPC qui pousse un mauvais ancien
+        // format).
+        let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&event.account_number)
+            .map_err(|e| {
+                FromProtobufTypeError::invalid_argument(match e {
+                    mullvad_types::warren_pubkey::ParseError::InvalidLength { .. } => {
+                        "RemoveDeviceEvent.account_number must be a 64-char hex Warren pubkey"
+                    }
+                    mullvad_types::warren_pubkey::ParseError::NonHex => {
+                        "RemoveDeviceEvent.account_number contains non-hex characters"
+                    }
+                })
+            })?;
         Ok(mullvad_types::device::RemoveDeviceEvent {
-            account_number: event.account_number,
+            pubkey,
             new_devices,
         })
     }

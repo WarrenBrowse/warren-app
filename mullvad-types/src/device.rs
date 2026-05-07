@@ -113,9 +113,14 @@ pub struct DeviceEvent {
 
 /// Emitted when a device is removed using the `RemoveDevice` RPC.
 /// This is not sent by a normal logout or when it is revoked remotely.
+///
+/// Warren fork — Phase 2.B.3 V6.b : le field `account_number` (alias
+/// `String`) est remplacé par `pubkey` ([`WarrenPubKey`], hex 64ch
+/// validé). Le proto gRPC garde `account_number` comme name pour
+/// compat clients (cf. mullvad-management-interface conversions).
 #[derive(Clone, Debug, Serialize)]
 pub struct RemoveDeviceEvent {
-    pub account_number: AccountNumber,
+    pub pubkey: crate::warren_pubkey::WarrenPubKey,
     pub new_devices: Vec<Device>,
 }
 
@@ -166,5 +171,19 @@ mod tests {
         assert!(DeviceState::LoggedIn(identity).is_logged_in());
         assert!(!DeviceState::LoggedOut.is_logged_in());
         assert!(!DeviceState::Revoked.is_logged_in());
+    }
+
+    #[test]
+    fn remove_device_event_carries_warren_pubkey() {
+        // Phase 2.B.3 V6.b — `RemoveDeviceEvent.pubkey` est typé
+        // `WarrenPubKey`. Test garantit que la pubkey survie
+        // construction → field accessor.
+        let pk = fixture_pubkey();
+        let event = RemoveDeviceEvent {
+            pubkey: pk.clone(),
+            new_devices: vec![fixture_device()],
+        };
+        assert_eq!(event.pubkey, pk);
+        assert_eq!(event.new_devices.len(), 1);
     }
 }
