@@ -23,9 +23,23 @@ pub const ENV_VAR_NAME: &str = "WARREN_LOCAL_ACCOUNT";
 /// Activé par `WARREN_LOCAL_ACCOUNT=1` (ou `true`, `yes`, `on`, insensitive
 /// à la casse). Toute autre valeur ou absence = comportement Mullvad
 /// standard (appels `api.mullvad.net` pour `get_data` et `validate_device`).
+///
+/// **Phase E** : voir [`resolve`] pour la combinaison env + Settings.
 #[must_use]
 pub fn is_enabled() -> bool {
     parse_env(std::env::var(ENV_VAR_NAME).ok().as_deref())
+}
+
+/// Phase E — résout le mode account local effectif depuis l'env var POC
+/// combinée au flag persistant `Settings::warren_local_account`. L'env
+/// var, si setée, **prend précédence**. Cf. doc
+/// [`crate::warren_mode::resolve`] pour le rationale de cette préséance.
+#[must_use]
+pub fn resolve(settings_warren_local_account: bool) -> bool {
+    match std::env::var(ENV_VAR_NAME).ok().as_deref() {
+        Some(raw) => parse_env(Some(raw)),
+        None => settings_warren_local_account,
+    }
 }
 
 fn parse_env(raw: Option<&str>) -> bool {
@@ -71,5 +85,24 @@ mod tests {
         for v in ["0", "false", "no", "off", "", "warren", "account"] {
             assert!(!parse_env(Some(v)), "should reject {v:?}");
         }
+    }
+
+    /// Phase E : `resolve` retourne la valeur Settings quand l'env
+    /// var est absente (cas prod normal). Régression : si on lisait
+    /// toujours `false` (= ignorer Settings), un user qui a togglé
+    /// le mode via UI/CLI ne le verrait jamais activé.
+    #[test]
+    fn resolve_uses_settings_when_env_var_absent() {
+        if std::env::var(super::ENV_VAR_NAME).is_ok() {
+            return;
+        }
+        assert!(
+            super::resolve(true),
+            "resolve(true) sans env doit être true"
+        );
+        assert!(
+            !super::resolve(false),
+            "resolve(false) sans env doit être false"
+        );
     }
 }

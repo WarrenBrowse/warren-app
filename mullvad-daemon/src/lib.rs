@@ -872,7 +872,10 @@ impl Daemon {
         // cohérent avec la mnémonique avant que `AccountManager::spawn`
         // ne lise le `DeviceCacher`. Permet au daemon d'atteindre
         // `Connecting` sans appel `create_device` à api.mullvad.net.
-        let local_account_mode = warren_account_mode::is_enabled();
+        // Phase E : combine l'env var POC `WARREN_LOCAL_ACCOUNT` avec
+        // le flag persistant `Settings::warren_local_account`. L'env
+        // var, si setée, prend précédence (cf. `warren_account_mode::resolve`).
+        let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
         if local_account_mode {
             match warren_signer::load_or_create_signing_key(&config.settings_dir) {
                 Some(signing_key) => match warren_device_bootstrap::ensure_local_device(
@@ -944,9 +947,11 @@ impl Daemon {
         // absent) et la `SigningKey` BIP39 depuis le settings dir.
         // Sinon, ces artefacts restent `None` et le path WireGuard
         // upstream reste seul actif.
-        let (warren_relay_selector, warren_signing_key) = if warren_mode::is_enabled() {
+        // Phase E : warren_mode utilise resolve = env override + Settings.
+        let warren_mode_active = warren_mode::resolve(settings.warren_mode);
+        let (warren_relay_selector, warren_signing_key) = if warren_mode_active {
             log::info!(
-                "Warren tunnel mode enabled (env var {}=1)",
+                "Warren tunnel mode enabled (env var {}=1 or Settings::warren_mode=true)",
                 warren_mode::ENV_VAR_NAME
             );
             let selector = warren_relay_selector::DaemonWarrenRelaySelector::load_from_cache_dir(
@@ -1038,8 +1043,9 @@ impl Daemon {
             internal_event_tx.to_specialized_sender(),
             offline_state_tx,
             route_manager.clone(),
-            // Warren fork : pass-through du flag détecté au boot.
-            warren_mode::is_enabled(),
+            // Warren fork : pass-through du flag résolu au boot
+            // (env override + Settings::warren_mode).
+            warren_mode_active,
             #[cfg(target_os = "windows")]
             volume_update_rx,
             #[cfg(target_os = "android")]

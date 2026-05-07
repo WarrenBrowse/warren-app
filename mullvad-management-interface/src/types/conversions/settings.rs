@@ -186,6 +186,13 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // included in the serializable settings, such as the below value.
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
+            // Warren fork — Phase E : ces 2 booléens ne sont pas
+            // (encore) propagés via gRPC ; le daemon les lit depuis
+            // sa propre `Settings` persistée. À exposer via gRPC
+            // SetWarrenMode / SetWarrenLocalAccount dans une phase
+            // ultérieure quand l'UI/CLI proposera un toggle.
+            warren_mode: false,
+            warren_local_account: false,
         })
     }
 }

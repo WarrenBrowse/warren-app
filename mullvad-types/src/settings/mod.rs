@@ -118,6 +118,18 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
+    /// Warren fork — Phase E : si `true`, le daemon utilise le backend
+    /// tunnel Iroh (Warren) au lieu de WireGuard. Override possible
+    /// via env var POC `WARREN_TUNNEL=1` (cf. `warren_mode::resolve`).
+    /// Default `false` = path WireGuard upstream préservé.
+    #[serde(default)]
+    pub warren_mode: bool,
+    /// Warren fork — Phase E : si `true`, le daemon utilise les backends
+    /// account/device locaux (`LocalAccountBackend`/`LocalDeviceBackend`)
+    /// au lieu de contacter `api.mullvad.net`. Override via env var POC
+    /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
+    #[serde(default)]
+    pub warren_local_account: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -294,6 +306,8 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
+            warren_mode: false,
+            warren_local_account: false,
         }
     }
 }
