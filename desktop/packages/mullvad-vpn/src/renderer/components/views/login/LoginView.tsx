@@ -5,8 +5,8 @@ import styled from 'styled-components';
 import { Url } from '../../../../shared/constants';
 import { AccountDataError, WarrenPubKey } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
+import { isWarrenPubKey } from '../../../../shared/utils';
 import { useAppContext } from '../../../context';
-import { formatAccountNumber } from '../../../lib/account';
 import useActions from '../../../lib/actionsHook';
 import { Box, Button, Flex, Icon, Spinner, Text, TitleMedium } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
@@ -16,6 +16,7 @@ import { View } from '../../../lib/components/view';
 import { colors } from '../../../lib/foundations';
 import { formatHtml } from '../../../lib/html-formatter';
 import { IconBadge } from '../../../lib/icon-badge';
+import { formatWarrenPubKey } from '../../../lib/pubkey';
 import accountActions from '../../../redux/account/actions';
 import { LoginState } from '../../../redux/account/reducers';
 import { useSelector } from '../../../redux/store';
@@ -91,7 +92,7 @@ interface IState {
   createAccountDialogVisible: boolean;
 }
 
-const MIN_ACCOUNT_NUMBER_LENGTH = 10;
+const WARREN_PUBKEY_HEX_LEN = 64;
 
 class Login extends React.Component<IProps, IState> {
   public state: IState = {
@@ -181,7 +182,7 @@ class Login extends React.Component<IProps, IState> {
   private onSubmit = (event?: React.FormEvent) => {
     event?.preventDefault();
 
-    if (this.accountNumberValid()) {
+    if (this.pubkeyValid()) {
       this.props.login(this.props.pubkey!);
     }
   };
@@ -301,9 +302,9 @@ class Login extends React.Component<IProps, IState> {
     return this.allowInteraction() && (pubkey === undefined || pubkey.length === 0);
   }
 
-  private accountNumberValid(): boolean {
+  private pubkeyValid(): boolean {
     const { pubkey } = this.props;
-    return pubkey !== undefined && pubkey.length >= MIN_ACCOUNT_NUMBER_LENGTH;
+    return pubkey !== undefined && isWarrenPubKey(pubkey);
   }
 
   private shouldShowAccountHistory() {
@@ -356,9 +357,9 @@ class Login extends React.Component<IProps, IState> {
   };
 
   private createLoginForm() {
-    const inputId = 'account-number-input';
+    const inputId = 'warren-pubkey-input';
     const allowInteraction = this.allowInteraction();
-    const allowLogin = allowInteraction && this.accountNumberValid();
+    const allowLogin = allowInteraction && this.pubkeyValid();
     const hasError =
       this.props.loginState.type === 'failed' &&
       this.props.loginState.method === 'existing_account';
@@ -382,10 +383,11 @@ class Login extends React.Component<IProps, IState> {
                 <StyledAccountInputBackdrop>
                   <StyledInput
                     id={inputId}
-                    allowedCharacters="[0-9]"
+                    allowedCharacters="[0-9a-fA-F]"
                     separator=" "
-                    groupLength={4}
-                    placeholder="0000 0000 0000 0000"
+                    groupLength={8}
+                    maxLength={WARREN_PUBKEY_HEX_LEN}
+                    placeholder="00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000"
                     value={this.props.pubkey || ''}
                     disabled={!allowInteraction}
                     onFocus={this.onFocus}
@@ -464,14 +466,14 @@ interface IAccountDropdownProps {
 }
 
 function AccountDropdown(props: IAccountDropdownProps) {
-  const accountNumber = props.item;
-  if (!accountNumber) {
+  const pubkey = props.item;
+  if (!pubkey) {
     return null;
   }
-  const label = formatAccountNumber(accountNumber);
+  const label = formatWarrenPubKey(pubkey);
   return (
     <AccountDropdownItem
-      value={accountNumber}
+      value={pubkey}
       label={label}
       onSelect={props.onSelect}
       onRemove={props.onRemove}
