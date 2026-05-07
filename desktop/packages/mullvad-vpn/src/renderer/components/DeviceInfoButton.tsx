@@ -26,13 +26,13 @@ export default function DeviceInfoButton() {
         <ModalMessage>
           {messages.pgettext(
             'device-management',
-            'This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website.',
+            'This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website.',
           )}
         </ModalMessage>
         <ModalMessage>
           {messages.pgettext(
             'device-management',
-            'You can have up to 5 devices logged in on one Mullvad account.',
+            'You can have up to 5 devices logged in on one Warren account.',
           )}
         </ModalMessage>
         <ModalMessage>
