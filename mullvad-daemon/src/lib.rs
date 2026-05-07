@@ -905,11 +905,46 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        let parameters_generator = tunnel::ParametersGenerator::new(
+        // Warren fork — Phase 4.F.5 : init des artefacts Warren-Iroh
+        // au boot. Si `WARREN_TUNNEL=1` est posé, on charge :
+        // - la `WarrenRelayList` depuis `<cache_dir>/warren-relays.json`
+        //   (fallback liste vide si absent),
+        // - la `SigningKey` BIP39 depuis `<settings_dir>/warren_mnemonic.txt`
+        //   (Phase 2.A.4 path).
+        // En mode désactivé, ces artefacts restent `None` et le path
+        // WireGuard upstream reste seul actif.
+        let (warren_relay_selector, warren_signing_key) = if warren_mode::is_enabled() {
+            log::info!(
+                "Warren tunnel mode enabled (env var {}=1)",
+                warren_mode::ENV_VAR_NAME
+            );
+            let selector = warren_relay_selector::DaemonWarrenRelaySelector::load_from_cache_dir(
+                &config.cache_dir,
+            )
+            .unwrap_or_else(|err| {
+                log::warn!(
+                    "Failed to load warren-relays.json: {err}. Falling back to empty relay list."
+                );
+                warren_relay_selector::DaemonWarrenRelaySelector::new(Default::default())
+            });
+            let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
+            if signing_key.is_none() {
+                log::warn!(
+                    "Warren mode active but no signing key available; tunnel attempts will fail"
+                );
+            }
+            (Some(selector), signing_key)
+        } else {
+            (None, None)
+        };
+
+        let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             account_manager.clone(),
             relay_selector.clone(),
             settings.relay_settings.clone(),
             settings.tunnel_options.clone(),
+            warren_relay_selector,
+            warren_signing_key,
         );
 
         let param_gen = parameters_generator.clone();

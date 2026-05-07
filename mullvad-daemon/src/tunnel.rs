@@ -1,7 +1,9 @@
 use std::net::SocketAddr;
 use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
 
+use ed25519_dalek::SigningKey;
 use talpid_types::net::wireguard::TunnelParameters;
+use talpid_warren_iroh::WarrenIrohParameters;
 use tokio::sync::Mutex;
 
 use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
@@ -13,10 +15,13 @@ use mullvad_types::{
 };
 use talpid_core::tunnel_state_machine::TunnelParametersGenerator;
 use talpid_types::net::{obfuscation::Obfuscators, wireguard};
+use warren_relay_selector::WarrenRelayQuery;
 
 use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationError};
 
 use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
+use crate::warren_iroh_params::{self, AssembleError};
+use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -31,6 +36,21 @@ pub enum Error {
 
     #[error("Failed to get device data")]
     Device(#[from] DeviceError),
+
+    /// Warren mode actif (env var `WARREN_TUNNEL=1`) mais le selector
+    /// Warren n'est pas configuré côté generator.
+    #[error("Warren tunnel mode requested but no Warren relay selector configured")]
+    WarrenSelectorMissing,
+
+    /// Warren mode actif mais la `signing_key` n'a pas pu être chargée
+    /// (mnémonique BIP39 absente ou corrompue cf. `warren_signer`).
+    #[error("Warren tunnel mode requested but no Warren signing key available")]
+    WarrenSigningKeyMissing,
+
+    /// Échec de l'assemblage des `WarrenIrohParameters` (sélection
+    /// échouée, ...).
+    #[error("Failed to assemble Warren tunnel parameters")]
+    WarrenAssemble(#[from] AssembleError),
 }
 
 #[derive(Clone)]
@@ -43,15 +63,39 @@ struct InnerParametersGenerator {
     account_manager: AccountManagerHandle,
 
     last_generated_relays: Option<LastSelectedRelays>,
+
+    /// Warren fork — Phase 4.F.5 : artefacts pour le path Warren-Iroh
+    /// parallèle. `None` côté daemon non-Warren (= path WG seul) ;
+    /// `Some` quand `mullvad-daemon::warren_mode::is_enabled() == true`
+    /// au boot (cf. `lib.rs` Phase 4.F.5.c).
+    ///
+    /// `dead_code` allow autorisé : ces champs sont consommés par
+    /// `generate_warren_iroh_params` qui sera invoqué depuis le state
+    /// machine en Phase 4.F.5.b/c. Cf. règle dans CLAUDE.md sur le
+    /// double-allow workaround Phase 1.A.
+    #[allow(clippy::allow_attributes)]
+    #[allow(dead_code)]
+    warren_relay_selector: Option<DaemonWarrenRelaySelector>,
+    #[allow(clippy::allow_attributes)]
+    #[allow(dead_code)]
+    warren_signing_key: Option<SigningKey>,
 }
 
 impl ParametersGenerator {
-    /// Constructs a new tunnel parameters generator.
-    pub fn new(
+    /// Constructs a tunnel parameters generator avec les artefacts
+    /// Warren-Iroh optionnels (Phase 4.F.5).
+    ///
+    /// Si `warren_relay_selector` ou `warren_signing_key` sont `None`,
+    /// `generate_warren_iroh_params` retournera l'erreur typée
+    /// correspondante. Le path WireGuard reste utilisable en parallèle
+    /// quel que soit l'état des artefacts Warren.
+    pub fn new_with_optional_warren(
         account_manager: AccountManagerHandle,
         relay_selector: RelaySelector,
         relay_settings: RelaySettings,
         tunnel_options: TunnelOptions,
+        warren_relay_selector: Option<DaemonWarrenRelaySelector>,
+        warren_signing_key: Option<SigningKey>,
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
@@ -59,7 +103,50 @@ impl ParametersGenerator {
             relay_settings,
             account_manager,
             last_generated_relays: None,
+            warren_relay_selector,
+            warren_signing_key,
         })))
+    }
+
+    /// Phase 4.F.5 — assemble un [`WarrenIrohParameters`] pour la
+    /// tentative `retry_attempt`, à partir des artefacts Warren stockés.
+    ///
+    /// API miroir asymétrique de
+    /// [`TunnelParametersGenerator::generate`] (qui produit du WG) :
+    /// le state machine choisit l'une OU l'autre selon le mode Warren
+    /// actif (cf. `warren_mode::is_enabled`).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::WarrenSelectorMissing`] si le selector Warren n'a
+    ///   pas été configuré au boot.
+    /// - [`Error::WarrenSigningKeyMissing`] si la signing key BIP39
+    ///   n'a pas pu être chargée.
+    /// - [`Error::WarrenAssemble`] si la sélection elle-même échoue
+    ///   (aucun relay matchant).
+    #[allow(clippy::allow_attributes)]
+    #[allow(dead_code)]
+    pub async fn generate_warren_iroh_params(
+        &self,
+        retry_attempt: u32,
+    ) -> Result<WarrenIrohParameters, Error> {
+        let inner = self.0.lock().await;
+        let selector = inner
+            .warren_relay_selector
+            .as_ref()
+            .ok_or(Error::WarrenSelectorMissing)?;
+        let signing_key = inner
+            .warren_signing_key
+            .as_ref()
+            .ok_or(Error::WarrenSigningKeyMissing)?
+            .clone();
+        let params = warren_iroh_params::assemble_for_attempt(
+            selector,
+            signing_key,
+            &WarrenRelayQuery::any(),
+            retry_attempt,
+        )?;
+        Ok(params)
     }
 
     /// Sets the tunnel options to use when generating new tunnel parameters.
@@ -244,6 +331,13 @@ impl From<Error> for ParameterGenerationError {
             Error::NoAuthDetails | Error::SelectRelay(_) | Error::Device(_) => {
                 ParameterGenerationError::NoMatchingRelay
             }
+            // Phase 4.F.5 : les erreurs Warren sont remontées comme
+            // `NoMatchingRelay` côté state machine pour le moment ;
+            // une variante `WarrenAssemble` dédiée pourra être ajoutée
+            // si on veut un message d'erreur UI distinct.
+            Error::WarrenSelectorMissing
+            | Error::WarrenSigningKeyMissing
+            | Error::WarrenAssemble(_) => ParameterGenerationError::NoMatchingRelay,
         }
     }
 }
