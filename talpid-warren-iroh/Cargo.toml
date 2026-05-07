@@ -7,10 +7,26 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+futures = { workspace = true }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "sync"] }
+
+# Warren POC crates (path-deps cross-repo via local workspace).
+# Pour la prod long-terme, ces crates devront être publiées sur un
+# registry privé (ex: cargo-binstall + Gitea registry) ou intégrées
+# directement comme submodule du fork.
+warren-iroh-tunnel = { path = "../../warren-pocs/crates/warren-iroh-tunnel" }
+
+# Iroh types réexposés dans l'API publique (EndpointId, EndpointAddr,
+# SecretKey). Pin strict sur la même version que `warren-iroh-tunnel`
+# pour éviter le diamond dependency.
+iroh = { version = "=0.98.2", default-features = false }
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
+  "std",
+] }
+anyhow = "1"
 
 [lints]
 workspace = true
