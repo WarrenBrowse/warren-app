@@ -14001,7 +14001,6 @@ proto.mullvad_daemon.management_interface.Settings.toObject = function(includeIn
     proto.mullvad_daemon.management_interface.RelayOverride.toObject, includeInstance),
     recents: (f = msg.getRecents()) && proto.mullvad_daemon.management_interface.Recents.toObject(includeInstance, f),
     updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
-    // Warren fork — Phase H : patch manuel des bindings JS.
     warrenMode: jspb.Message.getBooleanFieldWithDefault(msg, 15, false),
     warrenLocalAccount: jspb.Message.getBooleanFieldWithDefault(msg, 16, false)
   };
@@ -14100,7 +14099,6 @@ proto.mullvad_daemon.management_interface.Settings.deserializeBinaryFromReader =
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setUpdateDefaultLocation(value);
       break;
-    // Warren fork — Phase H : patch manuel des bindings JS.
     case 15:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setWarrenMode(value);
@@ -14237,7 +14235,6 @@ proto.mullvad_daemon.management_interface.Settings.serializeBinaryToWriter = fun
       f
     );
   }
-  // Warren fork — Phase H : patch manuel des bindings JS.
   f = message.getWarrenMode();
   if (f) {
     writer.writeBool(
@@ -14641,9 +14638,6 @@ proto.mullvad_daemon.management_interface.Settings.prototype.setUpdateDefaultLoc
   return jspb.Message.setProto3BooleanField(this, 14, value);
 };
 
-
-// Warren fork — Phase H : patch manuel des bindings JS.
-// À régénérer via `bash scripts/container-run-generate-bindings.sh`.
 
 /**
  * optional bool warren_mode = 15;

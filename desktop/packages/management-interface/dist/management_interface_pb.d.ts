@@ -1776,12 +1776,6 @@ export class Settings extends jspb.Message {
     setRecents(value?: Recents): Settings;
     getUpdateDefaultLocation(): boolean;
     setUpdateDefaultLocation(value: boolean): Settings;
-
-    // Warren fork — Phase H : patch manuel des bindings TS.
-    // À régénérer via `bash scripts/container-run-generate-bindings.sh`
-    // dans `desktop/packages/management-interface` (cf. proto fields
-    // `warren_mode = 15` et `warren_local_account = 16` dans
-    // `mullvad-management-interface/proto/management_interface.proto`).
     getWarrenMode(): boolean;
     setWarrenMode(value: boolean): Settings;
     getWarrenLocalAccount(): boolean;
@@ -1812,7 +1806,6 @@ export namespace Settings {
         relayOverridesList: Array<RelayOverride.AsObject>,
         recents?: Recents.AsObject,
         updateDefaultLocation: boolean,
-        // Warren fork — Phase H : patch manuel.
         warrenMode: boolean,
         warrenLocalAccount: boolean,
     }
