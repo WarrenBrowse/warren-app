@@ -104,7 +104,7 @@
 
 ## Décisions actées (2026-05-06)
 
-1. **Hébergement repo** : `git.p2p.legal/warren/warrenBrowse-app` (Gitea selfhost, même espace que `warren-pocs` qui vit sur `git.p2p.legal/warren/poc.git`)
+1. **Hébergement repo** : `git.p2p.legal/warren/warren-app` (Gitea selfhost, même espace que `warren-pocs` qui vit sur `git.p2p.legal/warren/poc.git`)
 2. **Visibilité** : **privé** pendant la phase POC. Public au lancement freemium (GPL-3.0 oblige le source du fork — la visibilité publique sera réactivée à ce moment-là)
 3. **CI** : workflows séparés du `warren-pocs`. À adapter : retirer les jobs upstream Mullvad inutiles (tests Android/iOS si on ne ship pas mobile dès POC), ajouter le check `cargo build` Warren-only via le feature flag `tunnel_backend = "iroh"`. Détails à figer en début phase 1
 4. **Cadence merge upstream** : **weekly cherry-pick** de `main` upstream. Branche `warren-base` divergente, on rebase les commits Warren sur le HEAD upstream du jour J chaque semaine (lundi typique). Limites les conflits accumulés vs un freeze long
@@ -117,18 +117,18 @@
 - ✅ Inventaire dépendances système
 - ✅ Inventaire fichiers à toucher (auth wallet + tunnel trait + relay selector + GUI)
 - ✅ Décisions hébergement / CI / cadence merge (cf. § Décisions actées)
-- ⏸ Build green sanity check (deferred — deps externes lourdes : Volta, podman, protobuf, bash 4. À faire au début phase 1 dans un container dédié)
-- ⏸ Push initial sur `git.p2p.legal/warren/warrenBrowse-app` (repo à créer manuellement avant push)
+- ✅ Push initial `main` + tag `upstream-baseline-2026-05-06` + branche `warren-base`
+- ⏸ Build green sanity check (deferred — deps externes lourdes : Volta, podman, protobuf, bash 4. À faire au début phase 1)
 
-Reconnaissance terminée. Phase 1 prête à démarrer dès que le bench stab 24h confirme `warren-pocs` shippable.
+Reconnaissance terminée. Phase 1 amorcée 2026-05-07 (post-bench stab 24h validé `warren-pocs` shippable).
 
 ## Setup phase 1 (commandes prêtes)
 
 Une fois le repo Gitea créé :
 
 ```bash
-cd /Users/poka/dev/warrenBros/warrenBrowse-app
-git remote add origin ssh://git@git.p2p.legal:10122/warren/warrenBrowse-app.git
+cd /Users/poka/dev/warrenBros/warren-app
+git remote add origin ssh://git@git.p2p.legal:10122/warren/warren-app.git
 git push -u origin main
 git push origin upstream-baseline-2026-05-06   # tag baseline
 ```
