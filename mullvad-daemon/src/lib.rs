@@ -867,6 +867,31 @@ impl Daemon {
             migrations::MigrationComplete::new(true)
         };
 
+        // Warren fork — Phase B.4 : si l'env var
+        // `WARREN_LOCAL_ACCOUNT=1` est setée, bootstrap un `device.json`
+        // cohérent avec la mnémonique avant que `AccountManager::spawn`
+        // ne lise le `DeviceCacher`. Permet au daemon d'atteindre
+        // `Connecting` sans appel `create_device` à api.mullvad.net.
+        let local_account_mode = warren_account_mode::is_enabled();
+        if local_account_mode {
+            match warren_signer::load_or_create_signing_key(&config.settings_dir) {
+                Some(signing_key) => match warren_device_bootstrap::ensure_local_device(
+                    &config.settings_dir,
+                    &signing_key,
+                ) {
+                    Ok(outcome) => {
+                        log::info!("Warren local account bootstrap: {outcome:?}")
+                    }
+                    Err(e) => {
+                        log::error!("Warren local account bootstrap failed: {e}")
+                    }
+                },
+                None => {
+                    log::warn!("Warren local account: no mnemonic available, bootstrap skipped");
+                }
+            }
+        }
+
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
@@ -876,9 +901,7 @@ impl Daemon {
                 .rotation_interval
                 .unwrap_or_default(),
             internal_event_tx.to_specialized_sender(),
-            // Warren fork B.3 — temporairement `false`. Branché sur
-            // `warren_account_mode::is_enabled()` en Phase B.4.
-            false,
+            local_account_mode,
         )
         .await
         .map_err(Error::LoadAccountManager)?;
@@ -1137,10 +1160,7 @@ impl Daemon {
             account_history,
             device_checker: device::TunnelStateChangeHandler::new(
                 account_manager.clone(),
-                // Warren fork B.3 — temporairement `false` (path Mullvad
-                // standard préservé). Sera branché sur
-                // `warren_account_mode::is_enabled()` en Phase B.4.
-                false,
+                local_account_mode,
             ),
             account_manager,
             access_mode_handler,
