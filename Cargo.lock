@@ -3802,6 +3802,7 @@ dependencies = [
  "ed25519-dalek 2.2.0",
  "either",
  "futures",
+ "hex",
  "hickory-resolver 0.25.2",
  "insta",
  "libc",
@@ -8210,9 +8211,11 @@ dependencies = [
 name = "warren-relay-selector"
 version = "0.0.1-poc"
 dependencies = [
+ "hex",
  "iroh",
  "rand 0.10.1",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 

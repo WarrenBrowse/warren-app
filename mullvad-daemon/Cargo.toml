@@ -131,6 +131,7 @@ tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["chrono"] }
 
 [dev-dependencies]
+hex = "0.4"
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }

@@ -10,15 +10,29 @@
 //! quand il a accès au `warren_signer` et à la config.
 //!
 //! **Pourquoi un module dédié** : (a) testable en isolation, (b)
-//! n'importe pas `talpid-warren-iroh` → reste compilable même quand le
-//! state machine wiring Phase 1.B n'est pas terminé.
+//! n'importe pas `talpid-warren-iroh` côté API publique du wrapper
+//! (Phase 4.F.1 utilise le wrapper sans charger talpid-warren-iroh).
 
+use std::path::Path;
 use std::sync::Arc;
 
 use warren_relay_selector::iroh_types::{EndpointAddr, EndpointId};
 use warren_relay_selector::{
-    SelectorError, WarrenRelay, WarrenRelayList, WarrenRelayQuery, WarrenRelaySelector,
+    JsonError, SelectorError, WarrenRelay, WarrenRelayList, WarrenRelayQuery, WarrenRelaySelector,
 };
+
+/// Erreurs du chargement de `warren-relays.json` au boot.
+#[derive(Debug, thiserror::Error)]
+pub enum LoadError {
+    /// I/O sur le fichier `warren-relays.json` (chemin présent mais
+    /// illisible).
+    #[error("failed to read warren relays at {0}: {1}")]
+    Io(String, #[source] std::io::Error),
+
+    /// Le JSON est invalide ou ne respecte pas le schéma v1.
+    #[error("invalid warren-relays.json at {0}: {1}")]
+    Json(String, #[source] JsonError),
+}
 
 /// Sortie minimale de la sélection : les seuls deux champs
 /// nécessaires pour construire un `WarrenIrohParameters` côté caller.
@@ -54,6 +68,12 @@ pub struct DaemonWarrenRelaySelector {
     inner: Arc<WarrenRelaySelector>,
 }
 
+/// Nom du fichier qui contient la `WarrenRelayList` bootstrappée
+/// localement. Convention figée : déplacement futur impose une
+/// migration cache. Sera remplacé Phase 2.F par un fetch périodique
+/// vers `mullvad-api`.
+pub const WARREN_RELAYS_FILENAME: &str = "warren-relays.json";
+
 impl DaemonWarrenRelaySelector {
     /// Construit un wrapper depuis une [`WarrenRelayList`].
     #[must_use]
@@ -61,6 +81,42 @@ impl DaemonWarrenRelaySelector {
         Self {
             inner: Arc::new(WarrenRelaySelector::new(relays)),
         }
+    }
+
+    /// Charge la `WarrenRelayList` depuis `<cache_dir>/warren-relays.json`.
+    ///
+    /// Politique no-fail au boot : si le fichier est absent ou
+    /// illisible, retourne un wrapper avec une liste vide + log warn,
+    /// pour permettre au daemon de continuer à booter en mode WG. Le
+    /// dispatch Phase 4.F.5 verra une `WarrenRelayList` vide et
+    /// retournera `NoRelayMatch` à la première sélection — comportement
+    /// attendu : l'utilisateur n'est pas en mode Warren.
+    ///
+    /// # Errors
+    ///
+    /// Retourne une erreur uniquement si le fichier existe mais
+    /// contient un JSON invalide (= corruption silencieuse à signaler
+    /// explicitement). Le caller (boot daemon) peut choisir de
+    /// fallback sur une liste vide via `unwrap_or_else`.
+    pub fn load_from_cache_dir(cache_dir: &Path) -> Result<Self, LoadError> {
+        let path = cache_dir.join(WARREN_RELAYS_FILENAME);
+        if !path.exists() {
+            log::info!(
+                "Warren relays file not found at {} — booting with empty relay list",
+                path.display()
+            );
+            return Ok(Self::new(WarrenRelayList::default()));
+        }
+        let raw = std::fs::read_to_string(&path)
+            .map_err(|e| LoadError::Io(path.display().to_string(), e))?;
+        let list = WarrenRelayList::from_json_str(&raw)
+            .map_err(|e| LoadError::Json(path.display().to_string(), e))?;
+        log::info!(
+            "Loaded {} Warren relays from {}",
+            list.len(),
+            path.display()
+        );
+        Ok(Self::new(list))
     }
 
     /// Sélectionne un relay pour la tentative `retry_attempt` et
@@ -158,6 +214,71 @@ mod tests {
             selector.select_for_attempt(&WarrenRelayQuery::any(), 0),
             Err(SelectorError::NoRelayMatch)
         ));
+    }
+
+    #[test]
+    fn load_from_cache_dir_returns_empty_list_when_file_absent() {
+        // Phase 4.F.3 : au premier boot, le fichier n'existe pas →
+        // wrapper avec liste vide, pas d'erreur. Permet au daemon de
+        // démarrer sans nécessairement avoir une RelayList Warren.
+        let dir = isolated_tempdir();
+        let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir)
+            .expect("must succeed without file");
+        assert!(matches!(
+            selector.select_for_attempt(&WarrenRelayQuery::any(), 0),
+            Err(SelectorError::NoRelayMatch)
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_from_cache_dir_parses_valid_json_file() {
+        // Phase 4.F.3 : si le fichier existe et contient un JSON v1
+        // valide, le wrapper doit charger les relays correctement.
+        let dir = isolated_tempdir();
+        let pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+        let json = format!(
+            r#"{{"version":1,"relays":[{{"endpoint_id":"{pubkey_hex}","ip_addrs":["198.51.100.1:51820"],"country":"se","city":"Stockholm","weight":100,"active":true}}]}}"#
+        );
+        std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write file");
+
+        let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir).expect("must parse");
+        let selection = selector
+            .select_for_attempt(&WarrenRelayQuery::any(), 0)
+            .expect("must find the relay");
+        let expected_id = SecretKey::from_bytes(&[5u8; 32]).public();
+        assert_eq!(selection.endpoint_id, expected_id);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_from_cache_dir_returns_json_error_on_corrupt_file() {
+        // Phase 4.F.3 : si le fichier existe mais contient un JSON
+        // invalide, on remonte une erreur typée plutôt que de silencer
+        // (la corruption silencieuse masquerait un bug).
+        let dir = isolated_tempdir();
+        std::fs::write(dir.join(WARREN_RELAYS_FILENAME), "not valid json").expect("write");
+
+        let result = DaemonWarrenRelaySelector::load_from_cache_dir(&dir);
+        assert!(matches!(result, Err(LoadError::Json(_, _))));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Tempdir isolé par test (pid + nanos + counter atomique).
+    fn isolated_tempdir() -> std::path::PathBuf {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        let pid = std::process::id();
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let n = COUNTER.fetch_add(1, Ordering::SeqCst);
+        let dir = std::env::temp_dir().join(format!("warren-relay-selector-{pid}-{nanos}-{n}"));
+        std::fs::create_dir_all(&dir).expect("create tempdir");
+        dir
     }
 
     #[test]
