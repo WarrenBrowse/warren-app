@@ -170,29 +170,35 @@ pub struct PrivateAccountAndDevice {
 impl From<PrivateAccountAndDevice> for WarrenIdentity {
     /// Warren fork — Phase 2.B.3 V6.a : conversion depuis le format
     /// historique daemon (`account_number: String`) vers Warren
-    /// (`pubkey: WarrenPubKey`).
-    ///
-    /// Si `config.account_number` n'est PAS une pubkey Warren valide
-    /// (= 64 chars hex), on log et on fallback sur un dummy
-    /// `WarrenPubKey` (tous zéros) — la requête signée associée
-    /// échouera côté serveur, mais ne crash pas le boot. La migration
-    /// v15 (Phase 2.D) renommera le field interne et lèvera ce
-    /// fallback.
+    /// (`pubkey: WarrenPubKey`). Cf. [`account_number_to_warren_pubkey`].
     fn from(config: PrivateAccountAndDevice) -> Self {
-        use std::str::FromStr;
-        let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&config.account_number)
-            .unwrap_or_else(|e| {
-                log::warn!(
-                    "PrivateAccountAndDevice.account_number is not a valid Warren pubkey \
-                     ({e}), fallback dummy zero pubkey — relogin required for Warren auth",
-                );
-                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&[0u8; 32])
-            });
         WarrenIdentity {
-            pubkey,
+            pubkey: account_number_to_warren_pubkey(&config.account_number),
             device: Device::from(config.device),
         }
     }
+}
+
+/// Warren fork — Phase 2.C V7.b : helper interne qui parse un
+/// `AccountNumber` (= `String`) en `WarrenPubKey` (hex 64ch). Si la
+/// chaîne n'est pas une pubkey Warren valide (= ancien device.json
+/// Mullvad avec un account_number décimal), on log un `warn!` et on
+/// retourne un `WarrenPubKey` zéro (toutes les requêtes signées
+/// échoueront côté serveur, mais le daemon ne crash pas).
+///
+/// La migration v15 (Phase 2.D) renommera le field interne en
+/// `pubkey: WarrenPubKey` et supprimera ce fallback.
+pub(crate) fn account_number_to_warren_pubkey(
+    account_number: &str,
+) -> mullvad_types::warren_pubkey::WarrenPubKey {
+    use std::str::FromStr;
+    mullvad_types::warren_pubkey::WarrenPubKey::from_str(account_number).unwrap_or_else(|e| {
+        log::warn!(
+            "account_number is not a valid Warren pubkey ({e}), fallback dummy zero \
+             pubkey — relogin required for Warren auth",
+        );
+        mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&[0u8; 32])
+    })
 }
 
 /// Device type that contains private data.
@@ -639,11 +645,14 @@ impl AccountManager {
 
         let create_submission = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
-            let account_number = old_config.account_number.clone();
+            // Warren fork — Phase 2.C V7.b : `submit_voucher` prend
+            // une `WarrenPubKey`. Conversion depuis le legacy
+            // `account_number: String` via fallback helper.
+            let pubkey = account_number_to_warren_pubkey(&old_config.account_number);
             let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
                 warren_identity_service
-                    .submit_voucher(account_number, voucher)
+                    .submit_voucher(pubkey, voucher)
                     .await
             })
         };
@@ -1214,11 +1223,13 @@ impl AccountManager {
         &self,
     ) -> Result<impl Future<Output = Result<chrono::DateTime<Utc>, Error>> + use<>, Error> {
         let old_config = self.data.device().ok_or(Error::NoDevice)?;
-        let account_number = old_config.account_number.clone();
+        // Warren fork — Phase 2.C V7.b : `get_data_2` prend une
+        // `WarrenPubKey`. Conversion depuis le legacy `account_number`.
+        let pubkey = account_number_to_warren_pubkey(&old_config.account_number);
         let warren_identity_service = self.warren_identity_service.clone();
         Ok(async move {
             warren_identity_service
-                .get_data_2(account_number)
+                .get_data_2(pubkey)
                 .await
                 .map(|data| data.expiry)
         })

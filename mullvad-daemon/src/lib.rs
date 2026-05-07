@@ -1950,7 +1950,11 @@ impl Daemon {
     ) {
         let account = self.account_manager.warren_identity_service.clone();
         tokio::spawn(async move {
-            let result = account.get_data(account_number).await;
+            // Warren fork — Phase 2.C V7.b : `get_data` prend une
+            // `WarrenPubKey`. On parse le legacy `account_number`
+            // (= chaîne possiblement non-hex) avec fallback dummy.
+            let pubkey = device::account_number_to_warren_pubkey(&account_number);
+            let result = account.get_data(pubkey).await;
             Self::oneshot_send(tx, result, "account data");
         });
     }

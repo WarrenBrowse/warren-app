@@ -7,6 +7,7 @@ use mullvad_types::account::{PlayPurchase, PlayPurchasePaymentToken};
 use mullvad_types::{
     account::{AccountData, AccountNumber, VoucherSubmission},
     device::{Device, DeviceId},
+    warren_pubkey::WarrenPubKey,
     wireguard::WireguardData,
 };
 use talpid_types::net::wireguard::PrivateKey;
@@ -313,11 +314,16 @@ impl WarrenIdentityService {
         )
     }
 
-    pub async fn get_data(&self, number: AccountNumber) -> Result<AccountData, rest::Error> {
+    /// Warren fork — Phase 2.C V7.b : prend une `WarrenPubKey` au
+    /// lieu d'un `AccountNumber` brut. La conversion vers
+    /// `AccountNumber` (= String) se fait à l'interface du
+    /// `AccountsProxy` Mullvad qui n'a pas encore migré (Phase 4).
+    pub async fn get_data(&self, pubkey: WarrenPubKey) -> Result<AccountData, rest::Error> {
         let proxy = self.proxy.clone();
         let api_handle = self.api_availability.clone();
+        let account_number: AccountNumber = pubkey.as_str().to_owned();
         let result = retry_future(
-            move || proxy.get_data(number.clone()),
+            move || proxy.get_data(account_number.clone()),
             move |result| should_retry(result, &api_handle),
             RETRY_ACTION_STRATEGY,
         )
@@ -328,17 +334,18 @@ impl WarrenIdentityService {
         result
     }
 
-    pub async fn get_data_2(&self, number: AccountNumber) -> Result<AccountData, Error> {
-        self.get_data(number).await.map_err(map_rest_error)
+    pub async fn get_data_2(&self, pubkey: WarrenPubKey) -> Result<AccountData, Error> {
+        self.get_data(pubkey).await.map_err(map_rest_error)
     }
 
     pub async fn submit_voucher(
         &self,
-        account_number: AccountNumber,
+        pubkey: WarrenPubKey,
         voucher: String,
     ) -> Result<VoucherSubmission, Error> {
         let proxy = self.proxy.clone();
         let api_handle = self.api_availability.clone();
+        let account_number: AccountNumber = pubkey.as_str().to_owned();
         let result = retry_future(
             move || proxy.submit_voucher(account_number.clone(), voucher.clone()),
             move |result| should_retry(result, &api_handle),
@@ -355,10 +362,11 @@ impl WarrenIdentityService {
     #[cfg(target_os = "android")]
     pub async fn init_play_purchase(
         &self,
-        account_number: AccountNumber,
+        pubkey: WarrenPubKey,
     ) -> Result<PlayPurchasePaymentToken, Error> {
         let mut proxy = self.proxy.clone();
         let api_handle = self.api_availability.clone();
+        let account_number: AccountNumber = pubkey.as_str().to_owned();
         let factory = move || {
             let account_number = account_number.clone();
 
@@ -380,11 +388,12 @@ impl WarrenIdentityService {
     #[cfg(target_os = "android")]
     pub async fn verify_play_purchase(
         &self,
-        account_number: AccountNumber,
+        pubkey: WarrenPubKey,
         play_purchase: PlayPurchase,
     ) -> Result<(), Error> {
         let mut proxy = self.proxy.clone();
         let api_handle = self.api_availability.clone();
+        let account_number: AccountNumber = pubkey.as_str().to_owned();
         let factory = move || {
             let account_number = account_number.clone();
             let play_purchase = play_purchase.clone();
@@ -405,9 +414,10 @@ impl WarrenIdentityService {
     }
 
     #[cfg(target_os = "android")]
-    pub async fn delete_account(&self, account_number: AccountNumber) -> Result<(), Error> {
+    pub async fn delete_account(&self, pubkey: WarrenPubKey) -> Result<(), Error> {
         let proxy = self.proxy.clone();
         let api_handle = self.api_availability.clone();
+        let account_number: AccountNumber = pubkey.as_str().to_owned();
 
         let factory = move || {
             let account_number = account_number.clone();
