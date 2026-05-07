@@ -864,7 +864,9 @@ impl Daemon {
 
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
-            data.device().map(|device| device.account_number.clone()),
+            // AccountHistory.set/get prennent AccountNumber (= String).
+            data.device()
+                .map(|device| device.pubkey.as_str().to_owned()),
         )
         .await
         .map_err(Error::LoadAccountHistory)?;
@@ -1664,7 +1666,7 @@ impl Daemon {
             AccountEvent::Device(PrivateDeviceEvent::Login(device)) => {
                 if let Err(error) = self
                     .account_history
-                    .set(device.account_number.clone())
+                    .set(device.pubkey.as_str().to_owned())
                     .await
                 {
                     log::error!(
@@ -1965,7 +1967,7 @@ impl Daemon {
                 let future = self
                     .account_manager
                     .warren_identity_service
-                    .get_www_auth_token(device.account_number);
+                    .get_www_auth_token(device.pubkey.as_str().to_owned());
                 tokio::spawn(async {
                     Self::oneshot_send(
                         tx,

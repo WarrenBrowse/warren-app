@@ -144,14 +144,6 @@ impl PrivateDeviceState {
 impl From<PrivateDeviceState> for DeviceState {
     fn from(state: PrivateDeviceState) -> Self {
         match state {
-            // Warren fork — Phase 2.B.3 V6.a : `DeviceState::LoggedIn`
-            // porte une `WarrenIdentity` au lieu de l'historique
-            // `AccountAndDevice`. Le `From<PrivateAccountAndDevice>
-            // for WarrenIdentity` (cf. plus bas) parse le field
-            // `account_number` (String) en `WarrenPubKey` (hex 64ch),
-            // avec fallback bidon si format non-Warren (= ancien
-            // device.json Mullvad). Phase 2.D s'occupera de la
-            // migration v15 propre.
             PrivateDeviceState::LoggedIn(dev) => DeviceState::LoggedIn(WarrenIdentity::from(dev)),
             PrivateDeviceState::LoggedOut => DeviceState::LoggedOut,
             PrivateDeviceState::Revoked => DeviceState::Revoked,
@@ -159,35 +151,39 @@ impl From<PrivateDeviceState> for DeviceState {
     }
 }
 
-/// Same as [PrivateDevice] but also contains the associated account number.
+/// Same as [PrivateDevice] but also contains the associated Warren
+/// pubkey identifier.
+///
+/// Warren fork — Phase 2.D V8.b : le field `account_number: AccountNumber`
+/// historique a été remplacé par `pubkey: WarrenPubKey` (newtype hex
+/// 64ch validé). Les anciens device.json (`{"account_number": ...}`)
+/// échouent à la désérialisation et sont wipés (= LoggedOut au boot).
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
 pub struct PrivateAccountAndDevice {
-    #[serde(alias = "account_token")]
-    pub account_number: AccountNumber,
+    pub pubkey: mullvad_types::warren_pubkey::WarrenPubKey,
     pub device: PrivateDevice,
 }
 
 impl From<PrivateAccountAndDevice> for WarrenIdentity {
-    /// Warren fork — Phase 2.B.3 V6.a : conversion depuis le format
-    /// historique daemon (`account_number: String`) vers Warren
-    /// (`pubkey: WarrenPubKey`). Cf. [`account_number_to_warren_pubkey`].
     fn from(config: PrivateAccountAndDevice) -> Self {
         WarrenIdentity {
-            pubkey: account_number_to_warren_pubkey(&config.account_number),
+            pubkey: config.pubkey,
             device: Device::from(config.device),
         }
     }
 }
 
 /// Warren fork — Phase 2.C V7.b : helper interne qui parse un
-/// `AccountNumber` (= `String`) en `WarrenPubKey` (hex 64ch). Si la
-/// chaîne n'est pas une pubkey Warren valide (= ancien device.json
-/// Mullvad avec un account_number décimal), on log un `warn!` et on
-/// retourne un `WarrenPubKey` zéro (toutes les requêtes signées
-/// échoueront côté serveur, mais le daemon ne crash pas).
+/// `AccountNumber` (= `String`) reçu d'une **interface externe**
+/// (gRPC client, API serveur, settings legacy v5) en `WarrenPubKey`
+/// (hex 64ch). Si la chaîne n'est pas une pubkey Warren valide, on
+/// log un `warn!` et on retourne un `WarrenPubKey` zéro (= toutes
+/// les requêtes signées avec cette pubkey échoueront côté serveur,
+/// mais le daemon ne crash pas).
 ///
-/// La migration v15 (Phase 2.D) renommera le field interne en
-/// `pubkey: WarrenPubKey` et supprimera ce fallback.
+/// Phase 2.D V8.b : ce helper n'est plus utilisé pour les conversions
+/// internes (le field `PrivateAccountAndDevice.pubkey` est typé
+/// directement) ; il reste pour les inputs externes type-erased.
 pub(crate) fn account_number_to_warren_pubkey(
     account_number: &str,
 ) -> mullvad_types::warren_pubkey::WarrenPubKey {
@@ -462,7 +458,11 @@ impl AccountManager {
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
-        let number = data.device().map(|state| state.account_number.clone());
+        // Warren fork — Phase 2.D V8.b : `state.pubkey` est typé
+        // `WarrenPubKey` ; `spawn_warren_identity_service` reçoit
+        // toujours un `Option<AccountNumber>` (= String) pour
+        // l'initial check legacy.
+        let number = data.device().map(|state| state.pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
         let warren_identity_service = service::spawn_warren_identity_service(
             rest_handle.clone(),
@@ -648,7 +648,7 @@ impl AccountManager {
             // Warren fork — Phase 2.C V7.b : `submit_voucher` prend
             // une `WarrenPubKey`. Conversion depuis le legacy
             // `account_number: String` via fallback helper.
-            let pubkey = account_number_to_warren_pubkey(&old_config.account_number);
+            let pubkey = old_config.pubkey.clone();
             let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
                 warren_identity_service
@@ -680,13 +680,9 @@ impl AccountManager {
 
         let init_play_purchase_api_call = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
-            let account_number = old_config.account_number.clone();
+            let pubkey = old_config.pubkey.clone();
             let warren_identity_service = self.warren_identity_service.clone();
-            Ok(async move {
-                warren_identity_service
-                    .init_play_purchase(account_number)
-                    .await
-            })
+            Ok(async move { warren_identity_service.init_play_purchase(pubkey).await })
         };
 
         match init_play_purchase_api_call() {
@@ -738,11 +734,11 @@ impl AccountManager {
 
         let play_purchase_verify_api_call = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
-            let account_number = old_config.account_number.clone();
+            let pubkey = old_config.pubkey.clone();
             let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
                 warren_identity_service
-                    .verify_play_purchase(account_number, play_purchase)
+                    .verify_play_purchase(pubkey, play_purchase)
                     .await
             })
         };
@@ -905,7 +901,8 @@ impl AccountManager {
             && let Some(updated_config) = self.data.device()
         {
             let device_service = self.device_service.clone();
-            let number = updated_config.account_number.clone();
+            // DeviceService.rotate_key prend AccountNumber (String).
+            let number = updated_config.pubkey.as_str().to_owned();
             let device_id = updated_config.device.id.clone();
             api_call.set_oneshot_rotation(Box::pin(async move {
                 device_service.rotate_key(number, device_id).await
@@ -1002,7 +999,8 @@ impl AccountManager {
         let key_rotation_timer = self.key_rotation_timer(config.device.wg_data.created);
 
         let device_service = self.device_service.clone();
-        let account_number = config.account_number.clone();
+        // DeviceService.rotate_key prend AccountNumber (String).
+        let account_number = config.pubkey.as_str().to_owned();
         let device_id = config.device.id.clone();
 
         Some(async move {
@@ -1092,10 +1090,7 @@ impl AccountManager {
         };
 
         let service = self.warren_identity_service.clone();
-        match service
-            .delete_account(old_config.clone().account_number)
-            .await
-        {
+        match service.delete_account(old_config.clone().pubkey).await {
             Ok(_) => {
                 if let Err(err) = self.cacher.write(&PrivateDeviceState::LoggedOut).await {
                     let _ = tx.send(Err(err));
@@ -1123,7 +1118,7 @@ impl AccountManager {
 
         async move {
             if let Err(error) = service
-                .remove_device_with_backoff(data.account_number, data.device.id)
+                .remove_device_with_backoff(data.pubkey.as_str().to_owned(), data.device.id)
                 .await
             {
                 log::error!(
@@ -1167,7 +1162,7 @@ impl AccountManager {
         let device_service = self.device_service.clone();
         Ok(async move {
             device_service
-                .rotate_key(data.account_number, data.device.id)
+                .rotate_key(data.pubkey.as_str().to_owned(), data.device.id)
                 .await
         })
     }
@@ -1207,7 +1202,8 @@ impl AccountManager {
         old_config: &PrivateAccountAndDevice,
     ) -> impl Future<Output = Result<Device, Error>> + use<> {
         let device_service = self.device_service.clone();
-        let account_number = old_config.account_number.clone();
+        // DeviceService.get prend AccountNumber (String).
+        let account_number = old_config.pubkey.as_str().to_owned();
         let device_id = old_config.device.id.clone();
         async move { device_service.get(account_number, device_id).await }
     }
@@ -1225,7 +1221,7 @@ impl AccountManager {
         let old_config = self.data.device().ok_or(Error::NoDevice)?;
         // Warren fork — Phase 2.C V7.b : `get_data_2` prend une
         // `WarrenPubKey`. Conversion depuis le legacy `account_number`.
-        let pubkey = account_number_to_warren_pubkey(&old_config.account_number);
+        let pubkey = old_config.pubkey.clone();
         let warren_identity_service = self.warren_identity_service.clone();
         Ok(async move {
             warren_identity_service

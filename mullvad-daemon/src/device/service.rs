@@ -67,7 +67,7 @@ impl DeviceService {
             .map_err(map_rest_error)?;
 
             Ok(PrivateAccountAndDevice {
-                account_number,
+                pubkey: super::account_number_to_warren_pubkey(&account_number),
                 device: PrivateDevice::try_from_device(
                     device,
                     WireguardData {
@@ -103,7 +103,7 @@ impl DeviceService {
                 .map_err(map_rest_error)?;
 
         Ok(PrivateAccountAndDevice {
-            account_number,
+            pubkey: super::account_number_to_warren_pubkey(&account_number),
             device: PrivateDevice::try_from_device(
                 device,
                 WireguardData {

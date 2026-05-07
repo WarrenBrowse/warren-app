@@ -79,7 +79,10 @@ async fn cache_from_wireguard_key(
     for device in devices.into_iter() {
         if device.pubkey == wg_data.private_key.public_key() {
             return Ok(PrivateAccountAndDevice {
-                account_number,
+                // Warren fork — Phase 2.D V8.b : conversion legacy
+                // `account_number` (= input migration v5) en pubkey
+                // Warren via fallback dummy si format non-hex.
+                pubkey: crate::device::account_number_to_warren_pubkey(&account_number),
                 device: PrivateDevice::try_from_device(device, wg_data)?,
             });
         }
