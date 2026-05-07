@@ -465,6 +465,24 @@ impl<B: AddressCacheBacking> Runtime<B> {
         &self,
         connection_mode_provider: T,
     ) -> rest::MullvadRestHandle {
+        self.mullvad_rest_handle_with_warren_signer(connection_mode_provider, None)
+    }
+
+    /// Warren fork — Phase 2.A.4 : variante de
+    /// [`Self::mullvad_rest_handle`] qui pose un
+    /// [`rest::WarrenAuthSigner`] sur la `RequestFactory` quand
+    /// `warren_signer` est `Some`. Si `None`, comportement identique
+    /// à [`Self::mullvad_rest_handle`] (= mode Mullvad Bearer
+    /// historique).
+    ///
+    /// Le caller (= mullvad-daemon) détient l'`Arc<WarrenAuthSigner>`
+    /// dérivé de la mnémonique BIP39 stockée localement (cf. crate
+    /// `warren-identity` côté warren-pocs).
+    pub fn mullvad_rest_handle_with_warren_signer<T: ConnectionModeProvider + 'static>(
+        &self,
+        connection_mode_provider: T,
+        warren_signer: Option<Arc<warren_auth::WarrenAuthSigner>>,
+    ) -> rest::MullvadRestHandle {
         let service = self.new_request_service(
             connection_mode_provider,
             Arc::clone(&self.address_cache),
@@ -475,7 +493,10 @@ impl<B: AddressCacheBacking> Runtime<B> {
         );
         let hostname = self.endpoint.host().to_owned();
         let token_store = access::AccessTokenStore::new(service.clone(), hostname.clone());
-        let factory = rest::RequestFactory::new(hostname, Some(token_store));
+        let mut factory = rest::RequestFactory::new(hostname, Some(token_store));
+        if let Some(signer) = warren_signer {
+            factory = factory.with_warren_signer(signer);
+        }
 
         rest::MullvadRestHandle::new(service, factory, self.availability_handle())
     }

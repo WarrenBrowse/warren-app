@@ -614,6 +614,15 @@ impl RequestFactory {
         self
     }
 
+    /// Warren fork — `true` si la factory a été configurée avec un
+    /// signer Warren via [`Self::with_warren_signer`]. Utilisé par
+    /// les services daemon pour détecter le mode auth (Warren signed
+    /// vs Mullvad Bearer historique).
+    #[must_use]
+    pub fn has_warren_signer(&self) -> bool {
+        self.warren_signer.is_some()
+    }
+
     pub fn request<B: Body + Default>(&self, path: &str, method: Method) -> Result<Request<B>> {
         Ok(
             Request::new(self.hyper_request(path, method)?, self.token_store.clone())
@@ -944,6 +953,23 @@ mod tests {
 
     fn fixed_signer() -> Arc<WarrenAuthSigner> {
         Arc::new(WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32])))
+    }
+
+    #[test]
+    fn has_warren_signer_reflects_factory_state() {
+        // Phase 2.B Vague 3 — un caller (e.g. mullvad-daemon ou un
+        // test d'intégration) doit pouvoir interroger la factory pour
+        // savoir si elle est configurée en mode Warren auth (pour
+        // décider entre `signed_*` et helpers Bearer historiques).
+        let bare = RequestFactory::new("api.example.test", None);
+        assert!(!bare.has_warren_signer());
+        let warren = bare.clone().with_warren_signer(fixed_signer());
+        assert!(warren.has_warren_signer());
+        // Builder ne mute pas l'original (= immutability conventionnelle) :
+        assert!(
+            !bare.has_warren_signer(),
+            "builder ne doit pas muter l'original"
+        );
     }
 
     #[test]
