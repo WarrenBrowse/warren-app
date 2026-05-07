@@ -3,7 +3,7 @@ use futures::channel::{mpsc, oneshot};
 use futures::stream::Fuse;
 
 use talpid_tunnel::{TunnelEvent, TunnelMetadata};
-use talpid_types::net::{AllowedClients, AllowedEndpoint, wireguard::TunnelParameters};
+use talpid_types::net::{AllowedClients, AllowedEndpoint};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_types::{BoxedError, ErrorExt};
 
@@ -12,6 +12,7 @@ use crate::firewall::FirewallPolicy;
 use crate::resolver::LOCAL_DNS_RESOLVER;
 use talpid_dns::ResolvedDnsConfig;
 
+use super::backend_params::BackendParams;
 use super::connecting_state::TunnelCloseEvent;
 use super::{
     AfterDisconnect, ConnectingState, DisconnectingState, ErrorState, EventConsequence,
@@ -26,7 +27,7 @@ pub(crate) type TunnelEventsReceiver =
 pub struct ConnectedState {
     metadata: TunnelMetadata,
     tunnel_events: TunnelEventsReceiver,
-    tunnel_parameters: TunnelParameters,
+    tunnel_parameters: BackendParams,
     tunnel_close_event: TunnelCloseEvent,
     tunnel_close_tx: oneshot::Sender<()>,
 }
@@ -36,7 +37,7 @@ impl ConnectedState {
         shared_values: &mut SharedTunnelStateValues,
         metadata: TunnelMetadata,
         tunnel_events: TunnelEventsReceiver,
-        tunnel_parameters: TunnelParameters,
+        tunnel_parameters: BackendParams,
         tunnel_close_event: TunnelCloseEvent,
         tunnel_close_tx: oneshot::Sender<()>,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {

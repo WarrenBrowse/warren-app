@@ -1,3 +1,4 @@
+mod backend_params;
 mod connected_state;
 mod connecting_state;
 mod disconnected_state;
@@ -575,50 +576,6 @@ pub trait TunnelParametersGenerator: Send + 'static {
     }
 }
 
-#[cfg(test)]
-mod warren_trait_default_tests {
-    //! Phase 4.F.5.c.1 — un seul test pertinent : valider que le
-    //! default impl du trait pour `generate_warren_iroh_params`
-    //! retourne bien `NoMatchingRelay` (vs. `unimplemented!()` ou
-    //! panic). Important parce que les implémenteurs upstream Mullvad
-    //! ne savent rien de Warren ; ils doivent dégrader proprement.
-    //!
-    //! Pas de test creux ici (= "vérifie que la méthode est appelée") :
-    //! on teste le contrat exact du default body.
-    use std::future::Future;
-    use std::pin::Pin;
-    use talpid_types::net::IpAvailability;
-    use talpid_types::net::wireguard::TunnelParameters;
-    use talpid_types::tunnel::ParameterGenerationError;
-
-    use super::TunnelParametersGenerator;
-
-    /// Implémenteur minimal qui n'override PAS `generate_warren_iroh_params`,
-    /// pour exercer le default body du trait.
-    struct UpstreamOnlyGenerator;
-
-    impl TunnelParametersGenerator for UpstreamOnlyGenerator {
-        fn generate(
-            &mut self,
-            _retry_attempt: u32,
-            _ip_availability: IpAvailability,
-        ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>
-        {
-            Box::pin(async { Err(ParameterGenerationError::NoMatchingRelay) })
-        }
-    }
-
-    #[tokio::test]
-    async fn default_generate_warren_returns_no_matching_relay() {
-        let mut generator = UpstreamOnlyGenerator;
-        let result = generator.generate_warren_iroh_params(0).await;
-        assert!(
-            matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
-            "default impl must degrade to NoMatchingRelay (got {result:?})"
-        );
-    }
-}
-
 /// Values that are common to all tunnel states.
 struct SharedTunnelStateValues {
     /// Management of excluded apps.
@@ -897,5 +854,49 @@ impl TunnelStateMachineHandle {
     #[cfg(windows)]
     pub fn split_tunnel(&self) -> &split_tunnel::SplitTunnelHandle {
         &self.split_tunnel
+    }
+}
+
+#[cfg(test)]
+mod warren_trait_default_tests {
+    //! Phase 4.F.5.c.1 — un seul test pertinent : valider que le
+    //! default impl du trait pour `generate_warren_iroh_params`
+    //! retourne bien `NoMatchingRelay` (vs. `unimplemented!()` ou
+    //! panic). Important parce que les implémenteurs upstream Mullvad
+    //! ne savent rien de Warren ; ils doivent dégrader proprement.
+    //!
+    //! Pas de test creux ici (= "vérifie que la méthode est appelée") :
+    //! on teste le contrat exact du default body.
+    use std::future::Future;
+    use std::pin::Pin;
+    use talpid_types::net::IpAvailability;
+    use talpid_types::net::wireguard::TunnelParameters;
+    use talpid_types::tunnel::ParameterGenerationError;
+
+    use super::TunnelParametersGenerator;
+
+    /// Implémenteur minimal qui n'override PAS `generate_warren_iroh_params`,
+    /// pour exercer le default body du trait.
+    struct UpstreamOnlyGenerator;
+
+    impl TunnelParametersGenerator for UpstreamOnlyGenerator {
+        fn generate(
+            &mut self,
+            _retry_attempt: u32,
+            _ip_availability: IpAvailability,
+        ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>
+        {
+            Box::pin(async { Err(ParameterGenerationError::NoMatchingRelay) })
+        }
+    }
+
+    #[tokio::test]
+    async fn default_generate_warren_returns_no_matching_relay() {
+        let mut generator = UpstreamOnlyGenerator;
+        let result = generator.generate_warren_iroh_params(0).await;
+        assert!(
+            matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
+            "default impl must degrade to NoMatchingRelay (got {result:?})"
+        );
     }
 }

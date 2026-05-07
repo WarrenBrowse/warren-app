@@ -10,11 +10,12 @@ use talpid_routing::RouteManagerHandle;
 use talpid_tunnel::tun_provider::TunProvider;
 use talpid_tunnel::{EventHook, TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::ErrorExt;
-use talpid_types::net::{
-    AllowedClients, AllowedEndpoint, AllowedTunnelTraffic, wireguard::TunnelParameters,
-};
+use talpid_types::net::wireguard::TunnelParameters;
+use talpid_types::net::{AllowedClients, AllowedEndpoint, AllowedTunnelTraffic};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_warren_iroh::WarrenIrohParameters;
+
+use super::backend_params::BackendParams;
 
 use super::connected_state::TunnelEventsReceiver;
 use super::{
@@ -43,7 +44,7 @@ const INITIAL_ALLOWED_TUNNEL_TRAFFIC: AllowedTunnelTraffic = AllowedTunnelTraffi
 /// The tunnel has been started, but it is not established/functional.
 pub struct ConnectingState {
     tunnel_events: TunnelEventsReceiver,
-    tunnel_parameters: TunnelParameters,
+    tunnel_parameters: BackendParams,
     tunnel_metadata: Option<TunnelMetadata>,
     allowed_tunnel_traffic: AllowedTunnelTraffic,
     tunnel_close_event: TunnelCloseEvent,
@@ -127,9 +128,11 @@ impl ConnectingState {
                     return ErrorState::enter(shared_values, ErrorStateCause::SplitTunnelError);
                 }
 
+                let backend_params = BackendParams::Wireguard(tunnel_parameters);
+
                 if let Err(error) = Self::set_firewall_policy(
                     shared_values,
-                    &tunnel_parameters,
+                    &backend_params,
                     &None,
                     AllowedTunnelTraffic::None,
                 ) {
@@ -157,9 +160,19 @@ impl ConnectingState {
                         }
                     }
 
+                    // Re-extraire le `wireguard::TunnelParameters` concret
+                    // pour `start_tunnel` qui le passe à `TunnelMonitor::start`.
+                    // Évite un clone vs. wrapping post-call.
+                    let wg_params = match backend_params {
+                        BackendParams::Wireguard(p) => p,
+                        BackendParams::Warren(_) => {
+                            unreachable!("enter_wireguard never receives Warren params")
+                        }
+                    };
+
                     let connecting_state = Self::start_tunnel(
                         shared_values.runtime.clone(),
-                        tunnel_parameters,
+                        wg_params,
                         &shared_values.log_dir,
                         &shared_values.resource_dir,
                         shared_values.tun_provider.clone(),
@@ -167,10 +180,11 @@ impl ConnectingState {
                         retry_attempt,
                     );
 
-                    let params = connecting_state.tunnel_parameters.clone();
+                    let transition_endpoint =
+                        connecting_state.tunnel_parameters.get_tunnel_endpoint();
                     (
                         Box::new(connecting_state),
-                        TunnelStateTransition::Connecting(params.get_tunnel_endpoint()),
+                        TunnelStateTransition::Connecting(transition_endpoint),
                     )
                 }
             }
@@ -182,20 +196,14 @@ impl ConnectingState {
     /// Différences avec [`Self::enter_wireguard`] :
     /// - Pas de check `ip_availability` côté state machine — Iroh
     ///   gère sa propre résolution multi-path (v4/v6) au handshake.
-    /// - Pas d'appel `set_firewall_policy()` pré-handshake — les IPs
-    ///   candidate de l'exit ne sont connues qu'après le `connect_multi`.
-    ///   La sécurisation du trafic vers l'exit sera ajoutée en Phase
-    ///   future (refactor firewall pour accepter `EndpointAddr.ip_addrs()`).
     /// - Pas d'Android `prepare_tun_config` — Warren-Iroh ouvre son
     ///   propre TUN via `args.tun_provider` côté `WarrenIrohMonitor::start`.
     ///
-    /// **Dette technique documentée** : la struct [`ConnectingState`]
-    /// est typée `tunnel_parameters: TunnelParameters` (WG). Pour
-    /// préserver l'API du state machine sans refactor structurel
-    /// invasif, on stocke un `TunnelParameters` placeholder qui n'est
-    /// jamais consommé pour de la décision crypto/routing après le
-    /// `start_warren_iroh`. L'unification du type côté `ConnectingState`
-    /// est traquée comme Phase 4.F.5.d future.
+    /// Le firewall pre-handshake est appliqué **comme pour WG** via
+    /// [`Self::set_firewall_policy`] : grâce à l'enum
+    /// [`BackendParams`], `get_next_hop_endpoints()` retourne l'ensemble
+    /// des `endpoint_addr.ip_addrs()` Iroh, ce qui sécurise le trafic
+    /// outgoing vers l'exit (Phase 4.F.5.d).
     fn enter_warren(
         shared_values: &mut SharedTunnelStateValues,
         retry_attempt: u32,
@@ -214,7 +222,28 @@ impl ConnectingState {
             }
         };
 
-        let transition_endpoint = warren_endpoint_for_transition(&warren_params);
+        // Phase 4.F.5.d.3 : firewall pre-handshake activé en Warren mode.
+        // Le `BackendParams::Warren` expose les IPs candidate Iroh via
+        // `get_next_hop_endpoints()` ; le firewall les autorise comme
+        // pour les peers WG. Pas de regression no-leak.
+        let backend_params = BackendParams::Warren(WarrenIrohParameters {
+            exit_id: warren_params.exit_id,
+            exit_addr: warren_params.exit_addr.clone(),
+            signing_key: warren_params.signing_key.clone(),
+            n_connections: warren_params.n_connections,
+            features: warren_params.features,
+        });
+        if let Err(error) = Self::set_firewall_policy(
+            shared_values,
+            &backend_params,
+            &None,
+            AllowedTunnelTraffic::None,
+        ) {
+            return ErrorState::enter(
+                shared_values,
+                ErrorStateCause::SetFirewallPolicyError(error),
+            );
+        }
 
         let connecting_state = Self::start_tunnel_warren(
             shared_values.runtime.clone(),
@@ -226,6 +255,7 @@ impl ConnectingState {
             retry_attempt,
         );
 
+        let transition_endpoint = connecting_state.tunnel_parameters.get_tunnel_endpoint();
         (
             Box::new(connecting_state),
             TunnelStateTransition::Connecting(transition_endpoint),
@@ -259,8 +289,16 @@ impl ConnectingState {
         let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
         let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
 
-        // Placeholder WG TunnelParameters — voir docstring `enter_warren`.
-        let tunnel_parameters_placeholder = warren_tunnel_parameters_placeholder(&parameters);
+        // Phase 4.F.5.d.2 : on stocke les params Warren dans le
+        // BackendParams (plus de dummy WG placeholder). Clone car
+        // la task spawn_blocking consomme `parameters` via `move`.
+        let stored_params = BackendParams::Warren(WarrenIrohParameters {
+            exit_id: parameters.exit_id,
+            exit_addr: parameters.exit_addr.clone(),
+            signing_key: parameters.signing_key.clone(),
+            n_connections: parameters.n_connections,
+            features: parameters.features,
+        });
 
         tokio::task::spawn_blocking(move || {
             let start = Instant::now();
@@ -317,7 +355,7 @@ impl ConnectingState {
 
         ConnectingState {
             tunnel_events: event_rx.fuse(),
-            tunnel_parameters: tunnel_parameters_placeholder,
+            tunnel_parameters: stored_params,
             tunnel_metadata: None,
             allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
             tunnel_close_event: tunnel_close_event_rx.fuse(),
@@ -328,7 +366,7 @@ impl ConnectingState {
 
     fn set_firewall_policy(
         shared_values: &mut SharedTunnelStateValues,
-        params: &TunnelParameters,
+        params: &BackendParams,
         tunnel_metadata: &Option<TunnelMetadata>,
         allowed_tunnel_traffic: AllowedTunnelTraffic,
     ) -> Result<(), FirewallPolicyError> {
@@ -482,7 +520,7 @@ impl ConnectingState {
 
         ConnectingState {
             tunnel_events: event_rx.fuse(),
-            tunnel_parameters: parameters,
+            tunnel_parameters: BackendParams::Wireguard(parameters),
             tunnel_metadata: None,
             allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
             tunnel_close_event: tunnel_close_event_rx.fuse(),
@@ -846,97 +884,5 @@ impl TunnelState for ConnectingState {
                 self.handle_tunnel_close_event(block_reason, shared_values)
             }
         }
-    }
-}
-
-/// Construit un [`talpid_types::net::Endpoint`] minimal pour
-/// [`TunnelStateTransition::Connecting`] côté Warren — sert
-/// uniquement à informer la GUI/management-interface qu'un tunnel
-/// est en cours d'établissement vers une IP candidate de l'exit.
-///
-/// Si `exit_addr` n'a aucune IP candidate (cas d'erreur de selection
-/// non-relevé), retourne `0.0.0.0:0` plutôt que panic — le wait du
-/// `WarrenIrohMonitor` remontera de toute façon une erreur visible.
-fn warren_endpoint_for_transition(
-    params: &WarrenIrohParameters,
-) -> talpid_types::net::TunnelEndpoint {
-    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-    use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
-
-    let socket_addr: SocketAddr = params
-        .exit_addr
-        .ip_addrs()
-        .next()
-        .copied()
-        .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
-
-    TunnelEndpoint {
-        endpoint: Endpoint::from_socket_address(socket_addr, TransportProtocol::Udp),
-        quantum_resistant: false,
-        obfuscation: None,
-        entry_endpoint: None,
-        tunnel_interface: None,
-        // talpid-types active toujours `cfg(daita)` via son build.rs ;
-        // le champ est donc présent inconditionnellement côté struct
-        // de définition. On le set sans `#[cfg(daita)]` pour éviter
-        // un mismatch côté talpid-core qui n'a pas ce build flag.
-        daita: false,
-    }
-}
-
-/// Construit un placeholder `wireguard::TunnelParameters` pour le
-/// path Warren (cf. docstring `enter_warren`).
-///
-/// **Dette technique** : ce placeholder existe pour préserver le type
-/// de [`ConnectingState::tunnel_parameters`] sans refactor structurel.
-/// Les valeurs WG (`private_key`, `public_key`, `allowed_ips`) sont
-/// dummy zero ; seule `peer.endpoint` est remplie avec une IP
-/// candidate de l'exit Iroh — pertinent pour le firewall WG path qui
-/// n'est de toute façon pas appliqué côté Warren (`enter_warren` skip
-/// le `set_firewall_policy` pre-handshake).
-fn warren_tunnel_parameters_placeholder(params: &WarrenIrohParameters) -> TunnelParameters {
-    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-    use talpid_types::net::GenericTunnelOptions;
-    use talpid_types::net::wireguard::{
-        ConnectionConfig, PeerConfig, PrivateKey, TunnelConfig, TunnelOptions,
-    };
-
-    let endpoint: SocketAddr = params
-        .exit_addr
-        .ip_addrs()
-        .next()
-        .copied()
-        .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
-
-    let dummy_priv = PrivateKey::from([0u8; 32]);
-    let dummy_pub = dummy_priv.public_key();
-
-    TunnelParameters {
-        connection: ConnectionConfig {
-            tunnel: TunnelConfig {
-                private_key: dummy_priv,
-                addresses: vec![],
-            },
-            peer: PeerConfig {
-                public_key: dummy_pub,
-                allowed_ips: vec![],
-                endpoint,
-                psk: None,
-                constant_packet_size: false,
-            },
-            exit_peer: None,
-            ipv4_gateway: Ipv4Addr::UNSPECIFIED,
-            ipv6_gateway: None,
-            #[cfg(target_os = "linux")]
-            fwmark: None,
-        },
-        options: TunnelOptions {
-            mtu: None,
-            quantum_resistant: false,
-            daita: false,
-            userspace: false,
-        },
-        generic_options: GenericTunnelOptions { enable_ipv6: false },
-        obfuscation: None,
     }
 }
