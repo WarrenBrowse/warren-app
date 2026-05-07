@@ -154,6 +154,12 @@ enum Cli {
     /// Manage logs and tracing
     #[clap(subcommand)]
     Log(log::Log),
+
+    /// Warren fork — toggle persistant des modes Warren (tunnel Iroh,
+    /// account local POC). Le restart du daemon est requis pour
+    /// appliquer un changement.
+    #[clap(subcommand)]
+    Warren(warren::Warren),
 }
 
 #[tokio::main]
@@ -188,6 +194,7 @@ async fn main() -> Result<()> {
         Cli::ImportSettings { file } => patch::import(file).await,
         Cli::ExportSettings { file } => patch::export(file).await,
         Cli::Log(cmd) => cmd.handle().await,
+        Cli::Warren(cmd) => cmd.handle().await,
 
         #[cfg(all(unix, not(target_os = "android")))]
         Cli::ShellCompletions { shell, dir } => {

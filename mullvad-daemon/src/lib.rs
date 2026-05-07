@@ -309,6 +309,10 @@ pub enum DaemonCommand {
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
+    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_mode`.
+    SetWarrenMode(ResponseTx<(), settings::Error>, bool),
+    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_local_account`.
+    SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -1613,6 +1617,10 @@ impl Daemon {
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
+            SetWarrenMode(tx, enabled) => self.on_set_warren_mode(tx, enabled).await,
+            SetWarrenLocalAccount(tx, enabled) => {
+                self.on_set_warren_local_account(tx, enabled).await
+            }
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -2671,6 +2679,51 @@ impl Daemon {
                 Self::oneshot_send(tx, Err(e), "set_allow_lan response");
             }
         }
+    }
+
+    /// Warren fork — Phase F.1 : persiste `Settings::warren_mode`.
+    /// Le mode est lu au boot par `warren_mode::resolve` ; un restart
+    /// du daemon est requis pour appliquer (pas de hot-reload du
+    /// backend tunnel — la state machine + identité signing key
+    /// sont posées une fois au boot).
+    async fn on_set_warren_mode(&mut self, tx: ResponseTx<(), settings::Error>, enabled: bool) {
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_mode = enabled)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!(
+                "Warren mode persisted to {} ; restart required for effect",
+                enabled
+            );
+        }
+        Self::oneshot_send(tx, result, "set_warren_mode response");
+    }
+
+    /// Warren fork — Phase F.1 : persiste `Settings::warren_local_account`.
+    /// Restart requis (cf. `on_set_warren_mode` doc).
+    async fn on_set_warren_local_account(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        enabled: bool,
+    ) {
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_local_account = enabled)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!(
+                "Warren local account persisted to {} ; restart required for effect",
+                enabled
+            );
+        }
+        Self::oneshot_send(tx, result, "set_warren_local_account response");
     }
 
     async fn on_set_show_beta_releases(

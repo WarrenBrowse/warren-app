@@ -55,6 +55,10 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 .collect(),
             recents: settings.recents.clone().map(proto::Recents::from),
             update_default_location: settings.update_default_location,
+            // Warren fork — Phase F.1 : exposés via gRPC pour permettre
+            // au CLI/UI de les lire et les muter.
+            warren_mode: settings.warren_mode,
+            warren_local_account: settings.warren_local_account,
         }
     }
 }
@@ -186,13 +190,11 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // included in the serializable settings, such as the below value.
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // Warren fork — Phase E : ces 2 booléens ne sont pas
-            // (encore) propagés via gRPC ; le daemon les lit depuis
-            // sa propre `Settings` persistée. À exposer via gRPC
-            // SetWarrenMode / SetWarrenLocalAccount dans une phase
-            // ultérieure quand l'UI/CLI proposera un toggle.
-            warren_mode: false,
-            warren_local_account: false,
+            // Warren fork — Phase F.1 : propagés via gRPC depuis le
+            // daemon. Le client gRPC peut les lire via `GetSettings`
+            // et les muter via `SetWarrenMode`/`SetWarrenLocalAccount`.
+            warren_mode: settings.warren_mode,
+            warren_local_account: settings.warren_local_account,
         })
     }
 }

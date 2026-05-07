@@ -56,6 +56,17 @@ service ManagementService {
   rpc SetEnableRecents(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetUserspaceWireguard(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
 
+  // Warren fork — Phase F.1 : toggle persistant du mode tunnel Warren
+  // (true = backend Iroh, false = WireGuard upstream). Override via
+  // env var POC `WARREN_TUNNEL=1` reste possible. Restart du daemon
+  // requis pour appliquer.
+  rpc SetWarrenMode(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
+  // Warren fork — Phase F.1 : toggle persistant du mode account local
+  // (true = backends Local* sans api.mullvad.net, false = Remote*
+  // historiques). Override via env var POC `WARREN_LOCAL_ACCOUNT=1`.
+  // Restart requis pour appliquer.
+  rpc SetWarrenLocalAccount(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
+
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
@@ -542,6 +553,10 @@ message Settings {
   repeated RelayOverride relay_overrides = 12;
   optional Recents recents = 13;
   bool update_default_location = 14;
+  // Warren fork — Phase F.1 : toggle persistant. Cf. SetWarrenMode rpc.
+  bool warren_mode = 15;
+  // Warren fork — Phase F.1. Cf. SetWarrenLocalAccount rpc.
+  bool warren_local_account = 16;
 }
 
 message RelayOverride {

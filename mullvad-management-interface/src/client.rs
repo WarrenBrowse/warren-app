@@ -275,6 +275,22 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_mode`.
+    /// Le restart du daemon est requis pour appliquer (le mode est lu
+    /// au boot par `warren_mode::resolve`).
+    pub async fn set_warren_mode(&mut self, state: bool) -> Result<()> {
+        self.0.set_warren_mode(state).await?;
+        Ok(())
+    }
+
+    /// Warren fork — Phase F.1 : toggle persistant
+    /// `Settings::warren_local_account`. Restart requis (cf. doc
+    /// `set_warren_mode`).
+    pub async fn set_warren_local_account(&mut self, state: bool) -> Result<()> {
+        self.0.set_warren_local_account(state).await?;
+        Ok(())
+    }
+
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
         self.0
             .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))
