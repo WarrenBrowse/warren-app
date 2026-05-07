@@ -34,8 +34,10 @@ use tokio::{
 
 mod account_backend;
 mod api;
+mod device_backend;
 mod service;
 pub(crate) use account_backend::{LocalAccountBackend, RemoteAccountBackend, WarrenAccountBackend};
+pub(crate) use device_backend::{LocalDeviceBackend, RemoteDeviceBackend, WarrenDeviceBackend};
 pub(crate) use service::{DeviceService, WarrenIdentityService};
 
 /// File that used to store account and device data.
@@ -497,7 +499,21 @@ impl AccountManager {
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
 
-        let device_service = DeviceService::new(rest_handle, api_availability);
+        // Warren fork — Phase C.2 : aiguillage du backend device.
+        // Symétrique à C.1 (cf. `account_backend` ci-dessus).
+        // `local_account_mode=true` → `LocalDeviceBackend` seedé
+        // depuis l'état `device.json` lu par `DeviceCacher::new` ;
+        // sinon `RemoteDeviceBackend` qui wrap le `DevicesProxy`
+        // historique. Le path Mullvad standard reste strictement
+        // identique en non-local.
+        let device_backend: std::sync::Arc<dyn WarrenDeviceBackend> = if local_account_mode {
+            std::sync::Arc::new(LocalDeviceBackend::from_state(&data))
+        } else {
+            std::sync::Arc::new(RemoteDeviceBackend::new(mullvad_api::DevicesProxy::new(
+                rest_handle,
+            )))
+        };
+        let device_service = DeviceService::new(api_availability, device_backend);
         let manager = AccountManager {
             cacher,
             warren_identity_service: warren_identity_service.clone(),

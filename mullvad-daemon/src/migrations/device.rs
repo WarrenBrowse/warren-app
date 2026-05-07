@@ -39,7 +39,15 @@ pub(crate) fn generate_device(
         });
 
         let api_handle = rest_handle.availability.clone();
-        let service = DeviceService::new(rest_handle, api_handle);
+        // Warren fork — Phase C.2 : la migration legacy v5 utilise
+        // toujours le path Remote (= `DevicesProxy` Mullvad). Le mode
+        // local POC ne traverse pas ce path (pas de migration depuis
+        // un install Mullvad pré-existant en mode local).
+        let device_backend: std::sync::Arc<dyn crate::device::WarrenDeviceBackend> =
+            std::sync::Arc::new(crate::device::RemoteDeviceBackend::new(
+                mullvad_api::DevicesProxy::new(rest_handle),
+            ));
+        let service = DeviceService::new(api_handle, device_backend);
         let result = match (migration_data.token, wg_data) {
             (account_number, Some(wg_data)) => {
                 log::info!("Creating a new device cache from previous settings");

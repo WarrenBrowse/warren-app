@@ -12,9 +12,11 @@ use mullvad_types::{
 };
 use talpid_types::net::wireguard::PrivateKey;
 
-use super::{Error, PrivateAccountAndDevice, PrivateDevice, WarrenAccountBackend};
+use super::{
+    Error, PrivateAccountAndDevice, PrivateDevice, WarrenAccountBackend, WarrenDeviceBackend,
+};
 use mullvad_api::{
-    AccountsProxy, DevicesProxy,
+    AccountsProxy,
     availability::ApiAvailability,
     rest::{self, MullvadRestHandle},
 };
@@ -29,13 +31,20 @@ const RETRY_BACKOFF_STRATEGY: Jittered<ExponentialBackoff> = Jittered::jitter(
 #[derive(Clone)]
 pub struct DeviceService {
     api_availability: ApiAvailability,
-    proxy: DevicesProxy,
+    /// Warren fork — Phase C.2 : backend abstrait pour les 5 opérations
+    /// device-level. Le caller (`AccountManager::spawn`) injecte
+    /// `RemoteDeviceBackend` ou `LocalDeviceBackend` selon
+    /// `local_account_mode`.
+    backend: Arc<dyn WarrenDeviceBackend>,
 }
 
 impl DeviceService {
-    pub fn new(handle: rest::MullvadRestHandle, api_availability: ApiAvailability) -> Self {
+    /// Construit un `DeviceService` à partir d'un backend déjà résolu.
+    /// Utilisé par `AccountManager::spawn` qui aiguille `Remote` vs
+    /// `Local` selon `local_account_mode`.
+    pub fn new(api_availability: ApiAvailability, backend: Arc<dyn WarrenDeviceBackend>) -> Self {
         Self {
-            proxy: DevicesProxy::new(handle),
+            backend,
             api_availability,
         }
     }
@@ -48,15 +57,15 @@ impl DeviceService {
         let private_key = PrivateKey::new_from_random();
         let pubkey = private_key.public_key();
 
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let number_copy = account_number.clone();
         async move {
             let factory = move || {
                 let number = number_copy.clone();
                 let pubkey = pubkey.clone();
-
-                proxy.create(number, pubkey)
+                let backend = backend.clone();
+                async move { backend.create(number, pubkey).await }
             };
             let (device, addresses) = retry_future(
                 factory,
@@ -87,15 +96,15 @@ impl DeviceService {
         let private_key = PrivateKey::new_from_random();
         let pubkey = private_key.public_key();
 
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let number_copy = account_number.clone();
         let factory = move || {
             let number = number_copy.clone();
             let pubkey = pubkey.clone();
-            let task = proxy.create(number, pubkey);
-
-            api_handle.when_online(task)
+            let backend = backend.clone();
+            let api_handle = api_handle.clone();
+            async move { api_handle.when_online(backend.create(number, pubkey)).await }
         };
         let (device, addresses) =
             retry_future(factory, should_retry_backoff, RETRY_BACKOFF_STRATEGY)
@@ -130,10 +139,15 @@ impl DeviceService {
         number: AccountNumber,
         device: DeviceId,
     ) -> Result<(), Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         retry_future(
-            move || proxy.remove(number.clone(), device.clone()),
+            move || {
+                let backend = backend.clone();
+                let number = number.clone();
+                let device = device.clone();
+                async move { backend.remove(number, device).await }
+            },
             move |result| should_retry(result, &api_handle),
             RETRY_ACTION_STRATEGY,
         )
@@ -147,12 +161,18 @@ impl DeviceService {
         number: AccountNumber,
         device: DeviceId,
     ) -> Result<(), Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
 
         retry_future(
             // NOTE: Not honoring "paused" state, because the account may have no time on it.
-            move || api_handle.when_online(proxy.remove(number.clone(), device.clone())),
+            move || {
+                let backend = backend.clone();
+                let number = number.clone();
+                let device = device.clone();
+                let api_handle = api_handle.clone();
+                async move { api_handle.when_online(backend.remove(number, device)).await }
+            },
             should_retry_backoff,
             // Not setting a maximum interval
             RETRY_BACKOFF_STRATEGY.clone().max_delay(None),
@@ -170,15 +190,15 @@ impl DeviceService {
     ) -> Result<WireguardData, Error> {
         let private_key = PrivateKey::new_from_random();
 
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let pubkey = private_key.public_key();
         let factory = move || {
             let number = number.clone();
             let device = device.clone();
             let pubkey = pubkey.clone();
-
-            proxy.replace_wg_key(number, device, pubkey)
+            let backend = backend.clone();
+            async move { backend.replace_wg_key(number, device, pubkey).await }
         };
         let addresses = retry_future(
             factory,
@@ -202,7 +222,7 @@ impl DeviceService {
     ) -> Result<WireguardData, Error> {
         let private_key = PrivateKey::new_from_random();
 
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let pubkey = private_key.public_key();
 
@@ -210,8 +230,16 @@ impl DeviceService {
 
         let addresses = retry_future(
             move || {
-                let task = proxy.replace_wg_key(number.clone(), device.clone(), pubkey.clone());
-                api_handle.when_bg_resumes(task)
+                let backend = backend.clone();
+                let number = number.clone();
+                let device = device.clone();
+                let pubkey = pubkey.clone();
+                let api_handle = api_handle.clone();
+                async move {
+                    api_handle
+                        .when_bg_resumes(backend.replace_wg_key(number, device, pubkey))
+                        .await
+                }
             },
             should_retry_backoff,
             rotate_retry_strategy,
@@ -227,11 +255,12 @@ impl DeviceService {
     }
 
     pub async fn list_devices(&self, number: AccountNumber) -> Result<Vec<Device>, Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let factory = move || {
             let number = number.clone();
-            proxy.list(number)
+            let backend = backend.clone();
+            async move { backend.list(number).await }
         };
         retry_future(
             factory,
@@ -246,14 +275,14 @@ impl DeviceService {
         &self,
         number: AccountNumber,
     ) -> Result<Vec<Device>, Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
 
         let factory = move || {
             let number = number.clone();
-            let task = proxy.list(number);
-
-            api_handle.when_online(task)
+            let backend = backend.clone();
+            let api_handle = api_handle.clone();
+            async move { api_handle.when_online(backend.list(number)).await }
         };
         retry_future(factory, should_retry_backoff, RETRY_BACKOFF_STRATEGY)
             .await
@@ -261,15 +290,15 @@ impl DeviceService {
     }
 
     pub async fn get(&self, number: AccountNumber, device: DeviceId) -> Result<Device, Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let number = number.clone();
         let device = device.clone();
         let factory = move || {
             let number = number.clone();
             let device = device.clone();
-
-            proxy.get(number, device)
+            let backend = backend.clone();
+            async move { backend.get(number, device).await }
         };
         retry_future(
             factory,
