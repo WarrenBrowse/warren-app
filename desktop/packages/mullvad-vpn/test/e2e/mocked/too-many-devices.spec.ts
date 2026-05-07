@@ -68,7 +68,12 @@ test.describe('Too many devices', () => {
 
       await util.ipc.account.device.notify({
         type: 'logged in',
-        deviceState: { type: 'logged in', accountAndDevice: { accountNumber: '1234123412341234' } },
+        deviceState: {
+          type: 'logged in',
+          warrenIdentity: {
+            pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
+          },
+        },
       });
       await util.ipc.account[''].notify(NON_EXPIRED_EXPIRY);
       await page.clock.fastForward(1000);

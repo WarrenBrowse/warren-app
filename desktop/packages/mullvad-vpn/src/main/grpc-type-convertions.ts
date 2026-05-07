@@ -943,10 +943,12 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
     case grpcTypes.DeviceState.State.LOGGED_IN: {
       const accountAndDevice = deviceState.getDevice()!;
       const device = accountAndDevice.getDevice();
+      // Warren fork — Phase 3.B: the gRPC field is still named `account_number` for
+      // wire-format compatibility, but its content is the 64-char hex Warren pubkey.
       return {
         type: 'logged in',
-        accountAndDevice: {
-          accountNumber: accountAndDevice.getAccountNumber(),
+        warrenIdentity: {
+          pubkey: accountAndDevice.getAccountNumber(),
           device: device && convertFromDevice(device),
         },
       };

@@ -8,7 +8,6 @@ import {
   AccessMethodSetting,
   AccountDataError,
   AccountDataResponse,
-  AccountNumber,
   CustomListError,
   CustomProxy,
   DaemonAppUpgradeEvent,
@@ -30,6 +29,7 @@ import {
   RelaySettings,
   TunnelState,
   VoucherResponse,
+  WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -173,11 +173,11 @@ export class DaemonRpc extends GrpcClient {
     }
   }
 
-  public async getAccountData(accountNumber: AccountNumber): Promise<AccountDataResponse> {
+  public async getAccountData(pubkey: WarrenPubKey): Promise<AccountDataResponse> {
     try {
       const response = await this.callString<grpcTypes.AccountData>(
         this.client.getAccountData,
-        accountNumber,
+        pubkey,
       );
       const expiry = response.getExpiry()!.toDate().toISOString();
       return { type: 'success', expiry };
@@ -250,9 +250,9 @@ export class DaemonRpc extends GrpcClient {
     return response.getValue();
   }
 
-  public async loginAccount(accountNumber: AccountNumber): Promise<AccountDataError | void> {
+  public async loginAccount(pubkey: WarrenPubKey): Promise<AccountDataError | void> {
     try {
-      await this.callString(this.client.loginAccount, accountNumber);
+      await this.callString(this.client.loginAccount, pubkey);
     } catch (e) {
       const error = e as grpc.ServiceError;
       switch (error.code) {
@@ -426,7 +426,7 @@ export class DaemonRpc extends GrpcClient {
     return convertFromSettings(response)!;
   }
 
-  public async getAccountHistory(): Promise<AccountNumber | undefined> {
+  public async getAccountHistory(): Promise<WarrenPubKey | undefined> {
     const response = await this.callEmpty<grpcTypes.AccountHistory>(this.client.getAccountHistory);
     return response.getNumber()?.getValue();
   }
@@ -530,12 +530,9 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setDaitaDirectOnly, value);
   }
 
-  public async listDevices(accountNumber: AccountNumber): Promise<Array<IDevice>> {
+  public async listDevices(pubkey: WarrenPubKey): Promise<Array<IDevice>> {
     try {
-      const response = await this.callString<grpcTypes.DeviceList>(
-        this.client.listDevices,
-        accountNumber,
-      );
+      const response = await this.callString<grpcTypes.DeviceList>(this.client.listDevices, pubkey);
 
       return response.getDevicesList().map(convertFromDevice);
     } catch {
@@ -545,7 +542,9 @@ export class DaemonRpc extends GrpcClient {
 
   public async removeDevice(deviceRemoval: IDeviceRemoval): Promise<void> {
     const grpcDeviceRemoval = new grpcTypes.DeviceRemoval();
-    grpcDeviceRemoval.setAccountNumber(deviceRemoval.accountNumber);
+    // Warren fork — the gRPC field is named `account_number` for wire-format compat
+    // but its content is the 64-char hex Warren pubkey.
+    grpcDeviceRemoval.setAccountNumber(deviceRemoval.pubkey);
     grpcDeviceRemoval.setDeviceId(deviceRemoval.deviceId);
 
     await this.call<grpcTypes.DeviceRemoval, Empty>(this.client.removeDevice, grpcDeviceRemoval);

@@ -57,7 +57,12 @@ test.describe('Login view', () => {
 
     await util.ipc.account.device.notify({
       type: 'logged in',
-      deviceState: { type: 'logged in', accountAndDevice: { accountNumber: '1234123412341234' } },
+      deviceState: {
+        type: 'logged in',
+        warrenIdentity: {
+          pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
+        },
+      },
     });
     await util.ipc.account[''].notify(NON_EXPIRED_EXPIRY);
 

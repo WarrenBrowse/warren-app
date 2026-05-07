@@ -154,8 +154,8 @@ test.describe('Account expiry', () => {
         type: 'logged in',
         deviceState: {
           type: 'logged in',
-          accountAndDevice: {
-            accountNumber: '1234213413241234',
+          warrenIdentity: {
+            pubkey: '1234213413241234123421341324123412342134132412341234213413241234',
             device: { id: '1', name: 'Successful Test', created: START_DATE },
           },
         },

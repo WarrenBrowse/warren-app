@@ -1,13 +1,13 @@
 import { closeToExpiry, hasExpired } from '../shared/account-expiry';
 import {
   AccountDataError,
-  AccountNumber,
   DeviceEvent,
   DeviceState,
   IAccountData,
   IDeviceRemoval,
   LogoutSource,
   TunnelState,
+  WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import {
@@ -33,15 +33,15 @@ export interface AccountDelegate {
 
 export default class Account {
   private accountDataValue?: IAccountData = undefined;
-  private accountHistoryValue?: AccountNumber = undefined;
+  private accountHistoryValue?: WarrenPubKey = undefined;
   private expiryNotificationFrequencyScheduler = new Scheduler();
   private firstExpiryNotificationScheduler = new Scheduler();
 
   private hasExpired = false;
 
   private accountDataCache = new AccountDataCache(
-    (accountNumber) => {
-      return this.daemonRpc.getAccountData(accountNumber);
+    (pubkey) => {
+      return this.daemonRpc.getAccountData(pubkey);
     },
     (accountData) => {
       this.handleAccountData(accountData);
@@ -72,16 +72,16 @@ export default class Account {
   public registerIpcListeners() {
     IpcMainEventChannel.account.handleCreate(() => this.createNewAccount());
     IpcMainEventChannel.account.handleLogin(
-      async (number: AccountNumber) => (await this.login(number)) ?? undefined,
+      async (pubkey: WarrenPubKey) => (await this.login(pubkey)) ?? undefined,
     );
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
     IpcMainEventChannel.account.handleGetWwwAuthToken(() => this.daemonRpc.getWwwAuthToken());
     IpcMainEventChannel.account.handleSubmitVoucher(async (voucherCode: string) => {
-      const currentAccountNumber = this.getAccountNumber();
+      const currentPubKey = this.getWarrenPubKey();
       const response = await this.daemonRpc.submitVoucher(voucherCode);
 
-      if (currentAccountNumber) {
-        this.accountDataCache.handleVoucherResponse(currentAccountNumber, response);
+      if (currentPubKey) {
+        this.accountDataCache.handleVoucherResponse(currentPubKey, response);
       }
 
       return response;
@@ -93,8 +93,8 @@ export default class Account {
       void this.updateAccountHistory();
     });
 
-    IpcMainEventChannel.account.handleListDevices((accountNumber: AccountNumber) => {
-      return this.daemonRpc.listDevices(accountNumber);
+    IpcMainEventChannel.account.handleListDevices((pubkey: WarrenPubKey) => {
+      return this.daemonRpc.listDevices(pubkey);
     });
     IpcMainEventChannel.account.handleRemoveDevice((deviceRemoval: IDeviceRemoval) => {
       return this.daemonRpc.removeDevice(deviceRemoval);
@@ -107,7 +107,7 @@ export default class Account {
 
   public updateAccountData = () => {
     if (this.daemonRpc.isConnected && this.isLoggedIn()) {
-      this.accountDataCache.fetch(this.getAccountNumber()!);
+      this.accountDataCache.fetch(this.getWarrenPubKey()!);
     }
   };
 
@@ -136,7 +136,7 @@ export default class Account {
 
     switch (deviceEvent.deviceState.type) {
       case 'logged in':
-        this.accountDataCache.fetch(deviceEvent.deviceState.accountAndDevice.accountNumber);
+        this.accountDataCache.fetch(deviceEvent.deviceState.warrenIdentity.pubkey);
         break;
       case 'logged out':
       case 'revoked':
@@ -145,7 +145,7 @@ export default class Account {
     }
   }
 
-  public setAccountHistory(accountHistory?: AccountNumber) {
+  public setAccountHistory(accountHistory?: WarrenPubKey) {
     this.accountHistoryValue = accountHistory;
 
     IpcMainEventChannel.accountHistory.notify?.(accountHistory);
@@ -171,8 +171,8 @@ export default class Account {
     }
   }
 
-  private async login(accountNumber: AccountNumber): Promise<AccountDataError | void> {
-    const error = await this.daemonRpc.loginAccount(accountNumber);
+  private async login(pubkey: WarrenPubKey): Promise<AccountDataError | void> {
+    const error = await this.daemonRpc.loginAccount(pubkey);
 
     if (error) {
       log.error(`Failed to login: ${error.error}`);
@@ -253,9 +253,9 @@ export default class Account {
     }
   }
 
-  private getAccountNumber(): AccountNumber | undefined {
+  private getWarrenPubKey(): WarrenPubKey | undefined {
     return this.deviceState?.type === 'logged in'
-      ? this.deviceState.accountAndDevice.accountNumber
+      ? this.deviceState.warrenIdentity.pubkey
       : undefined;
   }
 }

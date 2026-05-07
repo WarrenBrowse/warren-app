@@ -7,8 +7,8 @@ export const createHelpers = (utils: MockedTestUtils) => {
       type: 'logged in',
       deviceState: {
         type: 'logged in',
-        accountAndDevice: {
-          accountNumber: '0000-0000-0000-0000',
+        warrenIdentity: {
+          pubkey: '0000000000000000000000000000000000000000000000000000000000000000',
           device: {
             id: currentDevice.id,
             name: currentDevice.name,

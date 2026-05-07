@@ -425,12 +425,12 @@ export interface IAppVersionInfo {
   suggestedIsBeta?: boolean;
 }
 
-export interface IAccountAndDevice {
-  accountNumber: AccountNumber;
+export interface IWarrenIdentity {
+  pubkey: WarrenPubKey;
   device?: IDevice;
 }
 
-export type LoggedInDeviceState = { type: 'logged in'; accountAndDevice: IAccountAndDevice };
+export type LoggedInDeviceState = { type: 'logged in'; warrenIdentity: IWarrenIdentity };
 export type LoggedOutDeviceState = { type: 'logged out' | 'revoked' };
 
 export type DeviceState = LoggedInDeviceState | LoggedOutDeviceState;
@@ -446,7 +446,7 @@ export interface IDevice {
 }
 
 export interface IDeviceRemoval {
-  accountNumber: string;
+  pubkey: WarrenPubKey;
   deviceId: string;
 }
 

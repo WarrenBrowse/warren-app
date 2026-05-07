@@ -893,18 +893,18 @@ export default class AppRenderer {
 
     switch (deviceEvent.type) {
       case 'logged in': {
-        const accountNumber = deviceEvent.deviceState.accountAndDevice.accountNumber;
-        const device = deviceEvent.deviceState.accountAndDevice.device;
+        const pubkey = deviceEvent.deviceState.warrenIdentity.pubkey;
+        const device = deviceEvent.deviceState.warrenIdentity.device;
 
         switch (this.loginState) {
           case 'none':
-            reduxAccount.loggedIn(accountNumber, device);
+            reduxAccount.loggedIn(pubkey, device);
             break;
           case 'logging in':
-            reduxAccount.loggedIn(accountNumber, device);
+            reduxAccount.loggedIn(pubkey, device);
             break;
           case 'creating account':
-            reduxAccount.accountCreated(accountNumber, device, new Date().toISOString());
+            reduxAccount.accountCreated(pubkey, device, new Date().toISOString());
             break;
         }
         break;

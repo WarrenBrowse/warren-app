@@ -46,8 +46,8 @@ class ApplicationMain {
 
   private deviceState: DeviceState = {
     type: 'logged in',
-    accountAndDevice: {
-      accountNumber: '1234123412341234',
+    warrenIdentity: {
+      pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
       device: {
         id: '1234',
         name: 'Testing Mole',
