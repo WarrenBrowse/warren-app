@@ -28,6 +28,10 @@ pub use crate::https_client::SocketBypassRequest;
 mod access;
 mod address_cache;
 pub mod device;
+
+/// Warren fork — Phase 2 auth wallet : signature Ed25519 sur les
+/// requêtes API HTTP. Cf. `warren-pocs/docs/06-auth-wallet.md`.
+pub mod warren_auth;
 mod relay_list;
 
 pub use address_cache::Error as AddressCacheError;
