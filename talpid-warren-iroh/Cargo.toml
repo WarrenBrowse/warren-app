@@ -11,7 +11,17 @@ futures = { workspace = true }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "sync"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "io-util"] }
+log = { workspace = true }
+
+# `tun08` = même crate `tun = 0.8.x` que `talpid-tunnel` (default features
+# pour avoir async). Pin strict sur la même version pour éviter le
+# diamond dependency entre `talpid-tunnel::tun_provider::unix.rs` (qui
+# expose `tun08::AsyncDevice` via `into_async_device`) et l'adapter
+# `MullvadTunPacketDevice` côté Warren.
+tun08 = { package = "tun", version = "0.8.5", default-features = false, features = [
+  "async",
+] }
 
 # Warren POC crates (path-deps cross-repo via local workspace).
 # Pour la prod long-terme, ces crates devront être publiées sur un

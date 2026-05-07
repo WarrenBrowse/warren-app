@@ -25,7 +25,10 @@ use iroh::{EndpointAddr, EndpointId};
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
-use warren_iroh_tunnel::{ClientTunnel, MultiSession};
+use warren_iroh_tunnel::{ClientTunnel, MultiSession, pump_multi_bidirectional};
+
+mod adapter;
+use adapter::MullvadTunPacketDevice;
 
 /// Paramètres pour démarrer un tunnel Warren via Iroh.
 ///
@@ -125,12 +128,9 @@ impl Error {
 /// Warren `warren_iroh_tunnel::PacketDevice`).
 pub struct WarrenIrohMonitor {
     runtime: tokio::runtime::Handle,
-    /// Session multi-conn QUIC active. `Option` parce que `wait`
-    /// drop pour teardown propre (close datagram + wait_idle endpoint).
-    session: Option<MultiSession>,
-    /// Device TUN ouvert via le provider Mullvad. Phase 1.B.4.b
-    /// l'utilisera pour brancher le pump bidirectionnel.
-    tun: Option<Tun>,
+    /// Handle de la task pump bidirectionnel TUN ↔ datagrammes QUIC.
+    /// `wait` l'abort sur close-signal pour teardown propre.
+    pump_handle: tokio::task::JoinHandle<()>,
     /// Hook d'émission events vers le daemon (state machine).
     event_hook: talpid_tunnel::EventHook,
     /// Receiver oneshot du daemon : signalé pour demander la
@@ -191,12 +191,19 @@ impl WarrenIrohMonitor {
                 .map_err(|e| Error::TunSetup(format!("{e}")))?
         };
 
-        // Étape 3 : metadata pour les events. Le nom d'interface est
-        // récupéré post-création (l'OS peut l'avoir auto-assigné si pas
-        // explicitement demandé côté config Linux).
+        // Étape 3 : metadata pour les events.
         let metadata = build_tunnel_metadata(&tun, &tun_config);
 
-        // Étape 4 : émission des events Up — `InterfaceUp` d'abord (le
+        // Étape 4 : extraction de l'`AsyncDevice` interne pour le pump.
+        // `Tun = UnixTun` consomme `into_inner` puis `into_async_device`
+        // (cf. patch Warren-fork sur `talpid-tunnel/tun_provider/unix.rs`).
+        // L'adapter `MullvadTunPacketDevice` enveloppe l'`AsyncDevice`
+        // dans un `Arc` pour pouvoir être cloné entre les tasks
+        // uplink/downlink du pump.
+        let async_device = tun.into_inner().into_async_device();
+        let packet_device = MullvadTunPacketDevice::new(async_device);
+
+        // Étape 5 : émission des events Up — `InterfaceUp` d'abord (le
         // state machine pose alors les routes + firewall), puis `Up`
         // (tunnel prêt à servir le trafic). Cohérent avec le séquençage
         // utilisé par `WireguardMonitor`.
@@ -210,15 +217,25 @@ impl WarrenIrohMonitor {
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
 
-        // `metadata` n'est conservé dans la struct que si Phase 1.B.5
-        // l'exige (ex: re-émission sur change MTU). `Down` event n'a
-        // pas de payload, donc inutile pour le teardown actuel.
-        let _ = metadata;
+        // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
+        // QUIC. La task tourne jusqu'à : (a) close de la session
+        // (drop de `MultiSession` → connections QUIC closed) ou (b)
+        // erreur I/O sur le TUN (interface descendue par le kernel).
+        // Phase 1.B.5 ajoutera un canal interne pour propager les
+        // erreurs du pump au `wait()` au lieu de les avaler.
+        let pump_handle = runtime.spawn(async move {
+            if let Err(e) = pump_multi_bidirectional(packet_device, session).await {
+                log::warn!("Warren pump terminated with error: {e:#}");
+            } else {
+                log::debug!("Warren pump terminated cleanly");
+            }
+        });
+
+        let _ = metadata; // utile à terme pour 1.B.5 (re-émission sur MTU change)
 
         Ok(Self {
             runtime,
-            session: Some(session),
-            tun: Some(tun),
+            pump_handle,
             event_hook,
             close_rx: args.tunnel_close_rx,
         })
@@ -244,8 +261,7 @@ impl WarrenIrohMonitor {
     pub fn wait(self) -> Result<(), Error> {
         let WarrenIrohMonitor {
             runtime,
-            session,
-            tun,
+            pump_handle,
             mut event_hook,
             close_rx,
         } = self;
@@ -256,14 +272,20 @@ impl WarrenIrohMonitor {
             // traité comme un close implicite (pas d'erreur remontée).
             let _ = close_rx.await;
             event_hook.on_event(TunnelEvent::Down).await;
+
+            // Teardown : abort le pump pour libérer le device TUN +
+            // la session QUIC qu'il détient. `JoinHandle::abort`
+            // déclenche un cancel propre (la task se termine sur
+            // le prochain `await` cancellation point).
+            pump_handle.abort();
+
+            // Wait that the pump task has actually terminated avant
+            // de retourner — sinon le `tun_provider` interne pourrait
+            // être ré-ouvert avec le même nom alors que le fd n'est
+            // pas encore fermé côté kernel.
+            let _ = pump_handle.await;
         });
 
-        // Teardown ordonné : TUN d'abord (l'interface descend, plus
-        // de read côté kernel), puis session (close des connections
-        // QUIC). L'ordre inverse ferait que le pump 1.B.4.b
-        // recevrait des EBADF lors du close du fd.
-        drop(tun);
-        drop(session);
         Ok(())
     }
 }

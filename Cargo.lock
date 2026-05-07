@@ -7065,10 +7065,12 @@ dependencies = [
  "ed25519-dalek 2.2.0",
  "futures",
  "iroh",
+ "log",
  "talpid-tunnel",
  "talpid-types",
  "thiserror 2.0.18",
  "tokio",
+ "tun 0.8.7",
  "warren-iroh-tunnel",
 ]
 
