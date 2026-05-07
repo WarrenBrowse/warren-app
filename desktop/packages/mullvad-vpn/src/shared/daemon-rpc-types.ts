@@ -23,6 +23,15 @@ export type AccountDataError = {
 export type AccountDataResponse = ({ type: 'success' } & IAccountData) | AccountDataError;
 
 export type AccountNumber = string;
+
+/**
+ * 64-char lowercase hex Ed25519 public key identifying a Warren wallet.
+ *
+ * Warren fork — Phase 3.A.
+ * Replaces the legacy Mullvad `AccountNumber` (10-16 digit) concept.
+ * Validation: {@link isWarrenPubKey}. Display: {@link formatWarrenPubKey}.
+ */
+export type WarrenPubKey = string;
 export type Ip = string;
 export interface ILocation {
   ipv4?: string;

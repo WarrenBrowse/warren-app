@@ -15,3 +15,7 @@ export function isNumber(number: unknown): number is number {
 export function isAccountNumber(value: string): boolean {
   return /^\d{10,16}$/.test(value);
 }
+
+export function isWarrenPubKey(value: string): boolean {
+  return /^[0-9a-f]{64}$/i.test(value);
+}
