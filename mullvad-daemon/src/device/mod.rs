@@ -14,6 +14,7 @@ use mullvad_types::{
     device::{
         AccountAndDevice, Device, DeviceEvent, DeviceEventCause, DeviceId, DeviceName, DeviceState,
     },
+    warren_identity::WarrenIdentity,
     wireguard::{self, RotationInterval, WireguardData},
 };
 
@@ -145,7 +146,15 @@ impl PrivateDeviceState {
 impl From<PrivateDeviceState> for DeviceState {
     fn from(state: PrivateDeviceState) -> Self {
         match state {
-            PrivateDeviceState::LoggedIn(dev) => DeviceState::LoggedIn(AccountAndDevice::from(dev)),
+            // Warren fork — Phase 2.B.3 V6.a : `DeviceState::LoggedIn`
+            // porte une `WarrenIdentity` au lieu de l'historique
+            // `AccountAndDevice`. Le `From<PrivateAccountAndDevice>
+            // for WarrenIdentity` (cf. plus bas) parse le field
+            // `account_number` (String) en `WarrenPubKey` (hex 64ch),
+            // avec fallback bidon si format non-Warren (= ancien
+            // device.json Mullvad). Phase 2.D s'occupera de la
+            // migration v15 propre.
+            PrivateDeviceState::LoggedIn(dev) => DeviceState::LoggedIn(WarrenIdentity::from(dev)),
             PrivateDeviceState::LoggedOut => DeviceState::LoggedOut,
             PrivateDeviceState::Revoked => DeviceState::Revoked,
         }
@@ -164,6 +173,34 @@ impl From<PrivateAccountAndDevice> for AccountAndDevice {
     fn from(config: PrivateAccountAndDevice) -> Self {
         AccountAndDevice {
             account_number: config.account_number,
+            device: Device::from(config.device),
+        }
+    }
+}
+
+impl From<PrivateAccountAndDevice> for WarrenIdentity {
+    /// Warren fork — Phase 2.B.3 V6.a : conversion depuis le format
+    /// historique daemon (`account_number: String`) vers Warren
+    /// (`pubkey: WarrenPubKey`).
+    ///
+    /// Si `config.account_number` n'est PAS une pubkey Warren valide
+    /// (= 64 chars hex), on log et on fallback sur un dummy
+    /// `WarrenPubKey` (tous zéros) — la requête signée associée
+    /// échouera côté serveur, mais ne crash pas le boot. La migration
+    /// v15 (Phase 2.D) renommera le field interne et lèvera ce
+    /// fallback.
+    fn from(config: PrivateAccountAndDevice) -> Self {
+        use std::str::FromStr;
+        let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&config.account_number)
+            .unwrap_or_else(|e| {
+                log::warn!(
+                    "PrivateAccountAndDevice.account_number is not a valid Warren pubkey \
+                     ({e}), fallback dummy zero pubkey — relogin required for Warren auth",
+                );
+                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&[0u8; 32])
+            });
+        WarrenIdentity {
+            pubkey,
             device: Device::from(config.device),
         }
     }

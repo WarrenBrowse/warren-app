@@ -1,6 +1,7 @@
 use crate::types::{FromProtobufTypeError, conversions::bytes_to_pubkey, proto};
 use chrono::DateTime;
 use prost_types::Timestamp;
+use std::str::FromStr;
 
 impl TryFrom<proto::Device> for mullvad_types::device::Device {
     type Error = FromProtobufTypeError;
@@ -59,9 +60,27 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                         "missing device data",
                     ))?;
 
+                // Warren fork — Phase 2.B.3 V6.a : le proto wire format
+                // garde le field `account_number` (= chaîne string) pour
+                // compat des clients gRPC. À la conversion en domain
+                // type, on parse cette string en `WarrenPubKey` (hex
+                // 64ch) ; un client qui pousse un format non-Warren
+                // reçoit `invalid_argument`.
+                let pubkey =
+                    mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account.account_number)
+                        .map_err(|e| {
+                        FromProtobufTypeError::invalid_argument(match e {
+                            mullvad_types::warren_pubkey::ParseError::InvalidLength { .. } => {
+                                "account_number must be a 64-char hex Warren pubkey"
+                            }
+                            mullvad_types::warren_pubkey::ParseError::NonHex => {
+                                "account_number contains non-hex characters"
+                            }
+                        })
+                    })?;
                 Ok(mullvad_types::device::DeviceState::LoggedIn(
-                    mullvad_types::device::AccountAndDevice {
-                        account_number: account.account_number,
+                    mullvad_types::warren_identity::WarrenIdentity {
+                        pubkey,
                         device: mullvad_types::device::Device::try_from(device)?,
                     },
                 ))
@@ -78,8 +97,12 @@ impl From<mullvad_types::device::DeviceState> for proto::DeviceState {
     fn from(state: mullvad_types::device::DeviceState) -> Self {
         proto::DeviceState {
             state: proto::device_state::State::from(&state) as i32,
+            // Warren fork — Phase 2.B.3 V6.a : on émet la `pubkey` hex
+            // dans le field proto historique `account_number` (= string)
+            // pour rester compat des clients gRPC qui n'ont pas migré.
+            // Le rename du proto field viendra en Phase 2.B suivante.
             device: state.logged_in().map(|client| proto::AccountAndDevice {
-                account_number: client.account_number,
+                account_number: client.pubkey.as_str().to_owned(),
                 device: Some(proto::Device::from(client.device)),
             }),
         }

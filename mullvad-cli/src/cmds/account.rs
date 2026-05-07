@@ -107,9 +107,15 @@ impl Account {
 
         match state {
             DeviceState::LoggedIn(device) => {
-                println!("{:<20}{}", "Mullvad account:", device.account_number);
+                // Warren fork — Phase 2.B.3 V6.a : on affiche la
+                // pubkey hex Warren à la place du `account_number`
+                // historique. Le label conserve "Mullvad account:"
+                // pour cohérence du `--help` user-facing pendant la
+                // transition (rename UI viendra en Phase 3 GUI).
+                let pubkey = device.pubkey.as_str().to_owned();
+                println!("{:<20}{}", "Mullvad account:", pubkey);
 
-                let data = rpc.get_account_data(device.account_number).await?;
+                let data = rpc.get_account_data(pubkey).await?;
                 println!(
                     "{:<20}{}",
                     "Expires at:",
@@ -214,7 +220,7 @@ async fn account_else_current(
         None => {
             let state = rpc.get_device().await?;
             match state {
-                DeviceState::LoggedIn(account) => Ok(account.account_number),
+                DeviceState::LoggedIn(account) => Ok(account.pubkey.as_str().to_owned()),
                 _ => Err(anyhow!("Log in or specify an account")),
             }
         }
