@@ -88,6 +88,12 @@ mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
+# Warren fork — Phase 2 auth wallet : la mnémonique BIP39 stockée dans
+# `<settings_dir>/warren_mnemonic.txt` est dérivée en SigningKey
+# Ed25519 au boot du daemon via ces 2 crates path-dep cross-repo (cf.
+# `../../warren-pocs/crates/warren-identity/`).
+warren-config = { path = "../../warren-pocs/crates/warren-config" }
+warren-identity = { path = "../../warren-pocs/crates/warren-identity" }
 regex = "1.0"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }

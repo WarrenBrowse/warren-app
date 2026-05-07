@@ -29,6 +29,10 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Warren fork — Phase 2.A.4 V4 : helper qui charge ou génère la
+/// mnémonique BIP39 utilisateur depuis `<settings_dir>/warren_mnemonic.txt`
+/// et la dérive en `WarrenAuthSigner` partagé.
+pub mod warren_signer;
 
 use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,
@@ -808,7 +812,15 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        let api_handle = api_runtime.mullvad_rest_handle(access_mode_provider);
+        // Warren fork — Phase 2.A.4 V4 : charge / génère la mnémonique
+        // BIP39 dans `<settings_dir>/warren_mnemonic.txt` et la dérive
+        // en `WarrenAuthSigner` partagé. Si l'opération échoue, on log
+        // un warn et on retombe sur `None` (= mode Mullvad Bearer
+        // historique pendant la transition Phase 2). Cf.
+        // `warren_signer::load_or_create_signer`.
+        let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
+        let api_handle =
+            api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
         // Continually update the API IP
         tokio::spawn(api_address_updater::run_api_address_fetcher(
