@@ -3844,6 +3844,7 @@ dependencies = [
  "tracing-subscriber",
  "warren-config",
  "warren-identity",
+ "warren-relay-selector",
  "winapi",
  "windows-service",
  "windows-sys 0.61.2",
@@ -8201,6 +8202,16 @@ version = "0.0.1-poc"
 dependencies = [
  "parking_lot",
  "tracing",
+]
+
+[[package]]
+name = "warren-relay-selector"
+version = "0.0.1-poc"
+dependencies = [
+ "iroh",
+ "rand 0.10.1",
+ "serde",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

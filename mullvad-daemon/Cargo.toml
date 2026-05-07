@@ -94,6 +94,12 @@ rand = { workspace = true }
 # `../../warren-pocs/crates/warren-identity/`).
 warren-config = { path = "../../warren-pocs/crates/warren-config" }
 warren-identity = { path = "../../warren-pocs/crates/warren-identity" }
+# Warren fork — Phase 4 : sélection d'exits Iroh (équivalent
+# `mullvad-relay-selector` pour le backend Warren). Ne dépend pas
+# de `talpid-warren-iroh` côté API : retourne juste `(EndpointId,
+# EndpointAddr)` ; le caller (state machine, Phase 4.F future)
+# assemble le `WarrenIrohParameters` complet.
+warren-relay-selector = { path = "../../warren-pocs/crates/warren-relay-selector" }
 regex = "1.0"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }

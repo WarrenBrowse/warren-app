@@ -29,6 +29,10 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Warren fork — Phase 4.E : wrapper daemon-side autour de
+/// `warren_relay_selector::WarrenRelaySelector`. Sélectionne les
+/// composants Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
+pub mod warren_relay_selector;
 /// Warren fork — Phase 2.A.4 V4 : helper qui charge ou génère la
 /// mnémonique BIP39 utilisateur depuis `<settings_dir>/warren_mnemonic.txt`
 /// et la dérive en `WarrenAuthSigner` partagé.
