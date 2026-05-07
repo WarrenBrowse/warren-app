@@ -1007,6 +1007,9 @@ impl Daemon {
             internal_event_tx.to_specialized_sender(),
             offline_state_tx,
             route_manager.clone(),
+            // Warren fork — Phase 4.F.5.c.2 : pass-through du flag
+            // détecté au boot (cf. warren_mode::is_enabled).
+            warren_mode::is_enabled(),
             #[cfg(target_os = "windows")]
             volume_update_rx,
             #[cfg(target_os = "android")]

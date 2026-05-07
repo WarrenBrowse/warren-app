@@ -132,10 +132,7 @@ pub struct LinuxNetworkingIdentifiers {
 }
 
 /// Spawn the tunnel state machine thread, returning a channel for sending tunnel commands.
-#[cfg_attr(
-    any(target_os = "android", target_os = "windows", target_os = "linux"),
-    expect(clippy::too_many_arguments)
-)]
+#[expect(clippy::too_many_arguments)]
 pub async fn spawn(
     initial_settings: InitialTunnelState,
     tunnel_parameters_generator: impl TunnelParametersGenerator,
@@ -144,6 +141,9 @@ pub async fn spawn(
     state_change_listener: impl Sender<TunnelStateTransition> + Send + 'static,
     offline_state_listener: mpsc::UnboundedSender<Connectivity>,
     route_manager: RouteManagerHandle,
+    // Warren fork — Phase 4.F.5.c.2 : si `true`, dispatche les
+    // démarrages de tunnel vers le path Warren-Iroh.
+    warren_mode: bool,
     #[cfg(target_os = "windows")] volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")] android_context: AndroidContext,
     #[cfg(target_os = "android")] connectivity_listener: ConnectivityListener,
@@ -175,6 +175,7 @@ pub async fn spawn(
         resource_dir,
         commands_rx: command_rx,
         route_manager,
+        warren_mode,
         #[cfg(target_os = "windows")]
         volume_update_rx,
         #[cfg(target_os = "android")]
@@ -349,6 +350,12 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     resource_dir: PathBuf,
     commands_rx: mpsc::UnboundedReceiver<TunnelCommand>,
     route_manager: RouteManagerHandle,
+    /// Warren fork — Phase 4.F.5.c.2 : si `true`, le state machine
+    /// dispatche les démarrages de tunnel vers le path Warren-Iroh
+    /// (`TunnelMonitor::start_warren_iroh`) au lieu du path WireGuard
+    /// upstream. Settable via env var `WARREN_TUNNEL=1` au boot du
+    /// daemon (cf. `mullvad-daemon::warren_mode`).
+    warren_mode: bool,
     #[cfg(target_os = "windows")]
     volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")]
@@ -477,6 +484,7 @@ impl TunnelStateMachine {
             tun_provider: Arc::new(Mutex::new(args.tun_provider)),
             log_dir: args.log_dir,
             resource_dir: args.resource_dir,
+            warren_mode: args.warren_mode,
             #[cfg(target_os = "linux")]
             connectivity_check_was_enabled: None,
             #[cfg(target_os = "macos")]
@@ -542,6 +550,73 @@ pub trait TunnelParametersGenerator: Send + 'static {
         retry_attempt: u32,
         ip_availability: IpAvailability,
     ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
+
+    /// Warren fork — Phase 4.F.5.c.1 : produit des
+    /// [`talpid_warren_iroh::WarrenIrohParameters`] pour la tentative
+    /// `retry_attempt` donnée.
+    ///
+    /// Implémentation par défaut : retourne `NoMatchingRelay`. Les
+    /// implémenteurs qui ne supportent pas Warren (= la majorité des
+    /// builds upstream) n'ont rien à faire.
+    /// `mullvad-daemon::tunnel::ParametersGenerator` override cette
+    /// méthode pour brancher le path Warren côté daemon.
+    fn generate_warren_iroh_params(
+        &mut self,
+        retry_attempt: u32,
+    ) -> Pin<
+        Box<
+            dyn Future<
+                Output = Result<talpid_warren_iroh::WarrenIrohParameters, ParameterGenerationError>,
+            >,
+        >,
+    > {
+        let _ = retry_attempt;
+        Box::pin(async move { Err(ParameterGenerationError::NoMatchingRelay) })
+    }
+}
+
+#[cfg(test)]
+mod warren_trait_default_tests {
+    //! Phase 4.F.5.c.1 — un seul test pertinent : valider que le
+    //! default impl du trait pour `generate_warren_iroh_params`
+    //! retourne bien `NoMatchingRelay` (vs. `unimplemented!()` ou
+    //! panic). Important parce que les implémenteurs upstream Mullvad
+    //! ne savent rien de Warren ; ils doivent dégrader proprement.
+    //!
+    //! Pas de test creux ici (= "vérifie que la méthode est appelée") :
+    //! on teste le contrat exact du default body.
+    use std::future::Future;
+    use std::pin::Pin;
+    use talpid_types::net::IpAvailability;
+    use talpid_types::net::wireguard::TunnelParameters;
+    use talpid_types::tunnel::ParameterGenerationError;
+
+    use super::TunnelParametersGenerator;
+
+    /// Implémenteur minimal qui n'override PAS `generate_warren_iroh_params`,
+    /// pour exercer le default body du trait.
+    struct UpstreamOnlyGenerator;
+
+    impl TunnelParametersGenerator for UpstreamOnlyGenerator {
+        fn generate(
+            &mut self,
+            _retry_attempt: u32,
+            _ip_availability: IpAvailability,
+        ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>
+        {
+            Box::pin(async { Err(ParameterGenerationError::NoMatchingRelay) })
+        }
+    }
+
+    #[tokio::test]
+    async fn default_generate_warren_returns_no_matching_relay() {
+        let mut generator = UpstreamOnlyGenerator;
+        let result = generator.generate_warren_iroh_params(0).await;
+        assert!(
+            matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
+            "default impl must degrade to NoMatchingRelay (got {result:?})"
+        );
+    }
 }
 
 /// Values that are common to all tunnel states.
@@ -579,6 +654,13 @@ struct SharedTunnelStateValues {
     log_dir: Option<PathBuf>,
     /// Resource directory path.
     resource_dir: PathBuf,
+
+    /// Warren fork — Phase 4.F.5.c.2 : si `true`, le state machine
+    /// dispatche le démarrage de tunnel via `TunnelMonitor::start_warren_iroh`
+    /// (path Iroh). Sinon, path WireGuard upstream inchangé.
+    #[allow(clippy::allow_attributes)]
+    #[allow(dead_code)]
+    warren_mode: bool,
 
     /// NetworkManager's connecitivity check state.
     #[cfg(target_os = "linux")]

@@ -124,9 +124,7 @@ impl ParametersGenerator {
     ///   n'a pas pu être chargée.
     /// - [`Error::WarrenAssemble`] si la sélection elle-même échoue
     ///   (aucun relay matchant).
-    #[allow(clippy::allow_attributes)]
-    #[allow(dead_code)]
-    pub async fn generate_warren_iroh_params(
+    pub async fn produce_warren_iroh_params(
         &self,
         retry_attempt: u32,
     ) -> Result<WarrenIrohParameters, Error> {
@@ -303,6 +301,28 @@ impl TunnelParametersGenerator for ParametersGenerator {
                     log::error!(
                         "{}",
                         error.display_chain_with_msg("Failed to generate tunnel parameters")
+                    );
+                })
+                .map_err(ParameterGenerationError::from)
+        })
+    }
+
+    /// Warren fork — Phase 4.F.5.c.1 : override du default trait method
+    /// pour brancher le path Warren-Iroh côté daemon. Délègue à la
+    /// méthode publique async existante (Phase 4.F.5.a) qui consomme
+    /// les artefacts Warren stockés dans `InnerParametersGenerator`.
+    fn generate_warren_iroh_params(
+        &mut self,
+        retry_attempt: u32,
+    ) -> Pin<Box<dyn Future<Output = Result<WarrenIrohParameters, ParameterGenerationError>>>> {
+        let this = self.clone();
+        Box::pin(async move {
+            this.produce_warren_iroh_params(retry_attempt)
+                .await
+                .inspect_err(|error| {
+                    log::error!(
+                        "{}",
+                        error.display_chain_with_msg("Failed to generate Warren tunnel parameters")
                     );
                 })
                 .map_err(ParameterGenerationError::from)

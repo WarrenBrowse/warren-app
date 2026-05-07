@@ -14,6 +14,7 @@ use talpid_types::net::{
     AllowedClients, AllowedEndpoint, AllowedTunnelTraffic, wireguard::TunnelParameters,
 };
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
+use talpid_warren_iroh::WarrenIrohParameters;
 
 use super::connected_state::TunnelEventsReceiver;
 use super::{
@@ -75,6 +76,22 @@ impl ConnectingState {
                 });
         }
 
+        // Warren fork — Phase 4.F.5.c.3 : dispatch tunnel backend.
+        // Si `warren_mode` est actif au boot (cf. `warren_mode::is_enabled`
+        // côté daemon → flag passé via `TunnelStateMachineInitArgs`), on
+        // route vers le path Warren-Iroh ; sinon le path WireGuard
+        // upstream est strictement préservé.
+        if shared_values.warren_mode {
+            return Self::enter_warren(shared_values, retry_attempt);
+        }
+
+        Self::enter_wireguard(shared_values, retry_attempt)
+    }
+
+    fn enter_wireguard(
+        shared_values: &mut SharedTunnelStateValues,
+        retry_attempt: u32,
+    ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
         let ip_availability = match shared_values.connectivity.availability() {
             Some(ip_availability) => ip_availability,
             // If we're offline, enter the offline state
@@ -157,6 +174,155 @@ impl ConnectingState {
                     )
                 }
             }
+        }
+    }
+
+    /// Warren fork — Phase 4.F.5.c.3 : path Warren-Iroh.
+    ///
+    /// Différences avec [`Self::enter_wireguard`] :
+    /// - Pas de check `ip_availability` côté state machine — Iroh
+    ///   gère sa propre résolution multi-path (v4/v6) au handshake.
+    /// - Pas d'appel `set_firewall_policy()` pré-handshake — les IPs
+    ///   candidate de l'exit ne sont connues qu'après le `connect_multi`.
+    ///   La sécurisation du trafic vers l'exit sera ajoutée en Phase
+    ///   future (refactor firewall pour accepter `EndpointAddr.ip_addrs()`).
+    /// - Pas d'Android `prepare_tun_config` — Warren-Iroh ouvre son
+    ///   propre TUN via `args.tun_provider` côté `WarrenIrohMonitor::start`.
+    ///
+    /// **Dette technique documentée** : la struct [`ConnectingState`]
+    /// est typée `tunnel_parameters: TunnelParameters` (WG). Pour
+    /// préserver l'API du state machine sans refactor structurel
+    /// invasif, on stocke un `TunnelParameters` placeholder qui n'est
+    /// jamais consommé pour de la décision crypto/routing après le
+    /// `start_warren_iroh`. L'unification du type côté `ConnectingState`
+    /// est traquée comme Phase 4.F.5.d future.
+    fn enter_warren(
+        shared_values: &mut SharedTunnelStateValues,
+        retry_attempt: u32,
+    ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
+        let warren_params = match shared_values.runtime.block_on(
+            shared_values
+                .tunnel_parameters_generator
+                .generate_warren_iroh_params(retry_attempt),
+        ) {
+            Ok(params) => params,
+            Err(err) => {
+                return ErrorState::enter(
+                    shared_values,
+                    ErrorStateCause::TunnelParameterError(err),
+                );
+            }
+        };
+
+        let transition_endpoint = warren_endpoint_for_transition(&warren_params);
+
+        let connecting_state = Self::start_tunnel_warren(
+            shared_values.runtime.clone(),
+            warren_params,
+            &shared_values.log_dir,
+            &shared_values.resource_dir,
+            shared_values.tun_provider.clone(),
+            &shared_values.route_manager,
+            retry_attempt,
+        );
+
+        (
+            Box::new(connecting_state),
+            TunnelStateTransition::Connecting(transition_endpoint),
+        )
+    }
+
+    /// Warren fork — Phase 4.F.5.c.3 : miroir minimal de
+    /// [`Self::start_tunnel`] mais qui invoque
+    /// [`TunnelMonitor::start_warren_iroh`] au lieu de
+    /// [`TunnelMonitor::start`].
+    ///
+    /// La task spawn_blocking est identique en structure (channel
+    /// d'events, oneshot close, retry/sleep policy) — seule la factory
+    /// du `TunnelMonitor` change.
+    fn start_tunnel_warren(
+        runtime: tokio::runtime::Handle,
+        parameters: WarrenIrohParameters,
+        log_dir: &Option<PathBuf>,
+        resource_dir: &Path,
+        tun_provider: Arc<Mutex<TunProvider>>,
+        route_manager: &RouteManagerHandle,
+        retry_attempt: u32,
+    ) -> Self {
+        let (event_tx, event_rx) = mpsc::unbounded();
+        let event_hook = EventHook::new(event_tx);
+
+        let route_manager = route_manager.clone();
+        let log_dir = log_dir.clone();
+        let resource_dir = resource_dir.to_path_buf();
+
+        let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
+        let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
+
+        // Placeholder WG TunnelParameters — voir docstring `enter_warren`.
+        let tunnel_parameters_placeholder = warren_tunnel_parameters_placeholder(&parameters);
+
+        tokio::task::spawn_blocking(move || {
+            let start = Instant::now();
+
+            let args = TunnelArgs {
+                runtime,
+                resource_dir: &resource_dir,
+                event_hook,
+                tunnel_close_rx,
+                tun_provider,
+                retry_attempt,
+                route_manager,
+            };
+
+            let block_reason = match TunnelMonitor::start_warren_iroh(&parameters, &log_dir, args) {
+                Ok(monitor) => {
+                    let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
+                    log::debug!(
+                        "Warren Iroh tunnel monitor exited with block reason: {:?}",
+                        reason
+                    );
+                    reason
+                }
+                Err(error) if should_retry(&error, retry_attempt) => {
+                    log::warn!(
+                        "{}",
+                        error.display_chain_with_msg(
+                            "Retrying to connect after failing to start Warren tunnel"
+                        )
+                    );
+                    None
+                }
+                Err(error) => {
+                    log::error!(
+                        "{}",
+                        error.display_chain_with_msg("Failed to start Warren tunnel")
+                    );
+                    Some(error.into())
+                }
+            };
+
+            if block_reason.is_none()
+                && let Some(remaining_time) = MIN_TUNNEL_ALIVE_TIME.checked_sub(start.elapsed())
+            {
+                thread::sleep(remaining_time);
+            }
+
+            if tunnel_close_event_tx.send(block_reason).is_err() {
+                log::warn!("Tunnel state machine stopped before receiving tunnel closed event");
+            }
+
+            log::trace!("Warren Iroh tunnel monitor thread exit");
+        });
+
+        ConnectingState {
+            tunnel_events: event_rx.fuse(),
+            tunnel_parameters: tunnel_parameters_placeholder,
+            tunnel_metadata: None,
+            allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
+            tunnel_close_event: tunnel_close_event_rx.fuse(),
+            tunnel_close_tx,
+            retry_attempt,
         }
     }
 
@@ -680,5 +846,97 @@ impl TunnelState for ConnectingState {
                 self.handle_tunnel_close_event(block_reason, shared_values)
             }
         }
+    }
+}
+
+/// Construit un [`talpid_types::net::Endpoint`] minimal pour
+/// [`TunnelStateTransition::Connecting`] côté Warren — sert
+/// uniquement à informer la GUI/management-interface qu'un tunnel
+/// est en cours d'établissement vers une IP candidate de l'exit.
+///
+/// Si `exit_addr` n'a aucune IP candidate (cas d'erreur de selection
+/// non-relevé), retourne `0.0.0.0:0` plutôt que panic — le wait du
+/// `WarrenIrohMonitor` remontera de toute façon une erreur visible.
+fn warren_endpoint_for_transition(
+    params: &WarrenIrohParameters,
+) -> talpid_types::net::TunnelEndpoint {
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+    use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
+
+    let socket_addr: SocketAddr = params
+        .exit_addr
+        .ip_addrs()
+        .next()
+        .copied()
+        .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+
+    TunnelEndpoint {
+        endpoint: Endpoint::from_socket_address(socket_addr, TransportProtocol::Udp),
+        quantum_resistant: false,
+        obfuscation: None,
+        entry_endpoint: None,
+        tunnel_interface: None,
+        // talpid-types active toujours `cfg(daita)` via son build.rs ;
+        // le champ est donc présent inconditionnellement côté struct
+        // de définition. On le set sans `#[cfg(daita)]` pour éviter
+        // un mismatch côté talpid-core qui n'a pas ce build flag.
+        daita: false,
+    }
+}
+
+/// Construit un placeholder `wireguard::TunnelParameters` pour le
+/// path Warren (cf. docstring `enter_warren`).
+///
+/// **Dette technique** : ce placeholder existe pour préserver le type
+/// de [`ConnectingState::tunnel_parameters`] sans refactor structurel.
+/// Les valeurs WG (`private_key`, `public_key`, `allowed_ips`) sont
+/// dummy zero ; seule `peer.endpoint` est remplie avec une IP
+/// candidate de l'exit Iroh — pertinent pour le firewall WG path qui
+/// n'est de toute façon pas appliqué côté Warren (`enter_warren` skip
+/// le `set_firewall_policy` pre-handshake).
+fn warren_tunnel_parameters_placeholder(params: &WarrenIrohParameters) -> TunnelParameters {
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+    use talpid_types::net::GenericTunnelOptions;
+    use talpid_types::net::wireguard::{
+        ConnectionConfig, PeerConfig, PrivateKey, TunnelConfig, TunnelOptions,
+    };
+
+    let endpoint: SocketAddr = params
+        .exit_addr
+        .ip_addrs()
+        .next()
+        .copied()
+        .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+
+    let dummy_priv = PrivateKey::from([0u8; 32]);
+    let dummy_pub = dummy_priv.public_key();
+
+    TunnelParameters {
+        connection: ConnectionConfig {
+            tunnel: TunnelConfig {
+                private_key: dummy_priv,
+                addresses: vec![],
+            },
+            peer: PeerConfig {
+                public_key: dummy_pub,
+                allowed_ips: vec![],
+                endpoint,
+                psk: None,
+                constant_packet_size: false,
+            },
+            exit_peer: None,
+            ipv4_gateway: Ipv4Addr::UNSPECIFIED,
+            ipv6_gateway: None,
+            #[cfg(target_os = "linux")]
+            fwmark: None,
+        },
+        options: TunnelOptions {
+            mtu: None,
+            quantum_resistant: false,
+            daita: false,
+            userspace: false,
+        },
+        generic_options: GenericTunnelOptions { enable_ipv6: false },
+        obfuscation: None,
     }
 }
