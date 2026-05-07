@@ -101,8 +101,9 @@ impl DevicesProxy {
         let service = self.handle.service.clone();
         let factory = self.handle.factory.clone();
         async move {
+            // Warren fork — Phase D.1 : `delete_or_signed`.
             let request = factory
-                .delete(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
+                .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
                 .expected_status(&[StatusCode::NO_CONTENT])
                 .account(account)?;
             service.request(request).await?;
@@ -140,8 +141,9 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `get_or_signed`.
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
@@ -156,8 +158,9 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `get_or_signed`.
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/devices"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
@@ -180,8 +183,9 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `put_json_or_signed`.
             let request = factory
-                .put_json(
+                .put_json_or_signed(
                     &format!("{ACCOUNTS_URL_PREFIX}/devices/{id}/pubkey"),
                     &req_body,
                 )?
@@ -211,8 +215,9 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `post_json_or_signed`.
             let request = factory
-                .post_json(&format!("{ACCOUNTS_URL_PREFIX}/devices"), &submission)?
+                .post_json_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"), &submission)?
                 .account(account)?
                 .expected_status(&[StatusCode::CREATED]);
             service.request(request).await

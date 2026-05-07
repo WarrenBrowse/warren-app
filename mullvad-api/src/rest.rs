@@ -405,6 +405,15 @@ impl<B: Body> Request<B> {
     pub fn headers(&self) -> &http::HeaderMap {
         self.request.headers()
     }
+
+    /// Returns the HTTP method of the underlying [`hyper::Request`].
+    ///
+    /// Warren fork — Phase D.1 : utile pour les tests qui vérifient
+    /// qu'un dispatcher (`*_or_signed`) produit la bonne méthode HTTP
+    /// (régression critique anti-replay cross-method).
+    pub fn method(&self) -> &http::Method {
+        self.request.method()
+    }
 }
 impl<B> Request<B> {
     /// Map the underlying [`hyper::Request`] type
@@ -748,6 +757,130 @@ impl RequestFactory {
     /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
     pub fn signed_delete(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
         self.signed_empty_body_request(path, Method::DELETE)
+    }
+
+    /// Warren fork — Phase D.1 : variante signée de [`Self::post`]
+    /// (POST **sans body**, contrairement à [`Self::signed_post_json`]).
+    /// Le canonical message contient `method = POST` + body vide.
+    ///
+    /// Utilisé pour les endpoints comme `POST /accounts` (créer un
+    /// compte, où le body est vide et seuls les headers signés
+    /// authentifient l'origine).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    pub fn signed_post(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        self.signed_empty_body_request(path, Method::POST)
+    }
+
+    /// Warren fork — Phase D.1 : dispatcher [`Self::delete`] /
+    /// [`Self::signed_delete`] selon présence d'un signer Warren.
+    /// Symétrique de [`Self::get_or_signed`] pour DELETE — utilisé
+    /// par `DELETE /accounts/me` et `DELETE /devices/{id}`.
+    ///
+    /// # Errors
+    ///
+    /// Mêmes erreurs que [`Self::delete`] et [`Self::signed_delete`].
+    pub fn delete_or_signed(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        if self.has_warren_signer() {
+            self.signed_delete(path)
+        } else {
+            self.delete(path)
+        }
+    }
+
+    /// Warren fork — Phase D.1 : dispatcher [`Self::post`] /
+    /// [`Self::signed_post`] selon présence d'un signer Warren.
+    ///
+    /// # Errors
+    ///
+    /// Mêmes erreurs que [`Self::post`] et [`Self::signed_post`].
+    pub fn post_or_signed(&self, path: &str) -> Result<Request<Empty<Bytes>>> {
+        if self.has_warren_signer() {
+            self.signed_post(path)
+        } else {
+            self.post(path)
+        }
+    }
+
+    /// Warren fork — Phase D.1 : dispatcher [`Self::post_json`] /
+    /// [`Self::signed_post_json`] selon présence d'un signer Warren.
+    ///
+    /// # Errors
+    ///
+    /// Mêmes erreurs que [`Self::post_json`] et [`Self::signed_post_json`].
+    pub fn post_json_or_signed<S: serde::Serialize>(
+        &self,
+        path: &str,
+        body: &S,
+    ) -> Result<Request<Full<Bytes>>> {
+        if self.has_warren_signer() {
+            self.signed_post_json(path, body)
+        } else {
+            self.post_json(path, body)
+        }
+    }
+
+    /// Warren fork — Phase D.1 : dispatcher [`Self::put_json`] /
+    /// [`Self::signed_put_json`] selon présence d'un signer Warren.
+    ///
+    /// # Errors
+    ///
+    /// Mêmes erreurs que [`Self::put_json`] et [`Self::signed_put_json`].
+    pub fn put_json_or_signed<S: serde::Serialize>(
+        &self,
+        path: &str,
+        body: &S,
+    ) -> Result<Request<Full<Bytes>>> {
+        if self.has_warren_signer() {
+            self.signed_put_json(path, body)
+        } else {
+            self.put_json(path, body)
+        }
+    }
+
+    /// Warren fork — Phase D.1 : variante signée de [`Self::put_json`].
+    /// Le canonical message contient `method = PUT` + sha256(body) ;
+    /// distinct de [`Self::signed_post_json`] pour empêcher le replay
+    /// cross-method (= un body POST signé ne peut pas être renvoyé en
+    /// PUT et vice-versa).
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::DeserializeError`] si la sérialisation `serde_json`
+    ///   échoue (cas exotiques : map à clé non-string).
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    pub fn signed_put_json<S: serde::Serialize>(
+        &self,
+        path: &str,
+        body: &S,
+    ) -> Result<Request<Full<Bytes>>> {
+        let json_body = serde_json::to_vec(body)?;
+        self.signed_put_json_bytes(path, json_body)
+    }
+
+    /// Warren fork — Phase D.1 : variante de [`Self::put_json_bytes`]
+    /// qui injecte une signature Ed25519 (4 headers `X-Warren-*`).
+    /// Symétrique de [`Self::signed_post_json_bytes`] avec PUT.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NoWarrenSigner`] si pas de signer configuré.
+    /// - Erreurs propagées de [`Self::hyper_request`] et de
+    ///   l'injection HTTP (impossibles en pratique).
+    pub fn signed_put_json_bytes(&self, path: &str, body: Vec<u8>) -> Result<Request<Full<Bytes>>> {
+        let mut request = self.hyper_request::<Full<Bytes>>(path, Method::PUT)?;
+        let body_length = body.len();
+        self.inject_warren_signature(&mut request, &body)?;
+        *request.body_mut() = Full::new(Bytes::from(body));
+        let headers = request.headers_mut();
+        headers.insert(header::CONTENT_LENGTH, HeaderValue::from(body_length));
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+        Ok(Request::new(request, None).timeout(self.default_timeout))
     }
 
     /// Helper privé : factorise les variantes `signed_get` /
@@ -1287,5 +1420,115 @@ mod tests {
 
         vk.verify(canonical.as_bytes(), &sig)
             .expect("signature doit vérifier — sinon le wire format a divergé");
+    }
+
+    /// Régression Phase D.1 critique : les 4 nouveaux dispatchers
+    /// `*_or_signed` (`delete`, `post`, `post_json`, `put_json`)
+    /// DOIVENT signer quand un signer Warren est configuré, et NE
+    /// DOIVENT PAS signer sinon. Sans cette propriété, les 10
+    /// endpoints REST critiques migrés en D.1 partiraient toujours
+    /// en Bearer historique = bug invisible identique à celui
+    /// qu'on cherche à corriger.
+    ///
+    /// Le test couvre aussi la **bonne méthode HTTP** par dispatcher :
+    /// si quelqu'un swappait accidentellement `delete_or_signed`
+    /// pour appeler `signed_get` au lieu de `signed_delete`, le
+    /// canonical message contiendrait `GET` au lieu de `DELETE` →
+    /// le serveur rejetterait avec replay-cross-method.
+    #[test]
+    fn all_or_signed_dispatchers_dispatch_and_use_correct_http_method() {
+        let bare = RequestFactory::new("api.example.test", None);
+        let warren =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+
+        // Liste : (label, fn bare → req, fn warren → req, expected method)
+        // On ne peut pas trivialement boucler car les types de retour
+        // diffèrent (Empty vs Full body), donc on inline.
+
+        // delete_or_signed → DELETE
+        let bare_req = bare.delete_or_signed("v1/devices/abc").unwrap();
+        let warren_req = warren.delete_or_signed("v1/devices/abc").unwrap();
+        assert!(
+            !bare_req.headers().contains_key(HEADER_PUBKEY),
+            "delete_or_signed bare ne doit pas signer"
+        );
+        assert!(
+            warren_req.headers().contains_key(HEADER_PUBKEY),
+            "delete_or_signed warren doit signer"
+        );
+        assert_eq!(
+            warren_req.method(),
+            hyper::Method::DELETE,
+            "delete_or_signed doit produire une req DELETE"
+        );
+
+        // post_or_signed → POST sans body
+        let bare_req = bare.post_or_signed("v1/accounts").unwrap();
+        let warren_req = warren.post_or_signed("v1/accounts").unwrap();
+        assert!(!bare_req.headers().contains_key(HEADER_PUBKEY));
+        assert!(warren_req.headers().contains_key(HEADER_PUBKEY));
+        assert_eq!(warren_req.method(), hyper::Method::POST);
+
+        // post_json_or_signed → POST avec body JSON
+        let payload = serde_json::json!({"voucher": "abc"});
+        let bare_req = bare.post_json_or_signed("v1/voucher", &payload).unwrap();
+        let warren_req = warren.post_json_or_signed("v1/voucher", &payload).unwrap();
+        assert!(!bare_req.headers().contains_key(HEADER_PUBKEY));
+        assert!(warren_req.headers().contains_key(HEADER_PUBKEY));
+        assert_eq!(warren_req.method(), hyper::Method::POST);
+
+        // put_json_or_signed → PUT avec body JSON
+        let bare_req = bare
+            .put_json_or_signed("v1/devices/x/pubkey", &payload)
+            .unwrap();
+        let warren_req = warren
+            .put_json_or_signed("v1/devices/x/pubkey", &payload)
+            .unwrap();
+        assert!(!bare_req.headers().contains_key(HEADER_PUBKEY));
+        assert!(warren_req.headers().contains_key(HEADER_PUBKEY));
+        assert_eq!(warren_req.method(), hyper::Method::PUT);
+    }
+
+    /// Régression Phase D.1 anti-replay cross-method : le canonical
+    /// message d'une req `signed_put_json` doit contenir `PUT` (pas
+    /// `POST`). Si on copy-pasta le code de `signed_post_json_bytes`
+    /// sans changer la méthode, un payload `replace_wg_key` PUT signé
+    /// serait *identique* à un POST `create_device` signé sur le
+    /// même path → replay possible côté serveur.
+    #[test]
+    fn signed_put_json_signs_with_put_method_distinct_from_post() {
+        let factory =
+            RequestFactory::new("api.example.test", None).with_warren_signer(fixed_signer());
+        let payload = serde_json::json!({"pubkey": "abc"});
+
+        let req_post = factory.signed_post_json("v1/devices/x", &payload).unwrap();
+        let req_put = factory.signed_put_json("v1/devices/x", &payload).unwrap();
+
+        // Pubkey identique (même signer), méthodes différentes :
+        assert_eq!(
+            req_post.headers().get(HEADER_PUBKEY).unwrap(),
+            req_put.headers().get(HEADER_PUBKEY).unwrap()
+        );
+        assert_eq!(req_post.method(), hyper::Method::POST);
+        assert_eq!(req_put.method(), hyper::Method::PUT);
+
+        // Signatures DIFFÉRENTES (même path + body, mais method
+        // distincte dans le canonical) :
+        let sig_post = req_post
+            .headers()
+            .get(HEADER_SIGNATURE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let sig_put = req_put
+            .headers()
+            .get(HEADER_SIGNATURE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_ne!(
+            sig_post, sig_put,
+            "signed_post_json et signed_put_json sur même path/body doivent produire signatures différentes (anti-replay cross-method)"
+        );
     }
 }

@@ -556,8 +556,12 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `get_or_signed` injecte les
+            // 4 headers `X-Warren-*` quand un signer est configuré
+            // (cf. `mullvad_rest_handle_with_warren_signer` côté
+            // daemon). Sinon, requête nue identique à l'ancien path.
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
@@ -587,8 +591,9 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `post_or_signed` (cf. doc).
             let request = factory
-                .post(&format!("{ACCOUNTS_URL_PREFIX}/accounts"))?
+                .post_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts"))?
                 .expected_status(&[StatusCode::CREATED]);
             service.request(request).await
         }
@@ -609,8 +614,9 @@ impl AccountsProxy {
         let submission = VoucherSubmission { voucher_code };
 
         async move {
+            // Warren fork — Phase D.1 : `post_json_or_signed` (cf. doc).
             let request = factory
-                .post_json(&format!("{APP_URL_PREFIX}/submit-voucher"), &submission)?
+                .post_json_or_signed(&format!("{APP_URL_PREFIX}/submit-voucher"), &submission)?
                 .account(account)?
                 .expected_status(&[StatusCode::OK]);
             service.request(request).await?.deserialize().await
@@ -625,8 +631,9 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // Warren fork — Phase D.1 : `delete_or_signed` (cf. doc).
             let request = factory
-                .delete(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
+                .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .account(account.clone())?
                 .header("Mullvad-Account-Number", &account)?
                 .expected_status(&[StatusCode::NO_CONTENT]);
