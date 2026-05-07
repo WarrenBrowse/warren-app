@@ -1,4 +1,4 @@
-import { AccountDataError, AccountNumber, IDevice } from '../../../shared/daemon-rpc-types';
+import { AccountDataError, IDevice, WarrenPubKey } from '../../../shared/daemon-rpc-types';
 import { ReduxAction } from '../store';
 
 type LoginMethod = 'existing_account' | 'new_account';
@@ -12,19 +12,19 @@ export type LoginState =
   | { type: 'failed'; method: 'existing_account'; error: AccountDataError['error'] }
   | { type: 'failed'; method: 'new_account'; error: Error };
 export interface IAccountReduxState {
-  accountNumber?: AccountNumber;
+  pubkey?: WarrenPubKey;
   deviceName?: string;
   devices: Array<IDevice>;
-  accountHistory?: AccountNumber;
+  pubkeyHistory?: WarrenPubKey;
   expiry?: string; // ISO8601
   status: LoginState;
 }
 
 const initialState: IAccountReduxState = {
-  accountNumber: undefined,
+  pubkey: undefined,
   deviceName: undefined,
   devices: [],
-  accountHistory: undefined,
+  pubkeyHistory: undefined,
   expiry: undefined,
   status: { type: 'none', deviceRevoked: false },
 };
@@ -38,7 +38,7 @@ export default function (
       return {
         ...state,
         status: { type: 'logging in', method: 'existing_account' },
-        accountNumber: action.accountNumber,
+        pubkey: action.pubkey,
       };
     case 'LOGGED_IN':
       return {
@@ -48,7 +48,7 @@ export default function (
           method: 'existing_account',
           newDeviceBanner: state.status.type === 'logging in',
         },
-        accountNumber: action.accountNumber,
+        pubkey: action.pubkey,
         deviceName: action.deviceName,
       };
     case 'LOGIN_FAILED':
@@ -65,7 +65,7 @@ export default function (
       return {
         ...state,
         status: { type: 'none', deviceRevoked: false },
-        accountNumber: undefined,
+        pubkey: undefined,
         expiry: undefined,
       };
     case 'RESET_LOGIN_ERROR':
@@ -97,7 +97,7 @@ export default function (
           newDeviceBanner: true,
           expiredState: 'expired',
         },
-        accountNumber: action.accountNumber,
+        pubkey: action.pubkey,
         deviceName: action.deviceName,
         expiry: action.expiry,
       };
@@ -115,15 +115,15 @@ export default function (
         ...state,
         status: { ...state.status, newDeviceBanner: false },
       };
-    case 'UPDATE_ACCOUNT_NUMBER':
+    case 'UPDATE_PUBKEY':
       return {
         ...state,
-        accountNumber: action.accountNumber,
+        pubkey: action.pubkey,
       };
-    case 'UPDATE_ACCOUNT_HISTORY':
+    case 'UPDATE_PUBKEY_HISTORY':
       return {
         ...state,
-        accountHistory: action.accountHistory,
+        pubkeyHistory: action.pubkeyHistory,
       };
     case 'UPDATE_ACCOUNT_EXPIRY': {
       const status = { ...state.status };

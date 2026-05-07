@@ -1,14 +1,14 @@
 import { hasExpired } from '../../../shared/account-expiry';
-import { AccountDataError, AccountNumber, IDevice } from '../../../shared/daemon-rpc-types';
+import { AccountDataError, IDevice, WarrenPubKey } from '../../../shared/daemon-rpc-types';
 
 interface IStartLoginAction {
   type: 'START_LOGIN';
-  accountNumber: AccountNumber;
+  pubkey: WarrenPubKey;
 }
 
 interface ILoggedInAction {
   type: 'LOGGED_IN';
-  accountNumber: AccountNumber;
+  pubkey: WarrenPubKey;
   deviceName?: string;
 }
 
@@ -44,7 +44,7 @@ interface ICreateAccountFailed {
 
 interface IAccountCreated {
   type: 'ACCOUNT_CREATED';
-  accountNumber: AccountNumber;
+  pubkey: WarrenPubKey;
   deviceName?: string;
   expiry: string;
 }
@@ -57,14 +57,14 @@ interface IHideNewDeviceBanner {
   type: 'HIDE_NEW_DEVICE_BANNER';
 }
 
-interface IUpdateAccountNumberAction {
-  type: 'UPDATE_ACCOUNT_NUMBER';
-  accountNumber: AccountNumber;
+interface IUpdatePubKeyAction {
+  type: 'UPDATE_PUBKEY';
+  pubkey: WarrenPubKey;
 }
 
-interface IUpdateAccountHistoryAction {
-  type: 'UPDATE_ACCOUNT_HISTORY';
-  accountHistory?: AccountNumber;
+interface IUpdatePubKeyHistoryAction {
+  type: 'UPDATE_PUBKEY_HISTORY';
+  pubkeyHistory?: WarrenPubKey;
 }
 
 interface IUpdateAccountExpiryAction {
@@ -91,22 +91,22 @@ export type AccountAction =
   | IAccountCreated
   | IAccountSetupFinished
   | IHideNewDeviceBanner
-  | IUpdateAccountNumberAction
-  | IUpdateAccountHistoryAction
+  | IUpdatePubKeyAction
+  | IUpdatePubKeyHistoryAction
   | IUpdateAccountExpiryAction
   | IUpdateDevicesAction;
 
-function startLogin(accountNumber: AccountNumber): IStartLoginAction {
+function startLogin(pubkey: WarrenPubKey): IStartLoginAction {
   return {
     type: 'START_LOGIN',
-    accountNumber,
+    pubkey,
   };
 }
 
-function loggedIn(accountNumber: AccountNumber, device?: IDevice): ILoggedInAction {
+function loggedIn(pubkey: WarrenPubKey, device?: IDevice): ILoggedInAction {
   return {
     type: 'LOGGED_IN',
-    accountNumber,
+    pubkey,
     deviceName: device?.name,
   };
 }
@@ -156,13 +156,13 @@ function createAccountFailed(error: Error): ICreateAccountFailed {
 }
 
 function accountCreated(
-  accountNumber: AccountNumber,
+  pubkey: WarrenPubKey,
   device: IDevice | undefined,
   expiry: string,
 ): IAccountCreated {
   return {
     type: 'ACCOUNT_CREATED',
-    accountNumber: accountNumber,
+    pubkey,
     deviceName: device?.name,
     expiry,
   };
@@ -176,17 +176,17 @@ function hideNewDeviceBanner(): IHideNewDeviceBanner {
   return { type: 'HIDE_NEW_DEVICE_BANNER' };
 }
 
-function updateAccountNumber(accountNumber: AccountNumber): IUpdateAccountNumberAction {
+function updatePubKey(pubkey: WarrenPubKey): IUpdatePubKeyAction {
   return {
-    type: 'UPDATE_ACCOUNT_NUMBER',
-    accountNumber,
+    type: 'UPDATE_PUBKEY',
+    pubkey,
   };
 }
 
-function updateAccountHistory(accountHistory?: AccountNumber): IUpdateAccountHistoryAction {
+function updatePubKeyHistory(pubkeyHistory?: WarrenPubKey): IUpdatePubKeyHistoryAction {
   return {
-    type: 'UPDATE_ACCOUNT_HISTORY',
-    accountHistory,
+    type: 'UPDATE_PUBKEY_HISTORY',
+    pubkeyHistory,
   };
 }
 
@@ -218,8 +218,8 @@ export default {
   accountCreated,
   accountSetupFinished,
   hideNewDeviceBanner,
-  updateAccountNumber,
-  updateAccountHistory,
+  updatePubKey,
+  updatePubKeyHistory,
   updateAccountExpiry,
   updateDevices,
 };

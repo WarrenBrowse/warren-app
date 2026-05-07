@@ -131,10 +131,7 @@ function WelcomeView() {
       <StyledAccountNumberMessage>
         {messages.pgettext('connect-view', 'Here’s your account number. Save it!')}
         <StyledAccountNumberContainer>
-          <StyledAccountNumberLabel
-            accountNumber={account.accountNumber || ''}
-            obscureValue={false}
-          />
+          <StyledAccountNumberLabel accountNumber={account.pubkey || ''} obscureValue={false} />
         </StyledAccountNumberContainer>
       </StyledAccountNumberMessage>
 

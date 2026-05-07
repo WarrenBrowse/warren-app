@@ -14,7 +14,7 @@ export const useHandleRemoveDeviceError = () => {
     setError,
     device: { id: deviceId },
   } = useDeviceListItemContext();
-  const accountNumber = useSelector((state) => state.account.accountNumber)!;
+  const pubkey = useSelector((state) => state.account.pubkey)!;
 
   const handleError = React.useCallback(
     async (error: Error) => {
@@ -22,7 +22,7 @@ export const useHandleRemoveDeviceError = () => {
 
       let devices: Array<IDevice> | undefined = undefined;
       try {
-        devices = await fetchDevices(accountNumber);
+        devices = await fetchDevices(pubkey);
       } finally {
         if (devices === undefined || devices.some((device) => device.id === deviceId)) {
           hideConfirmDialog();
@@ -31,7 +31,7 @@ export const useHandleRemoveDeviceError = () => {
         }
       }
     },
-    [fetchDevices, accountNumber, deviceId, hideConfirmDialog, resetDeleting, setError],
+    [fetchDevices, pubkey, deviceId, hideConfirmDialog, resetDeleting, setError],
   );
 
   return handleError;

@@ -415,7 +415,7 @@ function OutdatedVersionWarningDialog() {
 
 const useCollectLog = () => {
   const { collectProblemReport } = useAppContext();
-  const accountHistory = useSelector((state) => state.account.accountHistory);
+  const pubkeyHistory = useSelector((state) => state.account.pubkeyHistory);
 
   const collectLogPromise = useRef<Promise<string>>(undefined);
 
@@ -423,7 +423,7 @@ const useCollectLog = () => {
     if (collectLogPromise.current) {
       return collectLogPromise.current;
     } else {
-      const collectPromise = collectProblemReport(accountHistory);
+      const collectPromise = collectProblemReport(pubkeyHistory);
       // save promise to prevent subsequent requests
       collectLogPromise.current = collectPromise;
 
@@ -435,7 +435,7 @@ const useCollectLog = () => {
         throw error;
       }
     }
-  }, [accountHistory, collectProblemReport]);
+  }, [pubkeyHistory, collectProblemReport]);
 
   return { collectLog };
 };

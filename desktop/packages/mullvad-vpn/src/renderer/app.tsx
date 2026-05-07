@@ -13,7 +13,6 @@ import {
 import { Url } from '../shared/constants';
 import {
   AccessMethodSetting,
-  AccountNumber,
   CustomProxy,
   DeviceEvent,
   DisconnectSource,
@@ -33,6 +32,7 @@ import {
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
+  WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
@@ -162,8 +162,8 @@ export default class AppRenderer {
       this.reduxActions.account.updateDevices(devices);
     });
 
-    IpcRendererEventChannel.accountHistory.listen((newAccountHistory?: AccountNumber) => {
-      this.setAccountHistory(newAccountHistory);
+    IpcRendererEventChannel.accountHistory.listen((newPubKeyHistory?: WarrenPubKey) => {
+      this.setPubKeyHistory(newPubKeyHistory);
     });
 
     IpcRendererEventChannel.tunnel.listen((newState: TunnelState) => {
@@ -322,7 +322,7 @@ export default class AppRenderer {
     // Login state and account needs to be set before expiry.
     this.setAccountExpiry(initialState.accountData?.expiry);
 
-    this.setAccountHistory(initialState.accountHistory);
+    this.setPubKeyHistory(initialState.accountHistory);
     this.setTunnelState(initialState.tunnelState);
     this.updateBlockedState(initialState.tunnelState);
 
@@ -525,19 +525,19 @@ export default class AppRenderer {
     }
   };
 
-  public login = async (accountNumber: AccountNumber) => {
+  public login = async (pubkey: WarrenPubKey) => {
     const actions = this.reduxActions;
-    actions.account.startLogin(accountNumber);
+    actions.account.startLogin(pubkey);
 
     log.info('Logging in');
 
     this.loginState = 'logging in';
 
-    const response = await IpcRendererEventChannel.account.login(accountNumber);
+    const response = await IpcRendererEventChannel.account.login(pubkey);
     if (response?.type === 'error') {
       if (response.error === 'too-many-devices') {
         try {
-          await this.fetchDevices(accountNumber);
+          await this.fetchDevices(pubkey);
 
           actions.account.loginTooManyDevices();
           this.loginState = 'too many devices';
@@ -586,8 +586,8 @@ export default class AppRenderer {
     }
   };
 
-  public fetchDevices = async (accountNumber: AccountNumber): Promise<Array<IDevice>> => {
-    const devices = await IpcRendererEventChannel.account.listDevices(accountNumber);
+  public fetchDevices = async (pubkey: WarrenPubKey): Promise<Array<IDevice>> => {
+    const devices = await IpcRendererEventChannel.account.listDevices(pubkey);
     this.reduxActions.account.updateDevices(devices);
     return devices;
   };
@@ -799,8 +799,8 @@ export default class AppRenderer {
     this.reduxActions.appUpgrade.resetAppUpgrade();
   }
 
-  private setAccountHistory(accountHistory?: AccountNumber) {
-    this.reduxActions.account.updateAccountHistory(accountHistory);
+  private setPubKeyHistory(pubkeyHistory?: WarrenPubKey) {
+    this.reduxActions.account.updatePubKeyHistory(pubkeyHistory);
   }
 
   private setTunnelState(tunnelState: TunnelState) {

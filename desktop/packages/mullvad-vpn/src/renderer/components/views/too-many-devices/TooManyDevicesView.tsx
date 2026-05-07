@@ -22,14 +22,14 @@ const StyledCustomScrollbars = styled(CustomScrollbars)({
 export function TooManyDevicesView() {
   const { reset } = useHistory();
   const { login, cancelLogin } = useAppContext();
-  const accountNumber = useSelector((state) => state.account.accountNumber)!;
+  const pubkey = useSelector((state) => state.account.pubkey)!;
   const devices = useSelector((state) => state.account.devices);
   const loginState = useSelector((state) => state.account.status);
 
   const continueLogin = useCallback(() => {
-    void login(accountNumber);
+    void login(pubkey);
     reset(RoutePath.login, { transition: TransitionType.pop });
-  }, [reset, login, accountNumber]);
+  }, [reset, login, pubkey]);
 
   const cancel = useCallback(() => {
     cancelLogin();

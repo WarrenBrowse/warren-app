@@ -3,7 +3,7 @@ import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { Url } from '../../../../shared/constants';
-import { AccountDataError, AccountNumber } from '../../../../shared/daemon-rpc-types';
+import { AccountDataError, WarrenPubKey } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { useAppContext } from '../../../context';
 import { formatAccountNumber } from '../../../lib/account';
@@ -41,9 +41,9 @@ import {
 
 export function LoginView() {
   const { openUrl, login, clearAccountHistory, createNewAccount } = useAppContext();
-  const { resetLoginError, updateAccountNumber } = useActions(accountActions);
+  const { resetLoginError, updatePubKey } = useActions(accountActions);
 
-  const { accountNumber, accountHistory, status } = useSelector((state) => state.account);
+  const { pubkey, pubkeyHistory, status } = useSelector((state) => state.account);
 
   const tunnelState = useSelector((state) => state.connection.status);
   const showBlockMessage =
@@ -56,14 +56,14 @@ export function LoginView() {
 
   return (
     <Login
-      accountNumber={accountNumber}
-      accountHistory={accountHistory}
+      pubkey={pubkey}
+      pubkeyHistory={pubkeyHistory}
       loginState={status}
       showBlockMessage={showBlockMessage}
       openExternalLink={openUrl}
       login={login}
       resetLoginError={resetLoginError}
-      updateAccountNumber={updateAccountNumber}
+      updatePubKey={updatePubKey}
       clearAccountHistory={clearAccountHistory}
       createNewAccount={createNewAccount}
       isPerformingPostUpgrade={isPerformingPostUpgrade}
@@ -72,14 +72,14 @@ export function LoginView() {
 }
 
 interface IProps {
-  accountNumber?: AccountNumber;
-  accountHistory?: AccountNumber;
+  pubkey?: WarrenPubKey;
+  pubkeyHistory?: WarrenPubKey;
   loginState: LoginState;
   showBlockMessage: boolean;
   openExternalLink: (type: Url) => void;
-  login: (accountNumber: AccountNumber) => void;
+  login: (pubkey: WarrenPubKey) => void;
   resetLoginError: () => void;
-  updateAccountNumber: (accountNumber: AccountNumber) => void;
+  updatePubKey: (pubkey: WarrenPubKey) => void;
   clearAccountHistory: () => Promise<void>;
   createNewAccount: () => void;
   isPerformingPostUpgrade?: boolean;
@@ -182,18 +182,18 @@ class Login extends React.Component<IProps, IState> {
     event?.preventDefault();
 
     if (this.accountNumberValid()) {
-      this.props.login(this.props.accountNumber!);
+      this.props.login(this.props.pubkey!);
     }
   };
 
-  private onInputChange = (accountNumber: string) => {
-    // reset error when user types in the new account number
+  private onInputChange = (pubkey: string) => {
+    // reset error when user types in the new pubkey
     if (this.shouldResetLoginError) {
       this.shouldResetLoginError = false;
       this.props.resetLoginError();
     }
 
-    this.props.updateAccountNumber(accountNumber);
+    this.props.updatePubKey(pubkey);
   };
 
   private formTitle() {
@@ -297,22 +297,22 @@ class Login extends React.Component<IProps, IState> {
   }
 
   private allowCreateAccount() {
-    const { accountNumber } = this.props;
-    return this.allowInteraction() && (accountNumber === undefined || accountNumber.length === 0);
+    const { pubkey } = this.props;
+    return this.allowInteraction() && (pubkey === undefined || pubkey.length === 0);
   }
 
   private accountNumberValid(): boolean {
-    const { accountNumber } = this.props;
-    return accountNumber !== undefined && accountNumber.length >= MIN_ACCOUNT_NUMBER_LENGTH;
+    const { pubkey } = this.props;
+    return pubkey !== undefined && pubkey.length >= MIN_ACCOUNT_NUMBER_LENGTH;
   }
 
   private shouldShowAccountHistory() {
-    return this.allowInteraction() && this.props.accountHistory !== undefined;
+    return this.allowInteraction() && this.props.pubkeyHistory !== undefined;
   }
 
-  private onSelectAccountFromHistory = (accountNumber: string) => {
-    this.props.updateAccountNumber(accountNumber);
-    this.props.login(accountNumber);
+  private onSelectAccountFromHistory = (pubkey: string) => {
+    this.props.updatePubKey(pubkey);
+    this.props.login(pubkey);
   };
 
   private onClearAccountHistory = () => {
@@ -339,7 +339,7 @@ class Login extends React.Component<IProps, IState> {
   }
 
   private onCreateNewAccount = () => {
-    if (this.props.accountHistory !== undefined) {
+    if (this.props.pubkeyHistory !== undefined) {
       this.setState({ createAccountDialogVisible: true });
     } else {
       this.onConfirmCreateNewAccount();
@@ -386,7 +386,7 @@ class Login extends React.Component<IProps, IState> {
                     separator=" "
                     groupLength={4}
                     placeholder="0000 0000 0000 0000"
-                    value={this.props.accountNumber || ''}
+                    value={this.props.pubkey || ''}
                     disabled={!allowInteraction}
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
@@ -399,7 +399,7 @@ class Login extends React.Component<IProps, IState> {
                 <Accordion expanded={this.shouldShowAccountHistory()}>
                   <StyledAccountDropdownContainer>
                     <AccountDropdown
-                      item={this.props.accountHistory}
+                      item={this.props.pubkeyHistory}
                       onSelect={this.onSelectAccountFromHistory}
                       onRemove={this.onClearAccountHistory}
                     />
@@ -458,9 +458,9 @@ class Login extends React.Component<IProps, IState> {
 }
 
 interface IAccountDropdownProps {
-  item?: AccountNumber;
-  onSelect: (value: AccountNumber) => void;
-  onRemove: (value: AccountNumber) => void;
+  item?: WarrenPubKey;
+  onSelect: (value: WarrenPubKey) => void;
+  onRemove: (value: WarrenPubKey) => void;
 }
 
 function AccountDropdown(props: IAccountDropdownProps) {
@@ -481,9 +481,9 @@ function AccountDropdown(props: IAccountDropdownProps) {
 
 interface AccountDropdownItemProps {
   label: string;
-  value: AccountNumber;
-  onRemove: (value: AccountNumber) => void;
-  onSelect: (value: AccountNumber) => void;
+  value: WarrenPubKey;
+  onRemove: (value: WarrenPubKey) => void;
+  onSelect: (value: WarrenPubKey) => void;
 }
 
 const StyledIcon = styled(Icon)({
