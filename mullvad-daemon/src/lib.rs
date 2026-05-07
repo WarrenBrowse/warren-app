@@ -29,6 +29,10 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Détection du mode account local Warren via env var
+/// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net pour le
+/// retry-loop initial `get_data` et la validation device).
+pub mod warren_account_mode;
 /// Assemble un `talpid_warren_iroh::WarrenIrohParameters` complet à
 /// partir du relay selector + signing_key + constantes côté config.
 pub mod warren_iroh_params;
