@@ -15,7 +15,7 @@ import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
-import { AccountExpiryRow, AccountNumberRow, DeviceNameRow, LabelledRow } from './components';
+import { AccountExpiryRow, DeviceNameRow, LabelledRow, WarrenPubKeyRow } from './components';
 
 const StyledViewContainer = styled(View.Container)`
   height: 100%;
@@ -67,8 +67,8 @@ export function AccountView() {
                   <DeviceNameRow />
                 </LabelledRow>
 
-                <LabelledRow label={messages.pgettext('account-view', 'Account number')}>
-                  <AccountNumberRow />
+                <LabelledRow label={messages.pgettext('account-view', 'Public key')}>
+                  <WarrenPubKeyRow />
                 </LabelledRow>
 
                 <LabelledRow gap="tiny" label={messages.pgettext('account-view', 'Paid until')}>

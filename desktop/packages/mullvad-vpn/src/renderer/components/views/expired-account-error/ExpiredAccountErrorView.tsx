@@ -20,13 +20,13 @@ import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
 import DeviceInfoButton from '../../DeviceInfoButton';
 import {
-  StyledAccountNumberContainer,
-  StyledAccountNumberLabel,
-  StyledAccountNumberMessage,
   StyledCustomScrollbars,
   StyledDeviceLabel,
   StyledMessage,
   StyledTitle,
+  StyledWarrenPubKeyContainer,
+  StyledWarrenPubKeyLabel,
+  StyledWarrenPubKeyMessage,
 } from '../../ExpiredAccountErrorViewStyles';
 import { ModalAlert, ModalAlertType, ModalMessage } from '../../Modal';
 import { SettingsListItem } from '../../settings-list-item';
@@ -128,12 +128,12 @@ function WelcomeView() {
       <StyledTitle data-testid="title">
         {messages.pgettext('connect-view', 'Congrats!')}
       </StyledTitle>
-      <StyledAccountNumberMessage>
-        {messages.pgettext('connect-view', 'Here’s your account number. Save it!')}
-        <StyledAccountNumberContainer>
-          <StyledAccountNumberLabel accountNumber={account.pubkey || ''} obscureValue={false} />
-        </StyledAccountNumberContainer>
-      </StyledAccountNumberMessage>
+      <StyledWarrenPubKeyMessage>
+        {messages.pgettext('connect-view', 'Here’s your public key. Save it!')}
+        <StyledWarrenPubKeyContainer>
+          <StyledWarrenPubKeyLabel pubkey={account.pubkey || ''} obscureValue={false} />
+        </StyledWarrenPubKeyContainer>
+      </StyledWarrenPubKeyMessage>
 
       <Flex alignItems="center" gap="tiny" margin={{ bottom: 'medium' }}>
         <StyledDeviceLabel>
