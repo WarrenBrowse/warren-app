@@ -1,4 +1,3 @@
-use crate::account::AccountNumber;
 use crate::warren_identity::WarrenIdentity;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -43,12 +42,12 @@ impl Device {
 
 /// Contains a device state.
 ///
-/// Warren fork — Phase 2.B.3 V6.a : le variant `LoggedIn` porte
-/// désormais une [`WarrenIdentity`] (pubkey Ed25519 + device) au lieu
-/// de l'historique [`AccountAndDevice`] (account_number String +
-/// device). La struct [`AccountAndDevice`] reste définie ci-dessous
-/// pour transition (gRPC proto + `From` impl côté daemon) ; suppression
-/// prévue en V6.c.
+/// Warren fork — Phase 2.B.3 V6.a-c : le variant `LoggedIn` porte
+/// une [`WarrenIdentity`] (pubkey Ed25519 + device). L'historique
+/// `AccountAndDevice` (account_number String + device) a été
+/// supprimé en V6.c ; le proto gRPC garde encore son `proto::AccountAndDevice`
+/// avec field `account_number: String` qui reçoit la pubkey hex
+/// (= compat clients gRPC sans rename .proto).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceState {
@@ -69,23 +68,6 @@ impl DeviceState {
 
     pub const fn is_logged_in(&self) -> bool {
         matches!(self, Self::LoggedIn(_))
-    }
-}
-
-/// A [Device] and its associated account number.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccountAndDevice {
-    #[serde(alias = "account_token")]
-    pub account_number: AccountNumber,
-    pub device: Device,
-}
-
-impl AccountAndDevice {
-    pub fn new(account_number: AccountNumber, device: Device) -> Self {
-        Self {
-            account_number,
-            device,
-        }
     }
 }
 

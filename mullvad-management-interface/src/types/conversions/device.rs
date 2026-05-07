@@ -218,15 +218,6 @@ impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEv
     }
 }
 
-impl From<mullvad_types::device::AccountAndDevice> for proto::AccountAndDevice {
-    fn from(device: mullvad_types::device::AccountAndDevice) -> Self {
-        proto::AccountAndDevice {
-            account_number: device.account_number,
-            device: Some(proto::Device::from(device.device)),
-        }
-    }
-}
-
 impl From<Vec<mullvad_types::device::Device>> for proto::DeviceList {
     fn from(devices: Vec<mullvad_types::device::Device>) -> Self {
         proto::DeviceList {

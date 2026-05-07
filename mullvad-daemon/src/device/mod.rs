@@ -11,9 +11,7 @@ use mullvad_types::account::{
 };
 use mullvad_types::{
     account::{AccountNumber, VoucherSubmission},
-    device::{
-        AccountAndDevice, Device, DeviceEvent, DeviceEventCause, DeviceId, DeviceName, DeviceState,
-    },
+    device::{Device, DeviceEvent, DeviceEventCause, DeviceId, DeviceName, DeviceState},
     warren_identity::WarrenIdentity,
     wireguard::{self, RotationInterval, WireguardData},
 };
@@ -167,15 +165,6 @@ pub struct PrivateAccountAndDevice {
     #[serde(alias = "account_token")]
     pub account_number: AccountNumber,
     pub device: PrivateDevice,
-}
-
-impl From<PrivateAccountAndDevice> for AccountAndDevice {
-    fn from(config: PrivateAccountAndDevice) -> Self {
-        AccountAndDevice {
-            account_number: config.account_number,
-            device: Device::from(config.device),
-        }
-    }
 }
 
 impl From<PrivateAccountAndDevice> for WarrenIdentity {
