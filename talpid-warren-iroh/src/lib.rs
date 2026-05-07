@@ -123,6 +123,7 @@ impl Error {
 /// `args.tun_provider` + émet `InterfaceUp` puis `Up` events.
 /// `wait` bloque sur `tunnel_close_rx` puis émet `Down` + drop tun
 /// + drop session.
+///
 /// Pump TUN ↔ datagrammes QUIC = Phase 1.B.4.b (adapter `PacketDevice`
 /// nécessaire pour bridger `tun08::AsyncDevice` Mullvad et le trait
 /// Warren `warren_iroh_tunnel::PacketDevice`).

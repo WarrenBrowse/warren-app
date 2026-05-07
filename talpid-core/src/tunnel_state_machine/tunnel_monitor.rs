@@ -140,9 +140,13 @@ enum TunnelBackend {
     /// Backend historique WireGuard (path upstream Mullvad inchangé).
     Wireguard(WireguardMonitor),
     /// Backend Warren-Iroh POC. Phase 1.A : stub présent pour valider la
-    /// structure d'enum dispatch ; Phase 1.B câblera `warren-iroh-tunnel`.
-    /// `dead_code` autorisé tant qu'aucun call-site (state machine,
-    /// connecting_state) ne l'utilise — sera consommé en Phase 1.B.
+    /// structure d'enum dispatch. Le variant n'est jamais *construit*
+    /// tant que `connecting_state` n'appelle pas `start_warren_iroh`
+    /// (Phase 1.B). On suppress `dead_code` ; le `clippy::allow_attributes`
+    /// est aussi suppressé (limitation : `#[expect(dead_code)]` ne
+    /// satisfait pas le lint sur ce variant à cause d'un quirk
+    /// rustc/clippy concernant la détection de "never-constructed").
+    #[allow(clippy::allow_attributes)]
     #[allow(dead_code)]
     WarrenIroh(WarrenIrohMonitor),
 }
@@ -181,7 +185,8 @@ impl TunnelMonitor {
     ///
     /// [`Error::WarrenIrohMonitoring`] si le backend Iroh échoue à
     /// initialiser.
-    #[allow(dead_code)] // Phase 1.A : pas encore wiré dans connecting_state.
+    #[allow(clippy::allow_attributes)]
+    #[allow(dead_code)] // Phase 1.A : factory pas encore wirée dans connecting_state, viendra en Phase 1.B.
     pub fn start_warren_iroh(
         params: &WarrenIrohParameters,
         log_dir: &Option<path::PathBuf>,
