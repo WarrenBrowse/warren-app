@@ -32,8 +32,10 @@ use tokio::{
     io::{self, AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
 };
 
+mod account_backend;
 mod api;
 mod service;
+pub(crate) use account_backend::{LocalAccountBackend, RemoteAccountBackend, WarrenAccountBackend};
 pub(crate) use service::{DeviceService, WarrenIdentityService};
 
 /// File that used to store account and device data.
@@ -465,11 +467,32 @@ impl AccountManager {
         // l'initial check legacy.
         let number = data.device().map(|state| state.pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
+        // Warren fork — Phase C.1 : aiguillage du backend account.
+        // `local_account_mode=true` → `LocalAccountBackend` qui sert
+        // les données depuis la mnémonique sans toucher au réseau ;
+        // sinon `RemoteAccountBackend` qui wrap l'`AccountsProxy`
+        // historique. Le path Mullvad standard reste strictement
+        // identique en non-local.
+        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if local_account_mode {
+            // SAFETY: en local mode, `device.json` est garanti
+            // bootstrappé en amont par `warren_device_bootstrap` —
+            // donc `data.device()` est `Some(LoggedIn)` et
+            // `state.pubkey` est la pubkey courante.
+            let pubkey = data
+                .device()
+                .map(|state| state.pubkey.clone())
+                .expect("local_account_mode requires bootstrapped device.json");
+            std::sync::Arc::new(LocalAccountBackend::new(pubkey, settings_dir.to_path_buf()))
+        } else {
+            std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
+                rest_handle.clone(),
+            )))
+        };
         let warren_identity_service = service::spawn_warren_identity_service(
             rest_handle.clone(),
             number,
             api_availability.clone(),
-            local_account_mode,
+            account_backend,
         );
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
