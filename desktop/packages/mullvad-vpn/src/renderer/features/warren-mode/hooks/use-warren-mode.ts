@@ -45,3 +45,24 @@ export function useWarrenLocalAccount() {
 
   return { warrenLocalAccount, setWarrenLocalAccount };
 }
+
+// Warren fork — Phase G.5.a : hook URL persistante warren-api. Empty
+// string ou undefined → unset côté daemon (= fallback Mullvad upstream).
+export function useWarrenApiUrl() {
+  const warrenApiUrl = useSelector((state) => state.settings.warrenApiUrl);
+  const { setWarrenApiUrl: contextSetWarrenApiUrl } = useAppContext();
+
+  const setWarrenApiUrl = React.useCallback(
+    async (value: string) => {
+      try {
+        await contextSetWarrenApiUrl(value);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        log.error('Could not set Warren api URL', message);
+      }
+    },
+    [contextSetWarrenApiUrl],
+  );
+
+  return { warrenApiUrl, setWarrenApiUrl };
+}

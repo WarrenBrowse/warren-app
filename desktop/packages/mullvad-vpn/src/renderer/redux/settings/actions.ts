@@ -49,6 +49,12 @@ export interface IUpdateWarrenLocalAccountAction {
   warrenLocalAccount: boolean;
 }
 
+// Warren fork — Phase G.5.a : action de mise à jour URL warren-api.
+export interface IUpdateWarrenApiUrlAction {
+  type: 'UPDATE_WARREN_API_URL';
+  warrenApiUrl?: string;
+}
+
 export interface IUpdateEnableIpv6Action {
   type: 'UPDATE_ENABLE_IPV6';
   enableIpv6: boolean;
@@ -142,6 +148,7 @@ export type SettingsAction =
   | IUpdateAllowLanAction
   | IUpdateWarrenModeAction
   | IUpdateWarrenLocalAccountAction
+  | IUpdateWarrenApiUrlAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -210,6 +217,13 @@ function updateWarrenLocalAccount(warrenLocalAccount: boolean): IUpdateWarrenLoc
   return {
     type: 'UPDATE_WARREN_LOCAL_ACCOUNT',
     warrenLocalAccount,
+  };
+}
+
+function updateWarrenApiUrl(warrenApiUrl?: string): IUpdateWarrenApiUrlAction {
+  return {
+    type: 'UPDATE_WARREN_API_URL',
+    warrenApiUrl,
   };
 }
 
@@ -346,6 +360,7 @@ export default {
   updateAllowLan,
   updateWarrenMode,
   updateWarrenLocalAccount,
+  updateWarrenApiUrl,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

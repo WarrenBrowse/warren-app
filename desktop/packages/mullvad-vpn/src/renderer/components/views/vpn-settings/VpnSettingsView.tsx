@@ -7,6 +7,7 @@ import {
   QuantumResistantSetting,
 } from '../../../features/tunnel/components';
 import {
+  WarrenApiUrlSetting,
   WarrenLocalAccountSetting,
   WarrenModeSetting,
 } from '../../../features/warren-mode/components';
@@ -59,6 +60,8 @@ export function VpnSettingsView() {
                     <WarrenModeSetting position="first" />
                     <WarrenLocalAccountSetting position="last" />
                   </FlexColumn>
+
+                  <WarrenApiUrlSetting />
 
                   <FlexColumn gap="small">
                     <DnsBlockerSettings position="solo" />

@@ -301,6 +301,14 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setWarrenLocalAccount, enabled);
   }
 
+  // Warren fork — Phase G.5.a : URL persistante warren-api. Empty
+  // string → unset côté daemon (= fallback Mullvad upstream backend).
+  // Restart daemon requis pour appliquer (cf. `resolve_warren_api_config`
+  // côté Rust qui lit Settings au boot uniquement).
+  public async setWarrenApiUrl(url: string): Promise<void> {
+    await this.callString(this.client.setWarrenApiUrl, url);
+  }
+
   public async setShowBetaReleases(showBetaReleases: boolean): Promise<void> {
     await this.callBool(this.client.setShowBetaReleases, showBetaReleases);
   }

@@ -78,6 +78,9 @@ export function getDefaultSettings(): ISettings {
     // préservé). L'utilisateur opt-in via UI Settings ou `mullvad warren …`.
     warrenMode: false,
     warrenLocalAccount: false,
+    // Warren fork — Phase G.5.a : `undefined` = unset, fallback Mullvad
+    // upstream backend.
+    warrenApiUrl: undefined,
   };
 }
 

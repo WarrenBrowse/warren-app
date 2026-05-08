@@ -4,5 +4,11 @@
 // toggles à l'utilisateur. Le restart du daemon est requis pour
 // appliquer un changement (cf. `warren_mode::resolve` côté Rust).
 
-export { WarrenModeSwitch, WarrenLocalAccountSwitch } from './components';
-export { useWarrenMode, useWarrenLocalAccount } from './hooks';
+export {
+  WarrenModeSwitch,
+  WarrenLocalAccountSwitch,
+  WarrenModeSetting,
+  WarrenLocalAccountSetting,
+  WarrenApiUrlSetting,
+} from './components';
+export { useWarrenMode, useWarrenLocalAccount, useWarrenApiUrl } from './hooks';

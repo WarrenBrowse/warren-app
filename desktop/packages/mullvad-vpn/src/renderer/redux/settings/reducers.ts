@@ -84,6 +84,8 @@ export interface ISettingsReduxState {
   // Warren fork — Phase H : toggles persistants exposés via gRPC.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
+  // Warren fork — Phase G.5.a : URL warren-api persistante.
+  warrenApiUrl?: string;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -131,6 +133,7 @@ const initialState: ISettingsReduxState = {
   showBetaReleases: false,
   warrenMode: false,
   warrenLocalAccount: false,
+  warrenApiUrl: undefined,
   wireguard: {
     quantumResistant: true,
   },
@@ -218,6 +221,12 @@ export default function (
       return {
         ...state,
         warrenLocalAccount: action.warrenLocalAccount,
+      };
+
+    case 'UPDATE_WARREN_API_URL':
+      return {
+        ...state,
+        warrenApiUrl: action.warrenApiUrl,
       };
 
     case 'UPDATE_ENABLE_IPV6':

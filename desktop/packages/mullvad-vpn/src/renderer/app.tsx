@@ -624,6 +624,15 @@ export default class AppRenderer {
     actions.settings.updateWarrenLocalAccount(warrenLocalAccount);
   };
 
+  // Warren fork — Phase G.5.a : URL persistante warren-api. Empty
+  // string → unset côté daemon (= fallback Mullvad upstream backend).
+  // Restart daemon requis pour appliquer.
+  public setWarrenApiUrl = async (warrenApiUrl: string) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenApiUrl(warrenApiUrl);
+    actions.settings.updateWarrenApiUrl(warrenApiUrl === '' ? undefined : warrenApiUrl);
+  };
+
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setShowBetaReleases(showBetaReleases);
@@ -859,6 +868,7 @@ export default class AppRenderer {
     reduxSettings.updateAllowLan(newSettings.allowLan);
     reduxSettings.updateWarrenMode(newSettings.warrenMode);
     reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
+    reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);

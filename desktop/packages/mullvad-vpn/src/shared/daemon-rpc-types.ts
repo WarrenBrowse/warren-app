@@ -494,6 +494,9 @@ export interface ISettings {
   // Restart du daemon requis pour appliquer un changement.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
+  // Warren fork — Phase G.5.a : URL warren-api persistante. `undefined`
+  // si unset (= fallback Mullvad upstream). Restart daemon requis.
+  warrenApiUrl?: string;
 }
 
 export type SplitTunnelSettings = {

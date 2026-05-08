@@ -196,6 +196,9 @@ export const ipcSchema = {
     // Warren fork — Phase H : toggles persistants Warren mode.
     setWarrenMode: invoke<boolean, void>(),
     setWarrenLocalAccount: invoke<boolean, void>(),
+    // Warren fork — Phase G.5.a : URL persistante warren-api (string
+    // vide = unset). Restart daemon requis pour appliquer.
+    setWarrenApiUrl: invoke<string, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
     setLockdownMode: invoke<boolean, void>(),
