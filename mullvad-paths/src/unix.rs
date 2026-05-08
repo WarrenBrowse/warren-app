@@ -6,7 +6,11 @@ use std::{
 
 use crate::{Error, Result, UserPermissions};
 
-pub const PRODUCT_NAME: &str = "mullvad-vpn";
+// Renommé en `warren-vpn` pour le fork Warren afin d'éviter toute
+// collision avec un client Mullvad upstream installé sur la même
+// machine (même socket RPC, même settings.json, même relays.json).
+// Cf. tests/warren_collision_safety.rs.
+pub const PRODUCT_NAME: &str = "warren-vpn";
 
 impl UserPermissions {
     fn fs_permissions(self) -> fs::Permissions {

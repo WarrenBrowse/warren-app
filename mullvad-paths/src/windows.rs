@@ -44,7 +44,10 @@ use windows_sys::{
     core::{GUID, PWSTR},
 };
 
-pub const PRODUCT_NAME: &str = "Mullvad VPN";
+// Renommé en `Warren VPN` pour le fork Warren — voir
+// `unix.rs::PRODUCT_NAME` pour le rationale (anti-collision avec
+// Mullvad upstream).
+pub const PRODUCT_NAME: &str = "Warren VPN";
 
 pub fn get_allusersprofile_dir() -> Result<PathBuf> {
     match std::env::var_os("ALLUSERSPROFILE") {
