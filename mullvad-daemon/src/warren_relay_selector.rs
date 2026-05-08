@@ -18,7 +18,8 @@ use std::sync::Arc;
 
 use warren_relay_selector::iroh_types::{EndpointAddr, EndpointId};
 use warren_relay_selector::{
-    JsonError, SelectorError, WarrenRelay, WarrenRelayList, WarrenRelayQuery, WarrenRelaySelector,
+    SelectorError, SignedError, WarrenRelay, WarrenRelayList, WarrenRelayQuery,
+    WarrenRelaySelector, verify_signed_relay_list,
 };
 
 /// Erreurs du chargement de `warren-relays.json` au boot.
@@ -29,9 +30,11 @@ pub enum LoadError {
     #[error("failed to read warren relays at {0}: {1}")]
     Io(String, #[source] std::io::Error),
 
-    /// Le JSON est invalide ou ne respecte pas le schéma v1.
+    /// Le JSON est invalide, n'a pas la version supportée, ou la
+    /// signature serveur ne vérifie pas. Format wire v2 obligatoire
+    /// post-F3 fork audit (cf. `warren_relay_selector::signed`).
     #[error("invalid warren-relays.json at {0}: {1}")]
-    Json(String, #[source] JsonError),
+    Json(String, #[source] SignedError),
 }
 
 /// Sortie minimale de la sélection : les seuls deux champs
@@ -99,6 +102,30 @@ impl DaemonWarrenRelaySelector {
     /// explicitement). Le caller (boot daemon) peut choisir de
     /// fallback sur une liste vide via `unwrap_or_else`.
     pub fn load_from_cache_dir(cache_dir: &Path) -> Result<Self, LoadError> {
+        Self::load_from_cache_dir_with_pin(cache_dir, None)
+    }
+
+    /// Variante de [`Self::load_from_cache_dir`] avec **pin de la
+    /// pubkey serveur**. Si `expected_server_pubkey_hex` est `Some(hex)`,
+    /// refuse toute liste signée par une autre pubkey (= protection
+    /// MITM-on-bootstrap). Si `None`, mode TOFU : accepte toute
+    /// signature self-cohérente (utile pour le 1er fetch ou les tests).
+    ///
+    /// Format attendu : v2 signé Ed25519 (cf.
+    /// [`warren_relay_selector::verify_signed_relay_list`]). Le format
+    /// v1 non-signé est **rejeté** post-F3 audit (anti-downgrade
+    /// attack — un attaquant qui sert un v1 sans signature pourrait
+    /// substituer la liste sans détection).
+    ///
+    /// # Errors
+    ///
+    /// - [`LoadError::Io`] si le fichier existe mais est illisible.
+    /// - [`LoadError::Json`] si le JSON est invalide, version != 2, la
+    ///   pubkey serveur diffère du pin, ou la signature ne vérifie pas.
+    pub fn load_from_cache_dir_with_pin(
+        cache_dir: &Path,
+        expected_server_pubkey_hex: Option<&str>,
+    ) -> Result<Self, LoadError> {
         let path = cache_dir.join(WARREN_RELAYS_FILENAME);
         if !path.exists() {
             log::info!(
@@ -109,10 +136,10 @@ impl DaemonWarrenRelaySelector {
         }
         let raw = std::fs::read_to_string(&path)
             .map_err(|e| LoadError::Io(path.display().to_string(), e))?;
-        let list = WarrenRelayList::from_json_str(&raw)
+        let list = verify_signed_relay_list(&raw, expected_server_pubkey_hex)
             .map_err(|e| LoadError::Json(path.display().to_string(), e))?;
         log::info!(
-            "Loaded {} Warren relays from {}",
+            "Loaded {} Warren relays from {} (signature verified)",
             list.len(),
             path.display()
         );
@@ -231,22 +258,106 @@ mod tests {
     }
 
     #[test]
-    fn load_from_cache_dir_parses_valid_json_file() {
-        // Si le fichier existe et contient un JSON v1 valide, le
-        // wrapper doit charger les relays correctement.
+    fn load_from_cache_dir_parses_v2_signed_json_emitted_by_warren_api() {
+        // F3 fork audit : warren-api `/v1/exits` retourne un format
+        // **v2 signé** (`SignedRelayList` avec server_pubkey + signature
+        // Ed25519). Le daemon doit le parser et vérifier la signature
+        // — pas accepter du v1 non-signé. Format figé : si serde change
+        // l'ordre des fields v2, ce test (et toute installation
+        // existante) casse → rotation `/v3` obligatoire.
+        use ed25519_dalek::SigningKey;
+        use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
+
         let dir = isolated_tempdir();
-        let pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
-        let json = format!(
-            r#"{{"version":1,"relays":[{{"endpoint_id":"{pubkey_hex}","ip_addrs":["198.51.100.1:51820"],"country":"se","city":"Stockholm","weight":100,"active":true}}]}}"#
+
+        // Server signing key fixe pour le test (déterministe).
+        let server_key = SigningKey::from_bytes(&[0xab; 32]);
+        let relay_pubkey = SecretKey::from_bytes(&[5u8; 32]).public();
+        let relay_pubkey_hex = hex::encode(relay_pubkey.as_bytes());
+
+        let signed = sign_relay_list(
+            vec![SignedJsonRelay {
+                endpoint_id: relay_pubkey_hex,
+                ip_addrs: vec!["198.51.100.1:51820".to_owned()],
+                country: "se".to_owned(),
+                city: "Stockholm".to_owned(),
+                weight: 100,
+                active: true,
+            }],
+            &server_key,
+            1_700_000_000,
         );
+        let json = serde_json::to_string(&signed).expect("serialize signed v2");
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write file");
 
-        let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir).expect("must parse");
+        let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir).expect("must parse v2");
         let selection = selector
             .select_for_attempt(&WarrenRelayQuery::any(), 0)
             .expect("must find the relay");
-        let expected_id = SecretKey::from_bytes(&[5u8; 32]).public();
-        assert_eq!(selection.endpoint_id, expected_id);
+        assert_eq!(selection.endpoint_id, relay_pubkey);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_from_cache_dir_rejects_v2_with_tampered_relay_signature() {
+        // Anti-MITM : un attaquant qui sert sa propre liste signée OU
+        // qui modifie un relay sans re-signer doit voir le daemon
+        // refuser de charger (= falls back vers liste vide / erreur,
+        // tunnel reste impossible plutôt que de connecter à un
+        // attaquant).
+        use ed25519_dalek::SigningKey;
+        use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
+
+        let dir = isolated_tempdir();
+        let server_key = SigningKey::from_bytes(&[0xab; 32]);
+        let relay_pubkey_hex =
+            hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+
+        let mut signed = sign_relay_list(
+            vec![SignedJsonRelay {
+                endpoint_id: relay_pubkey_hex,
+                ip_addrs: vec!["198.51.100.1:51820".to_owned()],
+                country: "se".to_owned(),
+                city: "Stockholm".to_owned(),
+                weight: 100,
+                active: true,
+            }],
+            &server_key,
+            1_700_000_000,
+        );
+        // Tamper le port (= MITM qui re-route vers son relais) sans
+        // re-signer.
+        signed.relays[0].ip_addrs = vec!["198.51.100.1:9999".to_owned()];
+        let json = serde_json::to_string(&signed).expect("serialize tampered");
+        std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write");
+
+        let result = DaemonWarrenRelaySelector::load_from_cache_dir(&dir);
+        assert!(
+            matches!(result, Err(LoadError::Json(_, _))),
+            "tampered relay must produce LoadError::Json (signature verify fail)"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_from_cache_dir_rejects_v1_unsigned_legacy_format() {
+        // Anti-rollback : un attaquant qui sert un v1 non-signé doit
+        // être rejeté. v1 a été déprécié (cf. F3 fork audit) et le
+        // daemon doit refuser de l'ingérer (sinon downgrade attack).
+        let dir = isolated_tempdir();
+        let pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+        let json_v1 = format!(
+            r#"{{"version":1,"relays":[{{"endpoint_id":"{pubkey_hex}","ip_addrs":["198.51.100.1:51820"],"country":"se","city":"Stockholm","weight":100,"active":true}}]}}"#
+        );
+        std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json_v1).expect("write v1");
+
+        let result = DaemonWarrenRelaySelector::load_from_cache_dir(&dir);
+        assert!(
+            matches!(result, Err(LoadError::Json(_, _))),
+            "v1 unsigned format must be rejected post-F3 (got {result:?})"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
