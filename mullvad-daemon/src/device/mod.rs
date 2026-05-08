@@ -36,9 +36,30 @@ mod account_backend;
 mod api;
 mod device_backend;
 mod service;
-pub(crate) use account_backend::{LocalAccountBackend, RemoteAccountBackend, WarrenAccountBackend};
-pub(crate) use device_backend::{LocalDeviceBackend, RemoteDeviceBackend, WarrenDeviceBackend};
+pub(crate) use account_backend::{
+    LocalAccountBackend, RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
+};
+pub(crate) use device_backend::{
+    LocalDeviceBackend, RemoteDeviceBackend, WarrenDeviceBackend, WarrenRemoteDeviceBackend,
+};
 pub(crate) use service::{DeviceService, WarrenIdentityService};
+
+/// Phase G.4 — config nécessaire pour instancier les backends Warren-Remote
+/// (= path warren-api). Construite par le caller (`Daemon::start`) au boot
+/// si `warren_mode && !warren_local_account`. `None` = backend Mullvad
+/// upstream (legacy) ou `LocalAccountBackend` (selon `local_account_mode`).
+///
+/// Convention :
+/// - `url` : `http(s)://host:port`, sans trailing slash. Tipiquement
+///   `https://api.warrenbrowse.com` en prod ou `http://127.0.0.1:8080`
+///   en dev local. Source : env var `WARREN_API_URL` au boot.
+/// - `signing_key` : identité Warren chargée depuis la mnémonique
+///   (`warren_signer::load_or_create_signing_key`).
+#[derive(Clone)]
+pub(crate) struct WarrenApiConfig {
+    pub url: String,
+    pub signing_key: ed25519_dalek::SigningKey,
+}
 
 /// File that used to store account and device data.
 pub(crate) const DEVICE_CACHE_FILENAME: &str = "device.json";
@@ -461,6 +482,7 @@ impl AccountManager {
         initial_rotation_interval: RotationInterval,
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
         local_account_mode: bool,
+        warren_api_config: Option<WarrenApiConfig>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         // Warren fork — Phase 2.D V8.b : `state.pubkey` est typé
@@ -469,12 +491,15 @@ impl AccountManager {
         // l'initial check legacy.
         let number = data.device().map(|state| state.pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
-        // Warren fork — Phase C.1 : aiguillage du backend account.
-        // `local_account_mode=true` → `LocalAccountBackend` qui sert
-        // les données depuis la mnémonique sans toucher au réseau ;
-        // sinon `RemoteAccountBackend` qui wrap l'`AccountsProxy`
-        // historique. Le path Mullvad standard reste strictement
-        // identique en non-local.
+        // Warren fork — Phase G.4 : aiguillage 3-branches du backend
+        // account, prioritaire dans cet ordre :
+        // 1. `local_account_mode = true` → [`LocalAccountBackend`]
+        //    (POC stateless, no network, depuis mnémonique).
+        // 2. Sinon, `warren_api_config = Some(_)` →
+        //    [`WarrenRemoteAccountBackend`] (parle à warren-api via
+        //    HTTP signé Ed25519).
+        // 3. Sinon → [`RemoteAccountBackend`] (path Mullvad upstream
+        //    historique, parle à api.mullvad.net).
         let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if local_account_mode {
             // SAFETY: en local mode, `device.json` est garanti
             // bootstrappé en amont par `warren_device_bootstrap` —
@@ -485,6 +510,12 @@ impl AccountManager {
                 .map(|state| state.pubkey.clone())
                 .expect("local_account_mode requires bootstrapped device.json");
             std::sync::Arc::new(LocalAccountBackend::new(pubkey, settings_dir.to_path_buf()))
+        } else if let Some(cfg) = warren_api_config.clone() {
+            // Clone de la SigningKey via to_bytes/from_bytes pour
+            // pouvoir réutiliser cfg pour le device_backend en plus.
+            let key_clone = ed25519_dalek::SigningKey::from_bytes(&cfg.signing_key.to_bytes());
+            let client = warren_api_client::WarrenApiClient::new(cfg.url, key_clone);
+            std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
         } else {
             std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
                 rest_handle.clone(),
@@ -499,15 +530,13 @@ impl AccountManager {
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
 
-        // Warren fork — Phase C.2 : aiguillage du backend device.
-        // Symétrique à C.1 (cf. `account_backend` ci-dessus).
-        // `local_account_mode=true` → `LocalDeviceBackend` seedé
-        // depuis l'état `device.json` lu par `DeviceCacher::new` ;
-        // sinon `RemoteDeviceBackend` qui wrap le `DevicesProxy`
-        // historique. Le path Mullvad standard reste strictement
-        // identique en non-local.
+        // Warren fork — Phase G.4 : aiguillage 3-branches du backend
+        // device, symétrique à `account_backend` ci-dessus.
         let device_backend: std::sync::Arc<dyn WarrenDeviceBackend> = if local_account_mode {
             std::sync::Arc::new(LocalDeviceBackend::from_state(&data))
+        } else if let Some(cfg) = warren_api_config {
+            let client = warren_api_client::WarrenApiClient::new(cfg.url, cfg.signing_key);
+            std::sync::Arc::new(WarrenRemoteDeviceBackend::new(client))
         } else {
             std::sync::Arc::new(RemoteDeviceBackend::new(mullvad_api::DevicesProxy::new(
                 rest_handle,

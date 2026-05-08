@@ -204,6 +204,99 @@ impl WarrenAccountBackend for LocalAccountBackend {
     }
 }
 
+/// Backend Warren-Remote — Phase G.3 — implémente
+/// [`WarrenAccountBackend`] via le HTTP client signé `warren-api-client`
+/// qui parle au serveur warren-api (= alternative au path
+/// `RemoteAccountBackend` qui parle à `api.mullvad.net`).
+///
+/// Activé en mode `warren_mode = true && warren_local_account = false`
+/// (= 3e branche du dispatch dans `device/mod.rs`, cf. Phase G.4).
+///
+/// Sémantique mapping :
+/// - `create_account()` : retourne la pubkey hex du `WarrenApiClient`
+///   (= identité Warren signataire au boot du daemon). Pas d'appel
+///   serveur — la création de compte côté warren-api passe par le flow
+///   voucher (`POST /v1/register` non-auth) hors de ce trait.
+/// - `get_data(account)` : `GET /v1/subscription` signé →
+///   [`AccountData`] avec `id = account` et `expiry` reconstitué depuis
+///   `expires_at` (unix seconds → `chrono::DateTime<Utc>`).
+/// - `delete_account(account)` : `DELETE /v1/account` signé.
+#[derive(Clone)]
+pub struct WarrenRemoteAccountBackend {
+    client: Arc<warren_api_client::WarrenApiClient>,
+}
+
+impl WarrenRemoteAccountBackend {
+    /// Construit un backend depuis un `WarrenApiClient` configuré au
+    /// boot. Le client porte la `SigningKey` Ed25519 (= identité
+    /// Warren) et l'URL `warren-api`.
+    #[must_use]
+    pub fn new(client: warren_api_client::WarrenApiClient) -> Self {
+        Self {
+            client: Arc::new(client),
+        }
+    }
+}
+
+impl WarrenAccountBackend for WarrenRemoteAccountBackend {
+    fn create_account(&self) -> BoxFut<Result<AccountNumber, rest::Error>> {
+        // Pas d'appel serveur : l'identité Warren est figée par la
+        // mnémonique chargée au boot. La création réelle de la sub
+        // côté warren-api se fait via le flow voucher (`POST /v1/register`
+        // non-auth) hors de ce trait.
+        let pubkey_hex = self.client.pubkey_hex();
+        Box::pin(async move { Ok(pubkey_hex) })
+    }
+
+    fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let resp = client.get_subscription().await.map_err(map_client_error)?;
+            let expiry = expiry_from_unix_secs(resp.expires_at)?;
+            Ok(AccountData {
+                id: account,
+                expiry,
+            })
+        })
+    }
+
+    fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
+        let client = self.client.clone();
+        Box::pin(async move { client.delete_account().await.map_err(map_client_error) })
+    }
+}
+
+/// Reconstitue `expiry: DateTime<Utc>` depuis `expires_at: u64` (unix
+/// seconds). Le serveur warren-api fournit l'expiry en secondes
+/// (cohérent JSON), Mullvad utilise `chrono::DateTime`. Erreur seule
+/// possible : `expires_at` overflow `i64` (= année > 9 milliards) →
+/// renvoie `Aborted` plutôt que panic.
+fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error> {
+    let secs_i64 = i64::try_from(secs).map_err(|_| rest::Error::Aborted)?;
+    chrono::DateTime::from_timestamp(secs_i64, 0).ok_or(rest::Error::Aborted)
+}
+
+/// Mappe une [`warren_api_client::ClientError`] vers une
+/// [`rest::Error`] Mullvad pour préserver le contrat des traits
+/// [`WarrenAccountBackend`] / [`super::device_backend::WarrenDeviceBackend`].
+///
+/// Convention : un statut HTTP non-2xx → `ApiError(StatusCode, msg)`
+/// (mappable côté caller via `map_rest_error`). Tout le reste
+/// (transport down, sérialisation, clock) → `Aborted` — cohérent avec
+/// le pattern Mullvad pour les pannes infrastructure.
+pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Error {
+    use warren_api_client::ClientError;
+    match err {
+        ClientError::ServerStatus { status } => {
+            let code = rest::StatusCode::from_u16(status)
+                .unwrap_or(rest::StatusCode::INTERNAL_SERVER_ERROR);
+            rest::Error::ApiError(code, format!("warren-api {status}"))
+        }
+        // Transport / serde / clock → infra down.
+        _ => rest::Error::Aborted,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -321,5 +414,145 @@ mod tests {
             .expect("delete_account avec fichiers absents doit retourner Ok");
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ===================================================================
+    // WarrenRemoteAccountBackend — Phase G.3 tests E2E.
+    //
+    // Stratégie : spawn warren-api in-process (axum::serve loopback),
+    // construit un `WarrenApiClient` signé Ed25519, instancie le backend,
+    // exerce chaque méthode du trait. Vérifie le mapping wire warren-api
+    // ↔ `mullvad_types::AccountData` + le mapping `ClientError` ↔
+    // `rest::Error::ApiError`.
+    // ===================================================================
+
+    use ed25519_dalek::SigningKey;
+    use std::sync::Arc as TestArc;
+    use warren_api_client::WarrenApiClient;
+
+    /// Spawn warren-api en in-process et retourne (URL, AppState).
+    /// L'`AppState` permet aux tests d'inspecter / pré-populer les
+    /// stores serveur (= raccourci équivalent aux endpoints admin
+    /// signés à venir en M5).
+    async fn spawn_warren_api() -> (String, TestArc<warren_api::AppState>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind ephemeral");
+        let addr = listener.local_addr().expect("local addr");
+        let state = warren_api::AppState::in_memory();
+        let app = warren_api::build_router(state.clone());
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.expect("serve");
+        });
+        (format!("http://{addr}"), state)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_account_create_returns_signing_pubkey() {
+        // Régression critique : `create_account` doit retourner la
+        // pubkey hex de l'identité signataire (= cohérence avec
+        // `device.json` côté `warren_device_bootstrap`). Pas d'appel
+        // serveur — purement local.
+        let (api_url, _state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[60u8; 32]);
+        let expected_pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+
+        let acc = backend.create_account().await.expect("create OK");
+        assert_eq!(acc, expected_pubkey_hex);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_account_get_data_reads_subscription_expiry() {
+        // Cas nominal : sub présente côté warren-api → backend.get_data()
+        // retourne AccountData avec expiry reconstitué depuis expires_at.
+        let (api_url, state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[61u8; 32]);
+        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        // Pré-populate côté serveur (= équivalent /v1/register préalable).
+        state.subscriptions.insert(&pubkey_hex, 1_700_000_000);
+
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+        let data = backend
+            .get_data(pubkey_hex.clone())
+            .await
+            .expect("get_data OK");
+
+        assert_eq!(data.id, pubkey_hex, "id == account passé en arg");
+        assert_eq!(
+            data.expiry.timestamp(),
+            1_700_000_000_i64,
+            "expiry doit refléter expires_at serveur"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_account_get_data_returns_apierror_404_when_no_sub() {
+        // Régression critique : si le mapping ClientError → rest::Error
+        // perd le statut 404, le caller (`handle_account_data_result`)
+        // interprète une erreur générique au lieu de "compte inexistant"
+        // → UX dégradée + état device.json incohérent.
+        let (api_url, _state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[62u8; 32]);
+        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+
+        let err = backend
+            .get_data(pubkey_hex)
+            .await
+            .expect_err("must fail with 404 mapping");
+        match err {
+            rest::Error::ApiError(code, _) => {
+                assert_eq!(code.as_u16(), 404, "404 doit transiter intact");
+            }
+            other => panic!("expected ApiError(404, _), got {other:?}"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_account_delete_removes_subscription() {
+        // Cas nominal : delete_account retire la sub côté serveur.
+        let (api_url, state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[63u8; 32]);
+        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        state.subscriptions.insert(&pubkey_hex, 9_999_999_999);
+
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+        backend
+            .delete_account(pubkey_hex.clone())
+            .await
+            .expect("delete OK");
+
+        assert!(
+            state.subscriptions.get_expiry(&pubkey_hex).is_none(),
+            "sub doit avoir disparu côté serveur après delete_account"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_account_delete_returns_apierror_404_when_no_sub() {
+        // Régression : si on essaie de delete une sub inexistante, le
+        // backend doit propager 404 → caller peut décider de l'ignorer
+        // ou la log proprement (vs erreur générique).
+        let (api_url, _state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[64u8; 32]);
+        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+
+        let err = backend
+            .delete_account(pubkey_hex)
+            .await
+            .expect_err("must fail 404");
+        match err {
+            rest::Error::ApiError(code, _) => {
+                assert_eq!(code.as_u16(), 404);
+            }
+            other => panic!("expected ApiError(404, _), got {other:?}"),
+        }
     }
 }

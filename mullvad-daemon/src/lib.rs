@@ -913,6 +913,39 @@ impl Daemon {
             }
         }
 
+        // Warren fork — Phase G.4 : si `warren_mode = true && !local_account_mode`,
+        // construire `WarrenApiConfig` (URL via env var + identité Warren).
+        // Sinon `None` → backend Mullvad upstream legacy (preserve strict).
+        let warren_api_config: Option<device::WarrenApiConfig> = if warren_mode_active_for_log
+            && !local_account_mode
+        {
+            let url = std::env::var("WARREN_API_URL").ok();
+            let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
+            match (url, signing_key) {
+                (Some(url), Some(key)) => {
+                    log::info!("Warren remote backend enabled (api={url})");
+                    Some(device::WarrenApiConfig {
+                        url,
+                        signing_key: key,
+                    })
+                }
+                (None, _) => {
+                    log::warn!(
+                        "Warren mode active but WARREN_API_URL not set; falling back to Mullvad upstream backend"
+                    );
+                    None
+                }
+                (_, None) => {
+                    log::warn!(
+                        "Warren mode active but no mnemonic available; falling back to Mullvad upstream backend"
+                    );
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
@@ -923,6 +956,7 @@ impl Daemon {
                 .unwrap_or_default(),
             internal_event_tx.to_specialized_sender(),
             local_account_mode,
+            warren_api_config,
         )
         .await
         .map_err(Error::LoadAccountManager)?;
