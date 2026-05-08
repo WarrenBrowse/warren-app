@@ -874,6 +874,22 @@ setWarrenLocalAccount: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
+  // Warren fork — Phase G.5.a : URL persistante du serveur warren-api
+// (consumed par WarrenRemote{Account,Device}Backend). Format
+// `http(s)://host:port` sans trailing slash. Empty string → unset
+// (= None côté Settings, fallback Mullvad upstream). Override via
+// env var `WARREN_API_URL`. Restart requis pour appliquer.
+setWarrenApiUrl: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenApiUrl',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
   // Account management
 createNewAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/CreateNewAccount',

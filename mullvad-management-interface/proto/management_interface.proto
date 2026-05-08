@@ -66,6 +66,12 @@ service ManagementService {
   // historiques). Override via env var POC `WARREN_LOCAL_ACCOUNT=1`.
   // Restart requis pour appliquer.
   rpc SetWarrenLocalAccount(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
+  // Warren fork — Phase G.5.a : URL persistante du serveur warren-api
+  // (consumed par WarrenRemote{Account,Device}Backend). Format
+  // `http(s)://host:port` sans trailing slash. Empty string → unset
+  // (= None côté Settings, fallback Mullvad upstream). Override via
+  // env var `WARREN_API_URL`. Restart requis pour appliquer.
+  rpc SetWarrenApiUrl(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
@@ -557,6 +563,8 @@ message Settings {
   bool warren_mode = 15;
   // Warren fork — Phase F.1. Cf. SetWarrenLocalAccount rpc.
   bool warren_local_account = 16;
+  // Warren fork — Phase G.5.a. Empty string = unset. Cf. SetWarrenApiUrl rpc.
+  string warren_api_url = 17;
 }
 
 message RelayOverride {

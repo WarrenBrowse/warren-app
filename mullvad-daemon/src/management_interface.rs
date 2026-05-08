@@ -286,6 +286,17 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
+        let warren_api_url = request.into_inner();
+        // No-log Warren : URL peut potentiellement contenir un host
+        // sensible (= déploiement privé). Logger seulement la longueur.
+        log::debug!("set_warren_api_url(len={})", warren_api_url.len());
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
         let enabled = request.into_inner();
         log::debug!("set_show_beta_releases({})", enabled);

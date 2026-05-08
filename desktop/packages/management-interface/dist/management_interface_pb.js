@@ -14002,7 +14002,8 @@ proto.mullvad_daemon.management_interface.Settings.toObject = function(includeIn
     recents: (f = msg.getRecents()) && proto.mullvad_daemon.management_interface.Recents.toObject(includeInstance, f),
     updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
     warrenMode: jspb.Message.getBooleanFieldWithDefault(msg, 15, false),
-    warrenLocalAccount: jspb.Message.getBooleanFieldWithDefault(msg, 16, false)
+    warrenLocalAccount: jspb.Message.getBooleanFieldWithDefault(msg, 16, false),
+    warrenApiUrl: jspb.Message.getFieldWithDefault(msg, 17, "")
   };
 
   if (includeInstance) {
@@ -14106,6 +14107,10 @@ proto.mullvad_daemon.management_interface.Settings.deserializeBinaryFromReader =
     case 16:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setWarrenLocalAccount(value);
+      break;
+    case 17:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setWarrenApiUrl(value);
       break;
     default:
       reader.skipField();
@@ -14246,6 +14251,13 @@ proto.mullvad_daemon.management_interface.Settings.serializeBinaryToWriter = fun
   if (f) {
     writer.writeBool(
       16,
+      f
+    );
+  }
+  f = message.getWarrenApiUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      17,
       f
     );
   }
@@ -14672,6 +14684,24 @@ proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenLocalAccou
  */
 proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenLocalAccount = function(value) {
   return jspb.Message.setProto3BooleanField(this, 16, value);
+};
+
+
+/**
+ * optional string warren_api_url = 17;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenApiUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 17, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenApiUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 17, value);
 };
 
 

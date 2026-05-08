@@ -1780,6 +1780,8 @@ export class Settings extends jspb.Message {
     setWarrenMode(value: boolean): Settings;
     getWarrenLocalAccount(): boolean;
     setWarrenLocalAccount(value: boolean): Settings;
+    getWarrenApiUrl(): string;
+    setWarrenApiUrl(value: string): Settings;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
@@ -1808,6 +1810,7 @@ export namespace Settings {
         updateDefaultLocation: boolean,
         warrenMode: boolean,
         warrenLocalAccount: boolean,
+        warrenApiUrl: string,
     }
 }
 

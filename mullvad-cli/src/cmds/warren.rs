@@ -21,6 +21,10 @@ pub enum Warren {
     /// Manage the Warren local account mode (no api.mullvad.net) toggle
     #[clap(subcommand)]
     LocalAccount(WarrenLocalAccount),
+
+    /// Manage the warren-api server URL (consumed by remote backends)
+    #[clap(subcommand)]
+    ApiUrl(WarrenApiUrl),
 }
 
 #[derive(Subcommand, Debug)]
@@ -47,6 +51,21 @@ pub enum WarrenLocalAccount {
     },
 }
 
+#[derive(Subcommand, Debug)]
+pub enum WarrenApiUrl {
+    /// Show the persisted warren-api URL (or "<unset>" if absent)
+    Get,
+
+    /// Persist the warren-api URL (restart daemon to apply)
+    Set {
+        /// Format `http(s)://host:port` sans trailing slash
+        url: String,
+    },
+
+    /// Unset the warren-api URL (restart daemon to apply, fallback Mullvad upstream)
+    Unset,
+}
+
 impl Warren {
     pub async fn handle(self) -> Result<()> {
         match self {
@@ -56,6 +75,9 @@ impl Warren {
             Warren::LocalAccount(WarrenLocalAccount::Set { state }) => {
                 Self::local_account_set(*state).await
             }
+            Warren::ApiUrl(WarrenApiUrl::Get) => Self::api_url_get().await,
+            Warren::ApiUrl(WarrenApiUrl::Set { url }) => Self::api_url_set(Some(url)).await,
+            Warren::ApiUrl(WarrenApiUrl::Unset) => Self::api_url_set(None).await,
         }
     }
 
@@ -89,6 +111,28 @@ impl Warren {
         println!(
             "Warren local account mode persisted: {label} (restart `mullvad-daemon` to apply)"
         );
+        Ok(())
+    }
+
+    async fn api_url_get() -> Result<()> {
+        let mut rpc = MullvadProxyClient::new().await?;
+        let settings = rpc.get_settings().await?;
+        match settings.warren_api_url {
+            Some(url) => println!("Warren api URL: {url}"),
+            None => println!("Warren api URL: <unset>"),
+        }
+        Ok(())
+    }
+
+    async fn api_url_set(url: Option<String>) -> Result<()> {
+        let mut rpc = MullvadProxyClient::new().await?;
+        rpc.set_warren_api_url(url.clone()).await?;
+        match url {
+            Some(u) => {
+                println!("Warren api URL persisted: {u} (restart `mullvad-daemon` to apply)")
+            }
+            None => println!("Warren api URL unset (restart `mullvad-daemon` to apply)"),
+        }
         Ok(())
     }
 }

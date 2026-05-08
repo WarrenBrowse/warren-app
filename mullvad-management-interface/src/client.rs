@@ -291,6 +291,13 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Warren fork — Phase G.5.a : URL persistante `Settings::warren_api_url`.
+    /// `None` → unset (= empty string sur le wire). Restart requis.
+    pub async fn set_warren_api_url(&mut self, url: Option<String>) -> Result<()> {
+        self.0.set_warren_api_url(url.unwrap_or_default()).await?;
+        Ok(())
+    }
+
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
         self.0
             .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))

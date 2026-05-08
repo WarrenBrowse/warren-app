@@ -59,6 +59,11 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             // au CLI/UI de les lire et les muter.
             warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
+            // Warren fork — Phase G.5.a : None → empty string sur le wire
+            // (proto3 `string` n'a pas de "absent", on utilise "" comme
+            // sentinel pour "unset"). Cohérent avec la conversion
+            // inverse côté `try_from(SettingsProto)`.
+            warren_api_url: settings.warren_api_url.clone().unwrap_or_default(),
         }
     }
 }
@@ -195,13 +200,14 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // et les muter via `SetWarrenMode`/`SetWarrenLocalAccount`.
             warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
-            // Warren fork — Phase G.5.a : `warren_api_url` n'est pas
-            // (encore) exposé via gRPC. Le daemon le lit directement
-            // depuis settings.json. Quand un client gRPC envoie un
-            // `SetSettings`, ce field repart à `None` ici — c'est
-            // intentionnel pour cette phase (cf. HACK note ci-dessus
-            // sur l'absence de séparation client-settings/daemon-settings).
-            warren_api_url: None,
+            // Warren fork — Phase G.5.a : empty string proto → None
+            // côté mullvad_types. Permet à l'UI/CLI gRPC de unset le
+            // field en envoyant "".
+            warren_api_url: if settings.warren_api_url.is_empty() {
+                None
+            } else {
+                Some(settings.warren_api_url)
+            },
         })
     }
 }

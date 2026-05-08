@@ -313,6 +313,9 @@ pub enum DaemonCommand {
     SetWarrenMode(ResponseTx<(), settings::Error>, bool),
     /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_local_account`.
     SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
+    /// Warren fork — Phase G.5.a : URL persistante `Settings::warren_api_url`.
+    /// Empty string → unset (= None côté Settings).
+    SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -1674,6 +1677,7 @@ impl Daemon {
             SetWarrenLocalAccount(tx, enabled) => {
                 self.on_set_warren_local_account(tx, enabled).await
             }
+            SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -2777,6 +2781,30 @@ impl Daemon {
             );
         }
         Self::oneshot_send(tx, result, "set_warren_local_account response");
+    }
+
+    /// Warren fork — Phase G.5.a : persiste `Settings::warren_api_url`.
+    /// Restart requis pour appliquer (le daemon résoud l'URL au boot
+    /// dans `Daemon::start`, il ne re-checke pas Settings en runtime).
+    /// Empty string → `None` côté Settings (= unset = fallback Mullvad
+    /// upstream backend).
+    async fn on_set_warren_api_url(&mut self, tx: ResponseTx<(), settings::Error>, url: String) {
+        let new_value = if url.is_empty() { None } else { Some(url) };
+        let display_value = new_value
+            .as_deref()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| "<unset>".to_owned());
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_api_url = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!("Warren api_url persisted to {display_value} ; restart required for effect");
+        }
+        Self::oneshot_send(tx, result, "set_warren_api_url response");
     }
 
     async fn on_set_show_beta_releases(
