@@ -759,7 +759,12 @@ impl<'a> PolicyBatch<'a> {
 
         self.batch.add(&in_rule, nftnl::MsgType::Add);
 
-        // Allow any traffic to the endpoint which is marked with fwmark
+        // Allow any traffic to the endpoint which is marked with fwmark.
+        // Pour WireGuard upstream : le client WG userspace tourne dans le
+        // cgroup `split_tunnel`, ses paquets sortent du `mangle_chain`
+        // marqués → cette règle matche → ACCEPT. WG-kernel a sa propre
+        // logique fwmark. Voir aussi `add_allow_tunnel_endpoint_root_rule`
+        // pour le cas Warren-Iroh ci-dessous.
         let mut out_rule = Rule::new(&self.out_chain);
         check_endpoint(&mut out_rule, End::Dst, &endpoint.endpoint);
         out_rule.add_expr(&nft_expr!(meta mark));
@@ -767,6 +772,36 @@ impl<'a> PolicyBatch<'a> {
         add_verdict(&mut out_rule, &Verdict::Accept);
 
         self.batch.add(&out_rule, nftnl::MsgType::Add);
+
+        // Cas Warren-Iroh (fork F6 audit) : le daemon `mullvad-daemon` lui-même
+        // établit le tunnel QUIC via `talpid-warren-iroh::WarrenIrohMonitor`.
+        // Ses sockets émettent depuis le **cgroup root** du daemon (pas le
+        // cgroup `split_tunnel` réservé aux processus split-tunneled). Donc
+        // ses paquets ne traversent pas le `mangle_chain` qui pose le fwmark
+        // → la règle ci-dessus avec `meta mark == fwmark` ne match jamais
+        // → fall-through au `reject` final → `sendmsg` retourne EPERM.
+        //
+        // Symétriquement à `add_allow_endpoint_rules` (= API mullvad
+        // accessible via root sans fwmark), on ajoute ici une règle qui
+        // accepte le traffic vers le peer endpoint quand `skuid == 0` (=
+        // root). Sécu : équivalent à la rule API existante — un attaquant
+        // root userspace pourrait toujours désactiver nftables, donc cette
+        // règle n'élargit pas la surface d'attaque.
+        let mut out_rule_root = Rule::new(&self.out_chain);
+        check_endpoint(&mut out_rule_root, End::Dst, &endpoint.endpoint);
+        out_rule_root.add_expr(&nft_expr!(meta skuid));
+        out_rule_root.add_expr(&nft_expr!(cmp == super::ROOT_UID));
+        add_verdict(&mut out_rule_root, &Verdict::Accept);
+
+        self.batch.add(&out_rule_root, nftnl::MsgType::Add);
+
+        // Symétrique côté inbound : ack/datagrams retour de l'exit doivent
+        // pouvoir atteindre le daemon root. La règle in_chain au-dessus
+        // accepte déjà via `ct state established`, mais ce n'est valide
+        // qu'une fois la 1ère paire (out, in) établie. La 1ère paire elle
+        // est portée par la out_rule_root ci-dessus + l'in_rule existant
+        // qui ne checke pas le mark (juste established). Donc on n'a pas
+        // besoin d'une nouvelle in_rule ici.
 
         // Used for local custom bridge, allows some local socks5 proxy to send traffic to the
         // endpoint
