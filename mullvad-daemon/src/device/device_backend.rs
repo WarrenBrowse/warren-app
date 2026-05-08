@@ -421,14 +421,23 @@ impl WarrenDeviceBackend for WarrenRemoteDeviceBackend {
     fn replace_wg_key(
         &self,
         _account: AccountNumber,
-        _id: DeviceId,
-        _pubkey: WgPublicKey,
+        id: DeviceId,
+        pubkey: WgPublicKey,
     ) -> BoxFut<Result<AssociatedAddresses, rest::Error>> {
-        // MVP G.3 : warren-api n'expose pas encore `PUT /v1/devices/{id}`.
-        // Cf. doc struct pour roadmap. `Aborted` est la convention
-        // Mullvad pour "API non disponible" (= cohérent avec
-        // `RemoteAccountBackend::delete_account` hors Android).
-        Box::pin(async move { Err(rest::Error::Aborted) })
+        // Phase G.5.b : `PUT /v1/devices/{id}` signé. L'`id` est
+        // préservé côté serveur (cf. trait contract : la rotation
+        // wg ne change PAS l'identifiant). Le backend retourne les
+        // mêmes stub addresses (= warren-api ne fournit pas
+        // d'allocation IP — cf. `stub_associated_addresses` doc).
+        let client = self.client.clone();
+        let new_wg_pubkey_hex = hex::encode(pubkey.as_bytes());
+        Box::pin(async move {
+            client
+                .rotate_device_wg_key(&id, &new_wg_pubkey_hex)
+                .await
+                .map_err(super::account_backend::map_client_error)?;
+            Ok(stub_associated_addresses())
+        })
     }
 }
 
@@ -811,24 +820,69 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_device_replace_wg_key_returns_aborted_unsupported() {
-        // En MVP G.3, warren-api n'expose pas l'endpoint rotate. Le
-        // backend retourne explicitement `Aborted` plutôt que de panic
-        // ou de prétendre succeed silencieusement. À updater dès que
-        // `PUT /v1/devices/{id}` côté serveur est ajouté (Phase G.5+).
-        let (api_url, _state) = spawn_warren_api().await;
+    async fn warren_remote_device_replace_wg_key_rotates_and_preserves_id() {
+        // Phase G.5.b : la rotation wg via warren-api préserve le
+        // device_id côté serveur (= contrat Mullvad), et le backend
+        // retourne les addresses (stub MVP).
+        let (api_url, state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[82u8; 32]);
+        let owner_pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let server_device =
+            state
+                .devices
+                .register(&owner_pubkey_hex, &fixed_wg_pubkey_hex(83), false, now);
+
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteDeviceBackend::new(client);
+        let new_wg_pubkey = WgPrivateKey::from([84u8; 32]).public_key();
 
-        let new_pubkey = WgPrivateKey::from([83u8; 32]).public_key();
-        let err = backend
-            .replace_wg_key("acc".to_owned(), "anyid".to_owned(), new_pubkey)
+        let addresses = backend
+            .replace_wg_key(
+                "acc".to_owned(),
+                server_device.id.clone(),
+                new_wg_pubkey.clone(),
+            )
             .await
-            .expect_err("must fail unsupported");
+            .expect("rotate OK");
+        // Stub addresses (MVP).
+        assert_eq!(addresses.ipv4_address.to_string(), "10.66.0.1/32");
+
+        // Le device côté serveur a bien la nouvelle wg_pubkey, et l'id
+        // est préservé.
+        let updated = state
+            .devices
+            .get_for_owner(&owner_pubkey_hex, &server_device.id)
+            .expect("device still present");
+        assert_eq!(updated.id, server_device.id, "id MUST be preserved");
+        assert_eq!(updated.wg_pubkey_hex, hex::encode(new_wg_pubkey.as_bytes()));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_device_replace_wg_key_returns_apierror_404_unknown_id() {
+        // Régression : si l'id n'existe pas, le mapping doit propager
+        // 404 (= caller peut détecter "device révoqué" et déclencher
+        // re-login).
+        let (api_url, _state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[85u8; 32]);
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteDeviceBackend::new(client);
+        let new_pubkey = WgPrivateKey::from([86u8; 32]).public_key();
+
+        let err = backend
+            .replace_wg_key(
+                "acc".to_owned(),
+                "deadbeefdeadbeefdeadbeefdeadbeef".to_owned(),
+                new_pubkey,
+            )
+            .await
+            .expect_err("must fail 404");
         match err {
-            rest::Error::Aborted => {}
-            other => panic!("expected Aborted, got {other:?}"),
+            rest::Error::ApiError(code, _) => assert_eq!(code.as_u16(), 404),
+            other => panic!("expected ApiError(404, _), got {other:?}"),
         }
     }
 }
