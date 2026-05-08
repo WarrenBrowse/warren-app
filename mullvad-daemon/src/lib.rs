@@ -749,12 +749,18 @@ impl Daemon {
         #[cfg(target_os = "macos")]
         macos::bump_filehandle_limit();
 
+        // F7 fork audit : `migrate_all` peut échouer pour cause non-fatale
+        // (ex: account-history.json absent au fresh boot Warren mode). Le
+        // daemon continue avec `None` migration data — c'est attendu, pas
+        // une erreur opérationnelle. Logger WARN évite la fausse alarme
+        // dans les logs prod sans masquer un vrai problème de migration
+        // sur installation upstream existante.
         let migration_data = migrations::migrate_all(&config.cache_dir, &config.settings_dir)
             .await
             .unwrap_or_else(|error| {
-                log::error!(
+                log::warn!(
                     "{}",
-                    error.display_chain_with_msg("Failed to migrate settings or cache")
+                    error.display_chain_with_msg("Failed to migrate settings or cache (non-fatal)")
                 );
                 None
             });
@@ -763,8 +769,24 @@ impl Daemon {
 
         // Initialize relay selector asap, since it's a pre-requisite for accepting incoming gRPC
         // connections.
+        //
+        // F5 fork audit : en mode Warren pur (`WARREN_TUNNEL=1`), la liste
+        // Mullvad upstream `relays.json` n'est jamais consommée — le tunnel
+        // utilise `warren-relays.json` parsé par `DaemonWarrenRelaySelector`.
+        // Une absence du fichier ne devrait pas logger ERROR (= bruit qui
+        // inquiète l'opérateur prod) mais juste DEBUG. Pour le mode WG
+        // upstream, garder ERROR (= signal réel d'un cache cassé).
+        let warren_mode_for_relays_log = warren_mode::resolve(settings.warren_mode);
         let initial_relay_list = parse_relays_from_file(&config.cache_dir, &config.resource_dir)
-            .inspect_err(|err| log::error!("{err}"))
+            .inspect_err(|err| {
+                if warren_mode_for_relays_log {
+                    log::debug!(
+                        "Mullvad relays.json unavailable (Warren mode active, list unused): {err}"
+                    );
+                } else {
+                    log::error!("{err}");
+                }
+            })
             .ok();
         let relay_selector = {
             let (initial_relay_list, initial_bridge_list) = initial_relay_list
