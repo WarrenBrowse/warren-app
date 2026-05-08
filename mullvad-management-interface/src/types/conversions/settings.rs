@@ -195,6 +195,13 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // et les muter via `SetWarrenMode`/`SetWarrenLocalAccount`.
             warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
+            // Warren fork — Phase G.5.a : `warren_api_url` n'est pas
+            // (encore) exposé via gRPC. Le daemon le lit directement
+            // depuis settings.json. Quand un client gRPC envoie un
+            // `SetSettings`, ce field repart à `None` ici — c'est
+            // intentionnel pour cette phase (cf. HACK note ci-dessus
+            // sur l'absence de séparation client-settings/daemon-settings).
+            warren_api_url: None,
         })
     }
 }

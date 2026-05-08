@@ -130,6 +130,18 @@ pub struct Settings {
     /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
     #[serde(default)]
     pub warren_local_account: bool,
+    /// Warren fork — Phase G.5.a : URL du serveur warren-api utilisée
+    /// par les `WarrenRemote{Account,Device}Backend` (mode `warren_mode
+    /// = true && warren_local_account = false`).
+    ///
+    /// Format attendu : `http(s)://host:port` sans trailing slash, e.g.
+    /// `https://api.warrenbrowse.com` ou `http://127.0.0.1:8080`.
+    ///
+    /// `None` = pas de mode warren-remote → fallback `RemoteAccountBackend`
+    /// (path Mullvad upstream legacy via `api.mullvad.net`). Override
+    /// possible via env var `WARREN_API_URL` (priorité sur Settings).
+    #[serde(default)]
+    pub warren_api_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -308,6 +320,7 @@ impl Default for Settings {
             rollout_threshold_seed: None,
             warren_mode: false,
             warren_local_account: false,
+            warren_api_url: None,
         }
     }
 }

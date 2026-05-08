@@ -913,13 +913,18 @@ impl Daemon {
             }
         }
 
-        // Warren fork — Phase G.4 : si `warren_mode = true && !local_account_mode`,
-        // construire `WarrenApiConfig` (URL via env var + identité Warren).
-        // Sinon `None` → backend Mullvad upstream legacy (preserve strict).
+        // Warren fork — Phase G.5.a : si `warren_mode = true &&
+        // !local_account_mode`, construire `WarrenApiConfig`. URL
+        // résolue par priorité :
+        // 1. env var `WARREN_API_URL` (override dev/CI).
+        // 2. `Settings::warren_api_url` (config persistante user).
+        // Sinon `None` → fallback `RemoteAccountBackend` Mullvad upstream.
         let warren_api_config: Option<device::WarrenApiConfig> = if warren_mode_active_for_log
             && !local_account_mode
         {
-            let url = std::env::var("WARREN_API_URL").ok();
+            let url = std::env::var("WARREN_API_URL")
+                .ok()
+                .or_else(|| settings.warren_api_url.clone());
             let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
             match (url, signing_key) {
                 (Some(url), Some(key)) => {
@@ -931,7 +936,7 @@ impl Daemon {
                 }
                 (None, _) => {
                     log::warn!(
-                        "Warren mode active but WARREN_API_URL not set; falling back to Mullvad upstream backend"
+                        "Warren mode active but no warren_api_url configured (env or Settings); falling back to Mullvad upstream backend"
                     );
                     None
                 }
