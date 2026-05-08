@@ -71,6 +71,59 @@ sudo apt install gcc libdbus-1-dev
 sudo apt install rpm
 ```
 
+#### Warren fork — extra deps Linux (F4 fork audit)
+
+Le fork Warren-Iroh ajoute des dépendances natives au-delà des
+besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :
+
+```bash
+sudo apt install \
+  libprotobuf-dev protobuf-compiler \
+  libmnl-dev libnftnl-dev \
+  libnl-3-dev libnl-route-3-dev libnl-genl-3-dev \
+  build-essential clang pkg-config libssl-dev cmake ninja-build
+```
+
+- `libprotobuf-dev` : nécessaire pour les `.proto` standards
+  (`google/protobuf/empty.proto`, `timestamp.proto`, etc.) que
+  `mullvad-management-interface` importe.
+- `libmnl-dev` + `libnftnl-dev` : linking pour
+  `talpid-core::firewall::linux` (= nftnl-rs) qui appelle directement
+  la lib C. `protobuf-compiler` seul ne suffit pas.
+- `libnl-3-dev` + extensions : netlink helpers utilisés par
+  `talpid-routing::linux`.
+- `build.rs` de `mullvad-daemon` invoque `git log` pour embedder la
+  date du commit. Sur un VPS sans `.git/`, il faut soit installer
+  `git` + `git init` une fake repo, soit appliquer le workaround
+  bench (cf. `scripts/build-on-vps-linux.sh` côté warren-pocs).
+
+#### Cross-compile macOS → Linux (F1 fork audit)
+
+Le `cross` (Docker-based) **n'est pas supporté pour le fork Warren**
+car le path-dep cross-repo `warren-app/talpid-warren-iroh →
+../../warren-pocs/crates/warren-iroh-tunnel` n'est pas montable dans
+le container `cross-rs/x86_64-unknown-linux-gnu` standard.
+
+**Workaround** : build natif sur un VPS Linux via le script
+warren-pocs `scripts/build-on-vps-linux.sh`, ou directement :
+
+```bash
+# Sur un VPS Debian 12 fresh
+sudo apt install -y <deps ci-dessus> rsync
+rsync -az --exclude target/ --exclude .git/ \
+  /path/to/warren-pocs/ vps:/home/warren/warren-pocs/
+rsync -az --exclude target/ --exclude node_modules/ \
+  /path/to/warren-app/ vps:/home/warren/warren-app/
+ssh vps 'cd /home/warren/warren-app && git init -q && \
+  git commit -q --allow-empty -m d && \
+  cargo build --release -p mullvad-daemon -p mullvad-cli'
+```
+
+Pour CI release builds, soit (a) déclencher le job sur un runner
+Linux x86_64 directement (pas de cross), soit (b) écrire un
+`Cross.toml` custom avec un Dockerfile qui fait un mount additionnel
+de warren-pocs (non implémenté dans cette version du fork).
+
 ### Fedora/RHEL
 
 ```bash
