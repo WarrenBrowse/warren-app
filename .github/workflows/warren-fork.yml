@@ -60,6 +60,12 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
 
+      - name: cargo fmt --check (Warren scope)
+        # Gate fmt en plus de clippy/test pour eviter les drifts de
+        # style sur la branche fork (= cohérent avec workflow ci.yml
+        # warren-pocs qui gate aussi fmt).
+        run: cargo fmt --all -- --check
+
       - name: cargo test mullvad-daemon
         # Cible les crates touchees par le fork. On evite cargo test
         # --workspace pour ne pas faire tourner Android / iOS / Windows
