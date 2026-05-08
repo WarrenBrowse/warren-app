@@ -47,6 +47,10 @@ pub mod warren_mode;
 /// `WarrenRelayList` depuis le `cache_dir`, sélectionne les composants
 /// Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
 pub mod warren_relay_selector;
+/// Phase #4 — résolution `WarrenApiConfig` (URL warren-api + signing key)
+/// depuis Settings + env var. Pure function testable extraite de
+/// `Daemon::start`.
+mod warren_remote_config;
 /// Charge ou génère la mnémonique BIP39 utilisateur depuis
 /// `<settings_dir>/warren_mnemonic.txt`, la dérive en `SigningKey`
 /// Ed25519 et expose un `WarrenAuthSigner` partagé pour les requêtes
@@ -916,43 +920,28 @@ impl Daemon {
             }
         }
 
-        // Warren fork — Phase G.5.a : si `warren_mode = true &&
-        // !local_account_mode`, construire `WarrenApiConfig`. URL
-        // résolue par priorité :
-        // 1. env var `WARREN_API_URL` (override dev/CI).
-        // 2. `Settings::warren_api_url` (config persistante user).
-        // Sinon `None` → fallback `RemoteAccountBackend` Mullvad upstream.
-        let warren_api_config: Option<device::WarrenApiConfig> = if warren_mode_active_for_log
-            && !local_account_mode
-        {
-            let url = std::env::var("WARREN_API_URL")
-                .ok()
-                .or_else(|| settings.warren_api_url.clone());
-            let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
-            match (url, signing_key) {
-                (Some(url), Some(key)) => {
-                    log::info!("Warren remote backend enabled (api={url})");
-                    Some(device::WarrenApiConfig {
-                        url,
-                        signing_key: key,
-                    })
-                }
-                (None, _) => {
-                    log::warn!(
-                        "Warren mode active but no warren_api_url configured (env or Settings); falling back to Mullvad upstream backend"
-                    );
-                    None
-                }
-                (_, None) => {
-                    log::warn!(
-                        "Warren mode active but no mnemonic available; falling back to Mullvad upstream backend"
-                    );
-                    None
-                }
+        // Warren fork — Phase G.5.a + #4 : résolution déléguée à
+        // `warren_remote_config::resolve` (pure fn testable). Side
+        // effects (env, signing_key load) résolus ici, les flags purs
+        // passés à la fn. Le log diff (Some vs None) reste ici car la
+        // fn est silencieuse pour rester testable sans capture log.
+        let env_url = std::env::var("WARREN_API_URL").ok();
+        let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
+        let warren_api_config = warren_remote_config::resolve(
+            warren_mode_active_for_log,
+            local_account_mode,
+            settings.warren_api_url.clone(),
+            env_url,
+            signing_key,
+        );
+        if warren_mode_active_for_log && !local_account_mode {
+            match &warren_api_config {
+                Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
+                None => log::warn!(
+                    "Warren mode active but no warren_api_url + mnemonic; falling back to Mullvad upstream backend"
+                ),
             }
-        } else {
-            None
-        };
+        }
 
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
