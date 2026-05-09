@@ -21,7 +21,9 @@ use std::net::IpAddr;
 use std::path::Path;
 
 use ed25519_dalek::SigningKey;
+use ipnetwork::IpNetwork;
 use iroh::{EndpointAddr, EndpointId};
+use talpid_routing::{Node, RequiredRoute};
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
@@ -226,6 +228,44 @@ impl WarrenIrohMonitor {
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
 
+        // Étape 5.5 (F8 fork audit) : pose les routes via le route_manager
+        // pour rediriger le trafic user via le tun, en préservant l'access
+        // du daemon-iroh lui-même au peer endpoint (sinon boucle :
+        // daemon → tun → exit qui est lui-même le daemon dst).
+        //
+        // Stratégie split-default (technique VPN classique) :
+        // - 0.0.0.0/1 + 128.0.0.0/1 dev tun0 : couvre tout 0.0.0.0/0
+        //   sans replace la route default existante (= moins
+        //   intrusive, restore propre au teardown via route_manager).
+        // - <exit_ip>/32 dev <physical_iface> : route plus spécifique
+        //   que /1 → bypass tun pour les paquets daemon vers l'exit.
+        //
+        // Validation manuelle Hetzner WAN : ping 8.8.8.8 via tunnel
+        // 8.1ms RTT après pose de ces routes (vs 100% loss sans).
+        let exit_ips: Vec<IpAddr> = params.exit_addr.ip_addrs().map(|sa| sa.ip()).collect();
+        let physical_iface = detect_default_iface().unwrap_or_else(|e| {
+            log::warn!(
+                "Failed to detect default iface, falling back to 'eth0': {e}. \
+                 Bypass routes for exit IPs may not install correctly."
+            );
+            "eth0".to_owned()
+        });
+        let routes = build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface);
+        let route_manager = args.route_manager.clone();
+        runtime.block_on(async move {
+            match route_manager.add_routes(routes.into_iter().collect()).await {
+                Ok(()) => log::info!(
+                    "Warren tunnel routes installed (split-default via {}, bypass via {})",
+                    metadata.interface,
+                    physical_iface
+                ),
+                Err(e) => log::warn!(
+                    "Failed to install Warren tunnel routes: {e}. \
+                     Tunnel up but no traffic forwarding."
+                ),
+            }
+        });
+
         // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
         // QUIC. La task tourne jusqu'à : (a) close de la session
         // (drop de `MultiSession` → connections QUIC closed) ou (b)
@@ -388,6 +428,84 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
         ipv4_gateway: config.ipv4_gateway,
         ipv6_gateway: config.ipv6_gateway,
     }
+}
+
+/// Construit les `RequiredRoute` pour rediriger le trafic user via le
+/// tun, en bypassant les paquets daemon-iroh vers les IPs candidates
+/// de l'exit (sinon boucle de routage). F8 fork audit.
+///
+/// Stratégie :
+/// 1. Pour chaque IP candidate de l'exit : route /32 ou /128 via
+///    `physical_iface` → préserve la connexion daemon ↔ exit (route
+///    plus spécifique gagne sur les /1 ci-dessous).
+/// 2. `0.0.0.0/1` + `128.0.0.0/1` via `tun_iface` → couvre la totalité
+///    de l'IPv4 sans replace la route default existante (technique
+///    split-default classique des VPN userspace).
+///
+/// Validation manuelle Hetzner WAN : ces routes posées via `ip route
+/// add` permettent `ping 8.8.8.8` à passer via le tunnel (8.1ms RTT
+/// fsn1↔nbg1↔Internet) là où sans elles le trafic restait sur eth0.
+#[must_use]
+fn build_warren_tunnel_routes(
+    tun_iface: &str,
+    exit_ips: &[IpAddr],
+    physical_iface: &str,
+) -> Vec<RequiredRoute> {
+    let tun_node = Node::device(tun_iface.to_owned());
+    let physical_node = Node::device(physical_iface.to_owned());
+
+    let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len() + 2);
+    for ip in exit_ips {
+        let net = IpNetwork::from(*ip);
+        routes.push(RequiredRoute::new(net, physical_node.clone()));
+    }
+
+    // Split-default IPv4 — couvre 0.0.0.0/0 sans toucher la route
+    // default. Restore propre via route_manager au teardown.
+    let half1: IpNetwork = "0.0.0.0/1".parse().expect("hardcoded valid IPv4 CIDR /1");
+    let half2: IpNetwork = "128.0.0.0/1".parse().expect("hardcoded valid IPv4 CIDR /1");
+    routes.push(RequiredRoute::new(half1, tun_node.clone()));
+    routes.push(RequiredRoute::new(half2, tun_node));
+
+    routes
+}
+
+/// Détecte le nom de l'interface portant la route default IPv4.
+/// Utilisé pour la pose des routes bypass vers les IPs de l'exit.
+///
+/// Lecture de `/proc/net/route` : format texte avec ligne d'en-tête,
+/// puis lignes `Iface\tDestination\tGateway\t...`. La route default a
+/// `Destination == 00000000`. On retourne le premier match.
+///
+/// # Errors
+///
+/// I/O sur `/proc/net/route` (= système non-Linux ou /proc non monté)
+/// ou aucune route default v4 (= machine isolée).
+#[cfg(target_os = "linux")]
+fn detect_default_iface() -> std::io::Result<String> {
+    let routes = std::fs::read_to_string("/proc/net/route")?;
+    for line in routes.lines().skip(1) {
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        if fields.len() >= 2 && fields[1] == "00000000" {
+            return Ok(fields[0].to_owned());
+        }
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "no IPv4 default route in /proc/net/route",
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+fn detect_default_iface() -> std::io::Result<String> {
+    // Non-Linux : `talpid_routing::get_best_default_route` existe pour
+    // macOS/Windows. Pour la phase POC, fallback statique — le bypass
+    // des paquets daemon est de toute façon géré différemment hors
+    // Linux (= macOS pf utilise des règles de routing différentes).
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "default iface detection not implemented for this platform",
+    ))
 }
 
 #[cfg(test)]

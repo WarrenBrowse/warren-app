@@ -8,6 +8,8 @@ license.workspace = true
 
 [dependencies]
 futures = { workspace = true }
+ipnetwork = { workspace = true }
+talpid-routing = { path = "../talpid-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
