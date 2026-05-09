@@ -35,6 +35,10 @@ use warren_iroh_tunnel::{
 mod adapter;
 use adapter::MullvadTunPacketDevice;
 
+/// **F10e c2 fix** — split-default policy routing pour Internet via tunnel.
+/// Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+pub mod default_route_split;
+
 // F10e Option B trace marker. Préfixe unique pour grep simple post-bench.
 // Format : `[F10e-trace] T{N}={ms}ms <event>` — N croît à chaque étape de
 // `start()`, ms est l'elapsed depuis `start_t`. Pas un trace_span tracing
@@ -158,6 +162,12 @@ pub struct WarrenIrohMonitor {
     /// Receiver oneshot du daemon : signalé pour demander la
     /// terminaison du tunnel.
     close_rx: futures::channel::oneshot::Receiver<()>,
+    /// **F10e c2 fix** — guard split-default policy routing. Installé
+    /// après les events Up pour forcer le trafic Internet via tunnel
+    /// sans casser le socket QUIC daemon → exit. Cleanup async dans
+    /// `wait()` avant que le pump soit aborté (= ordre miroir install).
+    /// `None` si pas d'IPv4 exit IP disponible.
+    default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
 }
 
 impl WarrenIrohMonitor {
@@ -369,15 +379,14 @@ impl WarrenIrohMonitor {
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
         log::info!(
-            "{F10E_PREFIX} T6={}ms phase=routes_add_start (split-default + bypass exit)",
+            "{F10E_PREFIX} T6={}ms phase=routes_add_start (bypass exit only — split-default via default_route_split)",
             start_t.elapsed().as_millis()
         );
+        let metadata_iface_for_log = metadata.interface.clone();
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
                 Ok(()) => log::info!(
-                    "Warren tunnel routes installed (split-default via {}, bypass via {})",
-                    metadata.interface,
-                    physical_iface
+                    "Warren tunnel bypass routes installed (tun={metadata_iface_for_log}, physical={physical_iface})"
                 ),
                 Err(e) => log::warn!(
                     "Failed to install Warren tunnel routes: {e}. \
@@ -390,6 +399,44 @@ impl WarrenIrohMonitor {
             start_t.elapsed().as_millis(),
             routes_t.elapsed().as_millis()
         );
+
+        // F10e c2 fix : install le split-default policy routing (table
+        // 100 + ip rule bypass exit IP). On extrait l'exit IPv4 du
+        // metadata. Si pas d'IPv4 dispo, log warn (= tunnel up mais
+        // Internet pas routé via tun). Cf.
+        // `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        let default_route_guard = {
+            let exit_ip_v4 = exit_ips.iter().find_map(|ip| match ip {
+                IpAddr::V4(v4) => Some(*v4),
+                IpAddr::V6(_) => None,
+            });
+            if let Some(v4) = exit_ip_v4 {
+                let tun_name_for_split = metadata.interface.clone();
+                runtime
+                    .block_on(async move {
+                        default_route_split::DefaultRouteSplitGuard::install(
+                            v4,
+                            &tun_name_for_split,
+                        )
+                        .await
+                    })
+                    .map(Some)
+                    .unwrap_or_else(|e| {
+                        log::warn!(
+                            "F10e c2 fix: failed to install default-route split: {e}. \
+                             Internet traffic will NOT route via tunnel. \
+                             Need root + ip in PATH."
+                        );
+                        None
+                    })
+            } else {
+                log::warn!(
+                    "F10e c2 fix: no IPv4 exit IP available, skip default-route split. \
+                     Internet traffic via IPv6-only exit not yet supported."
+                );
+                None
+            }
+        };
 
         // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
         // QUIC. La task tourne jusqu'à : (a) close de la session
@@ -484,6 +531,7 @@ impl WarrenIrohMonitor {
             pump_error_rx,
             event_hook,
             close_rx: args.tunnel_close_rx,
+            default_route_guard,
         })
     }
 
@@ -506,6 +554,7 @@ impl WarrenIrohMonitor {
             pump_error_rx,
             mut event_hook,
             close_rx,
+            default_route_guard,
         } = self;
 
         let result = runtime.block_on(async move {
@@ -539,6 +588,17 @@ impl WarrenIrohMonitor {
             };
             event_hook.on_event(TunnelEvent::Down).await;
             outcome
+        });
+
+        // F10e c2 — désinstaller le split-default policy routing AVANT
+        // d'aborter le pump. Ordre miroir de l'install. Best-effort :
+        // log warn mais ne fait pas échouer le teardown.
+        runtime.block_on(async {
+            if let Some(guard) = default_route_guard
+                && let Err(e) = guard.uninstall().await
+            {
+                log::warn!("F10e c2 default-route split cleanup failed: {e}");
+            }
         });
 
         // Teardown : abort le pump pour libérer le device TUN + la
@@ -768,30 +828,40 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
 ///    de l'IPv4 sans replace la route default existante (technique
 ///    split-default classique des VPN userspace).
 ///
-/// Validation manuelle Hetzner WAN : ces routes posées via `ip route
-/// add` permettent `ping 8.8.8.8` à passer via le tunnel (8.1ms RTT
-/// fsn1↔nbg1↔Internet) là où sans elles le trafic restait sur eth0.
+/// Validation manuelle Hetzner WAN : ces routes (= bypass exit IP via
+/// physical iface) sont nécessaires mais pas suffisantes. Le
+/// split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` est posé séparément
+/// via [`default_route_split`] (= policy routing avec table dédiée), pas
+/// ici dans la table main. Cf.
+/// `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md` pour la
+/// raison exacte (= éviter la boucle de routage qui empoisonne le
+/// tunnel quand les /1 capturent les paquets QUIC sortants vers exit).
+///
+/// Le `physical_node` reste `Node::device` sans `gateway` : `talpid_routing`
+/// pose alors une route `dev eth0` scope link, qui peut souffrir du même
+/// problème ARP que la version manuelle si l'IP exit n'est pas sur le
+/// L2 d'eth0. **TODO** (round 20+) : injecter le gateway via
+/// `Node::address(gateway_ip, eth0)` après détection /proc/net/route.
 #[must_use]
 fn build_warren_tunnel_routes(
-    tun_iface: &str,
+    _tun_iface: &str,
     exit_ips: &[IpAddr],
     physical_iface: &str,
 ) -> Vec<RequiredRoute> {
-    let tun_node = Node::device(tun_iface.to_owned());
     let physical_node = Node::device(physical_iface.to_owned());
 
-    let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len() + 2);
+    let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len());
     for ip in exit_ips {
         let net = IpNetwork::from(*ip);
         routes.push(RequiredRoute::new(net, physical_node.clone()));
     }
 
-    // Split-default IPv4 — couvre 0.0.0.0/0 sans toucher la route
-    // default. Restore propre via route_manager au teardown.
-    let half1: IpNetwork = "0.0.0.0/1".parse().expect("hardcoded valid IPv4 CIDR /1");
-    let half2: IpNetwork = "128.0.0.0/1".parse().expect("hardcoded valid IPv4 CIDR /1");
-    routes.push(RequiredRoute::new(half1, tun_node.clone()));
-    routes.push(RequiredRoute::new(half2, tun_node));
+    // F10e c2 fix : on NE pose PAS `0.0.0.0/1 + 128.0.0.0/1 dev <tun>`
+    // dans la table main. Ces routes capturaient AUSSI les paquets QUIC
+    // sortants du daemon vers exit:7000 → boucle de routage → tunnel
+    // s'auto-poison. Elles sont posées dans la table 100 dédiée par
+    // `default_route_split::DefaultRouteSplitGuard::install` après que
+    // `talpid_routing` ait posé les routes ci-dessus dans table main.
 
     routes
 }
@@ -914,20 +984,20 @@ mod tests {
     }
 
     #[test]
-    fn build_routes_emits_split_default_via_tun_and_bypass_via_physical() {
-        // F8 fork audit : sans ces routes, le tunnel passe `Connected`
-        // mais aucun paquet user ne le traverse — la default reste via
-        // eth0. Ce test fige la composition attendue :
-        //   1. 1 route bypass /32 (v4) ou /128 (v6) par exit IP candidate
-        //      via l'interface physique → préserve l'access daemon ↔
-        //      exit (route plus spécifique gagne sur les /1).
-        //   2. 2 routes split-default 0.0.0.0/1 + 128.0.0.0/1 via tun
-        //      → couvrent toute l'IPv4 sans replace la route default
-        //      (technique VPN classique, restore propre au teardown).
+    fn build_routes_emits_only_bypass_via_physical_after_f10e_fix() {
+        // **F10e c2 fix** : `build_warren_tunnel_routes` ne pose PLUS
+        // les routes split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>`
+        // dans la table main (= elles capturaient AUSSI les paquets QUIC
+        // sortants du daemon vers exit:7000 → boucle de routage).
         //
-        // Si quelqu'un retire un bypass exit, le daemon-iroh tomberait
-        // dans une boucle de routage tunnel→exit→tunnel — donc ce test
-        // est un garde-fou critique anti-régression.
+        // Ces routes sont posées dans la **table 100 dédiée** par
+        // `default_route_split::DefaultRouteSplitGuard::install` après
+        // que `talpid_routing` ait posé les bypass ci-dessous dans la
+        // table main.
+        //
+        // Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        // Anti-régression critique : si quelqu'un re-ajoute les /1 dans
+        // ce Vec, le tunnel s'auto-poison.
         let exit_ips: Vec<IpAddr> = vec![
             "91.99.122.154".parse().unwrap(),
             "2a01:4f8:c013:14a1::1".parse().unwrap(),
@@ -936,8 +1006,8 @@ mod tests {
 
         assert_eq!(
             routes.len(),
-            4,
-            "2 bypass (v4+v6) + 2 split-default = 4 routes (got {} : {routes:?})",
+            2,
+            "post-F10e fix : 2 bypass (v4+v6 par exit) + 0 split-default = 2 routes (got {} : {routes:?})",
             routes.len()
         );
 
@@ -951,47 +1021,53 @@ mod tests {
             dump.contains("addr: 2a01:4f8:c013:14a1::1") && dump.contains("prefix: 128"),
             "exit v6 doit avoir une route /128 bypass dans {dump}"
         );
-        // Les 2 demi-default split (0.0.0.0/1 + 128.0.0.0/1) via tun0.
+        // **Anti-régression F10e** : les /1 split-default NE doivent PAS
+        // être dans ce Vec. Si re-introduits, le tunnel se cassera comme
+        // au round 13/14 (cf. RESOLVED.md).
         assert!(
-            dump.contains("addr: 0.0.0.0") && dump.contains("prefix: 1"),
-            "0.0.0.0/1 split-default attendu dans {dump}"
+            !dump.contains("addr: 0.0.0.0"),
+            "0.0.0.0/1 split-default ne doit PAS être dans table main \
+             (cause F10e c2 boucle routage). Voir default_route_split module. \
+             dump = {dump}"
         );
         assert!(
-            dump.contains("addr: 128.0.0.0"),
-            "128.0.0.0/1 split-default attendu dans {dump}"
+            !dump.contains("addr: 128.0.0.0"),
+            "128.0.0.0/1 split-default ne doit PAS être dans table main \
+             (cause F10e c2 boucle routage). dump = {dump}"
         );
-        // Les devices Node : tun0 (= 2 routes) et eth0 (= 2 routes).
-        assert!(
-            dump.contains(r#"device: Some("tun0")"#),
-            "tun_iface 'tun0' dans node device attendu dans {dump}"
-        );
+        // Tous les bypass via eth0 (= physical iface).
         assert!(
             dump.contains(r#"device: Some("eth0")"#),
             "physical_iface 'eth0' dans node device attendu dans {dump}"
         );
+        assert!(
+            !dump.contains(r#"device: Some("tun0")"#),
+            "post-F10e fix : tun_iface ne doit PAS apparaître dans build_warren_tunnel_routes \
+             (= split-default est dans default_route_split::install)"
+        );
     }
 
     #[test]
-    fn build_routes_with_no_exit_ips_still_emits_split_default() {
-        // Edge case : exit_ips vide (= au moment de la pose des routes,
-        // l'EndpointAddr de l'exit n'expose pas d'IPs candidates,
-        // possible en mode peer-discovery). On émet quand même les 2
-        // demi-default pour que le tunnel soit fonctionnel — au prix
-        // d'une boucle potentielle si le daemon tente de joindre l'exit.
+    fn build_routes_with_no_exit_ips_emits_no_routes() {
+        // Edge case : exit_ips vide. Post-F10e fix, on émet 0 routes
+        // (= les /1 ne sont plus ici). Le tunnel sera fonctionnel pour
+        // le trafic interne TUN, mais pas pour Internet via NAT (ce
+        // qui demande default_route_split avec exit IP, qui sera skip
+        // si pas d'IPv4 dispo).
         let routes = build_warren_tunnel_routes("tun0", &[], "eth0");
-        assert_eq!(routes.len(), 2, "0 bypass + 2 split-default");
-        let dump = format!("{routes:?}");
-        assert!(dump.contains("addr: 0.0.0.0"));
-        assert!(dump.contains("addr: 128.0.0.0"));
+        assert_eq!(
+            routes.len(),
+            0,
+            "post-F10e fix : 0 bypass + 0 split-default"
+        );
     }
 
     #[test]
-    fn build_routes_v4_only_exit_does_not_emit_v6_bypass() {
-        // Cas dual-stack absent : l'exit n'annonce qu'une IPv4. On
-        // émet un seul bypass (= /32 v4) plus les 2 split-default.
+    fn build_routes_v4_only_exit_emits_one_bypass() {
+        // V4-only exit : 1 bypass /32 v4. Pas de v6, pas de split-default.
         let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
         let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0");
-        assert_eq!(routes.len(), 3);
+        assert_eq!(routes.len(), 1, "post-F10e fix : 1 bypass v4 seul");
         let dump = format!("{routes:?}");
         assert!(
             !dump.contains("V6("),
