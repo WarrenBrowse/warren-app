@@ -176,7 +176,16 @@ impl WarrenIrohMonitor {
     ) -> Result<Self, Error> {
         let runtime = args.runtime.clone();
         let exit_id = params.exit_id;
-        let exit_addr = params.exit_addr.clone();
+        // F10 fork audit : iroh annonce parfois l'IP du TUN gateway
+        // exit (ex: `10.66.0.1:7000`) parmi les `EndpointAddr.addrs`
+        // candidate. Le client la teste en multipath probe → routing
+        // boucle (paquet va via tun0 → encap → tunnel → decap exit
+        // → arrive sur warren0 mais le socket QUIC exit est sur eth0
+        // → drop). On filtre les addresses non-routables Internet
+        // (= RFC1918 IPv4 + ULA IPv6 + loopback + link-local) avant
+        // de passer au handshake. Cf. rapport
+        // `bench/results/2026-05-09_F9_optionA_F10.md`.
+        let exit_addr = filter_endpoint_addr_for_wan(params.exit_addr.clone());
         let signing = params.signing_key.clone();
         let n_conns = params.n_connections;
         let features = params.features;
@@ -447,6 +456,86 @@ impl SessionKind {
             SessionKind::Multi(s) => s.assigned_max_mtu(),
         }
     }
+}
+
+/// Filtre les `EndpointAddr.addrs` pour ne garder que les adresses
+/// **routables sur Internet** (= F10 fork audit). Exclut :
+/// - IPv4 privées RFC 1918 (10/8, 172.16/12, 192.168/16)
+/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
+///   multicast, unspecified
+/// - IPv6 loopback (::1), unspecified, multicast, link-local (fe80::/10)
+/// - IPv6 unique-local ULA (fc00::/7)
+///
+/// Préserve `id` et les `TransportAddr::Relay(...)` non-IP
+/// (Warren n'utilise pas les relays mais on n'est pas en charge de
+/// les filtrer ici — `relay_mode(Disabled)` côté `client.connect()`
+/// les ignore déjà).
+///
+/// **Pourquoi** : iroh fait de la path discovery via les local
+/// interfaces du peer. Quand `warren-poc-exit --use-tun` est actif,
+/// l'interface `warren0` (= TUN gateway, IP `10.66.0.1`) apparaît
+/// dans la list des candidate addrs annoncées au client. Le client
+/// la teste en multipath probe → boucle de routage qui poisonne le
+/// pump (= F10 finding bench 2026-05-09).
+#[must_use]
+fn filter_endpoint_addr_for_wan(addr: EndpointAddr) -> EndpointAddr {
+    let mut filtered = EndpointAddr::new(addr.id);
+    for transport_addr in &addr.addrs {
+        match transport_addr {
+            iroh::TransportAddr::Ip(socket) if is_routable_internet(*socket) => {
+                filtered = filtered.with_ip_addr(*socket);
+            }
+            iroh::TransportAddr::Ip(_) => {
+                // IP privée / non-routable — droppée silencieusement.
+                // Le pump tunnel doit pouvoir survivre à un EndpointAddr
+                // vidé de toutes ses IPs (= path discovery iroh
+                // re-essaiera via le mécanisme natif).
+            }
+            other => {
+                // Préserver les variants non-IP (Relay, etc.) ; warren
+                // n'utilise pas les relays mais on reste agnostic.
+                filtered.addrs.insert(other.clone());
+            }
+        }
+    }
+    filtered
+}
+
+/// Indique si une `SocketAddr` est routable sur Internet (= éligible
+/// pour un path candidate iroh). Voir [`filter_endpoint_addr_for_wan`].
+#[must_use]
+fn is_routable_internet(socket: std::net::SocketAddr) -> bool {
+    match socket.ip() {
+        std::net::IpAddr::V4(v4) => {
+            !v4.is_private()
+                && !v4.is_loopback()
+                && !v4.is_link_local()
+                && !v4.is_broadcast()
+                && !v4.is_multicast()
+                && !v4.is_unspecified()
+        }
+        std::net::IpAddr::V6(v6) => {
+            !v6.is_loopback()
+                && !v6.is_unspecified()
+                && !v6.is_multicast()
+                && !is_ipv6_unique_local(v6)
+                && !is_ipv6_link_local(v6)
+        }
+    }
+}
+
+/// IPv6 `fc00::/7` (Unique Local Address, RFC 4193). `Ipv6Addr::is_unique_local`
+/// est encore unstable côté std (fév 2026), donc check explicite ici.
+#[must_use]
+fn is_ipv6_unique_local(addr: std::net::Ipv6Addr) -> bool {
+    (addr.segments()[0] & 0xfe00) == 0xfc00
+}
+
+/// IPv6 `fe80::/10` (Link-Local). `Ipv6Addr::is_unicast_link_local` est
+/// gated derrière `ip` feature unstable, donc check explicite ici.
+#[must_use]
+fn is_ipv6_link_local(addr: std::net::Ipv6Addr) -> bool {
+    (addr.segments()[0] & 0xffc0) == 0xfe80
 }
 
 /// Choix du mode session côté warren-iroh-tunnel basé sur `n_connections`.
@@ -755,6 +844,121 @@ mod tests {
         assert_eq!(select_session_request(2), SessionRequest::Multi(2));
         assert_eq!(select_session_request(4), SessionRequest::Multi(4));
         assert_eq!(select_session_request(8), SessionRequest::Multi(8));
+    }
+
+    #[test]
+    fn is_routable_internet_v4_accepts_public_addrs() {
+        // Sentinelle anti-régression : les IPs Hetzner Cloud (= type
+        // d'usage cible warren-poc-exit) doivent être considérées
+        // comme routables, sinon `filter_endpoint_addr_for_wan`
+        // viderait l'EndpointAddr et le client iroh ne pourrait pas
+        // joindre l'exit.
+        for ip in ["91.99.122.154:7000", "178.104.4.40:7000", "8.8.8.8:53"] {
+            let sa: std::net::SocketAddr = ip.parse().unwrap();
+            assert!(
+                is_routable_internet(sa),
+                "{ip} doit être routable (IP publique Internet)"
+            );
+        }
+    }
+
+    #[test]
+    fn is_routable_internet_v4_rejects_rfc1918_and_loopback() {
+        // F10 fork audit : `10.66.0.1:7000` (= TUN gateway warren0
+        // exit) est l'IP qui poisonne le multipath probing iroh.
+        // Doit être rejetée. + tests symétriques 172.16/12 + 192.168/16
+        // + 127.0.0.1 + 169.254/16 + 0.0.0.0.
+        for ip in [
+            "10.66.0.1:7000",     // F10 cause root
+            "10.0.0.1:443",       // RFC1918 10/8
+            "172.20.0.5:80",      // RFC1918 172.16/12
+            "192.168.1.1:8080",   // RFC1918 192.168/16
+            "127.0.0.1:7100",     // loopback
+            "169.254.169.254:80", // link-local
+            "0.0.0.0:0",          // unspecified
+        ] {
+            let sa: std::net::SocketAddr = ip.parse().unwrap();
+            assert!(
+                !is_routable_internet(sa),
+                "{ip} doit être REJETÉE (non-routable Internet)"
+            );
+        }
+    }
+
+    #[test]
+    fn is_routable_internet_v6_accepts_public_globals_rejects_local() {
+        // IPv6 publiques Hetzner = OK. ULA fc00::/7 + link-local
+        // fe80::/10 + loopback ::1 = REJECT.
+        let public: std::net::SocketAddr = "[2a01:4f8:c013:14a1::1]:7000".parse().unwrap();
+        assert!(
+            is_routable_internet(public),
+            "global IPv6 doit être routable"
+        );
+
+        for ip in [
+            "[fc00::1]:7000", // ULA RFC4193
+            "[fd00::1]:7000", // ULA fd00::/8 (sub-range de fc00::/7)
+            "[fe80::1]:7000", // link-local
+            "[::1]:7000",     // loopback
+            "[::]:7000",      // unspecified
+        ] {
+            let sa: std::net::SocketAddr = ip.parse().unwrap();
+            assert!(!is_routable_internet(sa), "{ip} doit être REJETÉE");
+        }
+    }
+
+    #[test]
+    fn filter_endpoint_addr_drops_private_v4_keeps_public_pair() {
+        // Cas réaliste F10 : EndpointAddr annoncé par exit contient
+        // (1) IP publique routable + (2) IP TUN gateway 10.66.0.1.
+        // Le filtre doit garder (1) et drop (2).
+        use iroh::SecretKey;
+        let id = SecretKey::from_bytes(&[7u8; 32]).public();
+        let public: std::net::SocketAddr = "91.99.122.154:7000".parse().unwrap();
+        let tun_gw: std::net::SocketAddr = "10.66.0.1:7000".parse().unwrap();
+        let addr = EndpointAddr::new(id)
+            .with_ip_addr(public)
+            .with_ip_addr(tun_gw);
+
+        let filtered = filter_endpoint_addr_for_wan(addr);
+        let kept: Vec<_> = filtered.ip_addrs().copied().collect();
+        assert_eq!(kept.len(), 1, "exactement 1 IP gardée (publique)");
+        assert_eq!(kept[0], public, "IP publique conservée");
+        assert!(
+            !kept.contains(&tun_gw),
+            "tun gateway 10.66.0.1 doit être droppée (F10 cause root)"
+        );
+    }
+
+    #[test]
+    fn filter_endpoint_addr_preserves_endpoint_id() {
+        // L'identité Ed25519 du peer ne doit pas être modifiée par
+        // le filtre — sinon le handshake noq attendrait une autre
+        // pubkey et rejetterait la connexion.
+        use iroh::SecretKey;
+        let id = SecretKey::from_bytes(&[42u8; 32]).public();
+        let addr = EndpointAddr::new(id).with_ip_addr("10.0.0.1:7000".parse().unwrap());
+
+        let filtered = filter_endpoint_addr_for_wan(addr);
+        assert_eq!(filtered.id, id, "EndpointId préservé après filtre");
+    }
+
+    #[test]
+    fn filter_endpoint_addr_with_only_private_ips_returns_empty_addrs() {
+        // Edge case : si le serveur n'annonce que des IPs privées
+        // (= bug ops, EndpointAddr mal construit), on retourne un
+        // EndpointAddr vide. Le caller (= `client.connect`) devra
+        // alors fail proprement avec `connect to exit failed`,
+        // plutôt que de boucler sur multipath probes 10.66.0.1.
+        use iroh::SecretKey;
+        let id = SecretKey::from_bytes(&[1u8; 32]).public();
+        let addr = EndpointAddr::new(id)
+            .with_ip_addr("10.66.0.1:7000".parse().unwrap())
+            .with_ip_addr("192.168.1.1:7000".parse().unwrap());
+
+        let filtered = filter_endpoint_addr_for_wan(addr);
+        assert_eq!(filtered.ip_addrs().count(), 0, "toutes droppées");
+        assert_eq!(filtered.id, id);
     }
 
     #[test]
