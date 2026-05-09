@@ -41,9 +41,11 @@ pub mod default_route_split;
 
 // F10e Option B trace marker. Préfixe unique pour grep simple post-bench.
 // Format : `[F10e-trace] T{N}={ms}ms <event>` — N croît à chaque étape de
-// `start()`, ms est l'elapsed depuis `start_t`. Pas un trace_span tracing
-// volontairement (= compatible avec `RUST_LOG=info` du daemon Mullvad sans
-// re-config). Cf. bench round 10 plan dans `bench/results/`.
+// `start()`, ms est l'elapsed depuis `start_t`. Logs au niveau `debug`
+// pour ne pas polluer prod ; activer via `RUST_LOG=debug` ou
+// `RUST_LOG=talpid_warren_iroh=debug` quand on veut diagnostiquer un
+// futur problème de séquençage start/wait. Cf.
+// `warren-pocs/bench/results/2026-05-09_F10e_*` pour les rounds.
 const F10E_PREFIX: &str = "[F10e-trace]";
 
 /// Paramètres pour démarrer un tunnel Warren via Iroh.
@@ -198,7 +200,7 @@ impl WarrenIrohMonitor {
         // qu'en stack daemon-fork (pas en POC raw). Cf. agents
         // d'investigation 2026-05-09.
         let start_t = Instant::now();
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T0=0ms phase=start_begin n_conns={} features={:#010x}",
             params.n_connections,
             params.features
@@ -259,7 +261,7 @@ impl WarrenIrohMonitor {
             );
         }
 
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T1={}ms phase=handshake_start (block_on connect_*)",
             start_t.elapsed().as_millis()
         );
@@ -282,7 +284,7 @@ impl WarrenIrohMonitor {
                     .map_err(|e| Error::Handshake(format!("{e:#}"))),
             }
         })?;
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind={}",
             start_t.elapsed().as_millis(),
             handshake_t.elapsed().as_millis(),
@@ -305,7 +307,7 @@ impl WarrenIrohMonitor {
                 .open_tun()
                 .map_err(|e| Error::TunSetup(format!("{e}")))?
         };
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={}",
             start_t.elapsed().as_millis(),
             tun_t.elapsed().as_millis(),
@@ -329,7 +331,7 @@ impl WarrenIrohMonitor {
         // state machine pose alors les routes + firewall), puis `Up`
         // (tunnel prêt à servir le trafic). Cohérent avec le séquençage
         // utilisé par `WireguardMonitor`.
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T4={}ms phase=interfaceup_emit (state machine va poser firewall+DNS rules)",
             start_t.elapsed().as_millis()
         );
@@ -341,13 +343,13 @@ impl WarrenIrohMonitor {
                     AllowedTunnelTraffic::All,
                 ))
                 .await;
-            log::info!(
+            log::debug!(
                 "{F10E_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall posé), emit Up",
                 start_t.elapsed().as_millis()
             );
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall posé)",
             start_t.elapsed().as_millis(),
             events_t.elapsed().as_millis()
@@ -386,15 +388,11 @@ impl WarrenIrohMonitor {
                  Bypass routes will use scope link (may fail ARP on cloud VPS)."
             );
         }
-        let routes = build_warren_tunnel_routes(
-            &metadata.interface,
-            &exit_ips,
-            &physical_iface,
-            gateway_v4,
-        );
+        let routes =
+            build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface, gateway_v4);
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T6={}ms phase=routes_add_start (bypass exit only — split-default via default_route_split)",
             start_t.elapsed().as_millis()
         );
@@ -410,7 +408,7 @@ impl WarrenIrohMonitor {
                 ),
             }
         });
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T7={}ms phase=routes_added elapsed_routes={}ms",
             start_t.elapsed().as_millis(),
             routes_t.elapsed().as_millis()
@@ -525,7 +523,7 @@ impl WarrenIrohMonitor {
                 let dup = up.saturating_sub(prev_up);
                 let ddown = down.saturating_sub(prev_down);
                 let elapsed = tick_start.elapsed().as_millis();
-                log::info!(
+                log::debug!(
                     "{F10E_PREFIX} pump_metrics t={elapsed}ms uplink={up} (+{dup}) downlink={down} (+{ddown})"
                 );
                 prev_up = up;
@@ -533,7 +531,7 @@ impl WarrenIrohMonitor {
             }
         });
 
-        log::info!(
+        log::debug!(
             "{F10E_PREFIX} T8={}ms phase=pump_spawned elapsed_total_start={}ms (data plane should now flow)",
             start_t.elapsed().as_millis(),
             pump_spawn_t.duration_since(start_t).as_millis()
