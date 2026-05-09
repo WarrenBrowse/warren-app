@@ -4588,8 +4588,7 @@ checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
 [[package]]
 name = "noq"
 version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b969bd157c3bd3bab239a1a8b14f67f2033fa012770367fcbd5b42d71ae3548"
+source = "git+https://github.com/poka-IT/noq.git?branch=warren-fork-0.17.0-f10d#a220e1199ebe15481bec320caee944597f7daf4d"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -4599,7 +4598,7 @@ dependencies = [
  "pin-project-lite",
  "rustc-hash",
  "rustls",
- "socket2 0.6.3",
+ "socket2 0.5.10",
  "thiserror 2.0.18",
  "tokio",
  "tokio-stream",
@@ -4610,8 +4609,7 @@ dependencies = [
 [[package]]
 name = "noq-proto"
 version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdec6f5039d98ee5377b2f532d495a555eb664c53161b1b5780dcaeac678b60e"
+source = "git+https://github.com/poka-IT/noq.git?branch=warren-fork-0.17.0-f10d#a220e1199ebe15481bec320caee944597f7daf4d"
 dependencies = [
  "aes-gcm",
  "bytes",
@@ -4637,12 +4635,11 @@ dependencies = [
 [[package]]
 name = "noq-udp"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee91b05f4f3353290936ba1f3233518868fb4e2da99cb4c90d1f8cebb064e527"
+source = "git+https://github.com/poka-IT/noq.git?branch=warren-fork-0.17.0-f10d#a220e1199ebe15481bec320caee944597f7daf4d"
 dependencies = [
  "cfg_aliases",
  "libc",
- "socket2 0.6.3",
+ "socket2 0.5.10",
  "tracing",
  "windows-sys 0.61.2",
 ]

@@ -176,6 +176,19 @@ unused_macro_rules = "warn"
 # usage checkers to see that it's not unused
 ignored = ["prost"]
 
+# Warren F10e fork audit — utilise le fork noq Warren qui désactive
+# multipath QUIC + n0_nat_traversal quand `disable_path_migration=true`
+# (default fork Warren). Sans ce patch côté CLIENT, le daemon-fork envoie
+# des frames `PATH_NEW_CONNECTION_ID` qui sont rejetées par le serveur
+# (qui a multipath off via le même fork) → `PROTOCOL_VIOLATION` → connexion
+# aborted. Le fork doit être appliqué côté CLIENT ET SERVEUR pour que la
+# négociation multipath soit symétriquement désactivée. Cf.
+# `bench/results/2026-05-09_F10d_partial_round7.md` § F10e.
+[patch.crates-io]
+noq = { git = "https://github.com/poka-IT/noq.git", branch = "warren-fork-0.17.0-f10d" }
+noq-proto = { git = "https://github.com/poka-IT/noq.git", branch = "warren-fork-0.17.0-f10d" }
+noq-udp = { git = "https://github.com/poka-IT/noq.git", branch = "warren-fork-0.17.0-f10d" }
+
 [profile.release]
 opt-level = "s"
 strip = true
