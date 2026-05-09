@@ -10,11 +10,11 @@ INSTALL_DIR=$2
 #
 # TODO: This can be reverted when the following issue has been fixed:
 # https://github.com/electron-userland/electron-builder/issues/8166
-if [[ $INSTALL_DIR == *"Mullvad VPN.app" ]]; then
+if [[ $INSTALL_DIR == *"Warren VPN.app" ]]; then
     exit 0
 fi
 
-LOG_DIR=/var/log/mullvad-vpn
+LOG_DIR=/var/log/warren-vpn
 
 mkdir -p $LOG_DIR
 chmod 755 $LOG_DIR
@@ -22,24 +22,24 @@ exec > $LOG_DIR/preinstall.log 2>&1
 
 echo "Running preinstall at $(date)"
 
-# Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing mullvad-setup.
-sudo -u nobody "$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/mullvad-setup" prepare-restart &>/dev/null || \
-    echo "Failed to send 'prepare-restart' command to old mullvad-daemon"
+# Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
+sudo -u nobody "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup" prepare-restart &>/dev/null || \
+    echo "Failed to send 'prepare-restart' command to old warren-daemon"
 
 # NOTE: This path must be kept in sync with the path defined
-# in mullvad-daemon/src/macos_launch_daemon.rs and postinstall
-DAEMON_PLIST_PATH="/Library/LaunchDaemons/net.mullvad.daemon.plist"
-launchctl unload -w $DAEMON_PLIST_PATH || echo "Failed to unload old mullvad-daemon"
+# in warren-daemon/src/macos_launch_daemon.rs and postinstall
+DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
+launchctl unload -w $DAEMON_PLIST_PATH || echo "Failed to unload old warren-daemon"
 
 # For good measure, delete old application directories that may prevent install/upgrade.
 # Make sure this happens after the daemon is unloaded, or it will trip the daemon's uninstall
 # detection.
-rm -rf "$INSTALL_DIR/Mullvad VPN.app"
-rm -rf "$INSTALL_DIR/Mullvad VPN.localized"
+rm -rf "$INSTALL_DIR/Warren VPN.app"
+rm -rf "$INSTALL_DIR/Warren VPN.localized"
 
 # Migrate cache files from <=2020.8-beta2 paths
-OLD_CACHE_DIR="/var/root/Library/Caches/mullvad-vpn"
-NEW_CACHE_DIR="/Library/Caches/mullvad-vpn"
+OLD_CACHE_DIR="/var/root/Library/Caches/warren-vpn"
+NEW_CACHE_DIR="/Library/Caches/warren-vpn"
 
 if [ -d "$OLD_CACHE_DIR" ]; then
     echo "Found old cache dir at $OLD_CACHE_DIR, moving to $NEW_CACHE_DIR"
@@ -55,12 +55,12 @@ rm "$NEW_CACHE_DIR/api-ip-address.txt" || true
 
 # Record whether the GUI is running so postinstall can relaunch it. /var/run is
 # root-only writable, so an unprivileged user can't plant the marker.
-GUI_RUNNING_MARKER="/var/run/mullvad-gui-was-running"
-if pgrep -x "Mullvad VPN" >/dev/null 2>&1; then
+GUI_RUNNING_MARKER="/var/run/warren-gui-was-running"
+if pgrep -x "Warren VPN" >/dev/null 2>&1; then
     : > "$GUI_RUNNING_MARKER"
 else
     rm -f "$GUI_RUNNING_MARKER"
 fi
 
 # Kill the GUI before proceeding with the upgrade.
-pkill -x "Mullvad VPN" && sleep 1 || echo "Unable to kill GUI, not running?"
+pkill -x "Warren VPN" && sleep 1 || echo "Unable to kill GUI, not running?"

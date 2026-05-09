@@ -40,7 +40,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 !define ERROR_SERVICE_MARKED_FOR_DELETE 1072
 !define ERROR_SERVICE_DEPENDENCY_DELETED 1075
 
-# mullvad-setup status codes
+# warren-setup status codes
 !define MVSETUP_OK 0
 !define MVSETUP_ERROR 1
 !define MVSETUP_VERSION_NOT_OLDER 2
@@ -102,12 +102,12 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 #
 # ExtractMullvadSetup
 #
-# Extract mullvad-setup into $PLUGINSDIR
+# Extract warren-setup into $PLUGINSDIR
 #
 !macro ExtractMullvadSetup
 
 	SetOutPath "$PLUGINSDIR"
-	File "${BUILD_RESOURCES_DIR}\$%SETUP_SUBDIR%\mullvad-setup.exe"
+	File "${BUILD_RESOURCES_DIR}\$%SETUP_SUBDIR%\warren-setup.exe"
 	File "${BUILD_RESOURCES_DIR}\..\windows\winfw\bin\$%CPP_BUILD_TARGET%-$%CPP_BUILD_MODE%\winfw.dll"
 
 !macroend
@@ -125,7 +125,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	log::Log "RemoveWintun()"
 
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" driver remove wintun'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" driver remove wintun'
 	Pop $0
 	Pop $1
 
@@ -160,7 +160,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	log::Log "RemoveWireGuardNt()"
 
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" driver remove wg-nt'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" driver remove wg-nt'
 	Pop $0
 	Pop $1
 
@@ -195,7 +195,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	log::Log "RemoveAbandonedWintunAdapter()"
 
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" driver remove wintun-abandoned-device'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" driver remove wintun-abandoned-device'
 	Pop $0
 	Pop $1
 
@@ -235,8 +235,8 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Push $1
 	Push $2
 
-	log::Log "Running $\"mullvad-daemon$\" for it to self-register as a service"
-	nsExec::ExecToStack '"$INSTDIR\resources\mullvad-daemon.exe" --register-service'
+	log::Log "Running $\"warren-daemon$\" for it to self-register as a service"
+	nsExec::ExecToStack '"$INSTDIR\resources\warren-daemon.exe" --register-service'
 
 	Pop $0
 	Pop $1
@@ -253,7 +253,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 		# And naturally, comparing to 0xC0000139 fails because... NSIS
 		#
 		${If} $0 == -1073741511
-			log::Log "Failed to launch $\"mullvad-daemon$\" (API issue)"
+			log::Log "Failed to launch $\"warren-daemon$\" (API issue)"
 			Goto InstallService_return
 		${EndIf}
 
@@ -305,7 +305,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Push $1
 
 	log::Log "Removing Split Tunneling driver"
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" driver remove split-tunnel'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" driver remove split-tunnel'
 
 	Pop $0
 	Pop $1
@@ -544,7 +544,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 #
 # ClearFirewallRules
 #
-# Removes any WFP filters added by the daemon, using mullvad-setup.
+# Removes any WFP filters added by the daemon, using warren-setup.
 # This fails if the daemon is running.
 #
 !macro ClearFirewallRules
@@ -554,7 +554,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Push $0
 	Push $1
 
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" reset-firewall'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" reset-firewall'
 	Pop $0
 	Pop $1
 
@@ -610,7 +610,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Push $0
 	Push $1
 
-	nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" remove-device'
+	nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" remove-device'
 	Pop $0
 	Pop $1
 
@@ -693,7 +693,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	# Application uninstall key
 	# Migrate 2018.6 through 2019.7 to current
-	registry::MoveKey "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Mullvad VPN" "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}"
+	registry::MoveKey "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Warren VPN" "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}"
 
 	# Discard return value
 	Pop $0
@@ -955,7 +955,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	# Copy over the daemon log from the old install for debugging purposes
 	SetShellVarContext all
-	CopyFiles /SILENT /FILESONLY "$LOCALAPPDATA\Mullvad VPN\daemon.log" "$LOCALAPPDATA\Mullvad VPN\old-install-daemon.log"
+	CopyFiles /SILENT /FILESONLY "$LOCALAPPDATA\Warren VPN\daemon.log" "$LOCALAPPDATA\Warren VPN\old-install-daemon.log"
 
 	log::Log "Removing Mullvad service"
 	nsExec::ExecToStack '"$SYSDIR\sc.exe" delete mullvadvpn'
@@ -1061,7 +1061,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	${If} ${isUpdated}
 		ReadRegStr $NewVersion HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" "NewVersion"
 
-		nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" is-older-version $0'
+		nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" is-older-version $0'
 		Pop $0
 		Pop $1
 
@@ -1084,7 +1084,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	${If} $FullUninstall == 0
 		# Save the target tunnel state if we're upgrading
-		nsExec::ExecToStack '"$PLUGINSDIR\mullvad-setup.exe" prepare-restart'
+		nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" prepare-restart'
 		Pop $0
 		Pop $1
 
@@ -1212,14 +1212,14 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 		${EndIf}
 
 		${RemoveSettings}
-		DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "net.mullvad.vpn"
+		DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "com.warrenbrowse.vpn"
 
 		customRemoveFiles_after_remove_settings:
 	${Else}
 		log::SetLogTarget ${LOG_VOID}
 
 		SetShellVarContext all
-		Delete "$LOCALAPPDATA\Mullvad VPN\uninstall.log"
+		Delete "$LOCALAPPDATA\Warren VPN\uninstall.log"
 	${EndIf}
 
 	${UnloadPlugins}

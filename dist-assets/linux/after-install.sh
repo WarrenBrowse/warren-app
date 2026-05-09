@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -eu
 
-chmod u+s "/usr/bin/mullvad-exclude"
+chmod u+s "/usr/bin/warren-exclude"
 
-systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service"
-systemctl start mullvad-daemon.service || echo "Failed to start mullvad-daemon.service"
-systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service"
+systemctl enable "/usr/lib/systemd/system/warren-daemon.service"
+systemctl start warren-daemon.service || echo "Failed to start warren-daemon.service"
+systemctl enable "/usr/lib/systemd/system/warren-early-boot-blocking.service"
 
 # Check if the system supports a new-enough AppArmor version.
 function supported_apparmor() {
@@ -17,6 +17,6 @@ if supported_apparmor; then
     # The AppArmor profile allow Electron sandbox to work.
     # This disables user namespace restrictions.
     echo "Creating apparmor profile"
-    cp /opt/Mullvad\ VPN/resources/apparmor_mullvad /etc/apparmor.d/mullvad
-    apparmor_parser -r /etc/apparmor.d/mullvad || echo "Failed to reload apparmor profile"
+    cp /opt/Warren\ VPN/resources/apparmor_warren /etc/apparmor.d/warren
+    apparmor_parser -r /etc/apparmor.d/warren || echo "Failed to reload apparmor profile"
 fi

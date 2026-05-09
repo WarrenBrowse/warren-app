@@ -2,10 +2,10 @@
 set -eu
 
 function remove_logs_and_cache {
-  rm -r --interactive=never /var/log/mullvad-vpn/ || \
-    echo "Failed to remove mullvad-vpn logs"
-  rm -r --interactive=never /var/cache/mullvad-vpn/ || \
-    echo "Failed to remove mullvad-vpn cache"
+  rm -r --interactive=never /var/log/warren-vpn/ || \
+    echo "Failed to remove warren-vpn logs"
+  rm -r --interactive=never /var/cache/warren-vpn/ || \
+    echo "Failed to remove warren-vpn cache"
 }
 
 function get_home_dirs {
@@ -19,7 +19,7 @@ function clear_gpu_cache {
   home_dirs=$(get_home_dirs)
 
   for home_dir in $home_dirs; do
-      local gpu_cache_dir="$home_dir/.config/Mullvad VPN/GPUCache"
+      local gpu_cache_dir="$home_dir/.config/Warren VPN/GPUCache"
       if [[ -d "$gpu_cache_dir" ]]; then
           echo "Clearing GPU cache in $gpu_cache_dir"
           rm -r --interactive=never "$gpu_cache_dir" || \
@@ -29,27 +29,27 @@ function clear_gpu_cache {
 }
 
 function remove_config {
-  rm -r --interactive=never /etc/mullvad-vpn || \
-    echo "Failed to remove mullvad-vpn config"
+  rm -r --interactive=never /etc/warren-vpn || \
+    echo "Failed to remove warren-vpn config"
 
   # Remove app settings and auto-launcher for all users. This doesn't respect XDG_CONFIG_HOME due
   # to the complexity required.
   local home_dirs
   home_dirs=$(get_home_dirs)
   for home_dir in $home_dirs; do
-      local mullvad_dir="$home_dir/.config/Mullvad VPN"
-      if [[ -d "$mullvad_dir" ]]; then
-          echo "Removing mullvad-vpn app settings from $mullvad_dir"
-          rm -r --interactive=never "$mullvad_dir" || \
-              echo "Failed to remove mullvad-vpn app settings"
+      local warren_dir="$home_dir/.config/Warren VPN"
+      if [[ -d "$warren_dir" ]]; then
+          echo "Removing warren-vpn app settings from $warren_dir"
+          rm -r --interactive=never "$warren_dir" || \
+              echo "Failed to remove warren-vpn app settings"
       fi
 
-      local autostart_path="$home_dir/.config/autostart/mullvad-vpn.desktop"
-      # mullvad-vpn.desktop can be both a file or a symlink.
+      local autostart_path="$home_dir/.config/autostart/warren-vpn.desktop"
+      # warren-vpn.desktop can be both a file or a symlink.
       if [[ -f "$autostart_path" || -L "$autostart_path" ]]; then
-          echo "Removing mullvad-vpn app autostart file $autostart_path"
+          echo "Removing warren-vpn app autostart file $autostart_path"
           rm --interactive=never "$autostart_path" || \
-              echo "Failed to remove mullvad-vpn autostart file"
+              echo "Failed to remove warren-vpn autostart file"
       fi
   done
 }
@@ -76,7 +76,7 @@ esac
 clear_gpu_cache
 
 # Remove apparmor profile
-if apparmor_parser -R /etc/apparmor.d/mullvad &>/dev/null; then
+if apparmor_parser -R /etc/apparmor.d/warren &>/dev/null; then
     echo "Removing apparmor profile"
-    rm -f /etc/apparmor.d/mullvad || echo "Failed to delete apparmor profile"
+    rm -f /etc/apparmor.d/warren || echo "Failed to delete apparmor profile"
 fi

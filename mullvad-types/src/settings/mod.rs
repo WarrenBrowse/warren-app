@@ -318,8 +318,14 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            warren_mode: false,
-            warren_local_account: false,
+            // Warren rebrand Niveau A : `true` par défaut sur le fork
+            // Warren. Le binaire release ne contacte JAMAIS api.mullvad.net
+            // — la chaîne tunnel + account passe par warren-api.
+            // L'utilisateur peut explicitement passer ces flags à `false`
+            // pour réactiver le path Mullvad upstream (= dev/POC seulement,
+            // jamais documenté en prod).
+            warren_mode: true,
+            warren_local_account: true,
             warren_api_url: None,
         }
     }

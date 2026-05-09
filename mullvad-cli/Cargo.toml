@@ -7,14 +7,17 @@ repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-cli"
-OriginalFilename = "mullvad.exe"
+ProductName = "Warren VPN"
+CompanyName = "Warren contributors"
+LegalCopyright = "(c) 2026 Warren contributors"
+InternalName = "warren-cli"
+OriginalFilename = "warren.exe"
 
+# Warren rebrand Niveau A : binaire installé `warren` au lieu de
+# `mullvad`. Le nom du package Cargo (`mullvad-cli`) reste inchangé
+# pour faciliter les rebases upstream Mullvad.
 [[bin]]
-name = "mullvad"
+name = "warren"
 path = "src/main.rs"
 
 [dependencies]

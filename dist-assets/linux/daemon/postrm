@@ -2,15 +2,15 @@
 set -eu
 
 function remove_logs_and_cache {
-  rm -r --interactive=never /var/log/mullvad-vpn/ || \
-    echo "Failed to remove mullvad-vpn logs"
-  rm -r --interactive=never /var/cache/mullvad-vpn/ || \
-    echo "Failed to remove mullvad-vpn cache"
+  rm -r --interactive=never /var/log/warren-vpn/ || \
+    echo "Failed to remove warren-vpn logs"
+  rm -r --interactive=never /var/cache/warren-vpn/ || \
+    echo "Failed to remove warren-vpn cache"
 }
 
 function remove_config {
-  rm -r --interactive=never /etc/mullvad-vpn || \
-    echo "Failed to remove mullvad-vpn config"
+  rm -r --interactive=never /etc/warren-vpn || \
+    echo "Failed to remove warren-vpn config"
 }
 
 function remove_symlinks {

@@ -7,11 +7,11 @@ repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-installer"
-OriginalFilename = "MullvadVPN.exe"
+ProductName = "Warren VPN"
+CompanyName = "Warren contributors"
+LegalCopyright = "(c) 2026 Warren contributors"
+InternalName = "warren-installer"
+OriginalFilename = "WarrenVPN.exe"
 
 [build-dependencies]
 anyhow.workspace = true

@@ -311,8 +311,7 @@ mod tests {
 
         let dir = isolated_tempdir();
         let server_key = SigningKey::from_bytes(&[0xab; 32]);
-        let relay_pubkey_hex =
-            hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+        let relay_pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
 
         let mut signed = sign_relay_list(
             vec![SignedJsonRelay {
