@@ -19,6 +19,7 @@
 
 use std::net::IpAddr;
 use std::path::Path;
+use std::time::Instant;
 
 use ed25519_dalek::SigningKey;
 use ipnetwork::IpNetwork;
@@ -33,6 +34,13 @@ use warren_iroh_tunnel::{
 
 mod adapter;
 use adapter::MullvadTunPacketDevice;
+
+// F10e Option B trace marker. Préfixe unique pour grep simple post-bench.
+// Format : `[F10e-trace] T{N}={ms}ms <event>` — N croît à chaque étape de
+// `start()`, ms est l'elapsed depuis `start_t`. Pas un trace_span tracing
+// volontairement (= compatible avec `RUST_LOG=info` du daemon Mullvad sans
+// re-config). Cf. bench round 10 plan dans `bench/results/`.
+const F10E_PREFIX: &str = "[F10e-trace]";
 
 /// Paramètres pour démarrer un tunnel Warren via Iroh.
 ///
@@ -174,6 +182,18 @@ impl WarrenIrohMonitor {
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
+        // F10e Option B : timestamps précis à chaque étape pour
+        // identifier quel composant talpid (firewall, routing, tun
+        // provider) précipite le bug iroh wrapper qui ne se manifeste
+        // qu'en stack daemon-fork (pas en POC raw). Cf. agents
+        // d'investigation 2026-05-09.
+        let start_t = Instant::now();
+        log::info!(
+            "{F10E_PREFIX} T0=0ms phase=start_begin n_conns={} features={:#010x}",
+            params.n_connections,
+            params.features
+        );
+
         let runtime = args.runtime.clone();
         let exit_id = params.exit_id;
         // F10 fork audit : iroh annonce parfois l'IP du TUN gateway
@@ -208,24 +228,32 @@ impl WarrenIrohMonitor {
         // serveur tente path probe vers 10.66.0.2 → boucle de routage →
         // poison pump exit. Cf.
         // `bench/results/2026-05-09_F10b_resolved_round5.md` § F10c.
-        let bind_local_ip: Option<std::net::SocketAddr> = exit_addr
-            .ip_addrs()
-            .next()
-            .and_then(|exit_sa| match detect_default_local_ip(*exit_sa) {
-                Ok(ip) => Some(std::net::SocketAddr::new(ip, 0)),
-                Err(e) => {
-                    log::warn!(
-                        "Warren F10c: detect_default_local_ip failed: {e}. \
+        let bind_local_ip: Option<std::net::SocketAddr> =
+            exit_addr.ip_addrs().next().and_then(|exit_sa| {
+                match detect_default_local_ip(*exit_sa) {
+                    Ok(ip) => Some(std::net::SocketAddr::new(ip, 0)),
+                    Err(e) => {
+                        log::warn!(
+                            "Warren F10c: detect_default_local_ip failed: {e}. \
                          Falling back to bind 0.0.0.0:0 (unspecified) — TUN IP \
                          leak via n0_nat_traversal possible until fix."
-                    );
-                    None
+                        );
+                        None
+                    }
                 }
             });
         if let Some(addr) = bind_local_ip {
-            log::info!("Warren client bind local IP = {} (F10c fix active)", addr.ip());
+            log::info!(
+                "Warren client bind local IP = {} (F10c fix active)",
+                addr.ip()
+            );
         }
 
+        log::info!(
+            "{F10E_PREFIX} T1={}ms phase=handshake_start (block_on connect_*)",
+            start_t.elapsed().as_millis()
+        );
+        let handshake_t = Instant::now();
         let session_kind = runtime.block_on(async move {
             let mut client = ClientTunnel::with_signing_key(&signing).with_features(features);
             if let Some(addr) = bind_local_ip {
@@ -244,8 +272,18 @@ impl WarrenIrohMonitor {
                     .map_err(|e| Error::Handshake(format!("{e:#}"))),
             }
         })?;
+        log::info!(
+            "{F10E_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind={}",
+            start_t.elapsed().as_millis(),
+            handshake_t.elapsed().as_millis(),
+            match session_kind {
+                SessionKind::Mono(_) => "Mono",
+                SessionKind::Multi(_) => "Multi",
+            }
+        );
 
         // Étape 2 : config TUN dérivée de la session.
+        let tun_t = Instant::now();
         let tun_config = build_tun_config_for_kind(&session_kind);
         let tun = {
             let mut provider = args
@@ -257,6 +295,13 @@ impl WarrenIrohMonitor {
                 .open_tun()
                 .map_err(|e| Error::TunSetup(format!("{e}")))?
         };
+        log::info!(
+            "{F10E_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={}",
+            start_t.elapsed().as_millis(),
+            tun_t.elapsed().as_millis(),
+            tun.interface_name()
+                .unwrap_or_else(|_| "<unknown>".to_owned())
+        );
 
         // Étape 3 : metadata pour les events.
         let metadata = build_tunnel_metadata(&tun, &tun_config);
@@ -274,6 +319,11 @@ impl WarrenIrohMonitor {
         // state machine pose alors les routes + firewall), puis `Up`
         // (tunnel prêt à servir le trafic). Cohérent avec le séquençage
         // utilisé par `WireguardMonitor`.
+        log::info!(
+            "{F10E_PREFIX} T4={}ms phase=interfaceup_emit (state machine va poser firewall+DNS rules)",
+            start_t.elapsed().as_millis()
+        );
+        let events_t = Instant::now();
         runtime.block_on(async {
             event_hook
                 .on_event(TunnelEvent::InterfaceUp(
@@ -281,8 +331,17 @@ impl WarrenIrohMonitor {
                     AllowedTunnelTraffic::All,
                 ))
                 .await;
+            log::info!(
+                "{F10E_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall posé), emit Up",
+                start_t.elapsed().as_millis()
+            );
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
+        log::info!(
+            "{F10E_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall posé)",
+            start_t.elapsed().as_millis(),
+            events_t.elapsed().as_millis()
+        );
 
         // Étape 5.5 (F8 fork audit) : pose les routes via le route_manager
         // pour rediriger le trafic user via le tun, en préservant l'access
@@ -308,6 +367,11 @@ impl WarrenIrohMonitor {
         });
         let routes = build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface);
         let route_manager = args.route_manager.clone();
+        let routes_t = Instant::now();
+        log::info!(
+            "{F10E_PREFIX} T6={}ms phase=routes_add_start (split-default + bypass exit)",
+            start_t.elapsed().as_millis()
+        );
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
                 Ok(()) => log::info!(
@@ -321,6 +385,11 @@ impl WarrenIrohMonitor {
                 ),
             }
         });
+        log::info!(
+            "{F10E_PREFIX} T7={}ms phase=routes_added elapsed_routes={}ms",
+            start_t.elapsed().as_millis(),
+            routes_t.elapsed().as_millis()
+        );
 
         // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
         // QUIC. La task tourne jusqu'à : (a) close de la session
@@ -342,7 +411,10 @@ impl WarrenIrohMonitor {
         //     pour le bonding N-conn (uplink round-robin + N tasks
         //     downlink).
         let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
+        let pump_metrics = packet_device.metrics();
+        let pump_spawn_t = Instant::now();
         let pump_handle = runtime.spawn(async move {
+            log::info!("{F10E_PREFIX} pump=running");
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();
@@ -358,7 +430,7 @@ impl WarrenIrohMonitor {
                 }
                 Err(e) => {
                     let msg = format!("{e:#}");
-                    log::warn!("Warren pump terminated with error: {msg}");
+                    log::warn!("{F10E_PREFIX} pump=terminated reason=error msg=\"{msg}\"");
                     // `send` peut échouer si le `wait()` a déjà drop
                     // le receiver (= close externe arrivé en premier
                     // et le teardown a `abort` le pump). Pas grave —
@@ -367,6 +439,42 @@ impl WarrenIrohMonitor {
                 }
             }
         });
+
+        // F10e Option B : task métriques périodique. Toutes les 2s,
+        // log les compteurs pump (uplink TUN→QUIC, downlink QUIC→TUN).
+        // Permet d'identifier précisément QUELLE direction casse le
+        // data plane (= si uplink continue mais downlink stoppe →
+        // problème côté serveur read_datagram ; si les deux stoppent
+        // simultanément → connection QUIC fermée). La task se termine
+        // dès que les compteurs ne bougent plus 5s d'affilée (= idle
+        // ou tunnel cassé) ou est abortée par teardown via la même
+        // route que le pump.
+        let _metrics_task = runtime.spawn(async move {
+            let mut prev_up = 0u64;
+            let mut prev_down = 0u64;
+            let tick_start = Instant::now();
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
+            interval.tick().await; // skip first immediate tick
+            loop {
+                interval.tick().await;
+                let up = pump_metrics.uplink_packets();
+                let down = pump_metrics.downlink_packets();
+                let dup = up.saturating_sub(prev_up);
+                let ddown = down.saturating_sub(prev_down);
+                let elapsed = tick_start.elapsed().as_millis();
+                log::info!(
+                    "{F10E_PREFIX} pump_metrics t={elapsed}ms uplink={up} (+{dup}) downlink={down} (+{ddown})"
+                );
+                prev_up = up;
+                prev_down = down;
+            }
+        });
+
+        log::info!(
+            "{F10E_PREFIX} T8={}ms phase=pump_spawned elapsed_total_start={}ms (data plane should now flow)",
+            start_t.elapsed().as_millis(),
+            pump_spawn_t.duration_since(start_t).as_millis()
+        );
 
         let _ = metadata; // utile à terme pour re-émission sur MTU change
 

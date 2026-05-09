@@ -12,6 +12,7 @@
 //! (QUIC→TUN) du `pump_multi_bidirectional` Warren.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use warren_iroh_tunnel::PacketDevice;
 
@@ -25,6 +26,28 @@ use warren_iroh_tunnel::PacketDevice;
 /// path.
 const RECV_BUF_SIZE: usize = u16::MAX as usize;
 
+/// Compteurs partagés pump (= F10e Option B instrumentation). Permettent
+/// au caller `WarrenIrohMonitor::start` de spawn une task métricienne
+/// qui log les compteurs périodiquement, pour identifier précisément
+/// la direction (uplink TUN→QUIC vs downlink QUIC→TUN) qui casse en
+/// daemon-fork. `Relaxed` est suffisant : on ne synchronise pas avec
+/// d'autres atomiques, juste pub des compteurs monotonic croissants.
+#[derive(Default)]
+pub(crate) struct PumpMetrics {
+    uplink_packets: AtomicU64,
+    downlink_packets: AtomicU64,
+}
+
+impl PumpMetrics {
+    pub(crate) fn uplink_packets(&self) -> u64 {
+        self.uplink_packets.load(Ordering::Relaxed)
+    }
+
+    pub(crate) fn downlink_packets(&self) -> u64 {
+        self.downlink_packets.load(Ordering::Relaxed)
+    }
+}
+
 /// Adapter clonable autour d'un `tun08::AsyncDevice`. Implémente le
 /// trait Warren [`PacketDevice`] en déléguant à `recv` / `send` du
 /// device.
@@ -37,11 +60,22 @@ const RECV_BUF_SIZE: usize = u16::MAX as usize;
 #[derive(Clone)]
 pub(crate) struct MullvadTunPacketDevice {
     dev: Arc<tun08::AsyncDevice>,
+    metrics: Arc<PumpMetrics>,
 }
 
 impl MullvadTunPacketDevice {
     pub(crate) fn new(dev: tun08::AsyncDevice) -> Self {
-        Self { dev: Arc::new(dev) }
+        Self {
+            dev: Arc::new(dev),
+            metrics: Arc::new(PumpMetrics::default()),
+        }
+    }
+
+    /// Handle clonable des compteurs pump (F10e Option B). Permet à
+    /// `WarrenIrohMonitor::start` de lire les compteurs depuis une
+    /// task séparée pendant que le pump tourne.
+    pub(crate) fn metrics(&self) -> Arc<PumpMetrics> {
+        self.metrics.clone()
     }
 }
 
@@ -50,11 +84,19 @@ impl PacketDevice for MullvadTunPacketDevice {
         let mut buf = vec![0u8; RECV_BUF_SIZE];
         let n = self.dev.recv(&mut buf).await?;
         buf.truncate(n);
+        // F10e Option B : compteur uplink (TUN→QUIC). recv depuis
+        // le device kernel = paquet user à encapsuler.
+        self.metrics.uplink_packets.fetch_add(1, Ordering::Relaxed);
         Ok(buf)
     }
 
     async fn send(&self, packet: &[u8]) -> std::io::Result<()> {
         let _ = self.dev.send(packet).await?;
+        // F10e Option B : compteur downlink (QUIC→TUN). send vers
+        // le device kernel = paquet décap reçu côté QUIC.
+        self.metrics
+            .downlink_packets
+            .fetch_add(1, Ordering::Relaxed);
         Ok(())
     }
 
