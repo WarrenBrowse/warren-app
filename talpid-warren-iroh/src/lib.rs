@@ -549,4 +549,106 @@ mod tests {
         let e = Error::Backend("simulated".into());
         assert!(!e.is_recoverable());
     }
+
+    #[test]
+    fn build_routes_emits_split_default_via_tun_and_bypass_via_physical() {
+        // F8 fork audit : sans ces routes, le tunnel passe `Connected`
+        // mais aucun paquet user ne le traverse — la default reste via
+        // eth0. Ce test fige la composition attendue :
+        //   1. 1 route bypass /32 (v4) ou /128 (v6) par exit IP candidate
+        //      via l'interface physique → préserve l'access daemon ↔
+        //      exit (route plus spécifique gagne sur les /1).
+        //   2. 2 routes split-default 0.0.0.0/1 + 128.0.0.0/1 via tun
+        //      → couvrent toute l'IPv4 sans replace la route default
+        //      (technique VPN classique, restore propre au teardown).
+        //
+        // Si quelqu'un retire un bypass exit, le daemon-iroh tomberait
+        // dans une boucle de routage tunnel→exit→tunnel — donc ce test
+        // est un garde-fou critique anti-régression.
+        let exit_ips: Vec<IpAddr> = vec![
+            "91.99.122.154".parse().unwrap(),
+            "2a01:4f8:c013:14a1::1".parse().unwrap(),
+        ];
+        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0");
+
+        assert_eq!(
+            routes.len(),
+            4,
+            "2 bypass (v4+v6) + 2 split-default = 4 routes (got {} : {routes:?})",
+            routes.len()
+        );
+
+        let dump = format!("{routes:?}");
+        // Les 2 IPs exit doivent apparaître comme bypass /32 et /128.
+        assert!(
+            dump.contains("addr: 91.99.122.154") && dump.contains("prefix: 32"),
+            "exit v4 doit avoir une route /32 bypass dans {dump}"
+        );
+        assert!(
+            dump.contains("addr: 2a01:4f8:c013:14a1::1") && dump.contains("prefix: 128"),
+            "exit v6 doit avoir une route /128 bypass dans {dump}"
+        );
+        // Les 2 demi-default split (0.0.0.0/1 + 128.0.0.0/1) via tun0.
+        assert!(
+            dump.contains("addr: 0.0.0.0") && dump.contains("prefix: 1"),
+            "0.0.0.0/1 split-default attendu dans {dump}"
+        );
+        assert!(
+            dump.contains("addr: 128.0.0.0"),
+            "128.0.0.0/1 split-default attendu dans {dump}"
+        );
+        // Les devices Node : tun0 (= 2 routes) et eth0 (= 2 routes).
+        assert!(
+            dump.contains(r#"device: Some("tun0")"#),
+            "tun_iface 'tun0' dans node device attendu dans {dump}"
+        );
+        assert!(
+            dump.contains(r#"device: Some("eth0")"#),
+            "physical_iface 'eth0' dans node device attendu dans {dump}"
+        );
+    }
+
+    #[test]
+    fn build_routes_with_no_exit_ips_still_emits_split_default() {
+        // Edge case : exit_ips vide (= au moment de la pose des routes,
+        // l'EndpointAddr de l'exit n'expose pas d'IPs candidates,
+        // possible en mode peer-discovery). On émet quand même les 2
+        // demi-default pour que le tunnel soit fonctionnel — au prix
+        // d'une boucle potentielle si le daemon tente de joindre l'exit.
+        let routes = build_warren_tunnel_routes("tun0", &[], "eth0");
+        assert_eq!(routes.len(), 2, "0 bypass + 2 split-default");
+        let dump = format!("{routes:?}");
+        assert!(dump.contains("addr: 0.0.0.0"));
+        assert!(dump.contains("addr: 128.0.0.0"));
+    }
+
+    #[test]
+    fn build_routes_v4_only_exit_does_not_emit_v6_bypass() {
+        // Cas dual-stack absent : l'exit n'annonce qu'une IPv4. On
+        // émet un seul bypass (= /32 v4) plus les 2 split-default.
+        let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
+        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0");
+        assert_eq!(routes.len(), 3);
+        let dump = format!("{routes:?}");
+        assert!(
+            !dump.contains("V6("),
+            "aucune Ipv6Network attendue pour v4-only exit"
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn detect_default_iface_returns_some_iface_on_linux_runtime_or_skip() {
+        // Sanity check : sur l'env de test Linux, /proc/net/route existe
+        // et retourne au moins un nom d'interface non-vide. Si /proc
+        // n'est pas monté ou pas de route default (= conteneur isolé,
+        // CI sans réseau), on skip plutôt que faire échouer le test.
+        match detect_default_iface() {
+            Ok(iface) => assert!(!iface.is_empty(), "iface name doit être non-vide"),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                eprintln!("skip detect_default_iface : pas de route default ({e})");
+            }
+            Err(e) => panic!("unexpected I/O error: {e}"),
+        }
+    }
 }
