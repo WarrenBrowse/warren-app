@@ -200,8 +200,37 @@ impl WarrenIrohMonitor {
         // `read_datagram` côté exit → pump exit termine immédiatement
         // post-handshake → 0 datagram user transmis. Cf. rapport
         // `bench/results/2026-05-09_F9_diagnostic.md`.
+        // F10c fork audit : détecte l'IP source locale (eth0/wlan0) vers
+        // l'exit AVANT le handshake. Sans ce bind specific, iroh client
+        // bind `0.0.0.0:0` unspecified et enumere TOUTES les interfaces
+        // (eth0 + tun0 une fois tunnel monté → 10.66.0.2). iroh propage
+        // ces IPs au serveur via `ADD_ADDRESS` (`n0_nat_traversal`) →
+        // serveur tente path probe vers 10.66.0.2 → boucle de routage →
+        // poison pump exit. Cf.
+        // `bench/results/2026-05-09_F10b_resolved_round5.md` § F10c.
+        let bind_local_ip: Option<std::net::SocketAddr> = exit_addr
+            .ip_addrs()
+            .next()
+            .and_then(|exit_sa| match detect_default_local_ip(*exit_sa) {
+                Ok(ip) => Some(std::net::SocketAddr::new(ip, 0)),
+                Err(e) => {
+                    log::warn!(
+                        "Warren F10c: detect_default_local_ip failed: {e}. \
+                         Falling back to bind 0.0.0.0:0 (unspecified) — TUN IP \
+                         leak via n0_nat_traversal possible until fix."
+                    );
+                    None
+                }
+            });
+        if let Some(addr) = bind_local_ip {
+            log::info!("Warren client bind local IP = {} (F10c fix active)", addr.ip());
+        }
+
         let session_kind = runtime.block_on(async move {
-            let client = ClientTunnel::with_signing_key(&signing).with_features(features);
+            let mut client = ClientTunnel::with_signing_key(&signing).with_features(features);
+            if let Some(addr) = bind_local_ip {
+                client = client.with_bind_local_ip(addr);
+            }
             match select_session_request(n_conns) {
                 SessionRequest::Mono => client
                     .connect(exit_id, exit_addr)
@@ -697,6 +726,43 @@ fn detect_default_iface() -> std::io::Result<String> {
     ))
 }
 
+/// **F10c fork audit** — détecte l'IP source locale (eth0/wlan0) qui
+/// serait utilisée pour router un paquet vers `target`. Astuce
+/// `UdpSocket::connect` portable Linux/macOS/Windows : pour UDP,
+/// `connect()` ne fait AUCUN paquet réseau (= pas de handshake), juste
+/// résout la route locale ; `local_addr()` retourne ensuite l'IP source
+/// que le kernel aurait choisie.
+///
+/// Utilisé pour binder l'`Endpoint` Iroh client sur cette IP spécifique
+/// au lieu de `0.0.0.0:0` unspecified, afin d'empêcher iroh d'enumerer
+/// `tun0` (10.66.0.2) une fois le tunnel monté et de propager cette IP
+/// au serveur via `ADD_ADDRESS` frame `n0_nat_traversal`. Cf.
+/// `bench/results/2026-05-09_F10b_resolved_round5.md` § F10c.
+///
+/// # Errors
+///
+/// I/O sur le bind/connect (= machine sans Internet ou sans route default).
+/// Le caller doit fallback sur le bind unspecified (= comportement
+/// pré-F10c, bug subsiste mais POC reste fonctionnel).
+fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std::net::IpAddr> {
+    let bind = if target.is_ipv4() {
+        std::net::SocketAddr::V4(std::net::SocketAddrV4::new(
+            std::net::Ipv4Addr::UNSPECIFIED,
+            0,
+        ))
+    } else {
+        std::net::SocketAddr::V6(std::net::SocketAddrV6::new(
+            std::net::Ipv6Addr::UNSPECIFIED,
+            0,
+            0,
+            0,
+        ))
+    };
+    let sock = std::net::UdpSocket::bind(bind)?;
+    sock.connect(target)?;
+    Ok(sock.local_addr()?.ip())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -985,6 +1051,31 @@ mod tests {
                 eprintln!("skip detect_default_iface : pas de route default ({e})");
             }
             Err(e) => panic!("unexpected I/O error: {e}"),
+        }
+    }
+
+    #[test]
+    fn detect_default_local_ip_returns_routable_or_loopback_ip() {
+        // F10c invariant : l'astuce `UdpSocket::connect` doit retourner
+        // une IP source non-unspecified (= pas `0.0.0.0` ni `[::]`). Sur
+        // une machine de dev avec Internet, on obtient l'IP eth0/wlan0
+        // publique. Sur une machine isolée (CI sandbox sans réseau), la
+        // bind/connect peut fail OU retourner loopback — on tolère les
+        // deux cas, ce qui compte est qu'on ne retourne JAMAIS une IP
+        // unspecified (= bug = pas de fix F10c possible).
+        let target = std::net::SocketAddr::V4(std::net::SocketAddrV4::new(
+            std::net::Ipv4Addr::new(1, 1, 1, 1),
+            53,
+        ));
+        match detect_default_local_ip(target) {
+            Ok(ip) => assert!(
+                !ip.is_unspecified(),
+                "F10c regression : detect_default_local_ip ne doit JAMAIS retourner \
+                 0.0.0.0 ou [::] (= unspecified). Sinon `with_bind_local_ip(unspecified)` \
+                 déclencherait `collect_local_addresses` côté iroh et le bug F10c \
+                 serait ré-introduit. ip={ip}"
+            ),
+            Err(e) => eprintln!("skip detect_default_local_ip (CI sans réseau ?) : {e}"),
         }
     }
 }
