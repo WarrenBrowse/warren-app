@@ -27,7 +27,9 @@ use talpid_routing::{Node, RequiredRoute};
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
-use warren_iroh_tunnel::{ClientTunnel, MultiSession, pump_multi_bidirectional};
+use warren_iroh_tunnel::{
+    ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
+};
 
 mod adapter;
 use adapter::MullvadTunPacketDevice;
@@ -180,17 +182,33 @@ impl WarrenIrohMonitor {
         let features = params.features;
         let mut event_hook = args.event_hook;
 
-        // Étape 1 : handshake QUIC.
-        let session = runtime.block_on(async move {
+        // Étape 1 : handshake QUIC. F9 fork audit — dispatch :
+        //   - n=1 : `connect()` mono-conn (= path POC raw, validé bench
+        //     22.69h sans `MultipathNotNegotiated` warnings).
+        //   - n>1 : `connect_multi(_, _, n)` (= bonding multi-flow).
+        // Sans ce dispatch, `connect_multi(_, _, 1)` active des
+        // multipath path probes côté noq-proto qui poisonnent
+        // `read_datagram` côté exit → pump exit termine immédiatement
+        // post-handshake → 0 datagram user transmis. Cf. rapport
+        // `bench/results/2026-05-09_F9_diagnostic.md`.
+        let session_kind = runtime.block_on(async move {
             let client = ClientTunnel::with_signing_key(&signing).with_features(features);
-            client
-                .connect_multi(exit_id, exit_addr, n_conns)
-                .await
-                .map_err(|e| Error::Handshake(format!("{e:#}")))
+            match select_session_request(n_conns) {
+                SessionRequest::Mono => client
+                    .connect(exit_id, exit_addr)
+                    .await
+                    .map(SessionKind::Mono)
+                    .map_err(|e| Error::Handshake(format!("{e:#}"))),
+                SessionRequest::Multi(n) => client
+                    .connect_multi(exit_id, exit_addr, n)
+                    .await
+                    .map(SessionKind::Multi)
+                    .map_err(|e| Error::Handshake(format!("{e:#}"))),
+            }
         })?;
 
         // Étape 2 : config TUN dérivée de la session.
-        let tun_config = build_tun_config(&session);
+        let tun_config = build_tun_config_for_kind(&session_kind);
         let tun = {
             let mut provider = args
                 .tun_provider
@@ -268,16 +286,35 @@ impl WarrenIrohMonitor {
 
         // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
         // QUIC. La task tourne jusqu'à : (a) close de la session
-        // (drop de `MultiSession` → connections QUIC closed) ou (b)
-        // erreur I/O sur le TUN (interface descendue par le kernel).
+        // (drop de Session/MultiSession → connections QUIC closed) ou
+        // (b) erreur I/O sur le TUN (interface descendue par le kernel).
         //
         // Phase 1.B.5 : on propage l'erreur du pump via un oneshot
         // channel interne consommé dans `wait()` (au lieu de la
         // swallow dans un `log::warn!`). Ainsi la state machine
         // `connecting_state` peut décider de retry sur un échec pump.
+        //
+        // F9 fork audit : dispatch sur `SessionKind` :
+        //   - Mono → `pump_bidirectional(tun, conn)` avec session
+        //     déplacée dans la closure pour keep alive l'`Endpoint`
+        //     iroh sous-jacent (sinon drop = `read_datagram` retourne
+        //     immédiatement « endpoint driver future was dropped »).
+        //     Pattern identique à `warren-poc-client::main`.
+        //   - Multi → `pump_multi_bidirectional(tun, multi_session)`
+        //     pour le bonding N-conn (uplink round-robin + N tasks
+        //     downlink).
         let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
         let pump_handle = runtime.spawn(async move {
-            match pump_multi_bidirectional(packet_device, session).await {
+            let pump_result = match session_kind {
+                SessionKind::Mono(session) => {
+                    let conn = session.clone_conn();
+                    let res = pump_bidirectional(packet_device, conn).await;
+                    drop(session);
+                    res
+                }
+                SessionKind::Multi(multi) => pump_multi_bidirectional(packet_device, multi).await,
+            };
+            match pump_result {
                 Ok(()) => {
                     log::debug!("Warren pump terminated cleanly");
                 }
@@ -374,10 +411,73 @@ impl WarrenIrohMonitor {
     }
 }
 
-/// Construit la `TunConfig` à partir de la `MultiSession` issue du
-/// handshake exit. Reprend les IPs assignées par l'allocator côté
-/// serveur Warren et les rend compatibles avec l'API talpid.
-fn build_tun_config(session: &MultiSession) -> TunConfig {
+/// Variant de session warren-iroh côté client. F9 fork audit :
+/// on dispatch entre `Mono` (= 1 conn dédié, pas de multipath probes)
+/// et `Multi` (= bonding N-conn) selon `n_connections`. Voir
+/// [`select_session_request`] pour la règle.
+enum SessionKind {
+    /// Mono-conn dédié — utilisé quand `n_connections == 1` (ou 0
+    /// dégénéré). N'active **pas** les multipath probes côté noq-proto
+    /// → pas de risque `MultipathNotNegotiated` / `read_datagram failed`
+    /// post-handshake côté exit.
+    Mono(ClientSession),
+    /// Bonding multi-conn — utilisé quand `n_connections > 1`. Active
+    /// les paths multipath QUIC pour agrégation throughput inter-paths.
+    Multi(MultiSession),
+}
+
+impl SessionKind {
+    fn assigned_ipv4(&self) -> std::net::Ipv4Addr {
+        match self {
+            SessionKind::Mono(s) => s.assigned_ipv4(),
+            SessionKind::Multi(s) => s.assigned_ipv4(),
+        }
+    }
+
+    fn assigned_ipv6(&self) -> Option<std::net::Ipv6Addr> {
+        match self {
+            SessionKind::Mono(s) => s.assigned_ipv6(),
+            SessionKind::Multi(s) => s.assigned_ipv6(),
+        }
+    }
+
+    fn assigned_max_mtu(&self) -> u16 {
+        match self {
+            SessionKind::Mono(s) => s.assigned_max_mtu(),
+            SessionKind::Multi(s) => s.assigned_max_mtu(),
+        }
+    }
+}
+
+/// Choix du mode session côté warren-iroh-tunnel basé sur `n_connections`.
+/// **Fonction pure testable** — F9 fork audit : ce dispatch sépare le
+/// path mono (= POC raw validé bench 22.69h) du path multi (= bonding
+/// expérimental) pour éviter les multipath probes parasites quand n=1.
+#[derive(Debug, PartialEq, Eq)]
+enum SessionRequest {
+    /// Demander une session mono-conn dédiée (= `client.connect`).
+    Mono,
+    /// Demander une session multi-conn avec ce total (= `connect_multi`).
+    Multi(u8),
+}
+
+/// Choisit la variante de session selon `n_connections`. Règle :
+/// - `0` ou `1` → [`SessionRequest::Mono`] (= 0 traité comme cas
+///   dégénéré → mono pour ne pas paniquer côté caller).
+/// - `>= 2` → [`SessionRequest::Multi(n)`].
+#[must_use]
+fn select_session_request(n_connections: u8) -> SessionRequest {
+    if n_connections <= 1 {
+        SessionRequest::Mono
+    } else {
+        SessionRequest::Multi(n_connections)
+    }
+}
+
+/// Construit la `TunConfig` à partir d'une [`SessionKind`] (Mono ou
+/// Multi). Reprend les IPs assignées par l'allocator côté serveur
+/// Warren et les rend compatibles avec l'API talpid.
+fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
     let ipv4 = session.assigned_ipv4();
     let ipv6 = session.assigned_ipv6();
     let max_mtu = session.assigned_max_mtu();
@@ -634,6 +734,38 @@ mod tests {
             !dump.contains("V6("),
             "aucune Ipv6Network attendue pour v4-only exit"
         );
+    }
+
+    #[test]
+    fn select_session_request_returns_mono_for_one_connection() {
+        // F9 fork audit : `n_connections == 1` doit basculer sur le
+        // path `connect()` mono-conn (= POC raw validé bench 22.69h).
+        // `connect_multi(_, _, 1)` activait des multipath probes
+        // côté noq-proto qui poisonnaient `read_datagram` côté exit
+        // → pump exit terminait immédiatement → 0 datagram user
+        // transmis. Ce test fige la règle anti-régression.
+        assert_eq!(select_session_request(1), SessionRequest::Mono);
+    }
+
+    #[test]
+    fn select_session_request_returns_multi_for_two_or_more_connections() {
+        // n>=2 active le bonding multi-flow (= path `connect_multi`).
+        // Le multipath QUIC est légitime ici puisque c'est l'objectif
+        // explicite (= agrégation throughput inter-paths).
+        assert_eq!(select_session_request(2), SessionRequest::Multi(2));
+        assert_eq!(select_session_request(4), SessionRequest::Multi(4));
+        assert_eq!(select_session_request(8), SessionRequest::Multi(8));
+    }
+
+    #[test]
+    fn select_session_request_treats_zero_as_mono() {
+        // Edge case : `n_connections == 0` est un cas dégénéré
+        // (protocole `Setup` exige `total_connections >= 1`). Plutôt
+        // que paniquer côté `select_session_request`, on retourne
+        // `Mono` qui appelle `connect()` (= comportement défensif —
+        // l'API publique du caller `WarrenIrohParameters` peut
+        // valider plus strictement amont).
+        assert_eq!(select_session_request(0), SessionRequest::Mono);
     }
 
     #[cfg(target_os = "linux")]
