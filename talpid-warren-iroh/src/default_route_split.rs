@@ -153,11 +153,39 @@ impl DefaultRouteSplitGuard {
     pub async fn install(exit_ip: Ipv4Addr, tun_name: &str) -> Result<Self> {
         validate_tun_name(tun_name).context("invalid tun_name")?;
 
+        // Diagnostic : log ip rule + table 100 state AVANT install pour
+        // détecter d'éventuelles règles préexistantes (ex: talpid_routing
+        // qui pose ses propres rules netlink avec SuppressPrefixLen + fwmark).
+        if let Ok(out) = Command::new("ip").args(["rule", "show"]).output().await {
+            log::debug!(
+                "ip rule (pre-install): {}",
+                String::from_utf8_lossy(&out.stdout).trim()
+            );
+        }
+
         let cmds = build_install_commands(exit_ip, tun_name);
         for args in &cmds {
             run_ip_tolerant_exists(args)
                 .await
                 .with_context(|| format!("ip {}", args.join(" ")))?;
+        }
+
+        // Diagnostic : log ip rule + table 100 state APRÈS install.
+        if let Ok(out) = Command::new("ip").args(["rule", "show"]).output().await {
+            log::debug!(
+                "ip rule (post-install): {}",
+                String::from_utf8_lossy(&out.stdout).trim()
+            );
+        }
+        if let Ok(out) = Command::new("ip")
+            .args(["route", "show", "table", "100"])
+            .output()
+            .await
+        {
+            log::debug!(
+                "ip route table 100 (post-install): {}",
+                String::from_utf8_lossy(&out.stdout).trim()
+            );
         }
 
         log::info!(
@@ -205,10 +233,15 @@ async fn run_ip_tolerant_exists(args: &[String]) -> Result<()> {
         .await
         .with_context(|| format!("spawn ip {}", args.join(" ")))?;
     if out.status.success() {
+        log::debug!("ip {} OK", args.join(" "));
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&out.stderr);
     if stderr.contains("File exists") {
+        log::debug!(
+            "ip {} returned 'File exists' (tolerated as idempotent)",
+            args.join(" ")
+        );
         return Ok(());
     }
     Err(anyhow!("ip {} failed: {}", args.join(" "), stderr.trim()))

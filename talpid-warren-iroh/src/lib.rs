@@ -375,7 +375,23 @@ impl WarrenIrohMonitor {
             );
             "eth0".to_owned()
         });
-        let routes = build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface);
+        // F10e c2 fix : détecter gateway de la default route IPv4 pour
+        // poser le bypass <exit_ip>/32 via <gw> (= pas dev seul = ARP fail).
+        let gateway_v4 = detect_default_gateway_v4().ok();
+        if let Some(gw) = gateway_v4 {
+            log::info!("Detected default gateway: {gw} (used for bypass exit routes)");
+        } else {
+            log::warn!(
+                "Failed to detect default gateway via /proc/net/route. \
+                 Bypass routes will use scope link (may fail ARP on cloud VPS)."
+            );
+        }
+        let routes = build_warren_tunnel_routes(
+            &metadata.interface,
+            &exit_ips,
+            &physical_iface,
+            gateway_v4,
+        );
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
         log::info!(
@@ -828,27 +844,34 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
 ///    de l'IPv4 sans replace la route default existante (technique
 ///    split-default classique des VPN userspace).
 ///
-/// Validation manuelle Hetzner WAN : ces routes (= bypass exit IP via
-/// physical iface) sont nécessaires mais pas suffisantes. Le
-/// split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` est posé séparément
-/// via [`default_route_split`] (= policy routing avec table dédiée), pas
-/// ici dans la table main. Cf.
-/// `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md` pour la
-/// raison exacte (= éviter la boucle de routage qui empoisonne le
-/// tunnel quand les /1 capturent les paquets QUIC sortants vers exit).
+/// **F10e c2 fix complet** : pose le bypass `<exit_ip>/32 via <gateway>
+/// dev <physical>` (= avec gateway explicit) au lieu de `dev <physical>`
+/// scope link. La version sans gateway foire l'ARP sur les VPS Hetzner
+/// (= exit IP pas sur le même L2 qu'eth0) → kernel drop le paquet QUIC
+/// sortant → tunnel auto-poison.
 ///
-/// Le `physical_node` reste `Node::device` sans `gateway` : `talpid_routing`
-/// pose alors une route `dev eth0` scope link, qui peut souffrir du même
-/// problème ARP que la version manuelle si l'IP exit n'est pas sur le
-/// L2 d'eth0. **TODO** (round 20+) : injecter le gateway via
-/// `Node::address(gateway_ip, eth0)` après détection /proc/net/route.
+/// Si `gateway` est `None`, on retombe sur `Node::device(physical)`
+/// (= ancien comportement, KO sur Hetzner mais peut marcher sur LAN
+/// flat). Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+///
+/// Le split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` est posé
+/// séparément via [`default_route_split`] (= policy routing avec table
+/// dédiée), pas ici dans la table main.
 #[must_use]
 fn build_warren_tunnel_routes(
     _tun_iface: &str,
     exit_ips: &[IpAddr],
     physical_iface: &str,
+    gateway: Option<std::net::Ipv4Addr>,
 ) -> Vec<RequiredRoute> {
-    let physical_node = Node::device(physical_iface.to_owned());
+    // **F10e c2 fix** : si `gateway` Some, on construit `Node::address(gw, iface)`
+    // qui se traduira en `via <gw> dev <iface>` côté kernel. Sinon
+    // fallback `Node::device(iface)` (= scope link, probablement KO Hetzner).
+    let physical_node = match gateway {
+        // `Node::new(ip, iface)` = `via <ip> dev <iface>` côté kernel.
+        Some(gw) => Node::new(IpAddr::V4(gw), physical_iface.to_owned()),
+        None => Node::device(physical_iface.to_owned()),
+    };
 
     let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len());
     for ip in exit_ips {
@@ -892,6 +915,40 @@ fn detect_default_iface() -> std::io::Result<String> {
     ))
 }
 
+/// **F10e c2 fix** — détecte l'IP du gateway de la default route IPv4.
+/// Indispensable pour poser le bypass `<exit_ip>/32 via <gateway>` au
+/// lieu de `<exit_ip>/32 dev eth0` scope link qui foire l'ARP sur les
+/// VPS où l'IP exit n'est pas sur le même L2 qu'eth0.
+///
+/// Format `/proc/net/route` : `Iface\tDest\tGateway\tFlags\t...` où
+/// Dest et Gateway sont des u32 hex en **little-endian** (= byte swap
+/// nécessaire pour reconstruire l'`Ipv4Addr`).
+#[cfg(target_os = "linux")]
+fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
+    let routes = std::fs::read_to_string("/proc/net/route")?;
+    for line in routes.lines().skip(1) {
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        if fields.len() >= 3 && fields[1] == "00000000" {
+            // Gateway is in fields[2], hex little-endian (network byte order
+            // reversed by /proc).
+            let gw_hex = u32::from_str_radix(fields[2], 16).map_err(|e| {
+                std::io::Error::other(format!("parse gateway hex {}: {e}", fields[2]))
+            })?;
+            // Swap bytes : /proc/net/route donne en LE host order, on veut
+            // l'octet network order pour Ipv4Addr.
+            let gw = std::net::Ipv4Addr::from(gw_hex.swap_bytes());
+            if gw.is_unspecified() {
+                continue; // 0.0.0.0 = pas un gateway valide
+            }
+            return Ok(gw);
+        }
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "no IPv4 default gateway in /proc/net/route",
+    ))
+}
+
 #[cfg(not(target_os = "linux"))]
 fn detect_default_iface() -> std::io::Result<String> {
     // Non-Linux : `talpid_routing::get_best_default_route` existe pour
@@ -901,6 +958,17 @@ fn detect_default_iface() -> std::io::Result<String> {
     Err(std::io::Error::new(
         std::io::ErrorKind::Unsupported,
         "default iface detection not implemented for this platform",
+    ))
+}
+
+/// Stub non-Linux : pas de détection gateway possible via /proc.
+/// Le bypass route ne sera pas posé avec via gateway → fallback
+/// `Node::device` scope link (= ancien comportement, peut foirer).
+#[cfg(not(target_os = "linux"))]
+fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "default gateway detection not implemented for this platform",
     ))
 }
 
@@ -1002,7 +1070,7 @@ mod tests {
             "91.99.122.154".parse().unwrap(),
             "2a01:4f8:c013:14a1::1".parse().unwrap(),
         ];
-        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0");
+        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0", None);
 
         assert_eq!(
             routes.len(),
@@ -1054,7 +1122,7 @@ mod tests {
         // le trafic interne TUN, mais pas pour Internet via NAT (ce
         // qui demande default_route_split avec exit IP, qui sera skip
         // si pas d'IPv4 dispo).
-        let routes = build_warren_tunnel_routes("tun0", &[], "eth0");
+        let routes = build_warren_tunnel_routes("tun0", &[], "eth0", None);
         assert_eq!(
             routes.len(),
             0,
@@ -1066,7 +1134,7 @@ mod tests {
     fn build_routes_v4_only_exit_emits_one_bypass() {
         // V4-only exit : 1 bypass /32 v4. Pas de v6, pas de split-default.
         let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
-        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0");
+        let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0", None);
         assert_eq!(routes.len(), 1, "post-F10e fix : 1 bypass v4 seul");
         let dump = format!("{routes:?}");
         assert!(
