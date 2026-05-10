@@ -25,6 +25,7 @@ import {
   ExpiredAccountErrorView,
   FilterView,
   KeysView,
+  RestoreMnemonicView,
   LaunchView,
   LoginView,
   LwoSettingsView,
@@ -72,6 +73,7 @@ export default function AppRouter() {
           <Route exact path={RoutePath.setupFinished} component={SetupFinished} />
           <Route exact path={RoutePath.account} component={AccountView} />
           <Route exact path={RoutePath.keys} component={KeysView} />
+          <Route exact path={RoutePath.restoreKeys} component={RestoreMnemonicView} />
           <Route exact path={RoutePath.settings} component={SettingsView} />
           <Route exact path={RoutePath.selectLanguage} component={SelectLanguageView} />
           <Route

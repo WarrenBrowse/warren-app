@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
+import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { Button, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
@@ -195,6 +196,10 @@ export function KeysView() {
                   </Button>
                 </FlexColumn>
               )}
+
+              <Button onClick={() => history.push(RoutePath.restoreKeys)}>
+                <Button.Text>{messages.pgettext('keys-view', 'Restore from mnemonic')}</Button.Text>
+              </Button>
             </FlexColumn>
           </View.Container>
         </View.Content>

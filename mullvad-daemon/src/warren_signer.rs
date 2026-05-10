@@ -74,6 +74,98 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     Some(warren_identity::derive_node_key(&seed))
 }
 
+/// Restaure (= écrase) la mnémonique BIP39 utilisateur dans
+/// `<settings_dir>/warren_mnemonic.txt`. Validation BIP39 effectuée
+/// AVANT toute écriture sur disque (= rejet atomique sans corruption
+/// du fichier existant).
+///
+/// **Atomicité** : écrit d'abord dans un tempfile sibling (mode 0o600
+/// sur Unix, sync_all avant fermeture), puis `rename` atomique vers le
+/// path final (POSIX rename remplace silencieusement la destination).
+/// En cas de crash entre tempfile et rename, l'ancienne mnémonique
+/// reste intacte.
+///
+/// **Use case** : restore d'identité depuis la GUI (= C.1.d ImportMnemonicView).
+/// Le caller GUI DOIT afficher une confirmation strong avant d'appeler,
+/// car l'ancienne identité (et la subscription qui y est liée) est
+/// IRRÉVERSIBLEMENT remplacée. Le daemon doit être restart pour que
+/// la nouvelle identité soit prise en compte par le signer (signing key
+/// est dérivée au boot).
+///
+/// # Errors
+///
+/// - `InvalidData` si `mnemonic` n'est pas une BIP39 valide (checksum,
+///   wordlist, count) → fichier existant non touché.
+/// - Autres `io::Error` sur tempfile/rename (perms, FS plein, etc.).
+///
+/// # Politique no-log
+///
+/// Ne JAMAIS logger `mnemonic`. Logger uniquement le fait qu'une écriture
+/// a réussi/échoué (= audit trail).
+pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Result<()> {
+    use std::io::Write;
+
+    // Step 1 — validation BIP39 AVANT toute écriture.
+    warren_identity::seed_from_mnemonic(mnemonic).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("invalid BIP39 mnemonic: {e}"),
+        )
+    })?;
+
+    // Step 2 — préparation du tempfile sibling unique.
+    let path = settings_dir.join(MNEMONIC_FILENAME);
+    let parent = path.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let pid = std::process::id();
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.subsec_nanos())
+        .unwrap_or(0);
+    let tmp_path = parent.join(format!(".{MNEMONIC_FILENAME}.tmp.{pid}.{nanos}"));
+
+    // Best-effort cleanup d'un éventuel résidu d'un crash précédent.
+    let _ = std::fs::remove_file(&tmp_path);
+
+    // Step 3 — écriture atomique dans le tempfile.
+    {
+        #[cfg(unix)]
+        let mut f = {
+            use std::os::unix::fs::OpenOptionsExt;
+            std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(&tmp_path)?
+        };
+        #[cfg(not(unix))]
+        let mut f = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&tmp_path)?;
+
+        f.write_all(mnemonic.as_bytes())?;
+        f.write_all(b"\n")?;
+        f.sync_all()?;
+    }
+
+    // Step 4 — rename atomique vers la destination (overwrite OK).
+    // Contraste avec write_mnemonic_file de warren-identity qui utilise
+    // hard_link pour fail-on-exists (= load_or_create sémantique). Ici
+    // on VEUT remplacer.
+    match std::fs::rename(&tmp_path, &path) {
+        Ok(()) => {
+            log::info!(
+                "set_warren_mnemonic: identity overwritten (content NEVER logged)"
+            );
+            Ok(())
+        }
+        Err(e) => {
+            let _ = std::fs::remove_file(&tmp_path);
+            Err(e)
+        }
+    }
+}
+
 /// Lit la mnémonique BIP39 utilisateur **déjà persistée** dans
 /// `<settings_dir>/warren_mnemonic.txt`. Read-only : ne crée jamais
 /// le fichier (contraste avec [`load_or_create_signing_key`]).
@@ -230,6 +322,71 @@ mod tests {
         assert_eq!(
             pubkey_via_signer, pubkey_via_export,
             "exported mnemonic MUST re-derive identical pubkey, else backup is broken"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn set_warren_mnemonic_rejects_invalid_bip39() {
+        // Une string qui n'est pas une mnémonique BIP39 valide
+        // (bad checksum, mot inconnu, etc.) doit être REJETÉE avant
+        // d'écrire sur disque, sinon on corrompt l'identité user.
+        let dir = isolated_tempdir();
+        let bogus = "this is not a valid bip39 mnemonic at all";
+
+        let result = set_warren_mnemonic(&dir, bogus);
+        assert!(
+            result.is_err(),
+            "set_warren_mnemonic must reject non-BIP39 input"
+        );
+        assert!(
+            !dir.join(MNEMONIC_FILENAME).exists(),
+            "rejected input must NOT persist (atomicité = pas de demi-écriture)"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn set_warren_mnemonic_accepts_valid_bip39_and_persists() {
+        // Une mnémonique BIP39 valide doit être écrite sur disque
+        // ET être lisible via get_warren_mnemonic juste après.
+        let dir = isolated_tempdir();
+        // Mnémonique BIP39 12 mots fixe (= test vector connu).
+        let valid = "abandon abandon abandon abandon abandon abandon \
+                     abandon abandon abandon abandon abandon about";
+
+        set_warren_mnemonic(&dir, valid).expect("valid BIP39 must succeed");
+        let read_back = get_warren_mnemonic(&dir).expect("must be readable after set");
+        assert_eq!(
+            read_back, valid,
+            "round-trip set→get must preserve the mnemonic byte-exact"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn set_warren_mnemonic_overwrites_existing_identity() {
+        // Use case Restore : l'identité existe déjà (= load_or_create_signer
+        // a tourné). set_warren_mnemonic doit ÉCRASER cette identité par la
+        // nouvelle. Le caller GUI doit afficher une confirmation strong
+        // car cette opération est IRRÉVERSIBLE (= subscription liée à
+        // l'ancienne identité = perdue).
+        let dir = isolated_tempdir();
+        let original_signer = load_or_create_signer(&dir).expect("bootstrap original");
+        let original_pubkey = original_signer.pubkey_hex();
+
+        let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
+                            abandon abandon abandon abandon abandon about";
+        set_warren_mnemonic(&dir, new_mnemonic).expect("restore must succeed");
+
+        let new_signer = load_or_create_signer(&dir).expect("re-bootstrap");
+        let new_pubkey = new_signer.pubkey_hex();
+        assert_ne!(
+            original_pubkey, new_pubkey,
+            "after restore, pubkey MUST differ (= identité écrasée)"
         );
 
         let _ = std::fs::remove_dir_all(&dir);

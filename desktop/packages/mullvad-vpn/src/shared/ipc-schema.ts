@@ -241,6 +241,11 @@ export const ipcSchema = {
     // jamais bootstrappée. Caller renderer doit afficher avec
     // warning safety + confirmation user explicite.
     getWarrenMnemonic: invoke<void, string>(),
+    // Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
+    // par la mnémonique BIP39 fournie. Validation BIP39 daemon-side.
+    // Throw si invalid (= caller doit catch + show error). Restart
+    // daemon requis pour activation.
+    setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: send<void>(),
     listDevices: invoke<WarrenPubKey, Array<IDevice>>(),

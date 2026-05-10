@@ -308,6 +308,29 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(mnemonic.unwrap_or_default()))
     }
 
+    /// Warren fork — C.1.d (M7 GUI Keys Restore) : remplace la
+    /// mnémonique BIP39 (= restore identité). Validation BIP39 +
+    /// écriture atomique. Restart daemon requis. **Politique no-log**.
+    async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
+        let mnemonic = request.into_inner();
+        log::info!(
+            "set_warren_mnemonic request received (len={}, content NEVER logged)",
+            mnemonic.len()
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenMnemonic(tx, mnemonic))?;
+        let result = self.wait_for_result(rx).await?;
+        result.map(Response::new).map_err(|e| {
+            // Map io::ErrorKind::InvalidData → InvalidArgument (= BIP39 invalid).
+            // Autres erreurs → Internal.
+            if e.kind() == std::io::ErrorKind::InvalidData {
+                Status::invalid_argument(e.to_string())
+            } else {
+                Status::internal(e.to_string())
+            }
+        })
+    }
+
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
         let enabled = request.into_inner();
         log::debug!("set_show_beta_releases({})", enabled);

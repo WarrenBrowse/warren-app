@@ -909,6 +909,25 @@ getWarrenMnemonic: {
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
   },
+  // Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
+// utilisateur par la mnémonique BIP39 fournie. **Irréversible** :
+// toute subscription liée à l'identité actuelle est perdue. Le caller
+// GUI doit afficher une confirmation strong avant d'appeler. Le
+// daemon doit être restart manuellement après pour que la nouvelle
+// identité soit prise en compte par le signer (signing key dérivée
+// au boot uniquement). Le payload est validé BIP39 avant écriture
+// sur disque (= rejet atomique).
+setWarrenMnemonic: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMnemonic',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
   // Account management
 createNewAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/CreateNewAccount',

@@ -81,6 +81,15 @@ service ManagementService {
   // confirmation user explicite. La string retournée est secret
   // cryptographique, jamais loggée par le daemon (politique no-log).
   rpc GetWarrenMnemonic(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
+  // Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
+  // utilisateur par la mnémonique BIP39 fournie. **Irréversible** :
+  // toute subscription liée à l'identité actuelle est perdue. Le caller
+  // GUI doit afficher une confirmation strong avant d'appeler. Le
+  // daemon doit être restart manuellement après pour que la nouvelle
+  // identité soit prise en compte par le signer (signing key dérivée
+  // au boot uniquement). Le payload est validé BIP39 avant écriture
+  // sur disque (= rejet atomique).
+  rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}

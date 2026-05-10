@@ -404,6 +404,8 @@ export default class AppRenderer {
   }
 
   public getWarrenMnemonic = () => IpcRendererEventChannel.account.getWarrenMnemonic();
+  public setWarrenMnemonic = (mnemonic: string) =>
+    IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
   public updateAccountData = () => IpcRendererEventChannel.account.updateData();
   public removeDevice = (device: IDeviceRemoval) =>

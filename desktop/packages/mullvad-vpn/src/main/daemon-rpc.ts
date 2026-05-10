@@ -211,6 +211,16 @@ export class DaemonRpc extends GrpcClient {
     return response.getValue();
   }
 
+  /**
+   * Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
+   * par la mnémonique BIP39 fournie. Daemon valide BIP39 et écrit
+   * atomiquement. Throw `grpc.ServiceError` (status INVALID_ARGUMENT)
+   * si BIP39 invalide. Restart daemon requis pour activation.
+   */
+  public async setWarrenMnemonic(mnemonic: string): Promise<void> {
+    await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);
+  }
+
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
     try {
       const response = await this.callString<grpcTypes.VoucherSubmission>(

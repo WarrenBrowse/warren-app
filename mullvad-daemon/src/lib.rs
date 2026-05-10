@@ -286,6 +286,11 @@ pub enum DaemonCommand {
     /// si le fichier `warren_mnemonic.txt` n'existe pas (= identité
     /// jamais bootstrappée). Voir `warren_signer::get_warren_mnemonic`.
     GetWarrenMnemonic(oneshot::Sender<Option<String>>),
+    /// Warren fork — C.1.d : remplace la mnémonique BIP39 (= restore
+    /// identité). Validation BIP39 + écriture atomique. Restart daemon
+    /// requis pour que la nouvelle identité soit active. Voir
+    /// `warren_signer::set_warren_mnemonic`.
+    SetWarrenMnemonic(oneshot::Sender<std::io::Result<()>>, String),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
     /// Request account history
@@ -1679,6 +1684,7 @@ impl Daemon {
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
+            SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
@@ -2173,6 +2179,24 @@ impl Daemon {
             mnemonic.is_some()
         );
         Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
+    }
+
+    /// Warren fork — C.1.d : restaure la mnémonique via
+    /// `warren_signer::set_warren_mnemonic`. Restart daemon requis
+    /// pour que la nouvelle identité soit prise en compte par le
+    /// signer (signing key dérivée au boot). **Politique no-log** :
+    /// jamais le contenu de `mnemonic`, juste le résultat (ok/err).
+    fn on_set_warren_mnemonic(
+        &self,
+        tx: oneshot::Sender<std::io::Result<()>>,
+        mnemonic: String,
+    ) {
+        let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
+        log::info!(
+            "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
+            result.is_ok()
+        );
+        Self::oneshot_send(tx, result, "set_warren_mnemonic");
     }
 
     fn on_submit_voucher(&mut self, tx: ResponseTx<VoucherSubmission, Error>, voucher: String) {
