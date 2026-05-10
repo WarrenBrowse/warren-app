@@ -8249,7 +8249,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -8276,7 +8276,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-client"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "ed25519-dalek 2.2.0",
  "hex",
@@ -8295,11 +8295,11 @@ dependencies = [
 
 [[package]]
 name = "warren-config"
-version = "0.0.1-poc"
+version = "0.1.0"
 
 [[package]]
 name = "warren-identity"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "bip39",
  "ed25519-dalek 2.2.0",
@@ -8316,7 +8316,7 @@ dependencies = [
 
 [[package]]
 name = "warren-iroh-tunnel"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -8338,7 +8338,7 @@ dependencies = [
 
 [[package]]
 name = "warren-protocol"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "postcard",
  "serde",
@@ -8347,7 +8347,7 @@ dependencies = [
 
 [[package]]
 name = "warren-ratelimit"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -8355,7 +8355,7 @@ dependencies = [
 
 [[package]]
 name = "warren-relay-selector"
-version = "0.0.1-poc"
+version = "0.1.0"
 dependencies = [
  "ed25519-dalek 2.2.0",
  "hex",

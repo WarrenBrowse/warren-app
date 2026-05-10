@@ -1,28 +1,19 @@
-//! Policy routing pour faire passer le trafic Internet via le TUN
-//! Warren tout en préservant la connectivité socket UDP du daemon iroh
-//! vers l'exit.
+//! Policy routing that pushes Internet traffic through the Warren TUN
+//! while preserving the iroh daemon's UDP socket connectivity to the exit.
 //!
-//! ## Référence
+//! ## Why not `talpid_routing::RequiredRoute`
 //!
-//! Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md` pour la
-//! cause root + recette validée bench round 18 (= 863 Mbps Internet via
-//! tunnel 0% loss). Module miroir de
-//! `warren-poc-client/src/default_route_split.rs`.
+//! `RequiredRoute` exposes `use_main_table(bool)` but no custom `table_id`
+//! (only the `main` table or a talpid-internal one). We need a **dedicated
+//! table 100** plus an `ip rule` so the exit IP bypass wins on priority —
+//! `RequiredRoute` can't express this.
 //!
-//! ## Pourquoi ne pas utiliser `talpid_routing::RequiredRoute`
+//! We work around it by shelling out to `ip` after `talpid_routing` has
+//! installed its own routes. Same pattern as `warren-client`.
 //!
-//! L'API `RequiredRoute` expose `use_main_table(bool)` mais pas de
-//! `table_id` custom (= seule la table `main` ou une table interne
-//! talpid). On a besoin d'une **table 100 dédiée** + `ip rule` pour
-//! que le bypass de l'exit IP gagne en priorité, ce que `RequiredRoute`
-//! ne supporte pas.
+//! ## Platforms
 //!
-//! On contourne via shell-out vers `ip` après que `talpid_routing` ait
-//! posé ses routes. Pattern emprunté à `warren-poc-client`.
-//!
-//! ## Plateformes
-//!
-//! Linux uniquement.
+//! Linux only.
 
 use std::net::Ipv4Addr;
 
@@ -353,7 +344,7 @@ mod tests {
     #[test]
     fn validate_tun_name_accepts_valid() {
         assert!(validate_tun_name("tun0").is_ok());
-        assert!(validate_tun_name("warren-poc0").is_ok());
+        assert!(validate_tun_name("warren-tun0").is_ok());
         assert!(validate_tun_name("a_b").is_ok());
     }
 

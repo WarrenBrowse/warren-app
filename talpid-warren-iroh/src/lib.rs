@@ -462,15 +462,14 @@ impl WarrenIrohMonitor {
         // swallow dans un `log::warn!`). Ainsi la state machine
         // `connecting_state` peut décider de retry sur un échec pump.
         //
-        // F9 fork audit : dispatch sur `SessionKind` :
-        //   - Mono → `pump_bidirectional(tun, conn)` avec session
-        //     déplacée dans la closure pour keep alive l'`Endpoint`
-        //     iroh sous-jacent (sinon drop = `read_datagram` retourne
-        //     immédiatement « endpoint driver future was dropped »).
-        //     Pattern identique à `warren-poc-client::main`.
-        //   - Multi → `pump_multi_bidirectional(tun, multi_session)`
-        //     pour le bonding N-conn (uplink round-robin + N tasks
-        //     downlink).
+        // Dispatch on `SessionKind`:
+        //   - Mono → `pump_bidirectional(tun, conn)` with the session moved
+        //     into the closure to keep the underlying iroh `Endpoint`
+        //     alive (otherwise its drop makes `read_datagram` immediately
+        //     return "endpoint driver future was dropped"). Same pattern
+        //     as `warren-client::main`.
+        //   - Multi → `pump_multi_bidirectional(tun, multi_session)` for
+        //     N-connection bonding (uplink round-robin + N downlink tasks).
         let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
         let pump_metrics = packet_device.metrics();
         let pump_spawn_t = Instant::now();
@@ -669,25 +668,22 @@ impl SessionKind {
     }
 }
 
-/// Filtre les `EndpointAddr.addrs` pour ne garder que les adresses
-/// **routables sur Internet** (= F10 fork audit). Exclut :
-/// - IPv4 privées RFC 1918 (10/8, 172.16/12, 192.168/16)
-/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
-///   multicast, unspecified
+/// Filter `EndpointAddr.addrs` to keep only **Internet-routable** addresses.
+/// Excludes:
+/// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16)
+/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast, multicast,
+///   unspecified
 /// - IPv6 loopback (::1), unspecified, multicast, link-local (fe80::/10)
-/// - IPv6 unique-local ULA (fc00::/7)
+/// - IPv6 ULA (fc00::/7)
 ///
-/// Préserve `id` et les `TransportAddr::Relay(...)` non-IP
-/// (Warren n'utilise pas les relays mais on n'est pas en charge de
-/// les filtrer ici — `relay_mode(Disabled)` côté `client.connect()`
-/// les ignore déjà).
+/// Preserves `id` and non-IP `TransportAddr::Relay(...)` (Warren doesn't
+/// use relays, but `relay_mode(Disabled)` on `client.connect()` already
+/// ignores them).
 ///
-/// **Pourquoi** : iroh fait de la path discovery via les local
-/// interfaces du peer. Quand `warren-poc-exit --use-tun` est actif,
-/// l'interface `warren0` (= TUN gateway, IP `10.66.0.1`) apparaît
-/// dans la list des candidate addrs annoncées au client. Le client
-/// la teste en multipath probe → boucle de routage qui poisonne le
-/// pump (= F10 finding bench 2026-05-09).
+/// Why: iroh performs path discovery against the peer's local interfaces.
+/// When `warren-exit --use-tun` is up, the `warren0` TUN gateway
+/// (`10.66.0.1`) shows up in the candidate addrs advertised to the client.
+/// The client multipath-probes it → routing loop that poisons the pump.
 #[must_use]
 fn filter_endpoint_addr_for_wan(addr: EndpointAddr) -> EndpointAddr {
     let mut filtered = EndpointAddr::new(addr.id);
@@ -1164,11 +1160,10 @@ mod tests {
 
     #[test]
     fn is_routable_internet_v4_accepts_public_addrs() {
-        // Sentinelle anti-régression : les IPs Hetzner Cloud (= type
-        // d'usage cible warren-poc-exit) doivent être considérées
-        // comme routables, sinon `filter_endpoint_addr_for_wan`
-        // viderait l'EndpointAddr et le client iroh ne pourrait pas
-        // joindre l'exit.
+        // Regression sentinel: Hetzner Cloud IPs (the typical
+        // warren-exit target) must be considered routable, otherwise
+        // `filter_endpoint_addr_for_wan` would empty the EndpointAddr
+        // and the iroh client couldn't reach the exit.
         for ip in ["91.99.122.154:7000", "178.104.4.40:7000", "8.8.8.8:53"] {
             let sa: std::net::SocketAddr = ip.parse().unwrap();
             assert!(
