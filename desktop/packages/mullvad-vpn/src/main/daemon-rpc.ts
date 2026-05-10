@@ -200,6 +200,17 @@ export class DaemonRpc extends GrpcClient {
     return response.getValue();
   }
 
+  /**
+   * Warren fork — C.1 (M7 GUI Keys) : récupère la mnémonique BIP39
+   * (12 mots) pour permettre backup user-side. Empty string si
+   * l'identité n'a jamais été bootstrappée. Le caller renderer doit
+   * afficher avec warning safety + confirmation user explicite.
+   */
+  public async getWarrenMnemonic(): Promise<string> {
+    const response = await this.callEmpty<StringValue>(this.client.getWarrenMnemonic);
+    return response.getValue();
+  }
+
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
     try {
       const response = await this.callString<grpcTypes.VoucherSubmission>(

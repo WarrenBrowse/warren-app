@@ -890,6 +890,25 @@ setWarrenApiUrl: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
+  // Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique BIP39
+// utilisateur (12 mots) pour permettre backup user-side via le
+// GUI (= critère phase 1 #2 "Mnemonic affiché 1 fois et restaurable").
+// Empty string si l'identité n'a jamais été bootstrappée (= mode
+// Mullvad legacy ou premier boot avant warren_signer).
+// **Sensible** : caller GUI doit afficher avec warning safety +
+// confirmation user explicite. La string retournée est secret
+// cryptographique, jamais loggée par le daemon (politique no-log).
+getWarrenMnemonic: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenMnemonic',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_wrappers_pb.StringValue,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_StringValue,
+    responseDeserialize: deserialize_google_protobuf_StringValue,
+  },
   // Account management
 createNewAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/CreateNewAccount',

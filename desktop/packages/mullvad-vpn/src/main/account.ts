@@ -76,6 +76,9 @@ export default class Account {
     );
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
     IpcMainEventChannel.account.handleGetWwwAuthToken(() => this.daemonRpc.getWwwAuthToken());
+    IpcMainEventChannel.account.handleGetWarrenMnemonic(() =>
+      this.daemonRpc.getWarrenMnemonic(),
+    );
     IpcMainEventChannel.account.handleSubmitVoucher(async (voucherCode: string) => {
       const currentPubKey = this.getWarrenPubKey();
       const response = await this.daemonRpc.submitVoucher(voucherCode);

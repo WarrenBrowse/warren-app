@@ -236,6 +236,11 @@ export const ipcSchema = {
     login: invoke<WarrenPubKey, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
     getWwwAuthToken: invoke<void, string>(),
+    // Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique BIP39
+    // (12 mots) pour permettre backup user. Empty string si identité
+    // jamais bootstrappée. Caller renderer doit afficher avec
+    // warning safety + confirmation user explicite.
+    getWarrenMnemonic: invoke<void, string>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: send<void>(),
     listDevices: invoke<WarrenPubKey, Array<IDevice>>(),
