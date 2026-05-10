@@ -483,7 +483,7 @@ export default class UserInterface implements WindowControllerDelegate {
 
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Mullvad VPN',
+        label: 'Warren VPN',
         submenu: mullvadVpnSubmenu,
       },
       {
@@ -503,7 +503,7 @@ export default class UserInterface implements WindowControllerDelegate {
   private setLinuxAppMenu() {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Mullvad VPN',
+        label: 'Warren VPN',
         submenu: [{ role: 'quit' }],
       },
     ];
@@ -644,7 +644,7 @@ export default class UserInterface implements WindowControllerDelegate {
       }
     }
 
-    return 'Mullvad VPN';
+    return 'Warren VPN';
   }
 
   private createLocationString(location?: ILocation): string | undefined {
@@ -669,7 +669,7 @@ export default class UserInterface implements WindowControllerDelegate {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: sprintf(messages.pgettext('tray-icon-context-menu', 'Open %(mullvadVpn)s'), {
-          mullvadVpn: 'Mullvad VPN',
+          mullvadVpn: 'Warren VPN',
         }),
         click: () => this.windowController.show(),
       },

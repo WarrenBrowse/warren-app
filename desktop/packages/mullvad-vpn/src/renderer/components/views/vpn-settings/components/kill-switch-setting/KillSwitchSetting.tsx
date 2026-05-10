@@ -25,7 +25,7 @@ export function KillSwitchSetting(props: KillSwitchSettingProps) {
             <ModalMessage>
               {messages.pgettext(
                 'vpn-settings-view',
-                'The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection.',
+                'The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection.',
               )}
             </ModalMessage>
           </InfoButton>

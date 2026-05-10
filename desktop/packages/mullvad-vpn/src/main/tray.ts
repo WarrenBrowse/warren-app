@@ -15,7 +15,7 @@ export function createTray() {
 
   const tray = new Tray(initialIcon.toNativeImage());
 
-  tray.setToolTip('Mullvad VPN');
+  tray.setToolTip('Warren VPN');
 
   // disable double click on tray icon since it causes weird delay
   tray.setIgnoreDoubleClickEvents(true);

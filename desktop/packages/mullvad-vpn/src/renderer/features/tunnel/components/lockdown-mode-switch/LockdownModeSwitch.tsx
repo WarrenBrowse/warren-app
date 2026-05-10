@@ -51,7 +51,7 @@ function LockdownModeSwitch({ children, ...props }: LockdownModeSwitchProp) {
         <ModalMessage>
           {messages.pgettext(
             'vpn-settings-view',
-            'Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet.',
+            'Attention: enabling this will always require a Warren VPN connection in order to reach the internet.',
           )}
         </ModalMessage>
         <ModalMessage>

@@ -1,13 +1,13 @@
 {
   "name": "mullvad-vpn",
   "version": "0.0.0",
-  "productName": "Mullvad VPN",
+  "productName": "Warren VPN",
   "private": true,
-  "description": "Mullvad VPN client",
+  "description": "Warren VPN client",
   "main": "build/main.js",
   "author": {
-    "name": "Mullvad VPN",
-    "email": "support@mullvadvpn.net"
+    "name": "Warren contributors",
+    "email": "support@warrenbrowse.com"
   },
   "type": "module",
   "repository": "https://github.com/mullvad/mullvadvpn-app",

@@ -21,7 +21,7 @@ export function MacOsPermissionFooter() {
             // TRANSLATORS: Message in launch view when the background process permissions have been revoked.
             messages.pgettext(
               'launch-view',
-              'Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting.',
+              'Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting.',
             )
           }
         </FooterText>
