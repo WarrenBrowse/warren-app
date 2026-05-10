@@ -1,14 +1,14 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
-/// Creates and returns the settings directory pointed to by `MULLVAD_SETTINGS_DIR`, or the default
-/// one if that variable is unset.
+/// Creates and returns the settings directory pointed to by `WARREN_SETTINGS_DIR`,
+/// `MULLVAD_SETTINGS_DIR` (back-compat upstream), or the default one if neither is set.
 pub fn settings_dir() -> Result<PathBuf> {
     crate::create_dir(get_settings_dir()?, None)
 }
 
 fn get_settings_dir() -> Result<PathBuf> {
-    match env::var_os("MULLVAD_SETTINGS_DIR") {
+    match env::var_os("WARREN_SETTINGS_DIR").or_else(|| env::var_os("MULLVAD_SETTINGS_DIR")) {
         Some(path) => Ok(PathBuf::from(path)),
         None => get_default_settings_dir(),
     }

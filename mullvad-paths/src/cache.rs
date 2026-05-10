@@ -1,8 +1,8 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
-/// Creates and returns the cache directory pointed to by `MULLVAD_CACHE_DIR`, or the default
-/// one if that variable is unset.
+/// Creates and returns the cache directory pointed to by `WARREN_CACHE_DIR`,
+/// `MULLVAD_CACHE_DIR` (back-compat upstream), or the default if neither is set.
 pub fn cache_dir() -> Result<PathBuf> {
     let permissions = Some(crate::UserPermissions {
         read: true,
@@ -13,7 +13,7 @@ pub fn cache_dir() -> Result<PathBuf> {
 }
 
 pub fn get_cache_dir() -> Result<PathBuf> {
-    match env::var_os("MULLVAD_CACHE_DIR") {
+    match env::var_os("WARREN_CACHE_DIR").or_else(|| env::var_os("MULLVAD_CACHE_DIR")) {
         Some(path) => Ok(PathBuf::from(path)),
         None => get_default_cache_dir(),
     }

@@ -112,14 +112,11 @@ pub struct RelayConstraintsFormatter<'a> {
 
 impl fmt::Display for RelayConstraintsFormatter<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Warren fork — R0 : tunnel protocol affiché par défaut comme
-        // `warren-iroh` car le fork release route TOUJOURS via
-        // `talpid-warren-iroh` quand `Settings::warren_mode = true`
-        // (= default depuis rebrand A). Le bloc `wireguard_constraints`
-        // (port range, IP version, obfuscation) reste pertinent pour
-        // la sélection du relay côté warren-relay-selector — on le
-        // renomme `Tunnel constraints` pour éviter de suggérer un
-        // tunnel WireGuard réel.
+        // Hardcoded `warren-iroh` car le fork ne dispatch QUE vers
+        // talpid-warren-iroh quand `Settings::warren_mode = true`
+        // (default). `wireguard_constraints` reste utilisé pour la
+        // sélection (port, IP version, obfuscation) — d'où le renommage
+        // en "Tunnel constraints" pour ne pas suggérer un tunnel WG réel.
         writeln!(
             f,
             "Tunnel protocol: warren-iroh\nTunnel constraints: {}",

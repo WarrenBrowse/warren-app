@@ -51,15 +51,9 @@ import {
   ensureExists,
 } from './grpc-type-convertions';
 
-// Warren fork — R1.2 : aligne le path RPC daemon avec le default
-// Rust post-rebrand A (`mullvad_paths::rpc_socket::get_default_rpc_socket_path`).
-// Sans cet alignement, Electron tente de connect sur l'ancien path
-// upstream Mullvad qui peut être squatté par une install officielle
-// `/Applications/Mullvad VPN.app` parallèle (= bug observed 2026-05-10
-// session dev — daemon daemon orphelin tient le tunnel WireGuard SE
-// pendant que notre warren-daemon écrit sur warren-vpn). Override
-// possible via env var `MULLVAD_RPC_SOCKET_PATH` côté daemon (= la
-// même var sert à pointer Electron vers l'ancien path si besoin).
+// Doit matcher `mullvad_paths::rpc_socket::get_default_rpc_socket_path` côté
+// Rust. Sans cet alignement, Electron tape l'ancien path upstream Mullvad qui
+// peut être squatté par une install officielle Mullvad VPN.app parallèle.
 const DAEMON_RPC_PATH =
   process.platform === 'win32' ? '//./pipe/Warren VPN' : '/var/run/warren-vpn';
 
