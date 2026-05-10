@@ -74,6 +74,34 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     Some(warren_identity::derive_node_key(&seed))
 }
 
+/// Lit la mnémonique BIP39 utilisateur **déjà persistée** dans
+/// `<settings_dir>/warren_mnemonic.txt`. Read-only : ne crée jamais
+/// le fichier (contraste avec [`load_or_create_signing_key`]).
+///
+/// Retourne `None` si :
+/// - le fichier n'existe pas (= identité jamais bootstrappée),
+/// - le fichier est inaccessible (perms cassées, FS error).
+///
+/// Utilisé par le handler gRPC `GetWarrenMnemonic` (C.1) pour
+/// permettre au GUI Electron d'afficher la mnémonique en clair afin
+/// que l'utilisateur la sauvegarde (= critère phase 1 #2 "Mnemonic
+/// BIP39 affiché 1 fois et restaurable").
+///
+/// # Politique no-log
+///
+/// La string retournée est un secret cryptographique. Le caller
+/// (handler gRPC) doit la transmettre au GUI puis la dropper. Ne
+/// JAMAIS logger le contenu, même en debug. Le fait *qu'une lecture
+/// a eu lieu* peut être loggé (= audit trail GUI requests), mais
+/// jamais le contenu.
+#[must_use]
+pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<String> {
+    let path = settings_dir.join(MNEMONIC_FILENAME);
+    std::fs::read_to_string(&path)
+        .ok()
+        .map(|s| s.trim().to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,6 +162,74 @@ mod tests {
             s1.pubkey_hex(),
             s2.pubkey_hex(),
             "même settings_dir = même pubkey à travers les boots"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn get_warren_mnemonic_returns_none_when_no_file_exists() {
+        // Au premier boot, avant load_or_create_signer, le fichier
+        // n'existe pas → la fonction doit retourner None sans paniquer
+        // ni créer de fichier (read-only get).
+        let dir = isolated_tempdir();
+        assert!(
+            !dir.join(MNEMONIC_FILENAME).exists(),
+            "préconditions : pas de mnémonique"
+        );
+
+        let result = get_warren_mnemonic(&dir);
+        assert!(
+            result.is_none(),
+            "absent file must yield None, not panic or create"
+        );
+        assert!(
+            !dir.join(MNEMONIC_FILENAME).exists(),
+            "get_warren_mnemonic ne doit JAMAIS créer le fichier (read-only)"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn get_warren_mnemonic_returns_existing_mnemonic_after_persist() {
+        // Après load_or_create_signer (= bootstrap identité), la
+        // mnémonique BIP39 doit être lisible via get_warren_mnemonic
+        // et contenir 12 ou 24 mots (= cardinal BIP39 standard).
+        let dir = isolated_tempdir();
+        let _ = load_or_create_signer(&dir).expect("bootstrap signer");
+
+        let mnemonic = get_warren_mnemonic(&dir).expect("must return Some after persist");
+        let word_count = mnemonic.split_whitespace().count();
+        assert!(
+            word_count == 12 || word_count == 24,
+            "BIP39 mnemonic should be 12 or 24 words, got {word_count}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn get_warren_mnemonic_yields_deterministic_signing_key() {
+        // Invariant cross-fonction critique : la mnémonique retournée
+        // par get_warren_mnemonic, re-dérivée via warren_identity::
+        // {seed_from_mnemonic, derive_node_key}, doit produire
+        // EXACTEMENT la même pubkey que load_or_create_signing_key.
+        // Sinon le user qui exporte sa mnémonique pour backup se
+        // retrouve avec une identité différente au restore (= perte
+        // de subscription → blocker phase 1 critère #2).
+        let dir = isolated_tempdir();
+        let signing_key = load_or_create_signing_key(&dir).expect("bootstrap key");
+        let pubkey_via_signer = hex::encode(signing_key.verifying_key().as_bytes());
+
+        let mnemonic = get_warren_mnemonic(&dir).expect("mnemonic exported");
+        let seed = warren_identity::seed_from_mnemonic(&mnemonic).expect("re-derive seed");
+        let re_derived = warren_identity::derive_node_key(&seed);
+        let pubkey_via_export = hex::encode(re_derived.verifying_key().as_bytes());
+
+        assert_eq!(
+            pubkey_via_signer, pubkey_via_export,
+            "exported mnemonic MUST re-derive identical pubkey, else backup is broken"
         );
 
         let _ = std::fs::remove_dir_all(&dir);

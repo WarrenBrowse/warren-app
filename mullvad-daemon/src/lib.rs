@@ -281,6 +281,11 @@ pub enum DaemonCommand {
     ),
     /// Request www auth token for an account
     GetWwwAuthToken(ResponseTx<String, Error>),
+    /// Warren fork — C.1 : retourne la mnémonique BIP39 utilisateur
+    /// pour permettre backup user-side via le GUI Electron. `None`
+    /// si le fichier `warren_mnemonic.txt` n'existe pas (= identité
+    /// jamais bootstrappée). Voir `warren_signer::get_warren_mnemonic`.
+    GetWarrenMnemonic(oneshot::Sender<Option<String>>),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
     /// Request account history
@@ -728,6 +733,10 @@ pub struct Daemon {
     location_handler: GeoIpHandler,
     leak_checker: LeakChecker,
     cache_dir: PathBuf,
+    /// Warren fork — C.1 : conservé pour permettre les lectures
+    /// runtime de la mnémonique BIP39 (`<settings_dir>/warren_mnemonic.txt`)
+    /// via le handler `on_get_warren_mnemonic`.
+    settings_dir: PathBuf,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1254,6 +1263,7 @@ impl Daemon {
             location_handler,
             leak_checker,
             cache_dir: config.cache_dir,
+            settings_dir: config.settings_dir,
         };
 
         api_availability.unsuspend();
@@ -1668,6 +1678,7 @@ impl Daemon {
             CreateNewAccount(tx) => self.on_create_new_account(tx),
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
+            GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
@@ -2148,6 +2159,20 @@ impl Daemon {
                 );
             }
         }
+    }
+
+    /// Warren fork — C.1 : lit la mnémonique BIP39 utilisateur via
+    /// `warren_signer::get_warren_mnemonic`. Read-only, sync (pas
+    /// de spawn nécessaire — `read_to_string` < 1 ms sur un fichier
+    /// de 100 bytes). **Politique no-log** : on log uniquement le fait
+    /// qu'une lecture a eu lieu, jamais le contenu.
+    fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<String>>) {
+        let mnemonic = warren_signer::get_warren_mnemonic(&self.settings_dir);
+        log::debug!(
+            "on_get_warren_mnemonic: present={} (content NEVER logged)",
+            mnemonic.is_some()
+        );
+        Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
     }
 
     fn on_submit_voucher(&mut self, tx: ResponseTx<VoucherSubmission, Error>, voucher: String) {

@@ -297,6 +297,17 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    /// Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique
+    /// BIP39 utilisateur. Empty string si l'identité n'a jamais été
+    /// bootstrappée. **Politique no-log** : ne jamais logger le contenu.
+    async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
+        log::debug!("get_warren_mnemonic (content NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
+        let mnemonic = self.wait_for_result(rx).await?;
+        Ok(Response::new(mnemonic.unwrap_or_default()))
+    }
+
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
         let enabled = request.into_inner();
         log::debug!("set_show_beta_releases({})", enabled);

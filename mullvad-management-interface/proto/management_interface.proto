@@ -72,6 +72,15 @@ service ManagementService {
   // (= None côté Settings, fallback Mullvad upstream). Override via
   // env var `WARREN_API_URL`. Restart requis pour appliquer.
   rpc SetWarrenApiUrl(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  // Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique BIP39
+  // utilisateur (12 mots) pour permettre backup user-side via le
+  // GUI (= critère phase 1 #2 "Mnemonic affiché 1 fois et restaurable").
+  // Empty string si l'identité n'a jamais été bootstrappée (= mode
+  // Mullvad legacy ou premier boot avant warren_signer).
+  // **Sensible** : caller GUI doit afficher avec warning safety +
+  // confirmation user explicite. La string retournée est secret
+  // cryptographique, jamais loggée par le daemon (politique no-log).
+  rpc GetWarrenMnemonic(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
 
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
