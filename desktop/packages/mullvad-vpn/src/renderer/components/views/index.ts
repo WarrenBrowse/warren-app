@@ -1,5 +1,6 @@
 export * from './api-access';
 export * from './account';
+export * from './keys';
 export * from './app-info';
 export * from './app-upgrade';
 export * from './daita-settings';

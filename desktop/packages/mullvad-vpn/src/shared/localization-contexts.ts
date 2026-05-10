@@ -20,6 +20,7 @@ export type LocalizationContexts =
   | 'settings-view'
   | 'navigation-bar'
   | 'account-view'
+  | 'keys-view'
   | 'redeem-voucher-view'
   | 'redeem-voucher-alert'
   | 'user-interface-settings-view'

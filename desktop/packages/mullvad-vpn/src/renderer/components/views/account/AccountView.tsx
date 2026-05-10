@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
+import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { Button, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
@@ -88,6 +89,16 @@ export function AccountView() {
               </Button>
 
               <RedeemVoucherButton />
+
+              <Button onClick={() => history.push(RoutePath.keys)}>
+                <Button.Text>
+                  {
+                    // TRANSLATORS: Button label that opens the Keys
+                    // TRANSLATORS: backup view (= reveal/copy BIP39 mnemonic).
+                    messages.pgettext('account-view', 'Backup keys')
+                  }
+                </Button.Text>
+              </Button>
 
               <Button variant="destructive" onClick={doLogout}>
                 <Button.Text>
