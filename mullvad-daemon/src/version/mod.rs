@@ -52,9 +52,12 @@ pub fn is_dev_version() -> bool {
 }
 
 pub fn log_version() {
+    // Warren fork — R1.4 : log boot user-facing rebrandé. Le crate
+    // s'appelle toujours `mullvad-daemon` (= conservé pour limiter le
+    // diff de fork) mais le binaire compilé est `warren-daemon` et
+    // le produit user-visible est "Warren VPN".
     log::info!(
-        "Starting {} - {} {}",
-        env!("CARGO_PKG_NAME"),
+        "Starting Warren VPN daemon - {} {}",
         mullvad_version::VERSION,
         COMMIT_DATE,
     )
