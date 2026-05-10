@@ -204,10 +204,10 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Warren fork — C.1 (M7 GUI Keys) : récupère la mnémonique BIP39
-   * (12 mots) pour permettre backup user-side. Empty string si
-   * l'identité n'a jamais été bootstrappée. Le caller renderer doit
-   * afficher avec warning safety + confirmation user explicite.
+   * Récupère la mnémonique BIP39 (12 mots) pour permettre backup
+   * user-side. Empty string si l'identité n'a jamais été
+   * bootstrappée. Le caller renderer doit afficher avec warning
+   * safety + confirmation user explicite.
    */
   public async getWarrenMnemonic(): Promise<string> {
     const response = await this.callEmpty<StringValue>(this.client.getWarrenMnemonic);
@@ -215,10 +215,10 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
-   * par la mnémonique BIP39 fournie. Daemon valide BIP39 et écrit
-   * atomiquement. Throw `grpc.ServiceError` (status INVALID_ARGUMENT)
-   * si BIP39 invalide. Restart daemon requis pour activation.
+   * Remplace l'identité par la mnémonique BIP39 fournie. Daemon
+   * valide BIP39 et écrit atomiquement. Throw `grpc.ServiceError`
+   * (status INVALID_ARGUMENT) si BIP39 invalide. Restart daemon
+   * requis pour activation.
    */
   public async setWarrenMnemonic(mnemonic: string): Promise<void> {
     await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);
@@ -313,22 +313,22 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAllowLan, allowLan);
   }
 
-  // Warren fork — Phase H : toggle persistant du mode tunnel Iroh.
-  // Le restart du daemon est requis pour appliquer (cf. resolve() côté Rust).
+  // Toggle persistant du mode tunnel Iroh. Le restart du daemon est
+  // requis pour appliquer (cf. resolve() côté Rust).
   public async setWarrenMode(enabled: boolean): Promise<void> {
     await this.callBool(this.client.setWarrenMode, enabled);
   }
 
-  // Warren fork — Phase H : toggle persistant du mode account local
-  // (= no api.mullvad.net). Restart requis.
+  // Toggle persistant du mode account local (= no api.mullvad.net).
+  // Restart requis.
   public async setWarrenLocalAccount(enabled: boolean): Promise<void> {
     await this.callBool(this.client.setWarrenLocalAccount, enabled);
   }
 
-  // Warren fork — Phase G.5.a : URL persistante warren-api. Empty
-  // string → unset côté daemon (= fallback Mullvad upstream backend).
-  // Restart daemon requis pour appliquer (cf. `resolve_warren_api_config`
-  // côté Rust qui lit Settings au boot uniquement).
+  // URL persistante warren-api. Empty string → unset côté daemon (=
+  // fallback Mullvad upstream backend). Restart daemon requis pour
+  // appliquer (cf. `resolve_warren_api_config` côté Rust qui lit
+  // Settings au boot uniquement).
   public async setWarrenApiUrl(url: string): Promise<void> {
     await this.callString(this.client.setWarrenApiUrl, url);
   }
@@ -586,8 +586,8 @@ export class DaemonRpc extends GrpcClient {
 
   public async removeDevice(deviceRemoval: IDeviceRemoval): Promise<void> {
     const grpcDeviceRemoval = new grpcTypes.DeviceRemoval();
-    // Warren fork — the gRPC field is named `account_number` for wire-format compat
-    // but its content is the 64-char hex Warren pubkey.
+    // The gRPC field is named `account_number` for wire-format
+    // compat but its content is the 64-char hex Warren pubkey.
     grpcDeviceRemoval.setAccountNumber(deviceRemoval.pubkey);
     grpcDeviceRemoval.setDeviceId(deviceRemoval.deviceId);
 

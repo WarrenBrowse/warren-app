@@ -1,4 +1,4 @@
-//! Warren fork — Phase 2.B.2 : type [`WarrenIdentity`] qui remplace
+//! Type [`WarrenIdentity`] qui remplace
 //! [`crate::device::AccountAndDevice`] dans le pipeline auth Warren.
 //!
 //! **Différence avec `AccountAndDevice`** :
@@ -11,12 +11,6 @@
 //!   ce n'est PAS la même que la `WarrenPubKey` Ed25519 de
 //!   l'identité Warren (la première est WireGuard, la seconde est
 //!   l'identifiant utilisateur Warren).
-//!
-//! **Coexistence Phase 2.B** : ce type vit *en parallèle* d'
-//! `AccountAndDevice` pendant la transition. Une vague ultérieure
-//! (Phase 2.B.3+) substituera `AccountAndDevice` par
-//! `WarrenIdentity` dans `DeviceState::LoggedIn` et propagera la
-//! cascade.
 
 use crate::device::Device;
 use crate::warren_pubkey::WarrenPubKey;

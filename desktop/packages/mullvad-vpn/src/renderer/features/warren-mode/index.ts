@@ -1,8 +1,8 @@
-// Warren fork — Phase H : feature des toggles persistants Warren.
+// Feature des toggles persistants Warren.
 //
-// L'écran Settings consomme ces composants pour exposer les deux
-// toggles à l'utilisateur. Le restart du daemon est requis pour
-// appliquer un changement (cf. `warren_mode::resolve` côté Rust).
+// L'écran Settings consomme ces composants pour exposer les toggles
+// à l'utilisateur. Le restart du daemon est requis pour appliquer un
+// changement (cf. `warren_mode::resolve` côté Rust).
 
 export {
   WarrenModeSwitch,

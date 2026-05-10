@@ -1,8 +1,8 @@
 import { Switch, SwitchProps } from '../../../lib/components/switch';
 import { useWarrenLocalAccount } from '../hooks';
 
-// Warren fork — Phase H : toggle UI pour `Settings::warren_local_account`.
-// Symétrique de `WarrenModeSwitch` (cf. doc).
+// Toggle UI pour `Settings::warren_local_account`. Symétrique de
+// `WarrenModeSwitch` (cf. doc).
 export type WarrenLocalAccountSwitch = SwitchProps;
 
 function WarrenLocalAccountSwitch({ children, ...props }: WarrenLocalAccountSwitch) {

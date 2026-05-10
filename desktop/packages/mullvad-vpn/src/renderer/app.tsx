@@ -612,24 +612,23 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
-  // Warren fork — Phase H : toggle persistant warren_mode (tunnel Iroh).
-  // Le restart du daemon est requis pour appliquer (cf. resolve()).
+  // Toggle persistant warren_mode (tunnel Iroh). Le restart du daemon
+  // est requis pour appliquer (cf. resolve()).
   public setWarrenMode = async (warrenMode: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenMode(warrenMode);
     actions.settings.updateWarrenMode(warrenMode);
   };
 
-  // Warren fork — Phase H : toggle persistant warren_local_account.
   public setWarrenLocalAccount = async (warrenLocalAccount: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenLocalAccount(warrenLocalAccount);
     actions.settings.updateWarrenLocalAccount(warrenLocalAccount);
   };
 
-  // Warren fork — Phase G.5.a : URL persistante warren-api. Empty
-  // string → unset côté daemon (= fallback Mullvad upstream backend).
-  // Restart daemon requis pour appliquer.
+  // URL persistante warren-api. Empty string → unset côté daemon (=
+  // fallback Mullvad upstream backend). Restart daemon requis pour
+  // appliquer.
   public setWarrenApiUrl = async (warrenApiUrl: string) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenApiUrl(warrenApiUrl);

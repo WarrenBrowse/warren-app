@@ -5,10 +5,10 @@ import { SettingsListItem } from '../../../../components/settings-list-item';
 import { ListItemProps } from '../../../../lib/components/list-item';
 import { WarrenModeSwitch } from '../WarrenModeSwitch';
 
-// Warren fork — Phase H : entry de la page VPN settings pour
-// `Settings::warren_mode`. Symétrique du pattern `AllowLanSetting`.
-// Le toggle persiste dans Settings (gRPC `set_warren_mode`) et nécessite
-// un redémarrage du daemon pour appliquer (cf. `warren_mode::resolve`).
+// Entry de la page VPN settings pour `Settings::warren_mode`.
+// Symétrique du pattern `AllowLanSetting`. Le toggle persiste dans
+// Settings (gRPC `set_warren_mode`) et nécessite un redémarrage du
+// daemon pour appliquer (cf. `warren_mode::resolve`).
 export type WarrenModeSettingProps = Omit<ListItemProps, 'children'>;
 
 export function WarrenModeSetting(props: WarrenModeSettingProps) {

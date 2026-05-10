@@ -443,9 +443,8 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   const apiAccessMethods = convertFromApiAccessMethodSettings(settings.getApiAccessMethods()!);
   const relayOverrides = settingsObject.relayOverridesList;
   const recents = convertFromRecents(settings.getRecents());
-  // Warren fork — Phase G.5.a : empty string proto → undefined côté
-  // ISettings (alignement avec mullvad_types::Settings::warren_api_url:
-  // Option<String>).
+  // Empty string proto → undefined côté ISettings (alignement avec
+  // mullvad_types::Settings::warren_api_url: Option<String>).
   const warrenApiUrl =
     settingsObject.warrenApiUrl && settingsObject.warrenApiUrl.length > 0
       ? settingsObject.warrenApiUrl
@@ -951,8 +950,9 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
     case grpcTypes.DeviceState.State.LOGGED_IN: {
       const accountAndDevice = deviceState.getDevice()!;
       const device = accountAndDevice.getDevice();
-      // Warren fork — Phase 3.B: the gRPC field is still named `account_number` for
-      // wire-format compatibility, but its content is the 64-char hex Warren pubkey.
+      // The gRPC field is still named `account_number` for
+      // wire-format compatibility, but its content is the 64-char hex
+      // Warren pubkey.
       return {
         type: 'logged in',
         warrenIdentity: {

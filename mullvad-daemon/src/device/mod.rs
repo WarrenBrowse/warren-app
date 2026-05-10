@@ -179,10 +179,10 @@ impl From<PrivateDeviceState> for DeviceState {
 /// Same as [PrivateDevice] but also contains the associated Warren
 /// pubkey identifier.
 ///
-/// Warren fork — Phase 2.D V8.b : le field `account_number: AccountNumber`
-/// historique a été remplacé par `pubkey: WarrenPubKey` (newtype hex
-/// 64ch validé). Les anciens device.json (`{"account_number": ...}`)
-/// échouent à la désérialisation et sont wipés (= LoggedOut au boot).
+/// Le field `account_number: AccountNumber` historique a été
+/// remplacé par `pubkey: WarrenPubKey` (newtype hex 64ch validé). Les
+/// anciens device.json (`{"account_number": ...}`) échouent à la
+/// désérialisation et sont wipés (= LoggedOut au boot).
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
 pub struct PrivateAccountAndDevice {
     pub pubkey: mullvad_types::warren_pubkey::WarrenPubKey,
@@ -198,17 +198,16 @@ impl From<PrivateAccountAndDevice> for WarrenIdentity {
     }
 }
 
-/// Warren fork — Phase 2.C V7.b : helper interne qui parse un
-/// `AccountNumber` (= `String`) reçu d'une **interface externe**
-/// (gRPC client, API serveur, settings legacy v5) en `WarrenPubKey`
-/// (hex 64ch). Si la chaîne n'est pas une pubkey Warren valide, on
-/// log un `warn!` et on retourne un `WarrenPubKey` zéro (= toutes
-/// les requêtes signées avec cette pubkey échoueront côté serveur,
-/// mais le daemon ne crash pas).
+/// Helper interne qui parse un `AccountNumber` (= `String`) reçu
+/// d'une **interface externe** (gRPC client, API serveur, settings
+/// legacy v5) en `WarrenPubKey` (hex 64ch). Si la chaîne n'est pas
+/// une pubkey Warren valide, on log un `warn!` et on retourne un
+/// `WarrenPubKey` zéro (= toutes les requêtes signées avec cette
+/// pubkey échoueront côté serveur, mais le daemon ne crash pas).
 ///
-/// Phase 2.D V8.b : ce helper n'est plus utilisé pour les conversions
-/// internes (le field `PrivateAccountAndDevice.pubkey` est typé
-/// directement) ; il reste pour les inputs externes type-erased.
+/// Ce helper n'est plus utilisé pour les conversions internes (le
+/// field `PrivateAccountAndDevice.pubkey` est typé directement) ; il
+/// reste pour les inputs externes type-erased.
 pub(crate) fn account_number_to_warren_pubkey(
     account_number: &str,
 ) -> mullvad_types::warren_pubkey::WarrenPubKey {
@@ -485,14 +484,14 @@ impl AccountManager {
         warren_api_config: Option<WarrenApiConfig>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
-        // Warren fork — Phase 2.D V8.b : `state.pubkey` est typé
-        // `WarrenPubKey` ; `spawn_warren_identity_service` reçoit
-        // toujours un `Option<AccountNumber>` (= String) pour
-        // l'initial check legacy.
+        // `state.pubkey` est typé `WarrenPubKey` ;
+        // `spawn_warren_identity_service` reçoit toujours un
+        // `Option<AccountNumber>` (= String) pour l'initial check
+        // legacy.
         let number = data.device().map(|state| state.pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
-        // Warren fork — Phase G.4 : aiguillage 3-branches du backend
-        // account, prioritaire dans cet ordre :
+        // Aiguillage 3-branches du backend account, prioritaire dans
+        // cet ordre :
         // 1. `local_account_mode = true` → [`LocalAccountBackend`]
         //    (POC stateless, no network, depuis mnémonique).
         // 2. Sinon, `warren_api_config = Some(_)` →
@@ -530,8 +529,8 @@ impl AccountManager {
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
 
-        // Warren fork — Phase G.4 : aiguillage 3-branches du backend
-        // device, symétrique à `account_backend` ci-dessus.
+        // Aiguillage 3-branches du backend device, symétrique à
+        // `account_backend` ci-dessus.
         let device_backend: std::sync::Arc<dyn WarrenDeviceBackend> = if local_account_mode {
             std::sync::Arc::new(LocalDeviceBackend::from_state(&data))
         } else if let Some(cfg) = warren_api_config {
@@ -715,9 +714,9 @@ impl AccountManager {
 
         let create_submission = move || {
             let old_config = self.data.device().ok_or(Error::NoDevice)?;
-            // Warren fork — Phase 2.C V7.b : `submit_voucher` prend
-            // une `WarrenPubKey`. Conversion depuis le legacy
-            // `account_number: String` via fallback helper.
+            // `submit_voucher` prend une `WarrenPubKey`. Conversion
+            // depuis le legacy `account_number: String` via fallback
+            // helper.
             let pubkey = old_config.pubkey.clone();
             let warren_identity_service = self.warren_identity_service.clone();
             Ok(async move {
@@ -1289,8 +1288,8 @@ impl AccountManager {
         &self,
     ) -> Result<impl Future<Output = Result<chrono::DateTime<Utc>, Error>> + use<>, Error> {
         let old_config = self.data.device().ok_or(Error::NoDevice)?;
-        // Warren fork — Phase 2.C V7.b : `get_data_2` prend une
-        // `WarrenPubKey`. Conversion depuis le legacy `account_number`.
+        // `get_data_2` prend une `WarrenPubKey`. Conversion depuis le
+        // legacy `account_number`.
         let pubkey = old_config.pubkey.clone();
         let warren_identity_service = self.warren_identity_service.clone();
         Ok(async move {
@@ -1425,9 +1424,9 @@ impl DeviceCacher {
 /// Checks if the current device is valid if a WireGuard tunnel cannot be set up
 /// after multiple attempts.
 ///
-/// Warren fork — Phase B.3 : `local_account_mode` court-circuite la
-/// validation device contre `api.mullvad.net` quand le daemon tourne
-/// en mode account local POC (cf. [`crate::warren_account_mode`]).
+/// `local_account_mode` court-circuite la validation device contre
+/// `api.mullvad.net` quand le daemon tourne en mode account local
+/// POC (cf. [`crate::warren_account_mode`]).
 pub(crate) struct TunnelStateChangeHandler {
     manager: AccountManagerHandle,
     can_retry: Arc<AtomicBool>,

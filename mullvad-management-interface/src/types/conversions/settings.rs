@@ -55,14 +55,14 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 .collect(),
             recents: settings.recents.clone().map(proto::Recents::from),
             update_default_location: settings.update_default_location,
-            // Warren fork — Phase F.1 : exposés via gRPC pour permettre
-            // au CLI/UI de les lire et les muter.
+            // Exposés via gRPC pour permettre au CLI/UI de les lire et
+            // les muter.
             warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
-            // Warren fork — Phase G.5.a : None → empty string sur le wire
-            // (proto3 `string` n'a pas de "absent", on utilise "" comme
-            // sentinel pour "unset"). Cohérent avec la conversion
-            // inverse côté `try_from(SettingsProto)`.
+            // None → empty string sur le wire (proto3 `string` n'a pas
+            // de "absent", on utilise "" comme sentinel pour "unset").
+            // Cohérent avec la conversion inverse côté
+            // `try_from(SettingsProto)`.
             warren_api_url: settings.warren_api_url.clone().unwrap_or_default(),
         }
     }
@@ -195,14 +195,13 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // included in the serializable settings, such as the below value.
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // Warren fork — Phase F.1 : propagés via gRPC depuis le
-            // daemon. Le client gRPC peut les lire via `GetSettings`
-            // et les muter via `SetWarrenMode`/`SetWarrenLocalAccount`.
+            // Propagés via gRPC depuis le daemon. Le client gRPC peut
+            // les lire via `GetSettings` et les muter via
+            // `SetWarrenMode`/`SetWarrenLocalAccount`.
             warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
-            // Warren fork — Phase G.5.a : empty string proto → None
-            // côté mullvad_types. Permet à l'UI/CLI gRPC de unset le
-            // field en envoyant "".
+            // Empty string proto → None côté mullvad_types. Permet à
+            // l'UI/CLI gRPC de unset le field en envoyant "".
             warren_api_url: if settings.warren_api_url.is_empty() {
                 None
             } else {

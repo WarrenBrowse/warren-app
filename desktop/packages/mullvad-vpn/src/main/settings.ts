@@ -31,14 +31,14 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
-    // Warren fork — Phase H : IPC handlers pour les toggles Warren.
+    // IPC handlers pour les toggles Warren.
     IpcMainEventChannel.settings.handleSetWarrenMode((enabled) =>
       this.daemonRpc.setWarrenMode(enabled),
     );
     IpcMainEventChannel.settings.handleSetWarrenLocalAccount((enabled) =>
       this.daemonRpc.setWarrenLocalAccount(enabled),
     );
-    // Warren fork — Phase G.5.a : IPC handler pour la URL warren-api.
+    // IPC handler pour la URL warren-api.
     IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
       this.daemonRpc.setWarrenApiUrl(url),
     );
@@ -185,15 +185,14 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
-  // Warren fork — Phase H : exposition des toggles persistants Warren.
+  // Exposition des toggles persistants Warren.
   public get warrenMode() {
     return this.settingsValue.warrenMode;
   }
   public get warrenLocalAccount() {
     return this.settingsValue.warrenLocalAccount;
   }
-  // Warren fork — Phase G.5.a : URL persistante warren-api (undefined
-  // si unset côté daemon).
+  // URL persistante warren-api (undefined si unset côté daemon).
   public get warrenApiUrl() {
     return this.settingsValue.warrenApiUrl;
   }

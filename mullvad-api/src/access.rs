@@ -176,7 +176,6 @@ async fn fetch_access_token(
     }
     let request = AccessTokenRequest { account_number };
 
-    // Warren fork — Phase D.1 : `post_json_or_signed`.
     let rest_request = factory
         .post_json_or_signed(&format!("{AUTH_URL_PREFIX}/token"), &request)?
         .expected_status(&[StatusCode::OK]);

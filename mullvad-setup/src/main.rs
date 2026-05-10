@@ -262,8 +262,8 @@ async fn remove_device() -> Result<(), Error> {
         );
 
         let device_removal = retry_future(
-            // Warren fork — Phase 2.D V8.b : DevicesProxy::remove
-            // prend AccountNumber (= String) ; cast depuis WarrenPubkey.
+            // DevicesProxy::remove prend AccountNumber (= String) ;
+            // cast depuis WarrenPubkey.
             move || proxy.remove(device.pubkey.as_str().to_owned(), device.device.id.clone()),
             move |result| match result {
                 Err(error) => error.is_network_error(),

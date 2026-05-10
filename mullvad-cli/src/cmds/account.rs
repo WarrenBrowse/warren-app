@@ -107,11 +107,10 @@ impl Account {
 
         match state {
             DeviceState::LoggedIn(device) => {
-                // Warren fork — Phase 2.B.3 V6.a : on affiche la
-                // pubkey hex Warren à la place du `account_number`
-                // historique. Le label conserve "Mullvad account:"
-                // pour cohérence du `--help` user-facing pendant la
-                // transition (rename UI viendra en Phase 3 GUI).
+                // On affiche la pubkey hex Warren à la place du
+                // `account_number` historique. Le label conserve
+                // "Mullvad account:" pour cohérence du `--help`
+                // user-facing pendant la transition.
                 let pubkey = device.pubkey.as_str().to_owned();
                 println!("{:<20}{}", "Mullvad account:", pubkey);
 

@@ -1,4 +1,4 @@
-//! Warren fork — signature Ed25519 sur les requêtes API HTTP.
+//! Signature Ed25519 sur les requêtes API HTTP.
 //!
 //! Remplace le modèle `Authorization: Bearer <token>` Mullvad par une
 //! signature canonique de chaque requête, prouvant la possession de la

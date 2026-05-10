@@ -81,10 +81,10 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
-  // Warren fork — Phase H : toggles persistants exposés via gRPC.
+  // Toggles persistants exposés via gRPC.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
-  // Warren fork — Phase G.5.a : URL warren-api persistante.
+  // URL warren-api persistante.
   warrenApiUrl?: string;
   wireguard: {
     mtu?: number;

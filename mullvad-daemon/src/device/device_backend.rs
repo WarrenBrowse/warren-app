@@ -1,5 +1,5 @@
-//! Trait abstrait Warren fork — Phase C.2 — pour les opérations
-//! device-level qui partaient en `DevicesProxy` vers `api.mullvad.net`.
+//! Trait abstrait pour les opérations device-level qui partaient en
+//! `DevicesProxy` vers `api.mullvad.net`.
 //!
 //! Pendant device-side du [`super::account_backend`] : permet d'aiguiller
 //! au boot entre :

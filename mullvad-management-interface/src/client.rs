@@ -275,24 +275,23 @@ impl MullvadProxyClient {
         Ok(())
     }
 
-    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_mode`.
-    /// Le restart du daemon est requis pour appliquer (le mode est lu
-    /// au boot par `warren_mode::resolve`).
+    /// Toggle persistant `Settings::warren_mode`. Le restart du
+    /// daemon est requis pour appliquer (le mode est lu au boot par
+    /// `warren_mode::resolve`).
     pub async fn set_warren_mode(&mut self, state: bool) -> Result<()> {
         self.0.set_warren_mode(state).await?;
         Ok(())
     }
 
-    /// Warren fork — Phase F.1 : toggle persistant
-    /// `Settings::warren_local_account`. Restart requis (cf. doc
-    /// `set_warren_mode`).
+    /// Toggle persistant `Settings::warren_local_account`. Restart
+    /// requis (cf. doc `set_warren_mode`).
     pub async fn set_warren_local_account(&mut self, state: bool) -> Result<()> {
         self.0.set_warren_local_account(state).await?;
         Ok(())
     }
 
-    /// Warren fork — Phase G.5.a : URL persistante `Settings::warren_api_url`.
-    /// `None` → unset (= empty string sur le wire). Restart requis.
+    /// URL persistante `Settings::warren_api_url`. `None` → unset (=
+    /// empty string sur le wire). Restart requis.
     pub async fn set_warren_api_url(&mut self, url: Option<String>) -> Result<()> {
         self.0.set_warren_api_url(url.unwrap_or_default()).await?;
         Ok(())

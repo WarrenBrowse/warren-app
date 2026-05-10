@@ -74,12 +74,11 @@ export function getDefaultSettings(): ISettings {
     apiAccessMethods: getDefaultApiAccessMethods(),
     relayOverrides: [],
     recents: [],
-    // Warren fork — Phase H : defaults désactivés (path Mullvad standard
-    // préservé). L'utilisateur opt-in via UI Settings ou `mullvad warren …`.
+    // Defaults désactivés (path Mullvad standard préservé).
+    // L'utilisateur opt-in via UI Settings ou `mullvad warren …`.
     warrenMode: false,
     warrenLocalAccount: false,
-    // Warren fork — Phase G.5.a : `undefined` = unset, fallback Mullvad
-    // upstream backend.
+    // `undefined` = unset, fallback Mullvad upstream backend.
     warrenApiUrl: undefined,
   };
 }

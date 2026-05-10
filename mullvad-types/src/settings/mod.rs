@@ -118,21 +118,21 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
-    /// Warren fork — Phase E : si `true`, le daemon utilise le backend
-    /// tunnel Iroh (Warren) au lieu de WireGuard. Override possible
-    /// via env var POC `WARREN_TUNNEL=1` (cf. `warren_mode::resolve`).
-    /// Default `false` = path WireGuard upstream préservé.
+    /// Si `true`, le daemon utilise le backend tunnel Iroh (Warren)
+    /// au lieu de WireGuard. Override possible via env var POC
+    /// `WARREN_TUNNEL=1` (cf. `warren_mode::resolve`). Default `false`
+    /// = path WireGuard upstream préservé.
     #[serde(default)]
     pub warren_mode: bool,
-    /// Warren fork — Phase E : si `true`, le daemon utilise les backends
-    /// account/device locaux (`LocalAccountBackend`/`LocalDeviceBackend`)
-    /// au lieu de contacter `api.mullvad.net`. Override via env var POC
+    /// Si `true`, le daemon utilise les backends account/device locaux
+    /// (`LocalAccountBackend`/`LocalDeviceBackend`) au lieu de
+    /// contacter `api.mullvad.net`. Override via env var POC
     /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
     #[serde(default)]
     pub warren_local_account: bool,
-    /// Warren fork — Phase G.5.a : URL du serveur warren-api utilisée
-    /// par les `WarrenRemote{Account,Device}Backend` (mode `warren_mode
-    /// = true && warren_local_account = false`).
+    /// URL du serveur warren-api utilisée par les
+    /// `WarrenRemote{Account,Device}Backend` (mode `warren_mode = true
+    /// && warren_local_account = false`).
     ///
     /// Format attendu : `http(s)://host:port` sans trailing slash, e.g.
     /// `https://api.warrenbrowse.com` ou `http://127.0.0.1:8080`.
@@ -318,12 +318,12 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // Warren rebrand Niveau A : `true` par défaut sur le fork
-            // Warren. Le binaire release ne contacte JAMAIS api.mullvad.net
-            // — la chaîne tunnel + account passe par warren-api.
-            // L'utilisateur peut explicitement passer ces flags à `false`
-            // pour réactiver le path Mullvad upstream (= dev/POC seulement,
-            // jamais documenté en prod).
+            // `true` par défaut sur le fork Warren. Le binaire release
+            // ne contacte JAMAIS api.mullvad.net — la chaîne tunnel +
+            // account passe par warren-api. L'utilisateur peut
+            // explicitement passer ces flags à `false` pour réactiver
+            // le path Mullvad upstream (= dev/POC seulement, jamais
+            // documenté en prod).
             warren_mode: true,
             warren_local_account: true,
             warren_api_url: None,

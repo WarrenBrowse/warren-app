@@ -42,12 +42,12 @@ impl Device {
 
 /// Contains a device state.
 ///
-/// Warren fork — Phase 2.B.3 V6.a-c : le variant `LoggedIn` porte
-/// une [`WarrenIdentity`] (pubkey Ed25519 + device). L'historique
-/// `AccountAndDevice` (account_number String + device) a été
-/// supprimé en V6.c ; le proto gRPC garde encore son `proto::AccountAndDevice`
-/// avec field `account_number: String` qui reçoit la pubkey hex
-/// (= compat clients gRPC sans rename .proto).
+/// Le variant `LoggedIn` porte une [`WarrenIdentity`] (pubkey
+/// Ed25519 + device). L'historique `AccountAndDevice`
+/// (account_number String + device) a été supprimé ; le proto gRPC
+/// garde encore son `proto::AccountAndDevice` avec field
+/// `account_number: String` qui reçoit la pubkey hex (= compat
+/// clients gRPC sans rename .proto).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceState {
@@ -96,10 +96,10 @@ pub struct DeviceEvent {
 /// Emitted when a device is removed using the `RemoveDevice` RPC.
 /// This is not sent by a normal logout or when it is revoked remotely.
 ///
-/// Warren fork — Phase 2.B.3 V6.b : le field `account_number` (alias
-/// `String`) est remplacé par `pubkey` ([`WarrenPubKey`], hex 64ch
-/// validé). Le proto gRPC garde `account_number` comme name pour
-/// compat clients (cf. mullvad-management-interface conversions).
+/// Le field `account_number` (alias `String`) est remplacé par
+/// `pubkey` ([`WarrenPubKey`], hex 64ch validé). Le proto gRPC garde
+/// `account_number` comme name pour compat clients (cf.
+/// mullvad-management-interface conversions).
 #[derive(Clone, Debug, Serialize)]
 pub struct RemoveDeviceEvent {
     pub pubkey: crate::warren_pubkey::WarrenPubKey,

@@ -83,19 +83,17 @@ pub enum Error {
     #[error("Body exceeded size limit")]
     BodyTooLarge,
 
-    /// Warren fork — Phase 2.A.3 : un helper `signed_*` a été appelé
-    /// sur une [`RequestFactory`] qui n'a pas de
-    /// [`crate::warren_auth::WarrenAuthSigner`] configuré (cf.
-    /// [`RequestFactory::with_warren_signer`]). Pas de fallback
-    /// silencieux : on refuse de poster une requête non-signée vers
-    /// `warren-api` (qui rejetterait avec 401).
+    /// Un helper `signed_*` a été appelé sur une [`RequestFactory`]
+    /// qui n'a pas de [`crate::warren_auth::WarrenAuthSigner`]
+    /// configuré (cf. [`RequestFactory::with_warren_signer`]). Pas de
+    /// fallback silencieux : on refuse de poster une requête non-signée
+    /// vers `warren-api` (qui rejetterait avec 401).
     #[error("Warren signer not configured on request factory")]
     NoWarrenSigner,
 
-    /// Warren fork — Phase 2.A.3 : échec d'injection des headers
-    /// `X-Warren-*` sur une requête. En pratique impossible (les
-    /// valeurs sont hex ou décimal ASCII), gardé pour propagation
-    /// stricte du `Result` exposé par
+    /// Échec d'injection des headers `X-Warren-*` sur une requête. En
+    /// pratique impossible (les valeurs sont hex ou décimal ASCII),
+    /// gardé pour propagation stricte du `Result` exposé par
     /// [`crate::warren_auth::WarrenAuthSigner::apply_to_request`].
     #[error("failed to inject Warren auth headers")]
     WarrenAuthInjection(Arc<std::io::Error>),
@@ -399,8 +397,8 @@ impl<B: Body> Request<B> {
 
     /// Returns the headers of the underlying [`hyper::Request`].
     ///
-    /// Warren fork — Phase 2.A.3 : utile pour l'inspection (tests,
-    /// logs, debug) après injection des headers `X-Warren-*` par
+    /// Utile pour l'inspection (tests, logs, debug) après injection
+    /// des headers `X-Warren-*` par
     /// [`RequestFactory::signed_post_json_bytes`] et consorts.
     pub fn headers(&self) -> &http::HeaderMap {
         self.request.headers()
@@ -408,9 +406,9 @@ impl<B: Body> Request<B> {
 
     /// Returns the HTTP method of the underlying [`hyper::Request`].
     ///
-    /// Warren fork — Phase D.1 : utile pour les tests qui vérifient
-    /// qu'un dispatcher (`*_or_signed`) produit la bonne méthode HTTP
-    /// (régression critique anti-replay cross-method).
+    /// Utile pour les tests qui vérifient qu'un dispatcher
+    /// (`*_or_signed`) produit la bonne méthode HTTP (régression
+    /// critique anti-replay cross-method).
     pub fn method(&self) -> &http::Method {
         self.request.method()
     }
@@ -592,10 +590,10 @@ pub struct RequestFactory {
     hostname: Cow<'static, str>,
     token_store: Option<AccessTokenStore>,
     default_timeout: Duration,
-    /// Warren fork — Phase 2.A.3 : signer optionnel injecté via
-    /// [`Self::with_warren_signer`]. Quand présent, les helpers
-    /// `signed_*` injectent les 4 headers `X-Warren-*` ; quand absent,
-    /// ces helpers retournent [`Error::NoWarrenSigner`].
+    /// Signer optionnel injecté via [`Self::with_warren_signer`].
+    /// Quand présent, les helpers `signed_*` injectent les 4 headers
+    /// `X-Warren-*` ; quand absent, ces helpers retournent
+    /// [`Error::NoWarrenSigner`].
     warren_signer: Option<Arc<WarrenAuthSigner>>,
 }
 
@@ -612,10 +610,10 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — configure un [`WarrenAuthSigner`] sur la factory.
-    /// Tous les helpers `signed_*` ultérieurs utiliseront ce signer
-    /// pour produire les headers `X-Warren-*`. Le signer est partagé
-    /// via [`Arc`] parce qu'il sera typiquement détenu par
+    /// Configure un [`WarrenAuthSigner`] sur la factory. Tous les
+    /// helpers `signed_*` ultérieurs utiliseront ce signer pour
+    /// produire les headers `X-Warren-*`. Le signer est partagé via
+    /// [`Arc`] parce qu'il sera typiquement détenu par
     /// `MullvadRestHandle` et cloné dans plusieurs services daemon.
     #[must_use]
     pub fn with_warren_signer(mut self, signer: Arc<WarrenAuthSigner>) -> Self {
@@ -623,10 +621,10 @@ impl RequestFactory {
         self
     }
 
-    /// Warren fork — `true` si la factory a été configurée avec un
-    /// signer Warren via [`Self::with_warren_signer`]. Utilisé par
-    /// les services daemon pour détecter le mode auth (Warren signed
-    /// vs Mullvad Bearer historique).
+    /// `true` si la factory a été configurée avec un signer Warren
+    /// via [`Self::with_warren_signer`]. Utilisé par les services
+    /// daemon pour détecter le mode auth (Warren signed vs Mullvad
+    /// Bearer historique).
     #[must_use]
     pub fn has_warren_signer(&self) -> bool {
         self.warren_signer.is_some()
@@ -714,10 +712,9 @@ impl RequestFactory {
         self.json_request_with_bytes(method, path, json_body)
     }
 
-    /// Warren fork — Phase 2.A.4 V5 : variante GET qui dispatch sur
-    /// [`Self::has_warren_signer`]. Si un signer Warren est configuré,
-    /// la requête est signée (headers `X-Warren-*`) ; sinon elle est
-    /// nue, comme avec [`Self::get`].
+    /// Variante GET qui dispatch sur [`Self::has_warren_signer`]. Si
+    /// un signer Warren est configuré, la requête est signée (headers
+    /// `X-Warren-*`) ; sinon elle est nue, comme avec [`Self::get`].
     ///
     /// Permet aux callers historiques (e.g. `RelayListProxy`) de
     /// migrer vers la signature Warren sans brancher manuellement
@@ -737,9 +734,9 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — Phase 2.A.3 : variante signée de [`Self::get`].
-    /// Aucun body (= sha256(b"") dans le canonical message) ; les 4
-    /// headers `X-Warren-*` sont posés sur la requête `Empty<Bytes>`.
+    /// Variante signée de [`Self::get`]. Aucun body (= sha256(b"")
+    /// dans le canonical message) ; les 4 headers `X-Warren-*` sont
+    /// posés sur la requête `Empty<Bytes>`.
     ///
     /// # Errors
     ///
@@ -748,9 +745,9 @@ impl RequestFactory {
         self.signed_empty_body_request(path, Method::GET)
     }
 
-    /// Warren fork — Phase 2.A.3 : variante signée de
-    /// [`Self::delete`]. Idem [`Self::signed_get`] mais avec
-    /// `method = DELETE` dans le canonical (anti-replay cross-method).
+    /// Variante signée de [`Self::delete`]. Idem [`Self::signed_get`]
+    /// mais avec `method = DELETE` dans le canonical (anti-replay
+    /// cross-method).
     ///
     /// # Errors
     ///
@@ -759,9 +756,9 @@ impl RequestFactory {
         self.signed_empty_body_request(path, Method::DELETE)
     }
 
-    /// Warren fork — Phase D.1 : variante signée de [`Self::post`]
-    /// (POST **sans body**, contrairement à [`Self::signed_post_json`]).
-    /// Le canonical message contient `method = POST` + body vide.
+    /// Variante signée de [`Self::post`] (POST **sans body**,
+    /// contrairement à [`Self::signed_post_json`]). Le canonical
+    /// message contient `method = POST` + body vide.
     ///
     /// Utilisé pour les endpoints comme `POST /accounts` (créer un
     /// compte, où le body est vide et seuls les headers signés
@@ -774,10 +771,10 @@ impl RequestFactory {
         self.signed_empty_body_request(path, Method::POST)
     }
 
-    /// Warren fork — Phase D.1 : dispatcher [`Self::delete`] /
-    /// [`Self::signed_delete`] selon présence d'un signer Warren.
-    /// Symétrique de [`Self::get_or_signed`] pour DELETE — utilisé
-    /// par `DELETE /accounts/me` et `DELETE /devices/{id}`.
+    /// Dispatcher [`Self::delete`] / [`Self::signed_delete`] selon
+    /// présence d'un signer Warren. Symétrique de
+    /// [`Self::get_or_signed`] pour DELETE — utilisé par `DELETE
+    /// /accounts/me` et `DELETE /devices/{id}`.
     ///
     /// # Errors
     ///
@@ -790,8 +787,8 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — Phase D.1 : dispatcher [`Self::post`] /
-    /// [`Self::signed_post`] selon présence d'un signer Warren.
+    /// Dispatcher [`Self::post`] / [`Self::signed_post`] selon
+    /// présence d'un signer Warren.
     ///
     /// # Errors
     ///
@@ -804,8 +801,8 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — Phase D.1 : dispatcher [`Self::post_json`] /
-    /// [`Self::signed_post_json`] selon présence d'un signer Warren.
+    /// Dispatcher [`Self::post_json`] / [`Self::signed_post_json`]
+    /// selon présence d'un signer Warren.
     ///
     /// # Errors
     ///
@@ -822,8 +819,8 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — Phase D.1 : dispatcher [`Self::put_json`] /
-    /// [`Self::signed_put_json`] selon présence d'un signer Warren.
+    /// Dispatcher [`Self::put_json`] / [`Self::signed_put_json`]
+    /// selon présence d'un signer Warren.
     ///
     /// # Errors
     ///
@@ -840,11 +837,11 @@ impl RequestFactory {
         }
     }
 
-    /// Warren fork — Phase D.1 : variante signée de [`Self::put_json`].
-    /// Le canonical message contient `method = PUT` + sha256(body) ;
-    /// distinct de [`Self::signed_post_json`] pour empêcher le replay
-    /// cross-method (= un body POST signé ne peut pas être renvoyé en
-    /// PUT et vice-versa).
+    /// Variante signée de [`Self::put_json`]. Le canonical message
+    /// contient `method = PUT` + sha256(body) ; distinct de
+    /// [`Self::signed_post_json`] pour empêcher le replay cross-method
+    /// (= un body POST signé ne peut pas être renvoyé en PUT et
+    /// vice-versa).
     ///
     /// # Errors
     ///
@@ -860,9 +857,9 @@ impl RequestFactory {
         self.signed_put_json_bytes(path, json_body)
     }
 
-    /// Warren fork — Phase D.1 : variante de [`Self::put_json_bytes`]
-    /// qui injecte une signature Ed25519 (4 headers `X-Warren-*`).
-    /// Symétrique de [`Self::signed_post_json_bytes`] avec PUT.
+    /// Variante de [`Self::put_json_bytes`] qui injecte une signature
+    /// Ed25519 (4 headers `X-Warren-*`). Symétrique de
+    /// [`Self::signed_post_json_bytes`] avec PUT.
     ///
     /// # Errors
     ///
@@ -913,10 +910,9 @@ impl RequestFactory {
         Ok(())
     }
 
-    /// Warren fork — Phase 2.A.3 : variante signée de
-    /// [`Self::post_json`]. Sérialise `body` via `serde_json` puis
-    /// délègue à [`Self::signed_post_json_bytes`] (qui pose les 4
-    /// headers `X-Warren-*`).
+    /// Variante signée de [`Self::post_json`]. Sérialise `body` via
+    /// `serde_json` puis délègue à [`Self::signed_post_json_bytes`]
+    /// (qui pose les 4 headers `X-Warren-*`).
     ///
     /// # Errors
     ///
@@ -932,10 +928,9 @@ impl RequestFactory {
         self.signed_post_json_bytes(path, json_body)
     }
 
-    /// Warren fork — Phase 2.A.3 : variante de [`Self::post_json_bytes`]
-    /// qui injecte une signature Ed25519 (4 headers `X-Warren-*`)
-    /// produite par le [`WarrenAuthSigner`] configuré via
-    /// [`Self::with_warren_signer`].
+    /// Variante de [`Self::post_json_bytes`] qui injecte une signature
+    /// Ed25519 (4 headers `X-Warren-*`) produite par le
+    /// [`WarrenAuthSigner`] configuré via [`Self::with_warren_signer`].
     ///
     /// La requête résultante a les mêmes headers HTTP standard
     /// (`Content-Type: application/json`, `Content-Length`) que

@@ -38,7 +38,7 @@ export interface IUpdateAllowLanAction {
   allowLan: boolean;
 }
 
-// Warren fork — Phase H : actions de mise à jour des toggles Warren.
+// Actions de mise à jour des toggles Warren.
 export interface IUpdateWarrenModeAction {
   type: 'UPDATE_WARREN_MODE';
   warrenMode: boolean;
@@ -49,7 +49,7 @@ export interface IUpdateWarrenLocalAccountAction {
   warrenLocalAccount: boolean;
 }
 
-// Warren fork — Phase G.5.a : action de mise à jour URL warren-api.
+// Action de mise à jour URL warren-api.
 export interface IUpdateWarrenApiUrlAction {
   type: 'UPDATE_WARREN_API_URL';
   warrenApiUrl?: string;

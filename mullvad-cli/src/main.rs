@@ -155,9 +155,9 @@ enum Cli {
     #[clap(subcommand)]
     Log(log::Log),
 
-    /// Warren fork — toggle persistant des modes Warren (tunnel Iroh,
-    /// account local POC). Le restart du daemon est requis pour
-    /// appliquer un changement.
+    /// Toggle persistant des modes Warren (tunnel Iroh, account local
+    /// POC). Le restart du daemon est requis pour appliquer un
+    /// changement.
     #[clap(subcommand)]
     Warren(warren::Warren),
 }

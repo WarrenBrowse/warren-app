@@ -101,7 +101,6 @@ impl DevicesProxy {
         let service = self.handle.service.clone();
         let factory = self.handle.factory.clone();
         async move {
-            // Warren fork — Phase D.1 : `delete_or_signed`.
             let request = factory
                 .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
                 .expected_status(&[StatusCode::NO_CONTENT])
@@ -141,7 +140,6 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `get_or_signed`.
             let request = factory
                 .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
                 .expected_status(&[StatusCode::OK])
@@ -158,7 +156,6 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `get_or_signed`.
             let request = factory
                 .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"))?
                 .expected_status(&[StatusCode::OK])
@@ -183,7 +180,6 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `put_json_or_signed`.
             let request = factory
                 .put_json_or_signed(
                     &format!("{ACCOUNTS_URL_PREFIX}/devices/{id}/pubkey"),
@@ -215,7 +211,6 @@ impl DevicesProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `post_json_or_signed`.
             let request = factory
                 .post_json_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"), &submission)?
                 .account(account)?

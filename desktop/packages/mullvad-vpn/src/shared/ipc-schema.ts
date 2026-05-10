@@ -193,11 +193,11 @@ export const ipcSchema = {
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
-    // Warren fork — Phase H : toggles persistants Warren mode.
+    // Toggles persistants Warren mode.
     setWarrenMode: invoke<boolean, void>(),
     setWarrenLocalAccount: invoke<boolean, void>(),
-    // Warren fork — Phase G.5.a : URL persistante warren-api (string
-    // vide = unset). Restart daemon requis pour appliquer.
+    // URL persistante warren-api (string vide = unset). Restart
+    // daemon requis pour appliquer.
     setWarrenApiUrl: invoke<string, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
@@ -236,15 +236,14 @@ export const ipcSchema = {
     login: invoke<WarrenPubKey, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
     getWwwAuthToken: invoke<void, string>(),
-    // Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique BIP39
-    // (12 mots) pour permettre backup user. Empty string si identité
-    // jamais bootstrappée. Caller renderer doit afficher avec
-    // warning safety + confirmation user explicite.
+    // Retourne la mnémonique BIP39 (12 mots) pour permettre backup
+    // user. Empty string si identité jamais bootstrappée. Caller
+    // renderer doit afficher avec warning safety + confirmation user
+    // explicite.
     getWarrenMnemonic: invoke<void, string>(),
-    // Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
-    // par la mnémonique BIP39 fournie. Validation BIP39 daemon-side.
-    // Throw si invalid (= caller doit catch + show error). Restart
-    // daemon requis pour activation.
+    // Remplace l'identité par la mnémonique BIP39 fournie. Validation
+    // BIP39 daemon-side. Throw si invalid (= caller doit catch + show
+    // error). Restart daemon requis pour activation.
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: send<void>(),

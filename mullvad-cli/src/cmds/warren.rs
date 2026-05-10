@@ -1,6 +1,6 @@
-//! Warren fork — Phase F.2 — sous-commandes CLI pour piloter les flags
-//! `Settings::warren_mode` et `Settings::warren_local_account` sans
-//! avoir à exporter d'env var POC.
+//! Sous-commandes CLI pour piloter les flags `Settings::warren_mode`
+//! et `Settings::warren_local_account` sans avoir à exporter d'env
+//! var POC.
 //!
 //! Le restart du daemon est requis pour appliquer un changement (cf.
 //! `warren_mode::resolve` et `warren_account_mode::resolve` côté daemon

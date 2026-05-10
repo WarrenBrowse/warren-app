@@ -8,11 +8,11 @@ import { ListItemProps } from '../../../../lib/components/list-item';
 import { useTextField } from '../../../../lib/components/text-field';
 import { useSelector } from '../../../../redux/store';
 
-// Warren fork — Phase G.5.a : entry de la page VPN settings pour
-// `Settings::warren_api_url`. Pattern aligné avec `MtuSetting`
-// (TextField + onBlur submit). Empty string → unset côté daemon
-// (= fallback Mullvad upstream backend). Restart daemon requis pour
-// appliquer (cf. `warren_remote_config::resolve` côté Rust).
+// Entry de la page VPN settings pour `Settings::warren_api_url`.
+// Pattern aligné avec `MtuSetting` (TextField + onBlur submit).
+// Empty string → unset côté daemon (= fallback Mullvad upstream
+// backend). Restart daemon requis pour appliquer (cf.
+// `warren_remote_config::resolve` côté Rust).
 
 export type WarrenApiUrlSettingProps = Omit<ListItemProps, 'children'>;
 

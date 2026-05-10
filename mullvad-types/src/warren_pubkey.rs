@@ -1,6 +1,6 @@
-//! Warren fork — Phase 2.B : newtype `WarrenPubKey` qui remplace
-//! l'alias `pub type AccountNumber = String` ([`crate::account`]) par
-//! une représentation strictement validée d'une pubkey Ed25519.
+//! Newtype `WarrenPubKey` qui remplace l'alias `pub type AccountNumber
+//! = String` ([`crate::account`]) par une représentation strictement
+//! validée d'une pubkey Ed25519.
 //!
 //! **Format** : chaîne hex de 64 caractères ASCII `[0-9a-f]` (=
 //! 32 octets binaires). Toute autre forme est refusée à la

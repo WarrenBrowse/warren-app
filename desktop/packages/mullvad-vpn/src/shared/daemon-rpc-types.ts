@@ -27,7 +27,6 @@ export type AccountNumber = string;
 /**
  * 64-char lowercase hex Ed25519 public key identifying a Warren wallet.
  *
- * Warren fork — Phase 3.A.
  * Replaces the legacy Mullvad `AccountNumber` (10-16 digit) concept.
  * Validation: {@link isWarrenPubKey}. Display: {@link formatWarrenPubKey}.
  */
@@ -490,12 +489,12 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
-  // Warren fork — Phase H : toggles persistants exposés via gRPC.
-  // Restart du daemon requis pour appliquer un changement.
+  // Toggles persistants exposés via gRPC. Restart du daemon requis
+  // pour appliquer un changement.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
-  // Warren fork — Phase G.5.a : URL warren-api persistante. `undefined`
-  // si unset (= fallback Mullvad upstream). Restart daemon requis.
+  // URL warren-api persistante. `undefined` si unset (= fallback
+  // Mullvad upstream). Restart daemon requis.
   warrenApiUrl?: string;
 }
 

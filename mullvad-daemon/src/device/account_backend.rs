@@ -1,5 +1,5 @@
-//! Trait abstrait Warren fork — Phase C.1 — pour les opérations
-//! account-level qui partaient en `AccountsProxy` vers `api.mullvad.net`.
+//! Trait abstrait pour les opérations account-level qui partaient en
+//! `AccountsProxy` vers `api.mullvad.net`.
 //!
 //! Permet d'aiguiller au boot entre :
 //! - [`RemoteAccountBackend`] : thin wrap sur l'`AccountsProxy` Mullvad
@@ -7,7 +7,7 @@
 //! - [`LocalAccountBackend`] : POC stateless qui sert des données
 //!   cohérentes avec la mnémonique chargée au boot, **sans toucher
 //!   au réseau**. Remplace l'env-var-bypass `WARREN_LOCAL_ACCOUNT=1`
-//!   de la Phase B.3 par un vrai backend pluggable.
+//!   par un vrai backend pluggable.
 //!
 //! Périmètre MVP (3 méthodes) : `create_account`, `get_data`,
 //! `delete_account`. Les autres méthodes (`submit_voucher`,

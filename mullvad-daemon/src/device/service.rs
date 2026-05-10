@@ -31,10 +31,9 @@ const RETRY_BACKOFF_STRATEGY: Jittered<ExponentialBackoff> = Jittered::jitter(
 #[derive(Clone)]
 pub struct DeviceService {
     api_availability: ApiAvailability,
-    /// Warren fork — Phase C.2 : backend abstrait pour les 5 opérations
-    /// device-level. Le caller (`AccountManager::spawn`) injecte
-    /// `RemoteDeviceBackend` ou `LocalDeviceBackend` selon
-    /// `local_account_mode`.
+    /// Backend abstrait pour les 5 opérations device-level. Le
+    /// caller (`AccountManager::spawn`) injecte `RemoteDeviceBackend`
+    /// ou `LocalDeviceBackend` selon `local_account_mode`.
     backend: Arc<dyn WarrenDeviceBackend>,
 }
 
@@ -318,11 +317,10 @@ pub struct WarrenIdentityService {
     /// www_auth_token, init/verify_play_purchase Android). Garde le
     /// path historique tant que ces flows ne sont pas migrés.
     proxy: AccountsProxy,
-    /// Warren fork — Phase C.1 : backend abstrait pour les 3 méthodes
-    /// MVP critiques (`create_account`, `get_data`, `delete_account`).
-    /// Le caller (`spawn_warren_identity_service`) injecte
-    /// `RemoteAccountBackend` ou `LocalAccountBackend` selon
-    /// `local_account_mode`.
+    /// Backend abstrait pour les 3 méthodes MVP critiques
+    /// (`create_account`, `get_data`, `delete_account`). Le caller
+    /// (`spawn_warren_identity_service`) injecte `RemoteAccountBackend`
+    /// ou `LocalAccountBackend` selon `local_account_mode`.
     backend: Arc<dyn WarrenAccountBackend>,
 }
 
@@ -352,9 +350,9 @@ impl WarrenIdentityService {
         )
     }
 
-    /// Warren fork — Phase 2.C V7.b : prend une `WarrenPubKey` au
-    /// lieu d'un `AccountNumber` brut. Phase C.1 : route via
-    /// [`WarrenAccountBackend`] pour permettre le mode local POC.
+    /// Prend une `WarrenPubKey` au lieu d'un `AccountNumber` brut.
+    /// Route via [`WarrenAccountBackend`] pour permettre le mode local
+    /// POC.
     pub async fn get_data(&self, pubkey: WarrenPubKey) -> Result<AccountData, rest::Error> {
         let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();

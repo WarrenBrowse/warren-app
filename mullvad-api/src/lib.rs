@@ -30,8 +30,8 @@ mod address_cache;
 pub mod device;
 
 mod relay_list;
-/// Warren fork — Phase 2 auth wallet : signature Ed25519 sur les
-/// requêtes API HTTP. Cf. `warren-pocs/docs/06-auth-wallet.md`.
+/// Auth wallet : signature Ed25519 sur les requêtes API HTTP.
+/// Cf. `warren-pocs/docs/06-auth-wallet.md`.
 pub mod warren_auth;
 
 pub use address_cache::Error as AddressCacheError;
@@ -468,8 +468,7 @@ impl<B: AddressCacheBacking> Runtime<B> {
         self.mullvad_rest_handle_with_warren_signer(connection_mode_provider, None)
     }
 
-    /// Warren fork — Phase 2.A.4 : variante de
-    /// [`Self::mullvad_rest_handle`] qui pose un
+    /// Variante de [`Self::mullvad_rest_handle`] qui pose un
     /// [`rest::WarrenAuthSigner`] sur la `RequestFactory` quand
     /// `warren_signer` est `Some`. Si `None`, comportement identique
     /// à [`Self::mullvad_rest_handle`] (= mode Mullvad Bearer
@@ -556,10 +555,10 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `get_or_signed` injecte les
-            // 4 headers `X-Warren-*` quand un signer est configuré
-            // (cf. `mullvad_rest_handle_with_warren_signer` côté
-            // daemon). Sinon, requête nue identique à l'ancien path.
+            // `get_or_signed` injecte les 4 headers `X-Warren-*` quand
+            // un signer est configuré (cf.
+            // `mullvad_rest_handle_with_warren_signer` côté daemon).
+            // Sinon, requête nue identique à l'ancien path.
             let request = factory
                 .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .expected_status(&[StatusCode::OK])
@@ -591,7 +590,6 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `post_or_signed` (cf. doc).
             let request = factory
                 .post_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts"))?
                 .expected_status(&[StatusCode::CREATED]);
@@ -614,7 +612,6 @@ impl AccountsProxy {
         let submission = VoucherSubmission { voucher_code };
 
         async move {
-            // Warren fork — Phase D.1 : `post_json_or_signed` (cf. doc).
             let request = factory
                 .post_json_or_signed(&format!("{APP_URL_PREFIX}/submit-voucher"), &submission)?
                 .account(account)?
@@ -631,7 +628,6 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // Warren fork — Phase D.1 : `delete_or_signed` (cf. doc).
             let request = factory
                 .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .account(account.clone())?

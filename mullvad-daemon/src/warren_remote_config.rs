@@ -1,5 +1,5 @@
-//! Warren fork — Phase #4 — extraction testable de la résolution
-//! `WarrenApiConfig` depuis Settings + env var + signing key loader.
+//! Extraction testable de la résolution `WarrenApiConfig` depuis
+//! Settings + env var + signing key loader.
 //!
 //! Pure function : pas de side effects, pas d'I/O. Le caller
 //! (`Daemon::start` dans `lib.rs`) charge l'env + signing_key + settings

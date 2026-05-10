@@ -281,14 +281,14 @@ pub enum DaemonCommand {
     ),
     /// Request www auth token for an account
     GetWwwAuthToken(ResponseTx<String, Error>),
-    /// Warren fork — C.1 : retourne la mnémonique BIP39 utilisateur
-    /// pour permettre backup user-side via le GUI Electron. `None`
-    /// si le fichier `warren_mnemonic.txt` n'existe pas (= identité
-    /// jamais bootstrappée). Voir `warren_signer::get_warren_mnemonic`.
+    /// Retourne la mnémonique BIP39 utilisateur pour permettre backup
+    /// user-side via le GUI Electron. `None` si le fichier
+    /// `warren_mnemonic.txt` n'existe pas (= identité jamais
+    /// bootstrappée). Voir `warren_signer::get_warren_mnemonic`.
     GetWarrenMnemonic(oneshot::Sender<Option<String>>),
-    /// Warren fork — C.1.d : remplace la mnémonique BIP39 (= restore
-    /// identité). Validation BIP39 + écriture atomique. Restart daemon
-    /// requis pour que la nouvelle identité soit active. Voir
+    /// Remplace la mnémonique BIP39 (= restore identité). Validation
+    /// BIP39 + écriture atomique. Restart daemon requis pour que la
+    /// nouvelle identité soit active. Voir
     /// `warren_signer::set_warren_mnemonic`.
     SetWarrenMnemonic(oneshot::Sender<std::io::Result<()>>, String),
     /// Submit voucher to add time to the current account. Returns time added in seconds
@@ -323,12 +323,12 @@ pub enum DaemonCommand {
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
-    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_mode`.
+    /// Toggle persistant `Settings::warren_mode`.
     SetWarrenMode(ResponseTx<(), settings::Error>, bool),
-    /// Warren fork — Phase F.1 : toggle persistant `Settings::warren_local_account`.
+    /// Toggle persistant `Settings::warren_local_account`.
     SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
-    /// Warren fork — Phase G.5.a : URL persistante `Settings::warren_api_url`.
-    /// Empty string → unset (= None côté Settings).
+    /// URL persistante `Settings::warren_api_url`. Empty string →
+    /// unset (= None côté Settings).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
@@ -738,9 +738,9 @@ pub struct Daemon {
     location_handler: GeoIpHandler,
     leak_checker: LeakChecker,
     cache_dir: PathBuf,
-    /// Warren fork — C.1 : conservé pour permettre les lectures
-    /// runtime de la mnémonique BIP39 (`<settings_dir>/warren_mnemonic.txt`)
-    /// via le handler `on_get_warren_mnemonic`.
+    /// Conservé pour permettre les lectures runtime de la mnémonique
+    /// BIP39 (`<settings_dir>/warren_mnemonic.txt`) via le handler
+    /// `on_get_warren_mnemonic`.
     settings_dir: PathBuf,
 }
 pub struct DaemonConfig {
@@ -914,16 +914,16 @@ impl Daemon {
             migrations::MigrationComplete::new(true)
         };
 
-        // Warren fork — Phase B.4 : si l'env var
-        // `WARREN_LOCAL_ACCOUNT=1` est setée, bootstrap un `device.json`
-        // cohérent avec la mnémonique avant que `AccountManager::spawn`
-        // ne lise le `DeviceCacher`. Permet au daemon d'atteindre
-        // `Connecting` sans appel `create_device` à api.mullvad.net.
-        // Phase E : combine l'env var POC `WARREN_LOCAL_ACCOUNT` avec
-        // le flag persistant `Settings::warren_local_account`. L'env
-        // var, si setée, prend précédence (cf. `warren_account_mode::resolve`).
+        // Si l'env var `WARREN_LOCAL_ACCOUNT=1` est setée, bootstrap
+        // un `device.json` cohérent avec la mnémonique avant que
+        // `AccountManager::spawn` ne lise le `DeviceCacher`. Permet
+        // au daemon d'atteindre `Connecting` sans appel
+        // `create_device` à api.mullvad.net.
+        // Combine l'env var POC `WARREN_LOCAL_ACCOUNT` avec le flag
+        // persistant `Settings::warren_local_account`. L'env var, si
+        // setée, prend précédence (cf. `warren_account_mode::resolve`).
         let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
-        // Phase G : log structuré au boot pour faciliter le debug terrain.
+        // Log structuré au boot pour faciliter le debug terrain.
         // L'admin/dev voit immédiatement quels modes sont actifs et leur
         // source (env override vs Settings persistant) sans avoir à
         // grep dans des dizaines de log lines.
@@ -956,11 +956,11 @@ impl Daemon {
             }
         }
 
-        // Warren fork — Phase G.5.a + #4 : résolution déléguée à
-        // `warren_remote_config::resolve` (pure fn testable). Side
-        // effects (env, signing_key load) résolus ici, les flags purs
-        // passés à la fn. Le log diff (Some vs None) reste ici car la
-        // fn est silencieuse pour rester testable sans capture log.
+        // Résolution déléguée à `warren_remote_config::resolve` (pure
+        // fn testable). Side effects (env, signing_key load) résolus
+        // ici, les flags purs passés à la fn. Le log diff (Some vs
+        // None) reste ici car la fn est silencieuse pour rester
+        // testable sans capture log.
         let env_url = std::env::var("WARREN_API_URL").ok();
         let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
         let warren_api_config = warren_remote_config::resolve(
@@ -2133,9 +2133,9 @@ impl Daemon {
     ) {
         let account = self.account_manager.warren_identity_service.clone();
         tokio::spawn(async move {
-            // Warren fork — Phase 2.C V7.b : `get_data` prend une
-            // `WarrenPubKey`. On parse le legacy `account_number`
-            // (= chaîne possiblement non-hex) avec fallback dummy.
+            // `get_data` prend une `WarrenPubKey`. On parse le legacy
+            // `account_number` (= chaîne possiblement non-hex) avec
+            // fallback dummy.
             let pubkey = device::account_number_to_warren_pubkey(&account_number);
             let result = account.get_data(pubkey).await;
             Self::oneshot_send(tx, result, "account data");
@@ -2167,7 +2167,7 @@ impl Daemon {
         }
     }
 
-    /// Warren fork — C.1 : lit la mnémonique BIP39 utilisateur via
+    /// Lit la mnémonique BIP39 utilisateur via
     /// `warren_signer::get_warren_mnemonic`. Read-only, sync (pas
     /// de spawn nécessaire — `read_to_string` < 1 ms sur un fichier
     /// de 100 bytes). **Politique no-log** : on log uniquement le fait
@@ -2181,7 +2181,7 @@ impl Daemon {
         Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
     }
 
-    /// Warren fork — C.1.d : restaure la mnémonique via
+    /// Restaure la mnémonique via
     /// `warren_signer::set_warren_mnemonic`. Restart daemon requis
     /// pour que la nouvelle identité soit prise en compte par le
     /// signer (signing key dérivée au boot). **Politique no-log** :
@@ -2366,12 +2366,12 @@ impl Daemon {
                 .map(move |new_devices| {
                     // FIXME: We should be able to get away with only returning the removed ID,
                     //        and not have to request the list from the API.
-                    // Warren fork — Phase 2.B.3 V6.b : `RemoveDeviceEvent`
-                    // porte désormais une `WarrenPubKey`. On parse le
-                    // `account_number` (= String, possiblement non-hex
-                    // si ancien device.json Mullvad) avec fallback
-                    // dummy zero pubkey + warn (cohérent avec le From
-                    // impl côté `device::mod.rs`).
+                    // `RemoveDeviceEvent` porte désormais une
+                    // `WarrenPubKey`. On parse le `account_number` (=
+                    // String, possiblement non-hex si ancien
+                    // device.json Mullvad) avec fallback dummy zero
+                    // pubkey + warn (cohérent avec le From impl côté
+                    // `device::mod.rs`).
                     use std::str::FromStr;
                     let pubkey =
                         mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account_number)
@@ -2798,11 +2798,10 @@ impl Daemon {
         }
     }
 
-    /// Warren fork — Phase F.1 : persiste `Settings::warren_mode`.
-    /// Le mode est lu au boot par `warren_mode::resolve` ; un restart
-    /// du daemon est requis pour appliquer (pas de hot-reload du
-    /// backend tunnel — la state machine + identité signing key
-    /// sont posées une fois au boot).
+    /// Persiste `Settings::warren_mode`. Le mode est lu au boot par
+    /// `warren_mode::resolve` ; un restart du daemon est requis pour
+    /// appliquer (pas de hot-reload du backend tunnel — la state
+    /// machine + identité signing key sont posées une fois au boot).
     async fn on_set_warren_mode(&mut self, tx: ResponseTx<(), settings::Error>, enabled: bool) {
         let result = self
             .settings
@@ -2820,8 +2819,8 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_mode response");
     }
 
-    /// Warren fork — Phase F.1 : persiste `Settings::warren_local_account`.
-    /// Restart requis (cf. `on_set_warren_mode` doc).
+    /// Persiste `Settings::warren_local_account`. Restart requis (cf.
+    /// `on_set_warren_mode` doc).
     async fn on_set_warren_local_account(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -2843,11 +2842,10 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_local_account response");
     }
 
-    /// Warren fork — Phase G.5.a : persiste `Settings::warren_api_url`.
-    /// Restart requis pour appliquer (le daemon résoud l'URL au boot
-    /// dans `Daemon::start`, il ne re-checke pas Settings en runtime).
-    /// Empty string → `None` côté Settings (= unset = fallback Mullvad
-    /// upstream backend).
+    /// Persiste `Settings::warren_api_url`. Restart requis pour
+    /// appliquer (le daemon résoud l'URL au boot dans `Daemon::start`,
+    /// il ne re-checke pas Settings en runtime). Empty string → `None`
+    /// côté Settings (= unset = fallback Mullvad upstream backend).
     async fn on_set_warren_api_url(&mut self, tx: ResponseTx<(), settings::Error>, url: String) {
         let new_value = if url.is_empty() { None } else { Some(url) };
         let display_value = new_value
