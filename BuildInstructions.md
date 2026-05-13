@@ -1,6 +1,66 @@
 These are instructions on how to build the app on desktop platforms. See the
 [readme](./README.md#building-the-app) for help building on other platforms.
 
+# Pré-requis Warren fork — repo voisin `warren-core/`
+
+> ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
+
+Le fork Warren consomme plusieurs crates via des **path-deps cross-repo**
+(`warren-iroh-tunnel`, `warren-identity`, `warren-config`, `warren-relay-selector`,
+`warren-api-client`, `warren-api`). Elles vivent dans le repo voisin
+[`warren-core`](https://git.p2p.legal/warren/warren-core) et **doivent être
+checkout-ées en parallèle** de `warren-app`.
+
+Layout attendu :
+
+```
+warrenBros/
+├── warren-app/      ← ce repo (fork Mullvad)
+└── warren-core/     ← repo des crates Warren
+    └── crates/
+        ├── warren-iroh-tunnel/
+        ├── warren-identity/
+        ├── warren-config/
+        ├── warren-relay-selector/
+        ├── warren-api-client/
+        ├── warren-api/
+        └── …
+```
+
+Si `warren-core/` est absent ou à un autre path, `cargo metadata` /
+`./build.sh` échouent avec :
+
+```
+error: failed to load manifest for dependency `warren-iroh-tunnel`
+Caused by: failed to read `../../warren-core/crates/warren-iroh-tunnel/Cargo.toml`
+Caused by: No such file or directory (os error 2)
+```
+
+Setup minimal :
+
+```bash
+cd /path/to/warrenBros
+git clone ssh://git@git.p2p.legal:10122/warren/warren-core.git
+git clone ssh://git@git.p2p.legal:10122/warren/warren-app.git
+cd warren-app && git submodule update --init
+```
+
+Les path-deps sont déclarés dans :
+
+- [`Cargo.toml`](Cargo.toml) (workspace root — pas de `[patch.crates-io]`,
+  les path-deps sont posés au niveau crate)
+- [`mullvad-daemon/Cargo.toml`](mullvad-daemon/Cargo.toml) (`warren-config`,
+  `warren-identity`, `warren-relay-selector`, `warren-api-client`,
+  `warren-api` en dev-dep)
+- [`talpid-warren-iroh/Cargo.toml`](talpid-warren-iroh/Cargo.toml)
+  (`warren-iroh-tunnel`)
+- [`Cross.toml`](Cross.toml) (mount additionnel `../warren-core` pour les
+  builds Docker `cross`)
+
+Si vous travaillez à un autre layout que `warrenBros/warren-{app,core}/`,
+vous devez patcher les `path = "../../warren-core/..."` dans les 3 manifestes
+ci-dessus.
+
 # Install toolchains and dependencies
 
 These instructions are probably not complete. If you find something more that needs installing
@@ -95,23 +155,23 @@ sudo apt install \
 - `build.rs` de `mullvad-daemon` invoque `git log` pour embedder la
   date du commit. Sur un VPS sans `.git/`, il faut soit installer
   `git` + `git init` une fake repo, soit appliquer le workaround
-  bench (cf. `scripts/build-on-vps-linux.sh` côté warren-pocs).
+  bench (cf. `scripts/build-on-vps-linux.sh` côté warren-core).
 
 #### Cross-compile macOS → Linux (F1 fork audit)
 
 Le `cross` (Docker-based) **n'est pas supporté pour le fork Warren**
 car le path-dep cross-repo `warren-app/talpid-warren-iroh →
-../../warren-pocs/crates/warren-iroh-tunnel` n'est pas montable dans
+../../warren-core/crates/warren-iroh-tunnel` n'est pas montable dans
 le container `cross-rs/x86_64-unknown-linux-gnu` standard.
 
 **Workaround** : build natif sur un VPS Linux via le script
-warren-pocs `scripts/build-on-vps-linux.sh`, ou directement :
+warren-core `scripts/build-on-vps-linux.sh`, ou directement :
 
 ```bash
 # Sur un VPS Debian 12 fresh
 sudo apt install -y <deps ci-dessus> rsync
 rsync -az --exclude target/ --exclude .git/ \
-  /path/to/warren-pocs/ vps:/home/warren/warren-pocs/
+  /path/to/warren-core/ vps:/home/warren/warren-core/
 rsync -az --exclude target/ --exclude node_modules/ \
   /path/to/warren-app/ vps:/home/warren/warren-app/
 ssh vps 'cd /home/warren/warren-app && git init -q && \
@@ -122,7 +182,7 @@ ssh vps 'cd /home/warren/warren-app && git init -q && \
 Pour CI release builds, soit (a) déclencher le job sur un runner
 Linux x86_64 directement (pas de cross), soit (b) écrire un
 `Cross.toml` custom avec un Dockerfile qui fait un mount additionnel
-de warren-pocs (non implémenté dans cette version du fork).
+de warren-core (non implémenté dans cette version du fork).
 
 ### Fedora/RHEL
 
@@ -339,9 +399,14 @@ Build and package:
 TARGETS="riscv64gc-unknown-linux-gnu" ./build.sh --daemon-only --optimize
 ```
 
-# Building and running mullvad-daemon
+# Building and running warren-daemon
 
 This section is for building the system service individually.
+
+> **Note (Warren fork)** : le package Cargo s'appelle toujours `mullvad-daemon`
+> (conservé pour faciliter les rebases upstream), mais le binaire produit est
+> `warren-daemon`. Idem env var : `WARREN_RESOURCE_DIR` est l'alias prioritaire,
+> `MULLVAD_RESOURCE_DIR` reste accepté en fallback.
 
 1. On Windows, build the C++ libraries:
     ```bash
@@ -366,7 +431,7 @@ This section is for building the system service individually.
 
 1. Run the daemon with verbose logging (from the root directory of the project):
     ```bash
-    sudo MULLVAD_RESOURCE_DIR="./dist-assets" ./target/debug/mullvad-daemon -vv
+    sudo WARREN_RESOURCE_DIR="./dist-assets" ./target/debug/warren-daemon -vv
     ```
     Leave out `sudo` on Windows. The daemon must run as root since it modifies the firewall and sets
     up virtual network interfaces etc.
@@ -394,5 +459,5 @@ If you change any javascript file while the development mode is running it will 
 transpile and reload the file so that the changes are visible almost immediately.
 
 Please note that the Electron app needs a running daemon to connect to in order to work. See
-[Building and running mullvad-daemon](#building-and-running-mullvad-daemon) for instructions
+[Building and running warren-daemon](#building-and-running-warren-daemon) for instructions
 on how to do that before starting the Electron app.
