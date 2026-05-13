@@ -15,12 +15,12 @@ use mullvad_types::{
 };
 use talpid_core::tunnel_state_machine::TunnelParametersGenerator;
 use talpid_types::net::{obfuscation::Obfuscators, wireguard};
-use warren_relay_selector::WarrenRelayQuery;
 
 use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationError};
 
 use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
 use crate::warren_iroh_params::{self, AssembleError};
+use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 
 #[derive(thiserror::Error, Debug)]
@@ -128,10 +128,11 @@ impl ParametersGenerator {
             .as_ref()
             .ok_or(Error::WarrenSigningKeyMissing)?
             .clone();
+        let query = relay_settings_to_warren_query(&inner.relay_settings);
         let params = warren_iroh_params::assemble_for_attempt(
             selector,
             signing_key,
-            &WarrenRelayQuery::any(),
+            &query,
             retry_attempt,
         )?;
         Ok(params)

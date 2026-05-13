@@ -287,10 +287,15 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
 pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Error {
     use warren_api_client::ClientError;
     match err {
-        ClientError::ServerStatus { status } => {
+        ClientError::ServerStatus { status, body } => {
             let code = rest::StatusCode::from_u16(status)
                 .unwrap_or(rest::StatusCode::INTERNAL_SERVER_ERROR);
-            rest::Error::ApiError(code, format!("warren-api {status}"))
+            let msg = if body.is_empty() {
+                format!("warren-api {status}")
+            } else {
+                format!("warren-api {status}: {body}")
+            };
+            rest::Error::ApiError(code, msg)
         }
         // Transport / serde / clock → infra down.
         _ => rest::Error::Aborted,

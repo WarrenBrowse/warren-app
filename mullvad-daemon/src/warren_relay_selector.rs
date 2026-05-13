@@ -69,6 +69,11 @@ impl From<&WarrenRelay> for WarrenSelection {
 #[derive(Debug, Clone)]
 pub struct DaemonWarrenRelaySelector {
     inner: Arc<WarrenRelaySelector>,
+    /// Liste brute conservée à part pour permettre au caller (boot
+    /// daemon) de la convertir en `RelayList` Mullvad-format et la
+    /// broadcaster à la GUI Electron via `notify_relay_list`. Cf.
+    /// `warren_relay_list_view::to_mullvad_relay_list`.
+    list: Arc<WarrenRelayList>,
 }
 
 /// Nom du fichier qui contient la `WarrenRelayList` bootstrappée
@@ -81,9 +86,20 @@ impl DaemonWarrenRelaySelector {
     /// Construit un wrapper depuis une [`WarrenRelayList`].
     #[must_use]
     pub fn new(relays: WarrenRelayList) -> Self {
+        let list = Arc::new(relays.clone());
         Self {
             inner: Arc::new(WarrenRelaySelector::new(relays)),
+            list,
         }
+    }
+
+    /// Accès lecture à la `WarrenRelayList` brute (= ce qui a été
+    /// passé à [`Self::new`] ou chargé depuis le cache). Utilisé par
+    /// le boot daemon pour broadcaster la liste à la GUI via
+    /// [`crate::warren_relay_list_view`].
+    #[must_use]
+    pub fn list(&self) -> &WarrenRelayList {
+        &self.list
     }
 
     /// Charge la `WarrenRelayList` depuis `<cache_dir>/warren-relays.json`.

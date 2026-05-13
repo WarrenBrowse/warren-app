@@ -27,7 +27,7 @@ pub enum AssembleError {
 /// Nombre de connexions QUIC parallèles. `1` = mono-conn (baseline) ;
 /// le multi-conn (bonding) sera activable quand les benchs justifieront
 /// la complexité + la résolution des bugs perf (cf.
-/// `warren-pocs/docs/13-M3-RADICAL-PERF-RESEARCH.md`).
+/// `warren-core/docs/13-M3-RADICAL-PERF-RESEARCH.md`).
 const DEFAULT_N_CONNECTIONS: u8 = 1;
 
 /// Bitmask `features` annoncé dans le `Setup` Warren. `0` = baseline

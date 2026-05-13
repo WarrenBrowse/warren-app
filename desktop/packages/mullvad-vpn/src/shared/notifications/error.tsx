@@ -232,7 +232,7 @@ export class ErrorNotificationProvider
             default:
               return messages.pgettext(
                 'notifications',
-                'Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report.',
+                'Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report.',
               );
           }
       }
@@ -309,7 +309,7 @@ export class ErrorNotificationProvider
         troubleshoot: {
           details: messages.pgettext(
             'troubleshoot',
-            'This error can happen when something other than Mullvad is actively updating the DNS.',
+            'This error can happen when something other than Warren is actively updating the DNS.',
           ),
           steps: troubleshootSteps,
         },
@@ -341,7 +341,7 @@ export class ErrorNotificationProvider
           steps: [
             messages.pgettext(
               'troubleshoot',
-              'Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings.',
+              'Enable “Full Disk Access” for “Warren VPN” in the macOS system settings.',
             ),
           ],
           buttons: troubleshootButtons,

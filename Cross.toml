@@ -1,16 +1,16 @@
 # Cross config — image edge (GCC 11+, cmake, clang, lld) requise par
 # aws-lc-sys (dépendance de iroh@=0.98.2 + tls-aws-lc-rs). Mirror de
-# /Users/poka/dev/warrenBros/warren-pocs/Cross.toml.
+# /Users/poka/dev/warrenBros/warren-core/Cross.toml.
 #
-# Le mount additionnel `../warren-pocs` est requis pour résoudre les
+# Le mount additionnel `../warren-core` est requis pour résoudre les
 # path-deps cross-repo (= warren-iroh-tunnel, warren-relay-selector,
 # warren-api-client, etc. consommés par mullvad-daemon via
-# ../../warren-pocs/crates/...).
+# ../../warren-core/crates/...).
 
 [target.x86_64-unknown-linux-gnu]
 image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge"
 volumes = [
-    "/Users/poka/dev/warrenBros/warren-pocs:/Users/poka/dev/warrenBros/warren-pocs",
+    "/Users/poka/dev/warrenBros/warren-core:/Users/poka/dev/warrenBros/warren-core",
 ]
 
 [build]

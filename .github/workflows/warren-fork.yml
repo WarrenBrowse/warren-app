@@ -63,7 +63,7 @@ jobs:
       - name: cargo fmt --check (Warren scope)
         # Gate fmt en plus de clippy/test pour eviter les drifts de
         # style sur la branche fork (= cohérent avec workflow ci.yml
-        # warren-pocs qui gate aussi fmt).
+        # warren-core qui gate aussi fmt).
         run: cargo fmt --all -- --check
 
       - name: cargo test mullvad-daemon

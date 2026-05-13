@@ -343,8 +343,13 @@ class ApplicationMain
   };
 
   private onBeforeQuit = async (event: Electron.Event) => {
-    if (this.needFullDiskAccess) {
-      await this.daemonRpc.prepareRestart(true);
+    if (this.needFullDiskAccess && this.daemonRpc.isConnected) {
+      try {
+        await this.daemonRpc.prepareRestart(true);
+      } catch (e) {
+        const error = e as Error;
+        log.error(`Failed to prepare daemon restart on quit: ${error.message}`);
+      }
     }
 
     log.info('before-quit received');

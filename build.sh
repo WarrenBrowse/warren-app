@@ -20,7 +20,7 @@ CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-"target"}
 
 echo "Computing build version..."
 PRODUCT_VERSION=$(cargo run -q --bin mullvad-version)
-log_header "Building Mullvad VPN $PRODUCT_VERSION"
+log_header "Building Warren VPN $PRODUCT_VERSION"
 
 # If compiler optimization and artifact compression should be turned on or not
 OPTIMIZE="false"
@@ -94,7 +94,7 @@ if [[ "$UNIVERSAL" == "true" ]]; then
     # When the --target flag is provided to cargo it always puts the build in the target/$ENV_TARGET
     # folder even when it matches you local machine, as opposed to just the target folder.
     # This causes the cached build not to get used when later running e.g.
-    # 'cargo run --bin mullvad --shell-completions'.
+    # 'cargo run --bin warren --shell-completions'.
     case $HOST in
         x86_64-apple-darwin) TARGETS=("" aarch64-apple-darwin);;
         aarch64-apple-darwin) TARGETS=("" x86_64-apple-darwin);;
@@ -206,8 +206,8 @@ function sign_win {
             log_info "Signing $binary..."
             if signtool sign \
                 -tr http://timestamp.digicert.com -td sha256 \
-                -fd sha256 -d "Mullvad VPN" \
-                -du "https://github.com/mullvad/mullvadvpn-app#readme" \
+                -fd sha256 -d "Warren VPN" \
+                -du "https://git.p2p.legal/warren/warren-app" \
                 -sha1 "$CERT_HASH" "$binary"
             then
                 break
@@ -252,8 +252,8 @@ function build {
     fi
 
     local cargo_crates_to_build=(
-        -p mullvad-daemon --bin mullvad-daemon
-        -p mullvad-cli --bin mullvad
+        -p mullvad-daemon --bin warren-daemon
+        -p mullvad-cli --bin warren
         -p mullvad-setup --bin mullvad-setup
         -p mullvad-problem-report --bin mullvad-problem-report
     )
@@ -281,23 +281,23 @@ function build {
     # All the binaries produced by cargo that we want to include in the app
     if [[ ("$(uname -s)" == "Darwin") ]]; then
         BINARIES=(
-            mullvad-daemon
-            mullvad
+            warren-daemon
+            warren
             mullvad-problem-report
             mullvad-setup
         )
     elif [[ ("$(uname -s)" == "Linux") ]]; then
         BINARIES=(
-            mullvad-daemon
-            mullvad
+            warren-daemon
+            warren
             mullvad-problem-report
             mullvad-setup
             mullvad-exclude
         )
     elif [[ ("$(uname -s)" == "MINGW"*) ]]; then
         BINARIES=(
-            mullvad-daemon.exe
-            mullvad.exe
+            warren-daemon.exe
+            warren.exe
             mullvad-problem-report.exe
             mullvad-setup.exe
         )
@@ -374,13 +374,13 @@ done
 # Package app.
 ################################################################################
 
-log_header "Preparing for packaging Mullvad VPN $PRODUCT_VERSION"
+log_header "Preparing for packaging Warren VPN $PRODUCT_VERSION"
 
 if [[ "$(uname -s)" == "Darwin" || "$(uname -s)" == "Linux" ]]; then
     mkdir -p "build/shell-completions"
     for sh in bash zsh fish; do
         log_info "Generating shell completion script for $sh..."
-        cargo run --bin mullvad "${CARGO_ARGS[@]}" -- shell-completions "$sh" \
+        cargo run --bin warren "${CARGO_ARGS[@]}" -- shell-completions "$sh" \
             "build/shell-completions/"
     done
 else
@@ -414,8 +414,8 @@ function build_daemon_packages {
                 ;;
         esac
 
-        local deb_name="mullvad-vpn-daemon_${PRODUCT_VERSION}_${deb_arch}.deb"
-        local rpm_name="mullvad-vpn-daemon_${PRODUCT_VERSION}_${rpm_arch}.rpm"
+        local deb_name="warren-vpn-daemon_${PRODUCT_VERSION}_${deb_arch}.deb"
+        local rpm_name="warren-vpn-daemon_${PRODUCT_VERSION}_${rpm_arch}.rpm"
         local deb_file="dist/${deb_name}"
         local rpm_file="dist/${rpm_name}"
 
@@ -462,7 +462,7 @@ if [[ "$DAEMON_ONLY" == "false" ]]; then
 
     pushd packages/mullvad-vpn
 
-    log_header "Packing Mullvad VPN $PRODUCT_VERSION artifact(s)"
+    log_header "Packing Warren VPN $PRODUCT_VERSION artifact(s)"
 
     case "$(uname -s)" in
         Linux*)     npm run pack:linux -- "${NPM_PACK_ARGS[@]}";;
@@ -472,7 +472,7 @@ if [[ "$DAEMON_ONLY" == "false" ]]; then
     popd
     popd
 else
-    log_header "Packing Mullvad VPN daemon-only packages $PRODUCT_VERSION"
+    log_header "Packing Warren VPN daemon-only packages $PRODUCT_VERSION"
 
     build_daemon_packages
 fi

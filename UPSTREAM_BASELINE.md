@@ -26,7 +26,7 @@
 | Electron gRPC | podman | latest | Container pour bindings TypeScript |
 | MSVC | Build Tools | — | Windows only |
 
-## Inventaire des modifications Warren à venir (cf. `warren-pocs/docs/03-fork-mullvad.md`)
+## Inventaire des modifications Warren à venir (cf. `warren-core/docs/03-fork-mullvad.md`)
 
 ### À refondre (auth wallet : `Authorization: Token` → `X-Warren-*` signature)
 
@@ -51,8 +51,8 @@
 |---|---|
 | `trait Tunnel` dans `talpid-tunnel/src/lib.rs` | **N'existe pas** dans l'upstream. À créer avec API `setup() / teardown() / tunnel_address()`. |
 | Impl `Tunnel` pour `talpid-wireguard` | Adapter le code WG existant derrière le trait |
-| Impl `Tunnel` pour `warren-iroh-tunnel` | Nouvelle crate (existe déjà dans `warren-pocs/crates/warren-iroh-tunnel/`), consommée via `path = "../../warren-pocs/crates/warren-iroh-tunnel"` |
-| Crate `warren-identity` | Existe dans `warren-pocs/`, consommée via path |
+| Impl `Tunnel` pour `warren-iroh-tunnel` | Nouvelle crate (existe déjà dans `warren-core/crates/warren-iroh-tunnel/`), consommée via `path = "../../warren-core/crates/warren-iroh-tunnel"` |
+| Crate `warren-identity` | Existe dans `warren-core/`, consommée via path |
 | Crate `warren-natpmp-server` | Existe, consommée via path |
 | Crate `warren-natpmp-client` | Existe, consommée via path |
 | Crate `warren-killswitch` | Existe (Linux nft + macOS pf), consommée via path |
@@ -104,9 +104,9 @@
 
 ## Décisions actées (2026-05-06)
 
-1. **Hébergement repo** : `git.p2p.legal/warren/warren-app` (Gitea selfhost, même espace que `warren-pocs` qui vit sur `git.p2p.legal/warren/poc.git`)
+1. **Hébergement repo** : `git.p2p.legal/warren/warren-app` (Gitea selfhost, même espace que `warren-core` qui vit sur `git.p2p.legal/warren/poc.git`)
 2. **Visibilité** : **privé** pendant la phase POC. Public au lancement freemium (GPL-3.0 oblige le source du fork — la visibilité publique sera réactivée à ce moment-là)
-3. **CI** : workflows séparés du `warren-pocs`. À adapter : retirer les jobs upstream Mullvad inutiles (tests Android/iOS si on ne ship pas mobile dès POC), ajouter le check `cargo build` Warren-only via le feature flag `tunnel_backend = "iroh"`. Détails à figer en début phase 1
+3. **CI** : workflows séparés du `warren-core`. À adapter : retirer les jobs upstream Mullvad inutiles (tests Android/iOS si on ne ship pas mobile dès POC), ajouter le check `cargo build` Warren-only via le feature flag `tunnel_backend = "iroh"`. Détails à figer en début phase 1
 4. **Cadence merge upstream** : **weekly cherry-pick** de `main` upstream. Branche `warren-base` divergente, on rebase les commits Warren sur le HEAD upstream du jour J chaque semaine (lundi typique). Limites les conflits accumulés vs un freeze long
 
 ## État reconnaissance (2026-05-06)
@@ -120,7 +120,7 @@
 - ✅ Push initial `main` + tag `upstream-baseline-2026-05-06` + branche `warren-base`
 - ⏸ Build green sanity check (deferred — deps externes lourdes : Volta, podman, protobuf, bash 4. À faire au début phase 1)
 
-Reconnaissance terminée. Phase 1 amorcée 2026-05-07 (post-bench stab 24h validé `warren-pocs` shippable).
+Reconnaissance terminée. Phase 1 amorcée 2026-05-07 (post-bench stab 24h validé `warren-core` shippable).
 
 ## Setup phase 1 (commandes prêtes)
 

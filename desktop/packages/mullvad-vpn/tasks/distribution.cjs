@@ -26,8 +26,8 @@ function getOptionValue(option) {
 function newConfig() {
   return {
     appId: 'net.mullvad.vpn',
-    copyright: 'Mullvad VPN AB',
-    productName: 'Mullvad VPN',
+    copyright: 'Warren contributors',
+    productName: 'Warren VPN',
     publish: null,
     asar: true,
     compression: noCompression ? 'store' : 'normal',
@@ -90,7 +90,7 @@ function newConfig() {
       },
       x64ArchFiles:
         'Contents/Resources/app.asar.unpacked/node_modules/nseventforwarder/dist/*/index.node',
-      artifactName: 'MullvadVPN-${version}.${ext}',
+      artifactName: 'WarrenVPN-${version}.${ext}',
       category: 'public.app-category.tools',
       icon: distAssets('icon-macos.icns'),
       notarize: shouldNotarize,
@@ -99,13 +99,13 @@ function newConfig() {
         NSUserNotificationAlertStyle: 'banner',
       },
       extraResources: [
-        { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad')), to: '.' },
+        { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren')), to: '.' },
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad-problem-report')), to: '.' },
-        { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad-daemon')), to: '.' },
+        { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-daemon')), to: '.' },
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad-setup')), to: '.' },
         { from: distAssets('uninstall_macos.sh'), to: './uninstall.sh' },
-        { from: buildAssets('shell-completions/_mullvad'), to: '.' },
-        { from: buildAssets('shell-completions/mullvad.fish'), to: '.' },
+        { from: buildAssets('shell-completions/_warren'), to: '.' },
+        { from: buildAssets('shell-completions/warren.fish'), to: '.' },
       ],
     },
 
@@ -128,14 +128,14 @@ function newConfig() {
 
     win: {
       target: [],
-      artifactName: 'MullvadVPN-${version}_${arch}.${ext}',
+      artifactName: 'WarrenVPN-${version}_${arch}.${ext}',
       extraResources: [
-        { from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad.exe')), to: '.' },
+        { from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren.exe')), to: '.' },
         {
           from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad-problem-report.exe')),
           to: '.',
         },
-        { from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad-daemon.exe')), to: '.' },
+        { from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren-daemon.exe')), to: '.' },
         {
           from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad-setup.exe')),
           to: '.',
@@ -188,15 +188,15 @@ function newConfig() {
           arch: getLinuxTargetArch(),
         },
       ],
-      executableName: 'mullvad-vpn',
-      artifactName: 'MullvadVPN-${version}_${arch}.${ext}',
+      executableName: 'warren-vpn',
+      artifactName: 'WarrenVPN-${version}_${arch}.${ext}',
       category: 'Network',
       icon: distAssets('icon.icns'),
-      extraFiles: [{ from: distAssets('linux/mullvad-gui-launcher.sh'), to: '.' }],
+      extraFiles: [{ from: distAssets('linux/warren-gui-launcher.sh'), to: '.' }],
       extraResources: [
         { from: distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-problem-report')), to: '.' },
         { from: distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-setup')), to: '.' },
-        { from: distAssets(path.join('linux', 'apparmor_mullvad')), to: '.' },
+        { from: distAssets(path.join('linux', 'apparmor_warren')), to: '.' },
       ],
     },
 
@@ -209,19 +209,19 @@ function newConfig() {
         distAssets('linux/before-install.sh'),
         '--before-remove',
         distAssets('linux/before-remove.sh'),
-        distAssets('linux/mullvad-daemon.service') +
-          '=/usr/lib/systemd/system/mullvad-daemon.service',
-        distAssets('linux/mullvad-early-boot-blocking.service') +
-          '=/usr/lib/systemd/system/mullvad-early-boot-blocking.service',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad')) + '=/usr/bin/',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-daemon')) + '=/usr/bin/',
+        distAssets('linux/warren-daemon.service') +
+          '=/usr/lib/systemd/system/warren-daemon.service',
+        distAssets('linux/warren-early-boot-blocking.service') +
+          '=/usr/lib/systemd/system/warren-early-boot-blocking.service',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren')) + '=/usr/bin/',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-daemon')) + '=/usr/bin/',
         distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-exclude')) + '=/usr/bin/',
         distAssets('linux/problem-report-link') + '=/usr/bin/mullvad-problem-report',
-        buildAssets('shell-completions/mullvad.bash') +
-          '=/usr/share/bash-completion/completions/mullvad',
-        buildAssets('shell-completions/_mullvad') + '=/usr/local/share/zsh/site-functions/_mullvad',
-        buildAssets('shell-completions/mullvad.fish') +
-          '=/usr/share/fish/vendor_completions.d/mullvad.fish',
+        buildAssets('shell-completions/warren.bash') +
+          '=/usr/share/bash-completion/completions/warren',
+        buildAssets('shell-completions/_warren') + '=/usr/local/share/zsh/site-functions/_warren',
+        buildAssets('shell-completions/warren.fish') +
+          '=/usr/share/fish/vendor_completions.d/warren.fish',
       ],
       afterInstall: distAssets('linux/after-install.sh'),
       afterRemove: distAssets('linux/after-remove.sh'),
@@ -235,26 +235,26 @@ function newConfig() {
         // same across all electron-builder applications, which causes package
         // conflicts
         '--rpm-rpmbuild-define=_build_id_links none',
-        '--directories=/opt/Mullvad VPN/',
+        '--directories=/opt/Warren VPN/',
         '--before-install',
         distAssets('linux/before-install.sh'),
         '--before-remove',
         distAssets('linux/before-remove.sh'),
         '--rpm-posttrans',
         distAssets('linux/post-transaction.sh'),
-        distAssets('linux/mullvad-daemon.service') +
-          '=/usr/lib/systemd/system/mullvad-daemon.service',
-        distAssets('linux/mullvad-early-boot-blocking.service') +
-          '=/usr/lib/systemd/system/mullvad-early-boot-blocking.service',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad')) + '=/usr/bin/',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-daemon')) + '=/usr/bin/',
+        distAssets('linux/warren-daemon.service') +
+          '=/usr/lib/systemd/system/warren-daemon.service',
+        distAssets('linux/warren-early-boot-blocking.service') +
+          '=/usr/lib/systemd/system/warren-early-boot-blocking.service',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren')) + '=/usr/bin/',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-daemon')) + '=/usr/bin/',
         distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-exclude')) + '=/usr/bin/',
         distAssets('linux/problem-report-link') + '=/usr/bin/mullvad-problem-report',
-        buildAssets('shell-completions/mullvad.bash') +
-          '=/usr/share/bash-completion/completions/mullvad',
-        buildAssets('shell-completions/_mullvad') + '=/usr/share/zsh/site-functions/_mullvad',
-        buildAssets('shell-completions/mullvad.fish') +
-          '=/usr/share/fish/vendor_completions.d/mullvad.fish',
+        buildAssets('shell-completions/warren.bash') +
+          '=/usr/share/bash-completion/completions/warren',
+        buildAssets('shell-completions/_warren') + '=/usr/share/zsh/site-functions/_warren',
+        buildAssets('shell-completions/warren.fish') +
+          '=/usr/share/fish/vendor_completions.d/warren.fish',
       ],
       afterInstall: distAssets('linux/after-install.sh'),
       afterRemove: distAssets('linux/after-remove.sh'),
@@ -442,13 +442,13 @@ function packLinux() {
       afterPack: async (context) => {
         config.afterPack?.(context);
 
-        const sourceExecutable = path.join(context.appOutDir, 'mullvad-vpn');
-        const targetExecutable = path.join(context.appOutDir, 'mullvad-gui');
-        const launcherScript = path.join(context.appOutDir, 'mullvad-gui-launcher.sh');
+        const sourceExecutable = path.join(context.appOutDir, 'warren-vpn');
+        const targetExecutable = path.join(context.appOutDir, 'warren-gui');
+        const launcherScript = path.join(context.appOutDir, 'warren-gui-launcher.sh');
 
-        // rename "Mullvad VPN" to mullvad-gui
+        // rename "Warren VPN" to warren-gui
         await fs.promises.rename(sourceExecutable, targetExecutable);
-        // rename launcher script to mullvad-vpn
+        // rename launcher script to warren-vpn
         await fs.promises.rename(launcherScript, sourceExecutable);
       },
     },

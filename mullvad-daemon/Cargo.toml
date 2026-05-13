@@ -89,12 +89,17 @@ mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
+# Warren fork — fetch `GET /v1/exits` au boot pour bootstrap
+# `<cache_dir>/warren-relays.json` depuis warren-api. Endpoint public
+# (pas de signature client), réponse v2 signée serveur vérifiée au load
+# par `DaemonWarrenRelaySelector`.
+reqwest = { workspace = true }
 # Warren fork — Phase 2 auth wallet : la mnémonique BIP39 stockée dans
 # `<settings_dir>/warren_mnemonic.txt` est dérivée en SigningKey
 # Ed25519 au boot du daemon via ces 2 crates path-dep cross-repo (cf.
-# `../../warren-pocs/crates/warren-identity/`).
-warren-config = { path = "../../warren-pocs/crates/warren-config" }
-warren-identity = { path = "../../warren-pocs/crates/warren-identity" }
+# `../../warren-core/crates/warren-identity/`).
+warren-config = { path = "../../warren-core/crates/warren-config" }
+warren-identity = { path = "../../warren-core/crates/warren-identity" }
 # Phase 4.F : `warren_signer` expose désormais une `SigningKey` brute
 # pour assembler des `WarrenIrohParameters`. Version pin alignée sur
 # `mullvad-api/Cargo.toml`.
@@ -104,12 +109,12 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std
 # de `talpid-warren-iroh` côté API : retourne juste `(EndpointId,
 # EndpointAddr)` ; le caller (state machine, Phase 4.F future)
 # assemble le `WarrenIrohParameters` complet.
-warren-relay-selector = { path = "../../warren-pocs/crates/warren-relay-selector" }
+warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
 # Phase G.3 : client HTTP signé warren-api (consumed par
 # `WarrenRemoteAccountBackend` + `WarrenRemoteDeviceBackend` pour
 # remplacer les calls `mullvad_api::AccountsProxy/DevicesProxy` quand
 # `warren_mode = true && warren_local_account = false`).
-warren-api-client = { path = "../../warren-pocs/crates/warren-api-client" }
+warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 # Phase G.3 : encode/decode wg_pubkey 32 bytes ↔ hex 64 chars dans
 # `WarrenRemoteDeviceBackend::map_device_response`.
 hex = "0.4"
@@ -150,7 +155,7 @@ talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
 # Phase G.3 : tests E2E spawn warren-api in-process pour valider le
 # round-trip `WarrenRemote*Backend` → warren-api-client → warren-api.
-warren-api = { path = "../../warren-pocs/crates/warren-api" }
+warren-api = { path = "../../warren-core/crates/warren-api" }
 
 [target.'cfg(any(unix, windows))'.dependencies]
 mullvad-update = { path = "../mullvad-update", features = ["client"] }

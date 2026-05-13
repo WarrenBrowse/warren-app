@@ -6,7 +6,7 @@
 //! `warren_identity::derive_node_key`). Pas de cycle de vie token,
 //! pas de cache à invalider.
 //!
-//! **Format canonique** (cf. `warren-pocs/docs/06-auth-wallet.md` § 110) :
+//! **Format canonique** (cf. `warren-core/docs/06-auth-wallet.md` § 110) :
 //!
 //! ```text
 //! message = METHOD || "\n" || path || "\n" || timestamp || "\n" || nonce_hex || "\n" || sha256_hex(body)
@@ -20,7 +20,7 @@
 //! - `X-Warren-Timestamp` : epoch seconds décimal
 //! - `X-Warren-Nonce`     : hex 32 chars (nonce 16 octets random)
 //!
-//! **Validation côté serveur** (cf. `warren-pocs/crates/warren-api/`) :
+//! **Validation côté serveur** (cf. `warren-core/crates/warren-api/`) :
 //! 1. `|now - timestamp| ≤ 60 s` (clock skew window)
 //! 2. `nonce` jamais vu dans les 120 s précédentes (LRU RAM)
 //! 3. signature vérifie via la pubkey

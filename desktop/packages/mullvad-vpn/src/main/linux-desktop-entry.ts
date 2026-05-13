@@ -190,7 +190,7 @@ export function shouldShowApplication(application: DesktopEntry): application is
 
   return (
     application.type === 'Application' &&
-    application.name !== 'Mullvad VPN' &&
+    application.name !== 'Warren VPN' &&
     application.exec !== undefined &&
     application.noDisplay !== 'true' &&
     application.terminal !== 'true' &&

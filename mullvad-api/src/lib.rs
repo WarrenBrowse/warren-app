@@ -31,7 +31,7 @@ pub mod device;
 
 mod relay_list;
 /// Auth wallet : signature Ed25519 sur les requêtes API HTTP.
-/// Cf. `warren-pocs/docs/06-auth-wallet.md`.
+/// Cf. `warren-core/docs/06-auth-wallet.md`.
 pub mod warren_auth;
 
 pub use address_cache::Error as AddressCacheError;
@@ -476,7 +476,7 @@ impl<B: AddressCacheBacking> Runtime<B> {
     ///
     /// Le caller (= mullvad-daemon) détient l'`Arc<WarrenAuthSigner>`
     /// dérivé de la mnémonique BIP39 stockée localement (cf. crate
-    /// `warren-identity` côté warren-pocs).
+    /// `warren-identity` côté warren-core).
     pub fn mullvad_rest_handle_with_warren_signer<T: ConnectionModeProvider + 'static>(
         &self,
         connection_mode_provider: T,

@@ -3,8 +3,8 @@
 Ce document explique comment activer et utiliser les modes Warren ajoutés
 au fork de Mullvad VPN. Pour le contexte produit (pourquoi Warren existe,
 quelles décisions architecturales ont été prises), voir le repo POC
-[`warren-pocs`](../../warren-pocs/) et son cahier des charges
-[`docs/00-contexte-et-decisions.md`](../../warren-pocs/docs/00-contexte-et-decisions.md).
+[`warren-core`](../../warren-core/) et son cahier des charges
+[`docs/00-contexte-et-decisions.md`](../../warren-core/docs/00-contexte-et-decisions.md).
 
 ## Vue d'ensemble
 
@@ -126,7 +126,7 @@ mullvad connect
 ### Crypto handshake
 
 L'identité Warren est portée par la `SigningKey` Ed25519 dérivée de la
-mnémonique BIP39 via [`warren_identity::derive_node_key`](../../warren-pocs/crates/warren-identity/).
+mnémonique BIP39 via [`warren_identity::derive_node_key`](../../warren-core/crates/warren-identity/).
 Cette même clé est utilisée pour :
 
 1. **TLS QUIC handshake** Iroh : `iroh::SecretKey::from_bytes(signing.to_bytes())`.
@@ -136,9 +136,9 @@ Cette même clé est utilisée pour :
    headers `X-Warren-{PubKey,Signature,Timestamp,Nonce}` sur les endpoints
    migrés (cf. `mullvad-api/src/rest.rs::*_or_signed`).
 
-L'exit warren-pocs supporte une **allowlist** optionnelle (`ExitBindOpts.allowlist`)
+L'exit warren-core supporte une **allowlist** optionnelle (`ExitBindOpts.allowlist`)
 qui restreint les pubkeys autorisées au handshake — pour les déploiements
-multi-tenants. Cf. [`crates/warren-iroh-tunnel/src/exit.rs`](../../warren-pocs/crates/warren-iroh-tunnel/src/exit.rs).
+multi-tenants. Cf. [`crates/warren-iroh-tunnel/src/exit.rs`](../../warren-core/crates/warren-iroh-tunnel/src/exit.rs).
 
 ## Validation locale
 
@@ -147,7 +147,7 @@ multi-tenants. Cf. [`crates/warren-iroh-tunnel/src/exit.rs`](../../warren-pocs/c
 cargo test -p mullvad-daemon --lib warren_
 
 # Lancer les tests Warren côté pocs (nécessite cargo-test-nofw sur macOS)
-cd ../warren-pocs
+cd ../warren-core
 ./scripts/dev/cargo-test-nofw.sh test -p warren-iroh-tunnel
 ```
 
@@ -160,7 +160,7 @@ cd ../warren-pocs
 - ✅ Phase B : `WARREN_LOCAL_ACCOUNT=1` mode + bootstrap device.json
 - ✅ Phase C : `WarrenAccountBackend` + `WarrenDeviceBackend` traits
 - ✅ Phase D.1 : 10 endpoints REST signés via `WarrenAuthSigner`
-- ✅ Phase D.2 : Allowlist côté exit warren-pocs
+- ✅ Phase D.2 : Allowlist côté exit warren-core
 - ✅ Phase E : `Settings::warren_mode` + `warren_local_account` persistants
 - ✅ Phase F : gRPC `SetWarrenMode`/`SetWarrenLocalAccount` + `mullvad warren` CLI
 

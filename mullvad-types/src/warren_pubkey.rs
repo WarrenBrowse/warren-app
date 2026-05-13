@@ -11,7 +11,7 @@
 //! qu'une `WarrenPubKey` est *toujours* parseable en `[u8; 32]` sans
 //! re-validation aval ; (3) préparer le remplacement progressif de
 //! `AccountNumber` dans toute la chaîne API + daemon (cf.
-//! `warren-pocs/docs/06-auth-wallet.md`).
+//! `warren-core/docs/06-auth-wallet.md`).
 
 use std::fmt;
 use std::str::FromStr;

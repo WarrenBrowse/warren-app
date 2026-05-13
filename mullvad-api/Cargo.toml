@@ -16,7 +16,7 @@ async-trait = "0.1"
 chrono = { workspace = true }
 # Warren fork — Phase 2 auth wallet : signature Ed25519 sur les requêtes
 # API HTTP (cf. `mullvad-api/src/warren_auth.rs` et
-# `warren-pocs/docs/06-auth-wallet.md`).
+# `warren-core/docs/06-auth-wallet.md`).
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
   "std",
 ] }

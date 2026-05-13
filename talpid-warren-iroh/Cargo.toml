@@ -29,7 +29,7 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # Pour la prod long-terme, ces crates devront être publiées sur un
 # registry privé (ex: cargo-binstall + Gitea registry) ou intégrées
 # directement comme submodule du fork.
-warren-iroh-tunnel = { path = "../../warren-pocs/crates/warren-iroh-tunnel" }
+warren-iroh-tunnel = { path = "../../warren-core/crates/warren-iroh-tunnel" }
 
 # Iroh types réexposés dans l'API publique (EndpointId, EndpointAddr,
 # SecretKey). Pin strict sur la même version que `warren-iroh-tunnel`
