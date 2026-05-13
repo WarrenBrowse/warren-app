@@ -47,6 +47,18 @@ pub mod warren_mode;
 /// `WarrenRelayList` depuis le `cache_dir`, sélectionne les composants
 /// Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
 pub mod warren_relay_selector;
+/// Vue `RelayList` Mullvad-format d'une `WarrenRelayList`. Permet à la
+/// GUI Electron de consommer les exits Warren via son sélecteur de
+/// pays/villes existant.
+pub mod warren_relay_list_view;
+/// Bootstrap fetcher pour `<cache_dir>/warren-relays.json` depuis
+/// l'endpoint public `GET {warren_api_url}/v1/exits`. Best-effort au
+/// boot — si échec, le selector tombe sur l'ancien cache (ou liste vide).
+pub mod warren_relays_fetch;
+/// Conversion `RelaySettings` (Mullvad UI) → `WarrenRelayQuery`
+/// (filtrage côté warren-relay-selector). Mappe country/city, fallback
+/// `Any` pour les cas non supportés (custom lists, custom endpoint).
+pub mod warren_query_from_settings;
 /// Phase #4 — résolution `WarrenApiConfig` (URL warren-api + signing key)
 /// depuis Settings + env var. Pure function testable extraite de
 /// `Daemon::start`.
@@ -731,6 +743,12 @@ pub struct Daemon {
     relay_selector: RelaySelector,
     relay_list_updater: RelayListUpdaterHandle,
     parameters_generator: tunnel::ParametersGenerator,
+    /// Vue Mullvad-format de la `WarrenRelayList` calculée au boot.
+    /// Substituée à la liste Mullvad upstream pour les pulls
+    /// synchrones — sinon la GUI propose des pays absents de la
+    /// WarrenRelayList et le tunnel Warren retourne NoMatchingRelay
+    /// au connect → kill-switch. `None` si `warren_mode` inactif.
+    warren_relay_list_view: Option<RelayList>,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
     #[cfg(target_os = "windows")]
@@ -1039,6 +1057,40 @@ impl Daemon {
                 "Warren tunnel mode enabled (env var {}=1 or Settings::warren_mode=true)",
                 warren_mode::ENV_VAR_NAME
             );
+
+            // Best-effort refresh du cache warren-relays.json depuis
+            // `GET {api_url}/v1/exits`. URL : env WARREN_API_URL > Settings >
+            // default warren_config::WARREN_API_URL. Si le fetch échoue
+            // (réseau down, 5xx, JSON invalide), on log warn et on tombe
+            // sur le cache existant (verify côté load_from_cache_dir).
+            let relays_api_url = std::env::var("WARREN_API_URL")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .or_else(|| {
+                    settings
+                        .warren_api_url
+                        .clone()
+                        .filter(|s| !s.is_empty())
+                })
+                .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned());
+            match warren_relays_fetch::fetch_and_cache_relays(
+                &relays_api_url,
+                &config.cache_dir,
+            )
+            .await
+            {
+                Ok(bytes) => log::info!(
+                    "Warren relays refreshed from {} ({} bytes)",
+                    relays_api_url,
+                    bytes
+                ),
+                Err(e) => log::warn!(
+                    "Failed to refresh warren-relays from {}: {} — falling back to cached file",
+                    relays_api_url,
+                    e
+                ),
+            }
+
             let selector = warren_relay_selector::DaemonWarrenRelaySelector::load_from_cache_dir(
                 &config.cache_dir,
             )
@@ -1058,6 +1110,14 @@ impl Daemon {
         } else {
             (None, None)
         };
+
+        // Pré-calcule la vue Mullvad-format des warren-relays pour
+        // pouvoir la broadcaster à la GUI au boot ET la cloner dans le
+        // closure `on_relay_list_update` synchrone (qui ne peut pas
+        // re-locker `parameters_generator`).
+        let warren_relay_list_view: Option<RelayList> = warren_relay_selector
+            .as_ref()
+            .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list()));
 
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             account_manager.clone(),
@@ -1152,13 +1212,38 @@ impl Daemon {
 
         let relay_list_listener = management_interface.notifier().clone();
         let internal_event_tx_clone = internal_event_tx.clone();
+
+        // En mode Warren tunnel, on substitue la `RelayList` broadcast à
+        // la GUI par une vue construite depuis `warren-relays.json`
+        // (cf. `warren_relay_list_view::to_mullvad_relay_list`). Le
+        // `RelayListUpdater` Mullvad upstream continue de tourner pour
+        // alimenter les autres consommateurs internes (API access
+        // methods, bridges) qui dépendent encore de la liste Mullvad,
+        // mais le payload exposé à la GUI vient uniquement de Warren.
+        let warren_view_for_closure = warren_relay_list_view.clone();
         let on_relay_list_update = move |relay_list: &RelayList| {
-            relay_list_listener.notify_relay_list(relay_list.clone());
+            let to_broadcast = warren_view_for_closure
+                .as_ref()
+                .cloned()
+                .unwrap_or_else(|| relay_list.clone());
+            relay_list_listener.notify_relay_list(to_broadcast);
             let (tx, _) = oneshot::channel();
             let _ = internal_event_tx_clone.send(InternalDaemonEvent::Command(
                 DaemonCommand::UpdateDefaultLocationCountry(tx),
             ));
         };
+
+        // Broadcast immédiat de la vue Warren (= sans attendre le 1er
+        // refresh de `RelayListUpdater` qui peut arriver minutes plus
+        // tard) : la GUI affichera les exits Warren dès la 1ère
+        // connexion au management interface.
+        if let Some(view) = warren_relay_list_view.as_ref() {
+            log::info!(
+                "Broadcasting Warren relay list view ({} countries) to GUI at boot",
+                view.countries.len()
+            );
+            management_interface.notifier().notify_relay_list(view.clone());
+        }
 
         let mut relay_list_updater = RelayListUpdater::spawn(
             relay_selector.clone(),
@@ -1261,6 +1346,7 @@ impl Daemon {
             relay_selector,
             relay_list_updater,
             parameters_generator,
+            warren_relay_list_view,
             shutdown_tasks: vec![],
             tunnel_state_machine_handle,
             #[cfg(target_os = "windows")]
@@ -2214,7 +2300,17 @@ impl Daemon {
     }
 
     fn on_get_relay_locations(&mut self, tx: oneshot::Sender<RelayList>) {
-        Self::oneshot_send(tx, self.relay_selector.get_relays(), "relay locations");
+        // Substituer la vue Warren à la liste Mullvad pour le pull
+        // synchrone — sans ça la GUI peuple son selector avec des
+        // relays absents de la WarrenRelayList → NoMatchingRelay au
+        // connect → kill-switch. Substitution équivalente au closure
+        // `on_relay_list_update` côté broadcast push.
+        let relays = self
+            .warren_relay_list_view
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| self.relay_selector.get_relays());
+        Self::oneshot_send(tx, relays, "relay locations");
     }
 
     fn on_get_bridges(&mut self, tx: oneshot::Sender<BridgeList>) {
