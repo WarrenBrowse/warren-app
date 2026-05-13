@@ -8272,6 +8272,7 @@ dependencies = [
 name = "warren-api-client"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "ed25519-dalek 2.2.0",
  "hex",
  "rand 0.10.1",
