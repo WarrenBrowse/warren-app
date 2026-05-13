@@ -36,7 +36,7 @@ mod adapter;
 use adapter::MullvadTunPacketDevice;
 
 /// **F10e c2 fix** — split-default policy routing pour Internet via tunnel.
-/// Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+/// Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
 pub mod default_route_split;
 
 // F10e Option B trace marker. Préfixe unique pour grep simple post-bench.
@@ -45,7 +45,7 @@ pub mod default_route_split;
 // pour ne pas polluer prod ; activer via `RUST_LOG=debug` ou
 // `RUST_LOG=talpid_warren_iroh=debug` quand on veut diagnostiquer un
 // futur problème de séquençage start/wait. Cf.
-// `warren-pocs/bench/results/2026-05-09_F10e_*` pour les rounds.
+// `warren-core/bench/results/2026-05-09_F10e_*` pour les rounds.
 const F10E_PREFIX: &str = "[F10e-trace]";
 
 /// Paramètres pour démarrer un tunnel Warren via Iroh.
@@ -370,37 +370,60 @@ impl WarrenIrohMonitor {
         // Validation manuelle Hetzner WAN : ping 8.8.8.8 via tunnel
         // 8.1ms RTT après pose de ces routes (vs 100% loss sans).
         let exit_ips: Vec<IpAddr> = params.exit_addr.ip_addrs().map(|sa| sa.ip()).collect();
-        let physical_iface = detect_default_iface().unwrap_or_else(|e| {
-            log::warn!(
-                "Failed to detect default iface, falling back to 'eth0': {e}. \
-                 Bypass routes for exit IPs may not install correctly."
-            );
-            "eth0".to_owned()
-        });
-        // F10e c2 fix : détecter gateway de la default route IPv4 pour
-        // poser le bypass <exit_ip>/32 via <gw> (= pas dev seul = ARP fail).
-        let gateway_v4 = detect_default_gateway_v4().ok();
-        if let Some(gw) = gateway_v4 {
-            log::info!("Detected default gateway: {gw} (used for bypass exit routes)");
-        } else {
-            log::warn!(
-                "Failed to detect default gateway via /proc/net/route. \
-                 Bypass routes will use scope link (may fail ARP on cloud VPS)."
-            );
-        }
-        let routes =
-            build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface, gateway_v4);
+        // Build the route set according to the platform's routing model.
+        // Mullvad WireGuard already uses this same dispatch
+        // (`talpid-wireguard/src/lib.rs`: `get_endpoint_routes` +
+        // `get_pre_tunnel_routes` + `get_post_tunnel_routes`) — we mirror
+        // the pattern, adapted to our Warren/Iroh requirements.
+        //
+        // - Linux: bypass `<exit_ip>/32 via <gw> dev <physical>` (main
+        //   table) + split-default `/1 + /1 dev <tun>` (table 100 via
+        //   `default_route_split`). iface + gw detected from
+        //   `/proc/net/route`.
+        // - macOS: bypass `<exit_ip>/32 NetNode::DefaultNode` (talpid-routing
+        //   resolves best_default_route at apply time) + `0.0.0.0/0 dev
+        //   <tun>` (triggers the `tunnel_default_routes` ifscope dance).
+        //   No upfront detection — talpid-routing already tracks the
+        //   physical iface and gw via its internal monitor.
+        #[cfg(target_os = "linux")]
+        let routes = {
+            let physical_iface = detect_default_iface().unwrap_or_else(|e| {
+                log::warn!(
+                    "Failed to detect default iface, falling back to 'eth0': {e}. \
+                     Bypass routes for exit IPs may not install correctly."
+                );
+                "eth0".to_owned()
+            });
+            let gateway_v4 = detect_default_gateway_v4().ok();
+            if let Some(gw) = gateway_v4 {
+                log::info!("Detected default gateway: {gw} (used for bypass exit routes)");
+            } else {
+                log::warn!(
+                    "Failed to detect default gateway via /proc/net/route. \
+                     Bypass routes will use scope link (may fail ARP on cloud VPS)."
+                );
+            }
+            build_warren_tunnel_routes(&metadata.interface, &exit_ips, &physical_iface, gateway_v4)
+        };
+        #[cfg(target_os = "macos")]
+        let routes = build_warren_tunnel_routes_macos(&metadata.interface, &exit_ips);
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        let routes: Vec<RequiredRoute> = {
+            log::warn!("Warren tunnel routing not yet implemented for this platform.");
+            Vec::new()
+        };
+
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
         log::debug!(
-            "{F10E_PREFIX} T6={}ms phase=routes_add_start (bypass exit only — split-default via default_route_split)",
+            "{F10E_PREFIX} T6={}ms phase=routes_add_start",
             start_t.elapsed().as_millis()
         );
         let metadata_iface_for_log = metadata.interface.clone();
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
                 Ok(()) => log::info!(
-                    "Warren tunnel bypass routes installed (tun={metadata_iface_for_log}, physical={physical_iface})"
+                    "Warren tunnel routes installed (tun={metadata_iface_for_log})"
                 ),
                 Err(e) => log::warn!(
                     "Failed to install Warren tunnel routes: {e}. \
@@ -414,11 +437,13 @@ impl WarrenIrohMonitor {
             routes_t.elapsed().as_millis()
         );
 
-        // F10e c2 fix : install le split-default policy routing (table
-        // 100 + ip rule bypass exit IP). On extrait l'exit IPv4 du
-        // metadata. Si pas d'IPv4 dispo, log warn (= tunnel up mais
-        // Internet pas routé via tun). Cf.
-        // `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        // F10e c2 fix Linux : install le split-default policy routing
+        // (table 100 + ip rule bypass exit IP). Sur macOS, le split-default
+        // est posé directement dans la table de routing principale via
+        // `build_warren_tunnel_routes` (la spécificité du `/32` bypass
+        // garantit l'absence de boucle de routage — pas besoin de policy
+        // routing). Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        #[cfg(target_os = "linux")]
         let default_route_guard = {
             let exit_ip_v4 = exit_ips.iter().find_map(|ip| match ip {
                 IpAddr::V4(v4) => Some(*v4),
@@ -451,6 +476,8 @@ impl WarrenIrohMonitor {
                 None
             }
         };
+        #[cfg(not(target_os = "linux"))]
+        let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
         // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
         // QUIC. La task tourne jusqu'à : (a) close de la session
@@ -846,11 +873,12 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
 ///
 /// Si `gateway` est `None`, on retombe sur `Node::device(physical)`
 /// (= ancien comportement, KO sur Hetzner mais peut marcher sur LAN
-/// flat). Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+/// flat). Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
 ///
 /// Le split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` est posé
 /// séparément via [`default_route_split`] (= policy routing avec table
 /// dédiée), pas ici dans la table main.
+#[cfg(target_os = "linux")]
 #[must_use]
 fn build_warren_tunnel_routes(
     _tun_iface: &str,
@@ -873,12 +901,65 @@ fn build_warren_tunnel_routes(
         routes.push(RequiredRoute::new(net, physical_node.clone()));
     }
 
-    // F10e c2 fix : on NE pose PAS `0.0.0.0/1 + 128.0.0.0/1 dev <tun>`
-    // dans la table main. Ces routes capturaient AUSSI les paquets QUIC
-    // sortants du daemon vers exit:7000 → boucle de routage → tunnel
-    // s'auto-poison. Elles sont posées dans la table 100 dédiée par
-    // `default_route_split::DefaultRouteSplitGuard::install` après que
-    // `talpid_routing` ait posé les routes ci-dessus dans table main.
+    // F10e c2 fix Linux only: we do NOT post `0.0.0.0/1 + 128.0.0.0/1
+    // dev <tun>` in the main table. These routes would also capture the
+    // daemon's outbound QUIC packets to exit:7000 → routing loop → the
+    // tunnel poisons itself. They are posted in a dedicated table 100
+    // by `default_route_split::DefaultRouteSplitGuard::install` after
+    // `talpid_routing` has posted the bypass routes above in the main
+    // table. On macOS, see [`build_warren_tunnel_routes_macos`] for the
+    // native ifscope strategy through talpid-routing.
+
+    routes
+}
+
+/// Build `RequiredRoute`s to redirect user traffic through the TUN on
+/// macOS, while bypassing daemon-iroh packets to the exit IPs. Mirror
+/// of Mullvad WireGuard's pattern (`talpid-wireguard/src/lib.rs:843-859`
+/// + `get_post_tunnel_routes`), adapted to Warren's needs (single exit,
+/// Iroh QUIC transport).
+///
+/// macOS strategy — do NOT reproduce the Linux `/1 + /1` recipe:
+///
+/// 1. **`<exit_ip>/32 NetNode::DefaultNode`** — bypass so that the
+///    daemon's QUIC packets to the exit take the physical NIC instead
+///    of the TUN (otherwise routing loop). `DefaultNode` is a symbolic
+///    node: talpid-routing macOS posts `<ip>/32 via
+///    best_default_route.router_ip` in `apply_non_tunnel_routes`
+///    (`talpid-routing/src/unix/macos/mod.rs:541`), executed **after**
+///    the ifscope dance, hence with an ARP-able L3 gateway (not the SDL
+///    link-scope that fails ARP for off-LAN exits).
+///
+/// 2. **`0.0.0.0/0 dev <tun>`** — default redirect. Prefix 0 triggers
+///    the `tunnel_default_routes` special case in talpid-routing macOS
+///    (`mod.rs:344-354`) which:
+///    - Transforms the previous default `0.0.0.0/0 via gw dev <physical>`
+///      into an **ifscope** route (= visible only to sockets bound to
+///      the physical iface).
+///    - Posts the new default `0.0.0.0/0 dev <tun>` un-scoped (= visible
+///      to everything else, i.e. user traffic).
+///
+/// Cleanup is automatic via `cleanup_routes` + `try_restore_default_routes`
+/// (with exponential backoff retry, `mod.rs:613-671`) when the tunnel
+/// tears down.
+///
+/// macOS has no policy routing (= one routing table); the ifscope
+/// mechanism is the native Darwin equivalent of Linux's table 100.
+#[cfg(target_os = "macos")]
+#[must_use]
+fn build_warren_tunnel_routes_macos(tun_iface: &str, exit_ips: &[IpAddr]) -> Vec<RequiredRoute> {
+    use talpid_routing::NetNode;
+
+    let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len() + 1);
+
+    for ip in exit_ips {
+        routes.push(RequiredRoute::new(IpNetwork::from(*ip), NetNode::DefaultNode));
+    }
+
+    let tun_node = Node::device(tun_iface.to_owned());
+    let default_v4 = ipnetwork::Ipv4Network::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0)
+        .expect("0.0.0.0/0 est un préfixe valide");
+    routes.push(RequiredRoute::new(IpNetwork::V4(default_v4), tun_node));
 
     routes
 }
@@ -940,29 +1021,6 @@ fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
     Err(std::io::Error::new(
         std::io::ErrorKind::NotFound,
         "no IPv4 default gateway in /proc/net/route",
-    ))
-}
-
-#[cfg(not(target_os = "linux"))]
-fn detect_default_iface() -> std::io::Result<String> {
-    // Non-Linux : `talpid_routing::get_best_default_route` existe pour
-    // macOS/Windows. Pour la phase POC, fallback statique — le bypass
-    // des paquets daemon est de toute façon géré différemment hors
-    // Linux (= macOS pf utilise des règles de routing différentes).
-    Err(std::io::Error::new(
-        std::io::ErrorKind::Unsupported,
-        "default iface detection not implemented for this platform",
-    ))
-}
-
-/// Stub non-Linux : pas de détection gateway possible via /proc.
-/// Le bypass route ne sera pas posé avec via gateway → fallback
-/// `Node::device` scope link (= ancien comportement, peut foirer).
-#[cfg(not(target_os = "linux"))]
-fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
-    Err(std::io::Error::new(
-        std::io::ErrorKind::Unsupported,
-        "default gateway detection not implemented for this platform",
     ))
 }
 
@@ -1045,6 +1103,7 @@ mod tests {
         assert!(!e.is_recoverable());
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn build_routes_emits_only_bypass_via_physical_after_f10e_fix() {
         // **F10e c2 fix** : `build_warren_tunnel_routes` ne pose PLUS
@@ -1057,7 +1116,7 @@ mod tests {
         // que `talpid_routing` ait posé les bypass ci-dessous dans la
         // table main.
         //
-        // Cf. `warren-pocs/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        // Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
         // Anti-régression critique : si quelqu'un re-ajoute les /1 dans
         // ce Vec, le tunnel s'auto-poison.
         let exit_ips: Vec<IpAddr> = vec![
@@ -1109,32 +1168,121 @@ mod tests {
         );
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn build_routes_with_no_exit_ips_emits_no_routes() {
-        // Edge case : exit_ips vide. Post-F10e fix, on émet 0 routes
-        // (= les /1 ne sont plus ici). Le tunnel sera fonctionnel pour
-        // le trafic interne TUN, mais pas pour Internet via NAT (ce
-        // qui demande default_route_split avec exit IP, qui sera skip
-        // si pas d'IPv4 dispo).
+        // Edge case Linux : exit_ips vide. Post-F10e fix, on émet 0 routes
+        // (= les /1 ne sont plus ici, posés par default_route_split table 100).
         let routes = build_warren_tunnel_routes("tun0", &[], "eth0", None);
         assert_eq!(
             routes.len(),
             0,
-            "post-F10e fix : 0 bypass + 0 split-default"
+            "Linux post-F10e fix : 0 bypass + 0 split-default"
         );
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn build_routes_v4_only_exit_emits_one_bypass() {
-        // V4-only exit : 1 bypass /32 v4. Pas de v6, pas de split-default.
+        // V4-only exit Linux : 1 bypass /32 v4. Pas de v6, pas de split-default.
         let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
         let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0", None);
-        assert_eq!(routes.len(), 1, "post-F10e fix : 1 bypass v4 seul");
+        assert_eq!(routes.len(), 1, "Linux post-F10e fix : 1 bypass v4 seul");
         let dump = format!("{routes:?}");
         assert!(
             !dump.contains("V6("),
             "aucune Ipv6Network attendue pour v4-only exit"
         );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn build_routes_macos_uses_default_node_bypass_and_default_redirect() {
+        // macOS — pattern Mullvad WireGuard (= Warren-style adapté Iroh) :
+        //   1. `<exit_ip>/32 NetNode::DefaultNode` → bypass via best
+        //      default route (résolu au moment de pose par talpid-routing).
+        //   2. `0.0.0.0/0 dev <tun>` → déclenche le `tunnel_default_routes`
+        //      ifscope dance (= recipe macOS native, pas de policy routing).
+        //
+        // Anti-régression critique : si quelqu'un réintroduit `/1 + /1`
+        // dans la table main (= l'ancienne tentative qui cassait l'iroh
+        // socket via SDL link-scope ARP fail), ces asserts détectent.
+        use talpid_routing::NetNode;
+
+        let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
+        let routes = build_warren_tunnel_routes_macos("utun4", &exit_ips);
+
+        assert_eq!(
+            routes.len(),
+            2,
+            "macOS : 1 bypass exit + 1 default redirect (got {} : {routes:?})",
+            routes.len()
+        );
+
+        // Bypass exit IP via NetNode::DefaultNode.
+        let bypass = routes
+            .iter()
+            .find(|r| r.prefix.prefix() == 32)
+            .expect("bypass /32 attendu");
+        assert!(
+            matches!(bypass.node, NetNode::DefaultNode),
+            "bypass exit doit utiliser NetNode::DefaultNode (= talpid-routing \
+             résout via best_default_route.router_ip au moment de pose, \
+             garantit un L3 gateway ARP-able). got: {:?}",
+            bypass.node
+        );
+
+        // Default redirect via TUN.
+        let default = routes
+            .iter()
+            .find(|r| r.prefix.prefix() == 0)
+            .expect("default /0 attendu");
+        let dump = format!("{default:?}");
+        assert!(
+            dump.contains(r#"device: Some("utun4")"#),
+            "default redirect doit pointer sur tun_iface (= déclenche \
+             tunnel_default_routes special case dans talpid-routing macOS, \
+             cf. mod.rs:346). dump = {dump}"
+        );
+
+        // Anti-régression : pas de /1 (= ancienne tentative cassée).
+        assert!(
+            !routes.iter().any(|r| r.prefix.prefix() == 1),
+            "PAS de /1 split-default sur macOS — l'approche ifscope-dance \
+             est la recette native macOS et remplace `/1 + /1`. routes = {routes:?}"
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn build_routes_macos_with_no_exit_ips_still_emits_default_redirect() {
+        // Edge case macOS : exit_ips vide → 0 bypass + 1 default redirect.
+        // Le tunnel route le trafic user via tun mais sans bypass exit
+        // (cas pratique : exit IPv6-only pas encore supporté ou test).
+        let routes = build_warren_tunnel_routes_macos("utun4", &[]);
+        assert_eq!(routes.len(), 1, "macOS no exit : 0 bypass + 1 default = 1");
+        assert_eq!(routes[0].prefix.prefix(), 0, "le seul item doit être le /0");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn build_routes_macos_multiple_exit_ips_yields_one_bypass_each() {
+        // Multiple exit IPs (v4 + v6) : un bypass par IP + le default.
+        let exit_ips: Vec<IpAddr> = vec![
+            "91.99.122.154".parse().unwrap(),
+            "2a01:4f8:c013:14a1::1".parse().unwrap(),
+        ];
+        let routes = build_warren_tunnel_routes_macos("utun4", &exit_ips);
+        assert_eq!(
+            routes.len(),
+            3,
+            "2 exit IPs (v4+v6) → 2 bypass + 1 default redirect = 3"
+        );
+        let bypass_count = routes
+            .iter()
+            .filter(|r| matches!(r.node, talpid_routing::NetNode::DefaultNode))
+            .count();
+        assert_eq!(bypass_count, 2, "1 bypass DefaultNode par exit IP");
     }
 
     #[test]
