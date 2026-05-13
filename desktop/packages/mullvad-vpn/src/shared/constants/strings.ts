@@ -1,5 +1,6 @@
 export const strings = {
   wireguard: 'WireGuard',
+  iroh: 'Iroh',
   openvpn: 'OpenVPN',
   splitTunneling: 'Split tunneling',
   daita: 'DAITA',

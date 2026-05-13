@@ -60,6 +60,7 @@ const StyledConnectionDetailsTitle = styled(StyledConnectionDetailsLabel)({
 
 export function ConnectionDetails() {
   const reduxConnection = useSelector((state) => state.connection);
+  const warrenMode = useSelector((state) => state.settings.warrenMode);
   const [connection, setConnection] = useState(reduxConnection);
 
   const tunnelState = connection.status;
@@ -84,7 +85,9 @@ export function ConnectionDetails() {
         {messages.pgettext('connect-view', 'Connection details')}
       </StyledConnectionDetailsHeading>
       <StyledConnectionDetailsLabel data-testid="tunnel-protocol">
-        {showDetails && tunnelState.details !== undefined && strings.wireguard}
+        {showDetails &&
+          tunnelState.details !== undefined &&
+          (warrenMode ? strings.iroh : strings.wireguard)}
       </StyledConnectionDetailsLabel>
       <StyledIpTable>
         <StyledConnectionDetailsTitle>
