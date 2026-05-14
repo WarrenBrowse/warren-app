@@ -2,7 +2,7 @@
 name = "talpid-warren-iroh"
 edition.workspace = true
 rust-version.workspace = true
-description = "Warren — adaptateur Iroh pour le tunnel state machine talpid (POC)"
+description = "Warren adapter for the talpid tunnel state machine, on top of warren-tunnel (Quinn upstream)"
 repository.workspace = true
 license.workspace = true
 
@@ -16,25 +16,29 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "sync", "io-util"] }
 log = { workspace = true }
 
-# `tun08` = même crate `tun = 0.8.x` que `talpid-tunnel` (default features
-# pour avoir async). Pin strict sur la même version pour éviter le
-# diamond dependency entre `talpid-tunnel::tun_provider::unix.rs` (qui
-# expose `tun08::AsyncDevice` via `into_async_device`) et l'adapter
-# `MullvadTunPacketDevice` côté Warren.
+# `tun08` is the same `tun = 0.8.x` crate used by `talpid-tunnel`
+# (default features to get async). Strict pin on the same version to
+# avoid a diamond dependency between
+# `talpid-tunnel::tun_provider::unix.rs` (which exposes
+# `tun08::AsyncDevice` via `into_async_device`) and the
+# `MullvadTunPacketDevice` adapter on the Warren side. warren-tunnel
+# itself uses `tun-rs = 2`, so the adapter bridges the two.
 tun08 = { package = "tun", version = "0.8.5", default-features = false, features = [
   "async",
 ] }
 
-# Warren POC crates (path-deps cross-repo via local workspace).
-# Pour la prod long-terme, ces crates devront être publiées sur un
-# registry privé (ex: cargo-binstall + Gitea registry) ou intégrées
-# directement comme submodule du fork.
-warren-iroh-tunnel = { path = "../../warren-core/crates/warren-iroh-tunnel" }
+# Warren crates consumed as path-deps cross-repo. The expected
+# warren-core checkout SHA is pinned in `.warren-core-version` at the
+# warren-app repo root. Long-term the plan is to switch to a git
+# submodule under `vendor/warren-core/` then to a private cargo registry
+# (cf. docs/warren-app-quinn-migration-plan.md § "Stratégie de partage").
+warren-tunnel = { path = "../../warren-core/crates/warren-tunnel" }
+warren-protocol = { path = "../../warren-core/crates/warren-protocol" }
 
-# Iroh types réexposés dans l'API publique (EndpointId, EndpointAddr,
-# SecretKey). Pin strict sur la même version que `warren-iroh-tunnel`
-# pour éviter le diamond dependency.
-iroh = { version = "=0.98.2", default-features = false }
+# Ed25519 signing key carried in `WarrenIrohParameters`. ed25519-dalek
+# is also re-exported via `warren-relay-selector::warren_types` upstream
+# warren-core, but we depend on it directly to avoid pulling the whole
+# selector crate.
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
   "std",
 ] }
