@@ -1,21 +1,24 @@
-//! Adaptateur Iroh pour le tunnel state machine talpid Warren — Phase 1.B.
+//! Warren adapter for the talpid tunnel state machine.
 //!
-//! Cette crate fournit [`WarrenIrohMonitor`] : un substitut à
-//! [`talpid_wireguard::WireguardMonitor`] consommé par
-//! [`talpid_core::tunnel_state_machine::tunnel_monitor::TunnelMonitor`]
-//! via un dispatch enum (cf. UPSTREAM_BASELINE.md § Phase 1.A).
+//! This crate exposes [`WarrenIrohMonitor`], a drop-in alternative to
+//! [`talpid_wireguard::WireguardMonitor`] consumed by
+//! `talpid_core::tunnel_state_machine::tunnel_monitor::TunnelMonitor`
+//! through an enum dispatch. The API mirrors
+//! [`WireguardMonitor::start`] / `wait` so `connecting_state.rs` can
+//! treat both backends uniformly.
 //!
-//! **Phase 1.B en cours** :
-//! - 1.B.1+1.B.2+1.B.3 (DONE) : params réels + dep `warren-iroh-tunnel`
-//!   + handshake `connect_multi` réel
-//! - 1.B.4 (TODO) : setup TUN via `args.tun_provider` + spawn pump
-//! - 1.B.5 (TODO) : émission `TunnelEvent::Up`/`Down` + close signal
-//!   propre pour la state machine
+//! Underneath, [`WarrenIrohMonitor::start`] performs the QUIC handshake
+//! through [`warren_tunnel::ClientTunnel`], opens a TUN via the
+//! talpid `TunProvider`, emits `TunnelEvent::InterfaceUp` / `Up` and
+//! spawns the bidirectional pump (TUN <-> QUIC datagrams). `wait()`
+//! blocks on the close-signal, drops the routing-table override and
+//! aborts the pump.
 //!
-//! L'API miroir [`WireguardMonitor::start`] / `wait` est délibérée :
-//! permet au caller `tunnel_monitor.rs` de dispatcher sur l'enum
-//! [`talpid_core::tunnel_state_machine::tunnel_monitor::TunnelBackend`]
-//! sans changer la sémantique attendue par `connecting_state.rs`.
+//! Despite the crate name `talpid-warren-iroh`, the transport is no
+//! longer Iroh: warren-core completed the migration to Quinn upstream
+//! 0.11 in May 2026 (cf. `warren-core/docs/17-QUINN-MIGRATION-NOTES.md`).
+//! The crate name is preserved for source-compat with consumers; rename
+//! to `talpid-warren-tunnel` is a follow-up.
 
 use std::net::IpAddr;
 use std::path::Path;
@@ -23,75 +26,70 @@ use std::time::Instant;
 
 use ed25519_dalek::SigningKey;
 use ipnetwork::IpNetwork;
-use iroh::{EndpointAddr, EndpointId};
 use talpid_routing::{Node, RequiredRoute};
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
-use warren_iroh_tunnel::{
+use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
+use warren_tunnel::{
     ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
 };
 
 mod adapter;
 use adapter::MullvadTunPacketDevice;
 
-/// **F10e c2 fix** — split-default policy routing pour Internet via tunnel.
-/// Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
+/// Split-default policy routing helper that routes Internet traffic via
+/// the tunnel without overriding the kernel main routing table.
 pub mod default_route_split;
 
-// F10e Option B trace marker. Préfixe unique pour grep simple post-bench.
-// Format : `[F10e-trace] T{N}={ms}ms <event>` — N croît à chaque étape de
-// `start()`, ms est l'elapsed depuis `start_t`. Logs au niveau `debug`
-// pour ne pas polluer prod ; activer via `RUST_LOG=debug` ou
-// `RUST_LOG=talpid_warren_iroh=debug` quand on veut diagnostiquer un
-// futur problème de séquençage start/wait. Cf.
-// `warren-core/bench/results/2026-05-09_F10e_*` pour les rounds.
-const F10E_PREFIX: &str = "[F10e-trace]";
+// Trace prefix used by the start-sequence and pump-metrics debug logs.
+// Format: `[warren-trace] T{N}={ms}ms <event>`. `N` increments at each
+// step of `start()`, `ms` is the elapsed since `start_t`. Logs are at
+// `debug` level so they stay out of release output; enable with
+// `RUST_LOG=talpid_warren_iroh=debug` when diagnosing a start/wait
+// sequencing issue.
+const TRACE_PREFIX: &str = "[warren-trace]";
 
-/// Paramètres pour démarrer un tunnel Warren via Iroh.
+/// Parameters required to start a Warren tunnel.
 ///
-/// Phase 1.B : champs alignés sur la signature de
-/// [`ClientTunnel::connect_multi`]. La sélection de l'exit
-/// (`EndpointId` + `EndpointAddr`) est fournie en amont par le
-/// `mullvad-relay-selector` Warren-fork (Phase 4) ; la `signing_key`
-/// est dérivée de la mnémonique BIP39 utilisateur via
-/// `warren_identity::derive_node_key` (Phase 2 auth wallet).
+/// Field shape mirrors the inputs to [`ClientTunnel::connect`] /
+/// [`ClientTunnel::connect_multi`]. Exit selection (`exit_addr`) is
+/// provided upstream by the Warren-fork relay selector; the
+/// `signing_key` is derived from the user's BIP39 mnemonic via
+/// `warren_identity::derive_node_key` (auth wallet).
+///
+/// Note: `exit_addr.id` carries the exit's Ed25519 pubkey post-Quinn
+/// migration, so the legacy separate `exit_id` parameter has been
+/// folded into `exit_addr`.
 #[derive(Clone)]
 pub struct WarrenIrohParameters {
-    /// Identité Ed25519 publique de l'exit Warren (clé `EndpointId`
-    /// iroh = 32 octets dérivés de la pubkey).
-    pub exit_id: EndpointId,
+    /// Candidate addresses of the exit (UDP IPv4/IPv6) plus the exit's
+    /// Ed25519 pubkey in `exit_addr.id`. Built by the relay selector
+    /// from `exit-info.json` published by the exits.
+    pub exit_addr: WarrenExitAddr,
 
-    /// Adresses candidate de l'exit (UDP IPv4/IPv6 + relay url
-    /// optionnel). Construit par le relay selector à partir des
-    /// `exit-info.json` publiés par les exits.
-    pub exit_addr: EndpointAddr,
-
-    /// Identité Ed25519 du client (dérivée de la mnémonique BIP39).
-    /// `talpid-warren-iroh` ne génère **jamais** une identité
-    /// éphémère — l'identité doit être stable pour que les sessions
-    /// soient ré-attribuées avec la même IP de tunnel sur reconnect
-    /// (cf. fix M03 audit côté `warren-iroh-tunnel`).
+    /// Client Ed25519 signing key (derived from the user's BIP39
+    /// mnemonic). `talpid-warren-iroh` never generates an ephemeral
+    /// identity: the identity must be stable so reconnects re-attach
+    /// to the same tunnel IP on the exit side.
     pub signing_key: SigningKey,
 
-    /// Nombre de connexions QUIC parallèles pour le multi-conn (cf.
-    /// `MAX_CONNECTIONS_PER_SESSION` côté `warren-config`). 1 = mono-conn
-    /// classique, N>1 = bonding multi-flow agrégé par identité côté exit.
+    /// Number of parallel QUIC connections to use. `1` = mono-conn
+    /// (classic), `N > 1` = multi-flow bonding aggregated by identity
+    /// on the exit side.
     pub n_connections: u8,
 
-    /// Bitmask des features client annoncées dans le `Setup`
-    /// (cf. `warren_protocol::features`). 0 = baseline IPv4 only.
-    /// Activable : `IPV6`, `PORT_FORWARD`, ... — combinaison via OR.
+    /// Client feature bitmask advertised in the `Setup` frame
+    /// (cf. `warren_protocol::features`). `0` = IPv4 baseline.
+    /// Combinable via OR: `IPV6`, `PORT_FORWARD`, ...
     pub features: u32,
 }
 
 impl std::fmt::Debug for WarrenIrohParameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // **No-log Warren** : ne JAMAIS logger la signing_key complète
-        // (= secret material) ni l'exit_id complet (PII identité de la
-        // session). Format minimal pour debug : n_conns + features.
+        // No-log Warren: never log the full signing_key (secret material)
+        // nor the full exit pubkey (session-PII). Minimal debug shape.
         f.debug_struct("WarrenIrohParameters")
-            .field("exit_id", &"<redacted>")
             .field("exit_addr", &"<redacted>")
             .field("signing_key", &"<redacted>")
             .field("n_connections", &self.n_connections)
@@ -100,169 +98,143 @@ impl std::fmt::Debug for WarrenIrohParameters {
     }
 }
 
-/// Erreurs spécifiques au backend Warren-Iroh.
+/// Errors specific to the Warren tunnel backend.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    /// Le handshake `connect_multi` a échoué (timeout, refus exit,
-    /// version protocole, etc.). Wrappe l'erreur sous-jacente
-    /// `warren-iroh-tunnel` en string pour ne pas leaker des détails
-    /// d'identité dans le `Display` (cf. règle no-log Warren).
+    /// The QUIC handshake (`connect` / `connect_multi`) failed
+    /// (timeout, exit rejected, protocol version mismatch, etc.).
+    /// The underlying warren-tunnel error is stringified so the
+    /// `Display` does not leak identity material (no-log Warren).
     #[error("Warren handshake failed: {0}")]
     Handshake(String),
 
-    /// Échec d'ouverture du device TUN via [`talpid_tunnel::tun_provider::TunProvider`].
+    /// Could not open the TUN device via
+    /// [`talpid_tunnel::tun_provider::TunProvider`].
     #[error("Warren tun setup failed: {0}")]
     TunSetup(String),
 
-    /// Erreur générique du backend (à enrichir Phase 1.B.4.b quand on
-    /// ajoutera le pump bidirectionnel TUN ↔ datagrammes QUIC).
-    #[error("Warren Iroh backend error: {0}")]
+    /// Generic backend error (pump I/O, route install, ...).
+    #[error("Warren tunnel backend error: {0}")]
     Backend(String),
 }
 
 impl Error {
-    /// Indique si l'erreur est récupérable (= retry pertinent côté
-    /// state machine `connecting_state`). Phase 1.B : `Handshake`
-    /// → `true` (transient réseau probable) ; `TunSetup` → `false`
-    /// (problème de privilège / kernel module / nom déjà pris) ;
-    /// `Backend` → `false` (erreur structurelle).
+    /// Whether the error is worth retrying from the state-machine
+    /// side. `Handshake` is `true` (transient network glitch is the
+    /// common cause); `TunSetup` is `false` (privilege / kernel
+    /// module / name collision: retry will not help); `Backend` is
+    /// `false` (structural).
     #[must_use]
     pub fn is_recoverable(&self) -> bool {
         matches!(self, Error::Handshake(_))
     }
 }
 
-/// Monitor d'un tunnel Warren actif via Iroh.
+/// Active Warren tunnel monitor.
 ///
-/// API miroir de [`talpid_wireguard::WireguardMonitor`] :
-/// - [`Self::start`] : factory bloquant (handshake QUIC + setup TUN)
-/// - [`Self::wait`] : bloque jusqu'au signal close du daemon
+/// API mirrors [`talpid_wireguard::WireguardMonitor`]:
+/// - [`Self::start`]: blocking factory (QUIC handshake + TUN setup +
+///   pump spawn).
+/// - [`Self::wait`]: blocks until the daemon close-signal fires.
 ///
-/// **Phase 1.B.4.a** : `start` fait handshake + ouvre le TUN via
-/// `args.tun_provider` + émet `InterfaceUp` puis `Up` events.
-/// `wait` bloque sur `tunnel_close_rx` puis émet `Down` + drop tun
-/// + drop session.
-///
-/// Pump TUN ↔ datagrammes QUIC = Phase 1.B.4.b (adapter `PacketDevice`
-/// nécessaire pour bridger `tun08::AsyncDevice` Mullvad et le trait
-/// Warren `warren_iroh_tunnel::PacketDevice`).
+/// `start` performs the QUIC handshake via warren-tunnel, opens the
+/// TUN through `args.tun_provider`, emits `InterfaceUp` then `Up`,
+/// installs the routing override and spawns the bidirectional pump.
+/// `wait` blocks on `tunnel_close_rx`, emits `Down`, uninstalls the
+/// routing override and drains the pump.
 pub struct WarrenIrohMonitor {
     runtime: tokio::runtime::Handle,
-    /// Handle de la task pump bidirectionnel TUN ↔ datagrammes QUIC.
-    /// `wait` l'abort sur close-signal pour teardown propre.
+    /// Handle on the bidirectional TUN <-> QUIC pump task. `wait`
+    /// aborts it on close-signal for clean teardown.
     pump_handle: tokio::task::JoinHandle<()>,
-    /// Receiver oneshot interne signalé par la task pump si elle
-    /// termine de façon anormale (erreur I/O TUN, session QUIC
-    /// fermée par l'exit). Permet à `wait` de différencier un close
-    /// externe propre d'un échec pump et de remonter l'erreur au
-    /// state machine pour déclencher un retry. Audit fix MEDIUM
-    /// (Phase 1.B.5) : avant on swallowait l'erreur dans un
-    /// `log::warn!`, ce qui empêchait la state machine de retry.
+    /// Oneshot signalled by the pump task on abnormal termination
+    /// (TUN I/O error, QUIC session closed by the exit). Lets `wait`
+    /// distinguish an external clean close from a pump failure and
+    /// surface the latter back to the state machine for retry.
     pump_error_rx: tokio::sync::oneshot::Receiver<String>,
-    /// Hook d'émission events vers le daemon (state machine).
+    /// Event sink towards the daemon state machine.
     event_hook: talpid_tunnel::EventHook,
-    /// Receiver oneshot du daemon : signalé pour demander la
-    /// terminaison du tunnel.
+    /// Oneshot from the daemon: fires to request tunnel shutdown.
     close_rx: futures::channel::oneshot::Receiver<()>,
-    /// **F10e c2 fix** — guard split-default policy routing. Installé
-    /// après les events Up pour forcer le trafic Internet via tunnel
-    /// sans casser le socket QUIC daemon → exit. Cleanup async dans
-    /// `wait()` avant que le pump soit aborté (= ordre miroir install).
-    /// `None` si pas d'IPv4 exit IP disponible.
+    /// Guard for the split-default policy routing override. Installed
+    /// after the Up events to force Internet traffic through the
+    /// tunnel without breaking the daemon -> exit QUIC socket. Cleanup
+    /// happens in `wait()` before the pump is aborted (mirrors the
+    /// install order). `None` if no IPv4 exit IP was available.
     default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
 }
 
 impl WarrenIrohMonitor {
-    /// Démarre un tunnel Warren-Iroh avec `params`, en bloquant le
-    /// thread courant le temps du handshake QUIC + setup TUN.
+    /// Starts a Warren tunnel from `params`, blocking the current
+    /// thread until the QUIC handshake + TUN setup are complete.
     ///
-    /// Séquence Phase 1.B.4.a :
-    /// 1. `connect_multi` côté `warren-iroh-tunnel` (block_on async)
-    /// 2. Construction `TunConfig` à partir des IPs assignées par l'exit
-    /// 3. `tun_provider.open_tun()` pour le device TUN platform-spécifique
-    /// 4. Émission `TunnelEvent::InterfaceUp` puis `Up` via `event_hook`
-    ///
-    /// Phase 1.B.4.b ajoutera le spawn du pump bidirectionnel.
+    /// Sequence:
+    /// 1. `connect` (or `connect_multi`) against warren-tunnel.
+    /// 2. Build `TunConfig` from the IPs assigned by the exit.
+    /// 3. `tun_provider.open_tun()` for the platform-specific device.
+    /// 4. Emit `TunnelEvent::InterfaceUp` then `Up` via `event_hook`.
+    /// 5. Install routing override + spawn the bidirectional pump.
     ///
     /// # Errors
     ///
-    /// - [`Error::Handshake`] si le handshake QUIC + Setup échoue.
-    /// - [`Error::TunSetup`] si l'ouverture du TUN échoue (privilèges,
-    ///   nom déjà pris, kernel module manquant).
+    /// - [`Error::Handshake`] if the QUIC handshake or `Setup`
+    ///   exchange fails.
+    /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
+    ///   interface name collision, kernel module missing).
     pub fn start(
         params: &WarrenIrohParameters,
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
-        // F10e Option B : timestamps précis à chaque étape pour
-        // identifier quel composant talpid (firewall, routing, tun
-        // provider) précipite le bug iroh wrapper qui ne se manifeste
-        // qu'en stack daemon-fork (pas en POC raw). Cf. agents
-        // d'investigation 2026-05-09.
+        // Per-step start timestamps. Keep these (low cost, debug-only)
+        // so a future regression in the talpid/warren-tunnel handoff
+        // can be pinpointed without instrumenting the codebase again.
         let start_t = Instant::now();
         log::debug!(
-            "{F10E_PREFIX} T0=0ms phase=start_begin n_conns={} features={:#010x}",
+            "{TRACE_PREFIX} T0=0ms phase=start_begin n_conns={} features={:#010x}",
             params.n_connections,
             params.features
         );
 
         let runtime = args.runtime.clone();
-        let exit_id = params.exit_id;
-        // F10 fork audit : iroh annonce parfois l'IP du TUN gateway
-        // exit (ex: `10.66.0.1:7000`) parmi les `EndpointAddr.addrs`
-        // candidate. Le client la teste en multipath probe → routing
-        // boucle (paquet va via tun0 → encap → tunnel → decap exit
-        // → arrive sur warren0 mais le socket QUIC exit est sur eth0
-        // → drop). On filtre les addresses non-routables Internet
-        // (= RFC1918 IPv4 + ULA IPv6 + loopback + link-local) avant
-        // de passer au handshake. Cf. rapport
-        // `bench/results/2026-05-09_F9_optionA_F10.md`.
+        // Filter out non-Internet-routable candidate addresses (RFC 1918
+        // IPv4, ULA / link-local IPv6, loopback). Some legacy exit
+        // metadata still carries the TUN gateway IP (10.66.0.1) in its
+        // candidate list; if the client tried it, the kernel would route
+        // through the tunnel itself, causing an encapsulation loop.
+        // Quinn upstream does not do path discovery the way Iroh did
+        // (no `n0_nat_traversal` extension), so this filter is now
+        // defense-in-depth.
         let exit_addr = filter_endpoint_addr_for_wan(params.exit_addr.clone());
         let signing = params.signing_key.clone();
         let n_conns = params.n_connections;
         let features = params.features;
         let mut event_hook = args.event_hook;
 
-        // Étape 1 : handshake QUIC. F9 fork audit — dispatch :
-        //   - n=1 : `connect()` mono-conn (= path POC raw, validé bench
-        //     22.69h sans `MultipathNotNegotiated` warnings).
-        //   - n>1 : `connect_multi(_, _, n)` (= bonding multi-flow).
-        // Sans ce dispatch, `connect_multi(_, _, 1)` active des
-        // multipath path probes côté noq-proto qui poisonnent
-        // `read_datagram` côté exit → pump exit termine immédiatement
-        // post-handshake → 0 datagram user transmis. Cf. rapport
-        // `bench/results/2026-05-09_F9_diagnostic.md`.
-        // F10c fork audit : détecte l'IP source locale (eth0/wlan0) vers
-        // l'exit AVANT le handshake. Sans ce bind specific, iroh client
-        // bind `0.0.0.0:0` unspecified et enumere TOUTES les interfaces
-        // (eth0 + tun0 une fois tunnel monté → 10.66.0.2). iroh propage
-        // ces IPs au serveur via `ADD_ADDRESS` (`n0_nat_traversal`) →
-        // serveur tente path probe vers 10.66.0.2 → boucle de routage →
-        // poison pump exit. Cf.
-        // `bench/results/2026-05-09_F10b_resolved_round5.md` § F10c.
+        // Detect the outbound source IP (eth0 / wlan0) used to reach
+        // the exit before the handshake, so we bind the QUIC `Endpoint`
+        // explicitly to that IP instead of `0.0.0.0:0`. Defense in depth
+        // against any future regression that might re-introduce
+        // multi-path / rebind behavior in the transport layer.
         let bind_local_ip: Option<std::net::SocketAddr> =
             exit_addr.ip_addrs().next().and_then(|exit_sa| {
-                match detect_default_local_ip(*exit_sa) {
+                match detect_default_local_ip(exit_sa) {
                     Ok(ip) => Some(std::net::SocketAddr::new(ip, 0)),
                     Err(e) => {
                         log::warn!(
-                            "Warren F10c: detect_default_local_ip failed: {e}. \
-                         Falling back to bind 0.0.0.0:0 (unspecified) — TUN IP \
-                         leak via n0_nat_traversal possible until fix."
+                            "Warren: detect_default_local_ip failed: {e}. \
+                         Falling back to bind 0.0.0.0:0 (unspecified)."
                         );
                         None
                     }
                 }
             });
         if let Some(addr) = bind_local_ip {
-            log::info!(
-                "Warren client bind local IP = {} (F10c fix active)",
-                addr.ip()
-            );
+            log::info!("Warren client bind local IP = {}", addr.ip());
         }
 
         log::debug!(
-            "{F10E_PREFIX} T1={}ms phase=handshake_start (block_on connect_*)",
+            "{TRACE_PREFIX} T1={}ms phase=handshake_start (block_on connect_*)",
             start_t.elapsed().as_millis()
         );
         let handshake_t = Instant::now();
@@ -273,19 +245,19 @@ impl WarrenIrohMonitor {
             }
             match select_session_request(n_conns) {
                 SessionRequest::Mono => client
-                    .connect(exit_id, exit_addr)
+                    .connect(exit_addr)
                     .await
                     .map(SessionKind::Mono)
                     .map_err(|e| Error::Handshake(format!("{e:#}"))),
                 SessionRequest::Multi(n) => client
-                    .connect_multi(exit_id, exit_addr, n)
+                    .connect_multi(exit_addr, n)
                     .await
                     .map(SessionKind::Multi)
                     .map_err(|e| Error::Handshake(format!("{e:#}"))),
             }
         })?;
         log::debug!(
-            "{F10E_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind={}",
+            "{TRACE_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind={}",
             start_t.elapsed().as_millis(),
             handshake_t.elapsed().as_millis(),
             match session_kind {
@@ -308,31 +280,29 @@ impl WarrenIrohMonitor {
                 .map_err(|e| Error::TunSetup(format!("{e}")))?
         };
         log::debug!(
-            "{F10E_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={}",
+            "{TRACE_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={}",
             start_t.elapsed().as_millis(),
             tun_t.elapsed().as_millis(),
             tun.interface_name()
                 .unwrap_or_else(|_| "<unknown>".to_owned())
         );
 
-        // Étape 3 : metadata pour les events.
         let metadata = build_tunnel_metadata(&tun, &tun_config);
 
-        // Étape 4 : extraction de l'`AsyncDevice` interne pour le pump.
-        // `Tun = UnixTun` consomme `into_inner` puis `into_async_device`
-        // (cf. patch Warren-fork sur `talpid-tunnel/tun_provider/unix.rs`).
-        // L'adapter `MullvadTunPacketDevice` enveloppe l'`AsyncDevice`
-        // dans un `Arc` pour pouvoir être cloné entre les tasks
-        // uplink/downlink du pump.
+        // Extract the inner `AsyncDevice` for the pump. `Tun = UnixTun`
+        // exposes `into_inner` -> `into_async_device` (cf. the
+        // Warren-fork patch on `talpid-tunnel/tun_provider/unix.rs`).
+        // `MullvadTunPacketDevice` then wraps the `AsyncDevice` in an
+        // `Arc` so it can be cloned between the uplink and downlink
+        // tasks of the pump.
         let async_device = tun.into_inner().into_async_device();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Étape 5 : émission des events Up — `InterfaceUp` d'abord (le
-        // state machine pose alors les routes + firewall), puis `Up`
-        // (tunnel prêt à servir le trafic). Cohérent avec le séquençage
-        // utilisé par `WireguardMonitor`.
+        // Emit Up events: `InterfaceUp` first (state machine then
+        // installs routes + firewall), then `Up` (tunnel ready for
+        // user traffic). Same sequencing as `WireguardMonitor`.
         log::debug!(
-            "{F10E_PREFIX} T4={}ms phase=interfaceup_emit (state machine va poser firewall+DNS rules)",
+            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (state machine va poser firewall+DNS rules)",
             start_t.elapsed().as_millis()
         );
         let events_t = Instant::now();
@@ -344,47 +314,42 @@ impl WarrenIrohMonitor {
                 ))
                 .await;
             log::debug!(
-                "{F10E_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall posé), emit Up",
+                "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall posé), emit Up",
                 start_t.elapsed().as_millis()
             );
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
         log::debug!(
-            "{F10E_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall posé)",
+            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall posé)",
             start_t.elapsed().as_millis(),
             events_t.elapsed().as_millis()
         );
 
-        // Étape 5.5 (F8 fork audit) : pose les routes via le route_manager
-        // pour rediriger le trafic user via le tun, en préservant l'access
-        // du daemon-iroh lui-même au peer endpoint (sinon boucle :
-        // daemon → tun → exit qui est lui-même le daemon dst).
+        // Install routes via route_manager: redirect user traffic
+        // through the TUN while preserving the daemon's own access to
+        // the peer endpoint (otherwise daemon -> tun -> exit -> daemon
+        // == routing loop).
         //
-        // Stratégie split-default (technique VPN classique) :
-        // - 0.0.0.0/1 + 128.0.0.0/1 dev tun0 : couvre tout 0.0.0.0/0
-        //   sans replace la route default existante (= moins
-        //   intrusive, restore propre au teardown via route_manager).
-        // - <exit_ip>/32 dev <physical_iface> : route plus spécifique
-        //   que /1 → bypass tun pour les paquets daemon vers l'exit.
-        //
-        // Validation manuelle Hetzner WAN : ping 8.8.8.8 via tunnel
-        // 8.1ms RTT après pose de ces routes (vs 100% loss sans).
+        // Split-default strategy:
+        // - 0.0.0.0/1 + 128.0.0.0/1 dev tun0 : covers all of 0.0.0.0/0
+        //   without replacing the existing default route, less
+        //   intrusive, clean restore at teardown via route_manager.
+        // - <exit_ip>/32 dev <physical_iface> : more specific than /1
+        //   so daemon -> exit packets bypass the tun.
         let exit_ips: Vec<IpAddr> = params.exit_addr.ip_addrs().map(|sa| sa.ip()).collect();
-        // Build the route set according to the platform's routing model.
-        // Mullvad WireGuard already uses this same dispatch
-        // (`talpid-wireguard/src/lib.rs`: `get_endpoint_routes` +
-        // `get_pre_tunnel_routes` + `get_post_tunnel_routes`) — we mirror
-        // the pattern, adapted to our Warren/Iroh requirements.
-        //
-        // - Linux: bypass `<exit_ip>/32 via <gw> dev <physical>` (main
-        //   table) + split-default `/1 + /1 dev <tun>` (table 100 via
-        //   `default_route_split`). iface + gw detected from
-        //   `/proc/net/route`.
-        // - macOS: bypass `<exit_ip>/32 NetNode::DefaultNode` (talpid-routing
-        //   resolves best_default_route at apply time) + `0.0.0.0/0 dev
-        //   <tun>` (triggers the `tunnel_default_routes` ifscope dance).
-        //   No upfront detection — talpid-routing already tracks the
-        //   physical iface and gw via its internal monitor.
+        // Per-platform route set, mirroring Mullvad WireGuard's
+        // `get_endpoint_routes` / `get_pre_tunnel_routes` /
+        // `get_post_tunnel_routes` dispatch:
+        // - Linux: bypass `<exit_ip>/32 via <gw> dev <physical>` in
+        //   the main table + split-default `/1 + /1 dev <tun>` in
+        //   table 100 via `default_route_split`. Iface + gw detected
+        //   from `/proc/net/route`.
+        // - macOS: bypass `<exit_ip>/32 NetNode::DefaultNode`
+        //   (talpid-routing resolves best_default_route at apply
+        //   time) + `0.0.0.0/0 dev <tun>` (triggers the
+        //   `tunnel_default_routes` ifscope dance). No upfront
+        //   detection: talpid-routing already tracks the physical
+        //   iface and gw via its internal monitor.
         #[cfg(target_os = "linux")]
         let routes = {
             let physical_iface = detect_default_iface().unwrap_or_else(|e| {
@@ -416,15 +381,15 @@ impl WarrenIrohMonitor {
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
         log::debug!(
-            "{F10E_PREFIX} T6={}ms phase=routes_add_start",
+            "{TRACE_PREFIX} T6={}ms phase=routes_add_start",
             start_t.elapsed().as_millis()
         );
         let metadata_iface_for_log = metadata.interface.clone();
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
-                Ok(()) => log::info!(
-                    "Warren tunnel routes installed (tun={metadata_iface_for_log})"
-                ),
+                Ok(()) => {
+                    log::info!("Warren tunnel routes installed (tun={metadata_iface_for_log})")
+                }
                 Err(e) => log::warn!(
                     "Failed to install Warren tunnel routes: {e}. \
                      Tunnel up but no traffic forwarding."
@@ -432,17 +397,17 @@ impl WarrenIrohMonitor {
             }
         });
         log::debug!(
-            "{F10E_PREFIX} T7={}ms phase=routes_added elapsed_routes={}ms",
+            "{TRACE_PREFIX} T7={}ms phase=routes_added elapsed_routes={}ms",
             start_t.elapsed().as_millis(),
             routes_t.elapsed().as_millis()
         );
 
-        // F10e c2 fix Linux : install le split-default policy routing
-        // (table 100 + ip rule bypass exit IP). Sur macOS, le split-default
-        // est posé directement dans la table de routing principale via
-        // `build_warren_tunnel_routes` (la spécificité du `/32` bypass
-        // garantit l'absence de boucle de routage — pas besoin de policy
-        // routing). Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
+        // Linux: install the split-default policy routing (table 100
+        // + ip rule bypass for the exit IP). On macOS the split-default
+        // is posted directly in the main routing table by
+        // `build_warren_tunnel_routes_macos` (the `/32` bypass is
+        // specific enough to avoid a routing loop, so no policy routing
+        // needed).
         #[cfg(target_os = "linux")]
         let default_route_guard = {
             let exit_ip_v4 = exit_ips.iter().find_map(|ip| match ip {
@@ -462,7 +427,7 @@ impl WarrenIrohMonitor {
                     .map(Some)
                     .unwrap_or_else(|e| {
                         log::warn!(
-                            "F10e c2 fix: failed to install default-route split: {e}. \
+                            "Warren: failed to install default-route split: {e}. \
                              Internet traffic will NOT route via tunnel. \
                              Need root + ip in PATH."
                         );
@@ -470,7 +435,7 @@ impl WarrenIrohMonitor {
                     })
             } else {
                 log::warn!(
-                    "F10e c2 fix: no IPv4 exit IP available, skip default-route split. \
+                    "Warren: no IPv4 exit IP available, skip default-route split. \
                      Internet traffic via IPv6-only exit not yet supported."
                 );
                 None
@@ -479,29 +444,29 @@ impl WarrenIrohMonitor {
         #[cfg(not(target_os = "linux"))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
-        // Étape 6 : spawn le pump bidirectionnel TUN ↔ datagrammes
-        // QUIC. La task tourne jusqu'à : (a) close de la session
-        // (drop de Session/MultiSession → connections QUIC closed) ou
-        // (b) erreur I/O sur le TUN (interface descendue par le kernel).
+        // Spawn the bidirectional TUN <-> QUIC datagram pump. The task
+        // runs until (a) the session closes (drop of Session /
+        // MultiSession -> QUIC connections closed) or (b) an I/O error
+        // on the TUN (interface brought down by the kernel).
         //
-        // Phase 1.B.5 : on propage l'erreur du pump via un oneshot
-        // channel interne consommé dans `wait()` (au lieu de la
-        // swallow dans un `log::warn!`). Ainsi la state machine
-        // `connecting_state` peut décider de retry sur un échec pump.
+        // The pump error is propagated via an internal oneshot
+        // consumed by `wait()` (rather than swallowed in a log::warn!),
+        // so the state machine can decide whether to retry.
         //
         // Dispatch on `SessionKind`:
-        //   - Mono → `pump_bidirectional(tun, conn)` with the session moved
-        //     into the closure to keep the underlying iroh `Endpoint`
-        //     alive (otherwise its drop makes `read_datagram` immediately
-        //     return "endpoint driver future was dropped"). Same pattern
-        //     as `warren-client::main`.
-        //   - Multi → `pump_multi_bidirectional(tun, multi_session)` for
-        //     N-connection bonding (uplink round-robin + N downlink tasks).
+        // - Mono -> `pump_bidirectional(tun, conn)`. The session value
+        //   must be moved into the closure to keep the underlying
+        //   `Endpoint` alive (otherwise its drop makes `read_datagram`
+        //   return "endpoint driver future was dropped" immediately).
+        //   Same pattern as `warren-client::main`.
+        // - Multi -> `pump_multi_bidirectional(tun, multi_session)`
+        //   for N-connection bonding (uplink round-robin + N downlink
+        //   tasks).
         let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
         let pump_metrics = packet_device.metrics();
         let pump_spawn_t = Instant::now();
         let pump_handle = runtime.spawn(async move {
-            log::info!("{F10E_PREFIX} pump=running");
+            log::info!("{TRACE_PREFIX} pump=running");
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();
@@ -517,25 +482,20 @@ impl WarrenIrohMonitor {
                 }
                 Err(e) => {
                     let msg = format!("{e:#}");
-                    log::warn!("{F10E_PREFIX} pump=terminated reason=error msg=\"{msg}\"");
-                    // `send` peut échouer si le `wait()` a déjà drop
-                    // le receiver (= close externe arrivé en premier
-                    // et le teardown a `abort` le pump). Pas grave —
-                    // l'erreur du pump devient bénigne dans ce cas.
+                    log::warn!("{TRACE_PREFIX} pump=terminated reason=error msg=\"{msg}\"");
+                    // `send` may fail if `wait()` already dropped the
+                    // receiver (external close beat us, teardown
+                    // aborted the pump). Benign in that case.
                     let _ = pump_error_tx.send(msg);
                 }
             }
         });
 
-        // F10e Option B : task métriques périodique. Toutes les 2s,
-        // log les compteurs pump (uplink TUN→QUIC, downlink QUIC→TUN).
-        // Permet d'identifier précisément QUELLE direction casse le
-        // data plane (= si uplink continue mais downlink stoppe →
-        // problème côté serveur read_datagram ; si les deux stoppent
-        // simultanément → connection QUIC fermée). La task se termine
-        // dès que les compteurs ne bougent plus 5s d'affilée (= idle
-        // ou tunnel cassé) ou est abortée par teardown via la même
-        // route que le pump.
+        // Periodic pump metrics task (every 2s, logs uplink + downlink
+        // counters). Lets a future bench distinguish which direction
+        // stalls (uplink stops but downlink continues -> server-side
+        // `read_datagram` issue; both stop at once -> QUIC connection
+        // closed). The task aborts when teardown aborts the pump.
         let _metrics_task = runtime.spawn(async move {
             let mut prev_up = 0u64;
             let mut prev_down = 0u64;
@@ -550,7 +510,7 @@ impl WarrenIrohMonitor {
                 let ddown = down.saturating_sub(prev_down);
                 let elapsed = tick_start.elapsed().as_millis();
                 log::debug!(
-                    "{F10E_PREFIX} pump_metrics t={elapsed}ms uplink={up} (+{dup}) downlink={down} (+{ddown})"
+                    "{TRACE_PREFIX} pump_metrics t={elapsed}ms uplink={up} (+{dup}) downlink={down} (+{ddown})"
                 );
                 prev_up = up;
                 prev_down = down;
@@ -558,12 +518,12 @@ impl WarrenIrohMonitor {
         });
 
         log::debug!(
-            "{F10E_PREFIX} T8={}ms phase=pump_spawned elapsed_total_start={}ms (data plane should now flow)",
+            "{TRACE_PREFIX} T8={}ms phase=pump_spawned elapsed_total_start={}ms (data plane should now flow)",
             start_t.elapsed().as_millis(),
             pump_spawn_t.duration_since(start_t).as_millis()
         );
 
-        let _ = metadata; // utile à terme pour re-émission sur MTU change
+        let _ = metadata; // kept for future MTU-change re-emission
 
         Ok(Self {
             runtime,
@@ -575,18 +535,18 @@ impl WarrenIrohMonitor {
         })
     }
 
-    /// Bloque le thread courant jusqu'à : (a) close-signal externe du
-    /// daemon, ou (b) terminaison anormale du pump (erreur I/O TUN,
-    /// session QUIC fermée). Émet [`TunnelEvent::Down`] dans tous les
-    /// cas, puis abort + drain la task pump pour libérer le fd TUN
-    /// avant que le `tun_provider` puisse être réutilisé.
+    /// Blocks the current thread until (a) the external close-signal
+    /// from the daemon fires, or (b) the pump terminates abnormally
+    /// (TUN I/O error, QUIC session closed). Emits [`TunnelEvent::Down`]
+    /// in both cases, then aborts and drains the pump task to release
+    /// the TUN fd before the `tun_provider` can be reused.
     ///
     /// # Errors
     ///
-    /// [`Error::Backend`] si le pump termine anormalement avant le
-    /// close-signal externe (= cas où la state machine doit retry,
-    /// `is_recoverable()` retourne `false` pour rester conservatif —
-    /// raffiner en Phase 1.C selon la nature de l'erreur).
+    /// [`Error::Backend`] if the pump terminated abnormally before the
+    /// close-signal arrived (state machine should retry, but
+    /// `is_recoverable()` returns `false` to stay conservative until
+    /// the error nature is classified more precisely).
     pub fn wait(self) -> Result<(), Error> {
         let WarrenIrohMonitor {
             runtime,
@@ -612,12 +572,11 @@ impl WarrenIrohMonitor {
                     Ok(())
                 }
                 pump_res = pump_error_rx => {
-                    // Pump a terminé avant le close externe.
-                    // `Ok(msg)` : pump a explicitement send une erreur.
-                    // `Err(_)` : sender drop sans erreur = clean exit
-                    //            (= session QUIC fermée graceful par
-                    //             l'exit, ex: idle_timeout). Pas
-                    //             d'erreur à remonter.
+                    // Pump terminated before the external close.
+                    // `Ok(msg)`: the pump explicitly sent an error.
+                    // `Err(_)`: sender dropped without sending = clean
+                    // exit (QUIC session closed gracefully by the
+                    // exit, e.g. idle_timeout). No error to report.
                     match pump_res {
                         Ok(msg) => Err(Error::Backend(format!(
                             "pump terminated abnormally: {msg}"
@@ -630,24 +589,23 @@ impl WarrenIrohMonitor {
             outcome
         });
 
-        // F10e c2 — désinstaller le split-default policy routing AVANT
-        // d'aborter le pump. Ordre miroir de l'install. Best-effort :
-        // log warn mais ne fait pas échouer le teardown.
+        // Uninstall the split-default policy routing before aborting
+        // the pump, mirroring the install order. Best-effort: log a
+        // warning but do not fail teardown.
         runtime.block_on(async {
             if let Some(guard) = default_route_guard
                 && let Err(e) = guard.uninstall().await
             {
-                log::warn!("F10e c2 default-route split cleanup failed: {e}");
+                log::warn!("Warren default-route split cleanup failed: {e}");
             }
         });
 
-        // Teardown : abort le pump pour libérer le device TUN + la
-        // session QUIC qu'il détient. `JoinHandle::abort` déclenche
-        // un cancel propre (la task se termine sur le prochain
-        // `await` cancellation point). On wait ensuite pour que le
-        // fd TUN soit effectivement fermé côté kernel avant de
-        // retourner — sinon un retry immédiat pourrait race avec un
-        // open_tun() sur le même nom d'interface.
+        // Abort the pump to release the TUN device and the QUIC
+        // session it holds. `JoinHandle::abort` triggers a clean
+        // cancel (task terminates at the next `await` cancellation
+        // point). Wait afterwards so the TUN fd is actually closed
+        // kernel-side before returning, otherwise an immediate retry
+        // could race with `open_tun()` on the same interface name.
         runtime.block_on(async {
             pump_handle.abort();
             let _ = pump_handle.await;
@@ -657,18 +615,16 @@ impl WarrenIrohMonitor {
     }
 }
 
-/// Variant de session warren-iroh côté client. F9 fork audit :
-/// on dispatch entre `Mono` (= 1 conn dédié, pas de multipath probes)
-/// et `Multi` (= bonding N-conn) selon `n_connections`. Voir
-/// [`select_session_request`] pour la règle.
+/// Client-side session variant. Dispatch between `Mono` (single
+/// dedicated QUIC connection) and `Multi` (N-connection bonding) is
+/// driven by `n_connections`; see [`select_session_request`].
 enum SessionKind {
-    /// Mono-conn dédié — utilisé quand `n_connections == 1` (ou 0
-    /// dégénéré). N'active **pas** les multipath probes côté noq-proto
-    /// → pas de risque `MultipathNotNegotiated` / `read_datagram failed`
-    /// post-handshake côté exit.
+    /// Mono-conn dedicated session, used when `n_connections == 1`
+    /// (or `0`, treated as degenerate). Single QUIC `Connection`, no
+    /// multi-connection bonding overhead.
     Mono(ClientSession),
-    /// Bonding multi-conn — utilisé quand `n_connections > 1`. Active
-    /// les paths multipath QUIC pour agrégation throughput inter-paths.
+    /// Multi-conn bonded session, used when `n_connections > 1`.
+    /// Aggregates throughput across N parallel QUIC connections.
     Multi(MultiSession),
 }
 
@@ -695,48 +651,49 @@ impl SessionKind {
     }
 }
 
-/// Filter `EndpointAddr.addrs` to keep only **Internet-routable** addresses.
-/// Excludes:
-/// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16)
-/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast, multicast,
-///   unspecified
-/// - IPv6 loopback (::1), unspecified, multicast, link-local (fe80::/10)
-/// - IPv6 ULA (fc00::/7)
+/// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
+/// addresses. Excludes:
+/// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16).
+/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
+///   multicast, unspecified.
+/// - IPv6 loopback (::1), unspecified, multicast, link-local
+///   (fe80::/10), unique-local (fc00::/7).
 ///
-/// Preserves `id` and non-IP `TransportAddr::Relay(...)` (Warren doesn't
-/// use relays, but `relay_mode(Disabled)` on `client.connect()` already
-/// ignores them).
+/// Preserves `id` and any future non-IP transport variants (Warren
+/// does not use relays today; the match stays open via `_` to track
+/// the upstream `#[non_exhaustive]` shape).
 ///
-/// Why: iroh performs path discovery against the peer's local interfaces.
-/// When `warren-exit --use-tun` is up, the `warren0` TUN gateway
-/// (`10.66.0.1`) shows up in the candidate addrs advertised to the client.
-/// The client multipath-probes it → routing loop that poisons the pump.
+/// Defense in depth post-Quinn migration: the underlying iroh
+/// `n0_nat_traversal` bug class (path discovery probing the peer's
+/// TUN gateway IP) is structurally eliminated, but this filter still
+/// hardens against malformed exit metadata that would carry a
+/// `10.66.0.1` candidate or similar.
 #[must_use]
-fn filter_endpoint_addr_for_wan(addr: EndpointAddr) -> EndpointAddr {
-    let mut filtered = EndpointAddr::new(addr.id);
+fn filter_endpoint_addr_for_wan(addr: WarrenExitAddr) -> WarrenExitAddr {
+    let mut filtered = WarrenExitAddr::new(addr.id);
     for transport_addr in &addr.addrs {
         match transport_addr {
-            iroh::TransportAddr::Ip(socket) if is_routable_internet(*socket) => {
+            WarrenTransportAddr::Ip(socket) if is_routable_internet(*socket) => {
                 filtered = filtered.with_ip_addr(*socket);
             }
-            iroh::TransportAddr::Ip(_) => {
-                // IP privée / non-routable — droppée silencieusement.
-                // Le pump tunnel doit pouvoir survivre à un EndpointAddr
-                // vidé de toutes ses IPs (= path discovery iroh
-                // re-essaiera via le mécanisme natif).
+            WarrenTransportAddr::Ip(_) => {
+                // Non-routable IP, drop silently. An empty filtered
+                // address set is acceptable; the connect() call will
+                // surface a clear error to the caller.
             }
-            other => {
-                // Préserver les variants non-IP (Relay, etc.) ; warren
-                // n'utilise pas les relays mais on reste agnostic.
-                filtered.addrs.insert(other.clone());
+            _ => {
+                // Future transport variants (Warren does not ship any
+                // today). Pass through untouched so we do not start
+                // dropping non-IP variants the day they ship.
+                filtered.addrs.insert(transport_addr.clone());
             }
         }
     }
     filtered
 }
 
-/// Indique si une `SocketAddr` est routable sur Internet (= éligible
-/// pour un path candidate iroh). Voir [`filter_endpoint_addr_for_wan`].
+/// Whether a `SocketAddr` is routable on the public Internet. Cf.
+/// [`filter_endpoint_addr_for_wan`].
 #[must_use]
 fn is_routable_internet(socket: std::net::SocketAddr) -> bool {
     match socket.ip() {
@@ -758,36 +715,38 @@ fn is_routable_internet(socket: std::net::SocketAddr) -> bool {
     }
 }
 
-/// IPv6 `fc00::/7` (Unique Local Address, RFC 4193). `Ipv6Addr::is_unique_local`
-/// est encore unstable côté std (fév 2026), donc check explicite ici.
+/// IPv6 `fc00::/7` (Unique Local Address, RFC 4193).
+/// `Ipv6Addr::is_unique_local` is still unstable in std as of early
+/// 2026, hence the explicit check.
 #[must_use]
 fn is_ipv6_unique_local(addr: std::net::Ipv6Addr) -> bool {
     (addr.segments()[0] & 0xfe00) == 0xfc00
 }
 
-/// IPv6 `fe80::/10` (Link-Local). `Ipv6Addr::is_unicast_link_local` est
-/// gated derrière `ip` feature unstable, donc check explicite ici.
+/// IPv6 `fe80::/10` (Link-Local). `Ipv6Addr::is_unicast_link_local` is
+/// gated behind the unstable `ip` feature, hence the explicit check.
 #[must_use]
 fn is_ipv6_link_local(addr: std::net::Ipv6Addr) -> bool {
     (addr.segments()[0] & 0xffc0) == 0xfe80
 }
 
-/// Choix du mode session côté warren-iroh-tunnel basé sur `n_connections`.
-/// **Fonction pure testable** — F9 fork audit : ce dispatch sépare le
-/// path mono (= POC raw validé bench 22.69h) du path multi (= bonding
-/// expérimental) pour éviter les multipath probes parasites quand n=1.
+/// Picks the session variant based on `n_connections`. Pure function,
+/// kept testable: mono vs multi is a behavioural decision that lives
+/// here, not deep inside the warren-tunnel client builder.
 #[derive(Debug, PartialEq, Eq)]
 enum SessionRequest {
-    /// Demander une session mono-conn dédiée (= `client.connect`).
+    /// Mono-conn dedicated session (`client.connect`).
     Mono,
-    /// Demander une session multi-conn avec ce total (= `connect_multi`).
+    /// Multi-conn bonded session with this total count
+    /// (`client.connect_multi(_, n)`).
     Multi(u8),
 }
 
-/// Choisit la variante de session selon `n_connections`. Règle :
-/// - `0` ou `1` → [`SessionRequest::Mono`] (= 0 traité comme cas
-///   dégénéré → mono pour ne pas paniquer côté caller).
-/// - `>= 2` → [`SessionRequest::Multi(n)`].
+/// Selects the session variant from `n_connections`:
+/// - `0` or `1` -> [`SessionRequest::Mono`] (0 is the degenerate case
+///   and gets mono rather than a panic, since the upper layer should
+///   validate stricter).
+/// - `>= 2` -> [`SessionRequest::Multi(n)`].
 #[must_use]
 fn select_session_request(n_connections: u8) -> SessionRequest {
     if n_connections <= 1 {
@@ -818,15 +777,15 @@ fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
         packet_information: false,
         addresses,
         mtu: max_mtu,
-        // Convention Warren : la gateway IPv4 est la `.1` du pool tunnel
-        // (`10.66.0.1`), exposée par `warren-config`. Phase 1.B.4.a
-        // utilise une constante littérale en attendant l'import propre
-        // de la const `warren_config::TUNNEL_GATEWAY_IP` (à wirer une
-        // fois `warren-config` exposé via path-dep).
+        // Warren convention: the IPv4 gateway is the `.1` of the
+        // tunnel pool (`10.66.0.1`), exposed by `warren-config`.
+        // Hardcoded literal until `warren-config` is wired as a
+        // direct path-dep.
         ipv4_gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
         ipv6_gateway: None,
-        // Phase 1.B.4.a : pas de routes additionnelles. Phase 4 (relay
-        // selector) raffinera selon le mode (full-tunnel vs split).
+        // No additional routes here; routing is owned by the route
+        // installer below and refined by the relay selector for
+        // future full-tunnel vs split-tunnel modes.
         routes: vec![],
         allow_lan: false,
         dns_servers: None,
@@ -836,12 +795,11 @@ fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
     }
 }
 
-/// Construit la `TunnelMetadata` exposée aux events `Up`/`Down`.
+/// Builds the `TunnelMetadata` payload emitted with `Up` / `Down`
+/// events.
 fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
-    // Nom d'interface : récupéré du device si possible (Linux peut
-    // l'auto-assigner) ; fallback sur "warren0" si l'API n'expose pas
-    // un getter à ce niveau d'abstraction (corrigé en 1.B.4.b si
-    // nécessaire).
+    // Interface name: pulled from the device when possible (Linux
+    // may have auto-assigned it); fallback to "warren0" otherwise.
     let interface = tun
         .interface_name()
         .unwrap_or_else(|_| "warren0".to_owned());
@@ -853,31 +811,29 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
     }
 }
 
-/// Construit les `RequiredRoute` pour rediriger le trafic user via le
-/// tun, en bypassant les paquets daemon-iroh vers les IPs candidates
-/// de l'exit (sinon boucle de routage). F8 fork audit.
+/// Builds the `RequiredRoute` set to redirect user traffic through
+/// the TUN while bypassing daemon-side packets to the candidate exit
+/// IPs (otherwise the daemon -> exit traffic would loop back into the
+/// tunnel).
 ///
-/// Stratégie :
-/// 1. Pour chaque IP candidate de l'exit : route /32 ou /128 via
-///    `physical_iface` → préserve la connexion daemon ↔ exit (route
-///    plus spécifique gagne sur les /1 ci-dessous).
-/// 2. `0.0.0.0/1` + `128.0.0.0/1` via `tun_iface` → couvre la totalité
-///    de l'IPv4 sans replace la route default existante (technique
-///    split-default classique des VPN userspace).
+/// Strategy:
+/// 1. For each candidate exit IP: a `/32` (or `/128`) route via the
+///    physical interface, more specific than the `/1 + /1` below, so
+///    the daemon -> exit packets keep using the physical NIC.
+/// 2. `0.0.0.0/1` + `128.0.0.0/1` via the TUN interface: covers the
+///    entire IPv4 space without replacing the existing default route,
+///    a classic split-default trick.
 ///
-/// **F10e c2 fix complet** : pose le bypass `<exit_ip>/32 via <gateway>
-/// dev <physical>` (= avec gateway explicit) au lieu de `dev <physical>`
-/// scope link. La version sans gateway foire l'ARP sur les VPS Hetzner
-/// (= exit IP pas sur le même L2 qu'eth0) → kernel drop le paquet QUIC
-/// sortant → tunnel auto-poison.
+/// Bypass form: `<exit_ip>/32 via <gateway> dev <physical>` with the
+/// explicit gateway is required on cloud VPS where the exit IP is
+/// not on the same L2 as the egress NIC (ARP would otherwise fail).
+/// If `gateway` is `None`, fall back to `Node::device(physical)`
+/// (scope-link), which works on flat LANs but typically not on
+/// Hetzner / cloud topologies.
 ///
-/// Si `gateway` est `None`, on retombe sur `Node::device(physical)`
-/// (= ancien comportement, KO sur Hetzner mais peut marcher sur LAN
-/// flat). Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
-///
-/// Le split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` est posé
-/// séparément via [`default_route_split`] (= policy routing avec table
-/// dédiée), pas ici dans la table main.
+/// The `0.0.0.0/1` + `128.0.0.0/1` split-default is posted separately
+/// by [`default_route_split`] (policy routing in table 100), not here
+/// in the main routing table.
 #[cfg(target_os = "linux")]
 #[must_use]
 fn build_warren_tunnel_routes(
@@ -886,11 +842,10 @@ fn build_warren_tunnel_routes(
     physical_iface: &str,
     gateway: Option<std::net::Ipv4Addr>,
 ) -> Vec<RequiredRoute> {
-    // **F10e c2 fix** : si `gateway` Some, on construit `Node::address(gw, iface)`
-    // qui se traduira en `via <gw> dev <iface>` côté kernel. Sinon
-    // fallback `Node::device(iface)` (= scope link, probablement KO Hetzner).
+    // `Node::new(ip, iface)` -> `via <ip> dev <iface>` on the kernel
+    // side. With `None`, `Node::device(iface)` posts a scope-link
+    // route (works only on flat LANs).
     let physical_node = match gateway {
-        // `Node::new(ip, iface)` = `via <ip> dev <iface>` côté kernel.
         Some(gw) => Node::new(IpAddr::V4(gw), physical_iface.to_owned()),
         None => Node::device(physical_iface.to_owned()),
     };
@@ -901,23 +856,23 @@ fn build_warren_tunnel_routes(
         routes.push(RequiredRoute::new(net, physical_node.clone()));
     }
 
-    // F10e c2 fix Linux only: we do NOT post `0.0.0.0/1 + 128.0.0.0/1
-    // dev <tun>` in the main table. These routes would also capture the
-    // daemon's outbound QUIC packets to exit:7000 → routing loop → the
-    // tunnel poisons itself. They are posted in a dedicated table 100
-    // by `default_route_split::DefaultRouteSplitGuard::install` after
-    // `talpid_routing` has posted the bypass routes above in the main
-    // table. On macOS, see [`build_warren_tunnel_routes_macos`] for the
-    // native ifscope strategy through talpid-routing.
+    // We do NOT post `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` in the main
+    // table. Those routes would also capture the daemon's outbound
+    // QUIC packets to the exit port, creating a routing loop. They
+    // are posted in a dedicated table 100 by
+    // `default_route_split::DefaultRouteSplitGuard::install` *after*
+    // talpid_routing has posted the bypass routes above in the main
+    // table. On macOS, see [`build_warren_tunnel_routes_macos`] for
+    // the native ifscope strategy.
 
     routes
 }
 
 /// Build `RequiredRoute`s to redirect user traffic through the TUN on
-/// macOS, while bypassing daemon-iroh packets to the exit IPs. Mirror
-/// of Mullvad WireGuard's pattern (`talpid-wireguard/src/lib.rs:843-859`
-/// + `get_post_tunnel_routes`), adapted to Warren's needs (single exit,
-/// Iroh QUIC transport).
+/// macOS, while bypassing daemon-side packets to the exit IPs. Mirror
+/// of Mullvad WireGuard's pattern (`talpid-wireguard/src/lib.rs:843-859`,
+/// plus `get_post_tunnel_routes`), adapted to Warren's needs (single
+/// exit, Quinn QUIC transport).
 ///
 /// macOS strategy — do NOT reproduce the Linux `/1 + /1` recipe:
 ///
@@ -953,28 +908,31 @@ fn build_warren_tunnel_routes_macos(tun_iface: &str, exit_ips: &[IpAddr]) -> Vec
     let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len() + 1);
 
     for ip in exit_ips {
-        routes.push(RequiredRoute::new(IpNetwork::from(*ip), NetNode::DefaultNode));
+        routes.push(RequiredRoute::new(
+            IpNetwork::from(*ip),
+            NetNode::DefaultNode,
+        ));
     }
 
     let tun_node = Node::device(tun_iface.to_owned());
     let default_v4 = ipnetwork::Ipv4Network::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0)
-        .expect("0.0.0.0/0 est un préfixe valide");
+        .expect("0.0.0.0/0 is a valid prefix");
     routes.push(RequiredRoute::new(IpNetwork::V4(default_v4), tun_node));
 
     routes
 }
 
-/// Détecte le nom de l'interface portant la route default IPv4.
-/// Utilisé pour la pose des routes bypass vers les IPs de l'exit.
+/// Detects the name of the interface carrying the IPv4 default
+/// route. Used when posting bypass routes for the exit IPs.
 ///
-/// Lecture de `/proc/net/route` : format texte avec ligne d'en-tête,
-/// puis lignes `Iface\tDestination\tGateway\t...`. La route default a
-/// `Destination == 00000000`. On retourne le premier match.
+/// Reads `/proc/net/route`: text format with a header line, then
+/// `Iface\tDestination\tGateway\t...` lines. The default route has
+/// `Destination == 00000000`. Returns the first match.
 ///
 /// # Errors
 ///
-/// I/O sur `/proc/net/route` (= système non-Linux ou /proc non monté)
-/// ou aucune route default v4 (= machine isolée).
+/// I/O on `/proc/net/route` (non-Linux system, `/proc` not mounted)
+/// or no IPv4 default route (isolated machine).
 #[cfg(target_os = "linux")]
 fn detect_default_iface() -> std::io::Result<String> {
     let routes = std::fs::read_to_string("/proc/net/route")?;
@@ -990,14 +948,14 @@ fn detect_default_iface() -> std::io::Result<String> {
     ))
 }
 
-/// **F10e c2 fix** — détecte l'IP du gateway de la default route IPv4.
-/// Indispensable pour poser le bypass `<exit_ip>/32 via <gateway>` au
-/// lieu de `<exit_ip>/32 dev eth0` scope link qui foire l'ARP sur les
-/// VPS où l'IP exit n'est pas sur le même L2 qu'eth0.
+/// Detects the gateway IP of the IPv4 default route. Required to
+/// post `<exit_ip>/32 via <gateway>` instead of
+/// `<exit_ip>/32 dev <iface>` scope-link, which fails ARP on cloud
+/// VPS where the exit IP is not on the same L2 as the egress NIC.
 ///
-/// Format `/proc/net/route` : `Iface\tDest\tGateway\tFlags\t...` où
-/// Dest et Gateway sont des u32 hex en **little-endian** (= byte swap
-/// nécessaire pour reconstruire l'`Ipv4Addr`).
+/// `/proc/net/route` format: `Iface\tDest\tGateway\tFlags\t...`
+/// where `Dest` and `Gateway` are u32 hex in little-endian (so byte
+/// swap is needed to reconstruct the `Ipv4Addr`).
 #[cfg(target_os = "linux")]
 fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
     let routes = std::fs::read_to_string("/proc/net/route")?;
@@ -1009,11 +967,11 @@ fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
             let gw_hex = u32::from_str_radix(fields[2], 16).map_err(|e| {
                 std::io::Error::other(format!("parse gateway hex {}: {e}", fields[2]))
             })?;
-            // Swap bytes : /proc/net/route donne en LE host order, on veut
-            // l'octet network order pour Ipv4Addr.
+            // Swap bytes: /proc/net/route is little-endian host
+            // order, we want network byte order for Ipv4Addr.
             let gw = std::net::Ipv4Addr::from(gw_hex.swap_bytes());
             if gw.is_unspecified() {
-                continue; // 0.0.0.0 = pas un gateway valide
+                continue; // 0.0.0.0 is not a valid gateway
             }
             return Ok(gw);
         }
@@ -1024,24 +982,21 @@ fn detect_default_gateway_v4() -> std::io::Result<std::net::Ipv4Addr> {
     ))
 }
 
-/// **F10c fork audit** — détecte l'IP source locale (eth0/wlan0) qui
-/// serait utilisée pour router un paquet vers `target`. Astuce
-/// `UdpSocket::connect` portable Linux/macOS/Windows : pour UDP,
-/// `connect()` ne fait AUCUN paquet réseau (= pas de handshake), juste
-/// résout la route locale ; `local_addr()` retourne ensuite l'IP source
-/// que le kernel aurait choisie.
+/// Detects the local source IP (eth0 / wlan0) that the kernel would
+/// use to reach `target`. Trick: `UdpSocket::connect()` for UDP does
+/// no network I/O (no handshake), it just resolves the local route,
+/// and `local_addr()` returns the source IP the kernel would pick.
+/// Works on Linux, macOS and Windows.
 ///
-/// Utilisé pour binder l'`Endpoint` Iroh client sur cette IP spécifique
-/// au lieu de `0.0.0.0:0` unspecified, afin d'empêcher iroh d'enumerer
-/// `tun0` (10.66.0.2) une fois le tunnel monté et de propager cette IP
-/// au serveur via `ADD_ADDRESS` frame `n0_nat_traversal`. Cf.
-/// `bench/results/2026-05-09_F10b_resolved_round5.md` § F10c.
+/// Used to bind the client QUIC `Endpoint` to this specific IP
+/// rather than `0.0.0.0:0` (unspecified). Defense in depth so the
+/// transport stays pinned to the original egress interface even
+/// after the TUN is up.
 ///
 /// # Errors
 ///
-/// I/O sur le bind/connect (= machine sans Internet ou sans route default).
-/// Le caller doit fallback sur le bind unspecified (= comportement
-/// pré-F10c, bug subsiste mais POC reste fonctionnel).
+/// I/O on bind / connect (no Internet, no default route). The caller
+/// should fall back to the unspecified bind.
 fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std::net::IpAddr> {
     let bind = if target.is_ipv4() {
         std::net::SocketAddr::V4(std::net::SocketAddrV4::new(
@@ -1064,61 +1019,61 @@ fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std:
 #[cfg(test)]
 mod tests {
     use super::*;
+    use warren_protocol::WarrenPubkey;
 
     #[test]
     fn warren_iroh_parameters_debug_does_not_leak_secrets() {
-        // Audit no-log Warren : Debug ne doit JAMAIS révéler
-        // signing_key, exit_id ni exit_addr complets — ces données sont
-        // soit du secret material (signing_key), soit de la PII de
-        // session (exit_id qui identifie l'utilisateur sur l'exit).
+        // No-log Warren: Debug must never reveal signing_key nor the
+        // full exit pubkey. The first is secret material, the second
+        // is session-PII identifying the user on the exit side.
         let signing = SigningKey::from_bytes(&[0u8; 32]);
-        let exit_id = EndpointId::from_bytes(&[1u8; 32]).expect("EndpointId from_bytes");
+        let exit_id = WarrenPubkey::from_bytes([1u8; 32]);
         let params = WarrenIrohParameters {
-            exit_id,
-            exit_addr: EndpointAddr::new(exit_id),
+            exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 2,
             features: 0x1,
         };
         let s = format!("{params:?}");
-        assert!(s.contains("<redacted>"), "doit masquer les secrets : {s}");
-        assert!(!s.contains("0001000100"), "ne doit pas leak l'exit_id hex");
+        assert!(s.contains("<redacted>"), "must mask secrets: {s}");
+        assert!(
+            !s.contains(&exit_id.to_hex()),
+            "must not leak the exit pubkey in hex: {s}"
+        );
         assert!(s.contains("n_connections: 2"));
         assert!(s.contains("features: 0x00000001"));
     }
 
     #[test]
     fn handshake_error_is_recoverable() {
-        // Phase 1.B : un handshake transient (network glitch) doit
-        // être retryable côté state machine pour ne pas casser une
-        // session sur un blip réseau.
+        // A transient handshake error (network glitch) must be
+        // retryable on the state-machine side so a session is not
+        // killed by a single packet loss.
         let e = Error::Handshake("simulated".into());
         assert!(e.is_recoverable());
     }
 
     #[test]
     fn backend_error_is_not_recoverable() {
-        // Erreur structurelle = pas de retry (économise du CPU/réseau).
+        // Structural error: do not retry (saves CPU and network).
         let e = Error::Backend("simulated".into());
         assert!(!e.is_recoverable());
     }
 
     #[cfg(target_os = "linux")]
     #[test]
-    fn build_routes_emits_only_bypass_via_physical_after_f10e_fix() {
-        // **F10e c2 fix** : `build_warren_tunnel_routes` ne pose PLUS
-        // les routes split-default `0.0.0.0/1 + 128.0.0.0/1 dev <tun>`
-        // dans la table main (= elles capturaient AUSSI les paquets QUIC
-        // sortants du daemon vers exit:7000 → boucle de routage).
+    fn build_routes_emits_only_bypass_via_physical() {
+        // `build_warren_tunnel_routes` does NOT post the split-default
+        // `0.0.0.0/1 + 128.0.0.0/1 dev <tun>` in the main table:
+        // those routes would also capture the daemon's outbound QUIC
+        // packets to the exit port and create a routing loop. They
+        // are posted in the dedicated table 100 by
+        // `default_route_split::DefaultRouteSplitGuard::install`
+        // after talpid_routing has posted the bypass routes below in
+        // the main table.
         //
-        // Ces routes sont posées dans la **table 100 dédiée** par
-        // `default_route_split::DefaultRouteSplitGuard::install` après
-        // que `talpid_routing` ait posé les bypass ci-dessous dans la
-        // table main.
-        //
-        // Cf. `warren-core/bench/results/2026-05-09_F10e_RESOLVED.md`.
-        // Anti-régression critique : si quelqu'un re-ajoute les /1 dans
-        // ce Vec, le tunnel s'auto-poison.
+        // Anti-regression: if anyone re-adds the `/1` here, the
+        // tunnel poisons itself.
         let exit_ips: Vec<IpAddr> = vec![
             "91.99.122.154".parse().unwrap(),
             "2a01:4f8:c013:14a1::1".parse().unwrap(),
@@ -1128,94 +1083,89 @@ mod tests {
         assert_eq!(
             routes.len(),
             2,
-            "post-F10e fix : 2 bypass (v4+v6 par exit) + 0 split-default = 2 routes (got {} : {routes:?})",
+            "2 bypass (v4+v6) + 0 split-default = 2 routes (got {} : {routes:?})",
             routes.len()
         );
 
         let dump = format!("{routes:?}");
-        // Les 2 IPs exit doivent apparaître comme bypass /32 et /128.
+        // Both exit IPs must appear as /32 and /128 bypass routes.
         assert!(
             dump.contains("addr: 91.99.122.154") && dump.contains("prefix: 32"),
-            "exit v4 doit avoir une route /32 bypass dans {dump}"
+            "exit v4 must have a /32 bypass route in {dump}"
         );
         assert!(
             dump.contains("addr: 2a01:4f8:c013:14a1::1") && dump.contains("prefix: 128"),
-            "exit v6 doit avoir une route /128 bypass dans {dump}"
+            "exit v6 must have a /128 bypass route in {dump}"
         );
-        // **Anti-régression F10e** : les /1 split-default NE doivent PAS
-        // être dans ce Vec. Si re-introduits, le tunnel se cassera comme
-        // au round 13/14 (cf. RESOLVED.md).
+        // Anti-regression: no /1 split-default in this Vec.
         assert!(
             !dump.contains("addr: 0.0.0.0"),
-            "0.0.0.0/1 split-default ne doit PAS être dans table main \
-             (cause F10e c2 boucle routage). Voir default_route_split module. \
-             dump = {dump}"
+            "0.0.0.0/1 split-default must NOT be in the main table \
+             (routing loop). See default_route_split. dump = {dump}"
         );
         assert!(
             !dump.contains("addr: 128.0.0.0"),
-            "128.0.0.0/1 split-default ne doit PAS être dans table main \
-             (cause F10e c2 boucle routage). dump = {dump}"
+            "128.0.0.0/1 split-default must NOT be in the main table \
+             (routing loop). dump = {dump}"
         );
-        // Tous les bypass via eth0 (= physical iface).
+        // All bypass routes target eth0 (the physical interface).
         assert!(
             dump.contains(r#"device: Some("eth0")"#),
-            "physical_iface 'eth0' dans node device attendu dans {dump}"
+            "physical_iface 'eth0' expected as node device in {dump}"
         );
         assert!(
             !dump.contains(r#"device: Some("tun0")"#),
-            "post-F10e fix : tun_iface ne doit PAS apparaître dans build_warren_tunnel_routes \
-             (= split-default est dans default_route_split::install)"
+            "tun_iface must NOT appear in build_warren_tunnel_routes \
+             (split-default lives in default_route_split::install)"
         );
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn build_routes_with_no_exit_ips_emits_no_routes() {
-        // Edge case Linux : exit_ips vide. Post-F10e fix, on émet 0 routes
-        // (= les /1 ne sont plus ici, posés par default_route_split table 100).
+        // Edge case: empty exit_ips emits 0 routes (the `/1` no
+        // longer live here, they are owned by default_route_split's
+        // table 100).
         let routes = build_warren_tunnel_routes("tun0", &[], "eth0", None);
-        assert_eq!(
-            routes.len(),
-            0,
-            "Linux post-F10e fix : 0 bypass + 0 split-default"
-        );
+        assert_eq!(routes.len(), 0, "0 bypass + 0 split-default");
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn build_routes_v4_only_exit_emits_one_bypass() {
-        // V4-only exit Linux : 1 bypass /32 v4. Pas de v6, pas de split-default.
+        // IPv4-only exit: 1 /32 v4 bypass. No v6, no split-default.
         let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
         let routes = build_warren_tunnel_routes("tun0", &exit_ips, "eth0", None);
-        assert_eq!(routes.len(), 1, "Linux post-F10e fix : 1 bypass v4 seul");
+        assert_eq!(routes.len(), 1, "1 v4 bypass route");
         let dump = format!("{routes:?}");
         assert!(
             !dump.contains("V6("),
-            "aucune Ipv6Network attendue pour v4-only exit"
+            "no Ipv6Network expected for a v4-only exit"
         );
     }
 
     #[cfg(target_os = "macos")]
     #[test]
     fn build_routes_macos_uses_default_node_bypass_and_default_redirect() {
-        // macOS — pattern Mullvad WireGuard (= Warren-style adapté Iroh) :
-        //   1. `<exit_ip>/32 NetNode::DefaultNode` → bypass via best
-        //      default route (résolu au moment de pose par talpid-routing).
-        //   2. `0.0.0.0/0 dev <tun>` → déclenche le `tunnel_default_routes`
-        //      ifscope dance (= recipe macOS native, pas de policy routing).
+        // macOS - mirror of the Mullvad WireGuard pattern, adapted to
+        // Warren's needs:
+        //   1. `<exit_ip>/32 NetNode::DefaultNode` -> bypass via the
+        //      best default route (resolved at apply time by
+        //      talpid-routing).
+        //   2. `0.0.0.0/0 dev <tun>` -> triggers the
+        //      `tunnel_default_routes` ifscope dance (native macOS
+        //      recipe, no policy routing on Darwin).
         //
-        // Anti-régression critique : si quelqu'un réintroduit `/1 + /1`
-        // dans la table main (= l'ancienne tentative qui cassait l'iroh
-        // socket via SDL link-scope ARP fail), ces asserts détectent.
-        use talpid_routing::NetNode;
-
+        // The `node` field on `RequiredRoute` is private, so the
+        // assertions below use the `Debug` output, which exposes
+        // both the prefix and the node variant.
         let exit_ips: Vec<IpAddr> = vec!["91.99.122.154".parse().unwrap()];
         let routes = build_warren_tunnel_routes_macos("utun4", &exit_ips);
 
         assert_eq!(
             routes.len(),
             2,
-            "macOS : 1 bypass exit + 1 default redirect (got {} : {routes:?})",
+            "macOS: 1 bypass exit + 1 default redirect (got {} : {routes:?})",
             routes.len()
         );
 
@@ -1223,51 +1173,51 @@ mod tests {
         let bypass = routes
             .iter()
             .find(|r| r.prefix.prefix() == 32)
-            .expect("bypass /32 attendu");
+            .expect("/32 bypass expected");
+        let bypass_dump = format!("{bypass:?}");
         assert!(
-            matches!(bypass.node, NetNode::DefaultNode),
-            "bypass exit doit utiliser NetNode::DefaultNode (= talpid-routing \
-             résout via best_default_route.router_ip au moment de pose, \
-             garantit un L3 gateway ARP-able). got: {:?}",
-            bypass.node
+            bypass_dump.contains("DefaultNode"),
+            "bypass exit must use NetNode::DefaultNode (talpid-routing \
+             resolves it via best_default_route.router_ip at apply time, \
+             guaranteeing an ARP-able L3 gateway). dump = {bypass_dump}"
         );
 
         // Default redirect via TUN.
         let default = routes
             .iter()
             .find(|r| r.prefix.prefix() == 0)
-            .expect("default /0 attendu");
+            .expect("/0 default expected");
         let dump = format!("{default:?}");
         assert!(
             dump.contains(r#"device: Some("utun4")"#),
-            "default redirect doit pointer sur tun_iface (= déclenche \
-             tunnel_default_routes special case dans talpid-routing macOS, \
-             cf. mod.rs:346). dump = {dump}"
+            "default redirect must target tun_iface (triggers the \
+             tunnel_default_routes special case in talpid-routing \
+             macOS). dump = {dump}"
         );
 
-        // Anti-régression : pas de /1 (= ancienne tentative cassée).
+        // Anti-regression: no `/1` (= the old broken recipe).
         assert!(
             !routes.iter().any(|r| r.prefix.prefix() == 1),
-            "PAS de /1 split-default sur macOS — l'approche ifscope-dance \
-             est la recette native macOS et remplace `/1 + /1`. routes = {routes:?}"
+            "no /1 split-default on macOS - the ifscope dance is the \
+             native macOS recipe and replaces /1 + /1. routes = {routes:?}"
         );
     }
 
     #[cfg(target_os = "macos")]
     #[test]
     fn build_routes_macos_with_no_exit_ips_still_emits_default_redirect() {
-        // Edge case macOS : exit_ips vide → 0 bypass + 1 default redirect.
-        // Le tunnel route le trafic user via tun mais sans bypass exit
-        // (cas pratique : exit IPv6-only pas encore supporté ou test).
+        // Edge case: empty exit_ips -> 0 bypass + 1 default redirect.
+        // The tunnel still routes user traffic via TUN but without
+        // an exit bypass (case: IPv6-only exit, not yet supported).
         let routes = build_warren_tunnel_routes_macos("utun4", &[]);
-        assert_eq!(routes.len(), 1, "macOS no exit : 0 bypass + 1 default = 1");
-        assert_eq!(routes[0].prefix.prefix(), 0, "le seul item doit être le /0");
+        assert_eq!(routes.len(), 1, "macOS no exit: 0 bypass + 1 default");
+        assert_eq!(routes[0].prefix.prefix(), 0, "single item must be /0");
     }
 
     #[cfg(target_os = "macos")]
     #[test]
     fn build_routes_macos_multiple_exit_ips_yields_one_bypass_each() {
-        // Multiple exit IPs (v4 + v6) : un bypass par IP + le default.
+        // Multiple exit IPs (v4 + v6): one bypass per IP + the default.
         let exit_ips: Vec<IpAddr> = vec![
             "91.99.122.154".parse().unwrap(),
             "2a01:4f8:c013:14a1::1".parse().unwrap(),
@@ -1276,31 +1226,28 @@ mod tests {
         assert_eq!(
             routes.len(),
             3,
-            "2 exit IPs (v4+v6) → 2 bypass + 1 default redirect = 3"
+            "2 exit IPs (v4+v6) -> 2 bypass + 1 default redirect = 3"
         );
+        // Field `node` is private; check via Debug output.
         let bypass_count = routes
             .iter()
-            .filter(|r| matches!(r.node, talpid_routing::NetNode::DefaultNode))
+            .filter(|r| format!("{r:?}").contains("DefaultNode"))
             .count();
-        assert_eq!(bypass_count, 2, "1 bypass DefaultNode par exit IP");
+        assert_eq!(bypass_count, 2, "1 DefaultNode bypass per exit IP");
     }
 
     #[test]
     fn select_session_request_returns_mono_for_one_connection() {
-        // F9 fork audit : `n_connections == 1` doit basculer sur le
-        // path `connect()` mono-conn (= POC raw validé bench 22.69h).
-        // `connect_multi(_, _, 1)` activait des multipath probes
-        // côté noq-proto qui poisonnaient `read_datagram` côté exit
-        // → pump exit terminait immédiatement → 0 datagram user
-        // transmis. Ce test fige la règle anti-régression.
+        // `n_connections == 1` must pick the `connect()` mono-conn
+        // path. Anti-regression: do not switch to `connect_multi(_,1)`
+        // for n=1, that path activated multi-flow logic that did not
+        // make sense for a single connection.
         assert_eq!(select_session_request(1), SessionRequest::Mono);
     }
 
     #[test]
     fn select_session_request_returns_multi_for_two_or_more_connections() {
-        // n>=2 active le bonding multi-flow (= path `connect_multi`).
-        // Le multipath QUIC est légitime ici puisque c'est l'objectif
-        // explicite (= agrégation throughput inter-paths).
+        // n >= 2 activates multi-flow bonding (`connect_multi`).
         assert_eq!(select_session_request(2), SessionRequest::Multi(2));
         assert_eq!(select_session_request(4), SessionRequest::Multi(4));
         assert_eq!(select_session_request(8), SessionRequest::Multi(8));
@@ -1323,12 +1270,12 @@ mod tests {
 
     #[test]
     fn is_routable_internet_v4_rejects_rfc1918_and_loopback() {
-        // F10 fork audit : `10.66.0.1:7000` (= TUN gateway warren0
-        // exit) est l'IP qui poisonne le multipath probing iroh.
-        // Doit être rejetée. + tests symétriques 172.16/12 + 192.168/16
-        // + 127.0.0.1 + 169.254/16 + 0.0.0.0.
+        // `10.66.0.1:7000` (= TUN gateway warren0 exit) is the IP we
+        // most care about rejecting: a misconfigured exit metadata
+        // would carry it and lead to a routing loop. Same for the
+        // standard RFC1918 + loopback + link-local + unspecified.
         for ip in [
-            "10.66.0.1:7000",     // F10 cause root
+            "10.66.0.1:7000",     // anti-loop sentinel
             "10.0.0.1:443",       // RFC1918 10/8
             "172.20.0.5:80",      // RFC1918 172.16/12
             "192.168.1.1:8080",   // RFC1918 192.168/16
@@ -1339,109 +1286,102 @@ mod tests {
             let sa: std::net::SocketAddr = ip.parse().unwrap();
             assert!(
                 !is_routable_internet(sa),
-                "{ip} doit être REJETÉE (non-routable Internet)"
+                "{ip} must be REJECTED (non-routable Internet)"
             );
         }
     }
 
     #[test]
     fn is_routable_internet_v6_accepts_public_globals_rejects_local() {
-        // IPv6 publiques Hetzner = OK. ULA fc00::/7 + link-local
-        // fe80::/10 + loopback ::1 = REJECT.
+        // Public IPv6 = OK. ULA fc00::/7 + link-local fe80::/10 +
+        // loopback ::1 + unspecified = REJECT.
         let public: std::net::SocketAddr = "[2a01:4f8:c013:14a1::1]:7000".parse().unwrap();
-        assert!(
-            is_routable_internet(public),
-            "global IPv6 doit être routable"
-        );
+        assert!(is_routable_internet(public), "global IPv6 must be routable");
 
         for ip in [
-            "[fc00::1]:7000", // ULA RFC4193
-            "[fd00::1]:7000", // ULA fd00::/8 (sub-range de fc00::/7)
+            "[fc00::1]:7000", // ULA RFC 4193
+            "[fd00::1]:7000", // ULA fd00::/8 (sub-range of fc00::/7)
             "[fe80::1]:7000", // link-local
             "[::1]:7000",     // loopback
             "[::]:7000",      // unspecified
         ] {
             let sa: std::net::SocketAddr = ip.parse().unwrap();
-            assert!(!is_routable_internet(sa), "{ip} doit être REJETÉE");
+            assert!(!is_routable_internet(sa), "{ip} must be REJECTED");
         }
     }
 
     #[test]
     fn filter_endpoint_addr_drops_private_v4_keeps_public_pair() {
-        // Cas réaliste F10 : EndpointAddr annoncé par exit contient
-        // (1) IP publique routable + (2) IP TUN gateway 10.66.0.1.
-        // Le filtre doit garder (1) et drop (2).
-        use iroh::SecretKey;
-        let id = SecretKey::from_bytes(&[7u8; 32]).public();
+        // Realistic case: exit metadata carries (1) a routable public
+        // IP plus (2) the TUN gateway IP `10.66.0.1`. The filter keeps
+        // (1) and drops (2).
+        let id = WarrenPubkey::from_bytes([7u8; 32]);
         let public: std::net::SocketAddr = "91.99.122.154:7000".parse().unwrap();
         let tun_gw: std::net::SocketAddr = "10.66.0.1:7000".parse().unwrap();
-        let addr = EndpointAddr::new(id)
+        let addr = WarrenExitAddr::new(id)
             .with_ip_addr(public)
             .with_ip_addr(tun_gw);
 
         let filtered = filter_endpoint_addr_for_wan(addr);
-        let kept: Vec<_> = filtered.ip_addrs().copied().collect();
-        assert_eq!(kept.len(), 1, "exactement 1 IP gardée (publique)");
-        assert_eq!(kept[0], public, "IP publique conservée");
+        let kept: Vec<_> = filtered.ip_addrs().collect();
+        assert_eq!(kept.len(), 1, "exactly one address kept (public)");
+        assert_eq!(kept[0], public, "public IP kept");
         assert!(
             !kept.contains(&tun_gw),
-            "tun gateway 10.66.0.1 doit être droppée (F10 cause root)"
+            "tun gateway 10.66.0.1 must be dropped"
         );
     }
 
     #[test]
     fn filter_endpoint_addr_preserves_endpoint_id() {
-        // L'identité Ed25519 du peer ne doit pas être modifiée par
-        // le filtre — sinon le handshake noq attendrait une autre
-        // pubkey et rejetterait la connexion.
-        use iroh::SecretKey;
-        let id = SecretKey::from_bytes(&[42u8; 32]).public();
-        let addr = EndpointAddr::new(id).with_ip_addr("10.0.0.1:7000".parse().unwrap());
+        // The peer's Ed25519 identity must not be altered by the
+        // filter, otherwise the TLS RPK check would reject the
+        // handshake.
+        let id = WarrenPubkey::from_bytes([42u8; 32]);
+        let addr = WarrenExitAddr::new(id).with_ip_addr("10.0.0.1:7000".parse().unwrap());
 
         let filtered = filter_endpoint_addr_for_wan(addr);
-        assert_eq!(filtered.id, id, "EndpointId préservé après filtre");
+        assert_eq!(filtered.id, id, "pubkey preserved through filter");
     }
 
     #[test]
     fn filter_endpoint_addr_with_only_private_ips_returns_empty_addrs() {
-        // Edge case : si le serveur n'annonce que des IPs privées
-        // (= bug ops, EndpointAddr mal construit), on retourne un
-        // EndpointAddr vide. Le caller (= `client.connect`) devra
-        // alors fail proprement avec `connect to exit failed`,
-        // plutôt que de boucler sur multipath probes 10.66.0.1.
-        use iroh::SecretKey;
-        let id = SecretKey::from_bytes(&[1u8; 32]).public();
-        let addr = EndpointAddr::new(id)
+        // Edge case: server advertises only private IPs (= ops bug or
+        // malformed exit metadata). The filter returns an empty addr
+        // set; the caller (`client.connect`) then surfaces a clean
+        // "connect to exit failed" instead of looping on bogus
+        // candidates.
+        let id = WarrenPubkey::from_bytes([1u8; 32]);
+        let addr = WarrenExitAddr::new(id)
             .with_ip_addr("10.66.0.1:7000".parse().unwrap())
             .with_ip_addr("192.168.1.1:7000".parse().unwrap());
 
         let filtered = filter_endpoint_addr_for_wan(addr);
-        assert_eq!(filtered.ip_addrs().count(), 0, "toutes droppées");
+        assert_eq!(filtered.ip_addrs().count(), 0, "all dropped");
         assert_eq!(filtered.id, id);
     }
 
     #[test]
     fn select_session_request_treats_zero_as_mono() {
-        // Edge case : `n_connections == 0` est un cas dégénéré
-        // (protocole `Setup` exige `total_connections >= 1`). Plutôt
-        // que paniquer côté `select_session_request`, on retourne
-        // `Mono` qui appelle `connect()` (= comportement défensif —
-        // l'API publique du caller `WarrenIrohParameters` peut
-        // valider plus strictement amont).
+        // Edge case: `n_connections == 0` is a degenerate case (the
+        // `Setup` frame requires `total_connections >= 1`). Rather
+        // than panicking in `select_session_request`, we return Mono
+        // (calls `connect()`); the upper-layer params builder is
+        // responsible for stricter validation.
         assert_eq!(select_session_request(0), SessionRequest::Mono);
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn detect_default_iface_returns_some_iface_on_linux_runtime_or_skip() {
-        // Sanity check : sur l'env de test Linux, /proc/net/route existe
-        // et retourne au moins un nom d'interface non-vide. Si /proc
-        // n'est pas monté ou pas de route default (= conteneur isolé,
-        // CI sans réseau), on skip plutôt que faire échouer le test.
+        // Sanity check: on a Linux test environment, `/proc/net/route`
+        // exists and returns at least one non-empty interface name.
+        // If `/proc` is not mounted or there is no default route
+        // (isolated container, no-network CI), skip rather than fail.
         match detect_default_iface() {
-            Ok(iface) => assert!(!iface.is_empty(), "iface name doit être non-vide"),
+            Ok(iface) => assert!(!iface.is_empty(), "iface name must be non-empty"),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                eprintln!("skip detect_default_iface : pas de route default ({e})");
+                eprintln!("skip detect_default_iface: no default route ({e})");
             }
             Err(e) => panic!("unexpected I/O error: {e}"),
         }
@@ -1449,13 +1389,13 @@ mod tests {
 
     #[test]
     fn detect_default_local_ip_returns_routable_or_loopback_ip() {
-        // F10c invariant : l'astuce `UdpSocket::connect` doit retourner
-        // une IP source non-unspecified (= pas `0.0.0.0` ni `[::]`). Sur
-        // une machine de dev avec Internet, on obtient l'IP eth0/wlan0
-        // publique. Sur une machine isolée (CI sandbox sans réseau), la
-        // bind/connect peut fail OU retourner loopback — on tolère les
-        // deux cas, ce qui compte est qu'on ne retourne JAMAIS une IP
-        // unspecified (= bug = pas de fix F10c possible).
+        // Invariant: the `UdpSocket::connect` trick must return a
+        // non-unspecified source IP (not `0.0.0.0` nor `[::]`). On a
+        // dev machine with Internet we get the eth0 / wlan0 IP. On an
+        // isolated CI sandbox the bind / connect may fail OR return
+        // loopback, both tolerated; what must not happen is the
+        // unspecified IP, which would let the transport rebind on any
+        // interface including the TUN once the tunnel is up.
         let target = std::net::SocketAddr::V4(std::net::SocketAddrV4::new(
             std::net::Ipv4Addr::new(1, 1, 1, 1),
             53,
@@ -1463,12 +1403,10 @@ mod tests {
         match detect_default_local_ip(target) {
             Ok(ip) => assert!(
                 !ip.is_unspecified(),
-                "F10c regression : detect_default_local_ip ne doit JAMAIS retourner \
-                 0.0.0.0 ou [::] (= unspecified). Sinon `with_bind_local_ip(unspecified)` \
-                 déclencherait `collect_local_addresses` côté iroh et le bug F10c \
-                 serait ré-introduit. ip={ip}"
+                "regression: detect_default_local_ip must NEVER return \
+                 0.0.0.0 or [::]. ip={ip}"
             ),
-            Err(e) => eprintln!("skip detect_default_local_ip (CI sans réseau ?) : {e}"),
+            Err(e) => eprintln!("skip detect_default_local_ip (no-network CI?): {e}"),
         }
     }
 }
