@@ -6,21 +6,21 @@
 //! les exits Warren disponibles dans son sélecteur de pays/villes sans
 //! refacto majeur côté frontend.
 //!
-//! **Limites assumées du POC** :
-//! - Les `WireguardRelay` produits portent une `wireguard::PublicKey`
-//!   construite à partir des 32 octets de l'`EndpointId` Ed25519 Warren.
-//!   C'est un faux x25519 — il n'est **jamais utilisé** pour établir un
-//!   tunnel WG en mode Warren (le tunnel passe par `warren-iroh-tunnel`
-//!   via `talpid-warren-iroh`). C'est purement un identifiant unique
-//!   pour la GUI.
-//! - `hostname` = 16 premiers chars hex de l'`EndpointId` (suffisant
-//!   pour distinguer visuellement les exits dans la liste).
-//! - `latitude`/`longitude` = 0/0 (warren-api `/v1/exits` ne véhicule
-//!   pas les coords). La carte affichera tous les exits empilés sur (0,0)
-//!   tant qu'on n'enrichit pas avec une table country→coords ou un
-//!   geocoder côté daemon.
-//! - `port_ranges`/`shadowsocks_port_ranges`/`udp2tcp_ports` = vides
-//!   (non utilisés sur le path Warren).
+//! POC limitations:
+//! - Produced `WireguardRelay` values carry a `wireguard::PublicKey`
+//!   built from the 32 bytes of the Warren Ed25519 pubkey. It is a
+//!   fake x25519 key, never used to set up an actual WG tunnel in
+//!   Warren mode (the tunnel goes through `warren-tunnel` via
+//!   `talpid-warren-iroh`); it only acts as a unique identifier for
+//!   the GUI.
+//! - `hostname` = first 16 hex chars of the pubkey (enough to
+//!   visually distinguish exits in the list).
+//! - `latitude`/`longitude` = 0/0 (warren-api `/v1/exits` does not
+//!   carry the coordinates). The map will stack all exits on (0,0)
+//!   until we enrich with a country->coord table or a server-side
+//!   geocoder.
+//! - `port_ranges`/`shadowsocks_port_ranges`/`udp2tcp_ports` are
+//!   empty (not used on the Warren path).
 
 use std::collections::BTreeMap;
 use std::net::{Ipv4Addr, SocketAddr};
@@ -93,20 +93,21 @@ fn make_wireguard_relay(
     city_name: &str,
     city_code: &str,
 ) -> WireguardRelay {
-    // EndpointId Warren = 32 bytes Ed25519 → réinterprétés en wireguard::PublicKey
-    // pour satisfaire le type GUI. Cette key n'est jamais consommée par
-    // le tunnel : `produce_warren_iroh_params` utilise directement
-    // l'`EndpointId` issu du `WarrenRelaySelector`, pas la `RelayList`.
+    // Warren pubkey = 32 bytes Ed25519, re-interpreted as a
+    // `wireguard::PublicKey` to satisfy the GUI type. This key is
+    // never consumed by the tunnel: `produce_warren_iroh_params`
+    // pulls the pubkey directly from the `WarrenRelaySelector`, not
+    // from the `RelayList` view.
     let endpoint_bytes: [u8; 32] = *relay.endpoint_id().as_bytes();
     let public_key = wireguard::PublicKey::from(endpoint_bytes);
 
-    // hostname court visuellement distinct (16 hex chars de la pubkey).
+    // Short visually distinct hostname (16 hex chars of the pubkey).
     let hostname = format!("warren-{}", &hex::encode(endpoint_bytes)[..16]);
 
     let ipv4 = relay
         .endpoint_addr()
         .ip_addrs()
-        .find_map(|addr: &SocketAddr| match addr {
+        .find_map(|addr| match addr {
             SocketAddr::V4(v4) => Some(*v4.ip()),
             SocketAddr::V6(_) => None,
         })
@@ -114,7 +115,7 @@ fn make_wireguard_relay(
     let ipv6 = relay
         .endpoint_addr()
         .ip_addrs()
-        .find_map(|addr: &SocketAddr| match addr {
+        .find_map(|addr| match addr {
             SocketAddr::V4(_) => None,
             SocketAddr::V6(v6) => Some(*v6.ip()),
         });
@@ -136,11 +137,11 @@ fn make_wireguard_relay(
     };
 
     WireguardRelay::new(
-        false,                       // overridden_ipv4
-        false,                       // overridden_ipv6
-        true,                        // include_in_country
-        true,                        // owned (= shown as Warren-owned)
-        "warren".to_string(),        // provider
+        false,                // overridden_ipv4
+        false,                // overridden_ipv6
+        true,                 // include_in_country
+        true,                 // owned (= shown as Warren-owned)
+        "warren".to_string(), // provider
         WireguardRelayEndpointData::new(public_key),
         inner,
     )
@@ -191,14 +192,14 @@ fn country_display_name(code: &str) -> String {
 mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::iroh_types::{EndpointAddr, SecretKey};
+    use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
     use warren_relay_selector::{Location as WLocation, WarrenRelay};
 
     fn make_warren_relay(country: &str, city: &str, ipv4: &str, byte_seed: u8) -> WarrenRelay {
         let sk = SigningKey::from_bytes(&[byte_seed; 32]);
-        let endpoint_id = SecretKey::from_bytes(&sk.to_bytes()).public();
+        let endpoint_id = WarrenPubkey::from_bytes(sk.verifying_key().to_bytes());
         let socket: SocketAddr = format!("{}:51820", ipv4).parse().unwrap();
-        let endpoint_addr = EndpointAddr::new(endpoint_id).with_ip_addr(socket);
+        let endpoint_addr = WarrenExitAddr::new(endpoint_id).with_ip_addr(socket);
         WarrenRelay::new(
             endpoint_id,
             endpoint_addr,

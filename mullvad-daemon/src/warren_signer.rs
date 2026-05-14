@@ -154,9 +154,7 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
     // on VEUT remplacer.
     match std::fs::rename(&tmp_path, &path) {
         Ok(()) => {
-            log::info!(
-                "set_warren_mnemonic: identity overwritten (content NEVER logged)"
-            );
+            log::info!("set_warren_mnemonic: identity overwritten (content NEVER logged)");
             Ok(())
         }
         Err(e) => {

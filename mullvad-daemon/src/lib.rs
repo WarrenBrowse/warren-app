@@ -42,23 +42,23 @@ pub mod warren_iroh_params;
 /// Détection du mode tunnel Warren via env var `WARREN_TUNNEL` (POC
 /// switch — pas de toggle UI/CLI pour l'instant).
 pub mod warren_mode;
+/// Conversion `RelaySettings` (Mullvad UI) → `WarrenRelayQuery`
+/// (filtrage côté warren-relay-selector). Mappe country/city, fallback
+/// `Any` pour les cas non supportés (custom lists, custom endpoint).
+pub mod warren_query_from_settings;
+/// Vue `RelayList` Mullvad-format d'une `WarrenRelayList`. Permet à la
+/// GUI Electron de consommer les exits Warren via son sélecteur de
+/// pays/villes existant.
+pub mod warren_relay_list_view;
 /// Wrapper daemon-side autour de
 /// `warren_relay_selector::WarrenRelaySelector` : charge la
 /// `WarrenRelayList` depuis le `cache_dir`, sélectionne les composants
 /// Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
 pub mod warren_relay_selector;
-/// Vue `RelayList` Mullvad-format d'une `WarrenRelayList`. Permet à la
-/// GUI Electron de consommer les exits Warren via son sélecteur de
-/// pays/villes existant.
-pub mod warren_relay_list_view;
 /// Bootstrap fetcher pour `<cache_dir>/warren-relays.json` depuis
 /// l'endpoint public `GET {warren_api_url}/v1/exits`. Best-effort au
 /// boot — si échec, le selector tombe sur l'ancien cache (ou liste vide).
 pub mod warren_relays_fetch;
-/// Conversion `RelaySettings` (Mullvad UI) → `WarrenRelayQuery`
-/// (filtrage côté warren-relay-selector). Mappe country/city, fallback
-/// `Any` pour les cas non supportés (custom lists, custom endpoint).
-pub mod warren_query_from_settings;
 /// Phase #4 — résolution `WarrenApiConfig` (URL warren-api + signing key)
 /// depuis Settings + env var. Pure function testable extraite de
 /// `Daemon::start`.
@@ -1066,18 +1066,10 @@ impl Daemon {
             let relays_api_url = std::env::var("WARREN_API_URL")
                 .ok()
                 .filter(|s| !s.is_empty())
-                .or_else(|| {
-                    settings
-                        .warren_api_url
-                        .clone()
-                        .filter(|s| !s.is_empty())
-                })
+                .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
                 .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned());
-            match warren_relays_fetch::fetch_and_cache_relays(
-                &relays_api_url,
-                &config.cache_dir,
-            )
-            .await
+            match warren_relays_fetch::fetch_and_cache_relays(&relays_api_url, &config.cache_dir)
+                .await
             {
                 Ok(bytes) => log::info!(
                     "Warren relays refreshed from {} ({} bytes)",
@@ -1242,7 +1234,9 @@ impl Daemon {
                 "Broadcasting Warren relay list view ({} countries) to GUI at boot",
                 view.countries.len()
             );
-            management_interface.notifier().notify_relay_list(view.clone());
+            management_interface
+                .notifier()
+                .notify_relay_list(view.clone());
         }
 
         let mut relay_list_updater = RelayListUpdater::spawn(
@@ -2272,11 +2266,7 @@ impl Daemon {
     /// pour que la nouvelle identité soit prise en compte par le
     /// signer (signing key dérivée au boot). **Politique no-log** :
     /// jamais le contenu de `mnemonic`, juste le résultat (ok/err).
-    fn on_set_warren_mnemonic(
-        &self,
-        tx: oneshot::Sender<std::io::Result<()>>,
-        mnemonic: String,
-    ) {
+    fn on_set_warren_mnemonic(&self, tx: oneshot::Sender<std::io::Result<()>>, mnemonic: String) {
         let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
             "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",

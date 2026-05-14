@@ -129,12 +129,8 @@ impl ParametersGenerator {
             .ok_or(Error::WarrenSigningKeyMissing)?
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
-        let params = warren_iroh_params::assemble_for_attempt(
-            selector,
-            signing_key,
-            &query,
-            retry_attempt,
-        )?;
+        let params =
+            warren_iroh_params::assemble_for_attempt(selector, signing_key, &query, retry_attempt)?;
         Ok(params)
     }
 

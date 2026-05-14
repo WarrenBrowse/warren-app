@@ -1,14 +1,13 @@
-//! Assemblage d'un [`talpid_warren_iroh::WarrenIrohParameters`]
-//! complet à partir des briques séparées (sélecteur Iroh + signing
-//! key BIP39 + constantes config).
+//! Builds a complete [`talpid_warren_iroh::WarrenIrohParameters`]
+//! from the separate building blocks (relay selector + BIP39 signing
+//! key + config constants).
 //!
-//! Module dédié pour deux raisons : testable en isolation, et point
-//! unique de décision pour les paramètres non-issus de la sélection
-//! (`n_connections`, `features`) qui peuvent évoluer indépendamment.
+//! Dedicated module for two reasons: it can be tested in isolation,
+//! and it is the single place where parameters not picked by the
+//! selector (`n_connections`, `features`) are decided.
 //!
-//! Caller : [`crate::tunnel::ParametersGenerator::produce_warren_iroh_params`],
-//! invoqué depuis le tunnel state machine quand le mode Warren est
-//! actif.
+//! Caller: [`crate::tunnel::ParametersGenerator::produce_warren_iroh_params`],
+//! invoked from the tunnel state machine when Warren mode is active.
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_iroh::WarrenIrohParameters;
@@ -16,32 +15,30 @@ use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 
-/// Erreurs de l'assemblage des paramètres Iroh.
+/// Errors raised while assembling Warren tunnel parameters.
 #[derive(Debug, thiserror::Error)]
 pub enum AssembleError {
-    /// Aucun relay Warren ne satisfait la query (ou liste vide).
+    /// No Warren relay matched the query (or the list was empty).
     #[error("warren relay selection failed: {0}")]
     Selector(#[from] SelectorError),
 }
 
-/// Nombre de connexions QUIC parallèles. `1` = mono-conn (baseline) ;
-/// le multi-conn (bonding) sera activable quand les benchs justifieront
-/// la complexité + la résolution des bugs perf (cf.
-/// `warren-core/docs/13-M3-RADICAL-PERF-RESEARCH.md`).
+/// Number of parallel QUIC connections. `1` = mono-conn (baseline);
+/// multi-conn (bonding) gets enabled once the benches justify the
+/// extra complexity.
 const DEFAULT_N_CONNECTIONS: u8 = 1;
 
-/// Bitmask `features` annoncé dans le `Setup` Warren. `0` = baseline
-/// IPv4 only, pas de port-forward, pas de multipath. À étendre quand
-/// les settings UI exposeront ces options.
+/// `features` bitmask advertised in the Warren `Setup` frame. `0` =
+/// IPv4-only baseline, no port-forward, no multipath. To be extended
+/// once the UI settings surface these options.
 const DEFAULT_FEATURES: u32 = 0;
 
-/// Assemble un [`WarrenIrohParameters`] complet pour la tentative
-/// `retry_attempt` donnée.
+/// Assembles a full [`WarrenIrohParameters`] for the given
+/// `retry_attempt`.
 ///
 /// # Errors
 ///
-/// Retourne [`AssembleError::Selector`] si le sélecteur ne trouve
-/// aucun relay matchant la query.
+/// Returns [`AssembleError::Selector`] if no relay matches the query.
 pub fn assemble_for_attempt(
     selector: &DaemonWarrenRelaySelector,
     signing_key: SigningKey,
@@ -50,7 +47,6 @@ pub fn assemble_for_attempt(
 ) -> Result<WarrenIrohParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     Ok(WarrenIrohParameters {
-        exit_id: selection.endpoint_id,
         exit_addr: selection.endpoint_addr,
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
@@ -61,29 +57,28 @@ pub fn assemble_for_attempt(
 #[cfg(test)]
 mod tests {
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::iroh_types::{EndpointAddr, SecretKey};
+    use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
     use warren_relay_selector::{Location, LocationConstraint, WarrenRelay, WarrenRelayList};
 
     use super::*;
 
     fn fixture_signing_key() -> SigningKey {
-        // Seed déterministe pour les tests : ed25519_dalek SigningKey
-        // accepte un seed [u8; 32].
+        // Deterministic seed for the tests.
         SigningKey::from_bytes(&[7u8; 32])
     }
 
     fn fixture_relay(seed: u8, country: &str) -> WarrenRelay {
-        let id = SecretKey::from_bytes(&[seed; 32]).public();
-        let addr = EndpointAddr::new(id).with_ip_addr("198.51.100.1:51820".parse().unwrap());
+        let id = WarrenPubkey::from_bytes([seed; 32]);
+        let addr = WarrenExitAddr::new(id).with_ip_addr("198.51.100.1:51820".parse().unwrap());
         WarrenRelay::new(id, addr, Location::new(country, "_"), 100, true)
     }
 
     #[test]
     fn assemble_combines_selection_signing_key_and_constants() {
-        // La fonction doit produire un `WarrenIrohParameters` dont
-        // `exit_id` + `exit_addr` viennent du selector, `signing_key`
-        // est passée telle quelle, et les 2 constantes
-        // `n_connections=1` + `features=0` sont posées.
+        // The function must produce a `WarrenIrohParameters` whose
+        // `exit_addr` comes from the selector, whose `signing_key` is
+        // passed through verbatim, and where the two constants
+        // `n_connections == 1` + `features == 0` are set.
         let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
         let selector = DaemonWarrenRelaySelector::new(list);
         let key = fixture_signing_key();
@@ -92,19 +87,19 @@ mod tests {
         let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0)
             .expect("must assemble valid params");
 
-        let expected_id = SecretKey::from_bytes(&[1u8; 32]).public();
-        assert_eq!(params.exit_id, expected_id);
+        let expected_id = WarrenPubkey::from_bytes([1u8; 32]);
+        assert_eq!(params.exit_addr.id, expected_id);
         assert!(
             params
                 .exit_addr
                 .ip_addrs()
                 .any(|s| s.to_string() == "198.51.100.1:51820"),
-            "exit_addr doit contenir l'IP source"
+            "exit_addr must contain the source IP"
         );
         assert_eq!(
             params.signing_key.verifying_key().to_bytes(),
             expected_pubkey,
-            "signing_key doit être passée telle quelle"
+            "signing_key must be passed through verbatim"
         );
         assert_eq!(params.n_connections, 1);
         assert_eq!(params.features, 0);
@@ -112,9 +107,9 @@ mod tests {
 
     #[test]
     fn assemble_propagates_selector_error_when_no_match() {
-        // Si la query ne match aucun relay, l'erreur upstream doit
-        // remonter via `AssembleError::Selector` (pas de remap qui
-        // masquerait la cause).
+        // If the query matches no relay, the upstream selector error
+        // must propagate via `AssembleError::Selector` (no remap that
+        // would mask the cause).
         let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
         let selector = DaemonWarrenRelaySelector::new(list);
         let query = WarrenRelayQuery::any().with_location(LocationConstraint::Country("zz".into()));
@@ -129,9 +124,9 @@ mod tests {
 
     #[test]
     fn assemble_is_idempotent_for_same_attempt() {
-        // Même retry_attempt + même selector + même signing_key →
-        // mêmes paramètres assemblés. Crucial pour l'idempotence du
-        // state machine (reprise après crash).
+        // Same retry_attempt + same selector + same signing_key ->
+        // same assembled parameters. Critical for state-machine
+        // idempotence (post-crash resume).
         let list = WarrenRelayList::new(vec![
             fixture_relay(1, "se"),
             fixture_relay(2, "fr"),
@@ -154,7 +149,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(params_a.exit_id, params_b.exit_id);
+        assert_eq!(params_a.exit_addr.id, params_b.exit_addr.id);
         assert_eq!(
             params_a.signing_key.verifying_key().to_bytes(),
             params_b.signing_key.verifying_key().to_bytes()

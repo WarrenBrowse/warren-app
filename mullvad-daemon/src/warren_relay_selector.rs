@@ -16,7 +16,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use warren_relay_selector::iroh_types::{EndpointAddr, EndpointId};
+use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
 use warren_relay_selector::{
     SelectorError, SignedError, WarrenRelay, WarrenRelayList, WarrenRelayQuery,
     WarrenRelaySelector, verify_signed_relay_list,
@@ -37,19 +37,21 @@ pub enum LoadError {
     Json(String, #[source] SignedError),
 }
 
-/// Sortie minimale de la sélection : les seuls deux champs
-/// nécessaires pour construire un `WarrenIrohParameters` côté caller.
+/// Minimal selection output: the two fields needed to build a
+/// `WarrenIrohParameters` on the caller side. Cloneable so the
+/// caller can keep a copy before producing the tunnel parameters.
 ///
-/// Cloneable (les deux types Iroh le sont) pour permettre au caller
-/// d'en garder une copie avant d'en faire un `WarrenIrohParameters`.
+/// Note: post-Quinn migration, `WarrenExitAddr.id` carries the same
+/// Ed25519 pubkey as `endpoint_id`. The pair is kept here to preserve
+/// the caller's accessor pattern; long-term the duplicate can be
+/// dropped once consumers read from `endpoint_addr.id` directly.
 #[derive(Debug, Clone)]
 pub struct WarrenSelection {
-    /// Identité Ed25519 de l'exit Warren sélectionné.
-    pub endpoint_id: EndpointId,
+    /// Ed25519 identity of the selected Warren exit.
+    pub endpoint_id: WarrenPubkey,
 
-    /// Adresses candidate de l'exit (UDP IPv4/IPv6 + relay url
-    /// optionnel).
-    pub endpoint_addr: EndpointAddr,
+    /// Candidate addresses of the exit (UDP IPv4/IPv6).
+    pub endpoint_addr: WarrenExitAddr,
 }
 
 impl From<&WarrenRelay> for WarrenSelection {
@@ -187,26 +189,25 @@ impl DaemonWarrenRelaySelector {
 
 #[cfg(test)]
 mod tests {
-    use warren_relay_selector::iroh_types::{EndpointAddr, SecretKey};
     use warren_relay_selector::{Location, LocationConstraint, WarrenRelay};
 
     use super::*;
 
-    fn endpoint_id(seed: u8) -> EndpointId {
-        SecretKey::from_bytes(&[seed; 32]).public()
+    fn endpoint_id(seed: u8) -> WarrenPubkey {
+        WarrenPubkey::from_bytes([seed; 32])
     }
 
     fn relay(seed: u8, country: &str, addr_str: &str) -> WarrenRelay {
         let id = endpoint_id(seed);
-        let addr = EndpointAddr::new(id).with_ip_addr(addr_str.parse().unwrap());
+        let addr = WarrenExitAddr::new(id).with_ip_addr(addr_str.parse().unwrap());
         WarrenRelay::new(id, addr, Location::new(country, "_"), 100, true)
     }
 
     #[test]
-    fn daemon_selector_returns_iroh_components_for_unconstrained_query() {
-        // Le wrapper doit déléguer correctement à la crate upstream et
-        // retourner un `WarrenSelection` avec les deux champs Iroh
-        // attendus par `WarrenIrohParameters` côté talpid-warren-iroh.
+    fn daemon_selector_returns_warren_components_for_unconstrained_query() {
+        // The wrapper must delegate to the upstream crate and return a
+        // `WarrenSelection` with the two fields needed downstream by
+        // `WarrenIrohParameters`.
         let list = WarrenRelayList::new(vec![relay(1, "se", "198.51.100.1:51820")]);
         let selector = DaemonWarrenRelaySelector::new(list);
 
@@ -220,14 +221,14 @@ mod tests {
                 .endpoint_addr
                 .ip_addrs()
                 .any(|s| s.to_string() == "198.51.100.1:51820"),
-            "endpoint_addr doit contenir l'IP source"
+            "endpoint_addr must contain the source IP"
         );
     }
 
     #[test]
     fn daemon_selector_propagates_location_constraint() {
-        // Le wrapper doit honorer les contraintes de la query (filtrage
-        // géo). Si on demande FR, on ne doit pas tomber sur SE.
+        // The wrapper must honor the query's geo constraint. Asking
+        // for FR must never return SE.
         let list = WarrenRelayList::new(vec![
             relay(1, "se", "198.51.100.1:51820"),
             relay(2, "fr", "198.51.100.2:51820"),
@@ -242,15 +243,15 @@ mod tests {
             assert_eq!(
                 selection.endpoint_id,
                 endpoint_id(2),
-                "attempt {attempt} doit toujours retourner le relay FR"
+                "attempt {attempt} must always return the FR relay"
             );
         }
     }
 
     #[test]
     fn daemon_selector_returns_error_when_no_match() {
-        // Si la liste est vide, l'erreur upstream doit remonter telle
-        // quelle (pas de remap silencieux).
+        // With an empty list, the upstream error must propagate
+        // verbatim (no silent remap).
         let selector = DaemonWarrenRelaySelector::new(WarrenRelayList::new(vec![]));
         assert!(matches!(
             selector.select_for_attempt(&WarrenRelayQuery::any(), 0),
@@ -288,7 +289,7 @@ mod tests {
 
         // Server signing key fixe pour le test (déterministe).
         let server_key = SigningKey::from_bytes(&[0xab; 32]);
-        let relay_pubkey = SecretKey::from_bytes(&[5u8; 32]).public();
+        let relay_pubkey = WarrenPubkey::from_bytes([5u8; 32]);
         let relay_pubkey_hex = hex::encode(relay_pubkey.as_bytes());
 
         let signed = sign_relay_list(
@@ -327,7 +328,7 @@ mod tests {
 
         let dir = isolated_tempdir();
         let server_key = SigningKey::from_bytes(&[0xab; 32]);
-        let relay_pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+        let relay_pubkey_hex = hex::encode(WarrenPubkey::from_bytes([5u8; 32]).as_bytes());
 
         let mut signed = sign_relay_list(
             vec![SignedJsonRelay {
@@ -362,7 +363,7 @@ mod tests {
         // être rejeté. v1 a été déprécié (cf. F3 fork audit) et le
         // daemon doit refuser de l'ingérer (sinon downgrade attack).
         let dir = isolated_tempdir();
-        let pubkey_hex = hex::encode(SecretKey::from_bytes(&[5u8; 32]).public().as_bytes());
+        let pubkey_hex = hex::encode(WarrenPubkey::from_bytes([5u8; 32]).as_bytes());
         let json_v1 = format!(
             r#"{{"version":1,"relays":[{{"endpoint_id":"{pubkey_hex}","ip_addrs":["198.51.100.1:51820"],"country":"se","city":"Stockholm","weight":100,"active":true}}]}}"#
         );
