@@ -6,12 +6,12 @@
 //! depuis `<cache_dir>/warren-relays.json`), et expose une API stable
 //! pour le `ParametersGenerator`. Le wrapper retourne uniquement les
 //! composants Iroh (`EndpointId` + `EndpointAddr`) ; l'assemblage
-//! final en `WarrenIrohParameters` (avec `signing_key`,
+//! final en `WarrenTunnelParameters` (avec `signing_key`,
 //! `n_connections`, `features`) est fait par
-//! [`crate::warren_iroh_params::assemble_for_attempt`].
+//! [`crate::warren_tunnel_params::assemble_for_attempt`].
 //!
 //! Module dédié pour deux raisons : testable en isolation, et n'importe
-//! pas `talpid-warren-iroh` côté API publique du wrapper.
+//! pas `talpid-warren-tunnel` côté API publique du wrapper.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -38,7 +38,7 @@ pub enum LoadError {
 }
 
 /// Minimal selection output: the two fields needed to build a
-/// `WarrenIrohParameters` on the caller side. Cloneable so the
+/// `WarrenTunnelParameters` on the caller side. Cloneable so the
 /// caller can keep a copy before producing the tunnel parameters.
 ///
 /// Note: post-Quinn migration, `WarrenExitAddr.id` carries the same
@@ -207,7 +207,7 @@ mod tests {
     fn daemon_selector_returns_warren_components_for_unconstrained_query() {
         // The wrapper must delegate to the upstream crate and return a
         // `WarrenSelection` with the two fields needed downstream by
-        // `WarrenIrohParameters`.
+        // `WarrenTunnelParameters`.
         let list = WarrenRelayList::new(vec![relay(1, "se", "198.51.100.1:51820")]);
         let selector = DaemonWarrenRelaySelector::new(list);
 

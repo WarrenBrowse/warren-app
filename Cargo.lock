@@ -3260,7 +3260,7 @@ dependencies = [
  "talpid-routing",
  "talpid-time",
  "talpid-types",
- "talpid-warren-iroh",
+ "talpid-warren-tunnel",
  "talpid-windows",
  "thiserror 2.0.18",
  "tikv-jemallocator",
@@ -5888,7 +5888,7 @@ dependencies = [
  "talpid-routing",
  "talpid-tunnel",
  "talpid-types",
- "talpid-warren-iroh",
+ "talpid-warren-tunnel",
  "talpid-windows",
  "talpid-wireguard",
  "test-log",
@@ -6075,7 +6075,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "talpid-warren-iroh"
+name = "talpid-warren-tunnel"
 version = "0.0.0"
 dependencies = [
  "anyhow",
@@ -7151,6 +7151,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "ed25519-dalek",
+ "parking_lot",
  "postcard",
  "quinn",
  "rand 0.10.1",

@@ -36,9 +36,6 @@ pub mod warren_account_mode;
 /// Bootstrap d'un `device.json` cohérent avec la mnémonique Warren —
 /// invoqué au boot en mode `WARREN_LOCAL_ACCOUNT=1`.
 pub mod warren_device_bootstrap;
-/// Assemble un `talpid_warren_iroh::WarrenIrohParameters` complet à
-/// partir du relay selector + signing_key + constantes côté config.
-pub mod warren_iroh_params;
 /// Détection du mode tunnel Warren via env var `WARREN_TUNNEL` (POC
 /// switch — pas de toggle UI/CLI pour l'instant).
 pub mod warren_mode;
@@ -68,6 +65,9 @@ mod warren_remote_config;
 /// Ed25519 et expose un `WarrenAuthSigner` partagé pour les requêtes
 /// API authentifiées.
 pub mod warren_signer;
+/// Assemble un `talpid_warren_tunnel::WarrenTunnelParameters` complet à
+/// partir du relay selector + signing_key + constantes côté config.
+pub mod warren_tunnel_params;
 
 use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,

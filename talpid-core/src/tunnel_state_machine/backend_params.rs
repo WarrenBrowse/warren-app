@@ -12,18 +12,18 @@ use std::net::SocketAddr;
 
 use talpid_types::net::wireguard::TunnelParameters as WireguardTunnelParameters;
 use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
-use talpid_warren_iroh::WarrenIrohParameters;
+use talpid_warren_tunnel::WarrenTunnelParameters;
 
 /// Typed tunnel parameters, agnostic of the underlying backend.
 ///
 /// Stored in `ConnectingState` and `ConnectedState`. The variants
 /// expose only what the state machine needs (firewall, transitions,
 /// GUI display); backend-specific consumption lives downstream in
-/// `TunnelMonitor::start{,_warren_iroh}`.
+/// `TunnelMonitor::start{,_warren_tunnel}`.
 #[derive(Debug, Clone)]
 pub(crate) enum BackendParams {
     Wireguard(WireguardTunnelParameters),
-    Warren(WarrenIrohParameters),
+    Warren(WarrenTunnelParameters),
 }
 
 impl BackendParams {
@@ -67,7 +67,7 @@ impl BackendParams {
 /// Build the `TunnelEndpoint` published in the state transition for a
 /// Warren tunnel. The GUI displays the first candidate IP of the exit
 /// (typically v4 first) over UDP.
-fn warren_tunnel_endpoint(params: &WarrenIrohParameters) -> TunnelEndpoint {
+fn warren_tunnel_endpoint(params: &WarrenTunnelParameters) -> TunnelEndpoint {
     use std::net::{IpAddr, Ipv4Addr};
 
     let socket_addr = params
@@ -97,18 +97,18 @@ mod tests {
 
     use ed25519_dalek::SigningKey;
     use talpid_types::net::TransportProtocol;
-    use talpid_warren_iroh::WarrenIrohParameters;
+    use talpid_warren_tunnel::WarrenTunnelParameters;
     use warren_protocol::{WarrenExitAddr, WarrenPubkey};
 
     use super::BackendParams;
 
-    fn fixture_warren(addrs: &[&str]) -> WarrenIrohParameters {
+    fn fixture_warren(addrs: &[&str]) -> WarrenTunnelParameters {
         let exit_id = WarrenPubkey::from_bytes([7u8; 32]);
         let mut addr = WarrenExitAddr::new(exit_id);
         for s in addrs {
             addr = addr.with_ip_addr(s.parse::<SocketAddr>().unwrap());
         }
-        WarrenIrohParameters {
+        WarrenTunnelParameters {
             exit_addr: addr,
             signing_key: SigningKey::from_bytes(&[9u8; 32]),
             n_connections: 1,
@@ -195,7 +195,7 @@ mod tests {
         // Symmetric edge case: if there is no candidate IP, return a
         // UNSPECIFIED:0 placeholder rather than panic. This robustness
         // lets the Connecting transition still fire; the downstream
-        // `WarrenIrohMonitor::start` then fails cleanly with a visible
+        // `WarrenTunnelMonitor::start` then fails cleanly with a visible
         // error.
         let params = fixture_warren(&[]);
         let backend = BackendParams::Warren(params);

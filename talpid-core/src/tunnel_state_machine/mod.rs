@@ -352,7 +352,7 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     commands_rx: mpsc::UnboundedReceiver<TunnelCommand>,
     route_manager: RouteManagerHandle,
     /// Warren fork : si `true`, le state machine dispatche les
-    /// démarrages de tunnel via `TunnelMonitor::start_warren_iroh`
+    /// démarrages de tunnel via `TunnelMonitor::start_warren_tunnel`
     /// au lieu du path WireGuard upstream. Settable via env var
     /// `WARREN_TUNNEL=1` au boot du daemon (cf.
     /// `mullvad-daemon::warren_mode`).
@@ -552,20 +552,23 @@ pub trait TunnelParametersGenerator: Send + 'static {
         ip_availability: IpAvailability,
     ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
 
-    /// Produit des [`talpid_warren_iroh::WarrenIrohParameters`] pour
+    /// Produit des [`talpid_warren_tunnel::WarrenTunnelParameters`] pour
     /// la tentative `retry_attempt` donnée.
     ///
     /// Implémentation par défaut : retourne `NoMatchingRelay`. Les
     /// implémenteurs qui ne supportent pas Warren n'ont rien à faire.
     /// `mullvad-daemon::tunnel::ParametersGenerator` override cette
     /// méthode pour brancher le path Warren côté daemon.
-    fn generate_warren_iroh_params(
+    fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
     ) -> Pin<
         Box<
             dyn Future<
-                Output = Result<talpid_warren_iroh::WarrenIrohParameters, ParameterGenerationError>,
+                Output = Result<
+                    talpid_warren_tunnel::WarrenTunnelParameters,
+                    ParameterGenerationError,
+                >,
             >,
         >,
     > {
@@ -611,7 +614,7 @@ struct SharedTunnelStateValues {
     resource_dir: PathBuf,
 
     /// Warren fork : si `true`, dispatche le démarrage de tunnel via
-    /// `TunnelMonitor::start_warren_iroh` (path Iroh). Sinon, path
+    /// `TunnelMonitor::start_warren_tunnel` (path Iroh). Sinon, path
     /// WireGuard upstream inchangé.
     warren_mode: bool,
 
@@ -856,7 +859,7 @@ impl TunnelStateMachineHandle {
 #[cfg(test)]
 mod warren_trait_default_tests {
     //! Valide que le default impl du trait pour
-    //! `generate_warren_iroh_params` retourne `NoMatchingRelay` (vs.
+    //! `generate_warren_tunnel_params` retourne `NoMatchingRelay` (vs.
     //! `unimplemented!()` ou panic). Critique parce que les
     //! implémenteurs upstream Mullvad ne savent rien de Warren ; ils
     //! doivent dégrader proprement.
@@ -868,7 +871,7 @@ mod warren_trait_default_tests {
 
     use super::TunnelParametersGenerator;
 
-    /// Implémenteur minimal qui n'override PAS `generate_warren_iroh_params`,
+    /// Implémenteur minimal qui n'override PAS `generate_warren_tunnel_params`,
     /// pour exercer le default body du trait.
     struct UpstreamOnlyGenerator;
 
@@ -886,7 +889,7 @@ mod warren_trait_default_tests {
     #[tokio::test]
     async fn default_generate_warren_returns_no_matching_relay() {
         let mut generator = UpstreamOnlyGenerator;
-        let result = generator.generate_warren_iroh_params(0).await;
+        let result = generator.generate_warren_tunnel_params(0).await;
         assert!(
             matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
             "default impl must degrade to NoMatchingRelay (got {result:?})"

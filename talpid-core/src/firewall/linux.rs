@@ -774,7 +774,7 @@ impl<'a> PolicyBatch<'a> {
         self.batch.add(&out_rule, nftnl::MsgType::Add);
 
         // Cas Warren-Iroh (fork F6 audit) : le daemon `mullvad-daemon` lui-même
-        // établit le tunnel QUIC via `talpid-warren-iroh::WarrenIrohMonitor`.
+        // établit le tunnel QUIC via `talpid-warren-tunnel::WarrenTunnelMonitor`.
         // Ses sockets émettent depuis le **cgroup root** du daemon (pas le
         // cgroup `split_tunnel` réservé aux processus split-tunneled). Donc
         // ses paquets ne traversent pas le `mangle_chain` qui pose le fwmark

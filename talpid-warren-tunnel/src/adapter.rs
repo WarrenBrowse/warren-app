@@ -21,7 +21,7 @@ use warren_tunnel::PacketDevice;
 /// read brings the size down, so we only pay alloc + cap (no copy).
 const RECV_BUF_SIZE: usize = u16::MAX as usize;
 
-/// Shared pump counters used by `WarrenIrohMonitor::start` to spawn a
+/// Shared pump counters used by `WarrenTunnelMonitor::start` to spawn a
 /// metrics task that logs the counters periodically. Pinpoints which
 /// direction (uplink TUN -> QUIC vs downlink QUIC -> TUN) drives the
 /// data plane. `Relaxed` is sufficient: no synchronization with other
@@ -65,7 +65,7 @@ impl MullvadTunPacketDevice {
     }
 
     /// Cloneable handle on the pump counters. Lets
-    /// `WarrenIrohMonitor::start` read the counters from a dedicated
+    /// `WarrenTunnelMonitor::start` read the counters from a dedicated
     /// metrics task while the pump runs.
     pub(crate) fn metrics(&self) -> Arc<PumpMetrics> {
         self.metrics.clone()

@@ -13,7 +13,7 @@ use talpid_types::ErrorExt;
 use talpid_types::net::wireguard::TunnelParameters;
 use talpid_types::net::{AllowedClients, AllowedEndpoint, AllowedTunnelTraffic};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
-use talpid_warren_iroh::WarrenIrohParameters;
+use talpid_warren_tunnel::WarrenTunnelParameters;
 
 use super::backend_params::BackendParams;
 
@@ -196,7 +196,7 @@ impl ConnectingState {
     /// - Pas de check `ip_availability` côté state machine — Iroh
     ///   gère sa propre résolution multi-path (v4/v6) au handshake.
     /// - Pas d'Android `prepare_tun_config` — Warren-Iroh ouvre son
-    ///   propre TUN via `args.tun_provider` côté `WarrenIrohMonitor::start`.
+    ///   propre TUN via `args.tun_provider` côté `WarrenTunnelMonitor::start`.
     ///
     /// Le firewall pre-handshake est appliqué via
     /// [`Self::set_firewall_policy`] comme pour WG :
@@ -211,7 +211,7 @@ impl ConnectingState {
         let warren_params = match shared_values.runtime.block_on(
             shared_values
                 .tunnel_parameters_generator
-                .generate_warren_iroh_params(retry_attempt),
+                .generate_warren_tunnel_params(retry_attempt),
         ) {
             Ok(params) => params,
             Err(err) => {
@@ -258,11 +258,11 @@ impl ConnectingState {
 
     /// Miroir de [`Self::start_tunnel`] côté Warren : structure
     /// identique (channel d'events, oneshot close, retry/sleep policy)
-    /// mais invoque [`TunnelMonitor::start_warren_iroh`] au lieu de
+    /// mais invoque [`TunnelMonitor::start_warren_tunnel`] au lieu de
     /// [`TunnelMonitor::start`].
     fn start_tunnel_warren(
         runtime: tokio::runtime::Handle,
-        parameters: WarrenIrohParameters,
+        parameters: WarrenTunnelParameters,
         log_dir: &Option<PathBuf>,
         resource_dir: &Path,
         tun_provider: Arc<Mutex<TunProvider>>,
@@ -297,7 +297,8 @@ impl ConnectingState {
                 route_manager,
             };
 
-            let block_reason = match TunnelMonitor::start_warren_iroh(&parameters, &log_dir, args) {
+            let block_reason = match TunnelMonitor::start_warren_tunnel(&parameters, &log_dir, args)
+            {
                 Ok(monitor) => {
                     let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
                     log::debug!(

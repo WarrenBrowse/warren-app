@@ -2,7 +2,7 @@
 //!
 //! Warren fork : le backend interne est une enum [`TunnelBackend`]
 //! qui dispatche entre le `WireguardMonitor` upstream et le
-//! `WarrenIrohMonitor`. Le path WG est strictement préservé — aucun
+//! `WarrenTunnelMonitor`. Le path WG est strictement préservé — aucun
 //! changement de comportement pour les déploiements qui n'activent
 //! pas le backend Warren via `WARREN_TUNNEL=1`.
 use std::path;
@@ -12,7 +12,7 @@ use talpid_tunnel::TunnelArgs;
 use talpid_tunnel::tun_provider;
 use talpid_types::net::{wireguard as wireguard_types, wireguard::TunnelParameters};
 use talpid_types::tunnel::ErrorStateCause;
-use talpid_warren_iroh::{WarrenIrohMonitor, WarrenIrohParameters};
+use talpid_warren_tunnel::{WarrenTunnelMonitor, WarrenTunnelParameters};
 use talpid_wireguard::WireguardMonitor;
 
 const WIREGUARD_LOG_FILENAME: &str = "wireguard.log";
@@ -41,7 +41,7 @@ pub enum Error {
 
     /// There was an error listening for events from the Warren-Iroh tunnel.
     #[error("Failed while listening for events from the Warren-Iroh tunnel")]
-    WarrenIrohMonitoring(#[from] talpid_warren_iroh::Error),
+    WarrenTunnelMonitoring(#[from] talpid_warren_tunnel::Error),
 }
 
 impl From<Error> for ErrorStateCause {
@@ -107,7 +107,7 @@ impl Error {
     pub fn is_recoverable(&self) -> bool {
         match self {
             Error::TunnelMonitoring(error) => error.is_recoverable(),
-            Error::WarrenIrohMonitoring(error) => error.is_recoverable(),
+            Error::WarrenTunnelMonitoring(error) => error.is_recoverable(),
             _ => false,
         }
     }
@@ -134,9 +134,9 @@ impl Error {
 enum TunnelBackend {
     /// Backend historique WireGuard (path upstream Mullvad inchangé).
     Wireguard(WireguardMonitor),
-    /// Backend Warren-Iroh, construit via [`TunnelMonitor::start_warren_iroh`]
+    /// Backend Warren-Iroh, construit via [`TunnelMonitor::start_warren_tunnel`]
     /// quand `warren_mode` est actif côté state machine.
-    WarrenIroh(WarrenIrohMonitor),
+    WarrenTunnel(WarrenTunnelMonitor),
 }
 
 /// Abstraction for monitoring a VPN tunnel.
@@ -168,17 +168,17 @@ impl TunnelMonitor {
     ///
     /// # Errors
     ///
-    /// [`Error::WarrenIrohMonitoring`] si le backend Iroh échoue à
+    /// [`Error::WarrenTunnelMonitoring`] si le backend Iroh échoue à
     /// initialiser.
-    pub fn start_warren_iroh(
-        params: &WarrenIrohParameters,
+    pub fn start_warren_tunnel(
+        params: &WarrenTunnelParameters,
         log_dir: &Option<path::PathBuf>,
         args: TunnelArgs<'_>,
     ) -> Result<Self> {
         let log_file = Self::prepare_tunnel_log_file(log_dir.as_ref())?;
-        let monitor = WarrenIrohMonitor::start(params, args, log_file.as_deref())?;
+        let monitor = WarrenTunnelMonitor::start(params, args, log_file.as_deref())?;
         Ok(TunnelMonitor {
-            backend: TunnelBackend::WarrenIroh(monitor),
+            backend: TunnelBackend::WarrenTunnel(monitor),
         })
     }
 
@@ -223,7 +223,7 @@ impl TunnelMonitor {
     pub fn wait(self) -> Result<()> {
         match self.backend {
             TunnelBackend::Wireguard(monitor) => monitor.wait().map_err(Error::from),
-            TunnelBackend::WarrenIroh(monitor) => monitor.wait().map_err(Error::from),
+            TunnelBackend::WarrenTunnel(monitor) => monitor.wait().map_err(Error::from),
         }
     }
 }

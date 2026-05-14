@@ -18,7 +18,7 @@ talpid-dns = { path = "../talpid-dns" }
 talpid-routing = { path = "../talpid-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
-talpid-warren-iroh = { path = "../talpid-warren-iroh" }
+talpid-warren-tunnel = { path = "../talpid-warren-tunnel" }
 talpid-wireguard = { path = "../talpid-wireguard" }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }

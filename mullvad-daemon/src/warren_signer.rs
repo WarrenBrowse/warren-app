@@ -42,7 +42,7 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
 ///
 /// Sœur de [`load_or_create_signer`] : expose le matériel
 /// cryptographique brut nécessaire pour assembler des
-/// [`talpid_warren_iroh::WarrenIrohParameters`].
+/// [`talpid_warren_tunnel::WarrenTunnelParameters`].
 ///
 /// **Politique no-log** : ne JAMAIS logger la `SigningKey` retournée
 /// (cf. règle Warren). Le caller doit la consommer puis la dropper.

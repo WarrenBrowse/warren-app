@@ -11,7 +11,7 @@
 //!   built from the 32 bytes of the Warren Ed25519 pubkey. It is a
 //!   fake x25519 key, never used to set up an actual WG tunnel in
 //!   Warren mode (the tunnel goes through `warren-tunnel` via
-//!   `talpid-warren-iroh`); it only acts as a unique identifier for
+//!   `talpid-warren-tunnel`); it only acts as a unique identifier for
 //!   the GUI.
 //! - `hostname` = first 16 hex chars of the pubkey (enough to
 //!   visually distinguish exits in the list).
@@ -95,7 +95,7 @@ fn make_wireguard_relay(
 ) -> WireguardRelay {
     // Warren pubkey = 32 bytes Ed25519, re-interpreted as a
     // `wireguard::PublicKey` to satisfy the GUI type. This key is
-    // never consumed by the tunnel: `produce_warren_iroh_params`
+    // never consumed by the tunnel: `produce_warren_tunnel_params`
     // pulls the pubkey directly from the `WarrenRelaySelector`, not
     // from the `RelayList` view.
     let endpoint_bytes: [u8; 32] = *relay.endpoint_id().as_bytes();

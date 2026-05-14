@@ -380,13 +380,13 @@ mod tun08_imp {
     impl TunnelDevice {
         /// Consomme le device et retourne le `tun08::AsyncDevice`
         /// sous-jacent. Permet à un backend tunnel custom (cf.
-        /// `talpid-warren-iroh`) de récupérer le device pour brancher
+        /// `talpid-warren-tunnel`) de récupérer le device pour brancher
         /// un pump async I/O direct dessus, sans passer par les
         /// opérations gérées par `TunnelDevice` (set_ip, set_up).
         ///
         /// **Warren fork** — Phase 1.B.4.b : nécessaire pour que le
         /// pump bidirectionnel TUN ↔ datagrammes QUIC du backend
-        /// `WarrenIrohMonitor` puisse partager un `Arc<AsyncDevice>`
+        /// `WarrenTunnelMonitor` puisse partager un `Arc<AsyncDevice>`
         /// entre la task uplink et la task downlink.
         #[must_use]
         pub fn into_async_device(self) -> tun08::AsyncDevice {

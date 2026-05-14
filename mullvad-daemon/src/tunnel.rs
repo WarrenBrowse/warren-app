@@ -3,7 +3,7 @@ use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
 use talpid_types::net::wireguard::TunnelParameters;
-use talpid_warren_iroh::WarrenIrohParameters;
+use talpid_warren_tunnel::WarrenTunnelParameters;
 use tokio::sync::Mutex;
 
 use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
@@ -19,9 +19,9 @@ use talpid_types::net::{obfuscation::Obfuscators, wireguard};
 use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationError};
 
 use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
-use crate::warren_iroh_params::{self, AssembleError};
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
+use crate::warren_tunnel_params::{self, AssembleError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -47,7 +47,7 @@ pub enum Error {
     #[error("Warren tunnel mode requested but no Warren signing key available")]
     WarrenSigningKeyMissing,
 
-    /// Échec de l'assemblage des `WarrenIrohParameters` (sélection
+    /// Échec de l'assemblage des `WarrenTunnelParameters` (sélection
     /// échouée, ...).
     #[error("Failed to assemble Warren tunnel parameters")]
     WarrenAssemble(#[from] AssembleError),
@@ -76,7 +76,7 @@ impl ParametersGenerator {
     /// artefacts Warren-Iroh optionnels en plus du path WireGuard.
     ///
     /// Si `warren_relay_selector` ou `warren_signing_key` sont `None`,
-    /// `generate_warren_iroh_params` retournera l'erreur typée
+    /// `generate_warren_tunnel_params` retournera l'erreur typée
     /// correspondante. Le path WireGuard reste utilisable en parallèle
     /// quel que soit l'état des artefacts Warren.
     pub fn new_with_optional_warren(
@@ -98,7 +98,7 @@ impl ParametersGenerator {
         })))
     }
 
-    /// Assemble un [`WarrenIrohParameters`] pour la tentative
+    /// Assemble un [`WarrenTunnelParameters`] pour la tentative
     /// `retry_attempt`, à partir des artefacts Warren stockés.
     ///
     /// API miroir asymétrique de
@@ -114,10 +114,10 @@ impl ParametersGenerator {
     ///   n'a pas pu être chargée.
     /// - [`Error::WarrenAssemble`] si la sélection elle-même échoue
     ///   (aucun relay matchant).
-    pub async fn produce_warren_iroh_params(
+    pub async fn produce_warren_tunnel_params(
         &self,
         retry_attempt: u32,
-    ) -> Result<WarrenIrohParameters, Error> {
+    ) -> Result<WarrenTunnelParameters, Error> {
         let inner = self.0.lock().await;
         let selector = inner
             .warren_relay_selector
@@ -129,8 +129,12 @@ impl ParametersGenerator {
             .ok_or(Error::WarrenSigningKeyMissing)?
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
-        let params =
-            warren_iroh_params::assemble_for_attempt(selector, signing_key, &query, retry_attempt)?;
+        let params = warren_tunnel_params::assemble_for_attempt(
+            selector,
+            signing_key,
+            &query,
+            retry_attempt,
+        )?;
         Ok(params)
     }
 
@@ -296,15 +300,16 @@ impl TunnelParametersGenerator for ParametersGenerator {
 
     /// Override du default trait method pour brancher le path
     /// Warren-Iroh côté daemon. Délègue à
-    /// [`Self::produce_warren_iroh_params`] qui consomme les
+    /// [`Self::produce_warren_tunnel_params`] qui consomme les
     /// artefacts Warren stockés dans `InnerParametersGenerator`.
-    fn generate_warren_iroh_params(
+    fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
-    ) -> Pin<Box<dyn Future<Output = Result<WarrenIrohParameters, ParameterGenerationError>>>> {
+    ) -> Pin<Box<dyn Future<Output = Result<WarrenTunnelParameters, ParameterGenerationError>>>>
+    {
         let this = self.clone();
         Box::pin(async move {
-            this.produce_warren_iroh_params(retry_attempt)
+            this.produce_warren_tunnel_params(retry_attempt)
                 .await
                 .inspect_err(|error| {
                     log::error!(

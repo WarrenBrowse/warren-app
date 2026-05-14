@@ -1,24 +1,18 @@
 //! Warren adapter for the talpid tunnel state machine.
 //!
-//! This crate exposes [`WarrenIrohMonitor`], a drop-in alternative to
+//! This crate exposes [`WarrenTunnelMonitor`], a drop-in alternative to
 //! [`talpid_wireguard::WireguardMonitor`] consumed by
 //! `talpid_core::tunnel_state_machine::tunnel_monitor::TunnelMonitor`
 //! through an enum dispatch. The API mirrors
 //! [`WireguardMonitor::start`] / `wait` so `connecting_state.rs` can
 //! treat both backends uniformly.
 //!
-//! Underneath, [`WarrenIrohMonitor::start`] performs the QUIC handshake
-//! through [`warren_tunnel::ClientTunnel`], opens a TUN via the
-//! talpid `TunProvider`, emits `TunnelEvent::InterfaceUp` / `Up` and
-//! spawns the bidirectional pump (TUN <-> QUIC datagrams). `wait()`
-//! blocks on the close-signal, drops the routing-table override and
-//! aborts the pump.
-//!
-//! Despite the crate name `talpid-warren-iroh`, the transport is no
-//! longer Iroh: warren-core completed the migration to Quinn upstream
-//! 0.11 in May 2026 (cf. `warren-core/docs/17-QUINN-MIGRATION-NOTES.md`).
-//! The crate name is preserved for source-compat with consumers; rename
-//! to `talpid-warren-tunnel` is a follow-up.
+//! Underneath, [`WarrenTunnelMonitor::start`] performs the QUIC
+//! handshake through [`warren_tunnel::ClientTunnel`], opens a TUN via
+//! the talpid `TunProvider`, emits `TunnelEvent::InterfaceUp` / `Up`
+//! and spawns the bidirectional pump (TUN <-> QUIC datagrams).
+//! `wait()` blocks on the close-signal, drops the routing-table
+//! override and aborts the pump.
 
 use std::net::IpAddr;
 use std::path::Path;
@@ -46,7 +40,7 @@ pub mod default_route_split;
 // Format: `[warren-trace] T{N}={ms}ms <event>`. `N` increments at each
 // step of `start()`, `ms` is the elapsed since `start_t`. Logs are at
 // `debug` level so they stay out of release output; enable with
-// `RUST_LOG=talpid_warren_iroh=debug` when diagnosing a start/wait
+// `RUST_LOG=talpid_warren_tunnel=debug` when diagnosing a start/wait
 // sequencing issue.
 const TRACE_PREFIX: &str = "[warren-trace]";
 
@@ -62,14 +56,14 @@ const TRACE_PREFIX: &str = "[warren-trace]";
 /// migration, so the legacy separate `exit_id` parameter has been
 /// folded into `exit_addr`.
 #[derive(Clone)]
-pub struct WarrenIrohParameters {
+pub struct WarrenTunnelParameters {
     /// Candidate addresses of the exit (UDP IPv4/IPv6) plus the exit's
     /// Ed25519 pubkey in `exit_addr.id`. Built by the relay selector
     /// from `exit-info.json` published by the exits.
     pub exit_addr: WarrenExitAddr,
 
     /// Client Ed25519 signing key (derived from the user's BIP39
-    /// mnemonic). `talpid-warren-iroh` never generates an ephemeral
+    /// mnemonic). `talpid-warren-tunnel` never generates an ephemeral
     /// identity: the identity must be stable so reconnects re-attach
     /// to the same tunnel IP on the exit side.
     pub signing_key: SigningKey,
@@ -85,11 +79,11 @@ pub struct WarrenIrohParameters {
     pub features: u32,
 }
 
-impl std::fmt::Debug for WarrenIrohParameters {
+impl std::fmt::Debug for WarrenTunnelParameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // No-log Warren: never log the full signing_key (secret material)
         // nor the full exit pubkey (session-PII). Minimal debug shape.
-        f.debug_struct("WarrenIrohParameters")
+        f.debug_struct("WarrenTunnelParameters")
             .field("exit_addr", &"<redacted>")
             .field("signing_key", &"<redacted>")
             .field("n_connections", &self.n_connections)
@@ -142,7 +136,7 @@ impl Error {
 /// installs the routing override and spawns the bidirectional pump.
 /// `wait` blocks on `tunnel_close_rx`, emits `Down`, uninstalls the
 /// routing override and drains the pump.
-pub struct WarrenIrohMonitor {
+pub struct WarrenTunnelMonitor {
     runtime: tokio::runtime::Handle,
     /// Handle on the bidirectional TUN <-> QUIC pump task. `wait`
     /// aborts it on close-signal for clean teardown.
@@ -164,7 +158,7 @@ pub struct WarrenIrohMonitor {
     default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
 }
 
-impl WarrenIrohMonitor {
+impl WarrenTunnelMonitor {
     /// Starts a Warren tunnel from `params`, blocking the current
     /// thread until the QUIC handshake + TUN setup are complete.
     ///
@@ -182,7 +176,7 @@ impl WarrenIrohMonitor {
     /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
     ///   interface name collision, kernel module missing).
     pub fn start(
-        params: &WarrenIrohParameters,
+        params: &WarrenTunnelParameters,
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
@@ -548,7 +542,7 @@ impl WarrenIrohMonitor {
     /// `is_recoverable()` returns `false` to stay conservative until
     /// the error nature is classified more precisely).
     pub fn wait(self) -> Result<(), Error> {
-        let WarrenIrohMonitor {
+        let WarrenTunnelMonitor {
             runtime,
             pump_handle,
             pump_error_rx,
@@ -1022,13 +1016,13 @@ mod tests {
     use warren_protocol::WarrenPubkey;
 
     #[test]
-    fn warren_iroh_parameters_debug_does_not_leak_secrets() {
+    fn warren_tunnel_parameters_debug_does_not_leak_secrets() {
         // No-log Warren: Debug must never reveal signing_key nor the
         // full exit pubkey. The first is secret material, the second
         // is session-PII identifying the user on the exit side.
         let signing = SigningKey::from_bytes(&[0u8; 32]);
         let exit_id = WarrenPubkey::from_bytes([1u8; 32]);
-        let params = WarrenIrohParameters {
+        let params = WarrenTunnelParameters {
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 2,

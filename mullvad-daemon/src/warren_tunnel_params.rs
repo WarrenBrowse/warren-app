@@ -1,4 +1,4 @@
-//! Builds a complete [`talpid_warren_iroh::WarrenIrohParameters`]
+//! Builds a complete [`talpid_warren_tunnel::WarrenTunnelParameters`]
 //! from the separate building blocks (relay selector + BIP39 signing
 //! key + config constants).
 //!
@@ -6,11 +6,11 @@
 //! and it is the single place where parameters not picked by the
 //! selector (`n_connections`, `features`) are decided.
 //!
-//! Caller: [`crate::tunnel::ParametersGenerator::produce_warren_iroh_params`],
+//! Caller: [`crate::tunnel::ParametersGenerator::produce_warren_tunnel_params`],
 //! invoked from the tunnel state machine when Warren mode is active.
 
 use ed25519_dalek::SigningKey;
-use talpid_warren_iroh::WarrenIrohParameters;
+use talpid_warren_tunnel::WarrenTunnelParameters;
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -33,7 +33,7 @@ const DEFAULT_N_CONNECTIONS: u8 = 1;
 /// once the UI settings surface these options.
 const DEFAULT_FEATURES: u32 = 0;
 
-/// Assembles a full [`WarrenIrohParameters`] for the given
+/// Assembles a full [`WarrenTunnelParameters`] for the given
 /// `retry_attempt`.
 ///
 /// # Errors
@@ -44,9 +44,9 @@ pub fn assemble_for_attempt(
     signing_key: SigningKey,
     query: &WarrenRelayQuery,
     retry_attempt: u32,
-) -> Result<WarrenIrohParameters, AssembleError> {
+) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
-    Ok(WarrenIrohParameters {
+    Ok(WarrenTunnelParameters {
         exit_addr: selection.endpoint_addr,
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn assemble_combines_selection_signing_key_and_constants() {
-        // The function must produce a `WarrenIrohParameters` whose
+        // The function must produce a `WarrenTunnelParameters` whose
         // `exit_addr` comes from the selector, whose `signing_key` is
         // passed through verbatim, and where the two constants
         // `n_connections == 1` + `features == 0` are set.
