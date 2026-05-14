@@ -16,15 +16,15 @@
 
 #![cfg(not(target_os = "android"))]
 
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Helper : extrait le segment de path en lowercase pour matcher
 /// "mullvad" insensitivement (ex: `Mullvad VPN` sur Windows).
-fn path_contains_mullvad(p: &PathBuf) -> bool {
+fn path_contains_mullvad(p: &Path) -> bool {
     p.to_string_lossy().to_lowercase().contains("mullvad")
 }
 
-fn path_contains_warren(p: &PathBuf) -> bool {
+fn path_contains_warren(p: &Path) -> bool {
     p.to_string_lossy().to_lowercase().contains("warren")
 }
 

@@ -30,18 +30,16 @@ pub fn relay_settings_to_warren_query(rs: &RelaySettings) -> WarrenRelayQuery {
         RelaySettings::Normal(constraints) => match &constraints.location {
             Constraint::Any => WarrenLocation::Any,
             Constraint::Only(MullvadLocation::Location(geo)) => match geo {
-                GeographicLocationConstraint::Country(cc) => {
-                    WarrenLocation::Country(cc.to_string())
-                }
+                GeographicLocationConstraint::Country(cc) => WarrenLocation::Country(cc.clone()),
                 GeographicLocationConstraint::City(cc, city) => WarrenLocation::City {
-                    country_code: cc.to_string(),
-                    city: city.to_string(),
+                    country_code: cc.clone(),
+                    city: city.clone(),
                 },
                 // Warren ne distingue pas les hosts d'une ville : on
                 // restreint à la `(country, city)` du hostname.
                 GeographicLocationConstraint::Hostname(cc, city, _) => WarrenLocation::City {
-                    country_code: cc.to_string(),
-                    city: city.to_string(),
+                    country_code: cc.clone(),
+                    city: city.clone(),
                 },
             },
             // Les custom lists Mullvad pointent vers une `CustomListsSettings`
@@ -64,8 +62,10 @@ mod tests {
     use mullvad_types::relay_constraints::RelayConstraints;
 
     fn settings_with_location(loc: Constraint<MullvadLocation>) -> RelaySettings {
-        let mut constraints = RelayConstraints::default();
-        constraints.location = loc;
+        let constraints = RelayConstraints {
+            location: loc,
+            ..RelayConstraints::default()
+        };
         RelaySettings::Normal(constraints)
     }
 
