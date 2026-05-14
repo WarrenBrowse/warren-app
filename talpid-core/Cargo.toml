@@ -24,13 +24,13 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
 
 [dev-dependencies]
-# Phase 4.F.5.d.1 : fixtures `BackendParams::Warren` dans les tests
-# unit (déterministes via seeds Ed25519).
+# Test fixtures for `BackendParams::Warren` use deterministic Ed25519
+# seeds + warren-protocol newtypes (WarrenPubkey / WarrenExitAddr).
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true }
-iroh = { version = "=0.98.2", default-features = false }
 test-log = "0.2.17"
 tokio = { workspace = true, features = ["io-util", "test-util", "time"] }
+warren-protocol = { path = "../../warren-core/crates/warren-protocol" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jnix = { version = "0.5.1", features = ["derive"] }
