@@ -7054,8 +7054,10 @@ dependencies = [
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
+ "warren-api-types",
  "warren-config",
  "warren-identity",
+ "warren-ratelimit",
  "warren-relay-selector",
 ]
 
@@ -7075,7 +7077,16 @@ dependencies = [
  "tokio",
  "tokio-util 0.7.18",
  "tracing",
+ "warren-api-types",
  "warren-identity",
+]
+
+[[package]]
+name = "warren-api-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -7148,7 +7159,6 @@ dependencies = [
 name = "warren-tunnel"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "bytes",
  "ed25519-dalek",
  "parking_lot",
@@ -7157,6 +7167,7 @@ dependencies = [
  "rand 0.10.1",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "tokio",
  "tracing",
  "tun-rs",
