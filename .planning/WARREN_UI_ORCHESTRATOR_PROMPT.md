@@ -290,6 +290,27 @@ Ta tâche d'orchestrateur : drafter ces deux messages pour chaque phase.
 
 ## 7. Règles de prompting / patterns appris (CRITIQUE)
 
+### DOCTRINE NOUVELLE 2026-05-20 : Agents full autonomy, NO timid rollback
+
+**Tous les briefs M4.H.X+ doivent inclure une section §0.5 "Mandat
+d'autonomie"** qui autorise EXPLICITEMENT l'agent à :
+- Diagnostic 30 min + fix tactique TDD strict (cross-repo OK) quand
+  imprévu rencontré
+- Continuer la procédure brief avec le fix appliqué
+- Commiter+push warren-core ET warren-app dans la même phase si fix
+  débloque scope
+
+Verdict NO-GO uniquement si fix prouvé impossible OU breaking change
+/v1 OU signing key prod OU coût > 0.30 EUR. Escalade `AskUserQuestion`
+limitée à ces 4 cas. PAS de rollback opportuniste, PAS d'escalade pour
+"voir si ok" / "que faire ensuite" / "valider l'approche".
+
+Référence détaillée : memory warren-app `feedback_agent_full_autonomy_no_timid_rollback`.
+
+Origine : poka 2026-05-20, après que M4.H.A → bis → ter ont fait 3
+NO-GO consécutifs sur le même bug warren-core (= ~10h+ perdues à
+escalader+rollback au lieu de fixer).
+
 ### Anti-patterns historiques M4.E à NE PAS reproduire
 
 Identifiés sur 14 phases bench M4.E. Les agents ont commis ces erreurs
