@@ -10,7 +10,7 @@
 //! invoked from the tunnel state machine when Warren mode is active.
 
 use ed25519_dalek::SigningKey;
-use talpid_warren_tunnel::{MultiHopConfig, WarrenTunnelParameters};
+use talpid_warren_tunnel::{MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -54,6 +54,7 @@ pub fn assemble_for_attempt(
     query: &WarrenRelayQuery,
     retry_attempt: u32,
     multi_hop: Option<MultiHopConfig>,
+    nat_pmp: Option<NatPmpConfig>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     Ok(WarrenTunnelParameters {
@@ -67,6 +68,10 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         on_reconnect: None,
+        // NAT-PMP config originates from user settings (M4.H.F UI). The
+        // caller threads it as-is; `None` keeps the legacy behaviour
+        // (no refresh loop spawned).
+        nat_pmp,
     })
 }
 
@@ -100,7 +105,7 @@ mod tests {
         let key = fixture_signing_key();
         let expected_pubkey = key.verifying_key().to_bytes();
 
-        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0, None)
+        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0, None, None)
             .expect("must assemble valid params");
 
         let expected_id = WarrenPubkey::from_bytes([1u8; 32]);
@@ -129,6 +134,11 @@ mod tests {
              (ParametersGenerator::produce_warren_tunnel_params) is the \
              single place that wires the WarrenStatusCache observer"
         );
+        assert!(
+            params.nat_pmp.is_none(),
+            "assemble with nat_pmp=None must yield params with no NAT-PMP \
+             refresh loop wired (legacy behaviour preserved)"
+        );
     }
 
     #[test]
@@ -140,7 +150,7 @@ mod tests {
         let selector = DaemonWarrenRelaySelector::new(list);
         let query = WarrenRelayQuery::any().with_location(LocationConstraint::Country("zz".into()));
 
-        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0, None)
+        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0, None, None)
             .expect_err("must fail");
         assert!(matches!(
             err,
@@ -166,6 +176,7 @@ mod tests {
             &WarrenRelayQuery::any(),
             42,
             None,
+            None,
         )
         .unwrap();
         let params_b = assemble_for_attempt(
@@ -173,6 +184,7 @@ mod tests {
             fixture_signing_key(),
             &WarrenRelayQuery::any(),
             42,
+            None,
             None,
         )
         .unwrap();
@@ -223,6 +235,7 @@ mod tests {
             &WarrenRelayQuery::any(),
             0,
             Some(mh.clone()),
+            None,
         )
         .expect("must assemble multi-hop params");
 
@@ -244,5 +257,72 @@ mod tests {
         );
         assert_eq!(wired.enable_gso, mh.enable_gso);
         assert_eq!(wired.use_warren_obfuscation, mh.use_warren_obfuscation);
+    }
+
+    #[test]
+    fn assemble_with_nat_pmp_some_wires_into_params() {
+        // When the daemon passes a `Some(NatPmpConfig)`, it must be
+        // forwarded verbatim onto `params.nat_pmp`. The daemon-side
+        // `NatPmpManager` reads that field to decide whether to spawn
+        // a refresh loop once the tunnel is up. A regression dropping
+        // the field would silently disable port-forwarding for every
+        // user without any error surfacing (= product differentiator
+        // missed).
+        use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto};
+
+        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 22,
+        };
+
+        let params = assemble_for_attempt(
+            &selector,
+            fixture_signing_key(),
+            &WarrenRelayQuery::any(),
+            0,
+            None,
+            Some(cfg.clone()),
+        )
+        .expect("must assemble nat-pmp params");
+
+        let wired = params
+            .nat_pmp
+            .expect("nat_pmp must be forwarded onto params");
+        assert_eq!(wired, cfg, "NatPmpConfig must round-trip verbatim");
+    }
+
+    #[test]
+    fn nat_pmp_config_default_disabled_matches_off_invariant() {
+        // `NatPmpConfig::default_disabled()` must produce a config that
+        // the daemon treats equivalently to `None`. The daemon checks
+        // `enabled == false` to short-circuit, so the field must be
+        // false; the other fields' values don't matter but are stable
+        // for diffing purposes.
+        use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto};
+
+        let cfg = NatPmpConfig::default_disabled();
+        assert!(!cfg.enabled, "default_disabled() must yield enabled=false");
+        assert_eq!(cfg.lifetime_secs, NatPmpConfig::DEFAULT_LIFETIME_SECS);
+        assert_eq!(cfg.protocol, NatPmpProto::Udp);
+        assert_eq!(cfg.suggested_external_port, 0);
+        assert_eq!(cfg.internal_port, 0);
+    }
+
+    #[test]
+    fn nat_pmp_config_default_enabled_uses_one_hour_lifetime() {
+        // The UI's first-time toggle creates `default_enabled()`. The
+        // lifetime must default to the longest interval the exit-side
+        // allocator grants (1h = 3600s) so renewals happen at most
+        // every 30 min - keeping the no-log control plane quiet.
+        use talpid_warren_tunnel::NatPmpConfig;
+
+        let cfg = NatPmpConfig::default_enabled();
+        assert!(cfg.enabled);
+        assert_eq!(cfg.lifetime_secs, 3600);
     }
 }

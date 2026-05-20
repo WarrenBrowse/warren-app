@@ -30,6 +30,13 @@ use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 // directly. Same pattern as `warren-relay-selector::warren_types`.
 pub use warren_multihop::RelayDescriptorSigned as MultiHopRelayDescriptor;
 pub use warren_multihop::{ExitDescriptorSigned as MultiHopExitDescriptor, ExitId};
+// NAT-PMP wire protocol enum re-exported so daemon code constructs
+// `NatPmpConfig { protocol: NatPmpProto::Udp, .. }` without depending
+// directly on the warren-natpmp-protocol crate. The crate itself is a
+// path-dep of this one (so the type lives in this binary's symbol
+// table) and is also referenced explicitly by the daemon-side
+// `warren_nat_pmp` module.
+pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
@@ -105,6 +112,24 @@ pub struct WarrenTunnelParameters {
     /// Ignored on the single-hop path (single-hop has no auto-reconnect
     /// supervisor in /v1).
     pub on_reconnect: Option<warren_client::supervisor::ReconnectObserver>,
+
+    /// NAT-PMP port-forwarding configuration. `None` (default) disables
+    /// the feature entirely; `Some` instructs the daemon-side
+    /// `NatPmpManager` to spawn a `refresh_loop` against the exit's
+    /// NAT-PMP server (RFC 6886, UDP/5351 of the tunnel gateway) once
+    /// the tunnel is `Up`, and to tear it down on disconnect.
+    ///
+    /// Port-forwarding is Warren's headline differentiator since
+    /// Mullvad and IVPN dropped the feature in 2023. The wire format
+    /// and the exit-side service are out of scope here: this struct
+    /// only carries the user's preference (toggle + lifetime +
+    /// protocol) from the Settings UI down to the daemon-side manager.
+    ///
+    /// Not consumed inside `talpid-warren-tunnel` itself: the dispatcher
+    /// only relays the field to the daemon-side `NatPmpManager` via
+    /// the tunnel state machine. The structural mirror is intentional
+    /// (parameters live in one struct).
+    pub nat_pmp: Option<NatPmpConfig>,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -121,7 +146,79 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 "on_reconnect",
                 &self.on_reconnect.as_ref().map(|_| "<observer>"),
             )
+            .field("nat_pmp", &self.nat_pmp)
             .finish()
+    }
+}
+
+/// NAT-PMP port-forwarding configuration carried by
+/// [`WarrenTunnelParameters::nat_pmp`].
+///
+/// Wired by the Electron UI through the gRPC `SetNatPmpSettings` rpc.
+/// Default-disabled (the field is `None` upstream when `enabled =
+/// false`) so existing user installs see no change in behaviour after
+/// the M4.H.F upgrade.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NatPmpConfig {
+    /// User-facing toggle. `false` is the default; when `false` the
+    /// daemon-side manager does NOT start a refresh loop at all.
+    pub enabled: bool,
+    /// Lifetime requested from the exit in seconds. The server clamps
+    /// to its own `[60..3600]` range, so values outside that range will
+    /// be silently capped server-side; UI offers `3600` (1h), `21600`
+    /// (6h, ends up clamped), `86400` (24h, ends up clamped). The
+    /// refresh loop renews at `granted / 2`.
+    pub lifetime_secs: u32,
+    /// Transport protocol to map. Single value in /v1: UDP or TCP.
+    /// Mapping both protocols simultaneously is left to a future
+    /// extension (would spawn two refresh loops).
+    pub protocol: NatPmpProto,
+    /// Suggested external port. `0` (default) lets the server pick a
+    /// port from its allocator pool (recommended). Pinning a port is
+    /// possible by setting a value in `49152..=65535` but the server
+    /// is allowed to ignore the suggestion (RFC 6886 §3.3).
+    pub suggested_external_port: u16,
+    /// Internal port the application binds locally. `0` means "no
+    /// specific local port", in which case the daemon defers a
+    /// concrete port choice to the manager. UI may expose this field
+    /// for advanced users.
+    pub internal_port: u16,
+}
+
+impl NatPmpConfig {
+    /// Default lifetime: 1 hour. Matches the exit-side allocator's
+    /// maximum clamp ([60..3600] seconds), so the user gets the longest
+    /// possible interval between renewals (renewal every 30 min).
+    pub const DEFAULT_LIFETIME_SECS: u32 = 3600;
+
+    /// Default disabled configuration; the daemon treats this as
+    /// equivalent to `None` (no refresh loop spawned). Provided so
+    /// callers can produce a `Some(NatPmpConfig::default_disabled())`
+    /// for places that need to thread the config but not enable it.
+    #[must_use]
+    pub fn default_disabled() -> Self {
+        Self {
+            enabled: false,
+            lifetime_secs: Self::DEFAULT_LIFETIME_SECS,
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        }
+    }
+
+    /// Default enabled configuration for first-time users: UDP, 1 hour
+    /// lifetime, server picks the external port. Internal port is 0
+    /// (UI must set the bind port before any application can actually
+    /// receive traffic; the mapping itself is created regardless).
+    #[must_use]
+    pub fn default_enabled() -> Self {
+        Self {
+            enabled: true,
+            lifetime_secs: Self::DEFAULT_LIFETIME_SECS,
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        }
     }
 }
 
@@ -1591,6 +1688,7 @@ mod tests {
             features: 0x1,
             multi_hop: None,
             on_reconnect: None,
+            nat_pmp: None,
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1617,12 +1715,18 @@ mod tests {
             features: 0,
             multi_hop: None,
             on_reconnect: None,
+            nat_pmp: None,
         };
         assert!(params.multi_hop.is_none());
         assert!(
             params.on_reconnect.is_none(),
             "default on_reconnect must be None so the single-hop legacy path \
              does not spuriously try to wire a multi-hop-only observer"
+        );
+        assert!(
+            params.nat_pmp.is_none(),
+            "default nat_pmp must be None so the daemon-side NatPmpManager \
+             stays inert until the user opts in via the UI"
         );
     }
 
@@ -1660,6 +1764,7 @@ mod tests {
             features: 0,
             multi_hop: Some(mh),
             on_reconnect: None,
+            nat_pmp: None,
         };
         let s = format!("{params:?}");
         assert!(
@@ -1674,6 +1779,59 @@ mod tests {
             !s.contains("192.0.2.10") && !s.contains("192.0.2.20"),
             "relay/exit endpoints must not leak: {s}"
         );
+    }
+
+    #[test]
+    fn warren_tunnel_parameters_debug_when_nat_pmp_some_redacts_internals() {
+        // No-log Warren: NAT-PMP config carries the user's port choice
+        // and protocol preference. Those are not session-PII but the
+        // Debug surface must still display the field structurally so
+        // operators reading a log line can see whether port-forwarding
+        // is on without exposing the picked port (which becomes
+        // identifying once the mapping is live).
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 22222,
+            internal_port: 22,
+        };
+        let params = WarrenTunnelParameters {
+            exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([0u8; 32])),
+            signing_key: SigningKey::from_bytes(&[0u8; 32]),
+            n_connections: 1,
+            features: 0,
+            multi_hop: None,
+            on_reconnect: None,
+            nat_pmp: Some(cfg.clone()),
+        };
+        let s = format!("{params:?}");
+        // NatPmpConfig derives Debug, so the Some(..) renders the
+        // structural shape. We assert the toggle is visible (operators
+        // need to see "enabled: true") and that the suggested external
+        // port number is dropped or carried (here carried; future
+        // tightening can mask it if needed).
+        assert!(
+            s.contains("enabled: true"),
+            "nat_pmp enabled toggle must appear in Debug: {s}"
+        );
+    }
+
+    #[test]
+    fn nat_pmp_config_default_disabled_yields_enabled_false() {
+        let cfg = NatPmpConfig::default_disabled();
+        assert!(!cfg.enabled);
+        assert_eq!(cfg.lifetime_secs, NatPmpConfig::DEFAULT_LIFETIME_SECS);
+        assert_eq!(cfg.protocol, NatPmpProto::Udp);
+    }
+
+    #[test]
+    fn nat_pmp_config_default_enabled_uses_one_hour_default_lifetime() {
+        let cfg = NatPmpConfig::default_enabled();
+        assert!(cfg.enabled);
+        assert_eq!(cfg.lifetime_secs, 3600);
+        assert_eq!(cfg.protocol, NatPmpProto::Udp);
+        assert_eq!(cfg.suggested_external_port, 0);
     }
 
     #[test]

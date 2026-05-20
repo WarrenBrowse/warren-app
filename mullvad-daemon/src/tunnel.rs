@@ -3,7 +3,7 @@ use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
 use talpid_types::net::wireguard::TunnelParameters;
-use talpid_warren_tunnel::{MultiHopConfig, WarrenTunnelParameters};
+use talpid_warren_tunnel::{MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
 use tokio::sync::Mutex;
 
 use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
@@ -82,6 +82,13 @@ struct InnerParametersGenerator {
     /// multi-hop supervisor so a successful reconnect bumps the
     /// `reconnect_count` field that the Electron UI displays.
     warren_status_cache: WarrenStatusCache,
+    /// NAT-PMP user preference. `None` (default) leaves port-forwarding
+    /// disabled; `Some(cfg)` triggers the daemon-side `NatPmpManager`
+    /// to spawn a refresh loop once the tunnel is up. Mutated at
+    /// runtime via [`ParametersGenerator::set_warren_nat_pmp`] when
+    /// the user toggles the setting from the Electron UI; the next
+    /// tunnel reconnect picks up the new value.
+    warren_nat_pmp: Option<NatPmpConfig>,
 }
 
 impl ParametersGenerator {
@@ -116,7 +123,34 @@ impl ParametersGenerator {
             warren_signing_key,
             warren_multi_hop,
             warren_status_cache,
+            warren_nat_pmp: None,
         })))
+    }
+
+    /// Sets the user's NAT-PMP preference. The next call to
+    /// [`Self::produce_warren_tunnel_params`] picks up the new value;
+    /// in-flight tunnels keep their current setting until the daemon
+    /// reconnects.
+    ///
+    /// Wired from the gRPC `SetNatPmpSettings` handler (consumer added
+    /// alongside `management_interface.rs::set_nat_pmp_settings`).
+    #[expect(
+        dead_code,
+        reason = "Storage hook for the NAT-PMP setting: consumed by the gRPC SetNatPmpSettings handler added in a follow-up commit. Wired here so the setter + storage live in one place."
+    )]
+    pub async fn set_warren_nat_pmp(&self, cfg: Option<NatPmpConfig>) {
+        self.0.lock().await.warren_nat_pmp = cfg;
+    }
+
+    /// Returns the current NAT-PMP preference, primarily for the
+    /// gRPC `GetNatPmpSettings` handler. `None` means port-forwarding
+    /// is disabled (the daemon never spawns a refresh loop).
+    #[expect(
+        dead_code,
+        reason = "Consumed by the gRPC GetNatPmpSettings handler added in a follow-up commit."
+    )]
+    pub async fn get_warren_nat_pmp(&self) -> Option<NatPmpConfig> {
+        self.0.lock().await.warren_nat_pmp.clone()
     }
 
     /// Assembles a [`WarrenTunnelParameters`] for the
@@ -151,12 +185,14 @@ impl ParametersGenerator {
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
         let multi_hop = inner.warren_multi_hop.clone();
+        let nat_pmp = inner.warren_nat_pmp.clone();
         let mut params = warren_tunnel_params::assemble_for_attempt(
             selector,
             signing_key,
             &query,
             retry_attempt,
             multi_hop,
+            nat_pmp,
         )?;
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI

@@ -6133,6 +6133,8 @@ dependencies = [
  "warren-client",
  "warren-config",
  "warren-multihop",
+ "warren-natpmp-client",
+ "warren-natpmp-protocol",
  "warren-protocol",
  "warren-relay",
  "warren-tunnel",
@@ -7220,6 +7222,27 @@ dependencies = [
  "tracing",
  "x25519-dalek",
  "zeroize",
+]
+
+[[package]]
+name = "warren-natpmp-client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "warren-config",
+ "warren-natpmp-protocol",
+]
+
+[[package]]
+name = "warren-natpmp-protocol"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.18",
 ]
 
 [[package]]

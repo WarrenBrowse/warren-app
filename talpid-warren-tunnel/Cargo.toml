@@ -34,6 +34,14 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # (see docs/warren-app-quinn-migration-plan.md § "Sharing strategy").
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel" }
 warren-protocol = { path = "../../warren-core/crates/warren-protocol" }
+# NAT-PMP client + RFC 6886 wire types. The client crate exposes the
+# `refresh_loop` helper consumed by `mullvad-daemon::warren_nat_pmp` to
+# keep the exit-side mapping alive. The protocol crate is pulled
+# transitively but also re-exported here so daemon code references
+# `talpid_warren_tunnel::NatPmpProto` without depending on warren-core
+# directly.
+warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client" }
+warren-natpmp-protocol = { path = "../../warren-core/crates/warren-natpmp-protocol" }
 # Multi-hop stack (M4.B/C/D/E.D) consumed by the dispatcher in
 # `lib.rs` to spin up a `MultiHopSupervisor`-driven session when the
 # user opts into multi-hop. Single-hop dispatch keeps using
