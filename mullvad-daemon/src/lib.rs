@@ -29,55 +29,55 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
-/// Détection du mode account local Warren via env var
-/// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net pour le
-/// retry-loop initial `get_data` et la validation device).
+/// Detection of Warren local account mode via env var
+/// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net for the
+/// initial `get_data` retry-loop and device validation).
 pub mod warren_account_mode;
-/// Bootstrap d'un `device.json` cohérent avec la mnémonique Warren —
-/// invoqué au boot en mode `WARREN_LOCAL_ACCOUNT=1`.
+/// Bootstrap of a `device.json` consistent with the Warren mnemonic —
+/// invoked at boot in `WARREN_LOCAL_ACCOUNT=1` mode.
 pub mod warren_device_bootstrap;
-/// Détection du mode tunnel Warren via env var `WARREN_TUNNEL` (POC
-/// switch — pas de toggle UI/CLI pour l'instant).
+/// Detection of Warren tunnel mode via env var `WARREN_TUNNEL` (POC
+/// switch — no UI/CLI toggle for now).
 pub mod warren_mode;
-/// Loader pour `<settings_dir>/warren-multihop.json` qui matérialise
-/// un `MultiHopConfig` à partir de descripteurs signés mintés
-/// out-of-band par les ops (wapi admin-mint-*). PKI vérifiée au load
-/// contre l'`operational_pubkey` carried dans le fichier.
+/// Loader for `<settings_dir>/warren-multihop.json` that materializes
+/// a `MultiHopConfig` from signed descriptors minted
+/// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
+/// against the `operational_pubkey` carried in the file.
 pub mod warren_multi_hop;
-/// Détection de l'opt-in multi-hop via env var `WARREN_MULTI_HOP`
-/// (POC switch — pas de toggle UI/CLI pour l'instant, M4.H.C scope).
+/// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
+/// (POC switch — no UI/CLI toggle for now, M4.H.C scope).
 pub mod warren_multi_hop_mode;
-/// Conversion `RelaySettings` (Mullvad UI) → `WarrenRelayQuery`
-/// (filtrage côté warren-relay-selector). Mappe country/city, fallback
-/// `Any` pour les cas non supportés (custom lists, custom endpoint).
+/// Conversion `RelaySettings` (Mullvad UI) -> `WarrenRelayQuery`
+/// (filtering on the warren-relay-selector side). Maps country/city, fallback
+/// `Any` for unsupported cases (custom lists, custom endpoint).
 pub mod warren_query_from_settings;
-/// Vue `RelayList` Mullvad-format d'une `WarrenRelayList`. Permet à la
-/// GUI Electron de consommer les exits Warren via son sélecteur de
-/// pays/villes existant.
+/// Mullvad-format `RelayList` view of a `WarrenRelayList`. Allows the
+/// Electron GUI to consume the Warren exits via its existing
+/// country/city selector.
 pub mod warren_relay_list_view;
-/// Wrapper daemon-side autour de
-/// `warren_relay_selector::WarrenRelaySelector` : charge la
-/// `WarrenRelayList` depuis le `cache_dir`, sélectionne les composants
-/// Iroh (`EndpointId` + `EndpointAddr`) d'un exit Warren.
+/// Daemon-side wrapper around
+/// `warren_relay_selector::WarrenRelaySelector`: loads the
+/// `WarrenRelayList` from `cache_dir`, selects the Iroh
+/// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
-/// Bootstrap fetcher pour `<cache_dir>/warren-relays.json` depuis
-/// l'endpoint public `GET {warren_api_url}/v1/exits`. Best-effort au
-/// boot — si échec, le selector tombe sur l'ancien cache (ou liste vide).
+/// Bootstrap fetcher for `<cache_dir>/warren-relays.json` from
+/// the public endpoint `GET {warren_api_url}/v1/exits`. Best-effort at
+/// boot — if it fails, the selector falls back on the existing cache (or empty list).
 pub mod warren_relays_fetch;
-/// Phase #4 — résolution `WarrenApiConfig` (URL warren-api + signing key)
-/// depuis Settings + env var. Pure function testable extraite de
+/// Phase #4 — resolution of `WarrenApiConfig` (warren-api URL + signing key)
+/// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
-/// Charge ou génère la mnémonique BIP39 utilisateur depuis
-/// `<settings_dir>/warren_mnemonic.txt`, la dérive en `SigningKey`
-/// Ed25519 et expose un `WarrenAuthSigner` partagé pour les requêtes
-/// API authentifiées.
+/// Loads or generates the user's BIP39 mnemonic from
+/// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
+/// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
+/// authenticated API requests.
 pub mod warren_signer;
 /// Live Warren tunnel status cache surfaced to the gRPC management
 /// interface (`GetWarrenStatus` rpc + `WarrenStatusUpdates` stream).
 pub mod warren_status;
-/// Assemble un `talpid_warren_tunnel::WarrenTunnelParameters` complet à
-/// partir du relay selector + signing_key + constantes côté config.
+/// Assembles a complete `talpid_warren_tunnel::WarrenTunnelParameters`
+/// from the relay selector + signing_key + config-side constants.
 pub mod warren_tunnel_params;
 
 use crate::{
@@ -304,14 +304,14 @@ pub enum DaemonCommand {
     ),
     /// Request www auth token for an account
     GetWwwAuthToken(ResponseTx<String, Error>),
-    /// Retourne la mnémonique BIP39 utilisateur pour permettre backup
-    /// user-side via le GUI Electron. `None` si le fichier
-    /// `warren_mnemonic.txt` n'existe pas (= identité jamais
-    /// bootstrappée). Voir `warren_signer::get_warren_mnemonic`.
+    /// Returns the user's BIP39 mnemonic to allow user-side
+    /// backup via the Electron GUI. `None` if the
+    /// `warren_mnemonic.txt` file does not exist (= identity never
+    /// bootstrapped). See `warren_signer::get_warren_mnemonic`.
     GetWarrenMnemonic(oneshot::Sender<Option<String>>),
-    /// Remplace la mnémonique BIP39 (= restore identité). Validation
-    /// BIP39 + écriture atomique. Restart daemon requis pour que la
-    /// nouvelle identité soit active. Voir
+    /// Replaces the BIP39 mnemonic (= restore identity). BIP39
+    /// validation + atomic write. Daemon restart required for the
+    /// new identity to take effect. See
     /// `warren_signer::set_warren_mnemonic`.
     SetWarrenMnemonic(oneshot::Sender<std::io::Result<()>>, String),
     /// Submit voucher to add time to the current account. Returns time added in seconds
@@ -350,8 +350,8 @@ pub enum DaemonCommand {
     SetWarrenMode(ResponseTx<(), settings::Error>, bool),
     /// Toggle persistant `Settings::warren_local_account`.
     SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
-    /// URL persistante `Settings::warren_api_url`. Empty string →
-    /// unset (= None côté Settings).
+    /// Persistent URL `Settings::warren_api_url`. Empty string ->
+    /// unset (= None on the Settings side).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
     /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
     /// Restart required to apply (mirrors `SetWarrenMode`).
@@ -760,11 +760,11 @@ pub struct Daemon {
     relay_selector: RelaySelector,
     relay_list_updater: RelayListUpdaterHandle,
     parameters_generator: tunnel::ParametersGenerator,
-    /// Vue Mullvad-format de la `WarrenRelayList` calculée au boot.
-    /// Substituée à la liste Mullvad upstream pour les pulls
-    /// synchrones — sinon la GUI propose des pays absents de la
-    /// WarrenRelayList et le tunnel Warren retourne NoMatchingRelay
-    /// au connect → kill-switch. `None` si `warren_mode` inactif.
+    /// Mullvad-format view of the `WarrenRelayList` computed at boot.
+    /// Substituted for the upstream Mullvad list for synchronous
+    /// pulls — otherwise the GUI offers countries absent from the
+    /// WarrenRelayList and the Warren tunnel returns NoMatchingRelay
+    /// on connect -> kill-switch. `None` if `warren_mode` inactive.
     warren_relay_list_view: Option<RelayList>,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
@@ -773,9 +773,9 @@ pub struct Daemon {
     location_handler: GeoIpHandler,
     leak_checker: LeakChecker,
     cache_dir: PathBuf,
-    /// Conservé pour permettre les lectures runtime de la mnémonique
-    /// BIP39 (`<settings_dir>/warren_mnemonic.txt`) via le handler
-    /// `on_get_warren_mnemonic`.
+    /// Kept to allow runtime reads of the BIP39 mnemonic
+    /// (`<settings_dir>/warren_mnemonic.txt`) via the
+    /// `on_get_warren_mnemonic` handler.
     settings_dir: PathBuf,
     /// Live Warren tunnel status cache. Populated by the multi-hop
     /// supervisor (when multi-hop is active) and read by the
@@ -811,12 +811,12 @@ impl Daemon {
         #[cfg(target_os = "macos")]
         macos::bump_filehandle_limit();
 
-        // F7 fork audit : `migrate_all` peut échouer pour cause non-fatale
-        // (ex: account-history.json absent au fresh boot Warren mode). Le
-        // daemon continue avec `None` migration data — c'est attendu, pas
-        // une erreur opérationnelle. Logger WARN évite la fausse alarme
-        // dans les logs prod sans masquer un vrai problème de migration
-        // sur installation upstream existante.
+        // F7 fork audit: `migrate_all` may fail for non-fatal reasons
+        // (e.g. account-history.json absent on fresh boot Warren mode). The
+        // daemon continues with `None` migration data — this is expected, not
+        // an operational error. Logging WARN avoids false alarms
+        // in prod logs without masking a real migration problem
+        // on an existing upstream install.
         let migration_data = migrations::migrate_all(&config.cache_dir, &config.settings_dir)
             .await
             .unwrap_or_else(|error| {
@@ -832,12 +832,12 @@ impl Daemon {
         // Initialize relay selector asap, since it's a pre-requisite for accepting incoming gRPC
         // connections.
         //
-        // F5 fork audit : en mode Warren pur (`WARREN_TUNNEL=1`), la liste
-        // Mullvad upstream `relays.json` n'est jamais consommée — le tunnel
-        // utilise `warren-relays.json` parsé par `DaemonWarrenRelaySelector`.
-        // Une absence du fichier ne devrait pas logger ERROR (= bruit qui
-        // inquiète l'opérateur prod) mais juste DEBUG. Pour le mode WG
-        // upstream, garder ERROR (= signal réel d'un cache cassé).
+        // F5 fork audit: in pure Warren mode (`WARREN_TUNNEL=1`), the
+        // upstream Mullvad `relays.json` list is never consumed — the tunnel
+        // uses `warren-relays.json` parsed by `DaemonWarrenRelaySelector`.
+        // An absence of the file should not log ERROR (= noise that
+        // worries the prod operator) but just DEBUG. For upstream WG
+        // mode, keep ERROR (= real signal of a broken cache).
         let warren_mode_for_relays_log = warren_mode::resolve(settings.warren_mode);
         let initial_relay_list = parse_relays_from_file(&config.cache_dir, &config.resource_dir)
             .inspect_err(|err| {
@@ -928,10 +928,10 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        // Warren fork : charge ou génère la mnémonique BIP39 dans
-        // `<settings_dir>/warren_mnemonic.txt` et la dérive en
-        // `WarrenAuthSigner` partagé. En cas d'échec, retombe sur
-        // `None` (mode Bearer historique) ; le détail est loggé par
+        // Warren fork: loads or generates the BIP39 mnemonic in
+        // `<settings_dir>/warren_mnemonic.txt` and derives it into a
+        // shared `WarrenAuthSigner`. On failure, falls back to
+        // `None` (legacy Bearer mode); the detail is logged by
         // `load_or_create_signer`.
         let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
         let api_handle =
@@ -964,19 +964,19 @@ impl Daemon {
             migrations::MigrationComplete::new(true)
         };
 
-        // Si l'env var `WARREN_LOCAL_ACCOUNT=1` est setée, bootstrap
-        // un `device.json` cohérent avec la mnémonique avant que
-        // `AccountManager::spawn` ne lise le `DeviceCacher`. Permet
-        // au daemon d'atteindre `Connecting` sans appel
-        // `create_device` à api.mullvad.net.
-        // Combine l'env var POC `WARREN_LOCAL_ACCOUNT` avec le flag
-        // persistant `Settings::warren_local_account`. L'env var, si
-        // setée, prend précédence (cf. `warren_account_mode::resolve`).
+        // If the env var `WARREN_LOCAL_ACCOUNT=1` is set, bootstrap
+        // a `device.json` consistent with the mnemonic before
+        // `AccountManager::spawn` reads the `DeviceCacher`. Allows
+        // the daemon to reach `Connecting` without a `create_device`
+        // call to api.mullvad.net.
+        // Combines the POC env var `WARREN_LOCAL_ACCOUNT` with the
+        // persistent flag `Settings::warren_local_account`. The env
+        // var, if set, takes precedence (see `warren_account_mode::resolve`).
         let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
-        // Log structuré au boot pour faciliter le debug terrain.
-        // L'admin/dev voit immédiatement quels modes sont actifs et leur
-        // source (env override vs Settings persistant) sans avoir à
-        // grep dans des dizaines de log lines.
+        // Structured log at boot to ease field debugging.
+        // The admin/dev sees immediately which modes are active and
+        // their source (env override vs persistent Settings) without
+        // having to grep dozens of log lines.
         let warren_mode_active_for_log = warren_mode::resolve(settings.warren_mode);
         log::info!(
             "Warren modes at boot — tunnel={} (env={}, settings={}) ; local_account={} (env={}, settings={})",
@@ -1006,11 +1006,11 @@ impl Daemon {
             }
         }
 
-        // Résolution déléguée à `warren_remote_config::resolve` (pure
-        // fn testable). Side effects (env, signing_key load) résolus
-        // ici, les flags purs passés à la fn. Le log diff (Some vs
-        // None) reste ici car la fn est silencieuse pour rester
-        // testable sans capture log.
+        // Resolution delegated to `warren_remote_config::resolve` (pure
+        // testable fn). Side effects (env, signing_key load) resolved
+        // here, the pure flags passed to the fn. The diff log (Some vs
+        // None) stays here because the fn is silent to remain
+        // testable without log capture.
         let env_url = std::env::var("WARREN_API_URL").ok();
         let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
         let warren_api_config = warren_remote_config::resolve(
@@ -1090,11 +1090,11 @@ impl Daemon {
                 warren_mode::ENV_VAR_NAME
             );
 
-            // Best-effort refresh du cache warren-relays.json depuis
-            // `GET {api_url}/v1/exits`. URL : env WARREN_API_URL > Settings >
-            // default warren_config::WARREN_API_URL. Si le fetch échoue
-            // (réseau down, 5xx, JSON invalide), on log warn et on tombe
-            // sur le cache existant (verify côté load_from_cache_dir).
+            // Best-effort refresh of the warren-relays.json cache from
+            // `GET {api_url}/v1/exits`. URL: env WARREN_API_URL > Settings >
+            // default warren_config::WARREN_API_URL. If the fetch fails
+            // (network down, 5xx, invalid JSON), we log a warn and fall back
+            // to the existing cache (verify on load_from_cache_dir side).
             let relays_api_url = std::env::var("WARREN_API_URL")
                 .ok()
                 .filter(|s| !s.is_empty())
@@ -1171,10 +1171,10 @@ impl Daemon {
             None
         };
 
-        // Pré-calcule la vue Mullvad-format des warren-relays pour
-        // pouvoir la broadcaster à la GUI au boot ET la cloner dans le
-        // closure `on_relay_list_update` synchrone (qui ne peut pas
-        // re-locker `parameters_generator`).
+        // Pre-computes the Mullvad-format view of the warren-relays
+        // so we can broadcast it to the GUI at boot AND clone it into
+        // the synchronous `on_relay_list_update` closure (which cannot
+        // re-lock `parameters_generator`).
         let warren_relay_list_view: Option<RelayList> = warren_relay_selector
             .as_ref()
             .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list()));
@@ -1249,7 +1249,7 @@ impl Daemon {
             internal_event_tx.to_specialized_sender(),
             offline_state_tx,
             route_manager.clone(),
-            // Warren fork : pass-through du flag résolu au boot
+            // Warren fork: pass-through of the flag resolved at boot
             // (env override + Settings::warren_mode).
             warren_mode_active,
             #[cfg(target_os = "windows")]
@@ -1274,13 +1274,13 @@ impl Daemon {
         let relay_list_listener = management_interface.notifier().clone();
         let internal_event_tx_clone = internal_event_tx.clone();
 
-        // En mode Warren tunnel, on substitue la `RelayList` broadcast à
-        // la GUI par une vue construite depuis `warren-relays.json`
-        // (cf. `warren_relay_list_view::to_mullvad_relay_list`). Le
-        // `RelayListUpdater` Mullvad upstream continue de tourner pour
-        // alimenter les autres consommateurs internes (API access
-        // methods, bridges) qui dépendent encore de la liste Mullvad,
-        // mais le payload exposé à la GUI vient uniquement de Warren.
+        // In Warren tunnel mode, we replace the `RelayList` broadcast to
+        // the GUI with a view built from `warren-relays.json`
+        // (see `warren_relay_list_view::to_mullvad_relay_list`). The
+        // upstream Mullvad `RelayListUpdater` keeps running to
+        // feed the other internal consumers (API access methods,
+        // bridges) that still depend on the Mullvad list, but the
+        // payload exposed to the GUI comes solely from Warren.
         let warren_view_for_closure = warren_relay_list_view.clone();
         let on_relay_list_update = move |relay_list: &RelayList| {
             let to_broadcast = warren_view_for_closure
@@ -1294,10 +1294,10 @@ impl Daemon {
             ));
         };
 
-        // Broadcast immédiat de la vue Warren (= sans attendre le 1er
-        // refresh de `RelayListUpdater` qui peut arriver minutes plus
-        // tard) : la GUI affichera les exits Warren dès la 1ère
-        // connexion au management interface.
+        // Immediate broadcast of the Warren view (= without waiting
+        // for the first `RelayListUpdater` refresh which may arrive
+        // minutes later): the GUI will display the Warren exits as
+        // soon as it first connects to the management interface.
         if let Some(view) = warren_relay_list_view.as_ref() {
             log::info!(
                 "Broadcasting Warren relay list view ({} countries) to GUI at boot",
@@ -2286,9 +2286,9 @@ impl Daemon {
     ) {
         let account = self.account_manager.warren_identity_service.clone();
         tokio::spawn(async move {
-            // `get_data` prend une `WarrenPubKey`. On parse le legacy
-            // `account_number` (= chaîne possiblement non-hex) avec
-            // fallback dummy.
+            // `get_data` takes a `WarrenPubKey`. We parse the legacy
+            // `account_number` (= possibly non-hex string) with a
+            // dummy fallback.
             let pubkey = device::account_number_to_warren_pubkey(&account_number);
             let result = account.get_data(pubkey).await;
             Self::oneshot_send(tx, result, "account data");
@@ -2320,11 +2320,11 @@ impl Daemon {
         }
     }
 
-    /// Lit la mnémonique BIP39 utilisateur via
-    /// `warren_signer::get_warren_mnemonic`. Read-only, sync (pas
-    /// de spawn nécessaire — `read_to_string` < 1 ms sur un fichier
-    /// de 100 bytes). **Politique no-log** : on log uniquement le fait
-    /// qu'une lecture a eu lieu, jamais le contenu.
+    /// Reads the user's BIP39 mnemonic via
+    /// `warren_signer::get_warren_mnemonic`. Read-only, sync (no
+    /// spawn needed — `read_to_string` < 1 ms on a 100-byte file).
+    /// **No-log policy**: we only log the fact that a read occurred,
+    /// never the content.
     fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<String>>) {
         let mnemonic = warren_signer::get_warren_mnemonic(&self.settings_dir);
         log::debug!(
@@ -2334,11 +2334,11 @@ impl Daemon {
         Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
     }
 
-    /// Restaure la mnémonique via
-    /// `warren_signer::set_warren_mnemonic`. Restart daemon requis
-    /// pour que la nouvelle identité soit prise en compte par le
-    /// signer (signing key dérivée au boot). **Politique no-log** :
-    /// jamais le contenu de `mnemonic`, juste le résultat (ok/err).
+    /// Restores the mnemonic via
+    /// `warren_signer::set_warren_mnemonic`. Daemon restart required
+    /// for the new identity to be picked up by the signer
+    /// (signing key derived at boot). **No-log policy**:
+    /// never the content of `mnemonic`, just the result (ok/err).
     fn on_set_warren_mnemonic(&self, tx: oneshot::Sender<std::io::Result<()>>, mnemonic: String) {
         let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
@@ -2363,11 +2363,12 @@ impl Daemon {
     }
 
     fn on_get_relay_locations(&mut self, tx: oneshot::Sender<RelayList>) {
-        // Substituer la vue Warren à la liste Mullvad pour le pull
-        // synchrone — sans ça la GUI peuple son selector avec des
-        // relays absents de la WarrenRelayList → NoMatchingRelay au
-        // connect → kill-switch. Substitution équivalente au closure
-        // `on_relay_list_update` côté broadcast push.
+        // Substitute the Warren view for the Mullvad list on the
+        // synchronous pull — without this, the GUI populates its
+        // selector with relays absent from the WarrenRelayList ->
+        // NoMatchingRelay on connect -> kill-switch. Substitution
+        // equivalent to the `on_relay_list_update` closure on the
+        // broadcast push side.
         let relays = self
             .warren_relay_list_view
             .as_ref()
@@ -2525,12 +2526,12 @@ impl Daemon {
                 .map(move |new_devices| {
                     // FIXME: We should be able to get away with only returning the removed ID,
                     //        and not have to request the list from the API.
-                    // `RemoveDeviceEvent` porte désormais une
-                    // `WarrenPubKey`. On parse le `account_number` (=
-                    // String, possiblement non-hex si ancien
-                    // device.json Mullvad) avec fallback dummy zero
-                    // pubkey + warn (cohérent avec le From impl côté
-                    // `device::mod.rs`).
+                    // `RemoveDeviceEvent` now carries a
+                    // `WarrenPubKey`. We parse `account_number` (=
+                    // String, possibly non-hex if it's an old
+                    // Mullvad device.json) with a dummy zero pubkey
+                    // fallback + warn (consistent with the From impl on
+                    // the `device::mod.rs` side).
                     use std::str::FromStr;
                     let pubkey =
                         mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account_number)
@@ -2957,10 +2958,10 @@ impl Daemon {
         }
     }
 
-    /// Persiste `Settings::warren_mode`. Le mode est lu au boot par
-    /// `warren_mode::resolve` ; un restart du daemon est requis pour
-    /// appliquer (pas de hot-reload du backend tunnel — la state
-    /// machine + identité signing key sont posées une fois au boot).
+    /// Persists `Settings::warren_mode`. The mode is read at boot by
+    /// `warren_mode::resolve`; a daemon restart is required to
+    /// apply (no hot-reload of the tunnel backend — the state
+    /// machine + signing key identity are wired once at boot).
     async fn on_set_warren_mode(&mut self, tx: ResponseTx<(), settings::Error>, enabled: bool) {
         let result = self
             .settings
@@ -2978,7 +2979,7 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_mode response");
     }
 
-    /// Persiste `Settings::warren_local_account`. Restart requis (cf.
+    /// Persists `Settings::warren_local_account`. Restart required (see
     /// `on_set_warren_mode` doc).
     async fn on_set_warren_local_account(
         &mut self,
@@ -3001,10 +3002,10 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_local_account response");
     }
 
-    /// Persiste `Settings::warren_api_url`. Restart requis pour
-    /// appliquer (le daemon résoud l'URL au boot dans `Daemon::start`,
-    /// il ne re-checke pas Settings en runtime). Empty string → `None`
-    /// côté Settings (= unset = fallback Mullvad upstream backend).
+    /// Persists `Settings::warren_api_url`. Restart required to
+    /// apply (the daemon resolves the URL at boot in `Daemon::start`,
+    /// it does not re-check Settings at runtime). Empty string -> `None`
+    /// on the Settings side (= unset = fallback to Mullvad upstream backend).
     async fn on_set_warren_api_url(&mut self, tx: ResponseTx<(), settings::Error>, url: String) {
         let new_value = if url.is_empty() { None } else { Some(url) };
         let display_value = new_value

@@ -1,19 +1,19 @@
-//! Trait abstrait pour les opérations device-level qui partaient en
-//! `DevicesProxy` vers `api.mullvad.net`.
+//! Abstract trait for the device-level operations that used to go
+//! through `DevicesProxy` to `api.mullvad.net`.
 //!
-//! Pendant device-side du [`super::account_backend`] : permet d'aiguiller
-//! au boot entre :
-//! - [`RemoteDeviceBackend`] : thin wrap sur l'`DevicesProxy` Mullvad
-//!   historique. Comportement strictement identique en non-`local`.
-//! - [`LocalDeviceBackend`] : POC stateful (HashMap mémoire-only) qui
-//!   sert des données cohérentes avec le `device.json` bootstrappé,
-//!   sans aucun appel réseau.
+//! Device-side counterpart of [`super::account_backend`]: lets us
+//! dispatch at boot between:
+//! - [`RemoteDeviceBackend`]: thin wrap over the legacy Mullvad
+//!   `DevicesProxy`. Behavior strictly identical in non-`local`.
+//! - [`LocalDeviceBackend`]: stateful POC (memory-only HashMap) that
+//!   serves data consistent with the bootstrapped `device.json`,
+//!   without any network call.
 //!
-//! Périmètre 5 méthodes : `create`, `get`, `list`, `remove`,
-//! `replace_wg_key`. `LocalDeviceBackend` ne touche **jamais** au
-//! `device.json` — c'est `DeviceCacher` qui possède le fichier (cf.
-//! recon C.2 § Q8 conflit DeviceCacher). Le HashMap interne est
-//! seulement un *shadow lookup* pour les requêtes API simulées.
+//! Scope of 5 methods: `create`, `get`, `list`, `remove`,
+//! `replace_wg_key`. `LocalDeviceBackend` **never** touches
+//! `device.json` — `DeviceCacher` owns the file (see
+//! recon C.2 § Q8 DeviceCacher conflict). The internal HashMap is
+//! only a *shadow lookup* for the simulated API requests.
 
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -30,41 +30,43 @@ use talpid_types::net::wireguard::PublicKey as WgPublicKey;
 
 use super::PrivateDeviceState;
 
-/// Type alias pour les futures retournées par le trait. Cf. doc
-/// [`super::account_backend::BoxFut`] pour le rationale `'static`.
+/// Type alias for the futures returned by the trait. See doc
+/// [`super::account_backend::BoxFut`] for the `'static` rationale.
 pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 
-/// Backend abstrait pour les 5 opérations device-level qui passaient
-/// historiquement par `DevicesProxy`. Cf. doc module pour le pendant
-/// account-side.
+/// Abstract backend for the 5 device-level operations that
+/// historically went through `DevicesProxy`. See module doc for the
+/// account-side counterpart.
 pub trait WarrenDeviceBackend: Send + Sync {
-    /// Crée un device pour le compte donné, lié à la pubkey WireGuard
-    /// fournie. Retourne le device produit + les `AssociatedAddresses`
-    /// allouées pour ce client. Idempotent côté local : un appel répété
-    /// avec la même pubkey wg retourne le même `Device` (même `id`).
+    /// Creates a device for the given account, tied to the provided
+    /// WireGuard pubkey. Returns the produced device + the
+    /// `AssociatedAddresses` allocated for this client. Idempotent on
+    /// the local side: a repeated call with the same wg pubkey returns
+    /// the same `Device` (same `id`).
     fn create(
         &self,
         account: AccountNumber,
         pubkey: WgPublicKey,
     ) -> BoxFut<Result<(Device, AssociatedAddresses), rest::Error>>;
 
-    /// Récupère un device par son id. Retourne `Err(rest::Error::ApiError(NOT_FOUND))`
-    /// si l'id n'est pas connu (= 404 côté backend).
+    /// Fetches a device by its id. Returns `Err(rest::Error::ApiError(NOT_FOUND))`
+    /// if the id is unknown (= 404 on the backend side).
     fn get(&self, account: AccountNumber, id: DeviceId) -> BoxFut<Result<Device, rest::Error>>;
 
-    /// Liste tous les devices du compte. Côté local, contient au plus
-    /// l'unique device bootstrappé (= POC single-device par identité).
+    /// Lists all devices on the account. On the local side, contains
+    /// at most the single bootstrapped device (= single-device POC
+    /// per identity).
     fn list(&self, account: AccountNumber) -> BoxFut<Result<Vec<Device>, rest::Error>>;
 
-    /// Supprime un device par son id. Idempotent : un id déjà absent
-    /// retourne `Ok(())`.
+    /// Removes a device by its id. Idempotent: an already-absent id
+    /// returns `Ok(())`.
     fn remove(&self, account: AccountNumber, id: DeviceId) -> BoxFut<Result<(), rest::Error>>;
 
-    /// Rotation de la pubkey WireGuard d'un device existant. Retourne
-    /// les `AssociatedAddresses` du device — qui DOIVENT rester
-    /// **identiques** à celles initialement allouées au `create`
-    /// (anti-régression : si on re-derivait depuis la nouvelle pubkey,
-    /// le tunnel exit Warren rejetterait le client = mismatch IP).
+    /// Rotation of the WireGuard pubkey of an existing device. Returns
+    /// the `AssociatedAddresses` of the device — which MUST remain
+    /// **identical** to those initially allocated at `create`
+    /// (anti-regression: if we re-derived from the new pubkey,
+    /// the Warren exit tunnel would reject the client = IP mismatch).
     fn replace_wg_key(
         &self,
         account: AccountNumber,
@@ -73,8 +75,8 @@ pub trait WarrenDeviceBackend: Send + Sync {
     ) -> BoxFut<Result<AssociatedAddresses, rest::Error>>;
 }
 
-/// Wrap fin de l'`DevicesProxy` Mullvad. Forward direct, comportement
-/// strictement identique au path historique pré-Warren-fork.
+/// Thin wrap of the Mullvad `DevicesProxy`. Direct forward, behavior
+/// strictly identical to the pre-Warren-fork legacy path.
 #[derive(Clone)]
 pub struct RemoteDeviceBackend {
     proxy: DevicesProxy,
@@ -123,35 +125,36 @@ impl WarrenDeviceBackend for RemoteDeviceBackend {
     }
 }
 
-/// Entry interne du HashMap `LocalDeviceBackend`. Stocke le `Device`
-/// public (renvoyé par `create`/`get`/`list`) et les `AssociatedAddresses`
-/// allouées (= persistantes pour la durée de vie du device, indépendantes
-/// de la pubkey wg qui peut tourner via `replace_wg_key`).
+/// Internal entry of the `LocalDeviceBackend` HashMap. Stores the
+/// public `Device` (returned by `create`/`get`/`list`) and the
+/// `AssociatedAddresses` allocated (= persistent for the device
+/// lifetime, independent of the wg pubkey which can rotate via
+/// `replace_wg_key`).
 #[derive(Debug, Clone)]
 struct LocalDeviceEntry {
     device: Device,
     addresses: AssociatedAddresses,
 }
 
-/// Backend POC qui maintient un shadow `HashMap<DeviceId, LocalDeviceEntry>`
-/// en mémoire. Ne touche **jamais** au `device.json` : c'est le
-/// [`super::DeviceCacher`] qui possède le fichier (cf. recon C.2 § Q8).
+/// POC backend that maintains a shadow `HashMap<DeviceId, LocalDeviceEntry>`
+/// in memory. **Never** touches `device.json`: the
+/// [`super::DeviceCacher`] owns the file (see recon C.2 § Q8).
 ///
-/// Le HashMap est seedé depuis [`PrivateDeviceState`] au boot via
-/// [`Self::from_state`] pour que `list` retourne immédiatement le device
-/// bootstrappé en mode local. Les mutations (`create`/`remove`/
-/// `replace_wg_key`) mettent à jour le HashMap mais le caller reste
-/// responsable de l'écriture disque via `DeviceCacher::write` —
-/// cohérence garantie par la séquence appel-backend → set-cacher dans
-/// [`super::AccountManager`].
+/// The HashMap is seeded from [`PrivateDeviceState`] at boot via
+/// [`Self::from_state`] so that `list` immediately returns the
+/// device bootstrapped in local mode. Mutations (`create`/`remove`/
+/// `replace_wg_key`) update the HashMap but the caller remains
+/// responsible for disk writes via `DeviceCacher::write` —
+/// consistency is guaranteed by the call-backend -> set-cacher
+/// sequence in [`super::AccountManager`].
 #[derive(Clone)]
 pub struct LocalDeviceBackend {
     inner: Arc<Mutex<HashMap<DeviceId, LocalDeviceEntry>>>,
 }
 
 impl LocalDeviceBackend {
-    /// Construit un backend vide (= aucun device connu). Utile pour
-    /// les tests d'opérations qui n'ont pas besoin de seed.
+    /// Builds an empty backend (= no known device). Useful for
+    /// operation tests that do not need a seed.
     #[must_use]
     pub fn empty() -> Self {
         Self {
@@ -159,10 +162,10 @@ impl LocalDeviceBackend {
         }
     }
 
-    /// Construit un backend dont le HashMap est seedé depuis l'état
-    /// fourni — typiquement `PrivateDeviceState` lu par `DeviceCacher`
-    /// au boot. Si l'état est `LoggedIn`, l'unique device est inséré.
-    /// Sinon (LoggedOut/Revoked), le HashMap démarre vide.
+    /// Builds a backend whose HashMap is seeded from the provided
+    /// state — typically `PrivateDeviceState` read by `DeviceCacher`
+    /// at boot. If the state is `LoggedIn`, the single device is inserted.
+    /// Otherwise (LoggedOut/Revoked), the HashMap starts empty.
     #[must_use]
     pub fn from_state(state: &PrivateDeviceState) -> Self {
         let backend = Self::empty();
@@ -188,8 +191,8 @@ impl LocalDeviceBackend {
     }
 }
 
-/// Dérive un `DeviceId` POC stable à partir de la pubkey wg (= 32 bytes).
-/// Préfixé `warren-local-` pour distinguer des UUID Mullvad.
+/// Derives a stable POC `DeviceId` from the wg pubkey (= 32 bytes).
+/// Prefixed `warren-local-` to distinguish from Mullvad UUIDs.
 fn derive_device_id(pubkey: &WgPublicKey) -> DeviceId {
     let bytes = pubkey.as_bytes();
     let hex_short = bytes[..8]
@@ -202,11 +205,11 @@ fn derive_device_id(pubkey: &WgPublicKey) -> DeviceId {
     format!("warren-local-{hex_short}")
 }
 
-/// Dérive un `AssociatedAddresses` POC depuis les bytes de la pubkey
-/// wg pour éviter les collisions IP triviales entre clients sur un
-/// même exit. Plages :
-/// - IPv4 dans `10.64.0.0/10` (compat Mullvad).
-/// - IPv6 dans `fc00:bbbb::/32` (ULA arbitraire POC).
+/// Derives a POC `AssociatedAddresses` from the wg pubkey bytes
+/// to avoid trivial IP collisions between clients on the
+/// same exit. Ranges:
+/// - IPv4 in `10.64.0.0/10` (Mullvad-compatible).
+/// - IPv6 in `fc00:bbbb::/32` (arbitrary POC ULA).
 fn derive_addresses(pubkey: &WgPublicKey) -> AssociatedAddresses {
     let bytes = pubkey.as_bytes();
     let v4_str = format!("10.64.{}.{}/32", bytes[0], bytes[1].max(1));
@@ -237,10 +240,10 @@ impl WarrenDeviceBackend for LocalDeviceBackend {
                 .lock()
                 .expect("poisoned mutex (single-thread Tokio in tests)");
 
-            // Idempotence : si une entry existe déjà pour ce id (=
-            // même pubkey wg), retourner le device existant. Le caller
-            // appelle parfois `create` plusieurs fois lors d'un re-login
-            // après logout volontaire.
+            // Idempotence: if an entry already exists for this id
+            // (= same wg pubkey), return the existing device. The
+            // caller sometimes calls `create` multiple times during a
+            // re-login after deliberate logout.
             if let Some(entry) = guard.get(&id) {
                 return Ok((entry.device.clone(), entry.addresses.clone()));
             }
@@ -295,8 +298,8 @@ impl WarrenDeviceBackend for LocalDeviceBackend {
         let inner = self.inner.clone();
         Box::pin(async move {
             let mut guard = inner.lock().expect("poisoned mutex");
-            // Idempotent : `remove` d'un id déjà absent retourne Ok.
-            // Cohérent avec sémantique gRPC `RemoveDevice` côté UI.
+            // Idempotent: `remove` of an already-absent id returns Ok.
+            // Consistent with the gRPC `RemoveDevice` semantics on the UI side.
             guard.remove(&id);
             Ok(())
         })
@@ -317,42 +320,42 @@ impl WarrenDeviceBackend for LocalDeviceBackend {
                     mullvad_api::DEVICE_NOT_FOUND.to_owned(),
                 )
             })?;
-            // **Régression critique** (cf. recon C.2 § 6) : ne JAMAIS
-            // re-dériver les addresses depuis la nouvelle pubkey wg.
-            // L'exit Warren a alloué une IP de tunnel pour cette
-            // identité au `create` initial — la rotation de clé wg ne
-            // doit pas changer l'IP, sinon le tunnel devient inutilisable.
+            // **Critical regression** (see recon C.2 § 6): NEVER
+            // re-derive the addresses from the new wg pubkey.
+            // The Warren exit allocated a tunnel IP for this
+            // identity at the initial `create` — wg key rotation must
+            // not change the IP, otherwise the tunnel becomes unusable.
             entry.device.pubkey = pubkey;
             Ok(entry.addresses.clone())
         })
     }
 }
 
-/// Backend Warren-Remote — Phase G.3.b — implémente
-/// [`WarrenDeviceBackend`] via le client `warren-api-client` qui parle
-/// au serveur warren-api.
+/// Warren-Remote backend — Phase G.3.b — implements
+/// [`WarrenDeviceBackend`] via the `warren-api-client` client that
+/// talks to the warren-api server.
 ///
-/// Activé en mode `warren_mode = true && warren_local_account = false`
-/// (= 3e branche du dispatch dans `device/mod.rs`).
+/// Enabled in `warren_mode = true && warren_local_account = false` mode
+/// (= 3rd branch of the dispatch in `device/mod.rs`).
 ///
-/// Mapping wire :
-/// - [`warren_api_client::Device`] ↔ [`mullvad_types::device::Device`]
+/// Wire mapping:
+/// - [`warren_api_client::Device`] <-> [`mullvad_types::device::Device`]
 ///   via [`map_device_response`].
-/// - [`WgPublicKey`] ↔ `wg_pubkey_hex` (32 bytes ↔ 64 chars hex).
-/// - [`AssociatedAddresses`] : warren-api ne les retourne pas en MVP,
-///   on émet un stub fixe ([`stub_associated_addresses`]). Raffinement
-///   M5+ : warren-api allouera de vraies IPs (10.66.x.y / fc00:bbbb::x).
-/// - `replace_wg_key` : non supporté (warren-api n'expose pas encore
-///   l'endpoint rotate). Retourne `rest::Error::Aborted` jusqu'à ce
-///   que G.3.b+ ajoute `PUT /v1/devices/{id}` côté serveur.
+/// - [`WgPublicKey`] <-> `wg_pubkey_hex` (32 bytes <-> 64 hex chars).
+/// - [`AssociatedAddresses`]: warren-api does not return them in MVP,
+///   we emit a fixed stub ([`stub_associated_addresses`]). M5+
+///   refinement: warren-api will allocate real IPs (10.66.x.y / fc00:bbbb::x).
+/// - `replace_wg_key`: not supported (warren-api does not yet expose
+///   the rotate endpoint). Returns `rest::Error::Aborted` until
+///   G.3.b+ adds `PUT /v1/devices/{id}` server-side.
 #[derive(Clone)]
 pub struct WarrenRemoteDeviceBackend {
     client: Arc<warren_api_client::WarrenApiClient>,
 }
 
 impl WarrenRemoteDeviceBackend {
-    /// Construit un backend depuis un `WarrenApiClient` configuré au
-    /// boot (= identité Warren signataire + URL warren-api).
+    /// Builds a backend from a `WarrenApiClient` configured at
+    /// boot (= Warren signer identity + warren-api URL).
     #[must_use]
     pub fn new(client: warren_api_client::WarrenApiClient) -> Self {
         Self {
@@ -424,11 +427,11 @@ impl WarrenDeviceBackend for WarrenRemoteDeviceBackend {
         id: DeviceId,
         pubkey: WgPublicKey,
     ) -> BoxFut<Result<AssociatedAddresses, rest::Error>> {
-        // Phase G.5.b : `PUT /v1/devices/{id}` signé. L'`id` est
-        // préservé côté serveur (cf. trait contract : la rotation
-        // wg ne change PAS l'identifiant). Le backend retourne les
-        // mêmes stub addresses (= warren-api ne fournit pas
-        // d'allocation IP — cf. `stub_associated_addresses` doc).
+        // Phase G.5.b: signed `PUT /v1/devices/{id}`. The `id` is
+        // preserved server-side (see trait contract: wg rotation
+        // does NOT change the identifier). The backend returns the
+        // same stub addresses (= warren-api does not provide
+        // IP allocation — see `stub_associated_addresses` doc).
         let client = self.client.clone();
         let new_wg_pubkey_hex = hex::encode(pubkey.as_bytes());
         Box::pin(async move {
@@ -441,12 +444,12 @@ impl WarrenDeviceBackend for WarrenRemoteDeviceBackend {
     }
 }
 
-/// Mappe une `warren_api_client::Device` (wire JSON) vers
+/// Maps a `warren_api_client::Device` (wire JSON) to
 /// [`mullvad_types::device::Device`].
 ///
-/// Erreurs possibles :
-/// - `wg_pubkey_hex` invalide (pas 32 bytes après decode) → `Aborted`.
-/// - `created_at` overflow `i64` (= année > 9 milliards) → `Aborted`.
+/// Possible errors:
+/// - `wg_pubkey_hex` invalid (not 32 bytes after decode) -> `Aborted`.
+/// - `created_at` overflows `i64` (= year > 9 billion) -> `Aborted`.
 fn map_device_response(d: warren_api_client::Device) -> Result<Device, rest::Error> {
     let wg_bytes = hex::decode(&d.wg_pubkey_hex).map_err(|_| rest::Error::Aborted)?;
     let wg_array: [u8; 32] = wg_bytes.try_into().map_err(|_| rest::Error::Aborted)?;
@@ -462,12 +465,13 @@ fn map_device_response(d: warren_api_client::Device) -> Result<Device, rest::Err
     })
 }
 
-/// Stub `AssociatedAddresses` — warren-api ne fournit pas d'allocation
-/// IP en MVP. Adresses fixes Mullvad-style pour que `PrivateDevice::try_from_device`
-/// côté caller puisse construire un device valide. En mode warren-mode,
-/// le tunnel data plane passe par `warren-iroh-tunnel` qui n'utilise
-/// PAS ces IPs WireGuard — donc l'absence d'allocation réelle n'est
-/// pas un blocker pour la chaîne MVP.
+/// Stub `AssociatedAddresses` — warren-api does not provide IP
+/// allocation in MVP. Fixed Mullvad-style addresses so that
+/// `PrivateDevice::try_from_device` on the caller side can build
+/// a valid device. In warren-mode, the tunnel data plane goes
+/// through `warren-iroh-tunnel` which does NOT use these WireGuard
+/// IPs — so the absence of real allocation is not a blocker for
+/// the MVP chain.
 fn stub_associated_addresses() -> AssociatedAddresses {
     AssociatedAddresses {
         ipv4_address: "10.66.0.1/32".parse().expect("valid v4 stub"),
@@ -486,34 +490,34 @@ mod tests {
 
     #[tokio::test]
     async fn local_create_returns_device_with_input_wg_pubkey() {
-        // Régression critique : le `Device.pubkey` retourné par
-        // `create` DOIT être la pubkey wg fournie en entrée, sinon le
-        // path `try_from_device` côté caller (PrivateDevice::try_from_device,
-        // device/mod.rs:228) échoue avec `Error::InvalidDevice` qui
-        // crash le flow login.
+        // Critical regression: the `Device.pubkey` returned by
+        // `create` MUST be the wg pubkey provided as input, otherwise
+        // the `try_from_device` path on the caller side
+        // (PrivateDevice::try_from_device, device/mod.rs:228) fails
+        // with `Error::InvalidDevice` which crashes the login flow.
         let backend = LocalDeviceBackend::empty();
         let pubkey = fixed_wg_pubkey(7);
 
         let (device, _addrs) = backend
             .create("acc".to_owned(), pubkey.clone())
             .await
-            .expect("create doit succeed en local");
+            .expect("create must succeed locally");
 
         assert_eq!(
             device.pubkey.as_bytes(),
             pubkey.as_bytes(),
-            "Device.pubkey DOIT matcher la pubkey wg input (sinon try_from_device échoue)"
+            "Device.pubkey MUST match the input wg pubkey (otherwise try_from_device fails)"
         );
     }
 
     #[tokio::test]
     async fn local_create_idempotent_for_same_wg_pubkey() {
-        // Régression critique : un re-login (= même mnémonique → même
-        // wg privkey régénérée la même façon ? non, wg privkey est
-        // random à chaque generate_for_account ; mais si le caller
-        // appelle deux fois `create` avec la même pubkey, on ne doit
-        // pas créer deux entries divergentes). Test indirect de
-        // l'idempotence du HashMap par pubkey.
+        // Critical regression: a re-login (= same mnemonic -> same
+        // wg privkey regenerated the same way? no, wg privkey is
+        // random on each generate_for_account; but if the caller
+        // calls `create` twice with the same pubkey, we must not
+        // create two divergent entries). Indirect test of
+        // HashMap idempotence by pubkey.
         let backend = LocalDeviceBackend::empty();
         let pubkey = fixed_wg_pubkey(11);
 
@@ -528,21 +532,21 @@ mod tests {
 
         assert_eq!(
             d1.id, d2.id,
-            "create idempotent doit retourner le même DeviceId pour la même pubkey wg"
+            "idempotent create must return the same DeviceId for the same wg pubkey"
         );
         assert_eq!(
             a1.ipv4_address, a2.ipv4_address,
-            "les addresses ne doivent pas changer entre deux create idempotents"
+            "addresses must not change between two idempotent creates"
         );
     }
 
     #[tokio::test]
     async fn local_list_returns_seeded_device_after_init_from_state() {
-        // Régression critique : si le seed depuis `PrivateDeviceState`
-        // ne fonctionne pas, `mullvad-cli device list` afficherait 0
-        // devices alors que le user vient de bootstrapper sa mnémonique
-        // = panne UX. Le test simule ce path en construisant un état
-        // LoggedIn et asserte que `list` le voit bien.
+        // Critical regression: if the seed from `PrivateDeviceState`
+        // does not work, `mullvad-cli device list` would display 0
+        // devices while the user just bootstrapped their mnemonic
+        // = UX breakage. The test simulates this path by building a
+        // LoggedIn state and asserts that `list` sees it.
         let pubkey = fixed_wg_pubkey(13);
         let priv_key = WgPrivateKey::from([13u8; 32]);
         let addresses = derive_addresses(&pubkey);
@@ -565,15 +569,15 @@ mod tests {
         let backend = LocalDeviceBackend::from_state(&state);
         let devices = backend.list("ignored".to_owned()).await.unwrap();
 
-        assert_eq!(devices.len(), 1, "list doit voir le device seedé");
+        assert_eq!(devices.len(), 1, "list must see the seeded device");
         assert_eq!(devices[0].id, "warren-local-abcdef00");
     }
 
     #[tokio::test]
     async fn local_get_returns_not_found_after_remove() {
-        // Régression critique : si `remove` était no-op, le state
-        // machine ne déclencherait jamais `revoke_device` après un
-        // logout = bug grave (user reste "logged in" perpétuellement).
+        // Critical regression: if `remove` were a no-op, the state
+        // machine would never trigger `revoke_device` after a
+        // logout = serious bug (user stays "logged in" perpetually).
         let backend = LocalDeviceBackend::empty();
         let pubkey = fixed_wg_pubkey(17);
         let (device, _) = backend.create("acc".to_owned(), pubkey).await.unwrap();
@@ -589,18 +593,18 @@ mod tests {
                 result,
                 Err(rest::Error::ApiError(rest::StatusCode::NOT_FOUND, _))
             ),
-            "get après remove doit retourner NOT_FOUND, got {result:?}"
+            "get after remove must return NOT_FOUND, got {result:?}"
         );
     }
 
     #[tokio::test]
     async fn local_replace_wg_key_changes_pubkey_but_preserves_addresses() {
-        // Régression critique D2/C.2 : si `replace_wg_key` re-dérivait
-        // les addresses depuis la nouvelle pubkey, le tunnel exit
-        // Warren rejetterait le client (mismatch IP côté allocation
-        // exit). C'est exactement le bug invisible que ce test
-        // shielde — sans assertion `addresses_before == addresses_after`,
-        // la régression passerait inaperçue jusqu'au déploiement prod.
+        // Critical regression D2/C.2: if `replace_wg_key` re-derived
+        // the addresses from the new pubkey, the Warren exit tunnel
+        // would reject the client (IP mismatch on the exit allocation
+        // side). This is exactly the invisible bug this test
+        // shields — without the `addresses_before == addresses_after`
+        // assertion, the regression would go unnoticed until prod deployment.
         let backend = LocalDeviceBackend::empty();
         let pubkey_initial = fixed_wg_pubkey(19);
         let (device, addresses_before) = backend
@@ -616,37 +620,37 @@ mod tests {
 
         assert_eq!(
             addresses_before.ipv4_address, addresses_after.ipv4_address,
-            "replace_wg_key DOIT préserver l'ipv4 (sinon mismatch IP exit)"
+            "replace_wg_key MUST preserve ipv4 (otherwise exit IP mismatch)"
         );
         assert_eq!(
             addresses_before.ipv6_address, addresses_after.ipv6_address,
-            "replace_wg_key DOIT préserver l'ipv6"
+            "replace_wg_key MUST preserve ipv6"
         );
 
-        // Mais la pubkey du device doit avoir bien tourné :
+        // But the device pubkey must have rotated:
         let device_after = backend.get("acc".to_owned(), device.id).await.unwrap();
         assert_eq!(
             device_after.pubkey.as_bytes(),
             pubkey_new.as_bytes(),
-            "Device.pubkey doit refléter la nouvelle pubkey wg post-rotate"
+            "Device.pubkey must reflect the new wg pubkey post-rotate"
         );
         assert_ne!(
             device_after.pubkey.as_bytes(),
             pubkey_initial.as_bytes(),
-            "Device.pubkey ne doit PAS être l'ancienne pubkey"
+            "Device.pubkey must NOT be the old pubkey"
         );
     }
 
     // ===================================================================
     // WarrenRemoteDeviceBackend — Phase G.3.b tests E2E.
-    // Cf. account_backend::tests pour le pattern spawn_warren_api.
+    // See account_backend::tests for the spawn_warren_api pattern.
     // ===================================================================
 
     use ed25519_dalek::SigningKey;
     use std::sync::Arc as TestArc;
     use warren_api_client::WarrenApiClient;
 
-    /// Wg_pubkey hex 64 chars dérivée d'une seed fixe.
+    /// 64-char hex wg_pubkey derived from a fixed seed.
     fn fixed_wg_pubkey_hex(seed: u8) -> String {
         hex::encode(WgPrivateKey::from([seed; 32]).public_key().as_bytes())
     }
@@ -666,10 +670,10 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_device_create_inserts_device_and_returns_stub_addresses() {
-        // Cas nominal : create envoie POST /v1/devices signé, le serveur
-        // upsert le device, le client le mappe en mullvad_types::Device.
-        // Les addresses retournées sont les stubs (warren-api ne les
-        // alloue pas en MVP).
+        // Nominal case: create sends signed POST /v1/devices, the server
+        // upserts the device, the client maps it to mullvad_types::Device.
+        // The returned addresses are stubs (warren-api does not allocate
+        // them in MVP).
         let (api_url, state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[70u8; 32]);
         let owner_pubkey_hex = hex::encode(key.verifying_key().as_bytes());
@@ -682,19 +686,19 @@ mod tests {
             .await
             .expect("create OK");
 
-        // Le pubkey wg du Device retourné == celui envoyé.
+        // The wg pubkey of the returned Device == the one sent.
         assert_eq!(device.pubkey.as_bytes(), wg_pubkey.as_bytes());
-        // ID 32 hex chars (cf. compute_device_id côté warren-api).
+        // ID 32 hex chars (see compute_device_id on warren-api side).
         assert_eq!(device.id.len(), 32);
-        // Le serveur a bien le device.
+        // The server does have the device.
         let server_devices = state.devices.list_for_owner(&owner_pubkey_hex);
         assert_eq!(server_devices.len(), 1);
         assert_eq!(server_devices[0].id, device.id);
-        // Stub addresses (à raffiner M5+).
+        // Stub addresses (to be refined M5+).
         assert_eq!(
             addresses.ipv4_address.to_string(),
             "10.66.0.1/32",
-            "stub v4 attendu en MVP"
+            "expected v4 stub in MVP"
         );
     }
 
@@ -707,8 +711,8 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        // Pré-popule via le store warren-api directement (= équivalent
-        // d'un `create` préalable, raccourci test).
+        // Pre-populates via the warren-api store directly (= equivalent
+        // to a prior `create`, test shortcut).
         let server_device =
             state
                 .devices
@@ -725,9 +729,9 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_device_get_returns_apierror_404_for_unknown_id() {
-        // Régression critique : si on perd le 404 dans le mapping, le
-        // caller (`AccountManager::handle_get_device`) ne peut pas
-        // distinguer "device supprimé/révoqué" d'une erreur transport.
+        // Critical regression: if we lose the 404 in the mapping, the
+        // caller (`AccountManager::handle_get_device`) cannot
+        // distinguish "device removed/revoked" from a transport error.
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[74u8; 32]);
         let client = WarrenApiClient::new(api_url, key);
@@ -748,8 +752,8 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_device_list_returns_only_owners_devices() {
-        // Anti-cross-tenant : list signé par A ne contient que les
-        // devices de A (assuré par le serveur via identity middleware).
+        // Anti-cross-tenant: list signed by A contains only A's
+        // devices (ensured by the server via identity middleware).
         let (api_url, state) = spawn_warren_api().await;
         let key_a = SigningKey::from_bytes(&[75u8; 32]);
         let pubkey_a = hex::encode(key_a.verifying_key().as_bytes());
@@ -769,7 +773,7 @@ mod tests {
         let client_a = WarrenApiClient::new(api_url, key_a);
         let backend_a = WarrenRemoteDeviceBackend::new(client_a);
         let list = backend_a.list("acc".to_owned()).await.expect("list OK");
-        assert_eq!(list.len(), 1, "A doit voir seulement ses propres devices");
+        assert_eq!(list.len(), 1, "A must see only its own devices");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -795,7 +799,7 @@ mod tests {
 
         assert!(
             state.devices.list_for_owner(&owner_pubkey_hex).is_empty(),
-            "device doit avoir disparu du store côté serveur"
+            "device must have disappeared from the server-side store"
         );
     }
 
@@ -821,9 +825,9 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_device_replace_wg_key_rotates_and_preserves_id() {
-        // Phase G.5.b : la rotation wg via warren-api préserve le
-        // device_id côté serveur (= contrat Mullvad), et le backend
-        // retourne les addresses (stub MVP).
+        // Phase G.5.b: wg rotation via warren-api preserves the
+        // server-side device_id (= Mullvad contract), and the backend
+        // returns the addresses (MVP stub).
         let (api_url, state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[82u8; 32]);
         let owner_pubkey_hex = hex::encode(key.verifying_key().as_bytes());
@@ -851,8 +855,8 @@ mod tests {
         // Stub addresses (MVP).
         assert_eq!(addresses.ipv4_address.to_string(), "10.66.0.1/32");
 
-        // Le device côté serveur a bien la nouvelle wg_pubkey, et l'id
-        // est préservé.
+        // The server-side device has the new wg_pubkey, and the id
+        // is preserved.
         let updated = state
             .devices
             .get_for_owner(&owner_pubkey_hex, &server_device.id)
@@ -863,9 +867,9 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_device_replace_wg_key_returns_apierror_404_unknown_id() {
-        // Régression : si l'id n'existe pas, le mapping doit propager
-        // 404 (= caller peut détecter "device révoqué" et déclencher
-        // re-login).
+        // Regression: if the id does not exist, the mapping must
+        // propagate 404 (= caller can detect "device revoked" and
+        // trigger re-login).
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[85u8; 32]);
         let client = WarrenApiClient::new(api_url, key);

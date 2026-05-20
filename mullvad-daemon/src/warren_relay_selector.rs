@@ -262,9 +262,9 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_returns_empty_list_when_file_absent() {
-        // Au premier boot, le fichier n'existe pas → wrapper avec
-        // liste vide, pas d'erreur. Permet au daemon de démarrer
-        // sans nécessairement avoir une RelayList Warren.
+        // On first boot, the file does not exist -> wrapper with
+        // empty list, no error. Allows the daemon to start
+        // without necessarily having a Warren RelayList.
         let dir = isolated_tempdir();
         let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir)
             .expect("must succeed without file");
@@ -277,18 +277,18 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_parses_v2_signed_json_emitted_by_warren_api() {
-        // F3 fork audit : warren-api `/v1/exits` retourne un format
-        // **v2 signé** (`SignedRelayList` avec server_pubkey + signature
-        // Ed25519). Le daemon doit le parser et vérifier la signature
-        // — pas accepter du v1 non-signé. Format figé : si serde change
-        // l'ordre des fields v2, ce test (et toute installation
-        // existante) casse → rotation `/v3` obligatoire.
+        // F3 fork audit: warren-api `/v1/exits` returns a
+        // **signed v2** format (`SignedRelayList` with server_pubkey + Ed25519
+        // signature). The daemon must parse it and verify the signature
+        // — not accept unsigned v1. Frozen format: if serde changes
+        // the order of v2 fields, this test (and any existing
+        // installation) breaks -> `/v3` rotation mandatory.
         use ed25519_dalek::SigningKey;
         use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
 
         let dir = isolated_tempdir();
 
-        // Server signing key fixe pour le test (déterministe).
+        // Fixed server signing key for the test (deterministic).
         let server_key = SigningKey::from_bytes(&[0xab; 32]);
         let relay_pubkey = WarrenPubkey::from_bytes([5u8; 32]);
         let relay_pubkey_hex = hex::encode(relay_pubkey.as_bytes());
@@ -319,11 +319,11 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_rejects_v2_with_tampered_relay_signature() {
-        // Anti-MITM : un attaquant qui sert sa propre liste signée OU
-        // qui modifie un relay sans re-signer doit voir le daemon
-        // refuser de charger (= falls back vers liste vide / erreur,
-        // tunnel reste impossible plutôt que de connecter à un
-        // attaquant).
+        // Anti-MITM: an attacker who serves their own signed list OR
+        // modifies a relay without re-signing must see the daemon
+        // refuse to load (= falls back to empty list / error,
+        // tunnel remains impossible rather than connecting to an
+        // attacker).
         use ed25519_dalek::SigningKey;
         use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
 
@@ -343,8 +343,8 @@ mod tests {
             &server_key,
             1_700_000_000,
         );
-        // Tamper le port (= MITM qui re-route vers son relais) sans
-        // re-signer.
+        // Tamper the port (= MITM re-routing to its relay) without
+        // re-signing.
         signed.relays[0].ip_addrs = vec!["198.51.100.1:9999".to_owned()];
         let json = serde_json::to_string(&signed).expect("serialize tampered");
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write");
@@ -360,9 +360,9 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_rejects_v1_unsigned_legacy_format() {
-        // Anti-rollback : un attaquant qui sert un v1 non-signé doit
-        // être rejeté. v1 a été déprécié (cf. F3 fork audit) et le
-        // daemon doit refuser de l'ingérer (sinon downgrade attack).
+        // Anti-rollback: an attacker serving an unsigned v1 must
+        // be rejected. v1 has been deprecated (see F3 fork audit) and
+        // the daemon must refuse to ingest it (otherwise downgrade attack).
         let dir = isolated_tempdir();
         let pubkey_hex = hex::encode(WarrenPubkey::from_bytes([5u8; 32]).as_bytes());
         let json_v1 = format!(
@@ -381,9 +381,9 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_returns_json_error_on_corrupt_file() {
-        // Si le fichier existe mais contient un JSON invalide, on
-        // remonte une erreur typée plutôt que de silencer (la
-        // corruption silencieuse masquerait un bug).
+        // If the file exists but contains invalid JSON, we
+        // raise a typed error rather than silence it (silent
+        // corruption would mask a bug).
         let dir = isolated_tempdir();
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), "not valid json").expect("write");
 
@@ -393,7 +393,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// Tempdir isolé par test (pid + nanos + counter atomique).
+    /// Tempdir isolated per test (pid + nanos + atomic counter).
     fn isolated_tempdir() -> std::path::PathBuf {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);

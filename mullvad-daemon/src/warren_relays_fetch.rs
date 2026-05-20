@@ -1,16 +1,16 @@
-//! Bootstrap fetcher pour `<cache_dir>/warren-relays.json`.
+//! Bootstrap fetcher for `<cache_dir>/warren-relays.json`.
 //!
-//! Au boot du daemon en mode Warren, on tente un `GET {api_url}/v1/exits`
-//! (endpoint public, cf. `warren-api/src/handlers.rs` § `list_exits`),
-//! et on écrit la réponse brute dans le cache. La vérification de la
-//! signature serveur Ed25519 (format v2) est faite ensuite par
+//! At daemon boot in Warren mode, we attempt a `GET {api_url}/v1/exits`
+//! (public endpoint, see `warren-api/src/handlers.rs` § `list_exits`),
+//! and write the raw response to the cache. The server Ed25519
+//! signature verification (v2 format) is then done by
 //! `DaemonWarrenRelaySelector::load_from_cache_dir`.
 //!
-//! Best-effort : si le fetch échoue (réseau down, DNS, TLS, 5xx, JSON
-//! invalide), on log un warn et on laisse l'ancien cache en place. La
-//! state machine retournera `NoRelayMatch` si aucun cache valide
-//! n'existe, comportement attendu = l'utilisateur n'est pas encore
-//! connectable au réseau Warren.
+//! Best-effort: if the fetch fails (network down, DNS, TLS, 5xx, invalid
+//! JSON), we log a warn and leave the previous cache in place. The
+//! state machine will return `NoRelayMatch` if no valid cache
+//! exists, expected behavior = the user is not yet
+//! connectable to the Warren network.
 
 use std::path::Path;
 use std::time::Duration;
@@ -33,15 +33,15 @@ pub enum Error {
     Io(String, #[source] std::io::Error),
 }
 
-/// Fetch `/v1/exits` depuis `api_url` et écrit la réponse dans
-/// `<cache_dir>/warren-relays.json`. Retourne le nombre d'octets écrits
-/// en cas de succès.
+/// Fetches `/v1/exits` from `api_url` and writes the response to
+/// `<cache_dir>/warren-relays.json`. Returns the number of bytes written
+/// on success.
 ///
-/// Le body est vérifié syntaxiquement (`serde_json::Value`) avant
-/// écriture pour ne pas corrompre un cache valide existant avec une
-/// réponse non-JSON (page d'erreur Caddy, redirect HTML, etc.). La
-/// vérification cryptographique (signature Ed25519 serveur) reste de la
-/// responsabilité du loader aval.
+/// The body is syntactically verified (`serde_json::Value`) before
+/// writing so as not to corrupt an existing valid cache with a
+/// non-JSON response (Caddy error page, HTML redirect, etc.). The
+/// cryptographic verification (server Ed25519 signature) remains the
+/// responsibility of the downstream loader.
 pub async fn fetch_and_cache_relays(api_url: &str, cache_dir: &Path) -> Result<usize, Error> {
     let url = format!("{}/v1/exits", api_url.trim_end_matches('/'));
     let client = reqwest::Client::builder().timeout(FETCH_TIMEOUT).build()?;

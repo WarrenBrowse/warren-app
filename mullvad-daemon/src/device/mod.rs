@@ -44,16 +44,16 @@ pub(crate) use device_backend::{
 };
 pub(crate) use service::{DeviceService, WarrenIdentityService};
 
-/// Phase G.4 — config nécessaire pour instancier les backends Warren-Remote
-/// (= path warren-api). Construite par le caller (`Daemon::start`) au boot
-/// si `warren_mode && !warren_local_account`. `None` = backend Mullvad
-/// upstream (legacy) ou `LocalAccountBackend` (selon `local_account_mode`).
+/// Phase G.4 — config needed to instantiate the Warren-Remote backends
+/// (= warren-api path). Built by the caller (`Daemon::start`) at boot
+/// if `warren_mode && !warren_local_account`. `None` = Mullvad upstream
+/// backend (legacy) or `LocalAccountBackend` (depending on `local_account_mode`).
 ///
-/// Convention :
-/// - `url` : `http(s)://host:port`, sans trailing slash. Tipiquement
-///   `https://api.warrenbrowse.com` en prod ou `http://127.0.0.1:8080`
-///   en dev local. Source : env var `WARREN_API_URL` au boot.
-/// - `signing_key` : identité Warren chargée depuis la mnémonique
+/// Convention:
+/// - `url`: `http(s)://host:port`, without trailing slash. Typically
+///   `https://api.warrenbrowse.com` in prod or `http://127.0.0.1:8080`
+///   in local dev. Source: env var `WARREN_API_URL` at boot.
+/// - `signing_key`: Warren identity loaded from the mnemonic
 ///   (`warren_signer::load_or_create_signing_key`).
 #[derive(Clone)]
 pub(crate) struct WarrenApiConfig {
@@ -179,10 +179,10 @@ impl From<PrivateDeviceState> for DeviceState {
 /// Same as [PrivateDevice] but also contains the associated Warren
 /// pubkey identifier.
 ///
-/// Le field `account_number: AccountNumber` historique a été
-/// remplacé par `pubkey: WarrenPubKey` (newtype hex 64ch validé). Les
-/// anciens device.json (`{"account_number": ...}`) échouent à la
-/// désérialisation et sont wipés (= LoggedOut au boot).
+/// The legacy `account_number: AccountNumber` field has been
+/// replaced by `pubkey: WarrenPubKey` (validated 64ch hex newtype).
+/// Old device.json (`{"account_number": ...}`) fail to deserialize
+/// and are wiped (= LoggedOut at boot).
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
 pub struct PrivateAccountAndDevice {
     pub pubkey: mullvad_types::warren_pubkey::WarrenPubKey,
@@ -198,16 +198,16 @@ impl From<PrivateAccountAndDevice> for WarrenIdentity {
     }
 }
 
-/// Helper interne qui parse un `AccountNumber` (= `String`) reçu
-/// d'une **interface externe** (gRPC client, API serveur, settings
-/// legacy v5) en `WarrenPubKey` (hex 64ch). Si la chaîne n'est pas
-/// une pubkey Warren valide, on log un `warn!` et on retourne un
-/// `WarrenPubKey` zéro (= toutes les requêtes signées avec cette
-/// pubkey échoueront côté serveur, mais le daemon ne crash pas).
+/// Internal helper that parses an `AccountNumber` (= `String`) received
+/// from an **external interface** (gRPC client, server API, legacy v5
+/// settings) into a `WarrenPubKey` (64ch hex). If the string is not
+/// a valid Warren pubkey, we log a `warn!` and return a
+/// zero `WarrenPubKey` (= all requests signed with this
+/// pubkey will fail server-side, but the daemon does not crash).
 ///
-/// Ce helper n'est plus utilisé pour les conversions internes (le
-/// field `PrivateAccountAndDevice.pubkey` est typé directement) ; il
-/// reste pour les inputs externes type-erased.
+/// This helper is no longer used for internal conversions (the
+/// `PrivateAccountAndDevice.pubkey` field is typed directly); it
+/// remains for type-erased external inputs.
 pub(crate) fn account_number_to_warren_pubkey(
     account_number: &str,
 ) -> mullvad_types::warren_pubkey::WarrenPubKey {
@@ -484,34 +484,34 @@ impl AccountManager {
         warren_api_config: Option<WarrenApiConfig>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
-        // `state.pubkey` est typé `WarrenPubKey` ;
-        // `spawn_warren_identity_service` reçoit toujours un
-        // `Option<AccountNumber>` (= String) pour l'initial check
-        // legacy.
+        // `state.pubkey` is typed `WarrenPubKey`;
+        // `spawn_warren_identity_service` still receives an
+        // `Option<AccountNumber>` (= String) for the legacy initial
+        // check.
         let number = data.device().map(|state| state.pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
-        // Aiguillage 3-branches du backend account, prioritaire dans
-        // cet ordre :
-        // 1. `local_account_mode = true` → [`LocalAccountBackend`]
-        //    (POC stateless, no network, depuis mnémonique).
-        // 2. Sinon, `warren_api_config = Some(_)` →
-        //    [`WarrenRemoteAccountBackend`] (parle à warren-api via
-        //    HTTP signé Ed25519).
-        // 3. Sinon → [`RemoteAccountBackend`] (path Mullvad upstream
-        //    historique, parle à api.mullvad.net).
+        // 3-branch dispatch of the account backend, prioritized in
+        // this order:
+        // 1. `local_account_mode = true` -> [`LocalAccountBackend`]
+        //    (POC stateless, no network, from mnemonic).
+        // 2. Otherwise, `warren_api_config = Some(_)` ->
+        //    [`WarrenRemoteAccountBackend`] (talks to warren-api via
+        //    signed HTTP Ed25519).
+        // 3. Otherwise -> [`RemoteAccountBackend`] (legacy Mullvad
+        //    upstream path, talks to api.mullvad.net).
         let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if local_account_mode {
-            // SAFETY: en local mode, `device.json` est garanti
-            // bootstrappé en amont par `warren_device_bootstrap` —
-            // donc `data.device()` est `Some(LoggedIn)` et
-            // `state.pubkey` est la pubkey courante.
+            // SAFETY: in local mode, `device.json` is guaranteed to be
+            // bootstrapped upstream by `warren_device_bootstrap` —
+            // so `data.device()` is `Some(LoggedIn)` and
+            // `state.pubkey` is the current pubkey.
             let pubkey = data
                 .device()
                 .map(|state| state.pubkey.clone())
                 .expect("local_account_mode requires bootstrapped device.json");
             std::sync::Arc::new(LocalAccountBackend::new(pubkey, settings_dir.to_path_buf()))
         } else if let Some(cfg) = warren_api_config.clone() {
-            // Clone de la SigningKey via to_bytes/from_bytes pour
-            // pouvoir réutiliser cfg pour le device_backend en plus.
+            // Clone of the SigningKey via to_bytes/from_bytes so we
+            // can also reuse cfg for the device_backend.
             let key_clone = ed25519_dalek::SigningKey::from_bytes(&cfg.signing_key.to_bytes());
             let client = warren_api_client::WarrenApiClient::new(cfg.url, key_clone);
             std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
@@ -529,8 +529,8 @@ impl AccountManager {
 
         let (cmd_tx, cmd_rx) = mpsc::unbounded();
 
-        // Aiguillage 3-branches du backend device, symétrique à
-        // `account_backend` ci-dessus.
+        // 3-branch dispatch of the device backend, symmetric to
+        // `account_backend` above.
         let device_backend: std::sync::Arc<dyn WarrenDeviceBackend> = if local_account_mode {
             std::sync::Arc::new(LocalDeviceBackend::from_state(&data))
         } else if let Some(cfg) = warren_api_config {
@@ -1463,11 +1463,11 @@ impl TunnelStateChangeHandler {
         }
     }
 
-    /// Combine la décision standard de [`Self::should_check_device_validity`]
-    /// avec un court-circuit en `local_account_mode` qui retourne
-    /// **toujours** `false`. L'ordre `!local && check(...)` est délibéré :
-    /// le court-circuit `&&` empêche `should_check_device_validity` de
-    /// consommer `can_retry` (swap atomique) en mode local.
+    /// Combines the standard decision of [`Self::should_check_device_validity`]
+    /// with a short-circuit in `local_account_mode` that **always**
+    /// returns `false`. The order `!local && check(...)` is deliberate:
+    /// the `&&` short-circuit prevents `should_check_device_validity` from
+    /// consuming `can_retry` (atomic swap) in local mode.
     fn should_trigger_device_check(
         local_account_mode: bool,
         wireguard_retry_attempt: usize,

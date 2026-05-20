@@ -1,39 +1,39 @@
-//! Détection du mode account local Warren via env var au boot du daemon.
+//! Detection of Warren local account mode via env var at daemon boot.
 //!
-//! Quand `WARREN_LOCAL_ACCOUNT=1`, le daemon n'appelle plus `api.mullvad.net`
-//! pour le retry-loop initial `get_data()` ni pour la validation device
-//! déclenchée par la state machine après 3 retries WG. Le `device.json`
-//! présent localement (créé par `warren_device_bootstrap` à partir de la
-//! mnémonique) est considéré valide tel quel.
+//! When `WARREN_LOCAL_ACCOUNT=1`, the daemon no longer calls `api.mullvad.net`
+//! for the initial `get_data()` retry-loop nor for the device validation
+//! triggered by the state machine after 3 WG retries. The locally-present
+//! `device.json` (created by `warren_device_bootstrap` from the
+//! mnemonic) is considered valid as-is.
 //!
-//! Module sœur de [`crate::warren_mode`] : même convention de parsing
-//! truthy (`1`, `true`, `yes`, `on`, casse-insensitive). À remplacer par
-//! un setting persistant `Settings::warren_local_account: bool` exposé
-//! via gRPC + GUI/CLI quand la migration `AccountsProxy` Mullvad →
-//! `warren-api` proxy sera livrée — d'ici-là, c'est un POC switch
-//! pragmatique pour permettre le bench end-to-end du fork sans backend
-//! Mullvad.
+//! Sister module of [`crate::warren_mode`]: same truthy parsing convention
+//! (`1`, `true`, `yes`, `on`, case-insensitive). To be replaced by
+//! a persistent `Settings::warren_local_account: bool` setting exposed
+//! via gRPC + GUI/CLI when the `AccountsProxy` Mullvad ->
+//! `warren-api` proxy migration is delivered — until then, it's a
+//! pragmatic POC switch to allow end-to-end benchmarking of the fork
+//! without a Mullvad backend.
 
-/// Nom de l'env var lue au boot. Convention figée pour la durée du
-/// POC ; renommer impose une migration côté docs/scripts/runbooks.
+/// Name of the env var read at boot. Fixed convention for the duration
+/// of the POC; renaming requires a docs/scripts/runbooks migration.
 pub const ENV_VAR_NAME: &str = "WARREN_LOCAL_ACCOUNT";
 
-/// `true` si le mode account local Warren est activé pour ce process daemon.
+/// `true` if Warren local account mode is enabled for this daemon process.
 ///
-/// Activé par `WARREN_LOCAL_ACCOUNT=1` (ou `true`, `yes`, `on`, insensitive
-/// à la casse). Toute autre valeur ou absence = comportement Mullvad
-/// standard (appels `api.mullvad.net` pour `get_data` et `validate_device`).
+/// Enabled by `WARREN_LOCAL_ACCOUNT=1` (or `true`, `yes`, `on`,
+/// case-insensitive). Any other value or absence = standard Mullvad
+/// behavior (`api.mullvad.net` calls for `get_data` and `validate_device`).
 ///
-/// **Phase E** : voir [`resolve`] pour la combinaison env + Settings.
+/// **Phase E**: see [`resolve`] for the env + Settings combination.
 #[must_use]
 pub fn is_enabled() -> bool {
     parse_env(std::env::var(ENV_VAR_NAME).ok().as_deref())
 }
 
-/// Phase E — résout le mode account local effectif depuis l'env var POC
-/// combinée au flag persistant `Settings::warren_local_account`. L'env
-/// var, si setée, **prend précédence**. Cf. doc
-/// [`crate::warren_mode::resolve`] pour le rationale de cette préséance.
+/// Phase E — resolves the effective local account mode from the POC env var
+/// combined with the persistent `Settings::warren_local_account` flag. The env
+/// var, if set, **takes precedence**. See doc
+/// [`crate::warren_mode::resolve`] for the rationale of this precedence.
 #[must_use]
 pub fn resolve(settings_warren_local_account: bool) -> bool {
     match std::env::var(ENV_VAR_NAME).ok().as_deref() {
@@ -58,19 +58,19 @@ mod tests {
 
     #[test]
     fn parse_env_returns_false_when_unset() {
-        // Le default doit être false pour que les builds non-Warren
-        // gardent le comportement historique (appels api.mullvad.net).
-        // Si on régressait à `true` par défaut, tout le path account
-        // remote serait court-circuité silencieusement = breaking.
+        // The default must be false so that non-Warren builds
+        // keep the legacy behavior (api.mullvad.net calls).
+        // If we regressed to `true` by default, the whole remote
+        // account path would be silently short-circuited = breaking.
         assert!(!parse_env(None));
     }
 
     #[test]
     fn parse_env_accepts_truthy_values() {
-        // Couvre les variantes que les utilisateurs vont taper, y
-        // compris casse + whitespace. Si l'une casse (ex. `TRUE`
-        // rejeté), le user voit un mode qui ne s'active pas — bug
-        // silencieux côté UX.
+        // Covers the variants users will type, including
+        // case + whitespace. If one breaks (e.g. `TRUE`
+        // rejected), the user sees a mode that does not activate —
+        // silent UX bug.
         for v in ["1", "true", "yes", "on", "TRUE", "Yes", " on "] {
             assert!(parse_env(Some(v)), "should accept {v:?}");
         }
@@ -78,19 +78,19 @@ mod tests {
 
     #[test]
     fn parse_env_rejects_falsy_or_unknown_values() {
-        // Régression critique : une mauvaise valeur (ex. `warren`,
-        // `account`, ou une coquille `1.0`) ne doit JAMAIS activer
-        // le mode local. Sinon le daemon zappe les appels API en
-        // pensant être en mode local alors qu'il ne l'est pas.
+        // Critical regression: a bad value (e.g. `warren`,
+        // `account`, or a typo `1.0`) must NEVER enable
+        // local mode. Otherwise the daemon skips API calls thinking
+        // it's in local mode when it is not.
         for v in ["0", "false", "no", "off", "", "warren", "account"] {
             assert!(!parse_env(Some(v)), "should reject {v:?}");
         }
     }
 
-    /// Phase E : `resolve` retourne la valeur Settings quand l'env
-    /// var est absente (cas prod normal). Régression : si on lisait
-    /// toujours `false` (= ignorer Settings), un user qui a togglé
-    /// le mode via UI/CLI ne le verrait jamais activé.
+    /// Phase E: `resolve` returns the Settings value when the env
+    /// var is absent (normal prod case). Regression: if we always
+    /// read `false` (= ignore Settings), a user who toggled
+    /// the mode via UI/CLI would never see it enabled.
     #[test]
     fn resolve_uses_settings_when_env_var_absent() {
         if std::env::var(super::ENV_VAR_NAME).is_ok() {
@@ -98,11 +98,11 @@ mod tests {
         }
         assert!(
             super::resolve(true),
-            "resolve(true) sans env doit être true"
+            "resolve(true) without env must be true"
         );
         assert!(
             !super::resolve(false),
-            "resolve(false) sans env doit être false"
+            "resolve(false) without env must be false"
         );
     }
 }

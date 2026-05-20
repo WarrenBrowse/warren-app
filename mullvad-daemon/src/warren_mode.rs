@@ -1,36 +1,36 @@
-//! Détection du mode tunnel Warren via env var au boot du daemon.
+//! Detection of Warren tunnel mode via env var at daemon boot.
 //!
-//! POC switch pragmatique : pas de toggle UI/CLI/management-interface
-//! pour l'instant. L'utilisateur qui veut tester le path Warren-Iroh
-//! exporte `WARREN_TUNNEL=1` avant de lancer `mullvad-daemon`. Le
-//! default reste le path WireGuard upstream (pas de breaking change
-//! pour les builds non-Warren). À remplacer par un setting persistant
-//! `Settings::warren_mode: bool` exposé via gRPC + GUI/CLI quand le
-//! POC sera consolidé.
+//! Pragmatic POC switch: no UI/CLI/management-interface toggle
+//! for now. The user who wants to test the Warren-Iroh path
+//! exports `WARREN_TUNNEL=1` before launching `mullvad-daemon`. The
+//! default remains the upstream WireGuard path (no breaking change
+//! for non-Warren builds). To be replaced by a persistent
+//! `Settings::warren_mode: bool` setting exposed via gRPC + GUI/CLI
+//! when the POC is consolidated.
 
-/// Nom de l'env var lue au boot. Convention figée pour la durée du
-/// POC ; renommer impose une migration côté docs/scripts.
+/// Name of the env var read at boot. Fixed convention for the duration
+/// of the POC; renaming requires a docs/scripts migration.
 pub const ENV_VAR_NAME: &str = "WARREN_TUNNEL";
 
-/// `true` si le mode Warren-Iroh est activé pour ce process daemon.
+/// `true` if Warren-Iroh mode is enabled for this daemon process.
 ///
-/// Activé par `WARREN_TUNNEL=1` (ou `true`, `yes`, `on`, insensitive à
-/// la casse). Toute autre valeur ou absence = WireGuard upstream.
+/// Enabled by `WARREN_TUNNEL=1` (or `true`, `yes`, `on`, case
+/// insensitive). Any other value or absence = upstream WireGuard.
 ///
-/// **Phase E** : utilise [`resolve`] qui combine env var (override) +
-/// `Settings::warren_mode` (persistant). Cette wrapper garde
-/// l'historique pour les callers qui n'ont pas accès aux Settings au
-/// moment du check (= boot très précoce).
+/// **Phase E**: uses [`resolve`] which combines env var (override) +
+/// `Settings::warren_mode` (persistent). This wrapper keeps the
+/// history for callers that do not have access to Settings at the
+/// moment of the check (= very early boot).
 #[must_use]
 pub fn is_enabled() -> bool {
     parse_env(std::env::var(ENV_VAR_NAME).ok().as_deref())
 }
 
-/// Phase E — résout le mode Warren effectif depuis une combinaison
-/// env var POC + flag persistant `Settings::warren_mode`. L'env var,
-/// si setée, **prend précédence** : permet aux devs de tester
-/// rapidement sans persister le choix dans les Settings ; en
-/// production l'utilisateur final togglera via UI/CLI ce qui mute
+/// Phase E — resolves the effective Warren mode from a combination
+/// of POC env var + persistent `Settings::warren_mode` flag. The env var,
+/// if set, **takes precedence**: lets devs test
+/// quickly without persisting the choice in Settings; in
+/// production the end user will toggle via UI/CLI which mutates
 /// `Settings::warren_mode`.
 #[must_use]
 pub fn resolve(settings_warren_mode: bool) -> bool {
@@ -73,37 +73,37 @@ mod tests {
         }
     }
 
-    /// Phase E : `resolve` doit prendre l'env var en compte si setée,
-    /// même si Settings dit `false`. Sans cette priorité, un dev qui
-    /// exporte `WARREN_TUNNEL=1` pour tester rapidement n'aurait pas
-    /// le mode activé sans toucher à ses Settings persistants.
-    /// Ce test ne touche pas à l'env réel — il teste la logique pure
-    /// via `parse_env` + le check `Some/None`. Le reste (lecture
-    /// `std::env::var`) est trivial et testé indirectement par
-    /// l'absence d'env dans les builds CI.
+    /// Phase E: `resolve` must take the env var into account if set,
+    /// even if Settings says `false`. Without this priority, a dev who
+    /// exports `WARREN_TUNNEL=1` to test quickly would not have
+    /// the mode enabled without touching their persistent Settings.
+    /// This test does not touch the real env — it tests the pure
+    /// logic via `parse_env` + the `Some/None` check. The rest (reading
+    /// `std::env::var`) is trivial and tested indirectly by
+    /// the absence of env in CI builds.
     #[test]
     fn resolve_uses_settings_when_env_var_absent() {
-        // Hypothèse : env var WARREN_TUNNEL absente (cas normal en
-        // CI / prod sans override). resolve doit retourner la valeur
-        // de Settings.
-        // SAFETY: on lit `std::env` ; les autres tests ne setent pas
-        // WARREN_TUNNEL. Si un test parallèle le setait, ce test
-        // casserait → indication de coupling.
-        // SAFETY: remove_var est unsafe en Rust 2024.
-        // SAFETY: `remove_var` n'est pas thread-safe ; les tests Rust
-        // tournent souvent en parallèle (`--test-threads`). On évite
-        // donc de muter l'env directement et on construit la logique
-        // pure indépendamment de `std::env`.
-        // → On teste `resolve` indirectement via la logique
-        // équivalente : si WARREN_TUNNEL n'est pas setée par les
-        // autres tests (ce qui est le cas sur CI normal), `resolve`
-        // doit refléter Settings.
+        // Assumption: env var WARREN_TUNNEL absent (normal case in
+        // CI / prod without override). resolve must return the value
+        // from Settings.
+        // SAFETY: we read `std::env`; the other tests do not set
+        // WARREN_TUNNEL. If a parallel test set it, this test
+        // would break -> indication of coupling.
+        // SAFETY: remove_var is unsafe in Rust 2024.
+        // SAFETY: `remove_var` is not thread-safe; Rust tests
+        // often run in parallel (`--test-threads`). We therefore avoid
+        // mutating the env directly and build the pure
+        // logic independently of `std::env`.
+        // -> We test `resolve` indirectly via the equivalent
+        // logic: if WARREN_TUNNEL is not set by the
+        // other tests (which is the case on normal CI), `resolve`
+        // must reflect Settings.
         if std::env::var(ENV_VAR_NAME).is_ok() {
-            // Test skippé si l'env contient WARREN_TUNNEL — pas une
-            // régression mais sécurité de cohérence.
+            // Test skipped if the env contains WARREN_TUNNEL — not a
+            // regression but a consistency safeguard.
             return;
         }
-        assert!(resolve(true), "resolve(true) sans env doit être true");
-        assert!(!resolve(false), "resolve(false) sans env doit être false");
+        assert!(resolve(true), "resolve(true) without env must be true");
+        assert!(!resolve(false), "resolve(false) without env must be false");
     }
 }

@@ -31,16 +31,16 @@ const RETRY_BACKOFF_STRATEGY: Jittered<ExponentialBackoff> = Jittered::jitter(
 #[derive(Clone)]
 pub struct DeviceService {
     api_availability: ApiAvailability,
-    /// Backend abstrait pour les 5 opérations device-level. Le
-    /// caller (`AccountManager::spawn`) injecte `RemoteDeviceBackend`
-    /// ou `LocalDeviceBackend` selon `local_account_mode`.
+    /// Abstract backend for the 5 device-level operations. The
+    /// caller (`AccountManager::spawn`) injects `RemoteDeviceBackend`
+    /// or `LocalDeviceBackend` depending on `local_account_mode`.
     backend: Arc<dyn WarrenDeviceBackend>,
 }
 
 impl DeviceService {
-    /// Construit un `DeviceService` à partir d'un backend déjà résolu.
-    /// Utilisé par `AccountManager::spawn` qui aiguille `Remote` vs
-    /// `Local` selon `local_account_mode`.
+    /// Builds a `DeviceService` from an already-resolved backend.
+    /// Used by `AccountManager::spawn` which dispatches `Remote` vs
+    /// `Local` depending on `local_account_mode`.
     pub fn new(api_availability: ApiAvailability, backend: Arc<dyn WarrenDeviceBackend>) -> Self {
         Self {
             backend,
@@ -313,14 +313,14 @@ impl DeviceService {
 pub struct WarrenIdentityService {
     api_availability: ApiAvailability,
     initial_check_abort_handle: AbortHandle,
-    /// `AccountsProxy` Mullvad pour les méthodes non-MVP (voucher,
-    /// www_auth_token, init/verify_play_purchase Android). Garde le
-    /// path historique tant que ces flows ne sont pas migrés.
+    /// Mullvad `AccountsProxy` for the non-MVP methods (voucher,
+    /// www_auth_token, init/verify_play_purchase Android). Keeps the
+    /// legacy path as long as these flows are not migrated.
     proxy: AccountsProxy,
-    /// Backend abstrait pour les 3 méthodes MVP critiques
-    /// (`create_account`, `get_data`, `delete_account`). Le caller
-    /// (`spawn_warren_identity_service`) injecte `RemoteAccountBackend`
-    /// ou `LocalAccountBackend` selon `local_account_mode`.
+    /// Abstract backend for the 3 critical MVP methods
+    /// (`create_account`, `get_data`, `delete_account`). The caller
+    /// (`spawn_warren_identity_service`) injects `RemoteAccountBackend`
+    /// or `LocalAccountBackend` depending on `local_account_mode`.
     backend: Arc<dyn WarrenAccountBackend>,
 }
 
@@ -485,9 +485,9 @@ pub fn spawn_warren_identity_service(
 
     let (future, initial_check_abort_handle) = abortable(async move {
         let Some(number) = number else {
-            // Fresh install pré-login : pas d'`AccountNumber` connu,
-            // rien à demander au backend. On laisse l'`api_availability`
-            // en paused (déjà fait juste avant l'`abortable`).
+            // Fresh install pre-login: no `AccountNumber` known,
+            // nothing to ask the backend. We leave `api_availability`
+            // paused (already done just before the `abortable`).
             api_availability.pause_background();
             return;
         };

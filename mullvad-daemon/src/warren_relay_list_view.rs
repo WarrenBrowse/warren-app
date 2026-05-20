@@ -1,10 +1,10 @@
-//! Vue Mullvad-format d'une `WarrenRelayList`.
+//! Mullvad-format view of a `WarrenRelayList`.
 //!
-//! Convertit la liste warren-relays (`Vec<WarrenRelay>` plat) en une
-//! [`RelayList`] hiérarchique countries → cities → relays. Permet à la
-//! GUI Electron — qui consomme historiquement la liste Mullvad — d'afficher
-//! les exits Warren disponibles dans son sélecteur de pays/villes sans
-//! refacto majeur côté frontend.
+//! Converts the flat warren-relays list (`Vec<WarrenRelay>`) into a
+//! hierarchical [`RelayList`] countries -> cities -> relays. Allows the
+//! Electron GUI — which historically consumes the Mullvad list — to display
+//! the available Warren exits in its country/city selector without
+//! a major frontend refactor.
 //!
 //! POC limitations:
 //! - Produced `WireguardRelay` values carry a `wireguard::PublicKey`
@@ -33,15 +33,15 @@ use mullvad_types::relay_list::{
 use talpid_types::net::wireguard;
 use warren_relay_selector::{WarrenRelay, WarrenRelayList};
 
-/// Construit une [`RelayList`] (format Mullvad upstream) à partir d'une
+/// Builds a [`RelayList`] (upstream Mullvad format) from a
 /// [`WarrenRelayList`].
 ///
-/// Groupement déterministe par `country_code` puis `city` (ordre
-/// alphabétique via `BTreeMap`) pour produire une sortie stable
-/// (utile pour les tests de regression GUI).
+/// Deterministic grouping by `country_code` then `city` (alphabetical
+/// order via `BTreeMap`) to produce stable output
+/// (useful for GUI regression tests).
 #[must_use]
 pub fn to_mullvad_relay_list(warren: &WarrenRelayList) -> RelayList {
-    // country_code → (display_name, city → (display_name, Vec<&WarrenRelay>))
+    // country_code -> (display_name, city -> (display_name, Vec<&WarrenRelay>))
     let mut by_country: BTreeMap<String, BTreeMap<String, Vec<&WarrenRelay>>> = BTreeMap::new();
     for relay in warren.relays() {
         by_country
@@ -147,10 +147,10 @@ fn make_wireguard_relay(
     )
 }
 
-/// Slug grossier d'un nom de ville pour produire un `CityCode`
-/// (`ascii_lower`, `-` à la place de l'espace, supprime les caractères
-/// non `[a-z0-9-]`). Pas de garantie d'unicité — les `(country_code,
-/// city_code)` doivent rester uniques côté producteur warren-api.
+/// Rough slug of a city name to produce a `CityCode`
+/// (`ascii_lower`, `-` instead of space, removes non
+/// `[a-z0-9-]` characters). No uniqueness guarantee — `(country_code,
+/// city_code)` must remain unique on the warren-api producer side.
 fn slugify(s: &str) -> String {
     let lowered = s.to_lowercase().replace([' ', '_'], "-");
     lowered
@@ -159,11 +159,11 @@ fn slugify(s: &str) -> String {
         .collect()
 }
 
-/// Nom d'affichage d'un pays à partir de son code ISO-3166 alpha-2.
-/// Table minimale POC — on tombe sur le code en majuscules si
-/// l'entrée n'est pas connue (la GUI affichera "FR", "SE", "US" plutôt
-/// que "France", "Sweden", "United States"). À enrichir ou remplacer
-/// par un crate `isocountry`/`celes` si nécessaire.
+/// Display name of a country from its ISO-3166 alpha-2 code.
+/// Minimal POC table — falls back to the code in uppercase if
+/// the entry is unknown (the GUI will display "FR", "SE", "US" rather
+/// than "France", "Sweden", "United States"). To enrich or replace
+/// with an `isocountry`/`celes` crate if needed.
 fn country_display_name(code: &str) -> String {
     match code.to_ascii_lowercase().as_str() {
         "fr" => "France",

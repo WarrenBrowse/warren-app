@@ -1,18 +1,18 @@
-//! Charge ou génère la mnémonique BIP39 utilisateur depuis
-//! `<settings_dir>/warren_mnemonic.txt`, la dérive en [`SigningKey`]
-//! Ed25519 via [`warren_identity::derive_node_key`], et la wrap dans
-//! un [`mullvad_api::warren_auth::WarrenAuthSigner`] partagé via
+//! Loads or generates the user's BIP39 mnemonic from
+//! `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
+//! [`SigningKey`] via [`warren_identity::derive_node_key`], and wraps it
+//! in a shared [`mullvad_api::warren_auth::WarrenAuthSigner`] via
 //! [`Arc`].
 //!
-//! Module dédié pour permettre de wirer/unwirer la Warren auth via
-//! une seule modif de l'unique caller dans `lib.rs`, et tester la
-//! logique en isolation (vs `lib.rs` qui orchestre tout le boot et
-//! est non-testable en unit).
+//! Dedicated module so we can wire/unwire Warren auth via a single
+//! edit to the sole caller in `lib.rs`, and test the logic in
+//! isolation (vs `lib.rs` which orchestrates all of boot and is
+//! non-testable in unit).
 //!
-//! Politique d'erreur : on log et on retourne `None` si la mnémonique
-//! est inaccessible / corrompue. Le boot continue en mode Bearer
-//! historique. Cette dégradation disparaîtra quand la chaîne sera
-//! 100 % Warren (aucun fallback Bearer possible côté serveur).
+//! Error policy: we log and return `None` if the mnemonic is
+//! inaccessible / corrupted. The boot continues in legacy Bearer
+//! mode. This degradation will disappear once the chain is
+//! 100% Warren (no Bearer fallback possible on the server side).
 
 use std::path::Path;
 use std::sync::Arc;
@@ -20,32 +20,32 @@ use std::sync::Arc;
 use ed25519_dalek::SigningKey;
 use mullvad_api::warren_auth::WarrenAuthSigner;
 
-/// Nom du fichier qui stocke la mnémonique BIP39 utilisateur dans
-/// `settings_dir`. Convention figée : si on bouge ce nom plus tard,
-/// il faudra une migration v15+ qui renomme l'existant.
+/// Name of the file storing the user's BIP39 mnemonic in
+/// `settings_dir`. Fixed convention: if we move this name later,
+/// it will require a v15+ migration to rename the existing file.
 pub const MNEMONIC_FILENAME: &str = "warren_mnemonic.txt";
 
-/// Charge ou crée la mnémonique BIP39 dans `settings_dir`, la dérive
-/// en signing key Ed25519, et retourne un [`WarrenAuthSigner`] partagé.
+/// Loads or creates the BIP39 mnemonic in `settings_dir`, derives
+/// it into an Ed25519 signing key, and returns a shared [`WarrenAuthSigner`].
 ///
-/// Retourne `None` (avec un `log::warn!`) si la mnémonique ne peut pas
-/// être chargée ou dérivée, pour permettre au daemon de continuer en
-/// mode Mullvad classique pendant la transition Phase 2.
+/// Returns `None` (with a `log::warn!`) if the mnemonic cannot be
+/// loaded or derived, to allow the daemon to continue in classic
+/// Mullvad mode during the Phase 2 transition.
 #[must_use]
 pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner>> {
     let signing_key = load_or_create_signing_key(settings_dir)?;
     Some(Arc::new(WarrenAuthSigner::new(signing_key)))
 }
 
-/// Charge ou crée la mnémonique BIP39 dans `settings_dir` et la dérive
-/// en [`SigningKey`] Ed25519, sans wrapper.
+/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives
+/// it into an Ed25519 [`SigningKey`], without the wrapper.
 ///
-/// Sœur de [`load_or_create_signer`] : expose le matériel
-/// cryptographique brut nécessaire pour assembler des
+/// Sibling of [`load_or_create_signer`]: exposes the raw
+/// cryptographic material needed to assemble
 /// [`talpid_warren_tunnel::WarrenTunnelParameters`].
 ///
-/// **Politique no-log** : ne JAMAIS logger la `SigningKey` retournée
-/// (cf. règle Warren). Le caller doit la consommer puis la dropper.
+/// **No-log policy**: NEVER log the returned `SigningKey`
+/// (see Warren rule). The caller must consume it then drop it.
 #[must_use]
 pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     let mnemonic_path = settings_dir.join(MNEMONIC_FILENAME);
@@ -74,38 +74,38 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     Some(warren_identity::derive_node_key(&seed))
 }
 
-/// Restaure (= écrase) la mnémonique BIP39 utilisateur dans
-/// `<settings_dir>/warren_mnemonic.txt`. Validation BIP39 effectuée
-/// AVANT toute écriture sur disque (= rejet atomique sans corruption
-/// du fichier existant).
+/// Restores (= overwrites) the user's BIP39 mnemonic in
+/// `<settings_dir>/warren_mnemonic.txt`. BIP39 validation is performed
+/// BEFORE any write to disk (= atomic rejection without corrupting
+/// the existing file).
 ///
-/// **Atomicité** : écrit d'abord dans un tempfile sibling (mode 0o600
-/// sur Unix, sync_all avant fermeture), puis `rename` atomique vers le
-/// path final (POSIX rename remplace silencieusement la destination).
-/// En cas de crash entre tempfile et rename, l'ancienne mnémonique
-/// reste intacte.
+/// **Atomicity**: writes first to a sibling tempfile (mode 0o600
+/// on Unix, sync_all before close), then atomic `rename` to the final
+/// path (POSIX rename silently replaces the destination).
+/// In case of a crash between tempfile and rename, the old mnemonic
+/// remains intact.
 ///
-/// **Use case** : restore d'identité depuis la GUI (= C.1.d ImportMnemonicView).
-/// Le caller GUI DOIT afficher une confirmation strong avant d'appeler,
-/// car l'ancienne identité (et la subscription qui y est liée) est
-/// IRRÉVERSIBLEMENT remplacée. Le daemon doit être restart pour que
-/// la nouvelle identité soit prise en compte par le signer (signing key
-/// est dérivée au boot).
+/// **Use case**: identity restore from the GUI (= C.1.d ImportMnemonicView).
+/// The GUI caller MUST display a strong confirmation before calling,
+/// because the previous identity (and the subscription tied to it)
+/// is IRREVERSIBLY replaced. The daemon must be restarted so that
+/// the new identity is picked up by the signer (the signing key
+/// is derived at boot).
 ///
 /// # Errors
 ///
-/// - `InvalidData` si `mnemonic` n'est pas une BIP39 valide (checksum,
-///   wordlist, count) → fichier existant non touché.
-/// - Autres `io::Error` sur tempfile/rename (perms, FS plein, etc.).
+/// - `InvalidData` if `mnemonic` is not a valid BIP39 (checksum,
+///   wordlist, count) -> existing file untouched.
+/// - Other `io::Error` on tempfile/rename (perms, FS full, etc.).
 ///
-/// # Politique no-log
+/// # No-log policy
 ///
-/// Ne JAMAIS logger `mnemonic`. Logger uniquement le fait qu'une écriture
-/// a réussi/échoué (= audit trail).
+/// NEVER log `mnemonic`. Only log the fact that a write
+/// succeeded/failed (= audit trail).
 pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Result<()> {
     use std::io::Write;
 
-    // Step 1 — validation BIP39 AVANT toute écriture.
+    // Step 1 — BIP39 validation BEFORE any write.
     warren_identity::seed_from_mnemonic(mnemonic).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
@@ -113,7 +113,7 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
         )
     })?;
 
-    // Step 2 — préparation du tempfile sibling unique.
+    // Step 2 — prepare a unique sibling tempfile.
     let path = settings_dir.join(MNEMONIC_FILENAME);
     let parent = path.parent().unwrap_or_else(|| std::path::Path::new("."));
     let pid = std::process::id();
@@ -123,10 +123,10 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
         .unwrap_or(0);
     let tmp_path = parent.join(format!(".{MNEMONIC_FILENAME}.tmp.{pid}.{nanos}"));
 
-    // Best-effort cleanup d'un éventuel résidu d'un crash précédent.
+    // Best-effort cleanup of a possible leftover from a previous crash.
     let _ = std::fs::remove_file(&tmp_path);
 
-    // Step 3 — écriture atomique dans le tempfile.
+    // Step 3 — atomic write into the tempfile.
     {
         #[cfg(unix)]
         let mut f = {
@@ -148,10 +148,10 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
         f.sync_all()?;
     }
 
-    // Step 4 — rename atomique vers la destination (overwrite OK).
-    // Contraste avec write_mnemonic_file de warren-identity qui utilise
-    // hard_link pour fail-on-exists (= load_or_create sémantique). Ici
-    // on VEUT remplacer.
+    // Step 4 — atomic rename to the destination (overwrite OK).
+    // Contrast with write_mnemonic_file from warren-identity which uses
+    // hard_link for fail-on-exists (= load_or_create semantics). Here
+    // we WANT to replace.
     match std::fs::rename(&tmp_path, &path) {
         Ok(()) => {
             log::info!("set_warren_mnemonic: identity overwritten (content NEVER logged)");
@@ -164,26 +164,26 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
     }
 }
 
-/// Lit la mnémonique BIP39 utilisateur **déjà persistée** dans
-/// `<settings_dir>/warren_mnemonic.txt`. Read-only : ne crée jamais
-/// le fichier (contraste avec [`load_or_create_signing_key`]).
+/// Reads the **already persisted** user's BIP39 mnemonic in
+/// `<settings_dir>/warren_mnemonic.txt`. Read-only: never creates
+/// the file (contrast with [`load_or_create_signing_key`]).
 ///
-/// Retourne `None` si :
-/// - le fichier n'existe pas (= identité jamais bootstrappée),
-/// - le fichier est inaccessible (perms cassées, FS error).
+/// Returns `None` if:
+/// - the file does not exist (= identity never bootstrapped),
+/// - the file is inaccessible (broken perms, FS error).
 ///
-/// Utilisé par le handler gRPC `GetWarrenMnemonic` (C.1) pour
-/// permettre au GUI Electron d'afficher la mnémonique en clair afin
-/// que l'utilisateur la sauvegarde (= critère phase 1 #2 "Mnemonic
-/// BIP39 affiché 1 fois et restaurable").
+/// Used by the gRPC `GetWarrenMnemonic` (C.1) handler to
+/// allow the Electron GUI to display the mnemonic in cleartext so
+/// the user can back it up (= phase 1 criterion #2 "BIP39 mnemonic
+/// displayed once and restorable").
 ///
-/// # Politique no-log
+/// # No-log policy
 ///
-/// La string retournée est un secret cryptographique. Le caller
-/// (handler gRPC) doit la transmettre au GUI puis la dropper. Ne
-/// JAMAIS logger le contenu, même en debug. Le fait *qu'une lecture
-/// a eu lieu* peut être loggé (= audit trail GUI requests), mais
-/// jamais le contenu.
+/// The returned string is a cryptographic secret. The caller
+/// (gRPC handler) must transmit it to the GUI then drop it.
+/// NEVER log the content, even in debug. The fact *that a read
+/// occurred* may be logged (= GUI requests audit trail), but
+/// never the content.
 #[must_use]
 pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<String> {
     let path = settings_dir.join(MNEMONIC_FILENAME);
@@ -196,11 +196,11 @@ pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<String> {
 mod tests {
     use super::*;
 
-    /// Utility : un répertoire temporaire isolé pour chaque test.
-    /// Pas de `tempfile` ni `uuid` dans les deps daemon, donc on
-    /// compose avec `pid + timestamp_nanos + counter` (suffisant
-    /// pour éviter les collisions entre tests parallèles
-    /// `--test-threads`).
+    /// Utility: an isolated temporary directory for each test.
+    /// No `tempfile` nor `uuid` in the daemon deps, so we
+    /// compose with `pid + timestamp_nanos + counter` (sufficient
+    /// to avoid collisions between parallel
+    /// `--test-threads` tests).
     fn isolated_tempdir() -> std::path::PathBuf {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -217,23 +217,23 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_creates_mnemonic_on_first_call() {
-        // Au premier boot du daemon (= settings_dir
-        // vide), la fonction doit générer une nouvelle mnémonique
-        // BIP39, l'écrire sur disque, et retourner un signer valide.
+        // On the daemon's first boot (= empty settings_dir),
+        // the function must generate a new BIP39 mnemonic,
+        // write it to disk, and return a valid signer.
         let dir = isolated_tempdir();
         assert!(
             !dir.join(MNEMONIC_FILENAME).exists(),
-            "preconditions: pas de mnémonique existante"
+            "preconditions: no existing mnemonic"
         );
 
         let signer = load_or_create_signer(&dir).expect("must produce a signer on fresh boot");
 
-        // Le fichier doit avoir été créé :
+        // The file must have been created:
         assert!(
             dir.join(MNEMONIC_FILENAME).exists(),
-            "warren_mnemonic.txt doit être créé"
+            "warren_mnemonic.txt must be created"
         );
-        // Le signer doit produire une pubkey valide (= 64 chars hex) :
+        // The signer must produce a valid pubkey (= 64 hex chars):
         assert_eq!(signer.pubkey_hex().len(), 64);
 
         // Cleanup
@@ -242,8 +242,8 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_is_idempotent_across_calls() {
-        // Au reboot du daemon, la même mnémonique
-        // doit produire la même pubkey (= identité utilisateur stable).
+        // On daemon reboot, the same mnemonic must
+        // produce the same pubkey (= stable user identity).
         let dir = isolated_tempdir();
 
         let s1 = load_or_create_signer(&dir).expect("first call");
@@ -251,7 +251,7 @@ mod tests {
         assert_eq!(
             s1.pubkey_hex(),
             s2.pubkey_hex(),
-            "même settings_dir = même pubkey à travers les boots"
+            "same settings_dir = same pubkey across boots"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -259,13 +259,13 @@ mod tests {
 
     #[test]
     fn get_warren_mnemonic_returns_none_when_no_file_exists() {
-        // Au premier boot, avant load_or_create_signer, le fichier
-        // n'existe pas → la fonction doit retourner None sans paniquer
-        // ni créer de fichier (read-only get).
+        // On first boot, before load_or_create_signer, the file
+        // does not exist -> the function must return None without
+        // panicking nor creating a file (read-only get).
         let dir = isolated_tempdir();
         assert!(
             !dir.join(MNEMONIC_FILENAME).exists(),
-            "préconditions : pas de mnémonique"
+            "preconditions: no mnemonic"
         );
 
         let result = get_warren_mnemonic(&dir);
@@ -275,7 +275,7 @@ mod tests {
         );
         assert!(
             !dir.join(MNEMONIC_FILENAME).exists(),
-            "get_warren_mnemonic ne doit JAMAIS créer le fichier (read-only)"
+            "get_warren_mnemonic must NEVER create the file (read-only)"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -283,9 +283,9 @@ mod tests {
 
     #[test]
     fn get_warren_mnemonic_returns_existing_mnemonic_after_persist() {
-        // Après load_or_create_signer (= bootstrap identité), la
-        // mnémonique BIP39 doit être lisible via get_warren_mnemonic
-        // et contenir 12 ou 24 mots (= cardinal BIP39 standard).
+        // After load_or_create_signer (= identity bootstrap), the
+        // BIP39 mnemonic must be readable via get_warren_mnemonic
+        // and contain 12 or 24 words (= standard BIP39 cardinal).
         let dir = isolated_tempdir();
         let _ = load_or_create_signer(&dir).expect("bootstrap signer");
 
@@ -301,13 +301,13 @@ mod tests {
 
     #[test]
     fn get_warren_mnemonic_yields_deterministic_signing_key() {
-        // Invariant cross-fonction critique : la mnémonique retournée
-        // par get_warren_mnemonic, re-dérivée via warren_identity::
-        // {seed_from_mnemonic, derive_node_key}, doit produire
-        // EXACTEMENT la même pubkey que load_or_create_signing_key.
-        // Sinon le user qui exporte sa mnémonique pour backup se
-        // retrouve avec une identité différente au restore (= perte
-        // de subscription → blocker phase 1 critère #2).
+        // Critical cross-function invariant: the mnemonic returned
+        // by get_warren_mnemonic, re-derived via warren_identity::
+        // {seed_from_mnemonic, derive_node_key}, must produce
+        // EXACTLY the same pubkey as load_or_create_signing_key.
+        // Otherwise the user who exports their mnemonic for backup
+        // ends up with a different identity on restore (= loss
+        // of subscription -> phase 1 criterion #2 blocker).
         let dir = isolated_tempdir();
         let signing_key = load_or_create_signing_key(&dir).expect("bootstrap key");
         let pubkey_via_signer = hex::encode(signing_key.verifying_key().as_bytes());
@@ -327,9 +327,9 @@ mod tests {
 
     #[test]
     fn set_warren_mnemonic_rejects_invalid_bip39() {
-        // Une string qui n'est pas une mnémonique BIP39 valide
-        // (bad checksum, mot inconnu, etc.) doit être REJETÉE avant
-        // d'écrire sur disque, sinon on corrompt l'identité user.
+        // A string that is not a valid BIP39 mnemonic
+        // (bad checksum, unknown word, etc.) must be REJECTED before
+        // writing to disk, otherwise we corrupt the user identity.
         let dir = isolated_tempdir();
         let bogus = "this is not a valid bip39 mnemonic at all";
 
@@ -340,7 +340,7 @@ mod tests {
         );
         assert!(
             !dir.join(MNEMONIC_FILENAME).exists(),
-            "rejected input must NOT persist (atomicité = pas de demi-écriture)"
+            "rejected input must NOT persist (atomicity = no half-write)"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -348,10 +348,10 @@ mod tests {
 
     #[test]
     fn set_warren_mnemonic_accepts_valid_bip39_and_persists() {
-        // Une mnémonique BIP39 valide doit être écrite sur disque
-        // ET être lisible via get_warren_mnemonic juste après.
+        // A valid BIP39 mnemonic must be written to disk
+        // AND be readable via get_warren_mnemonic right after.
         let dir = isolated_tempdir();
-        // Mnémonique BIP39 12 mots fixe (= test vector connu).
+        // Fixed 12-word BIP39 mnemonic (= known test vector).
         let valid = "abandon abandon abandon abandon abandon abandon \
                      abandon abandon abandon abandon abandon about";
 
@@ -359,7 +359,7 @@ mod tests {
         let read_back = get_warren_mnemonic(&dir).expect("must be readable after set");
         assert_eq!(
             read_back, valid,
-            "round-trip set→get must preserve the mnemonic byte-exact"
+            "round-trip set->get must preserve the mnemonic byte-exact"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -367,11 +367,11 @@ mod tests {
 
     #[test]
     fn set_warren_mnemonic_overwrites_existing_identity() {
-        // Use case Restore : l'identité existe déjà (= load_or_create_signer
-        // a tourné). set_warren_mnemonic doit ÉCRASER cette identité par la
-        // nouvelle. Le caller GUI doit afficher une confirmation strong
-        // car cette opération est IRRÉVERSIBLE (= subscription liée à
-        // l'ancienne identité = perdue).
+        // Restore use case: the identity already exists (= load_or_create_signer
+        // has run). set_warren_mnemonic must OVERWRITE this identity with the
+        // new one. The GUI caller must display a strong confirmation
+        // because this operation is IRREVERSIBLE (= subscription tied to
+        // the previous identity = lost).
         let dir = isolated_tempdir();
         let original_signer = load_or_create_signer(&dir).expect("bootstrap original");
         let original_pubkey = original_signer.pubkey_hex();
@@ -384,7 +384,7 @@ mod tests {
         let new_pubkey = new_signer.pubkey_hex();
         assert_ne!(
             original_pubkey, new_pubkey,
-            "after restore, pubkey MUST differ (= identité écrasée)"
+            "after restore, pubkey MUST differ (= identity overwritten)"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -392,10 +392,10 @@ mod tests {
 
     #[test]
     fn load_or_create_signer_returns_none_on_corrupt_mnemonic() {
-        // Si le fichier mnemonic existe mais
-        // contient des données corrompues (= pas une mnémonique
-        // BIP39 valide), on log et on retourne None plutôt que de
-        // crasher le daemon.
+        // If the mnemonic file exists but
+        // contains corrupted data (= not a valid BIP39
+        // mnemonic), we log and return None rather than
+        // crashing the daemon.
         let dir = isolated_tempdir();
         std::fs::write(
             dir.join(MNEMONIC_FILENAME),
@@ -404,7 +404,7 @@ mod tests {
         .expect("write corrupt file");
 
         let signer = load_or_create_signer(&dir);
-        assert!(signer.is_none(), "corruption doit → None, pas panic");
+        assert!(signer.is_none(), "corruption must -> None, not panic");
 
         let _ = std::fs::remove_dir_all(&dir);
     }

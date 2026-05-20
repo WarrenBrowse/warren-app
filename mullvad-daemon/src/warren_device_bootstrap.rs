@@ -1,23 +1,23 @@
-//! Bootstrap d'un `device.json` local à partir des artefacts Warren
-//! (mnémonique BIP39 + signing key Ed25519 dérivée).
+//! Bootstrap of a local `device.json` from the Warren artifacts
+//! (BIP39 mnemonic + derived Ed25519 signing key).
 //!
-//! Invoqué au boot du daemon en mode [`crate::warren_account_mode`] pour
-//! éviter l'appel réseau `create_device → api.mullvad.net` quand
-//! `AccountsProxy` n'a pas encore migré vers `warren-api`. Le device
-//! généré est une **identité POC** : il n'est pas reconnu par l'infra
-//! Mullvad standard, ne fonctionne qu'avec un exit Warren custom.
+//! Invoked at daemon boot in [`crate::warren_account_mode`] mode to
+//! avoid the network call `create_device -> api.mullvad.net` when
+//! `AccountsProxy` has not yet migrated to `warren-api`. The
+//! generated device is a **POC identity**: it is not recognized by
+//! the standard Mullvad infra, and only works with a custom Warren exit.
 //!
-//! Politique d'idempotence stricte :
-//! - Si un `device.json` `LoggedIn` existe déjà ET sa pubkey matche la
-//!   signing key courante : on **ne touche rien** ([`BootstrapOutcome::AlreadyConsistent`]).
-//! - Si un `device.json` existe mais sa pubkey diffère : on **n'écrase
-//!   pas** ([`BootstrapOutcome::SkippedMismatch`]) — pourrait masquer une
-//!   logout volontaire ou un changement d'identité non-reconnu.
-//! - Si un `device.json` `LoggedOut`/`Revoked` existe : on **n'écrase pas
-//!   non plus** ([`BootstrapOutcome::SkippedExisting`]) — laisse le user
-//!   passer par `mullvad account login` explicite.
+//! Strict idempotence policy:
+//! - If a `device.json` `LoggedIn` already exists AND its pubkey matches
+//!   the current signing key: we **touch nothing** ([`BootstrapOutcome::AlreadyConsistent`]).
+//! - If a `device.json` exists but its pubkey differs: we **do not
+//!   overwrite** ([`BootstrapOutcome::SkippedMismatch`]) — could mask a
+//!   deliberate logout or an unrecognized identity change.
+//! - If a `device.json` `LoggedOut`/`Revoked` exists: we **do not overwrite
+//!   either** ([`BootstrapOutcome::SkippedExisting`]) — let the user
+//!   go through an explicit `mullvad account login`.
 //!
-//! Cette politique no-overwrite empêche la perte silencieuse d'identité.
+//! This no-overwrite policy prevents silent identity loss.
 
 use std::path::Path;
 
@@ -31,45 +31,44 @@ use crate::device::{
     DEVICE_CACHE_FILENAME, PrivateAccountAndDevice, PrivateDevice, PrivateDeviceState,
 };
 
-/// Outcome possible de [`ensure_local_device`].
+/// Possible outcome of [`ensure_local_device`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum BootstrapOutcome {
-    /// Device a été créé et écrit (`device.json` était absent).
+    /// Device was created and written (`device.json` was absent).
     Created,
-    /// Device existant matche déjà la signing key — rien fait.
+    /// Existing device already matches the signing key — nothing done.
     AlreadyConsistent,
-    /// Device existant a une pubkey différente — non-écrasé pour
-    /// préserver l'identité.
+    /// Existing device has a different pubkey — not overwritten to
+    /// preserve identity.
     SkippedMismatch,
-    /// Device existant en état `LoggedOut` ou `Revoked` — non-écrasé
-    /// pour préserver une logout/revocation explicite.
+    /// Existing device in `LoggedOut` or `Revoked` state — not
+    /// overwritten to preserve an explicit logout/revocation.
     SkippedExisting,
 }
 
-/// Erreurs du bootstrap.
+/// Bootstrap errors.
 #[derive(Debug, thiserror::Error)]
 pub enum BootstrapError {
-    /// Erreur I/O lors de l'écriture atomique.
+    /// I/O error during the atomic write.
     #[error("io error at {0}: {1}")]
     Io(String, #[source] std::io::Error),
-    /// Erreur de sérialisation JSON.
+    /// JSON serialization error.
     #[error("failed to serialize device state: {0}")]
     Serialize(#[source] serde_json::Error),
 }
 
-/// Crée un `device.json` cohérent avec la `signing_key` Warren si aucun
-/// device n'existe encore dans `settings_dir`.
+/// Creates a `device.json` consistent with the Warren `signing_key` if
+/// no device exists yet in `settings_dir`.
 ///
-/// Le caller (boot du daemon) doit avoir au préalable chargé la signing
-/// key via [`crate::warren_signer::load_or_create_signing_key`] et
-/// vérifié [`crate::warren_account_mode::is_enabled`].
+/// The caller (daemon boot) must have previously loaded the signing
+/// key via [`crate::warren_signer::load_or_create_signing_key`] and
+/// checked [`crate::warren_account_mode::is_enabled`].
 ///
 /// # Errors
 ///
-/// [`BootstrapError::Io`] si le write atomique du `device.json` échoue.
-/// [`BootstrapError::Serialize`] si la sérialisation JSON échoue (ne
-/// devrait jamais arriver avec les types `serde::Serialize`-derived
-/// utilisés ici).
+/// [`BootstrapError::Io`] if the atomic write of `device.json` fails.
+/// [`BootstrapError::Serialize`] if JSON serialization fails (should
+/// never happen with the `serde::Serialize`-derived types used here).
 pub fn ensure_local_device(
     settings_dir: &Path,
     signing_key: &SigningKey,
@@ -114,7 +113,7 @@ fn classify_existing(
         }
         PrivateDeviceState::LoggedIn(account) => {
             log::warn!(
-                "Warren local account: device.json pubkey ({}) ≠ mnemonic-derived pubkey ({}); not overwriting",
+                "Warren local account: device.json pubkey ({}) != mnemonic-derived pubkey ({}); not overwriting",
                 account.pubkey,
                 expected_pubkey
             );
@@ -145,12 +144,12 @@ fn generate_local_device(pubkey: &WarrenPubKey) -> PrivateDevice {
     }
 }
 
-/// Dérive un `AssociatedAddresses` à partir des octets de la pubkey
-/// pour éviter les collisions IP triviales entre plusieurs clients
-/// POC partageant un même exit. Plages :
-/// - IPv4 dans `10.64.0.0/10` (compat Mullvad — la plage qu'utilise
-///   l'API standard en production).
-/// - IPv6 dans `fc00:bbbb::/32` (ULA arbitraire POC).
+/// Derives an `AssociatedAddresses` from the pubkey bytes to
+/// avoid trivial IP collisions between multiple POC clients
+/// sharing the same exit. Ranges:
+/// - IPv4 in `10.64.0.0/10` (Mullvad-compatible — the range used by
+///   the standard API in production).
+/// - IPv6 in `fc00:bbbb::/32` (arbitrary POC ULA).
 fn derive_addresses(bytes: &[u8; 32]) -> AssociatedAddresses {
     let v4_str = format!("10.64.{}.{}/32", bytes[0], bytes[1].max(1));
     let v6_str = format!(
@@ -179,8 +178,8 @@ fn write_atomic(path: &Path, state: &PrivateDeviceState) -> Result<(), Bootstrap
 mod tests {
     use super::*;
 
-    /// Tempdir isolé par test — pid + nanos + counter atomique pour
-    /// éviter les collisions entre tests parallèles.
+    /// Tempdir isolated per test — pid + nanos + atomic counter to
+    /// avoid collisions between parallel tests.
     fn isolated_tempdir() -> std::path::PathBuf {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -206,10 +205,10 @@ mod tests {
 
     #[test]
     fn ensure_local_device_creates_logged_in_with_pubkey_derived_from_signing_key() {
-        // Régression critique : le device.json créé par bootstrap
-        // DOIT avoir une pubkey égale à la pubkey Ed25519 de la
-        // signing_key courante. Sinon le tunnel Warren ne pourra
-        // pas signer l'auth handshake exit (pubkey mismatch).
+        // Critical regression: the device.json created by bootstrap
+        // MUST have a pubkey equal to the Ed25519 pubkey of the
+        // current signing_key. Otherwise the Warren tunnel cannot
+        // sign the exit auth handshake (pubkey mismatch).
         let dir = isolated_tempdir();
         let sk = fixed_signing_key(7);
         let expected_pubkey = WarrenPubKey::from_bytes(sk.verifying_key().as_bytes());
@@ -222,11 +221,11 @@ mod tests {
             PrivateDeviceState::LoggedIn(account) => {
                 assert_eq!(
                     account.pubkey, expected_pubkey,
-                    "device.json pubkey doit dériver de la signing_key"
+                    "device.json pubkey must derive from the signing_key"
                 );
                 assert!(
                     account.device.id.starts_with("warren-local-"),
-                    "device id doit identifier le bootstrap POC"
+                    "device id must identify the POC bootstrap"
                 );
             }
             other => panic!("expected LoggedIn, got {other:?}"),
@@ -237,12 +236,12 @@ mod tests {
 
     #[test]
     fn ensure_local_device_is_idempotent_and_preserves_wireguard_private_key() {
-        // Régression critique : un re-boot du daemon NE DOIT PAS
-        // re-générer une nouvelle wg private_key, sinon (a) l'exit
-        // perdrait la session établie, (b) toutes les rotations de
-        // clés Wireguard seraient invalidées. L'idempotence se
-        // mesure sur le matériel cryptographique, pas sur un simple
-        // "device.json existe".
+        // Critical regression: a daemon re-boot MUST NOT
+        // regenerate a new wg private_key, otherwise (a) the exit
+        // would lose the established session, (b) all Wireguard
+        // key rotations would be invalidated. Idempotence is
+        // measured on the cryptographic material, not on a simple
+        // "device.json exists".
         let dir = isolated_tempdir();
         let sk = fixed_signing_key(11);
 
@@ -261,7 +260,7 @@ mod tests {
         };
         assert_eq!(
             pk_first, pk_second,
-            "wg private_key DOIT survivre au re-boot du daemon"
+            "wg private_key MUST survive a daemon re-boot"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -269,30 +268,30 @@ mod tests {
 
     #[test]
     fn ensure_local_device_does_not_overwrite_logged_in_with_different_pubkey() {
-        // Régression critique : si le user a déjà un device.json
-        // valide pour une autre identité (= changement de mnémonique
-        // ou logout-relogin avec une autre source), on NE DOIT PAS
-        // écraser silencieusement. Sinon perte d'identité utilisateur.
+        // Critical regression: if the user already has a valid
+        // device.json for another identity (= mnemonic change
+        // or logout-relogin with a different source), we MUST NOT
+        // overwrite silently. Otherwise user identity is lost.
         let dir = isolated_tempdir();
 
-        // Setup : bootstrap avec une première signing_key.
+        // Setup: bootstrap with a first signing_key.
         let sk_initial = fixed_signing_key(1);
         ensure_local_device(&dir, &sk_initial).expect("initial bootstrap");
         let initial_state_raw =
             std::fs::read_to_string(dir.join(DEVICE_CACHE_FILENAME)).expect("read initial");
 
-        // Act : re-bootstrap avec une signing_key différente.
+        // Act: re-bootstrap with a different signing_key.
         let sk_other = fixed_signing_key(2);
         let outcome = ensure_local_device(&dir, &sk_other).expect("second bootstrap");
 
-        // Assert : (a) outcome = SkippedMismatch, (b) le fichier n'a
-        // pas été modifié byte-pour-byte.
+        // Assert: (a) outcome = SkippedMismatch, (b) the file was
+        // not modified byte-for-byte.
         assert_eq!(outcome, BootstrapOutcome::SkippedMismatch);
         let after_state_raw =
             std::fs::read_to_string(dir.join(DEVICE_CACHE_FILENAME)).expect("read after");
         assert_eq!(
             initial_state_raw, after_state_raw,
-            "device.json DOIT rester intact en cas de mismatch pubkey"
+            "device.json MUST remain intact on pubkey mismatch"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
