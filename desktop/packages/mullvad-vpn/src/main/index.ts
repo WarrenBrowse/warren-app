@@ -20,6 +20,7 @@ import {
   IRelayListWithEndpointData,
   ISettings,
   TunnelState,
+  WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
 import { SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
@@ -105,6 +106,10 @@ class ApplicationMain
 
   private daemonEventListener?: SubscriptionListener<DaemonEvent>;
   private daemonAppUpgradeEventListener?: SubscriptionListener<DaemonAppUpgradeEvent>;
+  // Subscription to the daemon WarrenStatusUpdates push stream.
+  // Created on every successful daemon reconnect and torn down on
+  // disconnect, mirroring the daemonEventListener lifecycle.
+  private warrenStatusListener?: SubscriptionListener<WarrenStatus>;
   private reconnectBackoff = new ReconnectionBackoff();
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
@@ -560,6 +565,17 @@ class ApplicationMain
       return this.handleBootstrapError(error);
     }
 
+    // Subscribe to Warren live status. The stream is best-effort; a
+    // failing subscribe (older daemon without the rpc, network blip,
+    // etc.) must not block the rest of the bootstrap, so we only log
+    // and continue.
+    try {
+      this.warrenStatusListener = this.subscribeWarrenStatusEvents();
+    } catch (e) {
+      const error = e as Error;
+      log.warn(`Failed to subscribe to Warren status events: ${error.message}`);
+    }
+
     if (firstDaemonConnection) {
       // check if daemon is performing post upgrade tasks the first time it's connected to
       try {
@@ -702,9 +718,14 @@ class ApplicationMain
     if (this.daemonAppUpgradeEventListener) {
       this.daemonRpc.unsubscribeAppUpgradeEventListener(this.daemonAppUpgradeEventListener);
     }
-    // Reset the daemon and app upgrade event listeners since they're going to be invalidated on disconnect
+    if (this.warrenStatusListener) {
+      this.daemonRpc.unsubscribeWarrenStatusListener(this.warrenStatusListener);
+    }
+    // Reset the daemon, app upgrade, and Warren status listeners
+    // because they are going to be invalidated on disconnect.
     this.daemonEventListener = undefined;
     this.daemonAppUpgradeEventListener = undefined;
+    this.warrenStatusListener = undefined;
 
     this.notificationController.closeNotificationsInCategory(
       SystemNotificationCategory.tunnelState,
@@ -752,13 +773,18 @@ class ApplicationMain
   }
 
   private handleBootstrapError(_error?: Error) {
-    // Unsubscribe from daemon and app upgrade events when encountering errors during initial data retrieval.
+    // Unsubscribe from daemon, app upgrade, and Warren status events
+    // when encountering errors during initial data retrieval.
     if (this.daemonEventListener) {
       this.daemonRpc.unsubscribeDaemonEventListener(this.daemonEventListener);
     }
 
     if (this.daemonAppUpgradeEventListener) {
       this.daemonRpc.unsubscribeAppUpgradeEventListener(this.daemonAppUpgradeEventListener);
+    }
+
+    if (this.warrenStatusListener) {
+      this.daemonRpc.unsubscribeWarrenStatusListener(this.warrenStatusListener);
     }
   }
 
@@ -791,6 +817,23 @@ class ApplicationMain
     this.daemonRpc.subscribeDaemonEventListener(daemonEventListener);
 
     return daemonEventListener;
+  }
+
+  // Forwards every WarrenStatus snapshot received from the daemon to
+  // the renderer over the `warrenStatus` IPC channel. Errors are
+  // logged but do not bring down the rest of the bootstrap because
+  // the status stream is purely informational.
+  private subscribeWarrenStatusEvents(): SubscriptionListener<WarrenStatus> {
+    const listener = new SubscriptionListener(
+      (snapshot: WarrenStatus) => {
+        IpcMainEventChannel.warrenStatus.notify?.(snapshot);
+      },
+      (error: Error) => {
+        log.warn(`Cannot deserialize the Warren status event: ${error.message}`);
+      },
+    );
+    this.daemonRpc.subscribeWarrenStatusListener(listener);
+    return listener;
   }
 
   private setSettings(newSettings: ISettings) {

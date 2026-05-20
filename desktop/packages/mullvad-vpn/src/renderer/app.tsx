@@ -181,6 +181,13 @@ export default class AppRenderer {
       this.setCurrentApiAccessMethod(setting);
     });
 
+    // Warren live status push: dispatch every snapshot into the redux
+    // store so the connection-details panel and other consumers stay
+    // in sync without polling.
+    IpcRendererEventChannel.warrenStatus.listen((snapshot) => {
+      this.reduxActions.settings.updateWarrenStatus(snapshot);
+    });
+
     IpcRendererEventChannel.relays.listen((relayListPair: IRelayListWithEndpointData) => {
       this.setRelayListPair(relayListPair);
     });

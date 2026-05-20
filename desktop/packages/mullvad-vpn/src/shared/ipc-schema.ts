@@ -29,6 +29,7 @@ import {
   VoucherResponse,
   WarrenMultiHopSettings,
   WarrenPubKey,
+  WarrenStatus,
 } from './daemon-rpc-types';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
@@ -187,6 +188,13 @@ export const ipcSchema = {
     connect: invoke<void, void>(),
     disconnect: invoke<DisconnectSource, void>(),
     reconnect: invoke<void, void>(),
+  },
+  // Warren live status (M4.E.D auto-reconnect counter + age, M4.0
+  // obfuscation indicator). The main process subscribes to the daemon
+  // WarrenStatusUpdates push stream and forwards every snapshot via
+  // this channel; the renderer dispatches it into the redux store.
+  warrenStatus: {
+    '': notifyRenderer<WarrenStatus>(),
   },
   settings: {
     '': notifyRenderer<ISettings>(),

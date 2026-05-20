@@ -88,7 +88,9 @@ export class DaemonRpc extends GrpcClient {
   private nextSubscriptionId = 0;
   private subscriptions: Map<
     number,
-    grpc.ClientReadableStream<grpcTypes.DaemonEvent | grpcTypes.AppUpgradeEvent>
+    grpc.ClientReadableStream<
+      grpcTypes.DaemonEvent | grpcTypes.AppUpgradeEvent | grpcTypes.WarrenStatus
+    >
   > = new Map();
 
   public constructor(connectionObserver?: ConnectionObserver) {
@@ -174,6 +176,40 @@ export class DaemonRpc extends GrpcClient {
   }
 
   public unsubscribeDaemonEventListener(listener: SubscriptionListener<DaemonEvent>) {
+    const id = listener.subscriptionId;
+    if (id !== undefined) {
+      this.removeSubscription(id);
+    }
+  }
+
+  // Subscribe to the daemon's WarrenStatusUpdates push stream. Each
+  // emitted snapshot is converted to the renderer-facing WarrenStatus
+  // shape before being forwarded to the listener.
+  public subscribeWarrenStatusListener(listener: SubscriptionListener<WarrenStatus>) {
+    const call = this.isConnected && this.client.warrenStatusUpdates(new Empty());
+    if (!call) {
+      throw noConnectionError;
+    }
+    const subscriptionId = this.subscriptionId();
+    listener.subscriptionId = subscriptionId;
+    this.subscriptions.set(subscriptionId, call);
+
+    call.on('data', (data: grpcTypes.WarrenStatus) => {
+      try {
+        listener.onEvent(convertFromWarrenStatus(data));
+      } catch (e) {
+        const error = e as Error;
+        listener.onError(error);
+      }
+    });
+
+    call.on('error', (error) => {
+      listener.onError(error);
+      this.removeSubscription(subscriptionId);
+    });
+  }
+
+  public unsubscribeWarrenStatusListener(listener: SubscriptionListener<WarrenStatus>) {
     const id = listener.subscriptionId;
     if (id !== undefined) {
       this.removeSubscription(id);

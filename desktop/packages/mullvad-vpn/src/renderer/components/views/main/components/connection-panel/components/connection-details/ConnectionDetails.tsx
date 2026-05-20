@@ -112,8 +112,68 @@ export function ConnectionDetails() {
           )}
         </StyledIpLabelContainer>
       </StyledIpTable>
+      {warrenMode && <WarrenStatusRows />}
     </StyledConnectionDetailsContainer>
   );
+}
+
+// Warren status block: reconnect counter + age + M4.0 obfuscation
+// indicator. Reads from `state.settings.warrenStatus` which is fed by
+// the daemon WarrenStatusUpdates push stream. Hidden when warren_mode
+// is OFF (= pure Mullvad upstream path).
+function WarrenStatusRows() {
+  const warrenStatus = useSelector((state) => state.settings.warrenStatus);
+  const reconnectCount = warrenStatus?.reconnectCount ?? 0;
+  const lastReconnectAgeMs = warrenStatus?.lastReconnectAgeMs ?? null;
+  // Obfuscation default-on per /v1 doctrine; default to true if the
+  // status has not been pushed yet so the UI does not flash an
+  // alarming "OFF" state during boot.
+  const obfuscationActive = warrenStatus?.obfuscationActive ?? true;
+
+  return (
+    <StyledIpTable style={{ marginTop: '8px' }} data-anchor-id="warren-status-reconnect">
+      <StyledConnectionDetailsTitle>
+        {messages.pgettext('warren-status-view', 'Reconnects')}
+      </StyledConnectionDetailsTitle>
+      <StyledConnectionDetailsLabel data-testid="warren-reconnect-count">
+        {reconnectCount}
+      </StyledConnectionDetailsLabel>
+      <StyledConnectionDetailsTitle>
+        {messages.pgettext('warren-status-view', 'Last')}
+      </StyledConnectionDetailsTitle>
+      <StyledConnectionDetailsLabel data-testid="warren-last-reconnect-age">
+        {lastReconnectAgeMs === null
+          ? messages.pgettext('warren-status-view', 'never')
+          : formatAge(lastReconnectAgeMs)}
+      </StyledConnectionDetailsLabel>
+      <StyledConnectionDetailsTitle>
+        {messages.pgettext('warren-status-view', 'Obfuscation')}
+      </StyledConnectionDetailsTitle>
+      <StyledConnectionDetailsLabel data-testid="warren-obfuscation-active">
+        {obfuscationActive
+          ? messages.pgettext('warren-status-view', 'HTTP/3 mimicry (active)')
+          : messages.pgettext('warren-status-view', 'inactive')}
+      </StyledConnectionDetailsLabel>
+    </StyledIpTable>
+  );
+}
+
+// Compact age formatter: under a minute = seconds, under an hour =
+// minutes:seconds, beyond = HhMM. Tuned for the connection-details
+// panel where vertical space is tight.
+function formatAge(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  if (totalSec < 60) {
+    return `${totalSec}s ago`;
+  }
+  if (totalSec < 3600) {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}m ${s}s ago`;
+  }
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  return `${h}h ${m}m ago`;
 }
 
 function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
