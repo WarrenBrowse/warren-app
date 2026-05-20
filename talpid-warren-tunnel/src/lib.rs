@@ -37,6 +37,11 @@ pub use warren_multihop::{ExitDescriptorSigned as MultiHopExitDescriptor, ExitId
 // table) and is also referenced explicitly by the daemon-side
 // `warren_nat_pmp` module.
 pub use warren_natpmp_protocol::MapProto as NatPmpProto;
+// IPv4 CIDR descriptor used by the daemon-side `--bypass-cidr`
+// settings plumbing. Re-exported so callers (mullvad-daemon, gRPC
+// conversions, settings persistence) consume one canonical type
+// instead of duplicating it across crates.
+pub use warren_client::bypass_cidr::BypassCidr;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
@@ -146,6 +151,21 @@ pub struct WarrenTunnelParameters {
     /// `WarrenStatusCache`, which in turn drives the
     /// `NatPmpStatusUpdates` gRPC stream the Electron UI subscribes to.
     pub nat_pmp_observer: Option<NatPmpEventObserver>,
+
+    /// IPv4 CIDRs that should bypass the tunnel and remain reachable
+    /// via the host's main routing table (LAN, private ranges, inbound
+    /// SSH on a management interface, ...). Each entry becomes an
+    /// `ip rule add to <cidr> lookup main pref 49` installed alongside
+    /// the standard `0.0.0.0/1` + `128.0.0.0/1` split-default routes.
+    /// Empty (default) preserves the M4.E.D behaviour: the tunnel
+    /// captures all traffic except the exit IP itself.
+    ///
+    /// Linux-only at this layer: macOS and Windows daemon routing is
+    /// handled by talpid-core's platform splitters, which do not yet
+    /// consume this list. UI exposure is deferred to a future phase;
+    /// the field is plumbed end-to-end so future UI work only needs
+    /// the gRPC + Redux glue, not a fresh daemon traversal.
+    pub bypass_cidrs: Vec<BypassCidr>,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -167,6 +187,7 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 "nat_pmp_observer",
                 &self.nat_pmp_observer.as_ref().map(|_| "<observer>"),
             )
+            .field("bypass_cidrs", &self.bypass_cidrs)
             .finish()
     }
 }
@@ -1771,6 +1792,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            bypass_cidrs: Vec::new(),
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1799,6 +1821,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            bypass_cidrs: Vec::new(),
         };
         assert!(params.multi_hop.is_none());
         assert!(
@@ -1849,6 +1872,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            bypass_cidrs: Vec::new(),
         };
         let s = format!("{params:?}");
         assert!(
