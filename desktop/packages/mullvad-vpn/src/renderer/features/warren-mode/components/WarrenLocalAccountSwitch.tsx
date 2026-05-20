@@ -1,7 +1,7 @@
 import { Switch, SwitchProps } from '../../../lib/components/switch';
 import { useWarrenLocalAccount } from '../hooks';
 
-// Toggle UI pour `Settings::warren_local_account`. Symétrique de
+// UI toggle for `Settings::warren_local_account`. Symmetric to
 // `WarrenModeSwitch` (cf. doc).
 export type WarrenLocalAccountSwitch = SwitchProps;
 

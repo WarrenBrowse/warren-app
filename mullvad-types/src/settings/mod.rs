@@ -118,28 +118,28 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
-    /// Si `true`, le daemon utilise le backend tunnel Iroh (Warren)
-    /// au lieu de WireGuard. Override possible via env var POC
-    /// `WARREN_TUNNEL=1` (cf. `warren_mode::resolve`). Default `false`
-    /// = path WireGuard upstream préservé.
+    /// If `true`, the daemon uses the Iroh tunnel backend (Warren)
+    /// instead of WireGuard. Can be overridden via the POC env var
+    /// `WARREN_TUNNEL=1` (see `warren_mode::resolve`). Default `false`
+    /// = upstream WireGuard path preserved.
     #[serde(default)]
     pub warren_mode: bool,
-    /// Si `true`, le daemon utilise les backends account/device locaux
-    /// (`LocalAccountBackend`/`LocalDeviceBackend`) au lieu de
-    /// contacter `api.mullvad.net`. Override via env var POC
+    /// If `true`, the daemon uses the local account/device backends
+    /// (`LocalAccountBackend`/`LocalDeviceBackend`) instead of
+    /// contacting `api.mullvad.net`. Override via the POC env var
     /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
     #[serde(default)]
     pub warren_local_account: bool,
-    /// URL du serveur warren-api utilisée par les
+    /// URL of the warren-api server used by the
     /// `WarrenRemote{Account,Device}Backend` (mode `warren_mode = true
     /// && warren_local_account = false`).
     ///
-    /// Format attendu : `http(s)://host:port` sans trailing slash, e.g.
-    /// `https://api.warrenbrowse.com` ou `http://127.0.0.1:8080`.
+    /// Expected format: `http(s)://host:port` without trailing slash, e.g.
+    /// `https://api.warrenbrowse.com` or `http://127.0.0.1:8080`.
     ///
-    /// `None` = pas de mode warren-remote → fallback `RemoteAccountBackend`
-    /// (path Mullvad upstream legacy via `api.mullvad.net`). Override
-    /// possible via env var `WARREN_API_URL` (priorité sur Settings).
+    /// `None` = no warren-remote mode -> fallback to `RemoteAccountBackend`
+    /// (legacy upstream Mullvad path via `api.mullvad.net`). Can be
+    /// overridden via env var `WARREN_API_URL` (takes priority over Settings).
     #[serde(default)]
     pub warren_api_url: Option<String>,
     /// Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
@@ -353,12 +353,12 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // `true` par défaut sur le fork Warren. Le binaire release
-            // ne contacte JAMAIS api.mullvad.net — la chaîne tunnel +
-            // account passe par warren-api. L'utilisateur peut
-            // explicitement passer ces flags à `false` pour réactiver
-            // le path Mullvad upstream (= dev/POC seulement, jamais
-            // documenté en prod).
+            // `true` by default on the Warren fork. The release binary
+            // NEVER contacts api.mullvad.net — the tunnel + account
+            // chain goes through warren-api. The user can
+            // explicitly set these flags to `false` to re-enable
+            // the upstream Mullvad path (= dev/POC only, never
+            // documented in prod).
             warren_mode: true,
             warren_local_account: true,
             warren_api_url: None,

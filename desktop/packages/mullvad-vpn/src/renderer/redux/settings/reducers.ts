@@ -83,10 +83,10 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
-  // Toggles persistants exposés via gRPC.
+  // Persistent toggles exposed via gRPC.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
-  // URL warren-api persistante.
+  // Persistent warren-api URL.
   warrenApiUrl?: string;
   // Warren two-relayed QUIC multi-hop settings (M4.E.D).
   warrenMultiHop: WarrenMultiHopSettings;

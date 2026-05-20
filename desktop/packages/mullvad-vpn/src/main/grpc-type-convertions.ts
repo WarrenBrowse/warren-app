@@ -446,8 +446,8 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   const apiAccessMethods = convertFromApiAccessMethodSettings(settings.getApiAccessMethods()!);
   const relayOverrides = settingsObject.relayOverridesList;
   const recents = convertFromRecents(settings.getRecents());
-  // Empty string proto → undefined côté ISettings (alignement avec
-  // mullvad_types::Settings::warren_api_url: Option<String>).
+  // Empty string proto → undefined on the ISettings side (aligned
+  // with mullvad_types::Settings::warren_api_url: Option<String>).
   const warrenApiUrl =
     settingsObject.warrenApiUrl && settingsObject.warrenApiUrl.length > 0
       ? settingsObject.warrenApiUrl

@@ -1,10 +1,10 @@
 import { Switch, SwitchProps } from '../../../lib/components/switch';
 import { useWarrenMode } from '../hooks';
 
-// Toggle UI pour `Settings::warren_mode`. Réutilise le primitif
-// `Switch` du design system. À placer dans une page Settings (e.g. à
-// côté du toggle "Allow LAN") ou dans une page dédiée "Warren mode"
-// lorsque l'UX sera maquettée.
+// UI toggle for `Settings::warren_mode`. Reuses the `Switch` primitive
+// from the design system. To be placed in a Settings page (e.g. next
+// to the "Allow LAN" toggle) or in a dedicated "Warren mode" page
+// once the UX is designed.
 export type WarrenModeSwitch = SwitchProps;
 
 function WarrenModeSwitch({ children, ...props }: WarrenModeSwitch) {

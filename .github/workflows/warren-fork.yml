@@ -1,15 +1,15 @@
 ---
-# Warren fork — workflow CI léger spécifique à la branche `warren-base`.
+# Warren fork — lightweight CI workflow specific to the `warren-base` branch.
 #
-# Pourquoi un workflow distinct des `daemon.yml` / `clippy.yml` Mullvad
-# existants : ces derniers se déclenchent sur `pull_request` (sync
-# upstream Mullvad) et prennent ~30-60 min (build cross-OS Android +
-# desktop + iOS). Pour le dev quotidien sur `warren-base` (push direct),
-# on veut un signal rapide (~5 min) sur les régressions Warren-spécifiques
-# (toggles, identité BIP39, backends Local/Remote, UI Settings).
+# Why a workflow distinct from the existing Mullvad `daemon.yml` /
+# `clippy.yml`: those trigger on `pull_request` (upstream Mullvad
+# sync) and take ~30-60 min (cross-OS Android + desktop + iOS build).
+# For daily dev on `warren-base` (direct push), we want a fast signal
+# (~5 min) on Warren-specific regressions (toggles, BIP39 identity,
+# Local/Remote backends, Settings UI).
 #
-# Trigger : push direct sur `warren-base` ou PR ciblant cette branche.
-# Filtré par paths pour ne tourner que quand le code Warren change.
+# Trigger: direct push on `warren-base` or PR targeting that branch.
+# Filtered by paths to only run when Warren code changes.
 
 name: Warren fork CI
 
@@ -61,15 +61,15 @@ jobs:
       - uses: ./.github/actions/mullvad-build-env
 
       - name: cargo fmt --check (Warren scope)
-        # Gate fmt en plus de clippy/test pour eviter les drifts de
-        # style sur la branche fork (= cohérent avec workflow ci.yml
-        # warren-core qui gate aussi fmt).
+        # Gate fmt in addition to clippy/test to avoid style drifts
+        # on the fork branch (= consistent with the warren-core ci.yml
+        # workflow which also gates fmt).
         run: cargo fmt --all -- --check
 
       - name: cargo test mullvad-daemon
-        # Cible les crates touchees par le fork. On evite cargo test
-        # --workspace pour ne pas faire tourner Android / iOS / Windows
-        # specific tests sur Linux (deja couverts par daemon.yml upstream).
+        # Targets the crates touched by the fork. We avoid cargo test
+        # --workspace so we do not run Android / iOS / Windows
+        # specific tests on Linux (already covered by upstream daemon.yml).
         run: |
           cargo test --locked -p mullvad-daemon
           cargo test --locked -p mullvad-api
@@ -105,18 +105,18 @@ jobs:
         run: npm ci
 
       - name: TypeScript type-check
-        # Inclut les patches manuels TS Phase H des bindings gRPC.
-        # A regen automatiquement quand on aura execute le container
-        # mullvadvpn-app-build-node-grpc-bindings (cf. warren-fork.md).
+        # Includes the manual TS Phase H patches for the gRPC bindings.
+        # Will regen automatically once we have executed the
+        # mullvadvpn-app-build-node-grpc-bindings container (see warren-fork.md).
         run: npm run type-check
 
       - name: ESLint (zero warnings)
         run: npm run lint
 
       - name: Verify messages.pot is up-to-date
-        # Si du code TS appelle pgettext/gettext sans qu'un re-run de
-        # update-translations soit committe, ce check casse. Empeche
-        # la divergence pot-vs-source.
+        # If TS code calls pgettext/gettext without an update-translations
+        # re-run being committed, this check breaks. Prevents
+        # divergence between pot and source.
         shell: bash
         run: |
           npm run update-translations

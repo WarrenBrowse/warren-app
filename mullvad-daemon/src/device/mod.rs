@@ -1662,11 +1662,11 @@ mod test {
         );
     }
 
-    /// Régression critique Warren fork B.3 : en `local_account_mode`,
-    /// le helper de décision DOIT toujours retourner `false`, même au
-    /// seuil de retry où en mode standard on déclencherait un check.
-    /// Sinon le daemon enverrait `validate_device` à api.mullvad.net
-    /// alors qu'il a été configuré explicitement pour ne pas le faire.
+    /// Critical Warren fork B.3 regression: in `local_account_mode`,
+    /// the decision helper MUST always return `false`, even at the
+    /// retry threshold where in standard mode we would trigger a check.
+    /// Otherwise the daemon would send `validate_device` to api.mullvad.net
+    /// even though it was explicitly configured not to do so.
     #[test]
     fn should_trigger_device_check_returns_false_in_local_mode_at_threshold() {
         let can_retry = Arc::new(AtomicBool::new(true));
@@ -1678,12 +1678,12 @@ mod test {
         assert!(!triggered);
     }
 
-    /// Régression critique Warren fork B.3 : en mode local, le
-    /// court-circuit `!local && ...` ne doit PAS consommer le swap
-    /// atomique de `can_retry`. Si on consommait `can_retry` à
-    /// chaque transition de state même en local, on aurait un effet
-    /// de bord silencieux qui casserait la sémantique de retry quand
-    /// on bascule entre modes (futur toggle gRPC).
+    /// Critical Warren fork B.3 regression: in local mode, the
+    /// `!local && ...` short-circuit must NOT consume the atomic
+    /// swap of `can_retry`. If we consumed `can_retry` on
+    /// every state transition even in local mode, we would have a
+    /// silent side effect that would break the retry semantics when
+    /// switching between modes (future gRPC toggle).
     #[test]
     fn should_trigger_device_check_does_not_consume_can_retry_in_local_mode() {
         let can_retry = Arc::new(AtomicBool::new(true));
@@ -1694,15 +1694,15 @@ mod test {
         );
         assert!(
             can_retry.load(Ordering::SeqCst),
-            "can_retry doit rester intact en mode local"
+            "can_retry must remain intact in local mode"
         );
     }
 
-    /// Régression sur le path standard non-local : si `local=false` au
-    /// seuil de retry, le helper doit déléguer à
-    /// `should_check_device_validity` et retourner `true` (= déclencher
-    /// le check). Sinon B.3 aurait introduit une régression silencieuse
-    /// qui désactive le device check en mode Mullvad standard.
+    /// Regression on the standard non-local path: if `local=false` at
+    /// the retry threshold, the helper must delegate to
+    /// `should_check_device_validity` and return `true` (= trigger
+    /// the check). Otherwise B.3 would have introduced a silent regression
+    /// that disables the device check in standard Mullvad mode.
     #[test]
     fn should_trigger_device_check_runs_in_non_local_mode_at_threshold() {
         let can_retry = Arc::new(AtomicBool::new(true));
@@ -1713,7 +1713,7 @@ mod test {
         );
         assert!(
             triggered,
-            "non-local mode au seuil doit déclencher le check"
+            "non-local mode at threshold must trigger the check"
         );
     }
 }

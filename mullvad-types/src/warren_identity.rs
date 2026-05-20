@@ -1,43 +1,43 @@
-//! Type [`WarrenIdentity`] qui remplace
-//! [`crate::device::AccountAndDevice`] dans le pipeline auth Warren.
+//! [`WarrenIdentity`] type that replaces
+//! [`crate::device::AccountAndDevice`] in the Warren auth pipeline.
 //!
-//! **Différence avec `AccountAndDevice`** :
-//! - `account_number: AccountNumber` (alias `String` non validé) →
-//!   `pubkey: WarrenPubKey` (newtype hex 64ch validé, cf.
+//! **Difference from `AccountAndDevice`**:
+//! - `account_number: AccountNumber` (alias `String`, unvalidated) ->
+//!   `pubkey: WarrenPubKey` (validated 64-char hex newtype, see
 //!   [`crate::warren_pubkey`]).
-//! - Champ Device inchangé : on conserve la même structure
-//!   `Device { id, name, pubkey, hijack_dns, created }`. La `pubkey`
-//!   du Device est une `talpid_types::net::wireguard::PublicKey` ;
-//!   ce n'est PAS la même que la `WarrenPubKey` Ed25519 de
-//!   l'identité Warren (la première est WireGuard, la seconde est
-//!   l'identifiant utilisateur Warren).
+//! - Device field unchanged: we keep the same
+//!   `Device { id, name, pubkey, hijack_dns, created }` structure.
+//!   The `pubkey` of the Device is a
+//!   `talpid_types::net::wireguard::PublicKey`; this is NOT the
+//!   same as the Ed25519 `WarrenPubKey` of the Warren identity (the
+//!   former is WireGuard, the latter is the Warren user identifier).
 
 use crate::device::Device;
 use crate::warren_pubkey::WarrenPubKey;
 use serde::{Deserialize, Serialize};
 
-/// Identité Warren liée à un device — paire `(pubkey, device)`.
+/// Warren identity bound to a device — `(pubkey, device)` pair.
 ///
-/// La `pubkey` est l'identifiant utilisateur Warren (Ed25519 hex
-/// 64ch) ; le `device` est le device WireGuard enregistré côté
-/// serveur (le `device.pubkey` est la pubkey WireGuard, distincte).
-// `Device` upstream Mullvad n'implémente pas `PartialEq` / `Eq` (champ
-// `chrono::DateTime` + `talpid_types::PublicKey` qui ne le derivent
-// pas non plus). On reste cohérent : pas de `PartialEq` direct, les
-// tests comparent via roundtrip JSON.
+/// The `pubkey` is the Warren user identifier (Ed25519, 64-char hex);
+/// the `device` is the WireGuard device registered on the
+/// server side (the `device.pubkey` is the WireGuard pubkey, distinct).
+// Upstream Mullvad `Device` does not implement `PartialEq` / `Eq` (it
+// has a `chrono::DateTime` field plus `talpid_types::PublicKey` which
+// does not derive them either). We stay consistent: no direct
+// `PartialEq`; tests compare via JSON roundtrip.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WarrenIdentity {
-    /// Identifiant utilisateur Warren — pubkey Ed25519 dérivée de
-    /// la mnémonique BIP39 via `warren_identity::derive_node_key`.
+    /// Warren user identifier — Ed25519 pubkey derived from
+    /// the BIP39 mnemonic via `warren_identity::derive_node_key`.
     pub pubkey: WarrenPubKey,
-    /// Device WireGuard enregistré pour cette identité (id, nom,
-    /// clé WG, etc.).
+    /// WireGuard device registered for this identity (id, name,
+    /// WG key, etc.).
     pub device: Device,
 }
 
 impl WarrenIdentity {
-    /// Crée une nouvelle identité (constructeur trivial pour
-    /// cohérence avec `AccountAndDevice::new`).
+    /// Create a new identity (trivial constructor for
+    /// consistency with `AccountAndDevice::new`).
     #[must_use]
     pub fn new(pubkey: WarrenPubKey, device: Device) -> Self {
         Self { pubkey, device }
@@ -51,8 +51,8 @@ mod tests {
     use std::str::FromStr;
     use talpid_types::net::wireguard::PublicKey;
 
-    /// Fixture device pour tests. Pubkey WG arbitraire, ne sert
-    /// qu'à remplir la struct.
+    /// Fixture device for tests. Arbitrary WG pubkey, only used
+    /// to fill the struct.
     fn fixture_device() -> Device {
         Device {
             id: "device-id-fixture".to_owned(),
@@ -80,25 +80,25 @@ mod tests {
 
     #[test]
     fn serde_roundtrips_through_json() {
-        // Phase 2.B.2 — la sérialisation produit un JSON exploitable
-        // par le daemon (qui le persistera dans device.json à la
-        // place de l'ancien `AccountAndDevice`). La déserialisation
-        // valide la `pubkey` (= rejet si hex corrompu, cf.
+        // Phase 2.B.2 — serialization produces a JSON exploitable
+        // by the daemon (which will persist it in device.json
+        // instead of the legacy `AccountAndDevice`). Deserialization
+        // validates the `pubkey` (= rejected if hex corrupt, see
         // `warren_pubkey::serde_deserialize_rejects_invalid_hex`).
-        // `Device` n'a pas PartialEq, donc on compare via le JSON
-        // sérialisé ré-émis (= contrat de stabilité du wire format).
+        // `Device` has no PartialEq, so we compare via the re-emitted
+        // serialized JSON (= wire format stability contract).
         let identity = WarrenIdentity::new(fixture_pubkey(), fixture_device());
         let json = serde_json::to_string(&identity).expect("serialize");
         let parsed: WarrenIdentity = serde_json::from_str(&json).expect("deserialize must succeed");
         let rejson = serde_json::to_string(&parsed).expect("re-serialize");
-        assert_eq!(json, rejson, "JSON roundtrip doit être stable");
+        assert_eq!(json, rejson, "JSON roundtrip must be stable");
     }
 
     #[test]
     fn serde_rejects_invalid_pubkey_hex() {
-        // Sécurité : un device.json corrompu ne doit pas produire
-        // une identité avec pubkey invalide (qui crasherait plus
-        // tard quand on essaiera de signer).
+        // Security: a corrupt device.json must not produce
+        // an identity with an invalid pubkey (which would crash
+        // later when we try to sign).
         let bad_json = r#"{
             "pubkey": "not-hex",
             "device": {
@@ -110,6 +110,6 @@ mod tests {
             }
         }"#;
         let res: Result<WarrenIdentity, _> = serde_json::from_str(bad_json);
-        assert!(res.is_err(), "pubkey non-hex doit faire échouer la deser");
+        assert!(res.is_err(), "non-hex pubkey must fail deserialization");
     }
 }

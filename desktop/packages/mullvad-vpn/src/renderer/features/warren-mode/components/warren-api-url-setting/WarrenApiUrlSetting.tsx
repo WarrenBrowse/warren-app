@@ -8,22 +8,22 @@ import { ListItemProps } from '../../../../lib/components/list-item';
 import { useTextField } from '../../../../lib/components/text-field';
 import { useSelector } from '../../../../redux/store';
 
-// Entry de la page VPN settings pour `Settings::warren_api_url`.
-// Pattern aligné avec `MtuSetting` (TextField + onBlur submit).
-// Empty string → unset côté daemon (= fallback Mullvad upstream
-// backend). Restart daemon requis pour appliquer (cf.
-// `warren_remote_config::resolve` côté Rust).
+// Entry of the VPN settings page for `Settings::warren_api_url`.
+// Pattern aligned with `MtuSetting` (TextField + onBlur submit).
+// Empty string → unset on the daemon side (= fallback to Mullvad
+// upstream backend). Daemon restart required to apply (cf.
+// `warren_remote_config::resolve` on the Rust side).
 
 export type WarrenApiUrlSettingProps = Omit<ListItemProps, 'children'>;
 
 function urlIsValid(url: string): boolean {
-  // Empty = unset = valide.
+  // Empty = unset = valid.
   if (url === '') {
     return true;
   }
-  // Format minimal accepté : `http(s)://host[:port][/path]`. Pas de
-  // validation hostname stricte (le daemon le fera au boot via reqwest).
-  // Refuse les URL avec espace ou trailing slash (= cohérent avec convention).
+  // Minimal accepted format: `http(s)://host[:port][/path]`. No strict
+  // hostname validation (the daemon will do it at boot via reqwest).
+  // Rejects URLs with whitespace or trailing slash (= consistent with convention).
   if (/\s/.test(url)) {
     return false;
   }

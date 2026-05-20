@@ -312,8 +312,8 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
         let warren_api_url = request.into_inner();
-        // No-log Warren : URL peut potentiellement contenir un host
-        // sensible (= déploiement privé). Logger seulement la longueur.
+        // Warren no-log: URL may potentially contain a sensitive
+        // host (= private deployment). Log only the length.
         log::debug!("set_warren_api_url(len={})", warren_api_url.len());
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
@@ -321,9 +321,9 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    /// Retourne la mnémonique BIP39 utilisateur. Empty string si
-    /// l'identité n'a jamais été bootstrappée. **Politique no-log** :
-    /// ne jamais logger le contenu.
+    /// Returns the user's BIP39 mnemonic. Empty string if
+    /// the identity has never been bootstrapped. **No-log policy**:
+    /// never log the content.
     async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
         log::debug!("get_warren_mnemonic (content NEVER logged)");
         let (tx, rx) = oneshot::channel();
@@ -332,9 +332,9 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(mnemonic.unwrap_or_default()))
     }
 
-    /// Remplace la mnémonique BIP39 (= restore identité). Validation
-    /// BIP39 + écriture atomique. Restart daemon requis. **Politique
-    /// no-log**.
+    /// Replaces the BIP39 mnemonic (= restore identity). BIP39
+    /// validation + atomic write. Daemon restart required. **No-log
+    /// policy**.
     async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
         let mnemonic = request.into_inner();
         log::info!(

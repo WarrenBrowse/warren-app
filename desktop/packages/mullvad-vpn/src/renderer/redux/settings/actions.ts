@@ -40,7 +40,7 @@ export interface IUpdateAllowLanAction {
   allowLan: boolean;
 }
 
-// Actions de mise à jour des toggles Warren.
+// Update actions for the Warren toggles.
 export interface IUpdateWarrenModeAction {
   type: 'UPDATE_WARREN_MODE';
   warrenMode: boolean;
@@ -51,19 +51,19 @@ export interface IUpdateWarrenLocalAccountAction {
   warrenLocalAccount: boolean;
 }
 
-// Action de mise à jour URL warren-api.
+// Update action for the warren-api URL.
 export interface IUpdateWarrenApiUrlAction {
   type: 'UPDATE_WARREN_API_URL';
   warrenApiUrl?: string;
 }
 
-// Action de mise à jour des settings multi-hop Warren.
+// Update action for the Warren multi-hop settings.
 export interface IUpdateWarrenMultiHopAction {
   type: 'UPDATE_WARREN_MULTI_HOP';
   warrenMultiHop: WarrenMultiHopSettings;
 }
 
-// Action de mise à jour du status Warren live (reconnect_count + age).
+// Update action for the live Warren status (reconnect_count + age).
 export interface IUpdateWarrenStatusAction {
   type: 'UPDATE_WARREN_STATUS';
   warrenStatus: WarrenStatus;

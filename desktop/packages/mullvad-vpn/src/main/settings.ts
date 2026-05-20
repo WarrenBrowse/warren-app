@@ -31,18 +31,18 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
-    // IPC handlers pour les toggles Warren.
+    // IPC handlers for the Warren toggles.
     IpcMainEventChannel.settings.handleSetWarrenMode((enabled) =>
       this.daemonRpc.setWarrenMode(enabled),
     );
     IpcMainEventChannel.settings.handleSetWarrenLocalAccount((enabled) =>
       this.daemonRpc.setWarrenLocalAccount(enabled),
     );
-    // IPC handler pour la URL warren-api.
+    // IPC handler for the warren-api URL.
     IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
       this.daemonRpc.setWarrenApiUrl(url),
     );
-    // IPC handler pour les settings multi-hop Warren.
+    // IPC handler for the Warren multi-hop settings.
     IpcMainEventChannel.settings.handleSetWarrenMultiHop((settings) =>
       this.daemonRpc.setWarrenMultiHopSettings(settings),
     );
@@ -189,19 +189,19 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
-  // Exposition des toggles persistants Warren.
+  // Exposure of the persistent Warren toggles.
   public get warrenMode() {
     return this.settingsValue.warrenMode;
   }
   public get warrenLocalAccount() {
     return this.settingsValue.warrenLocalAccount;
   }
-  // URL persistante warren-api (undefined si unset côté daemon).
+  // Persistent warren-api URL (undefined if unset on the daemon side).
   public get warrenApiUrl() {
     return this.settingsValue.warrenApiUrl;
   }
-  // Warren multi-hop settings (M4.E.D). Restart daemon requis pour
-  // appliquer.
+  // Warren multi-hop settings (M4.E.D). Daemon restart required to
+  // apply.
   public get warrenMultiHop() {
     return this.settingsValue.warrenMultiHop;
   }

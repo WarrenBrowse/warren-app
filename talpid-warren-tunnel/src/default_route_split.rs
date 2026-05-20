@@ -20,21 +20,20 @@ use std::net::Ipv4Addr;
 use anyhow::{Context, Result, anyhow};
 use tokio::process::Command;
 
-/// Numéro de table de routage dédiée. Distinct du fwmark policy
-/// routing classique pour ne pas entrer en conflit si les deux features
-/// sont actives.
+/// Dedicated routing table number. Distinct from the classic fwmark
+/// policy routing to avoid conflicts if both features are active.
 const ROUTE_TABLE: u32 = 100;
 
-/// Priorité bypass exit IP (= évalué EN PREMIER pour gagner sur la
-/// règle `lookup 100`).
+/// Bypass exit IP priority (= evaluated FIRST so it wins over the
+/// `lookup 100` rule).
 const RULE_PREF_EXIT_BYPASS: u32 = 50;
 
-/// Priorité split-default via tun (= évalué APRÈS le bypass exit).
+/// Split-default via tun priority (= evaluated AFTER the exit bypass).
 const RULE_PREF_TUN: u32 = 51;
 
-/// Construit la liste de commandes `ip` à exécuter pour install. Pure
-/// (= testable sans kernel Linux). Retour `Vec<Vec<String>>` où chaque
-/// inner vec est les args à `ip`.
+/// Builds the list of `ip` commands to execute for install. Pure
+/// (= testable without a Linux kernel). Returns `Vec<Vec<String>>`
+/// where each inner vec is the args to `ip`.
 #[must_use]
 pub fn build_install_commands(exit_ip: Ipv4Addr, tun_name: &str) -> Vec<Vec<String>> {
     vec![
@@ -77,7 +76,7 @@ pub fn build_install_commands(exit_ip: Ipv4Addr, tun_name: &str) -> Vec<Vec<Stri
     ]
 }
 
-/// Construit la liste de commandes `ip` pour uninstall (ordre inverse).
+/// Builds the list of `ip` commands for uninstall (inverse order).
 #[must_use]
 pub fn build_uninstall_commands(exit_ip: Ipv4Addr) -> Vec<Vec<String>> {
     vec![
@@ -108,8 +107,8 @@ pub fn build_uninstall_commands(exit_ip: Ipv4Addr) -> Vec<Vec<String>> {
     ]
 }
 
-/// Validation minimale du nom TUN (= protection shell injection même
-/// si on passe via `Command::new`). 1-15 chars alphanum + `-`/`_`.
+/// Minimal TUN name validation (= shell injection protection even
+/// when passing via `Command::new`). 1-15 alphanum chars + `-`/`_`.
 fn validate_tun_name(name: &str) -> Result<()> {
     if name.is_empty() || name.len() > 15 {
         return Err(anyhow!("tun_name length must be 1-15 chars"));
@@ -125,7 +124,7 @@ fn validate_tun_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Guard RAII : tient l'état "installé" pour cleanup automatique au drop.
+/// RAII guard: holds the "installed" state for automatic cleanup on drop.
 #[derive(Debug)]
 pub struct DefaultRouteSplitGuard {
     exit_ip: Ipv4Addr,
@@ -133,20 +132,20 @@ pub struct DefaultRouteSplitGuard {
 }
 
 impl DefaultRouteSplitGuard {
-    /// Installe le split-default policy routing pour `tun_name` avec
-    /// bypass de `exit_ip`. Idempotent (= "File exists" toléré).
+    /// Installs the split-default policy routing for `tun_name` with
+    /// `exit_ip` bypass. Idempotent (= "File exists" tolerated).
     ///
     /// # Errors
     ///
-    /// - `tun_name` invalide
-    /// - Manque de privilèges (CAP_NET_ADMIN requis)
-    /// - `ip` pas dans le PATH
+    /// - invalid `tun_name`
+    /// - missing privileges (CAP_NET_ADMIN required)
+    /// - `ip` not in PATH
     pub async fn install(exit_ip: Ipv4Addr, tun_name: &str) -> Result<Self> {
         validate_tun_name(tun_name).context("invalid tun_name")?;
 
-        // Diagnostic : log ip rule + table 100 state AVANT install pour
-        // détecter d'éventuelles règles préexistantes (ex: talpid_routing
-        // qui pose ses propres rules netlink avec SuppressPrefixLen + fwmark).
+        // Diagnostic: log ip rule + table 100 state BEFORE install to
+        // detect any pre-existing rules (e.g. talpid_routing
+        // posting its own netlink rules with SuppressPrefixLen + fwmark).
         if let Ok(out) = Command::new("ip").args(["rule", "show"]).output().await {
             log::debug!(
                 "ip rule (pre-install): {}",
@@ -161,7 +160,7 @@ impl DefaultRouteSplitGuard {
                 .with_context(|| format!("ip {}", args.join(" ")))?;
         }
 
-        // Diagnostic : log ip rule + table 100 state APRÈS install.
+        // Diagnostic: log ip rule + table 100 state AFTER install.
         if let Ok(out) = Command::new("ip").args(["rule", "show"]).output().await {
             log::debug!(
                 "ip rule (post-install): {}",
@@ -190,8 +189,8 @@ impl DefaultRouteSplitGuard {
         })
     }
 
-    /// Retire les règles. Idempotent : tolère "No such file" si déjà
-    /// supprimé. Best-effort : log warn mais ne fait pas échouer.
+    /// Removes the rules. Idempotent: tolerates "No such file" if
+    /// already removed. Best-effort: logs warn but does not fail.
     pub async fn uninstall(mut self) -> Result<()> {
         let cmds = build_uninstall_commands(self.exit_ip);
         for args in &cmds {
@@ -284,8 +283,8 @@ mod tests {
 
     #[test]
     fn install_third_command_is_exit_bypass_rule() {
-        // Anti-régression F10e c2 : si quelqu'un retire ce bypass, le
-        // tunnel s'auto-poison (= boucle de routage cli → tun → exit).
+        // Anti-regression F10e c2: if anyone removes this bypass, the
+        // tunnel poisons itself (= routing loop cli -> tun -> exit).
         let cmds = build_install_commands(ip("91.99.122.154"), "tun0");
         assert_eq!(
             cmds[2],

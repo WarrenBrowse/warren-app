@@ -4,9 +4,9 @@ import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
 
-// Hook qui expose le toggle persistant du mode tunnel Iroh. Le
-// restart du daemon est requis pour appliquer le changement (le mode
-// est lu au boot par `warren_mode::resolve` côté Rust).
+// Hook that exposes the persistent toggle for the Iroh tunnel mode.
+// A daemon restart is required to apply the change (the mode is read
+// at boot by `warren_mode::resolve` on the Rust side).
 export function useWarrenMode() {
   const warrenMode = useSelector((state) => state.settings.warrenMode);
   const { setWarrenMode: contextSetWarrenMode } = useAppContext();
@@ -26,7 +26,7 @@ export function useWarrenMode() {
   return { warrenMode, setWarrenMode };
 }
 
-// Hook équivalent pour le mode account local.
+// Equivalent hook for the local account mode.
 export function useWarrenLocalAccount() {
   const warrenLocalAccount = useSelector((state) => state.settings.warrenLocalAccount);
   const { setWarrenLocalAccount: contextSetWarrenLocalAccount } = useAppContext();
@@ -46,8 +46,8 @@ export function useWarrenLocalAccount() {
   return { warrenLocalAccount, setWarrenLocalAccount };
 }
 
-// Hook URL persistante warren-api. Empty string ou undefined →
-// unset côté daemon (= fallback Mullvad upstream).
+// Hook for the persistent warren-api URL. Empty string or undefined →
+// unset on the daemon side (= fallback to Mullvad upstream).
 export function useWarrenApiUrl() {
   const warrenApiUrl = useSelector((state) => state.settings.warrenApiUrl);
   const { setWarrenApiUrl: contextSetWarrenApiUrl } = useAppContext();

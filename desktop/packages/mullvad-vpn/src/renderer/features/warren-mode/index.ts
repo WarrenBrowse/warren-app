@@ -1,8 +1,8 @@
-// Feature des toggles persistants Warren.
+// Feature for the persistent Warren toggles.
 //
-// L'écran Settings consomme ces composants pour exposer les toggles
-// à l'utilisateur. Le restart du daemon est requis pour appliquer un
-// changement (cf. `warren_mode::resolve` côté Rust).
+// The Settings screen consumes these components to expose the toggles
+// to the user. A daemon restart is required to apply any change
+// (cf. `warren_mode::resolve` on the Rust side).
 
 export {
   WarrenModeSwitch,

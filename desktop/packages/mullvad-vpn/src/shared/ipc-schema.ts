@@ -202,13 +202,13 @@ export const ipcSchema = {
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
-    // Toggles persistants Warren mode.
+    // Persistent toggles for Warren mode.
     setWarrenMode: invoke<boolean, void>(),
     setWarrenLocalAccount: invoke<boolean, void>(),
-    // URL persistante warren-api (string vide = unset). Restart
-    // daemon requis pour appliquer.
+    // Persistent warren-api URL (empty string = unset). Daemon restart
+    // required to apply.
     setWarrenApiUrl: invoke<string, void>(),
-    // Warren multi-hop settings (M4.E.D). Restart daemon requis.
+    // Warren multi-hop settings (M4.E.D). Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),

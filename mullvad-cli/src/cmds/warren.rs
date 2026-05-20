@@ -1,10 +1,10 @@
-//! Sous-commandes CLI pour piloter les flags `Settings::warren_mode`
-//! et `Settings::warren_local_account` sans avoir à exporter d'env
-//! var POC.
+//! CLI subcommands to drive the `Settings::warren_mode`
+//! and `Settings::warren_local_account` flags without having to export
+//! a POC env var.
 //!
-//! Le restart du daemon est requis pour appliquer un changement (cf.
-//! `warren_mode::resolve` et `warren_account_mode::resolve` côté daemon
-//! qui lisent les flags au boot uniquement).
+//! A daemon restart is required to apply a change (see
+//! `warren_mode::resolve` and `warren_account_mode::resolve` on the daemon
+//! side, which read the flags at boot only).
 
 use anyhow::Result;
 use clap::Subcommand;
@@ -58,7 +58,7 @@ pub enum WarrenApiUrl {
 
     /// Persist the warren-api URL (restart daemon to apply)
     Set {
-        /// Format `http(s)://host:port` sans trailing slash
+        /// Format `http(s)://host:port` without trailing slash
         url: String,
     },
 

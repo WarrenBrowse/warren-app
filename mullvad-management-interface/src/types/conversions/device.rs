@@ -60,11 +60,11 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                         "missing device data",
                     ))?;
 
-                // Le proto wire format garde le field `account_number`
-                // (= chaîne string) pour compat des clients gRPC. À la
-                // conversion en domain type, on parse cette string en
-                // `WarrenPubKey` (hex 64ch) ; un client qui pousse un
-                // format non-Warren reçoit `invalid_argument`.
+                // The proto wire format keeps the `account_number`
+                // field (= string) for gRPC client compat. On
+                // conversion to the domain type, we parse this string
+                // into a `WarrenPubKey` (64-char hex); a client pushing
+                // a non-Warren format receives `invalid_argument`.
                 let pubkey =
                     mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account.account_number)
                         .map_err(|e| {
@@ -96,9 +96,9 @@ impl From<mullvad_types::device::DeviceState> for proto::DeviceState {
     fn from(state: mullvad_types::device::DeviceState) -> Self {
         proto::DeviceState {
             state: proto::device_state::State::from(&state) as i32,
-            // On émet la `pubkey` hex dans le field proto historique
-            // `account_number` (= string) pour rester compat des
-            // clients gRPC qui n'ont pas migré.
+            // We emit the hex `pubkey` in the legacy proto field
+            // `account_number` (= string) to stay compat with the
+            // gRPC clients that have not migrated.
             device: state.logged_in().map(|client| proto::AccountAndDevice {
                 account_number: client.pubkey.as_str().to_owned(),
                 device: Some(proto::Device::from(client.device)),
@@ -171,9 +171,9 @@ impl From<proto::device_event::Cause> for mullvad_types::device::DeviceEventCaus
 
 impl From<mullvad_types::device::RemoveDeviceEvent> for proto::RemoveDeviceEvent {
     fn from(event: mullvad_types::device::RemoveDeviceEvent) -> Self {
-        // On émet la `pubkey` hex dans le field proto historique
-        // `account_number` pour rester compat des clients gRPC qui
-        // n'ont pas migré.
+        // We emit the hex `pubkey` in the legacy proto field
+        // `account_number` to stay compat with the gRPC clients that
+        // have not migrated.
         proto::RemoveDeviceEvent {
             account_number: event.pubkey.as_str().to_owned(),
             new_device_list: event
@@ -194,9 +194,9 @@ impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEv
             .into_iter()
             .map(mullvad_types::device::Device::try_from)
             .collect::<Result<Vec<_>, FromProtobufTypeError>>()?;
-        // Parse le field proto `account_number` en `WarrenPubKey` ;
-        // rejette si format non-Warren (= client gRPC qui pousse un
-        // mauvais ancien format).
+        // Parse the `account_number` proto field into a `WarrenPubKey`;
+        // reject if the format is non-Warren (= gRPC client pushing
+        // an old wrong format).
         let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&event.account_number)
             .map_err(|e| {
                 FromProtobufTypeError::invalid_argument(match e {

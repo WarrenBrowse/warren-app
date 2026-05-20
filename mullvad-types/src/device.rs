@@ -42,12 +42,12 @@ impl Device {
 
 /// Contains a device state.
 ///
-/// Le variant `LoggedIn` porte une [`WarrenIdentity`] (pubkey
-/// Ed25519 + device). L'historique `AccountAndDevice`
-/// (account_number String + device) a été supprimé ; le proto gRPC
-/// garde encore son `proto::AccountAndDevice` avec field
-/// `account_number: String` qui reçoit la pubkey hex (= compat
-/// clients gRPC sans rename .proto).
+/// The `LoggedIn` variant carries a [`WarrenIdentity`] (Ed25519
+/// pubkey + device). The legacy `AccountAndDevice`
+/// (account_number String + device) has been removed; the gRPC
+/// proto still keeps its `proto::AccountAndDevice` with field
+/// `account_number: String` which receives the hex pubkey (= compat
+/// with gRPC clients without renaming .proto).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceState {
@@ -96,9 +96,9 @@ pub struct DeviceEvent {
 /// Emitted when a device is removed using the `RemoveDevice` RPC.
 /// This is not sent by a normal logout or when it is revoked remotely.
 ///
-/// Le field `account_number` (alias `String`) est remplacé par
-/// `pubkey` ([`WarrenPubKey`], hex 64ch validé). Le proto gRPC garde
-/// `account_number` comme name pour compat clients (cf.
+/// The `account_number` field (alias `String`) is replaced by
+/// `pubkey` ([`WarrenPubKey`], validated 64-char hex). The gRPC proto
+/// keeps `account_number` as the name for client compat (see
 /// mullvad-management-interface conversions).
 #[derive(Clone, Debug, Serialize)]
 pub struct RemoveDeviceEvent {
@@ -130,10 +130,10 @@ mod tests {
 
     #[test]
     fn logged_in_returns_warren_identity_with_pubkey() {
-        // Phase 2.B.3 V6.a — `DeviceState::LoggedIn` porte une
-        // `WarrenIdentity` ; `.logged_in()` retourne donc cette
-        // identité et non plus un `AccountAndDevice`. Test garantit
-        // que la pubkey survie le pattern matching.
+        // Phase 2.B.3 V6.a — `DeviceState::LoggedIn` carries a
+        // `WarrenIdentity`; `.logged_in()` therefore returns this
+        // identity rather than an `AccountAndDevice`. The test
+        // guarantees that the pubkey survives pattern matching.
         let pk = fixture_pubkey();
         let identity = WarrenIdentity::new(pk.clone(), fixture_device());
         let state = DeviceState::LoggedIn(identity);
@@ -157,9 +157,9 @@ mod tests {
 
     #[test]
     fn remove_device_event_carries_warren_pubkey() {
-        // Phase 2.B.3 V6.b — `RemoveDeviceEvent.pubkey` est typé
-        // `WarrenPubKey`. Test garantit que la pubkey survie
-        // construction → field accessor.
+        // Phase 2.B.3 V6.b — `RemoveDeviceEvent.pubkey` is typed as
+        // `WarrenPubKey`. The test guarantees that the pubkey survives
+        // construction -> field accessor.
         let pk = fixture_pubkey();
         let event = RemoveDeviceEvent {
             pubkey: pk.clone(),

@@ -74,11 +74,11 @@ export function getDefaultSettings(): ISettings {
     apiAccessMethods: getDefaultApiAccessMethods(),
     relayOverrides: [],
     recents: [],
-    // Defaults désactivés (path Mullvad standard préservé).
-    // L'utilisateur opt-in via UI Settings ou `mullvad warren …`.
+    // Defaults disabled (standard Mullvad path preserved).
+    // The user opts in via the Settings UI or `mullvad warren …`.
     warrenMode: false,
     warrenLocalAccount: false,
-    // `undefined` = unset, fallback Mullvad upstream backend.
+    // `undefined` = unset, fallback to Mullvad upstream backend.
     warrenApiUrl: undefined,
     // Default OFF per doctrine `warren_multihop_doctrine_v1`.
     warrenMultiHop: {

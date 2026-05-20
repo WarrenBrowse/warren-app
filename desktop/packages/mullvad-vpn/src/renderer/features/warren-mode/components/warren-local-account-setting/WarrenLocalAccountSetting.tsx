@@ -5,12 +5,11 @@ import { SettingsListItem } from '../../../../components/settings-list-item';
 import { ListItemProps } from '../../../../lib/components/list-item';
 import { WarrenLocalAccountSwitch } from '../WarrenLocalAccountSwitch';
 
-// Entry de la page VPN settings pour
-// `Settings::warren_local_account`. Le toggle bascule l'identité
-// Warren (mnémonique BIP39) en mode local self-hosted
-// (LocalAccountBackend + LocalDeviceBackend) au lieu d'appeler l'API
-// distante au démarrage du daemon. Nécessite un redémarrage du
-// daemon.
+// Entry of the VPN settings page for
+// `Settings::warren_local_account`. The toggle switches the Warren
+// identity (BIP39 mnemonic) into self-hosted local mode
+// (LocalAccountBackend + LocalDeviceBackend) instead of calling the
+// remote API on daemon startup. Requires a daemon restart.
 export type WarrenLocalAccountSettingProps = Omit<ListItemProps, 'children'>;
 
 export function WarrenLocalAccountSetting(props: WarrenLocalAccountSettingProps) {
