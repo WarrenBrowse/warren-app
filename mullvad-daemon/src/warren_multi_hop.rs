@@ -97,12 +97,12 @@ pub fn load_from_settings_dir(settings_dir: &Path) -> Result<Option<MultiHopConf
     if !path.exists() {
         return Ok(None);
     }
-    let raw = std::fs::read_to_string(&path)
-        .map_err(|e| Error::Io(path.display().to_string(), e))?;
-    let parsed: MultiHopFileConfig = serde_json::from_str(&raw)
-        .map_err(|e| Error::Json(path.display().to_string(), e))?;
-    let op_bytes_vec = hex::decode(&parsed.operational_pubkey_hex)
-        .map_err(|_| Error::OperationalPubkey)?;
+    let raw =
+        std::fs::read_to_string(&path).map_err(|e| Error::Io(path.display().to_string(), e))?;
+    let parsed: MultiHopFileConfig =
+        serde_json::from_str(&raw).map_err(|e| Error::Json(path.display().to_string(), e))?;
+    let op_bytes_vec =
+        hex::decode(&parsed.operational_pubkey_hex).map_err(|_| Error::OperationalPubkey)?;
     let op_bytes: [u8; 32] = op_bytes_vec
         .try_into()
         .map_err(|_| Error::OperationalPubkey)?;
@@ -126,7 +126,9 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use ed25519_dalek::{Signer, SigningKey};
-    use warren_multihop::{ExitId, exit_descriptor_signing_payload, relay_descriptor_signing_payload};
+    use warren_multihop::{
+        ExitId, exit_descriptor_signing_payload, relay_descriptor_signing_payload,
+    };
 
     use super::*;
 
@@ -143,7 +145,11 @@ mod tests {
         dir
     }
 
-    fn well_signed_file(op: &SigningKey, with_tampered_relay_sig: bool, with_tampered_exit_sig: bool) -> String {
+    fn well_signed_file(
+        op: &SigningKey,
+        with_tampered_relay_sig: bool,
+        with_tampered_exit_sig: bool,
+    ) -> String {
         let relay_id = [0x11; 16];
         let relay_pubkey = [0x22; 32];
         let relay_payload = relay_descriptor_signing_payload(&relay_id, &relay_pubkey);
@@ -214,7 +220,10 @@ mod tests {
         let cfg = load_from_settings_dir(&dir)
             .expect("well-signed config must verify")
             .expect("config must be Some");
-        assert_eq!(cfg.operational_pubkey.to_bytes(), op.verifying_key().to_bytes());
+        assert_eq!(
+            cfg.operational_pubkey.to_bytes(),
+            op.verifying_key().to_bytes()
+        );
         assert!(!cfg.enable_gso, "enable_gso must round-trip from file");
         assert!(
             !cfg.use_warren_obfuscation,

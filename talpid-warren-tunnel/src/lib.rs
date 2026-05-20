@@ -28,8 +28,8 @@ use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warren-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
+pub use warren_multihop::RelayDescriptorSigned as MultiHopRelayDescriptor;
 pub use warren_multihop::{ExitDescriptorSigned as MultiHopExitDescriptor, ExitId};
-pub use warren_multihop::{RelayDescriptorSigned as MultiHopRelayDescriptor};
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
@@ -107,10 +107,7 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             .field("signing_key", &"<redacted>")
             .field("n_connections", &self.n_connections)
             .field("features", &format_args!("{:#010x}", self.features))
-            .field(
-                "multi_hop",
-                &self.multi_hop.as_ref().map(|_| "<redacted>"),
-            )
+            .field("multi_hop", &self.multi_hop.as_ref().map(|_| "<redacted>"))
             .finish()
     }
 }
@@ -704,18 +701,20 @@ impl WarrenTunnelMonitor {
         // exit) so the QUIC `Endpoint` binds explicitly to that IP and
         // does not rebind onto the TUN once routing flips.
         let relay_endpoint = cfg.relay.endpoint;
-        let bind_local_ip: std::net::SocketAddr =
-            match detect_default_local_ip(relay_endpoint) {
-                Ok(ip) => std::net::SocketAddr::new(ip, 0),
-                Err(e) => {
-                    log::warn!(
-                        "Warren multi-hop: detect_default_local_ip for relay failed: {e}. \
+        let bind_local_ip: std::net::SocketAddr = match detect_default_local_ip(relay_endpoint) {
+            Ok(ip) => std::net::SocketAddr::new(ip, 0),
+            Err(e) => {
+                log::warn!(
+                    "Warren multi-hop: detect_default_local_ip for relay failed: {e}. \
                          Falling back to 0.0.0.0:0 (unspecified)."
-                    );
-                    std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
-                }
-            };
-        log::info!("Warren multi-hop client bind local IP = {}", bind_local_ip.ip());
+                );
+                std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
+            }
+        };
+        log::info!(
+            "Warren multi-hop client bind local IP = {}",
+            bind_local_ip.ip()
+        );
 
         // Spawn the supervisor and wait for the first successful dial
         // so the rest of the bootstrap (TUN, routing) has a live
@@ -812,7 +811,8 @@ impl WarrenTunnelMonitor {
             "{TRACE_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={} ip={}",
             start_t.elapsed().as_millis(),
             tun_t.elapsed().as_millis(),
-            tun.interface_name().unwrap_or_else(|_| "<unknown>".to_owned()),
+            tun.interface_name()
+                .unwrap_or_else(|_| "<unknown>".to_owned()),
             tun_ip
         );
 
@@ -854,7 +854,12 @@ impl WarrenTunnelMonitor {
                 "eth0".to_owned()
             });
             let gateway_v4 = detect_default_gateway_v4().ok();
-            build_warren_tunnel_routes(&metadata.interface, &next_hop_ips, &physical_iface, gateway_v4)
+            build_warren_tunnel_routes(
+                &metadata.interface,
+                &next_hop_ips,
+                &physical_iface,
+                gateway_v4,
+            )
         };
         #[cfg(target_os = "macos")]
         let routes = build_warren_tunnel_routes_macos(&metadata.interface, &next_hop_ips);
@@ -903,9 +908,7 @@ impl WarrenTunnelMonitor {
                         None
                     })
             } else {
-                log::warn!(
-                    "Warren multi-hop: no IPv4 relay endpoint, skip default-route split."
-                );
+                log::warn!("Warren multi-hop: no IPv4 relay endpoint, skip default-route split.");
                 None
             }
         };
@@ -943,7 +946,11 @@ impl WarrenTunnelMonitor {
             if let Err(ref e) = res {
                 let msg = format!("multi-hop downlink: {e:#}");
                 log::warn!("{TRACE_PREFIX} {msg}");
-                if let Some(tx) = pump_error_tx_downlink.lock().ok().and_then(|mut g| g.take()) {
+                if let Some(tx) = pump_error_tx_downlink
+                    .lock()
+                    .ok()
+                    .and_then(|mut g| g.take())
+                {
                     let _ = tx.send(msg);
                 }
             }
