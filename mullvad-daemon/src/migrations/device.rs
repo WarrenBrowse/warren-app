@@ -39,10 +39,10 @@ pub(crate) fn generate_device(
         });
 
         let api_handle = rest_handle.availability.clone();
-        // La migration legacy v5 utilise toujours le path Remote (=
-        // `DevicesProxy` Mullvad). Le mode local POC ne traverse pas
-        // ce path (pas de migration depuis un install Mullvad
-        // pré-existant en mode local).
+        // The legacy v5 migration always uses the Remote path (=
+        // Mullvad `DevicesProxy`). Local POC mode does not traverse
+        // this path (no migration from a pre-existing Mullvad install
+        // in local mode).
         let device_backend: std::sync::Arc<dyn crate::device::WarrenDeviceBackend> =
             std::sync::Arc::new(crate::device::RemoteDeviceBackend::new(
                 mullvad_api::DevicesProxy::new(rest_handle),
@@ -87,9 +87,9 @@ async fn cache_from_wireguard_key(
     for device in devices.into_iter() {
         if device.pubkey == wg_data.private_key.public_key() {
             return Ok(PrivateAccountAndDevice {
-                // Conversion legacy `account_number` (= input migration
-                // v5) en pubkey Warren via fallback dummy si format
-                // non-hex.
+                // Legacy conversion of `account_number` (= v5 migration
+                // input) into a Warren pubkey via dummy fallback if the
+                // format is non-hex.
                 pubkey: crate::device::account_number_to_warren_pubkey(&account_number),
                 device: PrivateDevice::try_from_device(device, wg_data)?,
             });

@@ -1,29 +1,29 @@
-//! Extraction testable de la résolution `WarrenApiConfig` depuis
+//! Testable extraction of `WarrenApiConfig` resolution from
 //! Settings + env var + signing key loader.
 //!
-//! Pure function : pas de side effects, pas d'I/O. Le caller
-//! (`Daemon::start` dans `lib.rs`) charge l'env + signing_key + settings
-//! puis appelle [`resolve`] avec ces valeurs déjà résolues.
+//! Pure function: no side effects, no I/O. The caller
+//! (`Daemon::start` in `lib.rs`) loads env + signing_key + settings
+//! then calls [`resolve`] with those already-resolved values.
 //!
-//! Couvre 5 cas (cf. tests) :
-//! 1. `warren_mode = false` → None (preserve Mullvad upstream).
-//! 2. `local_account_mode = true` → None (LocalBackend prend le relais).
-//! 3. `warren_mode && !local_account_mode && Some(url) && Some(key)` → Some.
-//! 4. URL absente côté env ET settings → None (fallback Mullvad).
-//! 5. signing_key absente (mnémonique non bootstrappée) → None.
+//! Covers 5 cases (see tests):
+//! 1. `warren_mode = false` -> None (preserve Mullvad upstream).
+//! 2. `local_account_mode = true` -> None (LocalBackend takes over).
+//! 3. `warren_mode && !local_account_mode && Some(url) && Some(key)` -> Some.
+//! 4. URL absent from both env AND settings -> None (Mullvad fallback).
+//! 5. signing_key absent (mnemonic not bootstrapped) -> None.
 
 use ed25519_dalek::SigningKey;
 
 use crate::device::WarrenApiConfig;
 
-/// Résoud la config warren-api selon les flags + sources d'URL et de
-/// signing key. Pure function : le caller injecte `env_url` (= via
-/// `std::env::var("WARREN_API_URL").ok()`) et `signing_key` (=
-/// `warren_signer::load_or_create_signing_key(...)`) déjà résolus.
+/// Resolves the warren-api config based on flags + URL sources and
+/// signing key. Pure function: the caller injects `env_url` (= via
+/// `std::env::var("WARREN_API_URL").ok()`) and `signing_key` (=
+/// `warren_signer::load_or_create_signing_key(...)`) already resolved.
 ///
-/// Priorité URL : `env_url` > `settings_url`. Pas de mélange : si l'env
-/// est setée mais vide, c'est traité comme valeur explicite (= unset
-/// volontaire, override settings vers None).
+/// URL priority: `env_url` > `settings_url`. No mixing: if the env
+/// is set but empty, it is treated as an explicit value (= deliberately
+/// unset, overrides settings to None).
 #[must_use]
 pub(crate) fn resolve(
     warren_mode_active: bool,
@@ -55,9 +55,9 @@ mod tests {
 
     #[test]
     fn warren_mode_disabled_returns_none() {
-        // Régression critique : un user qui désactive warren_mode ne doit
-        // PAS voir le backend warren-remote actif. Tout doit retomber
-        // sur Mullvad upstream legacy.
+        // Critical regression: a user who disables warren_mode must
+        // NOT see the warren-remote backend active. Everything must
+        // fall back to legacy Mullvad upstream.
         let cfg = resolve(
             false, // warren_mode_active = false
             false,
@@ -70,9 +70,9 @@ mod tests {
 
     #[test]
     fn local_account_mode_takes_priority_over_warren_remote() {
-        // Régression : si warren_mode + warren_local_account sont tous
-        // les deux true, c'est `LocalAccountBackend` qui doit prendre
-        // la main (= path POC stateless), pas warren-remote.
+        // Regression: if warren_mode + warren_local_account are both
+        // true, `LocalAccountBackend` must take over (= stateless POC
+        // path), not warren-remote.
         let cfg = resolve(
             true,
             true, // local_account_mode = true
@@ -102,9 +102,9 @@ mod tests {
 
     #[test]
     fn env_url_overrides_settings_url() {
-        // Priorité spec : env > settings. Permet à un dev de pointer
-        // vers `http://localhost:8080` sans toucher la config persistante
-        // de l'utilisateur prod.
+        // Spec priority: env > settings. Allows a dev to point
+        // at `http://localhost:8080` without touching the persistent
+        // production user config.
         let cfg = resolve(
             true,
             false,
@@ -121,20 +121,20 @@ mod tests {
 
     #[test]
     fn no_url_anywhere_returns_none() {
-        // Edge case : warren_mode est on mais aucune URL configurée.
-        // Plutôt que de planter ou pointer vers une URL par défaut
-        // (= risque MITM), on retombe sur Mullvad upstream avec un warn
-        // côté caller.
+        // Edge case: warren_mode is on but no URL configured.
+        // Rather than panicking or pointing at a default URL
+        // (= MITM risk), we fall back to Mullvad upstream with a warn
+        // on the caller side.
         let cfg = resolve(true, false, None, None, Some(fixed_signing_key()));
         assert!(cfg.is_none(), "no URL MUST return None (no default)");
     }
 
     #[test]
     fn empty_url_returns_none() {
-        // Edge case : un user a unset son URL via `mullvad-cli warren
-        // api-url unset` qui envoie "" sur le wire → Settings.warren_api_url
-        // == Some("") après serde (selon proto3). On veut traiter ça
-        // comme unset, pas comme URL vide invalide qui crasherait
+        // Edge case: a user has unset their URL via `mullvad-cli warren
+        // api-url unset` which sends "" on the wire -> Settings.warren_api_url
+        // == Some("") after serde (per proto3). We want to treat that
+        // as unset, not as an invalid empty URL that would crash
         // reqwest.
         let cfg = resolve(
             true,
@@ -148,16 +148,16 @@ mod tests {
 
     #[test]
     fn no_signing_key_returns_none() {
-        // Edge case : warren_mode actif + URL configurée mais pas de
-        // mnémonique chargée (= identité absente). On NE DOIT PAS
-        // construire un client avec une key dummy : on retombe sur
-        // Mullvad upstream avec un warn.
+        // Edge case: warren_mode active + URL configured but no
+        // mnemonic loaded (= identity absent). We MUST NOT
+        // build a client with a dummy key: we fall back to
+        // Mullvad upstream with a warn.
         let cfg = resolve(
             true,
             false,
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
-            None, // signing_key absente
+            None, // signing_key absent
         );
         assert!(cfg.is_none(), "no signing_key MUST return None");
     }

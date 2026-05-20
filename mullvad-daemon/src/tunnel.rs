@@ -37,18 +37,18 @@ pub enum Error {
     #[error("Failed to get device data")]
     Device(#[from] DeviceError),
 
-    /// Warren mode actif (env var `WARREN_TUNNEL=1`) mais le selector
-    /// Warren n'est pas configuré côté generator.
+    /// Warren mode active (env var `WARREN_TUNNEL=1`) but the Warren
+    /// selector is not configured on the generator side.
     #[error("Warren tunnel mode requested but no Warren relay selector configured")]
     WarrenSelectorMissing,
 
-    /// Warren mode actif mais la `signing_key` n'a pas pu être chargée
-    /// (mnémonique BIP39 absente ou corrompue cf. `warren_signer`).
+    /// Warren mode active but the `signing_key` could not be loaded
+    /// (BIP39 mnemonic absent or corrupted, see `warren_signer`).
     #[error("Warren tunnel mode requested but no Warren signing key available")]
     WarrenSigningKeyMissing,
 
-    /// Échec de l'assemblage des `WarrenTunnelParameters` (sélection
-    /// échouée, ...).
+    /// Failed to assemble `WarrenTunnelParameters` (selection
+    /// failed, ...).
     #[error("Failed to assemble Warren tunnel parameters")]
     WarrenAssemble(#[from] AssembleError),
 }
@@ -64,9 +64,9 @@ struct InnerParametersGenerator {
 
     last_generated_relays: Option<LastSelectedRelays>,
 
-    /// Artefacts pour le path Warren-Iroh parallèle. `None` côté
-    /// daemon non-Warren (= path WG seul) ; `Some` quand
-    /// `warren_mode::is_enabled()` au boot.
+    /// Artifacts for the parallel Warren-Iroh path. `None` on a
+    /// non-Warren daemon (= WG path only); `Some` when
+    /// `warren_mode::is_enabled()` at boot.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
     warren_signing_key: Option<SigningKey>,
     /// Multi-hop config loaded at boot from
@@ -79,13 +79,13 @@ struct InnerParametersGenerator {
 }
 
 impl ParametersGenerator {
-    /// Construit un générateur de paramètres tunnel acceptant des
-    /// artefacts Warren-Iroh optionnels en plus du path WireGuard.
+    /// Builds a tunnel parameters generator accepting optional
+    /// Warren-Iroh artifacts in addition to the WireGuard path.
     ///
-    /// Si `warren_relay_selector` ou `warren_signing_key` sont `None`,
-    /// `generate_warren_tunnel_params` retournera l'erreur typée
-    /// correspondante. Le path WireGuard reste utilisable en parallèle
-    /// quel que soit l'état des artefacts Warren.
+    /// If `warren_relay_selector` or `warren_signing_key` are `None`,
+    /// `generate_warren_tunnel_params` will return the corresponding
+    /// typed error. The WireGuard path remains usable in parallel
+    /// regardless of the state of the Warren artifacts.
     pub fn new_with_optional_warren(
         account_manager: AccountManagerHandle,
         relay_selector: RelaySelector,
@@ -107,22 +107,22 @@ impl ParametersGenerator {
         })))
     }
 
-    /// Assemble un [`WarrenTunnelParameters`] pour la tentative
-    /// `retry_attempt`, à partir des artefacts Warren stockés.
+    /// Assembles a [`WarrenTunnelParameters`] for the
+    /// `retry_attempt` attempt, from the stored Warren artifacts.
     ///
-    /// API miroir asymétrique de
-    /// [`TunnelParametersGenerator::generate`] (qui produit du WG) :
-    /// le state machine choisit l'une OU l'autre selon
+    /// Asymmetric mirror API of
+    /// [`TunnelParametersGenerator::generate`] (which produces WG):
+    /// the state machine picks one OR the other depending on
     /// `warren_mode::is_enabled`.
     ///
     /// # Errors
     ///
-    /// - [`Error::WarrenSelectorMissing`] si le selector Warren n'a
-    ///   pas été configuré au boot.
-    /// - [`Error::WarrenSigningKeyMissing`] si la signing key BIP39
-    ///   n'a pas pu être chargée.
-    /// - [`Error::WarrenAssemble`] si la sélection elle-même échoue
-    ///   (aucun relay matchant).
+    /// - [`Error::WarrenSelectorMissing`] if the Warren selector was
+    ///   not configured at boot.
+    /// - [`Error::WarrenSigningKeyMissing`] if the BIP39 signing key
+    ///   could not be loaded.
+    /// - [`Error::WarrenAssemble`] if the selection itself fails
+    ///   (no matching relay).
     pub async fn produce_warren_tunnel_params(
         &self,
         retry_attempt: u32,
@@ -309,10 +309,10 @@ impl TunnelParametersGenerator for ParametersGenerator {
         })
     }
 
-    /// Override du default trait method pour brancher le path
-    /// Warren-Iroh côté daemon. Délègue à
-    /// [`Self::produce_warren_tunnel_params`] qui consomme les
-    /// artefacts Warren stockés dans `InnerParametersGenerator`.
+    /// Override of the default trait method to wire the Warren-Iroh
+    /// path on the daemon side. Delegates to
+    /// [`Self::produce_warren_tunnel_params`] which consumes the
+    /// Warren artifacts stored in `InnerParametersGenerator`.
     fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
@@ -354,9 +354,9 @@ impl From<Error> for ParameterGenerationError {
             Error::NoAuthDetails | Error::SelectRelay(_) | Error::Device(_) => {
                 ParameterGenerationError::NoMatchingRelay
             }
-            // Erreurs Warren mappées sur `NoMatchingRelay` côté state
-            // machine. Une variante dédiée pourra être ajoutée si
-            // l'UI doit distinguer ces cas.
+            // Warren errors mapped to `NoMatchingRelay` on the state
+            // machine side. A dedicated variant can be added if
+            // the UI needs to distinguish these cases.
             Error::WarrenSelectorMissing
             | Error::WarrenSigningKeyMissing
             | Error::WarrenAssemble(_) => ParameterGenerationError::NoMatchingRelay,

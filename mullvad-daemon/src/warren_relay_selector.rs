@@ -1,17 +1,17 @@
-//! Wrapper daemon-side autour de la crate
-//! [`warren_relay_selector::WarrenRelaySelector`].
+//! Daemon-side wrapper around the
+//! [`warren_relay_selector::WarrenRelaySelector`] crate.
 //!
-//! Encapsule l'état de la `WarrenRelayList` côté daemon (sera alimenté
-//! plus tard par un fetch périodique vers l'API ; pour le POC, chargée
-//! depuis `<cache_dir>/warren-relays.json`), et expose une API stable
-//! pour le `ParametersGenerator`. Le wrapper retourne uniquement les
-//! composants Iroh (`EndpointId` + `EndpointAddr`) ; l'assemblage
-//! final en `WarrenTunnelParameters` (avec `signing_key`,
-//! `n_connections`, `features`) est fait par
+//! Encapsulates the state of the `WarrenRelayList` on the daemon side
+//! (will later be populated by a periodic fetch to the API; for the
+//! POC, loaded from `<cache_dir>/warren-relays.json`), and exposes a
+//! stable API for the `ParametersGenerator`. The wrapper returns only
+//! the Iroh components (`EndpointId` + `EndpointAddr`); final
+//! assembly into `WarrenTunnelParameters` (with `signing_key`,
+//! `n_connections`, `features`) is done by
 //! [`crate::warren_tunnel_params::assemble_for_attempt`].
 //!
-//! Module dédié pour deux raisons : testable en isolation, et n'importe
-//! pas `talpid-warren-tunnel` côté API publique du wrapper.
+//! Dedicated module for two reasons: testable in isolation, and does
+//! not import `talpid-warren-tunnel` in the wrapper's public API.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -22,17 +22,17 @@ use warren_relay_selector::{
     WarrenRelaySelector, verify_signed_relay_list,
 };
 
-/// Erreurs du chargement de `warren-relays.json` au boot.
+/// Errors when loading `warren-relays.json` at boot.
 #[derive(Debug, thiserror::Error)]
 pub enum LoadError {
-    /// I/O sur le fichier `warren-relays.json` (chemin présent mais
-    /// illisible).
+    /// I/O on the `warren-relays.json` file (path present but
+    /// unreadable).
     #[error("failed to read warren relays at {0}: {1}")]
     Io(String, #[source] std::io::Error),
 
-    /// Le JSON est invalide, n'a pas la version supportée, ou la
-    /// signature serveur ne vérifie pas. Format wire v2 obligatoire
-    /// post-F3 fork audit (cf. `warren_relay_selector::signed`).
+    /// The JSON is invalid, does not have the supported version, or
+    /// the server signature does not verify. Wire format v2 mandatory
+    /// post-F3 fork audit (see `warren_relay_selector::signed`).
     #[error("invalid warren-relays.json at {0}: {1}")]
     Json(String, #[source] SignedError),
 }
@@ -63,29 +63,29 @@ impl From<&WarrenRelay> for WarrenSelection {
     }
 }
 
-/// Wrapper daemon-side autour du `WarrenRelaySelector`.
+/// Daemon-side wrapper around `WarrenRelaySelector`.
 ///
-/// Détient un `Arc<WarrenRelaySelector>` pour permettre un partage
-/// thread-safe entre le tunnel state machine et le management
-/// interface gRPC (futur).
+/// Holds an `Arc<WarrenRelaySelector>` to allow thread-safe sharing
+/// between the tunnel state machine and the gRPC management
+/// interface (future).
 #[derive(Debug, Clone)]
 pub struct DaemonWarrenRelaySelector {
     inner: Arc<WarrenRelaySelector>,
-    /// Liste brute conservée à part pour permettre au caller (boot
-    /// daemon) de la convertir en `RelayList` Mullvad-format et la
-    /// broadcaster à la GUI Electron via `notify_relay_list`. Cf.
+    /// Raw list kept separately to allow the caller (daemon boot)
+    /// to convert it to Mullvad-format `RelayList` and
+    /// broadcast it to the Electron GUI via `notify_relay_list`. See
     /// `warren_relay_list_view::to_mullvad_relay_list`.
     list: Arc<WarrenRelayList>,
 }
 
-/// Nom du fichier qui contient la `WarrenRelayList` bootstrappée
-/// localement. Convention figée : déplacement futur impose une
-/// migration cache. À remplacer par un fetch périodique vers
-/// `mullvad-api` quand l'endpoint Warren sera disponible.
+/// Name of the file containing the locally bootstrapped
+/// `WarrenRelayList`. Fixed convention: a future move imposes a
+/// cache migration. To be replaced by a periodic fetch to
+/// `mullvad-api` once the Warren endpoint is available.
 pub const WARREN_RELAYS_FILENAME: &str = "warren-relays.json";
 
 impl DaemonWarrenRelaySelector {
-    /// Construit un wrapper depuis une [`WarrenRelayList`].
+    /// Builds a wrapper from a [`WarrenRelayList`].
     #[must_use]
     pub fn new(relays: WarrenRelayList) -> Self {
         let list = Arc::new(relays.clone());
@@ -95,51 +95,52 @@ impl DaemonWarrenRelaySelector {
         }
     }
 
-    /// Accès lecture à la `WarrenRelayList` brute (= ce qui a été
-    /// passé à [`Self::new`] ou chargé depuis le cache). Utilisé par
-    /// le boot daemon pour broadcaster la liste à la GUI via
+    /// Read access to the raw `WarrenRelayList` (= what was
+    /// passed to [`Self::new`] or loaded from the cache). Used by
+    /// the daemon boot to broadcast the list to the GUI via
     /// [`crate::warren_relay_list_view`].
     #[must_use]
     pub fn list(&self) -> &WarrenRelayList {
         &self.list
     }
 
-    /// Charge la `WarrenRelayList` depuis `<cache_dir>/warren-relays.json`.
+    /// Loads the `WarrenRelayList` from `<cache_dir>/warren-relays.json`.
     ///
-    /// Politique no-fail au boot : si le fichier est absent ou
-    /// illisible, retourne un wrapper avec une liste vide + log warn,
-    /// pour permettre au daemon de continuer à booter en mode WG. Le
-    /// state machine verra une `WarrenRelayList` vide et retournera
-    /// `NoRelayMatch` à la première sélection — comportement attendu :
-    /// l'utilisateur n'est pas en mode Warren.
+    /// No-fail policy at boot: if the file is absent or
+    /// unreadable, returns a wrapper with an empty list + log warn,
+    /// to allow the daemon to keep booting in WG mode. The
+    /// state machine will see an empty `WarrenRelayList` and return
+    /// `NoRelayMatch` on the first selection — expected behavior:
+    /// the user is not in Warren mode.
     ///
     /// # Errors
     ///
-    /// Retourne une erreur uniquement si le fichier existe mais
-    /// contient un JSON invalide (= corruption silencieuse à signaler
-    /// explicitement). Le caller (boot daemon) peut choisir de
-    /// fallback sur une liste vide via `unwrap_or_else`.
+    /// Returns an error only if the file exists but
+    /// contains invalid JSON (= silent corruption to signal
+    /// explicitly). The caller (daemon boot) may choose to
+    /// fall back to an empty list via `unwrap_or_else`.
     pub fn load_from_cache_dir(cache_dir: &Path) -> Result<Self, LoadError> {
         Self::load_from_cache_dir_with_pin(cache_dir, None)
     }
 
-    /// Variante de [`Self::load_from_cache_dir`] avec **pin de la
-    /// pubkey serveur**. Si `expected_server_pubkey_hex` est `Some(hex)`,
-    /// refuse toute liste signée par une autre pubkey (= protection
-    /// MITM-on-bootstrap). Si `None`, mode TOFU : accepte toute
-    /// signature self-cohérente (utile pour le 1er fetch ou les tests).
+    /// Variant of [`Self::load_from_cache_dir`] with **server pubkey
+    /// pinning**. If `expected_server_pubkey_hex` is `Some(hex)`,
+    /// rejects any list signed by a different pubkey (=
+    /// MITM-on-bootstrap protection). If `None`, TOFU mode: accepts any
+    /// self-consistent signature (useful for the first fetch or tests).
     ///
-    /// Format attendu : v2 signé Ed25519 (cf.
-    /// [`warren_relay_selector::verify_signed_relay_list`]). Le format
-    /// v1 non-signé est **rejeté** post-F3 audit (anti-downgrade
-    /// attack — un attaquant qui sert un v1 sans signature pourrait
-    /// substituer la liste sans détection).
+    /// Expected format: v2 signed Ed25519 (see
+    /// [`warren_relay_selector::verify_signed_relay_list`]). The
+    /// unsigned v1 format is **rejected** post-F3 audit (anti-downgrade
+    /// attack — an attacker serving an unsigned v1 could
+    /// substitute the list without detection).
     ///
     /// # Errors
     ///
-    /// - [`LoadError::Io`] si le fichier existe mais est illisible.
-    /// - [`LoadError::Json`] si le JSON est invalide, version != 2, la
-    ///   pubkey serveur diffère du pin, ou la signature ne vérifie pas.
+    /// - [`LoadError::Io`] if the file exists but is unreadable.
+    /// - [`LoadError::Json`] if the JSON is invalid, version != 2,
+    ///   the server pubkey differs from the pin, or the signature
+    ///   does not verify.
     pub fn load_from_cache_dir_with_pin(
         cache_dir: &Path,
         expected_server_pubkey_hex: Option<&str>,
@@ -164,18 +165,18 @@ impl DaemonWarrenRelaySelector {
         Ok(Self::new(list))
     }
 
-    /// Sélectionne un relay pour la tentative `retry_attempt` et
-    /// retourne ses composants Iroh.
+    /// Selects a relay for the `retry_attempt` attempt and
+    /// returns its Iroh components.
     ///
-    /// API miroir de la
-    /// [`mullvad_relay_selector::RelaySelector::get_relay`] côté
-    /// WireGuard — facilite le dispatch par
+    /// Mirror API of
+    /// [`mullvad_relay_selector::RelaySelector::get_relay`] on the
+    /// WireGuard side — eases dispatch via
     /// `ParametersGenerator::generate(retry_attempt, ...)`.
     ///
     /// # Errors
     ///
-    /// Retourne [`SelectorError::NoRelayMatch`] si aucun relay actif
-    /// avec `weight > 0` ne satisfait les contraintes.
+    /// Returns [`SelectorError::NoRelayMatch`] if no active relay
+    /// with `weight > 0` satisfies the constraints.
     pub fn select_for_attempt(
         &self,
         query: &WarrenRelayQuery,

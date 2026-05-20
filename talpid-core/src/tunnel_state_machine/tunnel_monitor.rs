@@ -1,10 +1,10 @@
 //! Abstracts over an active VPN tunnel.
 //!
-//! Warren fork : le backend interne est une enum [`TunnelBackend`]
-//! qui dispatche entre le `WireguardMonitor` upstream et le
-//! `WarrenTunnelMonitor`. Le path WG est strictement préservé — aucun
-//! changement de comportement pour les déploiements qui n'activent
-//! pas le backend Warren via `WARREN_TUNNEL=1`.
+//! Warren fork: the internal backend is an enum [`TunnelBackend`]
+//! that dispatches between the upstream `WireguardMonitor` and the
+//! `WarrenTunnelMonitor`. The WG path is strictly preserved — no
+//! behavior change for deployments that do not activate
+//! the Warren backend via `WARREN_TUNNEL=1`.
 use std::path;
 
 use talpid_tunnel::TunnelArgs;
@@ -117,25 +117,25 @@ impl Error {
     pub fn get_tunnel_device_error(&self) -> Option<&std::io::Error> {
         match self {
             Error::TunnelMonitoring(error) => error.get_tunnel_device_error(),
-            // Warren-Iroh n'expose pas (encore) un `tunnel_device_error`
-            // équivalent ; Phase 1.B raffinera si nécessaire.
+            // Warren-Iroh does not (yet) expose an equivalent
+            // `tunnel_device_error`; Phase 1.B will refine if needed.
             _ => None,
         }
     }
 }
 
-/// Backend de tunnel sous-jacent — Warren fork.
+/// Underlying tunnel backend — Warren fork.
 ///
-/// Enum dispatch statique entre les implémentations supportées. L'ajout
-/// d'un nouveau backend nécessite une variante ici + une factory dans
-/// [`TunnelMonitor`]. Approche choisie vs. `Box<dyn Tunnel>` : 2 backends
-/// connus (WG upstream + Warren-Iroh), API riches conservées
-/// (`is_recoverable`, `get_tunnel_device_error`) sans downcast.
+/// Static enum dispatch between the supported implementations. Adding
+/// a new backend requires a variant here plus a factory in
+/// [`TunnelMonitor`]. Approach chosen over `Box<dyn Tunnel>`: 2 known
+/// backends (upstream WG + Warren-Iroh), rich APIs preserved
+/// (`is_recoverable`, `get_tunnel_device_error`) without downcast.
 enum TunnelBackend {
-    /// Backend historique WireGuard (path upstream Mullvad inchangé).
+    /// Historical WireGuard backend (upstream Mullvad path unchanged).
     Wireguard(WireguardMonitor),
-    /// Backend Warren-Iroh, construit via [`TunnelMonitor::start_warren_tunnel`]
-    /// quand `warren_mode` est actif côté state machine.
+    /// Warren-Iroh backend, constructed via [`TunnelMonitor::start_warren_tunnel`]
+    /// when `warren_mode` is active on the state machine side.
     WarrenTunnel(WarrenTunnelMonitor),
 }
 
@@ -158,18 +158,18 @@ impl TunnelMonitor {
         Self::start_wireguard_tunnel(tunnel_parameters, log_file, args)
     }
 
-    /// Démarre un tunnel via le backend Warren-Iroh.
+    /// Starts a tunnel via the Warren-Iroh backend.
     ///
-    /// Factory séparée de [`Self::start`] parce que les paramètres Iroh
-    /// divergent du `TunnelParameters` WireGuard (champs distincts, pas
-    /// d'obfuscation, pas d'options WG). Invoquée par
-    /// `connecting_state::start_tunnel_warren` quand `warren_mode` est
-    /// actif.
+    /// Factory separate from [`Self::start`] because the Iroh parameters
+    /// diverge from the WireGuard `TunnelParameters` (distinct fields, no
+    /// obfuscation, no WG options). Invoked by
+    /// `connecting_state::start_tunnel_warren` when `warren_mode` is
+    /// active.
     ///
     /// # Errors
     ///
-    /// [`Error::WarrenTunnelMonitoring`] si le backend Iroh échoue à
-    /// initialiser.
+    /// [`Error::WarrenTunnelMonitoring`] if the Iroh backend fails to
+    /// initialize.
     pub fn start_warren_tunnel(
         params: &WarrenTunnelParameters,
         log_dir: &Option<path::PathBuf>,

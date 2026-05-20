@@ -30,8 +30,8 @@ mod address_cache;
 pub mod device;
 
 mod relay_list;
-/// Auth wallet : signature Ed25519 sur les requêtes API HTTP.
-/// Cf. `warren-core/docs/06-auth-wallet.md`.
+/// Auth wallet: Ed25519 signature on HTTP API requests.
+/// See `warren-core/docs/06-auth-wallet.md`.
 pub mod warren_auth;
 
 pub use address_cache::Error as AddressCacheError;
@@ -468,15 +468,15 @@ impl<B: AddressCacheBacking> Runtime<B> {
         self.mullvad_rest_handle_with_warren_signer(connection_mode_provider, None)
     }
 
-    /// Variante de [`Self::mullvad_rest_handle`] qui pose un
-    /// [`rest::WarrenAuthSigner`] sur la `RequestFactory` quand
-    /// `warren_signer` est `Some`. Si `None`, comportement identique
-    /// à [`Self::mullvad_rest_handle`] (= mode Mullvad Bearer
-    /// historique).
+    /// Variant of [`Self::mullvad_rest_handle`] that attaches a
+    /// [`rest::WarrenAuthSigner`] on the `RequestFactory` when
+    /// `warren_signer` is `Some`. If `None`, behavior is identical
+    /// to [`Self::mullvad_rest_handle`] (= legacy Mullvad Bearer
+    /// mode).
     ///
-    /// Le caller (= mullvad-daemon) détient l'`Arc<WarrenAuthSigner>`
-    /// dérivé de la mnémonique BIP39 stockée localement (cf. crate
-    /// `warren-identity` côté warren-core).
+    /// The caller (= mullvad-daemon) holds the `Arc<WarrenAuthSigner>`
+    /// derived from the BIP39 mnemonic stored locally (see crate
+    /// `warren-identity` on the warren-core side).
     pub fn mullvad_rest_handle_with_warren_signer<T: ConnectionModeProvider + 'static>(
         &self,
         connection_mode_provider: T,
@@ -555,10 +555,10 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
-            // `get_or_signed` injecte les 4 headers `X-Warren-*` quand
-            // un signer est configuré (cf.
-            // `mullvad_rest_handle_with_warren_signer` côté daemon).
-            // Sinon, requête nue identique à l'ancien path.
+            // `get_or_signed` injects the 4 `X-Warren-*` headers when
+            // a signer is configured (see
+            // `mullvad_rest_handle_with_warren_signer` on the daemon side).
+            // Otherwise, plain request identical to the legacy path.
             let request = factory
                 .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .expected_status(&[StatusCode::OK])

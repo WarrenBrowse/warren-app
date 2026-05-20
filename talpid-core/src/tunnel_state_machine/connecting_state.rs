@@ -77,9 +77,9 @@ impl ConnectingState {
                 });
         }
 
-        // Warren fork : dispatch backend selon le flag posé au boot.
-        // `warren_mode` vient de `warren_mode::is_enabled` côté daemon
-        // (env var `WARREN_TUNNEL=1`) et transite via
+        // Warren fork: dispatch backend based on the flag set at boot.
+        // `warren_mode` comes from `warren_mode::is_enabled` on the daemon
+        // side (env var `WARREN_TUNNEL=1`) and flows through
         // `TunnelStateMachineInitArgs`.
         if shared_values.warren_mode {
             return Self::enter_warren(shared_values, retry_attempt);
@@ -159,9 +159,9 @@ impl ConnectingState {
                         }
                     }
 
-                    // Re-extraire le `wireguard::TunnelParameters` concret
-                    // pour `start_tunnel` qui le passe à `TunnelMonitor::start`.
-                    // Évite un clone vs. wrapping post-call.
+                    // Re-extract the concrete `wireguard::TunnelParameters`
+                    // for `start_tunnel`, which passes it to `TunnelMonitor::start`.
+                    // Avoids a clone vs. wrapping post-call.
                     let wg_params = match backend_params {
                         BackendParams::Wireguard(p) => p,
                         BackendParams::Warren(_) => {
@@ -190,19 +190,19 @@ impl ConnectingState {
         }
     }
 
-    /// Path Warren-Iroh.
+    /// Warren-Iroh path.
     ///
-    /// Différences avec [`Self::enter_wireguard`] :
-    /// - Pas de check `ip_availability` côté state machine — Iroh
-    ///   gère sa propre résolution multi-path (v4/v6) au handshake.
-    /// - Pas d'Android `prepare_tun_config` — Warren-Iroh ouvre son
-    ///   propre TUN via `args.tun_provider` côté `WarrenTunnelMonitor::start`.
+    /// Differences from [`Self::enter_wireguard`]:
+    /// - No `ip_availability` check on the state machine side — Iroh
+    ///   handles its own multi-path resolution (v4/v6) at handshake time.
+    /// - No Android `prepare_tun_config` — Warren-Iroh opens its
+    ///   own TUN via `args.tun_provider` on the `WarrenTunnelMonitor::start` side.
     ///
-    /// Le firewall pre-handshake est appliqué via
-    /// [`Self::set_firewall_policy`] comme pour WG :
-    /// [`BackendParams::get_next_hop_endpoints`] expose les IPs
-    /// candidate Iroh (depuis `endpoint_addr.ip_addrs()`), ce qui
-    /// autorise le trafic outgoing vers l'exit sans regression
+    /// The pre-handshake firewall is applied via
+    /// [`Self::set_firewall_policy`] just like for WG:
+    /// [`BackendParams::get_next_hop_endpoints`] exposes the candidate
+    /// Iroh IPs (from `endpoint_addr.ip_addrs()`), which
+    /// authorizes outgoing traffic to the exit without regressing
     /// no-leak.
     fn enter_warren(
         shared_values: &mut SharedTunnelStateValues,
@@ -222,10 +222,10 @@ impl ConnectingState {
             }
         };
 
-        // Firewall pre-handshake activé en Warren mode : le variant
-        // `BackendParams::Warren` expose les IPs candidate Iroh via
-        // `get_next_hop_endpoints()`, le firewall les autorise comme
-        // pour les peers WG (pas de regression no-leak).
+        // Pre-handshake firewall enabled in Warren mode: the
+        // `BackendParams::Warren` variant exposes the candidate Iroh IPs via
+        // `get_next_hop_endpoints()`, and the firewall authorizes them just like
+        // it does for WG peers (no no-leak regression).
         let backend_params = BackendParams::Warren(warren_params.clone());
         if let Err(error) = Self::set_firewall_policy(
             shared_values,
@@ -256,9 +256,9 @@ impl ConnectingState {
         )
     }
 
-    /// Miroir de [`Self::start_tunnel`] côté Warren : structure
-    /// identique (channel d'events, oneshot close, retry/sleep policy)
-    /// mais invoque [`TunnelMonitor::start_warren_tunnel`] au lieu de
+    /// Mirror of [`Self::start_tunnel`] for the Warren side: identical
+    /// structure (event channel, oneshot close, retry/sleep policy)
+    /// but invokes [`TunnelMonitor::start_warren_tunnel`] instead of
     /// [`TunnelMonitor::start`].
     fn start_tunnel_warren(
         runtime: tokio::runtime::Handle,
@@ -279,8 +279,8 @@ impl ConnectingState {
         let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
         let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
 
-        // Clone car la task `spawn_blocking` consomme `parameters` via
-        // `move` ; on garde une copie pour la stocker dans le
+        // Clone because the `spawn_blocking` task consumes `parameters` via
+        // `move`; we keep a copy to store it in the
         // `ConnectingState`.
         let stored_params = BackendParams::Warren(parameters.clone());
 

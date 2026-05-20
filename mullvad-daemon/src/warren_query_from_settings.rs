@@ -1,20 +1,20 @@
-//! Conversion `mullvad_types::RelaySettings` → `WarrenRelayQuery`.
+//! Conversion `mullvad_types::RelaySettings` -> `WarrenRelayQuery`.
 //!
-//! Pure function : pas d'I/O. Mappe l'UI Mullvad (countries/cities,
-//! custom lists, hostname) sur la grammaire de filtrage Warren (qui
-//! ne supporte que `Any`, `Country`, ou `(Country, City)` — pas de
-//! provider, ownership, multihop, obfuscation, ni DAITA).
+//! Pure function: no I/O. Maps the Mullvad UI (countries/cities,
+//! custom lists, hostname) onto the Warren filtering grammar (which
+//! only supports `Any`, `Country`, or `(Country, City)` — no
+//! provider, ownership, multihop, obfuscation, nor DAITA).
 //!
-//! Comportement des cas non-mappables :
-//! - `CustomList` (référence vers une `CustomListsSettings`) → fallback
-//!   `Any`. Les custom lists ne sont pas wired sur le path Warren ; un
-//!   user qui en sélectionne une verra "tous les exits actifs".
-//! - `Hostname(country, city, _)` → on conserve `(country, city)` et on
-//!   drop le hostname (Warren n'a pas la notion d'host individuel exposé
-//!   à l'UI).
-//! - `RelaySettings::CustomTunnelEndpoint(_)` → `Any` (cas edge ;
-//!   l'utilisateur ne devrait pas utiliser un custom endpoint en mode
-//!   Warren, c'est un cul-de-sac fonctionnel).
+//! Behavior for non-mappable cases:
+//! - `CustomList` (reference to a `CustomListsSettings`) -> fallback
+//!   `Any`. Custom lists are not wired on the Warren path; a user
+//!   who selects one will see "all active exits".
+//! - `Hostname(country, city, _)` -> we keep `(country, city)` and
+//!   drop the hostname (Warren has no concept of an individual host
+//!   exposed to the UI).
+//! - `RelaySettings::CustomTunnelEndpoint(_)` -> `Any` (edge case;
+//!   the user should not be using a custom endpoint in Warren mode,
+//!   it is a functional dead-end).
 
 use mullvad_types::constraints::Constraint;
 use mullvad_types::relay_constraints::{
@@ -22,8 +22,8 @@ use mullvad_types::relay_constraints::{
 };
 use warren_relay_selector::{LocationConstraint as WarrenLocation, WarrenRelayQuery};
 
-/// Convertit `RelaySettings` (Mullvad) en `WarrenRelayQuery` consommée
-/// par `DaemonWarrenRelaySelector::select_for_attempt`.
+/// Converts `RelaySettings` (Mullvad) into a `WarrenRelayQuery` consumed
+/// by `DaemonWarrenRelaySelector::select_for_attempt`.
 #[must_use]
 pub fn relay_settings_to_warren_query(rs: &RelaySettings) -> WarrenRelayQuery {
     let location = match rs {
@@ -35,22 +35,22 @@ pub fn relay_settings_to_warren_query(rs: &RelaySettings) -> WarrenRelayQuery {
                     country_code: cc.clone(),
                     city: city.clone(),
                 },
-                // Warren ne distingue pas les hosts d'une ville : on
-                // restreint à la `(country, city)` du hostname.
+                // Warren does not distinguish hosts within a city: we
+                // restrict to the `(country, city)` of the hostname.
                 GeographicLocationConstraint::Hostname(cc, city, _) => WarrenLocation::City {
                     country_code: cc.clone(),
                     city: city.clone(),
                 },
             },
-            // Les custom lists Mullvad pointent vers une `CustomListsSettings`
-            // séparée — pas de résolution pure ici. Fallback `Any` =
-            // comportement défensif. À étendre quand on wire le résolveur.
+            // Mullvad custom lists point to a separate `CustomListsSettings`
+            // — no pure resolution here. Fallback `Any` =
+            // defensive behavior. To be extended when the resolver is wired.
             Constraint::Only(MullvadLocation::CustomList { .. }) => WarrenLocation::Any,
         },
-        // Le custom tunnel endpoint cible un host spécifique (IP/port +
-        // pubkey) — sans rapport avec la sélection Warren basée sur des
-        // exits enrollés via warren-api. On laisse `Any` pour ne pas
-        // bloquer le user accidentellement.
+        // The custom tunnel endpoint targets a specific host (IP/port +
+        // pubkey) — unrelated to Warren selection based on
+        // exits enrolled via warren-api. We leave `Any` to avoid
+        // accidentally blocking the user.
         RelaySettings::CustomTunnelEndpoint(_) => WarrenLocation::Any,
     };
     WarrenRelayQuery::any().with_location(location)

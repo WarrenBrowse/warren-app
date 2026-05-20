@@ -142,8 +142,8 @@ pub async fn spawn(
     state_change_listener: impl Sender<TunnelStateTransition> + Send + 'static,
     offline_state_listener: mpsc::UnboundedSender<Connectivity>,
     route_manager: RouteManagerHandle,
-    // Warren fork : si `true`, dispatche les démarrages de tunnel
-    // vers le path Warren-Iroh.
+    // Warren fork: if `true`, dispatches tunnel starts
+    // to the Warren-Iroh path.
     warren_mode: bool,
     #[cfg(target_os = "windows")] volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")] android_context: AndroidContext,
@@ -351,10 +351,10 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     resource_dir: PathBuf,
     commands_rx: mpsc::UnboundedReceiver<TunnelCommand>,
     route_manager: RouteManagerHandle,
-    /// Warren fork : si `true`, le state machine dispatche les
-    /// démarrages de tunnel via `TunnelMonitor::start_warren_tunnel`
-    /// au lieu du path WireGuard upstream. Settable via env var
-    /// `WARREN_TUNNEL=1` au boot du daemon (cf.
+    /// Warren fork: if `true`, the state machine dispatches tunnel
+    /// starts via `TunnelMonitor::start_warren_tunnel`
+    /// instead of the upstream WireGuard path. Settable via env var
+    /// `WARREN_TUNNEL=1` at daemon boot (see
     /// `mullvad-daemon::warren_mode`).
     warren_mode: bool,
     #[cfg(target_os = "windows")]
@@ -552,13 +552,13 @@ pub trait TunnelParametersGenerator: Send + 'static {
         ip_availability: IpAvailability,
     ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
 
-    /// Produit des [`talpid_warren_tunnel::WarrenTunnelParameters`] pour
-    /// la tentative `retry_attempt` donnée.
+    /// Produces [`talpid_warren_tunnel::WarrenTunnelParameters`] for
+    /// the given `retry_attempt` attempt.
     ///
-    /// Implémentation par défaut : retourne `NoMatchingRelay`. Les
-    /// implémenteurs qui ne supportent pas Warren n'ont rien à faire.
-    /// `mullvad-daemon::tunnel::ParametersGenerator` override cette
-    /// méthode pour brancher le path Warren côté daemon.
+    /// Default implementation: returns `NoMatchingRelay`. Implementers
+    /// that do not support Warren have nothing to do.
+    /// `mullvad-daemon::tunnel::ParametersGenerator` overrides this
+    /// method to wire the Warren path on the daemon side.
     fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
@@ -613,9 +613,9 @@ struct SharedTunnelStateValues {
     /// Resource directory path.
     resource_dir: PathBuf,
 
-    /// Warren fork : si `true`, dispatche le démarrage de tunnel via
-    /// `TunnelMonitor::start_warren_tunnel` (path Iroh). Sinon, path
-    /// WireGuard upstream inchangé.
+    /// Warren fork: if `true`, dispatches tunnel startup via
+    /// `TunnelMonitor::start_warren_tunnel` (Iroh path). Otherwise, the
+    /// upstream WireGuard path is unchanged.
     warren_mode: bool,
 
     /// NetworkManager's connecitivity check state.
@@ -858,11 +858,11 @@ impl TunnelStateMachineHandle {
 
 #[cfg(test)]
 mod warren_trait_default_tests {
-    //! Valide que le default impl du trait pour
-    //! `generate_warren_tunnel_params` retourne `NoMatchingRelay` (vs.
-    //! `unimplemented!()` ou panic). Critique parce que les
-    //! implémenteurs upstream Mullvad ne savent rien de Warren ; ils
-    //! doivent dégrader proprement.
+    //! Validates that the trait default impl for
+    //! `generate_warren_tunnel_params` returns `NoMatchingRelay` (vs.
+    //! `unimplemented!()` or panic). Critical because upstream Mullvad
+    //! implementers know nothing about Warren; they
+    //! must degrade gracefully.
     use std::future::Future;
     use std::pin::Pin;
     use talpid_types::net::IpAvailability;
@@ -871,8 +871,8 @@ mod warren_trait_default_tests {
 
     use super::TunnelParametersGenerator;
 
-    /// Implémenteur minimal qui n'override PAS `generate_warren_tunnel_params`,
-    /// pour exercer le default body du trait.
+    /// Minimal implementer that does NOT override `generate_warren_tunnel_params`,
+    /// to exercise the trait's default body.
     struct UpstreamOnlyGenerator;
 
     impl TunnelParametersGenerator for UpstreamOnlyGenerator {
