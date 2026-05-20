@@ -1,0 +1,235 @@
+---
+# Warren VPN - Release pipeline
+#
+# Builds signed Warren VPN installers for macOS (DMG, notarized), Linux
+# (.deb + .rpm), and Windows (MSI) and uploads them to a GitHub Release.
+#
+# Trigger: tag push matching v*.*.* (e.g., v2026.5.0, v0.1.0-beta1).
+#
+# Required GitHub Secrets (configured at WarrenBrowse/warren-app repo Settings
+# > Secrets and variables > Actions):
+#
+#   WARREN_CORE_RO_TOKEN
+#     PAT with read access to WarrenBrowse/warren-core. Used by all build
+#     jobs to checkout the path-dep sibling repo.
+#
+#   WARREN_CSC_LINK_MACOS, WARREN_CSC_KEY_PASSWORD_MACOS
+#     macOS Developer ID Application certificate (.p12 base64-encoded) and
+#     its password. The .p12 is decoded into a temp file during the job.
+#
+#   WARREN_NOTARIZE_KEYCHAIN, WARREN_NOTARIZE_KEYCHAIN_PROFILE
+#     Apple notarytool credentials for stapling the .pkg installer.
+#
+#   WARREN_CSC_LINK_WIN, WARREN_CSC_KEY_PASSWORD_WIN
+#     Windows Authenticode certificate (.pfx base64-encoded) and its password.
+#     The .pfx is imported into the Windows cert store and the thumbprint is
+#     resolved at runtime, then signtool references that thumbprint.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (must already exist)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS DMG/PKG
+    runs-on: macos-14
+    env:
+      WARREN_CSC_LINK_MACOS_B64: ${{ secrets.WARREN_CSC_LINK_MACOS }}
+      WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
+      WARREN_NOTARIZE_KEYCHAIN: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN }}
+      WARREN_NOTARIZE_KEYCHAIN_PROFILE: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN_PROFILE }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Decode signing certificate
+        if: env.WARREN_CSC_LINK_MACOS_B64 != ''
+        run: |
+          tmp=$(mktemp -t warren-csc-XXXXXX.p12)
+          printf '%s' "$WARREN_CSC_LINK_MACOS_B64" | base64 -d > "$tmp"
+          echo "WARREN_CSC_LINK_MACOS=$tmp" >> "$GITHUB_ENV"
+
+      - name: Build (signed + notarized)
+        if: env.WARREN_CSC_LINK_MACOS != ''
+        run: ./build.sh --optimize --sign --notarize --universal
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.WARREN_CSC_LINK_MACOS == ''
+        run: |
+          echo "::warning::WARREN_CSC_LINK_MACOS secret not set; producing unsigned dev build."
+          ./build.sh --optimize --universal
+
+      - name: Wipe signing certificate from runner
+        if: always() && env.WARREN_CSC_LINK_MACOS != ''
+        run: rm -f "$WARREN_CSC_LINK_MACOS" || true
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installers
+          path: |
+            dist/WarrenVPN-*.dmg
+            dist/WarrenVPN-*.pkg
+          if-no-files-found: warn
+          retention-days: 14
+
+  build-linux:
+    name: Build Linux .deb/.rpm
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Install Linux packaging deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm fpm
+
+      - name: Build
+        run: ./build.sh --optimize
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installers
+          path: |
+            dist/WarrenVPN-*.deb
+            dist/WarrenVPN-*.rpm
+            dist/warren-vpn-daemon_*.deb
+            dist/warren-vpn-daemon_*.rpm
+          if-no-files-found: warn
+          retention-days: 14
+
+  build-windows:
+    name: Build Windows MSI
+    runs-on: windows-2022
+    env:
+      WARREN_CSC_LINK_WIN_B64: ${{ secrets.WARREN_CSC_LINK_WIN }}
+      WARREN_CSC_KEY_PASSWORD_WIN: ${{ secrets.WARREN_CSC_KEY_PASSWORD_WIN }}
+    steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Decode and import signing certificate
+        if: env.WARREN_CSC_LINK_WIN_B64 != ''
+        shell: pwsh
+        env:
+          PFX_PASSWORD: ${{ env.WARREN_CSC_KEY_PASSWORD_WIN }}
+          PFX_B64: ${{ env.WARREN_CSC_LINK_WIN_B64 }}
+        run: |
+          $bytes = [Convert]::FromBase64String($env:PFX_B64)
+          $pfxPath = Join-Path $env:RUNNER_TEMP "warren-codesign.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $bytes)
+          $securePwd = ConvertTo-SecureString -String $env:PFX_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation 'Cert:\CurrentUser\My' -Password $securePwd
+          "CERT_HASH=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+          "WARREN_CERT_HASH=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+
+      - name: Build (signed)
+        if: env.CERT_HASH != ''
+        shell: bash
+        run: ./build.sh --optimize --sign --universal
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.CERT_HASH == ''
+        shell: bash
+        run: |
+          echo "::warning::WARREN_CSC_LINK_WIN secret not set; producing unsigned dev build."
+          ./build.sh --optimize --universal
+
+      - name: Wipe signing certificate from runner
+        if: always() && env.CERT_HASH != ''
+        shell: pwsh
+        env:
+          HASH: ${{ env.CERT_HASH }}
+        run: |
+          if ($env:HASH) {
+            Get-ChildItem -Path "Cert:\CurrentUser\My\$env:HASH" -ErrorAction SilentlyContinue | Remove-Item -Force
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP "warren-codesign.pfx"
+          if (Test-Path $pfxPath) { Remove-Item -Force $pfxPath }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            dist/WarrenVPN-*.exe
+            dist/WarrenVPN-*.msi
+          if-no-files-found: warn
+          retention-days: 14
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/')
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifact layout
+        run: |
+          mkdir -p release-files
+          find artifacts -type f \( \
+            -name 'WarrenVPN-*.dmg' -o \
+            -name 'WarrenVPN-*.pkg' -o \
+            -name 'WarrenVPN-*.deb' -o \
+            -name 'WarrenVPN-*.rpm' -o \
+            -name 'WarrenVPN-*.exe' -o \
+            -name 'WarrenVPN-*.msi' -o \
+            -name 'warren-vpn-daemon_*.deb' -o \
+            -name 'warren-vpn-daemon_*.rpm' \
+          \) -exec cp {} release-files/ \;
+          ls -lh release-files/ || true
+
+      - name: Compute SHA-256 checksums
+        run: |
+          cd release-files
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG_NAME" \
+            --title "Warren VPN $TAG_NAME" \
+            --notes-file CHANGELOG.md \
+            --draft \
+            release-files/*

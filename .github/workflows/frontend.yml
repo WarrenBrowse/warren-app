@@ -28,6 +28,8 @@ jobs:
         uses: actions/checkout@v4
 
       - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Install dependencies
         working-directory: desktop

@@ -1,5 +1,5 @@
-name: "Mullvad build env"
-description: "Set up build environment for Mullvad"
+name: "Warren build env"
+description: "Set up build environment for Warren (fork of Mullvad)"
 inputs:
   rust-toolchain:
     description: "Rust toolchain (stable, beta, nightly, or version)"
@@ -20,9 +20,45 @@ inputs:
       will be cached as well.
     default: "false"
     required: false
+  warren-core-token:
+    description: >-
+      PAT with read access to WarrenBrowse/warren-core. Required because
+      warren-app's Cargo.toml has path-deps to ../warren-core/crates/*.
+      Configure as secrets.WARREN_CORE_RO_TOKEN in workflow callers.
+    default: ""
+    required: false
+  skip-warren-core:
+    description: >-
+      Set to 'true' to skip checking out warren-core. Only safe for jobs that
+      do not invoke cargo (e.g., shellcheck, yamllint).
+    default: "false"
+    required: false
 runs:
   using: "composite"
   steps:
+    - name: Read pinned warren-core SHA
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      id: warren-core-pin
+      shell: bash
+      run: echo "sha=$(cat .warren-core-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warren-core (sibling repo, path-dep target)
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      uses: actions/checkout@v4
+      with:
+        repository: WarrenBrowse/warren-core
+        ref: ${{ steps.warren-core-pin.outputs.sha }}
+        path: ../warren-core
+        token: ${{ inputs.warren-core-token }}
+
+    - name: Warn if warren-core checkout was skipped
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
+      shell: bash
+      run: |
+        echo "::warning::warren-core was not checked out (no warren-core-token input)."
+        echo "::warning::cargo commands relying on path-deps to ../warren-core/crates/* will fail."
+        echo "::warning::Pass warren-core-token: \${{ secrets.WARREN_CORE_RO_TOKEN }} from the calling workflow."
+
     - name: Override Rust toolchain
       if: ${{ inputs.rust-toolchain != 'stable' }}
       shell: bash

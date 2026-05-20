@@ -52,6 +52,7 @@ jobs:
         with:
           rustup-components: clippy
           rust-cache-targets: ${{ runner.os == 'Windows' }}
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Clippy check
         shell: bash
