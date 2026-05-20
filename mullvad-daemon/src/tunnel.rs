@@ -91,6 +91,13 @@ struct InnerParametersGenerator {
     /// the user toggles the setting from the Electron UI; the next
     /// tunnel reconnect picks up the new value.
     warren_nat_pmp: Option<NatPmpConfig>,
+    /// User-supplied IPv4 CIDRs that should bypass the tunnel and
+    /// reach the host's main routing table (LAN, SSH inbound). Plumbed
+    /// down to [`talpid_warren_tunnel::WarrenTunnelParameters::bypass_cidrs`].
+    /// Default empty; mutated at runtime via
+    /// [`ParametersGenerator::set_warren_bypass_cidrs`] once a UI or
+    /// settings file lands the values.
+    warren_bypass_cidrs: Vec<talpid_warren_tunnel::BypassCidr>,
 }
 
 impl ParametersGenerator {
@@ -126,7 +133,22 @@ impl ParametersGenerator {
             warren_multi_hop,
             warren_status_cache,
             warren_nat_pmp: None,
+            warren_bypass_cidrs: Vec::new(),
         })))
+    }
+
+    /// Replaces the user-supplied bypass CIDR list. The next call to
+    /// [`Self::produce_warren_tunnel_params`] picks up the new value;
+    /// in-flight tunnels keep their current routing until reconnect.
+    pub async fn set_warren_bypass_cidrs(&self, cidrs: Vec<talpid_warren_tunnel::BypassCidr>) {
+        self.0.lock().await.warren_bypass_cidrs = cidrs;
+    }
+
+    /// Reads back the currently-persisted bypass CIDR list. Used by
+    /// the gRPC `GetSettings` handler so the UI reflects the persisted
+    /// state even when no tunnel has been generated yet.
+    pub async fn warren_bypass_cidrs(&self) -> Vec<talpid_warren_tunnel::BypassCidr> {
+        self.0.lock().await.warren_bypass_cidrs.clone()
     }
 
     /// Sets the user's NAT-PMP preference. The next call to
@@ -184,6 +206,7 @@ impl ParametersGenerator {
         let query = relay_settings_to_warren_query(&inner.relay_settings);
         let multi_hop = inner.warren_multi_hop.clone();
         let nat_pmp = inner.warren_nat_pmp.clone();
+        let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let mut params = warren_tunnel_params::assemble_for_attempt(
             selector,
             signing_key,
@@ -191,6 +214,7 @@ impl ParametersGenerator {
             retry_attempt,
             multi_hop,
             nat_pmp,
+            bypass_cidrs,
         )?;
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI

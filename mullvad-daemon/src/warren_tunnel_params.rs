@@ -117,8 +117,16 @@ mod tests {
         let key = fixture_signing_key();
         let expected_pubkey = key.verifying_key().to_bytes();
 
-        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0, None, None)
-            .expect("must assemble valid params");
+        let params = assemble_for_attempt(
+            &selector,
+            key,
+            &WarrenRelayQuery::any(),
+            0,
+            None,
+            None,
+            Vec::new(),
+        )
+        .expect("must assemble valid params");
 
         let expected_id = WarrenPubkey::from_bytes([1u8; 32]);
         assert_eq!(params.exit_addr.id, expected_id);
@@ -162,8 +170,16 @@ mod tests {
         let selector = DaemonWarrenRelaySelector::new(list);
         let query = WarrenRelayQuery::any().with_location(LocationConstraint::Country("zz".into()));
 
-        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0, None, None)
-            .expect_err("must fail");
+        let err = assemble_for_attempt(
+            &selector,
+            fixture_signing_key(),
+            &query,
+            0,
+            None,
+            None,
+            Vec::new(),
+        )
+        .expect_err("must fail");
         assert!(matches!(
             err,
             AssembleError::Selector(SelectorError::NoRelayMatch)
@@ -189,6 +205,7 @@ mod tests {
             42,
             None,
             None,
+            Vec::new(),
         )
         .unwrap();
         let params_b = assemble_for_attempt(
@@ -198,6 +215,7 @@ mod tests {
             42,
             None,
             None,
+            Vec::new(),
         )
         .unwrap();
 
@@ -248,6 +266,7 @@ mod tests {
             0,
             Some(mh.clone()),
             None,
+            Vec::new(),
         )
         .expect("must assemble multi-hop params");
 
@@ -299,6 +318,7 @@ mod tests {
             0,
             None,
             Some(cfg.clone()),
+            Vec::new(),
         )
         .expect("must assemble nat-pmp params");
 
@@ -306,6 +326,76 @@ mod tests {
             .nat_pmp
             .expect("nat_pmp must be forwarded onto params");
         assert_eq!(wired, cfg, "NatPmpConfig must round-trip verbatim");
+    }
+
+    #[test]
+    fn assemble_propagates_bypass_cidrs_into_params() {
+        // The daemon-side settings store carries a Vec<BypassCidr>
+        // populated by either a future UI flow or the CLI. assemble()
+        // must forward that list verbatim onto
+        // `params.bypass_cidrs` so the talpid-warren-tunnel routing
+        // installer sees the user's intent on the next tunnel start.
+        // A regression that drops the field would silently route LAN
+        // traffic through the tunnel and break inbound SSH on
+        // dual-NIC hosts (the exact M4.H.G fix).
+        use std::net::Ipv4Addr;
+        use talpid_warren_tunnel::BypassCidr;
+
+        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+        let cidrs = vec![
+            BypassCidr {
+                network: Ipv4Addr::new(192, 168, 0, 0),
+                prefix: 16,
+            },
+            BypassCidr {
+                network: Ipv4Addr::new(10, 0, 0, 0),
+                prefix: 8,
+            },
+        ];
+
+        let params = assemble_for_attempt(
+            &selector,
+            fixture_signing_key(),
+            &WarrenRelayQuery::any(),
+            0,
+            None,
+            None,
+            cidrs.clone(),
+        )
+        .expect("must assemble bypass-cidr params");
+
+        assert_eq!(
+            params.bypass_cidrs, cidrs,
+            "bypass_cidrs must round-trip verbatim from assemble() into params",
+        );
+    }
+
+    #[test]
+    fn assemble_default_empty_bypass_cidrs_yields_empty_params_field() {
+        // Caller passes an empty Vec (the daemon default before any
+        // user supplies a bypass): params.bypass_cidrs must also be
+        // empty. This is the M4.E.D anti-regression: zero-bypass
+        // callers must produce the historic "no extra rules" routing.
+        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+
+        let params = assemble_for_attempt(
+            &selector,
+            fixture_signing_key(),
+            &WarrenRelayQuery::any(),
+            0,
+            None,
+            None,
+            Vec::new(),
+        )
+        .expect("must assemble params");
+
+        assert!(
+            params.bypass_cidrs.is_empty(),
+            "an empty bypass list must produce empty params.bypass_cidrs, got {:?}",
+            params.bypass_cidrs,
+        );
     }
 
     #[test]
