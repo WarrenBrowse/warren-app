@@ -10,7 +10,7 @@
 //! invoked from the tunnel state machine when Warren mode is active.
 
 use ed25519_dalek::SigningKey;
-use talpid_warren_tunnel::{MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
+use talpid_warren_tunnel::{BypassCidr, MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -55,6 +55,7 @@ pub fn assemble_for_attempt(
     retry_attempt: u32,
     multi_hop: Option<MultiHopConfig>,
     nat_pmp: Option<NatPmpConfig>,
+    bypass_cidrs: Vec<BypassCidr>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     Ok(WarrenTunnelParameters {
@@ -77,6 +78,12 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         nat_pmp_observer: None,
+        // User-supplied bypass CIDRs (M4.H.G --bypass-cidr). The
+        // daemon-side runtime in `talpid-warren-tunnel` consumes this
+        // list to install extra `ip rule add to <cidr> lookup main`
+        // rules alongside the standard split-default routes. Empty
+        // (default) preserves the M4.E.D behaviour.
+        bypass_cidrs,
     })
 }
 

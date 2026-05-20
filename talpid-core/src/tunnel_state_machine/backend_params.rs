@@ -152,6 +152,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            bypass_cidrs: Vec::new(),
         }
     }
 
