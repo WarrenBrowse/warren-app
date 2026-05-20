@@ -1180,6 +1180,21 @@ impl Daemon {
             .as_ref()
             .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list()));
 
+        // M5.B.4: forward the resolved warren-api URL so the
+        // failover path (tunnel.rs) can post a best-effort
+        // exit-down report. `None` when Warren mode is off (the
+        // pure-Mullvad path bypasses warren-api entirely).
+        let warren_api_url_for_params: Option<String> = if warren_mode_active {
+            Some(
+                std::env::var("WARREN_API_URL")
+                    .ok()
+                    .filter(|s| !s.is_empty())
+                    .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
+                    .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned()),
+            )
+        } else {
+            None
+        };
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             account_manager.clone(),
             relay_selector.clone(),
@@ -1189,6 +1204,7 @@ impl Daemon {
             warren_signing_key,
             warren_multi_hop,
             warren_status_cache.clone(),
+            warren_api_url_for_params,
         );
         // M5.B.1: snapshot the persisted DAITA opt-in onto the
         // parameters generator at boot. Without this, the first

@@ -138,6 +138,14 @@ struct InnerParametersGenerator {
     /// excludes the previously failed pubkey. `None` on the very
     /// first attempt after a daemon boot.
     warren_last_exit_pubkey: Option<warren_relay_selector::warren_types::WarrenPubkey>,
+    /// M5.B.4 warren-api URL forwarded from `lib.rs` boot. Used
+    /// fire-and-forget to POST `/v1/incidents/exit-down` whenever
+    /// `assemble_failover_for_attempt` is dispatched, so the
+    /// operator can investigate persistent exit outages through
+    /// `GET /v1/admin/exits/health`. `None` keeps the report
+    /// suppressed (e.g. the user has not configured warren_api_url
+    /// or the daemon runs in pure Mullvad mode).
+    warren_api_url: Option<String>,
 }
 
 impl ParametersGenerator {
@@ -150,7 +158,7 @@ impl ParametersGenerator {
     /// regardless of the state of the Warren artifacts.
     #[expect(
         clippy::too_many_arguments,
-        reason = "Constructor for the daemon-side params generator: the eight inputs are all required (4 upstream + 4 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
+        reason = "Constructor for the daemon-side params generator: the nine inputs are all required (4 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
     )]
     pub fn new_with_optional_warren(
         account_manager: AccountManagerHandle,
@@ -161,6 +169,7 @@ impl ParametersGenerator {
         warren_signing_key: Option<SigningKey>,
         warren_multi_hop: Option<MultiHopConfig>,
         warren_status_cache: WarrenStatusCache,
+        warren_api_url: Option<String>,
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
@@ -176,6 +185,7 @@ impl ParametersGenerator {
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
             warren_last_exit_pubkey: None,
+            warren_api_url,
         })))
     }
 
@@ -314,8 +324,42 @@ impl ParametersGenerator {
         // via the watch channel and surfaces "Switched to <country>"
         // for ~5 seconds. The reconnect counter is updated separately
         // on a successful reconnect by the multi-hop supervisor.
+        //
+        // M5.B.4: post a fire-and-forget exit-down report to
+        // `warren-api` so the operator can correlate persistent
+        // outages through `GET /v1/admin/exits/health`. The report
+        // is forensically anonymous (cf. `incidents.rs` privacy
+        // section): the server does not log who reported. If the
+        // POST fails (network down, server outage), the failover
+        // path is NOT affected - we just lose one telemetry point.
         if is_failover {
             inner.warren_status_cache.record_failover();
+            if let (Some(api_url), Some(signing_key), Some(excluded)) = (
+                inner.warren_api_url.clone(),
+                inner.warren_signing_key.clone(),
+                last_pubkey,
+            ) {
+                tokio::spawn(async move {
+                    let client = warren_api_client::WarrenApiClient::new(api_url, signing_key);
+                    let req = warren_api_client::IncidentExitDownRequest {
+                        exit_pubkey_hex: hex::encode(excluded.as_bytes()),
+                        // We do not know the precise failure cause
+                        // from this call site (the tunnel-state
+                        // machine only tells us "the previous attempt
+                        // failed"). `HandshakeFail` is the closest
+                        // semantic match since exit-down typically
+                        // surfaces as a pre-tunnel exchange failure.
+                        reason_code: warren_api_client::IncidentReason::HandshakeFail,
+                        ts_unix: warren_config::unix_now(),
+                    };
+                    if let Err(e) = client.report_exit_down(&req).await {
+                        log::debug!(
+                            "exit-down report best-effort POST failed: {e} (telemetry only, \
+                             does not affect failover path)"
+                        );
+                    }
+                });
+            }
         }
         // Memo the freshly-picked exit pubkey so the next retry can
         // exclude it (M5.B.2 failover loop). The pubkey lives in
