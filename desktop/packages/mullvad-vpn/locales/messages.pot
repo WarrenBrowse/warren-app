@@ -2124,6 +2124,30 @@ msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr ""
 
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Requesting port mapping..."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Warren restores port-forwarding: a unique differentiator since Mullvad and IVPN removed this feature in 2023. Toggle below to ask the exit for a public port mapped to your device."
+msgstr ""
+
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
 msgid "Cancel"

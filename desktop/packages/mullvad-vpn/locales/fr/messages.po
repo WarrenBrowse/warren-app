@@ -3917,3 +3917,27 @@ msgstr "Reconnexions"
 msgctxt "warren-status-view"
 msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
 msgstr "Les tunnels Warren se font passer pour du trafic HTTP/3 navigateur standard : ALPN h3, SNI warrenbrowse.com, découpage du paquet Initial, UDP/443. Non désactivable en /v1 car le faire rendrait les clients Warren immédiatement identifiables sur le réseau."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Redirection de port"
+
+msgctxt "port-forwarding-view"
+msgid "Warren restores port-forwarding: a unique differentiator since Mullvad and IVPN removed this feature in 2023. Toggle below to ask the exit for a public port mapped to your device."
+msgstr "Warren restaure la redirection de port : un différenciateur unique depuis que Mullvad et IVPN ont supprimé cette fonctionnalité en 2023. Activez ci-dessous pour demander à la sortie un port public mappé vers votre appareil."
+
+msgctxt "port-forwarding-view"
+msgid "Requesting port mapping..."
+msgstr "Demande de mappage de port..."
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Échec du mappage : %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Port public : %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Renouvellement dans %(countdown)s"
