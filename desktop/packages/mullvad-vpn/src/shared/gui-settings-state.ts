@@ -38,4 +38,15 @@ export interface IGuiSettingsState {
 
   // Tells the app whether or not to show the map in the main view.
   animateMap: boolean;
+
+  // M5.B.3 onboarding wizard: timestamp (Unix seconds) at which the
+  // wizard was last completed. `undefined` -> first launch, the
+  // wizard router intercepts the boot and shows the welcome step.
+  // `Some(ts)` -> wizard already gone through; the user can replay
+  // it from the Settings "Replay onboarding" CTA, which clears this
+  // field. The value lets future versions invalidate the existing
+  // completion (e.g., a new wallet model in M6) without breaking the
+  // existing user base by simply bumping the cutoff in the renderer
+  // boot logic.
+  onboardingCompletedUnix?: number;
 }

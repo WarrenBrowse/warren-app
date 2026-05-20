@@ -41,4 +41,14 @@ export enum RoutePath {
   antiCensorship = '/settings/advanced/anti-censorship',
   wireguardPort = '/settings/advanced/wireguard-port',
   lwo = '/settings/advanced/lwo',
+  // M5.B.3 onboarding wizard (first-launch welcome + wallet
+  // generate/import + subscription pointer + privacy preferences +
+  // done). Re-triggerable from Settings ("Replay onboarding"). Uses
+  // a route-based flow (vs modal overlay) so demo links and support
+  // can deep-link a user to a specific step.
+  onboardingWelcome = '/onboarding',
+  onboardingWallet = '/onboarding/wallet',
+  onboardingSubscription = '/onboarding/subscription',
+  onboardingPreferences = '/onboarding/preferences',
+  onboardingDone = '/onboarding/done',
 }
