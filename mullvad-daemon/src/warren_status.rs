@@ -69,6 +69,15 @@ pub struct WarrenStatusSnapshot {
     /// the user has not opted into port-forwarding; the other variants
     /// track the refresh loop's lifecycle.
     pub nat_pmp: NatPmpStateSnapshot,
+    /// M5.B.2 multi-exit failover counter. Bumped each time the
+    /// `assemble_failover_for_attempt` path is taken (retry > 0 with a
+    /// memoized previous exit). The UI displays a toast when this
+    /// counter increments so the user knows their exit was swapped.
+    pub failover_count: u32,
+    /// Time since the last failover. `None` if no failover has been
+    /// recorded in the current session. Matches `last_reconnect_age`
+    /// semantics (computed against the calling thread's clock).
+    pub last_failover_age: Option<Duration>,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -80,6 +89,8 @@ impl Default for WarrenStatusSnapshot {
             last_reconnect_age: None,
             obfuscation_active: true,
             nat_pmp: NatPmpStateSnapshot::Disabled,
+            failover_count: 0,
+            last_failover_age: None,
         }
     }
 }
@@ -93,6 +104,8 @@ struct InternalState {
     last_reconnect_at: Option<Instant>,
     obfuscation_active: bool,
     nat_pmp: NatPmpStateSnapshot,
+    failover_count: u32,
+    last_failover_at: Option<Instant>,
 }
 
 impl Default for InternalState {
@@ -102,6 +115,8 @@ impl Default for InternalState {
             last_reconnect_at: None,
             obfuscation_active: true,
             nat_pmp: NatPmpStateSnapshot::Disabled,
+            failover_count: 0,
+            last_failover_at: None,
         }
     }
 }
@@ -147,6 +162,22 @@ impl WarrenStatusCache {
             last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
             obfuscation_active: inner.obfuscation_active,
             nat_pmp: inner.nat_pmp.clone(),
+            failover_count: inner.failover_count,
+            last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
+        }
+    }
+
+    /// Build a [`WarrenStatusSnapshot`] from the internal state. Used
+    /// by every `record_*` / `set_*` method to avoid drift between the
+    /// construction sites whenever new fields are added.
+    fn snapshot_of(inner: &InternalState) -> WarrenStatusSnapshot {
+        WarrenStatusSnapshot {
+            reconnect_count: inner.reconnect_count,
+            last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
+            obfuscation_active: inner.obfuscation_active,
+            nat_pmp: inner.nat_pmp.clone(),
+            failover_count: inner.failover_count,
+            last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
         }
     }
 
@@ -162,12 +193,25 @@ impl WarrenStatusCache {
                 .expect("warren_status state lock poisoned");
             inner.reconnect_count = inner.reconnect_count.saturating_add(1);
             inner.last_reconnect_at = Some(Instant::now());
-            WarrenStatusSnapshot {
-                reconnect_count: inner.reconnect_count,
-                last_reconnect_age: Some(Duration::from_secs(0)),
-                obfuscation_active: inner.obfuscation_active,
-                nat_pmp: inner.nat_pmp.clone(),
-            }
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// M5.B.2: bumps the failover counter and stamps the moment.
+    /// Called from the tunnel-state-machine right when
+    /// `assemble_failover_for_attempt` is dispatched, i.e. when a
+    /// retry > 0 will exclude the previous exit. The UI toast layer
+    /// observes `failover_count` increments via the watch channel.
+    pub fn record_failover(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            inner.failover_count = inner.failover_count.saturating_add(1);
+            inner.last_failover_at = Some(Instant::now());
+            Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
@@ -204,12 +248,7 @@ impl WarrenStatusCache {
                 NatPmpEvent::Failed { error } => NatPmpStateSnapshot::Failed { error },
                 NatPmpEvent::Cancelled => NatPmpStateSnapshot::Disabled,
             };
-            WarrenStatusSnapshot {
-                reconnect_count: inner.reconnect_count,
-                last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
-                obfuscation_active: inner.obfuscation_active,
-                nat_pmp: inner.nat_pmp.clone(),
-            }
+            Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
@@ -225,12 +264,7 @@ impl WarrenStatusCache {
                 .write()
                 .expect("warren_status state lock poisoned");
             inner.nat_pmp = NatPmpStateSnapshot::Requesting;
-            WarrenStatusSnapshot {
-                reconnect_count: inner.reconnect_count,
-                last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
-                obfuscation_active: inner.obfuscation_active,
-                nat_pmp: inner.nat_pmp.clone(),
-            }
+            Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
@@ -249,12 +283,7 @@ impl WarrenStatusCache {
                 return;
             }
             inner.nat_pmp = NatPmpStateSnapshot::Disabled;
-            WarrenStatusSnapshot {
-                reconnect_count: inner.reconnect_count,
-                last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
-                obfuscation_active: inner.obfuscation_active,
-                nat_pmp: NatPmpStateSnapshot::Disabled,
-            }
+            Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
@@ -272,12 +301,7 @@ impl WarrenStatusCache {
                 return;
             }
             inner.obfuscation_active = active;
-            WarrenStatusSnapshot {
-                reconnect_count: inner.reconnect_count,
-                last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
-                obfuscation_active: active,
-                nat_pmp: inner.nat_pmp.clone(),
-            }
+            Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
@@ -483,6 +507,77 @@ mod tests {
         // Already disabled by default; another disable must not push.
         cache.set_nat_pmp_disabled();
         assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    // --- M5.B.2 failover surface ---------------------------------------
+
+    #[test]
+    fn default_snapshot_has_failover_count_zero_and_age_none() {
+        let s = WarrenStatusSnapshot::default();
+        assert_eq!(s.failover_count, 0);
+        assert_eq!(s.last_failover_age, None);
+    }
+
+    #[test]
+    fn record_failover_bumps_counter_and_resets_age() {
+        let cache = WarrenStatusCache::new();
+        cache.record_failover();
+        let snap = cache.snapshot();
+        assert_eq!(snap.failover_count, 1, "first failover bumps from 0 -> 1");
+        let age = snap
+            .last_failover_age
+            .expect("last_failover_age must be Some after record_failover");
+        assert!(age < Duration::from_secs(1));
+    }
+
+    #[test]
+    fn record_failover_increments_monotonically() {
+        let cache = WarrenStatusCache::new();
+        cache.record_failover();
+        cache.record_failover();
+        cache.record_failover();
+        assert_eq!(cache.snapshot().failover_count, 3);
+    }
+
+    #[test]
+    fn record_failover_saturates_at_u32_max() {
+        let cache = WarrenStatusCache::new();
+        {
+            let mut inner = cache.state.write().unwrap();
+            inner.failover_count = u32::MAX - 1;
+        }
+        cache.record_failover();
+        cache.record_failover();
+        assert_eq!(cache.snapshot().failover_count, u32::MAX);
+    }
+
+    #[test]
+    fn subscribe_yields_snapshot_on_record_failover() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.record_failover();
+        assert!(rx.has_changed().unwrap_or(false));
+        let s = rx.borrow_and_update();
+        assert_eq!(s.failover_count, 1);
+    }
+
+    #[test]
+    fn record_failover_does_not_perturb_reconnect_count_or_nat_pmp() {
+        let cache = WarrenStatusCache::new();
+        cache.record_reconnect();
+        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
+            external_port: 60123,
+            lifetime_secs: 3600,
+        });
+        cache.record_failover();
+        let s = cache.snapshot();
+        assert_eq!(s.failover_count, 1);
+        assert_eq!(s.reconnect_count, 1, "failover must not touch reconnect counter");
+        assert!(
+            matches!(s.nat_pmp, NatPmpStateSnapshot::Mapped { external_port: 60123, .. }),
+            "failover must not touch nat_pmp state"
+        );
     }
 
     #[test]

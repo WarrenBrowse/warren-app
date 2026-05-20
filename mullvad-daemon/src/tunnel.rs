@@ -284,9 +284,8 @@ impl ParametersGenerator {
         // first attempt after boot (`retry_attempt == 0` or no
         // last-pubkey memo) we use the normal weighted selector.
         let last_pubkey = inner.warren_last_exit_pubkey;
-        let assemble_result = if retry_attempt > 0
-            && let Some(excluded) = last_pubkey
-        {
+        let is_failover = retry_attempt > 0 && last_pubkey.is_some();
+        let assemble_result = if let Some(excluded) = last_pubkey.filter(|_| is_failover) {
             warren_tunnel_params::assemble_failover_for_attempt(
                 &selector,
                 signing_key,
@@ -309,6 +308,15 @@ impl ParametersGenerator {
             )
         };
         let mut params = assemble_result?;
+        // M5.B.2: bump the failover counter as soon as the failover
+        // assembly succeeds (a fresh exit was picked, distinct from
+        // the memoized one). The UI toast layer observes increments
+        // via the watch channel and surfaces "Switched to <country>"
+        // for ~5 seconds. The reconnect counter is updated separately
+        // on a successful reconnect by the multi-hop supervisor.
+        if is_failover {
+            inner.warren_status_cache.record_failover();
+        }
         // Memo the freshly-picked exit pubkey so the next retry can
         // exclude it (M5.B.2 failover loop). The pubkey lives in
         // `WarrenExitAddr::id`.

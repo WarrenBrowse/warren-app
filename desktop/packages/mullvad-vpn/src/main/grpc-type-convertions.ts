@@ -524,14 +524,14 @@ export function convertToWarrenMultiHopSettings(
 }
 
 export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
-  const age = status.getLastReconnectAge();
-  const lastReconnectAgeMs = age
-    ? age.getSeconds() * 1000 + Math.floor(age.getNanos() / 1e6)
-    : null;
+  const durationToMs = (d: google_protobuf_duration_pb.Duration | undefined): number | null =>
+    d ? d.getSeconds() * 1000 + Math.floor(d.getNanos() / 1e6) : null;
   return {
     reconnectCount: status.getReconnectCount(),
-    lastReconnectAgeMs,
+    lastReconnectAgeMs: durationToMs(status.getLastReconnectAge()),
     obfuscationActive: status.getObfuscationActive(),
+    failoverCount: status.getFailoverCount(),
+    lastFailoverAgeMs: durationToMs(status.getLastFailoverAge()),
   };
 }
 

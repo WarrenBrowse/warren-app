@@ -32,6 +32,7 @@ import {
   NewDeviceNotificationProvider,
   NewVersionNotificationProvider,
   UnsupportedWireGuardPortNotificationProvider,
+  WarrenFailoverNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
 import { useMounted } from '../lib/utility-hooks';
@@ -89,6 +90,17 @@ export default function NotificationArea(props: IProps) {
   }, [setDisplayedChangelog]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // M5.B.2 failover banner state. Local to the renderer process: the
+  // daemon counter resets on restart, and so should the
+  // "acknowledged" mark (so a fresh boot's first failover always
+  // surfaces). The banner stays visible while
+  // `warrenStatus.failoverCount > warrenFailoverAcknowledged`.
+  const [warrenFailoverAcknowledged, setWarrenFailoverAcknowledged] = useState(0);
+  const warrenStatus = useSelector((state: IReduxState) => state.settings.warrenStatus);
+  const acknowledgeWarrenFailover = useCallback(() => {
+    setWarrenFailoverAcknowledged(warrenStatus?.failoverCount ?? 0);
+  }, [warrenStatus?.failoverCount]);
 
   const { setSplitTunnelingState } = useAppContext();
   const disableSplitTunneling = useCallback(async () => {
@@ -154,6 +166,11 @@ export default function NotificationArea(props: IProps) {
     }),
     new InconsistentVersionNotificationProvider({ consistent: version.consistent }),
     new UnsupportedVersionNotificationProvider(version),
+    new WarrenFailoverNotificationProvider({
+      failoverCount: warrenStatus?.failoverCount ?? 0,
+      acknowledgedCount: warrenFailoverAcknowledged,
+      close: acknowledgeWarrenFailover,
+    }),
   ];
 
   if (account.expiry) {

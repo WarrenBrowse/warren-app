@@ -115,6 +115,10 @@ pub fn assemble_for_attempt(
 /// Returns [`AssembleError::Selector`] when no alternative relay
 /// exists (single-relay deployment or every other relay filtered out
 /// by the query).
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror of assemble_for_attempt with one extra discriminator (excluded_pubkey); splitting into a struct would obscure the call site in tunnel.rs and decouple it visually from the sibling function."
+)]
 pub fn assemble_failover_for_attempt(
     selector: &DaemonWarrenRelaySelector,
     signing_key: SigningKey,

@@ -15172,7 +15172,9 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
   var f, obj = {
     reconnectCount: jspb.Message.getFieldWithDefault(msg, 1, 0),
     lastReconnectAge: (f = msg.getLastReconnectAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
-    obfuscationActive: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
+    obfuscationActive: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    failoverCount: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    lastFailoverAge: (f = msg.getLastFailoverAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -15221,6 +15223,15 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
     case 3:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setObfuscationActive(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setFailoverCount(value);
+      break;
+    case 5:
+      var value = new google_protobuf_duration_pb.Duration;
+      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
+      msg.setLastFailoverAge(value);
       break;
     default:
       reader.skipField();
@@ -15271,6 +15282,21 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
     writer.writeBool(
       3,
       f
+    );
+  }
+  f = message.getFailoverCount();
+  if (f !== 0) {
+    writer.writeUint32(
+      4,
+      f
+    );
+  }
+  f = message.getLastFailoverAge();
+  if (f != null) {
+    writer.writeMessage(
+      5,
+      f,
+      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
 };
@@ -15346,6 +15372,61 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getObfuscationA
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setObfuscationActive = function(value) {
   return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * optional uint32 failover_count = 4;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getFailoverCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setFailoverCount = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional google.protobuf.Duration last_failover_age = 5;
+ * @return {?proto.google.protobuf.Duration}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getLastFailoverAge = function() {
+  return /** @type{?proto.google.protobuf.Duration} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 5));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Duration|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setLastFailoverAge = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearLastFailoverAge = function() {
+  return this.setLastFailoverAge(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasLastFailoverAge = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 

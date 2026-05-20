@@ -587,6 +587,13 @@ export interface WarrenStatus {
   // if no reconnect has been observed yet (fresh session, single-hop).
   lastReconnectAgeMs: number | null;
   obfuscationActive: boolean;
+  // M5.B.2 multi-exit failover: number of times the daemon picked an
+  // alternative exit after the previous one became unreachable. The
+  // renderer surfaces an increment as a toast "Switched to <country>".
+  failoverCount: number;
+  // Time since the last failover in milliseconds. `null` if no
+  // failover has been observed yet.
+  lastFailoverAgeMs: number | null;
 }
 
 export type SplitTunnelSettings = {

@@ -1858,7 +1858,7 @@ export namespace WarrenMultiHopSettings {
     }
 }
 
-export class WarrenStatus extends jspb.Message { 
+export class WarrenStatus extends jspb.Message {
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;
 
@@ -1868,6 +1868,13 @@ export class WarrenStatus extends jspb.Message {
     setLastReconnectAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
     getObfuscationActive(): boolean;
     setObfuscationActive(value: boolean): WarrenStatus;
+    getFailoverCount(): number;
+    setFailoverCount(value: number): WarrenStatus;
+
+    hasLastFailoverAge(): boolean;
+    clearLastFailoverAge(): void;
+    getLastFailoverAge(): google_protobuf_duration_pb.Duration | undefined;
+    setLastFailoverAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -1884,6 +1891,8 @@ export namespace WarrenStatus {
         reconnectCount: number,
         lastReconnectAge?: google_protobuf_duration_pb.Duration.AsObject,
         obfuscationActive: boolean,
+        failoverCount: number,
+        lastFailoverAge?: google_protobuf_duration_pb.Duration.AsObject,
     }
 }
 

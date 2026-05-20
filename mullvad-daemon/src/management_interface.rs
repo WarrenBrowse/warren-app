@@ -114,13 +114,16 @@ fn nat_pmp_state_to_proto(
 fn warren_status_snapshot_to_proto(
     snap: crate::warren_status::WarrenStatusSnapshot,
 ) -> types::WarrenStatus {
+    let duration_to_proto = |d: std::time::Duration| types::Duration {
+        seconds: d.as_secs() as i64,
+        nanos: d.subsec_nanos() as i32,
+    };
     types::WarrenStatus {
         reconnect_count: snap.reconnect_count,
-        last_reconnect_age: snap.last_reconnect_age.map(|d| types::Duration {
-            seconds: d.as_secs() as i64,
-            nanos: d.subsec_nanos() as i32,
-        }),
+        last_reconnect_age: snap.last_reconnect_age.map(duration_to_proto),
         obfuscation_active: snap.obfuscation_active,
+        failover_count: snap.failover_count,
+        last_failover_age: snap.last_failover_age.map(duration_to_proto),
     }
 }
 

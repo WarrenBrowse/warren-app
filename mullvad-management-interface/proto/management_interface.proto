@@ -634,10 +634,15 @@ message WarrenMultiHopSettings {
 // WarrenStatusUpdates stream. reconnect_count + last_reconnect_age
 // expose the M4.E.D auto-reconnect supervisor; obfuscation_active is
 // always-true for /v1 per `warren_obfuscation_doctrine_v1`.
+// M5.B.2: failover_count + last_failover_age expose the multi-exit
+// auto-failover (`assemble_failover_for_attempt`) so the UI can toast
+// the user when their exit is swapped after an outage.
 message WarrenStatus {
   uint32 reconnect_count = 1;
   google.protobuf.Duration last_reconnect_age = 2;
   bool obfuscation_active = 3;
+  uint32 failover_count = 4;
+  google.protobuf.Duration last_failover_age = 5;
 }
 
 // Warren NAT-PMP port-forwarding settings persisted on disk and pushed
