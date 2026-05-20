@@ -10,9 +10,9 @@ license.workspace = true
 chrono = { workspace = true, features = ["clock", "serde"] }
 clap = { workspace = true, optional = true }
 either = "1.11"
-# Warren fork — Phase 2.B : `WarrenPubKey` newtype valide une chaîne hex
-# 64 chars représentant une pubkey Ed25519 (32 octets). Aligne sur la
-# version utilisée par `mullvad-api/src/warren_auth.rs`.
+# Warren fork — Phase 2.B: `WarrenPubKey` newtype validates a 64-char
+# hex string representing an Ed25519 pubkey (32 bytes). Aligned with
+# the version used by `mullvad-api/src/warren_auth.rs`.
 hex = "0.4"
 intersection-derive = { path = "intersection-derive" }
 ipnetwork = { workspace = true }
@@ -26,8 +26,8 @@ uuid = { version = "1.4.1", features = ["serde", "v4"] }
 vec1 = { workspace = true }
 
 [dev-dependencies]
-# Warren fork — Phase 2.B : serde_json pour les vector tests serde
-# de `WarrenPubKey` (transparent JSON).
+# Warren fork — Phase 2.B: serde_json for the serde vector tests of
+# `WarrenPubKey` (transparent JSON).
 serde_json = { workspace = true }
 
 [lints]

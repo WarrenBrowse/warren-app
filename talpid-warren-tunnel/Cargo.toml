@@ -31,7 +31,7 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # warren-core checkout SHA is pinned in `.warren-core-version` at the
 # warren-app repo root. Long-term the plan is to switch to a git
 # submodule under `vendor/warren-core/` then to a private cargo registry
-# (cf. docs/warren-app-quinn-migration-plan.md § "Stratégie de partage").
+# (see docs/warren-app-quinn-migration-plan.md § "Sharing strategy").
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel" }
 warren-protocol = { path = "../../warren-core/crates/warren-protocol" }
 # Multi-hop stack (M4.B/C/D/E.D) consumed by the dispatcher in

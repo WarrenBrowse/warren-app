@@ -1,10 +1,10 @@
-# Cross config — image edge (GCC 11+, cmake, clang, lld) requise par
-# aws-lc-sys (dépendance de iroh@=0.98.2 + tls-aws-lc-rs). Mirror de
+# Cross config — edge image (GCC 11+, cmake, clang, lld) required by
+# aws-lc-sys (dependency of iroh@=0.98.2 + tls-aws-lc-rs). Mirror of
 # /Users/poka/dev/warrenBros/warren-core/Cross.toml.
 #
-# Le mount additionnel `../warren-core` est requis pour résoudre les
-# path-deps cross-repo (= warren-iroh-tunnel, warren-relay-selector,
-# warren-api-client, etc. consommés par mullvad-daemon via
+# The additional `../warren-core` mount is required to resolve the
+# cross-repo path-deps (= warren-iroh-tunnel, warren-relay-selector,
+# warren-api-client, etc. consumed by mullvad-daemon via
 # ../../warren-core/crates/...).
 
 [target.x86_64-unknown-linux-gnu]

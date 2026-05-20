@@ -89,19 +89,19 @@ mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
-# Warren fork — fetch `GET /v1/exits` au boot pour bootstrap
-# `<cache_dir>/warren-relays.json` depuis warren-api. Endpoint public
-# (pas de signature client), réponse v2 signée serveur vérifiée au load
-# par `DaemonWarrenRelaySelector`.
+# Warren fork — fetches `GET /v1/exits` at boot to bootstrap
+# `<cache_dir>/warren-relays.json` from warren-api. Public endpoint
+# (no client signature); the server-signed v2 response is verified at
+# load time by `DaemonWarrenRelaySelector`.
 reqwest = { workspace = true }
-# Warren fork — Phase 2 auth wallet : la mnémonique BIP39 stockée dans
-# `<settings_dir>/warren_mnemonic.txt` est dérivée en SigningKey
-# Ed25519 au boot du daemon via ces 2 crates path-dep cross-repo (cf.
-# `../../warren-core/crates/warren-identity/`).
+# Warren fork — Phase 2 auth wallet: the BIP39 mnemonic stored in
+# `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
+# SigningKey at daemon boot via these two cross-repo path-dep crates
+# (see `../../warren-core/crates/warren-identity/`).
 warren-config = { path = "../../warren-core/crates/warren-config" }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
-# Phase 4.F : `warren_signer` expose désormais une `SigningKey` brute
-# pour assembler des `WarrenTunnelParameters`. Version pin alignée sur
+# Phase 4.F: `warren_signer` now exposes a raw `SigningKey` used to
+# assemble `WarrenTunnelParameters`. Version pin aligned with
 # `mullvad-api/Cargo.toml`.
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 # Warren exit selector (equivalent to `mullvad-relay-selector` for the
@@ -150,16 +150,16 @@ tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["chrono"] }
 
 [dev-dependencies]
-# Phase G.3 : axum 0.8 utilisé pour spawn warren-api in-process dans
-# les tests E2E. Pinné en dur (pas dans workspace.dependencies) car
-# axum n'est pas une dep prod de warren-app.
+# Phase G.3: axum 0.8 used to spawn warren-api in-process inside the
+# E2E tests. Hard-pinned (not in workspace.dependencies) because axum
+# is not a prod dep of warren-app.
 axum = "0.8"
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
-# Phase G.3 : tests E2E spawn warren-api in-process pour valider le
-# round-trip `WarrenRemote*Backend` → warren-api-client → warren-api.
+# Phase G.3: E2E tests spawn warren-api in-process to validate the
+# `WarrenRemote*Backend` → warren-api-client → warren-api round-trip.
 warren-api = { path = "../../warren-core/crates/warren-api" }
 
 [target.'cfg(any(unix, windows))'.dependencies]
@@ -232,10 +232,10 @@ multihop-pcap = ["talpid-core/multihop-pcap"]
 staggered-obfuscation = ["mullvad-relay-selector/staggered-obfuscation"]
 wireguard-go = ["talpid-core/wireguard-go"]
 
-# Warren rebrand Niveau A : binaire installé `warren-daemon` au lieu
-# de `mullvad-daemon`. Le nom du package Cargo (`mullvad-daemon`)
-# reste inchangé pour faciliter les rebases upstream Mullvad — seul
-# le nom du binaire produit dans `target/release/` est rebrandé.
+# Warren rebrand Level A: installed binary `warren-daemon` instead of
+# `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept
+# unchanged to ease upstream Mullvad rebases — only the binary name
+# produced in `target/release/` is rebranded.
 [[bin]]
 name = "warren-daemon"
 path = "src/main.rs"

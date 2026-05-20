@@ -1,33 +1,33 @@
-//! Signature Ed25519 sur les requêtes API HTTP.
+//! Ed25519 signature on HTTP API requests.
 //!
-//! Remplace le modèle `Authorization: Bearer <token>` Mullvad par une
-//! signature canonique de chaque requête, prouvant la possession de la
-//! clé privée Warren (dérivée de la mnémonique BIP39 utilisateur via
-//! `warren_identity::derive_node_key`). Pas de cycle de vie token,
-//! pas de cache à invalider.
+//! Replaces the Mullvad `Authorization: Bearer <token>` model with a
+//! canonical signature of each request, proving possession of the
+//! Warren private key (derived from the user's BIP39 mnemonic via
+//! `warren_identity::derive_node_key`). No token lifecycle, no cache
+//! to invalidate.
 //!
-//! **Format canonique** (cf. `warren-core/docs/06-auth-wallet.md` § 110) :
+//! **Canonical format** (see `warren-core/docs/06-auth-wallet.md` § 110):
 //!
 //! ```text
 //! message = METHOD || "\n" || path || "\n" || timestamp || "\n" || nonce_hex || "\n" || sha256_hex(body)
 //! sig     = Ed25519::sign(secret_key, message)
 //! ```
 //!
-//! **Headers HTTP injectés** :
+//! **Injected HTTP headers**:
 //!
-//! - `X-Warren-PubKey`    : hex 64 chars (pubkey 32 octets)
-//! - `X-Warren-Sig`       : hex 128 chars (signature 64 octets)
-//! - `X-Warren-Timestamp` : epoch seconds décimal
-//! - `X-Warren-Nonce`     : hex 32 chars (nonce 16 octets random)
+//! - `X-Warren-PubKey`    : 64-char hex (32-byte pubkey)
+//! - `X-Warren-Sig`       : 128-char hex (64-byte signature)
+//! - `X-Warren-Timestamp` : decimal epoch seconds
+//! - `X-Warren-Nonce`     : 32-char hex (16-byte random nonce)
 //!
-//! **Validation côté serveur** (cf. `warren-core/crates/warren-api/`) :
-//! 1. `|now - timestamp| ≤ 60 s` (clock skew window)
-//! 2. `nonce` jamais vu dans les 120 s précédentes (LRU RAM)
-//! 3. signature vérifie via la pubkey
-//! 4. pubkey ∈ table active subscription
+//! **Server-side validation** (see `warren-core/crates/warren-api/`):
+//! 1. `|now - timestamp| <= 60 s` (clock skew window)
+//! 2. `nonce` not seen in the previous 120 s (in-RAM LRU)
+//! 3. signature verifies against the pubkey
+//! 4. pubkey is in the active subscription table
 //!
-//! **No-log Warren** : la signing_key et la pubkey ne sont JAMAIS
-//! loggées en clair. Le `Debug` impl est explicitement masqué.
+//! **Warren no-log**: the signing_key and pubkey are NEVER logged in
+//! the clear. The `Debug` impl explicitly masks them.
 
 use ed25519_dalek::{Signer, SigningKey};
 use rand::RngCore;
@@ -41,50 +41,48 @@ pub use warren_api_client::{
     HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, canonical_message,
 };
 
-/// En-têtes HTTP générés par [`WarrenAuthSigner::sign_request`].
+/// HTTP headers produced by [`WarrenAuthSigner::sign_request`].
 ///
-/// Le caller (`mullvad-api::rest`) consomme ces 4 valeurs pour les
-/// injecter dans la requête `hyper::Request` via les noms officiels :
-/// [`HEADER_PUBKEY`], [`HEADER_SIGNATURE`], [`HEADER_TIMESTAMP`],
+/// The caller (`mullvad-api::rest`) consumes these 4 values and
+/// injects them into the `hyper::Request` using the official header
+/// names: [`HEADER_PUBKEY`], [`HEADER_SIGNATURE`], [`HEADER_TIMESTAMP`],
 /// [`HEADER_NONCE`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WarrenAuthHeaders {
-    /// Pubkey Ed25519 du signeur, hex 64 chars (32 octets).
+    /// Signer Ed25519 pubkey, 64-char hex (32 bytes).
     pub pubkey_hex: String,
-    /// Signature Ed25519 du `canonical_message`, hex 128 chars (64 octets).
+    /// Ed25519 signature over the `canonical_message`, 128-char hex (64 bytes).
     pub signature_hex: String,
-    /// Timestamp Unix epoch seconds (= âge maximum de la requête côté
-    /// serveur, qui rejette si `|now - timestamp| > 60 s`).
+    /// Unix epoch-seconds timestamp (= maximum request age on the
+    /// server, which rejects if `|now - timestamp| > 60 s`).
     pub timestamp: u64,
-    /// Nonce random hex 32 chars (16 octets), unique par requête —
-    /// utilisé par le serveur pour bloquer les replay attacks dans
-    /// la fenêtre de 120 s.
+    /// Random 32-char hex nonce (16 bytes), unique per request — used
+    /// by the server to block replay attacks within the 120 s window.
     pub nonce_hex: String,
 }
 
-/// Taille du nonce en octets (= 128 bits, suffisant pour qu'un même
-/// client génère 2^64 requêtes sans collision avec proba ≪ 1 %).
+/// Nonce size in bytes (= 128 bits, large enough that a single client
+/// can generate 2^64 requests without collisions at probability << 1%).
 pub const NONCE_BYTES: usize = 16;
 
-/// Signeur Warren — détient la clé privée Ed25519 et expose
-/// [`Self::sign_request`] qui produit les 4 headers HTTP à injecter
-/// dans une requête.
+/// Warren signer — owns the Ed25519 private key and exposes
+/// [`Self::sign_request`], which produces the 4 HTTP headers to inject
+/// into a request.
 ///
-/// **Vie de l'instance** : un signer = un identifiant Warren = une
-/// pubkey unique. La signing key est dérivée une fois au boot du
-/// daemon depuis la mnémonique BIP39 utilisateur (cf.
-/// `warren_identity::derive_node_key`) et conservée en RAM jusqu'au
-/// shutdown ou changement d'identité (logout / import nouvelle
-/// mnémonique).
+/// **Instance lifecycle**: one signer = one Warren identity = one
+/// unique pubkey. The signing key is derived once at daemon boot from
+/// the user's BIP39 mnemonic (see `warren_identity::derive_node_key`)
+/// and kept in RAM until shutdown or identity change (logout / import
+/// of a new mnemonic).
 pub struct WarrenAuthSigner {
     signing_key: SigningKey,
 }
 
 impl std::fmt::Debug for WarrenAuthSigner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // No-log Warren : ne JAMAIS révéler la signing_key. La pubkey
-        // est techniquement publique mais reste un identifiant
-        // utilisateur ; on la masque aussi par cohérence.
+        // Warren no-log: NEVER reveal the signing_key. The pubkey is
+        // technically public but is still a user identifier; we mask
+        // it as well for consistency.
         f.debug_struct("WarrenAuthSigner")
             .field("signing_key", &"<redacted>")
             .field("pubkey", &"<redacted>")
@@ -93,28 +91,26 @@ impl std::fmt::Debug for WarrenAuthSigner {
 }
 
 impl WarrenAuthSigner {
-    /// Crée un signer à partir d'une [`SigningKey`] dérivée d'une
-    /// mnémonique BIP39 utilisateur (cf.
-    /// `warren_identity::derive_node_key`).
+    /// Builds a signer from a [`SigningKey`] derived from a user's
+    /// BIP39 mnemonic (see `warren_identity::derive_node_key`).
     #[must_use]
     pub fn new(signing_key: SigningKey) -> Self {
         Self { signing_key }
     }
 
-    /// Pubkey hex (64 chars) du signeur. Utile pour les API externes
-    /// qui logent le `client_id` (= pubkey) sans toucher à la signing
-    /// key.
+    /// Signer hex pubkey (64 chars). Useful for external APIs that log
+    /// the `client_id` (= pubkey) without touching the signing key.
     #[must_use]
     pub fn pubkey_hex(&self) -> String {
         hex::encode(self.signing_key.verifying_key().as_bytes())
     }
 
-    /// Signe une requête avec un `timestamp` et un `nonce` fournis par
-    /// le caller. Variante déterministe utilisée par les tests pour
-    /// figer un vecteur d'entrée.
+    /// Signs a request with a `timestamp` and `nonce` provided by the
+    /// caller. Deterministic variant used by tests to pin a fixed
+    /// input vector.
     ///
-    /// **Production** : utiliser [`Self::sign_request`] qui génère
-    /// `timestamp` (= now) et `nonce` (= random) automatiquement.
+    /// **Production**: use [`Self::sign_request`], which generates
+    /// `timestamp` (= now) and `nonce` (= random) automatically.
     #[must_use]
     pub fn sign_request_at(
         &self,
@@ -137,16 +133,16 @@ impl WarrenAuthSigner {
         }
     }
 
-    /// Signe une requête avec `timestamp = now()` et un `nonce` random
+    /// Signs a request with `timestamp = now()` and a random nonce
     /// (cryptographically secure, via `rand::rng()`).
     ///
     /// # Panics
     ///
-    /// Ne panic pas en pratique : `SystemTime::now() < UNIX_EPOCH`
-    /// implique une horloge antérieure à 1970, cas impossible sur un
-    /// système fonctionnel. Si la conversion échoue, on retombe sur
-    /// `timestamp = 0` ce qui sera rejeté côté serveur (clock skew),
-    /// mais le client ne crash pas.
+    /// Does not panic in practice: `SystemTime::now() < UNIX_EPOCH`
+    /// would imply a clock set before 1970, which is impossible on a
+    /// functional system. If the conversion fails, we fall back to
+    /// `timestamp = 0`, which will be rejected server-side (clock
+    /// skew), but the client does not crash.
     #[must_use]
     pub fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> WarrenAuthHeaders {
         let timestamp = std::time::SystemTime::now()
@@ -158,31 +154,31 @@ impl WarrenAuthSigner {
         self.sign_request_at(method, path, body, timestamp, nonce)
     }
 
-    /// Applique les 4 headers X-Warren-* sur une `hyper::Request`
-    /// existante, en utilisant la méthode HTTP, le path et le body de
-    /// la requête comme entrées du `canonical_message`.
+    /// Applies the 4 X-Warren-* headers to an existing `hyper::Request`,
+    /// using the request's HTTP method, path, and body as inputs to the
+    /// `canonical_message`.
     ///
-    /// **Pourquoi cette signature** : factorise l'extraction
-    /// (`method`, `path`, `body`) côté caller, qui doit fournir le
-    /// `body` en bytes parce que `hyper::Request<B>` n'expose pas le
-    /// body sans le consommer. En pratique le caller (rest.rs) a déjà
-    /// le body sérialisé en `Vec<u8>` avant de construire la requête.
+    /// **Why this signature**: factorizes the `(method, path, body)`
+    /// extraction on the caller side, which must provide `body` as
+    /// bytes because `hyper::Request<B>` does not expose the body
+    /// without consuming it. In practice the caller (rest.rs) already
+    /// has the serialized body as `Vec<u8>` before building the
+    /// request.
     ///
     /// # Errors
     ///
-    /// [`std::io::Error`] avec [`std::io::ErrorKind::InvalidData`] si
-    /// l'un des `HeaderValue` produits ne peut pas être parsé (cas
-    /// uniquement théorique : nos valeurs sont toutes hex ou décimal
-    /// ASCII).
+    /// [`std::io::Error`] with [`std::io::ErrorKind::InvalidData`] if
+    /// one of the produced `HeaderValue`s cannot be parsed (only a
+    /// theoretical case: our values are all hex or decimal ASCII).
     pub fn apply_to_request<B>(
         &self,
         request: &mut http::Request<B>,
         body: &[u8],
     ) -> std::io::Result<()> {
         let method = request.method().as_str();
-        // Path with query string. `path_and_query` retourne `path?query`
-        // ou juste `path` si pas de query — c'est ce qu'on veut signer
-        // pour anti-tampering.
+        // Path with query string. `path_and_query` returns `path?query`
+        // or just `path` if no query — this is what we want to sign for
+        // anti-tampering.
         let path = request
             .uri()
             .path_and_query()
@@ -226,15 +222,15 @@ mod tests {
     use super::*;
     use ed25519_dalek::{Signature, Verifier};
 
-    /// Clé fixe pour vecteurs de test reproductibles. Seed = `[7u8; 32]`,
-    /// pubkey dérivée déterministe.
+    /// Fixed key for reproducible test vectors. Seed = `[7u8; 32]`,
+    /// derived pubkey is deterministic.
     fn fixed_signer() -> WarrenAuthSigner {
         WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]))
     }
 
     #[test]
     fn pubkey_hex_is_64_chars() {
-        // Audit format : pubkey Ed25519 = 32 octets = 64 chars hex
+        // Format audit: Ed25519 pubkey = 32 bytes = 64 hex chars.
         let signer = fixed_signer();
         assert_eq!(signer.pubkey_hex().len(), 64);
         assert!(signer.pubkey_hex().chars().all(|c| c.is_ascii_hexdigit()));
@@ -242,7 +238,7 @@ mod tests {
 
     #[test]
     fn signature_hex_is_128_chars() {
-        // Audit format : signature Ed25519 = 64 octets = 128 chars hex
+        // Format audit: Ed25519 signature = 64 bytes = 128 hex chars.
         let h = fixed_signer().sign_request_at("GET", "/v1/exits", b"", 1_700_000_000, [0u8; 16]);
         assert_eq!(h.signature_hex.len(), 128);
         assert!(h.signature_hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -250,16 +246,16 @@ mod tests {
 
     #[test]
     fn nonce_hex_is_32_chars() {
-        // Audit format : nonce 16 octets = 32 chars hex
+        // Format audit: 16-byte nonce = 32 hex chars.
         let h = fixed_signer().sign_request_at("GET", "/v1/exits", b"", 1_700_000_000, [0u8; 16]);
         assert_eq!(h.nonce_hex.len(), 32);
     }
 
     #[test]
     fn signature_is_deterministic_with_fixed_inputs() {
-        // Vector test : mêmes (key, method, path, body, timestamp,
-        // nonce) → même signature à coup sûr. Garde-fou wire format
-        // figé — toute régression de format casse ce test.
+        // Vector test: identical (key, method, path, body, timestamp,
+        // nonce) -> identical signature, guaranteed. Frozen-wire-format
+        // guardrail — any format regression breaks this test.
         let signer = fixed_signer();
         let h1 = signer.sign_request_at(
             "POST",
@@ -286,7 +282,7 @@ mod tests {
         let get = signer.sign_request_at("GET", "/v1/x", b"", 1, [0u8; 16]);
         assert_ne!(
             post.signature_hex, get.signature_hex,
-            "method DOIT influencer la signature (anti-replay cross-method)"
+            "method MUST affect the signature (cross-method anti-replay)"
         );
     }
 
@@ -297,7 +293,7 @@ mod tests {
         let b = signer.sign_request_at("POST", "/v1/b", b"", 1, [0u8; 16]);
         assert_ne!(
             a.signature_hex, b.signature_hex,
-            "path DOIT influencer la signature (anti-replay cross-endpoint)"
+            "path MUST affect the signature (cross-endpoint anti-replay)"
         );
     }
 
@@ -308,7 +304,7 @@ mod tests {
         let body = signer.sign_request_at("POST", "/v1/x", b"{\"k\":1}", 1, [0u8; 16]);
         assert_ne!(
             empty.signature_hex, body.signature_hex,
-            "body DOIT influencer la signature (anti-replay tampering)"
+            "body MUST affect the signature (anti-tampering)"
         );
     }
 
@@ -330,10 +326,10 @@ mod tests {
 
     #[test]
     fn signature_verifies_with_pubkey_and_canonical_message() {
-        // E2E : on reconstruit le canonical message côté "serveur" et
-        // on vérifie la signature avec la pubkey extraite des headers.
-        // C'est exactement ce que le middleware axum côté `warren-api`
-        // fait pour authentifier une requête entrante.
+        // E2E: we rebuild the canonical message on the "server" side
+        // and verify the signature with the pubkey extracted from the
+        // headers. This is exactly what the axum middleware in
+        // `warren-api` does to authenticate an incoming request.
         let signer = fixed_signer();
         let body = b"{\"exit_pubkey\":\"abc\"}";
         let h = signer.sign_request_at(
@@ -344,7 +340,7 @@ mod tests {
             [42u8; 16],
         );
 
-        // Reconstitution serveur :
+        // Server-side reconstruction:
         let body_hash_hex = hex::encode(Sha256::digest(body));
         let canonical = canonical_message(
             "POST",
@@ -374,13 +370,13 @@ mod tests {
 
     #[test]
     fn signature_does_not_verify_with_tampered_path() {
-        // Sécurité : si l'attaquant modifie le path en transit (e.g.
-        // MITM), la signature ne doit plus vérifier. Test le contrat
-        // "un bit modifié = rejet".
+        // Security: if an attacker modifies the path in transit (e.g.
+        // MITM), the signature must no longer verify. Tests the
+        // "one bit changed = rejected" contract.
         let signer = fixed_signer();
         let h = signer.sign_request_at("POST", "/v1/x", b"", 1, [0u8; 16]);
 
-        // Reconstitution avec path falsifié :
+        // Reconstruction with forged path:
         let body_hash_hex = hex::encode(Sha256::digest(b""));
         let tampered = canonical_message("POST", "/v1/admin", 1, &h.nonce_hex, &body_hash_hex);
 
@@ -391,36 +387,37 @@ mod tests {
 
         assert!(
             vk.verify(tampered.as_bytes(), &sig).is_err(),
-            "signature ne doit PAS vérifier avec un path falsifié"
+            "signature MUST NOT verify with a forged path"
         );
     }
 
     #[test]
     fn nonce_is_random_each_call_to_sign_request() {
-        // Anti-replay : 2 calls successifs doivent générer des nonces
-        // différents. Proba de collision sur 16 octets random = 1/2^128.
+        // Anti-replay: two consecutive calls must generate different
+        // nonces. Collision probability on a 16-byte random nonce =
+        // 1 / 2^128.
         let signer = fixed_signer();
         let a = signer.sign_request("GET", "/v1/x", b"");
         let b = signer.sign_request("GET", "/v1/x", b"");
-        assert_ne!(a.nonce_hex, b.nonce_hex, "nonces doivent être uniques");
+        assert_ne!(a.nonce_hex, b.nonce_hex, "nonces must be unique");
     }
 
     #[test]
     fn debug_does_not_leak_signing_key() {
-        // No-log Warren : Debug ne doit JAMAIS révéler la signing_key
-        // ni la pubkey, même partiellement.
+        // Warren no-log: Debug must NEVER reveal the signing_key or
+        // pubkey, not even partially.
         let signer = fixed_signer();
         let s = format!("{signer:?}");
         assert!(s.contains("<redacted>"));
-        assert!(!s.contains(&signer.pubkey_hex()[..10])); // ne pas révéler les 10 premiers chars de pubkey
+        assert!(!s.contains(&signer.pubkey_hex()[..10])); // do not reveal the first 10 chars of the pubkey
     }
 
     #[test]
     fn apply_to_request_injects_all_four_headers() {
-        // Vérifie que `apply_to_request` ajoute exactement les 4
-        // headers X-Warren-* attendus par le serveur, avec le bon
-        // format de valeur (taille hex pour pubkey/sig/nonce, décimal
-        // ASCII pour timestamp).
+        // Verifies that `apply_to_request` adds exactly the 4
+        // X-Warren-* headers expected by the server, with the correct
+        // value format (hex size for pubkey/sig/nonce, decimal ASCII
+        // for timestamp).
         let signer = fixed_signer();
         let mut req = http::Request::builder()
             .method("POST")
@@ -441,7 +438,7 @@ mod tests {
         assert_eq!(pk.to_str().unwrap().len(), 64);
         assert_eq!(sig.to_str().unwrap().len(), 128);
         assert_eq!(nonce.to_str().unwrap().len(), 32);
-        // Timestamp doit être un u64 décimal valide.
+        // Timestamp must be a valid decimal u64.
         ts.to_str()
             .unwrap()
             .parse::<u64>()
@@ -450,9 +447,9 @@ mod tests {
 
     #[test]
     fn apply_to_request_signs_with_path_and_query() {
-        // Anti-tampering : la signature doit couvrir le `?query` aussi.
-        // Un proxy malveillant qui retire un `?dry=true` ne doit pas
-        // produire une signature toujours valide.
+        // Anti-tampering: the signature must also cover the `?query`.
+        // A malicious proxy that strips a `?dry=true` must not produce
+        // a still-valid signature.
         let signer = fixed_signer();
         let mut req_with_q = http::Request::builder()
             .method("GET")
@@ -465,28 +462,30 @@ mod tests {
             .body(())
             .unwrap();
 
-        // On force le même timestamp + nonce pour pouvoir comparer
-        // uniquement l'effet du path. Pour ça on passe par
-        // `sign_request_at` directement et compare avec ce
-        // qu'`apply_to_request` injecterait.
+        // We pin the same timestamp + nonce so we can isolate the
+        // effect of the path. To do that we go through
+        // `sign_request_at` directly and compare with what
+        // `apply_to_request` would inject.
         let h_with = signer.sign_request_at("GET", "/v1/exits?region=eu", b"", 1, [0u8; 16]);
         let h_without = signer.sign_request_at("GET", "/v1/exits", b"", 1, [0u8; 16]);
         assert_ne!(h_with.signature_hex, h_without.signature_hex);
 
-        // Utilisation des `req_*` juste pour confirmer que `apply_to_request`
-        // ne crash pas sur les deux variantes path-only / path+query.
+        // We use the `req_*` values only to confirm that
+        // `apply_to_request` does not crash on either path-only or
+        // path+query variants.
         signer.apply_to_request(&mut req_with_q, b"").unwrap();
         signer.apply_to_request(&mut req_without_q, b"").unwrap();
     }
 
     #[test]
     fn body_hash_uses_sha256_for_empty_body() {
-        // Vector test cryptographique : sha256("") =
+        // Cryptographic vector test: sha256("") =
         // e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        // Garantit qu'on n'a pas mute l'algo de hash silencieusement.
+        // Guarantees we have not silently mutated the hash algorithm.
         let h = fixed_signer().sign_request_at("GET", "/v1/x", b"", 0, [0u8; 16]);
-        // Reconstruit : si la signature passe avec le canonical attendu
-        // contenant le sha256 standard, alors l'algo est bien sha256.
+        // Reconstruction: if the signature verifies against the
+        // expected canonical message containing the standard sha256,
+        // then the algorithm really is sha256.
         let expected_body_hash_hex =
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         let canonical = canonical_message("GET", "/v1/x", 0, &h.nonce_hex, expected_body_hash_hex);
@@ -497,7 +496,7 @@ mod tests {
         let sig = Signature::from_bytes(&sig_bytes);
 
         vk.verify(canonical.as_bytes(), &sig)
-            .expect("le body hash DOIT être sha256(b\"\") = e3b0c44...");
+            .expect("body hash MUST be sha256(b\"\") = e3b0c44...");
     }
 
     /// Wire format regression - any divergence between the local

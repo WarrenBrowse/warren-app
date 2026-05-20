@@ -13,9 +13,9 @@ LegalCopyright = "(c) 2026 Warren contributors"
 InternalName = "warren-cli"
 OriginalFilename = "warren.exe"
 
-# Warren rebrand Niveau A : binaire installé `warren` au lieu de
-# `mullvad`. Le nom du package Cargo (`mullvad-cli`) reste inchangé
-# pour faciliter les rebases upstream Mullvad.
+# Warren rebrand Level A: installed binary `warren` instead of
+# `mullvad`. The Cargo package name (`mullvad-cli`) is kept unchanged
+# to ease upstream Mullvad rebases.
 [[bin]]
 name = "warren"
 path = "src/main.rs"
