@@ -492,7 +492,21 @@ impl<B: AddressCacheBacking> Runtime<B> {
         );
         let hostname = self.endpoint.host().to_owned();
         let token_store = access::AccessTokenStore::new(service.clone(), hostname.clone());
+        // M4.H.E.2 invariant: the production factory MUST carry an
+        // AccessTokenStore so downstream `Request::account(...)` does
+        // not return `Error::NoAccessTokenStore`. Catches a future
+        // refactor that would inadvertently pass `None` here, which
+        // is what the M4.H.A bench v1 caveat was speculatively
+        // attributed to. The Warren-Remote dispatch in
+        // `mullvad-daemon/src/device/mod.rs` additionally bypasses
+        // this factory entirely (it routes through `WarrenApiClient`),
+        // but legacy Mullvad fallback paths still rely on this
+        // invariant.
         let mut factory = rest::RequestFactory::new(hostname, Some(token_store));
+        debug_assert!(
+            factory.has_access_token_store(),
+            "M4.H.E.2 invariant violated: MullvadRestHandle factory must carry a token store"
+        );
         if let Some(signer) = warren_signer {
             factory = factory.with_warren_signer(signer);
         }

@@ -629,6 +629,22 @@ impl RequestFactory {
         self.warren_signer.is_some()
     }
 
+    /// `true` if the factory carries an [`AccessTokenStore`] (= a
+    /// non-test factory built by
+    /// [`crate::Runtime::mullvad_rest_handle_with_warren_signer`]).
+    /// Production daemon paths require this invariant so that
+    /// [`Request::account`] does not return [`Error::NoAccessTokenStore`]:
+    /// the M4.H.A bench v1 caveat about that error against
+    /// `api.warrenbrowse.com` was traced back to a dispatch issue
+    /// (Phase G.4 routes Warren-Remote through `WarrenApiClient`, which
+    /// bypasses this chain entirely). This getter exists so the
+    /// invariant can be asserted in a regression test instead of being
+    /// implicit in the call shape at lib.rs.
+    #[must_use]
+    pub fn has_access_token_store(&self) -> bool {
+        self.token_store.is_some()
+    }
+
     pub fn request<B: Body + Default>(&self, path: &str, method: Method) -> Result<Request<B>> {
         Ok(
             Request::new(self.hyper_request(path, method)?, self.token_store.clone())
@@ -1109,6 +1125,44 @@ mod tests {
     fn fixed_signer() -> Arc<WarrenAuthSigner> {
         Arc::new(WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32])))
     }
+
+    #[test]
+    fn has_access_token_store_reports_constructor_value() {
+        // M4.H.E.2 anti-regression for the bench v1 caveat
+        // "Set account number on factory with no access token store"
+        // observed against `api.warrenbrowse.com`. The production
+        // `mullvad_rest_handle_with_warren_signer` always passes
+        // `Some(token_store)` to `RequestFactory::new`, and the
+        // dispatch in `mullvad-daemon/src/device/mod.rs` routes
+        // Warren-Remote through `WarrenApiClient` which bypasses this
+        // factory entirely. This test pins the boolean getter so the
+        // higher-layer assertion at lib.rs has a stable surface to
+        // call (instead of comparing factory shapes indirectly).
+        let bare = RequestFactory::new("api.example.test", None);
+        assert!(
+            !bare.has_access_token_store(),
+            "factory built with None must report has_access_token_store == false"
+        );
+    }
+
+    #[test]
+    fn account_returns_no_access_token_store_when_factory_lacks_store() {
+        // Documents the exact error shape that the M4.H.A bench v1
+        // observed. Any future regression that calls `.account()` on
+        // a factory without a token store would still surface this
+        // error verbatim — the test ensures the user-facing message
+        // does not silently drift away from the documented caveat.
+        let bare = RequestFactory::new("api.example.test", None);
+        let req: Request<Empty<Bytes>> = bare.get("auth/v1/anything").expect("bare get builds");
+        let err = req
+            .account("test-account".to_owned())
+            .expect_err("must fail: no token store");
+        assert!(
+            matches!(err, Error::NoAccessTokenStore),
+            "must surface Error::NoAccessTokenStore verbatim, got {err}"
+        );
+    }
+
 
     #[test]
     fn get_or_signed_dispatches_on_has_warren_signer() {
