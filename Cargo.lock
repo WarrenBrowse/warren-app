@@ -3310,6 +3310,7 @@ dependencies = [
  "warren-api-client",
  "warren-config",
  "warren-identity",
+ "warren-multihop",
  "warren-relay-selector",
  "winapi",
  "windows-service",

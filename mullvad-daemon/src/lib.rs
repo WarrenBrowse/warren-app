@@ -39,6 +39,14 @@ pub mod warren_device_bootstrap;
 /// Détection du mode tunnel Warren via env var `WARREN_TUNNEL` (POC
 /// switch — pas de toggle UI/CLI pour l'instant).
 pub mod warren_mode;
+/// Loader pour `<settings_dir>/warren-multihop.json` qui matérialise
+/// un `MultiHopConfig` à partir de descripteurs signés mintés
+/// out-of-band par les ops (wapi admin-mint-*). PKI vérifiée au load
+/// contre l'`operational_pubkey` carried dans le fichier.
+pub mod warren_multi_hop;
+/// Détection de l'opt-in multi-hop via env var `WARREN_MULTI_HOP`
+/// (POC switch — pas de toggle UI/CLI pour l'instant, M4.H.C scope).
+pub mod warren_multi_hop_mode;
 /// Conversion `RelaySettings` (Mullvad UI) → `WarrenRelayQuery`
 /// (filtrage côté warren-relay-selector). Mappe country/city, fallback
 /// `Any` pour les cas non supportés (custom lists, custom endpoint).
@@ -1103,6 +1111,42 @@ impl Daemon {
             (None, None)
         };
 
+        // Warren multi-hop opt-in: env var `WARREN_MULTI_HOP=1` plus a
+        // valid `<settings_dir>/warren-multihop.json` minted by ops via
+        // `wapi admin-mint-*`. Either missing surfaces a deliberate
+        // single-hop config; PKI failure on a present file surfaces a
+        // loud warn but does not abort the boot.
+        let warren_multi_hop = if warren_mode_active && warren_multi_hop_mode::is_enabled() {
+            match warren_multi_hop::load_from_settings_dir(&config.settings_dir) {
+                Ok(Some(cfg)) => {
+                    log::info!(
+                        "Warren multi-hop enabled (env {} + {} loaded + PKI verified)",
+                        warren_multi_hop_mode::ENV_VAR_NAME,
+                        warren_multi_hop::MULTI_HOP_FILENAME
+                    );
+                    Some(cfg)
+                }
+                Ok(None) => {
+                    log::warn!(
+                        "Warren multi-hop env {} is set but {} is missing in {}; falling back to single-hop",
+                        warren_multi_hop_mode::ENV_VAR_NAME,
+                        warren_multi_hop::MULTI_HOP_FILENAME,
+                        config.settings_dir.display()
+                    );
+                    None
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Failed to load {}: {e}. Falling back to single-hop.",
+                        warren_multi_hop::MULTI_HOP_FILENAME
+                    );
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
         // Pré-calcule la vue Mullvad-format des warren-relays pour
         // pouvoir la broadcaster à la GUI au boot ET la cloner dans le
         // closure `on_relay_list_update` synchrone (qui ne peut pas
@@ -1118,6 +1162,7 @@ impl Daemon {
             settings.tunnel_options.clone(),
             warren_relay_selector,
             warren_signing_key,
+            warren_multi_hop,
         );
 
         let param_gen = parameters_generator.clone();

@@ -10,7 +10,7 @@
 //! invoked from the tunnel state machine when Warren mode is active.
 
 use ed25519_dalek::SigningKey;
-use talpid_warren_tunnel::WarrenTunnelParameters;
+use talpid_warren_tunnel::{MultiHopConfig, WarrenTunnelParameters};
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -36,6 +36,15 @@ const DEFAULT_FEATURES: u32 = 0;
 /// Assembles a full [`WarrenTunnelParameters`] for the given
 /// `retry_attempt`.
 ///
+/// `multi_hop` is the optional output of
+/// [`crate::warren_multi_hop::load_from_settings_dir`]: when `Some` the
+/// dispatcher in `talpid-warren-tunnel` spins up a multi-hop session;
+/// when `None` it stays on the legacy single-hop path. The exit
+/// selection still runs in both cases so the firewall and routing
+/// layers have a consistent `exit_addr` shape, even though the
+/// multi-hop dispatcher derives the actual exit identity from
+/// [`MultiHopConfig::exit`].
+///
 /// # Errors
 ///
 /// Returns [`AssembleError::Selector`] if no relay matches the query.
@@ -44,6 +53,7 @@ pub fn assemble_for_attempt(
     signing_key: SigningKey,
     query: &WarrenRelayQuery,
     retry_attempt: u32,
+    multi_hop: Option<MultiHopConfig>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     Ok(WarrenTunnelParameters {
@@ -51,11 +61,7 @@ pub fn assemble_for_attempt(
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
-        // Single-hop assembly. Multi-hop is wired in a future
-        // selector revision that hydrates `multi_hop` from
-        // signed relay + exit descriptors fetched from
-        // warren-backend-api (cf. M4.H.B.2).
-        multi_hop: None,
+        multi_hop,
     })
 }
 
@@ -89,7 +95,7 @@ mod tests {
         let key = fixture_signing_key();
         let expected_pubkey = key.verifying_key().to_bytes();
 
-        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0)
+        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0, None)
             .expect("must assemble valid params");
 
         let expected_id = WarrenPubkey::from_bytes([1u8; 32]);
@@ -108,6 +114,10 @@ mod tests {
         );
         assert_eq!(params.n_connections, 1);
         assert_eq!(params.features, 0);
+        assert!(
+            params.multi_hop.is_none(),
+            "assemble with multi_hop=None must yield single-hop params"
+        );
     }
 
     #[test]
@@ -119,7 +129,7 @@ mod tests {
         let selector = DaemonWarrenRelaySelector::new(list);
         let query = WarrenRelayQuery::any().with_location(LocationConstraint::Country("zz".into()));
 
-        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0)
+        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0, None)
             .expect_err("must fail");
         assert!(matches!(
             err,
@@ -144,6 +154,7 @@ mod tests {
             fixture_signing_key(),
             &WarrenRelayQuery::any(),
             42,
+            None,
         )
         .unwrap();
         let params_b = assemble_for_attempt(
@@ -151,6 +162,7 @@ mod tests {
             fixture_signing_key(),
             &WarrenRelayQuery::any(),
             42,
+            None,
         )
         .unwrap();
 
@@ -159,5 +171,67 @@ mod tests {
             params_a.signing_key.verifying_key().to_bytes(),
             params_b.signing_key.verifying_key().to_bytes()
         );
+    }
+
+    #[test]
+    fn assemble_with_multi_hop_some_wires_into_params() {
+        // When the daemon passes a `Some(MultiHopConfig)`, it must be
+        // forwarded verbatim onto `params.multi_hop`. The dispatcher
+        // downstream (talpid-warren-tunnel::start) reads that field to
+        // decide single-hop vs multi-hop. A regression that dropped
+        // the field would silently downgrade every multi-hop user to
+        // single-hop without any error surfacing.
+        use talpid_warren_tunnel::{
+            ExitId, MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor,
+        };
+
+        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+        let mh = MultiHopConfig {
+            relay: MultiHopRelayDescriptor {
+                relay_id: [0xa1; 16],
+                relay_ed25519_pubkey: [0xa2; 32],
+                endpoint: "198.51.100.10:443".parse().unwrap(),
+                signature: [0xa3; 64],
+            },
+            exit: MultiHopExitDescriptor {
+                exit_id: ExitId([0xb1; 16]),
+                exit_ed25519_pubkey: [0xb2; 32],
+                exit_x25519_multihop_pubkey: [0xb3; 32],
+                endpoint: "198.51.100.20:443".parse().unwrap(),
+                signature: [0xb4; 64],
+            },
+            operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
+            enable_gso: false,
+            use_warren_obfuscation: true,
+        };
+
+        let params = assemble_for_attempt(
+            &selector,
+            fixture_signing_key(),
+            &WarrenRelayQuery::any(),
+            0,
+            Some(mh.clone()),
+        )
+        .expect("must assemble multi-hop params");
+
+        let wired = params
+            .multi_hop
+            .expect("multi_hop must be forwarded onto params");
+        assert_eq!(
+            wired.relay.endpoint, mh.relay.endpoint,
+            "relay endpoint must round-trip"
+        );
+        assert_eq!(
+            wired.exit.endpoint, mh.exit.endpoint,
+            "exit endpoint must round-trip"
+        );
+        assert_eq!(
+            wired.operational_pubkey.to_bytes(),
+            mh.operational_pubkey.to_bytes(),
+            "operational pubkey must round-trip"
+        );
+        assert_eq!(wired.enable_gso, mh.enable_gso);
+        assert_eq!(wired.use_warren_obfuscation, mh.use_warren_obfuscation);
     }
 }

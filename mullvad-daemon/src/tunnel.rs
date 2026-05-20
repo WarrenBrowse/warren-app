@@ -3,7 +3,7 @@ use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
 use talpid_types::net::wireguard::TunnelParameters;
-use talpid_warren_tunnel::WarrenTunnelParameters;
+use talpid_warren_tunnel::{MultiHopConfig, WarrenTunnelParameters};
 use tokio::sync::Mutex;
 
 use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
@@ -69,6 +69,13 @@ struct InnerParametersGenerator {
     /// `warren_mode::is_enabled()` au boot.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
     warren_signing_key: Option<SigningKey>,
+    /// Multi-hop config loaded at boot from
+    /// `<settings_dir>/warren-multihop.json`. `None` when the user has
+    /// not opted into multi-hop (no file or `WARREN_MULTI_HOP` env var
+    /// unset). Cloned into every `produce_warren_tunnel_params` call so
+    /// the multi-hop dispatcher in `talpid-warren-tunnel` can wire up
+    /// the `MultiHopSupervisor`.
+    warren_multi_hop: Option<MultiHopConfig>,
 }
 
 impl ParametersGenerator {
@@ -86,6 +93,7 @@ impl ParametersGenerator {
         tunnel_options: TunnelOptions,
         warren_relay_selector: Option<DaemonWarrenRelaySelector>,
         warren_signing_key: Option<SigningKey>,
+        warren_multi_hop: Option<MultiHopConfig>,
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
@@ -95,6 +103,7 @@ impl ParametersGenerator {
             last_generated_relays: None,
             warren_relay_selector,
             warren_signing_key,
+            warren_multi_hop,
         })))
     }
 
@@ -129,11 +138,13 @@ impl ParametersGenerator {
             .ok_or(Error::WarrenSigningKeyMissing)?
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
+        let multi_hop = inner.warren_multi_hop.clone();
         let params = warren_tunnel_params::assemble_for_attempt(
             selector,
             signing_key,
             &query,
             retry_attempt,
+            multi_hop,
         )?;
         Ok(params)
     }
