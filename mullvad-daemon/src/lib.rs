@@ -1190,6 +1190,19 @@ impl Daemon {
             warren_multi_hop,
             warren_status_cache.clone(),
         );
+        // M5.B.1: snapshot the persisted DAITA opt-in onto the
+        // parameters generator at boot. Without this, the first
+        // tunnel connect after a daemon restart would always go out
+        // DAITA-off even when the user had previously toggled it on.
+        // Subsequent toggles flow through `on_set_daita_*` handlers.
+        #[cfg(daita)]
+        {
+            let initial_daita = settings.tunnel_options.wireguard.daita.enabled;
+            let pg_for_daita_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_daita_boot.set_warren_enable_daita(initial_daita).await;
+            });
+        }
 
         let param_gen = parameters_generator.clone();
         let (param_gen_tx, mut param_gen_rx) = mpsc::unbounded();
@@ -3319,6 +3332,15 @@ impl Daemon {
                     return; // DAITA is not supported for custom relays
                 }
 
+                // M5.B.1: mirror the toggle onto the Warren-side
+                // parameters generator so the next reconnect picks up
+                // `Setup.daita_support = value` on the warren-protocol
+                // v3 handshake. Single UI surface drives both
+                // backends (WireGuard upstream + Quinn Warren).
+                self.parameters_generator
+                    .set_warren_enable_daita(value)
+                    .await;
+
                 if settings_changed {
                     log::info!("Reconnecting because DAITA settings changed");
                     self.reconnect_tunnel();
@@ -3375,6 +3397,7 @@ impl Daemon {
         tx: ResponseTx<(), settings::Error>,
         daita_settings: DaitaSettings,
     ) {
+        let new_enabled = daita_settings.enabled;
         match self
             .settings
             .update(|settings| settings.tunnel_options.wireguard.daita = daita_settings)
@@ -3382,6 +3405,12 @@ impl Daemon {
         {
             Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_daita_settings response");
+                // M5.B.1: same mirror as `on_set_daita_enabled`. The
+                // struct-update path can also flip `enabled`, so we
+                // forward the new value here too.
+                self.parameters_generator
+                    .set_warren_enable_daita(new_enabled)
+                    .await;
                 if settings_changed {
                     log::info!("Reconnecting because DAITA settings changed");
                     self.reconnect_tunnel();

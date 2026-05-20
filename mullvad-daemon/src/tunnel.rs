@@ -212,13 +212,10 @@ impl ParametersGenerator {
     /// `WarrenTunnelParameters.enable_daita`. In-flight tunnels keep
     /// their current setting until the daemon reconnects.
     ///
-    /// Wired from the Settings handler that observes
-    /// `Settings::tunnel_options::wireguard::daita::enabled` (single UI
-    /// surface for both WireGuard and Warren backends).
-    #[expect(
-        dead_code,
-        reason = "M5.B.1 lands the daemon-side plumbing only; the Settings observer that consumes this setter lands in a follow-up. Keep the setter public so that follow-up does not have to re-traverse this file."
-    )]
+    /// Wired from the daemon's `on_set_daita_enabled` /
+    /// `on_set_daita_settings` handlers (single UI surface drives
+    /// both WireGuard upstream + Quinn Warren backends) and from the
+    /// daemon boot routine (initial snapshot of the persisted value).
     pub async fn set_warren_enable_daita(&self, enabled: bool) {
         self.0.lock().await.warren_enable_daita = enabled;
     }
