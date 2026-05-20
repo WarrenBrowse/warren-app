@@ -1163,7 +1163,6 @@ mod tests {
         );
     }
 
-
     #[test]
     fn get_or_signed_dispatches_on_has_warren_signer() {
         // Phase 2.A.4 V5 — `get_or_signed(path)` must return a signed
