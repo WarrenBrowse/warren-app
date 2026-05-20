@@ -29,6 +29,7 @@ import {
   RelaySettings,
   TunnelState,
   VoucherResponse,
+  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenStatus,
@@ -220,6 +221,11 @@ export const ipcSchema = {
     setWarrenApiUrl: invoke<string, void>(),
     // Warren multi-hop settings (M4.E.D). Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
+    // Warren multi-exit failover toggle (M5.B.2). Picked up on the
+    // next tunnel reconnect (no restart needed). M5.B.1 DAITA toggle
+    // reuses Mullvad upstream's `setEnableDaita` rather than
+    // introducing a dedicated Warren-side switch.
+    setWarrenFailover: invoke<WarrenFailoverSettings, void>(),
     // Warren NAT-PMP port-forwarding settings. Daemon picks up the
     // new value on the NEXT tunnel reconnect (no restart needed).
     setNatPmpSettings: invoke<NatPmpSettings, void>(),

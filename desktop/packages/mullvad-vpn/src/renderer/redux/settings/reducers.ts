@@ -20,6 +20,7 @@ import {
   RelayLocation,
   RelayOverride,
   RelayProtocol,
+  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
@@ -103,6 +104,10 @@ export interface ISettingsReduxState {
   // from the daemon NatPmpStatusUpdates stream; treat undefined as
   // `{ state: 'disabled' }` UI-side.
   natPmpStatus?: NatPmpStatus;
+  // Persistent multi-exit auto-failover toggle (M5.B.2). Default ON.
+  // M5.B.1 DAITA is plumbed through Mullvad upstream's
+  // `wireguard.daita.enabled` rather than a Warren-specific field.
+  warrenFailover: WarrenFailoverSettings;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -166,6 +171,13 @@ const initialState: ISettingsReduxState = {
     internalPort: 0,
   },
   natPmpStatus: undefined,
+  // M5.B.2 multi-exit failover: ON by default. Differentiator vs
+  // Mullvad/IVPN (which require manual reconnect on exit-down).
+  // M5.B.1 DAITA toggle = Mullvad upstream `wireguard.daita.enabled`
+  // (no Warren-specific slice).
+  warrenFailover: {
+    enabled: true,
+  },
   wireguard: {
     quantumResistant: true,
   },
@@ -265,6 +277,12 @@ export default function (
       return {
         ...state,
         warrenMultiHop: action.warrenMultiHop,
+      };
+
+    case 'UPDATE_WARREN_FAILOVER':
+      return {
+        ...state,
+        warrenFailover: action.warrenFailover,
       };
 
     case 'UPDATE_WARREN_STATUS':

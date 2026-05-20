@@ -11,6 +11,7 @@ import {
   ObfuscationSettings,
   type Recents,
   RelayOverride,
+  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
@@ -63,6 +64,14 @@ export interface IUpdateWarrenApiUrlAction {
 export interface IUpdateWarrenMultiHopAction {
   type: 'UPDATE_WARREN_MULTI_HOP';
   warrenMultiHop: WarrenMultiHopSettings;
+}
+
+// Update action for the Warren multi-exit failover settings (M5.B.2).
+// M5.B.1 DAITA settings reuse Mullvad upstream's `wireguard.daita`
+// state slice, so there is no Warren-specific `UPDATE_WARREN_DAITA`.
+export interface IUpdateWarrenFailoverAction {
+  type: 'UPDATE_WARREN_FAILOVER';
+  warrenFailover: WarrenFailoverSettings;
 }
 
 // Update action for the live Warren status (reconnect_count + age).
@@ -180,6 +189,7 @@ export type SettingsAction =
   | IUpdateWarrenLocalAccountAction
   | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMultiHopAction
+  | IUpdateWarrenFailoverAction
   | IUpdateWarrenStatusAction
   | IUpdateNatPmpSettingsAction
   | IUpdateNatPmpStatusAction
@@ -265,6 +275,15 @@ function updateWarrenMultiHop(warrenMultiHop: WarrenMultiHopSettings): IUpdateWa
   return {
     type: 'UPDATE_WARREN_MULTI_HOP',
     warrenMultiHop,
+  };
+}
+
+function updateWarrenFailover(
+  warrenFailover: WarrenFailoverSettings,
+): IUpdateWarrenFailoverAction {
+  return {
+    type: 'UPDATE_WARREN_FAILOVER',
+    warrenFailover,
   };
 }
 
@@ -424,6 +443,7 @@ export default {
   updateWarrenLocalAccount,
   updateWarrenApiUrl,
   updateWarrenMultiHop,
+  updateWarrenFailover,
   updateWarrenStatus,
   updateNatPmpSettings,
   updateNatPmpStatus,

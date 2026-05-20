@@ -504,6 +504,21 @@ export interface ISettings {
   // live via `setNatPmpSettings` (no daemon restart required: the
   // next tunnel reconnect picks up the new config).
   warrenNatPmp: NatPmpSettings;
+  // Warren multi-exit auto-failover (M5.B.2): when the current exit
+  // becomes unreachable, the client automatically reconnects to an
+  // alternative exit (same country preferred, global fallback).
+  // Default ON (differentiator vs Mullvad / IVPN, which require
+  // manual reconnect on exit down).
+  //
+  // Note on DAITA v2 (M5.B.1): Warren reuses Mullvad upstream's
+  // existing `wireguard.daita.enabled` toggle rather than introducing
+  // a redundant `warrenDaita` field. The daemon-side adapter
+  // (talpid-warren-tunnel) reads that boolean and wires it into
+  // `ClientTunnel::with_daita(...)` for the Quinn-based Warren tunnel
+  // + activates the exit-side `DaitaPool`. The wire path differs
+  // (Quinn datagrams + warren-protocol v3 vs WireGuard +
+  // maybenot-ffi) but the user surface stays a single switch.
+  warrenFailover: WarrenFailoverSettings;
 }
 
 // Transport protocol enum mirrors the gRPC `NatPmpSettings.Proto`
@@ -550,6 +565,17 @@ export interface WarrenMultiHopSettings {
   // HPKE epoch rotation in milliseconds. Default 4h (14_400_000 ms)
   // per `warren_multihop_doctrine_v1`.
   hpkeEpochRotationMs: number;
+}
+
+// Warren multi-exit failover settings (M5.B.2). When `enabled`, the
+// daemon detects an unreachable exit via tunnel handshake timeouts
+// (default 3 consecutive failures) and reconnects to an alternative
+// exit using `select_failover_alternative` (same-country preference,
+// global fallback). Default ON: a key differentiator vs
+// Mullvad/IVPN, which require the user to manually disconnect and
+// pick a new server when their exit becomes unreachable.
+export interface WarrenFailoverSettings {
+  enabled: boolean;
 }
 
 // Live Warren tunnel status snapshot. Pushed by the daemon via the
