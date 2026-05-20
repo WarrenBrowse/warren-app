@@ -36,7 +36,7 @@ if [[ "$(stat -f %u "$INSTALL_DIR/Warren VPN.app")" -ne 0 ]]; then
 fi
 
 # NOTE: This path must be kept in sync with the path defined
-# in warren-daemon/src/macos_launch_daemon.rs and preinstall
+# in mullvad-daemon/src/macos_launch_daemon.rs and preinstall
 DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
 
 DAEMON_PLIST=$(cat <<-EOM
