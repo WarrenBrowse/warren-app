@@ -212,14 +212,11 @@ impl Error {
 /// routing override and drains the pump.
 pub struct WarrenTunnelMonitor {
     runtime: tokio::runtime::Handle,
-    /// Handle on the bidirectional TUN <-> QUIC pump task. `wait`
-    /// aborts it on close-signal for clean teardown.
-    pump_handle: tokio::task::JoinHandle<()>,
-    /// Oneshot signalled by the pump task on abnormal termination
-    /// (TUN I/O error, QUIC session closed by the exit). Lets `wait`
-    /// distinguish an external clean close from a pump failure and
-    /// surface the latter back to the state machine for retry.
-    pump_error_rx: tokio::sync::oneshot::Receiver<String>,
+    /// Backend-specific task handles. Single-hop owns one bidirectional
+    /// pump; multi-hop owns three tasks (supervisor + uplink +
+    /// downlink). `wait()` aborts all of them on teardown and surfaces
+    /// abnormal terminations through the same `Backend` error path.
+    backend: MonitorBackend,
     /// Event sink towards the daemon state machine.
     event_hook: talpid_tunnel::EventHook,
     /// Oneshot from the daemon: fires to request tunnel shutdown.
@@ -228,13 +225,66 @@ pub struct WarrenTunnelMonitor {
     /// after the Up events to force Internet traffic through the
     /// tunnel without breaking the daemon -> exit QUIC socket. Cleanup
     /// happens in `wait()` before the pump is aborted (mirrors the
-    /// install order). `None` if no IPv4 exit IP was available.
+    /// install order). `None` if no IPv4 next-hop IP was available.
     default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
 }
 
+/// Backend-specific task ownership.
+///
+/// - [`MonitorBackend::SingleHop`] owns a single bidirectional pump
+///   spawned by `warren_tunnel::pump_bidirectional` /
+///   `pump_multi_bidirectional` and an oneshot channel to surface
+///   abnormal pump terminations.
+/// - [`MonitorBackend::MultiHop`] owns a 3-task fanout: the
+///   `MultiHopSupervisor` future (drives connect+reconnect), the
+///   uplink pump (TUN -> multi-hop) and the downlink pump (multi-hop
+///   -> TUN), wired together through a watch channel.
+enum MonitorBackend {
+    SingleHop {
+        pump_handle: tokio::task::JoinHandle<()>,
+        pump_error_rx: tokio::sync::oneshot::Receiver<String>,
+    },
+    MultiHop {
+        supervisor_handle: tokio::task::JoinHandle<()>,
+        uplink_handle: tokio::task::JoinHandle<anyhow::Result<()>>,
+        downlink_handle: tokio::task::JoinHandle<anyhow::Result<()>>,
+        /// Channel through which the pump task reports the first fatal
+        /// error (uplink/downlink/supervisor death). `wait()` consumes
+        /// it the same way the single-hop path consumes
+        /// `pump_error_rx`. A retriable disconnect from the underlying
+        /// QUIC connection does NOT push an error here: the supervisor
+        /// absorbs it transparently and the pump tasks park on the
+        /// watch channel until the supervisor re-publishes.
+        pump_error_rx: tokio::sync::oneshot::Receiver<String>,
+    },
+}
+
 impl WarrenTunnelMonitor {
-    /// Starts a Warren tunnel from `params`, blocking the current
-    /// thread until the QUIC handshake + TUN setup are complete.
+    /// Starts a Warren tunnel from `params`, dispatching to the
+    /// single-hop path through `warren_tunnel::ClientTunnel` (when
+    /// `params.multi_hop` is `None`) or the multi-hop path through
+    /// `warren_client::supervisor::MultiHopSupervisor` (when `Some`).
+    ///
+    /// Both paths block the current thread until the underlying QUIC
+    /// session is established and the TUN is up.
+    ///
+    /// # Errors
+    ///
+    /// See [`Self::start_single_hop`] and [`Self::start_multi_hop`].
+    pub fn start(
+        params: &WarrenTunnelParameters,
+        args: TunnelArgs<'_>,
+        log_path: Option<&Path>,
+    ) -> Result<Self, Error> {
+        match params.multi_hop.clone() {
+            None => Self::start_single_hop(params, args, log_path),
+            Some(cfg) => Self::start_multi_hop(params, cfg, args, log_path),
+        }
+    }
+
+    /// Single-hop path: dial the exit directly through
+    /// `warren_tunnel::ClientTunnel`, open a TUN, install routing
+    /// guards, then spawn the bidirectional pump.
     ///
     /// Sequence:
     /// 1. `connect` (or `connect_multi`) against warren-tunnel.
@@ -249,7 +299,7 @@ impl WarrenTunnelMonitor {
     ///   exchange fails.
     /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
     ///   interface name collision, kernel module missing).
-    pub fn start(
+    fn start_single_hop(
         params: &WarrenTunnelParameters,
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
@@ -595,8 +645,329 @@ impl WarrenTunnelMonitor {
 
         Ok(Self {
             runtime,
-            pump_handle,
-            pump_error_rx,
+            backend: MonitorBackend::SingleHop {
+                pump_handle,
+                pump_error_rx,
+            },
+            event_hook,
+            close_rx: args.tunnel_close_rx,
+            default_route_guard,
+        })
+    }
+
+    /// Multi-hop path: spawn a `MultiHopSupervisor` that dials the
+    /// first-hop relay with auto-reconnect, open a TUN with a
+    /// deterministic IP derived from the client signing key, then wire
+    /// the supervisor's [`ClientWatch`] into the uplink + downlink
+    /// pumps.
+    ///
+    /// The supervisor + pumps live inside the returned monitor and
+    /// terminate together when `wait()` aborts them. Reconnects across
+    /// QUIC disconnects (idle timeout, peer reset, transient blip
+    /// beyond the 180 s `max_idle_timeout`) are absorbed silently by
+    /// the supervisor; the pump tasks park on the watch channel until
+    /// the supervisor re-publishes a live session.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::Handshake`] if the supervisor cannot establish an
+    ///   initial session within the bounded wait window.
+    /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
+    ///   interface name collision, kernel module missing).
+    /// - [`Error::Backend`] for non-retriable supervisor errors (PKI,
+    ///   TLS provider setup), bubbled up before any pump is spawned.
+    fn start_multi_hop(
+        params: &WarrenTunnelParameters,
+        cfg: MultiHopConfig,
+        args: TunnelArgs<'_>,
+        _log_path: Option<&Path>,
+    ) -> Result<Self, Error> {
+        use std::sync::Arc;
+        use std::time::Duration;
+        use warren_backoff::Backoff;
+        use warren_client::multi_hop::MultiHopClient;
+        use warren_client::supervised_pump::{run_downlink, run_uplink};
+        use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
+
+        let start_t = Instant::now();
+        log::debug!(
+            "{TRACE_PREFIX} T0=0ms phase=start_begin mode=multi_hop \
+             enable_gso={} use_warren_obfuscation={}",
+            cfg.enable_gso,
+            cfg.use_warren_obfuscation
+        );
+
+        let runtime = args.runtime.clone();
+        let mut event_hook = args.event_hook;
+
+        // Detect the outbound source IP towards the RELAY (not the
+        // exit) so the QUIC `Endpoint` binds explicitly to that IP and
+        // does not rebind onto the TUN once routing flips.
+        let relay_endpoint = cfg.relay.endpoint;
+        let bind_local_ip: std::net::SocketAddr =
+            match detect_default_local_ip(relay_endpoint) {
+                Ok(ip) => std::net::SocketAddr::new(ip, 0),
+                Err(e) => {
+                    log::warn!(
+                        "Warren multi-hop: detect_default_local_ip for relay failed: {e}. \
+                         Falling back to 0.0.0.0:0 (unspecified)."
+                    );
+                    std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
+                }
+            };
+        log::info!("Warren multi-hop client bind local IP = {}", bind_local_ip.ip());
+
+        // Spawn the supervisor and wait for the first successful dial
+        // so the rest of the bootstrap (TUN, routing) has a live
+        // session to anchor to.
+        let supervisor_config = SupervisorConfig {
+            relay: Arc::new(cfg.relay.clone()),
+            exit_id: cfg.exit.exit_id,
+            exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
+            operational_pubkey: cfg.operational_pubkey,
+            client_signing: params.signing_key.clone(),
+            bind_addr: bind_local_ip,
+            enable_gso: cfg.enable_gso,
+            use_warren_obfuscation: cfg.use_warren_obfuscation,
+            backoff: Backoff::HANDSHAKE,
+        };
+        let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
+        let supervisor_handle = runtime.spawn(async move {
+            if let Err(e) = supervisor.run().await {
+                log::warn!(
+                    "{TRACE_PREFIX} multi-hop supervisor terminated with non-retriable error: {e:#}"
+                );
+            }
+        });
+
+        let handshake_t = Instant::now();
+        log::debug!(
+            "{TRACE_PREFIX} T1={}ms phase=handshake_start (block_on supervisor first dial)",
+            start_t.elapsed().as_millis()
+        );
+        // Bound the initial-dial wait to 5 * Backoff::HANDSHAKE.max
+        // (~150 s) so a permanently-unreachable relay surfaces as a
+        // clean Error::Handshake instead of hanging the state machine.
+        let initial_wait_bound = Duration::from_secs(150);
+        let initial_client: Arc<MultiHopClient> =
+            runtime.block_on(async {
+                let deadline = tokio::time::Instant::now() + initial_wait_bound;
+                loop {
+                    if let Some(c) = client_rx.borrow().clone() {
+                        return Ok(c);
+                    }
+                    let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
+                    if remaining.is_zero() {
+                        return Err(Error::Handshake(format!(
+                            "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
+                        )));
+                    }
+                    if tokio::time::timeout(remaining, client_rx.changed())
+                        .await
+                        .is_err()
+                    {
+                        return Err(Error::Handshake(format!(
+                            "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
+                        )));
+                    }
+                }
+            })?;
+        log::debug!(
+            "{TRACE_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind=MultiHop",
+            start_t.elapsed().as_millis(),
+            handshake_t.elapsed().as_millis()
+        );
+        // Drop the strong reference; the watch channel still holds one.
+        // Lets `MultiHopClient::close` on the watch path release cleanly
+        // when the supervisor swaps in a fresh session.
+        drop(initial_client);
+
+        // Build a TUN config with a deterministic IP derived from the
+        // client pubkey. Multi-hop /v1 has no server-side IP allocator
+        // (the relay never holds the HPKE key, the exit talks ciphertext
+        // only), so the client picks its own slot inside
+        // `warren_config::TUNNEL_POOL_CIDR` (`10.66.0.0/16`).
+        //
+        // Derivation: octet C, D = pubkey[0], pubkey[1].max(2). Skips
+        // `10.66.X.0` (network) and `10.66.X.1` (gateway). Collision
+        // odds across two clients on the same exit are ~1/65 000.
+        // Future M4.H.C will replace this with a coordinated allocator
+        // (subscription-bound, persisted exit-side).
+        let pubkey_bytes = params.signing_key.verifying_key().to_bytes();
+        let tun_ip = derive_multi_hop_tun_ip(&pubkey_bytes);
+        let tun_config = build_multi_hop_tun_config(tun_ip);
+
+        let tun_t = Instant::now();
+        let tun = {
+            let mut provider = args
+                .tun_provider
+                .lock()
+                .map_err(|_| Error::TunSetup("tun_provider mutex poisoned".to_owned()))?;
+            *provider.config_mut() = tun_config.clone();
+            provider
+                .open_tun()
+                .map_err(|e| Error::TunSetup(format!("{e}")))?
+        };
+        log::debug!(
+            "{TRACE_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={} ip={}",
+            start_t.elapsed().as_millis(),
+            tun_t.elapsed().as_millis(),
+            tun.interface_name().unwrap_or_else(|_| "<unknown>".to_owned()),
+            tun_ip
+        );
+
+        let metadata = build_tunnel_metadata(&tun, &tun_config);
+        let async_device = tun.into_inner().into_async_device();
+        let packet_device = MullvadTunPacketDevice::new(async_device);
+
+        log::debug!(
+            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (multi-hop)",
+            start_t.elapsed().as_millis()
+        );
+        let events_t = Instant::now();
+        runtime.block_on(async {
+            event_hook
+                .on_event(TunnelEvent::InterfaceUp(
+                    metadata.clone(),
+                    AllowedTunnelTraffic::All,
+                ))
+                .await;
+            event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
+        });
+        log::debug!(
+            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms",
+            start_t.elapsed().as_millis(),
+            events_t.elapsed().as_millis()
+        );
+
+        // Routing install: bypass the relay endpoint IP (the only UDP
+        // peer the daemon reaches on the data plane), then split-default
+        // on the TUN.
+        let next_hop_ips: Vec<IpAddr> = vec![relay_endpoint.ip()];
+        #[cfg(target_os = "linux")]
+        let routes = {
+            let physical_iface = detect_default_iface().unwrap_or_else(|e| {
+                log::warn!(
+                    "Failed to detect default iface, falling back to 'eth0': {e}. \
+                     Bypass route for the relay IP may not install correctly."
+                );
+                "eth0".to_owned()
+            });
+            let gateway_v4 = detect_default_gateway_v4().ok();
+            build_warren_tunnel_routes(&metadata.interface, &next_hop_ips, &physical_iface, gateway_v4)
+        };
+        #[cfg(target_os = "macos")]
+        let routes = build_warren_tunnel_routes_macos(&metadata.interface, &next_hop_ips);
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        let routes: Vec<RequiredRoute> = {
+            log::warn!("Warren multi-hop tunnel routing not yet implemented for this platform.");
+            Vec::new()
+        };
+
+        let route_manager = args.route_manager.clone();
+        let metadata_iface_for_log = metadata.interface.clone();
+        runtime.block_on(async move {
+            match route_manager.add_routes(routes.into_iter().collect()).await {
+                Ok(()) => log::info!(
+                    "Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})"
+                ),
+                Err(e) => log::warn!(
+                    "Failed to install Warren multi-hop tunnel routes: {e}. \
+                     Tunnel up but no traffic forwarding."
+                ),
+            }
+        });
+
+        #[cfg(target_os = "linux")]
+        let default_route_guard = {
+            let relay_ip_v4 = match relay_endpoint.ip() {
+                IpAddr::V4(v4) => Some(v4),
+                IpAddr::V6(_) => None,
+            };
+            if let Some(v4) = relay_ip_v4 {
+                let tun_name_for_split = metadata.interface.clone();
+                runtime
+                    .block_on(async move {
+                        default_route_split::DefaultRouteSplitGuard::install(
+                            v4,
+                            &tun_name_for_split,
+                        )
+                        .await
+                    })
+                    .map(Some)
+                    .unwrap_or_else(|e| {
+                        log::warn!(
+                            "Warren multi-hop: failed to install default-route split: {e}. \
+                             Internet traffic will NOT route via tunnel."
+                        );
+                        None
+                    })
+            } else {
+                log::warn!(
+                    "Warren multi-hop: no IPv4 relay endpoint, skip default-route split."
+                );
+                None
+            }
+        };
+        #[cfg(not(target_os = "linux"))]
+        let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
+
+        // Spawn the uplink + downlink pumps. Each consumes a clone of
+        // the watch receiver so they can independently park on the
+        // supervisor's reconnect signal.
+        let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
+        let pump_error_tx = std::sync::Arc::new(std::sync::Mutex::new(Some(pump_error_tx)));
+        let pump_error_tx_uplink = pump_error_tx.clone();
+        let pump_error_tx_downlink = pump_error_tx.clone();
+
+        let uplink_rx = client_rx.clone();
+        let uplink_device = packet_device.clone();
+        let uplink_handle = runtime.spawn(async move {
+            log::info!("{TRACE_PREFIX} multi-hop uplink=running");
+            let res = run_uplink(uplink_rx, uplink_device).await;
+            if let Err(ref e) = res {
+                let msg = format!("multi-hop uplink: {e:#}");
+                log::warn!("{TRACE_PREFIX} {msg}");
+                if let Some(tx) = pump_error_tx_uplink.lock().ok().and_then(|mut g| g.take()) {
+                    let _ = tx.send(msg);
+                }
+            }
+            res
+        });
+
+        let downlink_rx = client_rx.clone();
+        let downlink_device = packet_device.clone();
+        let downlink_handle = runtime.spawn(async move {
+            log::info!("{TRACE_PREFIX} multi-hop downlink=running");
+            let res = run_downlink(downlink_rx, downlink_device).await;
+            if let Err(ref e) = res {
+                let msg = format!("multi-hop downlink: {e:#}");
+                log::warn!("{TRACE_PREFIX} {msg}");
+                if let Some(tx) = pump_error_tx_downlink.lock().ok().and_then(|mut g| g.take()) {
+                    let _ = tx.send(msg);
+                }
+            }
+            res
+        });
+
+        // Drop the local watch receiver. Only the uplink/downlink keep
+        // theirs alive; once those are aborted, the supervisor sees
+        // `tx.closed()` and terminates cleanly.
+        drop(client_rx);
+
+        log::debug!(
+            "{TRACE_PREFIX} T8={}ms phase=pump_spawned mode=multi_hop (uplink + downlink + supervisor live)",
+            start_t.elapsed().as_millis()
+        );
+
+        Ok(Self {
+            runtime,
+            backend: MonitorBackend::MultiHop {
+                supervisor_handle,
+                uplink_handle,
+                downlink_handle,
+                pump_error_rx,
+            },
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
@@ -618,12 +989,43 @@ impl WarrenTunnelMonitor {
     pub fn wait(self) -> Result<(), Error> {
         let WarrenTunnelMonitor {
             runtime,
-            pump_handle,
-            pump_error_rx,
+            backend,
             mut event_hook,
             close_rx,
             default_route_guard,
         } = self;
+
+        // Split the backend into its oneshot receiver (raced against
+        // `close_rx` below) and its owned task handles (aborted after
+        // the race finishes). Both backends surface abnormal pump
+        // terminations through the same `pump_error_rx` channel.
+        enum BackendHandles {
+            SingleHop(tokio::task::JoinHandle<()>),
+            MultiHop {
+                supervisor: tokio::task::JoinHandle<()>,
+                uplink: tokio::task::JoinHandle<anyhow::Result<()>>,
+                downlink: tokio::task::JoinHandle<anyhow::Result<()>>,
+            },
+        }
+        let (pump_error_rx, handles) = match backend {
+            MonitorBackend::SingleHop {
+                pump_handle,
+                pump_error_rx,
+            } => (pump_error_rx, BackendHandles::SingleHop(pump_handle)),
+            MonitorBackend::MultiHop {
+                supervisor_handle,
+                uplink_handle,
+                downlink_handle,
+                pump_error_rx,
+            } => (
+                pump_error_rx,
+                BackendHandles::MultiHop {
+                    supervisor: supervisor_handle,
+                    uplink: uplink_handle,
+                    downlink: downlink_handle,
+                },
+            ),
+        };
 
         let result = runtime.block_on(async move {
             // `tokio::select!` race les deux signaux. Le premier
@@ -668,15 +1070,35 @@ impl WarrenTunnelMonitor {
             }
         });
 
-        // Abort the pump to release the TUN device and the QUIC
-        // session it holds. `JoinHandle::abort` triggers a clean
+        // Abort backend tasks to release the TUN device and the QUIC
+        // session(s) they hold. `JoinHandle::abort` triggers a clean
         // cancel (task terminates at the next `await` cancellation
         // point). Wait afterwards so the TUN fd is actually closed
         // kernel-side before returning, otherwise an immediate retry
         // could race with `open_tun()` on the same interface name.
+        //
+        // Multi-hop aborts in a deterministic order: uplink/downlink
+        // first (release their watch receivers), then the supervisor
+        // (whose `tx.closed()` would otherwise race with the pump
+        // teardown).
         runtime.block_on(async {
-            pump_handle.abort();
-            let _ = pump_handle.await;
+            match handles {
+                BackendHandles::SingleHop(pump_handle) => {
+                    pump_handle.abort();
+                    let _ = pump_handle.await;
+                }
+                BackendHandles::MultiHop {
+                    supervisor,
+                    uplink,
+                    downlink,
+                } => {
+                    uplink.abort();
+                    downlink.abort();
+                    let _ = tokio::join!(uplink, downlink);
+                    supervisor.abort();
+                    let _ = supervisor.await;
+                }
+            }
         });
 
         result
@@ -821,6 +1243,51 @@ fn select_session_request(n_connections: u8) -> SessionRequest {
         SessionRequest::Mono
     } else {
         SessionRequest::Multi(n_connections)
+    }
+}
+
+/// Derives a deterministic IPv4 in `warren_config::TUNNEL_POOL_CIDR`
+/// (`10.66.0.0/16`) from the client Ed25519 pubkey bytes.
+///
+/// Multi-hop /v1 has no server-side IP allocator (the relay is
+/// HPKE-blind, the exit talks ciphertext only); the client picks its
+/// own slot. Using the pubkey makes the slot stable across reconnects
+/// for the same identity and lets two different identities very
+/// likely land on different IPs (~1/65 000 collision odds).
+///
+/// Skips the network address `10.66.X.0` and the gateway `10.66.X.1`
+/// to avoid reserved values.
+#[must_use]
+fn derive_multi_hop_tun_ip(pubkey_bytes: &[u8; 32]) -> std::net::Ipv4Addr {
+    let octet_c = pubkey_bytes[0];
+    let octet_d = pubkey_bytes[1].max(2);
+    std::net::Ipv4Addr::new(10, 66, octet_c, octet_d)
+}
+
+/// Builds a `TunConfig` for the multi-hop path with the given IPv4.
+/// MTU pinned to 1280 (Warren `TUNNEL_INITIAL_MTU`), gateway pinned to
+/// `10.66.0.1` (Warren `TUNNEL_GATEWAY_IP`). No IPv6 address: multi-hop
+/// /v1 is IPv4-only (cf. `warren-client::ipv6_killswitch`).
+fn build_multi_hop_tun_config(ipv4: std::net::Ipv4Addr) -> TunConfig {
+    TunConfig {
+        #[cfg(target_os = "linux")]
+        name: None,
+        #[cfg(target_os = "linux")]
+        packet_information: false,
+        addresses: vec![IpAddr::V4(ipv4)],
+        // 1280 matches the multi-hop CLI binary default and the
+        // baseline `TUNNEL_INITIAL_MTU` floor agreed in /v1 obfuscation
+        // doctrine. DPLPMTUD on the QUIC transport may negotiate higher
+        // path-MTU; the TUN itself stays at the safe floor.
+        mtu: 1280,
+        ipv4_gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
+        ipv6_gateway: None,
+        routes: vec![],
+        allow_lan: false,
+        dns_servers: None,
+        excluded_packages: vec![],
+        #[cfg(target_os = "windows")]
+        resource_dir: std::path::PathBuf::new(),
     }
 }
 
@@ -1178,6 +1645,74 @@ mod tests {
             !s.contains("192.0.2.10") && !s.contains("192.0.2.20"),
             "relay/exit endpoints must not leak: {s}"
         );
+    }
+
+    #[test]
+    fn derive_multi_hop_tun_ip_is_deterministic_for_same_pubkey() {
+        // Same identity must land on the same TUN IP across reconnects
+        // so subscriptions and exit-side state stay attached to a
+        // stable IP. Mutation = stale exit-side state across restart.
+        let pubkey = [0x42u8; 32];
+        let a = derive_multi_hop_tun_ip(&pubkey);
+        let b = derive_multi_hop_tun_ip(&pubkey);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn derive_multi_hop_tun_ip_skips_network_and_gateway_slots() {
+        // The /16 pool has `.0` reserved as the network address and
+        // `.1` reserved for the gateway. Even with pubkey bytes that
+        // would land on those slots, the derivation must bump to a
+        // safe value.
+        let pubkey = {
+            let mut p = [0u8; 32];
+            p[1] = 0; // would land on .X.0
+            p
+        };
+        let ip = derive_multi_hop_tun_ip(&pubkey);
+        assert_ne!(ip.octets()[3], 0, "must not land on the network slot");
+
+        let pubkey = {
+            let mut p = [0u8; 32];
+            p[1] = 1; // would land on .X.1 (gateway)
+            p
+        };
+        let ip = derive_multi_hop_tun_ip(&pubkey);
+        assert_ne!(ip.octets()[3], 1, "must not land on the gateway slot");
+    }
+
+    #[test]
+    fn derive_multi_hop_tun_ip_stays_in_pool_cidr() {
+        // Anchor: the derivation always produces an address inside
+        // 10.66.0.0/16. A regression that swapped octet positions
+        // would surface here.
+        for seed in 0..32u8 {
+            let mut p = [0u8; 32];
+            p[0] = seed;
+            p[1] = seed.wrapping_add(7);
+            let ip = derive_multi_hop_tun_ip(&p);
+            let o = ip.octets();
+            assert_eq!(o[0], 10);
+            assert_eq!(o[1], 66);
+        }
+    }
+
+    #[test]
+    fn build_multi_hop_tun_config_pins_mtu_and_gateway() {
+        // Multi-hop /v1 is IPv4-only at MTU 1280 with the canonical
+        // gateway `10.66.0.1`. Any mutation here would silently
+        // change the wire profile across deployments.
+        let cfg = build_multi_hop_tun_config(std::net::Ipv4Addr::new(10, 66, 7, 42));
+        assert_eq!(cfg.mtu, 1280, "multi-hop TUN MTU must be 1280");
+        assert_eq!(
+            cfg.ipv4_gateway,
+            std::net::Ipv4Addr::new(10, 66, 0, 1),
+            "multi-hop TUN gateway must be 10.66.0.1"
+        );
+        assert!(cfg.ipv6_gateway.is_none(), "multi-hop is IPv4-only in /v1");
+        assert_eq!(cfg.addresses.len(), 1);
+        assert!(!cfg.allow_lan, "no LAN access on multi-hop");
+        assert!(cfg.dns_servers.is_none(), "DNS handled by exit forwarder");
     }
 
     #[test]
