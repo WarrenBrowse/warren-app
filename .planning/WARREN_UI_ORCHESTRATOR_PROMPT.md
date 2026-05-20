@@ -510,31 +510,57 @@ Caveat M4.H.C.X follow-up : `WarrenStatusCache.record_reconnect` pas
 encore câblé depuis le supervisor `talpid-warren-tunnel::start_multi_hop`.
 Le UI affichera `reconnect_count = 0` steady-state jusqu'au câblage.
 
-### M4.H.D : branding Warren final
+### ~~M4.H.E~~ : Caveats fixes courts. **DONE 2026-05-20**
 
-Brief (2-3 jours) :
-- Phase R1.x rebrand checkpoint déjà partiel (commit `1fba381f07`) :
-  finaliser logo, couleurs, copy, splash, about
-- Cohérence FR/EN
-- Vérifier qu'aucune string `Mullvad` user-facing ne subsiste hors
-  attributions GPL
+GO ULTIMATE. 6 commits warren-app + 2 warren-core. Reconnect cache
+wiring via observer Arc<dyn Fn> cross-repo (warren-client
+`SupervisorConfig.on_reconnect` + `WarrenTunnelParameters` +
+`ParametersGenerator` closure capture). Factory bug Remote LOCAL=0
+ne reproduit déjà plus HEAD (Phase G.4 dispatch via WarrenApiClient),
+invariant pinning + 2 régression tests. wapi VAL1/2 résolu Option β
+(smoke align client-side reject). warren-killswitch verdict A
+(consumé warren-client warren-core, conserver). Pin warren-core bumped
+`a7159d94`. 426 PASS workspace + 110 Jest. Caveats restants ops poka :
+SSH Hetzner bench, GHCR PAT write:packages.
 
-### M4.H.E : fix `--bypass-cidr` + tune backoff ceiling
+### M4.H.D : Migration GitHub + Build pipeline DMG/AppImage/MSI + Signing + CI
 
-Brief court (~1 jour) :
+Brief (4-7 jours) :
+- Pré-phase : migrer warren-app de Gitea (`git.p2p.legal/warren/warren-app`)
+  vers GitHub (`github.com/WarrenBrowse/warren-app` pour cohérence
+  avec `github.com/WarrenBrowse/warren-core`). gh CLI user `poka-IT`
+  (switch via `gh auth switch --user poka-IT`). Préserver branches +
+  tags + upstream remote.
+- Adapter `build.sh` Mullvad existant pour Warren branding
+- DMG macOS via `dist-assets/pkg-scripts/` adapté
+- AppImage / .deb / .rpm Linux
+- MSI Windows via `mullvad-nsis/` adapté
+- Signing setup (CSC_LINK `.p12` macOS + `.pfx` Windows + Apple
+  notarytool credentials) - escalade poka pour les assets
+- CI workflows GHA `.github/workflows/` adaptés Warren (daemon.yml +
+  desktop-e2e.yml + frontend.yml + clippy.yml)
+- prepare-release.sh adapté/recréé pour tag signed Warren
+
+### M4.H.F : NAT-PMP client câblage + UI port-forwarding (différenciateur produit)
+
+Brief (3-5 jours) post-M4.H.D :
+- Path-dep `warren-natpmp-client` (594 LOC warren-core) dans
+  `talpid-warren-tunnel`
+- Settings UI Electron toggle "Port forwarding" + display port assigné
+  + lifetime countdown
+- IPC daemon ↔ UI pour status NAT-PMP
+- Vs Mullvad/IVPN qui ont abandonné port-forwarding 2023 (cf.
+  [[warren-product-corrected]] memory)
+
+### M4.H.G : `--bypass-cidr` + backoff tune (caveats post-M4.E.D résiduels)
+
+Brief court (~1 jour) post-M4.H.F :
 - `--bypass-cidr` flag dans warren-client (caveat connu post-M4.E.D :
   SSH inbound cassée par `--auto-routing`)
 - Optionnel : `Backoff::HANDSHAKE` 30s → 15s pour ramener worst-case
   reconnect M4.E.D ≤ 15s
 
-### M4.H.F : build pipeline Warren
-
-Brief (3-5 jours) :
-- DMG macOS, AppImage Linux, MSI Windows
-- Signing keys Warren (poka génère, agent intègre)
-- CI release
-
-### M4.H.G : doc warrenbrowse.com
+### M4.H.H : doc warrenbrowse.com
 
 Probablement séparé du repo warren-app : repo dédié site web ou
 dossier docs. Phase à clarifier avec poka.
