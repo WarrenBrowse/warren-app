@@ -15,12 +15,17 @@
 //!   then `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>`. Implementation
 //!   re-exported verbatim from `warren_client::default_route_split_macos`
 //!   so the adapter stays a thin wrapper.
-//! - **Other** (currently Windows + the rest): a [`stub`] that always
-//!   fails to install. Lets the `default_route_guard` field type exist
-//!   so the crate compiles on every target while making it visible at
-//!   runtime that traffic is **not** being captured by the tunnel
-//!   (operator log surfaces the install error and the warning that no
-//!   Internet traffic flows through the TUN).
+//! - **Windows**: PowerShell `New-NetRoute` recipe - host-route
+//!   exception on the captured default `(ifindex, NextHop)` pair, then
+//!   `0.0.0.0/1` + `128.0.0.0/1 -InterfaceAlias <tun>`. Re-exported
+//!   from `warren_client::default_route_split_windows`.
+//! - **Other** (any target that is not Linux, macOS or Windows): a
+//!   [`stub`] that always fails to install. Lets the
+//!   `default_route_guard` field type exist so the crate compiles on
+//!   every target while making it visible at runtime that traffic is
+//!   **not** being captured by the tunnel (operator log surfaces the
+//!   install error and the warning that no Internet traffic flows
+//!   through the TUN).
 //!
 //! The `install(exit_ip, tun_name)` / `uninstall(self)` / `Drop` API is
 //! identical on every platform so the call site in `lib.rs` does not
@@ -40,9 +45,17 @@ pub use linux::DefaultRouteSplitGuard;
 #[cfg(target_os = "macos")]
 pub use warren_client::default_route_split_macos::DefaultRouteSplitGuard;
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+// Windows: same `install(Ipv4Addr, &str) -> Result<Self>` shape as
+// Linux + macOS, exposed by the warren-core PowerShell port. The
+// recipe is `New-NetRoute` host-route exception + the two /1 routes
+// landing on the WinTUN interface alias. See
+// `warren_client::default_route_split_windows` for the recipe + tests.
+#[cfg(target_os = "windows")]
+pub use warren_client::default_route_split_windows::DefaultRouteSplitGuard;
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 mod stub;
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use stub::DefaultRouteSplitGuard;
 
 #[cfg(test)]
