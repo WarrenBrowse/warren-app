@@ -95,8 +95,11 @@ cohérence avec warren-core `warren-tunnel`). Path-deps actuels =
 `warren-tunnel` + `warren-protocol` uniquement. Reste à câbler le reste
 de la stack M4.E.D :
 
-1. **M4.H.A** : Linux bench fork E2E validation (caveat #1 report
-   migration, blocker pre-prod, pas encore validé en network réel).
+1. ~~**M4.H.A**~~ : Linux bench fork E2E validation. **DONE 2026-05-20**
+   GO ULTIMATE après séquence M4.H.A → bis → ter → quart. 802 Mbps TCP
+   4-flow sustained cross-DC, 0 eviction T+12. Fix warren-core
+   apply_snapshot allowlist (`8f4f299`) appliqué. Doctrine `§0.5 full
+   autonomy` actée durant ce cycle.
 2. **M4.H.B** : path-deps additionnels vers `warren-multihop`,
    `warren-client`, `warren-relay`, `warren-exit`, `warren-backoff`.
    Étendre `talpid-warren-tunnel` pour brancher MultiHopSupervisor
