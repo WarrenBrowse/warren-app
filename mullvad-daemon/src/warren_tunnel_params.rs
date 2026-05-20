@@ -84,6 +84,13 @@ pub fn assemble_for_attempt(
         // rules alongside the standard split-default routes. Empty
         // (default) preserves the M4.E.D behaviour.
         bypass_cidrs,
+        // M5.B.1 DAITA v2 opt-in. assemble() always starts at `false`;
+        // the caller (`ParametersGenerator::produce_warren_tunnel_params`)
+        // mutates this field post-assemble based on the live
+        // `wireguard.daita.enabled` Mullvad setting. Mirrors the
+        // post-assemble wiring of `on_reconnect` and the NAT-PMP
+        // observer.
+        enable_daita: false,
     })
 }
 

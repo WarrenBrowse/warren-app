@@ -3034,6 +3034,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "maybenot-machines"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62ec0e1ecb8aa29694d4f39b09e1c9d21569c282a9bd9046e57ba7a0f2cd5948"
+dependencies = [
+ "anyhow",
+ "enum-map",
+ "maybenot",
+ "rand 0.9.4",
+ "rand_core 0.9.5",
+ "serde",
+]
+
+[[package]]
 name = "md-5"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7322,10 +7336,13 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "ed25519-dalek",
+ "maybenot",
+ "maybenot-machines",
  "parking_lot",
  "postcard",
  "quinn",
  "rand 0.10.1",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

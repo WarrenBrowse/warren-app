@@ -153,6 +153,7 @@ mod tests {
             nat_pmp: None,
             nat_pmp_observer: None,
             bypass_cidrs: Vec::new(),
+            enable_daita: false,
         }
     }
 

@@ -166,6 +166,16 @@ pub struct WarrenTunnelParameters {
     /// the field is plumbed end-to-end so future UI work only needs
     /// the gRPC + Redux glue, not a fresh daemon traversal.
     pub bypass_cidrs: Vec<BypassCidr>,
+
+    /// M5.B.1 DAITA v2 opt-in. When `true`, the client advertises
+    /// `Setup.daita_support = true` on the warren-protocol v3
+    /// handshake. The exit may then respond with a
+    /// `SetupAck.daita_spec` describing the negotiated `maybenot`
+    /// machine. Driven by the Mullvad upstream `wireguard.daita`
+    /// toggle (single UI surface for both backends); the
+    /// daemon-state-machine reads that boolean and forwards it
+    /// verbatim through this field.
+    pub enable_daita: bool,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -188,6 +198,7 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 &self.nat_pmp_observer.as_ref().map(|_| "<observer>"),
             )
             .field("bypass_cidrs", &self.bypass_cidrs)
+            .field("enable_daita", &self.enable_daita)
             .finish()
     }
 }
@@ -481,6 +492,7 @@ impl WarrenTunnelMonitor {
         let signing = params.signing_key.clone();
         let n_conns = params.n_connections;
         let features = params.features;
+        let enable_daita = params.enable_daita;
         let mut event_hook = args.event_hook;
 
         // Detect the outbound source IP (eth0 / wlan0) used to reach
@@ -511,7 +523,9 @@ impl WarrenTunnelMonitor {
         );
         let handshake_t = Instant::now();
         let session_kind = runtime.block_on(async move {
-            let mut client = ClientTunnel::with_signing_key(&signing).with_features(features);
+            let mut client = ClientTunnel::with_signing_key(&signing)
+                .with_features(features)
+                .with_daita(enable_daita);
             if let Some(addr) = bind_local_ip {
                 client = client.with_bind_local_ip(addr);
             }
@@ -1819,6 +1833,7 @@ mod tests {
             nat_pmp: None,
             nat_pmp_observer: None,
             bypass_cidrs: Vec::new(),
+            enable_daita: false,
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1848,6 +1863,7 @@ mod tests {
             nat_pmp: None,
             nat_pmp_observer: None,
             bypass_cidrs: Vec::new(),
+            enable_daita: false,
         };
         assert!(params.multi_hop.is_none());
         assert!(
@@ -1899,6 +1915,7 @@ mod tests {
             nat_pmp: None,
             nat_pmp_observer: None,
             bypass_cidrs: Vec::new(),
+            enable_daita: false,
         };
         let s = format!("{params:?}");
         assert!(
@@ -1940,6 +1957,7 @@ mod tests {
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
             bypass_cidrs: Vec::new(),
+            enable_daita: false,
         };
         let s = format!("{params:?}");
         // NatPmpConfig derives Debug, so the Some(..) renders the

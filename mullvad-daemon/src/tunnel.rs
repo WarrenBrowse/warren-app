@@ -122,6 +122,13 @@ struct InnerParametersGenerator {
     /// [`ParametersGenerator::set_warren_bypass_cidrs`] once a UI or
     /// settings file lands the values.
     warren_bypass_cidrs: Vec<talpid_warren_tunnel::BypassCidr>,
+    /// M5.B.1 DAITA v2 toggle, mirroring Mullvad upstream
+    /// `wireguard.daita.enabled`. Forwarded verbatim onto
+    /// [`talpid_warren_tunnel::WarrenTunnelParameters::enable_daita`].
+    /// Mutated at runtime when the Settings handler observes a change
+    /// on the `wireguard.daita` slice (single UI surface for both
+    /// WireGuard + Warren backends).
+    warren_enable_daita: bool,
 }
 
 impl ParametersGenerator {
@@ -158,6 +165,7 @@ impl ParametersGenerator {
             warren_status_cache,
             warren_nat_pmp: None,
             warren_bypass_cidrs: Vec::new(),
+            warren_enable_daita: false,
         })))
     }
 
@@ -196,6 +204,23 @@ impl ParametersGenerator {
     /// alongside `management_interface.rs::set_nat_pmp_settings`).
     pub async fn set_warren_nat_pmp(&self, cfg: Option<NatPmpConfig>) {
         self.0.lock().await.warren_nat_pmp = cfg;
+    }
+
+    /// Sets the user's DAITA v2 preference (M5.B.1). Mirrors Mullvad
+    /// upstream's `wireguard.daita.enabled`. The next call to
+    /// [`Self::produce_warren_tunnel_params`] forwards the flag onto
+    /// `WarrenTunnelParameters.enable_daita`. In-flight tunnels keep
+    /// their current setting until the daemon reconnects.
+    ///
+    /// Wired from the Settings handler that observes
+    /// `Settings::tunnel_options::wireguard::daita::enabled` (single UI
+    /// surface for both WireGuard and Warren backends).
+    #[expect(
+        dead_code,
+        reason = "M5.B.1 lands the daemon-side plumbing only; the Settings observer that consumes this setter lands in a follow-up. Keep the setter public so that follow-up does not have to re-traverse this file."
+    )]
+    pub async fn set_warren_enable_daita(&self, enabled: bool) {
+        self.0.lock().await.warren_enable_daita = enabled;
     }
 
     /// Returns the current NAT-PMP preference, primarily for the
@@ -243,6 +268,7 @@ impl ParametersGenerator {
         let multi_hop = inner.warren_multi_hop.clone();
         let nat_pmp = inner.warren_nat_pmp.clone();
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
+        let enable_daita = inner.warren_enable_daita;
         let mut params = warren_tunnel_params::assemble_for_attempt(
             selector,
             signing_key,
@@ -252,6 +278,12 @@ impl ParametersGenerator {
             nat_pmp,
             bypass_cidrs,
         )?;
+        // M5.B.1: forward the DAITA opt-in onto the params. The flag is
+        // driven by Mullvad upstream's `wireguard.daita.enabled` toggle
+        // so the user surface stays a single switch even though the
+        // wire path differs (Quinn + warren-protocol v3 here vs
+        // WireGuard + maybenot-ffi in the upstream backend).
+        params.enable_daita = enable_daita;
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI
         // `reconnect_count` row advances on every successful reconnect.
