@@ -105,6 +105,18 @@ service ManagementService {
   // this for live UI updates without polling.
   rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
 
+  // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
+  // differentiator since Mullvad / IVPN dropped port-forwarding in
+  // 2023. OFF by default; when ON the daemon spawns a refresh loop
+  // against the exit's NAT-PMP server (UDP/5351 of the tunnel
+  // gateway) and surfaces the granted public port to the UI through
+  // the NatPmpStatusUpdates stream.
+  rpc GetNatPmpSettings(google.protobuf.Empty) returns (NatPmpSettings) {}
+  rpc SetNatPmpSettings(NatPmpSettings) returns (google.protobuf.Empty) {}
+  // Push stream emitting a new NatPmpStatus on every refresh loop
+  // event (Mapped / Renewed / Failed / Cancelled).
+  rpc NatPmpStatusUpdates(google.protobuf.Empty) returns (stream NatPmpStatus) {}
+
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
@@ -600,6 +612,9 @@ message Settings {
   // Warren two-relayed QUIC multi-hop settings. Cf.
   // SetWarrenMultiHopSettings rpc. Absent = OFF (single-hop).
   WarrenMultiHopSettings warren_multi_hop = 18;
+  // Warren NAT-PMP port-forwarding settings. Cf. SetNatPmpSettings
+  // rpc. Absent = OFF (no refresh loop spawned).
+  NatPmpSettings warren_nat_pmp = 19;
 }
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
@@ -623,6 +638,48 @@ message WarrenStatus {
   uint32 reconnect_count = 1;
   google.protobuf.Duration last_reconnect_age = 2;
   bool obfuscation_active = 3;
+}
+
+// Warren NAT-PMP port-forwarding settings persisted on disk and pushed
+// to the daemon via SetNatPmpSettings. Default OFF. Lifetime is the
+// requested lifetime in seconds; the exit clamps it to its allocator
+// range (60..3600 s). Protocol picks UDP or TCP; mapping both
+// simultaneously is left for a future extension.
+message NatPmpSettings {
+  bool enabled = 1;
+  uint32 lifetime_secs = 2;
+  enum Proto {
+    UDP = 0;
+    TCP = 1;
+  }
+  Proto protocol = 3;
+  // Suggested external port (0 = server picks). Useful for advanced
+  // users who pin a port; the server may ignore the suggestion (RFC
+  // 6886 §3.3).
+  uint32 suggested_external_port = 4;
+  // Internal port the user's application binds locally. 0 = unset.
+  uint32 internal_port = 5;
+}
+
+// NAT-PMP refresh-loop status surface used by GetNatPmpSettings (last
+// known state) and NatPmpStatusUpdates (live stream).
+message NatPmpStatus {
+  enum State {
+    DISABLED = 0;
+    REQUESTING = 1;
+    MAPPED = 2;
+    FAILED = 3;
+  }
+  State state = 1;
+  // Set when state == MAPPED. The public-facing port the user
+  // advertises to incoming peers.
+  optional uint32 external_port = 2;
+  // Set when state == MAPPED. Lifetime in seconds last granted by the
+  // exit; the UI displays a countdown relative to this value + the
+  // wall clock since the last event.
+  optional uint32 lifetime_remaining_secs = 3;
+  // Set when state == FAILED. Free-form error string.
+  optional string error_message = 4;
 }
 
 message RelayOverride {

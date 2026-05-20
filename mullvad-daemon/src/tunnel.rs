@@ -136,10 +136,6 @@ impl ParametersGenerator {
     ///
     /// Wired from the gRPC `SetNatPmpSettings` handler (consumer added
     /// alongside `management_interface.rs::set_nat_pmp_settings`).
-    #[expect(
-        dead_code,
-        reason = "Storage hook for the NAT-PMP setting: consumed by the gRPC SetNatPmpSettings handler added in a follow-up commit. Wired here so the setter + storage live in one place."
-    )]
     pub async fn set_warren_nat_pmp(&self, cfg: Option<NatPmpConfig>) {
         self.0.lock().await.warren_nat_pmp = cfg;
     }
@@ -149,7 +145,7 @@ impl ParametersGenerator {
     /// is disabled (the daemon never spawns a refresh loop).
     #[expect(
         dead_code,
-        reason = "Consumed by the gRPC GetNatPmpSettings handler added in a follow-up commit."
+        reason = "Read accessor for the NAT-PMP setting, retained for symmetry with set_warren_nat_pmp and for future health-check / diagnostic gRPC surfaces; the live status surface (NatPmpStatusUpdates) reads the WarrenStatusCache instead."
     )]
     pub async fn get_warren_nat_pmp(&self) -> Option<NatPmpConfig> {
         self.0.lock().await.warren_nat_pmp.clone()

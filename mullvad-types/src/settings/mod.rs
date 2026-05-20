@@ -148,6 +148,12 @@ pub struct Settings {
     /// `WARREN_MULTI_HOP=1` overrides this for POC.
     #[serde(default)]
     pub warren_multi_hop: WarrenMultiHopSettings,
+    /// Warren NAT-PMP port-forwarding settings. Default OFF; the
+    /// daemon-side `NatPmpManager` only spawns a refresh loop when
+    /// `enabled = true`. Differentiator product surface (Mullvad and
+    /// IVPN dropped port-forwarding in 2023).
+    #[serde(default)]
+    pub warren_nat_pmp: WarrenNatPmpSettings,
 }
 
 /// Warren two-relayed QUIC multi-hop settings (M4.E.D). Persisted in
@@ -175,6 +181,51 @@ impl Default for WarrenMultiHopSettings {
             entry_country: String::new(),
             exit_country: String::new(),
             hpke_epoch_rotation: std::time::Duration::from_secs(4 * 60 * 60),
+        }
+    }
+}
+
+/// Transport protocol selector for NAT-PMP port-forwarding. Stored on
+/// disk as a string discriminant to keep the JSON settings forward-
+/// compatible (adding a `Both` variant later does not need a numeric
+/// migration). Matches the RFC 6886 opcode mapping (UDP = 1, TCP = 2).
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub enum WarrenNatPmpProto {
+    /// UDP mapping (RFC 6886 opcode 1).
+    #[default]
+    Udp,
+    /// TCP mapping (RFC 6886 opcode 2).
+    Tcp,
+}
+
+/// Warren NAT-PMP port-forwarding settings. Persisted in
+/// [`Settings::warren_nat_pmp`] and surfaced via the
+/// `GetNatPmpSettings` gRPC rpc. Default OFF; lifetime defaults to 1h
+/// (the exit-side allocator clamps to 60..3600 s).
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenNatPmpSettings {
+    /// Toggle ON/OFF. Default `false`.
+    pub enabled: bool,
+    /// Lifetime in seconds. Default 3600 (1 hour); the exit-side
+    /// allocator clamps to its [60, 3600] range so larger values are
+    /// silently capped server-side.
+    pub lifetime_secs: u32,
+    /// Transport protocol (UDP or TCP).
+    pub protocol: WarrenNatPmpProto,
+    /// Suggested external port (0 = server picks).
+    pub suggested_external_port: u16,
+    /// Internal port the user's application binds (0 = unset).
+    pub internal_port: u16,
+}
+
+impl Default for WarrenNatPmpSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            lifetime_secs: 3600,
+            protocol: WarrenNatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
         }
     }
 }
@@ -363,6 +414,7 @@ impl Default for Settings {
             warren_local_account: true,
             warren_api_url: None,
             warren_multi_hop: WarrenMultiHopSettings::default(),
+            warren_nat_pmp: WarrenNatPmpSettings::default(),
         }
     }
 }

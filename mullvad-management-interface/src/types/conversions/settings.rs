@@ -67,6 +67,7 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             warren_multi_hop: Some(proto::WarrenMultiHopSettings::from(
                 &settings.warren_multi_hop,
             )),
+            warren_nat_pmp: Some(proto::NatPmpSettings::from(&settings.warren_nat_pmp)),
         }
     }
 }
@@ -104,6 +105,55 @@ impl TryFrom<proto::WarrenMultiHopSettings> for mullvad_types::settings::WarrenM
             entry_country: value.entry_country,
             exit_country: value.exit_country,
             hpke_epoch_rotation,
+        })
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenNatPmpSettings> for proto::NatPmpSettings {
+    fn from(value: &mullvad_types::settings::WarrenNatPmpSettings) -> Self {
+        use mullvad_types::settings::WarrenNatPmpProto;
+        proto::NatPmpSettings {
+            enabled: value.enabled,
+            lifetime_secs: value.lifetime_secs,
+            protocol: match value.protocol {
+                WarrenNatPmpProto::Udp => proto::nat_pmp_settings::Proto::Udp as i32,
+                WarrenNatPmpProto::Tcp => proto::nat_pmp_settings::Proto::Tcp as i32,
+            },
+            suggested_external_port: u32::from(value.suggested_external_port),
+            internal_port: u32::from(value.internal_port),
+        }
+    }
+}
+
+impl TryFrom<proto::NatPmpSettings> for mullvad_types::settings::WarrenNatPmpSettings {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::NatPmpSettings) -> Result<Self, Self::Error> {
+        use mullvad_types::settings::WarrenNatPmpProto;
+        let protocol = match proto::nat_pmp_settings::Proto::try_from(value.protocol) {
+            Ok(proto::nat_pmp_settings::Proto::Udp) => WarrenNatPmpProto::Udp,
+            Ok(proto::nat_pmp_settings::Proto::Tcp) => WarrenNatPmpProto::Tcp,
+            Err(_) => {
+                return Err(FromProtobufTypeError::invalid_argument(
+                    "invalid NatPmpSettings.protocol enum value",
+                ));
+            }
+        };
+        // Ports are 16-bit; reject overflow rather than silently
+        // truncating, otherwise a malformed gRPC call would silently
+        // wrap to e.g. (65536 -> 0).
+        let suggested_external_port = u16::try_from(value.suggested_external_port).map_err(|_| {
+            FromProtobufTypeError::invalid_argument("NatPmpSettings.suggested_external_port > 65535")
+        })?;
+        let internal_port = u16::try_from(value.internal_port).map_err(|_| {
+            FromProtobufTypeError::invalid_argument("NatPmpSettings.internal_port > 65535")
+        })?;
+        Ok(mullvad_types::settings::WarrenNatPmpSettings {
+            enabled: value.enabled,
+            lifetime_secs: value.lifetime_secs,
+            protocol,
+            suggested_external_port,
+            internal_port,
         })
     }
 }
@@ -250,6 +300,11 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             warren_multi_hop: settings
                 .warren_multi_hop
                 .map(mullvad_types::settings::WarrenMultiHopSettings::try_from)
+                .transpose()?
+                .unwrap_or_default(),
+            warren_nat_pmp: settings
+                .warren_nat_pmp
+                .map(mullvad_types::settings::WarrenNatPmpSettings::try_from)
                 .transpose()?
                 .unwrap_or_default(),
         })

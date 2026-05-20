@@ -359,6 +359,16 @@ pub enum DaemonCommand {
         ResponseTx<(), settings::Error>,
         mullvad_types::settings::WarrenMultiHopSettings,
     ),
+    /// Persist Warren NAT-PMP settings (`Settings::warren_nat_pmp`).
+    /// Unlike `SetWarrenMultiHopSettings`, this does NOT require a
+    /// daemon restart: the value is pushed live to the
+    /// `ParametersGenerator` so the next tunnel reconnect picks it up,
+    /// and the live `WarrenStatusCache` is reset to `Disabled` when the
+    /// user toggles off.
+    SetNatPmpSettings(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenNatPmpSettings,
+    ),
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -777,6 +787,10 @@ pub struct Daemon {
     /// (`<settings_dir>/warren_mnemonic.txt`) via the
     /// `on_get_warren_mnemonic` handler.
     settings_dir: PathBuf,
+    /// Shared with the `ManagementInterfaceServer`. The daemon writes
+    /// to it on NAT-PMP toggle changes; the gRPC stream subscribers
+    /// receive the resulting snapshots without polling.
+    warren_status_cache: warren_status::WarrenStatusCache,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1406,6 +1420,7 @@ impl Daemon {
             leak_checker,
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
+            warren_status_cache,
         };
 
         api_availability.unsuspend();
@@ -1846,6 +1861,7 @@ impl Daemon {
             SetWarrenMultiHopSettings(tx, settings) => {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
+            SetNatPmpSettings(tx, settings) => self.on_set_nat_pmp_settings(tx, settings).await,
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -3041,6 +3057,50 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_multi_hop_settings response");
     }
 
+    /// Persists `Settings::warren_nat_pmp` AND pushes the new value
+    /// live to the `ParametersGenerator` so the next tunnel reconnect
+    /// picks it up without a daemon restart. On a disable, the live
+    /// `WarrenStatusCache` is reset to `Disabled` so the UI immediately
+    /// hides the port-forwarding row.
+    async fn on_set_nat_pmp_settings(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        new_value: mullvad_types::settings::WarrenNatPmpSettings,
+    ) {
+        let display_value = format!(
+            "enabled={} lifetime_secs={} proto={:?} internal_port={}",
+            new_value.enabled,
+            new_value.lifetime_secs,
+            new_value.protocol,
+            new_value.internal_port,
+        );
+        let new_value_for_gen = new_value.clone();
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_nat_pmp = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            // Push the live value to the parameters generator so the
+            // next tunnel reconnect spawns (or stops) the NAT-PMP
+            // manager according to the new setting.
+            let nat_pmp_cfg = nat_pmp_settings_to_runtime_cfg(&new_value_for_gen);
+            self.parameters_generator
+                .set_warren_nat_pmp(nat_pmp_cfg)
+                .await;
+            if !new_value_for_gen.enabled {
+                // Disable -> snap the live status to Disabled so the UI
+                // hides the port-forwarding row immediately, without
+                // waiting for a tunnel reconnect.
+                self.warren_status_cache.set_nat_pmp_disabled();
+            }
+            log::info!("Warren NAT-PMP persisted + pushed live: {display_value}");
+        }
+        Self::oneshot_send(tx, result, "set_nat_pmp_settings response");
+    }
+
     async fn on_set_show_beta_releases(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -4105,6 +4165,32 @@ impl DaemonShutdownHandle {
             .tx
             .send(InternalDaemonEvent::TriggerShutdown(user_init_shutdown));
     }
+}
+
+/// Converts the persisted user setting into the runtime
+/// [`talpid_warren_tunnel::NatPmpConfig`] consumed by the
+/// `NatPmpManager`. Returns `None` when the toggle is OFF so the
+/// dispatcher short-circuits without spawning a refresh loop.
+fn nat_pmp_settings_to_runtime_cfg(
+    settings: &mullvad_types::settings::WarrenNatPmpSettings,
+) -> Option<talpid_warren_tunnel::NatPmpConfig> {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto};
+
+    if !settings.enabled {
+        return None;
+    }
+    let protocol = match settings.protocol {
+        WarrenNatPmpProto::Udp => NatPmpProto::Udp,
+        WarrenNatPmpProto::Tcp => NatPmpProto::Tcp,
+    };
+    Some(NatPmpConfig {
+        enabled: true,
+        lifetime_secs: settings.lifetime_secs,
+        protocol,
+        suggested_external_port: settings.suggested_external_port,
+        internal_port: settings.internal_port,
+    })
 }
 
 /// Consume a oneshot sender of `T1` and return a sender that takes a different type `T2`.

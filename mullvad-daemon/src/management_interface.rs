@@ -68,6 +68,45 @@ type AppUpgradeEventListenerReceiver =
 type WarrenStatusUpdatesReceiver =
     Box<dyn futures::Stream<Item = Result<types::WarrenStatus, Status>> + Send + Unpin>;
 
+type NatPmpStatusUpdatesReceiver =
+    Box<dyn futures::Stream<Item = Result<types::NatPmpStatus, Status>> + Send + Unpin>;
+
+/// Maps the live `NatPmpStateSnapshot` into the proto status message
+/// emitted by `GetNatPmpSettings` and the `NatPmpStatusUpdates` stream.
+fn nat_pmp_state_to_proto(state: &crate::warren_status::NatPmpStateSnapshot) -> types::NatPmpStatus {
+    use crate::warren_status::NatPmpStateSnapshot;
+    use types::nat_pmp_status::State;
+    match state {
+        NatPmpStateSnapshot::Disabled => types::NatPmpStatus {
+            state: State::Disabled as i32,
+            external_port: None,
+            lifetime_remaining_secs: None,
+            error_message: None,
+        },
+        NatPmpStateSnapshot::Requesting => types::NatPmpStatus {
+            state: State::Requesting as i32,
+            external_port: None,
+            lifetime_remaining_secs: None,
+            error_message: None,
+        },
+        NatPmpStateSnapshot::Mapped {
+            external_port,
+            lifetime_secs,
+        } => types::NatPmpStatus {
+            state: State::Mapped as i32,
+            external_port: Some(u32::from(*external_port)),
+            lifetime_remaining_secs: Some(*lifetime_secs),
+            error_message: None,
+        },
+        NatPmpStateSnapshot::Failed { error } => types::NatPmpStatus {
+            state: State::Failed as i32,
+            external_port: None,
+            lifetime_remaining_secs: None,
+            error_message: Some(error.clone()),
+        },
+    }
+}
+
 /// Convert a `WarrenStatusSnapshot` snapshot into the gRPC proto.
 /// Centralised so the snapshot RPC and the stream RPC stay consistent.
 fn warren_status_snapshot_to_proto(
@@ -93,6 +132,7 @@ impl ManagementService for ManagementServiceImpl {
     type AppUpgradeEventsListenStream = AppUpgradeEventListenerReceiver;
     type LogListenStream = UnboundedReceiverStream<Result<types::LogMessage, Status>>;
     type WarrenStatusUpdatesStream = WarrenStatusUpdatesReceiver;
+    type NatPmpStatusUpdatesStream = NatPmpStatusUpdatesReceiver;
 
     // Control and get the tunnel state
     //
@@ -425,6 +465,56 @@ impl ManagementService for ManagementServiceImpl {
             .map(|snap| Ok(warren_status_snapshot_to_proto(snap)));
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::WarrenStatusUpdatesStream
+        ))
+    }
+
+    async fn get_nat_pmp_settings(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::NatPmpSettings> {
+        log::debug!("get_nat_pmp_settings");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        let settings = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::NatPmpSettings::from(
+            &settings.warren_nat_pmp,
+        )))
+    }
+
+    async fn set_nat_pmp_settings(
+        &self,
+        request: Request<types::NatPmpSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_nat_pmp_settings(enabled={} lifetime_secs={} protocol={} internal_port={})",
+            proto_value.enabled,
+            proto_value.lifetime_secs,
+            proto_value.protocol,
+            proto_value.internal_port,
+        );
+        let new_value = mullvad_types::settings::WarrenNatPmpSettings::try_from(proto_value)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetNatPmpSettings(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    async fn nat_pmp_status_updates(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<Self::NatPmpStatusUpdatesStream> {
+        log::debug!("nat_pmp_status_updates subscribe");
+        let rx = self.warren_status_cache.subscribe();
+        #[expect(
+            clippy::result_large_err,
+            reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values."
+        )]
+        let stream = tokio_stream::wrappers::WatchStream::new(rx)
+            .map(|snap| Ok(nat_pmp_state_to_proto(&snap.nat_pmp)));
+        Ok(Response::new(
+            Box::new(Box::pin(stream)) as Self::NatPmpStatusUpdatesStream
         ))
     }
 
