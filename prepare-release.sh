@@ -76,10 +76,11 @@ TAG_NAME="v${VERSION}"
 
 log_header "Preparing Warren VPN release ${VERSION}"
 
-# Refuse on a dirty working tree
-if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+# Refuse on a dirty working tree (untracked files and submodule deltas are
+# tolerated; build.sh handles its own clean check before signed builds).
+if [[ -n "$(git status --porcelain --untracked-files=no --ignore-submodules=all)" ]]; then
     log_error "Working tree is dirty. Commit or stash changes before releasing."
-    git status --short
+    git status --short --untracked-files=no --ignore-submodules=all
     exit 1
 fi
 
