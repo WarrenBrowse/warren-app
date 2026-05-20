@@ -44,7 +44,8 @@ pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 pub use warren_client::bypass_cidr::BypassCidr;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
-    ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
+    ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
+    pump_bidirectional_with_daita, pump_multi_bidirectional,
 };
 
 mod adapter;
@@ -773,7 +774,38 @@ impl WarrenTunnelMonitor {
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();
-                    let res = pump_bidirectional(packet_device, conn).await;
+                    // M5.B.1: prefer the DAITA-enabled pump variant
+                    // when the exit ships a `daita_spec` in the
+                    // SetupAck. Falls back to the regular pump when
+                    // no DAITA was negotiated. Multi-conn variant of
+                    // the DAITA pump is not yet wired (cf. M5.B.1
+                    // open work) so multi-session paths keep the
+                    // regular pump even if a spec was returned.
+                    let res = match session.daita_spec().cloned() {
+                        Some(cfg) => {
+                            match DaitaState::from_config(&cfg, std::time::Instant::now()) {
+                                Ok(state) => {
+                                    log::info!(
+                                        "{TRACE_PREFIX} pump=running variant=daita machines={}",
+                                        cfg.machine_specs.len()
+                                    );
+                                    pump_bidirectional_with_daita(packet_device, conn, state).await
+                                }
+                                Err(e) => {
+                                    // Build failure on a server-supplied
+                                    // spec is exceptional. Surface as a
+                                    // pump-level tunnel error so the
+                                    // state machine reconnects rather
+                                    // than silently dropping DAITA.
+                                    log::error!(
+                                        "{TRACE_PREFIX} pump=daita_spec_invalid err=\"{e:#}\""
+                                    );
+                                    Err(e)
+                                }
+                            }
+                        }
+                        None => pump_bidirectional(packet_device, conn).await,
+                    };
                     drop(session);
                     res
                 }
