@@ -62,6 +62,11 @@ pub fn assemble_for_attempt(
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
         multi_hop,
+        // The reconnect observer is wired by the caller
+        // (`ParametersGenerator::produce_warren_tunnel_params`) after
+        // assembly so the relay-selection logic stays decoupled from
+        // the daemon-side status cache.
+        on_reconnect: None,
     })
 }
 
@@ -117,6 +122,12 @@ mod tests {
         assert!(
             params.multi_hop.is_none(),
             "assemble with multi_hop=None must yield single-hop params"
+        );
+        assert!(
+            params.on_reconnect.is_none(),
+            "assemble must leave on_reconnect at None so the caller \
+             (ParametersGenerator::produce_warren_tunnel_params) is the \
+             single place that wires the WarrenStatusCache observer"
         );
     }
 

@@ -777,19 +777,6 @@ pub struct Daemon {
     /// (`<settings_dir>/warren_mnemonic.txt`) via the
     /// `on_get_warren_mnemonic` handler.
     settings_dir: PathBuf,
-    /// Live Warren tunnel status cache. Populated by the multi-hop
-    /// supervisor (when multi-hop is active) and read by the
-    /// `GetWarrenStatus` rpc + `WarrenStatusUpdates` stream. In
-    /// single-hop mode the cache holds defaults (0 reconnects,
-    /// obfuscation always-on per /v1 doctrine). Kept on `Daemon` so
-    /// the multi-hop supervisor wiring (M4.H.C.X follow-up) has a
-    /// `record_reconnect()` handle reachable from the tunnel
-    /// orchestration path.
-    #[expect(
-        dead_code,
-        reason = "Held on Daemon so the multi-hop supervisor wiring (M4.H.C.X follow-up) can call record_reconnect from the tunnel orchestration path; the gRPC handlers consume an independently-cloned handle in ManagementServiceImpl."
-    )]
-    warren_status_cache: warren_status::WarrenStatusCache,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1187,6 +1174,7 @@ impl Daemon {
             warren_relay_selector,
             warren_signing_key,
             warren_multi_hop,
+            warren_status_cache.clone(),
         );
 
         let param_gen = parameters_generator.clone();
@@ -1418,7 +1406,6 @@ impl Daemon {
             leak_checker,
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
-            warren_status_cache,
         };
 
         api_availability.unsuspend();

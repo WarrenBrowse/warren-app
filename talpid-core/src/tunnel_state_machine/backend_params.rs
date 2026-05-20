@@ -149,6 +149,7 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: None,
+            on_reconnect: None,
         }
     }
 

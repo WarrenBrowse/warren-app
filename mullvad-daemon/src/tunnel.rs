@@ -21,6 +21,7 @@ use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationErr
 use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
+use crate::warren_status::WarrenStatusCache;
 use crate::warren_tunnel_params::{self, AssembleError};
 
 #[derive(thiserror::Error, Debug)]
@@ -76,6 +77,11 @@ struct InnerParametersGenerator {
     /// the multi-hop dispatcher in `talpid-warren-tunnel` can wire up
     /// the `MultiHopSupervisor`.
     warren_multi_hop: Option<MultiHopConfig>,
+    /// Live tunnel status cache shared with the gRPC management
+    /// interface. Cloned into the reconnect observer passed to the
+    /// multi-hop supervisor so a successful reconnect bumps the
+    /// `reconnect_count` field that the Electron UI displays.
+    warren_status_cache: WarrenStatusCache,
 }
 
 impl ParametersGenerator {
@@ -86,6 +92,10 @@ impl ParametersGenerator {
     /// `generate_warren_tunnel_params` will return the corresponding
     /// typed error. The WireGuard path remains usable in parallel
     /// regardless of the state of the Warren artifacts.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Constructor for the daemon-side params generator: the eight inputs are all required (4 upstream + 4 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
+    )]
     pub fn new_with_optional_warren(
         account_manager: AccountManagerHandle,
         relay_selector: RelaySelector,
@@ -94,6 +104,7 @@ impl ParametersGenerator {
         warren_relay_selector: Option<DaemonWarrenRelaySelector>,
         warren_signing_key: Option<SigningKey>,
         warren_multi_hop: Option<MultiHopConfig>,
+        warren_status_cache: WarrenStatusCache,
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
@@ -104,6 +115,7 @@ impl ParametersGenerator {
             warren_relay_selector,
             warren_signing_key,
             warren_multi_hop,
+            warren_status_cache,
         })))
     }
 
@@ -139,13 +151,22 @@ impl ParametersGenerator {
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
         let multi_hop = inner.warren_multi_hop.clone();
-        let params = warren_tunnel_params::assemble_for_attempt(
+        let mut params = warren_tunnel_params::assemble_for_attempt(
             selector,
             signing_key,
             &query,
             retry_attempt,
             multi_hop,
         )?;
+        // Wire the multi-hop reconnect observer that bumps the
+        // daemon-side WarrenStatusCache so the Electron UI
+        // `reconnect_count` row advances on every successful reconnect.
+        // The closure is harmless on the single-hop path: it is forwarded
+        // through `params.on_reconnect` but never invoked because
+        // `start_single_hop` ignores the field (no auto-reconnect
+        // supervisor in /v1 single-hop).
+        let cache = inner.warren_status_cache.clone();
+        params.on_reconnect = Some(Arc::new(move || cache.record_reconnect()));
         Ok(params)
     }
 

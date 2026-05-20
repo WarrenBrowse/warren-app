@@ -96,6 +96,15 @@ pub struct WarrenTunnelParameters {
     /// Both wiring details live in
     /// `talpid_core::tunnel_state_machine::backend_params`.
     pub multi_hop: Option<MultiHopConfig>,
+
+    /// Optional observer fired once per successful reconnect by the
+    /// multi-hop supervisor (NOT on the initial connect). `None`
+    /// disables the live `reconnect_count` surface; the daemon-side
+    /// `ParametersGenerator` wires this to a closure that bumps its
+    /// `WarrenStatusCache` so the Electron UI counter advances.
+    /// Ignored on the single-hop path (single-hop has no auto-reconnect
+    /// supervisor in /v1).
+    pub on_reconnect: Option<warren_client::supervisor::ReconnectObserver>,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -108,6 +117,10 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             .field("n_connections", &self.n_connections)
             .field("features", &format_args!("{:#010x}", self.features))
             .field("multi_hop", &self.multi_hop.as_ref().map(|_| "<redacted>"))
+            .field(
+                "on_reconnect",
+                &self.on_reconnect.as_ref().map(|_| "<observer>"),
+            )
             .finish()
     }
 }
@@ -381,7 +394,7 @@ impl WarrenTunnelMonitor {
             }
         );
 
-        // Étape 2 : config TUN dérivée de la session.
+        // Step 2: TUN config derived from the session.
         let tun_t = Instant::now();
         let tun_config = build_tun_config_for_kind(&session_kind);
         let tun = {
@@ -429,13 +442,13 @@ impl WarrenTunnelMonitor {
                 ))
                 .await;
             log::debug!(
-                "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall posé), emit Up",
+                "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall installed), emit Up",
                 start_t.elapsed().as_millis()
             );
             event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
         log::debug!(
-            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall posé)",
+            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall installed)",
             start_t.elapsed().as_millis(),
             events_t.elapsed().as_millis()
         );
@@ -729,6 +742,7 @@ impl WarrenTunnelMonitor {
             enable_gso: cfg.enable_gso,
             use_warren_obfuscation: cfg.use_warren_obfuscation,
             backoff: Backoff::HANDSHAKE,
+            on_reconnect: params.on_reconnect.clone(),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         let supervisor_handle = runtime.spawn(async move {
@@ -1035,16 +1049,16 @@ impl WarrenTunnelMonitor {
         };
 
         let result = runtime.block_on(async move {
-            // `tokio::select!` race les deux signaux. Le premier
-            // arrivé "gagne" et la branche perdante est drop (= les
-            // futures internes annulées proprement, sans leak).
+            // `tokio::select!` races the two signals. The first
+            // to arrive "wins" and the losing branch is dropped (= the
+            // internal futures are cleanly cancelled, no leak).
             let outcome: Result<(), Error> = tokio::select! {
                 close_res = close_rx => {
-                    // Close externe : daemon demande shutdown. Err =
-                    // Sender dropped sans signaler (rare : daemon
-                    // crashé). On traite comme un close implicite
-                    // (pas d'erreur — le state machine continuera
-                    // son cycle normal).
+                    // External close: daemon requests shutdown. Err =
+                    // Sender dropped without signaling (rare: daemon
+                    // crashed). We treat it as an implicit close
+                    // (no error — the state machine will continue
+                    // its normal cycle).
                     let _ = close_res;
                     Ok(())
                 }
@@ -1298,9 +1312,9 @@ fn build_multi_hop_tun_config(ipv4: std::net::Ipv4Addr) -> TunConfig {
     }
 }
 
-/// Construit la `TunConfig` à partir d'une [`SessionKind`] (Mono ou
-/// Multi). Reprend les IPs assignées par l'allocator côté serveur
-/// Warren et les rend compatibles avec l'API talpid.
+/// Builds the `TunConfig` from a [`SessionKind`] (Mono or
+/// Multi). Reuses the IPs assigned by the Warren server-side
+/// allocator and makes them compatible with the talpid API.
 fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
     let ipv4 = session.assigned_ipv4();
     let ipv6 = session.assigned_ipv6();
@@ -1576,6 +1590,7 @@ mod tests {
             n_connections: 2,
             features: 0x1,
             multi_hop: None,
+            on_reconnect: None,
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1601,8 +1616,14 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: None,
+            on_reconnect: None,
         };
         assert!(params.multi_hop.is_none());
+        assert!(
+            params.on_reconnect.is_none(),
+            "default on_reconnect must be None so the single-hop legacy path \
+             does not spuriously try to wire a multi-hop-only observer"
+        );
     }
 
     #[test]
@@ -1638,6 +1659,7 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: Some(mh),
+            on_reconnect: None,
         };
         let s = format!("{params:?}");
         assert!(
@@ -1973,7 +1995,7 @@ mod tests {
             let sa: std::net::SocketAddr = ip.parse().unwrap();
             assert!(
                 is_routable_internet(sa),
-                "{ip} doit être routable (IP publique Internet)"
+                "{ip} must be routable (public Internet IP)"
             );
         }
     }
