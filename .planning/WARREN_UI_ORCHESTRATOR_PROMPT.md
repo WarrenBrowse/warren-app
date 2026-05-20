@@ -293,6 +293,20 @@ Ta tâche d'orchestrateur : drafter ces deux messages pour chaque phase.
 
 ## 7. Règles de prompting / patterns appris (CRITIQUE)
 
+### DOCTRINE CRITICAL 2026-05-20 : Pas de commande git destructive
+
+**Tous les briefs M4.H.X+ DOIVENT inclure une section §0.0 INVIOLABLE
+en HAUT** (avant §0.5 mandat d'autonomie) qui interdit explicitement
+toute commande git destructive : `git checkout <path>`, `git stash`,
+`git reset --hard`, `git restore`, `git clean`. Aucune exception.
+Cette règle PRIME sur le mandat d'autonomie §0.5.
+
+Incident M4.H.F 2026-05-20 : l'agent autonome a exécuté
+`git checkout a7159d94 -- .` dans warren-core "pour tester si la base
+compile" → 5 fichiers WIP poka warren-core perdus du disque.
+
+Détail + texte exact à embedder : memory `feedback_no_destructive_git_in_agent_briefs.md`.
+
 ### DOCTRINE NOUVELLE 2026-05-20 : Agents full autonomy, NO timid rollback
 
 **Tous les briefs M4.H.X+ doivent inclure une section §0.5 "Mandat
@@ -545,16 +559,20 @@ Caveats ops poka NEW :
 - Signing assets pending (`.p12` macOS + `.pfx` Windows + notarytool)
 - Live build empirique pas exécuté (conditional signing assets)
 
-### M4.H.F : NAT-PMP client câblage + UI port-forwarding (différenciateur produit)
+### ~~M4.H.F~~ : NAT-PMP différenciateur produit. **DONE 2026-05-20**
 
-Brief (3-5 jours) post-M4.H.D :
-- Path-dep `warren-natpmp-client` (594 LOC warren-core) dans
-  `talpid-warren-tunnel`
-- Settings UI Electron toggle "Port forwarding" + display port assigné
-  + lifetime countdown
-- IPC daemon ↔ UI pour status NAT-PMP
-- Vs Mullvad/IVPN qui ont abandonné port-forwarding 2023 (cf.
-  [[warren-product-corrected]] memory)
+GO ULTIMATE. 8 commits cross-repo (1 warren-core + 7 warren-app).
+`refresh_loop` warren-core (mpsc events) + NatPmpManager daemon
+state machine + gRPC NatPmpSettings/Status/Updates stream + UI
+`port-forwarding-settings/` from scratch (Mullvad supprimé 2023) +
+i18n 6 strings + 445 PASS workspace + 115 Jest. Pin warren-core
+bumped à `6272ba50`. Pitch produit "seul VPN consumer FR avec
+port-forwarding restauré en 2026" ship-ready.
+
+INCIDENT M4.H.F : agent a violé rule destructive git (`git checkout
+a7159d94 -- .` dans warren-core), 5 fichiers WIP poka perdus. Règle
+§0.0 INVIOLABLE intégrée dans tous les briefs futurs (cf. memory
+`feedback_no_destructive_git_in_agent_briefs`).
 
 ### M4.H.G : `--bypass-cidr` + backoff tune (caveats post-M4.E.D résiduels)
 
