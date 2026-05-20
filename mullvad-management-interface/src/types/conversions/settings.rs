@@ -64,7 +64,47 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             // Cohérent avec la conversion inverse côté
             // `try_from(SettingsProto)`.
             warren_api_url: settings.warren_api_url.clone().unwrap_or_default(),
+            warren_multi_hop: Some(proto::WarrenMultiHopSettings::from(
+                &settings.warren_multi_hop,
+            )),
         }
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenMultiHopSettings> for proto::WarrenMultiHopSettings {
+    fn from(value: &mullvad_types::settings::WarrenMultiHopSettings) -> Self {
+        proto::WarrenMultiHopSettings {
+            enabled: value.enabled,
+            entry_country: value.entry_country.clone(),
+            exit_country: value.exit_country.clone(),
+            hpke_epoch_rotation: Some(
+                prost_types::Duration::try_from(value.hpke_epoch_rotation).expect(
+                    "WarrenMultiHopSettings.hpke_epoch_rotation must fit in prost Duration",
+                ),
+            ),
+        }
+    }
+}
+
+impl TryFrom<proto::WarrenMultiHopSettings> for mullvad_types::settings::WarrenMultiHopSettings {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::WarrenMultiHopSettings) -> Result<Self, Self::Error> {
+        let hpke_epoch_rotation = value
+            .hpke_epoch_rotation
+            .map(std::time::Duration::try_from)
+            .transpose()
+            .map_err(|_| {
+                FromProtobufTypeError::invalid_argument("invalid hpke_epoch_rotation duration")
+            })?
+            .unwrap_or_else(|| std::time::Duration::from_secs(4 * 60 * 60));
+
+        Ok(mullvad_types::settings::WarrenMultiHopSettings {
+            enabled: value.enabled,
+            entry_country: value.entry_country,
+            exit_country: value.exit_country,
+            hpke_epoch_rotation,
+        })
     }
 }
 
@@ -207,6 +247,11 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             } else {
                 Some(settings.warren_api_url)
             },
+            warren_multi_hop: settings
+                .warren_multi_hop
+                .map(mullvad_types::settings::WarrenMultiHopSettings::try_from)
+                .transpose()?
+                .unwrap_or_default(),
         })
     }
 }
@@ -353,5 +398,79 @@ impl From<mullvad_types::settings::Recent> for proto::Recent {
                 })),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod warren_multi_hop_conversion_tests {
+    use super::*;
+    use mullvad_types::settings::WarrenMultiHopSettings;
+    use std::time::Duration;
+
+    #[test]
+    fn default_warren_multi_hop_settings_match_v1_doctrine() {
+        let defaults = WarrenMultiHopSettings::default();
+        assert!(
+            !defaults.enabled,
+            "warren-multihop OFF by default per doctrine `warren_multihop_doctrine_v1`"
+        );
+        assert!(defaults.entry_country.is_empty());
+        assert!(defaults.exit_country.is_empty());
+        assert_eq!(
+            defaults.hpke_epoch_rotation,
+            Duration::from_secs(4 * 60 * 60),
+            "default HPKE epoch rotation = 4h"
+        );
+    }
+
+    #[test]
+    fn proto_roundtrip_preserves_all_fields() {
+        let original = WarrenMultiHopSettings {
+            enabled: true,
+            entry_country: "fr".to_string(),
+            exit_country: "de".to_string(),
+            hpke_epoch_rotation: Duration::from_secs(7200),
+        };
+        let proto = proto::WarrenMultiHopSettings::from(&original);
+        let back = WarrenMultiHopSettings::try_from(proto).expect("roundtrip must succeed");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn proto_roundtrip_with_defaults_preserves_doctrine() {
+        let original = WarrenMultiHopSettings::default();
+        let proto = proto::WarrenMultiHopSettings::from(&original);
+        let back = WarrenMultiHopSettings::try_from(proto).expect("roundtrip");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn try_from_missing_duration_falls_back_to_4h() {
+        let proto = proto::WarrenMultiHopSettings {
+            enabled: true,
+            entry_country: "se".to_string(),
+            exit_country: "no".to_string(),
+            hpke_epoch_rotation: None,
+        };
+        let back = WarrenMultiHopSettings::try_from(proto).expect("None rotation accepted");
+        assert_eq!(back.hpke_epoch_rotation, Duration::from_secs(4 * 60 * 60));
+    }
+
+    #[test]
+    fn try_from_negative_duration_is_rejected() {
+        let proto = proto::WarrenMultiHopSettings {
+            enabled: false,
+            entry_country: String::new(),
+            exit_country: String::new(),
+            hpke_epoch_rotation: Some(prost_types::Duration {
+                seconds: -1,
+                nanos: 0,
+            }),
+        };
+        let result = WarrenMultiHopSettings::try_from(proto);
+        assert!(
+            result.is_err(),
+            "negative duration must be rejected as invalid"
+        );
     }
 }

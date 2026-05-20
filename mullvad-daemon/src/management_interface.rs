@@ -51,6 +51,11 @@ struct ManagementServiceImpl {
     subscriptions: Arc<Mutex<Vec<EventsListenerSender>>>,
     pub app_upgrade_broadcast: AppUpgradeBroadcast,
     log_reload_handle: crate::logging::LogHandle,
+    /// Direct handle on the live Warren status cache. Read by
+    /// `get_warren_status` and subscribed by `warren_status_updates`
+    /// without round-tripping through the daemon command channel
+    /// (the cache is `Arc`-backed and the values are pure RAM).
+    warren_status_cache: crate::warren_status::WarrenStatusCache,
 }
 
 pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
@@ -59,6 +64,24 @@ type EventsListenerSender = tokio::sync::mpsc::UnboundedSender<Result<types::Dae
 
 type AppUpgradeEventListenerReceiver =
     Box<dyn futures::Stream<Item = Result<types::AppUpgradeEvent, Status>> + Send + Unpin>;
+
+type WarrenStatusUpdatesReceiver =
+    Box<dyn futures::Stream<Item = Result<types::WarrenStatus, Status>> + Send + Unpin>;
+
+/// Convert a `WarrenStatusSnapshot` snapshot into the gRPC proto.
+/// Centralised so the snapshot RPC and the stream RPC stay consistent.
+fn warren_status_snapshot_to_proto(
+    snap: crate::warren_status::WarrenStatusSnapshot,
+) -> types::WarrenStatus {
+    types::WarrenStatus {
+        reconnect_count: snap.reconnect_count,
+        last_reconnect_age: snap.last_reconnect_age.map(|d| types::Duration {
+            seconds: d.as_secs() as i64,
+            nanos: d.subsec_nanos() as i32,
+        }),
+        obfuscation_active: snap.obfuscation_active,
+    }
+}
 
 const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
 const USED_VOUCHER_MESSAGE: &str = "This voucher code has already been used";
@@ -69,6 +92,7 @@ impl ManagementService for ManagementServiceImpl {
     type EventsListenStream = EventsListenerReceiver;
     type AppUpgradeEventsListenStream = AppUpgradeEventListenerReceiver;
     type LogListenStream = UnboundedReceiverStream<Result<types::LogMessage, Status>>;
+    type WarrenStatusUpdatesStream = WarrenStatusUpdatesReceiver;
 
     // Control and get the tunnel state
     //
@@ -329,6 +353,79 @@ impl ManagementService for ManagementServiceImpl {
                 Status::internal(e.to_string())
             }
         })
+    }
+
+    /// Read the persisted Warren multi-hop settings from the daemon
+    /// settings. Default = enabled:false per
+    /// `warren_multihop_doctrine_v1` (opt-in privacy).
+    async fn get_warren_multi_hop_settings(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::WarrenMultiHopSettings> {
+        log::debug!("get_warren_multi_hop_settings");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        let settings = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::WarrenMultiHopSettings::from(
+            &settings.warren_multi_hop,
+        )))
+    }
+
+    /// Persist Warren multi-hop settings. Restart required to apply
+    /// (the multi-hop supervisor is wired at boot from the
+    /// env-var + settings-file path).
+    async fn set_warren_multi_hop_settings(
+        &self,
+        request: Request<types::WarrenMultiHopSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_warren_multi_hop_settings(enabled={}, entry={}, exit={})",
+            proto_value.enabled,
+            proto_value.entry_country,
+            proto_value.exit_country
+        );
+        let new_value = mullvad_types::settings::WarrenMultiHopSettings::try_from(proto_value)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenMultiHopSettings(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    /// Snapshot of the live Warren tunnel status read directly from
+    /// the daemon-shared cache.
+    async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {
+        log::debug!("get_warren_status");
+        let snapshot = self.warren_status_cache.snapshot();
+        Ok(Response::new(warren_status_snapshot_to_proto(snapshot)))
+    }
+
+    /// Push stream emitting a `WarrenStatus` whenever the underlying
+    /// cache mutates (reconnect recorded, obfuscation flipped). Uses
+    /// `tokio::sync::watch` so each subscriber gets an immediate
+    /// initial value and only the latest snapshot when it falls
+    /// behind, avoiding unbounded growth.
+    async fn warren_status_updates(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<Self::WarrenStatusUpdatesStream> {
+        log::debug!("warren_status_updates subscribe");
+        let rx = self.warren_status_cache.subscribe();
+        // The closure intentionally returns `Result<_, Status>` so the
+        // tonic stream contract is satisfied (errors become trailing
+        // gRPC status); the `Ok` branch is the steady state. Status is
+        // large but boxing each item would defeat the per-snapshot
+        // memcpy avoidance, so the lint is silenced locally.
+        #[expect(
+            clippy::result_large_err,
+            reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values, so the large Err branch is never instantiated."
+        )]
+        let stream = tokio_stream::wrappers::WatchStream::new(rx)
+            .map(|snap| Ok(warren_status_snapshot_to_proto(snap)));
+        Ok(Response::new(
+            Box::new(Box::pin(stream)) as Self::WarrenStatusUpdatesStream
+        ))
     }
 
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
@@ -1439,6 +1536,7 @@ impl ManagementInterfaceServer {
         app_upgrade_broadcast: AppUpgradeBroadcast,
         log_reload_handle: crate::logging::LogHandle,
         relay_selector: mullvad_relay_selector::RelaySelector,
+        warren_status_cache: crate::warren_status::WarrenStatusCache,
     ) -> Result<ManagementInterfaceServer, Error> {
         let subscriptions = Arc::<Mutex<Vec<EventsListenerSender>>>::default();
 
@@ -1452,6 +1550,7 @@ impl ManagementInterfaceServer {
             subscriptions: subscriptions.clone(),
             app_upgrade_broadcast,
             log_reload_handle,
+            warren_status_cache,
         };
 
         let relay_selector_service = RelaySelectorServiceImpl::new(relay_selector);

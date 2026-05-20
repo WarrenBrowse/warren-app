@@ -89,6 +89,22 @@ service ManagementService {
   // BIP39 avant écriture sur disque (= rejet atomique).
   rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
+  // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
+  // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
+  // bandwidth single-hop, opt-in privacy). entry_country / exit_country
+  // are ISO 3166 alpha-2 codes ("fr", "de", ...); empty string means
+  // auto-pick.
+  rpc GetWarrenMultiHopSettings(google.protobuf.Empty) returns (WarrenMultiHopSettings) {}
+  rpc SetWarrenMultiHopSettings(WarrenMultiHopSettings) returns (google.protobuf.Empty) {}
+  // Warren live tunnel status (reconnect_count + last_reconnect_age
+  // surface the M4.E.D auto-reconnect supervisor; obfuscation_active
+  // is always-true for /v1 per `warren_obfuscation_doctrine_v1`).
+  rpc GetWarrenStatus(google.protobuf.Empty) returns (WarrenStatus) {}
+  // Push stream emitting a new WarrenStatus whenever reconnect_count
+  // changes or the tunnel state machine transitions. The GUI consumes
+  // this for live UI updates without polling.
+  rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
+
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
@@ -581,6 +597,32 @@ message Settings {
   bool warren_local_account = 16;
   // Empty string = unset. Cf. SetWarrenApiUrl rpc.
   string warren_api_url = 17;
+  // Warren two-relayed QUIC multi-hop settings. Cf.
+  // SetWarrenMultiHopSettings rpc. Absent = OFF (single-hop).
+  WarrenMultiHopSettings warren_multi_hop = 18;
+}
+
+// Warren multi-hop settings persisted in Settings.warren_multi_hop and
+// surfaced via GetWarrenMultiHopSettings rpc. Default = enabled:false,
+// empty countries, hpke_epoch_rotation = 4h (doctrine
+// `warren_multihop_doctrine_v1`).
+message WarrenMultiHopSettings {
+  bool enabled = 1;
+  // ISO 3166 alpha-2 country code. Empty string = auto-pick.
+  string entry_country = 2;
+  string exit_country = 3;
+  // HPKE epoch rotation interval. Default 4h, max 8h per doctrine.
+  google.protobuf.Duration hpke_epoch_rotation = 4;
+}
+
+// Warren live tunnel status surface via GetWarrenStatus rpc and the
+// WarrenStatusUpdates stream. reconnect_count + last_reconnect_age
+// expose the M4.E.D auto-reconnect supervisor; obfuscation_active is
+// always-true for /v1 per `warren_obfuscation_doctrine_v1`.
+message WarrenStatus {
+  uint32 reconnect_count = 1;
+  google.protobuf.Duration last_reconnect_age = 2;
+  bool obfuscation_active = 3;
 }
 
 message RelayOverride {

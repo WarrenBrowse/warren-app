@@ -73,6 +73,9 @@ mod warren_remote_config;
 /// Ed25519 et expose un `WarrenAuthSigner` partagé pour les requêtes
 /// API authentifiées.
 pub mod warren_signer;
+/// Live Warren tunnel status cache surfaced to the gRPC management
+/// interface (`GetWarrenStatus` rpc + `WarrenStatusUpdates` stream).
+pub mod warren_status;
 /// Assemble un `talpid_warren_tunnel::WarrenTunnelParameters` complet à
 /// partir du relay selector + signing_key + constantes côté config.
 pub mod warren_tunnel_params;
@@ -350,6 +353,12 @@ pub enum DaemonCommand {
     /// URL persistante `Settings::warren_api_url`. Empty string →
     /// unset (= None côté Settings).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
+    /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
+    /// Restart required to apply (mirrors `SetWarrenMode`).
+    SetWarrenMultiHopSettings(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenMultiHopSettings,
+    ),
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -768,6 +777,19 @@ pub struct Daemon {
     /// BIP39 (`<settings_dir>/warren_mnemonic.txt`) via le handler
     /// `on_get_warren_mnemonic`.
     settings_dir: PathBuf,
+    /// Live Warren tunnel status cache. Populated by the multi-hop
+    /// supervisor (when multi-hop is active) and read by the
+    /// `GetWarrenStatus` rpc + `WarrenStatusUpdates` stream. In
+    /// single-hop mode the cache holds defaults (0 reconnects,
+    /// obfuscation always-on per /v1 doctrine). Kept on `Daemon` so
+    /// the multi-hop supervisor wiring (M4.H.C.X follow-up) has a
+    /// `record_reconnect()` handle reachable from the tunnel
+    /// orchestration path.
+    #[expect(
+        dead_code,
+        reason = "Held on Daemon so the multi-hop supervisor wiring (M4.H.C.X follow-up) can call record_reconnect from the tunnel orchestration path; the gRPC handlers consume an independently-cloned handle in ManagementServiceImpl."
+    )]
+    warren_status_cache: warren_status::WarrenStatusCache,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -845,12 +867,14 @@ impl Daemon {
 
         let command_sender = daemon_command_channel.sender();
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
+        let warren_status_cache = warren_status::WarrenStatusCache::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,
             config.rpc_socket_path,
             app_upgrade_broadcast.clone(),
             config.log_handle,
             relay_selector.clone(),
+            warren_status_cache.clone(),
         )
         .map_err(Error::ManagementInterfaceError)?;
 
@@ -1394,6 +1418,7 @@ impl Daemon {
             leak_checker,
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
+            warren_status_cache,
         };
 
         api_availability.unsuspend();
@@ -1831,6 +1856,9 @@ impl Daemon {
                 self.on_set_warren_local_account(tx, enabled).await
             }
             SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
+            SetWarrenMultiHopSettings(tx, settings) => {
+                self.on_set_warren_multi_hop_settings(tx, settings).await
+            }
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -2994,6 +3022,35 @@ impl Daemon {
             log::info!("Warren api_url persisted to {display_value} ; restart required for effect");
         }
         Self::oneshot_send(tx, result, "set_warren_api_url response");
+    }
+
+    /// Persiste `Settings::warren_multi_hop`. Restart requis pour
+    /// appliquer (mirrors `on_set_warren_mode`) - the multi-hop
+    /// supervisor is wired in `start_multi_hop` once at boot via the
+    /// env-var + settings-file path.
+    async fn on_set_warren_multi_hop_settings(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        new_value: mullvad_types::settings::WarrenMultiHopSettings,
+    ) {
+        let display_value = format!(
+            "enabled={} entry={} exit={} rotation={:?}",
+            new_value.enabled,
+            new_value.entry_country,
+            new_value.exit_country,
+            new_value.hpke_epoch_rotation,
+        );
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_multi_hop = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!("Warren multi-hop persisted: {display_value} ; restart required for effect");
+        }
+        Self::oneshot_send(tx, result, "set_warren_multi_hop_settings response");
     }
 
     async fn on_set_show_beta_releases(

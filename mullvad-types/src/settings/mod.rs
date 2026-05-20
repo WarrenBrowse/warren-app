@@ -142,6 +142,41 @@ pub struct Settings {
     /// possible via env var `WARREN_API_URL` (priorité sur Settings).
     #[serde(default)]
     pub warren_api_url: Option<String>,
+    /// Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
+    /// Default = OFF per doctrine `warren_multihop_doctrine_v1`
+    /// (opt-in privacy, full bandwidth single-hop). The env var
+    /// `WARREN_MULTI_HOP=1` overrides this for POC.
+    #[serde(default)]
+    pub warren_multi_hop: WarrenMultiHopSettings,
+}
+
+/// Warren two-relayed QUIC multi-hop settings (M4.E.D). Persisted in
+/// [`Settings::warren_multi_hop`] and surfaced via the
+/// `GetWarrenMultiHopSettings` gRPC rpc. The `entry_country` and
+/// `exit_country` are ISO 3166 alpha-2 codes; empty string means
+/// auto-pick from the relay list.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenMultiHopSettings {
+    /// Toggle ON/OFF. Default `false` per doctrine.
+    pub enabled: bool,
+    /// ISO 3166 alpha-2 entry country code. Empty = auto-pick.
+    pub entry_country: String,
+    /// ISO 3166 alpha-2 exit country code. Empty = auto-pick.
+    pub exit_country: String,
+    /// HPKE epoch rotation interval, capped to 8h by warren-core
+    /// doctrine. Default 4h matches `warren_multihop_doctrine_v1`.
+    pub hpke_epoch_rotation: std::time::Duration,
+}
+
+impl Default for WarrenMultiHopSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            entry_country: String::new(),
+            exit_country: String::new(),
+            hpke_epoch_rotation: std::time::Duration::from_secs(4 * 60 * 60),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -327,6 +362,7 @@ impl Default for Settings {
             warren_mode: true,
             warren_local_account: true,
             warren_api_url: None,
+            warren_multi_hop: WarrenMultiHopSettings::default(),
         }
     }
 }
