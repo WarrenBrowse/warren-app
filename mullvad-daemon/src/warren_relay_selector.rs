@@ -104,6 +104,28 @@ impl DaemonWarrenRelaySelector {
         &self.list
     }
 
+    /// Read access to the inner [`WarrenRelaySelector`]. Exposed so
+    /// callers (M5.B.2 failover) can invoke selector methods that the
+    /// wrapper does not directly mirror (e.g.
+    /// `select_failover_alternative`).
+    #[must_use]
+    pub fn inner(&self) -> &WarrenRelaySelector {
+        &self.inner
+    }
+
+    /// Returns the relay whose `endpoint_id` matches `pubkey`, or
+    /// `None` if the list has no such entry. M5.B.2 failover uses this
+    /// to resolve the "previously failed exit's pubkey" back into the
+    /// full [`WarrenRelay`] needed by
+    /// [`WarrenRelaySelector::select_failover_alternative`].
+    #[must_use]
+    pub fn relay_by_pubkey(&self, pubkey: &WarrenPubkey) -> Option<&WarrenRelay> {
+        self.list
+            .relays()
+            .iter()
+            .find(|r| r.endpoint_id() == *pubkey)
+    }
+
     /// Loads the `WarrenRelayList` from `<cache_dir>/warren-relays.json`.
     ///
     /// No-fail policy at boot: if the file is absent or

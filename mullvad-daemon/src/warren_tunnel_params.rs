@@ -11,6 +11,7 @@
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{BypassCidr, MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
+use warren_relay_selector::warren_types::WarrenPubkey;
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -90,6 +91,57 @@ pub fn assemble_for_attempt(
         // `wireguard.daita.enabled` Mullvad setting. Mirrors the
         // post-assemble wiring of `on_reconnect` and the NAT-PMP
         // observer.
+        enable_daita: false,
+    })
+}
+
+/// M5.B.2 auto-failover variant: when the previous tunnel attempt is
+/// known to have used `excluded_pubkey` and failed, pick an
+/// alternative relay via
+/// [`warren_relay_selector::WarrenRelaySelector::select_failover_alternative`]
+/// (same-country preference, global fallback). The rest of the
+/// returned [`WarrenTunnelParameters`] is identical to
+/// [`assemble_for_attempt`] - the failover only affects relay
+/// selection, never the signing key, features, multi-hop config or
+/// the other fields.
+///
+/// `retry_attempt` seeds the internal RNG so successive failures of
+/// the same exit explore the alternative pool deterministically (a
+/// reconnect storm on a dead pop will land on a different fallback
+/// every time without re-trying the broken one).
+///
+/// # Errors
+///
+/// Returns [`AssembleError::Selector`] when no alternative relay
+/// exists (single-relay deployment or every other relay filtered out
+/// by the query).
+pub fn assemble_failover_for_attempt(
+    selector: &DaemonWarrenRelaySelector,
+    signing_key: SigningKey,
+    query: &WarrenRelayQuery,
+    retry_attempt: u32,
+    excluded_pubkey: WarrenPubkey,
+    multi_hop: Option<MultiHopConfig>,
+    nat_pmp: Option<NatPmpConfig>,
+    bypass_cidrs: Vec<BypassCidr>,
+) -> Result<WarrenTunnelParameters, AssembleError> {
+    let excluded = selector
+        .relay_by_pubkey(&excluded_pubkey)
+        .ok_or(SelectorError::NoRelayMatch)?;
+    let alternative =
+        selector
+            .inner()
+            .select_failover_alternative_for_attempt(query, excluded, retry_attempt)?;
+    Ok(WarrenTunnelParameters {
+        exit_addr: alternative.endpoint_addr().clone(),
+        signing_key,
+        n_connections: DEFAULT_N_CONNECTIONS,
+        features: DEFAULT_FEATURES,
+        multi_hop,
+        on_reconnect: None,
+        nat_pmp,
+        nat_pmp_observer: None,
+        bypass_cidrs,
         enable_daita: false,
     })
 }

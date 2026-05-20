@@ -1200,7 +1200,9 @@ impl Daemon {
             let initial_daita = settings.tunnel_options.wireguard.daita.enabled;
             let pg_for_daita_boot = parameters_generator.clone();
             tokio::spawn(async move {
-                pg_for_daita_boot.set_warren_enable_daita(initial_daita).await;
+                pg_for_daita_boot
+                    .set_warren_enable_daita(initial_daita)
+                    .await;
             });
         }
 
