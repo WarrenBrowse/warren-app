@@ -523,23 +523,27 @@ invariant pinning + 2 régression tests. wapi VAL1/2 résolu Option β
 `a7159d94`. 426 PASS workspace + 110 Jest. Caveats restants ops poka :
 SSH Hetzner bench, GHCR PAT write:packages.
 
-### M4.H.D : Migration GitHub + Build pipeline DMG/AppImage/MSI + Signing + CI
+### ~~M4.H.D~~ : Migration GitHub + Build pipeline. **DONE 2026-05-20**
 
-Brief (4-7 jours) :
-- Pré-phase : migrer warren-app de Gitea (`git.p2p.legal/warren/warren-app`)
-  vers GitHub (`github.com/WarrenBrowse/warren-app` pour cohérence
-  avec `github.com/WarrenBrowse/warren-core`). gh CLI user `poka-IT`
-  (switch via `gh auth switch --user poka-IT`). Préserver branches +
-  tags + upstream remote.
-- Adapter `build.sh` Mullvad existant pour Warren branding
-- DMG macOS via `dist-assets/pkg-scripts/` adapté
-- AppImage / .deb / .rpm Linux
-- MSI Windows via `mullvad-nsis/` adapté
-- Signing setup (CSC_LINK `.p12` macOS + `.pfx` Windows + Apple
-  notarytool credentials) - escalade poka pour les assets
-- CI workflows GHA `.github/workflows/` adaptés Warren (daemon.yml +
-  desktop-e2e.yml + frontend.yml + clippy.yml)
-- prepare-release.sh adapté/recréé pour tag signed Warren
+GO ULTIMATE. 9 commits warren-app (origin GitHub WarrenBrowse).
+Migration `github.com/WarrenBrowse/warren-app` private GPL-3.0 (main
++ warren-base + warren-base-phase1a + 478 tags + remotes propres
+origin/backup-gitea/upstream-Mullvad). Build pipeline rebrand
+`build.sh` + `installer.nsh` + `distribution.cjs` + signing env vars
+`WARREN_CSC_*` + `WARREN_NOTARIZE_*`. `release.yml` matrix 3 OS.
+`prepare-release.sh` 151L + `Release.md` 123L recréés. Bundle ID
+`com.warrenbrowse.vpn`, GUID Windows fresh, artifacts
+`WarrenVPN-<version>.{dmg,exe,pkg,deb,rpm,msi}`. Smoke 26/26 PASS.
+
+**Décision archi clé** : internal symbols (`MULLVAD_*` env vars,
+service `mullvadvpn`, NSIS macros) **kept upstream** pour faciliter
+rebases. Cosmétique user-facing rebrand only.
+
+Caveats ops poka NEW :
+- GH Actions billing poka-IT exhausted (CI bloqué exécution)
+- `WARREN_CORE_RO_TOKEN` secret pas configuré (warren-core checkout skip)
+- Signing assets pending (`.p12` macOS + `.pfx` Windows + notarytool)
+- Live build empirique pas exécuté (conditional signing assets)
 
 ### M4.H.F : NAT-PMP client câblage + UI port-forwarding (différenciateur produit)
 
