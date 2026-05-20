@@ -129,6 +129,15 @@ struct InnerParametersGenerator {
     /// on the `wireguard.daita` slice (single UI surface for both
     /// WireGuard + Warren backends).
     warren_enable_daita: bool,
+    /// M5.B.2 multi-exit auto-failover: pubkey of the most recently
+    /// assembled Warren exit. The state machine increments
+    /// `retry_attempt` after every connection failure; on the next
+    /// `produce_warren_tunnel_params(retry_attempt > 0)`, the
+    /// generator picks an alternative exit via
+    /// [`warren_tunnel_params::assemble_failover_for_attempt`] that
+    /// excludes the previously failed pubkey. `None` on the very
+    /// first attempt after a daemon boot.
+    warren_last_exit_pubkey: Option<warren_relay_selector::warren_types::WarrenPubkey>,
 }
 
 impl ParametersGenerator {
@@ -166,6 +175,7 @@ impl ParametersGenerator {
             warren_nat_pmp: None,
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
+            warren_last_exit_pubkey: None,
         })))
     }
 
@@ -251,11 +261,12 @@ impl ParametersGenerator {
         &self,
         retry_attempt: u32,
     ) -> Result<WarrenTunnelParameters, Error> {
-        let inner = self.0.lock().await;
+        let mut inner = self.0.lock().await;
         let selector = inner
             .warren_relay_selector
             .as_ref()
-            .ok_or(Error::WarrenSelectorMissing)?;
+            .ok_or(Error::WarrenSelectorMissing)?
+            .clone();
         let signing_key = inner
             .warren_signing_key
             .as_ref()
@@ -266,15 +277,42 @@ impl ParametersGenerator {
         let nat_pmp = inner.warren_nat_pmp.clone();
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let enable_daita = inner.warren_enable_daita;
-        let mut params = warren_tunnel_params::assemble_for_attempt(
-            selector,
-            signing_key,
-            &query,
-            retry_attempt,
-            multi_hop,
-            nat_pmp,
-            bypass_cidrs,
-        )?;
+        // M5.B.2 multi-exit failover: when this is a retry and we
+        // remember which exit was used on the failed attempt, ask the
+        // selector to skip it. The failover selector falls back to
+        // any same-country alternative first, then global. On the
+        // first attempt after boot (`retry_attempt == 0` or no
+        // last-pubkey memo) we use the normal weighted selector.
+        let last_pubkey = inner.warren_last_exit_pubkey;
+        let assemble_result = if retry_attempt > 0
+            && let Some(excluded) = last_pubkey
+        {
+            warren_tunnel_params::assemble_failover_for_attempt(
+                &selector,
+                signing_key,
+                &query,
+                retry_attempt,
+                excluded,
+                multi_hop,
+                nat_pmp,
+                bypass_cidrs,
+            )
+        } else {
+            warren_tunnel_params::assemble_for_attempt(
+                &selector,
+                signing_key,
+                &query,
+                retry_attempt,
+                multi_hop,
+                nat_pmp,
+                bypass_cidrs,
+            )
+        };
+        let mut params = assemble_result?;
+        // Memo the freshly-picked exit pubkey so the next retry can
+        // exclude it (M5.B.2 failover loop). The pubkey lives in
+        // `WarrenExitAddr::id`.
+        inner.warren_last_exit_pubkey = Some(params.exit_addr.id);
         // M5.B.1: forward the DAITA opt-in onto the params. The flag is
         // driven by Mullvad upstream's `wireguard.daita.enabled` toggle
         // so the user surface stays a single switch even though the
