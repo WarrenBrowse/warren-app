@@ -140,6 +140,12 @@ impl ParametersGenerator {
     /// Replaces the user-supplied bypass CIDR list. The next call to
     /// [`Self::produce_warren_tunnel_params`] picks up the new value;
     /// in-flight tunnels keep their current routing until reconnect.
+    #[expect(
+        dead_code,
+        reason = "M4.H.G ships the daemon-side plumbing only; the gRPC + UI \
+                  call site lands in a follow-up phase. Keep the setter public \
+                  so that follow-up does not have to re-traverse this file."
+    )]
     pub async fn set_warren_bypass_cidrs(&self, cidrs: Vec<talpid_warren_tunnel::BypassCidr>) {
         self.0.lock().await.warren_bypass_cidrs = cidrs;
     }
@@ -147,6 +153,12 @@ impl ParametersGenerator {
     /// Reads back the currently-persisted bypass CIDR list. Used by
     /// the gRPC `GetSettings` handler so the UI reflects the persisted
     /// state even when no tunnel has been generated yet.
+    #[expect(
+        dead_code,
+        reason = "M4.H.G ships the daemon-side plumbing only; the gRPC + UI \
+                  call site lands in a follow-up phase. Keep the getter public \
+                  so that follow-up does not have to re-traverse this file."
+    )]
     pub async fn warren_bypass_cidrs(&self) -> Vec<talpid_warren_tunnel::BypassCidr> {
         self.0.lock().await.warren_bypass_cidrs.clone()
     }
