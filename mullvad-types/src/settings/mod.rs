@@ -154,6 +154,17 @@ pub struct Settings {
     /// IVPN dropped port-forwarding in 2023).
     #[serde(default)]
     pub warren_nat_pmp: WarrenNatPmpSettings,
+    /// Warren TOFU pinning of exit Ed25519 pubkeys. Populated on first
+    /// connect to a given exit. Subsequent connects with a divergent
+    /// pubkey for the same exit identity surface a mismatch event to
+    /// the UI and refuse the connection until the user acknowledges
+    /// the change ("Trust new key") or resets the pin table.
+    ///
+    /// See `.planning/a4-pubkey-pinning-design.md` for the design
+    /// blueprint - in particular, the open question of the stable
+    /// `exit_id` field at the warren-core/backend level (deferred).
+    #[serde(default)]
+    pub warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys,
 }
 
 /// Warren two-relayed QUIC multi-hop settings (M4.E.D). Persisted in
@@ -183,6 +194,52 @@ impl Default for WarrenMultiHopSettings {
             hpke_epoch_rotation: std::time::Duration::from_secs(4 * 60 * 60),
         }
     }
+}
+
+/// Warren TOFU pinning store for exit Ed25519 pubkeys. Persisted as
+/// part of [`Settings`].
+///
+/// Storage key is the exit identifier (`exit_id_hex` - currently the
+/// 32-byte Ed25519 pubkey hex per /v1 limitation; the design doc
+/// recommends a future stable 128-bit `exit_id` field added to the
+/// signed warren-core relay list, see
+/// `.planning/a4-pubkey-pinning-design.md`).
+///
+/// Empty = no pins yet (all exits get pinned on first connect, TOFU
+/// pattern). Reset via the `ResetPinnedExitKeys` gRPC RPC.
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub struct WarrenPinnedExitPubkeys {
+    /// Ordered map for deterministic JSON serialisation. The key is a
+    /// lower-case hex string (currently the pubkey itself; switches to
+    /// the stable 128-bit `exit_id` once warren-core wires that field).
+    pub entries: std::collections::BTreeMap<String, WarrenPinnedExitPubkey>,
+}
+
+/// One entry in [`WarrenPinnedExitPubkeys`]. Stores the pubkey first
+/// seen for a given exit identifier plus the first/last observation
+/// timestamps for forensic context.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenPinnedExitPubkey {
+    /// Hex-encoded 32-byte Ed25519 verifying key the user's daemon
+    /// has trusted for this exit identity.
+    pub pubkey_hex: String,
+    /// Unix timestamp (seconds) when this pin was first established.
+    pub first_seen_unix: u64,
+    /// Unix timestamp (seconds) of the most recent successful match.
+    /// Bumped on every reconnect where the observed pubkey matches
+    /// `pubkey_hex`. Lets the UI surface staleness ("you last
+    /// connected to this exit X days ago").
+    pub last_seen_unix: u64,
+    /// Optional cached forensic context: ISO 3166 alpha-2 country
+    /// code + city as advertised by the relay list at the moment of
+    /// pinning. Carried so the UI can show "this used to be FR Paris"
+    /// even after the entry is removed from the active relay list.
+    /// Empty strings on first introduction if the daemon does not know
+    /// the location yet.
+    #[serde(default)]
+    pub country_code: String,
+    #[serde(default)]
+    pub city: String,
 }
 
 /// Transport protocol selector for NAT-PMP port-forwarding. Stored on
@@ -415,6 +472,7 @@ impl Default for Settings {
             warren_api_url: None,
             warren_multi_hop: WarrenMultiHopSettings::default(),
             warren_nat_pmp: WarrenNatPmpSettings::default(),
+            warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys::default(),
         }
     }
 }
@@ -507,5 +565,90 @@ impl Default for TunnelOptions {
             },
             dns_options: DnsOptions::default(),
         }
+    }
+}
+
+#[cfg(test)]
+mod warren_pinned_exit_pubkeys_tests {
+    use super::*;
+
+    /// Anti-regression: an empty pin table round-trips through the
+    /// settings JSON without leaking any field that would change the
+    /// shape from build to build. Settings drift between rebuilds is
+    /// a known cause of "user has to re-approve permissions" UX
+    /// regressions on macOS.
+    #[test]
+    fn empty_pin_table_round_trip_json() {
+        let pins = WarrenPinnedExitPubkeys::default();
+        let json = serde_json::to_string(&pins).unwrap();
+        assert_eq!(json, r#"{"entries":{}}"#);
+        let back: WarrenPinnedExitPubkeys = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, pins);
+    }
+
+    /// One pinned exit deserialises to the exact same `BTreeMap` it
+    /// was serialised from. Sentinel against a future field-shape
+    /// drift (e.g. someone renaming `pubkey_hex` to `pubkey`).
+    #[test]
+    fn one_pin_round_trip_json() {
+        let mut pins = WarrenPinnedExitPubkeys::default();
+        pins.entries.insert(
+            "abcd0123".repeat(8),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "ed25519aa".repeat(7) + "ed25519a",
+                first_seen_unix: 1747740000,
+                last_seen_unix: 1747740300,
+                country_code: "fr".into(),
+                city: "Paris".into(),
+            },
+        );
+        let json = serde_json::to_string(&pins).unwrap();
+        let back: WarrenPinnedExitPubkeys = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, pins);
+    }
+
+    /// `BTreeMap` preserves key order, which means the on-disk JSON is
+    /// deterministic regardless of insertion order. Important for diff-
+    /// based settings inspection by the operator (and for our own
+    /// regression suite, which would flake otherwise).
+    #[test]
+    fn pin_table_json_is_key_ordered() {
+        let mut pins = WarrenPinnedExitPubkeys::default();
+        pins.entries.insert(
+            "zzzz".into(),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "z".repeat(64),
+                first_seen_unix: 1,
+                last_seen_unix: 2,
+                country_code: String::new(),
+                city: String::new(),
+            },
+        );
+        pins.entries.insert(
+            "aaaa".into(),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "a".repeat(64),
+                first_seen_unix: 3,
+                last_seen_unix: 4,
+                country_code: String::new(),
+                city: String::new(),
+            },
+        );
+        let json = serde_json::to_string(&pins).unwrap();
+        let i_aaaa = json.find("\"aaaa\"").expect("aaaa key present");
+        let i_zzzz = json.find("\"zzzz\"").expect("zzzz key present");
+        assert!(
+            i_aaaa < i_zzzz,
+            "BTreeMap must serialise keys in lexicographic order, got: {json}"
+        );
+    }
+
+    /// The `Settings::default` initializer must produce an empty pin
+    /// table - never silently pre-populate with stale data that would
+    /// poison the TOFU contract on first boot.
+    #[test]
+    fn settings_default_has_empty_pin_table() {
+        let s = Settings::default();
+        assert!(s.warren_pinned_exit_pubkeys.entries.is_empty());
     }
 }

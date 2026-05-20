@@ -54,6 +54,30 @@ pub enum Error {
     /// failed, ...).
     #[error("Failed to assemble Warren tunnel parameters")]
     WarrenAssemble(#[from] AssembleError),
+
+    /// A.4 TOFU pin verification refused the connect: the exit served
+    /// a different Ed25519 pubkey than the one previously pinned for
+    /// the same exit identity. The user must either `TrustNewExitKey`
+    /// (update the pin) or `ResetPinnedExitKeys` (clear all pins) via
+    /// the gRPC management interface before another connect attempt.
+    ///
+    /// In /v1 with no separate `exit_id` field at the warren-core
+    /// relay-list layer (= the pin key is the pubkey itself), this
+    /// error path is structurally unreachable: a `BTreeMap` lookup
+    /// keyed by `pubkey_hex` can only return an entry whose
+    /// `pubkey_hex` matches the lookup key. The error variant exists
+    /// to ship the daemon-side scaffold ready for the future
+    /// warren-core `exit_id` field; see
+    /// `.planning/a4-pubkey-pinning-design.md`.
+    #[error(
+        "Warren exit pubkey pin mismatch (pinned_key={pinned}, observed_key={observed}, \
+         exit_id={exit_id_hex})"
+    )]
+    WarrenPubkeyPinMismatch {
+        exit_id_hex: String,
+        pinned: String,
+        observed: String,
+    },
 }
 
 #[derive(Clone)]
@@ -465,9 +489,18 @@ impl From<Error> for ParameterGenerationError {
             // Warren errors mapped to `NoMatchingRelay` on the state
             // machine side. A dedicated variant can be added if
             // the UI needs to distinguish these cases.
+            //
+            // `WarrenPubkeyPinMismatch` is included here so that the
+            // pre-existing tunnel state machine sees an immediate
+            // hard-stop ("no relay can satisfy the user's
+            // constraints"). A.4 follow-up adds a dedicated event so
+            // the UI surfaces the warning modal instead of falling
+            // through to the generic disconnect reason. See
+            // `.planning/a4-pubkey-pinning-design.md` §2.3.
             Error::WarrenSelectorMissing
             | Error::WarrenSigningKeyMissing
-            | Error::WarrenAssemble(_) => ParameterGenerationError::NoMatchingRelay,
+            | Error::WarrenAssemble(_)
+            | Error::WarrenPubkeyPinMismatch { .. } => ParameterGenerationError::NoMatchingRelay,
         }
     }
 }

@@ -310,6 +310,11 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .map(mullvad_types::settings::WarrenNatPmpSettings::try_from)
                 .transpose()?
                 .unwrap_or_default(),
+            // A.4 pinning storage is daemon-internal: never round-trip
+            // through gRPC `SetSettings` (would let a gRPC client wipe
+            // the pin table). Default-initialise from a gRPC update;
+            // the daemon retains its own copy.
+            warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
         })
     }
 }
