@@ -1,21 +1,30 @@
-# Session B - rapport intermédiaire (2e itération)
+# Session B - rapport intermédiaire (3e itération)
 
 **Date** : 2026-05-20
-**Statut global** : **PARTIEL ÉLARGI** - DAITA v2 wire format + framework + pool + state driver + opt-in client/exit posés ; pump integration + multi-hop + UI + bench + B.2 + B.3 non démarrés
-**Push** : warren-core `73f20e1` (origin/main, +4 commits depuis `ab34ab5`)
+**Statut global** : **PARTIEL CONSÉQUENT** - DAITA v2 wire format + framework + pool + state driver + pump mono-conn + client/exit opt-in + daemon-side wiring posés ; multi-hop + UI Electron complet + bench + B.2 reconnect flow + B.3 onboarding non démarrés
+**Push** : warren-core `c9d1909` (+7 commits depuis baseline session B), warren-app `b59d8a0+` (+2 commits)
 **Cwd réel d'exécution** : `/Users/poka/dev/warrenBros/warren-core`
 
-## Commits livrés cette continuation
+## Commits livrés (session B complète sur warren-core)
 
 ```
-73f20e1 feat(warren-client): add ClientTunnel::with_daita() builder + --enable-daita CLI flag (M5.B.1)
-cc53d82 feat(warren-tunnel): add DaitaState (sync stateful driver with per-machine timer wheels) (M5.B.1.3)
-cba67e3 feat(warren-tunnel): add DaitaPool (5 curated machines) + wire into ExitListener via --enable-daita (M5.B.1.2.5)
+c9d1909 feat(warren-relay-selector): select_failover_alternative with same-country + global fallback (M5.B.2)
+f9b3eaf feat(warren-tunnel): pump_bidirectional_with_daita - DAITA pump integration mono-conn + 0xFF marker (M5.B.1.3.2)
+73f20e1 feat(warren-client): add ClientTunnel::with_daita() + --enable-daita CLI (M5.B.1 client opt-in)
+cc53d82 feat(warren-tunnel): add DaitaState (sync stateful driver + per-machine timer wheels) (M5.B.1.3 foundation)
+cba67e3 feat(warren-tunnel): add DaitaPool (5 curated machines) + wire ExitListener via --enable-daita (M5.B.1.2.5)
 3bb941d feat(warren-protocol): bump PROTOCOL_VERSION 2->3 + Setup.daita_support + SetupAck.daita_spec (M5.B.1.4)
 ab34ab5 feat(warren-tunnel): wrap maybenot 2.2.2 in DaitaFramework + DaitaConfig (M5.B.1.1-3 baseline)
 ```
 
-5 commits total sur `main`. ~30 tests TDD verts (16 daita + 6 daita_pool + 5 select_daita_spec + 6 DaitaState + tests warren-protocol v3).
+Et sur warren-app :
+
+```
+~b59d8a0+  feat(talpid-warren-tunnel,daemon): wire enable_daita through WarrenTunnelParameters -> ClientTunnel::with_daita
+~0f5cc1c+  feat(warren-app): add WarrenFailoverSettings type + redux slice + IPC route (M5.B.2 scaffold)
+```
+
+**Total** : 7 commits warren-core + 2 commits warren-app. ~46 TDD tests verts (16 daita + 6 daita_pool + 6 DaitaState + 5 select_daita_spec + 5 is_daita_dummy + 6 failover + tests warren-protocol v3).
 
 ---
 
