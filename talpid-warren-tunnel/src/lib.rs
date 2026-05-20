@@ -45,7 +45,7 @@ pub use warren_client::bypass_cidr::BypassCidr;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
-    pump_bidirectional_with_daita, pump_multi_bidirectional,
+    pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
 };
 
 mod adapter;
@@ -809,7 +809,40 @@ impl WarrenTunnelMonitor {
                     drop(session);
                     res
                 }
-                SessionKind::Multi(multi) => pump_multi_bidirectional(packet_device, multi).await,
+                SessionKind::Multi(multi) => {
+                    // M5.B.1: prefer the DAITA-enabled multi-conn pump
+                    // when the primary's SetupAck shipped a spec. The
+                    // exit guarantees every secondary inherits the
+                    // same spec (cf. `attribute_session` sharing), so
+                    // we can read it once from the MultiSession and
+                    // hand it to a single shared DaitaState.
+                    match multi.daita_spec().cloned() {
+                        Some(cfg) => {
+                            match DaitaState::from_config(&cfg, std::time::Instant::now()) {
+                                Ok(state) => {
+                                    log::info!(
+                                        "{TRACE_PREFIX} pump=running variant=daita_multi machines={} conns={}",
+                                        cfg.machine_specs.len(),
+                                        multi.num_connections()
+                                    );
+                                    pump_multi_bidirectional_with_daita(
+                                        packet_device,
+                                        multi,
+                                        state,
+                                    )
+                                    .await
+                                }
+                                Err(e) => {
+                                    log::error!(
+                                        "{TRACE_PREFIX} pump=daita_spec_invalid err=\"{e:#}\""
+                                    );
+                                    Err(e)
+                                }
+                            }
+                        }
+                        None => pump_multi_bidirectional(packet_device, multi).await,
+                    }
+                }
             };
             match pump_result {
                 Ok(()) => {
