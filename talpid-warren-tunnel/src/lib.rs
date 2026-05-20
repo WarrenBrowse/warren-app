@@ -674,13 +674,22 @@ impl WarrenTunnelMonitor {
             routes_t.elapsed().as_millis()
         );
 
-        // Linux: install the split-default policy routing (table 100
-        // + ip rule bypass for the exit IP). On macOS the split-default
-        // is posted directly in the main routing table by
-        // `build_warren_tunnel_routes_macos` (the `/32` bypass is
-        // specific enough to avoid a routing loop, so no policy routing
-        // needed).
-        #[cfg(target_os = "linux")]
+        // Install the platform-specific split-default policy routing.
+        // The OS-specific recipe lives in the `default_route_split`
+        // facade module:
+        // - Linux: dedicated table 100 + `ip rule` bypass for the exit
+        //   IP (in-crate impl, see `default_route_split::linux`).
+        // - macOS: host-route exception + `/1` split-default on the
+        //   global table, ported from `warren_client::default_route_split_macos`.
+        // - Other platforms: stub that fails to install (operator sees
+        //   "Internet traffic will NOT route via tunnel" warning).
+        //
+        // Both Linux and macOS expose the same `install(Ipv4Addr, &str)
+        // -> Result<Self>` signature, so the install branch is OS-
+        // agnostic at this call site. The cfg-guard is required only to
+        // skip the work entirely on platforms where the facade ships
+        // the `stub` impl.
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
         let default_route_guard = {
             let exit_ip_v4 = exit_ips.iter().find_map(|ip| match ip {
                 IpAddr::V4(v4) => Some(*v4),
@@ -701,7 +710,7 @@ impl WarrenTunnelMonitor {
                         log::warn!(
                             "Warren: failed to install default-route split: {e}. \
                              Internet traffic will NOT route via tunnel. \
-                             Need root + ip in PATH."
+                             Need root + ip/route in PATH."
                         );
                         None
                     })
@@ -713,7 +722,7 @@ impl WarrenTunnelMonitor {
                 None
             }
         };
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
         // Spawn the bidirectional TUN <-> QUIC datagram pump. The task
@@ -1048,7 +1057,11 @@ impl WarrenTunnelMonitor {
             }
         });
 
-        #[cfg(target_os = "linux")]
+        // Multi-hop split-default install: same facade as single-hop
+        // above. The bypass exception targets the *relay* endpoint
+        // (first hop) rather than the exit, since on multi-hop the only
+        // UDP peer the client speaks to directly is the relay.
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
         let default_route_guard = {
             let relay_ip_v4 = match relay_endpoint.ip() {
                 IpAddr::V4(v4) => Some(v4),
@@ -1077,7 +1090,7 @@ impl WarrenTunnelMonitor {
                 None
             }
         };
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
         // Spawn the uplink + downlink pumps. Each consumes a clone of
