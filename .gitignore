@@ -46,3 +46,9 @@ android/.idea
 .vscode/
 .direnv/
 .zed/
+
+# Warren signing assets MUST never be committed.
+*.p12
+*.pfx
+*.cer
+.notarytool-creds.json
