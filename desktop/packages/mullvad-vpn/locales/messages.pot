@@ -549,6 +549,12 @@ msgctxt "account-view"
 msgid "Account"
 msgstr ""
 
+#. Button label that opens the Keys
+#. backup view (= reveal/copy BIP39 mnemonic).
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr ""
+
 msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr ""
@@ -1601,6 +1607,96 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr ""
 
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Copy mnemonic to clipboard"
+msgstr ""
+
+#. Shown when the daemon rejects the mnemonic
+#. (typically: invalid BIP39 word, bad checksum,
+#. wrong word count). User must check + retry.
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr ""
+
+#. Generic error when the daemon RPC fails. Shown
+#. only on transient connection issues.
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr ""
+
+#. Title label in navigation bar
+msgctxt "keys-view"
+msgid "Keys"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Mnemonic copied"
+msgstr ""
+
+#. Shown when the daemon has no Warren BIP39 mnemonic
+#. stored (= identity never bootstrapped). User must
+#. log in or restore from mnemonic first.
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr ""
+
+#. Title label in navigation bar
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "words"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr ""
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
 msgid "Connecting to Mullvad system service..."
@@ -1628,7 +1724,7 @@ msgstr ""
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
 msgstr ""
 
 #. List item in troubleshooting modal advising user to reinstall the app.
@@ -1987,7 +2083,7 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
 msgstr ""
 
 msgctxt "notifications"
@@ -2278,6 +2374,10 @@ msgctxt "settings-view"
 msgid "VPN settings"
 msgstr ""
 
+msgctxt "settings-view"
+msgid "Warren multi-hop"
+msgstr ""
+
 msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr ""
@@ -2350,7 +2450,7 @@ msgid "Please try again or send a problem report."
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
+msgid "Restart Warren Service"
 msgstr ""
 
 #. Information about split tunneling being unavailable due to
@@ -2362,7 +2462,7 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr ""
 
 #. Error message showed in a dialog when an application fails to launch.
@@ -2497,7 +2597,7 @@ msgid "Disable split tunneling"
 msgstr ""
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
 msgstr ""
 
 msgctxt "troubleshoot"
@@ -2521,7 +2621,7 @@ msgid "Open system settings"
 msgstr ""
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
 msgstr ""
 
 msgctxt "troubleshoot"
@@ -2644,7 +2744,7 @@ msgid "Anti-censorship"
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2759,7 +2859,7 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2835,7 +2935,91 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Legacy Mullvad obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
 msgstr ""
 
 #. Title label in navigation bar

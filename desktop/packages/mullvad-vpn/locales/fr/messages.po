@@ -3829,3 +3829,91 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "Vous perdrez votre jour restant."
 msgstr[1] "Vous perdrez vous %d jours restants."
 
+
+msgctxt "settings-view"
+msgid "Warren multi-hop"
+msgstr "Multi-hop Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Pays d'entrée"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Pays de sortie"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Attendez-vous à environ la moitié du débit du single-hop, en échange d'une non-corrélation entre l'IP utilisateur et l'IP de destination. Désactivé par défaut ; activation opt-in pour la vie privée."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Optionnel : fixer les pays des relais d'entrée et de sortie (codes ISO 3166 alpha-2 tels que fr, de, se). Laisser vide pour sélection automatique."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Redémarrez le daemon Warren après avoir modifié ce paramètre."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Achemine votre trafic à travers deux relais Warren avec chiffrement HPKE de bout en bout. Le relais d'entrée ne voit que du chiffré ; le relais de sortie ne voit que la charge déchiffrée, jamais votre IP. Schéma inspiré d'Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Warren single-hop actif. Débit maximal, mêmes garanties de vie privée que le mode single-hop par défaut."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Compromis : environ la moitié du débit single-hop. Désactivé par défaut ; activation opt-in pour la vie privée. Redémarrage du daemon requis après modification."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Multi-hop Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Lorsqu'activé, le trafic est routé à travers deux relais Warren (entrée puis sortie) avec chiffrement HPKE de bout en bout entre le client et la sortie. Le relais d'entrée ne voit que du chiffré ; le relais de sortie ne voit que la charge déchiffrée, jamais l'IP utilisateur."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "Mimétisme HTTP/3 (actif)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "L'obfuscation par mimétisme HTTP/3 est toujours active pour les tunnels Warren (/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "L'obfuscation par mimétisme HTTP/3 est actuellement inactive."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "inactif"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Dernier"
+
+msgctxt "warren-status-view"
+msgid "Legacy Mullvad obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Les méthodes d'obfuscation Mullvad classiques (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas lorsque warren_mode est actif."
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "jamais"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Obfuscation"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Reconnexions"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Les tunnels Warren se font passer pour du trafic HTTP/3 navigateur standard : ALPN h3, SNI warrenbrowse.com, découpage du paquet Initial, UDP/443. Non désactivable en /v1 car le faire rendrait les clients Warren immédiatement identifiables sur le réseau."
