@@ -16,7 +16,7 @@ source scripts/utils/log
 
 echo "Computing build version..."
 PRODUCT_VERSION=$(cargo run -q --bin mullvad-version)
-log_header "Building universal Windows installer for Mullvad VPN $PRODUCT_VERSION"
+log_header "Building universal Windows installer for Warren VPN $PRODUCT_VERSION"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -59,7 +59,7 @@ fi
 
 cargo build "${CARGO_ARGS[@]}" -p windows-installer --target x86_64-pc-windows-msvc
 
-dest="dist/MullvadVPN-${PRODUCT_VERSION}.exe"
+dest="dist/WarrenVPN-${PRODUCT_VERSION}.exe"
 
 cp "$CARGO_TARGET_DIR/x86_64-pc-windows-msvc/${RUST_BUILD_MODE}/windows-installer.exe" "$dest"
 

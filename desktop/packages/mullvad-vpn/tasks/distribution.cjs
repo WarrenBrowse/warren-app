@@ -25,7 +25,7 @@ function getOptionValue(option) {
 
 function newConfig() {
   return {
-    appId: 'net.mullvad.vpn',
+    appId: 'com.warrenbrowse.vpn',
     copyright: 'Warren contributors',
     productName: 'Warren VPN',
     publish: null,
@@ -117,7 +117,7 @@ function newConfig() {
     },
 
     nsis: {
-      guid: '2A356FD4-03B7-4F45-99B4-737BE580DC82',
+      guid: '15528187-40A4-4A0D-B38A-F8E3442EC456',
       oneClick: false,
       perMachine: true,
       allowElevation: true,

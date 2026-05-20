@@ -207,7 +207,7 @@ function sign_win {
             if signtool sign \
                 -tr http://timestamp.digicert.com -td sha256 \
                 -fd sha256 -d "Warren VPN" \
-                -du "https://git.p2p.legal/warren/warren-app" \
+                -du "https://github.com/WarrenBrowse/warren-app" \
                 -sha1 "$CERT_HASH" "$binary"
             then
                 break
@@ -505,7 +505,7 @@ if [[ "$UNIVERSAL" == "true" && "$(uname -s)" == "MINGW"* ]]; then
         "${WIN_PACK_ARGS[@]}"
     if [[ "$SIGN" == "true" ]]; then
         assert_clean_working_directory
-        sign_win "dist/MullvadVPN-${PRODUCT_VERSION}.exe"
+        sign_win "dist/WarrenVPN-${PRODUCT_VERSION}.exe"
     fi
 fi
 

@@ -10,7 +10,7 @@
     "email": "support@warrenbrowse.com"
   },
   "type": "module",
-  "repository": "https://github.com/mullvad/mullvadvpn-app",
+  "repository": "https://github.com/WarrenBrowse/warren-app",
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
