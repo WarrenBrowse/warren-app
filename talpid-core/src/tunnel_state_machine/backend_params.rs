@@ -150,6 +150,8 @@ mod tests {
             features: 0,
             multi_hop: None,
             on_reconnect: None,
+            nat_pmp: None,
+            nat_pmp_observer: None,
         }
     }
 
