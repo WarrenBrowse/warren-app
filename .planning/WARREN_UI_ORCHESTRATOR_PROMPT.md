@@ -499,15 +499,16 @@ Brief (3-5 jours) :
 - Tests régression : single-hop OK + multi-hop OK + auto-reconnect mid-
   session OK (`reconnect_count` exposé)
 
-### M4.H.C : UI Electron toggles + status
+### ~~M4.H.C~~ : UI Electron toggles + status. **DONE 2026-05-20**
 
-Brief (5-7 jours) :
-- Toggle multi-hop ON/OFF dans settings (OFF default)
-- Choix exit country
-- Status reconnect_count + last_reconnect_age
-- Killswitch IPv6 + DNS leak toggle
-- Toggle obfuscation M4.0 (ON default, info-only sans switch ? à trancher)
-- I18n FR + EN minimum sur toutes les strings nouvelles
+GO ULTIMATE. 9 commits warren-app + 1 warren-core (re-export public
+`canonical_message` + `HEADER_*` warren-api-client pour dédup signature
+HTTP). UI multi-hop view + reconnect status + killswitch + obfuscation
+M4.0 banner + 21 strings i18n FR+EN. Tests 424 workspace + 110 Jest PASS.
+
+Caveat M4.H.C.X follow-up : `WarrenStatusCache.record_reconnect` pas
+encore câblé depuis le supervisor `talpid-warren-tunnel::start_multi_hop`.
+Le UI affichera `reconnect_count = 0` steady-state jusqu'au câblage.
 
 ### M4.H.D : branding Warren final
 
