@@ -3218,6 +3218,7 @@ dependencies = [
  "tokio-socks",
  "tower",
  "vec1",
+ "warren-api-client",
 ]
 
 [[package]]

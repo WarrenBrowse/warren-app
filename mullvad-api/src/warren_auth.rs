@@ -32,6 +32,14 @@
 use ed25519_dalek::{Signer, SigningKey};
 use rand::RngCore;
 use sha2::{Digest, Sha256};
+// Re-exported from warren-identity::auth via warren-api-client: the
+// canonical wire format constants and the canonical_message builder
+// MUST be identical on both sides (signer here, verifier server-side),
+// otherwise no signature ever verifies. Consuming the single source of
+// truth prevents silent /v1 wire divergence.
+pub use warren_api_client::{
+    HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, canonical_message,
+};
 
 /// En-têtes HTTP générés par [`WarrenAuthSigner::sign_request`].
 ///
@@ -53,15 +61,6 @@ pub struct WarrenAuthHeaders {
     /// la fenêtre de 120 s.
     pub nonce_hex: String,
 }
-
-/// Nom du header HTTP pour la pubkey Warren (cf. doc 06 § 121-126).
-pub const HEADER_PUBKEY: &str = "X-Warren-PubKey";
-/// Nom du header HTTP pour la signature Ed25519.
-pub const HEADER_SIGNATURE: &str = "X-Warren-Sig";
-/// Nom du header HTTP pour le timestamp epoch seconds.
-pub const HEADER_TIMESTAMP: &str = "X-Warren-Timestamp";
-/// Nom du header HTTP pour le nonce hex.
-pub const HEADER_NONCE: &str = "X-Warren-Nonce";
 
 /// Taille du nonce en octets (= 128 bits, suffisant pour qu'un même
 /// client génère 2^64 requêtes sans collision avec proba ≪ 1 %).
@@ -220,30 +219,6 @@ impl WarrenAuthSigner {
         );
         Ok(())
     }
-}
-
-/// Construit le `canonical_message` qui sera signé. Format figé par la
-/// doc 06 § 110 — ne JAMAIS modifier sans rotation de version (`v2`).
-fn canonical_message(
-    method: &str,
-    path: &str,
-    timestamp: u64,
-    nonce_hex: &str,
-    body_hash_hex: &str,
-) -> String {
-    let mut s = String::with_capacity(
-        method.len() + path.len() + 20 + nonce_hex.len() + body_hash_hex.len() + 4,
-    );
-    s.push_str(method);
-    s.push('\n');
-    s.push_str(path);
-    s.push('\n');
-    s.push_str(&timestamp.to_string());
-    s.push('\n');
-    s.push_str(nonce_hex);
-    s.push('\n');
-    s.push_str(body_hash_hex);
-    s
 }
 
 #[cfg(test)]
@@ -523,5 +498,52 @@ mod tests {
 
         vk.verify(canonical.as_bytes(), &sig)
             .expect("le body hash DOIT être sha256(b\"\") = e3b0c44...");
+    }
+
+    /// Wire format regression - any divergence between the local
+    /// canonical_message (pre-refactor) and the warren-identity::auth
+    /// canonical_message (post-refactor) would cause every signed API
+    /// request to be rejected server-side. The hardcoded expected
+    /// string below was captured against the pre-refactor local impl;
+    /// it MUST keep producing the same bytes after wiring through
+    /// warren-api-client.
+    #[test]
+    fn canonical_message_matches_hardcoded_reference_vector() {
+        let method = "POST";
+        let path = "/v1/port-forward/request?dry=true";
+        let timestamp: u64 = 1_700_000_000;
+        let nonce_hex = "0102030405060708090a0b0c0d0e0f10";
+        let body = b"{\"exit_pubkey\":\"abc\"}";
+        let body_hash_hex = hex::encode(Sha256::digest(body));
+
+        let actual = canonical_message(method, path, timestamp, nonce_hex, &body_hash_hex);
+
+        // Expected = concatenation with literal '\n' separators in this
+        // exact order: METHOD\npath\ntimestamp\nnonce\nbody_hash. Frozen
+        // wire format /v1, must not change.
+        let expected = format!(
+            "POST\n\
+             /v1/port-forward/request?dry=true\n\
+             1700000000\n\
+             0102030405060708090a0b0c0d0e0f10\n\
+             {body_hash_hex}"
+        );
+
+        assert_eq!(
+            actual, expected,
+            "canonical_message MUST produce the exact reference vector - any change to the wire format is a /v1 breaking change"
+        );
+    }
+
+    /// HEADER_* constants are the single source of truth - changing
+    /// any of these strings is a /v1 breaking change because both
+    /// server middleware and signer use them verbatim as HTTP header
+    /// names.
+    #[test]
+    fn header_constants_match_v1_wire_names() {
+        assert_eq!(HEADER_PUBKEY, "X-Warren-PubKey");
+        assert_eq!(HEADER_SIGNATURE, "X-Warren-Sig");
+        assert_eq!(HEADER_TIMESTAMP, "X-Warren-Timestamp");
+        assert_eq!(HEADER_NONCE, "X-Warren-Nonce");
     }
 }
