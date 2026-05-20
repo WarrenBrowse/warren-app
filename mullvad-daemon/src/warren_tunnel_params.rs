@@ -51,6 +51,11 @@ pub fn assemble_for_attempt(
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
+        // Single-hop assembly. Multi-hop is wired in a future
+        // selector revision that hydrates `multi_hop` from
+        // signed relay + exit descriptors fetched from
+        // warren-backend-api (cf. M4.H.B.2).
+        multi_hop: None,
     })
 }
 

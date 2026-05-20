@@ -18,12 +18,18 @@ use std::net::IpAddr;
 use std::path::Path;
 use std::time::Instant;
 
-use ed25519_dalek::SigningKey;
+use ed25519_dalek::{SigningKey, VerifyingKey};
 use ipnetwork::IpNetwork;
 use talpid_routing::{Node, RequiredRoute};
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
+use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
+// Re-exported below so downstream crates (talpid-core, mullvad-daemon)
+// can construct `MultiHopConfig` without depending on warren-multihop
+// directly. Same pattern as `warren-relay-selector::warren_types`.
+pub use warren_multihop::{ExitDescriptorSigned as MultiHopExitDescriptor, ExitId};
+pub use warren_multihop::{RelayDescriptorSigned as MultiHopRelayDescriptor};
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, MultiSession, pump_bidirectional, pump_multi_bidirectional,
@@ -77,6 +83,19 @@ pub struct WarrenTunnelParameters {
     /// (cf. `warren_protocol::features`). `0` = IPv4 baseline.
     /// Combinable via OR: `IPV6`, `PORT_FORWARD`, ...
     pub features: u32,
+
+    /// Multi-hop configuration. `None` (default) selects the legacy
+    /// single-hop path through [`warren_tunnel::ClientTunnel`]; `Some`
+    /// dispatches to a multi-hop session driven by
+    /// `warren_client::supervisor::MultiHopSupervisor` against the
+    /// supplied first-hop relay.
+    ///
+    /// Selecting multi-hop changes the firewall surface (the daemon
+    /// only opens the relay endpoint, not the exit candidates) and the
+    /// GUI tunnel endpoint (the exit is shown via `entry_endpoint`).
+    /// Both wiring details live in
+    /// `talpid_core::tunnel_state_machine::backend_params`.
+    pub multi_hop: Option<MultiHopConfig>,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -88,6 +107,61 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             .field("signing_key", &"<redacted>")
             .field("n_connections", &self.n_connections)
             .field("features", &format_args!("{:#010x}", self.features))
+            .field(
+                "multi_hop",
+                &self.multi_hop.as_ref().map(|_| "<redacted>"),
+            )
+            .finish()
+    }
+}
+
+/// Inputs required to bring up a multi-hop session, populated by the
+/// daemon-side relay selector and consumed by the dispatcher in
+/// [`WarrenTunnelMonitor::start`].
+///
+/// Both descriptors are verified against [`Self::operational_pubkey`]
+/// before any UDP traffic is emitted. The exit `WarrenExitAddr` carried
+/// at the [`WarrenTunnelParameters`] root is ignored on the multi-hop
+/// path: the dispatcher derives the routing tag, the X25519 HPKE
+/// pubkey, and the Ed25519 RPK identity from [`Self::exit`].
+#[derive(Clone)]
+pub struct MultiHopConfig {
+    /// Signed first-hop descriptor. The client dials
+    /// [`RelayDescriptorSigned::endpoint`] over QUIC; the relay's
+    /// Ed25519 identity is pinned via the TLS RPK at handshake time.
+    pub relay: RelayDescriptorSigned,
+    /// Signed exit descriptor. The relay never holds the HPKE key, so
+    /// the exit's long-lived X25519 pubkey advertised here is the only
+    /// trust anchor for the payload encryption.
+    pub exit: ExitDescriptorSigned,
+    /// Ed25519 operational pubkey shared across the relay + exit
+    /// descriptor signatures. Out-of-band trust anchor for the
+    /// multi-hop pool.
+    pub operational_pubkey: VerifyingKey,
+    /// Enable UDP segmentation offload (GSO) on the multi-hop QUIC
+    /// transport. Recommended on physical NICs, disable on virtio
+    /// (Hetzner Cloud / KVM guests) and on macOS where GSO is not
+    /// supported.
+    pub enable_gso: bool,
+    /// Opt into the full M4.0 wire-mimicry profile (Initial padding +
+    /// split ClientHello). `true` is the production default against a
+    /// real warren-relay; `false` is used for loopback benches where
+    /// the relay-inbound transport config does not mirror these knobs
+    /// (caveat M4.D #1 in `warren-client::multi_hop`).
+    pub use_warren_obfuscation: bool,
+}
+
+impl std::fmt::Debug for MultiHopConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // No-log Warren: relay/exit pubkeys and endpoints are
+        // long-term identifiers correlatable across sessions; the
+        // operational pubkey identifies the deployment. All redacted.
+        f.debug_struct("MultiHopConfig")
+            .field("relay", &"<redacted>")
+            .field("exit", &"<redacted>")
+            .field("operational_pubkey", &"<redacted>")
+            .field("enable_gso", &self.enable_gso)
+            .field("use_warren_obfuscation", &self.use_warren_obfuscation)
             .finish()
     }
 }
@@ -1027,6 +1101,7 @@ mod tests {
             signing_key: signing,
             n_connections: 2,
             features: 0x1,
+            multi_hop: None,
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1036,6 +1111,105 @@ mod tests {
         );
         assert!(s.contains("n_connections: 2"));
         assert!(s.contains("features: 0x00000001"));
+    }
+
+    #[test]
+    fn warren_tunnel_parameters_default_multi_hop_is_none() {
+        // Backwards-compat anchor: every existing call site that
+        // constructs `WarrenTunnelParameters` without specifying
+        // `multi_hop` (single-hop = legacy path) must keep yielding
+        // `None` so the dispatcher dispatches to
+        // `warren_tunnel::ClientTunnel`. Mutation = silent multi-hop
+        // by default = breaks every existing deployment.
+        let params = WarrenTunnelParameters {
+            exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([1u8; 32])),
+            signing_key: SigningKey::from_bytes(&[0u8; 32]),
+            n_connections: 1,
+            features: 0,
+            multi_hop: None,
+        };
+        assert!(params.multi_hop.is_none());
+    }
+
+    #[test]
+    fn warren_tunnel_parameters_debug_when_multi_hop_some_marks_it_as_redacted() {
+        // No-log Warren: when multi_hop is Some, the relay + exit
+        // descriptors carry pubkeys + UDP endpoints that re-identify
+        // the session. The Debug surface must mark it as
+        // `Some("<redacted>")` and never let the underlying hex
+        // pubkeys leak into a log line.
+        let signing = SigningKey::from_bytes(&[0u8; 32]);
+        let exit_id = WarrenPubkey::from_bytes([1u8; 32]);
+        let mh = MultiHopConfig {
+            relay: RelayDescriptorSigned {
+                relay_id: [0xaa; 16],
+                relay_ed25519_pubkey: [0xbb; 32],
+                endpoint: "192.0.2.10:443".parse().unwrap(),
+                signature: [0xcc; 64],
+            },
+            exit: ExitDescriptorSigned {
+                exit_id: warren_multihop::ExitId([0xdd; 16]),
+                exit_ed25519_pubkey: [0xee; 32],
+                exit_x25519_multihop_pubkey: [0xff; 32],
+                endpoint: "192.0.2.20:443".parse().unwrap(),
+                signature: [0x11; 64],
+            },
+            operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
+            enable_gso: true,
+            use_warren_obfuscation: true,
+        };
+        let params = WarrenTunnelParameters {
+            exit_addr: WarrenExitAddr::new(exit_id),
+            signing_key: signing,
+            n_connections: 1,
+            features: 0,
+            multi_hop: Some(mh),
+        };
+        let s = format!("{params:?}");
+        assert!(
+            s.contains("Some(\"<redacted>\")") || s.contains("Some(\"<redacted>\")"),
+            "multi_hop Some must render as Some(\"<redacted>\"), got: {s}"
+        );
+        assert!(
+            !s.contains("bb") && !s.contains("ee") && !s.contains("ff"),
+            "relay/exit pubkeys must not leak: {s}"
+        );
+        assert!(
+            !s.contains("192.0.2.10") && !s.contains("192.0.2.20"),
+            "relay/exit endpoints must not leak: {s}"
+        );
+    }
+
+    #[test]
+    fn multi_hop_config_debug_does_not_leak_descriptors() {
+        // Independent anchor: `MultiHopConfig::Debug` is also
+        // formatted directly when the daemon logs the config struct
+        // standalone (e.g. trace-on-build). The redaction must hold
+        // there too, with the gso + obfuscation knobs exposed for
+        // operational debug.
+        let mh = MultiHopConfig {
+            relay: RelayDescriptorSigned {
+                relay_id: [0xaa; 16],
+                relay_ed25519_pubkey: [0xbb; 32],
+                endpoint: "192.0.2.10:443".parse().unwrap(),
+                signature: [0xcc; 64],
+            },
+            exit: ExitDescriptorSigned {
+                exit_id: warren_multihop::ExitId([0xdd; 16]),
+                exit_ed25519_pubkey: [0xee; 32],
+                exit_x25519_multihop_pubkey: [0xff; 32],
+                endpoint: "192.0.2.20:443".parse().unwrap(),
+                signature: [0x11; 64],
+            },
+            operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
+            enable_gso: false,
+            use_warren_obfuscation: true,
+        };
+        let s = format!("{mh:?}");
+        assert!(s.contains("<redacted>"));
+        assert!(s.contains("enable_gso: false"));
+        assert!(s.contains("use_warren_obfuscation: true"));
+        assert!(!s.contains("192.0.2"), "endpoints must not leak: {s}");
     }
 
     #[test]

@@ -38,17 +38,29 @@ impl BackendParams {
     }
 
     /// UDP endpoints to allow through the firewall pre-handshake (the
-    /// client -> exit outbound UDP path). For Warren this is the full
-    /// set of `exit_addr.ip_addrs()` candidates; for WireGuard, the
-    /// peer endpoint (or the obfuscator endpoints if active).
+    /// client -> next-hop outbound UDP path).
+    ///
+    /// - Wireguard: the peer endpoint (or the obfuscator endpoints if
+    ///   active).
+    /// - Warren single-hop: every candidate IP of the exit (client
+    ///   dials the exit directly).
+    /// - Warren multi-hop: only the relay endpoint (the client never
+    ///   sends UDP to the exit directly; the relay forwards the QUIC
+    ///   datagrams on a separate C2 connection).
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
         match self {
             Self::Wireguard(p) => p.get_next_hop_endpoints(),
-            Self::Warren(p) => p
-                .exit_addr
-                .ip_addrs()
-                .map(|addr| Endpoint::from_socket_address(addr, TransportProtocol::Udp))
-                .collect(),
+            Self::Warren(p) => match &p.multi_hop {
+                Some(mh) => vec![Endpoint::from_socket_address(
+                    mh.relay.endpoint,
+                    TransportProtocol::Udp,
+                )],
+                None => p
+                    .exit_addr
+                    .ip_addrs()
+                    .map(|addr| Endpoint::from_socket_address(addr, TransportProtocol::Udp))
+                    .collect(),
+            },
         }
     }
 
@@ -65,22 +77,42 @@ impl BackendParams {
 }
 
 /// Build the `TunnelEndpoint` published in the state transition for a
-/// Warren tunnel. The GUI displays the first candidate IP of the exit
-/// (typically v4 first) over UDP.
+/// Warren tunnel.
+///
+/// - Single-hop: `endpoint` = first candidate IP of the exit (typically
+///   v4) over UDP, `entry_endpoint` = `None`.
+/// - Multi-hop: `endpoint` = the exit descriptor's advertised endpoint
+///   (= the conceptual peer the user is exiting through), and
+///   `entry_endpoint` = `Some(relay.endpoint)` (= the first hop the
+///   client actually dials). Mirrors the Wireguard multi-hop convention
+///   so the GUI displays the entry/exit pair consistently across
+///   backends.
 fn warren_tunnel_endpoint(params: &WarrenTunnelParameters) -> TunnelEndpoint {
     use std::net::{IpAddr, Ipv4Addr};
 
-    let socket_addr = params
-        .exit_addr
-        .ip_addrs()
-        .next()
-        .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+    let (endpoint_addr, entry_endpoint) = match &params.multi_hop {
+        Some(mh) => (
+            mh.exit.endpoint,
+            Some(Endpoint::from_socket_address(
+                mh.relay.endpoint,
+                TransportProtocol::Udp,
+            )),
+        ),
+        None => (
+            params
+                .exit_addr
+                .ip_addrs()
+                .next()
+                .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0)),
+            None,
+        ),
+    };
 
     TunnelEndpoint {
-        endpoint: Endpoint::from_socket_address(socket_addr, TransportProtocol::Udp),
+        endpoint: Endpoint::from_socket_address(endpoint_addr, TransportProtocol::Udp),
         quantum_resistant: false,
         obfuscation: None,
-        entry_endpoint: None,
+        entry_endpoint,
         tunnel_interface: None,
         daita: false,
     }
@@ -97,7 +129,10 @@ mod tests {
 
     use ed25519_dalek::SigningKey;
     use talpid_types::net::TransportProtocol;
-    use talpid_warren_tunnel::WarrenTunnelParameters;
+    use talpid_warren_tunnel::{
+        ExitId, MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor,
+        WarrenTunnelParameters,
+    };
     use warren_protocol::{WarrenExitAddr, WarrenPubkey};
 
     use super::BackendParams;
@@ -113,7 +148,34 @@ mod tests {
             signing_key: SigningKey::from_bytes(&[9u8; 32]),
             n_connections: 1,
             features: 0,
+            multi_hop: None,
         }
+    }
+
+    fn fixture_warren_multi_hop(
+        relay_endpoint: &str,
+        exit_endpoint: &str,
+    ) -> WarrenTunnelParameters {
+        let mut p = fixture_warren(&["203.0.113.99:443"]);
+        p.multi_hop = Some(MultiHopConfig {
+            relay: MultiHopRelayDescriptor {
+                relay_id: [0xa1; 16],
+                relay_ed25519_pubkey: [0xa2; 32],
+                endpoint: relay_endpoint.parse().unwrap(),
+                signature: [0xa3; 64],
+            },
+            exit: MultiHopExitDescriptor {
+                exit_id: ExitId([0xb1; 16]),
+                exit_ed25519_pubkey: [0xb2; 32],
+                exit_x25519_multihop_pubkey: [0xb3; 32],
+                endpoint: exit_endpoint.parse().unwrap(),
+                signature: [0xb4; 64],
+            },
+            operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
+            enable_gso: true,
+            use_warren_obfuscation: true,
+        });
+        p
     }
 
     #[test]
@@ -188,6 +250,75 @@ mod tests {
             te.entry_endpoint.is_none(),
             "Warren has no multihop entry endpoint"
         );
+    }
+
+    #[test]
+    fn warren_multi_hop_get_next_hop_endpoints_returns_only_relay_endpoint() {
+        // Critical firewall regression: on the multi-hop path the
+        // client never sends UDP to the exit directly; the relay
+        // forwards datagrams on a separate C2 connection. Opening the
+        // exit candidate IPs in the firewall would punch unnecessary
+        // holes and break the threat model (the only IP the daemon
+        // sends to on the data plane is the relay).
+        let params = fixture_warren_multi_hop("198.51.100.10:443", "198.51.100.20:443");
+        let backend = BackendParams::Warren(params);
+
+        let endpoints = backend.get_next_hop_endpoints();
+        assert_eq!(
+            endpoints.len(),
+            1,
+            "multi-hop must expose exactly one next-hop (the relay), got {endpoints:?}"
+        );
+        let only = &endpoints[0];
+        assert_eq!(only.protocol, TransportProtocol::Udp);
+        assert_eq!(
+            only.address,
+            "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
+            "next-hop must be the relay endpoint, not the exit"
+        );
+    }
+
+    #[test]
+    fn warren_multi_hop_get_tunnel_endpoint_uses_exit_with_relay_entry() {
+        // GUI mirror of the Wireguard multi-hop convention: `endpoint`
+        // is the conceptual exit peer (= the IP the user effectively
+        // exits through), `entry_endpoint` is the first hop the
+        // client actually dials (= the relay). A regression that
+        // swaps these would confuse the UI relay-pair display and the
+        // "where am I exiting from" panel.
+        let params = fixture_warren_multi_hop("198.51.100.10:443", "198.51.100.20:443");
+        let backend = BackendParams::Warren(params);
+
+        let te = backend.get_tunnel_endpoint();
+        assert_eq!(te.endpoint.protocol, TransportProtocol::Udp);
+        assert_eq!(
+            te.endpoint.address,
+            "198.51.100.20:443".parse::<SocketAddr>().unwrap(),
+            "`endpoint` must surface the exit descriptor endpoint"
+        );
+        let entry = te
+            .entry_endpoint
+            .expect("multi-hop must publish an entry_endpoint");
+        assert_eq!(entry.protocol, TransportProtocol::Udp);
+        assert_eq!(
+            entry.address,
+            "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
+            "`entry_endpoint` must surface the relay descriptor endpoint"
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn warren_multi_hop_get_exit_hop_endpoint_returns_none() {
+        // The Windows split-tunnel exit-hop accessor stays `None` for
+        // Warren even in multi-hop mode: Warren's "exit hop" is
+        // already reflected in `get_tunnel_endpoint().endpoint`, and
+        // the Wireguard-style secondary peer notion does not apply
+        // (the relay-exit C2 hop is internal to the data plane, not
+        // visible to the Windows firewall).
+        let params = fixture_warren_multi_hop("198.51.100.10:443", "198.51.100.20:443");
+        let backend = BackendParams::Warren(params);
+        assert!(backend.get_exit_hop_endpoint().is_none());
     }
 
     #[test]
