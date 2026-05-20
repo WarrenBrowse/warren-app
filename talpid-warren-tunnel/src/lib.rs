@@ -644,7 +644,15 @@ impl WarrenTunnelMonitor {
         };
         #[cfg(target_os = "macos")]
         let routes = build_warren_tunnel_routes_macos(&metadata.interface, &exit_ips);
-        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        // Windows owns its routing entirely from the warren-core
+        // PowerShell port (`DefaultRouteSplitGuard::install` below):
+        // host-route exception + `0.0.0.0/1` + `128.0.0.0/1` via the
+        // WinTUN adapter. talpid-routing is therefore handed an empty
+        // route set so it does not double-install conflicting netsh
+        // entries.
+        #[cfg(target_os = "windows")]
+        let routes: Vec<RequiredRoute> = Vec::new();
+        #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let routes: Vec<RequiredRoute> = {
             log::warn!("Warren tunnel routing not yet implemented for this platform.");
             Vec::new()
@@ -689,7 +697,7 @@ impl WarrenTunnelMonitor {
         // agnostic at this call site. The cfg-guard is required only to
         // skip the work entirely on platforms where the facade ships
         // the `stub` impl.
-        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
         let default_route_guard = {
             let exit_ip_v4 = exit_ips.iter().find_map(|ip| match ip {
                 IpAddr::V4(v4) => Some(*v4),
@@ -722,7 +730,7 @@ impl WarrenTunnelMonitor {
                 None
             }
         };
-        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
         // Spawn the bidirectional TUN <-> QUIC datagram pump. The task
@@ -1037,7 +1045,12 @@ impl WarrenTunnelMonitor {
         };
         #[cfg(target_os = "macos")]
         let routes = build_warren_tunnel_routes_macos(&metadata.interface, &next_hop_ips);
-        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        // Windows: routing fully owned by the warren-core PowerShell
+        // port via `DefaultRouteSplitGuard::install` below; talpid-
+        // routing gets an empty set to avoid double-install.
+        #[cfg(target_os = "windows")]
+        let routes: Vec<RequiredRoute> = Vec::new();
+        #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let routes: Vec<RequiredRoute> = {
             log::warn!("Warren multi-hop tunnel routing not yet implemented for this platform.");
             Vec::new()
@@ -1061,7 +1074,7 @@ impl WarrenTunnelMonitor {
         // above. The bypass exception targets the *relay* endpoint
         // (first hop) rather than the exit, since on multi-hop the only
         // UDP peer the client speaks to directly is the relay.
-        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
         let default_route_guard = {
             let relay_ip_v4 = match relay_endpoint.ip() {
                 IpAddr::V4(v4) => Some(v4),
@@ -1090,7 +1103,7 @@ impl WarrenTunnelMonitor {
                 None
             }
         };
-        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
         // Spawn the uplink + downlink pumps. Each consumes a clone of
