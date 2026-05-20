@@ -45,6 +45,13 @@ use warren_tunnel::{
 mod adapter;
 use adapter::MullvadTunPacketDevice;
 
+/// Daemon-side NAT-PMP lifecycle wrapper that owns the refresh loop +
+/// event forwarder and drops them on tunnel teardown. Activated only
+/// when `WarrenTunnelParameters::nat_pmp` carries `Some(cfg)` with
+/// `cfg.enabled == true`.
+pub mod nat_pmp_manager;
+pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpManager};
+
 /// Split-default policy routing helper that routes Internet traffic via
 /// the tunnel without overriding the kernel main routing table.
 pub mod default_route_split;
@@ -130,6 +137,15 @@ pub struct WarrenTunnelParameters {
     /// the tunnel state machine. The structural mirror is intentional
     /// (parameters live in one struct).
     pub nat_pmp: Option<NatPmpConfig>,
+
+    /// Observer invoked for every NAT-PMP event emitted by the daemon
+    /// owned `NatPmpManager` (Mapped, Renewed, Failed, Cancelled).
+    /// `None` short-circuits the manager spawn entirely (no observer =
+    /// nowhere to forward events = the manager would be useless). The
+    /// daemon wires this to a closure that pushes events into the
+    /// `WarrenStatusCache`, which in turn drives the
+    /// `NatPmpStatusUpdates` gRPC stream the Electron UI subscribes to.
+    pub nat_pmp_observer: Option<NatPmpEventObserver>,
 }
 
 impl std::fmt::Debug for WarrenTunnelParameters {
@@ -147,6 +163,10 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 &self.on_reconnect.as_ref().map(|_| "<observer>"),
             )
             .field("nat_pmp", &self.nat_pmp)
+            .field(
+                "nat_pmp_observer",
+                &self.nat_pmp_observer.as_ref().map(|_| "<observer>"),
+            )
             .finish()
     }
 }
@@ -334,6 +354,12 @@ pub struct WarrenTunnelMonitor {
     /// happens in `wait()` before the pump is aborted (mirrors the
     /// install order). `None` if no IPv4 next-hop IP was available.
     default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
+    /// Lifecycle owner of the NAT-PMP refresh loop + event forwarder
+    /// spawned after the tunnel is up. `None` when port-forwarding is
+    /// disabled in the user settings (`params.nat_pmp.is_none()` OR
+    /// `params.nat_pmp_observer.is_none()`). Dropping the field
+    /// cancels the loop and aborts the forwarder.
+    nat_pmp_manager: Option<NatPmpManager>,
 }
 
 /// Backend-specific task ownership.
@@ -750,6 +776,12 @@ impl WarrenTunnelMonitor {
 
         let _ = metadata; // kept for future MTU-change re-emission
 
+        // Spawn the NAT-PMP refresh loop once the data plane is up.
+        // The exit's NAT-PMP server lives on the tunnel gateway
+        // (10.66.0.1:5351); routing was installed at T7 so the UDP
+        // datagrams now flow through the TUN.
+        let nat_pmp_manager = spawn_nat_pmp_manager_if_enabled(&runtime, params);
+
         Ok(Self {
             runtime,
             backend: MonitorBackend::SingleHop {
@@ -759,6 +791,7 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
+            nat_pmp_manager,
         })
     }
 
@@ -1078,6 +1111,12 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
 
+        // Spawn the NAT-PMP refresh loop once the data plane is up.
+        // The exit-side NAT-PMP server is reachable via the tunnel
+        // gateway (10.66.0.1:5351). On multi-hop the routing identity
+        // of the gateway is the exit's TUN IP, same as single-hop.
+        let nat_pmp_manager = spawn_nat_pmp_manager_if_enabled(&runtime, params);
+
         Ok(Self {
             runtime,
             backend: MonitorBackend::MultiHop {
@@ -1089,6 +1128,7 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
+            nat_pmp_manager,
         })
     }
 
@@ -1111,7 +1151,16 @@ impl WarrenTunnelMonitor {
             mut event_hook,
             close_rx,
             default_route_guard,
+            nat_pmp_manager,
         } = self;
+
+        // Drop the NAT-PMP manager first so its refresh loop stops
+        // emitting events while the rest of the tunnel teardown
+        // proceeds. The forwarder task is aborted via the manager's
+        // Drop impl; pending events still in flight are discarded
+        // (the observer side gets at most one extra Cancelled event,
+        // which the daemon-side WarrenStatusCache handles gracefully).
+        drop(nat_pmp_manager);
 
         // Split the backend into its oneshot receiver (raced against
         // `close_rx` below) and its owned task handles (aborted after
@@ -1275,6 +1324,38 @@ impl SessionKind {
 /// `n0_nat_traversal` bug class (path discovery probing the peer's
 /// TUN gateway IP) is structurally eliminated, but this filter still
 /// hardens against malformed exit metadata that would carry a
+/// Spawns a [`NatPmpManager`] if NAT-PMP is enabled in the supplied
+/// parameters AND an observer is wired. Returns `None` in every other
+/// case so the manager is never spawned with a no-op observer.
+///
+/// The server address defaults to the tunnel gateway:5351
+/// (`warren_natpmp_client::default_server_addr()`); routing for the
+/// gateway is set up by the time this helper is called (just after
+/// the bidirectional pump is spawned).
+fn spawn_nat_pmp_manager_if_enabled(
+    runtime: &tokio::runtime::Handle,
+    params: &WarrenTunnelParameters,
+) -> Option<NatPmpManager> {
+    let cfg = params.nat_pmp.as_ref()?;
+    if !cfg.enabled {
+        log::debug!("Warren NAT-PMP: config present but disabled, skipping manager spawn");
+        return None;
+    }
+    let Some(observer) = params.nat_pmp_observer.clone() else {
+        // Disabled defensively: spawning the loop without an observer
+        // would silently leak events; the daemon-side wiring is
+        // expected to plug an observer whenever `nat_pmp.enabled =
+        // true`.
+        log::warn!(
+            "Warren NAT-PMP: config enabled but no observer wired; manager spawn suppressed"
+        );
+        return None;
+    };
+    let server = warren_natpmp_client::default_server_addr();
+    log::info!("Warren NAT-PMP: starting refresh loop against {server}");
+    Some(NatPmpManager::start(runtime, server, cfg, observer))
+}
+
 /// `10.66.0.1` candidate or similar.
 #[must_use]
 fn filter_endpoint_addr_for_wan(addr: WarrenExitAddr) -> WarrenExitAddr {
@@ -1689,6 +1770,7 @@ mod tests {
             multi_hop: None,
             on_reconnect: None,
             nat_pmp: None,
+            nat_pmp_observer: None,
         };
         let s = format!("{params:?}");
         assert!(s.contains("<redacted>"), "must mask secrets: {s}");
@@ -1716,6 +1798,7 @@ mod tests {
             multi_hop: None,
             on_reconnect: None,
             nat_pmp: None,
+            nat_pmp_observer: None,
         };
         assert!(params.multi_hop.is_none());
         assert!(
@@ -1765,6 +1848,7 @@ mod tests {
             multi_hop: Some(mh),
             on_reconnect: None,
             nat_pmp: None,
+            nat_pmp_observer: None,
         };
         let s = format!("{params:?}");
         assert!(
@@ -1804,6 +1888,7 @@ mod tests {
             multi_hop: None,
             on_reconnect: None,
             nat_pmp: Some(cfg.clone()),
+            nat_pmp_observer: None,
         };
         let s = format!("{params:?}");
         // NatPmpConfig derives Debug, so the Some(..) renders the

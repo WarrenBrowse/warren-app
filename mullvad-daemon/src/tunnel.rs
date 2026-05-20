@@ -3,7 +3,9 @@ use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
 use talpid_types::net::wireguard::TunnelParameters;
-use talpid_warren_tunnel::{MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
+use talpid_warren_tunnel::{
+    MultiHopConfig, NatPmpConfig, NatPmpEventObserver, WarrenTunnelParameters,
+};
 use tokio::sync::Mutex;
 
 use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
@@ -203,6 +205,27 @@ impl ParametersGenerator {
         // supervisor in /v1 single-hop).
         let cache = inner.warren_status_cache.clone();
         params.on_reconnect = Some(Arc::new(move || cache.record_reconnect()));
+        // Wire the NAT-PMP observer that forwards every event from the
+        // refresh loop into the same WarrenStatusCache. The cache
+        // updates drive the gRPC `NatPmpStatusUpdates` stream the UI
+        // subscribes to. If `params.nat_pmp` is `None` or disabled,
+        // `talpid-warren-tunnel` short-circuits the manager spawn and
+        // this observer is never called.
+        if params
+            .nat_pmp
+            .as_ref()
+            .is_some_and(|cfg| cfg.enabled)
+        {
+            let cache_for_nat_pmp = inner.warren_status_cache.clone();
+            let observer: NatPmpEventObserver = Arc::new(move |event| {
+                cache_for_nat_pmp.record_nat_pmp_event(event);
+            });
+            // Surface the in-flight state up-front so the UI shows
+            // "Requesting" the moment the user toggles the feature on,
+            // even before the first request_map completes.
+            inner.warren_status_cache.set_nat_pmp_requesting();
+            params.nat_pmp_observer = Some(observer);
+        }
         Ok(params)
     }
 

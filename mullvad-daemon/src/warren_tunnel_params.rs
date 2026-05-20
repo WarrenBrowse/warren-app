@@ -72,6 +72,11 @@ pub fn assemble_for_attempt(
         // caller threads it as-is; `None` keeps the legacy behaviour
         // (no refresh loop spawned).
         nat_pmp,
+        // The NAT-PMP observer is wired by the caller
+        // (`ParametersGenerator::produce_warren_tunnel_params`) after
+        // assembly so the relay-selection logic stays decoupled from
+        // the daemon-side status cache.
+        nat_pmp_observer: None,
     })
 }
 
