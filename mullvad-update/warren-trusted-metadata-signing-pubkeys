@@ -1,0 +1,27 @@
+# Warren update-channel Ed25519 metadata signing public keys.
+#
+# Each non-comment, non-empty line is a single 64-character hex-encoded
+# Ed25519 verifying key. Comments start with `#`. Trailing whitespace is
+# stripped per `parse_keys` in `src/defaults.rs`.
+#
+# === PLACEHOLDER (pending Warren key generation by poka) ===========
+#
+# The pubkey below is the upstream `mullvad-update/test-pubkey` value
+# repurposed as a Warren placeholder so the `Vec1<VerifyingKey>`
+# LazyLock initialiser has at least one valid key to deserialise. Any
+# real Warren update manifest signed by an actual production privkey
+# will fail verification under this placeholder, which is the safe-by-
+# default outcome until the real key lands here.
+#
+# To deploy real Warren updates:
+#   1. poka generates an Ed25519 keypair offline (privkey kept secret).
+#   2. The 32-byte pubkey is encoded to hex and replaces the line below.
+#   3. CI release workflow signs every published `latest.json` /
+#      `*.json` manifest with the matching privkey.
+#   4. A `warren-vpn` daemon shipped with the new pubkey trust file
+#      will accept the signed manifest and surface the update banner.
+#
+# Multiple production keys may be listed once a key-rotation policy is
+# defined (mirror upstream Mullvad's 5-developer-key scheme if desired).
+# Until then, only this placeholder is parsed.
+BB4EF63FFDCC6BD5A19C30CD23B9DE03099407A04463418F17AE338B98AA09D4

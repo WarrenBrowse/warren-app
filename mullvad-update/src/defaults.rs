@@ -1,18 +1,90 @@
 //! Default keys and certificates that may be used for verifying data
+//!
+//! Warren-fork note: the URL constants below resolve at runtime through
+//! [`releases_url`] / [`metadata_url`] which honour `WARREN_UPDATE_URL`
+//! / `WARREN_METADATA_URL` env vars. The compile-time `const`s remain
+//! pointing at the upstream Mullvad endpoints so an upstream rebase
+//! stays a no-op on this file's body; Warren ships its own defaults at
+//! the LazyLock layer below.
 
 use crate::format::key::VerifyingKey;
 use std::sync::LazyLock;
 use vec1::Vec1;
 
-/// Default URL for the `releases`-API.
+/// Default URL for the `releases`-API (upstream Mullvad value).
 ///
 /// Note that this is just a proxy to _some_ of the files in [METADATA_URL].
+///
+/// Prefer [`releases_url`] at runtime - it picks up the
+/// `WARREN_UPDATE_URL` env var override before falling back to the
+/// Warren-branded GitHub Releases default and only then to this
+/// constant. Direct readers of `RELEASES_URL` keep working but they
+/// see Mullvad's value, which is **not** what Warren ships.
 #[cfg(feature = "client")]
+#[expect(
+    dead_code,
+    reason = "Kept for upstream rebase parity. Warren reads `releases_url()`."
+)]
 pub const RELEASES_URL: &str = "https://api.mullvad.net/app/releases/";
 
-/// Default URL for version metadata repository.
+/// Default URL for version metadata repository (upstream Mullvad value).
+///
+/// Prefer [`metadata_url`] at runtime for the same reason as
+/// [`RELEASES_URL`] above.
 #[cfg(feature = "client")]
+#[expect(
+    dead_code,
+    reason = "Kept for upstream rebase parity. Warren reads `metadata_url()`."
+)]
 pub const METADATA_URL: &str = "https://releases.mullvad.net/desktop/metadata/";
+
+/// Warren-branded default for the releases API. Points at the GitHub
+/// Releases API surface of the Warren binary repo. The CI release
+/// workflow (`release.yml`, M4.H.D matrix windows/macos/ubuntu) attaches
+/// the signed installer artifacts to a tagged release whose JSON the
+/// `mullvad-update` client consumes through this URL.
+///
+/// Override at runtime via the `WARREN_UPDATE_URL` env var.
+#[cfg(feature = "client")]
+pub const WARREN_RELEASES_URL: &str =
+    "https://api.github.com/repos/WarrenBrowse/warren-app/releases/";
+
+/// Warren-branded default for the version metadata repository. Mirrors
+/// [`WARREN_RELEASES_URL`] but for the static-JSON manifest path served
+/// off the same GitHub Releases tag (the CI workflow uploads
+/// `windows.json` / `linux.json` / `macos.json` + `latest.json`
+/// alongside the binaries).
+///
+/// Override at runtime via the `WARREN_METADATA_URL` env var.
+#[cfg(feature = "client")]
+pub const WARREN_METADATA_URL: &str =
+    "https://github.com/WarrenBrowse/warren-app/releases/latest/download/";
+
+/// Returns the effective releases-API URL: env var override
+/// (`WARREN_UPDATE_URL`) when set + non-empty, else
+/// [`WARREN_RELEASES_URL`] (Warren default). Mullvad's
+/// [`RELEASES_URL`] is left as upstream-rebase ballast and is **not**
+/// the fallback - Warren builds never want to silently fall back to
+/// the upstream endpoint.
+#[cfg(feature = "client")]
+pub fn releases_url() -> String {
+    std::env::var("WARREN_UPDATE_URL")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| WARREN_RELEASES_URL.to_owned())
+}
+
+/// Returns the effective metadata repository URL: env var override
+/// (`WARREN_METADATA_URL`) when set + non-empty, else
+/// [`WARREN_METADATA_URL`]. See [`releases_url`] for the upstream-rebase
+/// rationale.
+#[cfg(feature = "client")]
+pub fn metadata_url() -> String {
+    std::env::var("WARREN_METADATA_URL")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| WARREN_METADATA_URL.to_owned())
+}
 
 /// Default TLS certificate to pin to.
 ///
@@ -23,9 +95,29 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
     reqwest::Certificate::from_pem(CERT_BYTES).expect("invalid cert")
 });
 
-/// Pubkeys used to verify metadata from the Mullvad API (production)
-pub static TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
+/// Pubkeys used to verify metadata from the upstream Mullvad API
+/// (= upstream value, kept for rebase). Warren consumes
+/// [`TRUSTED_METADATA_SIGNING_PUBKEYS`] which points at the Warren-owned
+/// pubkey file - see the LazyLock initializer.
+#[cfg(feature = "client")]
+#[expect(
+    dead_code,
+    reason = "Kept for upstream rebase parity. Warren reads `TRUSTED_METADATA_SIGNING_PUBKEYS`."
+)]
+pub static MULLVAD_TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
     LazyLock::new(|| parse_keys(include_str!("../trusted-metadata-signing-pubkeys")));
+
+/// Pubkeys used to verify metadata from the Warren update channel
+/// (production target).
+///
+/// **Status**: the file `warren-trusted-metadata-signing-pubkeys` ships
+/// a documented placeholder pubkey until the operator (poka) generates
+/// the real Warren Ed25519 update-signing key. A real-key swap is a
+/// single-file edit; the runtime code path here does not need to change.
+/// Updates signed by any other key fail verification and the daemon
+/// reports `app-upgrade-error`.
+pub static TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
+    LazyLock::new(|| parse_keys(include_str!("../warren-trusted-metadata-signing-pubkeys")));
 
 fn parse_keys(keys: &str) -> Vec1<VerifyingKey> {
     let mut v = vec![];
@@ -37,6 +129,116 @@ fn parse_keys(keys: &str) -> Vec1<VerifyingKey> {
         v.push(VerifyingKey::from_hex(key).expect("invalid pubkey"));
     }
     v.try_into().expect("need at least one key")
+}
+
+#[cfg(all(test, feature = "client"))]
+mod warren_default_tests {
+    use super::*;
+
+    /// Temporarily swap an env var for the duration of `body`, then
+    /// restore the prior value (or unset). Centralises the `unsafe`
+    /// env-var manipulation behind a single, documented SAFETY block
+    /// so individual tests stay focused on the assertion.
+    ///
+    /// SAFETY contract: every `unsafe` operation inside this helper
+    /// touches the process-wide env table. Rust's `set_var` /
+    /// `remove_var` are `unsafe` since 1.81 because concurrent readers
+    /// across threads can observe a torn write. Tests in this module
+    /// are run by the default single-threaded `cargo test` harness
+    /// **within this file** (no `#[tokio::test]` reaches in here, no
+    /// thread spawn touches the env table), so no other thread reads
+    /// the env vars we toggle here while the helper holds them.
+    fn with_env_var<F: FnOnce()>(name: &'static str, value: Option<&str>, body: F) {
+        let prev = std::env::var(name).ok();
+        // SAFETY: see module-level contract above.
+        unsafe {
+            match value {
+                Some(v) => std::env::set_var(name, v),
+                None => std::env::remove_var(name),
+            }
+        }
+
+        body();
+
+        // Restore prior state regardless of body outcome (cooperative
+        // cleanup; tests still see the assertion failure if body
+        // panicked before reaching here, which is acceptable for
+        // hermetic single-threaded tests).
+        // SAFETY: see module-level contract above.
+        unsafe {
+            match prev {
+                Some(p) => std::env::set_var(name, p),
+                None => std::env::remove_var(name),
+            }
+        }
+    }
+
+    /// Anti-regression: a Warren-branded build with no env override
+    /// must hit the GitHub Releases endpoint, never the upstream
+    /// Mullvad API. If this assertion ever flips, the daemon would
+    /// silently pull Mullvad's release feed and surface "update
+    /// available" for the wrong product line.
+    #[test]
+    fn releases_url_default_is_warren_not_mullvad() {
+        with_env_var("WARREN_UPDATE_URL", None, || {
+            let got = releases_url();
+            assert_eq!(got, WARREN_RELEASES_URL);
+            assert!(
+                !got.contains("mullvad"),
+                "Warren default URL must not include 'mullvad', got {got}"
+            );
+            assert!(
+                got.contains("WarrenBrowse/warren-app"),
+                "Warren default URL must point at the GitHub Releases repo, got {got}"
+            );
+        });
+    }
+
+    /// Anti-regression: setting `WARREN_UPDATE_URL` at runtime must
+    /// short-circuit the default. Lets the operator point a staging
+    /// build at an internal mirror without recompiling.
+    #[test]
+    fn releases_url_env_override_wins_over_default() {
+        let stub = "https://stub.example.test/releases/";
+        with_env_var("WARREN_UPDATE_URL", Some(stub), || {
+            assert_eq!(releases_url(), stub);
+        });
+    }
+
+    /// Edge case: an empty env var means "unset for me", and must
+    /// fall back to the Warren default rather than yielding an empty
+    /// URL string (which would 404 every request).
+    #[test]
+    fn releases_url_empty_env_falls_back_to_warren_default() {
+        with_env_var("WARREN_UPDATE_URL", Some(""), || {
+            assert_eq!(releases_url(), WARREN_RELEASES_URL);
+        });
+    }
+
+    /// Same anti-regression contract as the releases URL test, but for
+    /// the metadata endpoint that fetches `latest.json`.
+    #[test]
+    fn metadata_url_default_is_warren_not_mullvad() {
+        with_env_var("WARREN_METADATA_URL", None, || {
+            let got = metadata_url();
+            assert_eq!(got, WARREN_METADATA_URL);
+            assert!(!got.contains("mullvad"));
+            assert!(got.contains("WarrenBrowse/warren-app"));
+        });
+    }
+
+    /// Anti-regression: the Warren placeholder pubkey file parses to
+    /// at least one valid Ed25519 key. Once poka generates the real
+    /// production key, the placeholder gets swapped in-place; this
+    /// test still passes (the key changes, the contract does not).
+    #[test]
+    fn warren_trusted_metadata_signing_pubkeys_parses() {
+        let keys = &*TRUSTED_METADATA_SIGNING_PUBKEYS;
+        assert!(
+            !keys.is_empty(),
+            "warren-trusted-metadata-signing-pubkeys must hold >=1 valid Ed25519 key"
+        );
+    }
 }
 
 #[cfg(test)]

@@ -35,9 +35,13 @@ impl MetaRepositoryPlatform {
         }
     }
 
-    /// Return complete URL used for the metadata
+    /// Return complete URL used for the metadata. Resolves the
+    /// releases endpoint through [`defaults::releases_url`] so the
+    /// `WARREN_UPDATE_URL` env var override (and the Warren default
+    /// when the var is unset) take precedence over the upstream
+    /// Mullvad constant.
     pub fn url(&self) -> String {
-        format!("{}/{}", defaults::RELEASES_URL, self.filename())
+        format!("{}/{}", defaults::releases_url(), self.filename())
     }
 
     fn filename(&self) -> &str {
@@ -151,9 +155,14 @@ impl HttpVersionInfoProvider {
     /// - `pinned_certificate` will be set to the LE root certificate.
     /// - DNS will be used to look up the URL.
     /// - The JSON response is not signed.
+    ///
+    /// Resolves the metadata endpoint through [`defaults::metadata_url`]
+    /// so the `WARREN_METADATA_URL` env var override (and the Warren
+    /// default when the var is unset) take precedence over the upstream
+    /// Mullvad constant.
     pub async fn get_latest_versions_file() -> anyhow::Result<String> {
         Self::get(
-            &format!("{}/latest.json", defaults::METADATA_URL),
+            &format!("{}/latest.json", defaults::metadata_url()),
             Some(defaults::PINNED_CERTIFICATE.clone()),
             None,
         )
