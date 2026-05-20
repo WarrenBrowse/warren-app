@@ -6,6 +6,8 @@ import {
   IDaitaSettings,
   IDnsOptions,
   IWireguardEndpointData,
+  NatPmpSettings,
+  NatPmpStatus,
   ObfuscationSettings,
   type Recents,
   RelayOverride,
@@ -67,6 +69,20 @@ export interface IUpdateWarrenMultiHopAction {
 export interface IUpdateWarrenStatusAction {
   type: 'UPDATE_WARREN_STATUS';
   warrenStatus: WarrenStatus;
+}
+
+// Update action for the persisted NAT-PMP settings (toggle + lifetime
+// + protocol + ports). Dispatched on every Settings.warrenNatPmp
+// change so the port-forwarding view stays in sync.
+export interface IUpdateNatPmpSettingsAction {
+  type: 'UPDATE_NAT_PMP_SETTINGS';
+  natPmpSettings: NatPmpSettings;
+}
+
+// Update action for the live NAT-PMP status (refresh-loop lifecycle).
+export interface IUpdateNatPmpStatusAction {
+  type: 'UPDATE_NAT_PMP_STATUS';
+  natPmpStatus: NatPmpStatus;
 }
 
 export interface IUpdateEnableIpv6Action {
@@ -165,6 +181,8 @@ export type SettingsAction =
   | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMultiHopAction
   | IUpdateWarrenStatusAction
+  | IUpdateNatPmpSettingsAction
+  | IUpdateNatPmpStatusAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -254,6 +272,20 @@ function updateWarrenStatus(warrenStatus: WarrenStatus): IUpdateWarrenStatusActi
   return {
     type: 'UPDATE_WARREN_STATUS',
     warrenStatus,
+  };
+}
+
+function updateNatPmpSettings(natPmpSettings: NatPmpSettings): IUpdateNatPmpSettingsAction {
+  return {
+    type: 'UPDATE_NAT_PMP_SETTINGS',
+    natPmpSettings,
+  };
+}
+
+function updateNatPmpStatus(natPmpStatus: NatPmpStatus): IUpdateNatPmpStatusAction {
+  return {
+    type: 'UPDATE_NAT_PMP_STATUS',
+    natPmpStatus,
   };
 }
 
@@ -393,6 +425,8 @@ export default {
   updateWarrenApiUrl,
   updateWarrenMultiHop,
   updateWarrenStatus,
+  updateNatPmpSettings,
+  updateNatPmpStatus,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

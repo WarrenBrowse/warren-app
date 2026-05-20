@@ -19,6 +19,7 @@ import {
   ErrorStateCause,
   IRelayListWithEndpointData,
   ISettings,
+  NatPmpStatus,
   TunnelState,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
@@ -110,6 +111,9 @@ class ApplicationMain
   // Created on every successful daemon reconnect and torn down on
   // disconnect, mirroring the daemonEventListener lifecycle.
   private warrenStatusListener?: SubscriptionListener<WarrenStatus>;
+  // Subscription to the daemon NatPmpStatusUpdates push stream.
+  // Same lifecycle as warrenStatusListener.
+  private natPmpStatusListener?: SubscriptionListener<NatPmpStatus>;
   private reconnectBackoff = new ReconnectionBackoff();
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
@@ -576,6 +580,15 @@ class ApplicationMain
       log.warn(`Failed to subscribe to Warren status events: ${error.message}`);
     }
 
+    // Subscribe to NAT-PMP refresh-loop status. Same best-effort
+    // policy as warrenStatus: failure must not block the bootstrap.
+    try {
+      this.natPmpStatusListener = this.subscribeNatPmpStatusEvents();
+    } catch (e) {
+      const error = e as Error;
+      log.warn(`Failed to subscribe to NAT-PMP status events: ${error.message}`);
+    }
+
     if (firstDaemonConnection) {
       // check if daemon is performing post upgrade tasks the first time it's connected to
       try {
@@ -721,11 +734,15 @@ class ApplicationMain
     if (this.warrenStatusListener) {
       this.daemonRpc.unsubscribeWarrenStatusListener(this.warrenStatusListener);
     }
-    // Reset the daemon, app upgrade, and Warren status listeners
-    // because they are going to be invalidated on disconnect.
+    if (this.natPmpStatusListener) {
+      this.daemonRpc.unsubscribeNatPmpStatusListener(this.natPmpStatusListener);
+    }
+    // Reset all listeners because they are going to be invalidated
+    // on disconnect.
     this.daemonEventListener = undefined;
     this.daemonAppUpgradeEventListener = undefined;
     this.warrenStatusListener = undefined;
+    this.natPmpStatusListener = undefined;
 
     this.notificationController.closeNotificationsInCategory(
       SystemNotificationCategory.tunnelState,
@@ -786,6 +803,10 @@ class ApplicationMain
     if (this.warrenStatusListener) {
       this.daemonRpc.unsubscribeWarrenStatusListener(this.warrenStatusListener);
     }
+
+    if (this.natPmpStatusListener) {
+      this.daemonRpc.unsubscribeNatPmpStatusListener(this.natPmpStatusListener);
+    }
   }
 
   private subscribeEvents(): SubscriptionListener<DaemonEvent> {
@@ -833,6 +854,22 @@ class ApplicationMain
       },
     );
     this.daemonRpc.subscribeWarrenStatusListener(listener);
+    return listener;
+  }
+
+  // Forwards every NatPmpStatus snapshot received from the daemon to
+  // the renderer over the `natPmpStatus` IPC channel. Same best-effort
+  // semantics as subscribeWarrenStatusEvents.
+  private subscribeNatPmpStatusEvents(): SubscriptionListener<NatPmpStatus> {
+    const listener = new SubscriptionListener(
+      (snapshot: NatPmpStatus) => {
+        IpcMainEventChannel.natPmpStatus.notify?.(snapshot);
+      },
+      (error: Error) => {
+        log.warn(`Cannot deserialize the NAT-PMP status event: ${error.message}`);
+      },
+    );
+    this.daemonRpc.subscribeNatPmpStatusListener(listener);
     return listener;
   }
 

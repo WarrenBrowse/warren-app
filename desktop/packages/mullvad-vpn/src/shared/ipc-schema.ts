@@ -21,6 +21,8 @@ import {
   IRelayListWithEndpointData,
   ISettings,
   LogoutSource,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
@@ -196,6 +198,14 @@ export const ipcSchema = {
   warrenStatus: {
     '': notifyRenderer<WarrenStatus>(),
   },
+  // NAT-PMP port-forwarding live status. Same pattern as
+  // `warrenStatus`: main subscribes to the daemon NatPmpStatusUpdates
+  // stream, forwards each snapshot via this channel, renderer
+  // dispatches into the redux store, and the port-forwarding settings
+  // view rerenders with the current port + countdown.
+  natPmpStatus: {
+    '': notifyRenderer<NatPmpStatus>(),
+  },
   settings: {
     '': notifyRenderer<ISettings>(),
     importFile: invoke<string, void>(),
@@ -210,6 +220,9 @@ export const ipcSchema = {
     setWarrenApiUrl: invoke<string, void>(),
     // Warren multi-hop settings (M4.E.D). Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
+    // Warren NAT-PMP port-forwarding settings. Daemon picks up the
+    // new value on the NEXT tunnel reconnect (no restart needed).
+    setNatPmpSettings: invoke<NatPmpSettings, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
     setLockdownMode: invoke<boolean, void>(),

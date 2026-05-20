@@ -2,6 +2,7 @@ import {
   ApiAccessMethodSettings,
   IRelaySettingsNormal,
   ISettings,
+  NatPmpProto,
   ObfuscationType,
   Ownership,
 } from '../shared/daemon-rpc-types';
@@ -86,6 +87,15 @@ export function getDefaultSettings(): ISettings {
       entryCountry: '',
       exitCountry: '',
       hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+    },
+    // NAT-PMP port-forwarding OFF by default. UDP / 1 h lifetime
+    // baseline; the user toggles ON from the port-forwarding view.
+    warrenNatPmp: {
+      enabled: false,
+      lifetimeSecs: 3600,
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 0,
     },
   };
 }

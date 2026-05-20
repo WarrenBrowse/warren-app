@@ -31,6 +31,7 @@ import {
   MainView,
   ManageDevicesView,
   MultihopSettingsView,
+  PortForwardingSettingsView,
   ProblemReportView,
   RestoreMnemonicView,
   SelectLanguageView,
@@ -87,6 +88,11 @@ export default function AppRouter() {
             exact
             path={RoutePath.warrenMultiHopSettings}
             component={WarrenMultiHopSettingsView}
+          />
+          <Route
+            exact
+            path={RoutePath.portForwardingSettings}
+            component={PortForwardingSettingsView}
           />
           <Route exact path={RoutePath.vpnSettings} component={VpnSettingsView} />
           <Route exact path={RoutePath.daitaSettings} component={DaitaSettingsView} />

@@ -283,6 +283,28 @@ function deserialize_mullvad_daemon_management_interface_LogMessage(buffer_arg) 
   return management_interface_pb.LogMessage.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_NatPmpSettings(arg) {
+  if (!(arg instanceof management_interface_pb.NatPmpSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.NatPmpSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_NatPmpSettings(buffer_arg) {
+  return management_interface_pb.NatPmpSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_NatPmpStatus(arg) {
+  if (!(arg instanceof management_interface_pb.NatPmpStatus)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.NatPmpStatus');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_NatPmpStatus(buffer_arg) {
+  return management_interface_pb.NatPmpStatus.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_NewAccessMethodSetting(arg) {
   if (!(arg instanceof management_interface_pb.NewAccessMethodSetting)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.NewAccessMethodSetting');
@@ -1002,6 +1024,47 @@ warrenStatusUpdates: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
+// differentiator since Mullvad / IVPN dropped port-forwarding in
+// 2023. OFF by default; when ON the daemon spawns a refresh loop
+// against the exit's NAT-PMP server (UDP/5351 of the tunnel
+// gateway) and surfaces the granted public port to the UI through
+// the NatPmpStatusUpdates stream.
+getNatPmpSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetNatPmpSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.NatPmpSettings,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpSettings,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpSettings,
+  },
+  setNatPmpSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetNatPmpSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.NatPmpSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_NatPmpSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Push stream emitting a new NatPmpStatus on every refresh loop
+// event (Mapped / Renewed / Failed / Cancelled).
+natPmpStatusUpdates: {
+    path: '/mullvad_daemon.management_interface.ManagementService/NatPmpStatusUpdates',
+    requestStream: false,
+    responseStream: true,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.NatPmpStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpStatus,
   },
   // Account management
 createNewAccount: {

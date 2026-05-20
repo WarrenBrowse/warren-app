@@ -500,7 +500,45 @@ export interface ISettings {
   // Default = OFF per doctrine `warren_multihop_doctrine_v1`.
   // Restart daemon requis pour appliquer.
   warrenMultiHop: WarrenMultiHopSettings;
+  // Warren NAT-PMP port-forwarding settings. Default OFF. Pushed
+  // live via `setNatPmpSettings` (no daemon restart required: the
+  // next tunnel reconnect picks up the new config).
+  warrenNatPmp: NatPmpSettings;
 }
+
+// Transport protocol enum mirrors the gRPC `NatPmpSettings.Proto`
+// shape. Default UDP. Mapping both TCP and UDP simultaneously is a
+// future extension (would spawn two daemon-side refresh loops).
+export enum NatPmpProto {
+  udp = 'udp',
+  tcp = 'tcp',
+}
+
+// Warren NAT-PMP port-forwarding settings. Persisted in
+// `Settings.warrenNatPmp` and surfaced via the port-forwarding
+// settings view (Warren differentiator since Mullvad / IVPN dropped
+// port-forwarding in 2023).
+export interface NatPmpSettings {
+  enabled: boolean;
+  // Requested lifetime in seconds. Exit clamps to [60, 3600] s, so
+  // values outside that range are silently capped server-side. UI
+  // exposes 1h / 6h / 24h presets that all collapse to 3600 s.
+  lifetimeSecs: number;
+  protocol: NatPmpProto;
+  // Suggested external port (0 = server picks).
+  suggestedExternalPort: number;
+  // Internal port the user's application binds (0 = unset).
+  internalPort: number;
+}
+
+// Live NAT-PMP refresh-loop status. Pushed by the daemon via the
+// `natPmpStatusUpdates` IPC channel and read on demand via
+// `getNatPmpSettings`.
+export type NatPmpStatus =
+  | { state: 'disabled' }
+  | { state: 'requesting' }
+  | { state: 'mapped'; externalPort: number; lifetimeRemainingSecs: number }
+  | { state: 'failed'; errorMessage: string };
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
 // surfaced via the Warren multi-hop view. `entryCountry` and

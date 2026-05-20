@@ -40,7 +40,9 @@ export type ScrollToAnchorId =
   // Anchors for the Warren status display (reconnect_count + age,
   // obfuscation indicator).
   | 'warren-status-reconnect'
-  | 'warren-obfuscation-indicator';
+  | 'warren-obfuscation-indicator'
+  // Anchor for the port-forwarding toggle row.
+  | 'port-forwarding-setting';
 
 export type ScrollToAnchorOption = {
   type: 'scroll-to-anchor';

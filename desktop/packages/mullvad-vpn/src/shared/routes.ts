@@ -17,6 +17,9 @@ export enum RoutePath {
   userInterfaceSettings = '/settings/interface',
   multihopSettings = '/settings/multihop',
   warrenMultiHopSettings = '/settings/warren-multi-hop',
+  // Warren NAT-PMP port-forwarding (M4.H.F differentiator vs Mullvad
+  // / IVPN abandon 2023). View opens from the settings home view.
+  portForwardingSettings = '/settings/port-forwarding',
   vpnSettings = '/settings/vpn',
   daitaSettings = '/settings/daita',
   udpOverTcp = '/settings/advanced/wireguard/udp-over-tcp',

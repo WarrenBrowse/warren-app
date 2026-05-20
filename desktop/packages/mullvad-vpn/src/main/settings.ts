@@ -46,6 +46,10 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetWarrenMultiHop((settings) =>
       this.daemonRpc.setWarrenMultiHopSettings(settings),
     );
+    // IPC handler for the NAT-PMP port-forwarding settings.
+    IpcMainEventChannel.settings.handleSetNatPmpSettings((settings) =>
+      this.daemonRpc.setNatPmpSettings(settings),
+    );
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
       this.daemonRpc.setShowBetaReleases(showBetaReleases),
     );
@@ -204,6 +208,11 @@ export default class Settings implements Readonly<ISettings> {
   // apply.
   public get warrenMultiHop() {
     return this.settingsValue.warrenMultiHop;
+  }
+  // NAT-PMP port-forwarding settings. Live push: no daemon restart
+  // needed.
+  public get warrenNatPmp() {
+    return this.settingsValue.warrenNatPmp;
   }
 
   public get gui() {

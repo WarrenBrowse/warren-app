@@ -22,6 +22,8 @@ import {
   IRelayListWithEndpointData,
   ISettings,
   LogoutSource,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
@@ -41,6 +43,8 @@ import {
   convertFromDaemonEvent,
   convertFromDevice,
   convertFromDeviceState,
+  convertFromNatPmpSettings,
+  convertFromNatPmpStatus,
   convertFromRelayList,
   convertFromSettings,
   convertFromTunnelState,
@@ -48,6 +52,7 @@ import {
   convertToApiAccessMethodSetting,
   convertToCustomList,
   convertToCustomProxy,
+  convertToNatPmpSettings,
   convertToNewApiAccessMethodSetting,
   convertToNewCustomList,
   convertToRelayConstraints,
@@ -89,7 +94,10 @@ export class DaemonRpc extends GrpcClient {
   private subscriptions: Map<
     number,
     grpc.ClientReadableStream<
-      grpcTypes.DaemonEvent | grpcTypes.AppUpgradeEvent | grpcTypes.WarrenStatus
+      | grpcTypes.DaemonEvent
+      | grpcTypes.AppUpgradeEvent
+      | grpcTypes.WarrenStatus
+      | grpcTypes.NatPmpStatus
     >
   > = new Map();
 
@@ -402,6 +410,55 @@ export class DaemonRpc extends GrpcClient {
   public async getWarrenStatus(): Promise<WarrenStatus> {
     const response = await this.callEmpty<grpcTypes.WarrenStatus>(this.client.getWarrenStatus);
     return convertFromWarrenStatus(response);
+  }
+
+  // Warren NAT-PMP port-forwarding. The setter pushes the value live
+  // to the daemon, which both persists it AND updates the running
+  // parameters generator so the next tunnel reconnect spawns (or
+  // stops) the refresh loop.
+  public async getNatPmpSettings(): Promise<NatPmpSettings> {
+    const response = await this.callEmpty<grpcTypes.NatPmpSettings>(this.client.getNatPmpSettings);
+    return convertFromNatPmpSettings(response);
+  }
+
+  public async setNatPmpSettings(settings: NatPmpSettings): Promise<void> {
+    const proto = convertToNatPmpSettings(settings);
+    await this.call<grpcTypes.NatPmpSettings, Empty>(this.client.setNatPmpSettings, proto);
+  }
+
+  // Push stream subscription mirroring `subscribeWarrenStatusListener`.
+  // Forwards every refresh-loop event (Mapped / Renewed / Failed /
+  // Cancelled) as a renderer-facing `NatPmpStatus` so the
+  // port-forwarding view updates without polling.
+  public subscribeNatPmpStatusListener(listener: SubscriptionListener<NatPmpStatus>) {
+    const call = this.isConnected && this.client.natPmpStatusUpdates(new Empty());
+    if (!call) {
+      throw noConnectionError;
+    }
+    const subscriptionId = this.subscriptionId();
+    listener.subscriptionId = subscriptionId;
+    this.subscriptions.set(subscriptionId, call);
+
+    call.on('data', (data: grpcTypes.NatPmpStatus) => {
+      try {
+        listener.onEvent(convertFromNatPmpStatus(data));
+      } catch (e) {
+        const error = e as Error;
+        listener.onError(error);
+      }
+    });
+
+    call.on('error', (error) => {
+      listener.onError(error);
+      this.removeSubscription(subscriptionId);
+    });
+  }
+
+  public unsubscribeNatPmpStatusListener(listener: SubscriptionListener<NatPmpStatus>) {
+    const id = listener.subscriptionId;
+    if (id !== undefined) {
+      this.removeSubscription(id);
+    }
   }
 
   public async setShowBetaReleases(showBetaReleases: boolean): Promise<void> {

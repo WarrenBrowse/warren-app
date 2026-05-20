@@ -9,6 +9,9 @@ import {
   IpVersion,
   IWireguardEndpointData,
   LiftedConstraint,
+  NatPmpProto,
+  NatPmpSettings,
+  NatPmpStatus,
   ObfuscationSettings,
   ObfuscationType,
   Ownership,
@@ -94,6 +97,12 @@ export interface ISettingsReduxState {
   // obfuscation_active). Undefined until the first push from the
   // daemon WarrenStatusUpdates stream.
   warrenStatus?: WarrenStatus;
+  // Persistent NAT-PMP port-forwarding settings (M4.H.F).
+  warrenNatPmp: NatPmpSettings;
+  // Live NAT-PMP refresh-loop status. Undefined until the first push
+  // from the daemon NatPmpStatusUpdates stream; treat undefined as
+  // `{ state: 'disabled' }` UI-side.
+  natPmpStatus?: NatPmpStatus;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -149,6 +158,14 @@ const initialState: ISettingsReduxState = {
     hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
   },
   warrenStatus: undefined,
+  warrenNatPmp: {
+    enabled: false,
+    lifetimeSecs: 3600,
+    protocol: NatPmpProto.udp,
+    suggestedExternalPort: 0,
+    internalPort: 0,
+  },
+  natPmpStatus: undefined,
   wireguard: {
     quantumResistant: true,
   },
@@ -254,6 +271,18 @@ export default function (
       return {
         ...state,
         warrenStatus: action.warrenStatus,
+      };
+
+    case 'UPDATE_NAT_PMP_SETTINGS':
+      return {
+        ...state,
+        warrenNatPmp: action.natPmpSettings,
+      };
+
+    case 'UPDATE_NAT_PMP_STATUS':
+      return {
+        ...state,
+        natPmpStatus: action.natPmpStatus,
       };
 
     case 'UPDATE_ENABLE_IPV6':

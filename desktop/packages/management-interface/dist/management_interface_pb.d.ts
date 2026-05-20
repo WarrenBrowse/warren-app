@@ -1788,6 +1788,11 @@ export class Settings extends jspb.Message {
     getWarrenMultiHop(): WarrenMultiHopSettings | undefined;
     setWarrenMultiHop(value?: WarrenMultiHopSettings): Settings;
 
+    hasWarrenNatPmp(): boolean;
+    clearWarrenNatPmp(): void;
+    getWarrenNatPmp(): NatPmpSettings | undefined;
+    setWarrenNatPmp(value?: NatPmpSettings): Settings;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
     static toObject(includeInstance: boolean, msg: Settings): Settings.AsObject;
@@ -1817,6 +1822,7 @@ export namespace Settings {
         warrenLocalAccount: boolean,
         warrenApiUrl: string,
         warrenMultiHop?: WarrenMultiHopSettings.AsObject,
+        warrenNatPmp?: NatPmpSettings.AsObject,
     }
 }
 
@@ -1879,6 +1885,90 @@ export namespace WarrenStatus {
         lastReconnectAge?: google_protobuf_duration_pb.Duration.AsObject,
         obfuscationActive: boolean,
     }
+}
+
+export class NatPmpSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): NatPmpSettings;
+    getLifetimeSecs(): number;
+    setLifetimeSecs(value: number): NatPmpSettings;
+    getProtocol(): NatPmpSettings.Proto;
+    setProtocol(value: NatPmpSettings.Proto): NatPmpSettings;
+    getSuggestedExternalPort(): number;
+    setSuggestedExternalPort(value: number): NatPmpSettings;
+    getInternalPort(): number;
+    setInternalPort(value: number): NatPmpSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NatPmpSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: NatPmpSettings): NatPmpSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NatPmpSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NatPmpSettings;
+    static deserializeBinaryFromReader(message: NatPmpSettings, reader: jspb.BinaryReader): NatPmpSettings;
+}
+
+export namespace NatPmpSettings {
+    export type AsObject = {
+        enabled: boolean,
+        lifetimeSecs: number,
+        protocol: NatPmpSettings.Proto,
+        suggestedExternalPort: number,
+        internalPort: number,
+    }
+
+    export enum Proto {
+    UDP = 0,
+    TCP = 1,
+    }
+
+}
+
+export class NatPmpStatus extends jspb.Message { 
+    getState(): NatPmpStatus.State;
+    setState(value: NatPmpStatus.State): NatPmpStatus;
+
+    hasExternalPort(): boolean;
+    clearExternalPort(): void;
+    getExternalPort(): number | undefined;
+    setExternalPort(value: number): NatPmpStatus;
+
+    hasLifetimeRemainingSecs(): boolean;
+    clearLifetimeRemainingSecs(): void;
+    getLifetimeRemainingSecs(): number | undefined;
+    setLifetimeRemainingSecs(value: number): NatPmpStatus;
+
+    hasErrorMessage(): boolean;
+    clearErrorMessage(): void;
+    getErrorMessage(): string | undefined;
+    setErrorMessage(value: string): NatPmpStatus;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
+    static toObject(includeInstance: boolean, msg: NatPmpStatus): NatPmpStatus.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NatPmpStatus, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NatPmpStatus;
+    static deserializeBinaryFromReader(message: NatPmpStatus, reader: jspb.BinaryReader): NatPmpStatus;
+}
+
+export namespace NatPmpStatus {
+    export type AsObject = {
+        state: NatPmpStatus.State,
+        externalPort?: number,
+        lifetimeRemainingSecs?: number,
+        errorMessage?: string,
+    }
+
+    export enum State {
+    DISABLED = 0,
+    REQUESTING = 1,
+    MAPPED = 2,
+    FAILED = 3,
+    }
+
 }
 
 export class RelayOverride extends jspb.Message { 

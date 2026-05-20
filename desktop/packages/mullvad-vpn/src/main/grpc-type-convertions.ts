@@ -42,6 +42,9 @@ import {
   IWireguardEndpointData,
   LoggedInDeviceState,
   LoggedOutDeviceState,
+  NatPmpProto,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
@@ -456,6 +459,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   // populates it (default = enabled:false), so a missing field here
   // means the daemon is a pre-M4.H.C build and we fall back to OFF.
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
+  const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
   return {
     ...settings.toObject(),
     relaySettings,
@@ -468,6 +472,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     recents,
     warrenApiUrl,
     warrenMultiHop,
+    warrenNatPmp,
   };
 }
 
@@ -520,6 +525,64 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     lastReconnectAgeMs,
     obfuscationActive: status.getObfuscationActive(),
   };
+}
+
+export function convertFromNatPmpSettings(
+  settings: grpcTypes.NatPmpSettings | undefined,
+): NatPmpSettings {
+  if (!settings) {
+    // Pre-M4.H.F daemon: assume OFF / UDP / 1 h defaults so the UI
+    // stays consistent even when talking to an older binary.
+    return {
+      enabled: false,
+      lifetimeSecs: 3600,
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 0,
+    };
+  }
+  const protoEnum = settings.getProtocol();
+  const protocol =
+    protoEnum === grpcTypes.NatPmpSettings.Proto.TCP ? NatPmpProto.tcp : NatPmpProto.udp;
+  return {
+    enabled: settings.getEnabled(),
+    lifetimeSecs: settings.getLifetimeSecs(),
+    protocol,
+    suggestedExternalPort: settings.getSuggestedExternalPort(),
+    internalPort: settings.getInternalPort(),
+  };
+}
+
+export function convertToNatPmpSettings(settings: NatPmpSettings): grpcTypes.NatPmpSettings {
+  const proto = new grpcTypes.NatPmpSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setLifetimeSecs(settings.lifetimeSecs);
+  proto.setProtocol(
+    settings.protocol === NatPmpProto.tcp
+      ? grpcTypes.NatPmpSettings.Proto.TCP
+      : grpcTypes.NatPmpSettings.Proto.UDP,
+  );
+  proto.setSuggestedExternalPort(settings.suggestedExternalPort);
+  proto.setInternalPort(settings.internalPort);
+  return proto;
+}
+
+export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpStatus {
+  switch (status.getState()) {
+    case grpcTypes.NatPmpStatus.State.MAPPED:
+      return {
+        state: 'mapped',
+        externalPort: status.getExternalPort() ?? 0,
+        lifetimeRemainingSecs: status.getLifetimeRemainingSecs() ?? 0,
+      };
+    case grpcTypes.NatPmpStatus.State.REQUESTING:
+      return { state: 'requesting' };
+    case grpcTypes.NatPmpStatus.State.FAILED:
+      return { state: 'failed', errorMessage: status.getErrorMessage() ?? '' };
+    case grpcTypes.NatPmpStatus.State.DISABLED:
+    default:
+      return { state: 'disabled' };
+  }
 }
 
 function convertFromRecents(recents: grpcTypes.Recents | undefined): Recents | undefined {

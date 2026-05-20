@@ -27,6 +27,7 @@ import {
   ISettings,
   liftConstraint,
   LogoutSource,
+  NatPmpSettings,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
@@ -186,6 +187,12 @@ export default class AppRenderer {
     // in sync without polling.
     IpcRendererEventChannel.warrenStatus.listen((snapshot) => {
       this.reduxActions.settings.updateWarrenStatus(snapshot);
+    });
+
+    // NAT-PMP refresh-loop status push. Same pattern: dispatch every
+    // snapshot so the port-forwarding view rerenders without polling.
+    IpcRendererEventChannel.natPmpStatus.listen((snapshot) => {
+      this.reduxActions.settings.updateNatPmpStatus(snapshot);
     });
 
     IpcRendererEventChannel.relays.listen((relayListPair: IRelayListWithEndpointData) => {
@@ -652,6 +659,16 @@ export default class AppRenderer {
     actions.settings.updateWarrenMultiHop(settings);
   };
 
+  // Warren NAT-PMP port-forwarding settings. No daemon restart needed
+  // (the daemon pushes the new config live to the parameters
+  // generator and the next tunnel reconnect spawns / stops the
+  // refresh loop accordingly).
+  public setNatPmpSettings = async (settings: NatPmpSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setNatPmpSettings(settings);
+    actions.settings.updateNatPmpSettings(settings);
+  };
+
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setShowBetaReleases(showBetaReleases);
@@ -889,6 +906,7 @@ export default class AppRenderer {
     reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
+    reduxSettings.updateNatPmpSettings(newSettings.warrenNatPmp);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);
