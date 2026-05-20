@@ -1913,6 +1913,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
+            bypass_cidrs: Vec::new(),
         };
         let s = format!("{params:?}");
         // NatPmpConfig derives Debug, so the Some(..) renders the

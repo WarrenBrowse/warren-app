@@ -271,12 +271,8 @@ mod tests {
         });
 
         let (observer, log) = collector();
-        let manager = NatPmpManager::start(
-            &tokio::runtime::Handle::current(),
-            addr,
-            &cfg(22),
-            observer,
-        );
+        let manager =
+            NatPmpManager::start(&tokio::runtime::Handle::current(), addr, &cfg(22), observer);
 
         for _ in 0..100 {
             if log

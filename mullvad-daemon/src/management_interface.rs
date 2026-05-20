@@ -73,7 +73,9 @@ type NatPmpStatusUpdatesReceiver =
 
 /// Maps the live `NatPmpStateSnapshot` into the proto status message
 /// emitted by `GetNatPmpSettings` and the `NatPmpStatusUpdates` stream.
-fn nat_pmp_state_to_proto(state: &crate::warren_status::NatPmpStateSnapshot) -> types::NatPmpStatus {
+fn nat_pmp_state_to_proto(
+    state: &crate::warren_status::NatPmpStateSnapshot,
+) -> types::NatPmpStatus {
     use crate::warren_status::NatPmpStateSnapshot;
     use types::nat_pmp_status::State;
     match state {
@@ -468,10 +470,7 @@ impl ManagementService for ManagementServiceImpl {
         ))
     }
 
-    async fn get_nat_pmp_settings(
-        &self,
-        _: Request<()>,
-    ) -> ServiceResult<types::NatPmpSettings> {
+    async fn get_nat_pmp_settings(&self, _: Request<()>) -> ServiceResult<types::NatPmpSettings> {
         log::debug!("get_nat_pmp_settings");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;

@@ -3069,10 +3069,7 @@ impl Daemon {
     ) {
         let display_value = format!(
             "enabled={} lifetime_secs={} proto={:?} internal_port={}",
-            new_value.enabled,
-            new_value.lifetime_secs,
-            new_value.protocol,
-            new_value.internal_port,
+            new_value.enabled, new_value.lifetime_secs, new_value.protocol, new_value.internal_port,
         );
         let new_value_for_gen = new_value.clone();
         let result = self

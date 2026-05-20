@@ -243,11 +243,7 @@ impl ParametersGenerator {
         // subscribes to. If `params.nat_pmp` is `None` or disabled,
         // `talpid-warren-tunnel` short-circuits the manager spawn and
         // this observer is never called.
-        if params
-            .nat_pmp
-            .as_ref()
-            .is_some_and(|cfg| cfg.enabled)
-        {
+        if params.nat_pmp.as_ref().is_some_and(|cfg| cfg.enabled) {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
             let observer: NatPmpEventObserver = Arc::new(move |event| {
                 cache_for_nat_pmp.record_nat_pmp_event(event);

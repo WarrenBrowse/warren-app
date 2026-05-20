@@ -142,9 +142,12 @@ impl TryFrom<proto::NatPmpSettings> for mullvad_types::settings::WarrenNatPmpSet
         // Ports are 16-bit; reject overflow rather than silently
         // truncating, otherwise a malformed gRPC call would silently
         // wrap to e.g. (65536 -> 0).
-        let suggested_external_port = u16::try_from(value.suggested_external_port).map_err(|_| {
-            FromProtobufTypeError::invalid_argument("NatPmpSettings.suggested_external_port > 65535")
-        })?;
+        let suggested_external_port =
+            u16::try_from(value.suggested_external_port).map_err(|_| {
+                FromProtobufTypeError::invalid_argument(
+                    "NatPmpSettings.suggested_external_port > 65535",
+                )
+            })?;
         let internal_port = u16::try_from(value.internal_port).map_err(|_| {
             FromProtobufTypeError::invalid_argument("NatPmpSettings.internal_port > 65535")
         })?;
