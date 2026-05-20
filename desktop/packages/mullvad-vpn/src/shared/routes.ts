@@ -16,6 +16,7 @@ export enum RoutePath {
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',
   multihopSettings = '/settings/multihop',
+  warrenMultiHopSettings = '/settings/warren-multi-hop',
   vpnSettings = '/settings/vpn',
   daitaSettings = '/settings/daita',
   udpOverTcp = '/settings/advanced/wireguard/udp-over-tcp',

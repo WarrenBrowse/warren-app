@@ -29,7 +29,9 @@ import {
   RelaySettings,
   TunnelState,
   VoucherResponse,
+  WarrenMultiHopSettings,
   WarrenPubKey,
+  WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -42,18 +44,20 @@ import {
   convertFromRelayList,
   convertFromSettings,
   convertFromTunnelState,
+  convertFromWarrenStatus,
   convertToApiAccessMethodSetting,
   convertToCustomList,
   convertToCustomProxy,
   convertToNewApiAccessMethodSetting,
   convertToNewCustomList,
   convertToRelayConstraints,
+  convertToWarrenMultiHopSettings,
   ensureExists,
 } from './grpc-type-convertions';
 
-// Doit matcher `mullvad_paths::rpc_socket::get_default_rpc_socket_path` côté
-// Rust. Sans cet alignement, Electron tape l'ancien path upstream Mullvad qui
-// peut être squatté par une install officielle Mullvad VPN.app parallèle.
+// Must match `mullvad_paths::rpc_socket::get_default_rpc_socket_path` on the
+// Rust side. Without this alignment, Electron hits the legacy upstream Mullvad
+// path which can be squatted by a parallel official Mullvad VPN.app install.
 const DAEMON_RPC_PATH =
   process.platform === 'win32' ? '//./pipe/Warren VPN' : '/var/run/warren-vpn';
 
@@ -204,10 +208,10 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Récupère la mnémonique BIP39 (12 mots) pour permettre backup
-   * user-side. Empty string si l'identité n'a jamais été
-   * bootstrappée. Le caller renderer doit afficher avec warning
-   * safety + confirmation user explicite.
+   * Returns the BIP39 mnemonic (12 words) so the user can back it up.
+   * Empty string if the identity has never been bootstrapped. The
+   * renderer caller must display it with a safety warning and explicit
+   * user confirmation.
    */
   public async getWarrenMnemonic(): Promise<string> {
     const response = await this.callEmpty<StringValue>(this.client.getWarrenMnemonic);
@@ -215,10 +219,10 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Remplace l'identité par la mnémonique BIP39 fournie. Daemon
-   * valide BIP39 et écrit atomiquement. Throw `grpc.ServiceError`
-   * (status INVALID_ARGUMENT) si BIP39 invalide. Restart daemon
-   * requis pour activation.
+   * Replaces the identity with the provided BIP39 mnemonic. The daemon
+   * validates BIP39 and writes atomically. Throws `grpc.ServiceError`
+   * (status INVALID_ARGUMENT) if the BIP39 input is invalid. Daemon
+   * restart is required to activate.
    */
   public async setWarrenMnemonic(mnemonic: string): Promise<void> {
     await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);
@@ -313,24 +317,55 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAllowLan, allowLan);
   }
 
-  // Toggle persistant du mode tunnel Iroh. Le restart du daemon est
-  // requis pour appliquer (cf. resolve() côté Rust).
+  // Persistent toggle for the Iroh tunnel mode. Daemon restart is
+  // required to apply (see resolve() on the Rust side).
   public async setWarrenMode(enabled: boolean): Promise<void> {
     await this.callBool(this.client.setWarrenMode, enabled);
   }
 
-  // Toggle persistant du mode account local (= no api.mullvad.net).
-  // Restart requis.
+  // Persistent toggle for local account mode (= no api.mullvad.net).
+  // Daemon restart required.
   public async setWarrenLocalAccount(enabled: boolean): Promise<void> {
     await this.callBool(this.client.setWarrenLocalAccount, enabled);
   }
 
-  // URL persistante warren-api. Empty string → unset côté daemon (=
-  // fallback Mullvad upstream backend). Restart daemon requis pour
-  // appliquer (cf. `resolve_warren_api_config` côté Rust qui lit
-  // Settings au boot uniquement).
+  // Persistent warren-api URL. Empty string → unset on the daemon
+  // side (= fallback to upstream Mullvad backend). Daemon restart is
+  // required to apply (see `resolve_warren_api_config` on the Rust
+  // side, which reads Settings at boot only).
   public async setWarrenApiUrl(url: string): Promise<void> {
     await this.callString(this.client.setWarrenApiUrl, url);
+  }
+
+  // Warren multi-hop settings (M4.E.D). Restart daemon required to
+  // apply (the supervisor is wired once at boot from the env-var +
+  // settings-file path).
+  public async getWarrenMultiHopSettings(): Promise<WarrenMultiHopSettings> {
+    const response = await this.callEmpty<grpcTypes.WarrenMultiHopSettings>(
+      this.client.getWarrenMultiHopSettings,
+    );
+    const rotation = response.getHpkeEpochRotation();
+    return {
+      enabled: response.getEnabled(),
+      entryCountry: response.getEntryCountry(),
+      exitCountry: response.getExitCountry(),
+      hpkeEpochRotationMs: rotation
+        ? rotation.getSeconds() * 1000 + Math.floor(rotation.getNanos() / 1e6)
+        : 4 * 60 * 60 * 1000,
+    };
+  }
+
+  public async setWarrenMultiHopSettings(settings: WarrenMultiHopSettings): Promise<void> {
+    const proto = convertToWarrenMultiHopSettings(settings);
+    await this.call<grpcTypes.WarrenMultiHopSettings, Empty>(
+      this.client.setWarrenMultiHopSettings,
+      proto,
+    );
+  }
+
+  public async getWarrenStatus(): Promise<WarrenStatus> {
+    const response = await this.callEmpty<grpcTypes.WarrenStatus>(this.client.getWarrenStatus);
+    return convertFromWarrenStatus(response);
   }
 
   public async setShowBetaReleases(showBetaReleases: boolean): Promise<void> {

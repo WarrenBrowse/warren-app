@@ -33,7 +33,14 @@ export type ScrollToAnchorId =
   | 'warren-mode-setting'
   | 'warren-local-account-setting'
   // Anchor pour l'input URL warren-api.
-  | 'warren-api-url-setting';
+  | 'warren-api-url-setting'
+  // Anchors for the Warren multi-hop view (M4.H.C).
+  | 'warren-multi-hop-setting'
+  | 'warren-multi-hop-country-pickers'
+  // Anchors for the Warren status display (reconnect_count + age,
+  // obfuscation indicator).
+  | 'warren-status-reconnect'
+  | 'warren-obfuscation-indicator';
 
 export type ScrollToAnchorOption = {
   type: 'scroll-to-anchor';

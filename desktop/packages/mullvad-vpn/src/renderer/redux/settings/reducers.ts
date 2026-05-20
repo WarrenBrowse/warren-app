@@ -17,6 +17,8 @@ import {
   RelayLocation,
   RelayOverride,
   RelayProtocol,
+  WarrenMultiHopSettings,
+  WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
 import { ReduxAction } from '../store';
@@ -86,6 +88,12 @@ export interface ISettingsReduxState {
   warrenLocalAccount: boolean;
   // URL warren-api persistante.
   warrenApiUrl?: string;
+  // Warren two-relayed QUIC multi-hop settings (M4.E.D).
+  warrenMultiHop: WarrenMultiHopSettings;
+  // Live Warren tunnel status (reconnect_count, last_reconnect_age,
+  // obfuscation_active). Undefined until the first push from the
+  // daemon WarrenStatusUpdates stream.
+  warrenStatus?: WarrenStatus;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -134,6 +142,13 @@ const initialState: ISettingsReduxState = {
   warrenMode: false,
   warrenLocalAccount: false,
   warrenApiUrl: undefined,
+  warrenMultiHop: {
+    enabled: false,
+    entryCountry: '',
+    exitCountry: '',
+    hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+  },
+  warrenStatus: undefined,
   wireguard: {
     quantumResistant: true,
   },
@@ -227,6 +242,18 @@ export default function (
       return {
         ...state,
         warrenApiUrl: action.warrenApiUrl,
+      };
+
+    case 'UPDATE_WARREN_MULTI_HOP':
+      return {
+        ...state,
+        warrenMultiHop: action.warrenMultiHop,
+      };
+
+    case 'UPDATE_WARREN_STATUS':
+      return {
+        ...state,
+        warrenStatus: action.warrenStatus,
       };
 
     case 'UPDATE_ENABLE_IPV6':

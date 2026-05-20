@@ -27,6 +27,7 @@ import {
   RelaySettings,
   TunnelState,
   VoucherResponse,
+  WarrenMultiHopSettings,
   WarrenPubKey,
 } from './daemon-rpc-types';
 import { IGuiSettingsState } from './gui-settings-state';
@@ -199,6 +200,8 @@ export const ipcSchema = {
     // URL persistante warren-api (string vide = unset). Restart
     // daemon requis pour appliquer.
     setWarrenApiUrl: invoke<string, void>(),
+    // Warren multi-hop settings (M4.E.D). Restart daemon requis.
+    setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
     setLockdownMode: invoke<boolean, void>(),
@@ -236,14 +239,15 @@ export const ipcSchema = {
     login: invoke<WarrenPubKey, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
     getWwwAuthToken: invoke<void, string>(),
-    // Retourne la mnémonique BIP39 (12 mots) pour permettre backup
-    // user. Empty string si identité jamais bootstrappée. Caller
-    // renderer doit afficher avec warning safety + confirmation user
-    // explicite.
+    // Returns the BIP39 mnemonic (12 words) so the user can back it
+    // up. Empty string if the identity has never been bootstrapped.
+    // The renderer caller must display it with a safety warning and
+    // explicit user confirmation.
     getWarrenMnemonic: invoke<void, string>(),
-    // Remplace l'identité par la mnémonique BIP39 fournie. Validation
-    // BIP39 daemon-side. Throw si invalid (= caller doit catch + show
-    // error). Restart daemon requis pour activation.
+    // Replaces the identity with the provided BIP39 mnemonic. BIP39
+    // validation is performed daemon-side. Throws if invalid (=
+    // caller must catch + show error). Daemon restart is required to
+    // activate.
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: send<void>(),

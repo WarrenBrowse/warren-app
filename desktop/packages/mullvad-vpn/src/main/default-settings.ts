@@ -80,6 +80,13 @@ export function getDefaultSettings(): ISettings {
     warrenLocalAccount: false,
     // `undefined` = unset, fallback Mullvad upstream backend.
     warrenApiUrl: undefined,
+    // Default OFF per doctrine `warren_multihop_doctrine_v1`.
+    warrenMultiHop: {
+      enabled: false,
+      entryCountry: '',
+      exitCountry: '',
+      hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+    },
   };
 }
 

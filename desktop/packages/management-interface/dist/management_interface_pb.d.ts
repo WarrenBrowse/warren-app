@@ -1783,6 +1783,11 @@ export class Settings extends jspb.Message {
     getWarrenApiUrl(): string;
     setWarrenApiUrl(value: string): Settings;
 
+    hasWarrenMultiHop(): boolean;
+    clearWarrenMultiHop(): void;
+    getWarrenMultiHop(): WarrenMultiHopSettings | undefined;
+    setWarrenMultiHop(value?: WarrenMultiHopSettings): Settings;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
     static toObject(includeInstance: boolean, msg: Settings): Settings.AsObject;
@@ -1811,6 +1816,68 @@ export namespace Settings {
         warrenMode: boolean,
         warrenLocalAccount: boolean,
         warrenApiUrl: string,
+        warrenMultiHop?: WarrenMultiHopSettings.AsObject,
+    }
+}
+
+export class WarrenMultiHopSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): WarrenMultiHopSettings;
+    getEntryCountry(): string;
+    setEntryCountry(value: string): WarrenMultiHopSettings;
+    getExitCountry(): string;
+    setExitCountry(value: string): WarrenMultiHopSettings;
+
+    hasHpkeEpochRotation(): boolean;
+    clearHpkeEpochRotation(): void;
+    getHpkeEpochRotation(): google_protobuf_duration_pb.Duration | undefined;
+    setHpkeEpochRotation(value?: google_protobuf_duration_pb.Duration): WarrenMultiHopSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenMultiHopSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenMultiHopSettings): WarrenMultiHopSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenMultiHopSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenMultiHopSettings;
+    static deserializeBinaryFromReader(message: WarrenMultiHopSettings, reader: jspb.BinaryReader): WarrenMultiHopSettings;
+}
+
+export namespace WarrenMultiHopSettings {
+    export type AsObject = {
+        enabled: boolean,
+        entryCountry: string,
+        exitCountry: string,
+        hpkeEpochRotation?: google_protobuf_duration_pb.Duration.AsObject,
+    }
+}
+
+export class WarrenStatus extends jspb.Message { 
+    getReconnectCount(): number;
+    setReconnectCount(value: number): WarrenStatus;
+
+    hasLastReconnectAge(): boolean;
+    clearLastReconnectAge(): void;
+    getLastReconnectAge(): google_protobuf_duration_pb.Duration | undefined;
+    setLastReconnectAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
+    getObfuscationActive(): boolean;
+    setObfuscationActive(value: boolean): WarrenStatus;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenStatus.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenStatus): WarrenStatus.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenStatus, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenStatus;
+    static deserializeBinaryFromReader(message: WarrenStatus, reader: jspb.BinaryReader): WarrenStatus;
+}
+
+export namespace WarrenStatus {
+    export type AsObject = {
+        reconnectCount: number,
+        lastReconnectAge?: google_protobuf_duration_pb.Duration.AsObject,
+        obfuscationActive: boolean,
     }
 }
 

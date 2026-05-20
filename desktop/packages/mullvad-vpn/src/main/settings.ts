@@ -42,6 +42,10 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
       this.daemonRpc.setWarrenApiUrl(url),
     );
+    // IPC handler pour les settings multi-hop Warren.
+    IpcMainEventChannel.settings.handleSetWarrenMultiHop((settings) =>
+      this.daemonRpc.setWarrenMultiHopSettings(settings),
+    );
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
       this.daemonRpc.setShowBetaReleases(showBetaReleases),
     );
@@ -195,6 +199,11 @@ export default class Settings implements Readonly<ISettings> {
   // URL persistante warren-api (undefined si unset côté daemon).
   public get warrenApiUrl() {
     return this.settingsValue.warrenApiUrl;
+  }
+  // Warren multi-hop settings (M4.E.D). Restart daemon requis pour
+  // appliquer.
+  public get warrenMultiHop() {
+    return this.settingsValue.warrenMultiHop;
   }
 
   public get gui() {

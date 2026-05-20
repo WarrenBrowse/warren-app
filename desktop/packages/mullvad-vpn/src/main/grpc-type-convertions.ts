@@ -1,3 +1,4 @@
+import * as google_protobuf_duration_pb from 'google-protobuf/google/protobuf/duration_pb';
 import * as grpcTypes from 'management-interface/management-interface/grpc-types';
 
 import {
@@ -55,6 +56,8 @@ import {
   SocksAuth,
   TunnelParameterError,
   TunnelState,
+  WarrenMultiHopSettings,
+  WarrenStatus,
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
 import { parseChangelog } from './changelog';
@@ -449,6 +452,10 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     settingsObject.warrenApiUrl && settingsObject.warrenApiUrl.length > 0
       ? settingsObject.warrenApiUrl
       : undefined;
+  // Warren multi-hop is a nested message in proto3; the daemon always
+  // populates it (default = enabled:false), so a missing field here
+  // means the daemon is a pre-M4.H.C build and we fall back to OFF.
+  const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   return {
     ...settings.toObject(),
     relaySettings,
@@ -460,6 +467,58 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     relayOverrides,
     recents,
     warrenApiUrl,
+    warrenMultiHop,
+  };
+}
+
+function convertFromWarrenMultiHopSettings(
+  settings: grpcTypes.WarrenMultiHopSettings | undefined,
+): WarrenMultiHopSettings {
+  if (!settings) {
+    // Pre-M4.H.C daemon: assume OFF / 4h rotation defaults so the UI
+    // stays consistent even when talking to an older binary.
+    return {
+      enabled: false,
+      entryCountry: '',
+      exitCountry: '',
+      hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+    };
+  }
+  const rotation = settings.getHpkeEpochRotation();
+  const hpkeEpochRotationMs = rotation
+    ? rotation.getSeconds() * 1000 + Math.floor(rotation.getNanos() / 1e6)
+    : 4 * 60 * 60 * 1000;
+  return {
+    enabled: settings.getEnabled(),
+    entryCountry: settings.getEntryCountry(),
+    exitCountry: settings.getExitCountry(),
+    hpkeEpochRotationMs,
+  };
+}
+
+export function convertToWarrenMultiHopSettings(
+  settings: WarrenMultiHopSettings,
+): grpcTypes.WarrenMultiHopSettings {
+  const proto = new grpcTypes.WarrenMultiHopSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setEntryCountry(settings.entryCountry);
+  proto.setExitCountry(settings.exitCountry);
+  const duration = new google_protobuf_duration_pb.Duration();
+  duration.setSeconds(Math.floor(settings.hpkeEpochRotationMs / 1000));
+  duration.setNanos((settings.hpkeEpochRotationMs % 1000) * 1_000_000);
+  proto.setHpkeEpochRotation(duration);
+  return proto;
+}
+
+export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
+  const age = status.getLastReconnectAge();
+  const lastReconnectAgeMs = age
+    ? age.getSeconds() * 1000 + Math.floor(age.getNanos() / 1e6)
+    : null;
+  return {
+    reconnectCount: status.getReconnectCount(),
+    lastReconnectAgeMs,
+    obfuscationActive: status.getObfuscationActive(),
   };
 }
 

@@ -489,13 +489,40 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
-  // Toggles persistants exposés via gRPC. Restart du daemon requis
-  // pour appliquer un changement.
+  // Persistent toggles exposed via gRPC. Daemon restart is required
+  // to apply a change.
   warrenMode: boolean;
   warrenLocalAccount: boolean;
-  // URL warren-api persistante. `undefined` si unset (= fallback
-  // Mullvad upstream). Restart daemon requis.
+  // Persistent warren-api URL. `undefined` if unset (= fallback to
+  // upstream Mullvad). Daemon restart required.
   warrenApiUrl?: string;
+  // Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
+  // Default = OFF per doctrine `warren_multihop_doctrine_v1`.
+  // Restart daemon requis pour appliquer.
+  warrenMultiHop: WarrenMultiHopSettings;
+}
+
+// Warren multi-hop settings persisted in Settings.warren_multi_hop and
+// surfaced via the Warren multi-hop view. `entryCountry` and
+// `exitCountry` are ISO 3166 alpha-2 codes; empty string = auto-pick.
+export interface WarrenMultiHopSettings {
+  enabled: boolean;
+  entryCountry: string;
+  exitCountry: string;
+  // HPKE epoch rotation in milliseconds. Default 4h (14_400_000 ms)
+  // per `warren_multihop_doctrine_v1`.
+  hpkeEpochRotationMs: number;
+}
+
+// Live Warren tunnel status snapshot. Pushed by the daemon via the
+// `warrenStatusUpdates` IPC channel and read on demand via
+// `getWarrenStatus`.
+export interface WarrenStatus {
+  reconnectCount: number;
+  // Time since the last successful reconnect in milliseconds. `null`
+  // if no reconnect has been observed yet (fresh session, single-hop).
+  lastReconnectAgeMs: number | null;
+  obfuscationActive: boolean;
 }
 
 export type SplitTunnelSettings = {

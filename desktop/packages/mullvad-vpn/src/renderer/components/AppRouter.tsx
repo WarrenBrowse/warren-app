@@ -25,7 +25,6 @@ import {
   ExpiredAccountErrorView,
   FilterView,
   KeysView,
-  RestoreMnemonicView,
   LaunchView,
   LoginView,
   LwoSettingsView,
@@ -33,6 +32,7 @@ import {
   ManageDevicesView,
   MultihopSettingsView,
   ProblemReportView,
+  RestoreMnemonicView,
   SelectLanguageView,
   SelectLocationView,
   SettingsImportView,
@@ -45,6 +45,7 @@ import {
   UdpOverTcpSettingsView,
   UserInterfaceSettingsView,
   VpnSettingsView,
+  WarrenMultiHopSettingsView,
   WireguardPortView,
 } from './views';
 
@@ -82,6 +83,11 @@ export default function AppRouter() {
             component={UserInterfaceSettingsView}
           />
           <Route exact path={RoutePath.multihopSettings} component={MultihopSettingsView} />
+          <Route
+            exact
+            path={RoutePath.warrenMultiHopSettings}
+            component={WarrenMultiHopSettingsView}
+          />
           <Route exact path={RoutePath.vpnSettings} component={VpnSettingsView} />
           <Route exact path={RoutePath.daitaSettings} component={DaitaSettingsView} />
           <Route exact path={RoutePath.udpOverTcp} component={UdpOverTcpSettingsView} />

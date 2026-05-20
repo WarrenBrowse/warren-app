@@ -32,6 +32,7 @@ import {
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
+  WarrenMultiHopSettings,
   WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
@@ -626,13 +627,22 @@ export default class AppRenderer {
     actions.settings.updateWarrenLocalAccount(warrenLocalAccount);
   };
 
-  // URL persistante warren-api. Empty string → unset côté daemon (=
-  // fallback Mullvad upstream backend). Restart daemon requis pour
-  // appliquer.
+  // Persistent warren-api URL. Empty string → unset on the daemon
+  // side (= fallback to upstream Mullvad backend). Daemon restart is
+  // required to apply.
   public setWarrenApiUrl = async (warrenApiUrl: string) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenApiUrl(warrenApiUrl);
     actions.settings.updateWarrenApiUrl(warrenApiUrl === '' ? undefined : warrenApiUrl);
+  };
+
+  // Warren multi-hop settings (M4.E.D). Daemon restart is required
+  // for a settings change to take effect because the supervisor is
+  // wired once at boot from the env-var + settings-file path.
+  public setWarrenMultiHop = async (settings: WarrenMultiHopSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenMultiHop(settings);
+    actions.settings.updateWarrenMultiHop(settings);
   };
 
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
@@ -871,6 +881,7 @@ export default class AppRenderer {
     reduxSettings.updateWarrenMode(newSettings.warrenMode);
     reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
+    reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);

@@ -17,6 +17,7 @@ import {
   SupportListItem,
   UserInterfaceSettingsListItem,
   VpnSettingsListItem,
+  WarrenMultiHopListItem,
 } from './components';
 import { useShowDebug, useShowSplitTunneling, useShowSubSettings } from './hooks';
 
@@ -48,6 +49,7 @@ export function SettingsView() {
                       <FlexColumn>
                         <DaitaListItem />
                         <MultihopListItem />
+                        <WarrenMultiHopListItem />
                         <VpnSettingsListItem />
                         <UserInterfaceSettingsListItem />
                       </FlexColumn>

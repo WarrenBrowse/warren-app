@@ -14,6 +14,7 @@ export * from './launch';
 export * from './main';
 export * from './manage-devices';
 export * from './multihop-settings';
+export * from './warren-multi-hop-settings';
 export * from './problem-report';
 export * from './login';
 export * from './changelog';

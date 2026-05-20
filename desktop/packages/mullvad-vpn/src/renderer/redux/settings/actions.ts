@@ -9,6 +9,8 @@ import {
   ObfuscationSettings,
   type Recents,
   RelayOverride,
+  WarrenMultiHopSettings,
+  WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
 import { IRelayLocationCountryRedux, RelaySettingsRedux } from './reducers';
@@ -53,6 +55,18 @@ export interface IUpdateWarrenLocalAccountAction {
 export interface IUpdateWarrenApiUrlAction {
   type: 'UPDATE_WARREN_API_URL';
   warrenApiUrl?: string;
+}
+
+// Action de mise à jour des settings multi-hop Warren.
+export interface IUpdateWarrenMultiHopAction {
+  type: 'UPDATE_WARREN_MULTI_HOP';
+  warrenMultiHop: WarrenMultiHopSettings;
+}
+
+// Action de mise à jour du status Warren live (reconnect_count + age).
+export interface IUpdateWarrenStatusAction {
+  type: 'UPDATE_WARREN_STATUS';
+  warrenStatus: WarrenStatus;
 }
 
 export interface IUpdateEnableIpv6Action {
@@ -149,6 +163,8 @@ export type SettingsAction =
   | IUpdateWarrenModeAction
   | IUpdateWarrenLocalAccountAction
   | IUpdateWarrenApiUrlAction
+  | IUpdateWarrenMultiHopAction
+  | IUpdateWarrenStatusAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -224,6 +240,20 @@ function updateWarrenApiUrl(warrenApiUrl?: string): IUpdateWarrenApiUrlAction {
   return {
     type: 'UPDATE_WARREN_API_URL',
     warrenApiUrl,
+  };
+}
+
+function updateWarrenMultiHop(warrenMultiHop: WarrenMultiHopSettings): IUpdateWarrenMultiHopAction {
+  return {
+    type: 'UPDATE_WARREN_MULTI_HOP',
+    warrenMultiHop,
+  };
+}
+
+function updateWarrenStatus(warrenStatus: WarrenStatus): IUpdateWarrenStatusAction {
+  return {
+    type: 'UPDATE_WARREN_STATUS',
+    warrenStatus,
   };
 }
 
@@ -361,6 +391,8 @@ export default {
   updateWarrenMode,
   updateWarrenLocalAccount,
   updateWarrenApiUrl,
+  updateWarrenMultiHop,
+  updateWarrenStatus,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

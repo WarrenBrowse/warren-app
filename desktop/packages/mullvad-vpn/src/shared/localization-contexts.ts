@@ -41,5 +41,7 @@ export type LocalizationContexts =
   | 'app-upgrade-view'
   | 'anti-censorship-view'
   | 'lwo-settings-view'
+  | 'warren-multi-hop-view'
+  | 'warren-status-view'
   | 'custom-list-feature'
   | 'locations-feature';

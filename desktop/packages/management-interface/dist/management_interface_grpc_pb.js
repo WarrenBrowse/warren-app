@@ -470,6 +470,28 @@ function deserialize_mullvad_daemon_management_interface_VoucherSubmission(buffe
   return management_interface_pb.VoucherSubmission.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenMultiHopSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenMultiHopSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(buffer_arg) {
+  return management_interface_pb.WarrenMultiHopSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_WarrenStatus(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenStatus)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenStatus');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenStatus(buffer_arg) {
+  return management_interface_pb.WarrenStatus.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 var ManagementServiceService = exports.ManagementServiceService = {
   // Control and get tunnel state
@@ -844,10 +866,10 @@ getSettings: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Warren fork — Phase F.1 : toggle persistant du mode tunnel Warren
-// (true = backend Iroh, false = WireGuard upstream). Override via
-// env var POC `WARREN_TUNNEL=1` reste possible. Restart du daemon
-// requis pour appliquer.
+  // Toggle persistant du mode tunnel Warren (true = backend Iroh,
+// false = WireGuard upstream). Override via env var POC
+// `WARREN_TUNNEL=1` reste possible. Restart du daemon requis pour
+// appliquer.
 setWarrenMode: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMode',
     requestStream: false,
@@ -859,10 +881,10 @@ setWarrenMode: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Warren fork — Phase F.1 : toggle persistant du mode account local
-// (true = backends Local* sans api.mullvad.net, false = Remote*
-// historiques). Override via env var POC `WARREN_LOCAL_ACCOUNT=1`.
-// Restart requis pour appliquer.
+  // Toggle persistant du mode account local (true = backends Local*
+// sans api.mullvad.net, false = Remote* historiques). Override via
+// env var POC `WARREN_LOCAL_ACCOUNT=1`. Restart requis pour
+// appliquer.
 setWarrenLocalAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenLocalAccount',
     requestStream: false,
@@ -874,8 +896,8 @@ setWarrenLocalAccount: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Warren fork — Phase G.5.a : URL persistante du serveur warren-api
-// (consumed par WarrenRemote{Account,Device}Backend). Format
+  // URL persistante du serveur warren-api (consumed par
+// WarrenRemote{Account,Device}Backend). Format
 // `http(s)://host:port` sans trailing slash. Empty string → unset
 // (= None côté Settings, fallback Mullvad upstream). Override via
 // env var `WARREN_API_URL`. Restart requis pour appliquer.
@@ -890,11 +912,10 @@ setWarrenApiUrl: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Warren fork — C.1 (M7 GUI Keys) : retourne la mnémonique BIP39
-// utilisateur (12 mots) pour permettre backup user-side via le
-// GUI (= critère phase 1 #2 "Mnemonic affiché 1 fois et restaurable").
-// Empty string si l'identité n'a jamais été bootstrappée (= mode
-// Mullvad legacy ou premier boot avant warren_signer).
+  // Retourne la mnémonique BIP39 utilisateur (12 mots) pour permettre
+// backup user-side via le GUI. Empty string si l'identité n'a
+// jamais été bootstrappée (= mode Mullvad legacy ou premier boot
+// avant warren_signer).
 // **Sensible** : caller GUI doit afficher avec warning safety +
 // confirmation user explicite. La string retournée est secret
 // cryptographique, jamais loggée par le daemon (politique no-log).
@@ -909,14 +930,13 @@ getWarrenMnemonic: {
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
   },
-  // Warren fork — C.1.d (M7 GUI Keys Restore) : remplace l'identité
-// utilisateur par la mnémonique BIP39 fournie. **Irréversible** :
-// toute subscription liée à l'identité actuelle est perdue. Le caller
-// GUI doit afficher une confirmation strong avant d'appeler. Le
-// daemon doit être restart manuellement après pour que la nouvelle
-// identité soit prise en compte par le signer (signing key dérivée
-// au boot uniquement). Le payload est validé BIP39 avant écriture
-// sur disque (= rejet atomique).
+  // Remplace l'identité utilisateur par la mnémonique BIP39 fournie.
+// **Irréversible** : toute subscription liée à l'identité actuelle
+// est perdue. Le caller GUI doit afficher une confirmation strong
+// avant d'appeler. Le daemon doit être restart manuellement après
+// pour que la nouvelle identité soit prise en compte par le signer
+// (signing key dérivée au boot uniquement). Le payload est validé
+// BIP39 avant écriture sur disque (= rejet atomique).
 setWarrenMnemonic: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMnemonic',
     requestStream: false,
@@ -927,6 +947,61 @@ setWarrenMnemonic: {
     requestDeserialize: deserialize_google_protobuf_StringValue,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
+// OFF by default per doctrine `warren_multihop_doctrine_v1` (full
+// bandwidth single-hop, opt-in privacy). entry_country / exit_country
+// are ISO 3166 alpha-2 codes ("fr", "de", ...); empty string means
+// auto-pick.
+getWarrenMultiHopSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenMultiHopSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenMultiHopSettings,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+  },
+  setWarrenMultiHopSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMultiHopSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WarrenMultiHopSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Warren live tunnel status (reconnect_count + last_reconnect_age
+// surface the M4.E.D auto-reconnect supervisor; obfuscation_active
+// is always-true for /v1 per `warren_obfuscation_doctrine_v1`).
+getWarrenStatus: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenStatus',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // Push stream emitting a new WarrenStatus whenever reconnect_count
+// changes or the tunnel state machine transitions. The GUI consumes
+// this for live UI updates without polling.
+warrenStatusUpdates: {
+    path: '/mullvad_daemon.management_interface.ManagementService/WarrenStatusUpdates',
+    requestStream: false,
+    responseStream: true,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
   },
   // Account management
 createNewAccount: {
