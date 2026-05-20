@@ -104,7 +104,7 @@
 
 ## Décisions actées (2026-05-06)
 
-1. **Hébergement repo** : `git.p2p.legal/warren/warren-app` (Gitea selfhost, même espace que `warren-core` qui vit sur `git.p2p.legal/warren/poc.git`)
+1. **Hébergement repo** : `github.com/WarrenBrowse/warren-app` (depuis 2026-05-20, M4.H.D migration Gitea → GitHub pour cohérence avec `warren-core` sur `github.com/WarrenBrowse/warren-core` ; ancien remote Gitea `git.p2p.legal/warren/warren-app` conservé comme `backup-gitea` fetch-only en lecture seule)
 2. **Visibilité** : **privé** pendant la phase POC. Public au lancement freemium (GPL-3.0 oblige le source du fork — la visibilité publique sera réactivée à ce moment-là)
 3. **CI** : workflows séparés du `warren-core`. À adapter : retirer les jobs upstream Mullvad inutiles (tests Android/iOS si on ne ship pas mobile dès POC), ajouter le check `cargo build` Warren-only via le feature flag `tunnel_backend = "iroh"`. Détails à figer en début phase 1
 4. **Cadence merge upstream** : **weekly cherry-pick** de `main` upstream. Branche `warren-base` divergente, on rebase les commits Warren sur le HEAD upstream du jour J chaque semaine (lundi typique). Limites les conflits accumulés vs un freeze long
@@ -128,7 +128,7 @@ Une fois le repo Gitea créé :
 
 ```bash
 cd /Users/poka/dev/warrenBros/warren-app
-git remote add origin ssh://git@git.p2p.legal:10122/warren/warren-app.git
+git remote add origin git@github.com:WarrenBrowse/warren-app.git
 git push -u origin main
 git push origin upstream-baseline-2026-05-06   # tag baseline
 ```

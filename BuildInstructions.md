@@ -8,7 +8,7 @@ These are instructions on how to build the app on desktop platforms. See the
 Le fork Warren consomme plusieurs crates via des **path-deps cross-repo**
 (`warren-iroh-tunnel`, `warren-identity`, `warren-config`, `warren-relay-selector`,
 `warren-api-client`, `warren-api`). Elles vivent dans le repo voisin
-[`warren-core`](https://git.p2p.legal/warren/warren-core) et **doivent être
+[`warren-core`](https://github.com/WarrenBrowse/warren-core) et **doivent être
 checkout-ées en parallèle** de `warren-app`.
 
 Layout attendu :
@@ -40,8 +40,8 @@ Setup minimal :
 
 ```bash
 cd /path/to/warrenBros
-git clone ssh://git@git.p2p.legal:10122/warren/warren-core.git
-git clone ssh://git@git.p2p.legal:10122/warren/warren-app.git
+git clone git@github.com:WarrenBrowse/warren-core.git
+git clone git@github.com:WarrenBrowse/warren-app.git
 cd warren-app && git submodule update --init
 ```
 

@@ -93,7 +93,7 @@ existants. Pour signaler un problème de sécurité, voir [SECURITY.md](SECURITY
 Ce repo utilise des submodules. Pour cloner :
 
 ```bash
-git clone ssh://git@git.p2p.legal:10122/warren/warren-app.git
+git clone git@github.com:WarrenBrowse/warren-app.git
 cd warren-app
 git submodule update --init
 ```
