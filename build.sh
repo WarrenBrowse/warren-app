@@ -140,11 +140,20 @@ if [[ "$SIGN" == "true" ]]; then
     # reproducibility and supply chain security)
     CARGO_ARGS+=(--locked)
 
+    # Accept Warren-prefixed env vars in parallel to upstream Mullvad CSC_*.
+    # When the Warren variant is set, it takes precedence. This lets CI release
+    # workflows use GitHub Secrets named WARREN_CSC_* (Warren-owned signing assets)
+    # without colliding with a developer's local upstream Mullvad signing setup.
+    : "${CSC_LINK:=${WARREN_CSC_LINK_MACOS:-${WARREN_CSC_LINK:-}}}"
+    : "${CSC_KEY_PASSWORD:=${WARREN_CSC_KEY_PASSWORD_MACOS:-${WARREN_CSC_KEY_PASSWORD:-}}}"
+    : "${CERT_HASH:=${WARREN_CERT_HASH:-}}"
+    export CSC_LINK CSC_KEY_PASSWORD CERT_HASH
+
     if [[ "$(uname -s)" == "Darwin" ]]; then
         log_info "Configuring environment for signing of binaries"
         if [[ -z ${CSC_LINK-} ]]; then
-            log_error "The variable CSC_LINK is not set. It needs to point to a file containing the"
-            log_error "private key used for signing of binaries."
+            log_error "Neither CSC_LINK nor WARREN_CSC_LINK_MACOS is set. One must point to a"
+            log_error "file containing the private key used for signing of binaries."
             exit 1
         fi
         if [[ -z ${CSC_KEY_PASSWORD-} ]]; then
@@ -156,8 +165,8 @@ if [[ "$SIGN" == "true" ]]; then
         export CSC_IDENTITY_AUTO_DISCOVERY=true
     elif [[ "$(uname -s)" == "MINGW"* ]]; then
         if [[ -z ${CERT_HASH-} ]]; then
-            log_error "The variable CERT_HASH is not set. It needs to be set to the thumbprint of"
-            log_error "the signing certificate."
+            log_error "Neither CERT_HASH nor WARREN_CERT_HASH is set. One must be set to the"
+            log_error "thumbprint of the signing certificate."
             exit 1
         fi
 
@@ -511,6 +520,16 @@ fi
 
 # notarize installer on macOS
 if [[ "$NOTARIZE" == "true" && "$(uname -s)" == "Darwin" ]]; then
+    # Accept Warren-prefixed env vars in parallel to upstream Mullvad NOTARIZE_*.
+    : "${NOTARIZE_KEYCHAIN:=${WARREN_NOTARIZE_KEYCHAIN:-}}"
+    : "${NOTARIZE_KEYCHAIN_PROFILE:=${WARREN_NOTARIZE_KEYCHAIN_PROFILE:-}}"
+
+    if [[ -z ${NOTARIZE_KEYCHAIN-} || -z ${NOTARIZE_KEYCHAIN_PROFILE-} ]]; then
+        log_error "Neither NOTARIZE_KEYCHAIN/NOTARIZE_KEYCHAIN_PROFILE nor their WARREN_*"
+        log_error "equivalents are set. Apple notarytool needs both to authenticate."
+        exit 1
+    fi
+
     log_info "Notarizing pkg"
     xcrun notarytool submit dist/*"$PRODUCT_VERSION"*.pkg \
         --keychain "$NOTARIZE_KEYCHAIN" \
