@@ -257,6 +257,10 @@ export const ipcSchema = {
     setPreferredLocale: invoke<string, ITranslations>(),
     setUnpinnedWindow: send<boolean>(),
     setAnimateMap: send<boolean>(),
+    // M5.B.3 onboarding wizard: persist the completion timestamp.
+    // Passing `undefined` clears it so the wizard re-runs on the next
+    // boot (used by the Settings "Replay onboarding" entry).
+    setOnboardingCompletedUnix: send<number | undefined>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),

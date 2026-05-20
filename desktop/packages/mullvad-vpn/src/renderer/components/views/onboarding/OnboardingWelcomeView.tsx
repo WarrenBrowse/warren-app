@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { Text } from '../../../lib/components';
@@ -12,6 +14,8 @@ import { useHistory } from '../../../lib/history';
 // wizard from Settings land here too.
 export function OnboardingWelcomeView() {
   const { push } = useHistory();
+  const next = React.useCallback(() => push(RoutePath.onboardingWallet), [push]);
+  const skip = React.useCallback(() => push(RoutePath.main), [push]);
   return (
     <View backgroundColor="darkBlue">
       <View.Content>
@@ -26,18 +30,10 @@ export function OnboardingWelcomeView() {
             )}
           </Text>
           <FlexColumn gap="medium">
-            <button
-              type="button"
-              onClick={() => push(RoutePath.onboardingWallet)}
-              data-testid="onboarding-welcome-next"
-            >
+            <button type="button" onClick={next} data-testid="onboarding-welcome-next">
               {messages.pgettext('warren-onboarding', 'Get started')}
             </button>
-            <button
-              type="button"
-              onClick={() => push(RoutePath.main)}
-              data-testid="onboarding-welcome-skip"
-            >
+            <button type="button" onClick={skip} data-testid="onboarding-welcome-skip">
               {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
             </button>
           </FlexColumn>

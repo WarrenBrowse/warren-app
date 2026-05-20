@@ -496,6 +496,12 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
+  // M5.B.3 onboarding wizard: persists the completion timestamp via
+  // the main-process GUI settings file. Pass `undefined` to clear it
+  // (replay flow). The renderer side is kept in sync through the
+  // existing `guiSettings.''` notifyRenderer broadcast.
+  public setOnboardingCompletedUnix = (ts: number | undefined): void =>
+    IpcRendererEventChannel.guiSettings.setOnboardingCompletedUnix(ts);
   public daemonPrepareRestart = (shutdown: boolean): void => {
     IpcRendererEventChannel.daemon.prepareRestart(shutdown);
   };

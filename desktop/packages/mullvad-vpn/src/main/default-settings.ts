@@ -97,6 +97,13 @@ export function getDefaultSettings(): ISettings {
       suggestedExternalPort: 0,
       internalPort: 0,
     },
+    // Multi-exit auto-failover (M5.B.2). ON by default: on reconnect
+    // attempts where the previous exit was still excluded, the
+    // daemon picks an alternative (same-country preference) so a
+    // dead exit does not strand the user on a single endpoint.
+    warrenFailover: {
+      enabled: true,
+    },
   };
 }
 

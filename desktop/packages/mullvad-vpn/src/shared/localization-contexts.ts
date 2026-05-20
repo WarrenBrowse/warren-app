@@ -44,5 +44,6 @@ export type LocalizationContexts =
   | 'warren-multi-hop-view'
   | 'warren-status-view'
   | 'port-forwarding-view'
+  | 'warren-onboarding'
   | 'custom-list-feature'
   | 'locations-feature';

@@ -31,6 +31,11 @@ import {
   MainView,
   ManageDevicesView,
   MultihopSettingsView,
+  OnboardingDoneView,
+  OnboardingPreferencesView,
+  OnboardingSubscriptionView,
+  OnboardingWalletView,
+  OnboardingWelcomeView,
   PortForwardingSettingsView,
   ProblemReportView,
   RestoreMnemonicView,
@@ -115,6 +120,19 @@ export default function AppRouter() {
           <Route exact path={RoutePath.antiCensorship} component={AntiCensorshipView} />
           <Route exact path={RoutePath.wireguardPort} component={WireguardPortView} />
           <Route exact path={RoutePath.lwo} component={LwoSettingsView} />
+          <Route exact path={RoutePath.onboardingWelcome} component={OnboardingWelcomeView} />
+          <Route exact path={RoutePath.onboardingWallet} component={OnboardingWalletView} />
+          <Route
+            exact
+            path={RoutePath.onboardingSubscription}
+            component={OnboardingSubscriptionView}
+          />
+          <Route
+            exact
+            path={RoutePath.onboardingPreferences}
+            component={OnboardingPreferencesView}
+          />
+          <Route exact path={RoutePath.onboardingDone} component={OnboardingDoneView} />
         </Switch>
       </Focus>
     </>

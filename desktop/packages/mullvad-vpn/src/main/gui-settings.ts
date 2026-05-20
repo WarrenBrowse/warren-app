@@ -16,6 +16,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
+  onboardingCompletedUnix: 'number',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -134,6 +135,19 @@ export default class GuiSettings {
 
   get animateMap(): boolean {
     return this.stateValue.animateMap;
+  }
+
+  // M5.B.3: onboarding-completion timestamp. `undefined` clears the
+  // flag so the wizard re-runs on next boot (Settings "Replay
+  // onboarding" CTA). The renderer-side AppRouter consults
+  // `onboardingCompletedUnix` via `getNavigationBase` and redirects
+  // to `RoutePath.onboardingWelcome` when it is unset.
+  set onboardingCompletedUnix(newValue: number | undefined) {
+    this.changeStateAndNotify({ ...this.stateValue, onboardingCompletedUnix: newValue });
+  }
+
+  get onboardingCompletedUnix(): number | undefined {
+    return this.stateValue.onboardingCompletedUnix;
   }
 
   public load() {

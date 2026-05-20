@@ -34,3 +34,4 @@ export * from './user-interface-settings';
 export * from './anti-censorship';
 export * from './wireguard-port';
 export * from './lwo-settings';
+export * from './onboarding';

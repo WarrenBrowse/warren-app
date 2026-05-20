@@ -22,6 +22,11 @@ export function OnboardingWalletView() {
   const { push } = useHistory();
   const [mode, setMode] = React.useState<'pick' | 'generate' | 'import'>('pick');
   const [revealed, setRevealed] = React.useState(false);
+  const pickGenerate = React.useCallback(() => setMode('generate'), []);
+  const pickImport = React.useCallback(() => setMode('import'), []);
+  const reveal = React.useCallback(() => setRevealed(true), []);
+  const next = React.useCallback(() => push(RoutePath.onboardingSubscription), [push]);
+  const skip = React.useCallback(() => push(RoutePath.main), [push]);
 
   // Wire-up to the daemon `generate_warren_mnemonic` /
   // `import_warren_mnemonic` IPC routes lands as a follow-up. The
@@ -45,18 +50,10 @@ export function OnboardingWalletView() {
                   'Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them.',
                 )}
               </Text>
-              <button
-                type="button"
-                onClick={() => setMode('generate')}
-                data-testid="onboarding-wallet-generate"
-              >
+              <button type="button" onClick={pickGenerate} data-testid="onboarding-wallet-generate">
                 {messages.pgettext('warren-onboarding', 'Generate a new wallet (recommended)')}
               </button>
-              <button
-                type="button"
-                onClick={() => setMode('import')}
-                data-testid="onboarding-wallet-import"
-              >
+              <button type="button" onClick={pickImport} data-testid="onboarding-wallet-import">
                 {messages.pgettext('warren-onboarding', 'Import an existing mnemonic')}
               </button>
             </FlexColumn>
@@ -78,17 +75,15 @@ export function OnboardingWalletView() {
                   padding: 12,
                   border: '1px solid #888',
                 }}
-                onClick={() => setRevealed(true)}
-                data-testid="onboarding-mnemonic-blur"
-              >
+                onClick={reveal}
+                data-testid="onboarding-mnemonic-blur">
                 {placeholderMnemonic}
               </div>
               <button
                 type="button"
-                onClick={() => push(RoutePath.onboardingSubscription)}
+                onClick={next}
                 disabled={!revealed}
-                data-testid="onboarding-wallet-confirm"
-              >
+                data-testid="onboarding-wallet-confirm">
                 {messages.pgettext('warren-onboarding', 'I have written down the words')}
               </button>
             </FlexColumn>
@@ -106,16 +101,12 @@ export function OnboardingWalletView() {
                 placeholder="word1 word2 word3 ..."
                 data-testid="onboarding-mnemonic-input"
               />
-              <button
-                type="button"
-                onClick={() => push(RoutePath.onboardingSubscription)}
-                data-testid="onboarding-wallet-import-confirm"
-              >
+              <button type="button" onClick={next} data-testid="onboarding-wallet-import-confirm">
                 {messages.pgettext('warren-onboarding', 'Restore wallet')}
               </button>
             </FlexColumn>
           )}
-          <button type="button" onClick={() => push(RoutePath.main)}>
+          <button type="button" onClick={skip}>
             {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
           </button>
         </View.Container>

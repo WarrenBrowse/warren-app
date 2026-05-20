@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { Text } from '../../../lib/components';
@@ -21,6 +23,8 @@ import { useHistory } from '../../../lib/history';
 // upstream/Warren hooks rather than introducing duplicate state.
 export function OnboardingPreferencesView() {
   const { push } = useHistory();
+  const next = React.useCallback(() => push(RoutePath.onboardingDone), [push]);
+  const skip = React.useCallback(() => push(RoutePath.main), [push]);
   return (
     <View backgroundColor="darkBlue">
       <View.Content>
@@ -54,18 +58,10 @@ export function OnboardingPreferencesView() {
                 '• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in.',
               )}
             </Text>
-            <button
-              type="button"
-              onClick={() => push(RoutePath.onboardingDone)}
-              data-testid="onboarding-preferences-next"
-            >
+            <button type="button" onClick={next} data-testid="onboarding-preferences-next">
               {messages.pgettext('warren-onboarding', 'Continue')}
             </button>
-            <button
-              type="button"
-              onClick={() => push(RoutePath.main)}
-              data-testid="onboarding-preferences-skip"
-            >
+            <button type="button" onClick={skip} data-testid="onboarding-preferences-skip">
               {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
             </button>
           </FlexColumn>

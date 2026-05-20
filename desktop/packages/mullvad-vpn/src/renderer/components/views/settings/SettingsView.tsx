@@ -13,6 +13,7 @@ import {
   DebugListItem,
   MultihopListItem,
   QuitButton,
+  ReplayOnboardingListItem,
   SplitTunnelingListItem,
   SupportListItem,
   UserInterfaceSettingsListItem,
@@ -65,6 +66,8 @@ export function SettingsView() {
                     <SupportListItem />
                     <AppInfoListItem />
                   </FlexColumn>
+
+                  <ReplayOnboardingListItem position="solo" />
 
                   {showDebug && <DebugListItem />}
                 </FlexColumn>

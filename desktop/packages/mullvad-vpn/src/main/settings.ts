@@ -141,6 +141,10 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.animateMap = animateMap;
     });
 
+    IpcMainEventChannel.guiSettings.handleSetOnboardingCompletedUnix((ts: number | undefined) => {
+      this.guiSettings.onboardingCompletedUnix = ts;
+    });
+
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
       this.guiSettings.changelogDisplayedForVersion = this.currentVersion.gui;
     });
@@ -213,6 +217,11 @@ export default class Settings implements Readonly<ISettings> {
   // needed.
   public get warrenNatPmp() {
     return this.settingsValue.warrenNatPmp;
+  }
+  // Multi-exit auto-failover toggle (M5.B.2). Persistent at the
+  // daemon level; the renderer also caches it for the UI status pill.
+  public get warrenFailover() {
+    return this.settingsValue.warrenFailover;
   }
 
   public get gui() {

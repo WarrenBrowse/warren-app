@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { Text } from '../../../lib/components';
@@ -17,6 +19,8 @@ import { useHistory } from '../../../lib/history';
 // click "I already have a subscription" to skip ahead.
 export function OnboardingSubscriptionView() {
   const { push } = useHistory();
+  const alreadyHave = React.useCallback(() => push(RoutePath.onboardingPreferences), [push]);
+  const skip = React.useCallback(() => push(RoutePath.main), [push]);
   return (
     <View backgroundColor="darkBlue">
       <View.Content>
@@ -35,22 +39,16 @@ export function OnboardingSubscriptionView() {
               href="https://warrenbrowse.com/pricing"
               target="_blank"
               rel="noopener noreferrer"
-              data-testid="onboarding-subscription-link"
-            >
+              data-testid="onboarding-subscription-link">
               {messages.pgettext('warren-onboarding', 'View plans (opens in your browser)')}
             </a>
             <button
               type="button"
-              onClick={() => push(RoutePath.onboardingPreferences)}
-              data-testid="onboarding-subscription-already-have"
-            >
+              onClick={alreadyHave}
+              data-testid="onboarding-subscription-already-have">
               {messages.pgettext('warren-onboarding', 'I already have a subscription')}
             </button>
-            <button
-              type="button"
-              onClick={() => push(RoutePath.main)}
-              data-testid="onboarding-subscription-skip"
-            >
+            <button type="button" onClick={skip} data-testid="onboarding-subscription-skip">
               {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
             </button>
           </FlexColumn>
