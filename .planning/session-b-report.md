@@ -1,9 +1,21 @@
-# Session B - rapport intermédiaire
+# Session B - rapport intermédiaire (2e itération)
 
 **Date** : 2026-05-20
-**Statut global** : **PARTIEL** - DAITA v2 groundwork posé, B.2 / B.3 non démarrés
-**Push** : warren-core `ab34ab5` (origin/main)
+**Statut global** : **PARTIEL ÉLARGI** - DAITA v2 wire format + framework + pool + state driver + opt-in client/exit posés ; pump integration + multi-hop + UI + bench + B.2 + B.3 non démarrés
+**Push** : warren-core `73f20e1` (origin/main, +4 commits depuis `ab34ab5`)
 **Cwd réel d'exécution** : `/Users/poka/dev/warrenBros/warren-core`
+
+## Commits livrés cette continuation
+
+```
+73f20e1 feat(warren-client): add ClientTunnel::with_daita() builder + --enable-daita CLI flag (M5.B.1)
+cc53d82 feat(warren-tunnel): add DaitaState (sync stateful driver with per-machine timer wheels) (M5.B.1.3)
+cba67e3 feat(warren-tunnel): add DaitaPool (5 curated machines) + wire into ExitListener via --enable-daita (M5.B.1.2.5)
+3bb941d feat(warren-protocol): bump PROTOCOL_VERSION 2->3 + Setup.daita_support + SetupAck.daita_spec (M5.B.1.4)
+ab34ab5 feat(warren-tunnel): wrap maybenot 2.2.2 in DaitaFramework + DaitaConfig (M5.B.1.1-3 baseline)
+```
+
+5 commits total sur `main`. ~30 tests TDD verts (16 daita + 6 daita_pool + 5 select_daita_spec + 6 DaitaState + tests warren-protocol v3).
 
 ---
 
@@ -230,21 +242,37 @@ B.2 + B.3 + suite B.1 reste à faire.
 
 ## Next steps prioritaires (qui prend la session suivante)
 
-### Tier 1 - terminer B.1
+### Tier 0 - état actuel (déjà fait)
 
-1. **PROTOCOL_VERSION 2 → 3 + DAITA fields** dans warren-protocol
-   (`Setup.daita_support: bool`, `SetupAck.daita_spec: Option<DaitaConfig>`).
-   Tests : encode/decode round-trip, deny_unknown_fields strict, postcard
-   forward-compat semantics documenté.
-2. **DaitaDriver async task** dans warren-tunnel (task #13). Hook les 4
-   variantes pump (mono, multi, rate-limited). Dummy packet émission +
-   filter.
-3. **Exit-side machine pool** : 5 machines pré-générées (statiques avec
-   seed déterministe pour reproductibilité bench), random pick par
-   session, envoi via SetupAck.
-4. **Multi-hop HPKE pré-encryption** : hook DaitaDriver dans
-   `warren-multihop::session::*` avant le HPKE seal côté client, après
-   HPKE unseal côté exit.
+1. ✅ PROTOCOL_VERSION 2→3 + Setup.daita_support + SetupAck.daita_spec (3bb941d)
+2. ✅ DaitaPool 5 machines + wire ExitListener + `--enable-daita` exit CLI (cba67e3)
+3. ✅ DaitaState sync driver (timer wheels per machine) — foundation for pump (cc53d82)
+4. ✅ ClientTunnel.with_daita() + `--enable-daita` client CLI (73f20e1)
+
+### Tier 1 - terminer B.1 (priorité haute)
+
+1. **Pump integration** (task #13 ouverte) : utiliser `DaitaState` dans
+   `pump_bidirectional` (mono-conn d'abord, multi/rate-limited ensuite).
+   Architecture :
+   - Pump détient un `Option<DaitaState>` (None si DAITA off).
+   - À chaque packet sent: `state.fire_events(&[NormalSent, TunnelSent], now)`.
+   - À chaque packet recv: check first byte high-nibble. Si `4` ou `6` (IP) →
+     `fire_events(&[TunnelRecv, NormalRecv])` + tun.send. Sinon (dummy) →
+     `fire_events(&[TunnelRecv, PaddingRecv])` + drop silencieux.
+   - `select!` add'l branch: `tokio::time::sleep_until(state.next_timer())`.
+     On expiry: `state.drain_expired(now)` → pour chaque machine retournée,
+     envoyer un dummy datagram (premier byte 0xFF + bourrage random ~1280B).
+   - Tests : FakeTun + 2 sessions, assert padding apparaît via stats compteur,
+     assert receiver drop dummy correctement.
+2. **Multi-conn session sharing** : actuellement chaque connection secondaire
+   reçoit `daita_spec: None` (cf. comment dans `select_daita_spec`). Wire le
+   primary's DaitaConfig sur `MultiSessionState` et le réutiliser pour les
+   secondaries.
+3. **Multi-hop HPKE pré-encryption** : pour M4.E multi-hop, DAITA padding
+   doit s'appliquer au payload **cleartext** (avant HPKE seal côté client,
+   après HPKE unseal côté exit). Hook équivalent dans
+   `warren-multihop::session`. Test E2E : padding visible dans la couche
+   HPKE-encrypted vs cleartext.
 
 ### Tier 2 - bench + UI
 
