@@ -156,6 +156,52 @@ managé via `desktop/package.json`.
 
 ## 4. Plan d'exécution
 
+### M4.H.C.PRE - Fix duplication signature HTTP canonique (opportuniste)
+
+**Contexte** : analyse architecturale orchestrateur 2026-05-20 a
+identifié une duplication conceptuelle dans `mullvad-api/src/warren_auth.rs`
+warren-app : les constantes `HEADER_PUBKEY` / `HEADER_SIGNATURE` /
+`HEADER_TIMESTAMP` / `HEADER_NONCE` + la fonction `canonical_message()`
+sont définies localement alors que `warren-api-client` warren-core
+expose exactement les mêmes symboles. Risque : divergence silencieuse
+du format canonique → signatures qui ne validate plus.
+
+Tu vas toucher `mullvad-api` de toute façon pour les gRPC handlers
+M4.H.C.0/.1, donc fix opportuniste :
+
+1. Vérifier `mullvad-api/Cargo.toml` : `warren-api-client` doit être
+   en deps. Si absent, ajouter en path-dep
+   `warren-api-client = { path = "../../warren-core/crates/warren-api-client" }`.
+2. Dans `mullvad-api/src/warren_auth.rs` :
+   - Supprimer les `pub const HEADER_*` LOCAUX (les 4 constantes)
+   - Supprimer la `fn canonical_message(...)` locale
+   - Importer depuis warren-api-client :
+     ```rust
+     use warren_api_client::{
+         HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP,
+         canonical_message,
+     };
+     ```
+3. Vérifier qu'aucun test warren-app n'asserte sur les constantes
+   locales (si oui, les pointer vers les re-exports).
+4. `cargo check -p mullvad-api` + `cargo test -p mullvad-api` PASS.
+5. **Vérification d'invariance** : la signature canonique doit
+   produire EXACTEMENT le même string que pré-refactor. Sinon les
+   requêtes signées warren-app vers warren-api seront rejetées (= bug
+   prod). Ajouter un test régression qui hardcode un canonical_message
+   de référence (méthode + path + timestamp fixed + nonce fixed + body
+   hash fixed) et assert que le résultat post-refactor === résultat
+   pré-refactor. RED→GREEN strict.
+6. Commit séparé : `refactor(mullvad-api): consume canonical_message + HEADER_* from warren-api-client to remove duplication`.
+
+**Pourquoi avant M4.H.C.0** : indépendant du gRPC proto + nécessite
+juste mullvad-api touch. Si fait en premier, le reste du M4.H.C n'a
+pas à se soucier de la duplication.
+
+**Cas d'escalade** : si warren-api-client expose une `canonical_message`
+avec une signature différente (paramètres ou ordre), c'est qu'il y a
+déjà eu divergence. Investiguer + escalader si nécessaire (cf. §6).
+
 ### M4.H.C.0 - gRPC proto extension
 
 1. Lire `management_interface.proto` actuel pour identifier le pattern
@@ -337,6 +383,9 @@ managé via `desktop/package.json`.
 
 ### GO ULTIMATE (cible)
 
+- **M4.H.C.PRE** : duplication `canonical_message` + `HEADER_*` éliminée
+  dans `mullvad-api/src/warren_auth.rs`, refactor commit séparé,
+  test régression canonical pré/post-refactor PASS
 - gRPC proto étendu + TS bindings regen + daemon handlers
   implémentés + tests TDD PASS
 - View `multihop-settings/` adapté pour Warren (toggle + entry + exit
@@ -366,7 +415,9 @@ managé via `desktop/package.json`.
 `/tmp/m4-h-c-report.md` ≤ 200 lignes :
 
 1. **Verdict** GO ULTIMATE / CONDITIONAL / NO-GO
-2. **gRPC proto extension** : diff schema + TS bindings regen
+2. **M4.H.C.PRE refactor** : duplication signature HTTP éliminée,
+   commit hash + test régression canonical hardcoded result
+3. **gRPC proto extension** : diff schema + TS bindings regen
 3. **Daemon handlers** : list + tests TDD count
 4. **UI views adaptés** : list + tests Jest count
 5. **I18n stats** : nb strings FR + EN ajoutées
