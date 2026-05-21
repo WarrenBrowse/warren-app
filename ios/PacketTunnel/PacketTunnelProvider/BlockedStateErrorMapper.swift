@@ -65,9 +65,11 @@ public struct BlockedStateErrorMapper: BlockedStateErrorMapperProtocol {
                 .noRelaysSatisfyingConstraints
             }
 
-        case is WireGuardAdapterError:
-            // Any errors that originate from wireguard adapter including failure to set tunnel settings using
-            // packet tunnel provider.
+        case is TunnelPingerError:
+            // Replaces the legacy WireGuardAdapterError case dropped in
+            // C.4.4. The WireGuard adapter path is removed entirely ;
+            // pinger / tunnel-adapter errors now surface through
+            // `TunnelPingerError` (PacketTunnelCore).
             return .tunnelAdapter
 
         case is PublicKeyError:
