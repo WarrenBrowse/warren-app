@@ -98,7 +98,6 @@
 		449E9A6F2D283C7400F8574A /* ButtonPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449E9A6E2D283C7400F8574A /* ButtonPanel.swift */; };
 		449EBA262B975B9700DFA4EB /* EphemeralPeerReceiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449EBA252B975B9700DFA4EB /* EphemeralPeerReceiving.swift */; };
 		44A262422D6373B400085380 /* WireGuardKitTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 44A262412D6373B400085380 /* WireGuardKitTypes */; };
-		44A262432D6373B400085380 /* WireGuardKitTypes in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 44A262412D6373B400085380 /* WireGuardKitTypes */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		44A262452D6373C400085380 /* WireGuardKit in Frameworks */ = {isa = PBXBuildFile; productRef = 44A262442D6373C400085380 /* WireGuardKit */; };
 		44A262472D6373D300085380 /* WireGuardKitTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 44A262462D6373D300085380 /* WireGuardKitTypes */; };
 		44A262492D6373D300085380 /* WireGuardKitTypes in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 44A262462D6373D300085380 /* WireGuardKitTypes */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -1308,6 +1307,34 @@
 			remoteGlobalIDString = 58FBDA9722A519BC00EB69A3;
 			remoteInfo = WireGuardGoBridge;
 		};
+		0EF2DA368E1D4ED72D89AD9A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06799ABB28F98E1D00ACD94E;
+			remoteInfo = WarrenREST;
+		};
+		206F169192AC110CFB8DA8F9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
+			remoteInfo = WarrenLogging;
+		};
+		4CA6BB2F84455A533FF7FAA3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58B2FDD22AA71D2A003EB5C6;
+			remoteInfo = WarrenSettings;
+		};
+		5580667115C01DDC56583F7E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
+			remoteInfo = WarrenRustRuntime;
+		};
 		58153073294CBE8B00D1702E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
@@ -1595,6 +1622,13 @@
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
 			remoteInfo = WarrenRustRuntime;
 		};
+		F0016F2A85B81C791479A66D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58D223A4294C8A480029F5F8;
+			remoteInfo = Operations;
+		};
 		F08B6B7F2C52927600D0A121 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
@@ -1608,6 +1642,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = F0ACE3072BE4E478006D5333;
 			remoteInfo = WarrenMockData;
+		};
+		F2D23B9D0682E79B174DE2E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58CE5E58224146200008646E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
+			remoteInfo = WarrenTypes;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -5821,6 +5862,12 @@
 			buildRules = (
 			);
 			dependencies = (
+				9FB8827C9D930AD6ABA15479 /* PBXTargetDependency */,
+				5FD8BAF722392DFFE1FE7140 /* PBXTargetDependency */,
+				005ABCD19BE37946E655E780 /* PBXTargetDependency */,
+				5FC4C8E3B1DB96B81264EE46 /* PBXTargetDependency */,
+				FBAE917523460E08CB87C451 /* PBXTargetDependency */,
+				D76B788C5B902035D097CF3A /* PBXTargetDependency */,
 			);
 			name = WarrenMockData;
 			packageProductDependencies = (
@@ -7442,6 +7489,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		005ABCD19BE37946E655E780 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WarrenSettings;
+			target = 58B2FDD22AA71D2A003EB5C6 /* WarrenSettings */;
+			targetProxy = 4CA6BB2F84455A533FF7FAA3 /* PBXContainerItemProxy */;
+		};
 		0107F3FD2F5AE1E40012451B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 06799ABB28F98E1D00ACD94E /* WarrenREST */;
@@ -7657,6 +7710,18 @@
 			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58FE65972AB1D90600E53CB5 /* PBXContainerItemProxy */;
 		};
+		5FC4C8E3B1DB96B81264EE46 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WarrenRustRuntime;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
+			targetProxy = 5580667115C01DDC56583F7E /* PBXContainerItemProxy */;
+		};
+		5FD8BAF722392DFFE1FE7140 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WarrenTypes;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
+			targetProxy = F2D23B9D0682E79B174DE2E4 /* PBXContainerItemProxy */;
+		};
 		7A4BFF812C2AB2B100754DCB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F0ACE3072BE4E478006D5333 /* WarrenMockData */;
@@ -7697,6 +7762,12 @@
 			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = 856E0AD22B4D9C1F007EAD4C /* PBXContainerItemProxy */;
 		};
+		9FB8827C9D930AD6ABA15479 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WarrenREST;
+			target = 06799ABB28F98E1D00ACD94E /* WarrenREST */;
+			targetProxy = 0EF2DA368E1D4ED72D89AD9A /* PBXContainerItemProxy */;
+		};
 		A9173C342C36CCFB00F6A08C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
@@ -7727,6 +7798,12 @@
 			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = A9D9A4C52C36D53C004088DD /* PBXContainerItemProxy */;
 		};
+		D76B788C5B902035D097CF3A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Operations;
+			target = 58D223A4294C8A480029F5F8 /* Operations */;
+			targetProxy = F0016F2A85B81C791479A66D /* PBXContainerItemProxy */;
+		};
 		F08B6B802C52927600D0A121 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 58C7A4352A863F440060C66F /* PacketTunnelCore */;
@@ -7736,6 +7813,12 @@
 			isa = PBXTargetDependency;
 			target = F0ACE3072BE4E478006D5333 /* WarrenMockData */;
 			targetProxy = F0ACE30E2BE4E478006D5333 /* PBXContainerItemProxy */;
+		};
+		FBAE917523460E08CB87C451 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = WarrenLogging;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
+			targetProxy = 206F169192AC110CFB8DA8F9 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

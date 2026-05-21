@@ -12,6 +12,18 @@
 # Passed by Xcode
 ACTION=$1
 
+# Warren note (C.4.0 transitional, 2026-05-21) : early-skip when the
+# legacy WireGuardKitGo subdirectory does not exist. The Warren
+# `wireguard-apple/` submodule is a stub Package.swift (cf.
+# `wireguard-apple/Package.swift`) ; the directory only carries empty
+# Swift library products. Skip the Go bridge build so the rest of the
+# project can compile and link. C.4.4 removes the WireGuardGoBridge
+# target entirely once WireGuard consumers are stubbed/replaced.
+if [ ! -d "wireguard-apple/Sources/WireGuardKitGo" ]; then
+    echo "Warren: WireGuardKitGo directory not present (stub wireguard-apple), skipping legacy Go bridge build."
+    exit 0
+fi
+
 if [ "$SOURCE_PACKAGES_PATH" == "" ]; then
     # When archiving, Xcode sets the action to "install"
     if [ "$ACTION" == "install" ]; then
