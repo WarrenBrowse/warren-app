@@ -21,7 +21,9 @@ typedef uint8_t SwiftAccessMethodKind;
 /**
  * Tunnel state enum surfaced via `warren_tunnel_status`. Variants
  * other than `Disconnected` are constructed by the warren-tunnel
- * dispatcher once the `tunnel` feature is wired (C.4 implementation).
+ * dispatcher once the Quinn connection task is wired (C.4.1). On the
+ * `not(tunnel)` feature path the enum has no constructor at all,
+ * hence the `cfg_attr(expect)` suppression scoped to that path.
  */
 typedef enum WarrenTunnelStateC {
   Disconnected = 0,
@@ -39,6 +41,8 @@ typedef struct Map Map;
 
 typedef struct Option_WarrenTunnelEventCallback Option_WarrenTunnelEventCallback;
 
+typedef struct Option_WarrenTunnelOutboundCallback Option_WarrenTunnelOutboundCallback;
+
 typedef struct RequestCancelHandle RequestCancelHandle;
 
 typedef struct RetryStrategy RetryStrategy;
@@ -47,7 +51,7 @@ typedef struct SwiftAccessMethodSettingsContext SwiftAccessMethodSettingsContext
 
 /**
  * Opaque handle representing an active Warren tunnel. Created by
- * `warren_tunnel_start` ; destroyed by `warren_tunnel_stop`.
+ * [`warren_tunnel_start`] ; destroyed by [`warren_tunnel_stop`].
  * The Swift side treats this as an `OpaquePointer`.
  */
 typedef struct WarrenTunnelHandle {
@@ -92,8 +96,8 @@ typedef struct WarrenDaitaSpecC {
  * public surface of `warren_tunnel::WarrenTunnelParameters`.
  *
  * String fields are null-terminated UTF-8 ; the Swift side allocates
- * + retains them for the duration of the `warren_tunnel_start` call
- * (Rust only borrows during marshalling).
+ * and retains them for the duration of the `warren_tunnel_start`
+ * call (Rust only borrows during marshalling).
  */
 typedef struct WarrenTunnelParametersC {
   /**
@@ -227,12 +231,12 @@ typedef void (*LogCallback)(uint8_t level, const char *message);
 /**
  * Starts a Warren tunnel with the given parameters. Returns an opaque
  * handle on success, or null on failure (invalid parameters, tunnel
- * feature disabled at build time).
+ * feature disabled at build time, runtime allocation failure).
  *
- * `packet_fd` is the iOS NEPacketTunnelFlow file descriptor. When the
- * `NEPacketTunnelFlow.readPackets/writePackets` bridge approach is
- * used (preferred), pass `-1` and configure the Swift-side bridge
- * separately.
+ * `packet_fd` is the iOS `NEPacketTunnelFlow` file descriptor. iOS
+ * does *not* expose the TUN fd directly through `NEPacketTunnelFlow` ;
+ * pass `-1` and use [`warren_tunnel_inject_inbound_packet`] +
+ * [`warren_tunnel_set_outbound_callback`] for the Swift bridge.
  *
  * # Safety
  * `parameters` must point to a valid `WarrenTunnelParametersC` (all
@@ -246,7 +250,7 @@ struct WarrenTunnelHandle *warren_tunnel_start(const struct WarrenTunnelParamete
  * call on a null handle (no-op).
  *
  * # Safety
- * `handle` must have been returned by `warren_tunnel_start` and must
+ * `handle` must have been returned by [`warren_tunnel_start`] and must
  * not have been stopped already.
  */
 void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
@@ -258,7 +262,7 @@ void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
  * Returns `0` on success, `-3` if the tunnel is not connected.
  *
  * # Safety
- * `handle` must be a valid pointer from `warren_tunnel_start`.
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
  */
 int warren_tunnel_reconnect(struct WarrenTunnelHandle *handle);
 
@@ -268,7 +272,8 @@ int warren_tunnel_reconnect(struct WarrenTunnelHandle *handle);
  * Returns `0` on success, `-1` on invalid input.
  *
  * # Safety
- * `handle` must be a valid pointer from `warren_tunnel_start`.
+ * `handle` may be null (status reports `Disconnected`). When non-null
+ * it must be a valid pointer from [`warren_tunnel_start`].
  * `out_status` must point to a writable `WarrenTunnelStatusC`.
  */
 int warren_tunnel_status(struct WarrenTunnelHandle *handle, struct WarrenTunnelStatusC *out_status);
@@ -283,14 +288,46 @@ int warren_tunnel_status(struct WarrenTunnelHandle *handle, struct WarrenTunnelS
  * Returns `0` on success.
  *
  * # Safety
- * `handle` must be a valid pointer from `warren_tunnel_start`.
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
  * `callback` (if non-null) must outlive the call to
- * `warren_tunnel_stop`. `context` is passed back unchanged ; lifetime
+ * [`warren_tunnel_stop`]. `context` is passed back unchanged ; lifetime
  * is the caller's responsibility.
  */
 int warren_tunnel_set_event_callback(struct WarrenTunnelHandle *handle,
                                      struct Option_WarrenTunnelEventCallback callback,
                                      void *context);
+
+/**
+ * Registers a callback that ships outbound IP packets to Swift for
+ * `NEPacketTunnelFlow.writePackets`. Replaces any previously
+ * registered callback.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * Same invariants as [`warren_tunnel_set_event_callback`].
+ */
+int warren_tunnel_set_outbound_callback(struct WarrenTunnelHandle *handle,
+                                        struct Option_WarrenTunnelOutboundCallback callback,
+                                        void *context);
+
+/**
+ * Pushes an inbound IP packet onto the tunnel uplink queue. Called
+ * by Swift after each `NEPacketTunnelFlow.readPackets` completion.
+ *
+ * `data` is borrowed for the duration of this call ; Rust copies the
+ * bytes before returning.
+ *
+ * Returns `0` on success, `-1` on null handle / null data / zero
+ * length.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ * `data` must point to at least `len` bytes of readable memory.
+ */
+int warren_tunnel_inject_inbound_packet(struct WarrenTunnelHandle *handle,
+                                        const uint8_t *data,
+                                        uintptr_t len);
 
 /**
  * Generates a new BIP39 mnemonic with `word_count` words (12 or 24).

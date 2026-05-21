@@ -7156,6 +7156,7 @@ dependencies = [
  "parking_lot",
  "postcard",
  "quinn",
+ "rand 0.9.4",
  "rand_core 0.9.5",
  "serde_json",
  "thiserror 2.0.18",
