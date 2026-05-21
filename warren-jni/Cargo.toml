@@ -29,6 +29,10 @@ warren-identity = { path = "../../warren-core/crates/warren-identity" }
 jnix = { version = "0.5.1", features = ["derive"] }
 log = { workspace = true }
 log-panics = "2"
+# `android_logger` bridges the `log` crate to the Android logcat subsystem
+# so `log::info!` from any of our deps shows up under `adb logcat -s
+# WarrenJni:V` without per-call ceremony.
+android_logger = "0.15"
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { workspace = true }

@@ -121,9 +121,20 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
 }
 
 fn init_log_file(_log_dir: &Path) -> Result<(), String> {
-    // TODO (D.4): wire a file appender writing to <log_dir>/warren.log with
-    // rotation. For now Android logcat capture via the default log facade is
-    // sufficient for development.
+    // Bridge the `log` crate to logcat. Once initialised, `log::info!`
+    // from any Rust dep (warren-identity, warren-tunnel once enabled,
+    // etc.) shows up under `adb logcat -s WarrenJni:V`. The
+    // `init_once` form is idempotent so JNI callers can re-trigger
+    // `initLogger` (e.g. after a process restart) without panicking.
+    android_logger::init_once(
+        android_logger::Config::default()
+            .with_max_level(log::LevelFilter::Debug)
+            .with_tag("WarrenJni"),
+    );
+    // TODO (D.4): also wire a file appender writing to
+    // <log_dir>/warren.log with rotation, so problem reports can ship
+    // the last N MB of native logs without relying on logcat ring
+    // buffer persistence.
     Ok(())
 }
 
