@@ -29,7 +29,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 
-private const val LOG_TAG = "mullvad"
+private const val LOG_TAG = "warren"
 
 @OptIn(ExperimentalComposeRuntimeApi::class)
 class WarrenApplication : Application() {

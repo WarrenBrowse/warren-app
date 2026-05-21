@@ -151,7 +151,7 @@ android {
     }
 
     packaging {
-        if (getBooleanProperty("mullvad.app.build.keepDebugSymbols")) {
+        if (getBooleanProperty("warren.app.build.keepDebugSymbols")) {
             jniLibs.keepDebugSymbols.add("**/*.so")
         }
         jniLibs.useLegacyPackaging = true
@@ -182,7 +182,7 @@ androidComponents {
             "ENABLE_IN_APP_VERSION_NOTIFICATIONS",
             BuildConfigField(
                 "boolean",
-                getBooleanProperty("mullvad.app.config.inAppVersionNotifications.enable"),
+                getBooleanProperty("warren.app.config.inAppVersionNotifications.enable"),
                 "Show in-app version notifications",
             ),
         )
@@ -275,13 +275,13 @@ junitPlatform {
 cargo {
     val isReleaseBuild = isReleaseBuild()
     val generateDebugSymbolsForReleaseBuilds =
-        getBooleanProperty("mullvad.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
+        getBooleanProperty("warren.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
     val enableApiOverride = !isReleaseBuild || appVersion.isDev || appVersion.isAlpha
     module = repoRootPath
     libname = "warren-jni"
     // All available targets:
     // https://github.com/mozilla/rust-android-gradle/tree/master?tab=readme-ov-file#targets
-    targets = getStringListProperty("mullvad.app.build.cargo.targets")
+    targets = getStringListProperty("warren.app.build.cargo.targets")
     profile =
         if (isReleaseBuild) {
             if (generateDebugSymbolsForReleaseBuilds) "release-debuginfo" else "release"
@@ -306,7 +306,7 @@ cargo {
         add("--locked")
     }
 
-    if (getBooleanProperty("mullvad.app.build.replaceRustPathPrefix")) {
+    if (getBooleanProperty("warren.app.build.replaceRustPathPrefix")) {
         environmentalOverrides["RUSTFLAGS"] = generateRemapArguments()
     }
 }
@@ -316,7 +316,7 @@ tasks.register<Exec>("cargoClean") {
     commandLine("cargo", "clean")
 }
 
-if (getBooleanProperty("mullvad.app.build.cargo.cleanBuild")) {
+if (getBooleanProperty("warren.app.build.cargo.cleanBuild")) {
     tasks["clean"].dependsOn("cargoClean")
 }
 

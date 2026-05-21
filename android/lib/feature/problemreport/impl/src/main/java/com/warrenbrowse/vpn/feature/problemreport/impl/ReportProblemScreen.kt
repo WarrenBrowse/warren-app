@@ -63,7 +63,7 @@ import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.component.textfield.ErrorSupportingText
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
@@ -215,7 +215,7 @@ private fun InputContent(
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr),
         placeholder = { Text(text = stringResource(id = R.string.user_email_hint)) },
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
         keyboardOptions =
             KeyboardOptions(
                 autoCorrectEnabled = false,
@@ -395,7 +395,7 @@ private fun ProblemMessageTextField(
             if (isError) {
                 { ErrorSupportingText(stringResource(R.string.report_problem_message_is_empty)) }
             } else null,
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,

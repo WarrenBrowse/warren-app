@@ -56,7 +56,7 @@ sealed interface DescriptionError {
 }
 
 class ReportProblemViewModel(
-    private val mullvadProblemReporter: ProblemReportRepository,
+    private val warrenProblemReporter: ProblemReportRepository,
     private val problemReportRepository: ProblemReportRepository,
     accountRepository: AccountRepository,
     private val isPlayBuild: Boolean,
@@ -124,7 +124,7 @@ class ReportProblemViewModel(
 
                 // Ensure we show loading for at least MINIMUM_LOADING_TIME_MILLIS
                 val deferredResult = async {
-                    mullvadProblemReporter.sendReport(
+                    warrenProblemReporter.sendReport(
                         UserReport(nullableEmail, description),
                         includeAccountIdState.value,
                     )
@@ -174,7 +174,7 @@ class ReportProblemViewModel(
 
     init {
         viewModelScope.launch {
-            if (mullvadProblemReporter.collectLogs()) {
+            if (warrenProblemReporter.collectLogs()) {
                 areLogsCollected.emit(LogCollectingState.Success)
             } else {
                 areLogsCollected.emit(LogCollectingState.Failed)
@@ -185,6 +185,6 @@ class ReportProblemViewModel(
     override fun onCleared() {
         super.onCleared()
         // Delete any logs if user leaves the screen
-        mullvadProblemReporter.deleteLogs()
+        warrenProblemReporter.deleteLogs()
     }
 }

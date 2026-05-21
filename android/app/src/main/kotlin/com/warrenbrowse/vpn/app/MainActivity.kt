@@ -45,10 +45,10 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
     override val scope by activityScope()
 
     private val launchVpnPermission =
-        registerForActivityResult(CreateVpnProfile()) { _ -> mullvadAppViewModel.connect() }
+        registerForActivityResult(CreateVpnProfile()) { _ -> warrenAppViewModel.connect() }
 
     private val apiEndpointFromIntentHolder by inject<ApiEndpointFromIntentHolder>()
-    private val mullvadAppViewModel by inject<WarrenAppViewModel>()
+    private val warrenAppViewModel by inject<WarrenAppViewModel>()
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         loadKoinModules(listOf(uiModule, paymentModule))
 
-        lifecycle.addObserver(mullvadAppViewModel)
+        lifecycle.addObserver(warrenAppViewModel)
 
         installSplashScreen().setKeepOnScreenCondition {
             val isReady = isReadyNextDraw
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
     }
 
     override fun onDestroy() {
-        lifecycle.removeObserver(mullvadAppViewModel)
+        lifecycle.removeObserver(warrenAppViewModel)
         super.onDestroy()
     }
 
@@ -148,7 +148,7 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
             // If legacy or other always on connect at let daemon generate a error state
             is PrepareError.OtherLegacyAlwaysOnVpn,
             is PrepareError.OtherAlwaysOnApp,
-            Prepared -> mullvadAppViewModel.connect()
+            Prepared -> warrenAppViewModel.connect()
         }
     }
 

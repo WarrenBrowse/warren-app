@@ -103,7 +103,7 @@ import com.warrenbrowse.vpn.feature.login.api.DeviceListNavKey
 import com.warrenbrowse.vpn.feature.login.api.LoginAction
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
@@ -420,7 +420,7 @@ private fun ColumnScope.LoginInput(
                 textDirection = TextDirection.Ltr,
                 fontFamily = FontFamily.Monospace,
             ),
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
         isError = state.loginState.isError(),
     )
 

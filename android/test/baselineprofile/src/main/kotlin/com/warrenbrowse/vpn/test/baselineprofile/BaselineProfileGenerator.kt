@@ -82,6 +82,6 @@ class BaselineProfileGenerator {
 
     private fun getValidAccountNumber() =
         InstrumentationRegistry.getArguments()
-            .getString("mullvad.test.baseline.accountNumber.valid")
+            .getString("warren.test.baseline.accountNumber.valid")
             ?: error("Requires a valid prod account number")
 }

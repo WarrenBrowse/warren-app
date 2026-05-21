@@ -331,7 +331,7 @@ val uiModule = module {
     viewModel { WelcomeViewModel(get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
     viewModel {
         ReportProblemViewModel(
-            mullvadProblemReporter = get(),
+            warrenProblemReporter = get(),
             problemReportRepository = get(),
             accountRepository = get(),
             isPlayBuild = IS_PLAY_BUILD,

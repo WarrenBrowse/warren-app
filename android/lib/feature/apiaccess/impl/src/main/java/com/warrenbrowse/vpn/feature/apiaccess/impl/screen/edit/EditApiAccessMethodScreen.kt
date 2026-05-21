@@ -68,7 +68,7 @@ import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateCloseIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.component.textfield.ErrorSupportingText
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenDropdownMenuItem
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenExposedDropdownMenuBox
@@ -321,7 +321,7 @@ private fun ApiAccessMethodTypeSelection(
     WarrenExposedDropdownMenuBox(
         label = stringResource(id = R.string.type),
         title = formData.apiAccessMethodTypes.text(),
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
     ) { close ->
         ApiAccessMethodTypes.entries.forEachIndexed { index, item ->
             if (index > 0) {
@@ -532,7 +532,7 @@ private fun PasswordInput(
             passwordError?.let {
                 { ErrorSupportingText(stringResource(id = R.string.this_field_is_required)) }
             },
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
     )
 }
 
@@ -541,7 +541,7 @@ private fun CipherSelection(cipher: Cipher, onCipherChange: (Cipher) -> Unit) {
     WarrenExposedDropdownMenuBox(
         label = stringResource(id = R.string.cipher),
         title = cipher.label,
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
     ) { close ->
         Cipher.listAll().forEachIndexed { index, item ->
             if (index > 0) {
@@ -586,7 +586,7 @@ private fun EnableAuthentication(
                         R.string.off
                     }
             ),
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
     ) { close ->
         WarrenDropdownMenuItem(
             text = stringResource(id = R.string.on),

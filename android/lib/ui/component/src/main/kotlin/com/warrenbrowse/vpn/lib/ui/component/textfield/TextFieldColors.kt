@@ -60,7 +60,7 @@ private fun PreviewDarkTextField() {
                 onValueChange = {},
                 placeholder = { Text(text = "Placeholder") },
                 label = { Text(text = "Label") },
-                colors = mullvadDarkTextFieldColors(),
+                colors = warrenDarkTextFieldColors(),
                 shape = MaterialTheme.shapes.small,
             )
 
@@ -70,7 +70,7 @@ private fun PreviewDarkTextField() {
                 onValueChange = {},
                 placeholder = { Text(text = "Placeholder") },
                 label = { Text(text = "Label") },
-                colors = mullvadDarkTextFieldColors(),
+                colors = warrenDarkTextFieldColors(),
                 shape = MaterialTheme.shapes.small,
             )
 
@@ -81,7 +81,7 @@ private fun PreviewDarkTextField() {
                 placeholder = { Text(text = "Placeholder") },
                 label = { Text(text = "Label") },
                 isError = true,
-                colors = mullvadDarkTextFieldColors(),
+                colors = warrenDarkTextFieldColors(),
                 shape = MaterialTheme.shapes.small,
             )
         }
@@ -89,7 +89,7 @@ private fun PreviewDarkTextField() {
 }
 
 @Composable
-fun mullvadDarkTextFieldColors(): TextFieldColors =
+fun warrenDarkTextFieldColors(): TextFieldColors =
     TextFieldDefaults.colors(
         focusedTextColor = MaterialTheme.colorScheme.onSurface,
         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,

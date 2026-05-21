@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +55,7 @@ fun WarrenSearchBar(
         },
         placeholder = { Text(text = stringResource(id = R.string.search_placeholder)) },
         colors =
-            mullvadDarkTextFieldColors()
+            warrenDarkTextFieldColors()
                 .copy(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,

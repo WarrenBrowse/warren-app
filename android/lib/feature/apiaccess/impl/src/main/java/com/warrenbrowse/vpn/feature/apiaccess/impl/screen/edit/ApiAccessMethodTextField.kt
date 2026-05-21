@@ -11,7 +11,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import com.warrenbrowse.vpn.lib.ui.component.textfield.CustomTextField
 import com.warrenbrowse.vpn.lib.ui.component.textfield.ErrorSupportingText
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 
 @Composable
 fun ApiAccessMethodTextField(
@@ -43,7 +43,7 @@ fun ApiAccessMethodTextField(
         maxCharLength = maxCharLength,
         isValidValue = isValidValue,
         isDigitsOnlyAllowed = isDigitsOnlyAllowed,
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
         keyboardOptions =
             KeyboardOptions(
                 capitalization = capitalization,

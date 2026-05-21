@@ -68,7 +68,7 @@ import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.annotatedStringResource
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
-import com.warrenbrowse.vpn.lib.ui.component.textfield.mullvadDarkTextFieldColors
+import com.warrenbrowse.vpn.lib.ui.component.textfield.warrenDarkTextFieldColors
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorSmall
 import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
@@ -278,7 +278,7 @@ private fun AccountNumberInput(
         outputTransformation = transformation,
         lineLimits = TextFieldLineLimits.SingleLine,
         enabled = !state.isLoading,
-        colors = mullvadDarkTextFieldColors(),
+        colors = warrenDarkTextFieldColors(),
         textStyle = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr),
         isError = state.verificationError != null,
         supportingText = state.verificationError?.let { { Text(it.toErrorMessage()) } },

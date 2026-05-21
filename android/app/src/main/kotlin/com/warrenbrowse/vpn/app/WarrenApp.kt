@@ -104,13 +104,13 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         )
     }
 
-    val mullvadAppViewModel = koinViewModel<WarrenAppViewModel>()
+    val warrenAppViewModel = koinViewModel<WarrenAppViewModel>()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             navigationState.backStackFlow.collect { backstack ->
-                mullvadAppViewModel.setCurrentBackStack(backstack)
+                warrenAppViewModel.setCurrentBackStack(backstack)
             }
         }
     }
@@ -185,7 +185,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
 
     // Globally handle daemon dropped connection with NoDaemonScreen
     LaunchedEffect(Unit) {
-        mullvadAppViewModel.uiSideEffect.collect {
+        warrenAppViewModel.uiSideEffect.collect {
             Logger.i { "DaemonScreenEvent: $it" }
             when (it) {
                 DaemonScreenEvent.Show -> nav3.navigate(NoDaemonNavKey)

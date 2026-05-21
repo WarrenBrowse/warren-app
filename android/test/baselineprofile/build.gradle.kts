@@ -34,10 +34,10 @@ android {
         testInstrumentationRunnerArguments += buildMap {
             put("clearPackageData", "true")
 
-            // Add all properties starting with "mullvad.test.baseline" to the
+            // Add all properties starting with "warren.test.baseline" to the
             // testInstrumentationRunnerArguments
             properties.forEach {
-                if (it.key.startsWith("mullvad.test.baseline")) {
+                if (it.key.startsWith("warren.test.baseline")) {
                     put(it.key, it.value.toString())
                 }
             }

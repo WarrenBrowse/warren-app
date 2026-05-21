@@ -66,7 +66,7 @@ class FileLogWriter(
                 throwable?.let { log.writer.appendLine(it.stackTraceToString()) }
                 log.writer.flush()
             } catch (e: IOException) {
-                android.util.Log.e("mullvad", "Error writing to log file", e)
+                android.util.Log.e("warren", "Error writing to log file", e)
             }
         }
     }

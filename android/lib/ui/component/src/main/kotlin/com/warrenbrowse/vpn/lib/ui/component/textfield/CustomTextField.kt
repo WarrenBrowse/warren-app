@@ -49,7 +49,7 @@ fun CustomTextField(
     isValidValue: Boolean,
     isDigitsOnlyAllowed: Boolean,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    colors: TextFieldColors = mullvadDarkTextFieldColors(),
+    colors: TextFieldColors = warrenDarkTextFieldColors(),
     textStyle: TextStyle = LocalTextStyle.current,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     keyboardOptions: KeyboardOptions =

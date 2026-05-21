@@ -32,10 +32,10 @@ val Project.appVersionProvider: Provider<AppVersion>
     get() = provider {
         AppVersion(
             code =
-                getIntPropertyOrNull("mullvad.app.config.override.versionCode")
+                getIntPropertyOrNull("warren.app.config.override.versionCode")
                     ?: execVersionCodeCargoCommand(),
             name =
-                getStringPropertyOrNull("mullvad.app.config.override.versionName")
+                getStringPropertyOrNull("warren.app.config.override.versionName")
                     ?: execVersionNameCargoCommand(),
         )
     }
