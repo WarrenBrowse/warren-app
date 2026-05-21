@@ -4,10 +4,66 @@ Design document for sub-phase C.4 of Session C iOS fork brief. Replaces the
 upstream Mullvad WireGuardAdapter pattern with a Warren Quinn-based packet
 tunnel provider backed by the warren-tunnel crate (warren-core).
 
-**Status** : DESIGN (handoff for `Session C.4 — PacketTunnelProvider Quinn` brief).
+**Status** : C.4.0 DELIVERED (warren-core IosTun + warren-ios FFI handle
+lifecycle + Swift WarrenQuinnAdapter wire-in), C.4.1+ TODO.
 Effort estimate brief : 10-14 days wall-clock. Probably underestimated due to
 NetworkExtension iOS subtleties (Wi-Fi <-> cellular handover, App Group event
 broadcasting, killswitch via Disconnect on Demand).
+
+### C.4.0 delivered (2026-05-21)
+
+- `warren-core::IosTun` (`warren-core/crates/warren-tunnel/src/ios_tun.rs`,
+  157 LOC) — `PacketDevice` impl bridging `NEPacketTunnelFlow` via
+  symmetric inbound/outbound mpsc channels (no raw fd, no unsafe). 5
+  host unit tests cover round-trip + clone-shared-channels + try_recv
+  empty.
+- `warren-ios::warren_tunnel_ffi` refactor — Box<Arc<WarrenTunnelHandleImpl>>
+  lifecycle, multi-thread Tokio runtime, IosTun ownership, spawned
+  outbound dispatcher draining `IosTun::next_outbound`, atomic state
+  counters surfaced via `warren_tunnel_status`.
+- 3 new FFI entry points :
+  - `warren_tunnel_inject_inbound_packet(handle, data, len)` — Swift →
+    Rust uplink push (consumed by `readPackets` loop).
+  - `warren_tunnel_set_outbound_callback(handle, cb, ctx)` — registers
+    plain-C-fn-pointer downlink callback (Rust dispatcher → Swift
+    `writePackets`).
+  - `warren_tunnel_set_event_callback(handle, cb, ctx)` — registers
+    tagged-event callback (Connected / Disconnected / Reconnecting /
+    Failover / NatPmp*).
+- Swift `WarrenQuinnAdapter` (`ios/WarrenRustRuntime/WarrenQuinnAdapter.swift`,
+  390 LOC) — final class (not actor for callback ergonomics),
+  `Unmanaged.passRetained` self-ref as FFI context, `@convention(c)`
+  `outboundCallback` and `eventCallbackBridge` mapping C → Swift enum
+  variants, inbound `Task` looping on `packetFlow.readPackets`, IPv4/IPv6
+  protocol auto-detect via first-nibble header inspection, single-hop
+  marshalling (multi-hop + DAITA C-struct pinning deferred C.4.1).
+- Pin warren-core `732869d` → `8779843`.
+
+### C.4.1+ remaining work
+
+The C.4.0 plumbing is in place ; what's still needed :
+
+1. **Quinn handshake** : `warren_tunnel_start` body currently allocates
+   handle + spawns outbound dispatcher but does not initiate a Quinn
+   connection. Wire `warren_tunnel::ClientTunnel::connect` with the
+   marshalled parameters. Needs `Connecting` → `Connected` state
+   transition + event dispatch.
+2. **Multi-hop + DAITA marshalling** : extend `WarrenQuinnAdapter.callTunnelStart`
+   to pin `WarrenRelayConfigC` + `WarrenDaitaSpecC` C structs across
+   the FFI call boundary (current single-hop pass uses `nil`).
+3. **Event dispatch from Rust side** : the `handle_impl.event_callback`
+   Mutex storage is wired ; the future Quinn connection task must
+   actually invoke the stored callback when state transitions happen.
+4. **PacketTunnelProvider rewrite** : add `WarrenQuinnTunnelImplementation`
+   conforming to `TunnelImplementation` protocol so it slots into the
+   existing dispatcher next to `WireGuardGoTunnelImplementation` /
+   `GotaTunTunnelImplementation`. Toggle via `PacketTunnelDebugSettings.useWarrenQuinn`
+   debug flag first, then remove the WG path for the production build.
+5. **WireGuardKit removal** : drop `WireGuardKitTypes` + `WireGuardKit`
+   framework refs from pbxproj after all WG consumers (WgAdapter,
+   TunnelPinger, BlockedStateErrorMapper unused import) are stubbed
+   or removed. Resolves the standing "Unexpected duplicate tasks"
+   linker error in `xcodebuild build -target WarrenVPN`.
 
 **Pre-conditions** :
 - C.1 + C.2 + C.3 skeleton DONE (cf. `.planning/session-c-report.md`).
