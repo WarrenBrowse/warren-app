@@ -1,22 +1,23 @@
-# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 skeleton DONE)
+# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE incl. step 1 deep)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
 **Brief source** : `.planning/session-c-ios-fork-brief.md`
 **Effort estimé brief** : 1-2 mois wall-clock (7 sous-phases)
-**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton (rename crate Rust `mullvad-ios` -> `warren-ios` + Swift `MullvadRustRuntime` -> `WarrenRustRuntime` + header `mullvad_rust_runtime.h` -> `warren_rust_runtime.h` + modulemap + build.rs cbindgen). FFI rewrite côté warren-core/warren-api-client = NON LIVRÉ (C.3 deep work différé).
+**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton (rename crate Rust + Swift module + header + modulemap + build.rs cbindgen) + C.3 deep step 1 (drop WG-legacy + 4 FFI skeleton modules) + C.4 design doc + follow-up briefs consolidés C.3.deep + C.5 + C.6 + C.7.
 
 ---
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 + C.2 + C.3 skeleton (sous-phases 1-2.5/7) livrées. C.3 deep work
-(FFI rewrite vers warren-api-client + drop ephemeral_peer_proxy/wireguard_key + add
-warren-specific FFI modules) + C.4 à C.7 non démarrés. Le scope restant reste dimensionné
-pour 20-35 jours wall-clock supplémentaires, hors single-session.
+**GO PARTIEL** — C.1 + C.2 + C.3 skeleton + C.3 deep step 1 + design docs DONE. C.3 deep
+step 2 (api_client rewrite) + C.4-C.7 NON STARTED. ~19 commits cette session ; tous
+poussés origin/main.
 
-Reprise via une série de briefs `Session C.3.deep` (FFI rewrite),
-`Session C.4`, … (un par sous-phase) recommandée.
+Reprise via briefs séparés `Session C.3.deep`, `Session C.4` (design doc déjà rédigé),
+`Session C.5`, `Session C.6`, `Session C.7` — cf. `.planning/session-c-followup-briefs.md`
+pour scope + effort + dépendances par sous-phase. Estimé restant : 13-26 jours wall-clock
+en sériel (C.3.deep peut tourner en parallèle de C.4).
 
 §0.0 INVIOLABLE respecté : aucune commande `git stash`, `git checkout <path>`,
 `git restore`, `git reset --hard`, ni `git clean`. Aucun fichier WIP poka touché.
@@ -121,7 +122,7 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 2. **File-level header comments `Copyright © 2026 Mullvad VPN AB`** : non sed (cosmétique, ~hundreds .swift files). À nettoyer en C.2.bis ou opportuniste lors C.4-C.6.
 3. **Types `MullvadFoo` Warren-specific dans le code Swift** (ex: `MullvadEndpoint`, `MullvadApiContext`, etc.) : non renommés. Représentent l'API publique des modules ; rename = source de churn. Recommandé en C.6 ou plus tard quand le scope sera plus mûr.
 
-## C.3 skeleton — DONE (FFI rewrite différé)
+## C.3 skeleton + deep step 1 — DONE (deep step 2 différé)
 
 ### Livré
 
@@ -135,10 +136,18 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 | Rename header `mullvad_rust_runtime.h` → `warren_rust_runtime.h` | ✅ | idem |
 | Update `module.private.modulemap` (link `libwarren_ios` + header + module name `WarrenRustRuntimeProxy`) | ✅ | idem |
 | Update `warren-ios/build.rs` cbindgen output path + autogen warning | ✅ | idem |
+| Drop `warren-ios/src/ephemeral_peer_proxy/` (WG PostQuantum, n/a Warren HPKE) | ✅ | `2822b298b8` |
+| Drop `warren-ios/src/tunnel_obfuscator_proxy/` (Mullvad bridge, Warren M4.0 native) | ✅ | idem |
+| Drop `warren-ios/src/wireguard_key.rs` (WG key gen, n/a Ed25519 wallet) | ✅ | idem |
+| Drop `talpid-tunnel-config-client` + `tunnel-obfuscation` deps from `warren-ios/Cargo.toml` | ✅ | idem |
+| Rename `mullvad_ios_runtime()` → `warren_ios_runtime()` (16 callers) | ✅ | idem |
+| Add 4 FFI skeleton modules (`warren_wallet_ffi.rs`, `warren_tunnel_ffi.rs`, `warren_multihop_ffi.rs`, `warren_natpmp_ffi.rs`) with documented intent | ✅ | idem |
+| C.4 design doc `.planning/c4-packet-tunnel-provider-quinn-design.md` (520 lines, 10 sections covering architecture, FFI contract, NEPacketTunnelFlow bridge, reconnect/killswitch/App Group events, migration steps C.4.1-C.4.10, risks/mitigation, open questions) | ✅ | `62f1ed71d2` |
+| Consolidated follow-up briefs `.planning/session-c-followup-briefs.md` (C.3.deep + C.5 + C.6 + C.7 outlines, ~310 lines) | ✅ | `0c9da888e5` |
 | `cargo metadata` PASS (warren-ios visible workspace member, mullvad-ios absent) | ✅ | observé |
 | `xcodebuild -list -project WarrenVPN.xcodeproj` PASS | ✅ | observé (WarrenRustRuntime + WarrenRustRuntimeTests targets listés) |
 
-### NON LIVRÉ (C.3 deep work, scope dedicated brief)
+### NON LIVRÉ (C.3 deep step 2, scope dedicated brief)
 
 - **Replace `mullvad_api` calls → `warren_api_client`** dans `warren-ios/src/api_client/` (le crate `warren-api-client` existe warren-core, expose HTTP signature canonical_message depuis M4.H.C.PRE refactor). Le code actuel consomme `mullvad-api`, nécessite rewrite des appels.
 - **Drop `warren-ios/src/ephemeral_peer_proxy/`** (WireGuard ephemeral peer key exchange, n/a Warren Quinn HPKE).
