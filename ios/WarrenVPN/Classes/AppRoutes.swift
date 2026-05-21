@@ -138,6 +138,13 @@ enum AppRoute: AppRouteProtocol {
      */
     case tos, login, main, revoked, outOfTime, welcome
 
+    /**
+     Warren onboarding wizard. Presented full-screen after TOS, before
+     the regular login / welcome / main flow, so the wallet exists
+     before any tunnel attempt.
+     */
+    case warrenOnboarding
+
     var isExclusive: Bool {
         switch self {
         case .account, .settings, .alert:
@@ -157,7 +164,7 @@ enum AppRoute: AppRouteProtocol {
 
     var routeGroup: AppRouteGroup {
         switch self {
-        case .tos, .login, .main, .revoked, .outOfTime, .welcome:
+        case .tos, .login, .main, .revoked, .outOfTime, .welcome, .warrenOnboarding:
             return .primary
         case .selectLocation:
             return .selectLocation

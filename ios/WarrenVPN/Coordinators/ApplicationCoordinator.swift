@@ -162,6 +162,9 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         case .tos:
             presentTOS(animated: animated, completion: completion)
 
+        case .warrenOnboarding:
+            presentWarrenOnboarding(animated: animated, completion: completion)
+
         case .main:
             presentMain(animated: animated, completion: completion)
 
@@ -193,6 +196,21 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         let dismissedRoute = context.dismissedRoutes.first!
 
         if context.isClosing {
+            // Warren onboarding sits in the `.primary` group conceptually
+            // (root-level boot route) but is presented modally via
+            // `presentChild`. Dismiss the modal explicitly before dropping
+            // the child, otherwise the wizard stays visible behind the next
+            // route.
+            if dismissedRoute.route == .warrenOnboarding,
+                let coordinator = dismissedRoute.coordinator as? Presentable
+            {
+                coordinator.dismiss(animated: context.isAnimated) {
+                    coordinator.removeFromParent()
+                    completion()
+                }
+                return
+            }
+
             switch dismissedRoute.route.routeGroup {
             case .primary:
                 completion()
@@ -342,6 +360,14 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             return [.tos]
         }
 
+        // Warren onboarding takes precedence over the regular Mullvad
+        // login UX. We want the wallet (and the user's understanding of
+        // multi-hop / DAITA) to exist before any tunnel attempt. The
+        // wizard runs once per fresh install or post-logout reset.
+        guard appPreferences.hasCompletedWarrenOnboarding else {
+            return [.warrenOnboarding]
+        }
+
         var routes = [AppRoute]()
 
         // Pick the primary route to present
@@ -389,6 +415,34 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
 
         addChild(coordinator)
         coordinator.start()
+
+        completion(coordinator)
+    }
+
+    /// Presents the Warren onboarding wizard full-screen on top of the
+    /// navigation container. The wizard owns its own UINavigationController
+    /// so it does not pollute the main navigation stack. On finish the
+    /// coordinator flips `hasCompletedWarrenOnboarding`, dismisses itself
+    /// and re-enters `continueFlow` so the route evaluator picks the next
+    /// route (login / welcome / main / outOfTime / revoked).
+    private func presentWarrenOnboarding(
+        animated: Bool,
+        completion: @escaping (Coordinator) -> Void
+    ) {
+        let coordinator = OnboardingWizardCoordinator()
+        coordinator.delegate = self
+
+        addChild(coordinator)
+        coordinator.start(animated: false)
+
+        presentChild(
+            coordinator,
+            animated: animated,
+            configuration: ModalPresentationConfiguration(
+                preferredContentSize: navigationContainer.preferredContentSize,
+                modalPresentationStyle: .fullScreen
+            )
+        )
 
         completion(coordinator)
     }
@@ -1225,5 +1279,21 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
 extension DeviceState {
     var splitViewMode: UISplitViewController.DisplayMode {
         isLoggedIn ? UISplitViewController.DisplayMode.oneBesideSecondary : .secondaryOnly
+    }
+}
+
+// MARK: - Warren onboarding wizard wire-in
+
+extension ApplicationCoordinator: @preconcurrency OnboardingWizardCoordinatorDelegate {
+    /// Called by `OnboardingWizardCoordinator` when the user finishes the
+    /// 5-step flow. We flip the persisted flag so the wizard is not
+    /// replayed on subsequent launches, dismiss the modal via the router
+    /// (which routes through `dismissWithContext` → modal dismiss arm) and
+    /// re-enter `continueFlow` so the route evaluator picks the next
+    /// route (login / welcome / main / outOfTime / revoked).
+    func onboardingWizardDidFinish(_ coordinator: OnboardingWizardCoordinator) {
+        appPreferences.hasCompletedWarrenOnboarding = true
+        router.dismiss(.warrenOnboarding, animated: true)
+        continueFlow(animated: true)
     }
 }
