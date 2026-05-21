@@ -44,9 +44,14 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Settings/WarrenNatPmpSettingsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenFailoverBannerView.swift" => "WarrenVPN",
 
-  # i18n resources: Wallet + Settings tables for FR + EN translations.
+  # Onboarding wizard 5-step (SwiftUI) + coordinator.
+  "WarrenVPN/View controllers/Onboarding/OnboardingWizardView.swift" => "WarrenVPN",
+  "WarrenVPN/Coordinators/OnboardingWizardCoordinator.swift" => "WarrenVPN",
+
+  # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.
   "Assets/Wallet.xcstrings" => "WarrenVPN",
   "Assets/Settings.xcstrings" => "WarrenVPN",
+  "Assets/Onboarding.xcstrings" => "WarrenVPN",
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree
