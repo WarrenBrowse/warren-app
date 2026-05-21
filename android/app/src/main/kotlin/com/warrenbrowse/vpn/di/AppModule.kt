@@ -14,8 +14,8 @@ import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
-import com.warrenbrowse.vpn.feature.settings.impl.WarrenQuinnConnectInvoker
-import com.warrenbrowse.vpn.feature.settings.impl.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAMED_ARGUMENT

@@ -25,6 +25,8 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import kotlinx.coroutines.launch
@@ -114,25 +116,3 @@ fun WarrenWalletSettings(navigator: Navigator) {
     }
 }
 
-/**
- * Lib-module-facing surface for the Warren Connect use-case. Defined
- * here in `lib/feature/settings/impl` (rather than pulled in from app)
- * to keep the dependency arrow correct: features may not depend on
- * `app`. The implementation lives in `app/connect/WarrenConnectUseCase`
- * and is bound to this interface in `di/AppModule`.
- */
-interface WarrenQuinnConnectInvoker {
-    suspend fun connect(activity: FragmentActivity): String
-}
-
-/**
- * Lib-module-facing surface for the Warren tunnel state stream. Same
- * dep-arrow rationale as [WarrenQuinnConnectInvoker]: the impl lives in
- * `app/service/WarrenQuinnStateProxy` and is bound to this interface in
- * `di/AppModule`. The state value is a plain String so consumers in
- * `lib/feature/*` modules don't need to import the app-private
- * `WarrenTunnelState` sealed type.
- */
-interface WarrenTunnelStateProvider {
-    val state: kotlinx.coroutines.flow.StateFlow<String>
-}

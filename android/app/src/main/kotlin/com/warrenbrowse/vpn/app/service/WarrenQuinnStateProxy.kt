@@ -1,6 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
-import com.warrenbrowse.vpn.feature.settings.impl.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
