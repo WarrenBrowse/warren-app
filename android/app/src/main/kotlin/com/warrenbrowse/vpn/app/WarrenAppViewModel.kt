@@ -19,14 +19,12 @@ import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
 import com.warrenbrowse.vpn.lib.grpc.ManagementService
-import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.screen.navigation.PrivacyDisclaimerNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 
 private val noServiceNavKeys = listOf(SplashNavKey, PrivacyDisclaimerNavKey)
 
 class WarrenAppViewModel(
-    private val connectionProxy: ConnectionProxy,
     managementService: ManagementService,
 ) : ViewModel(), LifecycleEventObserver {
 
@@ -92,10 +90,6 @@ class WarrenAppViewModel(
             // If we are stopped we intentionally stop service and don't care about showing overlay.
             DaemonState.Hidden.Ignored
         }
-    }
-
-    fun connect() {
-        viewModelScope.launch { connectionProxy.connectWithoutPermissionCheck() }
     }
 
     companion object {

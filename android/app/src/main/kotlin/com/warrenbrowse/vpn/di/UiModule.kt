@@ -437,7 +437,7 @@ val uiModule = module {
     viewModel { SearchSplitTunnelingViewModel(get(), get(), Dispatchers.IO) }
 
     // This view model must be single so we correctly attach lifecycle and share it with activity
-    single { WarrenAppViewModel(get(), get()) }
+    single { WarrenAppViewModel(get()) }
 }
 
 const val APP_PREFERENCES_NAME = "${BuildConfig.APPLICATION_ID}.app_preferences"

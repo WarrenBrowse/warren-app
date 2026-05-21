@@ -33,6 +33,7 @@ import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionState
@@ -49,7 +50,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     override val scope by activityScope()
 
     private val launchVpnPermission =
-        registerForActivityResult(CreateVpnProfile()) { _ -> warrenAppViewModel.connect() }
+        registerForActivityResult(CreateVpnProfile()) { _ -> dispatchWarrenConnect() }
 
     private val apiEndpointFromIntentHolder by inject<ApiEndpointFromIntentHolder>()
     private val warrenAppViewModel by inject<WarrenAppViewModel>()
@@ -57,6 +58,18 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
     private val managementService by inject<ManagementService>()
+    private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
+
+    private fun dispatchWarrenConnect() {
+        // D.4 step 13: route the post-VPN-profile-grant connect (and the
+        // already-prepared `Prepared` branch in handleRequestVpnProfileIntent)
+        // through the Warren Quinn use-case. The legacy
+        // `warrenAppViewModel.connect()` proxied to a dead daemon.
+        lifecycleScope.launch {
+            runCatching { warrenConnect.connect(this@MainActivity) }
+                .onFailure { e -> Logger.e(throwable = e) { "Warren connect dispatch failed" } }
+        }
+    }
 
     private var isReadyNextDraw: Boolean = false
 
@@ -152,7 +165,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
             // If legacy or other always on connect at let daemon generate a error state
             is PrepareError.OtherLegacyAlwaysOnVpn,
             is PrepareError.OtherAlwaysOnApp,
-            Prepared -> warrenAppViewModel.connect()
+            Prepared -> dispatchWarrenConnect()
         }
     }
 
