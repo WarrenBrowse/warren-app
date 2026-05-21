@@ -19,6 +19,21 @@ enum SwiftAccessMethodKind {
 typedef uint8_t SwiftAccessMethodKind;
 
 /**
+ * Event tag for the variant union below. Variants are constructed by
+ * the warren-tunnel dispatcher once the Quinn connection task is
+ * wired (C.4.1).
+ */
+typedef enum WarrenTunnelEventTagC {
+  Connected = 0,
+  Disconnected = 1,
+  Reconnecting = 2,
+  Failover = 3,
+  NatPmpMapped = 4,
+  NatPmpRenewed = 5,
+  NatPmpFailed = 6,
+} WarrenTunnelEventTagC;
+
+/**
  * Tunnel state enum surfaced via `warren_tunnel_status`. Variants
  * other than `Disconnected` are constructed by the warren-tunnel
  * dispatcher once the Quinn connection task is wired (C.4.1). On the
@@ -38,10 +53,6 @@ typedef struct ApiContext ApiContext;
 typedef struct DomainFrontingConfigContext DomainFrontingConfigContext;
 
 typedef struct Map Map;
-
-typedef struct Option_WarrenTunnelEventCallback Option_WarrenTunnelEventCallback;
-
-typedef struct Option_WarrenTunnelOutboundCallback Option_WarrenTunnelOutboundCallback;
 
 typedef struct RequestCancelHandle RequestCancelHandle;
 
@@ -153,6 +164,55 @@ typedef struct WarrenTunnelStatusC {
    */
   uint32_t failover_count;
 } WarrenTunnelStatusC;
+
+/**
+ * Tagged-union event payload.
+ * The Swift side reads `tag` first then accesses the matching
+ * `data_*` field (e.g. `data_failover_country_code` when tag ==
+ * `Failover`). cbindgen emits this as a C struct with a discriminator.
+ */
+typedef struct WarrenTunnelEventC {
+  enum WarrenTunnelEventTagC tag;
+  /**
+   * Failover : null-terminated UTF-8 country code of new exit.
+   */
+  const char *data_failover_country_code;
+  /**
+   * NatPmp* : forwarded port (external).
+   */
+  uint16_t data_nat_pmp_external_port;
+  /**
+   * NatPmpMapped : internal port + lifetime.
+   */
+  uint16_t data_nat_pmp_internal_port;
+  uint32_t data_nat_pmp_lifetime_seconds;
+  /**
+   * NatPmpFailed : null-terminated UTF-8 reason.
+   */
+  const char *data_nat_pmp_failure_reason;
+} WarrenTunnelEventC;
+
+/**
+ * Event callback signature. Called from a Tokio task on the
+ * warren-tunnel runtime ; the Swift side must marshal back to the
+ * MainActor if the callback updates UI state.
+ *
+ * `event` pointer is owned by Rust for the duration of the callback
+ * only ; Swift must copy any UTF-8 strings before returning.
+ */
+typedef void (*WarrenTunnelEventCallback)(const struct WarrenTunnelEventC *event, void *context);
+
+/**
+ * Outbound packet callback signature. Called from a Tokio task that
+ * drains [`warren_tunnel::IosTun`] after each `PacketDevice::send` from
+ * the downlink pump. The Swift side bridges to
+ * `NEPacketTunnelFlow.writePackets(_:withProtocols:)`.
+ *
+ * `data` + `len` are owned by Rust for the duration of the call ;
+ * Swift must copy before returning. `context` is the opaque pointer
+ * passed at registration time.
+ */
+typedef void (*WarrenTunnelOutboundCallback)(const uint8_t *data, uintptr_t len, void *context);
 
 typedef struct SwiftApiContext {
   const struct ApiContext *_0;
@@ -294,7 +354,7 @@ int warren_tunnel_status(struct WarrenTunnelHandle *handle, struct WarrenTunnelS
  * is the caller's responsibility.
  */
 int warren_tunnel_set_event_callback(struct WarrenTunnelHandle *handle,
-                                     struct Option_WarrenTunnelEventCallback callback,
+                                     WarrenTunnelEventCallback callback,
                                      void *context);
 
 /**
@@ -308,7 +368,7 @@ int warren_tunnel_set_event_callback(struct WarrenTunnelHandle *handle,
  * Same invariants as [`warren_tunnel_set_event_callback`].
  */
 int warren_tunnel_set_outbound_callback(struct WarrenTunnelHandle *handle,
-                                        struct Option_WarrenTunnelOutboundCallback callback,
+                                        WarrenTunnelOutboundCallback callback,
                                         void *context);
 
 /**

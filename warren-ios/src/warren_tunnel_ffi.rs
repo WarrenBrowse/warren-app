@@ -507,7 +507,7 @@ pub unsafe extern "C" fn warren_tunnel_status(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_set_event_callback(
     handle: *mut WarrenTunnelHandle,
-    callback: Option<WarrenTunnelEventCallback>,
+    callback: WarrenTunnelEventCallback,
     context: *mut c_void,
 ) -> c_int {
     if handle.is_null() {
@@ -520,8 +520,8 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
         let Ok(mut slot) = arc.event_callback.lock() else {
             return RC_INVALID_INPUT;
         };
-        *slot = callback.map(|cb| handle_impl::CallbackEntry {
-            callback: cb,
+        *slot = Some(handle_impl::CallbackEntry {
+            callback,
             context,
         });
         RC_OK
@@ -544,7 +544,7 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
     handle: *mut WarrenTunnelHandle,
-    callback: Option<WarrenTunnelOutboundCallback>,
+    callback: WarrenTunnelOutboundCallback,
     context: *mut c_void,
 ) -> c_int {
     if handle.is_null() {
@@ -557,8 +557,8 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
         let Ok(mut slot) = arc.outbound_callback.lock() else {
             return RC_INVALID_INPUT;
         };
-        *slot = callback.map(|cb| handle_impl::CallbackEntry {
-            callback: cb,
+        *slot = Some(handle_impl::CallbackEntry {
+            callback,
             context,
         });
         RC_OK
