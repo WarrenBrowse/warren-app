@@ -12,8 +12,10 @@ import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
 import com.warrenbrowse.vpn.feature.settings.impl.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.feature.settings.impl.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAMED_ARGUMENT
@@ -75,6 +77,10 @@ val appModule = module {
     // Kept separate from the proto-backed UserPreferencesRepository so we can
     // drop the legacy Mullvad surface without touching these.
     single { WarrenLocalSettingsRepository(androidContext()) }
+
+    // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
+    // Composables can read tunnel transitions without binding the service.
+    single { WarrenQuinnStateProxy() } bind WarrenTunnelStateProvider::class
 
     // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
     // service dispatch for Warren Quinn connect.

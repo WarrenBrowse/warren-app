@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
@@ -51,6 +52,8 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val activity = LocalContext.current as FragmentActivity
     val walletRepository = koinInject<WalletRepository>()
     val quinnConnect = koinInject<WarrenQuinnConnectInvoker>()
+    val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
+    val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var connectStatus by remember { mutableStateOf<String?>(null) }
 
@@ -99,6 +102,14 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
+
+            // Live Quinn tunnel state mirrored via WarrenQuinnStateProxy.
+            // Refreshes every time the service-side adapter transitions.
+            Text(
+                text = "Tunnel state: $tunnelState",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
     }
 }
@@ -112,4 +123,16 @@ fun WarrenWalletSettings(navigator: Navigator) {
  */
 interface WarrenQuinnConnectInvoker {
     suspend fun connect(activity: FragmentActivity): String
+}
+
+/**
+ * Lib-module-facing surface for the Warren tunnel state stream. Same
+ * dep-arrow rationale as [WarrenQuinnConnectInvoker]: the impl lives in
+ * `app/service/WarrenQuinnStateProxy` and is bound to this interface in
+ * `di/AppModule`. The state value is a plain String so consumers in
+ * `lib/feature/*` modules don't need to import the app-private
+ * `WarrenTunnelState` sealed type.
+ */
+interface WarrenTunnelStateProvider {
+    val state: kotlinx.coroutines.flow.StateFlow<String>
 }

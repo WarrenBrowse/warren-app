@@ -62,6 +62,8 @@ class WarrenVpnService : TalpidVpnService() {
     lateinit var quinnAdapter: WarrenQuinnAdapter
         private set
 
+    private lateinit var quinnStateProxy: WarrenQuinnStateProxy
+
     // Count number of binds to know if the service is needed. If user actively using the VPN, a
     // bind from the system, should always be present.
     private val bindCount = AtomicInt()
@@ -84,6 +86,7 @@ class WarrenVpnService : TalpidVpnService() {
             migrateSplitTunneling = get()
             apiEndpointFromIntentHolder = get()
             connectionProxy = get()
+            quinnStateProxy = get()
         }
 
         keyguardManager = getSystemService<KeyguardManager>()!!
@@ -97,12 +100,16 @@ class WarrenVpnService : TalpidVpnService() {
             connectivityManager = getSystemService<ConnectivityManager>()!!,
         )
 
-        // Observe Quinn tunnel transitions and stop the foreground
-        // notification on a non-blocking failure (mirrors the legacy
-        // `managementService.tunnelState` collector below, which targets
-        // a daemon that does not exist on Warren mobile).
+        // Observe Quinn tunnel transitions:
+        //   1. mirror every state into the process-wide proxy so any
+        //      Composable can read it without binding the service;
+        //   2. stop the foreground notification on non-blocking failure
+        //      (mirrors the legacy `managementService.tunnelState`
+        //      collector below, which targets a daemon that does not
+        //      exist on Warren mobile).
         lifecycleScope.launch {
             quinnAdapter.state.collect { state ->
+                quinnStateProxy.update(state)
                 if (state is WarrenTunnelState.Failed) {
                     Logger.w("Quinn tunnel failed: ${state.reason}")
                     foregroundNotificationHandler.stopForeground()

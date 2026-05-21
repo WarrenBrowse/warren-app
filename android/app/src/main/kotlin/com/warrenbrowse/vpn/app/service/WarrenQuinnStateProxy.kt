@@ -1,0 +1,62 @@
+package com.warrenbrowse.vpn.app.service
+
+import com.warrenbrowse.vpn.feature.settings.impl.WarrenTunnelStateProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+
+/**
+ * Process-singleton mirror of [WarrenQuinnAdapter.state] so any
+ * Composable (or any Koin consumer) can read the current tunnel state
+ * without having to bind to the running [WarrenVpnService].
+ *
+ * The adapter lives inside the service (it needs the `VpnService`
+ * reference); the proxy lives in the Koin graph (it has no
+ * dependencies). The service forwards every transition into the proxy
+ * via a collector spawned in `onCreate`. When the service tears down,
+ * the proxy is left at its last value, which is the correct semantic
+ * (the home screen shows the last known state until the next connect
+ * cycle resets it).
+ *
+ * Implements [WarrenTunnelStateProvider] so lib-side Composables can
+ * subscribe to the state without having to import the app-private
+ * [WarrenTunnelState] type (they observe a `String` projection).
+ */
+class WarrenQuinnStateProxy : WarrenTunnelStateProvider {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
+    val tunnelState: StateFlow<WarrenTunnelState> = _state.asStateFlow()
+
+    override val state: StateFlow<String> =
+        tunnelState.map { it.describe() }.stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = WarrenTunnelState.Disconnected.describe(),
+        )
+
+    /** Called by [WarrenVpnService] on every adapter-side transition. */
+    fun update(next: WarrenTunnelState) {
+        _state.value = next
+    }
+
+    private fun WarrenTunnelState.describe(): String = when (this) {
+        is WarrenTunnelState.Disconnected -> "Disconnected"
+        is WarrenTunnelState.Connecting -> "Connecting..."
+        is WarrenTunnelState.Connected ->
+            "Connected" + listOfNotNull(
+                if (multiHop) "multi-hop" else null,
+                if (daita) "DAITA" else null,
+                if (obfuscationM40) "M4.0" else null,
+                if (assignedNatPmpPort != null) "port $assignedNatPmpPort" else null,
+            ).let { features -> if (features.isEmpty()) "" else " (${features.joinToString()})" }
+        is WarrenTunnelState.Reconnecting -> "Reconnecting..."
+        is WarrenTunnelState.Failed -> "Failed: $reason"
+    }
+}
