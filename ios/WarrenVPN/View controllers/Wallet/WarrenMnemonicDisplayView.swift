@@ -39,11 +39,11 @@ public struct WarrenMnemonicDisplayView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Your 12 recovery words")
-                    .font(.headline)
+                Text(String(localized: "Your 12 recovery words", table: "Wallet"))
+                    .font(.mullvadLarge)
                     .foregroundColor(.white)
-                Text("Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet.")
-                    .font(.caption)
+                Text(String(localized: "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet.", table: "Wallet"))
+                    .font(.mullvadTiny)
                     .foregroundColor(.white.opacity(0.7))
             }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -62,20 +62,21 @@ public struct WarrenMnemonicDisplayView: View {
                         }
                     }
             )
-            Text("Press and hold to reveal. Do not screenshot.")
-                .font(.caption2)
+            Text(String(localized: "Press and hold to reveal. Do not screenshot.", table: "Wallet"))
+                .font(.mullvadMicro)
                 .foregroundColor(.white.opacity(0.5))
             Button(action: onConfirmed) {
-                Text("I have written them down")
+                Text(String(localized: "I have written them down", table: "Wallet"))
+                    .font(.mullvadSmallSemiBold)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.warrenYellow)
+                    .padding(.vertical, 14)
+                    .background(Color.Warren.yellow)
                     .foregroundColor(.black)
-                    .cornerRadius(8)
+                    .cornerRadius(10)
             }
         }
         .padding()
-        .background(Color.warrenNavy)
+        .background(Color.Warren.navy)
     }
 
     private var words: [String] {
@@ -96,7 +97,7 @@ public struct WarrenMnemonicDisplayView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.warrenYellow.opacity(0.4), lineWidth: 1)
+                        .stroke(Color.Warren.yellow.opacity(0.4), lineWidth: 1)
                 )
                 .accessibilityLabel("\(index + 1). \(isRevealed ? word : "hidden")")
         }
@@ -106,7 +107,7 @@ public struct WarrenMnemonicDisplayView: View {
     private var blurOverlay: some View {
         if !isRevealed {
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color.warrenNavy.opacity(0.85))
+                .fill(Color.Warren.navy.opacity(0.85))
                 .overlay(
                     Image(systemName: "eye.slash.fill")
                         .foregroundColor(.warrenYellow)

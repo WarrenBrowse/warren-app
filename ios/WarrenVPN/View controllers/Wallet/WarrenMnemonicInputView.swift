@@ -41,8 +41,8 @@ public struct WarrenMnemonicInputView: View {
     /// wrapped in `GeometryReader` (production task).
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Enter your 12 recovery words")
-                .font(.headline)
+            Text(String(localized: "Enter your 12 recovery words", table: "Wallet"))
+                .font(.mullvadLarge)
                 .foregroundColor(.white)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(0..<12, id: \.self) { idx in
@@ -51,18 +51,19 @@ public struct WarrenMnemonicInputView: View {
             }
             if isComplete {
                 Button(action: submitIfValid) {
-                    Text("Restore wallet")
+                    Text(String(localized: "Restore wallet", table: "Wallet"))
+                        .font(.mullvadSmallSemiBold)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(allWordsValid ? Color.warrenYellow : Color.gray)
+                        .padding(.vertical, 14)
+                        .background(allWordsValid ? Color.Warren.yellow : Color.gray)
                         .foregroundColor(.black)
-                        .cornerRadius(8)
+                        .cornerRadius(10)
                 }
                 .disabled(!allWordsValid)
             }
         }
         .padding()
-        .background(Color.warrenNavy)
+        .background(Color.Warren.navy)
     }
 
     @ViewBuilder
@@ -100,7 +101,7 @@ public struct WarrenMnemonicInputView: View {
     private func borderColor(for index: Int) -> Color {
         let word = words[index].trimmingCharacters(in: .whitespaces)
         if word.isEmpty { return .gray.opacity(0.5) }
-        return isValid(word) ? Color.warrenYellow.opacity(0.6) : Color.red.opacity(0.8)
+        return isValid(word) ? Color.Warren.yellow.opacity(0.6) : Color.red.opacity(0.8)
     }
 
     private var isComplete: Bool {
@@ -120,13 +121,5 @@ public struct WarrenMnemonicInputView: View {
     }
 }
 
-// MARK: - Warren brand colors
-
-extension Color {
-    /// Warren yellow `#ffd524` (cf. warrenbrowse.com landing + desktop
-    /// connection-details accent + mascotte taupe accents).
-    static let warrenYellow = Color(red: 1.0, green: 213.0 / 255.0, blue: 36.0 / 255.0)
-    /// Warren navy `#0a1422` (cf. warrenbrowse.com background + desktop
-    /// chrome background).
-    static let warrenNavy = Color(red: 10.0 / 255.0, green: 20.0 / 255.0, blue: 34.0 / 255.0)
-}
+// Warren brand colors live in `UIColor+Warren.swift` for cross-target
+// (UIKit + SwiftUI) consumption.

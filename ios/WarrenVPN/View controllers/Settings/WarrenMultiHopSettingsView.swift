@@ -46,7 +46,7 @@ public struct WarrenMultiHopSettingsView: View {
         Form {
             Section {
                 Toggle("Enable multi-hop", isOn: $isEnabled)
-                    .tint(.warrenYellow)
+                    .tint(.Warren.yellow)
             } footer: {
                 Text("Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default.")
                     .font(.caption)

@@ -39,10 +39,10 @@ public struct WarrenObfuscationIndicatorView: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.warrenNavy.opacity(0.8))
+                .fill(Color.Warren.navy.opacity(0.8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.warrenYellow.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.Warren.yellow.opacity(0.3), lineWidth: 1)
                 )
         )
         .accessibilityElement(children: .combine)
