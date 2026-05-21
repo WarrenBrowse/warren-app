@@ -8,7 +8,7 @@
 
 import Foundation
 
-import protocol MullvadTypes.Cancellable
+import protocol WarrenTypes.Cancellable
 
 public final class ResultBlockOperation<Success: Sendable>: ResultOperation<Success>, @unchecked Sendable {
     private var executor: ((@escaping @Sendable (Result<Success, Error>) -> Void) -> Cancellable?)?

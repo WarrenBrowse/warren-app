@@ -117,7 +117,7 @@ class MockDeviceManaging: DeviceManaging {
     func deleteDevice(
         _ identifier: String,
         completionHandler: @escaping @Sendable (Result<Bool, any Error>) -> Void
-    ) -> any MullvadTypes.Cancellable {
+    ) -> any WarrenTypes.Cancellable {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             completionHandler(.success(true))
         }

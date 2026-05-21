@@ -91,5 +91,5 @@ class MockDAITATunnelSettingsViewModel: TunnelSettingsObservable {
         value = daitaSettings
     }
 
-    func evaluate(setting: MullvadSettings.DAITASettings) {}
+    func evaluate(setting: WarrenSettings.DAITASettings) {}
 }

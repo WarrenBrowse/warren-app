@@ -1,6 +1,6 @@
 //
 //  WireGuardKeyTests.swift
-//  MullvadRustRuntimeTests
+//  WarrenRustRuntimeTests
 //
 //  Created by Emils on 2026-04-07.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

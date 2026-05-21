@@ -1,6 +1,6 @@
 //
 //  IPOverrideWrapper.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by Jon Petersson on 2024-02-05.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

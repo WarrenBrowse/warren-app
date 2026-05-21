@@ -1,6 +1,6 @@
 //
 //  ObfuscationMethodSelector.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by Jon Petersson on 2024-11-01.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

@@ -24,7 +24,7 @@ struct KeyExchangingResultStub: EphemeralPeerReceiving {
 
     public func receiveEphemeralPeerPrivateKey(
         _ ephemeralPeerPrivateKey: WireGuard.PrivateKey,
-        daitaParameters: MullvadTypes.DaitaV2Parameters?
+        daitaParameters: WarrenTypes.DaitaV2Parameters?
     ) async {
         await onReceiveEphemeralPeerPrivateKey?(ephemeralPeerPrivateKey, daitaParameters)
     }

@@ -1,6 +1,6 @@
 //
 //  OutgoingConnectionProxy.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by Mojgan on 2023-10-24.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

@@ -196,7 +196,7 @@ extension WireGuardGoTunnelImplementation: EphemeralPeerReceiving {
     func receivePostQuantumKey(
         _ key: WireGuard.PreSharedKey,
         ephemeralKey: WireGuard.PrivateKey,
-        daitaParameters: MullvadTypes.DaitaV2Parameters?
+        daitaParameters: WarrenTypes.DaitaV2Parameters?
     ) async {
         await ephemeralPeerExchangingPipeline.receivePostQuantumKey(
             key,
@@ -207,7 +207,7 @@ extension WireGuardGoTunnelImplementation: EphemeralPeerReceiving {
 
     public func receiveEphemeralPeerPrivateKey(
         _ ephemeralPeerPrivateKey: WireGuard.PrivateKey,
-        daitaParameters: MullvadTypes.DaitaV2Parameters?
+        daitaParameters: WarrenTypes.DaitaV2Parameters?
     ) async {
         await ephemeralPeerExchangingPipeline.receiveEphemeralPeerPrivateKey(
             ephemeralPeerPrivateKey,

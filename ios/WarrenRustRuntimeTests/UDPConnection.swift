@@ -1,6 +1,6 @@
 //
 //  UDPConnection.swift
-//  MullvadRustRuntimeTests
+//  WarrenRustRuntimeTests
 //
 //  Created by pronebird on 27/06/2023.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

@@ -17,7 +17,7 @@ extension WireGuard {
     /// A WireGuard private key backed by a raw `Data` buffer.
     ///
     /// Key generation and public key derivation are provided via extensions in
-    /// `MullvadRustRuntime` using talpid-types' x25519 implementation.
+    /// `WarrenRustRuntime` using talpid-types' x25519 implementation.
     ///
     /// The `Codable` format is a single-value container encoding raw `Data`,
     /// matching the format used by WireGuardKit for backward compatibility.

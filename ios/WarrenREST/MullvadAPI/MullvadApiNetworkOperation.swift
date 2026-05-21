@@ -1,6 +1,6 @@
 //
 //  MullvadApiNetworkOperation.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by Jon Petersson on 2025-01-29.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

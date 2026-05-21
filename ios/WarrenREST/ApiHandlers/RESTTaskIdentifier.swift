@@ -1,6 +1,6 @@
 //
 //  RESTTaskIdentifier.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by pronebird on 16/04/2022.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

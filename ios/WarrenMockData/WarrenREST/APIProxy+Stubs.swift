@@ -61,7 +61,7 @@ struct APIProxyStub: APIQuerying {
         accountNumber: String,
         retryStrategy: REST.RetryStrategy,
         completionHandler: @escaping ProxyCompletionHandler<UUID>
-    ) -> any MullvadTypes.Cancellable {
+    ) -> any WarrenTypes.Cancellable {
         completionHandler(initStorekitPaymentResult)
         return AnyCancellable()
     }
@@ -70,7 +70,7 @@ struct APIProxyStub: APIQuerying {
         transaction: StoreKitTransaction,
         retryStrategy: REST.RetryStrategy,
         completionHandler: @escaping ProxyCompletionHandler<Void>
-    ) -> any MullvadTypes.Cancellable {
+    ) -> any WarrenTypes.Cancellable {
         completionHandler(checkStorekitPaymentResult)
         return AnyCancellable()
     }
@@ -79,7 +79,7 @@ struct APIProxyStub: APIQuerying {
         retryStrategy: REST.RetryStrategy,
         accessMethod: PersistentAccessMethod,
         completion: @escaping ProxyCompletionHandler<Bool>
-    ) -> any MullvadTypes.Cancellable {
+    ) -> any WarrenTypes.Cancellable {
         completion(checkApiAvailabilityResult)
         return AnyCancellable()
     }

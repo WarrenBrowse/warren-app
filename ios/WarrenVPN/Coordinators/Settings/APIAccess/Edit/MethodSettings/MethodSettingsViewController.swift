@@ -9,7 +9,7 @@
 import Combine
 import UIKit
 
-import struct MullvadTypes.Duration
+import struct WarrenTypes.Duration
 
 /// The view controller providing the interface for editing method settings
 /// and testing the proxy configuration.

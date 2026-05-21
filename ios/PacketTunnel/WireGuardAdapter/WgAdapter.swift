@@ -35,7 +35,7 @@ class WgAdapter: TunnelAdapterProtocol, @unchecked Sendable {
         )
     }
 
-    func start(configuration: TunnelAdapterConfiguration, daita: MullvadTypes.DaitaConfiguration?) async throws {
+    func start(configuration: TunnelAdapterConfiguration, daita: WarrenTypes.DaitaConfiguration?) async throws {
         let wgConfig = configuration.asWgConfig
         let wgDaita = daita?.asWireGuardKitType
         do {
@@ -49,7 +49,7 @@ class WgAdapter: TunnelAdapterProtocol, @unchecked Sendable {
     func startMultihop(
         entryConfiguration: TunnelAdapterConfiguration? = nil,
         exitConfiguration: TunnelAdapterConfiguration,
-        daita: MullvadTypes.DaitaConfiguration?
+        daita: WarrenTypes.DaitaConfiguration?
     ) async throws {
 
         if exitConfiguration.peer?.endpoint.ip is IPv6Address, entryConfiguration != nil {
@@ -134,13 +134,13 @@ extension WgAdapter: TunnelDeviceInfoProtocol {
     }
 }
 
-private extension MullvadTypes.IPAddressRange {
+private extension WarrenTypes.IPAddressRange {
     var asWireGuardKitType: WireGuardKitTypes.IPAddressRange {
         WireGuardKitTypes.IPAddressRange(from: description)!
     }
 }
 
-private extension MullvadTypes.DaitaConfiguration {
+private extension WarrenTypes.DaitaConfiguration {
     var asWireGuardKitType: WireGuardKitTypes.DaitaConfiguration {
         WireGuardKitTypes.DaitaConfiguration(
             machines: machines,
@@ -177,7 +177,7 @@ private extension TunnelAdapterConfiguration {
     }
 }
 
-// MARK: - Conversion from MullvadTypes key types to WireGuardKitTypes key types
+// MARK: - Conversion from WarrenTypes key types to WireGuardKitTypes key types
 
 private extension WireGuard.PrivateKey {
     /// Convert to `WireGuardKitTypes.PrivateKey` for use with the WireGuard adapter.

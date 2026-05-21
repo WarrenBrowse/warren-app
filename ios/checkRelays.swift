@@ -7,7 +7,7 @@ guard let projectDir = ProcessInfo.processInfo.environment["PROJECT_DIR"] else {
     exit(1)
 }
 
-let relaysFile = "\(projectDir)/MullvadREST/Assets/relays.json"
+let relaysFile = "\(projectDir)/WarrenREST/Assets/relays.json"
 let configuration = ProcessInfo.processInfo.environment["CONFIGURATION"] ?? ""
 
 // For Release builds: require pre-committed file with valid relay data

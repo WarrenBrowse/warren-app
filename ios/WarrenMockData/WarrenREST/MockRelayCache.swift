@@ -13,16 +13,16 @@ import Foundation
 public struct MockRelayCache: RelayCacheProtocol {
     public init() {}
 
-    public func read() throws -> MullvadREST.CachedRelays {
+    public func read() throws -> WarrenREST.CachedRelays {
         CachedRelays(
             relays: ServerRelaysResponseStubs.sampleRelays,
             updatedAt: Date()
         )
     }
 
-    public func readPrebundledRelays() throws -> MullvadREST.CachedRelays {
+    public func readPrebundledRelays() throws -> WarrenREST.CachedRelays {
         try self.read()
     }
 
-    public func write(record: MullvadREST.StoredRelays) throws {}
+    public func write(record: WarrenREST.StoredRelays) throws {}
 }

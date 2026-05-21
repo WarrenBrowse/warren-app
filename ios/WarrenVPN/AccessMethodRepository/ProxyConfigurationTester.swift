@@ -14,7 +14,7 @@ import WarrenTypes
 
 /// A concrete implementation of an access method proxy configuration.
 class ProxyConfigurationTester: ProxyConfigurationTesterProtocol {
-    private var cancellable: MullvadTypes.Cancellable?
+    private var cancellable: WarrenTypes.Cancellable?
     private let apiProxy: APIQuerying
 
     init(apiProxy: APIQuerying) {

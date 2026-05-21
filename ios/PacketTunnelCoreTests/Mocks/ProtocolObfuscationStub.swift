@@ -15,7 +15,7 @@ struct ProtocolObfuscationStub: ProtocolObfuscation {
     var remotePort: UInt16 { 42 }
 
     func obfuscate(
-        _ endpoint: MullvadTypes.SelectedEndpoint,
+        _ endpoint: WarrenTypes.SelectedEndpoint,
         clientPublicKey: WireGuard.PublicKey
     ) -> ProtocolObfuscationResult {
         .init(endpoint: endpoint)

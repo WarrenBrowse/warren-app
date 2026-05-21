@@ -1,6 +1,6 @@
 //
 //  MullvadPostQuantum+Stubs.swift
-//  MullvadRustRuntimeTests
+//  WarrenRustRuntimeTests
 //
 //  Created by Marco Nikic on 2024-06-12.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
@@ -17,8 +17,8 @@ class TunnelProviderStub: TunnelProvider {
         0
     }
 
-    func wgFunctions() -> MullvadTypes.WgFunctionPointers {
-        return MullvadTypes.WgFunctionPointers(
+    func wgFunctions() -> WarrenTypes.WgFunctionPointers {
+        return WarrenTypes.WgFunctionPointers(
             open: { _, _, _ in return 0 },
             close: { _, _ in return 0 },
             receive: { _, _, _, _ in return 0 },
@@ -41,7 +41,7 @@ class FailedNegotiatorStub: EphemeralPeerNegotiating {
     func startNegotiation(
         devicePublicKey: WireGuard.PublicKey,
         presharedKey: WireGuard.PrivateKey,
-        peerReceiver: any MullvadTypes.TunnelProvider,
+        peerReceiver: any WarrenTypes.TunnelProvider,
         ephemeralPeerParams: EphemeralPeerParameters
     ) -> Bool {
         false
@@ -65,7 +65,7 @@ class SuccessfulNegotiatorStub: EphemeralPeerNegotiating {
     func startNegotiation(
         devicePublicKey: WireGuard.PublicKey,
         presharedKey: WireGuard.PrivateKey,
-        peerReceiver: any MullvadTypes.TunnelProvider,
+        peerReceiver: any WarrenTypes.TunnelProvider,
         ephemeralPeerParams: EphemeralPeerParameters
     ) -> Bool {
         true
