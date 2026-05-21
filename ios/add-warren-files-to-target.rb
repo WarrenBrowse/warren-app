@@ -39,10 +39,12 @@ FILES_TO_ADD = {
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
 
-  # C.6 remainder: DAITA / NAT-PMP settings + failover banner.
+  # C.6 remainder: DAITA / NAT-PMP settings + failover banner +
+  # App Group event observer wired into TunnelViewController.
   "WarrenVPN/View controllers/Settings/WarrenDaitaSettingsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Settings/WarrenNatPmpSettingsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenFailoverBannerView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift" => "WarrenVPN",
 
   # Onboarding wizard 5-step (SwiftUI) + coordinator.
   "WarrenVPN/View controllers/Onboarding/OnboardingWizardView.swift" => "WarrenVPN",
