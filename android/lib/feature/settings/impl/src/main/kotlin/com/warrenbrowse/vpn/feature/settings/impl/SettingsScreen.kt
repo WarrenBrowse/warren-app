@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -120,6 +121,8 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(NotificationSettingsNavKey) },
         onAppObfuscationClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppearanceNavKey) },
+        onWalletClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
 }
@@ -137,6 +140,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
+    onWalletClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -170,6 +174,7 @@ fun SettingsScreen(
                         onDaitaClick = onDaitaClick,
                         onNotificationSettingsCellClick = onNotificationSettingsCellClick,
                         onAppObfuscationClick = onAppObfuscationClick,
+                        onWalletClick = onWalletClick,
                     )
                 }
             }
@@ -188,7 +193,19 @@ private fun LazyListScope.content(
     onDaitaClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
+    onWalletClick: () -> Unit = {},
 ) {
+    // D.5 wallet entry - shown at the very top so it's prominent
+    // (Warren's identity model = the wallet, not a Mullvad account).
+    itemWithDivider {
+        NavigationListItem(
+            title = "Wallet",
+            onClick = onWalletClick,
+            position = Position.Top,
+        )
+    }
+    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+
     if (state.isLoggedIn) {
         itemWithDivider {
             DaitaListItem(isDaitaEnabled = state.isDaitaEnabled, onDaitaClick = onDaitaClick)
