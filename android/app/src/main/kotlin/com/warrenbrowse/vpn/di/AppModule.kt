@@ -13,6 +13,7 @@ import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
+import com.warrenbrowse.vpn.feature.settings.impl.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAMED_ARGUMENT
@@ -72,7 +73,9 @@ val appModule = module {
     // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
     // service dispatch for Warren Quinn connect.
     single { WarrenTunnelConfigBuilder() }
-    single { WarrenConnectUseCase(walletRepository = get(), configBuilder = get()) }
+    single {
+        WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
+    } bind WarrenQuinnConnectInvoker::class
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
     single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }

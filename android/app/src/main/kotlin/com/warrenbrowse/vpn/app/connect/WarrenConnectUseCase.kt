@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.app.service.MnemonicCache
 import com.warrenbrowse.vpn.app.service.WarrenVpnService
+import com.warrenbrowse.vpn.feature.settings.impl.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
@@ -37,20 +38,33 @@ import kotlinx.serialization.json.Json
 class WarrenConnectUseCase(
     private val walletRepository: WalletRepository,
     private val configBuilder: WarrenTunnelConfigBuilder,
-) {
+) : WarrenQuinnConnectInvoker {
 
-    sealed interface Result {
-        data object Success : Result
-        data object WalletNotReady : Result
-        data object AuthorizationDenied : Result
-        data class Failure(val message: String) : Result
+    sealed interface Outcome {
+        data object Success : Outcome
+        data object WalletNotReady : Outcome
+        data object AuthorizationDenied : Outcome
+        data class Failure(val message: String) : Outcome
     }
 
-    suspend fun connect(activity: FragmentActivity): Result {
+    /**
+     * `WarrenQuinnConnectInvoker` impl: returns a human-readable status
+     * string so UI layers in `lib/feature/*` modules (which cannot import
+     * the app-private [Outcome] sealed type) can render result inline.
+     */
+    override suspend fun connect(activity: FragmentActivity): String =
+        when (val outcome = invoke(activity)) {
+            Outcome.Success -> "Quinn connect dispatched"
+            Outcome.WalletNotReady -> "Wallet not ready"
+            Outcome.AuthorizationDenied -> "Biometric authentication denied"
+            is Outcome.Failure -> outcome.message
+        }
+
+    suspend fun invoke(activity: FragmentActivity): Outcome {
         val state = walletRepository.state.value
         if (state !is WalletState.Ready) {
             Logger.w("WarrenConnectUseCase: wallet not Ready (state=$state)")
-            return Result.WalletNotReady
+            return Outcome.WalletNotReady
         }
 
         val authorizer = BiometricPromptAuthorizer(activity)
@@ -60,10 +74,10 @@ class WarrenConnectUseCase(
                 reason = "Connect to Warren VPN",
             )
         } catch (e: WalletAuthorizationDeniedException) {
-            return Result.AuthorizationDenied
+            return Outcome.AuthorizationDenied
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenConnectUseCase: unlock failed" }
-            return Result.Failure(e.message ?: "wallet unlock failed")
+            return Outcome.Failure(e.message ?: "wallet unlock failed")
         }
 
         val config = configBuilder.build(state.pubkey)
@@ -77,6 +91,6 @@ class WarrenConnectUseCase(
         val context: Context = activity.applicationContext
         context.startForegroundService(intent)
         Logger.i("WarrenConnectUseCase: dispatched Quinn connect intent")
-        return Result.Success
+        return Outcome.Success
     }
 }
