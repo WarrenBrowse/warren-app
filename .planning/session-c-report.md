@@ -1,23 +1,25 @@
-# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE incl. step 1 deep)
+# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE + C.4/C.5/C.6 scaffolds)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
 **Brief source** : `.planning/session-c-ios-fork-brief.md`
 **Effort estimé brief** : 1-2 mois wall-clock (7 sous-phases)
-**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton (rename crate Rust + Swift module + header + modulemap + build.rs cbindgen) + C.3 deep step 1 (drop WG-legacy + 4 FFI skeleton modules) + C.4 design doc + follow-up briefs consolidés C.3.deep + C.5 + C.6 + C.7.
+**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton + C.3 deep step 1 (drop WG-legacy + 4 FFI skeleton modules) + C.4 design doc + C.4 Swift scaffold (`WarrenQuinnAdapter` actor) + C.5 Swift scaffolds (3 wallet UI + WarrenWallet FFI wrapper) + C.6 partial Swift scaffolds (Multi-hop settings + Obfuscation banner) + follow-up briefs consolidés.
 
 ---
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 + C.2 + C.3 skeleton + C.3 deep step 1 + design docs DONE. C.3 deep
-step 2 (api_client rewrite) + C.4-C.7 NON STARTED. ~19 commits cette session ; tous
-poussés origin/main.
+**GO PARTIEL** — C.1 + C.2 + C.3 (skeleton + deep step 1) + C.4 design + C.4/C.5/C.6
+Swift scaffolds DONE. C.3 deep step 2 (api_client rewrite) + C.4 implementation (FFI
+Rust side + Swift `start/stop/reconnect/status` body) + C.5/C.6 remaining UI + C.7
+NON STARTED. **~23 commits** cette session ; tous poussés origin/main.
 
-Reprise via briefs séparés `Session C.3.deep`, `Session C.4` (design doc déjà rédigé),
-`Session C.5`, `Session C.6`, `Session C.7` — cf. `.planning/session-c-followup-briefs.md`
-pour scope + effort + dépendances par sous-phase. Estimé restant : 13-26 jours wall-clock
-en sériel (C.3.deep peut tourner en parallèle de C.4).
+Reprise via briefs séparés `Session C.3.deep`, `Session C.4` (design doc + Swift scaffold
+déjà rédigés), `Session C.5`, `Session C.6`, `Session C.7` — cf.
+`.planning/session-c-followup-briefs.md` pour scope + effort + dépendances par sous-phase.
+Estimé restant : 12-24 jours wall-clock en sériel (C.3.deep peut tourner en parallèle de
+C.4 ; les scaffolds Swift accélèrent C.4/C.5/C.6 implementation d'~1-2j chacun).
 
 §0.0 INVIOLABLE respecté : aucune commande `git stash`, `git checkout <path>`,
 `git restore`, `git reset --hard`, ni `git clean`. Aucun fichier WIP poka touché.
@@ -162,16 +164,73 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 
 Total estimé deep work C.3 : 5-8j wall-clock.
 
-## C.4 à C.7 — NOT STARTED
+## C.4 Swift scaffold — DONE (FFI implementation différé)
+
+### Livré
+
+| Item | Statut | Commit |
+|------|--------|--------|
+| `ios/WarrenRustRuntime/WarrenQuinnAdapter.swift` (Swift actor implementing C.4 design contract §2.2 : `WarrenTunnelConfig`, `WarrenRelayConfig`, `WarrenDaitaSpec`, `WarrenTunnelStatus`, `WarrenTunnelEvent`, `WarrenQuinnAdapterError`, plus `start/stop/reconnect/status` méthodes avec TODO C.4.2 markers) | ✅ | `c98076895f` |
+
+### NON LIVRÉ (C.4 implementation)
+- FFI Rust side : `warren_tunnel_start/stop/reconnect/status/set_event_callback` bodies + `WarrenTunnelParametersC` / `WarrenTunnelStatusC` / `WarrenTunnelEventC` C-repr structs (effort ~3-4j, scope C.4.2)
+- Swift `start(config:)` body : marshal config -> WarrenTunnelParametersC + call FFI + spawn packet pump Task (~1-2j, C.4.3)
+- `WarrenQuinnTunnelImplementation` conformant à `TunnelImplementation` (~1-2j, C.4.4)
+- `PacketTunnelProvider` rewrite to use `WarrenQuinnAdapter` (~1j, C.4.5)
+- Drop `WireGuardAdapter/` + `WireGuardGoTunnelImplementation` + WireGuardKit framework refs in pbxproj
+- iOS Simulator smoke test (C.4.9)
+
+Total C.4 restant estimé : 8-12j (3-4j scaffold + 5-8j integration/test).
+
+## C.5 Swift scaffold — DONE (Coordinator + 5 ViewControllers différés)
+
+### Livré
+
+| Item | Statut | Commit |
+|------|--------|--------|
+| `ios/WarrenVPN/View controllers/Wallet/WarrenWalletKeychain.swift` (Foundation+Security Keychain wrapper, kSecAttrAccessibleWhenUnlockedThisDeviceOnly, no iCloud sync, save/load/exists/delete) | ✅ | `974d8af6fc` |
+| `ios/WarrenVPN/View controllers/Wallet/WarrenMnemonicInputView.swift` (SwiftUI 12-word BIP39 grid + paste-full-phrase support + per-word validation + Warren brand colors) | ✅ | idem |
+| `ios/WarrenVPN/View controllers/Wallet/WarrenMnemonicDisplayView.swift` (SwiftUI blur+reveal backup view, long-press to reveal, no copy button, accessibility-aware) | ✅ | idem |
+| `ios/WarrenRustRuntime/WarrenWallet.swift` (Swift facade : `generate()`, `fromMnemonic(_:)`, `revealMnemonic()`, `signCanonicalMessage(_:)` with TODO C.3-deep-step-2 markers for FFI wiring) | ✅ | idem |
+
+### NON LIVRÉ (C.5 implementation, scope dedicated brief)
+- `OnboardingWizardCoordinator.swift` (5-step flow: Welcome -> Wallet (generate/import) -> Subscription -> Privacy prefs -> Done)
+- 5 view controllers for each onboarding step
+- `WalletBackupViewController.swift` (Settings -> View mnemonic, Face ID gated)
+- Integration with `LoginCoordinator` for restore flow
+- `AppDelegate` check for existing wallet on launch
+- Localizable.xcstrings additions FR + EN (~30 strings)
+- pbxproj target add for the 3+ new Swift files
+- Unit tests for Keychain round-trip + UI tests for wizard flow
+
+Total C.5 restant estimé : 4-6j (vs original 5-7j ; scaffolds save ~1j).
+
+## C.6 Swift scaffold (partial) — DONE (DAITA + NAT-PMP + Failover banner différés)
+
+### Livré
+
+| Item | Statut | Commit |
+|------|--------|--------|
+| `ios/WarrenVPN/View controllers/Settings/WarrenMultiHopSettingsView.swift` (SwiftUI Form: toggle + entry country picker + exit country picker, data flow documented vers `WarrenTunnelConfig.multiHopRelay`) | ✅ | `c98076895f` |
+| `ios/WarrenVPN/View controllers/Tunnel/WarrenObfuscationIndicatorView.swift` (SwiftUI banner: always-on M4.0 HTTP/3 mimicry indicator, no toggle) | ✅ | idem |
+
+### NON LIVRÉ (C.6 remainder)
+- `WarrenDaitaSettingsViewController.swift` (DAITA toggle + tooltip + stability warning per Session F finding)
+- `WarrenNatPmpSettingsViewController.swift` (Port-forwarding toggle + forwarded port + lifetime countdown)
+- `WarrenFailoverBannerView.swift` (Switched to <country> banner, App Group `WarrenTunnel.lastFailoverExit` consumer)
+- Country picker FFI integration (currently hardcoded 6-country subset; production wires `warren_multihop_ffi::list_relays`)
+- pbxproj target add
+- i18n FR + EN
+
+Total C.6 restant estimé : 3-5j (vs original 5-7j ; scaffolds save ~2j).
+
+## C.7 — NOT STARTED
 
 | Sous-phase | Effort estimé brief | Statut | Raison |
 |------------|---------------------|--------|--------|
-| C.4 PacketTunnelProvider Quinn | 10-14j | ❌ NOT STARTED | Sous-phase la plus complexe (NetworkExtension + warren-tunnel FFI + reconnect handler + killswitch + drop MullvadPostQuantum + WireGuardKit deps) ; nécessite iOS Simulator full-cycle testing + iPhone device pour Wi-Fi/cellular handover |
-| C.5 UI Swift wallet Ed25519 mnemonic | 5-7j | ❌ NOT STARTED | Refonte écrans login + signup wizard 5-step + iOS Keychain + Face ID/Touch ID |
-| C.6 Multi-hop + DAITA + NAT-PMP UI | 5-7j | ❌ NOT STARTED | Parité desktop M4.H.C + session B mobile-side |
 | C.7 Build TestFlight + smoke simulator | 3-5j | ❌ NOT STARTED | Signing pending poka, smoke simulator faisable sans cert |
 
-**Total restant** : ~20-35 jours wall-clock estimés (C.3 deep work 5-8j + C.4 10-14j + C.5 5-7j + C.6 5-7j + C.7 3-5j), hors tests/fix breakage/itérations.
+**Total restant** : ~16-29 jours wall-clock estimés (C.3 deep step 2 3-5j + C.4 implementation 8-12j + C.5 remainder 4-6j + C.6 remainder 3-5j + C.7 3-5j), hors tests/fix breakage/itérations. Les scaffolds Swift cette session réduisent l'effort par sous-phase d'environ ~1-2j chacune.
 
 ---
 
