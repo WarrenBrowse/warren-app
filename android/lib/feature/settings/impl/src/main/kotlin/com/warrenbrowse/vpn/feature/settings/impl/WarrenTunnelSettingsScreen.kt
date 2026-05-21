@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
@@ -46,10 +47,12 @@ import org.koin.compose.koinInject
 @Composable
 fun WarrenTunnelSettings(navigator: Navigator) {
     val repo = koinInject<WarrenLocalSettingsRepository>()
+    val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val daita by repo.daitaEnabled.collectAsStateWithLifecycle()
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
     val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
     val obfuscation by repo.obfuscationM40.collectAsStateWithLifecycle()
+    val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
 
     ScaffoldWithSmallTopBar(
         appBarTitle = "Warren tunnel",
@@ -63,6 +66,15 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             modifier = Modifier.fillMaxSize().then(modifier).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Live tunnel state, sourced from WarrenQuinnStateProxy.
+            Text(
+                text = "Tunnel: $tunnelState",
+                style = MaterialTheme.typography.titleSmall,
+                color = if (tunnelState.startsWith("Connected")) {
+                    Color(0xFF2E7D32)
+                } else MaterialTheme.colorScheme.onSurface,
+            )
+
             Text(
                 text = "Changes apply on next connect.",
                 style = MaterialTheme.typography.bodySmall,
