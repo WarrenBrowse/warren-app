@@ -10,6 +10,7 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
+import com.warrenbrowse.vpn.app.connect.RelayCatalog
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
@@ -81,6 +82,10 @@ val appModule = module {
     // Kept separate from the proto-backed UserPreferencesRepository so we can
     // drop the legacy Mullvad surface without touching these.
     single { WarrenLocalSettingsRepository(androidContext()) }
+
+    // D.4 step 17: relay catalogue via WarrenJni.listRelays. Hardcoded entry
+    // today; D.6 wires the signed-relay-list fetch via warren-api-client.
+    single { RelayCatalog() }
 
     // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
     // Composables can read tunnel transitions without binding the service.

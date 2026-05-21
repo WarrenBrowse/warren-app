@@ -107,4 +107,24 @@ object WarrenJni {
      * - 3: reconnecting
      */
     external fun getTunnelStatus(): Int
+
+    /**
+     * Returns a JSON-encoded array of relay descriptors. Each entry is a
+     * `RelayInfo`-shaped object with fields:
+     *   - `exit_id`        : 16-byte stable identifier, lowercase hex
+     *   - `exit_pubkey_hex`: 32-byte Ed25519 pubkey, lowercase hex
+     *   - `endpoint`       : "host:port" UDP endpoint
+     *   - `country`        : ISO 3166-1 alpha-2
+     *   - `city`           : city name
+     *   - `active`         : whether the relay accepts new sessions today
+     *   - `weight`         : selector-weight hint (higher = preferred)
+     *
+     * D.6 surface: the Kotlin caller deserialises via
+     * `kotlinx.serialization.json.Json.decodeFromString<List<RelayInfo>>`
+     * and feeds the result into the location picker. The current
+     * implementation ships a single hardcoded warren-exit-1 entry; the
+     * real fetch (warren-api-client signed relay list) is a D.6
+     * follow-up.
+     */
+    external fun listRelays(): String
 }

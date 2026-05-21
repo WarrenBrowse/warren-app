@@ -439,6 +439,32 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
     SESSION_STATUS.load(std::sync::atomic::Ordering::SeqCst)
 }
 
+/// Returns a JSON-encoded array of [`RelayInfo`] objects describing the
+/// available Warren exits. The Kotlin side parses this into a list of
+/// `RelayInfo` and feeds the relay selector / location picker UI.
+///
+/// D.6 transition surface: a real implementation fetches the signed
+/// relay list via `warren-api-client`, verifies the signature with
+/// `warren-relay-selector::verify_signed_relay_list`, and projects each
+/// `WarrenRelay` to the JSON shape the Kotlin side expects. Until that
+/// fetch is wired we ship a single hardcoded entry (`warren-exit-1`
+/// prod, Hetzner fsn1-dc14) so the picker UI has data to render and
+/// the end-to-end connect path keeps working when the user mutates the
+/// selection.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    // Single-entry hardcoded list. Schema MUST line up with the Kotlin
+    // `com.warrenbrowse.vpn.app.connect.RelayInfo` data class.
+    let json = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
+    match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
