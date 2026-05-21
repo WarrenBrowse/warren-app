@@ -10,7 +10,7 @@ import WarrenMockData
 import XCTest
 
 @testable import WarrenMockData
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadTypes
 
 class RelayCacheTrackerTests: XCTestCase {

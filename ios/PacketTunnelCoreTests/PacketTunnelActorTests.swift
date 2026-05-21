@@ -12,7 +12,7 @@ import Network
 import XCTest
 
 @testable import WarrenMockData
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 @testable import PacketTunnelCore
 

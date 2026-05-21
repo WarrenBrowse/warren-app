@@ -10,7 +10,7 @@ import Foundation
 import WarrenMockData
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 @testable import MullvadTypes
 

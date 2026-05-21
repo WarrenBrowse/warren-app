@@ -9,7 +9,7 @@
 import XCTest
 
 @testable import WarrenMockData
-@testable import MullvadREST
+@testable import WarrenREST
 
 class DefaultLocationServiceTests: XCTestCase {
     private let encoder = JSONEncoder()

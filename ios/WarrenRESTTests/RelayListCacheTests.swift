@@ -1,6 +1,6 @@
 //
 //  RelayListCacheE2ETests.swift
-//  MullvadRESTTests
+//  WarrenRESTTests
 //
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
@@ -11,7 +11,7 @@ import MullvadTypes
 import Network
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 
 /// End-to-end test that verifies relay list responses are stored verbatim in the cache,

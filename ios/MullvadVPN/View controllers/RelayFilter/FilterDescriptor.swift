@@ -5,7 +5,7 @@
 //  Created by Mojgan on 2025-02-25.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
-import MullvadREST
+import WarrenREST
 import MullvadSettings
 import MullvadTypes
 

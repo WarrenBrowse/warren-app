@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 
 protocol RelayCacheTrackerObserver: AnyObject {
     func relayCacheTracker(

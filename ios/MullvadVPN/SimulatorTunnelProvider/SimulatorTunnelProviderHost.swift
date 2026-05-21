@@ -10,7 +10,7 @@
 
     @preconcurrency import Foundation
     import WarrenLogging
-    import MullvadREST
+    import WarrenREST
     import MullvadSettings
     import MullvadTypes
     import NetworkExtension

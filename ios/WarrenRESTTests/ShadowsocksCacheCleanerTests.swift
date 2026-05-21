@@ -1,6 +1,6 @@
 //
 //  ShadowsocksCacheCleanerTests.swift
-//  MullvadRESTTests
+//  WarrenRESTTests
 //
 //  Created by Marco Nikic on 2025-09-18.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
@@ -9,7 +9,7 @@
 import Network
 import Testing
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 @testable import MullvadTypes
 

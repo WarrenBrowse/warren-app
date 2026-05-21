@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadREST
+import WarrenREST
 import MullvadRustRuntime
 import MullvadTypes
 import Operations

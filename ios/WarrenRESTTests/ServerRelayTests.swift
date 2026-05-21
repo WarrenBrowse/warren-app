@@ -1,7 +1,7 @@
 import Network
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 class ServerRelayTests: XCTestCase {
     func testDecodeFromJSON() throws {

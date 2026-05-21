@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 import MullvadTypes
 
 final class RedeemVoucherInteractor: @unchecked Sendable {

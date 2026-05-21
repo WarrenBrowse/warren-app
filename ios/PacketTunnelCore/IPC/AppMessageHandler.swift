@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadREST
+import WarrenREST
 
 /**
  Actor handling packet tunnel IPC (app) messages and patching them through to the right facility.

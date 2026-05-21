@@ -10,7 +10,7 @@ import WarrenMockData
 import MullvadTypes
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 final class RelayCacheTests: XCTestCase {
     func testReadCache() throws {

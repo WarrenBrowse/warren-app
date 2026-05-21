@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 class UIntTests: XCTestCase {
     func testCountingSets() {

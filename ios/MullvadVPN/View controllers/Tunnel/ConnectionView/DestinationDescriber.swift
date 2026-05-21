@@ -7,7 +7,7 @@
 //
 //  A source of truth for converting an exit relay destination (i.e., a relay or list) into a name
 
-import MullvadREST
+import WarrenREST
 import MullvadSettings
 import MullvadTypes
 

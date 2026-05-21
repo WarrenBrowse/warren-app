@@ -9,7 +9,7 @@
 #if targetEnvironment(simulator)
 
     import Foundation
-    import MullvadREST
+    import WarrenREST
     import NetworkExtension
 
     class SimulatorVPNConnection: NSObject, VPNConnectionProtocol, @unchecked Sendable {

@@ -9,7 +9,7 @@
 import Foundation
 import MullvadTypes
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 public enum ServerRelaysResponseStubs {
     public static let wireguardPortRanges: [[UInt16]] = [[4000, 4001], [5000, 5001]]

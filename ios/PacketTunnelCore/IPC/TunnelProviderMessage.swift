@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 
 /// Enum describing supported app messages handled by packet tunnel provider.
 public enum TunnelProviderMessage: Codable, CustomStringConvertible {

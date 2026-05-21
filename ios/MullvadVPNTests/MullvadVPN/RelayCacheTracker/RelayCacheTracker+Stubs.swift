@@ -9,7 +9,7 @@
 import Foundation
 import WarrenMockData
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadTypes
 
 struct RelayCacheTrackerStub: RelayCacheTrackerProtocol {

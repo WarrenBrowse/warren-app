@@ -1,6 +1,6 @@
 //
 //  RetryStrategyTests.swift
-//  MullvadRESTTests
+//  WarrenRESTTests
 //
 //  Created by Marco Nikic on 2024-06-07.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
@@ -9,7 +9,7 @@
 import Foundation
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadTypes
 
 class RetryStrategyTests: XCTestCase {

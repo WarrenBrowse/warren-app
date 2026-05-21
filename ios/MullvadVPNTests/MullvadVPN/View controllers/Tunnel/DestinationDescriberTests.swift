@@ -11,7 +11,7 @@ import WarrenMockData
 import Network
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 
 final class DestinationDescriberTests: XCTestCase {

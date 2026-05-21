@@ -8,7 +8,7 @@ import XCTest
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 @testable import WarrenMockData
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadRustRuntime
 @testable import MullvadTypes
 @testable import PacketTunnelCore

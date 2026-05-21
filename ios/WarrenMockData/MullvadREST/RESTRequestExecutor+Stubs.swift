@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 import MullvadTypes
 
 struct RESTRequestExecutorStub<Success: Sendable>: RESTRequestExecutor {

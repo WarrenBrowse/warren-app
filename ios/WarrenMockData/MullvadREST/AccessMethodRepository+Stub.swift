@@ -1,6 +1,6 @@
 //
 //  AccessMethodRepository+Stub.swift
-//  MullvadRESTTests
+//  WarrenRESTTests
 //
 //  Created by Mojgan on 2024-01-02.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

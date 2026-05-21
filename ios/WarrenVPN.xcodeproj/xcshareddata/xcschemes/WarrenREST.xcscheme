@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "06799ABB28F98E1D00ACD94E"
-               BuildableName = "MullvadREST.framework"
-               BlueprintName = "MullvadREST"
+               BuildableName = "WarrenREST.framework"
+               BlueprintName = "WarrenREST"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -58,8 +58,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "06799ABB28F98E1D00ACD94E"
-            BuildableName = "MullvadREST.framework"
-            BlueprintName = "MullvadREST"
+            BuildableName = "WarrenREST.framework"
+            BlueprintName = "WarrenREST"
             ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

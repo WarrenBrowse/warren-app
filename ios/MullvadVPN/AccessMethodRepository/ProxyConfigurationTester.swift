@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-import MullvadREST
+import WarrenREST
 import MullvadSettings
 import MullvadTypes
 

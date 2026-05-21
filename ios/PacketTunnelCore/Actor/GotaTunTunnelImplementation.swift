@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadREST
+import WarrenREST
 @preconcurrency import NetworkExtension
 
 /// GotaTun tunnel implementation.

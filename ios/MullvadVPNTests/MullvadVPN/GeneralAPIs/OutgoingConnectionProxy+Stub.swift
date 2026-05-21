@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadREST
+import WarrenREST
 
 struct OutgoingConnectionProxyStub: OutgoingConnectionHandling {
     var ipV4: IPV4ConnectionData

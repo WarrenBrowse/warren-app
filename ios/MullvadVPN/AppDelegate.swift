@@ -9,7 +9,7 @@
 import BackgroundTasks
 import WarrenLogging
 import WarrenMockData
-import MullvadREST
+import WarrenREST
 import MullvadRustRuntime
 import MullvadSettings
 import MullvadTypes

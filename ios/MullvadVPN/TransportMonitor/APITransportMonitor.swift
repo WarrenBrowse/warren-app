@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadREST
+import WarrenREST
 import MullvadTypes
 
 final class APITransportMonitor: APITransportProviderProtocol {

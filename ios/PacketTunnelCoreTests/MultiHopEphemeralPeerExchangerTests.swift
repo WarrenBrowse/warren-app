@@ -9,7 +9,7 @@
 import XCTest
 
 @testable import WarrenMockData
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadRustRuntime
 @testable import MullvadTypes
 

@@ -9,7 +9,7 @@
 import Combine
 import MapKit
 import WarrenLogging
-import MullvadREST
+import WarrenREST
 import MullvadSettings
 import MullvadTypes
 import SwiftUI

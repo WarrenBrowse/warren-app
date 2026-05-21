@@ -9,7 +9,7 @@
 import MullvadSettings
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 class ObfuscationMethodSelectorTests: XCTestCase {
     var tunnelSettings = LatestTunnelSettings()

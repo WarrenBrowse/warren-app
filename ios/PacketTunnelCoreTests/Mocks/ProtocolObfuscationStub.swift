@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 @testable import MullvadTypes
 @testable import PacketTunnelCore

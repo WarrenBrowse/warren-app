@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadREST
+import WarrenREST
 import MullvadTypes
 import Operations
 import UIKit

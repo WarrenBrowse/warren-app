@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadREST
+import WarrenREST
 import MullvadSettings
 import MullvadTypes
 import SwiftUI

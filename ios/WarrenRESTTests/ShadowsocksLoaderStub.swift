@@ -1,6 +1,6 @@
 //
 //  ShadowsocksLoaderStub.swift
-//  MullvadRESTTests
+//  WarrenRESTTests
 //
 //  Created by Mojgan on 2024-01-08.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
@@ -10,7 +10,7 @@ import Foundation
 import MullvadSettings
 import MullvadTypes
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 struct ShadowsocksLoaderStub: ShadowsocksLoaderProtocol, SwiftShadowsocksBridgeProviding {
     func bridge() -> ShadowsocksConfiguration? {

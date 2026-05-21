@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 
 public struct PacketTunnelOptions {
     /// Keys for options dictionary

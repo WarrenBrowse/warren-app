@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadREST
+import WarrenREST
 import MullvadRustRuntime
 import MullvadSettings
 import MullvadTypes

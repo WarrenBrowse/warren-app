@@ -8,7 +8,7 @@
 
 import Foundation
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 public struct MockRelayCache: RelayCacheProtocol {
     public init() {}

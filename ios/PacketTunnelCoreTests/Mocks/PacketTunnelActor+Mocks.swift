@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenMockData
-@preconcurrency import MullvadREST
+@preconcurrency import WarrenREST
 @preconcurrency import PacketTunnelCore
 
 extension PacketTunnelActorTimings {

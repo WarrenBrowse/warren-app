@@ -9,7 +9,7 @@
 import MullvadTypes
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 final class ExponentialBackoffTests: XCTestCase {
     func testExponentialBackoff() {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadREST
+import WarrenREST
 import MullvadTypes
 
 /// An object that implements remote service used by `DeviceCheckOperation`.

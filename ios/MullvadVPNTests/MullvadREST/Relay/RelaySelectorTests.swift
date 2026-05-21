@@ -12,7 +12,7 @@ import MullvadTypes
 import Network
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 @testable import MullvadSettings
 
 private let portRanges: [[UInt16]] = [[4000, 4001], [5000, 5001]]

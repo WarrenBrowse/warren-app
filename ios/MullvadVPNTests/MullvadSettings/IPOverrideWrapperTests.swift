@@ -10,7 +10,7 @@ import MullvadSettings
 import Network
 import XCTest
 
-@testable import MullvadREST
+@testable import WarrenREST
 
 final class IPOverrideWrapperTests: XCTestCase {
     func testOverrideServerRelayInCache() throws {
