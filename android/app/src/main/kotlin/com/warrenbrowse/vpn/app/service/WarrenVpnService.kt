@@ -83,16 +83,28 @@ class WarrenVpnService : TalpidVpnService() {
         WarrenJni.initLogger(filesDir.absolutePath)
         Logger.i("warren-jni initialised")
 
-        Logger.i("Start management service")
-        managementService.start()
+        // The gRPC management service targets a daemon that does not exist
+        // on Warren mobile (the JNI library exposes `WarrenJni.connectTunnel`
+        // direct). Calling `managementService.start()` here would block on
+        // a non-existent UDS socket. We guard the start + tunnelState
+        // collect behind a try/catch so the service still boots on
+        // emulator while D.4 step 6 rewrites the lifecycle to use
+        // `WarrenQuinnAdapter` direct.
+        try {
+            Logger.i("Start management service (legacy mullvad gRPC, dead at runtime)")
+            managementService.start()
 
-        lifecycleScope.launch {
-            // If the service is started with a connect command and a non-blocking error occur (e.g.
-            // unable to start the tunnel) then the service is demoted from foreground.
-            managementService.tunnelState
-                .filterIsInstance<TunnelState.Error>()
-                .filter { !it.errorState.isBlocking }
-                .collect { foregroundNotificationHandler.stopForeground() }
+            lifecycleScope.launch {
+                managementService.tunnelState
+                    .filterIsInstance<TunnelState.Error>()
+                    .filter { !it.errorState.isBlocking }
+                    .collect { foregroundNotificationHandler.stopForeground() }
+            }
+        } catch (e: Exception) {
+            Logger.w(throwable = e) {
+                "managementService.start() failed (expected on Warren mobile — no daemon backend); " +
+                    "D.4 step 6 surgical removal pending"
+            }
         }
     }
 
@@ -194,16 +206,19 @@ class WarrenVpnService : TalpidVpnService() {
     override fun onDestroy() {
         super.onDestroy()
         Logger.i("WarrenVpnService: onDestroy")
-        // Shut down the managementService first so any in-flight gRPC
-        // calls fail fast. The Rust side has no daemon to terminate -
-        // `warren-jni` holds only the shared tokio runtime, which goes
-        // away with the process. D.4's `WarrenQuinnAdapter` will be
-        // responsible for tearing the active Quinn tunnel down here
-        // before letting the process exit.
-        managementService.stop()
-
-        Logger.i("Enter Idle")
-        managementService.enterIdle()
+        // Shut down the legacy managementService gRPC layer. These calls
+        // are no-ops at runtime on Warren mobile (no daemon backend);
+        // wrapped in try/catch so a missing socket doesn't crash the
+        // service teardown. D.4 step 6 will excise this entire layer.
+        try {
+            managementService.stop()
+            Logger.i("Enter Idle")
+            managementService.enterIdle()
+        } catch (e: Exception) {
+            Logger.w(throwable = e) {
+                "managementService teardown failed (dead at runtime — expected)"
+            }
+        }
 
         Logger.i("Shutdown complete")
     }
