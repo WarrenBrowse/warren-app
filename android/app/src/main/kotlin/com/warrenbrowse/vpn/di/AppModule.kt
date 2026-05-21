@@ -26,6 +26,7 @@ import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCas
 import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
+import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
@@ -33,6 +34,7 @@ import com.warrenbrowse.vpn.lib.repository.RelayLocationTranslationRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.usecase.AccountExpiryNotificationActionUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import org.koin.android.ext.koin.androidContext
@@ -63,6 +65,7 @@ val appModule = module {
     single { DeviceRepository(get()) }
     single { UserPreferencesRepository(get(), get()) }
     single { ConnectionProxy(androidContext(), get(), get()) }
+    single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
     single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }
