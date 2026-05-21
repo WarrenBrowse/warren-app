@@ -42,10 +42,12 @@ use tokio::sync::oneshot;
 // ---------------------------------------------------------------------------
 
 // Native-side error taxonomy reserved for the D.4 tunnel lifecycle work.
-// `dead_code` is allowed until the connectTunnel body actually produces
-// these variants; keeping the enum here documents the surface the JNI
-// callers should expect to surface via `throw`.
-#[allow(dead_code)]
+// Variants are unused until the connectTunnel body actually produces them;
+// keeping the enum here documents the surface the JNI callers should expect
+// to receive via `throw`. The `expect` form (rather than `allow`) makes
+// `cargo clippy -D warnings` fail loudly the day a variant goes from "still
+// unused" to "wrongly removed".
+#[expect(dead_code, reason = "D.4 tunnel lifecycle work in progress")]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Failed to initialize logging: {0}")]
@@ -143,8 +145,8 @@ fn init_log_file(_log_dir: &Path) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 /// Generate a fresh 12-word BIP39 English mnemonic. Returns the phrase as a
-/// space-separated UTF-8 string. The mnemonic is **never persisted by Rust**
-/// - the Kotlin caller is responsible for storing it via Android Keystore /
+/// space-separated UTF-8 string. The mnemonic is **never persisted by Rust** -
+/// the Kotlin caller is responsible for storing it via Android Keystore /
 /// EncryptedSharedPreferences (D.5).
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_generateMnemonic(
