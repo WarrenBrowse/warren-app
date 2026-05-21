@@ -9,7 +9,7 @@
 import Operations
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 @MainActor
 class OperationConditionTests: XCTestCase {

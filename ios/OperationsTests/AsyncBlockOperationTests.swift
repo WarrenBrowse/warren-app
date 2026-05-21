@@ -10,7 +10,7 @@ import MullvadTypes
 import Operations
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 final class AsyncBlockOperationTests: XCTestCase {
     let operationQueue = AsyncOperationQueue()

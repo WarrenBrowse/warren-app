@@ -6,10 +6,10 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadMockData
+import WarrenMockData
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import MullvadREST
 @testable import MullvadTypes
 

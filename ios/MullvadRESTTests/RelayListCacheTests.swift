@@ -5,7 +5,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadMockData
+import WarrenMockData
 import MullvadRustRuntime
 import MullvadTypes
 import Network

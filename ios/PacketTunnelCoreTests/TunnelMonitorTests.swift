@@ -10,7 +10,7 @@ import MullvadTypes
 import Network
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import PacketTunnelCore
 
 final class TunnelMonitorTests: XCTestCase {

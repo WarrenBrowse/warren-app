@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadMockData
+import WarrenMockData
 @preconcurrency import MullvadREST
 @preconcurrency import PacketTunnelCore
 

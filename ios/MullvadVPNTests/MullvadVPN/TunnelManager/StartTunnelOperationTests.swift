@@ -12,7 +12,7 @@ import Network
 import Operations
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 class StartTunnelOperationTests: XCTestCase {
     // MARK: utility code for setting up tests

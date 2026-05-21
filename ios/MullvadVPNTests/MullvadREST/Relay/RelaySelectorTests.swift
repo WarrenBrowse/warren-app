@@ -7,7 +7,7 @@
 //
 
 import CoreLocation
-import MullvadMockData
+import WarrenMockData
 import MullvadTypes
 import Network
 import XCTest

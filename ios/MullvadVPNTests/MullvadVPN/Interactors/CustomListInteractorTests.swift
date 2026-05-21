@@ -1,6 +1,6 @@
 import Testing
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import MullvadREST
 @testable import MullvadRustRuntime
 @testable import MullvadSettings

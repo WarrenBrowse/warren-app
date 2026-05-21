@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 final class OutgoingConnectionProxyTests: XCTestCase {
     private var mockIPV6ConnectionData: Data!

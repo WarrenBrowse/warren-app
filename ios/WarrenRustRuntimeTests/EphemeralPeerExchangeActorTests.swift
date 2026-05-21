@@ -9,7 +9,7 @@
 import NetworkExtension
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import MullvadRustRuntime
 @testable import MullvadTypes
 @testable import PacketTunnelCore

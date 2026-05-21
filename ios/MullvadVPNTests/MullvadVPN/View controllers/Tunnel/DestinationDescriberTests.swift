@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadMockData
+import WarrenMockData
 import Network
 import XCTest
 

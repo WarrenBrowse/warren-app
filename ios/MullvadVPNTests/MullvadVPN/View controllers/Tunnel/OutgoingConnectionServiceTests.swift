@@ -9,7 +9,7 @@
 import Foundation
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 final class OutgoingConnectionServiceTests: XCTestCase {
     func testSuccessGetOutgoingConnectionInfo() async throws {

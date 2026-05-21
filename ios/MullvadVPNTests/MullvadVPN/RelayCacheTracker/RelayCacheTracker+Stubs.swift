@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadMockData
+import WarrenMockData
 
 @testable import MullvadREST
 @testable import MullvadTypes

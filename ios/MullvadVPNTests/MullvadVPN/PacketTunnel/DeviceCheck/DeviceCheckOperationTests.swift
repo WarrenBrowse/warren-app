@@ -13,7 +13,7 @@ import Operations
 import PacketTunnelCore
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 class DeviceCheckOperationTests: XCTestCase {
     private let operationQueue = AsyncOperationQueue()

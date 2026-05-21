@@ -11,7 +11,7 @@ import MullvadTypes
 import PacketTunnelCore
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import MullvadREST
 
 final class AppMessageHandlerTests: XCTestCase {

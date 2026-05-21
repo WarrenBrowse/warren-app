@@ -1056,9 +1056,9 @@
 		F0AC644C2F3B52380024427C /* NotificationPromptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64452F3B52380024427C /* NotificationPromptViewModel.swift */; };
 		F0AC644D2F3B52F60024427C /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64392F3B4FD40024427C /* NotificationSettings.swift */; };
 		F0AC644E2F3B53150024427C /* UNUserNotificationCenter+Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643E2F3B51830024427C /* UNUserNotificationCenter+Permission.swift */; };
-		F0ACE30D2BE4E478006D5333 /* MullvadMockData.h in Headers */ = {isa = PBXBuildFile; fileRef = F0ACE30A2BE4E478006D5333 /* MullvadMockData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		F0ACE3102BE4E478006D5333 /* MullvadMockData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */; };
-		F0ACE3112BE4E478006D5333 /* MullvadMockData.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F0ACE30D2BE4E478006D5333 /* WarrenMockData.h in Headers */ = {isa = PBXBuildFile; fileRef = F0ACE30A2BE4E478006D5333 /* WarrenMockData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F0ACE3102BE4E478006D5333 /* WarrenMockData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */; };
+		F0ACE3112BE4E478006D5333 /* WarrenMockData.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F0ACE31D2BE4E4F2006D5333 /* DevicesProxy+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A900E9BB2ACC609200C95F67 /* DevicesProxy+Stubs.swift */; };
 		F0ACE31E2BE4E4F2006D5333 /* AccountsProxy+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A900E9B72ACC5C2B00C95F67 /* AccountsProxy+Stubs.swift */; };
 		F0ACE3222BE4E4F2006D5333 /* APIProxy+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A900E9BD2ACC654100C95F67 /* APIProxy+Stubs.swift */; };
@@ -1477,14 +1477,14 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F0ACE3072BE4E478006D5333;
-			remoteInfo = MullvadMockData;
+			remoteInfo = WarrenMockData;
 		};
 		7A4BFF802C2AB2B100754DCB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F0ACE3072BE4E478006D5333;
-			remoteInfo = MullvadMockData;
+			remoteInfo = WarrenMockData;
 		};
 		7A88DCD92A8FABBE00D2FF0E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1582,7 +1582,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F0ACE3072BE4E478006D5333;
-			remoteInfo = MullvadMockData;
+			remoteInfo = WarrenMockData;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1610,7 +1610,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				F0ACE3112BE4E478006D5333 /* MullvadMockData.framework in Embed Frameworks */,
+				F0ACE3112BE4E478006D5333 /* WarrenMockData.framework in Embed Frameworks */,
 				58D223E7294C8F120029F5F8 /* MullvadTypes.framework in Embed Frameworks */,
 				44A262432D6373B400085380 /* WireGuardKitTypes in Embed Frameworks */,
 				58D223FA294C8FF10029F5F8 /* MullvadLogging.framework in Embed Frameworks */,
@@ -2619,8 +2619,8 @@
 		F0AC64452F3B52380024427C /* NotificationPromptViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPromptViewModel.swift; sourceTree = "<group>"; };
 		F0AC64462F3B52380024427C /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		F0AC64472F3B52380024427C /* NotificationSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsViewModel.swift; sourceTree = "<group>"; };
-		F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MullvadMockData.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		F0ACE30A2BE4E478006D5333 /* MullvadMockData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MullvadMockData.h; sourceTree = "<group>"; };
+		F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WarrenMockData.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0ACE30A2BE4E478006D5333 /* WarrenMockData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WarrenMockData.h; sourceTree = "<group>"; };
 		F0ACE32E2BE4EA8B006D5333 /* MockProxyFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockProxyFactory.swift; sourceTree = "<group>"; };
 		F0ADF1CC2CFDFF3100299F09 /* StringConversionError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringConversionError.swift; sourceTree = "<group>"; };
 		F0ADF1D02D01B55C00299F09 /* ChipModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipModel.swift; sourceTree = "<group>"; };
@@ -2815,7 +2815,7 @@
 				58D223E6294C8F120029F5F8 /* MullvadTypes.framework in Frameworks */,
 				7ABCA5B32A9349F20044A708 /* Routing.framework in Frameworks */,
 				58D223CC294C8BCB0029F5F8 /* Operations.framework in Frameworks */,
-				F0ACE3102BE4E478006D5333 /* MullvadMockData.framework in Frameworks */,
+				F0ACE3102BE4E478006D5333 /* WarrenMockData.framework in Frameworks */,
 				A992DA232C24709F00DE7CE5 /* MullvadRustRuntime.framework in Frameworks */,
 				06799AD128F98E1D00ACD94E /* MullvadREST.framework in Frameworks */,
 				58B2FDD92AA71D2A003EB5C6 /* MullvadSettings.framework in Frameworks */,
@@ -4089,7 +4089,7 @@
 				58ECD29023F178FD004298B6 /* Configurations */,
 				584F991F2902CBDD001F858D /* Frameworks */,
 				58D223F4294C8FF00029F5F8 /* MullvadLogging */,
-				F0ACE3092BE4E478006D5333 /* MullvadMockData */,
+				F0ACE3092BE4E478006D5333 /* WarrenMockData */,
 				06799ABD28F98E1D00ACD94E /* MullvadREST */,
 				58FBFBE7291622580020E046 /* MullvadRESTTests */,
 				A992DA1E2C24709F00DE7CE5 /* MullvadRustRuntime */,
@@ -4131,7 +4131,7 @@
 				7A88DCD72A8FABBE00D2FF0E /* RoutingTests.xctest */,
 				58B2FDD32AA71D2A003EB5C6 /* MullvadSettings.framework */,
 				852969252B4D9C1F007EAD4C /* MullvadVPNUITests.xctest */,
-				F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */,
+				F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */,
 				A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */,
 				A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */,
 			);
@@ -4910,15 +4910,15 @@
 			path = Notification;
 			sourceTree = "<group>";
 		};
-		F0ACE3092BE4E478006D5333 /* MullvadMockData */ = {
+		F0ACE3092BE4E478006D5333 /* WarrenMockData */ = {
 			isa = PBXGroup;
 			children = (
-				F0ACE30A2BE4E478006D5333 /* MullvadMockData.h */,
+				F0ACE30A2BE4E478006D5333 /* WarrenMockData.h */,
 				7AEBA52D2C2310D20018BEC5 /* Extensions */,
 				F0ACE3172BE4E487006D5333 /* MullvadREST */,
 				F0ACE32B2BE4E748006D5333 /* MullvadTypes */,
 			);
-			path = MullvadMockData;
+			path = WarrenMockData;
 			sourceTree = "<group>";
 		};
 		F0ACE3172BE4E487006D5333 /* MullvadREST */ = {
@@ -5249,7 +5249,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F0ACE30D2BE4E478006D5333 /* MullvadMockData.h in Headers */,
+				F0ACE30D2BE4E478006D5333 /* WarrenMockData.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5680,9 +5680,9 @@
 			productReference = A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		F0ACE3072BE4E478006D5333 /* MullvadMockData */ = {
+		F0ACE3072BE4E478006D5333 /* WarrenMockData */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F0ACE3162BE4E479006D5333 /* Build configuration list for PBXNativeTarget "MullvadMockData" */;
+			buildConfigurationList = F0ACE3162BE4E479006D5333 /* Build configuration list for PBXNativeTarget "WarrenMockData" */;
 			buildPhases = (
 				F0ACE3032BE4E478006D5333 /* Headers */,
 				F0ACE3042BE4E478006D5333 /* Sources */,
@@ -5694,12 +5694,12 @@
 			);
 			dependencies = (
 			);
-			name = MullvadMockData;
+			name = WarrenMockData;
 			packageProductDependencies = (
 				44A262622D63745700085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadMockData;
-			productReference = F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */;
+			productName = WarrenMockData;
+			productReference = F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -5841,7 +5841,7 @@
 				58B2FDD22AA71D2A003EB5C6 /* MullvadSettings */,
 				7A88DCCD2A8FABBE00D2FF0E /* Routing */,
 				7A88DCD62A8FABBE00D2FF0E /* RoutingTests */,
-				F0ACE3072BE4E478006D5333 /* MullvadMockData */,
+				F0ACE3072BE4E478006D5333 /* WarrenMockData */,
 				A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */,
 				A9D9A4BF2C36D53C004088DD /* WarrenRustRuntimeTests */,
 			);
@@ -7507,7 +7507,7 @@
 		};
 		7A4BFF812C2AB2B100754DCB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F0ACE3072BE4E478006D5333 /* MullvadMockData */;
+			target = F0ACE3072BE4E478006D5333 /* WarrenMockData */;
 			targetProxy = 7A4BFF802C2AB2B100754DCB /* PBXContainerItemProxy */;
 		};
 		7A88DCDA2A8FABBE00D2FF0E /* PBXTargetDependency */ = {
@@ -7532,7 +7532,7 @@
 		};
 		7AEBA5312C2981870018BEC5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F0ACE3072BE4E478006D5333 /* MullvadMockData */;
+			target = F0ACE3072BE4E478006D5333 /* WarrenMockData */;
 			targetProxy = 7A4BFF7F2C2AAB3900754DCB /* PBXContainerItemProxy */;
 		};
 		8529692C2B4D9C1F007EAD4C /* PBXTargetDependency */ = {
@@ -7582,7 +7582,7 @@
 		};
 		F0ACE30F2BE4E478006D5333 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F0ACE3072BE4E478006D5333 /* MullvadMockData */;
+			target = F0ACE3072BE4E478006D5333 /* WarrenMockData */;
 			targetProxy = F0ACE30E2BE4E478006D5333 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -10078,8 +10078,8 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenMockData";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.WarrenMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10123,8 +10123,8 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenMockData";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.WarrenMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10167,8 +10167,8 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenMockData";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.WarrenMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10211,9 +10211,9 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenMockData";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.WarrenMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = com.warrenbrowse.vpn.ios.WarrenMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10439,7 +10439,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F0ACE3162BE4E479006D5333 /* Build configuration list for PBXNativeTarget "MullvadMockData" */ = {
+		F0ACE3162BE4E479006D5333 /* Build configuration list for PBXNativeTarget "WarrenMockData" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F0ACE3122BE4E478006D5333 /* Debug */,
