@@ -1,7 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
 import android.app.KeyguardManager
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
