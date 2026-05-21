@@ -1,6 +1,6 @@
 //
 //  StoredRelays.swift
-//  MullvadVPNUITests
+//  WarrenVPNUITests
 //
 //  Created by Jon Petersson on 2024-09-09.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

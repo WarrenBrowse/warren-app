@@ -2388,16 +2388,16 @@
 		7AFE63322ED9D0FC00D27DC7 /* SetUpAccountCompletedPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetUpAccountCompletedPage.swift; sourceTree = "<group>"; };
 		7AFE63342EE31BA800D27DC7 /* CustomErrorDescriptionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomErrorDescriptionProtocol.swift; sourceTree = "<group>"; };
 		7AFF5B9D2F60079B0088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvalidShadowsocksCipherInAppNotificationProvider.swift; sourceTree = "<group>"; };
-		85006A8E2B73EF67004AD8FB /* MullvadVPNUITestsSmoke.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = MullvadVPNUITestsSmoke.xctestplan; sourceTree = "<group>"; };
+		85006A8E2B73EF67004AD8FB /* WarrenVPNUITestsSmoke.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = WarrenVPNUITestsSmoke.xctestplan; sourceTree = "<group>"; };
 		850201DA2B503D7700EF8C96 /* RelayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayTests.swift; sourceTree = "<group>"; };
 		850201DC2B503D8C00EF8C96 /* SelectLocationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLocationPage.swift; sourceTree = "<group>"; };
 		850201DE2B5040A500EF8C96 /* TunnelControlPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelControlPage.swift; sourceTree = "<group>"; };
 		850201E22B51A93C00EF8C96 /* SettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPage.swift; sourceTree = "<group>"; };
 		85021CAD2BDBC4290098B400 /* AppLogsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogsPage.swift; sourceTree = "<group>"; };
 		85139B2C2B84B4A700734217 /* OutOfTimePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutOfTimePage.swift; sourceTree = "<group>"; };
-		852969252B4D9C1F007EAD4C /* MullvadVPNUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MullvadVPNUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		852969252B4D9C1F007EAD4C /* WarrenVPNUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WarrenVPNUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		852969272B4D9C1F007EAD4C /* AccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTests.swift; sourceTree = "<group>"; };
-		852969302B4D9E70007EAD4C /* MullvadVPNUITestsAll.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = MullvadVPNUITestsAll.xctestplan; sourceTree = "<group>"; };
+		852969302B4D9E70007EAD4C /* WarrenVPNUITestsAll.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = WarrenVPNUITestsAll.xctestplan; sourceTree = "<group>"; };
 		852969322B4E9232007EAD4C /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
 		852969342B4E9270007EAD4C /* LoginPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginPage.swift; sourceTree = "<group>"; };
 		852969372B4ED20E007EAD4C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -4098,7 +4098,7 @@
 				581943F228F8014500B0CB5E /* MullvadTypes */,
 				58CE5E62224146200008646E /* MullvadVPN */,
 				58B0A2A1238EE67E00BC001D /* MullvadVPNTests */,
-				852969262B4D9C1F007EAD4C /* MullvadVPNUITests */,
+				852969262B4D9C1F007EAD4C /* WarrenVPNUITests */,
 				58D223A6294C8A490029F5F8 /* Operations */,
 				589A455328E094B300565204 /* OperationsTests */,
 				58CE5E7A224146470008646E /* PacketTunnel */,
@@ -4130,7 +4130,7 @@
 				7A88DCCE2A8FABBE00D2FF0E /* Routing.framework */,
 				7A88DCD72A8FABBE00D2FF0E /* RoutingTests.xctest */,
 				58B2FDD32AA71D2A003EB5C6 /* MullvadSettings.framework */,
-				852969252B4D9C1F007EAD4C /* MullvadVPNUITests.xctest */,
+				852969252B4D9C1F007EAD4C /* WarrenVPNUITests.xctest */,
 				F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */,
 				A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */,
 				A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */,
@@ -4526,8 +4526,8 @@
 				7A83C3FE2A55B72E00DFB83A /* MullvadVPNApp.xctestplan */,
 				7A83C4002A55B81A00DFB83A /* MullvadVPNCI.xctestplan */,
 				7A02D4EA2A9CEC7A00C19E31 /* MullvadVPNScreenshots.xctestplan */,
-				852969302B4D9E70007EAD4C /* MullvadVPNUITestsAll.xctestplan */,
-				85006A8E2B73EF67004AD8FB /* MullvadVPNUITestsSmoke.xctestplan */,
+				852969302B4D9E70007EAD4C /* WarrenVPNUITestsAll.xctestplan */,
+				85006A8E2B73EF67004AD8FB /* WarrenVPNUITestsSmoke.xctestplan */,
 			);
 			path = TestPlans;
 			sourceTree = "<group>";
@@ -4688,7 +4688,7 @@
 			path = Base;
 			sourceTree = "<group>";
 		};
-		852969262B4D9C1F007EAD4C /* MullvadVPNUITests */ = {
+		852969262B4D9C1F007EAD4C /* WarrenVPNUITests */ = {
 			isa = PBXGroup;
 			children = (
 				8556EB512B9A1C6900D26DD4 /* MullvadApi.swift */,
@@ -4711,7 +4711,7 @@
 				856952E12BD6B04C008C1F84 /* XCUIElement+Extensions.swift */,
 				85557B152B5ABBBE00795FE1 /* XCUIElementQuery+Extensions.swift */,
 			);
-			path = MullvadVPNUITests;
+			path = WarrenVPNUITests;
 			sourceTree = "<group>";
 		};
 		852969312B4E9220007EAD4C /* Pages */ = {
@@ -5602,9 +5602,9 @@
 			productReference = 7A88DCD72A8FABBE00D2FF0E /* RoutingTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		852969242B4D9C1F007EAD4C /* MullvadVPNUITests */ = {
+		852969242B4D9C1F007EAD4C /* WarrenVPNUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8529692F2B4D9C1F007EAD4C /* Build configuration list for PBXNativeTarget "MullvadVPNUITests" */;
+			buildConfigurationList = 8529692F2B4D9C1F007EAD4C /* Build configuration list for PBXNativeTarget "WarrenVPNUITests" */;
 			buildPhases = (
 				852969212B4D9C1F007EAD4C /* Sources */,
 				852969222B4D9C1F007EAD4C /* Frameworks */,
@@ -5623,12 +5623,12 @@
 				0107F40F2F5B02840012451B /* PBXTargetDependency */,
 				0107F4132F5B02AD0012451B /* PBXTargetDependency */,
 			);
-			name = MullvadVPNUITests;
+			name = WarrenVPNUITests;
 			packageProductDependencies = (
 				0107F40A2F5B02580012451B /* WireGuardKitTypes */,
 			);
-			productName = MullvadVPNUITests;
-			productReference = 852969252B4D9C1F007EAD4C /* MullvadVPNUITests.xctest */;
+			productName = WarrenVPNUITests;
+			productReference = 852969252B4D9C1F007EAD4C /* WarrenVPNUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */ = {
@@ -5829,7 +5829,7 @@
 				58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */,
 				58CE5E78224146470008646E /* PacketTunnel */,
 				58B0A29F238EE67E00BC001D /* MullvadVPNTests */,
-				852969242B4D9C1F007EAD4C /* MullvadVPNUITests */,
+				852969242B4D9C1F007EAD4C /* WarrenVPNUITests */,
 				58D223A4294C8A480029F5F8 /* Operations */,
 				589A455128E094B300565204 /* OperationsTests */,
 				06799ABB28F98E1D00ACD94E /* WarrenREST */,
@@ -8647,11 +8647,11 @@
 					"$(inherited)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MullvadVPNUITests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenVPNUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn;
@@ -8677,11 +8677,11 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MullvadVPNUITests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenVPNUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn;
@@ -9220,10 +9220,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MullvadVPNUITests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
-				PRODUCT_NAME = MullvadVPNUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenVPNUITests";
+				PRODUCT_NAME = WarrenVPNUITests;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9242,10 +9242,10 @@
 				APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = MullvadVPNUITests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
-				PRODUCT_NAME = MullvadVPNUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenVPNUITests";
+				PRODUCT_NAME = WarrenVPNUITests;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = MULLVAD_ENVIRONMENT_PRODUCTION;
@@ -10406,7 +10406,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8529692F2B4D9C1F007EAD4C /* Build configuration list for PBXNativeTarget "MullvadVPNUITests" */ = {
+		8529692F2B4D9C1F007EAD4C /* Build configuration list for PBXNativeTarget "WarrenVPNUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8529692D2B4D9C1F007EAD4C /* Debug */,

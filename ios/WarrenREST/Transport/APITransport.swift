@@ -1,6 +1,6 @@
 //
 //  APITransport.swift
-//  MullvadVPNUITests
+//  WarrenVPNUITests
 //
 //  Created by Jon Petersson on 2025-02-24.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
