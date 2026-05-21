@@ -207,3 +207,56 @@ ou exécution séquentielle.
 §0.0 INVIOLABLE git : zéro destructive command. §0.5 autonomy mandate :
 aucune escalade timide, scope expansion tactique sur warren-tunnel
 optional feature.
+
+---
+
+## 10. Continuation post-rapport initial (13 commits supplémentaires)
+
+Cycle de raffinement post-initial, ciblé sur les follow-up suggérés dans
+le rapport ci-dessus. Tous push origin/main, séquentiels.
+
+| # | Commit | Apport |
+|---|---|---|
+| 1 | `fae3096343` | `warren-jni` real BIP39 + Ed25519 wallet primitives (warren-identity path-dep, 8 host tests) |
+| 2 | `e4189c49f1` | `signCanonicalRequest` helper - wire-format anchored Rust-side (9 host tests) |
+| 3 | `8fdda20e0c` | `android_logger 0.15` bridge - `log::*` -> `adb logcat -s WarrenJni:V` |
+| 4 | `e9e146df82` | Drop Mullvad `relays.json` bundle + `warren_jni` loadLibrary partout + ProblemReport JNI externals neutralisés (compile-safe stubs) |
+| 5 | `4a88446d54` | Rebrand `net.mullvad.talpid` -> `com.warrenbrowse.talpid` (18 files, 2 source dirs) |
+| 6 | `6e2c50828d` | Cleanup `mullvad.app.*` Gradle props -> `warren.app.*` + variables + `LOG_TAG` + Composable renames |
+| 7 | `cce9774dcb` | Rebrand internal Gradle plugin IDs `mullvad.*` -> `warren.*` (93 .kts/.kt) |
+| 8 | `6076445631` | Drop `WarrenDaemon` shim, wire `WarrenJni.initLogger` direct |
+| 9 | `b189bd73b1` | Drop `DaemonConfig` dataclass + Koin factory (no in-process daemon) |
+| 10 | `aaed18a422` | Drop unused `Context` import |
+| 11 | `5860faeed6` | Clippy lints (`#[expect]` over `#[allow]`, doc list continuation) |
+| 12 | `926ea98fcb` | `mnemonicPubkeyHex` convenience JNI helper (11 host tests) |
+| 13 | `169eb1c1e1` | Reproducible `android/scripts/verify-warren-jni.sh` smoke (host tests + 3 ABIs + clippy) |
+
+### État post-continuation
+
+- **11 host wallet tests PASS** (`cargo test -p warren-jni --lib`)
+- **3 Android ABIs** cargo check clean (aarch64 + armv7 + x86_64)
+- **clippy -D warnings** clean host + aarch64-linux-android
+- **WarrenJni surface** (8 JNI exports) :
+  - `initLogger(filesDirectory)`
+  - `generateMnemonic()`
+  - `importMnemonic(mnemonic) -> ByteArray pubkey`
+  - `mnemonicPubkeyHex(mnemonic) -> String`
+  - `signRequest(mnemonic, canonicalMessage)`
+  - `signCanonicalRequest(mnemonic, method, path, ts, nonceHex, bodyHashHex)`
+  - `connectTunnel`, `disconnectTunnel`, `getTunnelStatus` (stubs D.4)
+- **Mullvad branding** ~99.9% cleaned :
+  - Reste intentionnel : `net.mullvad.rust-android` 3rd-party Gradle plugin (Maven artifact, requires fork), `mullvad_daemon.management_interface` protobuf-generated bindings (touche .proto), `MullvadApi` test/e2e refs (real Mullvad API tests), `mullvad_exit_ip` SerialName wire fields (immutable), 1 commentaire ref dans MigrateSplitTunneling.kt
+- **Architecture cleanup** : `WarrenDaemon` retiré, `DaemonConfig` retiré, `relays.json` bundle retiré, ProblemReport JNI stubs compile-safe
+- **Reproducible verify** : `android/scripts/verify-warren-jni.sh` PASS pour la livraison Session D
+
+### Reste D.4+
+
+Inchangé depuis le design doc `.planning/session-d-d4-d7-design.md` :
+- warren-core cross-repo `PacketDevice::from_fd(OwnedFd)` PR
+- `WarrenVpnService` rewrite (extends `VpnService` direct, drop `lib/talpid`)
+- Wallet feature module Compose (D.5)
+- Multi-hop/DAITA/NAT-PMP UI (D.6)
+- Build APK signed + Play Store internal-test (D.7)
+- `ManagementService` + `ConnectionProxy` gRPC layer (dead-at-runtime, needs D.4 surgical removal)
+
+Estimation wall-clock restante : 3-5 semaines focused work (inchangé).
