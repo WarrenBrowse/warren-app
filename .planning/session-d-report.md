@@ -321,3 +321,62 @@ Pin warren-core suivi : `8b0e34` → `30a7e3c` (Session G DAITA) → `d59fd15`
 8. AndroidKeystoreWalletRepository impl (D.5 building block — interface ready)
 
 D.5 / D.6 / D.7 estimations restent inchangées.
+
+---
+
+## 12. D.4 step 4/5 + D.5 wallet impl + UI scaffolds (post-D.4 step 2)
+
+Continuation batch enchaînée après le breakthrough D.4 step 2 :
+
+| Commit | Apport |
+|---|---|
+| `ac7e4e5ad2` | **D.4 step 3** : WarrenQuinnAdapter polls `WarrenJni.getTunnelStatus()` 250ms + surface transitions via `WarrenTunnelState` StateFlow |
+| `de9167e547` | **D.5 contract** : `WalletState` sealed (Absent/Locked/Ready) + `WalletPubkeyHex` value class + redact-toString `Mnemonic` + `WalletRepository` interface (createWallet/importWallet/unlock/erase suspending) |
+| `760af0ed58` | **D.4 step 4** : `ConnectivityManager.NetworkCallback` registration + handover reconnect via `scheduleHandoverReconnect` (Backoff::HANDSHAKE 15s grace) + cache mnemonic in adapter |
+| `a41c4d0a18` | **D.4 step 5** : Guard legacy `managementService.start()/stop()/enterIdle()` calls behind try/catch (dead at runtime sur Warren mobile, D.4 step 6 surgical removal pending) |
+| `a0170d437b` | **D.5 wallet impl** : `AndroidKeystoreWalletRepository` (AES-256-GCM via Android Keystore master key "warren_wallet_master_v1", base64 ciphertext + IV in SharedPreferences "warren_wallet", BiometricPrompt TODO documenté) |
+| `45fbf89c67` | Koin wire `WalletRepository` → `AndroidKeystoreWalletRepository` in AppModule + `MnemonicInput` Composable (6x2 grid, lowercase sanitisation, ImeAction.Next/Done) |
+| `60f963ed2b` | `MnemonicDisplay` Composable (blur 12dp + reveal on tap, no clipboard CTA per anti-malware doctrine) + 18 wallet i18n strings EN + FR |
+| `0e85b07bd2` | `BiometricGate.kt` suspending `promptBiometric` wrapper + `androidx-biometric 1.1.0` + `androidx-fragment 1.8.7` deps |
+| `6aa06d18b8` | Drop `:test:mockapi` module + firebase config (-12 725 lignes, simulates Mullvad API; Warren tests land in D.6) |
+| `2483f8898a` | `WarrenWalletLoginScreen` scaffold : two-branch UI (Generate/Restore), inline `MnemonicInput` for import, `WalletState.Ready` observer hooks `onWalletReady` |
+| `81ed14b2bc` | wire `lib.model` + `lib.ui.component` deps for login/impl |
+| `01464b92e4` | `WarrenWalletBackupScreen` : displays freshly-generated mnemonic via `MnemonicDisplay` + "I have written it down" confirm CTA, includes no-copy-clipboard rationale |
+
+### Architecture maintenant en place côté Android
+
+```
+WarrenVpnService (TalpidVpnService subclass — legacy, guarded)
+    +-- WarrenQuinnAdapter (D.4)
+    |     +-- VpnService.Builder.establish() -> ParcelFileDescriptor
+    |     +-- WarrenJni.connectTunnel(fd, mnemonic, configJson)
+    |     +-- ConnectivityManager.NetworkCallback (handover reconnect)
+    |     +-- statusPollJob (250ms WarrenJni.getTunnelStatus())
+    |     +-- StateFlow<WarrenTunnelState>
+    +-- WalletRepository (Koin singleton)
+          +-- AndroidKeystoreWalletRepository
+                +-- AES-256-GCM via AndroidKeystore master key
+                +-- WarrenJni.{generateMnemonic, importMnemonic, mnemonicPubkeyHex}
+                +-- StateFlow<WalletState>
+                +-- (TODO D.5 step 2: BiometricGate around unlock())
+
+Compose UI scaffolds (D.5) :
+- MnemonicInput            (lib/ui/component)
+- MnemonicDisplay          (lib/ui/component)
+- BiometricGate            (lib/ui/component, suspending promptBiometric)
+- WarrenWalletLoginScreen  (lib/feature/login/impl)
+- WarrenWalletBackupScreen (lib/feature/login/impl)
+```
+
+### Reste D.4 step 6+ / D.5 step 2+ / D.6 / D.7
+
+- D.4 step 6 : drop `managementService` + `ConnectionProxy` from WarrenVpnService entirely (architectural rewrite — needs WarrenQuinnAdapter wired from onStartCommand intents)
+- D.4 step 7 : entry hop wiring via `warren_multihop::MultiHopClient`
+- D.4 step 8 : DAITA spec wiring (`SetupAck.daita_spec` → `pump_bidirectional_with_daita`)
+- D.4 step 9 : NAT-PMP wiring (`warren_natpmp_client`)
+- D.4 step 10 : drop `lib/talpid/` module entirely
+- D.5 step 2 : wire `BiometricGate` around `WalletRepository.unlock()` (currently TODO comment in AndroidKeystoreWalletRepository)
+- D.5 step 3 : LoginActivity / NavGraph routing for `WarrenWalletLoginScreen` → `WarrenWalletBackupScreen` → home
+- D.5 step 4 : "View recovery phrase" Settings entry gated by `promptBiometric`
+- D.6 : Multi-hop/DAITA/NAT-PMP UI parity (Compose screens via `WarrenJni.listRelays()` when implemented)
+- D.7 : Build APK signed + smoke emulator + Play Store internal-test
