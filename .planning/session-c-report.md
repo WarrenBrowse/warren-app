@@ -148,6 +148,11 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 | Consolidated follow-up briefs `.planning/session-c-followup-briefs.md` (C.3.deep + C.5 + C.6 + C.7 outlines, ~310 lines) | ✅ | `0c9da888e5` |
 | `cargo metadata` PASS (warren-ios visible workspace member, mullvad-ios absent) | ✅ | observé |
 | `xcodebuild -list -project WarrenVPN.xcodeproj` PASS | ✅ | observé (WarrenRustRuntime + WarrenRustRuntimeTests targets listés) |
+| Add path-deps warren-identity + warren-api-client + warren-relay-selector (base) + warren-tunnel + warren-client + warren-multihop + warren-natpmp-client (feature `tunnel`-gated) in `warren-ios/Cargo.toml` | ✅ | `8cfcde48f5` |
+| **Real `warren_wallet_ffi` implementation** over `warren-identity` + `bip39` + `ed25519-dalek` : `warren_wallet_generate_mnemonic(word_count)` + `warren_wallet_free_mnemonic(ptr)` + `warren_wallet_seed_from_mnemonic(mnemonic, out_seed)` + `warren_wallet_derive_pubkey(seed, out_pubkey)` + `warren_wallet_sign(seed, payload, payload_len, out_signature)` | ✅ | `8cfcde48f5` |
+| **`cargo check --target aarch64-apple-ios -p warren-ios` PASS** (C.3.8 GO ULTIMATE critère brief) | ✅ | observé |
+| **`cargo check --target aarch64-apple-ios-sim -p warren-ios` PASS** (C.3.8 GO ULTIMATE critère brief) | ✅ | observé |
+| Tunnel feature `cargo check --features tunnel` FAIL (expected, `tun_rs 2.8` no iOS backend, same blocker as Android Session D) | ⚠️ | C.4 design doc §3.2 documente le bridge via NEPacketTunnelFlow.readPackets/writePackets comme contournement préféré |
 
 ### NON LIVRÉ (C.3 deep step 2, scope dedicated brief)
 
