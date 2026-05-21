@@ -98,6 +98,7 @@ import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavResult
 import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import androidx.fragment.app.FragmentActivity
@@ -333,7 +334,14 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                         navigator.navigate(SettingsNavKey)
                     }
                 },
-            onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
+            onAccountClick =
+                dropUnlessResumed {
+                    // D.4 step 14: on Warren mobile the "account" surface is the wallet
+                    // (BIP39 identity); the legacy Mullvad AccountNavKey routes to a
+                    // dead daemon-driven screen. Direct the account icon to the wallet
+                    // settings instead.
+                    navigator.navigate(WarrenWalletSettingsNavKey)
+                },
             onDismissNewDeviceClick = connectViewModel::dismissNewDeviceNotification,
             onNavigateToFeature =
                 dropUnlessResumed { feature: FeatureIndicator ->

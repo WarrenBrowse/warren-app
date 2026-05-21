@@ -40,6 +40,7 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.account.api.AccountNavKey
 import com.warrenbrowse.vpn.feature.addtime.api.AddTimeNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.addtime.api.VerificationPendingNavKey
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
@@ -99,7 +100,7 @@ fun OutOfTime(navigator: Navigator) {
         state = state,
         snackbarHostState = snackbarHostState,
         onSettingsClick = dropUnlessResumed { navigator.navigate(SettingsNavKey) },
-        onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
+        onAccountClick = dropUnlessResumed { navigator.navigate(WarrenWalletSettingsNavKey) },
         onAddMoreTimeClick = dropUnlessResumed { navigator.navigate(AddTimeNavKey) },
         onPlayPaymentInfoClick =
             dropUnlessResumed { navigator.navigate(VerificationPendingNavKey) },

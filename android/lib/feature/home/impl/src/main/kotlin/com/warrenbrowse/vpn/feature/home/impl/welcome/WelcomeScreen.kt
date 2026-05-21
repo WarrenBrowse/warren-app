@@ -50,6 +50,7 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.account.api.AccountNavKey
 import com.warrenbrowse.vpn.feature.account.impl.CopyAnimatedIconButton
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.addtime.api.AddTimeNavKey
 import com.warrenbrowse.vpn.feature.addtime.api.VerificationPendingNavKey
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
@@ -126,7 +127,7 @@ fun Welcome(navigator: Navigator) {
         state = state,
         snackbarHostState = snackbarHostState,
         onSettingsClick = dropUnlessResumed { navigator.navigate(SettingsNavKey) },
-        onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
+        onAccountClick = dropUnlessResumed { navigator.navigate(WarrenWalletSettingsNavKey) },
         navigateToDeviceInfoDialog = dropUnlessResumed { navigator.navigate(DeviceNameInfoNavKey) },
         onDisconnectClick = vm::onDisconnectClick,
         onAddMoreTimeClick = dropUnlessResumed { navigator.navigate(AddTimeNavKey) },
