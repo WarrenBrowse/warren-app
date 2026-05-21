@@ -2,6 +2,8 @@ package com.warrenbrowse.vpn.app.service
 
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import co.touchlab.kermit.Logger
@@ -52,8 +54,12 @@ class WarrenQuinnAdapter(
     val state: StateFlow<WarrenTunnelState> = _state.asStateFlow()
 
     private var activeConfig: WarrenTunnelConfig? = null
+    private var activeMnemonic: String? = null
     private var activeFd: ParcelFileDescriptor? = null
     private var statusPollJob: Job? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var lastNetwork: Network? = null
+    private var pendingHandover: Job? = null
 
     suspend fun connect(config: WarrenTunnelConfig, mnemonic: String) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
@@ -62,6 +68,11 @@ class WarrenQuinnAdapter(
         }
         _state.value = WarrenTunnelState.Connecting
         activeConfig = config
+        // Hold the mnemonic in memory only for the duration of the active
+        // session, so the reconnect-on-handover path can re-derive the
+        // SigningKey without going back to the wallet repository (which
+        // would re-trigger BiometricPrompt mid-handover - bad UX).
+        activeMnemonic = mnemonic
 
         val fd = buildTunInterface(config) ?: run {
             _state.value = WarrenTunnelState.Failed("VpnService.Builder.establish() returned null")
@@ -78,7 +89,7 @@ class WarrenQuinnAdapter(
         // Poll the Rust-side session status atomic and translate transitions
         // back to `WarrenTunnelState`. A JNI callback channel would be more
         // elegant (no busy-poll) but requires JVM ref management gymnastics
-        // we are deferring to D.4 step 3 follow-up. The poll cadence
+        // we are deferring to D.4 step 5 follow-up. The poll cadence
         // (250 ms) is fast enough to keep the UI responsive without
         // burning battery: the Rust side updates the atomic only once per
         // transition.
@@ -100,15 +111,26 @@ class WarrenQuinnAdapter(
                 delay(STATUS_POLL_INTERVAL_MS)
             }
         }
+
+        // Register a NetworkCallback for handover-triggered reconnect
+        // (Wi-Fi <-> cellular <-> ethernet). The reconnect happens
+        // off-lock via `triggerHandoverReconnect` so the callback returns
+        // immediately to the ConnectivityManager.
+        registerNetworkCallback()
     }
 
     suspend fun disconnect() = lock.withLock {
+        unregisterNetworkCallback()
+        pendingHandover?.cancel()
+        pendingHandover = null
         WarrenJni.disconnectTunnel()
         statusPollJob?.cancel()
         statusPollJob = null
         activeFd?.close()
         activeFd = null
         activeConfig = null
+        activeMnemonic = null
+        lastNetwork = null
         _state.value = WarrenTunnelState.Disconnected
     }
 
@@ -130,10 +152,87 @@ class WarrenQuinnAdapter(
         return builder.establish()
     }
 
-    @Suppress("UnusedParameter")
-    private fun onNetworkChange(network: Network?) {
-        // TODO (D.4): trigger reconnect with Backoff::HANDSHAKE 15 s when
-        //   the underlying network handle changes (Wi-Fi <-> cellular).
+    private fun registerNetworkCallback() {
+        if (networkCallback != null) return
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            .build()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (lastNetwork == null) {
+                    // First seen network during the session is the
+                    // baseline; not a handover.
+                    lastNetwork = network
+                    return
+                }
+                if (network != lastNetwork) {
+                    Logger.i(
+                        "WarrenQuinnAdapter: underlying network changed " +
+                            "($lastNetwork -> $network), scheduling reconnect"
+                    )
+                    lastNetwork = network
+                    scheduleHandoverReconnect()
+                }
+            }
+
+            override fun onLost(network: Network) {
+                if (network == lastNetwork) {
+                    Logger.i("WarrenQuinnAdapter: underlying network $network lost")
+                    lastNetwork = null
+                }
+            }
+        }
+        try {
+            connectivityManager.registerNetworkCallback(request, callback)
+            networkCallback = callback
+        } catch (e: SecurityException) {
+            Logger.w(throwable = e) {
+                "registerNetworkCallback denied (missing permission?); handover reconnect disabled"
+            }
+        }
+    }
+
+    private fun unregisterNetworkCallback() {
+        val cb = networkCallback ?: return
+        try {
+            connectivityManager.unregisterNetworkCallback(cb)
+        } catch (e: IllegalArgumentException) {
+            Logger.w(throwable = e) {
+                "unregisterNetworkCallback failed (callback was not registered)"
+            }
+        }
+        networkCallback = null
+    }
+
+    /**
+     * Tear down the current Quinn session and re-issue `connectTunnel`
+     * with the cached config + mnemonic after a brief grace period. The
+     * 15 s wait mirrors warren-core `Backoff::HANDSHAKE` so the new
+     * handshake aligns with the exit's expected re-handshake window.
+     */
+    private fun scheduleHandoverReconnect() {
+        val config = activeConfig
+        val mnemonic = activeMnemonic
+        if (config == null || mnemonic == null) {
+            Logger.w("scheduleHandoverReconnect: no active session to reconnect")
+            return
+        }
+        pendingHandover?.cancel()
+        pendingHandover = scope.launch {
+            _state.value = WarrenTunnelState.Reconnecting
+            WarrenJni.disconnectTunnel()
+            // Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G).
+            delay(HANDOVER_GRACE_MS)
+            // Re-acquire the lock through `connect` itself; first drop
+            // local state so it re-initialises cleanly.
+            activeFd?.close()
+            activeFd = null
+            statusPollJob?.cancel()
+            statusPollJob = null
+            _state.value = WarrenTunnelState.Disconnected
+            connect(config, mnemonic)
+        }
     }
 
     private fun statusFromCode(code: Int, config: WarrenTunnelConfig): WarrenTunnelState =
@@ -158,5 +257,8 @@ class WarrenQuinnAdapter(
         const val STATUS_CONNECTED = 2
         const val STATUS_RECONNECTING = 3
         const val STATUS_POLL_INTERVAL_MS = 250L
+
+        /** Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G). */
+        const val HANDOVER_GRACE_MS = 15_000L
     }
 }
