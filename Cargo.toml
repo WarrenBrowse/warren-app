@@ -11,7 +11,7 @@ members = [
   "mullvad-encrypted-dns-proxy",
   "mullvad-exclude",
   "mullvad-fs",
-  "mullvad-ios",
+  "warren-ios",
   "mullvad-leak-checker",
   "mullvad-logging",
   "mullvad-management-interface",

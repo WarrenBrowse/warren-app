@@ -1,8 +1,8 @@
 [package]
-name = "mullvad-ios"
+name = "warren-ios"
 edition.workspace = true
 rust-version.workspace = true
-description = "Entry point for all FFI code on iOS"
+description = "Warren entry point for all FFI code on iOS"
 repository.workspace = true
 license.workspace = true
 
