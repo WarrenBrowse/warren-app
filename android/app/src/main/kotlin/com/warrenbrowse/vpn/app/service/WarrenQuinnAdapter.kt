@@ -10,9 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -73,14 +75,30 @@ class WarrenQuinnAdapter(
             return@withLock
         }
 
-        // TODO (D.4 step 3): register ConnectivityManager.NetworkCallback for
-        //   handover-triggered reconnect (Backoff::HANDSHAKE = 15 s).
-        // TODO (D.4 step 3): observe Rust-side status changes via a callback
-        //   channel instead of polling. For now we poll WarrenJni.getTunnelStatus()
-        //   from this coroutine and translate to WarrenTunnelState.
+        // Poll the Rust-side session status atomic and translate transitions
+        // back to `WarrenTunnelState`. A JNI callback channel would be more
+        // elegant (no busy-poll) but requires JVM ref management gymnastics
+        // we are deferring to D.4 step 3 follow-up. The poll cadence
+        // (250 ms) is fast enough to keep the UI responsive without
+        // burning battery: the Rust side updates the atomic only once per
+        // transition.
+        val sessionConfig = config
         statusPollJob = scope.launch {
-            // Placeholder: in a real impl, the Rust side pushes status
-            // transitions through a JNI callback.
+            var lastSeen = STATUS_CONNECTING
+            while (isActive) {
+                val code = WarrenJni.getTunnelStatus()
+                if (code != lastSeen) {
+                    lastSeen = code
+                    _state.value = statusFromCode(code, sessionConfig)
+                    if (code == STATUS_DISCONNECTED || code < 0) {
+                        // Rust task ended (clean exit or error). Stop
+                        // polling; the next `connect()` will start a fresh
+                        // session.
+                        break
+                    }
+                }
+                delay(STATUS_POLL_INTERVAL_MS)
+            }
         }
     }
 
@@ -116,5 +134,29 @@ class WarrenQuinnAdapter(
     private fun onNetworkChange(network: Network?) {
         // TODO (D.4): trigger reconnect with Backoff::HANDSHAKE 15 s when
         //   the underlying network handle changes (Wi-Fi <-> cellular).
+    }
+
+    private fun statusFromCode(code: Int, config: WarrenTunnelConfig): WarrenTunnelState =
+        when (code) {
+            STATUS_DISCONNECTED -> WarrenTunnelState.Disconnected
+            STATUS_CONNECTING -> WarrenTunnelState.Connecting
+            STATUS_CONNECTED ->
+                WarrenTunnelState.Connected(
+                    exitId = config.exitPubkeyHex,
+                    assignedNatPmpPort = null,
+                    multiHop = config.entryHop != null,
+                    daita = config.daita != null,
+                    obfuscationM40 = config.obfuscationM40,
+                )
+            STATUS_RECONNECTING -> WarrenTunnelState.Reconnecting
+            else -> WarrenTunnelState.Failed("native status code $code")
+        }
+
+    private companion object {
+        const val STATUS_DISCONNECTED = 0
+        const val STATUS_CONNECTING = 1
+        const val STATUS_CONNECTED = 2
+        const val STATUS_RECONNECTING = 3
+        const val STATUS_POLL_INTERVAL_MS = 250L
     }
 }
