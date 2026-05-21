@@ -20,13 +20,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import net.mullvad.talpid.model.Connectivity
-import net.mullvad.talpid.model.IpAvailability
-import net.mullvad.talpid.util.NetworkEvent
-import net.mullvad.talpid.util.UnderlyingConnectivityStatusResolver
-import net.mullvad.talpid.util.defaultNetworkEvents
-import net.mullvad.talpid.util.hasInternetConnectivity
-import net.mullvad.talpid.util.nonVpnInternetNetworksEvents
+import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.talpid.model.IpAvailability
+import com.warrenbrowse.talpid.util.NetworkEvent
+import com.warrenbrowse.talpid.util.UnderlyingConnectivityStatusResolver
+import com.warrenbrowse.talpid.util.defaultNetworkEvents
+import com.warrenbrowse.talpid.util.hasInternetConnectivity
+import com.warrenbrowse.talpid.util.nonVpnInternetNetworksEvents
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -310,6 +310,6 @@ class ConnectivityManagerUtilKtTest {
 
     companion object {
         private const val CONNECTIVITY_MANAGER_UTIL_CLASS =
-            "net.mullvad.talpid.util.ConnectivityManagerUtilKt"
+            "com.warrenbrowse.talpid.util.ConnectivityManagerUtilKt"
     }
 }

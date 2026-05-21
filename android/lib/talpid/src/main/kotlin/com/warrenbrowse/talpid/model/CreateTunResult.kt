@@ -1,4 +1,4 @@
-package net.mullvad.talpid.model
+package com.warrenbrowse.talpid.model
 
 import java.net.InetAddress
 import java.util.ArrayList

@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-android { namespace = "net.mullvad.talpid" }
+android { namespace = "com.warrenbrowse.talpid" }
 
 dependencies {
     implementation(projects.lib.model)

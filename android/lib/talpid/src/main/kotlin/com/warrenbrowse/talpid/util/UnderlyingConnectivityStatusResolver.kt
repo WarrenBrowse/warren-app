@@ -1,4 +1,4 @@
-package net.mullvad.talpid.util
+package com.warrenbrowse.talpid.util
 
 import arrow.core.Either
 import arrow.core.raise.result
@@ -8,7 +8,7 @@ import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import net.mullvad.talpid.model.Connectivity
+import com.warrenbrowse.talpid.model.Connectivity
 
 /** This class is used to check the ip version of the underlying network when a VPN is active. */
 class UnderlyingConnectivityStatusResolver(

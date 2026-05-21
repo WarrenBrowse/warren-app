@@ -1,4 +1,4 @@
-package net.mullvad.talpid
+package com.warrenbrowse.talpid
 
 import android.content.Intent
 import android.net.VpnService

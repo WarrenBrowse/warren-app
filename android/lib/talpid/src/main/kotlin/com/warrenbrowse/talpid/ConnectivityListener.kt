@@ -1,4 +1,4 @@
-package net.mullvad.talpid
+package com.warrenbrowse.talpid
 
 import android.net.ConnectivityManager
 import android.net.LinkProperties
@@ -19,14 +19,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import net.mullvad.talpid.model.Connectivity
-import net.mullvad.talpid.model.NetworkState
-import net.mullvad.talpid.util.RawNetworkState
-import net.mullvad.talpid.util.UnderlyingConnectivityStatusResolver
-import net.mullvad.talpid.util.activeRawNetworkState
-import net.mullvad.talpid.util.defaultRawNetworkStateFlow
-import net.mullvad.talpid.util.hasInternetConnectivity
-import net.mullvad.talpid.util.resolveConnectivityStatus
+import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.talpid.model.NetworkState
+import com.warrenbrowse.talpid.util.RawNetworkState
+import com.warrenbrowse.talpid.util.UnderlyingConnectivityStatusResolver
+import com.warrenbrowse.talpid.util.activeRawNetworkState
+import com.warrenbrowse.talpid.util.defaultRawNetworkStateFlow
+import com.warrenbrowse.talpid.util.hasInternetConnectivity
+import com.warrenbrowse.talpid.util.resolveConnectivityStatus
 
 class ConnectivityListener(
     private val connectivityManager: ConnectivityManager,

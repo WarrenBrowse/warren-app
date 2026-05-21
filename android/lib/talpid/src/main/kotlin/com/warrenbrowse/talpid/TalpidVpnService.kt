@@ -1,4 +1,4 @@
-package net.mullvad.talpid
+package com.warrenbrowse.talpid
 
 import android.net.ConnectivityManager
 import android.os.ParcelFileDescriptor
@@ -23,16 +23,16 @@ import kotlin.properties.Delegates.observable
 import com.warrenbrowse.vpn.lib.common.util.establishSafe
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.PrepareError
-import net.mullvad.talpid.model.CreateTunResult
-import net.mullvad.talpid.model.CreateTunResult.EstablishError
-import net.mullvad.talpid.model.CreateTunResult.InvalidDnsServers
-import net.mullvad.talpid.model.CreateTunResult.NotPrepared
-import net.mullvad.talpid.model.CreateTunResult.OtherAlwaysOnApp
-import net.mullvad.talpid.model.CreateTunResult.OtherLegacyAlwaysOnVpn
-import net.mullvad.talpid.model.InetNetwork
-import net.mullvad.talpid.model.TunConfig
-import net.mullvad.talpid.util.TalpidSdkUtils.setMeteredIfSupported
-import net.mullvad.talpid.util.UnderlyingConnectivityStatusResolver
+import com.warrenbrowse.talpid.model.CreateTunResult
+import com.warrenbrowse.talpid.model.CreateTunResult.EstablishError
+import com.warrenbrowse.talpid.model.CreateTunResult.InvalidDnsServers
+import com.warrenbrowse.talpid.model.CreateTunResult.NotPrepared
+import com.warrenbrowse.talpid.model.CreateTunResult.OtherAlwaysOnApp
+import com.warrenbrowse.talpid.model.CreateTunResult.OtherLegacyAlwaysOnVpn
+import com.warrenbrowse.talpid.model.InetNetwork
+import com.warrenbrowse.talpid.model.TunConfig
+import com.warrenbrowse.talpid.util.TalpidSdkUtils.setMeteredIfSupported
+import com.warrenbrowse.talpid.util.UnderlyingConnectivityStatusResolver
 
 @Suppress("TooManyFunctions")
 open class TalpidVpnService : LifecycleVpnService() {

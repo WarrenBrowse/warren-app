@@ -1,4 +1,4 @@
-package net.mullvad.talpid.model
+package com.warrenbrowse.talpid.model
 
 import android.net.LinkAddress
 import java.net.Inet4Address

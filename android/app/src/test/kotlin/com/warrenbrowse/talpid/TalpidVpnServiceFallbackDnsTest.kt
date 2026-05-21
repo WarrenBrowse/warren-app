@@ -1,4 +1,4 @@
-package net.mullvad.talpid
+package com.warrenbrowse.talpid
 
 import android.net.VpnService
 import android.os.Looper
@@ -15,9 +15,9 @@ import java.net.InetAddress
 import com.warrenbrowse.vpn.lib.common.test.assertLists
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.Prepared
-import net.mullvad.talpid.model.CreateTunResult
-import net.mullvad.talpid.model.InetNetwork
-import net.mullvad.talpid.model.TunConfig
+import com.warrenbrowse.talpid.model.CreateTunResult
+import com.warrenbrowse.talpid.model.InetNetwork
+import com.warrenbrowse.talpid.model.TunConfig
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf

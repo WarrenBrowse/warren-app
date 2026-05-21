@@ -1,4 +1,4 @@
-package net.mullvad.talpid.util
+package com.warrenbrowse.talpid.util
 
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import net.mullvad.talpid.model.Connectivity
-import net.mullvad.talpid.model.IpAvailability
+import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.talpid.model.IpAvailability
 
 private val CONNECTIVITY_DEBOUNCE = 300.milliseconds
 
