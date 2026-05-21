@@ -8,28 +8,18 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
-import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.MAIN_ACTIVITY_CLASS
-import com.warrenbrowse.vpn.lib.common.constant.VPN_SERVICE_CLASS
 import com.warrenbrowse.vpn.lib.common.util.getSupportedPendingIntentFlags
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
-import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
-import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
-import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.android.ext.android.get
 
@@ -39,8 +29,15 @@ class WarrenTileService : TileService() {
     private lateinit var securedIcon: Icon
     private lateinit var unsecuredIcon: Icon
 
-    private val connectionProxy = get<ConnectionProxy>()
-    private val managementService = get<ManagementService>()
+    // D.4 step 12: dead Mullvad ConnectionProxy + ManagementService
+    // replaced by Warren-native surfaces. The tile reads state from the
+    // process-singleton proxy (live mirror of WarrenQuinnAdapter.state)
+    // and issues disconnect through the dedicated Warren use-case.
+    // Connect from the tile requires the wallet UI (BiometricPrompt),
+    // so a disconnected-tile click opens the main activity rather than
+    // dispatching a connect intent directly.
+    private val tunnelStateProvider = get<WarrenTunnelStateProvider>()
+    private val warrenDisconnect = get<WarrenQuinnDisconnectInvoker>()
 
     override fun onCreate() {
         securedIcon = Icon.createWithResource(this, R.drawable.small_logo_white)
@@ -89,27 +86,17 @@ class WarrenTileService : TileService() {
     @SuppressLint("StartActivityAndCollapseDeprecated")
     private fun toggleTunnel() {
         val isSetup = applicationContext.prepareVpnSafe().isRight()
-        // TODO This logic should be more advanced, we should ensure user has an account setup etc.
-        if (isSetup) {
-            Logger.i("TileService: VPN service is setup")
-
-            val intent =
-                Intent().apply {
-                    setClassName(applicationContext.packageName, VPN_SERVICE_CLASS)
-                    action =
-                        if (qsTile.state == Tile.STATE_INACTIVE) {
-                            KEY_CONNECT_ACTION
-                        } else {
-                            KEY_DISCONNECT_ACTION
-                        }
-                }
-
-            // Always start as foreground, e.g if app is dead we won't be allowed to start if not
-            // in foreground.
-            startForegroundService(intent)
+        if (isSetup && qsTile.state == Tile.STATE_ACTIVE) {
+            // Tile shows the tunnel as connected; user wants disconnect.
+            Logger.i("TileService: dispatching Warren disconnect")
+            warrenDisconnect.disconnect()
         } else {
-            Logger.i("TileService: VPN service not setup, starting main activity")
-
+            // Either VPN profile is not set up yet, or tunnel is
+            // disconnected. The Warren connect path needs the wallet's
+            // BiometricPrompt host (FragmentActivity), so we bounce the
+            // user into the main activity rather than starting the
+            // service directly.
+            Logger.i("TileService: opening main activity for Warren connect")
             val intent =
                 Intent().apply {
                     setClassName(applicationContext.packageName, MAIN_ACTIVITY_CLASS)
@@ -139,48 +126,23 @@ class WarrenTileService : TileService() {
         }
     }
 
-    @OptIn(FlowPreview::class)
     private suspend fun launchListenToTunnelState() {
-        combine(
-                connectionProxy.tunnelState.onStart { emit(TunnelState.Disconnected(null)) },
-                managementService.connectionState,
-            ) { tunnelState, connectionState ->
-                tunnelState to connectionState
-            }
-            .debounce(TUNNEL_STATE_DEBOUNCE_MS)
-            .map { (tunnelState, connectionState) -> mapToTileState(tunnelState, connectionState) }
+        tunnelStateProvider.state
+            .map(::mapToTileState)
             .collect { updateTileState(it) }
     }
 
-    private fun mapToTileState(
-        tunnelState: TunnelState,
-        connectionState: GrpcConnectivityState,
-    ): Int {
-        return if (connectionState == GrpcConnectivityState.Ready) {
-            when (tunnelState) {
-                is TunnelState.Disconnected -> Tile.STATE_INACTIVE
-                is TunnelState.Connecting -> Tile.STATE_ACTIVE
-                is TunnelState.Connected -> Tile.STATE_ACTIVE
-                is TunnelState.Disconnecting -> {
-                    if (tunnelState.actionAfterDisconnect == ActionAfterDisconnect.Reconnect) {
-                        Tile.STATE_ACTIVE
-                    } else {
-                        Tile.STATE_INACTIVE
-                    }
-                }
-
-                is TunnelState.Error -> {
-                    if (tunnelState.errorState.isBlocking) {
-                        Tile.STATE_ACTIVE
-                    } else {
-                        Tile.STATE_INACTIVE
-                    }
-                }
-            }
-        } else {
-            Tile.STATE_INACTIVE
+    private fun mapToTileState(stateLabel: String): Int =
+        when {
+            // The proxy exposes a String projection; "Connected",
+            // "Connecting...", "Reconnecting..." all map to the active
+            // tile (the tunnel intent is captured). Anything else is
+            // inactive.
+            stateLabel.startsWith("Connected") -> Tile.STATE_ACTIVE
+            stateLabel.startsWith("Connecting") -> Tile.STATE_ACTIVE
+            stateLabel.startsWith("Reconnecting") -> Tile.STATE_ACTIVE
+            else -> Tile.STATE_INACTIVE
         }
-    }
 
     private fun updateTileState(newState: Int) {
         qsTile?.apply {
@@ -205,7 +167,4 @@ class WarrenTileService : TileService() {
         }
     }
 
-    companion object {
-        private const val TUNNEL_STATE_DEBOUNCE_MS = 300L
-    }
 }
