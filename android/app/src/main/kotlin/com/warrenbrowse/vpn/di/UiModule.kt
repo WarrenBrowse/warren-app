@@ -7,8 +7,6 @@ import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
-import com.warrenbrowse.vpn.feature.account.impl.AccountViewModel
-import com.warrenbrowse.vpn.feature.addtime.impl.AddTimeViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.AntiCensorshipSettingsViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.customport.CustomPortDialogViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.selectport.SelectPortViewModel
@@ -32,7 +30,6 @@ import com.warrenbrowse.vpn.feature.customlist.impl.screen.editlocations.CustomL
 import com.warrenbrowse.vpn.feature.customlist.impl.screen.editname.EditCustomListNameDialogViewModel
 import com.warrenbrowse.vpn.feature.customlist.impl.screen.lists.CustomListsViewModel
 import com.warrenbrowse.vpn.feature.daita.impl.DaitaViewModel
-import com.warrenbrowse.vpn.feature.deleteaccount.impl.deleteaccountconfirmation.DeleteAccountConfirmationViewModel
 import com.warrenbrowse.vpn.feature.filter.impl.FilterViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
@@ -50,12 +47,10 @@ import com.warrenbrowse.vpn.feature.login.impl.LoginViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.login.impl.apiunreachable.ApiUnreachableViewModel
 import com.warrenbrowse.vpn.feature.login.impl.devicelist.DeviceListViewModel
-import com.warrenbrowse.vpn.feature.managedevices.impl.ManageDevicesViewModel
 import com.warrenbrowse.vpn.feature.multihop.impl.MultihopViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.viewlogs.ViewLogsViewModel
-import com.warrenbrowse.vpn.feature.redeemvoucher.impl.VoucherDialogViewModel
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.ServerIpOverridesViewModel
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.reset.ResetServerIpOverridesConfirmationViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.SettingsViewModel
@@ -270,9 +265,10 @@ val uiModule = module {
 
     single { RelayListScrollConnection() }
 
-    // View models
-    viewModel { AccountViewModel(get(), get(), get()) }
-    viewModel { DeleteAccountConfirmationViewModel(get(), get()) }
+    // View models (D.4 step 16: AccountViewModel + DeleteAccountConfirmation +
+    // ManageDevicesViewModel + VoucherDialogViewModel + AddTimeViewModel
+    // registrations removed; the corresponding Mullvad-legacy screens are no
+    // longer in the navigation graph)
     viewModel { params -> ChangelogViewModel(navArgs = params.get(), get(), get()) }
     viewModel {
         AppInfoViewModel(
@@ -300,9 +296,6 @@ val uiModule = module {
         )
     }
     viewModel { params -> DeviceListViewModel(accountNumber = params.get(), get()) }
-    viewModel { params ->
-        ManageDevicesViewModel(accountNumber = params.get(), get(), Dispatchers.IO)
-    }
     viewModel { DeviceRevokedViewModel(get(), get(), get(), get()) }
     viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
@@ -327,7 +320,6 @@ val uiModule = module {
     }
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { SplashViewModel(get(), get(), get(), get(), get()) }
-    viewModel { VoucherDialogViewModel(get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
     viewModel { params -> AntiCensorshipSettingsViewModel(isModal = params.get(), get()) }
     viewModel { WelcomeViewModel(get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
@@ -395,14 +387,6 @@ val uiModule = module {
         )
     }
     viewModel { params -> DaitaViewModel(isModal = params.get(), get()) }
-    viewModel {
-        AddTimeViewModel(
-            paymentUseCase = get(),
-            accountRepository = get(),
-            connectionProxy = get(),
-            isPlayBuild = IS_PLAY_BUILD,
-        )
-    }
     viewModel { params ->
         ApiUnreachableViewModel(
             navArgs = params.get(),

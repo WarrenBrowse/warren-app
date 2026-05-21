@@ -44,8 +44,6 @@ import com.warrenbrowse.vpn.core.rememberResultStore
 import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
-import com.warrenbrowse.vpn.feature.account.impl.navigation.accountEntry
-import com.warrenbrowse.vpn.feature.addtime.impl.navigation.addTimeVerificationPendingEntry
 import com.warrenbrowse.vpn.feature.anticensorship.impl.navigation.anticensorshipEntry
 import com.warrenbrowse.vpn.feature.apiaccess.impl.navigation.apiAccessEntry
 import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
@@ -54,7 +52,6 @@ import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
 import com.warrenbrowse.vpn.feature.customlist.impl.navigation.customListEntry
 import com.warrenbrowse.vpn.feature.daita.impl.navigation.daitaEntry
-import com.warrenbrowse.vpn.feature.deleteaccount.impl.navigation.deleteAccountEntry
 import com.warrenbrowse.vpn.feature.filter.impl.navigation.filterEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
@@ -65,11 +62,9 @@ import com.warrenbrowse.vpn.feature.login.impl.navigation.loginEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
-import com.warrenbrowse.vpn.feature.managedevices.impl.navigation.manageDevicesEntry
 import com.warrenbrowse.vpn.feature.multihop.impl.navigation.multihopEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
-import com.warrenbrowse.vpn.feature.redeemvoucher.impl.navigation.redeemVoucherEntry
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.navigation.serverIpOverrideEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
@@ -123,8 +118,10 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     }
 
     val entryProvider = entryProvider {
-        accountEntry(nav3)
-        addTimeVerificationPendingEntry(nav3)
+        // D.4 step 16: Mullvad-legacy entries (account / addTime / deleteAccount /
+        // manageDevices / redeemVoucher) removed from the live navigation graph.
+        // The screens still compile (modules retained) but no NavKey routes them
+        // anymore. Full module deletion is a follow-up.
         anticensorshipEntry(nav3)
         apiAccessEntry(nav3)
         appIconEntry(nav3)
@@ -133,7 +130,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         changelogEntry(nav3)
         customListEntry(nav3)
         daitaEntry(nav3)
-        deleteAccountEntry(nav3)
         deviceListEntry(nav3)
         filterEntry(nav3)
         homeEntry(nav3)
@@ -144,13 +140,11 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         walletEntry(nav3)
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
-        manageDevicesEntry(nav3)
         multihopEntry(nav3)
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
-        redeemVoucherEntry(nav3)
         removeDeviceConfirmationDialogEntry(nav3)
         selectLocationEntry(nav3)
         serverIpOverrideEntry(nav3)
