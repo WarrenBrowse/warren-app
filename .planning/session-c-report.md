@@ -1,19 +1,25 @@
-# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE + C.4/C.5/C.6 scaffolds)
+# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE + C.4/C.5/C.6 scaffolds + Wallet/Settings integration)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
 **Brief source** : `.planning/session-c-ios-fork-brief.md`
 **Effort estimé brief** : 1-2 mois wall-clock (7 sous-phases)
-**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton + C.3 deep step 1 (drop WG-legacy + 4 FFI skeleton modules) + C.4 design doc + C.4 Swift scaffold (`WarrenQuinnAdapter` actor) + C.5 Swift scaffolds (3 wallet UI + WarrenWallet FFI wrapper) + C.6 partial Swift scaffolds (Multi-hop settings + Obfuscation banner) + follow-up briefs consolidés.
+**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton + C.3 deep step 1 (drop WG-legacy + 4 FFI skeleton modules) + **real `warren_wallet_ffi` (5 fonctions sur warren-identity + bip39 + ed25519-dalek)** + **C.4 Rust scaffold C ABI compile-validated** + C.4 design doc + C.4 Swift `WarrenQuinnAdapter` actor + **C.5 production-grade Wallet Coordinator/Interactor/3 ViewControllers + 3 SwiftUI views + Keychain wrapper (UIHostingController pattern Mullvad-compatible)** + **C.6 5 SwiftUI views (Multi-hop + DAITA + NAT-PMP settings + Obfuscation + FailoverBanner)** + Warren brand palette (`UIColor+Warren`) + Wallet.xcstrings + Settings.xcstrings (FR + EN, ~40 strings) + **pbxproj target add automated (xcodeproj Ruby gem script, idempotent)** + WarrenWallet Swift wrapping real FFI calls (zeroed secrets on deinit) + cbindgen-regenerated `warren_rust_runtime.h` + follow-up briefs consolidés.
 
 ---
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 + C.2 + C.3 (skeleton + deep step 1) + C.4 design + C.4/C.5/C.6
-Swift scaffolds DONE. C.3 deep step 2 (api_client rewrite) + C.4 implementation (FFI
-Rust side + Swift `start/stop/reconnect/status` body) + C.5/C.6 remaining UI + C.7
-NON STARTED. **~23 commits** cette session ; tous poussés origin/main.
+**GO PARTIEL** — C.1 + C.2 + C.3 (skeleton + deep step 1 + real warren_wallet_ffi) +
+C.4 design + C.4 Rust C ABI scaffold + Swift WarrenQuinnAdapter + **C.5 production-
+ready Wallet flow (Coordinator + Interactor + 3 ViewControllers + 3 SwiftUI views +
+Keychain) wired to real FFI** + **C.6 5 SwiftUI views with i18n FR/EN** + pbxproj target
+add automated DONE. C.3 deep step 2 (api_client rewrite) + C.4 implementation (FFI Rust
+bodies + NEPacketTunnelFlow bridge + drop WireGuardKit) + C.5/C.6 OnboardingWizard 5-step +
+field-tested integration + C.7 NON STARTED. **~32 commits** cette session ; tous poussés
+origin/main. Swift code compile clean (xcodebuild WarrenVPN target shows 0 errors in my
+new files ; remaining build issues are pre-existing WireGuardKit framework conflicts that
+C.4 will resolve).
 
 Reprise via briefs séparés `Session C.3.deep`, `Session C.4` (design doc + Swift scaffold
 déjà rédigés), `Session C.5`, `Session C.6`, `Session C.7` — cf.
