@@ -62,6 +62,10 @@ warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = tr
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
 warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
 warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
+# Direct dep on `warren-protocol` for `WarrenExitAddr` + `WarrenPubkey`
+# types passed to `warren_tunnel::ClientTunnel::connect`. Optional so
+# the no-tunnel build path stays minimal.
+warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
 cbindgen = { version = "0.28.0", default-features = false }
@@ -72,7 +76,7 @@ default = []
 api-override = ["mullvad-api/api-override"]
 # Pull in the Quinn tunnel stack. Requires an iOS `PacketDevice` adapter
 # (cf. C.4 design doc §3.2). OFF by default until the bridge lands.
-tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client"]
+tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol"]
 
 [lints]
 workspace = true

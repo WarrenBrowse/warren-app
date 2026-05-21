@@ -7230,6 +7230,7 @@ dependencies = [
  "warren-identity",
  "warren-multihop",
  "warren-natpmp-client",
+ "warren-protocol",
  "warren-relay-selector",
  "warren-tunnel",
 ]

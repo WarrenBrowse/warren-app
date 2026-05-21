@@ -20,7 +20,9 @@
 //! - All other entry points cast the raw pointer back to `&mut Impl`
 //!   without taking ownership.
 
-use std::ffi::{c_void, CStr};
+use std::ffi::c_void;
+#[cfg(feature = "tunnel")]
+use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 
 /// Opaque handle representing an active Warren tunnel. Created by
@@ -311,6 +313,36 @@ mod handle_impl {
             });
         }
 
+        /// Atomically store a new state discriminant.
+        pub fn set_state(&self, state: WarrenTunnelStateC) {
+            self.state.store(state as u8, Ordering::Relaxed);
+        }
+
+        /// Fire a tagged event on the registered callback (if any).
+        /// `tag` is the only field populated for `Connected` /
+        /// `Disconnected` / `Reconnecting` ; the data fields are
+        /// zero-initialized. Failover + NatPmp* variants pass through
+        /// [`fire_event_full`] with explicit data.
+        pub fn fire_event(&self, tag: super::WarrenTunnelEventTagC) {
+            let event = super::WarrenTunnelEventC {
+                tag,
+                data_failover_country_code: std::ptr::null(),
+                data_nat_pmp_external_port: 0,
+                data_nat_pmp_internal_port: 0,
+                data_nat_pmp_lifetime_seconds: 0,
+                data_nat_pmp_failure_reason: std::ptr::null(),
+            };
+            let Ok(cb_entry) = self.event_callback.lock() else { return };
+            let Some(entry) = cb_entry.as_ref() else { return };
+            // SAFETY: callback + context come from Swift via
+            // `warren_tunnel_set_event_callback`. Swift owns the
+            // context pointer lifecycle ; we just pass it back. The
+            // event pointer is valid for the duration of the call.
+            unsafe {
+                (entry.callback)(&raw const event, entry.context);
+            }
+        }
+
         /// Snapshot of the current state discriminant.
         pub fn state_snapshot(&self) -> WarrenTunnelStateC {
             match self.state.load(Ordering::Relaxed) {
@@ -348,17 +380,93 @@ pub unsafe extern "C" fn warren_tunnel_start(
     }
     #[cfg(feature = "tunnel")]
     {
-        // TODO C.4.1 marshal `parameters` into a real
-        // `warren_tunnel::ClientTunnel::connect` invocation and spawn
-        // the bidirectional pump. For now the handle is allocated and
-        // the outbound dispatcher started, but no Quinn connection is
-        // established (state stays `Disconnected`).
-        let _ = parameters;
+        // SAFETY: caller upholds the precondition that `parameters`
+        // points to a valid `WarrenTunnelParametersC` for the duration
+        // of this call. We re-borrow with the explicit-lifetime &.
+        let Some(params) = (unsafe { parameters.as_ref() }) else {
+            return std::ptr::null_mut();
+        };
+
+        // Parse the exit endpoint UTF-8 string into a SocketAddr ; bail
+        // out early on invalid input so the Swift side gets a null.
+        let Some(exit_endpoint_str) = (unsafe { cstr_to_str(params.exit_endpoint) }) else {
+            return std::ptr::null_mut();
+        };
+        let Ok(exit_addr) = exit_endpoint_str.parse::<std::net::SocketAddr>() else {
+            return std::ptr::null_mut();
+        };
+
+        // Build the WarrenExitAddr (pubkey + reachable transports).
+        let exit_pubkey = warren_protocol::WarrenPubkey::from_bytes(params.exit_pubkey);
+        let exit_target =
+            warren_protocol::WarrenExitAddr::from_ip_addrs(exit_pubkey, [exit_addr]);
+
+        // Wallet signing key from the Ed25519 seed bytes. Zeroize on
+        // drop is provided by `ed25519-dalek` via the `zeroize` feature
+        // already enabled in `warren-ios/Cargo.toml`.
+        let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
+
+        // C.4.1 caveat (per memory `warren_session_n_delivered`) :
+        // multi-hop + DAITA path has an outstanding silent data-plane
+        // bug. Single-hop only on this first wire-up ; multi-hop +
+        // DAITA marshalling is in place Swift-side (cf. C.4.2) but the
+        // Rust dispatcher here ignores those fields until the
+        // production-grade fix lands. The presence of `params.multi_hop_relay`
+        // or `params.daita_spec` is **NOT YET** honored.
+        let _ = params.multi_hop_relay;
+        let _ = params.daita_spec;
+        let _ = params.nat_pmp_enabled;
+        let _ = params.bypass_cidrs;
+        let _ = params.bypass_cidrs_count;
+
         let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
             return std::ptr::null_mut();
         };
         let arc = std::sync::Arc::new(impl_);
         arc.spawn_outbound_dispatcher();
+
+        // Spawn the Quinn handshake + bidirectional pump on the
+        // handle's runtime. The task transitions state through
+        // Connecting → Connected → Disconnected and fires the
+        // corresponding events on the registered callback.
+        let arc_for_task = std::sync::Arc::clone(&arc);
+        arc.runtime.spawn(async move {
+            arc_for_task.set_state(WarrenTunnelStateC::Connecting);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::Reconnecting);
+
+            let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key);
+            let session = match client.connect(exit_target).await {
+                Ok(session) => session,
+                Err(_e) => {
+                    arc_for_task.set_state(WarrenTunnelStateC::Failed);
+                    arc_for_task.fire_event(WarrenTunnelEventTagC::Disconnected);
+                    return;
+                }
+            };
+
+            arc_for_task.set_state(WarrenTunnelStateC::Connected);
+            arc_for_task
+                .connected_at_secs
+                .store(now_secs(), std::sync::atomic::Ordering::Relaxed);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::Connected);
+
+            // Drive the bidirectional pump. `pump_bidirectional` takes
+            // the `PacketDevice` (our `IosTun` clone) + the Quinn
+            // `Connection` (cloned out of the session). Returns on
+            // session error or when the IosTun channels close (handle
+            // drop). The `session` itself must outlive the pump (its
+            // `_endpoint` field keeps the connection alive), so we
+            // hold it on the stack of this task until pump exits.
+            let tun = arc_for_task.tun.clone();
+            let conn = session.clone_conn();
+            let pump_result = warren_tunnel::pump_bidirectional(tun, conn).await;
+            drop(session);
+            let _ = pump_result; // pump logs errors via tracing
+
+            arc_for_task.set_state(WarrenTunnelStateC::Disconnected);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::Disconnected);
+        });
+
         // Box the Arc so the FFI sees a single owner ; clones live
         // inside spawned tasks via the Arc.
         let boxed = Box::new(arc);
@@ -616,7 +724,7 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
 /// # Safety
 /// `ptr` must be null or point to a valid null-terminated C string for
 /// the duration of the returned reference's lifetime.
-#[expect(dead_code, reason = "marshalling helper ; consumed once parameters are wired C.4.1")]
+#[cfg(feature = "tunnel")]
 unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
     if ptr.is_null() {
         return None;
