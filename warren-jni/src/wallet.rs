@@ -55,6 +55,14 @@ pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
     Ok(key.verifying_key().to_bytes())
 }
 
+/// Convenience wrapper: derive the Ed25519 verifying key from `mnemonic`
+/// and return its lowercase hex encoding (64 characters). This is the form
+/// the `X-Warren-Pubkey-Hex` request header expects.
+pub fn pubkey_hex_from_mnemonic(mnemonic: &str) -> Result<String, WalletError> {
+    let pubkey = pubkey_from_mnemonic(mnemonic)?;
+    Ok(hex::encode(pubkey))
+}
+
 /// Sign `message` with the Ed25519 signing key derived from `mnemonic`.
 ///
 /// Returns the raw 64-byte signature. The signing key never escapes this
@@ -122,6 +130,26 @@ mod tests {
         let a = generate_mnemonic();
         let b = generate_mnemonic();
         assert_ne!(a, b, "two consecutive generate_mnemonic() calls collided");
+    }
+
+    #[test]
+    fn pubkey_hex_is_64_lowercase_chars() {
+        let phrase = generate_mnemonic();
+        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
+        assert_eq!(hex.len(), 64, "Ed25519 pubkey hex must be 64 chars");
+        assert!(
+            hex.chars()
+                .all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())),
+            "expected lowercase hex digits only, got {hex}"
+        );
+    }
+
+    #[test]
+    fn pubkey_hex_matches_byte_form() {
+        let phrase = generate_mnemonic();
+        let bytes = pubkey_from_mnemonic(&phrase).unwrap();
+        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
+        assert_eq!(hex, hex::encode(bytes));
     }
 
     #[test]

@@ -39,6 +39,14 @@ object WarrenJni {
     external fun importMnemonic(mnemonic: String): ByteArray
 
     /**
+     * Convenience wrapper: return the wallet pubkey directly as a 64-char
+     * lowercase hex string, ready for the `X-Warren-Pubkey-Hex` header.
+     * Saves Kotlin from a bytes-to-hex round-trip when only the hex form is
+     * needed.
+     */
+    external fun mnemonicPubkeyHex(mnemonic: String): String
+
+    /**
      * Ed25519-sign `canonicalMessage` with the key derived from `mnemonic`.
      * Returns a 64-byte signature suitable for the `X-Warren-Signature`
      * header (cf. warren-identity `auth::canonical_message`).

@@ -181,6 +181,31 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'l
     new_byte_array_from(&env, &pubkey)
 }
 
+/// Convenience wrapper: derive the wallet pubkey and return it as a
+/// 64-character lowercase hex string. This is the form the
+/// `X-Warren-Pubkey-Hex` request header expects, so the Kotlin caller can
+/// pass the result straight through without bytes-to-hex round-tripping.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_mnemonicPubkeyHex<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let env = JnixEnv::from(env);
+    let phrase = String::from_java(&env, mnemonic);
+    let hex_str = match crate::wallet::pubkey_hex_from_mnemonic(&phrase) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e.to_string());
+            return std::ptr::null_mut();
+        }
+    };
+    match env.new_string(hex_str) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// Sign `canonicalMessage` bytes with the Ed25519 signing key derived from
 /// `mnemonic`. Returns a 64-byte signature suitable for the
 /// `X-Warren-Signature` header (cf. `warren-identity::auth`).
