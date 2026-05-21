@@ -29,9 +29,11 @@ import {
   ObfuscationSettings,
   ObfuscationType,
   RelaySettings,
+  TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
   WarrenMultiHopSettings,
+  WarrenPubkeyMismatch,
   WarrenPubKey,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
@@ -424,6 +426,56 @@ export class DaemonRpc extends GrpcClient {
   public async setNatPmpSettings(settings: NatPmpSettings): Promise<void> {
     const proto = convertToNatPmpSettings(settings);
     await this.call<grpcTypes.NatPmpSettings, Empty>(this.client.setNatPmpSettings, proto);
+  }
+
+  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+  // verify hook keeps the in-memory pin table; these RPCs let the
+  // user resolve a pending mismatch from the modal.
+  public async trustNewExitKey(input: {
+    exitIdHex: string;
+    newPubkeyHex: string;
+  }): Promise<TrustNewExitKeyOutcome> {
+    const req = new grpcTypes.TrustNewExitKeyRequest();
+    req.setExitIdHex(input.exitIdHex);
+    req.setNewPubkeyHex(input.newPubkeyHex);
+    const response = await this.call<
+      grpcTypes.TrustNewExitKeyRequest,
+      grpcTypes.TrustNewExitKeyResponse
+    >(this.client.trustNewExitKey, req);
+    switch (response.getResult()) {
+      case grpcTypes.TrustNewExitKeyResponse.Result.OK:
+        return { result: 'ok' };
+      case grpcTypes.TrustNewExitKeyResponse.Result.EXIT_NOT_FOUND:
+        return { result: 'exit-not-found' };
+      case grpcTypes.TrustNewExitKeyResponse.Result.PUBKEY_MISMATCH:
+        return { result: 'pubkey-mismatch' };
+      default:
+        return { result: 'io-error', errorMessage: response.getErrorMessage() };
+    }
+  }
+
+  public async resetPinnedExitKeys(): Promise<number> {
+    const response = await this.callEmpty<grpcTypes.ResetPinnedExitKeysResponse>(
+      this.client.resetPinnedExitKeys,
+    );
+    return response.getResetCount();
+  }
+
+  public async dismissPubkeyMismatch(): Promise<void> {
+    await this.callEmpty<Empty>(this.client.dismissPubkeyMismatch);
+  }
+
+  public async reportPubkeyMismatch(mismatch: WarrenPubkeyMismatch): Promise<void> {
+    const req = new grpcTypes.ReportPubkeyMismatchRequest();
+    req.setExitIdHex(mismatch.exitIdHex);
+    req.setOldPubkeyHex(mismatch.pinnedPubkeyHex);
+    req.setNewPubkeyHex(mismatch.observedPubkeyHex);
+    req.setCountryCode(mismatch.countryCode);
+    req.setCity(mismatch.city);
+    await this.call<grpcTypes.ReportPubkeyMismatchRequest, Empty>(
+      this.client.reportPubkeyMismatch,
+      req,
+    );
   }
 
   // Push stream subscription mirroring `subscribeWarrenStatusListener`.

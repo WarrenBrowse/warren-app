@@ -7375,6 +7375,7 @@ dependencies = [
  "ed25519-dalek",
  "maybenot",
  "maybenot-machines",
+ "nix 0.31.2",
  "parking_lot",
  "postcard",
  "quinn",

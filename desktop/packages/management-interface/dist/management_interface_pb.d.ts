@@ -1858,7 +1858,7 @@ export namespace WarrenMultiHopSettings {
     }
 }
 
-export class WarrenStatus extends jspb.Message {
+export class WarrenStatus extends jspb.Message { 
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;
 
@@ -1875,6 +1875,11 @@ export class WarrenStatus extends jspb.Message {
     clearLastFailoverAge(): void;
     getLastFailoverAge(): google_protobuf_duration_pb.Duration | undefined;
     setLastFailoverAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
+
+    hasPubkeyMismatchPending(): boolean;
+    clearPubkeyMismatchPending(): void;
+    getPubkeyMismatchPending(): WarrenPubkeyMismatch | undefined;
+    setPubkeyMismatchPending(value?: WarrenPubkeyMismatch): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -1893,6 +1898,145 @@ export namespace WarrenStatus {
         obfuscationActive: boolean,
         failoverCount: number,
         lastFailoverAge?: google_protobuf_duration_pb.Duration.AsObject,
+        pubkeyMismatchPending?: WarrenPubkeyMismatch.AsObject,
+    }
+}
+
+export class WarrenPubkeyMismatch extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): WarrenPubkeyMismatch;
+    getPinnedPubkeyHex(): string;
+    setPinnedPubkeyHex(value: string): WarrenPubkeyMismatch;
+    getObservedPubkeyHex(): string;
+    setObservedPubkeyHex(value: string): WarrenPubkeyMismatch;
+    getCountryCode(): string;
+    setCountryCode(value: string): WarrenPubkeyMismatch;
+    getCity(): string;
+    setCity(value: string): WarrenPubkeyMismatch;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenPubkeyMismatch.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatch): WarrenPubkeyMismatch.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenPubkeyMismatch, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatch;
+    static deserializeBinaryFromReader(message: WarrenPubkeyMismatch, reader: jspb.BinaryReader): WarrenPubkeyMismatch;
+}
+
+export namespace WarrenPubkeyMismatch {
+    export type AsObject = {
+        exitIdHex: string,
+        pinnedPubkeyHex: string,
+        observedPubkeyHex: string,
+        countryCode: string,
+        city: string,
+    }
+}
+
+export class TrustNewExitKeyRequest extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): TrustNewExitKeyRequest;
+    getNewPubkeyHex(): string;
+    setNewPubkeyHex(value: string): TrustNewExitKeyRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): TrustNewExitKeyRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: TrustNewExitKeyRequest): TrustNewExitKeyRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: TrustNewExitKeyRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TrustNewExitKeyRequest;
+    static deserializeBinaryFromReader(message: TrustNewExitKeyRequest, reader: jspb.BinaryReader): TrustNewExitKeyRequest;
+}
+
+export namespace TrustNewExitKeyRequest {
+    export type AsObject = {
+        exitIdHex: string,
+        newPubkeyHex: string,
+    }
+}
+
+export class TrustNewExitKeyResponse extends jspb.Message { 
+    getResult(): TrustNewExitKeyResponse.Result;
+    setResult(value: TrustNewExitKeyResponse.Result): TrustNewExitKeyResponse;
+    getErrorMessage(): string;
+    setErrorMessage(value: string): TrustNewExitKeyResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): TrustNewExitKeyResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: TrustNewExitKeyResponse): TrustNewExitKeyResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: TrustNewExitKeyResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TrustNewExitKeyResponse;
+    static deserializeBinaryFromReader(message: TrustNewExitKeyResponse, reader: jspb.BinaryReader): TrustNewExitKeyResponse;
+}
+
+export namespace TrustNewExitKeyResponse {
+    export type AsObject = {
+        result: TrustNewExitKeyResponse.Result,
+        errorMessage: string,
+    }
+
+    export enum Result {
+    OK = 0,
+    EXIT_NOT_FOUND = 1,
+    PUBKEY_MISMATCH = 2,
+    IO_ERROR = 3,
+    }
+
+}
+
+export class ResetPinnedExitKeysResponse extends jspb.Message { 
+    getResetCount(): number;
+    setResetCount(value: number): ResetPinnedExitKeysResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ResetPinnedExitKeysResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ResetPinnedExitKeysResponse): ResetPinnedExitKeysResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ResetPinnedExitKeysResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ResetPinnedExitKeysResponse;
+    static deserializeBinaryFromReader(message: ResetPinnedExitKeysResponse, reader: jspb.BinaryReader): ResetPinnedExitKeysResponse;
+}
+
+export namespace ResetPinnedExitKeysResponse {
+    export type AsObject = {
+        resetCount: number,
+    }
+}
+
+export class ReportPubkeyMismatchRequest extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): ReportPubkeyMismatchRequest;
+    getOldPubkeyHex(): string;
+    setOldPubkeyHex(value: string): ReportPubkeyMismatchRequest;
+    getNewPubkeyHex(): string;
+    setNewPubkeyHex(value: string): ReportPubkeyMismatchRequest;
+    getCountryCode(): string;
+    setCountryCode(value: string): ReportPubkeyMismatchRequest;
+    getCity(): string;
+    setCity(value: string): ReportPubkeyMismatchRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ReportPubkeyMismatchRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ReportPubkeyMismatchRequest): ReportPubkeyMismatchRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ReportPubkeyMismatchRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ReportPubkeyMismatchRequest;
+    static deserializeBinaryFromReader(message: ReportPubkeyMismatchRequest, reader: jspb.BinaryReader): ReportPubkeyMismatchRequest;
+}
+
+export namespace ReportPubkeyMismatchRequest {
+    export type AsObject = {
+        exitIdHex: string,
+        oldPubkeyHex: string,
+        newPubkeyHex: string,
+        countryCode: string,
+        city: string,
     }
 }
 

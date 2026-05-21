@@ -369,6 +369,33 @@ pub enum DaemonCommand {
         ResponseTx<(), settings::Error>,
         mullvad_types::settings::WarrenNatPmpSettings,
     ),
+    /// Session H A.4: replace the pinned key for `exit_id_hex` with
+    /// `new_pubkey_hex` (user accepted a key rotation from the modal).
+    /// The daemon clears `WarrenStatusCache.pubkey_mismatch_pending`
+    /// on success so the modal unmounts.
+    TrustNewExitKey {
+        tx: oneshot::Sender<tunnel::TrustNewExitKeyOutcome>,
+        exit_id_hex: String,
+        new_pubkey_hex: String,
+    },
+    /// Session H A.4: clear the entire TOFU pin table. Returns the
+    /// number of dropped entries.
+    ResetPinnedExitKeys(oneshot::Sender<u32>),
+    /// Session H A.4: dismiss the pending mismatch flag without
+    /// changing the pinned key. The user stays disconnected; a
+    /// subsequent connect attempt would re-trigger the modal.
+    DismissPubkeyMismatch(oneshot::Sender<()>),
+    /// Session H A.4: best-effort POST to
+    /// `/v1/incidents/pubkey-mismatch`. The daemon clears the
+    /// mismatch flag regardless of the network outcome.
+    ReportPubkeyMismatch {
+        tx: oneshot::Sender<()>,
+        exit_id_hex: String,
+        old_pubkey_hex: String,
+        new_pubkey_hex: String,
+        country_code: String,
+        city: String,
+    },
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -578,6 +605,11 @@ pub(crate) enum InternalDaemonEvent {
     ExcludedPathsEvent(ExcludedPathsUpdate, oneshot::Sender<Result<(), Error>>),
     /// A network leak was detected.
     LeakDetected(LeakInfo),
+    /// Session H A.4: TOFU pubkey-pinning verify-hook event consumed by
+    /// the daemon main loop. Routes pin inserts / bumps / mismatches /
+    /// trust replacements / resets to the on-disk settings.json and
+    /// (for mismatches) to the live `WarrenStatusCache`.
+    WarrenPinUpdate(tunnel::WarrenPinUpdate),
 }
 
 #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
@@ -1233,6 +1265,27 @@ impl Daemon {
             let _ = param_gen_tx.unbounded_send(settings.tunnel_options.clone());
         });
 
+        // Session H A.4: wire the verify-hook channel into the daemon
+        // main loop. Every TOFU pin event (insert / bump / mismatch /
+        // trust / reset) is forwarded as an `InternalDaemonEvent` so
+        // the daemon's `handle_event` can persist it through
+        // `SettingsPersister::update` and (for mismatches) push it to
+        // the live `WarrenStatusCache`.
+        {
+            let (warren_pin_tx, mut warren_pin_rx) =
+                tokio::sync::mpsc::unbounded_channel::<tunnel::WarrenPinUpdate>();
+            parameters_generator
+                .set_warren_pin_update_tx(Some(warren_pin_tx))
+                .await;
+            let internal_event_tx_pin = internal_event_tx.clone();
+            tokio::spawn(async move {
+                while let Some(update) = warren_pin_rx.recv().await {
+                    let _ = internal_event_tx_pin
+                        .send(InternalDaemonEvent::WarrenPinUpdate(update));
+                }
+            });
+        }
+
         let param_gen_relay_settings = parameters_generator.clone();
         settings.register_change_listener(move |settings| {
             let settings = settings.clone();
@@ -1590,8 +1643,117 @@ impl Daemon {
                 log::warn!("{leak_info:?}");
                 self.handle_leak_event(leak_info)
             }
+            WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
         }
         should_stop
+    }
+
+    /// Session H A.4: route a verify-hook event to (a) the live
+    /// `WarrenStatusCache` so the UI modal can mount on mismatch and
+    /// (b) the on-disk settings.json so the TOFU pin table survives a
+    /// daemon restart. The fields on `Settings::warren_pinned_exit_pubkeys`
+    /// are the source of truth across restarts; the in-memory copy on
+    /// the parameters generator is rehydrated through the existing
+    /// `set_settings` change listener.
+    async fn handle_warren_pin_update(&mut self, update: tunnel::WarrenPinUpdate) {
+        use mullvad_types::settings::WarrenPinnedExitPubkey;
+        match update {
+            tunnel::WarrenPinUpdate::PinNewExit {
+                exit_id_hex,
+                pubkey_hex,
+                country_code,
+                city,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        s.warren_pinned_exit_pubkeys.entries.insert(
+                            exit_id_hex.clone(),
+                            WarrenPinnedExitPubkey {
+                                pubkey_hex,
+                                first_seen_unix: now_unix,
+                                last_seen_unix: now_unix,
+                                country_code,
+                                city,
+                            },
+                        );
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren A.4 pin-insert persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::BumpLastSeen {
+                exit_id_hex,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        if let Some(entry) =
+                            s.warren_pinned_exit_pubkeys.entries.get_mut(&exit_id_hex)
+                        {
+                            entry.last_seen_unix = now_unix;
+                        }
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren A.4 last_seen bump persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::Mismatch {
+                exit_id_hex,
+                pinned_pubkey_hex,
+                observed_pubkey_hex,
+                country_code,
+                city,
+            } => {
+                // No settings write: a mismatch deliberately does NOT
+                // mutate the pinned key (that's a Trust event).
+                self.warren_status_cache.set_pubkey_mismatch_pending(
+                    crate::warren_status::PubkeyMismatchPending {
+                        exit_id_hex,
+                        pinned_pubkey_hex,
+                        observed_pubkey_hex,
+                        country_code,
+                        city,
+                    },
+                );
+            }
+            tunnel::WarrenPinUpdate::TrustReplaceKey {
+                exit_id_hex,
+                new_pubkey_hex,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        if let Some(entry) =
+                            s.warren_pinned_exit_pubkeys.entries.get_mut(&exit_id_hex)
+                        {
+                            entry.pubkey_hex = new_pubkey_hex;
+                            entry.first_seen_unix = now_unix;
+                            entry.last_seen_unix = now_unix;
+                        }
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren A.4 trust-replace persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::ResetAll => {
+                let result = self
+                    .settings
+                    .update(|s| {
+                        s.warren_pinned_exit_pubkeys.entries.clear();
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren A.4 reset-all persist failed: {e}");
+                }
+            }
+        }
     }
 
     async fn handle_tunnel_state_transition(
@@ -1893,6 +2055,31 @@ impl Daemon {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
             SetNatPmpSettings(tx, settings) => self.on_set_nat_pmp_settings(tx, settings).await,
+            TrustNewExitKey {
+                tx,
+                exit_id_hex,
+                new_pubkey_hex,
+            } => self.on_trust_new_exit_key(tx, exit_id_hex, new_pubkey_hex).await,
+            ResetPinnedExitKeys(tx) => self.on_reset_pinned_exit_keys(tx).await,
+            DismissPubkeyMismatch(tx) => self.on_dismiss_pubkey_mismatch(tx),
+            ReportPubkeyMismatch {
+                tx,
+                exit_id_hex,
+                old_pubkey_hex,
+                new_pubkey_hex,
+                country_code,
+                city,
+            } => {
+                self.on_report_pubkey_mismatch(
+                    tx,
+                    exit_id_hex,
+                    old_pubkey_hex,
+                    new_pubkey_hex,
+                    country_code,
+                    city,
+                )
+                .await
+            }
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -3127,6 +3314,108 @@ impl Daemon {
             log::info!("Warren NAT-PMP persisted + pushed live: {display_value}");
         }
         Self::oneshot_send(tx, result, "set_nat_pmp_settings response");
+    }
+
+    /// Session H A.4: forward the trust event to the parameters
+    /// generator (replaces the in-memory pin) AND clear the
+    /// WarrenStatus.pubkey_mismatch_pending flag so the UI modal
+    /// unmounts. Persistence to settings.json is wired through the
+    /// existing `warren_pin_update_tx` consumer task (Session H.4).
+    async fn on_trust_new_exit_key(
+        &mut self,
+        tx: oneshot::Sender<tunnel::TrustNewExitKeyOutcome>,
+        exit_id_hex: String,
+        new_pubkey_hex: String,
+    ) {
+        let outcome = self
+            .parameters_generator
+            .trust_new_exit_key(&exit_id_hex, &new_pubkey_hex)
+            .await;
+        if matches!(outcome, tunnel::TrustNewExitKeyOutcome::Ok) {
+            self.warren_status_cache.clear_pubkey_mismatch_pending();
+            log::info!(
+                "warren A.4: TOFU pin updated for exit_id={exit_id_hex} (user-trusted rotation)"
+            );
+        }
+        Self::oneshot_send(tx, outcome, "trust_new_exit_key response");
+    }
+
+    /// Session H A.4: clears the entire in-memory pin table and the
+    /// pending mismatch flag, then signals the persistence consumer
+    /// to wipe the on-disk copy.
+    async fn on_reset_pinned_exit_keys(&mut self, tx: oneshot::Sender<u32>) {
+        let count = self.parameters_generator.reset_pinned_exit_keys().await;
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        log::info!("warren A.4: pin table reset, dropped {count} entries");
+        Self::oneshot_send(tx, count, "reset_pinned_exit_keys response");
+    }
+
+    /// Session H A.4: clears the pending mismatch flag without
+    /// touching the pinned key (= the user picked Reject from the
+    /// modal). A subsequent connect would re-emit the mismatch.
+    fn on_dismiss_pubkey_mismatch(&mut self, tx: oneshot::Sender<()>) {
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        log::info!("warren A.4: pubkey-mismatch dismissed by user");
+        Self::oneshot_send(tx, (), "dismiss_pubkey_mismatch response");
+    }
+
+    /// Session H A.4: forensic report to warren-api. Best-effort:
+    /// the mismatch flag is cleared regardless of the network
+    /// outcome so the UI does not stay stuck on a transient
+    /// network failure.
+    async fn on_report_pubkey_mismatch(
+        &mut self,
+        tx: oneshot::Sender<()>,
+        exit_id_hex: String,
+        old_pubkey_hex: String,
+        new_pubkey_hex: String,
+        country_code: String,
+        city: String,
+    ) {
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        if let (Some(api_url), Some(signing_key)) = (
+            self.warren_api_url_for_incidents(),
+            self.parameters_generator
+                .warren_signing_key_for_incidents()
+                .await,
+        ) {
+            tokio::spawn(async move {
+                let client = warren_api_client::WarrenApiClient::new(api_url, signing_key);
+                let req = warren_api_client::IncidentPubkeyMismatchRequest {
+                    exit_id_hex,
+                    old_pubkey_hex,
+                    new_pubkey_hex,
+                    country_code,
+                    city,
+                    ts_unix: warren_config::unix_now(),
+                };
+                if let Err(e) = client.report_pubkey_mismatch(&req).await {
+                    log::debug!(
+                        "pubkey-mismatch report best-effort POST failed: {e} (telemetry only)"
+                    );
+                }
+            });
+        } else {
+            log::debug!(
+                "pubkey-mismatch report suppressed: no warren_api_url or signing key configured"
+            );
+        }
+        Self::oneshot_send(tx, (), "report_pubkey_mismatch response");
+    }
+
+    /// Accessor for the warren-api URL used by Session H A.4 forensic
+    /// reports. Mirrors the resolution path used by
+    /// `warren_api_url_for_params` at boot.
+    fn warren_api_url_for_incidents(&self) -> Option<String> {
+        let from_env = std::env::var("WARREN_API_URL").ok().filter(|s| !s.is_empty());
+        if from_env.is_some() {
+            return from_env;
+        }
+        let url = self.settings.warren_api_url.clone();
+        if let Some(url) = url.filter(|s| !s.is_empty()) {
+            return Some(url);
+        }
+        Some(warren_config::WARREN_API_URL.to_owned())
     }
 
     async fn on_set_show_beta_releases(

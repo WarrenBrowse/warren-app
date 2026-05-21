@@ -62,6 +62,8 @@ pub fn assemble_for_attempt(
     Ok(WarrenTunnelParameters {
         exit_addr: selection.endpoint_addr,
         exit_id: selection.exit_id,
+        country_code: selection.country_code,
+        city: selection.city,
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
@@ -140,6 +142,8 @@ pub fn assemble_failover_for_attempt(
     Ok(WarrenTunnelParameters {
         exit_addr: alternative.endpoint_addr().clone(),
         exit_id: alternative.exit_id(),
+        country_code: alternative.location().country_code().to_owned(),
+        city: alternative.location().city().to_owned(),
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,

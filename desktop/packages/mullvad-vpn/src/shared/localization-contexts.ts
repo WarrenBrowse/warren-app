@@ -43,6 +43,7 @@ export type LocalizationContexts =
   | 'lwo-settings-view'
   | 'warren-multi-hop-view'
   | 'warren-status-view'
+  | 'warren-pubkey-warning'
   | 'port-forwarding-view'
   | 'warren-onboarding'
   | 'custom-list-feature'

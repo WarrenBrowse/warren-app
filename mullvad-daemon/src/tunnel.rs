@@ -169,13 +169,12 @@ struct InnerParametersGenerator {
 }
 
 /// Update message produced by the Session A.4 verify hook and
-/// consumed by the daemon-side settings flush task. Fields are
-/// `#[allow(dead_code)]` because the persistence task ships in a
-/// follow-up commit; the in-memory pin table is already authoritative
-/// within one daemon lifetime so the security-critical mismatch gate
-/// works regardless of whether the channel has a subscriber.
+/// consumed by the daemon-side settings flush task. The in-memory pin
+/// table is authoritative within one daemon lifetime: the channel
+/// only needs a subscriber to make the table survive daemon restarts
+/// (settings.json persistence) and to surface mismatch events to the
+/// UI through the WarrenStatusCache.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum WarrenPinUpdate {
     /// First connect to this `exit_id` ever: insert the observed
     /// pubkey as the TOFU baseline.
@@ -193,6 +192,41 @@ pub enum WarrenPinUpdate {
         exit_id_hex: String,
         now_unix: u64,
     },
+    /// Session H A.4: verify hook refused a connect because the
+    /// observed Ed25519 pubkey diverges from the locally pinned
+    /// baseline. The consumer relays this to the UI through the
+    /// WarrenStatusCache (sets `pubkey_mismatch_pending`).
+    Mismatch {
+        exit_id_hex: String,
+        pinned_pubkey_hex: String,
+        observed_pubkey_hex: String,
+        country_code: String,
+        city: String,
+    },
+    /// Session H A.4: user accepted a key rotation through the gRPC
+    /// `TrustNewExitKey` RPC. Replaces the pinned key and bumps
+    /// `first_seen` so the audit trail records the explicit trust
+    /// event.
+    TrustReplaceKey {
+        exit_id_hex: String,
+        new_pubkey_hex: String,
+        now_unix: u64,
+    },
+    /// Session H A.4: user invoked `ResetPinnedExitKeys` from the UI.
+    /// The consumer drops every entry from the table and persists
+    /// the empty state to disk.
+    ResetAll,
+}
+
+/// Session H A.4: outcome of the gRPC `TrustNewExitKey` RPC. Mirrors
+/// the proto enum so the management interface layer can map 1:1.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TrustNewExitKeyOutcome {
+    /// Pin successfully updated.
+    Ok,
+    /// No pin exists for the supplied `exit_id`. The UI should show a
+    /// "no such exit" hint rather than silently retrying.
+    ExitNotFound,
 }
 
 impl ParametersGenerator {
@@ -240,22 +274,64 @@ impl ParametersGenerator {
     }
 
     /// Wire the channel that forwards Session A.4 verify-hook events
-    /// (TOFU pin insert, last-seen bump) to the daemon-side
-    /// settings flush task. Called once at boot; subsequent calls
-    /// override the previous sender. Pass `None` to detach (e.g. in
-    /// tests).
-    #[expect(
-        dead_code,
-        reason = "Session E.4 ships the daemon-side verify hook only; the daemon \
-                  lib.rs wiring that consumes this channel lands in a follow-up commit. \
-                  Keeping the setter public so that follow-up does not have to \
-                  re-traverse this file."
-    )]
+    /// (TOFU pin insert, last-seen bump, mismatch, trust, reset) to
+    /// the daemon-side settings flush task. Called once at boot;
+    /// subsequent calls override the previous sender. Pass `None`
+    /// to detach (e.g. in tests).
     pub async fn set_warren_pin_update_tx(
         &self,
         tx: Option<tokio::sync::mpsc::UnboundedSender<WarrenPinUpdate>>,
     ) {
         self.0.lock().await.warren_pin_update_tx = tx;
+    }
+
+    /// Session H A.4: outcome of `trust_new_exit_key` consumed by the
+    /// gRPC handler. The detailed variants let the UI surface a
+    /// matching error message ("exit not found", "no pin to update").
+    #[allow(dead_code)]
+    pub async fn trust_new_exit_key(
+        &self,
+        exit_id_hex: &str,
+        new_pubkey_hex: &str,
+    ) -> TrustNewExitKeyOutcome {
+        let mut inner = self.0.lock().await;
+        let Some(existing) = inner.warren_pinned_exit_pubkeys.entries.get_mut(exit_id_hex)
+        else {
+            return TrustNewExitKeyOutcome::ExitNotFound;
+        };
+        let now_unix = warren_config::unix_now();
+        existing.pubkey_hex = new_pubkey_hex.to_owned();
+        existing.first_seen_unix = now_unix;
+        existing.last_seen_unix = now_unix;
+        if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
+            let _ = tx.send(WarrenPinUpdate::TrustReplaceKey {
+                exit_id_hex: exit_id_hex.to_owned(),
+                new_pubkey_hex: new_pubkey_hex.to_owned(),
+                now_unix,
+            });
+        }
+        TrustNewExitKeyOutcome::Ok
+    }
+
+    /// Session H A.4: borrow the signing key used by the daemon for
+    /// signing forensic incident reports. Returns `None` if Warren
+    /// mode is off / the BIP39 identity was never bootstrapped.
+    pub async fn warren_signing_key_for_incidents(&self) -> Option<SigningKey> {
+        self.0.lock().await.warren_signing_key.clone()
+    }
+
+    /// Session H A.4: clear every entry from the in-memory pin table.
+    /// Returns the number of entries that were dropped so the gRPC
+    /// handler can surface "Cleared N pinned keys" to the UI.
+    #[allow(dead_code)]
+    pub async fn reset_pinned_exit_keys(&self) -> u32 {
+        let mut inner = self.0.lock().await;
+        let count = inner.warren_pinned_exit_pubkeys.entries.len() as u32;
+        inner.warren_pinned_exit_pubkeys.entries.clear();
+        if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
+            let _ = tx.send(WarrenPinUpdate::ResetAll);
+        }
+        count
     }
 
     /// Replaces the user-supplied bypass CIDR list. The next call to
@@ -387,28 +463,77 @@ impl ParametersGenerator {
             )
         };
         let mut params = assemble_result?;
-        // Session A.4: TOFU pubkey-pinning verify hook. Keyed on the
-        // 16-byte stable `exit_id` so a legitimate Ed25519 rotation
-        // under the same `exit_id` still flags as a mismatch (the
-        // pinned pubkey diverges from the observed one); a wholesale
-        // new exit deployment surfaces as a fresh `exit_id` and gets
-        // a clean TOFU pin. The hook never runs on the multi-hop
-        // path: the multi-hop tunnel terminates at the exit through
-        // a relay so the daemon does not observe the exit pubkey on
-        // the QUIC TLS RPK handshake the same way; pinning there
-        // belongs to a future cycle.
-        if params.multi_hop.is_none() {
-            let exit_id_hex = params.exit_id.to_hex();
-            let observed_pubkey_hex = hex::encode(params.exit_addr.id.as_bytes());
+        // Session A.4 + Session H.5: TOFU pubkey-pinning verify hook,
+        // active on both the single-hop and the multi-hop paths.
+        //
+        // Pin key: the 16-byte stable `exit_id` (cf. Session E). A
+        // legitimate Ed25519 rotation under the same `exit_id` flags
+        // as a mismatch (pinned pubkey diverges from the observed
+        // one); a wholesale new exit deployment surfaces as a fresh
+        // `exit_id` and gets a clean TOFU pin.
+        //
+        // Pin value: the Ed25519 TLS RPK identity of the exit.
+        //  - Single-hop: `params.exit_addr.id` (the TLS RPK observed
+        //    on the wire of the direct QUIC handshake).
+        //  - Multi-hop: `params.multi_hop.exit.exit_ed25519_pubkey`
+        //    (the TLS RPK the relay forwards QUIC to; verified
+        //    against the operationally-signed exit descriptor). The
+        //    `exit_id` comes from the same descriptor so a single
+        //    table covers both paths.
+        //
+        // Session H.5 doctrine: pin by exit-only (not by entry+exit
+        // tuple) - entry rotation is operator-authorised and the
+        // entry pubkey only secures the cleartext header, not the
+        // payload encryption. Adversarial entry swap is a low-severity
+        // event compared to exit substitution.
+        let (exit_id_hex, observed_pubkey_hex) =
+            if let Some(multi_hop) = params.multi_hop.as_ref() {
+                let exit_id = talpid_warren_tunnel::RelayExitId::from_bytes(
+                    *multi_hop.exit.exit_id.as_bytes(),
+                );
+                (
+                    exit_id.to_hex(),
+                    hex::encode(multi_hop.exit.exit_ed25519_pubkey),
+                )
+            } else {
+                (
+                    params.exit_id.to_hex(),
+                    hex::encode(params.exit_addr.id.as_bytes()),
+                )
+            };
+        {
             let now_unix = warren_config::unix_now();
             let pin_outcome = self::warren_pin_verify(
                 &mut inner.warren_pinned_exit_pubkeys,
                 &exit_id_hex,
                 &observed_pubkey_hex,
+                &params.country_code,
+                &params.city,
                 now_unix,
             );
             match pin_outcome {
                 WarrenPinOutcome::Mismatch { pinned } => {
+                    // Fire-and-forget on the channel so the daemon
+                    // consumer can route the event to the UI through
+                    // the WarrenStatusCache. The channel may be
+                    // unsubscribed in tests or pre-H.4 builds; the
+                    // security gate works regardless.
+                    if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
+                        let _ = tx.send(WarrenPinUpdate::Mismatch {
+                            exit_id_hex: exit_id_hex.clone(),
+                            pinned_pubkey_hex: pinned.clone(),
+                            observed_pubkey_hex: observed_pubkey_hex.clone(),
+                            // Session H.6: forensic context threaded
+                            // through `WarrenSelection`. Single-hop
+                            // pulls from `params.country_code/city`;
+                            // multi-hop currently lacks descriptor-
+                            // side location so the field is left
+                            // empty (caveat documented in
+                            // session-h-report.md).
+                            country_code: params.country_code.clone(),
+                            city: params.city.clone(),
+                        });
+                    }
                     return Err(Error::WarrenPubkeyPinMismatch {
                         exit_id_hex,
                         pinned,
@@ -423,13 +548,14 @@ impl ParametersGenerator {
                         let _ = tx.send(WarrenPinUpdate::PinNewExit {
                             exit_id_hex,
                             pubkey_hex: observed_pubkey_hex,
-                            // Forensic context: empty for now since
-                            // the selected `WarrenRelay` is not
-                            // threaded through assemble_*. Filling
-                            // these in is a small follow-up (carry
-                            // location into WarrenSelection too).
-                            country_code: String::new(),
-                            city: String::new(),
+                            // Session H.6: forensic context threaded
+                            // through `WarrenSelection`. The TOFU
+                            // pin row now carries the user-readable
+                            // location (no GeoIP lookup needed
+                            // because the relay-list already ships
+                            // operator-curated geo).
+                            country_code: params.country_code.clone(),
+                            city: params.city.clone(),
                             now_unix,
                         });
                     }
@@ -820,10 +946,18 @@ enum WarrenPinOutcome {
 /// exit's Ed25519 pubkey carried by `WarrenExitAddr.id`, also in
 /// lowercase hex. `now_unix` is the wall-clock seconds the caller
 /// captured at the start of the connection attempt.
+///
+/// Session H.6: `country_code` and `city` are the forensic snapshot
+/// captured at TOFU time. On a `FirstSeen` insert they are recorded
+/// alongside the pubkey so future mismatch reports can surface a
+/// user-readable location. On `Match` and `Mismatch` they are
+/// ignored (the existing pin keeps its original snapshot).
 fn warren_pin_verify(
     table: &mut mullvad_types::settings::WarrenPinnedExitPubkeys,
     exit_id_hex: &str,
     observed_pubkey_hex: &str,
+    country_code: &str,
+    city: &str,
     now_unix: u64,
 ) -> WarrenPinOutcome {
     match table.entries.get_mut(exit_id_hex) {
@@ -834,8 +968,8 @@ fn warren_pin_verify(
                     pubkey_hex: observed_pubkey_hex.to_owned(),
                     first_seen_unix: now_unix,
                     last_seen_unix: now_unix,
-                    country_code: String::new(),
-                    city: String::new(),
+                    country_code: country_code.to_owned(),
+                    city: city.to_owned(),
                 },
             );
             WarrenPinOutcome::FirstSeen
@@ -856,11 +990,30 @@ mod warren_pin_tests {
 
     use super::{WarrenPinOutcome, warren_pin_verify};
 
+    // Convenience wrapper for tests that do not exercise the H.6
+    // forensic surface: empty country/city, matching the
+    // pre-H.6 verify-hook contract.
+    fn pv(
+        table: &mut WarrenPinnedExitPubkeys,
+        exit_id_hex: &str,
+        observed_pubkey_hex: &str,
+        now_unix: u64,
+    ) -> WarrenPinOutcome {
+        warren_pin_verify(
+            table,
+            exit_id_hex,
+            observed_pubkey_hex,
+            "",
+            "",
+            now_unix,
+        )
+    }
+
     #[test]
     fn first_seen_inserts_tofu_baseline() {
         let mut table = WarrenPinnedExitPubkeys::default();
         let outcome =
-            warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         let entry = table.entries.get(&"aa".repeat(16)).expect("inserted");
         assert_eq!(entry.pubkey_hex, "bb".repeat(32));
@@ -871,9 +1024,9 @@ mod warren_pin_tests {
     #[test]
     fn second_visit_with_same_pubkey_bumps_last_seen() {
         let mut table = WarrenPinnedExitPubkeys::default();
-        warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
         let outcome =
-            warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 250);
+            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 250);
         assert_eq!(outcome, WarrenPinOutcome::Match);
         let entry = table.entries.get(&"aa".repeat(16)).expect("still pinned");
         assert_eq!(entry.first_seen_unix, 100, "first_seen frozen at TOFU time");
@@ -887,9 +1040,9 @@ mod warren_pin_tests {
         // connect by returning Mismatch carrying the pinned hex so
         // the daemon can plumb both values into the gRPC event.
         let mut table = WarrenPinnedExitPubkeys::default();
-        warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
         let outcome =
-            warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
+            pv(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
         match outcome {
             WarrenPinOutcome::Mismatch { pinned } => {
                 assert_eq!(pinned, "bb".repeat(32));
@@ -909,9 +1062,9 @@ mod warren_pin_tests {
         // the existing pin for a different exit_id stays untouched
         // and the new exit_id gets its own TOFU baseline.
         let mut table = WarrenPinnedExitPubkeys::default();
-        warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
         let outcome =
-            warren_pin_verify(&mut table, "cd".repeat(16).as_str(), "ef".repeat(32).as_str(), 200);
+            pv(&mut table, "cd".repeat(16).as_str(), "ef".repeat(32).as_str(), 200);
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         assert_eq!(table.entries.len(), 2, "two independent pins");
     }
@@ -923,11 +1076,11 @@ mod warren_pin_tests {
         // same exit_id should TOFU-pin a fresh entry rather than
         // emit Mismatch.
         let mut table = WarrenPinnedExitPubkeys::default();
-        warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
         // Simulate the daemon receiving a reset.
         table.entries.clear();
         let outcome =
-            warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
+            pv(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         assert_eq!(table.entries.len(), 1);
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
@@ -936,18 +1089,108 @@ mod warren_pin_tests {
 
     #[test]
     fn first_seen_propagates_country_city_when_blank_then_keeps_disk_values() {
-        // The verify hook itself does not have the country/city in
-        // hand (they are not threaded through `WarrenSelection`
-        // today, follow-up). It inserts empty strings; a future
-        // settings flush enriches the row with the actual location.
-        // The test locks the contract: empty strings on insert, the
-        // pubkey_hex / first_seen / last_seen carry the operational
-        // payload.
+        // Backwards-compat: when the caller does not have the
+        // forensic context in hand (the `pv` test helper passes
+        // empty strings), the inserted row carries empty country/city
+        // strings. This locks the contract for legacy call sites and
+        // multi-hop paths where the descriptor lacks geo info.
         let mut table = WarrenPinnedExitPubkeys::default();
-        warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 42);
+        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 42);
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
         assert_eq!(entry.country_code, "");
         assert_eq!(entry.city, "");
+    }
+
+    #[test]
+    fn first_seen_records_forensic_country_city_from_caller() {
+        // Session H.6: the verify hook now receives the forensic
+        // snapshot from `WarrenSelection::country_code/city` (threaded
+        // through `WarrenTunnelParameters`). The TOFU insert records
+        // it alongside the pubkey so a later mismatch report can
+        // surface "FR/Paris" instead of an empty fingerprint.
+        let mut table = WarrenPinnedExitPubkeys::default();
+        let outcome = warren_pin_verify(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            "fr",
+            "Paris",
+            100,
+        );
+        assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
+        let entry = table.entries.get(&"aa".repeat(16)).unwrap();
+        assert_eq!(entry.country_code, "fr");
+        assert_eq!(entry.city, "Paris");
+    }
+
+    #[test]
+    fn match_does_not_overwrite_existing_forensic_fields() {
+        // A reconnect that hits the same pubkey must NOT alter the
+        // forensic snapshot pinned at TOFU time (the location is
+        // frozen at first-seen). This protects against the case
+        // where a downstream caller passes empty country/city on a
+        // reconnect (multi-hop today) and the pin's original
+        // location would otherwise be wiped.
+        let mut table = WarrenPinnedExitPubkeys::default();
+        warren_pin_verify(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            "se",
+            "Stockholm",
+            10,
+        );
+        let outcome = warren_pin_verify(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            "",
+            "",
+            42,
+        );
+        assert_eq!(outcome, WarrenPinOutcome::Match);
+        let entry = table.entries.get(&"aa".repeat(16)).unwrap();
+        assert_eq!(entry.country_code, "se", "TOFU forensic snapshot preserved");
+        assert_eq!(entry.city, "Stockholm");
+        assert_eq!(entry.last_seen_unix, 42, "last_seen bumped");
+    }
+
+    #[test]
+    fn multi_hop_path_pins_against_exit_descriptor_id_and_ed25519() {
+        // Session H.5: the multi-hop path uses the descriptor's
+        // `exit_id` (operator-signed) and `exit_ed25519_pubkey` (TLS
+        // RPK identity advertised by the operational signer) as the
+        // pin key/value. Since the table is keyed by `exit_id_hex`
+        // string, the verify hook does not care whether the caller
+        // sourced the value from single-hop `params.exit_id` or
+        // multi-hop `params.multi_hop.exit.exit_id` - both map to the
+        // same lookup. This test locks the cross-path equivalence.
+        let mut table = WarrenPinnedExitPubkeys::default();
+        let exit_id_hex = "aa".repeat(16);
+        let single_hop_pubkey = "bb".repeat(32);
+        // First connect on the multi-hop path establishes the pin.
+        pv(&mut table, &exit_id_hex, &single_hop_pubkey, 100);
+        // Same exit reached via single-hop (operator switched the
+        // user's path) MUST match the existing pin: the trust anchor
+        // identity is the same Ed25519 key advertised in both the
+        // signed single-hop `WarrenRelay` and the multi-hop
+        // `ExitDescriptorSigned`. The verify hook treats them as
+        // interchangeable, just like a desktop and a phone client
+        // would.
+        let outcome = pv(&mut table, &exit_id_hex, &single_hop_pubkey, 200);
+        assert_eq!(outcome, WarrenPinOutcome::Match);
+        // An operator key rotation under the same `exit_id` flags
+        // as a mismatch on EITHER path - that's the whole point of
+        // pinning by exit-only (the brief's recommendation), not by
+        // (entry, exit) tuple.
+        let rotated_pubkey = "cc".repeat(32);
+        let outcome_rot = pv(&mut table, &exit_id_hex, &rotated_pubkey, 300);
+        match outcome_rot {
+            WarrenPinOutcome::Mismatch { pinned } => {
+                assert_eq!(pinned, single_hop_pubkey);
+            }
+            other => panic!("expected Mismatch, got {other:?}"),
+        }
     }
 
     #[test]
@@ -968,7 +1211,7 @@ mod warren_pin_tests {
             },
         );
         let outcome =
-            warren_pin_verify(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 80);
+            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 80);
         assert_eq!(outcome, WarrenPinOutcome::Match);
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
         assert_eq!(entry.country_code, "fr");

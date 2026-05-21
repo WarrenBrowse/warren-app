@@ -105,6 +105,29 @@ service ManagementService {
   // this for live UI updates without polling.
   rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
 
+  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+  // verify hook refuses connects when the served Ed25519 pubkey for
+  // a known `exit_id` differs from the locally pinned baseline; the
+  // following RPCs let the user resolve the mismatch from the UI
+  // modal without editing settings.json by hand.
+  //
+  // - TrustNewExitKey: replace the pinned key with the newly-observed
+  //   one and resume connecting. Use case: legitimate key rotation
+  //   announced by the operator.
+  // - ResetPinnedExitKeys: clear the entire pin table. Use case: the
+  //   user switches identity / device and wants a fresh TOFU baseline.
+  // - DismissPubkeyMismatch: keep the existing pin, clear the
+  //   pending-mismatch flag from WarrenStatus so the modal unmounts.
+  //   The daemon stays disconnected; reconnecting would re-trigger
+  //   the modal until the user picks Trust or Reset.
+  // - ReportPubkeyMismatch: best-effort POST to
+  //   `/v1/incidents/pubkey-mismatch`. No PII (cf. the field set).
+  //   The mismatch flag is cleared regardless of the network outcome.
+  rpc TrustNewExitKey(TrustNewExitKeyRequest) returns (TrustNewExitKeyResponse) {}
+  rpc ResetPinnedExitKeys(google.protobuf.Empty) returns (ResetPinnedExitKeysResponse) {}
+  rpc DismissPubkeyMismatch(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc ReportPubkeyMismatch(ReportPubkeyMismatchRequest) returns (google.protobuf.Empty) {}
+
   // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
   // differentiator since Mullvad / IVPN dropped port-forwarding in
   // 2023. OFF by default; when ON the daemon spawns a refresh loop
@@ -637,12 +660,82 @@ message WarrenMultiHopSettings {
 // M5.B.2: failover_count + last_failover_age expose the multi-exit
 // auto-failover (`assemble_failover_for_attempt`) so the UI can toast
 // the user when their exit is swapped after an outage.
+// Session H A.4: pubkey_mismatch_pending surfaces a TOFU verify-hook
+// refusal so the renderer can mount the `WarrenPubKeyWarning` modal.
 message WarrenStatus {
   uint32 reconnect_count = 1;
   google.protobuf.Duration last_reconnect_age = 2;
   bool obfuscation_active = 3;
   uint32 failover_count = 4;
   google.protobuf.Duration last_failover_age = 5;
+  // Absent (= null on the wire) in the steady state; populated when
+  // the daemon-side verify hook refused a connect because the
+  // observed Ed25519 pubkey differs from the locally pinned baseline.
+  WarrenPubkeyMismatch pubkey_mismatch_pending = 6;
+}
+
+// Session H A.4: forensic payload surfaced alongside a TOFU pubkey
+// mismatch event. All fields are operator metadata (no PII): the
+// `exit_id` is public via the signed relay-list, the pubkeys are
+// public Ed25519 verifying keys, and country / city are the
+// forensic snapshot pinned at TOFU time.
+message WarrenPubkeyMismatch {
+  // 32-character lower-case hex of the 16-byte stable exit_id.
+  string exit_id_hex = 1;
+  // 64-character lower-case hex of the previously pinned Ed25519
+  // verifying key.
+  string pinned_pubkey_hex = 2;
+  // 64-character lower-case hex of the currently observed key.
+  string observed_pubkey_hex = 3;
+  // ISO 3166 alpha-2 country code captured at TOFU time. Empty
+  // string when the pin pre-dates the H.6 forensic enrichment.
+  string country_code = 4;
+  // City label captured at TOFU time. Empty string when the pin
+  // pre-dates the H.6 forensic enrichment.
+  string city = 5;
+}
+
+// Session H A.4: gRPC request for the TrustNewExitKey RPC. The
+// daemon replaces the pinned `pubkey_hex` for the given
+// `exit_id_hex` with the supplied `new_pubkey_hex`, bumping
+// `first_seen` to "now" so the audit trail records the explicit
+// user trust event. Returns one of the
+// `TrustNewExitKeyResponse.Result` enum values.
+message TrustNewExitKeyRequest {
+  string exit_id_hex = 1;
+  string new_pubkey_hex = 2;
+}
+
+message TrustNewExitKeyResponse {
+  enum Result {
+    OK = 0;
+    EXIT_NOT_FOUND = 1;
+    PUBKEY_MISMATCH = 2;
+    IO_ERROR = 3;
+  }
+  Result result = 1;
+  // Free-form error message when `result == IO_ERROR`. Empty for
+  // the other result variants.
+  string error_message = 2;
+}
+
+// Session H A.4: gRPC response for the ResetPinnedExitKeys RPC.
+// `reset_count` is the number of pin entries that were dropped.
+message ResetPinnedExitKeysResponse {
+  uint32 reset_count = 1;
+}
+
+// Session H A.4: gRPC request for the ReportPubkeyMismatch RPC.
+// The daemon stamps the request, signs it with the BIP39-derived
+// signing key, and posts to `/v1/incidents/pubkey-mismatch`
+// best-effort. No PII; the payload mirrors the modal forensic
+// fields.
+message ReportPubkeyMismatchRequest {
+  string exit_id_hex = 1;
+  string old_pubkey_hex = 2;
+  string new_pubkey_hex = 3;
+  string country_code = 4;
+  string city = 5;
 }
 
 // Warren NAT-PMP port-forwarding settings persisted on disk and pushed

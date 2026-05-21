@@ -146,6 +146,8 @@ mod tests {
         WarrenTunnelParameters {
             exit_addr: addr,
             exit_id: RelayExitId::from_bytes([7u8; 16]),
+            country_code: String::new(),
+            city: String::new(),
             signing_key: SigningKey::from_bytes(&[9u8; 32]),
             n_connections: 1,
             features: 0,

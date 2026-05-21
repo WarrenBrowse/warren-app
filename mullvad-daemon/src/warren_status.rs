@@ -50,6 +50,29 @@ pub enum NatPmpStateSnapshot {
     },
 }
 
+/// Session H A.4 surface: forensic payload pushed to the UI when the
+/// TOFU verify hook refuses a connect. All fields are operator
+/// metadata (`exit_id` and the Ed25519 pubkeys are public via the
+/// signed relay-list; the location is the snapshot pinned at TOFU
+/// time). The renderer mounts the `WarrenPubKeyWarning` modal while
+/// `WarrenStatusSnapshot::pubkey_mismatch_pending` is `Some`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PubkeyMismatchPending {
+    /// 32-character lower-case hex of the 16-byte stable `exit_id`.
+    pub exit_id_hex: String,
+    /// 64-character lower-case hex of the previously pinned Ed25519
+    /// verifying key.
+    pub pinned_pubkey_hex: String,
+    /// 64-character lower-case hex of the newly observed key.
+    pub observed_pubkey_hex: String,
+    /// ISO 3166 alpha-2 country code captured at TOFU time. Empty
+    /// when the pin pre-dates the H.6 forensic enrichment.
+    pub country_code: String,
+    /// City label captured at TOFU time. Empty when the pin pre-dates
+    /// the H.6 forensic enrichment.
+    pub city: String,
+}
+
 /// Snapshot returned by `GetWarrenStatus` rpc. Trivially cloneable so
 /// the watch channel can broadcast it without locking issues.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -78,6 +101,13 @@ pub struct WarrenStatusSnapshot {
     /// recorded in the current session. Matches `last_reconnect_age`
     /// semantics (computed against the calling thread's clock).
     pub last_failover_age: Option<Duration>,
+    /// Session H A.4: `None` (steady state) when no TOFU mismatch is
+    /// pending review; `Some` while the verify hook refused a connect
+    /// because the observed Ed25519 pubkey differs from the pinned
+    /// baseline. The UI mounts the `WarrenPubKeyWarning` modal until
+    /// the user picks Trust / Reject / Report and the daemon clears
+    /// the flag.
+    pub pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -91,6 +121,7 @@ impl Default for WarrenStatusSnapshot {
             nat_pmp: NatPmpStateSnapshot::Disabled,
             failover_count: 0,
             last_failover_age: None,
+            pubkey_mismatch_pending: None,
         }
     }
 }
@@ -106,6 +137,7 @@ struct InternalState {
     nat_pmp: NatPmpStateSnapshot,
     failover_count: u32,
     last_failover_at: Option<Instant>,
+    pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
 }
 
 impl Default for InternalState {
@@ -117,6 +149,7 @@ impl Default for InternalState {
             nat_pmp: NatPmpStateSnapshot::Disabled,
             failover_count: 0,
             last_failover_at: None,
+            pubkey_mismatch_pending: None,
         }
     }
 }
@@ -157,14 +190,7 @@ impl WarrenStatusCache {
             .state
             .read()
             .expect("warren_status state lock poisoned");
-        WarrenStatusSnapshot {
-            reconnect_count: inner.reconnect_count,
-            last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
-            obfuscation_active: inner.obfuscation_active,
-            nat_pmp: inner.nat_pmp.clone(),
-            failover_count: inner.failover_count,
-            last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
-        }
+        Self::snapshot_of(&inner)
     }
 
     /// Build a [`WarrenStatusSnapshot`] from the internal state. Used
@@ -178,6 +204,7 @@ impl WarrenStatusCache {
             nat_pmp: inner.nat_pmp.clone(),
             failover_count: inner.failover_count,
             last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
+            pubkey_mismatch_pending: inner.pubkey_mismatch_pending.clone(),
         }
     }
 
@@ -283,6 +310,41 @@ impl WarrenStatusCache {
                 return;
             }
             inner.nat_pmp = NatPmpStateSnapshot::Disabled;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Session H A.4: surface a TOFU pubkey-mismatch event to the UI.
+    /// Mounts the `WarrenPubKeyWarning` modal on the next watch tick.
+    /// Idempotent: passing the same payload again does not re-push.
+    pub fn set_pubkey_mismatch_pending(&self, pending: PubkeyMismatchPending) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.pubkey_mismatch_pending.as_ref() == Some(&pending) {
+                return;
+            }
+            inner.pubkey_mismatch_pending = Some(pending);
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Session H A.4: clear the pending mismatch flag (= the user
+    /// picked Trust / Reject / Report from the modal). Idempotent.
+    pub fn clear_pubkey_mismatch_pending(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.pubkey_mismatch_pending.is_none() {
+                return;
+            }
+            inner.pubkey_mismatch_pending = None;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -560,6 +622,60 @@ mod tests {
         assert!(rx.has_changed().unwrap_or(false));
         let s = rx.borrow_and_update();
         assert_eq!(s.failover_count, 1);
+    }
+
+    // --- Session H A.4 pubkey-mismatch surface --------------------
+
+    fn make_mismatch() -> PubkeyMismatchPending {
+        PubkeyMismatchPending {
+            exit_id_hex: "aa".repeat(16),
+            pinned_pubkey_hex: "bb".repeat(32),
+            observed_pubkey_hex: "cc".repeat(32),
+            country_code: "fr".to_owned(),
+            city: "Paris".to_owned(),
+        }
+    }
+
+    #[test]
+    fn default_snapshot_has_no_pubkey_mismatch_pending() {
+        assert!(WarrenStatusSnapshot::default().pubkey_mismatch_pending.is_none());
+    }
+
+    #[test]
+    fn set_pubkey_mismatch_pending_pushes_payload_and_clears_on_clear() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        let mismatch = make_mismatch();
+        cache.set_pubkey_mismatch_pending(mismatch.clone());
+        assert!(rx.has_changed().unwrap_or(false));
+        let snap_set = rx.borrow_and_update().clone();
+        assert_eq!(snap_set.pubkey_mismatch_pending.as_ref(), Some(&mismatch));
+        cache.clear_pubkey_mismatch_pending();
+        assert!(rx.has_changed().unwrap_or(false));
+        let snap_clear = rx.borrow_and_update().clone();
+        assert!(snap_clear.pubkey_mismatch_pending.is_none());
+    }
+
+    #[test]
+    fn set_pubkey_mismatch_pending_idempotent_same_payload() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        let mismatch = make_mismatch();
+        cache.set_pubkey_mismatch_pending(mismatch.clone());
+        rx.borrow_and_update();
+        cache.set_pubkey_mismatch_pending(mismatch);
+        assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    #[test]
+    fn clear_pubkey_mismatch_pending_idempotent_when_already_clear() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.clear_pubkey_mismatch_pending();
+        assert!(!rx.has_changed().unwrap_or(false));
     }
 
     #[test]

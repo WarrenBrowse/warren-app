@@ -115,6 +115,19 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetDaitaDirectOnly((value) => {
       return this.daemonRpc.setDaitaDirectOnly(value);
     });
+    // Session H A.4 UI follow-up: pubkey-pinning user actions.
+    IpcMainEventChannel.settings.handleTrustNewExitKey((input) =>
+      this.daemonRpc.trustNewExitKey(input),
+    );
+    IpcMainEventChannel.settings.handleResetPinnedExitKeys(() =>
+      this.daemonRpc.resetPinnedExitKeys(),
+    );
+    IpcMainEventChannel.settings.handleDismissPubkeyMismatch(() =>
+      this.daemonRpc.dismissPubkeyMismatch(),
+    );
+    IpcMainEventChannel.settings.handleReportPubkeyMismatch((mismatch) =>
+      this.daemonRpc.reportPubkeyMismatch(mismatch),
+    );
 
     IpcMainEventChannel.guiSettings.handleSetEnableSystemNotifications((flag: boolean) => {
       this.guiSettings.enableSystemNotifications = flag;

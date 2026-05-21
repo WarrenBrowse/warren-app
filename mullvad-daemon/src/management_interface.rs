@@ -124,6 +124,18 @@ fn warren_status_snapshot_to_proto(
         obfuscation_active: snap.obfuscation_active,
         failover_count: snap.failover_count,
         last_failover_age: snap.last_failover_age.map(duration_to_proto),
+        // Session H A.4: surface the pending mismatch to the UI.
+        // `None` (steady state) -> proto field unset -> renderer
+        // sees `pubkeyMismatchPending: null`.
+        pubkey_mismatch_pending: snap.pubkey_mismatch_pending.map(|m| {
+            types::WarrenPubkeyMismatch {
+                exit_id_hex: m.exit_id_hex,
+                pinned_pubkey_hex: m.pinned_pubkey_hex,
+                observed_pubkey_hex: m.observed_pubkey_hex,
+                country_code: m.country_code,
+                city: m.city,
+            }
+        }),
     }
 }
 
@@ -518,6 +530,81 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::NatPmpStatusUpdatesStream
         ))
+    }
+
+    // Session H A.4: TOFU pubkey-pinning user actions.
+    async fn trust_new_exit_key(
+        &self,
+        request: Request<types::TrustNewExitKeyRequest>,
+    ) -> ServiceResult<types::TrustNewExitKeyResponse> {
+        let body = request.into_inner();
+        log::debug!(
+            "trust_new_exit_key(exit_id={}, new_pubkey={})",
+            body.exit_id_hex,
+            body.new_pubkey_hex
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::TrustNewExitKey {
+            tx,
+            exit_id_hex: body.exit_id_hex,
+            new_pubkey_hex: body.new_pubkey_hex,
+        })?;
+        let outcome = self.wait_for_result(rx).await?;
+        let response = match outcome {
+            crate::tunnel::TrustNewExitKeyOutcome::Ok => types::TrustNewExitKeyResponse {
+                result: types::trust_new_exit_key_response::Result::Ok as i32,
+                error_message: String::new(),
+            },
+            crate::tunnel::TrustNewExitKeyOutcome::ExitNotFound => types::TrustNewExitKeyResponse {
+                result: types::trust_new_exit_key_response::Result::ExitNotFound as i32,
+                error_message: String::new(),
+            },
+        };
+        Ok(Response::new(response))
+    }
+
+    async fn reset_pinned_exit_keys(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::ResetPinnedExitKeysResponse> {
+        log::debug!("reset_pinned_exit_keys");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::ResetPinnedExitKeys(tx))?;
+        let reset_count = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::ResetPinnedExitKeysResponse {
+            reset_count,
+        }))
+    }
+
+    async fn dismiss_pubkey_mismatch(&self, _: Request<()>) -> ServiceResult<()> {
+        log::debug!("dismiss_pubkey_mismatch");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::DismissPubkeyMismatch(tx))?;
+        self.wait_for_result(rx).await?;
+        Ok(Response::new(()))
+    }
+
+    async fn report_pubkey_mismatch(
+        &self,
+        request: Request<types::ReportPubkeyMismatchRequest>,
+    ) -> ServiceResult<()> {
+        let body = request.into_inner();
+        log::debug!(
+            "report_pubkey_mismatch(exit_id={}, country={})",
+            body.exit_id_hex,
+            body.country_code
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::ReportPubkeyMismatch {
+            tx,
+            exit_id_hex: body.exit_id_hex,
+            old_pubkey_hex: body.old_pubkey_hex,
+            new_pubkey_hex: body.new_pubkey_hex,
+            country_code: body.country_code,
+            city: body.city,
+        })?;
+        self.wait_for_result(rx).await?;
+        Ok(Response::new(()))
     }
 
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {

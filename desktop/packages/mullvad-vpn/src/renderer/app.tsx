@@ -35,6 +35,7 @@ import {
   TunnelState,
   WarrenMultiHopSettings,
   WarrenPubKey,
+  WarrenPubkeyMismatch,
 } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
@@ -55,6 +56,7 @@ import Lang from './components/Lang';
 import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
+import { WarrenPubKeyWarning } from './features/warren-pubkey-warning';
 import { Theme } from './lib/components';
 import { getNavigationBase } from './lib/functions/navigation-base';
 import History from './lib/history';
@@ -405,6 +407,7 @@ export default class AppRenderer {
                             <AppRouter />
                           </MotionConfig>
                         </KeyboardNavigation>
+                        <WarrenPubKeyWarning />
                         {window.env.platform === 'darwin' && <MacOsScrollbarDetection />}
                       </ModalContainer>
                     </ErrorBoundary>
@@ -663,6 +666,38 @@ export default class AppRenderer {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenMultiHop(settings);
     actions.settings.updateWarrenMultiHop(settings);
+  };
+
+  // Session H A.4: trust the new pubkey for the given `exitIdHex`,
+  // replacing the pinned baseline. The daemon clears
+  // `WarrenStatus.pubkeyMismatchPending` on success so the modal
+  // unmounts automatically through the existing WarrenStatusUpdates
+  // stream.
+  public trustNewExitKey = async (input: { exitIdHex: string; newPubkeyHex: string }) => {
+    return IpcRendererEventChannel.settings.trustNewExitKey(input);
+  };
+
+  // Clear the entire TOFU pin table. Returns the number of entries
+  // that were cleared so the caller can confirm the operation in the
+  // UI ("Cleared N pinned keys").
+  public resetPinnedExitKeys = async () => {
+    return IpcRendererEventChannel.settings.resetPinnedExitKeys();
+  };
+
+  // Dismiss the pending pubkey mismatch without trusting the new key.
+  // Daemon clears `pubkeyMismatchPending` so the modal unmounts; the
+  // existing pin baseline survives untouched.
+  public dismissPubkeyMismatch = async () => {
+    return IpcRendererEventChannel.settings.dismissPubkeyMismatch();
+  };
+
+  // Forensic best-effort report posted to warren-api. The renderer
+  // forwards the pending mismatch payload (exit_id, old + new pubkey,
+  // forensic context) verbatim; the daemon stamps the timestamp and
+  // signs the request. Daemon clears `pubkeyMismatchPending`
+  // regardless of the network outcome (no retry surface).
+  public reportPubkeyMismatch = async (mismatch: WarrenPubkeyMismatch) => {
+    return IpcRendererEventChannel.settings.reportPubkeyMismatch(mismatch);
   };
 
   // Warren NAT-PMP port-forwarding settings. No daemon restart needed

@@ -578,6 +578,28 @@ export interface WarrenFailoverSettings {
   enabled: boolean;
 }
 
+// Session A.4 TOFU pubkey-pinning mismatch event surfaced to the UI.
+// When the daemon-side verify hook detects that the Ed25519 pubkey
+// served for a known `exit_id` differs from the locally pinned value,
+// it sets this field so the renderer can mount the
+// `WarrenPubKeyWarning` modal. `null` (the steady state) means no
+// mismatch is pending review.
+export interface WarrenPubkeyMismatch {
+  // 32-character lower-case hex (16 raw bytes) of the stable
+  // `exit_id` for which the pubkey changed.
+  exitIdHex: string;
+  // 64-character lower-case hex (32 raw bytes) of the previously
+  // pinned Ed25519 verifying key.
+  pinnedPubkeyHex: string;
+  // 64-character lower-case hex (32 raw bytes) of the currently
+  // observed key from the signed relay-list.
+  observedPubkeyHex: string;
+  // Forensic snapshot of the pin's location at first-seen time.
+  // Empty string when the pin pre-dates the H.6 enrichment.
+  countryCode: string;
+  city: string;
+}
+
 // Live Warren tunnel status snapshot. Pushed by the daemon via the
 // `warrenStatusUpdates` IPC channel and read on demand via
 // `getWarrenStatus`.
@@ -594,7 +616,24 @@ export interface WarrenStatus {
   // Time since the last failover in milliseconds. `null` if no
   // failover has been observed yet.
   lastFailoverAgeMs: number | null;
+  // Session A.4 TOFU pubkey-pinning: `null` (steady state) when no
+  // mismatch is pending review, populated when the daemon-side
+  // verify hook refused a connect because the served Ed25519
+  // pubkey differs from the locally pinned value. The renderer
+  // mounts `WarrenPubKeyWarning` while this field is non-null and
+  // dismisses it after the user picks Trust / Reject / Report.
+  pubkeyMismatchPending: WarrenPubkeyMismatch | null;
 }
+
+// Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either
+// updates the pinned key in the in-memory table (`ok`) or surfaces
+// the precise reason the operation failed so the UI can show a
+// matching error message.
+export type TrustNewExitKeyOutcome =
+  | { result: 'ok' }
+  | { result: 'exit-not-found' }
+  | { result: 'pubkey-mismatch' }
+  | { result: 'io-error'; errorMessage: string };
 
 export type SplitTunnelSettings = {
   enableExclusions: boolean;

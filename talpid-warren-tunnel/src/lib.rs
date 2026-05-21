@@ -101,6 +101,17 @@ pub struct WarrenTunnelParameters {
     /// `exit_id`) starts a fresh TOFU pin.
     pub exit_id: RelayExitId,
 
+    /// Session H.6: forensic snapshot of the exit's location at
+    /// selection time. Propagated to the Session A.4 TOFU pin row so
+    /// the modal + `/v1/incidents/pubkey-mismatch` report carry the
+    /// user-readable location. Empty string when Warren-mode is off
+    /// or the relay list lacked geo information.
+    pub country_code: String,
+    /// Session H.6: free-form city label associated with the
+    /// selected exit. Empty string when no geo information is
+    /// available.
+    pub city: String,
+
     /// Client Ed25519 signing key (derived from the user's BIP39
     /// mnemonic). `talpid-warren-tunnel` never generates an ephemeral
     /// identity: the identity must be stable so reconnects re-attach
@@ -1905,6 +1916,8 @@ mod tests {
         let exit_id = WarrenPubkey::from_bytes([1u8; 32]);
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
+            country_code: String::new(),
+            city: String::new(),
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 2,
@@ -1936,6 +1949,8 @@ mod tests {
         // by default = breaks every existing deployment.
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
+            country_code: String::new(),
+            city: String::new(),
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([1u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,
@@ -1989,6 +2004,8 @@ mod tests {
         };
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
+            country_code: String::new(),
+            city: String::new(),
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 1,
@@ -2032,6 +2049,8 @@ mod tests {
         };
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
+            country_code: String::new(),
+            city: String::new(),
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([0u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,

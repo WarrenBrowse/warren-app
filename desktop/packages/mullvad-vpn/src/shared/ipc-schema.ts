@@ -29,8 +29,10 @@ import {
   RelaySettings,
   TunnelState,
   VoucherResponse,
+  TrustNewExitKeyOutcome,
   WarrenFailoverSettings,
   WarrenMultiHopSettings,
+  WarrenPubkeyMismatch,
   WarrenPubKey,
   WarrenStatus,
 } from './daemon-rpc-types';
@@ -247,6 +249,23 @@ export const ipcSchema = {
     setEnableDaita: invoke<boolean, void>(),
     setDaitaDirectOnly: invoke<boolean, void>(),
     setEnableRecents: invoke<boolean, void>(),
+    // Session H A.4: trust the new pubkey served for the
+    // `exitIdHex` so future connects to that exit accept it as the
+    // baseline. The daemon clears the pending mismatch from
+    // WarrenStatus on success.
+    trustNewExitKey: invoke<{ exitIdHex: string; newPubkeyHex: string }, TrustNewExitKeyOutcome>(),
+    // Clear the entire TOFU pin table. Used by Settings -> "Reset
+    // pinned exit keys" when the user wants a fresh baseline (e.g.
+    // after switching identity / device).
+    resetPinnedExitKeys: invoke<void, number>(),
+    // Dismiss the pending pubkey mismatch without trusting the new
+    // key. Daemon clears `pubkeyMismatchPending` on WarrenStatus so
+    // the modal unmounts; the existing pin is preserved.
+    dismissPubkeyMismatch: invoke<void, void>(),
+    // Post a forensic report about the mismatch to warren-api
+    // (best-effort, no PII). Daemon clears `pubkeyMismatchPending`
+    // regardless of the report outcome.
+    reportPubkeyMismatch: invoke<WarrenPubkeyMismatch, void>(),
   },
   guiSettings: {
     '': notifyRenderer<IGuiSettingsState>(),

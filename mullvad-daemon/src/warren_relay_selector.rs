@@ -58,6 +58,15 @@ pub struct WarrenSelection {
 
     /// Candidate addresses of the exit (UDP IPv4/IPv6).
     pub endpoint_addr: WarrenExitAddr,
+
+    /// Session H.6: forensic snapshot threaded through to the TOFU
+    /// pin so the renderer modal + `/v1/incidents/pubkey-mismatch`
+    /// report carry the user-readable location, not just the pubkey
+    /// fingerprint. ISO 3166 alpha-2 code, lower case (matches the
+    /// signed relay-list `Location::country_code`).
+    pub country_code: String,
+    /// Session H.6: free-form city label captured at selection time.
+    pub city: String,
 }
 
 impl From<&WarrenRelay> for WarrenSelection {
@@ -66,6 +75,8 @@ impl From<&WarrenRelay> for WarrenSelection {
             endpoint_id: relay.endpoint_id(),
             exit_id: relay.exit_id(),
             endpoint_addr: relay.endpoint_addr().clone(),
+            country_code: relay.location().country_code().to_owned(),
+            city: relay.location().city().to_owned(),
         }
     }
 }

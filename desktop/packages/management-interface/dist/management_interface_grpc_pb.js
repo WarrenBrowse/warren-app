@@ -415,6 +415,28 @@ function deserialize_mullvad_daemon_management_interface_RelaySettings(buffer_ar
   return management_interface_pb.RelaySettings.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ReportPubkeyMismatchRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ReportPubkeyMismatchRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest(buffer_arg) {
+  return management_interface_pb.ReportPubkeyMismatchRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse(arg) {
+  if (!(arg instanceof management_interface_pb.ResetPinnedExitKeysResponse)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ResetPinnedExitKeysResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse(buffer_arg) {
+  return management_interface_pb.ResetPinnedExitKeysResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_Rollout(arg) {
   if (!(arg instanceof management_interface_pb.Rollout)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.Rollout');
@@ -457,6 +479,28 @@ function serialize_mullvad_daemon_management_interface_SplitFilterMigration(arg)
 
 function deserialize_mullvad_daemon_management_interface_SplitFilterMigration(buffer_arg) {
   return management_interface_pb.SplitFilterMigration.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest(arg) {
+  if (!(arg instanceof management_interface_pb.TrustNewExitKeyRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.TrustNewExitKeyRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest(buffer_arg) {
+  return management_interface_pb.TrustNewExitKeyRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse(arg) {
+  if (!(arg instanceof management_interface_pb.TrustNewExitKeyResponse)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.TrustNewExitKeyResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse(buffer_arg) {
+  return management_interface_pb.TrustNewExitKeyResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_mullvad_daemon_management_interface_TunnelState(arg) {
@@ -1024,6 +1068,68 @@ warrenStatusUpdates: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+// verify hook refuses connects when the served Ed25519 pubkey for
+// a known `exit_id` differs from the locally pinned baseline; the
+// following RPCs let the user resolve the mismatch from the UI
+// modal without editing settings.json by hand.
+//
+// - TrustNewExitKey: replace the pinned key with the newly-observed
+//   one and resume connecting. Use case: legitimate key rotation
+//   announced by the operator.
+// - ResetPinnedExitKeys: clear the entire pin table. Use case: the
+//   user switches identity / device and wants a fresh TOFU baseline.
+// - DismissPubkeyMismatch: keep the existing pin, clear the
+//   pending-mismatch flag from WarrenStatus so the modal unmounts.
+//   The daemon stays disconnected; reconnecting would re-trigger
+//   the modal until the user picks Trust or Reset.
+// - ReportPubkeyMismatch: best-effort POST to
+//   `/v1/incidents/pubkey-mismatch`. No PII (cf. the field set).
+//   The mismatch flag is cleared regardless of the network outcome.
+trustNewExitKey: {
+    path: '/mullvad_daemon.management_interface.ManagementService/TrustNewExitKey',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.TrustNewExitKeyRequest,
+    responseType: management_interface_pb.TrustNewExitKeyResponse,
+    requestSerialize: serialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse,
+  },
+  resetPinnedExitKeys: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ResetPinnedExitKeys',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.ResetPinnedExitKeysResponse,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse,
+  },
+  dismissPubkeyMismatch: {
+    path: '/mullvad_daemon.management_interface.ManagementService/DismissPubkeyMismatch',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  reportPubkeyMismatch: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ReportPubkeyMismatch',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ReportPubkeyMismatchRequest,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
   },
   // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
 // differentiator since Mullvad / IVPN dropped port-forwarding in

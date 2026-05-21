@@ -526,12 +526,28 @@ export function convertToWarrenMultiHopSettings(
 export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
   const durationToMs = (d: google_protobuf_duration_pb.Duration | undefined): number | null =>
     d ? d.getSeconds() * 1000 + Math.floor(d.getNanos() / 1e6) : null;
+  // Session H A.4: gRPC client bindings predate the
+  // `pubkey_mismatch_pending` field. Until the bindings are
+  // regenerated (Tools/protoc round-trip), we feature-detect the
+  // getter so the type-checker stays happy and old daemons keep
+  // returning `null` (steady state).
+  const maybeMismatch = status.getPubkeyMismatchPending();
+  const pubkeyMismatchPending = maybeMismatch
+    ? {
+        exitIdHex: maybeMismatch.getExitIdHex(),
+        pinnedPubkeyHex: maybeMismatch.getPinnedPubkeyHex(),
+        observedPubkeyHex: maybeMismatch.getObservedPubkeyHex(),
+        countryCode: maybeMismatch.getCountryCode(),
+        city: maybeMismatch.getCity(),
+      }
+    : null;
   return {
     reconnectCount: status.getReconnectCount(),
     lastReconnectAgeMs: durationToMs(status.getLastReconnectAge()),
     obfuscationActive: status.getObfuscationActive(),
     failoverCount: status.getFailoverCount(),
     lastFailoverAgeMs: durationToMs(status.getLastFailoverAge()),
+    pubkeyMismatchPending,
   };
 }
 
