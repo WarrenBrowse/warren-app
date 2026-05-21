@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -99,7 +100,9 @@ import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
+import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
 import com.warrenbrowse.vpn.lib.common.util.removeHtmlTags
 import com.warrenbrowse.vpn.lib.map.AnimatedMap
@@ -133,6 +136,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.util.visible
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
 private val SCREEN_HEIGHT_THRESHOLD = 700.dp
@@ -172,10 +176,26 @@ private fun PreviewAccountScreen(
 @Composable
 fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilityScope) {
     val connectViewModel: ConnectViewModel = koinViewModel()
+    val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+
+    val warrenScope = rememberCoroutineScope()
+    // D.4 step 11: route the user-initiated Connect button through the
+    // Warren Quinn use-case. The legacy `connectViewModel::onConnectClick`
+    // proxied to a dead daemon and is no longer wired here. The Quinn
+    // path requires a FragmentActivity host for BiometricPrompt; the
+    // app's MainActivity extends FragmentActivity (D.5 step 3).
+    val onWarrenConnectClick: () -> Unit = {
+        (context as? FragmentActivity)?.let { activity ->
+            warrenScope.launch {
+                runCatching { warrenConnect.connect(activity) }
+                    .onFailure { e -> co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" } }
+            }
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -266,7 +286,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
 
     LocalResultStore.current.consumeResult<SelectLocationNavResult> { result ->
         if (result.connect) {
-            connectViewModel.onConnectClick()
+            onWarrenConnectClick()
         }
     }
 
@@ -276,7 +296,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             snackbarHostState = snackbarHostState,
             onDisconnectClick = connectViewModel::onDisconnectClick,
             onReconnectClick = connectViewModel::onReconnectClick,
-            onConnectClick = connectViewModel::onConnectClick,
+            onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
