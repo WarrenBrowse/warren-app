@@ -93,7 +93,7 @@ val appModule = module {
 
     // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
     // service dispatch for Warren Quinn connect.
-    single { WarrenTunnelConfigBuilder(localSettings = get()) }
+    single { WarrenTunnelConfigBuilder(localSettings = get(), relayCatalog = get()) }
     single {
         WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
     } bind WarrenQuinnConnectInvoker::class

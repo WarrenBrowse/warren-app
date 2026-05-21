@@ -80,7 +80,10 @@ class WarrenConnectUseCase(
             return Outcome.Failure(e.message ?: "wallet unlock failed")
         }
 
-        val config = configBuilder.build(state.pubkey)
+        val config = configBuilder.build(state.pubkey) ?: run {
+            Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
+            return Outcome.Failure("No relay available")
+        }
         val configJson = Json.encodeToString(config)
 
         MnemonicCache.put(mnemonic)

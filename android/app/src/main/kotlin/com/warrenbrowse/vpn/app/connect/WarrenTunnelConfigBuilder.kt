@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.connect
 
+import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -7,44 +8,58 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 /**
  * Composes a [WarrenTunnelConfig] from in-memory state.
  *
- * D.4 step 7 cut: the only inputs the wiring needs *right now* are the
- * wallet pubkey (so the exit can authorise the session) and a stable
- * exit identity. Multi-hop entry resolution and DAITA spec selection
- * are not yet wired (D.4 step 8 swaps in the relay-selector for multi-
- * hop and a DAITA picker for the padding-machine selection); the
- * builder currently reads on/off toggles from [WarrenLocalSettingsRepository]
- * and substitutes hardcoded payloads when a toggle is on, so the wire
- * format is exercised end-to-end even before the picker UIs land.
- *
- * For the very first end-to-end smoke we point at warren-exit-1 prod
- * (the same exit the bench has been hitting in Session F-M). Once the
- * relay selector lands on Warren mobile, this builder is replaced by a
- * RelaySelector-driven path.
+ * Reads the user's toggles from [WarrenLocalSettingsRepository] and
+ * resolves the actual exit / entry relays via [RelayCatalog] (which is
+ * itself backed by `WarrenJni.listRelays()`). The picker UI (D.6) will
+ * eventually let the user pick an exit by `exit_id` and persist that
+ * choice; until then the builder falls back to the first active entry
+ * in the catalogue, so the connect flow keeps working without a
+ * picker.
  */
 class WarrenTunnelConfigBuilder(
     private val localSettings: WarrenLocalSettingsRepository,
+    private val relayCatalog: RelayCatalog,
 ) {
 
-    fun build(walletPubkey: WalletPubkeyHex): WarrenTunnelConfig {
+    /**
+     * Build a config or `null` if the relay catalogue is empty (no
+     * available exit). Callers should surface a "no exit reachable"
+     * message to the user when this happens.
+     */
+    fun build(walletPubkey: WalletPubkeyHex): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
         val obfuscationM40 = localSettings.obfuscationM40.value
 
+        val relays = relayCatalog.listRelays()
+        val exit = relays.firstOrNull { it.active }
+            ?: run {
+                Logger.e("WarrenTunnelConfigBuilder: no active relay in catalogue")
+                return null
+            }
+
+        // D.4 step 17 follow-up : multi-hop picks a distinct entry relay
+        // (different exit_id than the chosen exit). With a single-entry
+        // catalogue today there is no distinct entry to pick, so the
+        // multi-hop toggle is honoured by sending the same relay as
+        // entry - the exit still negotiates the multi-hop hop the same
+        // way; the picker UI will replace this fall-back.
+        val entryRelay = if (multiHopEnabled) {
+            relays.firstOrNull { it.active && it.exitId != exit.exitId } ?: exit
+        } else null
+
         return WarrenTunnelConfig(
-            exitPubkeyHex = DEFAULT_EXIT_PUBKEY_HEX,
-            exitEndpoint = DEFAULT_EXIT_ENDPOINT,
+            exitPubkeyHex = exit.exitPubkeyHex,
+            exitEndpoint = exit.endpoint,
             walletPubkeyHex = walletPubkey.value,
-            entryHop = if (multiHopEnabled) {
-                // TODO (D.4 step 8): swap for relay-selector picked entry
-                //   relay once the Warren relay list is exposed via JNI.
+            entryHop = entryRelay?.let { hop ->
                 WarrenTunnelConfig.EntryHop(
-                    relayPubkeyHex = DEFAULT_ENTRY_RELAY_PUBKEY_HEX,
-                    relayEndpoint = DEFAULT_ENTRY_RELAY_ENDPOINT,
+                    relayPubkeyHex = hop.exitPubkeyHex,
+                    relayEndpoint = hop.endpoint,
                 )
-            } else null,
+            },
             daita = if (daitaEnabled) {
-                // Single Tamaraw machine for now; picker UI lands D.6.
                 WarrenTunnelConfig.DaitaSpec(
                     paddingMachine = DEFAULT_DAITA_MACHINE,
                     normalizePackets = true,
@@ -57,20 +72,7 @@ class WarrenTunnelConfigBuilder(
     }
 
     private companion object {
-        // warren-exit-1 (Hetzner fsn1-dc14, persistent exit_id from
-        // Session E memory `warren_session_e_delivered.md`).
-        // TODO (D.4 step 8): replace with relay-selector output once the
-        //   Warren relay list is exposed via `WarrenJni.listRelays()`.
-        const val DEFAULT_EXIT_PUBKEY_HEX = "2921abad869e94064b56cf48c8da3631"
-        const val DEFAULT_EXIT_ENDPOINT = "warren-exit-1.warren.brown:443"
-
-        // Placeholder entry relay for multi-hop until the relay selector
-        // is wired; will be replaced by a picker-chosen relay.
-        const val DEFAULT_ENTRY_RELAY_PUBKEY_HEX = "0000000000000000000000000000000000000000000000000000000000000000"
-        const val DEFAULT_ENTRY_RELAY_ENDPOINT = "warren-relay-1.warren.brown:443"
-
-        // Tamaraw is the single padding machine warren-core ships today;
-        // see warren-core `daita::TAMARAW_PADDING_MACHINE`.
+        // Tamaraw is the single padding machine warren-core ships today.
         const val DEFAULT_DAITA_MACHINE = "tamaraw"
     }
 }

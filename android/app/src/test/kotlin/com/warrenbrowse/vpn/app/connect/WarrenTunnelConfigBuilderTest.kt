@@ -16,6 +16,16 @@ class WarrenTunnelConfigBuilderTest {
 
     private val pubkey = WalletPubkeyHex("a".repeat(64))
 
+    private val sampleRelay = RelayInfo(
+        exitId = "2921abad869e94064b56cf48c8da3631",
+        exitPubkeyHex = "2921abad869e94064b56cf48c8da3631",
+        endpoint = "warren-exit-1.warren.brown:443",
+        country = "DE",
+        city = "Falkenstein",
+        active = true,
+        weight = 100,
+    )
+
     private fun mockRepo(
         daita: Boolean = false,
         natPmp: Boolean = false,
@@ -30,22 +40,29 @@ class WarrenTunnelConfigBuilderTest {
         return repo
     }
 
+    private fun mockCatalog(relays: List<RelayInfo> = listOf(sampleRelay)): RelayCatalog {
+        val catalog: RelayCatalog = mockk()
+        every { catalog.listRelays() } returns relays
+        return catalog
+    }
+
     @Test
     fun `default config has no entry hop and no daita`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo())
-        val config = builder.build(pubkey)
+        val builder = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog())
+        val config = builder.build(pubkey)!!
 
         assertNull(config.entryHop)
         assertNull(config.daita)
         assertFalse(config.natPmpEnabled)
         assertFalse(config.obfuscationM40)
         assertEquals(pubkey.value, config.walletPubkeyHex)
+        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
     }
 
     @Test
     fun `daita on injects a Tamaraw spec`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(daita = true))
-        val config = builder.build(pubkey)
+        val builder = WarrenTunnelConfigBuilder(mockRepo(daita = true), mockCatalog())
+        val config = builder.build(pubkey)!!
 
         assertNotNull(config.daita)
         assertEquals("tamaraw", config.daita?.paddingMachine)
@@ -54,8 +71,8 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `multi-hop on injects an entry hop`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(multiHop = true))
-        val config = builder.build(pubkey)
+        val builder = WarrenTunnelConfigBuilder(mockRepo(multiHop = true), mockCatalog())
+        val config = builder.build(pubkey)!!
 
         assertNotNull(config.entryHop)
         assertTrue(config.entryHop?.relayEndpoint?.isNotEmpty() == true)
@@ -63,24 +80,31 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `nat pmp toggle flows through`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(natPmp = true))
-        val config = builder.build(pubkey)
+        val builder = WarrenTunnelConfigBuilder(mockRepo(natPmp = true), mockCatalog())
+        val config = builder.build(pubkey)!!
         assertTrue(config.natPmpEnabled)
     }
 
     @Test
     fun `obfuscation toggle flows through`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(obfuscation = true))
-        val config = builder.build(pubkey)
+        val builder = WarrenTunnelConfigBuilder(mockRepo(obfuscation = true), mockCatalog())
+        val config = builder.build(pubkey)!!
         assertTrue(config.obfuscationM40)
+    }
+
+    @Test
+    fun `empty catalogue yields null config`() {
+        val builder = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog(emptyList()))
+        assertNull(builder.build(pubkey))
     }
 
     @Test
     fun `all flags on produces a fully-populated config`() {
         val builder = WarrenTunnelConfigBuilder(
-            mockRepo(daita = true, natPmp = true, multiHop = true, obfuscation = true)
+            mockRepo(daita = true, natPmp = true, multiHop = true, obfuscation = true),
+            mockCatalog(),
         )
-        val config = builder.build(pubkey)
+        val config = builder.build(pubkey)!!
 
         assertNotNull(config.entryHop)
         assertNotNull(config.daita)
