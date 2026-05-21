@@ -39,7 +39,7 @@ pub unsafe extern "C" fn mullvad_ios_get_addresses(
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };
@@ -85,7 +85,7 @@ pub unsafe extern "C" fn mullvad_ios_api_addrs_available(
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };
@@ -160,7 +160,7 @@ pub unsafe extern "C" fn mullvad_ios_get_relays(
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };

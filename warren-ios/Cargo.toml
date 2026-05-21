@@ -17,20 +17,21 @@ hyper-util = { workspace = true }
 libc = "0.2"
 log = { workspace = true }
 mockito = { workspace = true }
+# Mullvad API client retained transitionally for legacy account-number flows
+# in `src/api_client/`. To be replaced by `warren-api-client` (path-dep on
+# warren-core via the Warren workspace) in the C.3 deep-work follow-up.
 mullvad-api = { path = "../mullvad-api", default-features = false }
 mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-logging = { path = "../mullvad-logging" }
 mullvad-types = { path = "../mullvad-types" }
 shadowsocks = { workspace = true }
 talpid-future = { path = "../talpid-future" }
-talpid-tunnel-config-client = { path = "../talpid-tunnel-config-client" }
 talpid-types = { path = "../talpid-types" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
 tower = { workspace = true }
 tracing = "0.1"
 tracing-subscriber = { workspace = true }
-tunnel-obfuscation = { path = "../tunnel-obfuscation" }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
 cbindgen = { version = "0.28.0", default-features = false }

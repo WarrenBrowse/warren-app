@@ -40,7 +40,7 @@ pub unsafe extern "C" fn mullvad_ios_init_storekit_payment(
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };
@@ -114,7 +114,7 @@ pub unsafe extern "C" fn mullvad_ios_check_storekit_payment(
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };

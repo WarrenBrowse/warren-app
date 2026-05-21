@@ -5,11 +5,23 @@ use std::ffi::CStr;
 use std::sync::OnceLock;
 use tokio::runtime::{Builder, Handle, Runtime};
 
+// Warren-side FFI modules (skeletons; implementations land in Session C.3.deep
+// follow-up once the warren-tunnel / warren-identity / warren-multihop /
+// warren-natpmp-client integration is wired through Swift wrappers).
+mod warren_multihop_ffi;
+mod warren_natpmp_ffi;
+mod warren_tunnel_ffi;
+mod warren_wallet_ffi;
+
+// Upstream Mullvad API client retained transitionally. Each call site here
+// still calls into `mullvad-api` (account number flows, device management,
+// problem reports, StoreKit). Migrating those flows to `warren-api-client`
+// is a dedicated follow-up (~16 source files): the Warren wallet auth uses
+// `X-Warren-*` canonical-message signatures (see warren-core/crates/warren-
+// identity::auth), which is a separate flow from Mullvad's account-number
+// token model.
 mod api_client;
-mod ephemeral_peer_proxy;
 mod logging;
-pub mod tunnel_obfuscator_proxy;
-mod wireguard_key;
 
 #[repr(C)]
 pub struct ProxyHandle {
@@ -17,12 +29,9 @@ pub struct ProxyHandle {
     pub port: u16,
 }
 
-#[unsafe(no_mangle)]
-pub static CONFIG_SERVICE_PORT: u16 = talpid_tunnel_config_client::CONFIG_SERVICE_PORT;
-
 static RUNTIME: OnceLock<Result<Runtime, String>> = OnceLock::new();
 
-fn mullvad_ios_runtime() -> Result<Handle, String> {
+fn warren_ios_runtime() -> Result<Handle, String> {
     match RUNTIME.get_or_init(|| {
         Builder::new_multi_thread()
             .enable_all()

@@ -46,7 +46,7 @@ pub unsafe extern "C" fn mullvad_ios_send_problem_report(
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
     let completion = completion_handler.clone();
 
-    let Ok(tokio_handle) = crate::mullvad_ios_runtime() else {
+    let Ok(tokio_handle) = crate::warren_ios_runtime() else {
         completion_handler.finish(SwiftMullvadApiResponse::no_tokio_runtime());
         return SwiftCancelHandle::empty();
     };

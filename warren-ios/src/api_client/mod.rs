@@ -332,7 +332,7 @@ pub extern "C" fn mullvad_api_init_inner(
         force_direct: false,
     };
 
-    let tokio_handle = crate::mullvad_ios_runtime().unwrap();
+    let tokio_handle = crate::warren_ios_runtime().unwrap();
 
     // SAFETY: See notes for `into_rust_context`
     let settings_context = unsafe { settings_provider.into_rust_context() };
