@@ -1,22 +1,22 @@
-# Session C — iOS fork rapport (partiel, C.1 + C.2 DONE)
+# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 skeleton DONE)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
 **Brief source** : `.planning/session-c-ios-fork-brief.md`
 **Effort estimé brief** : 1-2 mois wall-clock (7 sous-phases)
-**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (8 modules rebrand + MullvadRustRuntime déféré C.3 + MullvadPostQuantum déféré C.4) + scaffolding `wireguard-apple` stub
+**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (9 modules Swift rebrand) + C.3 skeleton (rename crate Rust `mullvad-ios` -> `warren-ios` + Swift `MullvadRustRuntime` -> `WarrenRustRuntime` + header `mullvad_rust_runtime.h` -> `warren_rust_runtime.h` + modulemap + build.rs cbindgen). FFI rewrite côté warren-core/warren-api-client = NON LIVRÉ (C.3 deep work différé).
 
 ---
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 + C.2 (sous-phases 1-2/7) livrées. C.3 à C.7 non démarrées. Le scope
-restant (C.3 warren-ios crate + C.4 PacketTunnelProvider Quinn rewrite + C.5 UI wallet + C.6
-multi-hop/DAITA/NAT-PMP UI parity + C.7 TestFlight) reste dimensionné pour 25-40 jours
-wall-clock supplémentaires, hors single-session.
+**GO PARTIEL** — C.1 + C.2 + C.3 skeleton (sous-phases 1-2.5/7) livrées. C.3 deep work
+(FFI rewrite vers warren-api-client + drop ephemeral_peer_proxy/wireguard_key + add
+warren-specific FFI modules) + C.4 à C.7 non démarrés. Le scope restant reste dimensionné
+pour 20-35 jours wall-clock supplémentaires, hors single-session.
 
-Reprise via une série de briefs `Session C.3`, `Session C.4`, … (un par sous-phase)
-recommandée.
+Reprise via une série de briefs `Session C.3.deep` (FFI rewrite),
+`Session C.4`, … (un par sous-phase) recommandée.
 
 §0.0 INVIOLABLE respecté : aucune commande `git stash`, `git checkout <path>`,
 `git restore`, `git reset --hard`, ni `git clean`. Aucun fichier WIP poka touché.
@@ -121,17 +121,48 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 2. **File-level header comments `Copyright © 2026 Mullvad VPN AB`** : non sed (cosmétique, ~hundreds .swift files). À nettoyer en C.2.bis ou opportuniste lors C.4-C.6.
 3. **Types `MullvadFoo` Warren-specific dans le code Swift** (ex: `MullvadEndpoint`, `MullvadApiContext`, etc.) : non renommés. Représentent l'API publique des modules ; rename = source de churn. Recommandé en C.6 ou plus tard quand le scope sera plus mûr.
 
-## C.3 à C.7 — NOT STARTED
+## C.3 skeleton — DONE (FFI rewrite différé)
+
+### Livré
+
+| Item | Statut | Commit |
+|------|--------|--------|
+| Rename crate Cargo.toml name `mullvad-ios` → `warren-ios` | ✅ | `e9de7ca973` |
+| git mv `mullvad-ios/` → `warren-ios/` | ✅ | idem |
+| Update workspace `Cargo.toml` members `mullvad-ios` → `warren-ios` | ✅ | idem |
+| Update pbxproj `libmullvad_ios.a` → `libwarren_ios.a` (8 refs) + script invocation `build-rust-library.sh mullvad-ios` → `build-rust-library.sh warren-ios` | ✅ | idem |
+| Rename Swift module `MullvadRustRuntime` → `WarrenRustRuntime` (target + dir + 33 importers) | ✅ | `bf06b6956d` |
+| Rename header `mullvad_rust_runtime.h` → `warren_rust_runtime.h` | ✅ | idem |
+| Update `module.private.modulemap` (link `libwarren_ios` + header + module name `WarrenRustRuntimeProxy`) | ✅ | idem |
+| Update `warren-ios/build.rs` cbindgen output path + autogen warning | ✅ | idem |
+| `cargo metadata` PASS (warren-ios visible workspace member, mullvad-ios absent) | ✅ | observé |
+| `xcodebuild -list -project WarrenVPN.xcodeproj` PASS | ✅ | observé (WarrenRustRuntime + WarrenRustRuntimeTests targets listés) |
+
+### NON LIVRÉ (C.3 deep work, scope dedicated brief)
+
+- **Replace `mullvad_api` calls → `warren_api_client`** dans `warren-ios/src/api_client/` (le crate `warren-api-client` existe warren-core, expose HTTP signature canonical_message depuis M4.H.C.PRE refactor). Le code actuel consomme `mullvad-api`, nécessite rewrite des appels.
+- **Drop `warren-ios/src/ephemeral_peer_proxy/`** (WireGuard ephemeral peer key exchange, n/a Warren Quinn HPKE).
+- **Drop `warren-ios/src/wireguard_key.rs`** (WireGuard key gen, n/a Warren Ed25519 wallet).
+- **Add `warren-ios/src/warren_tunnel_ffi.rs`** : FFI export warren-tunnel `WarrenTunnelParameters` + connect/disconnect handles.
+- **Add `warren-ios/src/warren_wallet_ffi.rs`** : FFI export warren-identity BIP39 mnemonic + signing.
+- **Add `warren-ios/src/warren_multihop_ffi.rs`** : FFI export warren-multihop HPKE handshake.
+- **Add `warren-ios/src/warren_natpmp_ffi.rs`** : FFI export warren-natpmp-client port-forwarding.
+- **Cargo build aarch64-apple-ios + aarch64-apple-ios-sim PASS** (nécessite rustup target add + iOS toolchain setup).
+- **Swift wrappers idiomatiques** dans `ios/WarrenRustRuntime/Sources/WarrenRustRuntime/` au-dessus du nouveau header généré.
+- **Drop deps `mullvad-api`, `mullvad-encrypted-dns-proxy`, `tunnel-obfuscation`, `shadowsocks`, `talpid-tunnel-config-client`** dans `warren-ios/Cargo.toml` (Warren utilise obfuscation M4.0 HTTP/3 mimicry intégrée dans warren-tunnel, pas WG bridge protocols).
+
+Total estimé deep work C.3 : 5-8j wall-clock.
+
+## C.4 à C.7 — NOT STARTED
 
 | Sous-phase | Effort estimé brief | Statut | Raison |
 |------------|---------------------|--------|--------|
-| C.3 `mullvad-ios` → `warren-ios` crate + wire warren-core | 7-10j | ❌ NOT STARTED | Nécessite cargo-lipo iOS toolchain validation + cbindgen header gen + Swift wrappers + bumps cross-repo warren-core ↔ warren-app ; idéalement couplé au rename Swift MullvadRustRuntime → WarrenRustRuntime |
 | C.4 PacketTunnelProvider Quinn | 10-14j | ❌ NOT STARTED | Sous-phase la plus complexe (NetworkExtension + warren-tunnel FFI + reconnect handler + killswitch + drop MullvadPostQuantum + WireGuardKit deps) ; nécessite iOS Simulator full-cycle testing + iPhone device pour Wi-Fi/cellular handover |
 | C.5 UI Swift wallet Ed25519 mnemonic | 5-7j | ❌ NOT STARTED | Refonte écrans login + signup wizard 5-step + iOS Keychain + Face ID/Touch ID |
 | C.6 Multi-hop + DAITA + NAT-PMP UI | 5-7j | ❌ NOT STARTED | Parité desktop M4.H.C + session B mobile-side |
 | C.7 Build TestFlight + smoke simulator | 3-5j | ❌ NOT STARTED | Signing pending poka, smoke simulator faisable sans cert |
 
-**Total restant** : ~25-40 jours wall-clock estimés, hors tests/fix breakage/itérations.
+**Total restant** : ~20-35 jours wall-clock estimés (C.3 deep work 5-8j + C.4 10-14j + C.5 5-7j + C.6 5-7j + C.7 3-5j), hors tests/fix breakage/itérations.
 
 ---
 
