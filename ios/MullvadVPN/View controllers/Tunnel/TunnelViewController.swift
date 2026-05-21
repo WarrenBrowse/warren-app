@@ -8,7 +8,7 @@
 
 import Combine
 import MapKit
-import MullvadLogging
+import WarrenLogging
 import MullvadREST
 import MullvadSettings
 import MullvadTypes

@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		0107F40B2F5B02580012451B /* WireGuardKitTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 0107F40A2F5B02580012451B /* WireGuardKitTypes */; };
 		0107F40D2F5B02840012451B /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
-		0107F4142F5B02D70012451B /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
-		0107F4152F5B02D70012451B /* MullvadLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0107F4142F5B02D70012451B /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
+		0107F4152F5B02D70012451B /* WarrenLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F4172F5B02D80012451B /* MullvadREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* MullvadREST.framework */; };
 		0107F4182F5B02D80012451B /* MullvadREST.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* MullvadREST.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F4192F5B02D90012451B /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
@@ -25,7 +25,7 @@
 		0107F42D2F5F62950012451B /* MullvadSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* MullvadSettings.framework */; };
 		0107F4322F5F62C80012451B /* MullvadSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* MullvadSettings.framework */; };
 		0107F4362F5F62CE0012451B /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
-		014E8C2A2F28B09700837D0A /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
+		014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		014E8C302F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		014E8C312F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		016EE0382F850C0E0035B25C /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0372F850C0E0035B25C /* WireGuardKey.swift */; };
@@ -315,7 +315,7 @@
 		58C7A4582A863FB90060C66F /* TunnelMonitorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C7A42C2A85067A0060C66F /* TunnelMonitorProtocol.swift */; };
 		58C7A4592A863FB90060C66F /* WgStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A3BDAF28A1821A00C8C2C6 /* WgStats.swift */; };
 		58C7A45B2A8640030060C66F /* PacketTunnelPathObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58225D272A84F23B0083D7F1 /* PacketTunnelPathObserver.swift */; };
-		58C7A45C2A8640490060C66F /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
+		58C7A45C2A8640490060C66F /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58C7A4692A8643A90060C66F /* IPv4Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 58218E1428B65058000C624F /* IPv4Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		58C7A46A2A8643A90060C66F /* ICMPHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 58218E1628B65396000C624F /* ICMPHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		58C7AF112ABD8480007EDD7A /* TunnelProviderMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585DA89226B0323E00B8C587 /* TunnelProviderMessage.swift */; };
@@ -369,9 +369,9 @@
 		58D223E6294C8F120029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
 		58D223E7294C8F120029F5F8 /* MullvadTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		58D223EA294C8F3C0029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
-		58D223F6294C8FF00029F5F8 /* MullvadLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 58D223F5294C8FF00029F5F8 /* MullvadLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		58D223F9294C8FF00029F5F8 /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
-		58D223FA294C8FF10029F5F8 /* MullvadLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		58D223F6294C8FF00029F5F8 /* WarrenLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 58D223F5294C8FF00029F5F8 /* WarrenLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		58D223F9294C8FF00029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
+		58D223FA294C8FF10029F5F8 /* WarrenLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		58D223FE294C90050029F5F8 /* Error+LogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581943E128F8010300B0CB5E /* Error+LogFormat.swift */; };
 		58D223FF294C90050029F5F8 /* LogFileOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581943DE28F8010300B0CB5E /* LogFileOutputStream.swift */; };
 		58D22400294C90050029F5F8 /* OSLogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581943E428F8010400B0CB5E /* OSLogHandler.swift */; };
@@ -396,8 +396,8 @@
 		58D22414294C90210029F5F8 /* RelayLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5898D2AF2902A67C00EB5EBA /* RelayLocation.swift */; };
 		58D22417294C90210029F5F8 /* FixedWidthInteger+Arithmetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58900D0228BBDCC70094E4F0 /* FixedWidthInteger+Arithmetics.swift */; };
 		58D2241A294C90380029F5F8 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 58D22419294C90380029F5F8 /* Logging */; };
-		58D2241D294C91D20029F5F8 /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
-		58D22422294C921B0029F5F8 /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
+		58D2241D294C91D20029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
+		58D22422294C921B0029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58D22426294C92750029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; platformFilter = ios; };
 		58D22435294C975B0029F5F8 /* Operations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; platformFilter = ios; };
 		58DDA18F2ABC32380039C360 /* Timings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DDA18E2ABC32380039C360 /* Timings.swift */; };
@@ -440,7 +440,7 @@
 		58FBFBEA291622580020E046 /* MullvadREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* MullvadREST.framework */; };
 		58FD5BF42428C67600112C88 /* InAppPurchaseButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FD5BF32428C67600112C88 /* InAppPurchaseButton.swift */; };
 		58FDF2D92A0BA11A00C2B061 /* DeviceCheckOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FDF2D82A0BA11900C2B061 /* DeviceCheckOperation.swift */; };
-		58FE25BB2AA72188003D1918 /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
+		58FE25BB2AA72188003D1918 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58FE25BF2AA72311003D1918 /* MigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D96B192A8247C100A5C673 /* MigrationManager.swift */; };
 		58FE25C62AA72779003D1918 /* PacketTunnelCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C7A4362A863F440060C66F /* PacketTunnelCore.framework */; };
 		58FE25CE2AA72802003D1918 /* MullvadSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* MullvadSettings.framework */; };
@@ -591,7 +591,7 @@
 		7A83C4022A57FAA800DFB83A /* SettingsDNSInfoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A83C4012A57FAA800DFB83A /* SettingsDNSInfoCell.swift */; };
 		7A88DCD82A8FABBE00D2FF0E /* Routing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A88DCCE2A8FABBE00D2FF0E /* Routing.framework */; };
 		7A88DCDF2A8FABBF00D2FF0E /* RoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A88DCDE2A8FABBF00D2FF0E /* RoutingTests.swift */; };
-		7A88DCEC2A8FB08D00D2FF0E /* MullvadLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */; };
+		7A88DCEC2A8FB08D00D2FF0E /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		7A88DCF12A8FB0B900D2FF0E /* ModalPresentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583FE00B29C0C7FD006E85F9 /* ModalPresentationConfiguration.swift */; };
 		7A88DCF22A8FB0B900D2FF0E /* PresentationControllerDismissalInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583FE01129C0F99A006E85F9 /* PresentationControllerDismissalInterceptor.swift */; };
 		7A88DCF32A93471F00D2FF0E /* ApplicationRouterDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5802EBC82A8E45BA00E5CE4C /* ApplicationRouterDelegate.swift */; };
@@ -1232,7 +1232,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		0107F42F2F5F62950012451B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1260,7 +1260,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		01B2FF882D70B914004AED35 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1323,7 +1323,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		58C7A4712A864B860060C66F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1400,21 +1400,21 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		58D2241F294C91D20029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		58D22424294C921B0029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		58D22428294C92750029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1449,7 +1449,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		58FE25C82AA72779003D1918 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1505,7 +1505,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223F2294C8FF00029F5F8;
-			remoteInfo = MullvadLogging;
+			remoteInfo = WarrenLogging;
 		};
 		7ABCA5B52A9349F20044A708 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1597,7 +1597,7 @@
 				0107F4182F5B02D80012451B /* MullvadREST.framework in Embed Frameworks */,
 				0107F41D2F5B02DB0012451B /* MullvadTypes.framework in Embed Frameworks */,
 				0107F4202F5B02DE0012451B /* WireGuardKitTypes in Embed Frameworks */,
-				0107F4152F5B02D70012451B /* MullvadLogging.framework in Embed Frameworks */,
+				0107F4152F5B02D70012451B /* WarrenLogging.framework in Embed Frameworks */,
 				0107F41F2F5B02DC0012451B /* Operations.framework in Embed Frameworks */,
 				0107F41C2F5B02DA0012451B /* MullvadSettings.framework in Embed Frameworks */,
 			);
@@ -1613,7 +1613,7 @@
 				F0ACE3112BE4E478006D5333 /* WarrenMockData.framework in Embed Frameworks */,
 				58D223E7294C8F120029F5F8 /* MullvadTypes.framework in Embed Frameworks */,
 				44A262432D6373B400085380 /* WireGuardKitTypes in Embed Frameworks */,
-				58D223FA294C8FF10029F5F8 /* MullvadLogging.framework in Embed Frameworks */,
+				58D223FA294C8FF10029F5F8 /* WarrenLogging.framework in Embed Frameworks */,
 				A992DA242C24709F00DE7CE5 /* MullvadRustRuntime.framework in Embed Frameworks */,
 				58B2FDDA2AA71D2A003EB5C6 /* MullvadSettings.framework in Embed Frameworks */,
 				7ABCA5B42A9349F20044A708 /* Routing.framework in Embed Frameworks */,
@@ -2087,8 +2087,8 @@
 		58D223A7294C8A490029F5F8 /* Operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Operations.h; sourceTree = "<group>"; };
 		58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MullvadTypes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D223D7294C8E5E0029F5F8 /* MullvadTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MullvadTypes.h; sourceTree = "<group>"; };
-		58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MullvadLogging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		58D223F5294C8FF00029F5F8 /* MullvadLogging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MullvadLogging.h; sourceTree = "<group>"; };
+		58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WarrenLogging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		58D223F5294C8FF00029F5F8 /* WarrenLogging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WarrenLogging.h; sourceTree = "<group>"; };
 		58DDA18E2ABC32380039C360 /* Timings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timings.swift; sourceTree = "<group>"; };
 		58DF28A42417CB4B00E836B0 /* StorePaymentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorePaymentManager.swift; sourceTree = "<group>"; };
 		58DFF7CF2B02560400F864E0 /* NSAttributedString+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Extensions.swift"; sourceTree = "<group>"; };
@@ -2750,7 +2750,7 @@
 			files = (
 				F0C3333C2B31A29C00D1A478 /* MullvadSettings.framework in Frameworks */,
 				58D223BF294C8AE90029F5F8 /* Operations.framework in Frameworks */,
-				58D2241D294C91D20029F5F8 /* MullvadLogging.framework in Frameworks */,
+				58D2241D294C91D20029F5F8 /* WarrenLogging.framework in Frameworks */,
 				58D223DC294C8EB90029F5F8 /* MullvadTypes.framework in Frameworks */,
 				01B2FF862D70B914004AED35 /* MullvadRustRuntime.framework in Frameworks */,
 				44A2624B2D6373E000085380 /* WireGuardKitTypes in Frameworks */,
@@ -2780,7 +2780,7 @@
 			files = (
 				A959E2412D75F39A00F95DDB /* MullvadTypes.framework in Frameworks */,
 				44A2625F2D63745000085380 /* WireGuardKitTypes in Frameworks */,
-				58FE25BB2AA72188003D1918 /* MullvadLogging.framework in Frameworks */,
+				58FE25BB2AA72188003D1918 /* WarrenLogging.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2792,7 +2792,7 @@
 				58238CB92AD57EC700768310 /* MullvadREST.framework in Frameworks */,
 				44A262572D63744400085380 /* WireGuardKitTypes in Frameworks */,
 				58FE65952AB1D90600E53CB5 /* MullvadTypes.framework in Frameworks */,
-				58C7A45C2A8640490060C66F /* MullvadLogging.framework in Frameworks */,
+				58C7A45C2A8640490060C66F /* WarrenLogging.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2810,7 +2810,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				58C7A4492A863F490060C66F /* PacketTunnelCore.framework in Frameworks */,
-				58D223F9294C8FF00029F5F8 /* MullvadLogging.framework in Frameworks */,
+				58D223F9294C8FF00029F5F8 /* WarrenLogging.framework in Frameworks */,
 				44A262422D6373B400085380 /* WireGuardKitTypes in Frameworks */,
 				58D223E6294C8F120029F5F8 /* MullvadTypes.framework in Frameworks */,
 				7ABCA5B32A9349F20044A708 /* Routing.framework in Frameworks */,
@@ -2832,7 +2832,7 @@
 				58D223C6294C8B970029F5F8 /* Operations.framework in Frameworks */,
 				58153071294CBE8B00D1702E /* MullvadREST.framework in Frameworks */,
 				44A262452D6373C400085380 /* WireGuardKit in Frameworks */,
-				58D22422294C921B0029F5F8 /* MullvadLogging.framework in Frameworks */,
+				58D22422294C921B0029F5F8 /* WarrenLogging.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2875,7 +2875,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A88DCEC2A8FB08D00D2FF0E /* MullvadLogging.framework in Frameworks */,
+				7A88DCEC2A8FB08D00D2FF0E /* WarrenLogging.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2892,7 +2892,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0107F41E2F5B02DC0012451B /* Operations.framework in Frameworks */,
-				0107F4142F5B02D70012451B /* MullvadLogging.framework in Frameworks */,
+				0107F4142F5B02D70012451B /* WarrenLogging.framework in Frameworks */,
 				0107F41B2F5B02DA0012451B /* MullvadSettings.framework in Frameworks */,
 				0107F40D2F5B02840012451B /* MullvadTypes.framework in Frameworks */,
 				0107F4172F5B02D80012451B /* MullvadREST.framework in Frameworks */,
@@ -2905,7 +2905,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				014E8C2A2F28B09700837D0A /* MullvadLogging.framework in Frameworks */,
+				014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */,
 				A9173C372C36CD2B00F6A08C /* MullvadTypes.framework in Frameworks */,
 				44A262672D63745C00085380 /* WireGuardKitTypes in Frameworks */,
 				0107F42D2F5F62950012451B /* MullvadSettings.framework in Frameworks */,
@@ -3068,7 +3068,7 @@
 			path = MullvadTypes;
 			sourceTree = "<group>";
 		};
-		440E9EFA2BDA976800B1FD11 /* MullvadLogging */ = {
+		440E9EFA2BDA976800B1FD11 /* WarrenLogging */ = {
 			isa = PBXGroup;
 			children = (
 				A902E7A52D3FB0D9007F844A /* LogFileOutputStreamTests.swift */,
@@ -3076,7 +3076,7 @@
 				44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */,
 				7AA513852BC91C6B00D081A4 /* LogRotationTests.swift */,
 			);
-			path = MullvadLogging;
+			path = WarrenLogging;
 			sourceTree = "<group>";
 		};
 		440E9EFB2BDA97C600B1FD11 /* GeneralAPIs */ = {
@@ -3900,7 +3900,7 @@
 		58B0A2A1238EE67E00BC001D /* MullvadVPNTests */ = {
 			isa = PBXGroup;
 			children = (
-				440E9EFA2BDA976800B1FD11 /* MullvadLogging */,
+				440E9EFA2BDA976800B1FD11 /* WarrenLogging */,
 				440E9EF32BDA942E00B1FD11 /* MullvadREST */,
 				449872E22B7CB91B00094DDC /* MullvadSettings */,
 				440E9EF92BDA95FC00B1FD11 /* MullvadTypes */,
@@ -4088,7 +4088,7 @@
 				58F3C0A824A50C0E003E76BE /* Assets */,
 				58ECD29023F178FD004298B6 /* Configurations */,
 				584F991F2902CBDD001F858D /* Frameworks */,
-				58D223F4294C8FF00029F5F8 /* MullvadLogging */,
+				58D223F4294C8FF00029F5F8 /* WarrenLogging */,
 				F0ACE3092BE4E478006D5333 /* WarrenMockData */,
 				06799ABD28F98E1D00ACD94E /* MullvadREST */,
 				58FBFBE7291622580020E046 /* MullvadRESTTests */,
@@ -4124,7 +4124,7 @@
 				58FBFBE6291622580020E046 /* MullvadRESTTests.xctest */,
 				58D223A5294C8A480029F5F8 /* Operations.framework */,
 				58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */,
-				58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */,
+				58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */,
 				58C7A4362A863F440060C66F /* PacketTunnelCore.framework */,
 				58C7A43D2A863F460060C66F /* PacketTunnelCoreTests.xctest */,
 				7A88DCCE2A8FABBE00D2FF0E /* Routing.framework */,
@@ -4259,10 +4259,10 @@
 			path = Operations;
 			sourceTree = "<group>";
 		};
-		58D223F4294C8FF00029F5F8 /* MullvadLogging */ = {
+		58D223F4294C8FF00029F5F8 /* WarrenLogging */ = {
 			isa = PBXGroup;
 			children = (
-				58D223F5294C8FF00029F5F8 /* MullvadLogging.h */,
+				58D223F5294C8FF00029F5F8 /* WarrenLogging.h */,
 				581943E328F8010400B0CB5E /* CustomFormatLogHandler.swift */,
 				581943E228F8010400B0CB5E /* Date+LogFormat.swift */,
 				581943E128F8010300B0CB5E /* Error+LogFormat.swift */,
@@ -4272,7 +4272,7 @@
 				581943E428F8010400B0CB5E /* OSLogHandler.swift */,
 				581943DE28F8010300B0CB5E /* LogFileOutputStream.swift */,
 			);
-			path = MullvadLogging;
+			path = WarrenLogging;
 			sourceTree = "<group>";
 		};
 		58D7E3D629C78A130044B058 /* AddressCacheUpdateScheduler */ = {
@@ -5224,7 +5224,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				58D223F6294C8FF00029F5F8 /* MullvadLogging.h in Headers */,
+				58D223F6294C8FF00029F5F8 /* WarrenLogging.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5519,9 +5519,9 @@
 			productReference = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		58D223F2294C8FF00029F5F8 /* MullvadLogging */ = {
+		58D223F2294C8FF00029F5F8 /* WarrenLogging */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58D223FB294C8FF10029F5F8 /* Build configuration list for PBXNativeTarget "MullvadLogging" */;
+			buildConfigurationList = 58D223FB294C8FF10029F5F8 /* Build configuration list for PBXNativeTarget "WarrenLogging" */;
 			buildPhases = (
 				58D223EE294C8FF00029F5F8 /* Headers */,
 				58D223EF294C8FF00029F5F8 /* Sources */,
@@ -5534,12 +5534,12 @@
 				58D2241C294C90450029F5F8 /* PBXTargetDependency */,
 				58D22429294C92750029F5F8 /* PBXTargetDependency */,
 			);
-			name = MullvadLogging;
+			name = WarrenLogging;
 			packageProductDependencies = (
 				58D22419294C90380029F5F8 /* Logging */,
 			);
-			productName = MullvadLogging;
-			productReference = 58D223F3294C8FF00029F5F8 /* MullvadLogging.framework */;
+			productName = WarrenLogging;
+			productReference = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		58FBFBE5291622580020E046 /* MullvadRESTTests */ = {
@@ -5835,7 +5835,7 @@
 				06799ABB28F98E1D00ACD94E /* MullvadREST */,
 				58FBFBE5291622580020E046 /* MullvadRESTTests */,
 				58D223D4294C8E5E0029F5F8 /* MullvadTypes */,
-				58D223F2294C8FF00029F5F8 /* MullvadLogging */,
+				58D223F2294C8FF00029F5F8 /* WarrenLogging */,
 				58C7A4352A863F440060C66F /* PacketTunnelCore */,
 				58C7A43C2A863F450060C66F /* PacketTunnelCoreTests */,
 				58B2FDD22AA71D2A003EB5C6 /* MullvadSettings */,
@@ -7317,7 +7317,7 @@
 		};
 		0107F4132F5B02AD0012451B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 0107F4122F5B02AD0012451B /* PBXContainerItemProxy */;
 		};
 		0107F4302F5F62950012451B /* PBXTargetDependency */ = {
@@ -7337,7 +7337,7 @@
 		};
 		014E8C2D2F28B09700837D0A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 014E8C2C2F28B09700837D0A /* PBXContainerItemProxy */;
 		};
 		01B2FF892D70B914004AED35 /* PBXTargetDependency */ = {
@@ -7401,7 +7401,7 @@
 		};
 		58C7A45F2A8640490060C66F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 58C7A45E2A8640490060C66F /* PBXContainerItemProxy */;
 		};
 		58C7A4722A864B860060C66F /* PBXTargetDependency */ = {
@@ -7447,7 +7447,7 @@
 		};
 		58D223F8294C8FF00029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 58D223F7294C8FF00029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D2241C294C90450029F5F8 /* PBXTargetDependency */ = {
@@ -7456,12 +7456,12 @@
 		};
 		58D22420294C91D20029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 58D2241F294C91D20029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D22425294C921B0029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 58D22424294C921B0029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D22429294C92750029F5F8 /* PBXTargetDependency */ = {
@@ -7487,7 +7487,7 @@
 		};
 		58FE25BE2AA72188003D1918 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 58FE25BD2AA72188003D1918 /* PBXContainerItemProxy */;
 		};
 		58FE25C92AA72779003D1918 /* PBXTargetDependency */ = {
@@ -7522,7 +7522,7 @@
 		};
 		7A88DCEF2A8FB08D00D2FF0E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223F2294C8FF00029F5F8 /* MullvadLogging */;
+			target = 58D223F2294C8FF00029F5F8 /* WarrenLogging */;
 			targetProxy = 7A88DCEE2A8FB08D00D2FF0E /* PBXContainerItemProxy */;
 		};
 		7ABCA5B62A9349F20044A708 /* PBXTargetDependency */ = {
@@ -8381,7 +8381,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadLogging";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenLogging";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8417,7 +8417,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadLogging";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenLogging";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9034,7 +9034,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadLogging";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenLogging";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9872,7 +9872,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadLogging";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenLogging";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -10351,7 +10351,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58D223FB294C8FF10029F5F8 /* Build configuration list for PBXNativeTarget "MullvadLogging" */ = {
+		58D223FB294C8FF10029F5F8 /* Build configuration list for PBXNativeTarget "WarrenLogging" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58D223FC294C8FF10029F5F8 /* Debug */,

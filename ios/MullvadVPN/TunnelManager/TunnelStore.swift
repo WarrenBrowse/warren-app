@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import MullvadTypes
 import NetworkExtension
 import UIKit

@@ -7,7 +7,7 @@
 //
 
 import CoreLocation
-import MullvadLogging
+import WarrenLogging
 import MullvadTypes
 
 public struct DefaultLocationService {

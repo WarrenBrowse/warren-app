@@ -7,7 +7,7 @@
 //
 
 @preconcurrency import Combine
-import MullvadLogging
+import WarrenLogging
 
 public protocol IPOverrideRepositoryProtocol: Sendable {
     var overridesPublisher: AnyPublisher<[IPOverride], Never> { get }

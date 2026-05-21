@@ -9,7 +9,7 @@
 @preconcurrency import Foundation
 import Testing
 
-@testable import MullvadLogging
+@testable import WarrenLogging
 
 @Suite("LogFileOutputStream Tests")
 actor LogFileOutputStreamTests {

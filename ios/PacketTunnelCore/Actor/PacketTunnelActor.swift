@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@preconcurrency import MullvadLogging
+@preconcurrency import WarrenLogging
 import MullvadREST
 import MullvadRustRuntime
 import MullvadSettings

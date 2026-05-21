@@ -5,7 +5,7 @@
 //  Created by Mojgan on 2025-03-21.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
-import MullvadLogging
+import WarrenLogging
 import MullvadTypes
 
 final public class RustProblemReportRequest {

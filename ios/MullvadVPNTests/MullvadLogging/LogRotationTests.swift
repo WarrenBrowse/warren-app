@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadLogging
+@testable import WarrenLogging
 
 final class LogRotationTests: XCTestCase {
     let fileManager = FileManager.default

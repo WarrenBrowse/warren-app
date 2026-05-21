@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 
 @propertyWrapper
 public struct PrimitiveStorage<Value: UserDefaultsPrimitive> {

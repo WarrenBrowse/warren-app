@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import MullvadTypes
 
 public enum CustomRelayListError: LocalizedError, Hashable {

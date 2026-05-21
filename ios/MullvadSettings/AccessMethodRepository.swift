@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import MullvadTypes
 
 public class AccessMethodRepository: AccessMethodRepositoryProtocol, @unchecked Sendable {

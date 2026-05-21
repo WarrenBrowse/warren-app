@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 
 /// Global logger instance for Rust logs
 private let rustLogger = Logger(label: "Rust")

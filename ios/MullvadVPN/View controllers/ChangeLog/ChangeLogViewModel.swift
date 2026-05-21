@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import SwiftUI
 
 protocol ChangeLogViewModelProtocol: ObservableObject {

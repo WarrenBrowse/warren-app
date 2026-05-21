@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import Network
 
 protocol OutgoingConnectionServiceHandling {

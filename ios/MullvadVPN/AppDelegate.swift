@@ -7,7 +7,7 @@
 //
 
 import BackgroundTasks
-import MullvadLogging
+import WarrenLogging
 import WarrenMockData
 import MullvadREST
 import MullvadRustRuntime

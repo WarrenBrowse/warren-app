@@ -8,7 +8,7 @@
 
 import Foundation
 import MapKit
-import MullvadLogging
+import WarrenLogging
 import Operations
 
 private let locationMarkerReuseIdentifier = "location"

@@ -9,7 +9,7 @@
 #if targetEnvironment(simulator)
 
     @preconcurrency import Foundation
-    import MullvadLogging
+    import WarrenLogging
     import MullvadREST
     import MullvadSettings
     import MullvadTypes

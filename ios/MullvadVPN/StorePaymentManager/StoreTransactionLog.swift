@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 
 /// Transaction log responsible for storing and querying processed transactions.
 ///

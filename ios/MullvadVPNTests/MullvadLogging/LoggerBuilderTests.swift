@@ -8,7 +8,7 @@
 
 import Testing
 
-@testable import MullvadLogging
+@testable import WarrenLogging
 
 struct LoggerBuilderTests {
 

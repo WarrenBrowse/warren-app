@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@preconcurrency import MullvadLogging
+@preconcurrency import WarrenLogging
 import MullvadTypes
 import NetworkExtension
 import PacketTunnelCore

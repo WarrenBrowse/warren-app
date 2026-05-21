@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadLogging
+import WarrenLogging
 import MullvadSettings
 import MullvadTypes
 
