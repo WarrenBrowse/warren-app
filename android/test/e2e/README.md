@@ -21,7 +21,7 @@ adb shell 'CLASSPATH=$(pm path androidx.test.services) app_process / \
     -e clearPackageData true \
     -e mullvad.test.e2e.prod.accountNumber.valid XXXX \
     -e mullvad.test.e2e.prod.accountNumber.invalid XXXX \
-    -e targetInstrumentation net.mullvad.mullvadvpn.test.e2e/androidx.test.runner.AndroidJUnitRunner \
+    -e targetInstrumentation com.warrenbrowse.vpn.test.e2e/androidx.test.runner.AndroidJUnitRunner \
     androidx.test.orchestrator/.AndroidTestOrchestrator'
 ```
 

@@ -1,0 +1,130 @@
+package com.warrenbrowse.vpn.feature.customlist.impl.screen.create
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.customlist.api.CreateCustomListNavResult
+import com.warrenbrowse.vpn.feature.customlist.api.EditCustomListLocationsNavKey
+import com.warrenbrowse.vpn.feature.customlist.impl.component.CustomListNameTextField
+import com.warrenbrowse.vpn.lib.model.CustomListAlreadyExists
+import com.warrenbrowse.vpn.lib.model.GeoLocationId
+import com.warrenbrowse.vpn.lib.model.NameIsEmpty
+import com.warrenbrowse.vpn.lib.ui.component.dialog.InputDialog
+import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.tag.CREATE_CUSTOM_LIST_DIALOG_INPUT_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.usecase.customlists.CreateWithLocationsError
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+
+@Preview
+@Composable
+private fun PreviewCreateCustomListDialog() {
+    AppTheme {
+        CreateCustomListDialog(
+            state = CreateCustomListUiState(),
+            createCustomList = {},
+            onInputChanged = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCreateCustomListDialogError() {
+    AppTheme {
+        CreateCustomListDialog(
+            state =
+                CreateCustomListUiState(
+                    error = CreateWithLocationsError.Create(CustomListAlreadyExists)
+                ),
+            createCustomList = {},
+            onInputChanged = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Composable
+fun CreateCustomList(locationCode: GeoLocationId?, navigator: Navigator) {
+    val vm: CreateCustomListDialogViewModel = koinViewModel { parametersOf(locationCode) }
+
+    LaunchedEffect(key1 = Unit) {
+        vm.uiSideEffect.collect { sideEffect ->
+            when (sideEffect) {
+                is CreateCustomListDialogSideEffect.NavigateToCustomListLocationsScreen -> {
+                    navigator.navigateReplaceTop(
+                        EditCustomListLocationsNavKey(
+                            customListId = sideEffect.customListId,
+                            newList = true,
+                        )
+                    )
+                }
+                is CreateCustomListDialogSideEffect.ReturnWithResult -> {
+                    navigator.goBack(result = CreateCustomListNavResult(sideEffect.result))
+                }
+            }
+        }
+    }
+
+    val state by vm.uiState.collectAsStateWithLifecycle()
+    CreateCustomListDialog(
+        state = state,
+        createCustomList = vm::createCustomList,
+        onInputChanged = vm::clearError,
+        onDismiss = dropUnlessResumed { navigator.goBack() },
+    )
+}
+
+@Composable
+fun CreateCustomListDialog(
+    state: CreateCustomListUiState,
+    createCustomList: (String) -> Unit,
+    onInputChanged: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val name = rememberSaveable { mutableStateOf("") }
+    val isValidName = name.value.isNotBlank()
+
+    InputDialog(
+        title = stringResource(id = R.string.create_new_list),
+        confirmButtonText = stringResource(id = R.string.create),
+        onBack = onDismiss,
+        onConfirm = { createCustomList(name.value) },
+        input = {
+            CustomListNameTextField(
+                name = name.value,
+                isValidName = isValidName,
+                error = state.error?.errorString(),
+                onSubmit = createCustomList,
+                onValueChanged = {
+                    name.value = it
+                    onInputChanged()
+                },
+                modifier = Modifier.testTag(CREATE_CUSTOM_LIST_DIALOG_INPUT_TEST_TAG),
+            )
+        },
+    )
+}
+
+@Composable
+private fun CreateWithLocationsError.errorString() =
+    stringResource(
+        when (this) {
+            is CreateWithLocationsError.Create if this.error is CustomListAlreadyExists ->
+                R.string.custom_list_error_list_exists
+            is CreateWithLocationsError.Create if this.error is NameIsEmpty ->
+                R.string.custom_list_error_list_is_empty
+            else -> R.string.error_occurred
+        }
+    )

@@ -1,0 +1,107 @@
+package com.warrenbrowse.vpn.feature.apiaccess.impl
+
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import de.mannodermaus.junit5.compose.ComposeContext
+import io.mockk.mockk
+import io.mockk.verify
+import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.list.ApiAccessListScreen
+import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.list.ApiAccessListUiState
+import com.warrenbrowse.vpn.lib.model.ApiAccessMethodSetting
+import com.warrenbrowse.vpn.lib.ui.tag.API_ACCESS_LIST_INFO_TEST_TAG
+import com.warrenbrowse.vpn.screen.test.createEdgeToEdgeComposeExtension
+import com.warrenbrowse.vpn.screen.test.setContentWithTheme
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+
+@OptIn(ExperimentalTestApi::class)
+class ApiAccessListScreenTest {
+    @JvmField @RegisterExtension val composeExtension = createEdgeToEdgeComposeExtension()
+
+    private fun ComposeContext.initScreen(
+        state: ApiAccessListUiState = ApiAccessListUiState(),
+        onAddMethodClick: () -> Unit = {},
+        onApiAccessMethodClick: (apiAccessMethodSetting: ApiAccessMethodSetting) -> Unit = {},
+        onApiAccessInfoClick: () -> Unit = {},
+        onBackClick: () -> Unit = {},
+    ) {
+        setContentWithTheme {
+            ApiAccessListScreen(
+                state = state,
+                onAddMethodClick = onAddMethodClick,
+                onApiAccessMethodClick = onApiAccessMethodClick,
+                onApiAccessInfoClick = onApiAccessInfoClick,
+                onBackClick = onBackClick,
+            )
+        }
+    }
+
+    @Test
+    fun shouldShowCurrentApiAccessName() = composeExtension.use {
+        // Arrange
+        val currentApiAccessMethod = DIRECT_ACCESS_METHOD
+        initScreen(
+            state = ApiAccessListUiState(currentApiAccessMethodSetting = currentApiAccessMethod)
+        )
+
+        // Assert
+        onNodeWithText("Current: ${currentApiAccessMethod.name}").assertExists()
+    }
+
+    @Test
+    fun shouldShowApiAccessNameAndStatusInList() = composeExtension.use {
+        // Arrange
+        val apiAccessMethod = DIRECT_ACCESS_METHOD
+        initScreen(state = ApiAccessListUiState(apiAccessMethodSettings = listOf(apiAccessMethod)))
+
+        // Assert
+        onNodeWithText(apiAccessMethod.name.value).assertExists()
+        onNodeWithText("On").assertExists()
+    }
+
+    @Test
+    fun whenClickingOnAddMethodShouldCallOnAddMethodClicked() = composeExtension.use {
+        // Arrange
+        val onAddMethodClick: () -> Unit = mockk(relaxed = true)
+        initScreen(state = ApiAccessListUiState(), onAddMethodClick = onAddMethodClick)
+
+        // Act
+        onNodeWithText("Add").performClick()
+
+        // Assert
+        verify { onAddMethodClick() }
+    }
+
+    @Test
+    fun whenClickingOnInfoButtonShouldCallOnApiAccessInfoClick() = composeExtension.use {
+        // Arrange
+        val onApiAccessInfoClick: () -> Unit = mockk(relaxed = true)
+        initScreen(state = ApiAccessListUiState(), onApiAccessInfoClick = onApiAccessInfoClick)
+
+        // Act
+        onNodeWithTag(API_ACCESS_LIST_INFO_TEST_TAG).performClick()
+
+        // Assert
+        verify { onApiAccessInfoClick() }
+    }
+
+    @Test
+    fun whenClickingOnApiAccessMethodShouldCallOnApiAccessMethodClickWithCorrectAccessMethod() =
+        composeExtension.use {
+            // Arrange
+            val apiAccessMethod = DIRECT_ACCESS_METHOD
+            val onApiAccessMethodClick: (ApiAccessMethodSetting) -> Unit = mockk(relaxed = true)
+            initScreen(
+                state = ApiAccessListUiState(apiAccessMethodSettings = listOf(apiAccessMethod)),
+                onApiAccessMethodClick = onApiAccessMethodClick,
+            )
+
+            // Act
+            onNodeWithText(apiAccessMethod.name.value).performClick()
+
+            // Assert
+            verify { onApiAccessMethodClick(apiAccessMethod) }
+        }
+}

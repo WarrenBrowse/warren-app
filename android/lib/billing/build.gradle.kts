@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.billing"
+    namespace = "com.warrenbrowse.vpn.lib.billing"
 
     packaging {
         resources {

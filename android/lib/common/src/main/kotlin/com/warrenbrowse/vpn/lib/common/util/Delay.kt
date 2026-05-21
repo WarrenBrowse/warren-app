@@ -1,0 +1,15 @@
+package com.warrenbrowse.vpn.lib.common.util
+
+import kotlin.time.Duration
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+
+suspend fun <T> delayAtLeast(duration: Long, f: suspend () -> T): T = coroutineScope {
+    val result = async { f() }
+    delay(timeMillis = duration)
+    result.await()
+}
+
+suspend fun <T> delayAtLeast(duration: Duration, f: suspend () -> T): T =
+    delayAtLeast(duration.inWholeMilliseconds, f)

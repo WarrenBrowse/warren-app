@@ -1,0 +1,93 @@
+package com.warrenbrowse.vpn.lib.ui.component.listitem
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.tooling.preview.Preview
+import com.warrenbrowse.vpn.lib.ui.component.R
+import com.warrenbrowse.vpn.lib.ui.component.preview.PreviewColumn
+import com.warrenbrowse.vpn.lib.ui.designsystem.Hierarchy
+import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemColors
+import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemDefaults
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+
+@Preview
+@Composable
+private fun PreviewExternalLinkListItem() {
+    PreviewColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
+        ExternalLinkListItem(title = "Navigation sample", showWarning = false, onClick = {})
+        ExternalLinkListItem(
+            hierarchy = Hierarchy.Child1,
+            title = "Navigation sample",
+            showWarning = true,
+            onClick = {},
+        )
+    }
+}
+
+@Composable
+fun ExternalLinkListItem(
+    modifier: Modifier = Modifier,
+    hierarchy: Hierarchy = Hierarchy.Parent,
+    position: Position = Position.Single,
+    title: String,
+    subtitle: String? = null,
+    subTitleTextDirection: TextDirection = TextDirection.Unspecified,
+    leadingIcon: ImageVector? = null,
+    colors: ListItemColors = ListItemDefaults.colors(),
+    showWarning: Boolean = false,
+    isRowEnabled: Boolean = true,
+    onClick: () -> Unit,
+    testTag: String? = null,
+) {
+    WarrenListItem(
+        modifier = modifier,
+        hierarchy = hierarchy,
+        position = position,
+        onClick = onClick,
+        colors = colors,
+        isEnabled = isRowEnabled,
+        testTag = testTag,
+        leadingContent = {
+            when {
+                showWarning ->
+                    Icon(
+                        imageVector = Icons.Rounded.Error,
+                        modifier = Modifier.padding(end = Dimens.smallPadding),
+                        contentDescription = stringResource(R.string.warning),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                leadingIcon != null ->
+                    Icon(
+                        imageVector = leadingIcon,
+                        modifier = Modifier.padding(end = Dimens.smallPadding),
+                        contentDescription = null,
+                    )
+            }
+        },
+        content = {
+            TitleAndSubtitle(
+                title = title,
+                subtitle = subtitle,
+                subTitleTextDirection = subTitleTextDirection,
+            )
+        },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
+                contentDescription = stringResource(R.string.external_link),
+            )
+        },
+    )
+}

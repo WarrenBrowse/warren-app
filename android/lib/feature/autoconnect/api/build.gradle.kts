@@ -1,3 +1,3 @@
 plugins { alias(libs.plugins.mullvad.android.library.feature.api) }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.autoconnect.api" }
+android { namespace = "com.warrenbrowse.vpn.feature.autoconnect.api" }

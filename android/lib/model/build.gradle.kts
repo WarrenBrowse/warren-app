@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.lib.model" }
+android { namespace = "com.warrenbrowse.vpn.lib.model" }
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)

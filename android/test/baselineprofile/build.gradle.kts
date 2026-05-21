@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.baselineprofile"
+    namespace = "com.warrenbrowse.vpn.test.baselineprofile"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()

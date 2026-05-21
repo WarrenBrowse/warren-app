@@ -1,5 +1,5 @@
 # screenshot-flow.yaml
-appId: net.mullvad.mullvadvpn
+appId: com.warrenbrowse.vpn
 ---
 - launchApp
 

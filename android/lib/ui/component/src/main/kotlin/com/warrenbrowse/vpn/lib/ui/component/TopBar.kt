@@ -1,0 +1,320 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
+package com.warrenbrowse.vpn.lib.ui.component
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_ACCOUNT_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_SETTINGS_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+
+@Preview
+@Composable
+private fun PreviewTopBar() {
+    AppTheme {
+        WarrenTopBar(
+            containerColor = MaterialTheme.colorScheme.positive,
+            iconTintColor = MaterialTheme.colorScheme.onSurface,
+            onSettingsClicked = null,
+            onAccountClicked = {},
+        )
+    }
+}
+
+@Preview(widthDp = 260)
+@Composable
+private fun PreviewSlimTopBar() {
+    AppTheme {
+        WarrenTopBar(
+            containerColor = MaterialTheme.colorScheme.positive,
+            iconTintColor = MaterialTheme.colorScheme.onSurface,
+            onSettingsClicked = null,
+            onAccountClicked = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNoIconAndLogoTopBar() {
+    AppTheme {
+        WarrenTopBar(
+            containerColor = MaterialTheme.colorScheme.positive,
+            iconTintColor = MaterialTheme.colorScheme.onSurface,
+            isIconAndLogoVisible = false,
+            onSettingsClicked = {},
+            onAccountClicked = null,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNothingTopBar() {
+    AppTheme {
+        WarrenTopBar(
+            containerColor = MaterialTheme.colorScheme.positive,
+            iconTintColor = MaterialTheme.colorScheme.onSurface,
+            isIconAndLogoVisible = false,
+            onSettingsClicked = null,
+            onAccountClicked = null,
+        )
+    }
+}
+
+@Composable
+fun WarrenTopBar(
+    containerColor: Color,
+    onSettingsClicked: (() -> Unit)?,
+    onAccountClicked: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    iconTintColor: Color,
+    isIconAndLogoVisible: Boolean = true,
+) {
+    TopAppBar(
+        modifier = modifier.testTag(TOP_BAR_TEST_TAG),
+        title = {
+            if (isIconAndLogoVisible) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.logo_icon),
+                        contentDescription = null, // No meaningful user info or action.
+                        modifier = Modifier.size(40.dp),
+                        tint = Color.Unspecified, // Logo should not be tinted
+                    )
+                    // Dynamically show Mullvad VPN Text if it fits, to avoid overlapping icons.
+                    BoxWithConstraints {
+                        val logoTextPainter = painterResource(id = R.drawable.logo_text)
+                        val logoHeight = Dimens.mediumPadding
+                        val logoStartEndPadding = Dimens.smallPadding
+
+                        val shouldShowText =
+                            remember(maxWidth) {
+                                val logoHeightWidthRatio =
+                                    logoTextPainter.intrinsicSize.width /
+                                        logoTextPainter.intrinsicSize.height
+                                val expectedLength = logoHeightWidthRatio * logoHeight.value
+                                maxWidth > (expectedLength + logoStartEndPadding.value * 2).dp
+                            }
+
+                        if (shouldShowText) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logo_text),
+                                tint = iconTintColor,
+                                contentDescription = null, // No meaningful user info or action.
+                                modifier =
+                                    Modifier.padding(horizontal = logoStartEndPadding)
+                                        .height(logoHeight),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        actions = {
+            if (onAccountClicked != null) {
+                IconButton(
+                    modifier = Modifier.testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),
+                    enabled = enabled,
+                    onClick = onAccountClicked,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AccountCircle,
+                        tint = iconTintColor,
+                        contentDescription = stringResource(id = R.string.settings_account),
+                    )
+                }
+            }
+
+            if (onSettingsClicked != null) {
+                IconButton(
+                    modifier = Modifier.testTag(TOP_BAR_SETTINGS_BUTTON_TEST_TAG),
+                    enabled = enabled,
+                    onClick = onSettingsClicked,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Settings,
+                        tint = iconTintColor,
+                        contentDescription = stringResource(id = R.string.settings),
+                    )
+                }
+            }
+        },
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = containerColor,
+                actionIconContentColor = iconTintColor,
+            ),
+    )
+}
+
+@Composable
+fun WarrenSmallTopBar(
+    title: String,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    TopAppBar(
+        title = { Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        navigationIcon = navigationIcon,
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+            ),
+        actions = actions,
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewWarrenTopBarWithLongDeviceName() {
+    AppTheme {
+        Surface {
+            WarrenTopBarWithDeviceName(
+                containerColor = MaterialTheme.colorScheme.error,
+                iconTintColor = MaterialTheme.colorScheme.onError,
+                onSettingsClicked = null,
+                onAccountClicked = null,
+                deviceName = "Superstitious Hippopotamus with extra weight",
+                daysLeftUntilExpiry = 1,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewWarrenTopBarWithShortDeviceName() {
+    AppTheme {
+        Surface {
+            WarrenTopBarWithDeviceName(
+                containerColor = MaterialTheme.colorScheme.error,
+                iconTintColor = MaterialTheme.colorScheme.onError,
+                onSettingsClicked = null,
+                onAccountClicked = null,
+                deviceName = "Fit Ant",
+                daysLeftUntilExpiry = 1,
+            )
+        }
+    }
+}
+
+@Composable
+fun WarrenTopBarWithDeviceName(
+    containerColor: Color,
+    onSettingsClicked: (() -> Unit)?,
+    onAccountClicked: (() -> Unit)?,
+    iconTintColor: Color,
+    isIconAndLogoVisible: Boolean = true,
+    deviceName: String?,
+    daysLeftUntilExpiry: Long?,
+) {
+    Column {
+        WarrenTopBar(
+            containerColor,
+            onSettingsClicked,
+            onAccountClicked,
+            Modifier,
+            enabled = true,
+            iconTintColor,
+            isIconAndLogoVisible,
+        )
+
+        // Align animation of extra row with the rest of the Topbar
+        val appBarContainerColor by
+            animateColorAsState(
+                targetValue = containerColor,
+                animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                label = "ColorAnimation",
+            )
+        Row(
+            modifier =
+                Modifier.background(appBarContainerColor)
+                    .padding(
+                        bottom = Dimens.smallPadding,
+                        start = Dimens.mediumPadding,
+                        end = Dimens.mediumPadding,
+                    )
+                    .fillMaxWidth()
+                    .animateContentSize(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
+        ) {
+            Text(
+                modifier = Modifier.weight(1f, fill = false),
+                text =
+                    deviceName?.let {
+                        stringResource(id = R.string.top_bar_device_name, deviceName)
+                    } ?: "",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelLarge,
+                color = iconTintColor,
+            )
+            if (daysLeftUntilExpiry != null) {
+                Text(
+                    text =
+                        stringResource(
+                            id = R.string.top_bar_time_left,
+                            if (daysLeftUntilExpiry >= 0) {
+                                pluralStringResource(
+                                    id = R.plurals.days,
+                                    daysLeftUntilExpiry.toInt(),
+                                    daysLeftUntilExpiry.toInt(),
+                                )
+                            } else {
+                                stringResource(id = R.string.out_of_time)
+                            },
+                        ),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = iconTintColor,
+                )
+            } else {
+                Spacer(Modifier)
+            }
+        }
+    }
+}

@@ -1,0 +1,144 @@
+package com.warrenbrowse.vpn.feature.addtime.impl
+
+import android.app.Activity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.feature.addtime.impl.AddMoreTimeSideEffect.OpenAccountManagementPageInBrowser
+import com.warrenbrowse.vpn.lib.common.Lc
+import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
+import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
+import com.warrenbrowse.vpn.lib.payment.model.ProductId
+import com.warrenbrowse.vpn.lib.payment.model.PurchaseResult
+import com.warrenbrowse.vpn.lib.repository.AccountRepository
+import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.PaymentLogic
+
+class AddTimeViewModel(
+    private val paymentUseCase: PaymentLogic,
+    private val accountRepository: AccountRepository,
+    connectionProxy: ConnectionProxy,
+    private val isPlayBuild: Boolean,
+) : ViewModel() {
+    private val _uiSideEffect = Channel<AddMoreTimeSideEffect>()
+    val uiSideEffect = _uiSideEffect.receiveAsFlow()
+
+    val uiState: StateFlow<Lc<Unit, AddTimeUiState>> =
+        combine(
+                paymentUseCase.paymentAvailability.filterNotNull(),
+                paymentUseCase.purchaseResult,
+                connectionProxy.tunnelState,
+            ) { paymentAvailability, purchaseResult, tunnelState ->
+                Lc.Content(
+                    AddTimeUiState(
+                        purchaseState = purchaseResult?.toPurchaseState(),
+                        billingPaymentState = paymentAvailability.toPaymentState(),
+                        tunnelStateBlocked = tunnelState.isBlocked(),
+                        showSitePayment = !isPlayBuild,
+                    )
+                )
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT),
+                initialValue = Lc.Loading(Unit),
+            )
+
+    init {
+        verifyPurchases()
+        fetchPaymentAvailability()
+        handlePurchaseResultTerminatingState()
+    }
+
+    fun onManageAccountClick() {
+        viewModelScope.launch {
+            val wwwAuthToken = accountRepository.getWebsiteAuthToken()
+            _uiSideEffect.send(OpenAccountManagementPageInBrowser(wwwAuthToken))
+        }
+    }
+
+    fun fetchPaymentAvailability() {
+        viewModelScope.launch { paymentUseCase.queryPaymentAvailability() }
+    }
+
+    fun startBillingPayment(productId: ProductId, activityProvider: () -> Activity) {
+        viewModelScope.launch { paymentUseCase.purchaseProduct(productId, activityProvider) }
+    }
+
+    fun resetPurchaseResult() {
+        viewModelScope.launch { paymentUseCase.resetPurchaseResult() }
+    }
+
+    private fun verifyPurchases() {
+        viewModelScope.launch {
+            if (paymentUseCase.verifyPurchases().isSuccess()) {
+                updateAccountExpiry()
+            }
+        }
+    }
+
+    private fun handlePurchaseResultTerminatingState() {
+        viewModelScope.launch {
+            paymentUseCase.purchaseResult
+                // Terminating states are either errors or completed purchases.
+                .filter { it?.isTerminatingState() == true }
+                .collect {
+                    // If did a successful purchase we should fetch the new added time
+                    if (it is PurchaseResult.Completed.Success) {
+                        updateAccountExpiry()
+                    } else {
+                        // Otherwise update payment availability to check for pending purchases
+                        fetchPaymentAvailability()
+                        // Check if we have any non-verified purchase
+                        verifyPurchases()
+                    }
+                }
+        }
+    }
+
+    private fun updateAccountExpiry() {
+        viewModelScope.launch { accountRepository.refreshAccountData() }
+    }
+
+    private fun PurchaseResult.toPurchaseState() =
+        when (this) {
+            // Idle states
+            PurchaseResult.Completed.Cancelled,
+            PurchaseResult.BillingFlowStarted,
+            is PurchaseResult.Error.BillingError -> {
+                // Show nothing
+                null
+            }
+            // Fetching products and obfuscated id loading state
+            PurchaseResult.FetchingProducts,
+            PurchaseResult.FetchingObfuscationId -> PurchaseState.Connecting
+            // Verifying loading states
+            PurchaseResult.VerificationStarted -> PurchaseState.VerificationStarted
+            // Pending state
+            is PurchaseResult.Completed.Pending,
+            is PurchaseResult.Error.VerificationError -> PurchaseState.VerifyingPurchase
+            // Success state
+            is PurchaseResult.Completed.Success -> PurchaseState.Success(productId)
+            // Error states
+            is PurchaseResult.Error.TransactionIdError ->
+                PurchaseState.Error.TransactionIdError(productId = productId)
+            is PurchaseResult.Error.FetchProductsError ->
+                PurchaseState.Error.OtherError(productId = productId)
+            is PurchaseResult.Error.NoProductFound ->
+                PurchaseState.Error.OtherError(productId = productId)
+        }
+}
+
+sealed class AddMoreTimeSideEffect {
+    data class OpenAccountManagementPageInBrowser(val token: WebsiteAuthToken?) :
+        AddMoreTimeSideEffect()
+}

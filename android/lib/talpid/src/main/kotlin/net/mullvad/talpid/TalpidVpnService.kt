@@ -20,9 +20,9 @@ import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import kotlin.properties.Delegates.observable
-import net.mullvad.mullvadvpn.lib.common.util.establishSafe
-import net.mullvad.mullvadvpn.lib.common.util.prepareVpnSafe
-import net.mullvad.mullvadvpn.lib.model.PrepareError
+import com.warrenbrowse.vpn.lib.common.util.establishSafe
+import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
+import com.warrenbrowse.vpn.lib.model.PrepareError
 import net.mullvad.talpid.model.CreateTunResult
 import net.mullvad.talpid.model.CreateTunResult.EstablishError
 import net.mullvad.talpid.model.CreateTunResult.InvalidDnsServers

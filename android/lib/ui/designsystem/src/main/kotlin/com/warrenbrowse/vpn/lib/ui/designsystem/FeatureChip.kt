@@ -1,0 +1,97 @@
+package com.warrenbrowse.vpn.lib.ui.designsystem
+
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import com.warrenbrowse.vpn.lib.ui.designsystem.preview.PreviewColumn
+import com.warrenbrowse.vpn.lib.ui.theme.shape.chipShape
+
+@Preview
+@Composable
+private fun PreviewWarrenFeatureChip() {
+    PreviewColumn {
+        WarrenFeatureChip(text = "DAITA", onClick = {})
+        WarrenFeatureChip(text = "Local Network Sharing", onClick = {})
+    }
+}
+
+@Composable
+fun WarrenFeatureChip(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+    labelColor: Color = MaterialTheme.colorScheme.onPrimary,
+    iconColor: Color = MaterialTheme.colorScheme.onPrimary,
+) {
+    FilterChip(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.chipShape,
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor = containerColor,
+                disabledLabelColor = labelColor,
+                labelColor = labelColor,
+                iconColor = iconColor,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                borderColor = borderColor,
+                enabled = true,
+                selected = false,
+            ),
+        selected = false,
+        onClick = onClick,
+        label = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+    )
+}
+
+@Composable
+fun WarrenMoreChip(
+    onClick: () -> Unit,
+    containerColor: Color = MaterialTheme.colorScheme.background,
+    borderColor: Color = Color.Transparent,
+    labelColor: Color = MaterialTheme.colorScheme.onPrimary,
+    iconColor: Color = MaterialTheme.colorScheme.onPrimary,
+    text: String,
+) {
+    FilterChip(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.chipShape,
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor = containerColor,
+                labelColor = labelColor,
+                iconColor = iconColor,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                borderColor = borderColor,
+                enabled = true,
+                selected = false,
+            ),
+        selected = false,
+        label = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+    )
+}

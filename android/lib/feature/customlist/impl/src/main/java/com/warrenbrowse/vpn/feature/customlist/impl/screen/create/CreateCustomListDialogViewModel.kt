@@ -1,0 +1,88 @@
+package com.warrenbrowse.vpn.feature.customlist.impl.screen.create
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
+import com.warrenbrowse.vpn.lib.model.CustomListId
+import com.warrenbrowse.vpn.lib.model.CustomListName
+import com.warrenbrowse.vpn.lib.model.GeoLocationId
+import com.warrenbrowse.vpn.lib.model.communication.CustomListAction
+import com.warrenbrowse.vpn.lib.model.communication.CustomListActionResultData
+import com.warrenbrowse.vpn.lib.usecase.customlists.CreateWithLocationsError
+import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListActionUseCase
+
+class CreateCustomListDialogViewModel(
+    private val locationCode: GeoLocationId?,
+    private val customListActionUseCase: CustomListActionUseCase,
+) : ViewModel() {
+
+    private val _uiSideEffect =
+        Channel<CreateCustomListDialogSideEffect>(1, BufferOverflow.DROP_OLDEST)
+    val uiSideEffect = _uiSideEffect.receiveAsFlow()
+
+    private val _error = MutableStateFlow<CreateWithLocationsError?>(null)
+
+    val uiState =
+        _error
+            .map { CreateCustomListUiState(it) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT),
+                CreateCustomListUiState(),
+            )
+
+    fun createCustomList(name: String) {
+        viewModelScope.launch {
+            customListActionUseCase(
+                    CustomListAction.Create(
+                        CustomListName.fromString(name),
+                        listOfNotNull(locationCode),
+                    )
+                )
+                .fold(
+                    { _error.emit(it) },
+                    {
+                        if (it.locationNames.isEmpty()) {
+                            _uiSideEffect.send(
+                                CreateCustomListDialogSideEffect
+                                    .NavigateToCustomListLocationsScreen(it.id)
+                            )
+                        } else {
+                            _uiSideEffect.send(
+                                CreateCustomListDialogSideEffect.ReturnWithResult(
+                                    CustomListActionResultData.Success.CreatedWithLocations(
+                                        customListName = it.name,
+                                        locationNames = it.locationNames,
+                                        undo = it.undo,
+                                    )
+                                )
+                            )
+                        }
+                    },
+                )
+        }
+    }
+
+    fun clearError() {
+        viewModelScope.launch { _error.emit(null) }
+    }
+}
+
+sealed interface CreateCustomListDialogSideEffect {
+
+    data class NavigateToCustomListLocationsScreen(val customListId: CustomListId) :
+        CreateCustomListDialogSideEffect
+
+    data class ReturnWithResult(
+        val result: CustomListActionResultData.Success.CreatedWithLocations
+    ) : CreateCustomListDialogSideEffect
+}

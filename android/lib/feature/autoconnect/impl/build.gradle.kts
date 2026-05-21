@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.autoconnect.impl" }
+android { namespace = "com.warrenbrowse.vpn.feature.autoconnect.impl" }
 
 dependencies {
     implementation(projects.lib.feature.autoconnect.api)

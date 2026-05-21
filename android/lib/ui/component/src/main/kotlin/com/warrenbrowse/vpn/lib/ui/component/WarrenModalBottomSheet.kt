@@ -1,0 +1,80 @@
+package com.warrenbrowse.vpn.lib.ui.component
+
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import com.warrenbrowse.vpn.lib.ui.component.listitem.BottomSheetListItem
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+private fun PreviewWarrenModalBottomSheet() {
+    AppTheme {
+        WarrenModalBottomSheet(
+            content = {
+                BottomSheetListItem(
+                    title = "Title",
+                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                    onBackgroundColor = MaterialTheme.colorScheme.onSurface,
+                )
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = Dimens.mediumPadding),
+                )
+                BottomSheetListItem(
+                    title = "Select",
+                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                    onBackgroundColor = MaterialTheme.colorScheme.onSurface,
+                )
+            },
+            onDismissRequest = {},
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("ComposableLambdaParameterNaming")
+@Composable
+fun WarrenModalBottomSheet(
+    modifier: Modifier = Modifier,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    onBackgroundColor: Color = MaterialTheme.colorScheme.onSurface,
+    onDismissRequest: () -> Unit,
+    content: @Composable ColumnScope.(bottomPadding: Dp) -> Unit,
+) {
+    // This is to avoid weird colors in the status bar and the navigation bar
+    val paddingValues = BottomSheetDefaults.windowInsets.asPaddingValues()
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        containerColor = backgroundColor,
+        modifier = modifier.semantics { testTagsAsResourceId = true },
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }, // No insets
+        dragHandle = { BottomSheetDefaults.DragHandle(color = onBackgroundColor) },
+    ) {
+        content(paddingValues.calculateBottomPadding())
+        Spacer(
+            modifier = Modifier.height(paddingValues.calculateBottomPadding() + Dimens.smallPadding)
+        )
+    }
+}

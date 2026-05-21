@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.addtime.impl" }
+android { namespace = "com.warrenbrowse.vpn.feature.addtime.impl" }
 
 dependencies {
     implementation(projects.lib.feature.addtime.api)

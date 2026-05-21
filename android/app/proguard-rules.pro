@@ -3,9 +3,9 @@
 # Keep all talpid classes as they are used for JNI calls
 -keep class net.mullvad.talpid.** { *; }
 # These are specific classes used in JNI calls with the daemon
--keep class net.mullvad.mullvadvpn.lib.endpoint.ApiEndpointOverride { *; }
--keep class net.mullvad.mullvadvpn.app.service.MullvadDaemon { *; }
--keep class net.mullvad.mullvadvpn.app.service.MullvadVpnService { *; }
+-keep class com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride { *; }
+-keep class com.warrenbrowse.vpn.app.service.MullvadDaemon { *; }
+-keep class com.warrenbrowse.vpn.app.service.MullvadVpnService { *; }
 # All classes that are used in JNI calls are subclasses of Parcelable
 -keep class android.os.Parcelable { *; }
 # Common java types used in JNI calls
@@ -29,4 +29,4 @@
 -dontwarn com.squareup.okhttp.TlsVersion
 
 # datastore
--keep class net.mullvad.mullvadvpn.repository.UserPreferences { *; }
+-keep class com.warrenbrowse.vpn.repository.UserPreferences { *; }

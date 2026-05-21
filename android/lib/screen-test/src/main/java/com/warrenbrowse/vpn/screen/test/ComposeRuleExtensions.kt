@@ -1,0 +1,25 @@
+package com.warrenbrowse.vpn.screen.test
+
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.core.view.WindowCompat
+import androidx.test.core.app.ActivityScenario
+import de.mannodermaus.junit5.compose.ComposeContext
+import de.mannodermaus.junit5.compose.createAndroidComposeExtension
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+
+fun ComposeContext.setContentWithTheme(content: @Composable () -> Unit) {
+    setContent { AppTheme { content() } }
+}
+
+@ExperimentalTestApi
+fun createEdgeToEdgeComposeExtension() =
+    createAndroidComposeExtension(
+        activityClass = ComponentActivity::class.java,
+        scenarioSupplier = {
+            ActivityScenario.launch(ComponentActivity::class.java).onActivity {
+                WindowCompat.setDecorFitsSystemWindows(it.window, false)
+            }
+        },
+    )

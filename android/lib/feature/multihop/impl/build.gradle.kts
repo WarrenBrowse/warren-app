@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.multihop.impl" }
+android { namespace = "com.warrenbrowse.vpn.feature.multihop.impl" }
 
 dependencies {
     implementation(projects.lib.repository)

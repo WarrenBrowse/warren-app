@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.apiaccess.impl" }
+android { namespace = "com.warrenbrowse.vpn.feature.apiaccess.impl" }
 
 dependencies {
     implementation(projects.lib.feature.apiaccess.api)

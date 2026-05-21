@@ -1,0 +1,77 @@
+package com.warrenbrowse.vpn.lib.pushnotification
+
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import co.touchlab.kermit.Logger
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import com.warrenbrowse.vpn.lib.common.util.accountExpiryNotificationTriggerAt
+import com.warrenbrowse.vpn.lib.pushnotification.receiver.NotificationAlarmReceiver
+import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+
+class ScheduleNotificationAlarmUseCase(
+    private val applicationContext: Context,
+    private val userPreferencesRepository: UserPreferencesRepository,
+) {
+    suspend operator fun invoke(accountExpiry: ZonedDateTime?, customContext: Context? = null) {
+        val context = customContext ?: applicationContext
+        val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+
+        cancelExisting(context, alarmManager)
+
+        if (accountExpiry == null) {
+            userPreferencesRepository.clearAccountExpiry()
+            return
+        }
+
+        val triggerAt =
+            accountExpiryNotificationTriggerAt(now = ZonedDateTime.now(), expiry = accountExpiry)
+
+        // If the triggerAt time is null, it means that the account has already expired, so we do
+        // not schedule a new notification.
+        if (triggerAt != null) {
+            val triggerAtMillis = triggerAt.toInstant().toEpochMilli()
+
+            val intent = alarmIntent(context)
+            alarmManager.set(AlarmManager.RTC, triggerAtMillis, intent)
+
+            // Change to UTC to avoid leaking the user's time zone in the logs
+            Logger.d(
+                "Scheduling next account expiry alarm for ${triggerAt.withZoneSameInstant(ZoneOffset.UTC)}"
+            )
+        }
+
+        userPreferencesRepository.setAccountExpiry(accountExpiry)
+    }
+
+    private fun alarmIntent(context: Context): PendingIntent =
+        Intent(context, NotificationAlarmReceiver::class.java).let { intent ->
+            PendingIntent.getBroadcast(
+                context,
+                ALARM_INTENT_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
+
+    private fun cancelExisting(context: Context, alarmManager: AlarmManager) {
+        existingAlarmIntent(context)?.let { pendingIntent ->
+            alarmManager.cancel(pendingIntent)
+            Logger.d("Cancelled existing account expiry alarm")
+        }
+    }
+
+    private fun existingAlarmIntent(context: Context): PendingIntent? =
+        PendingIntent.getBroadcast(
+            context,
+            ALARM_INTENT_REQUEST_CODE,
+            Intent(context, NotificationAlarmReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT +
+                PendingIntent.FLAG_IMMUTABLE +
+                PendingIntent.FLAG_NO_CREATE,
+        )
+}
+
+private const val ALARM_INTENT_REQUEST_CODE = 0

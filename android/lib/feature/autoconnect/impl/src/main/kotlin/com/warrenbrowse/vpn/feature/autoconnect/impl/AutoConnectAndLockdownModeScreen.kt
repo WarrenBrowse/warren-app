@@ -1,0 +1,365 @@
+package com.warrenbrowse.vpn.feature.autoconnect.impl
+
+import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutScope
+import androidx.core.text.HtmlCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.common.compose.unlessIsDetail
+import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.autoconnect.impl.PAGES.Companion.annotatedTopText
+import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
+import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
+import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
+import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
+import com.warrenbrowse.vpn.lib.ui.component.toAnnotatedString
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
+import com.warrenbrowse.vpn.lib.ui.util.visible
+import org.koin.androidx.compose.koinViewModel
+
+@Preview("OSS|Play")
+@Composable
+private fun PreviewAutoConnectAndLockdownModeScreen(
+    @PreviewParameter(AutoConnectAndLockdownModeUiStatePreviewParameterProvider::class)
+    state: AutoConnectAndLockdownModeUiState
+) {
+    AppTheme { AutoConnectAndLockdownModeScreen(state = state, onBackClick = {}) }
+}
+
+@Composable
+fun AutoConnectAndLockdownMode(navigator: Navigator) {
+    val vm = koinViewModel<AutoConnectAndLockdownModeViewModel>()
+    val state by vm.uiState.collectAsStateWithLifecycle()
+
+    AutoConnectAndLockdownModeScreen(
+        state = state,
+        onBackClick = dropUnlessResumed { navigator.goBack() },
+    )
+}
+
+@Suppress("LongMethod")
+@Composable
+fun AutoConnectAndLockdownModeScreen(
+    state: AutoConnectAndLockdownModeUiState,
+    onBackClick: () -> Unit,
+) {
+    val context = LocalContext.current
+    ScaffoldWithSmallTopBar(
+        appBarTitle = stringResource(id = R.string.auto_connect_and_lockdown_mode),
+        navigationIcon = {
+            unlessIsDetail { NavigateBackIconButton(onNavigateBack = onBackClick) }
+        },
+        bottomBar = {
+            PrimaryButton(
+                text = stringResource(id = R.string.go_to_vpn_settings),
+                onClick = { context.openVpnSettings() },
+                modifier =
+                    Modifier.windowInsetsPadding(
+                            WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+                        )
+                        .padding(
+                            horizontal = Dimens.sideMargin,
+                            vertical = Dimens.screenBottomMargin,
+                        ),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        contentDescription = null,
+                    )
+                },
+            )
+        },
+        content = { modifier ->
+            val scrollState = rememberScrollState()
+            Column(
+                modifier =
+                    modifier
+                        .drawVerticalScrollbar(
+                            state = scrollState,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = AlphaScrollbar),
+                        )
+                        .verticalScroll(state = scrollState),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                val pagerState = rememberPagerState(pageCount = { PAGES.entries.size })
+                val scope = rememberCoroutineScope()
+                ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+                    val (pager, backButtonRef, nextButtonRef, pageIndicatorRef) = createRefs()
+
+                    AutoConnectCarousel(
+                        isPlayBuild = state.isPlayBuild,
+                        pagerState = pagerState,
+                        backButtonRef = backButtonRef,
+                        nextButtonRef = nextButtonRef,
+                        pager = pager,
+                    )
+
+                    // Go to previous page
+                    CarouselNavigationButton(
+                        modifier =
+                            Modifier.constrainAs(backButtonRef) {
+                                top.linkTo(parent.top)
+                                start.linkTo(parent.start)
+                                bottom.linkTo(parent.bottom)
+                            },
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            }
+                        },
+                        isEnabled = { pagerState.currentPage != 0 },
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                    )
+
+                    // Go to next page
+                    CarouselNavigationButton(
+                        modifier =
+                            Modifier.constrainAs(nextButtonRef) {
+                                top.linkTo(parent.top)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom)
+                            },
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        },
+                        isEnabled = { pagerState.currentPage != pagerState.pageCount - 1 },
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    )
+
+                    PageIndicator(
+                        pagerState = pagerState,
+                        pageIndicatorRef = pageIndicatorRef,
+                        pager = pager,
+                    )
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun ConstraintLayoutScope.AutoConnectCarousel(
+    isPlayBuild: Boolean,
+    pagerState: PagerState,
+    backButtonRef: ConstrainedLayoutReference,
+    nextButtonRef: ConstrainedLayoutReference,
+    pager: ConstrainedLayoutReference,
+) {
+    HorizontalPager(
+        state = pagerState,
+        beyondViewportPageCount = 2,
+        modifier =
+            Modifier.constrainAs(pager) {
+                top.linkTo(parent.top)
+                start.linkTo(backButtonRef.end)
+                end.linkTo(nextButtonRef.start)
+                bottom.linkTo(parent.bottom)
+            },
+    ) { pageIndex ->
+        val page = PAGES.entries[pageIndex]
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            val annotatedTopText = page.annotatedTopText(isPlayBuild)
+            Text(
+                modifier = Modifier.padding(horizontal = Dimens.largePadding),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                text = annotatedTopText,
+            )
+            Image(
+                modifier =
+                    Modifier.padding(top = Dimens.smallPadding, bottom = Dimens.bottomPadding),
+                painter = painterResource(id = page.image),
+                contentDescription = null,
+            )
+            Text(
+                modifier = Modifier.padding(horizontal = Dimens.largePadding),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text =
+                    HtmlCompat.fromHtml(
+                            stringResource(id = page.bottomText),
+                            HtmlCompat.FROM_HTML_MODE_COMPACT,
+                        )
+                        .toAnnotatedString(
+                            boldSpanStyle =
+                                SpanStyle(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                        ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CarouselNavigationButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    isEnabled: () -> Boolean,
+    imageVector: ImageVector,
+) {
+    IconButton(
+        modifier = modifier.visible(isEnabled.invoke()),
+        onClick = onClick,
+        enabled = isEnabled.invoke(),
+    ) {
+        Icon(contentDescription = null, imageVector = imageVector)
+    }
+}
+
+@Composable
+private fun ConstraintLayoutScope.PageIndicator(
+    pagerState: PagerState,
+    pageIndicatorRef: ConstrainedLayoutReference,
+    pager: ConstrainedLayoutReference,
+) {
+    Row(
+        Modifier.wrapContentHeight().fillMaxWidth().padding(top = Dimens.mediumSpacer).constrainAs(
+            pageIndicatorRef
+        ) {
+            top.linkTo(pager.bottom)
+            end.linkTo(parent.end)
+            start.linkTo(parent.start)
+        },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        repeat(pagerState.pageCount) { iteration ->
+            val color =
+                if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.primary
+            Box(
+                modifier =
+                    Modifier.padding(Dimens.indicatorPadding)
+                        .clip(CircleShape)
+                        .background(color)
+                        .size(Dimens.indicatorSize)
+            )
+        }
+    }
+}
+
+@Composable
+private fun buildTopText(@StringRes id: Int) = buildAnnotatedString {
+    append(stringResource(id = id))
+}
+
+@Composable
+private fun buildLockdownTopText(isPlayBuild: Boolean) = buildAnnotatedString {
+    append(buildTopText(id = R.string.auto_connect_carousel_third_slide_top_text))
+    append(" ")
+
+    withLink(
+        LinkAnnotation.Url(
+            stringResource(id = R.string.lockdown_url).appendHideNavOnPlayBuild(isPlayBuild)
+        )
+    ) {
+        withStyle(
+            style =
+                SpanStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = TextDecoration.Underline,
+                )
+        ) {
+            append(
+                stringResource(
+                    id = R.string.auto_connect_carousel_third_slide_top_text_website_link
+                )
+            )
+            append(".")
+        }
+    }
+}
+
+private enum class PAGES(val image: Int, val bottomText: Int) {
+    FIRST(
+        R.drawable.carousel_slide_1_cogwheel,
+        R.string.auto_connect_carousel_first_slide_bottom_text,
+    ),
+    SECOND(
+        R.drawable.carousel_slide_2_always_on,
+        R.string.auto_connect_carousel_second_slide_bottom_text,
+    ),
+    THIRD(
+        R.drawable.carousel_slide_3_block_connections,
+        R.string.auto_connect_carousel_third_slide_bottom_text,
+    );
+
+    companion object {
+
+        @Composable
+        fun PAGES.annotatedTopText(isPlayBuild: Boolean): AnnotatedString =
+            when (this) {
+                FIRST -> buildTopText(id = R.string.auto_connect_carousel_first_slide_top_text)
+                SECOND -> buildTopText(id = R.string.auto_connect_carousel_second_slide_top_text)
+                THIRD -> buildLockdownTopText(isPlayBuild)
+            }
+    }
+}

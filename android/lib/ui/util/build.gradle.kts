@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.ui.util"
+    namespace = "com.warrenbrowse.vpn.lib.ui.util"
     buildFeatures { compose = true }
 }
 

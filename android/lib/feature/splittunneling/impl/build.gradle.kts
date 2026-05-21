@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.splittunneling.impl" }
+android { namespace = "com.warrenbrowse.vpn.feature.splittunneling.impl" }
 
 dependencies {
     implementation(projects.lib.repository)

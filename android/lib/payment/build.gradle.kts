@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.payment"
+    namespace = "com.warrenbrowse.vpn.lib.payment"
 
     defaultConfig { testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
 

@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.mullvad.android.library.compose)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.screen.test" }
+android { namespace = "com.warrenbrowse.vpn.screen.test" }
 
 dependencies {
     implementation(projects.lib.ui.theme)

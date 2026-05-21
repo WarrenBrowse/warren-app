@@ -1,0 +1,77 @@
+package com.warrenbrowse.vpn.feature.customlist.impl.screen.editname
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.feature.customlist.api.EditCustomListNameNavKey
+import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
+import com.warrenbrowse.vpn.lib.model.CustomListName
+import com.warrenbrowse.vpn.lib.model.communication.CustomListAction
+import com.warrenbrowse.vpn.lib.model.communication.CustomListActionResultData
+import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListActionUseCase
+import com.warrenbrowse.vpn.lib.usecase.customlists.RenameError
+
+class EditCustomListNameDialogViewModel(
+    private val navArgs: EditCustomListNameNavKey,
+    private val customListActionUseCase: CustomListActionUseCase,
+) : ViewModel() {
+
+    private val inputName = MutableStateFlow(navArgs.initialName.value)
+
+    private val _uiSideEffect =
+        Channel<EditCustomListNameDialogSideEffect>(1, BufferOverflow.DROP_OLDEST)
+    val uiSideEffect = _uiSideEffect.receiveAsFlow()
+
+    private val _error = MutableStateFlow<RenameError?>(null)
+
+    val uiState =
+        combine(inputName, _error) { name, error -> EditCustomListNameUiState(name = name, error) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT),
+                EditCustomListNameUiState(name = navArgs.initialName.value),
+            )
+
+    fun updateCustomListName(name: String) {
+        viewModelScope.launch {
+            customListActionUseCase(
+                    CustomListAction.Rename(
+                        id = navArgs.customListId,
+                        name = navArgs.initialName,
+                        newName = CustomListName.fromString(name),
+                    )
+                )
+                .fold(
+                    { _error.emit(it) },
+                    {
+                        _uiSideEffect.send(
+                            EditCustomListNameDialogSideEffect.ReturnWithResult(
+                                CustomListActionResultData.Success.Renamed(
+                                    newName = it.name,
+                                    undo = it.undo,
+                                )
+                            )
+                        )
+                    },
+                )
+        }
+    }
+
+    fun onNameChanged(name: String) {
+        inputName.value = name
+        viewModelScope.launch { _error.emit(null) }
+    }
+}
+
+sealed interface EditCustomListNameDialogSideEffect {
+    data class ReturnWithResult(val result: CustomListActionResultData.Success.Renamed) :
+        EditCustomListNameDialogSideEffect
+}

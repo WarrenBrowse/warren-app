@@ -1,0 +1,11 @@
+package com.warrenbrowse.vpn.lib.model
+
+enum class ParameterGenerationError {
+    NoMatchingRelayEntry,
+    NoMatchingRelayExit,
+    NoMatchingRelay,
+    NoMatchingBridgeRelay,
+    CustomTunnelHostResolutionError,
+    Ipv4_Unavailable,
+    Ipv6_Unavailable,
+}

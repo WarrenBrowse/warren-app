@@ -1,0 +1,218 @@
+package com.warrenbrowse.vpn.feature.customlist.impl.screen.editlist
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import com.warrenbrowse.vpn.common.compose.dropUnlessResumed
+import com.warrenbrowse.vpn.core.LocalResultStore
+import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.customlist.api.DeleteCustomListNavKey
+import com.warrenbrowse.vpn.feature.customlist.api.DeleteCustomListNavResult
+import com.warrenbrowse.vpn.feature.customlist.api.EditCustomListLocationsNavKey
+import com.warrenbrowse.vpn.feature.customlist.api.EditCustomListNameNavKey
+import com.warrenbrowse.vpn.feature.customlist.api.EditCustomListNavResult
+import com.warrenbrowse.vpn.lib.model.CustomListId
+import com.warrenbrowse.vpn.lib.model.CustomListName
+import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
+import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
+import com.warrenbrowse.vpn.lib.ui.component.listitem.EditCustomListListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
+import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.tag.DELETE_DROPDOWN_MENU_ITEM_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_DROPDOWN_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
+import com.warrenbrowse.vpn.lib.ui.theme.color.menuItemColors
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+
+@Preview("Content|Loading|NotFound")
+@Composable
+private fun PreviewEditCustomListScreen(
+    @PreviewParameter(EditCustomListUiStatePreviewParameterProvider::class)
+    state: EditCustomListUiState
+) {
+    AppTheme {
+        EditCustomListScreen(
+            state = state,
+            onDeleteList = { _, _ -> },
+            onNameClicked = { _, _ -> },
+            onLocationsClicked = {},
+            onBackClick = {},
+        )
+    }
+}
+
+@Composable
+fun EditCustomList(customListId: CustomListId, navigator: Navigator) {
+    val viewModel = koinViewModel<EditCustomListViewModel> { parametersOf(customListId) }
+
+    LocalResultStore.current.consumeResult<DeleteCustomListNavResult> { result ->
+        navigator.goBack(result = EditCustomListNavResult(result.value))
+    }
+
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    EditCustomListScreen(
+        state = state,
+        onDeleteList =
+            dropUnlessResumed { id, name ->
+                navigator.navigate(DeleteCustomListNavKey(customListId = id, name = name))
+            },
+        onNameClicked =
+            dropUnlessResumed { id, name ->
+                navigator.navigate(EditCustomListNameNavKey(customListId = id, initialName = name))
+            },
+        onLocationsClicked =
+            dropUnlessResumed { id ->
+                navigator.navigate(
+                    EditCustomListLocationsNavKey(customListId = id, newList = false)
+                )
+            },
+        onBackClick = dropUnlessResumed { navigator.goBack() },
+    )
+}
+
+@Composable
+fun EditCustomListScreen(
+    state: EditCustomListUiState,
+    onDeleteList: (id: CustomListId, name: CustomListName) -> Unit,
+    onNameClicked: (id: CustomListId, name: CustomListName) -> Unit,
+    onLocationsClicked: (CustomListId) -> Unit,
+    onBackClick: () -> Unit,
+) {
+    ScaffoldWithSmallTopBar(
+        appBarTitle = stringResource(id = R.string.edit_list),
+        navigationIcon = { NavigateBackIconButton(onNavigateBack = onBackClick) },
+        actions = {
+            val content = state as? EditCustomListUiState.Content
+            Actions(
+                enabled = content?.name != null,
+                onDeleteList = {
+                    if (content is EditCustomListUiState.Content) {
+                        onDeleteList(content.id, content.name)
+                    }
+                },
+            )
+        },
+    ) { modifier: Modifier ->
+        val scrollState = rememberScrollState()
+        Column(
+            modifier =
+                modifier
+                    .drawVerticalScrollbar(
+                        state = scrollState,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = AlphaScrollbar),
+                    )
+                    .verticalScroll(state = scrollState)
+                    .padding(horizontal = Dimens.sideMarginNew),
+            verticalArrangement = Arrangement.spacedBy(Dimens.listItemDivider),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            when (state) {
+                EditCustomListUiState.Loading -> {
+                    WarrenCircularProgressIndicatorLarge()
+                }
+                EditCustomListUiState.NotFound -> {
+                    Text(
+                        text = stringResource(id = R.string.not_found),
+                        modifier = Modifier.padding(Dimens.sideMargin),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                is EditCustomListUiState.Content -> {
+                    // Name cell
+                    EditCustomListListItem(
+                        title = stringResource(id = R.string.list_name),
+                        subtitle = state.name.value,
+                        position = Position.Top,
+                        onClick = { onNameClicked(state.id, state.name) },
+                    )
+                    // Locations cell
+                    EditCustomListListItem(
+                        title = stringResource(id = R.string.locations),
+                        subtitle =
+                            pluralStringResource(
+                                id = R.plurals.number_of_locations,
+                                state.locations.size,
+                                state.locations.size,
+                            ),
+                        position = Position.Bottom,
+                        onClick = { onLocationsClicked(state.id) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Actions(enabled: Boolean, onDeleteList: () -> Unit) {
+    var showMenu by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = { showMenu = true },
+        modifier = Modifier.testTag(TOP_BAR_DROPDOWN_BUTTON_TEST_TAG),
+    ) {
+        Icon(imageVector = Icons.Rounded.MoreVert, contentDescription = null)
+        if (showMenu) {
+            DropdownMenu(
+                expanded = true,
+                onDismissRequest = { showMenu = false },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(id = R.string.delete_list),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = null,
+                        )
+                    },
+                    colors = menuItemColors,
+                    onClick = {
+                        onDeleteList()
+                        showMenu = false
+                    },
+                    enabled = enabled,
+                    modifier = Modifier.testTag(DELETE_DROPDOWN_MENU_ITEM_TEST_TAG),
+                )
+            }
+        }
+    }
+}

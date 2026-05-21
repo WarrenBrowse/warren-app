@@ -1,14 +1,14 @@
-# Mullvad VPN Android app
+# Warren VPN Android app
 
-This directory contains the Android project as well as related files and information. Apart from the
-content of this directory, the Android project also relies on building the [mullvad-daemon](../mullvad-daemon/)
-(which includes the GotaTun WireGuard implementation) as a shared library bundled into the assembled APK.
+This directory contains the Android project as well as related files and information. The Android
+project relies on building the [warren-jni](../warren-jni/) Rust library (wired against
+[warren-core](https://github.com/WarrenBrowse/warren-core) Quinn tunnel) as a shared library
+bundled into the assembled APK.
 
-The app is available for download on
-[our website](https://mullvad.net/download/android/),
-[GitHub Releases](https://github.com/mullvad/mullvadvpn-app/releases),
-[F-Droid](https://f-droid.org/packages/net.mullvad.mullvadvpn/) and
-[Google Play](https://play.google.com/store/apps/details?id=net.mullvad.mullvadvpn).
+The app will be available for download on
+[our website](https://warrenbrowse.com/download),
+[GitHub Releases](https://github.com/WarrenBrowse/warren-app/releases) and
+[Google Play](https://play.google.com/store/apps/details?id=com.warrenbrowse.vpn).
 
 ## Quick start
 

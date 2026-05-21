@@ -12,8 +12,8 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import java.net.Inet6Address
 import java.net.InetAddress
-import net.mullvad.mullvadvpn.lib.common.util.prepareVpnSafe
-import net.mullvad.mullvadvpn.lib.model.Prepared
+import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
+import com.warrenbrowse.vpn.lib.model.Prepared
 import net.mullvad.talpid.model.CreateTunResult
 import net.mullvad.talpid.model.InetNetwork
 import net.mullvad.talpid.model.TunConfig
@@ -128,7 +128,7 @@ class TalpidVpnServiceInvalidIpv6ConfigTest {
 
     companion object {
         private const val VPN_SERVICE_EXTENSION =
-            "net.mullvad.mullvadvpn.lib.common.util.VpnServiceUtilsKt"
+            "com.warrenbrowse.vpn.lib.common.util.VpnServiceUtilsKt"
 
         val baseTunConfig =
             TunConfig(

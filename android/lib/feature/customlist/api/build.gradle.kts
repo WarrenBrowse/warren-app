@@ -1,5 +1,5 @@
 plugins { alias(libs.plugins.mullvad.android.library.feature.api) }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.customlist.api" }
+android { namespace = "com.warrenbrowse.vpn.feature.customlist.api" }
 
 dependencies { implementation(projects.lib.model) }
