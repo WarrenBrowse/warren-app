@@ -119,6 +119,27 @@ class WarrenQuinnAdapter(
         registerNetworkCallback()
     }
 
+    /**
+     * Tear down the active Quinn session and immediately reconnect using
+     * the cached [activeConfig] + [activeMnemonic]. Used by the user-
+     * facing Reconnect button (and by the OS handover flow); does NOT
+     * re-prompt for biometric auth because we have the mnemonic still
+     * in process memory from the prior connect.
+     *
+     * No-op when there is no active session; the user must use the
+     * normal connect flow in that case.
+     */
+    suspend fun reconnect() {
+        val config = activeConfig
+        val mnemonic = activeMnemonic
+        if (config == null || mnemonic == null) {
+            Logger.w("WarrenQuinnAdapter: reconnect() called without an active session")
+            return
+        }
+        disconnect()
+        connect(config, mnemonic)
+    }
+
     suspend fun disconnect() = lock.withLock {
         unregisterNetworkCallback()
         pendingHandover?.cancel()

@@ -157,8 +157,11 @@ class WarrenVpnService : TalpidVpnService() {
             }
 
             intent?.action == KEY_RECONNECT_ACTION -> {
+                // D.4 step 13: reconnect routes through the Quinn adapter,
+                // which reuses the cached config + mnemonic (no biometric
+                // re-prompt). No-op if there is no active session.
                 foregroundNotificationHandler.startForeground()
-                Logger.w("Received legacy KEY_RECONNECT_ACTION; no-op (D.4 step 10)")
+                lifecycleScope.launch { quinnAdapter.reconnect() }
             }
 
             intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {

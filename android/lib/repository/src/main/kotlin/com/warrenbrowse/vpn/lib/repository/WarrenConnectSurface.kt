@@ -44,3 +44,13 @@ interface WarrenTunnelStateProvider {
 interface WarrenQuinnDisconnectInvoker {
     fun disconnect()
 }
+
+/**
+ * Lib-side surface for the Warren reconnect path. Reuses the cached
+ * config + mnemonic from the running session (no biometric re-prompt).
+ * No-op if there is no active session. Implementation in
+ * `app/connect/WarrenReconnectUseCase`.
+ */
+interface WarrenQuinnReconnectInvoker {
+    fun reconnect()
+}

@@ -104,6 +104,7 @@ import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
 import com.warrenbrowse.vpn.lib.common.util.removeHtmlTags
@@ -180,6 +181,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val connectViewModel: ConnectViewModel = koinViewModel()
     val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
     val warrenDisconnect = koinInject<WarrenQuinnDisconnectInvoker>()
+    val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
     val warrenTunnelState = koinInject<WarrenTunnelStateProvider>()
     val warrenState by warrenTunnelState.state.collectAsStateWithLifecycle()
 
@@ -314,7 +316,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             state = state,
             snackbarHostState = snackbarHostState,
             onDisconnectClick = { warrenDisconnect.disconnect() },
-            onReconnectClick = connectViewModel::onReconnectClick,
+            onReconnectClick = { warrenReconnect.reconnect() },
             onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
