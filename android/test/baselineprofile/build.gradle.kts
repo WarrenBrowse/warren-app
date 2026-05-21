@@ -57,15 +57,7 @@ android {
             buildConfigField(
                 type = "String",
                 name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"mullvad.net\"",
-            )
-        }
-        create(Flavors.STAGEMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            buildConfigField(
-                type = "String",
-                name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"stagemole.eu\"",
+                value = "\"warrenbrowse.com\"",
             )
         }
     }

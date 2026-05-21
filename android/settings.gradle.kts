@@ -23,7 +23,7 @@ includeBuild("gradle/build-logic")
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "MullvadVPN"
+rootProject.name = "WarrenVPN"
 
 include(":app")
 

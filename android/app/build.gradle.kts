@@ -14,7 +14,6 @@ import utilities.generateRemapArguments
 import utilities.getBooleanProperty
 import utilities.getStringListProperty
 import utilities.isReleaseBuild
-import utilities.leakCanaryImplementation
 import utilities.matchesAny
 import utilities.ossProdAnyBuildType
 import utilities.playImplementation
@@ -41,14 +40,14 @@ val rustJniLibsDir = layout.buildDirectory.dir("rustJniLibs/android").get()
 val appVersion = appVersionProvider.get()
 
 android {
-    namespace = "net.mullvad.mullvadvpn"
+    namespace = "com.warrenbrowse.vpn"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "net.mullvad.mullvadvpn"
+        applicationId = "com.warrenbrowse.vpn"
         minSdk = libs.versions.min.sdk.get().toInt()
         targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = appVersion.code
@@ -66,8 +65,6 @@ android {
     }
 
     playConfigs {
-        register("playDevmoleRelease") { enabled = appVersion.isAlpha }
-        register("playStagemoleRelease") { enabled = appVersion.isAlpha }
         register("playProdRelease") {
             enabled = !appVersion.isDev
             releaseStatus.set(ReleaseStatus.DRAFT)
@@ -101,11 +98,6 @@ android {
             )
         }
         getByName(BuildTypes.DEBUG) { isPseudoLocalesEnabled = true }
-        create(BuildTypes.LEAK_CANARY) {
-            initWith(buildTypes.getByName(BuildTypes.DEBUG))
-            applicationIdSuffix = ".leakcanary"
-            matchingFallbacks += BuildTypes.DEBUG
-        }
     }
 
     flavorDimensions += FlavorDimensions.BILLING
@@ -122,18 +114,6 @@ android {
             isDefault = true
             buildConfigField("String", "API_ENDPOINT", "\"\"")
             buildConfigField("String", "API_IP", "\"\"")
-        }
-        create(Flavors.DEVMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.devmole"
-            buildConfigField("String", "API_ENDPOINT", "\"api-app.devmole.eu\"")
-            buildConfigField("String", "API_IP", "\"185.217.116.4\"")
-        }
-        create(Flavors.STAGEMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.stagemole"
-            buildConfigField("String", "API_ENDPOINT", "\"api-app.stagemole.eu\"")
-            buildConfigField("String", "API_IP", "\"185.217.116.132\"")
         }
     }
 
@@ -243,7 +223,7 @@ androidComponents {
 
         val variantName = it.name
         val capitalizedVariantName = variantName.capitalized()
-        val artifactName = "MullvadVPN-${appVersion.name}${artifactSuffix}"
+        val artifactName = "WarrenVPN-${appVersion.name}${artifactSuffix}"
 
         tasks.register<Copy>("create${capitalizedVariantName}DistApk") {
             from(it.artifacts.get(SingleArtifact.APK))
@@ -512,9 +492,6 @@ dependencies {
     // UI tooling
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
-
-    // Leak canary
-    leakCanaryImplementation(libs.leakCanary)
 
     // HACK:
     // Not used by app module, but otherwise an older version pre 1.8.0 will be used at runtime for

@@ -2,13 +2,11 @@ package utilities
 
 import utilities.BuildTypes.BENCHMARK
 import utilities.BuildTypes.DEBUG
-import utilities.BuildTypes.LEAK_CANARY
 import utilities.BuildTypes.NON_MINIFIED
 import utilities.BuildTypes.RELEASE
 import utilities.Flavors.OSS
 import utilities.Flavors.PLAY
 import utilities.Flavors.PROD
-import utilities.Flavors.STAGEMOLE
 
 val ossProdAnyBuildType =
     VariantFilter(
@@ -17,8 +15,7 @@ val ossProdAnyBuildType =
         buildTypePredicate = {
             when (it) {
                 DEBUG,
-                RELEASE,
-                LEAK_CANARY -> true
+                RELEASE -> true
                 else -> false
             }
         },
@@ -56,9 +53,10 @@ val ossProdDebug =
         infrastructurePredicate = { it == PROD },
         buildTypePredicate = { it == DEBUG },
     )
-val playStagemoleDebug =
+
+val playProdDebug =
     VariantFilter(
         billingPredicate = { it == PLAY },
-        infrastructurePredicate = { it == STAGEMOLE },
+        infrastructurePredicate = { it == PROD },
         buildTypePredicate = { it == DEBUG },
     )

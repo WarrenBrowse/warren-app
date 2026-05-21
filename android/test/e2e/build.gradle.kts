@@ -3,7 +3,7 @@ import utilities.Flavors
 import utilities.Variant
 import utilities.matchesAny
 import utilities.ossProdDebug
-import utilities.playStagemoleDebug
+import utilities.playProdDebug
 
 plugins {
     alias(libs.plugins.mullvad.utilities)
@@ -47,15 +47,7 @@ android {
             buildConfigField(
                 type = "String",
                 name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"mullvad.net\"",
-            )
-        }
-        create(Flavors.STAGEMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            buildConfigField(
-                type = "String",
-                name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"stagemole.eu\"",
+                value = "\"warrenbrowse.com\"",
             )
         }
     }
@@ -87,7 +79,7 @@ androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
             Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matchesAny(ossProdDebug, playStagemoleDebug)
+                .matchesAny(ossProdDebug, playProdDebug)
     }
 }
 

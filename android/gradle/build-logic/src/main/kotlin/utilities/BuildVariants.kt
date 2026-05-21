@@ -3,7 +3,6 @@ package utilities
 object BuildTypes {
     const val DEBUG = "debug"
     const val RELEASE = "release"
-    const val LEAK_CANARY = "leakCanary"
 
     const val NON_MINIFIED = "nonMinified"
 
@@ -24,8 +23,6 @@ object Flavors {
     const val PLAY = "play"
 
     const val PROD = "prod"
-    const val DEVMOLE = "devmole"
-    const val STAGEMOLE = "stagemole"
 }
 
 data class Variant(val buildType: String?, val productFlavors: Map<String, String>) {
@@ -56,10 +53,4 @@ fun fullReleaseTasks(appVersion: AppVersion) =
         add("createOssProdReleaseDistApk")
         add("createPlayProdReleaseDistApk")
         add("createPlayProdReleaseDistBundle")
-        if (appVersion.isAlpha || appVersion.isDev) {
-            add("createPlayDevmoleReleaseDistApk")
-            add("createPlayStagemoleReleaseDistApk")
-            add("createPlayDevmoleReleaseDistBundle")
-            add("createPlayStagemoleReleaseDistBundle")
-        }
     }

@@ -48,16 +48,16 @@ fun checkCleanWorkingDirectory(execOperations: ExecOperations) {
 fun printBuildHeader(versionName: String) {
     val hostname = java.net.InetAddress.getLocalHost().hostName
     val line = "=".repeat(BUILD_HEADER_LINE_LENGTH)
-    println("$line\nBuilding Mullvad VPN $versionName on $hostname\n$line")
+    println("$line\nBuilding Warren VPN $versionName on $hostname\n$line")
 }
 
 fun printBuildChecksums(versionName: String, distDir: java.io.File) {
     val artifacts =
         distDir
-            .listFiles { f -> f.name.startsWith("MullvadVPN-$versionName") }
+            .listFiles { f -> f.name.startsWith("WarrenVPN-$versionName") }
             ?.sortedBy { it.name }
     check(!artifacts.isNullOrEmpty()) {
-        "No artifacts found in $distDir for MullvadVPN-$versionName"
+        "No artifacts found in $distDir for WarrenVPN-$versionName"
     }
     println("\nBuild checksums:")
     artifacts.forEach { artifact ->

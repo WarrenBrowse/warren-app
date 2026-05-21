@@ -65,7 +65,6 @@ kotlinx = "1.10.2"
 kotlinx-serialization-json = "1.11.0"
 ktfmt = "0.26.0"
 ktor = "3.4.2"
-leakcanary = "2.14"
 mockk = "1.14.9"
 play-publisher = "4.0.0"
 play-services-location = "21.3.0"
@@ -171,7 +170,6 @@ ktor-client-resources = { module = "io.ktor:ktor-client-resources", version.ref 
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-engine-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-leakCanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
