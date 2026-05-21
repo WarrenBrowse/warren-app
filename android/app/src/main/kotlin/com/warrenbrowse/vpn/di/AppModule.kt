@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.usecase.AccountExpiryNotificationActionUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import org.koin.android.ext.koin.androidContext
@@ -70,9 +71,14 @@ val appModule = module {
     single { ConnectionProxy(androidContext(), get(), get()) }
     single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
 
+    // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    // Kept separate from the proto-backed UserPreferencesRepository so we can
+    // drop the legacy Mullvad surface without touching these.
+    single { WarrenLocalSettingsRepository(androidContext()) }
+
     // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
     // service dispatch for Warren Quinn connect.
-    single { WarrenTunnelConfigBuilder() }
+    single { WarrenTunnelConfigBuilder(localSettings = get()) }
     single {
         WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
     } bind WarrenQuinnConnectInvoker::class
