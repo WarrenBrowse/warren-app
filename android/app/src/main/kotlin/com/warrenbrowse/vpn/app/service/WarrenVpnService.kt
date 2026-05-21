@@ -41,7 +41,6 @@ class WarrenVpnService : TalpidVpnService() {
     private lateinit var migrateSplitTunneling: MigrateSplitTunneling
     private lateinit var apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder
     private lateinit var connectionProxy: ConnectionProxy
-    private lateinit var daemonConfig: DaemonConfig
 
     private lateinit var foregroundNotificationHandler: ForegroundNotificationManager
 
@@ -64,7 +63,6 @@ class WarrenVpnService : TalpidVpnService() {
                 ForegroundNotificationManager(this@WarrenVpnService, get())
             get<NotificationManager>()
 
-            daemonConfig = get()
             migrateSplitTunneling = get()
             apiEndpointFromIntentHolder = get()
             connectionProxy = get()
@@ -76,17 +74,15 @@ class WarrenVpnService : TalpidVpnService() {
         // upstream `relays.json` asset extraction (`prepareFiles()`) is gone.
         migrateSplitTunneling.migrate()
 
-        // If it is a debug build and we have an api override in the intent, use it
-        // This is for injecting hostname and port for our mock api tests
+        // Log any API endpoint override seeded by mockapi tests so the
+        // future warren-api-client can pick it up (D.6 wiring).
         val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
-        val updatedConfig =
-            if (BuildConfig.DEBUG && intentApiOverride != null) {
-                daemonConfig.copy(apiEndpointOverride = intentApiOverride)
-            } else {
-                daemonConfig
-            }
-        Logger.i("Start daemon")
-        startDaemon(updatedConfig)
+        if (BuildConfig.DEBUG && intentApiOverride != null) {
+            Logger.i("API endpoint override present: $intentApiOverride")
+        }
+
+        WarrenJni.initLogger(filesDir.absolutePath)
+        Logger.i("warren-jni initialised")
 
         Logger.i("Start management service")
         managementService.start()
@@ -169,16 +165,6 @@ class WarrenVpnService : TalpidVpnService() {
             Logger.i("onRebind from system")
             foregroundNotificationHandler.startForeground()
         }
-    }
-
-    private fun startDaemon(daemonConfig: DaemonConfig) {
-        // Initialise the Rust-side logger (and shared tokio runtime, once the
-        // tunnel feature lights up) via warren-jni. The legacy
-        // `WarrenDaemon.initialize` shim was deleted: Warren has no
-        // long-running Rust daemon on Android - the connection lifecycle is
-        // driven by `WarrenQuinnAdapter` (D.4 wiring).
-        WarrenJni.initLogger(daemonConfig.filesDir.absolutePath)
-        Logger.i("WarrenVpnService: warren-jni initialised")
     }
 
     private fun emptyBinder() =
