@@ -18,6 +18,7 @@ import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
+import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
@@ -170,18 +171,15 @@ class WarrenVpnService : TalpidVpnService() {
         }
     }
 
-    private fun startDaemon(daemonConfig: DaemonConfig) =
-        with(daemonConfig) {
-            WarrenDaemon.initialize(
-                vpnService = this@WarrenVpnService,
-                rpcSocketPath = rpcSocket.absolutePath,
-                filesDirectory = filesDir.absolutePath,
-                cacheDirectory = cacheDir.absolutePath,
-                apiEndpointOverride = apiEndpointOverride,
-                extraMetadata = mapOf("flavor" to BuildConfig.FLAVOR),
-            )
-            Logger.i("WarrenVpnService: Daemon initialized")
-        }
+    private fun startDaemon(daemonConfig: DaemonConfig) {
+        // Initialise the Rust-side logger (and shared tokio runtime, once the
+        // tunnel feature lights up) via warren-jni. The legacy
+        // `WarrenDaemon.initialize` shim was deleted: Warren has no
+        // long-running Rust daemon on Android - the connection lifecycle is
+        // driven by `WarrenQuinnAdapter` (D.4 wiring).
+        WarrenJni.initLogger(daemonConfig.filesDir.absolutePath)
+        Logger.i("WarrenVpnService: warren-jni initialised")
+    }
 
     private fun emptyBinder() =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -211,11 +209,13 @@ class WarrenVpnService : TalpidVpnService() {
     override fun onDestroy() {
         super.onDestroy()
         Logger.i("WarrenVpnService: onDestroy")
-        // Shutting down the daemon gracefully
+        // Shut down the managementService first so any in-flight gRPC
+        // calls fail fast. The Rust side has no daemon to terminate -
+        // `warren-jni` holds only the shared tokio runtime, which goes
+        // away with the process. D.4's `WarrenQuinnAdapter` will be
+        // responsible for tearing the active Quinn tunnel down here
+        // before letting the process exit.
         managementService.stop()
-
-        Logger.i("Shutdown WarrenDaemon")
-        WarrenDaemon.shutdown()
 
         Logger.i("Enter Idle")
         managementService.enterIdle()
