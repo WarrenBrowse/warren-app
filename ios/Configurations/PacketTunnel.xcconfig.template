@@ -2,8 +2,10 @@
 #include "Api.xcconfig"
 
 // Provisioning profiles
-// Comment out the lines below if using automatic code sign
-PROVISIONING_PROFILE_SPECIFIER[config=Debug][sdk=*][arch=*] = Packet Tunnel Development
-PROVISIONING_PROFILE_SPECIFIER[config=Staging][sdk=*][arch=*] = Packet Tunnel Development
-PROVISIONING_PROFILE_SPECIFIER[config=MockRelease][sdk=*][arch=*] = Packet Tunnel Development
-PROVISIONING_PROFILE_SPECIFIER[config=Release][sdk=*][arch=*] = Packet Tunnel Release
+// Warren defaults to Automatic code signing (see Base.xcconfig). Uncomment
+// and adjust the lines below when switching to manual signing with
+// Warren-named profiles (e.g. "Warren Packet Tunnel Development").
+// PROVISIONING_PROFILE_SPECIFIER[config=Debug][sdk=*][arch=*] = Warren Packet Tunnel Development
+// PROVISIONING_PROFILE_SPECIFIER[config=Staging][sdk=*][arch=*] = Warren Packet Tunnel Development
+// PROVISIONING_PROFILE_SPECIFIER[config=MockRelease][sdk=*][arch=*] = Warren Packet Tunnel Development
+// PROVISIONING_PROFILE_SPECIFIER[config=Release][sdk=*][arch=*] = Warren Packet Tunnel Release

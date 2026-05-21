@@ -40,7 +40,7 @@ enum ApplicationConfiguration {
         let filteredFilePaths: [URL] =
             filePathsInDirectory?.compactMap { path in
                 let pathIsLog = path.split(separator: ".").last == "log"
-                // Pattern should be "<Target Bundle ID>_", eg. "net.mullvad.MullvadVPN_".
+                // Pattern should be "<Target Bundle ID>_", eg. "com.warrenbrowse.vpn.ios_".
                 let pathBelongsToTarget = path.contains("\(target.bundleIdentifier)_")
 
                 return pathIsLog && pathBelongsToTarget ? containerURL.appendingPathComponent(path) : nil

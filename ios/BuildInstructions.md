@@ -199,10 +199,10 @@ rm distribution.{pem,cer} \
 
 We will now create the provisioning profiles listed below using the Apple developer console.
 
-| App ID                              | Provisioning Profile Name |
-|-------------------------------------|---------------------------|
-| net.mullvad.MullvadVPN              | Mullvad VPN Release       |
-| net.mullvad.MullvadVPN.PacketTunnel | Packet Tunnel Release     |
+| App ID                                  | Provisioning Profile Name      |
+|-----------------------------------------|--------------------------------|
+| com.warrenbrowse.vpn.ios                | Warren VPN Release             |
+| com.warrenbrowse.vpn.ios.PacketTunnel   | Warren Packet Tunnel Release   |
 
 Follow these steps to add each of provisioning profiles:
 

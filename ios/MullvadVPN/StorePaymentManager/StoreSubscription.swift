@@ -9,8 +9,8 @@
 import StoreKit
 
 enum StoreSubscription: String, CaseIterable {
-    case thirtyDays = "net.mullvad.MullvadVPN.subscription.storekit2.30days"
-    case ninetyDays = "net.mullvad.MullvadVPN.subscription.storekit2.90days"
+    case thirtyDays = "com.warrenbrowse.vpn.ios.subscription.storekit2.30days"
+    case ninetyDays = "com.warrenbrowse.vpn.ios.subscription.storekit2.90days"
 
     func localizedTitle(displayPrice: String) -> String {
         switch self {

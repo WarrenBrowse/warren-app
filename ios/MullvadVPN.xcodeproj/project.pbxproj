@@ -7705,7 +7705,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.OperationsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.OperationsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -7727,7 +7727,7 @@
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.OperationsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.OperationsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -7752,7 +7752,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPNTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -7774,7 +7774,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPNTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -7950,7 +7950,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.PacketTunnelCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.PacketTunnelCoreTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -7972,7 +7972,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.PacketTunnelCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.PacketTunnelCoreTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -8470,7 +8470,7 @@
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.MullvadRESTTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRESTTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8490,7 +8490,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.MullvadRESTTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRESTTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8592,7 +8592,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.RoutingTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.RoutingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8617,7 +8617,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.RoutingTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.RoutingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8632,7 +8632,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 852969382B4ED818007EAD4C /* UITests.xcconfig */;
 			buildSettings = {
-				APPLICATION_IDENTIFIER = net.mullvad.MullvadVPN;
+				APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
@@ -8654,7 +8654,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SECURITY_GROUP_IDENTIFIER = group.net.mullvad.MullvadVPN;
+				SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG MULLVAD_ENVIRONMENT_PRODUCTION $(inherited)";
@@ -8669,7 +8669,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 852969382B4ED818007EAD4C /* UITests.xcconfig */;
 			buildSettings = {
-				APPLICATION_IDENTIFIER = net.mullvad.MullvadVPN;
+				APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -8684,7 +8684,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadVPNUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SECURITY_GROUP_IDENTIFIER = group.net.mullvad.MullvadVPN;
+				SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -8848,7 +8848,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPNTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8904,7 +8904,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.OperationsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.OperationsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -8964,7 +8964,7 @@
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.MullvadRESTTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRESTTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9097,7 +9097,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.PacketTunnelCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.PacketTunnelCoreTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9200,7 +9200,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.RoutingTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.RoutingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9215,7 +9215,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 852969382B4ED818007EAD4C /* UITests.xcconfig */;
 			buildSettings = {
-				APPLICATION_IDENTIFIER = net.mullvad.MullvadVPN;
+				APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
@@ -9239,7 +9239,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 852969382B4ED818007EAD4C /* UITests.xcconfig */;
 			buildSettings = {
-				APPLICATION_IDENTIFIER = net.mullvad.MullvadVPN;
+				APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MullvadVPNUITests/Info.plist;
@@ -9458,7 +9458,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9484,7 +9484,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9509,7 +9509,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9535,7 +9535,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9686,7 +9686,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPNTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9742,7 +9742,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.OperationsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.OperationsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9802,7 +9802,7 @@
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = CKG9MXH72F;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.MullvadRESTTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRESTTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9935,7 +9935,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.PacketTunnelCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.PacketTunnelCoreTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -10038,7 +10038,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mullvad.MullvadVPN.RoutingTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.RoutingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -10079,7 +10079,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.mullvad.MullvadVPN.MullvadMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10124,7 +10124,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.mullvad.MullvadVPN.MullvadMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10168,7 +10168,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.mullvad.MullvadVPN.MullvadMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -10212,8 +10212,8 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadMockData";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.mullvad.MullvadVPN.MullvadMockData;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = net.mullvad.MullvadVPN.MullvadMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = com.warrenbrowse.vpn.ios.MullvadMockData;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;

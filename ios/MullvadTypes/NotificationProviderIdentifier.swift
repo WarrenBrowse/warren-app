@@ -31,6 +31,6 @@ public enum NotificationProviderIdentifier: String {
     case `default` = "default"
 
     public var domainIdentifier: String {
-        "net.mullvad.MullvadVPN.\(rawValue)"
+        "com.warrenbrowse.vpn.ios.\(rawValue)"
     }
 }
