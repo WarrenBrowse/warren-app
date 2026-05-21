@@ -3366,33 +3366,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mullvad-ios"
-version = "0.0.0"
-dependencies = [
- "cbindgen",
- "futures",
- "hyper",
- "hyper-util",
- "libc",
- "log",
- "mockito",
- "mullvad-api",
- "mullvad-encrypted-dns-proxy",
- "mullvad-logging",
- "mullvad-types",
- "shadowsocks",
- "talpid-future",
- "talpid-tunnel-config-client",
- "talpid-types",
- "tokio",
- "tonic",
- "tower",
- "tracing",
- "tracing-subscriber",
- "tunnel-obfuscation",
-]
-
-[[package]]
 name = "mullvad-leak-checker"
 version = "0.1.0"
 dependencies = [
@@ -7195,6 +7168,33 @@ dependencies = [
  "thiserror 2.0.18",
  "warren-config",
  "zeroize",
+]
+
+[[package]]
+name = "warren-ios"
+version = "0.0.0"
+dependencies = [
+ "cbindgen",
+ "futures",
+ "hyper",
+ "hyper-util",
+ "libc",
+ "log",
+ "mockito",
+ "mullvad-api",
+ "mullvad-encrypted-dns-proxy",
+ "mullvad-logging",
+ "mullvad-types",
+ "shadowsocks",
+ "talpid-future",
+ "talpid-tunnel-config-client",
+ "talpid-types",
+ "tokio",
+ "tonic",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+ "tunnel-obfuscation",
 ]
 
 [[package]]

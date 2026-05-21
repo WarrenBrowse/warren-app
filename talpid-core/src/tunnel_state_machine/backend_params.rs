@@ -130,7 +130,7 @@ mod tests {
     use ed25519_dalek::SigningKey;
     use talpid_types::net::TransportProtocol;
     use talpid_warren_tunnel::{
-        ExitId, MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor,
+        ExitId, MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor, RelayExitId,
         WarrenTunnelParameters,
     };
     use warren_protocol::{WarrenExitAddr, WarrenPubkey};
@@ -145,6 +145,7 @@ mod tests {
         }
         WarrenTunnelParameters {
             exit_addr: addr,
+            exit_id: RelayExitId::from_bytes([7u8; 16]),
             signing_key: SigningKey::from_bytes(&[9u8; 32]),
             n_connections: 1,
             features: 0,

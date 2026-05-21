@@ -43,6 +43,11 @@ pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
+/// Re-export of the single-hop stable exit identifier from
+/// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
+/// on this 16-byte value so a legitimate Ed25519 rotation stays
+/// distinguishable from an exit-substitution attack.
+pub use warren_protocol::ExitId as RelayExitId;
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
     pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
@@ -87,6 +92,14 @@ pub struct WarrenTunnelParameters {
     /// Ed25519 pubkey in `exit_addr.id`. Built by the relay selector
     /// from `exit-info.json` published by the exits.
     pub exit_addr: WarrenExitAddr,
+
+    /// Stable 16-byte exit identifier (Session A.4 anchor). Sourced
+    /// from `WarrenRelay::exit_id()` at selection time. The daemon's
+    /// pubkey-pinning verify hook keys its lookup on this field so a
+    /// legitimate Ed25519 rotation under the same `exit_id` triggers
+    /// the mismatch warning while a wholesale new exit (new
+    /// `exit_id`) starts a fresh TOFU pin.
+    pub exit_id: RelayExitId,
 
     /// Client Ed25519 signing key (derived from the user's BIP39
     /// mnemonic). `talpid-warren-tunnel` never generates an ephemeral
@@ -182,9 +195,11 @@ pub struct WarrenTunnelParameters {
 impl std::fmt::Debug for WarrenTunnelParameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // No-log Warren: never log the full signing_key (secret material)
-        // nor the full exit pubkey (session-PII). Minimal debug shape.
+        // nor the full exit pubkey (session-PII). exit_id is operator
+        // metadata (already public via signed relay list), safe to log.
         f.debug_struct("WarrenTunnelParameters")
             .field("exit_addr", &"<redacted>")
+            .field("exit_id", &self.exit_id)
             .field("signing_key", &"<redacted>")
             .field("n_connections", &self.n_connections)
             .field("features", &format_args!("{:#010x}", self.features))
@@ -1889,6 +1904,7 @@ mod tests {
         let signing = SigningKey::from_bytes(&[0u8; 32]);
         let exit_id = WarrenPubkey::from_bytes([1u8; 32]);
         let params = WarrenTunnelParameters {
+            exit_id: RelayExitId::ZERO,
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 2,
@@ -1919,6 +1935,7 @@ mod tests {
         // `warren_tunnel::ClientTunnel`. Mutation = silent multi-hop
         // by default = breaks every existing deployment.
         let params = WarrenTunnelParameters {
+            exit_id: RelayExitId::ZERO,
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([1u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,
@@ -1971,6 +1988,7 @@ mod tests {
             use_warren_obfuscation: true,
         };
         let params = WarrenTunnelParameters {
+            exit_id: RelayExitId::ZERO,
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 1,
@@ -2013,6 +2031,7 @@ mod tests {
             internal_port: 22,
         };
         let params = WarrenTunnelParameters {
+            exit_id: RelayExitId::ZERO,
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([0u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,

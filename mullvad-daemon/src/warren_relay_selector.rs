@@ -16,7 +16,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
+use warren_relay_selector::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
 use warren_relay_selector::{
     SelectorError, SignedError, WarrenRelay, WarrenRelayList, WarrenRelayQuery,
     WarrenRelaySelector, verify_signed_relay_list,
@@ -50,6 +50,12 @@ pub struct WarrenSelection {
     /// Ed25519 identity of the selected Warren exit.
     pub endpoint_id: WarrenPubkey,
 
+    /// Operator-assigned 16-byte stable identifier for this exit
+    /// (signed v3 relay-list field). The Session A.4 TOFU pubkey
+    /// pinning verify hook keys its lookup on this value so a
+    /// legitimate Ed25519 rotation stays detectable across reconnects.
+    pub exit_id: ExitId,
+
     /// Candidate addresses of the exit (UDP IPv4/IPv6).
     pub endpoint_addr: WarrenExitAddr,
 }
@@ -58,6 +64,7 @@ impl From<&WarrenRelay> for WarrenSelection {
     fn from(relay: &WarrenRelay) -> Self {
         Self {
             endpoint_id: relay.endpoint_id(),
+            exit_id: relay.exit_id(),
             endpoint_addr: relay.endpoint_addr().clone(),
         }
     }
@@ -223,7 +230,14 @@ mod tests {
     fn relay(seed: u8, country: &str, addr_str: &str) -> WarrenRelay {
         let id = endpoint_id(seed);
         let addr = WarrenExitAddr::new(id).with_ip_addr(addr_str.parse().unwrap());
-        WarrenRelay::new(id, addr, Location::new(country, "_"), 100, true)
+        WarrenRelay::new(
+            id,
+            ExitId::from_bytes([seed; 16]),
+            addr,
+            Location::new(country, "_"),
+            100,
+            true,
+        )
     }
 
     #[test]
@@ -318,6 +332,7 @@ mod tests {
         let signed = sign_relay_list(
             vec![SignedJsonRelay {
                 endpoint_id: relay_pubkey_hex,
+                exit_id: ExitId::from_bytes([0xe1; 16]),
                 ip_addrs: vec!["198.51.100.1:51820".to_owned()],
                 country: "se".to_owned(),
                 city: "Stockholm".to_owned(),
@@ -327,7 +342,7 @@ mod tests {
             &server_key,
             1_700_000_000,
         );
-        let json = serde_json::to_string(&signed).expect("serialize signed v2");
+        let json = serde_json::to_string(&signed).expect("serialize signed v3");
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write file");
 
         let selector = DaemonWarrenRelaySelector::load_from_cache_dir(&dir).expect("must parse v2");
@@ -356,6 +371,7 @@ mod tests {
         let mut signed = sign_relay_list(
             vec![SignedJsonRelay {
                 endpoint_id: relay_pubkey_hex,
+                exit_id: ExitId::from_bytes([0xe2; 16]),
                 ip_addrs: vec!["198.51.100.1:51820".to_owned()],
                 country: "se".to_owned(),
                 city: "Stockholm".to_owned(),

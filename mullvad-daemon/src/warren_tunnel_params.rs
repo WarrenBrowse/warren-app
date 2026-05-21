@@ -61,6 +61,7 @@ pub fn assemble_for_attempt(
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     Ok(WarrenTunnelParameters {
         exit_addr: selection.endpoint_addr,
+        exit_id: selection.exit_id,
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
@@ -138,6 +139,7 @@ pub fn assemble_failover_for_attempt(
             .select_failover_alternative_for_attempt(query, excluded, retry_attempt)?;
     Ok(WarrenTunnelParameters {
         exit_addr: alternative.endpoint_addr().clone(),
+        exit_id: alternative.exit_id(),
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
@@ -166,7 +168,14 @@ mod tests {
     fn fixture_relay(seed: u8, country: &str) -> WarrenRelay {
         let id = WarrenPubkey::from_bytes([seed; 32]);
         let addr = WarrenExitAddr::new(id).with_ip_addr("198.51.100.1:51820".parse().unwrap());
-        WarrenRelay::new(id, addr, Location::new(country, "_"), 100, true)
+        WarrenRelay::new(
+            id,
+            warren_relay_selector::warren_types::ExitId::from_bytes([seed; 16]),
+            addr,
+            Location::new(country, "_"),
+            100,
+            true,
+        )
     }
 
     #[test]

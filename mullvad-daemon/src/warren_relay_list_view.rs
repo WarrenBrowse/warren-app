@@ -202,6 +202,7 @@ mod tests {
         let endpoint_addr = WarrenExitAddr::new(endpoint_id).with_ip_addr(socket);
         WarrenRelay::new(
             endpoint_id,
+            warren_relay_selector::warren_types::ExitId::from_bytes([byte_seed; 16]),
             endpoint_addr,
             WLocation::new(country, city),
             100,
