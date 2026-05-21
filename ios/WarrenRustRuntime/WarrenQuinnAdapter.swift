@@ -198,15 +198,30 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
         let newHandle = try Self.callTunnelStart(config: config)
         let retainedSelf = Unmanaged.passRetained(self)
 
-        let cbStatus = warren_tunnel_set_outbound_callback(
+        let outboundStatus = warren_tunnel_set_outbound_callback(
             tunnelHandle(newHandle),
             outboundCallback,
             retainedSelf.toOpaque()
         )
-        guard cbStatus == 0 else {
+        guard outboundStatus == 0 else {
             warren_tunnel_stop(tunnelHandle(newHandle))
             retainedSelf.release()
-            throw WarrenQuinnAdapterError.ffi(cbStatus)
+            throw WarrenQuinnAdapterError.ffi(outboundStatus)
+        }
+
+        // Same retained self-pointer is used as the event-callback
+        // context. The two callbacks share lifecycle ; both are
+        // dropped together when the Rust-side Box is released by
+        // `warren_tunnel_stop`.
+        let eventStatus = warren_tunnel_set_event_callback(
+            tunnelHandle(newHandle),
+            eventCallbackBridge,
+            retainedSelf.toOpaque()
+        )
+        guard eventStatus == 0 else {
+            warren_tunnel_stop(tunnelHandle(newHandle))
+            retainedSelf.release()
+            throw WarrenQuinnAdapterError.ffi(eventStatus)
         }
 
         handle = newHandle
@@ -396,6 +411,47 @@ private let outboundCallback:
         let proto: NSNumber = (packet.first.map { ($0 >> 4) == 6 } ?? false)
             ? NSNumber(value: AF_INET6) : NSNumber(value: AF_INET)
         adapter.packetFlow.writePackets([packet], withProtocols: [proto])
+    }
+
+/// Rust → Swift event callback. Invoked from the warren-tunnel
+/// dispatcher whenever the connection state changes or a NAT-PMP
+/// event fires. Marshals the C tagged-union into the Swift
+/// [`WarrenTunnelEvent`] enum and forwards to the user-supplied
+/// closure.
+///
+/// `event` is owned by Rust for the duration of the call ; we copy
+/// every UTF-8 string we keep (country code, failure reason). The
+/// adapter's `eventCallback` closure is `@Sendable` so callers can
+/// post to any actor / queue.
+private let eventCallbackBridge:
+    @convention(c) (UnsafePointer<WarrenTunnelEventC>?, UnsafeMutableRawPointer?) -> Void = {
+        eventPtr, contextPtr in
+        guard let eventPtr, let contextPtr else { return }
+        let adapter = Unmanaged<WarrenQuinnAdapter>.fromOpaque(contextPtr).takeUnretainedValue()
+        let event = eventPtr.pointee
+        let mapped: WarrenTunnelEvent
+        switch event.tag {
+        case Connected: mapped = .connected
+        case Disconnected: mapped = .disconnected
+        case Reconnecting: mapped = .reconnecting
+        case Failover:
+            let country = event.data_failover_country_code.flatMap { String(cString: $0) } ?? ""
+            mapped = .failover(toExit: country)
+        case NatPmpMapped:
+            mapped = .natPmpMapped(
+                internalPort: event.data_nat_pmp_internal_port,
+                externalPort: event.data_nat_pmp_external_port,
+                lifetime: event.data_nat_pmp_lifetime_seconds
+            )
+        case NatPmpRenewed:
+            mapped = .natPmpRenewed(externalPort: event.data_nat_pmp_external_port)
+        case NatPmpFailed:
+            let reason = event.data_nat_pmp_failure_reason.flatMap { String(cString: $0) } ?? ""
+            mapped = .natPmpFailed(reason: reason)
+        default:
+            return
+        }
+        adapter.eventCallback(mapped)
     }
 
 /// Cast our typed `OpaquePointer` handle back to the C-bindgen pointer
