@@ -50,9 +50,12 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Onboarding/OnboardingWizardView.swift" => "WarrenVPN",
   "WarrenVPN/Coordinators/OnboardingWizardCoordinator.swift" => "WarrenVPN",
 
-  # Unit tests for the wallet flow (run on iOS Simulator).
+  # Unit tests for the wallet flow + App Group events observer (run on
+  # iOS Simulator).
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletKeychainTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/WarrenAppGroupEventsTests.swift" =>
+    "WarrenVPNTests",
 
   # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.
   "Assets/Wallet.xcstrings" => "WarrenVPN",
