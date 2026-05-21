@@ -260,3 +260,64 @@ Inchangé depuis le design doc `.planning/session-d-d4-d7-design.md` :
 - `ManagementService` + `ConnectionProxy` gRPC layer (dead-at-runtime, needs D.4 surgical removal)
 
 Estimation wall-clock restante : 3-5 semaines focused work (inchangé).
+
+---
+
+## 11. D.4 step 1/2/3 cross-repo BREAKTHROUGH (post-rapport)
+
+Cycle d'expansion qui transforme le skeleton D.3 en JNI fonctionnel pour
+un tunnel Quinn mono-hop.
+
+### warren-core PRs
+
+| Commit | Apport |
+|---|---|
+| `d59fd151` | `warren_tunnel::AndroidTun` PacketDevice impl (tokio AsyncFd + nix safe wrappers, workspace `unsafe_code = "forbid"` respected) ; cfg-gate `real_tun` pour non-android |
+| `6434207b` | `AndroidTun: Clone` via `Arc<AsyncFd<OwnedFd>>` (parité FakeTun/RealTun, débloque `pump_bidirectional<T: PacketDevice + Clone>`) |
+
+Pin warren-core suivi : `8b0e34` → `30a7e3c` (Session G DAITA) → `d59fd15`
+→ `6434207b` → `20200d4` (Session I DAITA + vendor symlink fix).
+
+### warren-app
+
+| Commit | Apport |
+|---|---|
+| `35e031fdee` | warren-jni `tunnel` feature on-by-default + `connectTunnel` JNI instantiates `AndroidTun` from VpnService fd |
+| `f26d54ec19` | **D.4 step 2** : `warren-jni/src/tunnel.rs` Quinn pump spawn complet (parse JSON config + derive SigningKey + WarrenExitAddr build + ClientTunnel.connect + pump_bidirectional spawn sur RUNTIME + tokio::select cancel_rx) ; `SESSION_STATUS: AtomicI32` static ; WarrenJni.kt + WarrenQuinnAdapter.kt signature alignée `connectTunnel(tunFd, mnemonic, configJson)` |
+| `ac7e4e5ad2` | **D.4 step 3** : WarrenQuinnAdapter poll `WarrenJni.getTunnelStatus()` 250ms + surface transitions via `WarrenTunnelState` StateFlow ; companion const STATUS_* codes ; arrête poll sur Disconnected/Failed |
+| `de9167e547` | **D.5 contract** : `WalletState` sealed interface + `WalletPubkeyHex` value class + `Mnemonic` redact-toString class + `WalletRepository` interface (createWallet / importWallet / unlock / erase, suspending pour BiometricPrompt gating) |
+
+### Surface JNI WarrenJni livrée
+
+| JNI fn | Status |
+|---|---|
+| `initLogger(filesDirectory)` | ✓ host check, wire android_logger |
+| `generateMnemonic()` | ✓ real (warren-identity BIP39 12-word) |
+| `importMnemonic(mnemonic)` | ✓ real (returns 32-byte pubkey) |
+| `mnemonicPubkeyHex(mnemonic)` | ✓ real (returns 64-char lowercase hex) |
+| `signRequest(mnemonic, canonical)` | ✓ real (Ed25519 sign) |
+| `signCanonicalRequest(mnemonic, method, path, ts, nonce_hex, body_hash_hex)` | ✓ real (warren-identity::auth::canonical_message + sign) |
+| `connectTunnel(tunFd, mnemonic, configJson)` | ✓ spawn Quinn pump (mono-hop, sans entry hop ni DAITA wiring yet) |
+| `disconnectTunnel()` | ✓ drop cancel_tx + flip SESSION_STATUS |
+| `getTunnelStatus()` | ✓ atomic read 0/1/2/3 |
+
+### Verifications continues
+
+- `cargo test -p warren-jni --lib` : 11 host tests PASS
+- `cargo check -p warren-jni --target {aarch64,armv7,x86_64}-linux-android` : 3 ABIs clean
+- `cargo clippy --target aarch64-linux-android -- -D warnings` : clean
+- `android/scripts/verify-warren-jni.sh` : ALL CHECKS PASSED reproductible
+- `cargo check --workspace` : 26 crates compiled clean
+
+### Reste D.4 step 4+ (multi-jour)
+
+1. `ConnectivityManager.NetworkCallback` registration in WarrenQuinnAdapter + reconnect-on-handover (Backoff::HANDSHAKE 15s)
+2. JNI callback channel Rust→Kotlin (replace 250ms polling)
+3. Entry hop wiring via `warren_multihop::MultiHopClient` (parse `WarrenTunnelConfig.entryHop` → MultiHopParams)
+4. DAITA spec wiring (`SetupAck.daita_spec` → `DaitaFramework` instantiation, pump_bidirectional_with_daita)
+5. NAT-PMP wiring via `warren_natpmp_client` (cfg-gated, lifetime + port surface)
+6. `WarrenVpnService` rewrite : drop `managementService.start()` + `ConnectionProxy` (dead at runtime), wire WarrenQuinnAdapter direct
+7. Drop `lib/talpid/` module entirely
+8. AndroidKeystoreWalletRepository impl (D.5 building block — interface ready)
+
+D.5 / D.6 / D.7 estimations restent inchangées.
