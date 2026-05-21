@@ -2,7 +2,7 @@ import utilities.FlavorDimensions
 import utilities.Flavors
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.test)
 }
 

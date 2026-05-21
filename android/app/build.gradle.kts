@@ -20,14 +20,14 @@ import utilities.playImplementation
 import utilities.registerReleaseTask
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.application)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.compose)
     alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
     alias(libs.plugins.rust.android)
     id("de.mannodermaus.android-junit5")
 }

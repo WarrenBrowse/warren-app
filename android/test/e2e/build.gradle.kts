@@ -6,7 +6,7 @@ import utilities.ossProdDebug
 import utilities.playProdDebug
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.test)
     alias(libs.plugins.kotlinx.serialization)
 }

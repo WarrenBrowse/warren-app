@@ -203,13 +203,13 @@ protobuf-core = { id = "com.google.protobuf", version.ref = "protobuf-gradle-plu
 # noinspection SimilarGradleDependency
 protobuf-protoc = { id = "com.google.protobuf:protoc", version.ref = "protobuf" }
 rust-android = { id = "net.mullvad.rust-android", version.ref = "rust-android" }
-# Convention plugins
-mullvad-android-library = { id = "mullvad.android-library" }
-mullvad-android-library-feature-api = { id = "mullvad.android-library-feature-api" }
-mullvad-android-library-feature-impl = { id = "mullvad.android-library-feature-impl" }
-mullvad-android-library-compose = { id = "mullvad.android-library-compose" }
-mullvad-android-library-unit-test = { id = "mullvad.android-library-unit-test" }
-mullvad-android-library-instrumented-test = { id = "mullvad.android-library-instrumented-test" }
-mullvad-kotlin-toolchain = { id = "mullvad.kotlin-toolchain" }
-mullvad-utilities = { id = "mullvad.utilities" }
-mullvad-unit-test = { id = "mullvad.unit-test" }
+# Convention plugins (Warren-internal, defined in gradle/build-logic/)
+warren-android-library = { id = "warren.android-library" }
+warren-android-library-feature-api = { id = "warren.android-library-feature-api" }
+warren-android-library-feature-impl = { id = "warren.android-library-feature-impl" }
+warren-android-library-compose = { id = "warren.android-library-compose" }
+warren-android-library-unit-test = { id = "warren.android-library-unit-test" }
+warren-android-library-instrumented-test = { id = "warren.android-library-instrumented-test" }
+warren-kotlin-toolchain = { id = "warren.kotlin-toolchain" }
+warren-utilities = { id = "warren.utilities" }
+warren-unit-test = { id = "warren.unit-test" }

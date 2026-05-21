@@ -1,6 +1,6 @@
 package com.warrenbrowse.vpn.test.mockapi.constant
 
-const val LOG_TAG = "mullvad-mockapi"
+const val LOG_TAG = "warren-mockapi"
 
 const val AUTH_TOKEN_URL_PATH = "/auth/v1/token"
 const val DEVICES_URL_PATH = "/accounts/v1/devices"
