@@ -10,33 +10,31 @@ import kotlinx.coroutines.flow.stateIn
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.toLc
-import com.warrenbrowse.vpn.lib.model.DeviceState
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
-import com.warrenbrowse.vpn.lib.repository.DeviceRepository
-import com.warrenbrowse.vpn.lib.repository.SettingsRepository
-import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 
 class SettingsViewModel(
-    deviceRepository: DeviceRepository,
+    walletRepository: WalletRepository,
+    warrenLocalSettings: WarrenLocalSettingsRepository,
     appVersionInfoRepository: AppVersionInfoRepository,
-    wireguardConstraintsRepository: WireguardConstraintsRepository,
-    settingsRepository: SettingsRepository,
     isPlayBuild: Boolean,
 ) : ViewModel() {
 
     val uiState: StateFlow<Lc<Unit, SettingsUiState>> =
         combine(
-                deviceRepository.deviceState,
+                walletRepository.state,
+                warrenLocalSettings.multiHopEnabled,
+                warrenLocalSettings.daitaEnabled,
                 appVersionInfoRepository.versionInfo,
-                wireguardConstraintsRepository.wireguardConstraints,
-                settingsRepository.settingsUpdates,
-            ) { deviceState, versionInfo, wireguardConstraints, settings ->
+            ) { walletState, multihop, daita, versionInfo ->
                 SettingsUiState(
-                        isLoggedIn = deviceState is DeviceState.LoggedIn,
+                        isLoggedIn = walletState is WalletState.Ready,
                         appVersion = versionInfo.currentVersion,
                         isSupportedVersion = versionInfo.isSupported,
-                        multihopEnabled = wireguardConstraints?.isMultihopEnabled == true,
-                        isDaitaEnabled = settings?.tunnelOptions?.daitaSettings?.enabled == true,
+                        multihopEnabled = multihop,
+                        isDaitaEnabled = daita,
                         isPlayBuild = isPlayBuild,
                     )
                     .toLc<Unit, SettingsUiState>()

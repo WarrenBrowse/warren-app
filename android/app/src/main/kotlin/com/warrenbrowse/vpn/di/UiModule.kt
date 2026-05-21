@@ -325,7 +325,7 @@ val uiModule = module {
             get(),
         )
     }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), IS_PLAY_BUILD) }
+    viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { SplashViewModel(get(), get(), get(), get(), get()) }
     viewModel { VoucherDialogViewModel(get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
