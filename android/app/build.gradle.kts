@@ -446,6 +446,8 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
+    // FragmentActivity baseline for MainActivity (BiometricPrompt host, D.5).
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.coresplashscreen)
     implementation(libs.androidx.credentials) {
