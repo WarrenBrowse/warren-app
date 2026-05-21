@@ -103,6 +103,7 @@ import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
 import com.warrenbrowse.vpn.lib.common.util.removeHtmlTags
 import com.warrenbrowse.vpn.lib.map.AnimatedMap
@@ -177,6 +178,7 @@ private fun PreviewAccountScreen(
 fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilityScope) {
     val connectViewModel: ConnectViewModel = koinViewModel()
     val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
+    val warrenDisconnect = koinInject<WarrenQuinnDisconnectInvoker>()
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -294,7 +296,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         ConnectScreen(
             state = state,
             snackbarHostState = snackbarHostState,
-            onDisconnectClick = connectViewModel::onDisconnectClick,
+            onDisconnectClick = { warrenDisconnect.disconnect() },
             onReconnectClick = connectViewModel::onReconnectClick,
             onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,

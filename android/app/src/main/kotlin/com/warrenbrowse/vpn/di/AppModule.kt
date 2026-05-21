@@ -11,10 +11,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
@@ -88,6 +90,12 @@ val appModule = module {
     single {
         WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
     } bind WarrenQuinnConnectInvoker::class
+
+    // D.4 step 12: disconnect path bound to the same lib-side surface
+    // contract; Connect button + tile service + notification action all
+    // resolve this single binding.
+    single { WarrenDisconnectUseCase(context = androidContext()) } bind
+        WarrenQuinnDisconnectInvoker::class
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
     single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }

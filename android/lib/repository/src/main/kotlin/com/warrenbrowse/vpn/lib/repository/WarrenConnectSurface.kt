@@ -32,3 +32,15 @@ interface WarrenQuinnConnectInvoker {
 interface WarrenTunnelStateProvider {
     val state: StateFlow<String>
 }
+
+/**
+ * Lib-side surface for the Warren disconnect path. The concrete impl
+ * lives in `app/connect/WarrenDisconnectUseCase` and is bound to this
+ * interface in `di/AppModule`. The disconnect path does not need
+ * biometric authorisation (it tears down a running session); a plain
+ * [android.content.Context] is sufficient because no UI dialog is
+ * raised.
+ */
+interface WarrenQuinnDisconnectInvoker {
+    fun disconnect()
+}
