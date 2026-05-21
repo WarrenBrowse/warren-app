@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
@@ -123,6 +124,8 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppearanceNavKey) },
         onWalletClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
+        onWarrenTunnelClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
 }
@@ -141,6 +144,7 @@ fun SettingsScreen(
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
     onWalletClick: () -> Unit = {},
+    onWarrenTunnelClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -175,6 +179,7 @@ fun SettingsScreen(
                         onNotificationSettingsCellClick = onNotificationSettingsCellClick,
                         onAppObfuscationClick = onAppObfuscationClick,
                         onWalletClick = onWalletClick,
+                        onWarrenTunnelClick = onWarrenTunnelClick,
                     )
                 }
             }
@@ -194,6 +199,7 @@ private fun LazyListScope.content(
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
     onWalletClick: () -> Unit = {},
+    onWarrenTunnelClick: () -> Unit = {},
 ) {
     // D.5 wallet entry - shown at the very top so it's prominent
     // (Warren's identity model = the wallet, not a Mullvad account).
@@ -202,6 +208,14 @@ private fun LazyListScope.content(
             title = "Wallet",
             onClick = onWalletClick,
             position = Position.Top,
+        )
+    }
+    // D.4 step 8 — Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    itemWithDivider {
+        NavigationListItem(
+            title = "Warren tunnel",
+            onClick = onWarrenTunnelClick,
+            position = Position.Bottom,
         )
     }
     item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
