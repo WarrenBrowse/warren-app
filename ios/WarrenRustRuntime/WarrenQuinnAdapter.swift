@@ -341,10 +341,20 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
     /// are valid only for the duration of the call ; the FFI must
     /// copy any field it needs to retain.
     ///
-    /// Single-hop only on this first pass. Multi-hop relay + DAITA
-    /// spec marshalling is wired in C.4.1 once the warren-tunnel
-    /// dispatcher consumes those fields ; for now the FFI ignores them
-    /// and the Swift side passes null.
+    /// Marshalling layers, outermost first :
+    /// 1. exit endpoint + bypass CIDRs (always pinned).
+    /// 2. optional multi-hop relay endpoint + country code (pinned
+    ///    inside an extra `withCString` pair when `config.multiHopRelay`
+    ///    is non-nil).
+    /// 3. optional DAITA machine seed (decoded from hex, by value, no
+    ///    pinning required - tuple-by-value in the C struct).
+    /// 4. `withUnsafePointer(to:)` to expose `&relayCfg` / `&daitaCfg`
+    ///    as stable C pointers inside the innermost FFI call.
+    ///
+    /// The Rust side currently ignores both fields (C.4.1 wires them
+    /// into `warren_tunnel::ClientTunnel::connect`) - but Swift-side
+    /// marshalling is in place so the future wire-up is a one-line
+    /// flip on the Rust side.
     fileprivate static func callTunnelStart(config: WarrenTunnelConfig) throws -> OpaquePointer
     {
         var exitPubkeyBytes = [UInt8](repeating: 0, count: 32)
@@ -363,28 +373,122 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
 
         let bypass = config.bypassCidrs
         let natPmpFlag: UInt8 = config.natPmpEnabled ? 1 : 0
+        let exitPubkeyTuple = tupleFrom32(exitPubkeyBytes)
+        let signingSeedTuple = tupleFrom32(signingSeedBytes)
 
-        // Nested `withCString` / `withCStrings` blocks pin every C
-        // pointer for the duration of the FFI call.
-        let handlePtr: UnsafeMutablePointer<WarrenTunnelHandle>? = config.exitEndpoint.withCString {
-            exitEndpointC in
-            withCStrings(bypass) { bypassArray in
-                var parameters = WarrenTunnelParametersC(
-                    exit_pubkey: tupleFrom32(exitPubkeyBytes),
-                    exit_endpoint: exitEndpointC,
-                    wallet_signing_seed: tupleFrom32(signingSeedBytes),
-                    multi_hop_relay: nil,
-                    daita_spec: nil,
-                    nat_pmp_enabled: natPmpFlag,
-                    bypass_cidrs: bypassArray.baseAddress,
-                    bypass_cidrs_count: UInt32(bypass.count)
-                )
-                return warren_tunnel_start(&parameters, -1)
+        // Pre-compute the DAITA bytes-tuple if present. The C struct
+        // takes it by value so no pinning is needed below.
+        let daitaTuple: (UInt32, (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8))? = config.daitaSpec.map
+        { spec in
+            var seed = [UInt8](repeating: 0, count: 32)
+            if let raw = Data(hexString: spec.machineSeedHex) {
+                raw.copyBytes(to: &seed, count: min(32, raw.count))
             }
+            return (spec.padding, tupleFrom32(seed))
         }
+
+        // Multi-hop pubkey tuple is pre-computed too ; only the strings
+        // need a `withCString` pin.
+        let relayPubkeyTuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)? = config.multiHopRelay
+            .map { relay in
+                var bytes = [UInt8](repeating: 0, count: 32)
+                relay.pubkey.copyBytes(to: &bytes, count: min(32, relay.pubkey.count))
+                return tupleFrom32(bytes)
+            }
+
+        // Outer-most pin : exit endpoint + bypass CIDRs.
+        let handlePtr: UnsafeMutablePointer<WarrenTunnelHandle>? =
+            config.exitEndpoint.withCString { exitEndpointC in
+                withCStrings(bypass) { bypassArray in
+                    let bypassCount = UInt32(bypass.count)
+                    let bypassBase = bypassArray.baseAddress
+                    // Inner pin : multi-hop relay strings (when present),
+                    // then DAITA-by-value, then build parameters + FFI.
+                    return Self.withMultiHopRelayPinned(config.multiHopRelay, pubkeyTuple: relayPubkeyTuple) {
+                        relayPtr in
+                        Self.withDaitaPinned(daitaTuple) { daitaPtr in
+                            var parameters = WarrenTunnelParametersC(
+                                exit_pubkey: exitPubkeyTuple,
+                                exit_endpoint: exitEndpointC,
+                                wallet_signing_seed: signingSeedTuple,
+                                multi_hop_relay: relayPtr,
+                                daita_spec: daitaPtr,
+                                nat_pmp_enabled: natPmpFlag,
+                                bypass_cidrs: bypassBase,
+                                bypass_cidrs_count: bypassCount
+                            )
+                            return warren_tunnel_start(&parameters, -1)
+                        }
+                    }
+                }
+            }
 
         guard let raw = handlePtr else { throw WarrenQuinnAdapterError.ffiStartFailed }
         return OpaquePointer(raw)
+    }
+
+    /// Pin a `WarrenRelayConfigC` C struct on the stack for the
+    /// duration of `body`. When `relay` is nil, calls `body(nil)`
+    /// without allocating anything.
+    ///
+    /// The endpoint + country code strings are pinned via nested
+    /// `withCString` blocks ; the resulting pointers are written into
+    /// the local `WarrenRelayConfigC` immediately before exposing the
+    /// pointer via `withUnsafePointer(to:)`.
+    private static func withMultiHopRelayPinned<Result>(
+        _ relay: WarrenRelayConfig?,
+        pubkeyTuple: (
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8
+        )?,
+        _ body: (UnsafePointer<WarrenRelayConfigC>?) -> Result
+    ) -> Result {
+        guard let relay, let pubkeyTuple else {
+            return body(nil)
+        }
+        return relay.endpoint.withCString { endpointC in
+            relay.countryCode.withCString { countryC in
+                var relayCfg = WarrenRelayConfigC(
+                    pubkey: pubkeyTuple,
+                    endpoint: endpointC,
+                    country_code: countryC
+                )
+                return withUnsafePointer(to: &relayCfg) { ptr in
+                    body(ptr)
+                }
+            }
+        }
+    }
+
+    /// Pin a `WarrenDaitaSpecC` C struct on the stack for the duration
+    /// of `body`. When `daita` is nil, calls `body(nil)`.
+    ///
+    /// `daita` is the pre-computed `(padding_pps, machine_seed_tuple)`
+    /// pair produced by [`callTunnelStart`]. No string pinning is
+    /// needed - the seed is a fixed-size byte tuple.
+    private static func withDaitaPinned<Result>(
+        _ daita: (
+            UInt32,
+            (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+                UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+                UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+                UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
+        )?,
+        _ body: (UnsafePointer<WarrenDaitaSpecC>?) -> Result
+    ) -> Result {
+        guard let daita else { return body(nil) }
+        var daitaCfg = WarrenDaitaSpecC(machine_seed: daita.1, padding_pps: daita.0)
+        return withUnsafePointer(to: &daitaCfg) { ptr in
+            body(ptr)
+        }
     }
 }
 
