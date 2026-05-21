@@ -10,7 +10,7 @@ import NetworkExtension
 import XCTest
 
 @testable import WarrenMockData
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 @testable import PacketTunnelCore
 

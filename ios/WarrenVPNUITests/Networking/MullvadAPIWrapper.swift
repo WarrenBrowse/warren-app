@@ -8,7 +8,7 @@
 
 import CryptoKit
 import Foundation
-import MullvadRustRuntime
+import WarrenRustRuntime
 import XCTest
 
 enum MullvadAPIError: Error {

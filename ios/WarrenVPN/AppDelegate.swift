@@ -10,7 +10,7 @@ import BackgroundTasks
 import WarrenLogging
 import WarrenMockData
 import WarrenREST
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import Operations

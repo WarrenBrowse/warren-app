@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenREST
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 @preconcurrency import NetworkExtension

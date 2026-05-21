@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenTypes
 import Operations
 

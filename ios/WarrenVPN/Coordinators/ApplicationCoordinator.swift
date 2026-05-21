@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenREST
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import Routing

@@ -8,7 +8,7 @@
 
 import WarrenLogging
 import WarrenREST
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenTypes
 import Operations
 import UIKit

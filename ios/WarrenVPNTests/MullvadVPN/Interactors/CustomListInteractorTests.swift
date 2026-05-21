@@ -2,7 +2,7 @@ import Testing
 
 @testable import WarrenMockData
 @testable import WarrenREST
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenSettings
 @testable import WarrenTypes
 

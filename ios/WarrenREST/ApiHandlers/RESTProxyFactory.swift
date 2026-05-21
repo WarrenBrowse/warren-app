@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadRustRuntime
+import WarrenRustRuntime
 
 public protocol ProxyFactoryProtocol {
     var apiTransportProvider: APITransportProviderProtocol { get }

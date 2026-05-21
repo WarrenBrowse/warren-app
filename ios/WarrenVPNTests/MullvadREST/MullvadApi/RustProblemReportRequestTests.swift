@@ -8,7 +8,7 @@
 
 import Testing
 
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 
 struct RustProblemReportRequestTests {

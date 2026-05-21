@@ -13,8 +13,8 @@
 		0107F4152F5B02D70012451B /* WarrenLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F4172F5B02D80012451B /* WarrenREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; };
 		0107F4182F5B02D80012451B /* WarrenREST.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		0107F4192F5B02D90012451B /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
-		0107F41A2F5B02D90012451B /* MullvadRustRuntime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0107F4192F5B02D90012451B /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
+		0107F41A2F5B02D90012451B /* WarrenRustRuntime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F41B2F5B02DA0012451B /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
 		0107F41C2F5B02DA0012451B /* WarrenSettings.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F41D2F5B02DB0012451B /* WarrenTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -24,7 +24,7 @@
 		0107F4222F5B97F30012451B /* RelayListCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0107F4212F5B97F30012451B /* RelayListCacheTests.swift */; };
 		0107F42D2F5F62950012451B /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
 		0107F4322F5F62C80012451B /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
-		0107F4362F5F62CE0012451B /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
+		0107F4362F5F62CE0012451B /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
 		014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		014E8C302F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		014E8C312F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
@@ -33,7 +33,7 @@
 		016EE03C2F8524EB0035B25C /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE03B2F8524EB0035B25C /* WireGuardKey.swift */; };
 		016EE0422F8540B00035B25C /* IPAddressRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0412F8540B00035B25C /* IPAddressRange.swift */; };
 		016EE0442F8640B00035B25C /* DaitaConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0432F8640B00035B25C /* DaitaConfiguration.swift */; };
-		01B2FF862D70B914004AED35 /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
+		01B2FF862D70B914004AED35 /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
 		01C981E82F43C3410002D284 /* BlockedStateReason+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E52F43C3410002D284 /* BlockedStateReason+Localization.swift */; };
 		01C981E92F43C3410002D284 /* TunnelStateAccessibilityAnnouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E62F43C3410002D284 /* TunnelStateAccessibilityAnnouncer.swift */; };
 		01C981EA2F43C3410002D284 /* BlockedStateReason+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E52F43C3410002D284 /* BlockedStateReason+Localization.swift */; };
@@ -819,9 +819,9 @@
 		A988A3E22AFE54AC0008D2C7 /* AccountExpiry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F2FA62AFBB9AE006D0856 /* AccountExpiry.swift */; };
 		A988DF272ADE86ED00D807EF /* WireGuardObfuscationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A988DF252ADE86ED00D807EF /* WireGuardObfuscationSettings.swift */; };
 		A988DF2A2ADE880300D807EF /* TunnelSettingsV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = A988DF282ADE880300D807EF /* TunnelSettingsV3.swift */; };
-		A992DA202C24709F00DE7CE5 /* MullvadRustRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = A992DA1F2C24709F00DE7CE5 /* MullvadRustRuntime.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A992DA232C24709F00DE7CE5 /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
-		A992DA242C24709F00DE7CE5 /* MullvadRustRuntime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A992DA202C24709F00DE7CE5 /* WarrenRustRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = A992DA1F2C24709F00DE7CE5 /* WarrenRustRuntime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A992DA232C24709F00DE7CE5 /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
+		A992DA242C24709F00DE7CE5 /* WarrenRustRuntime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A998DA812BD147AD001D61A2 /* ListCustomListsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A998DA802BD147AD001D61A2 /* ListCustomListsPage.swift */; };
 		A998DA832BD2B055001D61A2 /* EditCustomListLocationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A998DA822BD2B055001D61A2 /* EditCustomListLocationsPage.swift */; };
 		A99E5EE02B7628150033F241 /* ProblemReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99E5EDF2B7628150033F241 /* ProblemReportViewModel.swift */; };
@@ -925,13 +925,13 @@
 		A9D4A4792C2DAB5F00F1E522 /* libwarren_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9C75BC12C2D8C9E00B4CDF5 /* libwarren_ios.a */; };
 		A9D9A4B22C36D12D004088DD /* TunnelObfuscator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584023212A406BF5007B27AC /* TunnelObfuscator.swift */; };
 		A9D9A4BB2C36D397004088DD /* EphemeralPeerNegotiator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EB4F9C2B7FAB21002A2D7A /* EphemeralPeerNegotiator.swift */; };
-		A9D9A4C42C36D53C004088DD /* MullvadRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; };
+		A9D9A4C42C36D53C004088DD /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
 		A9D9A4CC2C36D54E004088DD /* UnsafeListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02E82A4B283000C6CAFF /* UnsafeListener.swift */; };
 		A9D9A4CD2C36D54E004088DD /* UDPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02EA2A4B285800C6CAFF /* UDPConnection.swift */; };
 		A9D9A4CE2C36D54E004088DD /* TunnelObfuscationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58695A9F2A4ADA9200328DB3 /* TunnelObfuscationTests.swift */; };
 		A9D9A4CF2C36D54E004088DD /* TCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02EC2A4B28F300C6CAFF /* TCPConnection.swift */; };
 		A9D9A4D22C36DBAF004088DD /* MullvadPostQuantum+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C308392C19DDA7008715F1 /* MullvadPostQuantum+Stubs.swift */; };
-		A9D9A4D42C36E1EA004088DD /* mullvad_rust_runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = A9D9A4D32C36E1EA004088DD /* mullvad_rust_runtime.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		A9D9A4D42C36E1EA004088DD /* warren_rust_runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = A9D9A4D32C36E1EA004088DD /* warren_rust_runtime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A9DF789D2B7D1E8B0094E4AD /* LoggedInWithTimeUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 859089692B61763B003AF5F5 /* LoggedInWithTimeUITestCase.swift */; };
 		A9E031782ACB09930095D843 /* BackgroundTaskProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E031762ACB08950095D843 /* BackgroundTaskProvider.swift */; };
 		A9E0317A2ACB0AE70095D843 /* UIApplication+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E031792ACB0AE70095D843 /* UIApplication+Stubs.swift */; };
@@ -1253,7 +1253,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		014E8C2C2F28B09700837D0A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1267,7 +1267,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		06410DF9292C4ABC00AFC18C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1526,7 +1526,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		A9173C332C36CCFB00F6A08C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1554,21 +1554,21 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		A9D9A4B92C36D2FD004088DD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		A9D9A4C52C36D53C004088DD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A992DA1C2C24709F00DE7CE5;
-			remoteInfo = MullvadRustRuntime;
+			remoteInfo = WarrenRustRuntime;
 		};
 		F08B6B7F2C52927600D0A121 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1593,7 +1593,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0107F41A2F5B02D90012451B /* MullvadRustRuntime.framework in Embed Frameworks */,
+				0107F41A2F5B02D90012451B /* WarrenRustRuntime.framework in Embed Frameworks */,
 				0107F4182F5B02D80012451B /* WarrenREST.framework in Embed Frameworks */,
 				0107F41D2F5B02DB0012451B /* WarrenTypes.framework in Embed Frameworks */,
 				0107F4202F5B02DE0012451B /* WireGuardKitTypes in Embed Frameworks */,
@@ -1614,7 +1614,7 @@
 				58D223E7294C8F120029F5F8 /* WarrenTypes.framework in Embed Frameworks */,
 				44A262432D6373B400085380 /* WireGuardKitTypes in Embed Frameworks */,
 				58D223FA294C8FF10029F5F8 /* WarrenLogging.framework in Embed Frameworks */,
-				A992DA242C24709F00DE7CE5 /* MullvadRustRuntime.framework in Embed Frameworks */,
+				A992DA242C24709F00DE7CE5 /* WarrenRustRuntime.framework in Embed Frameworks */,
 				58B2FDDA2AA71D2A003EB5C6 /* WarrenSettings.framework in Embed Frameworks */,
 				7ABCA5B42A9349F20044A708 /* Routing.framework in Embed Frameworks */,
 				06799AD228F98E1D00ACD94E /* WarrenREST.framework in Embed Frameworks */,
@@ -2479,8 +2479,8 @@
 		A988DF252ADE86ED00D807EF /* WireGuardObfuscationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuardObfuscationSettings.swift; sourceTree = "<group>"; };
 		A988DF282ADE880300D807EF /* TunnelSettingsV3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsV3.swift; sourceTree = "<group>"; };
 		A98F1B502C19C48D003C869E /* EphemeralPeerExchangeActorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EphemeralPeerExchangeActorTests.swift; sourceTree = "<group>"; };
-		A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MullvadRustRuntime.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A992DA1F2C24709F00DE7CE5 /* MullvadRustRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MullvadRustRuntime.h; sourceTree = "<group>"; };
+		A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WarrenRustRuntime.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A992DA1F2C24709F00DE7CE5 /* WarrenRustRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WarrenRustRuntime.h; sourceTree = "<group>"; };
 		A998DA802BD147AD001D61A2 /* ListCustomListsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCustomListsPage.swift; sourceTree = "<group>"; };
 		A998DA822BD2B055001D61A2 /* EditCustomListLocationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCustomListLocationsPage.swift; sourceTree = "<group>"; };
 		A99E5EDF2B7628150033F241 /* ProblemReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemReportViewModel.swift; sourceTree = "<group>"; };
@@ -2501,7 +2501,7 @@
 		A9C7B62B2EB9F71D002CABB1 /* LoggerBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerBuilderTests.swift; sourceTree = "<group>"; };
 		A9D96B192A8247C100A5C673 /* MigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationManager.swift; sourceTree = "<group>"; };
 		A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WarrenRustRuntimeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A9D9A4D32C36E1EA004088DD /* mullvad_rust_runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mullvad_rust_runtime.h; path = include/mullvad_rust_runtime.h; sourceTree = "<group>"; };
+		A9D9A4D32C36E1EA004088DD /* warren_rust_runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = warren_rust_runtime.h; path = include/warren_rust_runtime.h; sourceTree = "<group>"; };
 		A9E031762ACB08950095D843 /* BackgroundTaskProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskProvider.swift; sourceTree = "<group>"; };
 		A9E031792ACB0AE70095D843 /* UIApplication+Stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Stubs.swift"; sourceTree = "<group>"; };
 		A9E0317D2ACC32920095D843 /* TunnelStatusBlockObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusBlockObserver.swift; sourceTree = "<group>"; };
@@ -2752,7 +2752,7 @@
 				58D223BF294C8AE90029F5F8 /* Operations.framework in Frameworks */,
 				58D2241D294C91D20029F5F8 /* WarrenLogging.framework in Frameworks */,
 				58D223DC294C8EB90029F5F8 /* WarrenTypes.framework in Frameworks */,
-				01B2FF862D70B914004AED35 /* MullvadRustRuntime.framework in Frameworks */,
+				01B2FF862D70B914004AED35 /* WarrenRustRuntime.framework in Frameworks */,
 				44A2624B2D6373E000085380 /* WireGuardKitTypes in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2816,7 +2816,7 @@
 				7ABCA5B32A9349F20044A708 /* Routing.framework in Frameworks */,
 				58D223CC294C8BCB0029F5F8 /* Operations.framework in Frameworks */,
 				F0ACE3102BE4E478006D5333 /* WarrenMockData.framework in Frameworks */,
-				A992DA232C24709F00DE7CE5 /* MullvadRustRuntime.framework in Frameworks */,
+				A992DA232C24709F00DE7CE5 /* WarrenRustRuntime.framework in Frameworks */,
 				06799AD128F98E1D00ACD94E /* WarrenREST.framework in Frameworks */,
 				58B2FDD92AA71D2A003EB5C6 /* WarrenSettings.framework in Frameworks */,
 			);
@@ -2865,7 +2865,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0107F4362F5F62CE0012451B /* MullvadRustRuntime.framework in Frameworks */,
+				0107F4362F5F62CE0012451B /* WarrenRustRuntime.framework in Frameworks */,
 				58FBFBEA291622580020E046 /* WarrenREST.framework in Frameworks */,
 				0107F4322F5F62C80012451B /* WarrenSettings.framework in Frameworks */,
 			);
@@ -2897,7 +2897,7 @@
 				0107F40D2F5B02840012451B /* WarrenTypes.framework in Frameworks */,
 				0107F4172F5B02D80012451B /* WarrenREST.framework in Frameworks */,
 				0107F40B2F5B02580012451B /* WireGuardKitTypes in Frameworks */,
-				0107F4192F5B02D90012451B /* MullvadRustRuntime.framework in Frameworks */,
+				0107F4192F5B02D90012451B /* WarrenRustRuntime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2918,7 +2918,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				44A2626B2D63746400085380 /* WireGuardKitTypes in Frameworks */,
-				A9D9A4C42C36D53C004088DD /* MullvadRustRuntime.framework in Frameworks */,
+				A9D9A4C42C36D53C004088DD /* WarrenRustRuntime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4092,7 +4092,7 @@
 				F0ACE3092BE4E478006D5333 /* WarrenMockData */,
 				06799ABD28F98E1D00ACD94E /* WarrenREST */,
 				58FBFBE7291622580020E046 /* WarrenRESTTests */,
-				A992DA1E2C24709F00DE7CE5 /* MullvadRustRuntime */,
+				A992DA1E2C24709F00DE7CE5 /* WarrenRustRuntime */,
 				A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */,
 				58B2FDD42AA71D2A003EB5C6 /* WarrenSettings */,
 				581943F228F8014500B0CB5E /* WarrenTypes */,
@@ -4132,7 +4132,7 @@
 				58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */,
 				852969252B4D9C1F007EAD4C /* WarrenVPNUITests.xctest */,
 				F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */,
-				A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */,
+				A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */,
 				A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */,
 			);
 			name = Products;
@@ -4783,13 +4783,13 @@
 			path = Daita;
 			sourceTree = "<group>";
 		};
-		A992DA1E2C24709F00DE7CE5 /* MullvadRustRuntime */ = {
+		A992DA1E2C24709F00DE7CE5 /* WarrenRustRuntime */ = {
 			isa = PBXGroup;
 			children = (
 				A948809A2BC9308D0090A44C /* EphemeralPeerExchangeActor.swift */,
 				A9EB4F9C2B7FAB21002A2D7A /* EphemeralPeerNegotiator.swift */,
 				A9A557F42B7E3E5C0017ADA8 /* EphemeralPeerReceiver.swift */,
-				A9D9A4D32C36E1EA004088DD /* mullvad_rust_runtime.h */,
+				A9D9A4D32C36E1EA004088DD /* warren_rust_runtime.h */,
 				A98207F22D9ACE4C00654558 /* MullvadAccessMethodReceiver.swift */,
 				4491AC7A2ECF5FC8005789DF /* MullvadAddressCacheKeychainStore.swift */,
 				7A99D3702D56220E00891FF7 /* MullvadApiCancellable.swift */,
@@ -4798,7 +4798,7 @@
 				A9B95DEE2EC73BB800C7FE9B /* MullvadAPIMock.swift */,
 				7AB931252D43D222005FCEBA /* MullvadApiResponse.swift */,
 				A96D0B442D675F0400DD6C59 /* MullvadConnectionModeProvider.swift */,
-				A992DA1F2C24709F00DE7CE5 /* MullvadRustRuntime.h */,
+				A992DA1F2C24709F00DE7CE5 /* WarrenRustRuntime.h */,
 				A98207F02D91A0AC00654558 /* MullvadShadowsocksBridgeProvider.swift */,
 				01D13C202F11130500EC63DE /* RustLogging.swift */,
 				F0EEFB9E2D8D60E1007FE4B3 /* RustProblemReportRequest.swift */,
@@ -4808,7 +4808,7 @@
 				016EE0372F850C0E0035B25C /* WireGuardKey.swift */,
 				584023212A406BF5007B27AC /* TunnelObfuscator.swift */,
 			);
-			path = MullvadRustRuntime;
+			path = WarrenRustRuntime;
 			sourceTree = "<group>";
 		};
 		A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */ = {
@@ -5240,8 +5240,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A992DA202C24709F00DE7CE5 /* MullvadRustRuntime.h in Headers */,
-				A9D9A4D42C36E1EA004088DD /* mullvad_rust_runtime.h in Headers */,
+				A992DA202C24709F00DE7CE5 /* WarrenRustRuntime.h in Headers */,
+				A9D9A4D42C36E1EA004088DD /* warren_rust_runtime.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5631,12 +5631,12 @@
 			productReference = 852969252B4D9C1F007EAD4C /* WarrenVPNUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */ = {
+		A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A992DA252C24709F00DE7CE5 /* Build configuration list for PBXNativeTarget "MullvadRustRuntime" */;
+			buildConfigurationList = A992DA252C24709F00DE7CE5 /* Build configuration list for PBXNativeTarget "WarrenRustRuntime" */;
 			buildPhases = (
 				A93969802CE603110032A7A0 /* Import maybenot_machines */,
-				A992DA2A2C2470B300DE7CE5 /* Build MullvadRustRuntime */,
+				A992DA2A2C2470B300DE7CE5 /* Build WarrenRustRuntime */,
 				A992DA182C24709F00DE7CE5 /* Headers */,
 				A992DA192C24709F00DE7CE5 /* Sources */,
 				A992DA1A2C24709F00DE7CE5 /* Frameworks */,
@@ -5649,12 +5649,12 @@
 				014E8C2D2F28B09700837D0A /* PBXTargetDependency */,
 				0107F4302F5F62950012451B /* PBXTargetDependency */,
 			);
-			name = MullvadRustRuntime;
+			name = WarrenRustRuntime;
 			packageProductDependencies = (
 				44A262662D63745C00085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadRustRuntime;
-			productReference = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */;
+			productName = WarrenRustRuntime;
+			productReference = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		A9D9A4BF2C36D53C004088DD /* WarrenRustRuntimeTests */ = {
@@ -5842,7 +5842,7 @@
 				7A88DCCD2A8FABBE00D2FF0E /* Routing */,
 				7A88DCD62A8FABBE00D2FF0E /* RoutingTests */,
 				F0ACE3072BE4E478006D5333 /* WarrenMockData */,
-				A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */,
+				A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */,
 				A9D9A4BF2C36D53C004088DD /* WarrenRustRuntimeTests */,
 			);
 		};
@@ -6050,7 +6050,7 @@
 			shellPath = /bin/sh;
 			shellScript = "MAYBENOT_MACHINES=`cat ${SRCROOT}/../dist-assets/maybenot_machines`\ncat > ${SRCROOT}/PacketTunnelCore/Daita/Maybenot.swift << EOF\n// swift-format-ignore-file\n// This is an autogenerated file, do not edit\npublic struct Maybenot {\n    public let machines=\"\"\"\n$MAYBENOT_MACHINES\n\"\"\"\n    public let maximumEvents: UInt32 = 2048\n    public let maximumActions: UInt32 = 1024\n    public let maximumPadding: Double = 1.0\n    public let maximumBlocking: Double = 1.0\n}\nEOF\n";
 		};
-		A992DA2A2C2470B300DE7CE5 /* Build MullvadRustRuntime */ = {
+		A992DA2A2C2470B300DE7CE5 /* Build WarrenRustRuntime */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -6059,7 +6059,7 @@
 			);
 			inputPaths = (
 			);
-			name = "Build MullvadRustRuntime";
+			name = "Build WarrenRustRuntime";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -7332,7 +7332,7 @@
 		};
 		0107F4392F5F62CE0012451B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = 0107F4382F5F62CE0012451B /* PBXContainerItemProxy */;
 		};
 		014E8C2D2F28B09700837D0A /* PBXTargetDependency */ = {
@@ -7342,7 +7342,7 @@
 		};
 		01B2FF892D70B914004AED35 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = 01B2FF882D70B914004AED35 /* PBXContainerItemProxy */;
 		};
 		062B45A628FD4FD500746E77 /* PBXTargetDependency */ = {
@@ -7542,7 +7542,7 @@
 		};
 		856E0AD32B4D9C1F007EAD4C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = 856E0AD22B4D9C1F007EAD4C /* PBXContainerItemProxy */;
 		};
 		A9173C342C36CCFB00F6A08C /* PBXTargetDependency */ = {
@@ -7562,17 +7562,17 @@
 		};
 		A992DA222C24709F00DE7CE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = A992DA212C24709F00DE7CE5 /* PBXContainerItemProxy */;
 		};
 		A9D9A4BA2C36D2FD004088DD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = A9D9A4B92C36D2FD004088DD /* PBXContainerItemProxy */;
 		};
 		A9D9A4C62C36D53C004088DD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */;
+			target = A992DA1C2C24709F00DE7CE5 /* WarrenRustRuntime */;
 			targetProxy = A9D9A4C52C36D53C004088DD /* PBXContainerItemProxy */;
 		};
 		F08B6B802C52927600D0A121 /* PBXTargetDependency */ = {
@@ -9286,10 +9286,10 @@
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/../target/aarch64-apple-ios-sim/debug";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/MullvadRustRuntime/module.private.modulemap;
+				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadRustRuntime";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9334,10 +9334,10 @@
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/../target/aarch64-apple-ios-sim/debug";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/MullvadRustRuntime/module.private.modulemap;
+				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadRustRuntime";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9381,10 +9381,10 @@
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/../target/aarch64-apple-ios-sim/release";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/MullvadRustRuntime/module.private.modulemap;
+				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadRustRuntime";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -9427,10 +9427,10 @@
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/../target/aarch64-apple-ios-sim/release";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/MullvadRustRuntime/module.private.modulemap;
+				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadRustRuntime";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -10417,7 +10417,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A992DA252C24709F00DE7CE5 /* Build configuration list for PBXNativeTarget "MullvadRustRuntime" */ = {
+		A992DA252C24709F00DE7CE5 /* Build configuration list for PBXNativeTarget "WarrenRustRuntime" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A992DA262C24709F00DE7CE5 /* Debug */,

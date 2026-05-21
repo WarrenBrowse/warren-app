@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenTypes
 import Operations
 

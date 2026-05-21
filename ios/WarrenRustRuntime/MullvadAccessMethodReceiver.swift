@@ -1,6 +1,6 @@
 //
 //  MullvadAccessMethodReceiver.swift
-//  MullvadRustRuntime
+//  WarrenRustRuntime
 //
 //  Created by Marco Nikic on 2025-03-31.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

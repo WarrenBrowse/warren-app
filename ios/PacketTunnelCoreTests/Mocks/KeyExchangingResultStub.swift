@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 
 struct KeyExchangingResultStub: EphemeralPeerReceiving {

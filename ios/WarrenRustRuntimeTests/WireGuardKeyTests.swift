@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 @testable import WireGuardKitTypes
 

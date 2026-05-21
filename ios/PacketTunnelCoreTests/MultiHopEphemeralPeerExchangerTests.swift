@@ -10,7 +10,7 @@ import XCTest
 
 @testable import WarrenMockData
 @testable import WarrenREST
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 
 final class MultiHopEphemeralPeerExchangerTests: XCTestCase {

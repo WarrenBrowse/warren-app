@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadRustRuntime
+import WarrenRustRuntime
 
 struct MullvadApiError: Error {
     let description: String

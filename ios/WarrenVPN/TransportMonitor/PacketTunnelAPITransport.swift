@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadRustRuntime
+import WarrenRustRuntime
 import WarrenTypes
 import Operations
 import PacketTunnelCore

@@ -9,7 +9,7 @@
 import Foundation
 import Network
 
-@testable import MullvadRustRuntime
+@testable import WarrenRustRuntime
 @testable import WarrenTypes
 
 struct TunnelObfuscationStub: TunnelObfuscation {
