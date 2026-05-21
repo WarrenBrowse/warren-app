@@ -5,34 +5,40 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold Swift wrapper for `warren_wallet_ffi` (Rust crate `warren-ios`,
-//  see `warren-ios/src/warren_wallet_ffi.rs`). NOT yet wired to the actual
-//  FFI exports — those land in the C.3 deep-step-2 / C.5 implementation
-//  brief. This file defines the consumer-facing Swift API surface that
-//  the UI scaffolds (`WarrenMnemonicInputView`, `WarrenMnemonicDisplayView`,
-//  `OnboardingWizardCoordinator`) target.
+//  Swift facade over the `warren_wallet_ffi` Rust exports
+//  (`warren-ios/src/warren_wallet_ffi.rs`). Wraps the C ABI with an
+//  idiomatic Swift API + ensures every secret buffer is zeroed before
+//  drop. The underlying crypto is provided by `warren-identity`
+//  (warren-core) which uses BIP39 v2 + Ed25519-dalek v2 + HKDF-SHA256
+//  with frozen domain separation constants.
 //
 
 import Foundation
+import WarrenRustRuntimeProxy
 
 /// Errors emitted by `WarrenWallet`.
 public enum WarrenWalletError: Error, Equatable {
     /// BIP39 parsing failed (invalid word, bad length, bad checksum).
     case invalidMnemonic
-    /// Generic FFI failure with a human-readable Rust-side message.
-    case ffi(String)
+    /// RNG / FFI failure during BIP39 generation.
+    case generationFailed
+    /// Underlying Rust FFI returned a non-zero status.
+    case ffi(Int32)
 }
 
 /// High-level Swift facade over the warren-identity / warren-ios FFI.
 ///
-/// Threading: all methods are CPU-bound and fast (<1 ms for any of
-/// `generate`, `seedFrom`, `derivePubkey`). Safe to call on the main
-/// actor for UI flows.
-public struct WarrenWallet {
-    private let mnemonic: String
-
+/// Memory model : the 32-byte seed is held in a `Data` instance and
+/// explicitly zeroed in `deinit`. Callers MUST NOT copy `seed` to
+/// another long-lived `Data` ; instead, pass `seed` directly to
+/// `signCanonicalMessage(_:)` which keeps the secret inside Rust.
+public final class WarrenWallet {
+    /// The BIP39 mnemonic in cleartext. Hold only for the duration of
+    /// the backup-display step ; zero out via `forgetSecret()` once
+    /// persisted to the Keychain by the consumer.
+    private(set) public var mnemonic: String
     /// 32-byte HKDF-derived Ed25519 seed.
-    public let seed: Data
+    private(set) public var seed: Data
     /// 32-byte Ed25519 public key.
     public let publicKey: Data
 
@@ -42,37 +48,59 @@ public struct WarrenWallet {
         self.publicKey = publicKey
     }
 
+    deinit {
+        // Best-effort wipe of secret material. Swift does not guarantee
+        // that other heap copies are cleared, so the Rust side already
+        // zeroizes via `Zeroizing<[u8; 32]>` and we mirror that here.
+        let count = seed.count
+        if count > 0 {
+            seed.withUnsafeMutableBytes { buffer in
+                memset_s(buffer.baseAddress, count, 0, count)
+            }
+        }
+    }
+
     /// Generates a new 12-word BIP39 mnemonic and derives the Warren
     /// identity (seed + pubkey).
-    ///
-    /// Scaffold: returns a hardcoded test phrase. Production wires
-    /// `warren_wallet_generate_mnemonic()` from `warren_wallet_ffi`.
     public static func generate() throws -> WarrenWallet {
-        // TODO C.3 deep step 2: call warren_wallet_generate_mnemonic() via FFI.
-        let testPhrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-        return try fromMnemonic(testPhrase)
+        guard let cstr = warren_wallet_generate_mnemonic(12) else {
+            throw WarrenWalletError.generationFailed
+        }
+        defer { warren_wallet_free_mnemonic(cstr) }
+        let phrase = String(cString: cstr)
+        return try fromMnemonic(phrase)
     }
 
     /// Loads a wallet from an existing 12-word BIP39 mnemonic, validating
     /// the phrase against the BIP39 wordlist + checksum.
-    ///
-    /// Scaffold: returns a wallet with placeholder seed/pubkey when the
-    /// mnemonic has 12 whitespace-separated tokens. Production wires
-    /// `warren_wallet_mnemonic_to_seed` + `warren_wallet_derive_pubkey`.
     public static func fromMnemonic(_ mnemonic: String) throws -> WarrenWallet {
         let trimmed = mnemonic.trimmingCharacters(in: .whitespacesAndNewlines)
-        let words = trimmed.split(separator: " ")
-        guard words.count == 12 else {
+        // 32-byte seed buffer (filled by FFI on success).
+        var seedBuffer = [UInt8](repeating: 0, count: 32)
+        let seedStatus: Int32 = trimmed.withCString { cstr in
+            seedBuffer.withUnsafeMutableBufferPointer { ptr in
+                warren_wallet_seed_from_mnemonic(cstr, ptr.baseAddress)
+            }
+        }
+        guard seedStatus == 0 else {
             throw WarrenWalletError.invalidMnemonic
         }
-        // TODO C.3 deep step 2: call warren_wallet_mnemonic_to_seed via FFI
-        // and warren_wallet_derive_pubkey via FFI.
-        let placeholderSeed = Data(repeating: 0, count: 32)
-        let placeholderPubkey = Data(repeating: 0, count: 32)
+        // Derive pubkey from seed (32 bytes).
+        var pubkeyBuffer = [UInt8](repeating: 0, count: 32)
+        let pubkeyStatus: Int32 = seedBuffer.withUnsafeBufferPointer { seedPtr in
+            pubkeyBuffer.withUnsafeMutableBufferPointer { pubPtr in
+                warren_wallet_derive_pubkey(seedPtr.baseAddress, pubPtr.baseAddress)
+            }
+        }
+        guard pubkeyStatus == 0 else {
+            // Wipe the seed before throwing.
+            for i in 0..<seedBuffer.count { seedBuffer[i] = 0 }
+            throw WarrenWalletError.ffi(pubkeyStatus)
+        }
         return WarrenWallet(
             mnemonic: trimmed,
-            seed: placeholderSeed,
-            publicKey: placeholderPubkey
+            seed: Data(seedBuffer),
+            publicKey: Data(pubkeyBuffer)
         )
     }
 
@@ -82,16 +110,35 @@ public struct WarrenWallet {
         mnemonic
     }
 
+    /// Wipes the in-memory mnemonic string. Idempotent. Call after the
+    /// consumer has persisted the mnemonic to the Keychain.
+    public func forgetSecret() {
+        // Swift strings on the heap cannot be reliably zeroed (CoW +
+        // small-string optimisation), but we can drop the reference.
+        mnemonic = ""
+    }
+
     /// Signs `payload` with the Ed25519 derived signing key.
     /// The signature is a 64-byte Ed25519 signature suitable for the
     /// `X-Warren-Signature` HTTP header (canonical message convention
-    /// from `warren-api-client`, M4.H.C.PRE refactor).
-    ///
-    /// Scaffold: returns 64 zero bytes. Production wires
-    /// `warren_wallet_sign_canonical_message` via FFI.
+    /// from `warren-api-client`).
     public func signCanonicalMessage(_ payload: Data) throws -> Data {
-        // TODO C.3 deep step 2: call warren_wallet_sign_canonical_message via FFI.
-        _ = payload
-        return Data(repeating: 0, count: 64)
+        var signatureBuffer = [UInt8](repeating: 0, count: 64)
+        let status: Int32 = seed.withUnsafeBytes { seedRaw in
+            payload.withUnsafeBytes { payloadRaw in
+                signatureBuffer.withUnsafeMutableBufferPointer { sigPtr in
+                    warren_wallet_sign(
+                        seedRaw.bindMemory(to: UInt8.self).baseAddress,
+                        payloadRaw.bindMemory(to: UInt8.self).baseAddress,
+                        payload.count,
+                        sigPtr.baseAddress
+                    )
+                }
+            }
+        }
+        guard status == 0 else {
+            throw WarrenWalletError.ffi(status)
+        }
+        return Data(signatureBuffer)
     }
 }
