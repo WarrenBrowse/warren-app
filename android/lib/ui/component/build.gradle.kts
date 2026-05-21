@@ -33,4 +33,8 @@ dependencies {
     implementation(libs.androidx.animation)
 
     implementation(libs.accompanist.drawablepainter)
+
+    // Warren wallet UI (D.5) - BiometricPrompt gating in `BiometricGate.kt`.
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment)
 }
