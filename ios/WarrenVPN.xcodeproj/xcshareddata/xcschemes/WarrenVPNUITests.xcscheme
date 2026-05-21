@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "58CE5E5F224146200008646E"
-            BuildableName = "MullvadVPN.app"
-            BlueprintName = "MullvadVPN"
+            BuildableName = "WarrenVPN.app"
+            BlueprintName = "WarrenVPN"
             ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

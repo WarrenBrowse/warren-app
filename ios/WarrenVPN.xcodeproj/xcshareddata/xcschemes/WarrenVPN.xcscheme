@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58CE5E5F224146200008646E"
-               BuildableName = "MullvadVPN.app"
-               BlueprintName = "MullvadVPN"
+               BuildableName = "WarrenVPN.app"
+               BlueprintName = "WarrenVPN"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -43,8 +43,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "06799ABB28F98E1D00ACD94E"
-               BuildableName = "MullvadREST.framework"
-               BlueprintName = "MullvadREST"
+               BuildableName = "WarrenREST.framework"
+               BlueprintName = "WarrenREST"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -57,8 +57,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58D223F2294C8FF00029F5F8"
-               BuildableName = "MullvadLogging.framework"
-               BlueprintName = "MullvadLogging"
+               BuildableName = "WarrenLogging.framework"
+               BlueprintName = "WarrenLogging"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -85,8 +85,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58D223D4294C8E5E0029F5F8"
-               BuildableName = "MullvadTypes.framework"
-               BlueprintName = "MullvadTypes"
+               BuildableName = "WarrenTypes.framework"
+               BlueprintName = "WarrenTypes"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -202,8 +202,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58FBFBE5291622580020E046"
-               BuildableName = "MullvadRESTTests.xctest"
-               BlueprintName = "MullvadRESTTests"
+               BuildableName = "WarrenRESTTests.xctest"
+               BlueprintName = "WarrenRESTTests"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -296,8 +296,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "58CE5E5F224146200008646E"
-            BuildableName = "MullvadVPN.app"
-            BlueprintName = "MullvadVPN"
+            BuildableName = "WarrenVPN.app"
+            BlueprintName = "WarrenVPN"
             ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -325,8 +325,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "58CE5E5F224146200008646E"
-            BuildableName = "MullvadVPN.app"
-            BlueprintName = "MullvadVPN"
+            BuildableName = "WarrenVPN.app"
+            BlueprintName = "WarrenVPN"
             ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

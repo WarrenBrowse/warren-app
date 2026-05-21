@@ -1367,7 +1367,7 @@ final class TunnelManager: @unchecked Sendable {
          ```
          command alias swift expression -l Swift -O --
         
-         swift import MullvadVPN
+         swift import WarrenVPN
          swift (UIApplication.shared.delegate as? AppDelegate)?.tunnelManager.simulateAccountExpiration(option: .closeToExpiry)
          ```
         

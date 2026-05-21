@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
-               BuildableName = "MullvadVPNTests.xctest"
-               BlueprintName = "MullvadVPNTests"
+               BuildableName = "WarrenVPNTests.xctest"
+               BlueprintName = "WarrenVPNTests"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,11 +29,11 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:TestPlans/MullvadVPNApp.xctestplan"
+            reference = "container:TestPlans/WarrenVPNApp.xctestplan"
             default = "YES">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:TestPlans/MullvadVPNCI.xctestplan">
+            reference = "container:TestPlans/WarrenVPNCI.xctestplan">
          </TestPlanReference>
       </TestPlans>
       <Testables>
@@ -42,8 +42,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
-               BuildableName = "MullvadVPNTests.xctest"
-               BlueprintName = "MullvadVPNTests"
+               BuildableName = "WarrenVPNTests.xctest"
+               BlueprintName = "WarrenVPNTests"
                ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -81,8 +81,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
-            BuildableName = "MullvadVPNTests.xctest"
-            BlueprintName = "MullvadVPNTests"
+            BuildableName = "WarrenVPNTests.xctest"
+            BlueprintName = "WarrenVPNTests"
             ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

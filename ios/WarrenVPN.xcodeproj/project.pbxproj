@@ -587,7 +587,7 @@
 		7A81C3F42F6C1F0B008D7ADC /* SettingsNavigationRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F92F606F48001E5DB6 /* SettingsNavigationRoute.swift */; };
 		7A81C3F62F6C26F3008D7ADC /* ListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C3F52F6C26EF008D7ADC /* ListItem.swift */; };
 		7A83A0C62B29A750008B5CE7 /* APIAccessMethodsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A83A0C52B29A750008B5CE7 /* APIAccessMethodsTests.swift */; };
-		7A83C3FF2A55B72E00DFB83A /* MullvadVPNApp.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 7A83C3FE2A55B72E00DFB83A /* MullvadVPNApp.xctestplan */; };
+		7A83C3FF2A55B72E00DFB83A /* WarrenVPNApp.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 7A83C3FE2A55B72E00DFB83A /* WarrenVPNApp.xctestplan */; };
 		7A83C4022A57FAA800DFB83A /* SettingsDNSInfoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A83C4012A57FAA800DFB83A /* SettingsDNSInfoCell.swift */; };
 		7A88DCD82A8FABBE00D2FF0E /* Routing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A88DCCE2A8FABBE00D2FF0E /* Routing.framework */; };
 		7A88DCDF2A8FABBF00D2FF0E /* RoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A88DCDE2A8FABBF00D2FF0E /* RoutingTests.swift */; };
@@ -1274,7 +1274,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58CE5E5F224146200008646E;
-			remoteInfo = MullvadVPN;
+			remoteInfo = WarrenVPN;
 		};
 		06D9844928F99056003AABE9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1330,7 +1330,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58CE5E5F224146200008646E;
-			remoteInfo = MullvadVPN;
+			remoteInfo = WarrenVPN;
 		};
 		58CE5E7F224146470008646E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1498,7 +1498,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58CE5E5F224146200008646E;
-			remoteInfo = MullvadVPN;
+			remoteInfo = WarrenVPN;
 		};
 		7A88DCEE2A8FB08D00D2FF0E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1519,7 +1519,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58CE5E5F224146200008646E;
-			remoteInfo = MullvadVPN;
+			remoteInfo = WarrenVPN;
 		};
 		856E0AD22B4D9C1F007EAD4C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1924,7 +1924,7 @@
 		5864AF0129C7879B005B0CD9 /* CellFactoryProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CellFactoryProtocol.swift; sourceTree = "<group>"; };
 		5864AF0229C7879B005B0CD9 /* VPNSettingsCellFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VPNSettingsCellFactory.swift; sourceTree = "<group>"; };
 		5864AF7C2A9F4DC9008BC928 /* SettingsReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsReader.swift; sourceTree = "<group>"; };
-		5866F39B2243B82D00168AE5 /* MullvadVPN.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MullvadVPN.entitlements; sourceTree = "<group>"; };
+		5866F39B2243B82D00168AE5 /* WarrenVPN.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WarrenVPN.entitlements; sourceTree = "<group>"; };
 		5867770D29096984006F721F /* OutOfTimeInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutOfTimeInteractor.swift; sourceTree = "<group>"; };
 		5867770F290975E8006F721F /* SettingsInteractorFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsInteractorFactory.swift; sourceTree = "<group>"; };
 		58677711290976FB006F721F /* SettingsInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsInteractor.swift; sourceTree = "<group>"; };
@@ -2025,7 +2025,7 @@
 		58AEEF642344A36000C9BBD5 /* KeychainError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainError.swift; sourceTree = "<group>"; };
 		58AFC99429F96F7B000829DE /* AsyncBlockOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncBlockOperationTests.swift; sourceTree = "<group>"; };
 		58AFC99629F9753D000829DE /* AsyncResultBlockOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncResultBlockOperationTests.swift; sourceTree = "<group>"; };
-		58B0A2A0238EE67E00BC001D /* MullvadVPNTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MullvadVPNTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		58B0A2A0238EE67E00BC001D /* WarrenVPNTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WarrenVPNTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		58B0A2A4238EE67E00BC001D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		58B26E1D2943514300D5980C /* InAppNotificationDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppNotificationDescriptor.swift; sourceTree = "<group>"; };
 		58B26E21294351EA00D5980C /* InAppNotificationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppNotificationProvider.swift; sourceTree = "<group>"; };
@@ -2063,7 +2063,7 @@
 		58CCA0152242560B004F3011 /* UIColor+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Palette.swift"; sourceTree = "<group>"; };
 		58CCA01722426713004F3011 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		58CCA01D2242787B004F3011 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
-		58CE5E60224146200008646E /* MullvadVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MullvadVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		58CE5E60224146200008646E /* WarrenVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WarrenVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58CE5E63224146200008646E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		58CE5E65224146200008646E /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		58CE5E6A224146210008646E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -2156,7 +2156,7 @@
 		58FF9FE92B07653800E4C97D /* ButtonCellContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonCellContentView.swift; sourceTree = "<group>"; };
 		58FF9FEF2B07C4D300E4C97D /* PersistentAccessMethod+ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PersistentAccessMethod+ViewModel.swift"; sourceTree = "<group>"; };
 		58FF9FF32B07C61B00E4C97D /* AccessMethodValidationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessMethodValidationError.swift; sourceTree = "<group>"; };
-		7A02D4EA2A9CEC7A00C19E31 /* MullvadVPNScreenshots.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = MullvadVPNScreenshots.xctestplan; sourceTree = "<group>"; };
+		7A02D4EA2A9CEC7A00C19E31 /* WarrenVPNScreenshots.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = WarrenVPNScreenshots.xctestplan; sourceTree = "<group>"; };
 		7A09C98029D99215000C2CAC /* String+Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Search.swift"; sourceTree = "<group>"; };
 		7A0B311D2B303A0D004B12E0 /* AccessbilityIdentifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccessbilityIdentifier.swift; sourceTree = "<group>"; };
 		7A0C0F622A979C4A0058EFCE /* Coordinator+Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Coordinator+Router.swift"; sourceTree = "<group>"; };
@@ -2257,8 +2257,8 @@
 		7A81C3F12F6BE4E3008D7ADC /* ListItemFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListItemFactory.swift; sourceTree = "<group>"; };
 		7A81C3F52F6C26EF008D7ADC /* ListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListItem.swift; sourceTree = "<group>"; };
 		7A83A0C52B29A750008B5CE7 /* APIAccessMethodsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIAccessMethodsTests.swift; sourceTree = "<group>"; };
-		7A83C3FE2A55B72E00DFB83A /* MullvadVPNApp.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = MullvadVPNApp.xctestplan; sourceTree = "<group>"; };
-		7A83C4002A55B81A00DFB83A /* MullvadVPNCI.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = MullvadVPNCI.xctestplan; sourceTree = "<group>"; };
+		7A83C3FE2A55B72E00DFB83A /* WarrenVPNApp.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = WarrenVPNApp.xctestplan; sourceTree = "<group>"; };
+		7A83C4002A55B81A00DFB83A /* WarrenVPNCI.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = WarrenVPNCI.xctestplan; sourceTree = "<group>"; };
 		7A83C4012A57FAA800DFB83A /* SettingsDNSInfoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDNSInfoCell.swift; sourceTree = "<group>"; };
 		7A88DCCE2A8FABBE00D2FF0E /* Routing.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Routing.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A88DCD02A8FABBE00D2FF0E /* Routing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Routing.h; sourceTree = "<group>"; };
@@ -2648,7 +2648,7 @@
 		F0C6A8422AB08E54000777A8 /* RedeemVoucherViewConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemVoucherViewConfiguration.swift; sourceTree = "<group>"; };
 		F0C9CE3D2F110C2A00EF41CE /* UIStackView+Contentsize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStackView+Contentsize.swift"; sourceTree = "<group>"; };
 		F0CB96302E4A324000206149 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		F0CFB9362ECDBA5300776BA3 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = InfoPlist.xcstrings; path = "MullvadVPN/Supporting Files/InfoPlist.xcstrings"; sourceTree = SOURCE_ROOT; };
+		F0CFB9362ECDBA5300776BA3 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = InfoPlist.xcstrings; path = "WarrenVPN/Supporting Files/InfoPlist.xcstrings"; sourceTree = SOURCE_ROOT; };
 		F0D5591D2D3805050072B63F /* LatestChangesNotificationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestChangesNotificationProvider.swift; sourceTree = "<group>"; };
 		F0D8825A2B04F53600D3EF9A /* OutgoingConnectionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutgoingConnectionData.swift; sourceTree = "<group>"; };
 		F0DA87462A9CB9A2006044F1 /* AccountExpiryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountExpiryRow.swift; sourceTree = "<group>"; };
@@ -2970,7 +2970,7 @@
 			path = WarrenREST;
 			sourceTree = "<group>";
 		};
-		440E9EF02BDA93CB00B1FD11 /* MullvadVPN */ = {
+		440E9EF02BDA93CB00B1FD11 /* WarrenVPN */ = {
 			isa = PBXGroup;
 			children = (
 				F9EDB26A2EC4C03A0015DE36 /* Interactors */,
@@ -2985,7 +2985,7 @@
 				440E9EFF2BDA995800B1FD11 /* TunnelManager */,
 				440E9EFC2BDA982200B1FD11 /* View controllers */,
 			);
-			path = MullvadVPN;
+			path = WarrenVPN;
 			sourceTree = "<group>";
 		};
 		440E9EF12BDA940500B1FD11 /* Notifications */ = {
@@ -3695,7 +3695,7 @@
 				58CE5E6F224146210008646E /* Info.plist */,
 				F0EE6E762E4A321B0089DFF3 /* InfoPlist.strings */,
 				58727282265D173C00F315B2 /* LaunchScreen.storyboard */,
-				5866F39B2243B82D00168AE5 /* MullvadVPN.entitlements */,
+				5866F39B2243B82D00168AE5 /* WarrenVPN.entitlements */,
 				A92962582B1F4FDB00DFB93B /* PrivacyInfo.xcprivacy */,
 			);
 			path = "Supporting Files";
@@ -3897,18 +3897,18 @@
 			path = TransportMonitor;
 			sourceTree = "<group>";
 		};
-		58B0A2A1238EE67E00BC001D /* MullvadVPNTests */ = {
+		58B0A2A1238EE67E00BC001D /* WarrenVPNTests */ = {
 			isa = PBXGroup;
 			children = (
 				440E9EFA2BDA976800B1FD11 /* WarrenLogging */,
 				440E9EF32BDA942E00B1FD11 /* WarrenREST */,
 				449872E22B7CB91B00094DDC /* WarrenSettings */,
 				440E9EF92BDA95FC00B1FD11 /* WarrenTypes */,
-				440E9EF02BDA93CB00B1FD11 /* MullvadVPN */,
+				440E9EF02BDA93CB00B1FD11 /* WarrenVPN */,
 				58B0A2A4238EE67E00BC001D /* Info.plist */,
 				F0B0E6962AFE6E7E001DC66B /* XCTest+Async.swift */,
 			);
-			path = MullvadVPNTests;
+			path = WarrenVPNTests;
 			sourceTree = "<group>";
 		};
 		58B26E1F2943516500D5980C /* Notifications */ = {
@@ -4096,8 +4096,8 @@
 				A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */,
 				58B2FDD42AA71D2A003EB5C6 /* WarrenSettings */,
 				581943F228F8014500B0CB5E /* WarrenTypes */,
-				58CE5E62224146200008646E /* MullvadVPN */,
-				58B0A2A1238EE67E00BC001D /* MullvadVPNTests */,
+				58CE5E62224146200008646E /* WarrenVPN */,
+				58B0A2A1238EE67E00BC001D /* WarrenVPNTests */,
 				852969262B4D9C1F007EAD4C /* WarrenVPNUITests */,
 				58D223A6294C8A490029F5F8 /* Operations */,
 				589A455328E094B300565204 /* OperationsTests */,
@@ -4116,9 +4116,9 @@
 		58CE5E61224146200008646E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				58CE5E60224146200008646E /* MullvadVPN.app */,
+				58CE5E60224146200008646E /* WarrenVPN.app */,
 				58CE5E79224146470008646E /* PacketTunnel.appex */,
-				58B0A2A0238EE67E00BC001D /* MullvadVPNTests.xctest */,
+				58B0A2A0238EE67E00BC001D /* WarrenVPNTests.xctest */,
 				589A455228E094B300565204 /* OperationsTests.xctest */,
 				06799ABC28F98E1D00ACD94E /* WarrenREST.framework */,
 				58FBFBE6291622580020E046 /* WarrenRESTTests.xctest */,
@@ -4138,7 +4138,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		58CE5E62224146200008646E /* MullvadVPN */ = {
+		58CE5E62224146200008646E /* WarrenVPN */ = {
 			isa = PBXGroup;
 			children = (
 				F0E560D92F7EAF580027B900 /* MultihopMigration */,
@@ -4167,7 +4167,7 @@
 				583FE01629C196E8006E85F9 /* View controllers */,
 				583FE01F29C197ED006E85F9 /* Views */,
 			);
-			path = MullvadVPN;
+			path = WarrenVPN;
 			sourceTree = "<group>";
 		};
 		58CE5E7A224146470008646E /* PacketTunnel */ = {
@@ -4523,9 +4523,9 @@
 		7A83C3FC2A55B39500DFB83A /* TestPlans */ = {
 			isa = PBXGroup;
 			children = (
-				7A83C3FE2A55B72E00DFB83A /* MullvadVPNApp.xctestplan */,
-				7A83C4002A55B81A00DFB83A /* MullvadVPNCI.xctestplan */,
-				7A02D4EA2A9CEC7A00C19E31 /* MullvadVPNScreenshots.xctestplan */,
+				7A83C3FE2A55B72E00DFB83A /* WarrenVPNApp.xctestplan */,
+				7A83C4002A55B81A00DFB83A /* WarrenVPNCI.xctestplan */,
+				7A02D4EA2A9CEC7A00C19E31 /* WarrenVPNScreenshots.xctestplan */,
 				852969302B4D9E70007EAD4C /* WarrenVPNUITestsAll.xctestplan */,
 				85006A8E2B73EF67004AD8FB /* WarrenVPNUITestsSmoke.xctestplan */,
 			);
@@ -5319,9 +5319,9 @@
 			productReference = 589A455228E094B300565204 /* OperationsTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		58B0A29F238EE67E00BC001D /* MullvadVPNTests */ = {
+		58B0A29F238EE67E00BC001D /* WarrenVPNTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58B0A2A5238EE67E00BC001D /* Build configuration list for PBXNativeTarget "MullvadVPNTests" */;
+			buildConfigurationList = 58B0A2A5238EE67E00BC001D /* Build configuration list for PBXNativeTarget "WarrenVPNTests" */;
 			buildPhases = (
 				58B0A29C238EE67E00BC001D /* Sources */,
 				58B0A29D238EE67E00BC001D /* Frameworks */,
@@ -5333,12 +5333,12 @@
 			dependencies = (
 				06410DFA292C4ABC00AFC18C /* PBXTargetDependency */,
 			);
-			name = MullvadVPNTests;
+			name = WarrenVPNTests;
 			packageProductDependencies = (
 				44A262462D6373D300085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadVPNTests;
-			productReference = 58B0A2A0238EE67E00BC001D /* MullvadVPNTests.xctest */;
+			productName = WarrenVPNTests;
+			productReference = 58B0A2A0238EE67E00BC001D /* WarrenVPNTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		58B2FDD22AA71D2A003EB5C6 /* WarrenSettings */ = {
@@ -5413,9 +5413,9 @@
 			productReference = 58C7A43D2A863F460060C66F /* PacketTunnelCoreTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		58CE5E5F224146200008646E /* MullvadVPN */ = {
+		58CE5E5F224146200008646E /* WarrenVPN */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58CE5E72224146210008646E /* Build configuration list for PBXNativeTarget "MullvadVPN" */;
+			buildConfigurationList = 58CE5E72224146210008646E /* Build configuration list for PBXNativeTarget "WarrenVPN" */;
 			buildPhases = (
 				580E3F212A9860F20061809D /* Run SwiftLint */,
 				58CE5E5C224146200008646E /* Sources */,
@@ -5439,12 +5439,12 @@
 				F0ACE30F2BE4E478006D5333 /* PBXTargetDependency */,
 				A992DA222C24709F00DE7CE5 /* PBXTargetDependency */,
 			);
-			name = MullvadVPN;
+			name = WarrenVPN;
 			packageProductDependencies = (
 				44A262412D6373B400085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadVPN;
-			productReference = 58CE5E60224146200008646E /* MullvadVPN.app */;
+			productName = WarrenVPN;
+			productReference = 58CE5E60224146200008646E /* WarrenVPN.app */;
 			productType = "com.apple.product-type.application";
 		};
 		58CE5E78224146470008646E /* PacketTunnel */ = {
@@ -5789,7 +5789,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 58CE5E5B224146200008646E /* Build configuration list for PBXProject "MullvadVPN" */;
+			buildConfigurationList = 58CE5E5B224146200008646E /* Build configuration list for PBXProject "WarrenVPN" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -5825,10 +5825,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58CE5E5F224146200008646E /* MullvadVPN */,
+				58CE5E5F224146200008646E /* WarrenVPN */,
 				58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */,
 				58CE5E78224146470008646E /* PacketTunnel */,
-				58B0A29F238EE67E00BC001D /* MullvadVPNTests */,
+				58B0A29F238EE67E00BC001D /* WarrenVPNTests */,
 				852969242B4D9C1F007EAD4C /* WarrenVPNUITests */,
 				58D223A4294C8A480029F5F8 /* Operations */,
 				589A455128E094B300565204 /* OperationsTests */,
@@ -5892,7 +5892,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A9BA08312BA32FA9005A7A2D /* PrivacyInfo.xcprivacy in Resources */,
-				7A83C3FF2A55B72E00DFB83A /* MullvadVPNApp.xctestplan in Resources */,
+				7A83C3FF2A55B72E00DFB83A /* WarrenVPNApp.xctestplan in Resources */,
 				58727283265D173C00F315B2 /* LaunchScreen.storyboard in Resources */,
 				5859A55529CD9DD900F66591 /* changes.txt in Resources */,
 				587DCCEF287D84A500CE821E /* countries.geo.json in Resources */,
@@ -7352,7 +7352,7 @@
 		};
 		06410DFA292C4ABC00AFC18C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58CE5E5F224146200008646E /* MullvadVPN */;
+			target = 58CE5E5F224146200008646E /* WarrenVPN */;
 			targetProxy = 06410DF9292C4ABC00AFC18C /* PBXContainerItemProxy */;
 		};
 		06799AD028F98E1D00ACD94E /* PBXTargetDependency */ = {
@@ -7407,7 +7407,7 @@
 		58C7A4722A864B860060C66F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
-			target = 58CE5E5F224146200008646E /* MullvadVPN */;
+			target = 58CE5E5F224146200008646E /* WarrenVPN */;
 			targetProxy = 58C7A4712A864B860060C66F /* PBXContainerItemProxy */;
 		};
 		58CE5E80224146470008646E /* PBXTargetDependency */ = {
@@ -7517,7 +7517,7 @@
 		};
 		7A88DCDC2A8FABBE00D2FF0E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58CE5E5F224146200008646E /* MullvadVPN */;
+			target = 58CE5E5F224146200008646E /* WarrenVPN */;
 			targetProxy = 7A88DCDB2A8FABBE00D2FF0E /* PBXContainerItemProxy */;
 		};
 		7A88DCEF2A8FB08D00D2FF0E /* PBXTargetDependency */ = {
@@ -7537,7 +7537,7 @@
 		};
 		8529692C2B4D9C1F007EAD4C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58CE5E5F224146200008646E /* MullvadVPN */;
+			target = 58CE5E5F224146200008646E /* WarrenVPN */;
 			targetProxy = 8529692B2B4D9C1F007EAD4C /* PBXContainerItemProxy */;
 		};
 		856E0AD32B4D9C1F007EAD4C /* PBXTargetDependency */ = {
@@ -7745,7 +7745,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
-				INFOPLIST_FILE = MullvadVPNTests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -7767,7 +7767,7 @@
 			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				INFOPLIST_FILE = MullvadVPNTests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8121,12 +8121,12 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "MullvadVPN/Supporting Files/MullvadVPN.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "WarrenVPN/Supporting Files/WarrenVPN.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "MullvadVPN/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "WarrenVPN/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8147,14 +8147,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "MullvadVPN/Supporting Files/MullvadVPN.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "WarrenVPN/Supporting Files/WarrenVPN.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKG9MXH72F;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "MullvadVPN/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "WarrenVPN/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8661,7 +8661,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MullvadVPN;
+				TEST_TARGET_NAME = WarrenVPN;
 			};
 			name = Debug;
 		};
@@ -8690,7 +8690,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MullvadVPN;
+				TEST_TARGET_NAME = WarrenVPN;
 			};
 			name = Release;
 		};
@@ -8768,7 +8768,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "MullvadVPN/Supporting Files/MullvadVPN.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "WarrenVPN/Supporting Files/WarrenVPN.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
@@ -8777,7 +8777,7 @@
 					"$(inherited)",
 					"DEBUG=1",
 				);
-				INFOPLIST_FILE = "MullvadVPN/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "WarrenVPN/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8841,7 +8841,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
-				INFOPLIST_FILE = MullvadVPNTests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9231,7 +9231,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MullvadVPN;
+				TEST_TARGET_NAME = WarrenVPN;
 			};
 			name = Staging;
 		};
@@ -9252,7 +9252,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MullvadVPN;
+				TEST_TARGET_NAME = WarrenVPN;
 			};
 			name = MockRelease;
 		};
@@ -9615,12 +9615,12 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "MullvadVPN/Supporting Files/MullvadVPN.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "WarrenVPN/Supporting Files/WarrenVPN.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "MullvadVPN/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "WarrenVPN/Supporting Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9679,7 +9679,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CKG9MXH72F;
-				INFOPLIST_FILE = MullvadVPNTests/Info.plist;
+				INFOPLIST_FILE = WarrenVPNTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -10252,7 +10252,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58B0A2A5238EE67E00BC001D /* Build configuration list for PBXNativeTarget "MullvadVPNTests" */ = {
+		58B0A2A5238EE67E00BC001D /* Build configuration list for PBXNativeTarget "WarrenVPNTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B0A2A6238EE67E00BC001D /* Debug */,
@@ -10296,7 +10296,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58CE5E5B224146200008646E /* Build configuration list for PBXProject "MullvadVPN" */ = {
+		58CE5E5B224146200008646E /* Build configuration list for PBXProject "WarrenVPN" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58CE5E70224146210008646E /* Debug */,
@@ -10307,7 +10307,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58CE5E72224146210008646E /* Build configuration list for PBXNativeTarget "MullvadVPN" */ = {
+		58CE5E72224146210008646E /* Build configuration list for PBXNativeTarget "WarrenVPN" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58CE5E73224146210008646E /* Debug */,
