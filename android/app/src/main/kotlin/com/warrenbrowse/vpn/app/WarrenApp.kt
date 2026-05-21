@@ -61,6 +61,7 @@ import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.removeDevic
 import com.warrenbrowse.vpn.feature.login.impl.navigation.loginEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
 import com.warrenbrowse.vpn.feature.multihop.impl.navigation.multihopEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
@@ -140,6 +141,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         walletEntry(nav3)
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
+        warrenLocationPickerEntry(nav3)
         multihopEntry(nav3)
         noDaemonEntry(nav3)
         notificationEntry(nav3)

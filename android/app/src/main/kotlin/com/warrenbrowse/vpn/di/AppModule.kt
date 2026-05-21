@@ -20,6 +20,7 @@ import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepos
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
@@ -85,7 +86,7 @@ val appModule = module {
 
     // D.4 step 17: relay catalogue via WarrenJni.listRelays. Hardcoded entry
     // today; D.6 wires the signed-relay-list fetch via warren-api-client.
-    single { RelayCatalog() }
+    single { RelayCatalog() } bind WarrenRelayProvider::class
 
     // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
     // Composables can read tunnel transitions without binding the service.

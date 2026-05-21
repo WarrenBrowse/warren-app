@@ -54,3 +54,30 @@ interface WarrenQuinnDisconnectInvoker {
 interface WarrenQuinnReconnectInvoker {
     fun reconnect()
 }
+
+/**
+ * Wire shape for a relay entry exposed by [WarrenRelayProvider]. Lives
+ * here so feature modules can render the list without depending on the
+ * app module. The schema mirrors the JSON shape returned by
+ * `WarrenJni.listRelays`.
+ */
+data class WarrenRelaySummary(
+    val exitId: String,
+    val exitPubkeyHex: String,
+    val endpoint: String,
+    val country: String,
+    val city: String,
+    val active: Boolean,
+    val weight: Long,
+)
+
+/**
+ * Lib-side surface for the Warren relay catalogue. The concrete impl
+ * lives in `app/connect/RelayCatalog` and is bound to this interface in
+ * `di/AppModule`. The location picker UI in `lib/feature/settings/impl`
+ * consumes this surface to render the available relays.
+ */
+interface WarrenRelayProvider {
+    /** Snapshot of the available relays. Empty list = catalogue unreachable. */
+    fun list(): List<WarrenRelaySummary>
+}

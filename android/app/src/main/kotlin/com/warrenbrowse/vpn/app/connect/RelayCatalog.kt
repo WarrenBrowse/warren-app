@@ -2,6 +2,8 @@ package com.warrenbrowse.vpn.app.connect
 
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import kotlinx.serialization.json.Json
 
 /**
@@ -16,8 +18,11 @@ import kotlinx.serialization.json.Json
  * Held as a Koin `single` so future consumers (location picker,
  * relay selector, connect button) can share the same instance and
  * eventually a single in-memory cache + refresh strategy.
+ *
+ * Implements [WarrenRelayProvider] so feature modules can read the
+ * catalogue without depending on the `app` module.
  */
-class RelayCatalog {
+class RelayCatalog : WarrenRelayProvider {
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -40,4 +45,16 @@ class RelayCatalog {
             emptyList()
         }
     }
+
+    override fun list(): List<WarrenRelaySummary> = listRelays().map { it.toSummary() }
 }
+
+private fun RelayInfo.toSummary(): WarrenRelaySummary = WarrenRelaySummary(
+    exitId = exitId,
+    exitPubkeyHex = exitPubkeyHex,
+    endpoint = endpoint,
+    country = country,
+    city = city,
+    active = active,
+    weight = weight,
+)
