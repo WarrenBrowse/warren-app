@@ -39,8 +39,14 @@ FILES_TO_ADD = {
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
 
-  # i18n resource: Wallet table for FR + EN translations.
+  # C.6 remainder: DAITA / NAT-PMP settings + failover banner.
+  "WarrenVPN/View controllers/Settings/WarrenDaitaSettingsView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Settings/WarrenNatPmpSettingsView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/WarrenFailoverBannerView.swift" => "WarrenVPN",
+
+  # i18n resources: Wallet + Settings tables for FR + EN translations.
   "Assets/Wallet.xcstrings" => "WarrenVPN",
+  "Assets/Settings.xcstrings" => "WarrenVPN",
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree

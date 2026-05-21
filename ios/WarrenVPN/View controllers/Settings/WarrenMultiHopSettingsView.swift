@@ -45,34 +45,34 @@ public struct WarrenMultiHopSettingsView: View {
     public var body: some View {
         Form {
             Section {
-                Toggle("Enable multi-hop", isOn: $isEnabled)
+                Toggle(String(localized: "Enable multi-hop", table: "Settings"), isOn: $isEnabled)
                     .tint(.Warren.yellow)
             } footer: {
-                Text("Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default.")
-                    .font(.caption)
+                Text(String(localized: "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default.", table: "Settings"))
+                    .font(.mullvadMicro)
             }
 
             if isEnabled {
-                Section("Entry relay") {
-                    Picker("Country", selection: $entryCountryCode) {
+                Section(String(localized: "Entry relay", table: "Settings")) {
+                    Picker(String(localized: "Country", table: "Settings"), selection: $entryCountryCode) {
                         ForEach(Self.availableCountries, id: \.code) { country in
                             Text(country.name).tag(country.code)
                         }
                     }
                 }
-                Section("Exit relay") {
-                    Picker("Country", selection: $exitCountryCode) {
+                Section(String(localized: "Exit relay", table: "Settings")) {
+                    Picker(String(localized: "Country", table: "Settings"), selection: $exitCountryCode) {
                         ForEach(Self.availableCountries.filter { $0.code != entryCountryCode }, id: \.code) { country in
                             Text(country.name).tag(country.code)
                         }
                     }
                 } footer: {
-                    Text("The exit relay determines your apparent location to websites.")
-                        .font(.caption)
+                    Text(String(localized: "The exit relay determines your apparent location to websites.", table: "Settings"))
+                        .font(.mullvadMicro)
                 }
             }
         }
-        .navigationTitle("Multi-hop")
+        .navigationTitle(String(localized: "Multi-hop", table: "Settings"))
         .onChange(of: isEnabled) { _, newValue in
             // TODO C.6: persist to UserDefaults via SettingsReader / WarrenSettings.
             // Trigger tunnel reconnect via TunnelManager IPC.

@@ -1,0 +1,150 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Country" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Country" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pays" } }
+      }
+    },
+    "DAITA" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DAITA" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "DAITA" } }
+      }
+    },
+    "DAITA is experimental and may degrade throughput on high-bandwidth links." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DAITA is experimental and may degrade throughput on high-bandwidth links." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "DAITA est expérimental et peut réduire le débit sur les liaisons à haute vitesse." } }
+      }
+    },
+    "Defense Against AI-Guided Traffic Analysis. Emits constant-rate cover traffic to make your VPN sessions indistinguishable to network observers. Adds ~10% bandwidth overhead." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Defense Against AI-Guided Traffic Analysis. Emits constant-rate cover traffic to make your VPN sessions indistinguishable to network observers. Adds ~10% bandwidth overhead." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Défense contre l'analyse de trafic guidée par IA. Émet un trafic de couverture à débit constant pour rendre vos sessions VPN indissociables pour un observateur réseau. Ajoute ~10 % de surcharge." } }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dismiss" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fermer" } }
+      }
+    },
+    "Enable DAITA" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable DAITA" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer DAITA" } }
+      }
+    },
+    "Enable multi-hop" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable multi-hop" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer le multi-hop" } }
+      }
+    },
+    "Enable port forwarding" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable port forwarding" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer le forwarding de port" } }
+      }
+    },
+    "Entry relay" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Entry relay" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Relais d'entrée" } }
+      }
+    },
+    "Exit relay" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Exit relay" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Relais de sortie" } }
+      }
+    },
+    "External port" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "External port" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Port externe" } }
+      }
+    },
+    "Forwarded port" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Forwarded port" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Port redirigé" } }
+      }
+    },
+    "HTTP/3 mimicry active" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "HTTP/3 mimicry active" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mimétisme HTTP/3 actif" } }
+      }
+    },
+    "HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le mimétisme HTTP/3 est actif. Le trafic est indissociable d'un HTTPS normal." } }
+      }
+    },
+    "Multi-hop" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Multi-hop" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Multi-hop" } }
+      }
+    },
+    "Port forwarding" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Port forwarding" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Forwarding de port" } }
+      }
+    },
+    "Reconnected through %@. Your traffic stayed protected." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reconnected through %@. Your traffic stayed protected." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reconnecté via %@. Votre trafic est resté protégé." } }
+      }
+    },
+    "Renews in" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Renews in" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Renouvellement dans" } }
+      }
+    },
+    "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Demande au relais de sortie Warren un port externe via NAT-PMP, pour que les applications pair-à-pair (BitTorrent, appels vidéo, services auto-hébergés) puissent recevoir des connexions entrantes." } }
+      }
+    },
+    "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Achemine le trafic via un relais d'entrée avant le relais de sortie. Ajoute de la latence (~30-50 ms) et de la surcharge de bande passante. Désactivé par défaut." } }
+      }
+    },
+    "Switched exit relay" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switched exit relay" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Changement de relais de sortie" } }
+      }
+    },
+    "The exit relay determines your apparent location to websites." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The exit relay determines your apparent location to websites." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le relais de sortie détermine votre emplacement apparent vis-à-vis des sites web." } }
+      }
+    },
+    "VPN reconnected through %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "VPN reconnected through %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "VPN reconnecté via %@" } }
+      }
+    },
+    "Your VPN traffic is indistinguishable from regular HTTPS browsing." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your VPN traffic is indistinguishable from regular HTTPS browsing." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre trafic VPN est indissociable d'un trafic HTTPS classique." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

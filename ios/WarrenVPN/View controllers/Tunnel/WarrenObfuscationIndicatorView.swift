@@ -23,14 +23,14 @@ public struct WarrenObfuscationIndicatorView: View {
     public var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.shield.fill")
-                .foregroundColor(.warrenYellow)
+                .foregroundColor(.Warren.yellow)
                 .font(.title3)
             VStack(alignment: .leading, spacing: 2) {
-                Text("HTTP/3 mimicry active")
-                    .font(.subheadline.bold())
+                Text(String(localized: "HTTP/3 mimicry active", table: "Settings"))
+                    .font(.mullvadSmallSemiBold)
                     .foregroundColor(.white)
-                Text("Your VPN traffic is indistinguishable from regular HTTPS browsing.")
-                    .font(.caption)
+                Text(String(localized: "Your VPN traffic is indistinguishable from regular HTTPS browsing.", table: "Settings"))
+                    .font(.mullvadMicro)
                     .foregroundColor(.white.opacity(0.7))
             }
             Spacer()
@@ -38,14 +38,14 @@ public struct WarrenObfuscationIndicatorView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.Warren.navy.opacity(0.8))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.Warren.surface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.Warren.yellow.opacity(0.3), lineWidth: 1)
                 )
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS.")
+        .accessibilityLabel(String(localized: "HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS.", table: "Settings"))
     }
 }
