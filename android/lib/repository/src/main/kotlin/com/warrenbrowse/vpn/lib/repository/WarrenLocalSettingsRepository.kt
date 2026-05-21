@@ -40,6 +40,15 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _obfuscationM40 = MutableStateFlow(prefs.getBoolean(KEY_OBFUSCATION_M40, false))
     val obfuscationM40: StateFlow<Boolean> = _obfuscationM40.asStateFlow()
 
+    /**
+     * User-selected exit relay identifier (16-byte stable exit_id hex).
+     * `null` = picker has not been used yet; the builder falls back to
+     * the first active entry in [com.warrenbrowse.vpn.app.connect.RelayCatalog].
+     * Wired by the D.6 location picker UI.
+     */
+    private val _selectedExitId = MutableStateFlow(prefs.getString(KEY_SELECTED_EXIT_ID, null))
+    val selectedExitId: StateFlow<String?> = _selectedExitId.asStateFlow()
+
     fun setDaitaEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DAITA_ENABLED, enabled).apply()
         _daitaEnabled.value = enabled
@@ -60,11 +69,28 @@ class WarrenLocalSettingsRepository(context: Context) {
         _obfuscationM40.value = enabled
     }
 
+    /**
+     * Persist the user's exit selection. Pass `null` to clear it (the
+     * builder then falls back to the first active relay in the
+     * catalogue).
+     */
+    fun setSelectedExitId(exitId: String?) {
+        val editor = prefs.edit()
+        if (exitId == null) {
+            editor.remove(KEY_SELECTED_EXIT_ID)
+        } else {
+            editor.putString(KEY_SELECTED_EXIT_ID, exitId)
+        }
+        editor.apply()
+        _selectedExitId.value = exitId
+    }
+
     private companion object {
         const val PREFS_NAME = "warren_local_settings"
         const val KEY_DAITA_ENABLED = "daita_enabled"
         const val KEY_NAT_PMP_ENABLED = "nat_pmp_enabled"
         const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
         const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
+        const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
     }
 }

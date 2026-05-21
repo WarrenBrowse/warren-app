@@ -33,7 +33,10 @@ class WarrenTunnelConfigBuilder(
         val obfuscationM40 = localSettings.obfuscationM40.value
 
         val relays = relayCatalog.listRelays()
-        val exit = relays.firstOrNull { it.active }
+        val selectedExitId = localSettings.selectedExitId.value
+        val exit = relays
+            .firstOrNull { it.active && it.exitId == selectedExitId }
+            ?: relays.firstOrNull { it.active }
             ?: run {
                 Logger.e("WarrenTunnelConfigBuilder: no active relay in catalogue")
                 return null

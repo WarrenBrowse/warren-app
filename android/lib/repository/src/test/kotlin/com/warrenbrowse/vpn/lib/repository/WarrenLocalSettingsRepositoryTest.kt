@@ -25,6 +25,11 @@ class WarrenLocalSettingsRepositoryTest {
         every { mockAppContext.getSharedPreferences(any(), any()) } returns mockPrefs
         every { mockPrefs.edit() } returns mockEditor
         every { mockEditor.putBoolean(any(), any()) } returns mockEditor
+        every { mockEditor.putString(any(), any()) } returns mockEditor
+        every { mockEditor.remove(any()) } returns mockEditor
+        // Default seed for the selected-exit-id read on construction;
+        // individual tests can override.
+        every { mockPrefs.getString(any(), any()) } returns null
     }
 
     @Test
@@ -85,6 +90,25 @@ class WarrenLocalSettingsRepositoryTest {
 
         assertTrue(repo.obfuscationM40.value)
         verify { mockEditor.putBoolean("obfuscation_m40", true) }
+    }
+
+    @Test
+    fun `selectedExitId round-trips through prefs`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getString("selected_exit_id", null) } returns "2921abad869e94064b56cf48c8da3631"
+        every { mockEditor.putString(any(), any()) } returns mockEditor
+        every { mockEditor.remove(any()) } returns mockEditor
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+        assertEquals("2921abad869e94064b56cf48c8da3631", repo.selectedExitId.value)
+
+        repo.setSelectedExitId("ffffffffffffffffffffffffffffffff")
+        assertEquals("ffffffffffffffffffffffffffffffff", repo.selectedExitId.value)
+        verify { mockEditor.putString("selected_exit_id", "ffffffffffffffffffffffffffffffff") }
+
+        repo.setSelectedExitId(null)
+        assertEquals(null, repo.selectedExitId.value)
+        verify { mockEditor.remove("selected_exit_id") }
     }
 
     @Test
