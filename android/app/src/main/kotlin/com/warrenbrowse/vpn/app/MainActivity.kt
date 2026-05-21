@@ -4,11 +4,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -41,7 +41,11 @@ import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.context.loadKoinModules
 
-class MainActivity : ComponentActivity(), AndroidScopeComponent {
+// `FragmentActivity` rather than `ComponentActivity`: `BiometricPrompt`
+// (used by `BiometricPromptAuthorizer` for D.5 wallet unlock) requires a
+// FragmentActivity host. FragmentActivity extends ComponentActivity, so
+// this is a compatible upgrade for all existing Compose plumbing.
+class MainActivity : FragmentActivity(), AndroidScopeComponent {
     override val scope by activityScope()
 
     private val launchVpnPermission =
