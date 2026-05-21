@@ -77,9 +77,13 @@ static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 
 /// Opaque handle stored while a tunnel is alive. The cancel sender lets
-/// `disconnectTunnel` tear down the Quinn task gracefully.
+/// `disconnectTunnel` tear down the Quinn task gracefully. With the
+/// `tunnel` feature on, we additionally pin the [`warren_tunnel::AndroidTun`]
+/// so its `OwnedFd` lives as long as the active session.
 struct TunnelHandle {
     _cancel_tx: oneshot::Sender<()>,
+    #[cfg(feature = "tunnel")]
+    _tun: std::sync::Arc<warren_tunnel::AndroidTun>,
 }
 
 // ---------------------------------------------------------------------------
@@ -321,7 +325,7 @@ fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
-    _tun_fd: jint,
+    tun_fd: jint,
     _config_json: JString<'local>,
 ) -> jint {
     let mut slot = ACTIVE_TUNNEL.lock().expect("ACTIVE_TUNNEL poisoned");
@@ -329,13 +333,38 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         let _ = env.throw("Tunnel already running");
         return -1;
     }
-    // TODO (D.4): deserialize WarrenTunnelConfig from config_json, build a
-    // warren_tunnel::ClientConfig from it, spawn the Quinn pump on
-    // `RUNTIME`, wire TUN <-> Quinn datagram path, and (when entry hop is
-    // set) hand off to warren_multihop::MultiHopClient.
+
+    #[cfg(feature = "tunnel")]
+    let tun = {
+        use std::os::fd::{FromRawFd, OwnedFd};
+        if tun_fd < 0 {
+            let _ = env.throw(format!("invalid tun_fd: {tun_fd}"));
+            return -1;
+        }
+        // SAFETY: Kotlin passes a freshly `detachFd()`-ed fd whose ownership
+        // is now transferred to us. The fd is closed when AndroidTun drops.
+        let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(tun_fd) };
+        match warren_tunnel::AndroidTun::from_fd(owned) {
+            Ok(t) => std::sync::Arc::new(t),
+            Err(e) => {
+                let _ = env.throw(format!("AndroidTun::from_fd failed: {e}"));
+                return -1;
+            }
+        }
+    };
+    #[cfg(not(feature = "tunnel"))]
+    let _ = tun_fd;
+
+    // TODO (D.4 step 2): deserialize WarrenTunnelConfig from config_json,
+    // build a warren_tunnel::ClientConfig + ClientSession from it, spawn the
+    // Quinn pump on `RUNTIME` against `tun`, and (when entry hop is set)
+    // hand off to warren_multihop::MultiHopClient. For now the TUN is owned
+    // by the JNI side; nothing reads/writes packets to it yet.
     let (cancel_tx, _cancel_rx) = oneshot::channel();
     *slot = Some(TunnelHandle {
         _cancel_tx: cancel_tx,
+        #[cfg(feature = "tunnel")]
+        _tun: tun,
     });
     0
 }

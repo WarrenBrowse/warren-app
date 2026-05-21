@@ -57,11 +57,11 @@ warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional 
 warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
 
 [features]
-default = []
+default = ["tunnel"]
 # Allow the API endpoint URL to be overridden at runtime (dev/staging).
 api-override = []
-# Pull in the Quinn tunnel stack. Requires warren-core to ship an Android
-# `PacketDevice` (D.4 work).
+# Pull in the Quinn tunnel stack. Enabled by default now that warren-core
+# `d59fd15+` ships `warren_tunnel::AndroidTun` (wraps the VpnService TUN fd).
 tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client"]
 
 [lints]

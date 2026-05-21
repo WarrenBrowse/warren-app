@@ -7201,8 +7201,11 @@ dependencies = [
 name = "warren-ios"
 version = "0.0.0"
 dependencies = [
+ "bip39",
  "cbindgen",
+ "ed25519-dalek",
  "futures",
+ "hex",
  "hyper",
  "hyper-util",
  "libc",
@@ -7215,11 +7218,19 @@ dependencies = [
  "shadowsocks",
  "talpid-future",
  "talpid-types",
+ "thiserror 2.0.18",
  "tokio",
  "tonic",
  "tower",
  "tracing",
  "tracing-subscriber",
+ "warren-api-client",
+ "warren-client",
+ "warren-identity",
+ "warren-multihop",
+ "warren-natpmp-client",
+ "warren-relay-selector",
+ "warren-tunnel",
 ]
 
 [[package]]
@@ -7375,6 +7386,7 @@ dependencies = [
  "ed25519-dalek",
  "maybenot",
  "maybenot-machines",
+ "nix 0.31.2",
  "parking_lot",
  "postcard",
  "quinn",
