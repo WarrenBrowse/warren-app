@@ -33,7 +33,6 @@ plugins {
 }
 
 val repoRootPath = rootProject.projectDir.absoluteFile.parentFile.absolutePath
-val relayListDirectory = file("$repoRootPath/dist-assets/relays/").absolutePath
 val changelogAssetsDirectory = "$repoRootPath/android/src/main/play/release-notes/"
 val rustJniLibsDir = layout.buildDirectory.dir("rustJniLibs/android").get()
 
@@ -119,7 +118,6 @@ android {
 
     sourceSets {
         getByName("main") {
-            assets.directories.add(relayListDirectory)
             assets.directories.add(changelogAssetsDirectory)
         }
         // Workaround to include all instrumented tests in app module. Without this we'd have to
@@ -176,7 +174,6 @@ android {
 androidComponents {
     onVariants { variant ->
         val mainSources = variant.sources.getByName("main")
-        mainSources.addStaticSourceDirectory(relayListDirectory)
         mainSources.addStaticSourceDirectory(changelogAssetsDirectory)
     }
 
@@ -189,15 +186,9 @@ androidComponents {
                 "Show in-app version notifications",
             ),
         )
-        val shouldRequireBundleRelayFile = isReleaseBuild() && !appVersion.isDev
-        it.buildConfigFields!!.put(
-            "REQUIRE_BUNDLED_RELAY_FILE",
-            BuildConfigField(
-                "boolean",
-                shouldRequireBundleRelayFile.toString(),
-                "Whether to require a bundled relay list or not.",
-            ),
-        )
+        // Warren fetches relays via warren-api-client at runtime, no
+        // bundled JSON asset to gate on. The upstream
+        // `REQUIRE_BUNDLED_RELAY_FILE` BuildConfig field was dropped.
     }
     onVariants {
         val productFlavors = it.productFlavors.toMap()

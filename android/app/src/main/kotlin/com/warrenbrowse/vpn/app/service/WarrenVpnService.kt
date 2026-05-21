@@ -32,8 +32,6 @@ import net.mullvad.talpid.TalpidVpnService
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
-private const val RELAY_LIST_ASSET_NAME = "relays.json"
-
 class WarrenVpnService : TalpidVpnService() {
 
     private lateinit var keyguardManager: KeyguardManager
@@ -73,7 +71,8 @@ class WarrenVpnService : TalpidVpnService() {
 
         keyguardManager = getSystemService<KeyguardManager>()!!
 
-        prepareFiles()
+        // Warren fetches relay lists via warren-api-client at runtime, so the
+        // upstream `relays.json` asset extraction (`prepareFiles()`) is gone.
         migrateSplitTunneling.migrate()
 
         // If it is a debug build and we have an api override in the intent, use it
@@ -229,16 +228,9 @@ class WarrenVpnService : TalpidVpnService() {
         return this?.action == SERVICE_INTERFACE
     }
 
-    private fun Context.prepareFiles() {
-        extractAndOverwriteIfAssetMoreRecent(
-            RELAY_LIST_ASSET_NAME,
-            BuildConfig.REQUIRE_BUNDLED_RELAY_FILE,
-        )
-    }
-
     companion object {
         init {
-            System.loadLibrary("mullvad_jni")
+            System.loadLibrary("warren_jni")
         }
     }
 }

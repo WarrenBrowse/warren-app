@@ -41,7 +41,7 @@ class ProblemReportRepository(
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     init {
-        System.loadLibrary("mullvad_jni")
+        System.loadLibrary("warren_jni")
     }
 
     private val _problemReport = MutableStateFlow(UserReport("", ""))
@@ -142,21 +142,36 @@ class ProblemReportRepository(
         problemReportOutputPath.delete()
     }
 
-    // TODO We should remove the external functions from this class and migrate it to the service
-    private external fun collectReport(
+    // Warren-specific problem report path is unimplemented (D.6 follow-up).
+    // The upstream `mullvad-problem-report` Rust crate was dropped from
+    // warren-jni during D.3 and the Warren-native equivalent (collect a
+    // tarball of Kotlin + Rust logs, POST to warren-api `/v1/support`) has
+    // not landed yet. These stubs let the repository link without an
+    // `UnsatisfiedLinkError` at runtime and signal failure cleanly to
+    // callers, who already handle `SendProblemReportResult.Error.*`.
+    @Suppress("UnusedPrivateMember")
+    private fun collectReport(
         logDirectory: String,
         kermitFileLogDir: String,
         problemReportOutputPath: String,
         unverifiedPurchases: Int,
         pendingPurchases: Int,
-    ): Boolean
+    ): Boolean {
+        // TODO (D.6): wire warren-side problem-report collector.
+        return false
+    }
 
-    private external fun sendProblemReport(
+    @Suppress("UnusedPrivateMember")
+    private fun sendProblemReport(
         userEmail: String,
         userMessage: String,
         accountId: String?,
         reportPath: String,
         cacheDirectory: String,
         apiEndpointOverride: ApiEndpointOverride?,
-    ): Boolean
+    ): Boolean {
+        // TODO (D.6): POST report to warren-api `/v1/support` with the
+        // signed canonical request flow (see warren-jni signCanonicalRequest).
+        return false
+    }
 }
