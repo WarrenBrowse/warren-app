@@ -74,17 +74,25 @@ fixes :
 After these fixes the build progresses past linker + Go bridge stages
 and now fails on deeper C.2 rebrand incompleteness :
 
-- **704 `.swift` files** still reference `Mullvad` module names
-  (`import MullvadTypes`, `import protocol MullvadTypes.Cancellable`,
-  `MullvadFont`, etc.). The targets were renamed in C.2 but the
-  consuming source code was not migrated. Affects `WarrenVPN`,
-  `Operations`, `PacketTunnelCore`, `WarrenMockData`,
-  `WarrenRustRuntime`, `WarrenREST`, etc. Systematic find/replace
-  needed.
+- ~~704 `.swift` files Mullvad module refs~~ **DONE** in C.2.X (2026-05-21
+  continuation, commit on origin/main). Sed-bulk-replaced 5 module name
+  patterns (`MullvadREST/Types/Settings/Logging/RustRuntime` →
+  `Warren*`) across 58 .swift files. `MullvadVPN` + `MullvadApi*` class
+  names preserved (intentional — non-module-name refs). The previous
+  704 number was over-counted ; once filtered to actual module-name
+  imports + qualified refs, the real footprint was 58 files.
 - **`WarrenLogging` cannot resolve module `Logging`** (provided by
-  `apple/swift-log` SPM dep). Either the package-product link is
-  missing from the WarrenLogging target's `packageProductDependencies`
-  or the SwiftPM cache is stale. **Investigate** during C.2.X.
+  `apple/swift-log` SPM dep). The package IS resolved + listed as
+  explicit dep on the WarrenLogging target (verified
+  `xcodebuild -resolvePackageDependencies` + dep graph). Yet swift-driver
+  in explicit-module mode (Xcode 26.4 default) reports
+  "Unable to resolve module dependency: 'Logging'". Likely a SPM build
+  race between `Logging.swiftmodule` emit + WarrenLogging compile.
+  **Workaround paths** : (a) downgrade Xcode minimum to 15.x where
+  implicit-module mode is default ; (b) set
+  `SWIFT_ENABLE_EXPLICIT_MODULES = NO` on affected targets ; (c)
+  pin swift-log to a different version. **Defer to C.2.X follow-up** ;
+  not a C.4 blocker for cargo / cargo clippy validation flow.
 - **`WireGuardKitTypes.modulemap`** generated module map dir is empty
   for `iphoneos` builds when the manual Embed Frameworks entry is
   removed. Tied to the auto-embed / manual-embed duplicate dance ;
