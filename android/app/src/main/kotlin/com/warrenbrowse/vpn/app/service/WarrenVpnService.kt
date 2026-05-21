@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
@@ -22,6 +23,8 @@ import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
+import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
+import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
@@ -187,6 +190,40 @@ class WarrenVpnService : TalpidVpnService() {
                     } catch (e: Exception) {
                         Logger.w(throwable = e) {
                             "connectionProxy.reconnect dead at runtime (pending D.4 step 7)"
+                        }
+                    }
+                }
+            }
+
+            intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {
+                // D.4 step 7: dedicated Quinn connect path. Caller has
+                // already retrieved the mnemonic via the UI-side
+                // BiometricPromptAuthorizer and serialised a
+                // WarrenTunnelConfig in the extras.
+                foregroundNotificationHandler.startForeground()
+                val configJson = intent.getStringExtra(KEY_WARREN_TUNNEL_CONFIG_JSON)
+                if (configJson == null) {
+                    Logger.e("$KEY_WARREN_CONNECT_QUINN_ACTION missing config JSON extra")
+                } else {
+                    val config = try {
+                        Json.decodeFromString<WarrenTunnelConfig>(configJson)
+                    } catch (e: Exception) {
+                        Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
+                        null
+                    }
+                    if (config != null) {
+                        lifecycleScope.launch {
+                            // TODO (D.4 step 7 follow-up): the mnemonic
+                            // must be passed through a secure in-process
+                            // channel (Binder IPC carrying a parcelable
+                            // SecureMnemonic with auto-zero on consume),
+                            // NOT via Intent extras. For now, the
+                            // mnemonic source is a placeholder; the wiring
+                            // proves the action / dispatch path.
+                            Logger.w(
+                                "Quinn connect dispatch ready, awaiting secure mnemonic " +
+                                    "channel (D.4 step 7 follow-up)"
+                            )
                         }
                     }
                 }
