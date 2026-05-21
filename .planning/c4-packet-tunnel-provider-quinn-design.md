@@ -39,6 +39,62 @@ broadcasting, killswitch via Disconnect on Demand).
   marshalling (multi-hop + DAITA C-struct pinning deferred C.4.1).
 - Pin warren-core `732869d` → `8779843`.
 
+### C.4.0 build-chain unblock work (2026-05-21 continuation)
+
+Subsequent investigation surfaced multiple incomplete C.2 rebrand items
+that block `xcodebuild build -target WarrenVPN`. Discoveries + applied
+fixes :
+
+- **Duplicate-task linker error** : `WarrenVPN` target had
+  `WireGuardKitTypes` listed *both* in `Embed Frameworks` phase AND in
+  `packageProductDependencies` (Xcode 15+ auto-embed). Manual removal
+  exposed a downstream `WireGuardKitTypes.modulemap not found`
+  cascade ; reverted manual removal. **TBD** : either (a) remove the
+  manual entry AND fix the modulemap path, or (b) drop the SPM
+  dependency entirely (C.4.4 path).
+- **`WireGuardGoBridge` Legacy Target** invokes
+  `build-wireguard-go.sh` which `make`s
+  `wireguard-apple/Sources/WireGuardKitGo` — directory absent in the
+  Warren stub `wireguard-apple` submodule. **Fix applied** : early-skip
+  in `build-wireguard-go.sh` when the directory is missing.
+- **`WarrenMockData/{MullvadREST,MullvadTypes}` directories** kept
+  Mullvad names but pbxproj referenced new `WarrenREST/WarrenTypes`
+  paths. **Fix applied** : `git mv` to match pbxproj expectations.
+- **`WarrenRustRuntime/MullvadRustRuntime.h` umbrella header** kept old
+  name + imported `mullvad_rust_runtime.h` (lowercase). pbxproj already
+  pointed to `WarrenRustRuntime.h` + cbindgen emits
+  `warren_rust_runtime.h`. **Fix applied** : `git mv` + content update.
+- **`WarrenMockData` target had `dependencies = ()`** despite importing
+  WarrenREST/Types/Settings/RustRuntime/Logging/Operations. Xcode 15+
+  explicit-module build requires explicit deps. **Fix applied** :
+  `fix-warrenmockdata-deps.rb` Ruby script (xcodeproj gem) adds all 6.
+- **`WarrenVPN/.../BlockedStateErrorMapper.swift`** had an unused
+  `import WireGuardKit`. **Fix applied** : dropped.
+
+After these fixes the build progresses past linker + Go bridge stages
+and now fails on deeper C.2 rebrand incompleteness :
+
+- **704 `.swift` files** still reference `Mullvad` module names
+  (`import MullvadTypes`, `import protocol MullvadTypes.Cancellable`,
+  `MullvadFont`, etc.). The targets were renamed in C.2 but the
+  consuming source code was not migrated. Affects `WarrenVPN`,
+  `Operations`, `PacketTunnelCore`, `WarrenMockData`,
+  `WarrenRustRuntime`, `WarrenREST`, etc. Systematic find/replace
+  needed.
+- **`WarrenLogging` cannot resolve module `Logging`** (provided by
+  `apple/swift-log` SPM dep). Either the package-product link is
+  missing from the WarrenLogging target's `packageProductDependencies`
+  or the SwiftPM cache is stale. **Investigate** during C.2.X.
+- **`WireGuardKitTypes.modulemap`** generated module map dir is empty
+  for `iphoneos` builds when the manual Embed Frameworks entry is
+  removed. Tied to the auto-embed / manual-embed duplicate dance ;
+  resolves once `WireGuardKitTypes` is fully retired (C.4.4).
+
+These are documented as **C.2.X / C.4.4 follow-up** scope ; they are
+NOT blockers for the `cargo` / `cargo clippy` validation flow used
+throughout C.4.0 (warren-ios + warren-tunnel compile + lint cleanly
+without touching xcodebuild).
+
 ### C.4.1+ remaining work
 
 The C.4.0 plumbing is in place ; what's still needed :
