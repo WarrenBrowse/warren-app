@@ -287,7 +287,7 @@ cargo {
         getBooleanProperty("mullvad.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
     val enableApiOverride = !isReleaseBuild || appVersion.isDev || appVersion.isAlpha
     module = repoRootPath
-    libname = "mullvad-jni"
+    libname = "warren-jni"
     // All available targets:
     // https://github.com/mozilla/rust-android-gradle/tree/master?tab=readme-ov-file#targets
     targets = getStringListProperty("mullvad.app.build.cargo.targets")
@@ -309,9 +309,9 @@ cargo {
 
         @Suppress("SpreadOperator") defaultAnd(*enabledFeatures)
     }
-    targetIncludes = arrayOf("libmullvad_jni.so")
+    targetIncludes = arrayOf("libwarren_jni.so")
     extraCargoBuildArguments = buildList {
-        add("--package=mullvad-jni")
+        add("--package=warren-jni")
         add("--locked")
     }
 

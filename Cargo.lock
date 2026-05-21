@@ -3393,22 +3393,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mullvad-jni"
-version = "0.0.0"
-dependencies = [
- "jnix",
- "log",
- "log-panics",
- "mullvad-api",
- "mullvad-daemon",
- "mullvad-problem-report",
- "talpid-platform-metadata",
- "talpid-types",
- "thiserror 2.0.18",
- "tokio",
-]
-
-[[package]]
 name = "mullvad-leak-checker"
 version = "0.1.0"
 dependencies = [
@@ -7118,6 +7102,7 @@ dependencies = [
  "warren-api-types",
  "warren-config",
  "warren-identity",
+ "warren-protocol",
  "warren-ratelimit",
  "warren-relay-selector",
 ]
@@ -7148,6 +7133,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
+ "warren-protocol",
 ]
 
 [[package]]
@@ -7209,6 +7195,29 @@ dependencies = [
  "thiserror 2.0.18",
  "warren-config",
  "zeroize",
+]
+
+[[package]]
+name = "warren-jni"
+version = "0.0.0"
+dependencies = [
+ "hex",
+ "jnix",
+ "log",
+ "log-panics",
+ "serde",
+ "serde_json",
+ "talpid-platform-metadata",
+ "talpid-types",
+ "thiserror 2.0.18",
+ "tokio",
+ "warren-api-client",
+ "warren-client",
+ "warren-identity",
+ "warren-multihop",
+ "warren-natpmp-client",
+ "warren-relay-selector",
+ "warren-tunnel",
 ]
 
 [[package]]
