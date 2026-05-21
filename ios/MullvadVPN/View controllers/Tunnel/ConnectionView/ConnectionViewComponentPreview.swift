@@ -8,7 +8,7 @@
 
 import WarrenMockData
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import PacketTunnelCore
 import SwiftUI

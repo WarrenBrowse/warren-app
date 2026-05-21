@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadSettings
+import WarrenSettings
 import UIKit
 
 protocol CustomListViewControllerDelegate: AnyObject {

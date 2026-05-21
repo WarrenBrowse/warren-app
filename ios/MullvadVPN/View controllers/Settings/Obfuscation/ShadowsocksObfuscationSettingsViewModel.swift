@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol ShadowsocksObfuscationSettingsViewModel: ObservableObject {
     var value: WireGuardObfuscationShadowsocksPort { get set }

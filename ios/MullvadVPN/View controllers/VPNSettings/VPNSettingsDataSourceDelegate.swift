@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol DNSSettingsDataSourceDelegate: AnyObject {
     func didChangeViewModel(_ viewModel: VPNSettingsViewModel)

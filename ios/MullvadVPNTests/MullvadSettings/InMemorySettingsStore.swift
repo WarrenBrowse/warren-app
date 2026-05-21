@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol Instantiable {
     init()

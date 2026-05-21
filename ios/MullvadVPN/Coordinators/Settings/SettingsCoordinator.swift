@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import Operations
 import Routing
 import SwiftUI

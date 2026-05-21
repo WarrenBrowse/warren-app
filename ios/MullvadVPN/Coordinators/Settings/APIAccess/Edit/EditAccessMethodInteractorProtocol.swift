@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadSettings
+import WarrenSettings
 
 /// The type implementing the interface for persisting changes to the underlying access method view model in the editing context.
 protocol EditAccessMethodInteractorProtocol: ProxyConfigurationInteractorProtocol {

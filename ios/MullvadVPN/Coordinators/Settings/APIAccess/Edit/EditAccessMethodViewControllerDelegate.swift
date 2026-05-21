@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol EditAccessMethodViewControllerDelegate: AnyObject, AccessMethodEditing {
     /// The view controller requests the delegate to present the proxy configuration view controller.

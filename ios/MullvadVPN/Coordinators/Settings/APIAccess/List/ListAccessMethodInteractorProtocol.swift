@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 /// Types describing API access list interactor.

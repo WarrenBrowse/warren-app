@@ -7,7 +7,7 @@
 //
 
 @preconcurrency import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 
 final class LoginInteractor: @unchecked Sendable {
     private let tunnelManager: TunnelManager

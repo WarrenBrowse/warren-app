@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 /// A protocol that formalizes device state accessor dependency used by `DeviceCheckOperation`.
 protocol DeviceStateAccessorProtocol {

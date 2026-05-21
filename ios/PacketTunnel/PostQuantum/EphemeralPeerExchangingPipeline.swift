@@ -7,7 +7,7 @@
 //
 
 import MullvadRustRuntime
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import PacketTunnelCore
 

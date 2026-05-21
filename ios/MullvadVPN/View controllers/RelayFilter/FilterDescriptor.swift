@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 struct FilterDescriptor {

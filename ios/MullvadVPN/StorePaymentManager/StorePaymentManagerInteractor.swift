@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 final actor StorePaymentManagerInteractor {

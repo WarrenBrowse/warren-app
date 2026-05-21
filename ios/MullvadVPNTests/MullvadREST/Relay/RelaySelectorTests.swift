@@ -13,7 +13,7 @@ import Network
 import XCTest
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 private let portRanges: [[UInt16]] = [[4000, 4001], [5000, 5001]]
 

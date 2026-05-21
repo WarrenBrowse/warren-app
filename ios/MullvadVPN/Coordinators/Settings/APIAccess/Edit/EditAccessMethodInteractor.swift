@@ -7,7 +7,7 @@
 //
 
 @preconcurrency import Combine
-import MullvadSettings
+import WarrenSettings
 
 struct EditAccessMethodInteractor: EditAccessMethodInteractorProtocol {
     let subject: CurrentValueSubject<AccessMethodViewModel, Never>

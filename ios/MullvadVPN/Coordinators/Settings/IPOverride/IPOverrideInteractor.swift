@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 final class IPOverrideInteractor {

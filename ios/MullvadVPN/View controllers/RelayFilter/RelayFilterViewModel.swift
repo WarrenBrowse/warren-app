@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 final class RelayFilterViewModel {

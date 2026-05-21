@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 
 final class VPNSettingsInteractor {
     let tunnelManager: TunnelManager

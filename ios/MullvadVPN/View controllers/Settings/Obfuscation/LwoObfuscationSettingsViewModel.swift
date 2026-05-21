@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol LwoObfuscationSettingsViewModel: ObservableObject {
     var value: WireGuardObfuscationLwoPort { get set }

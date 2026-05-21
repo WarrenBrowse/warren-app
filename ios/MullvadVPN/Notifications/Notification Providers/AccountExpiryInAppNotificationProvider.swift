@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 final class AccountExpiryInAppNotificationProvider: NotificationProvider, InAppNotificationProvider,

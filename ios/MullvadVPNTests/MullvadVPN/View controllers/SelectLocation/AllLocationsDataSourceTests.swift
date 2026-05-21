@@ -11,7 +11,7 @@ import WarrenREST
 import MullvadTypes
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 class AllLocationsDataSourceTests: XCTestCase {
     var allLocationNodes = [LocationNode]()

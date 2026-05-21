@@ -7,7 +7,7 @@
 //
 
 import CoreLocation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 extension RelaySelector {

@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import SwiftUI
 
 protocol ListAccessViewModel: ObservableObject {

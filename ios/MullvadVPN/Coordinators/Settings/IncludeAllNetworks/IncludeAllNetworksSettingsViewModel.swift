@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import Network
 import SwiftUI
 import UIKit

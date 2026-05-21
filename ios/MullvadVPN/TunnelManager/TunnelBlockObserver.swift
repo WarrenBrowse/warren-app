@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 final class TunnelBlockObserver: TunnelObserver, @unchecked Sendable {
     typealias DidLoadConfigurationHandler = (TunnelManager) -> Void

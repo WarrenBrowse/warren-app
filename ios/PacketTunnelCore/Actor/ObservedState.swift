@@ -9,7 +9,7 @@
 import Combine
 import Foundation
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import Network
 

@@ -9,7 +9,7 @@
 import Network
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 class CustomListRepositoryTests: XCTestCase {
     nonisolated(unsafe) static let store = InMemorySettingsStore<SettingNotFound>()

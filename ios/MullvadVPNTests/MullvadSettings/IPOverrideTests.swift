@@ -9,7 +9,7 @@
 import MullvadTypes
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 final class IPOverrideTests: XCTestCase {
     let repository = IPOverrideRepository()

@@ -10,7 +10,7 @@ import Foundation
 import MullvadTypes
 import PacketTunnelCore
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 /// Settings reader stub that can be configured with a block to provide the desired behavior when testing.
 struct SettingsReaderStub: SettingsReaderProtocol {

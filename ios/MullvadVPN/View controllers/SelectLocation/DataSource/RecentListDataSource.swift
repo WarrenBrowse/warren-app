@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 class RecentListDataSource: LocationDataSourceProtocol {

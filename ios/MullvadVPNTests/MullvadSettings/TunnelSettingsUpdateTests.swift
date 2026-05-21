@@ -10,7 +10,7 @@ import MullvadTypes
 import Network
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 final class TunnelSettingsUpdateTests: XCTestCase {
     func testApplyDNSSettings() {

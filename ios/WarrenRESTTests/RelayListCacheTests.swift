@@ -12,7 +12,7 @@ import Network
 import XCTest
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 /// End-to-end test that verifies relay list responses are stored verbatim in the cache,
 /// preserving unknown JSON fields that `ServerRelaysResponse` doesn't model.

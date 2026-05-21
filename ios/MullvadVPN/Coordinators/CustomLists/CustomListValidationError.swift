@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 enum CustomListFieldValidationError: LocalizedError, Hashable {
     case name(CustomRelayListError)

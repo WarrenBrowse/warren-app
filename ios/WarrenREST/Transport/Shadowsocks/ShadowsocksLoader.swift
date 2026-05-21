@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 public final class ShadowsocksLoader: ShadowsocksLoaderProtocol, SwiftShadowsocksBridgeProviding, Sendable {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 /// An object that provides access to `DeviceState` used by `DeviceCheckOperation`.

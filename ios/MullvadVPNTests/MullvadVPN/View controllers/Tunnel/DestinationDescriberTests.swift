@@ -12,7 +12,7 @@ import Network
 import XCTest
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 final class DestinationDescriberTests: XCTestCase {
     static let store = InMemorySettingsStore<SettingNotFound>()

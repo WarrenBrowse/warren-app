@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadSettings
+import WarrenSettings
 
 class MultihopTunnelSettingsViewModel: ObservableObject {
     let tunnelManager: TunnelManager

@@ -11,7 +11,7 @@ import XCTest
 @testable import WarrenMockData
 @testable import WarrenREST
 @testable import MullvadRustRuntime
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 class TunnelManagerTests: XCTestCase {

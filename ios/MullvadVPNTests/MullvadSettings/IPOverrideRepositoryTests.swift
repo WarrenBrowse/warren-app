@@ -9,7 +9,7 @@
 import Network
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 final class IPOverrideRepositoryTests: XCTestCase {
     static let store = InMemorySettingsStore<SettingNotFound>()

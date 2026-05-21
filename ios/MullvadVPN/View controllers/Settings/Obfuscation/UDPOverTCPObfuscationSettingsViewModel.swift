@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 protocol UDPOverTCPObfuscationSettingsViewModel: ObservableObject {
     var value: WireGuardObfuscationUdpOverTcpPort { get set }

@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadSettings
+import WarrenSettings
 import UIKit
 
 /// The view controller providing the interface for editing the existing access method.

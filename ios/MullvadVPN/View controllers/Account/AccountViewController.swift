@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import StoreKit
 import UIKit
 

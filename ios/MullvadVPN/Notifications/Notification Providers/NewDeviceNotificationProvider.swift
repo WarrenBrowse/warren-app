@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import UIKit.UIColor
 import UIKit.UIFont

@@ -7,7 +7,7 @@
 //
 
 @preconcurrency import Combine
-import MullvadSettings
+import WarrenSettings
 
 struct IPOverrideRepositoryStub: IPOverrideRepositoryProtocol {
     let passthroughSubject: CurrentValueSubject<[IPOverride], Never> = CurrentValueSubject([])

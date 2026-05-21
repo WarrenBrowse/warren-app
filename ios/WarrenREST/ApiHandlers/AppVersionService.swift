@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 public final class AppVersionService: @unchecked Sendable {

@@ -7,7 +7,7 @@ import XCTest
 //  Created by Mojgan on 2024-05-29.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 class SettingsUpdaterTests: XCTestCase {

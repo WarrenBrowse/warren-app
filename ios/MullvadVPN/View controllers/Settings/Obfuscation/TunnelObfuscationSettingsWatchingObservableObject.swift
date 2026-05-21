@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 
 /// a generic ObservableObject that binds to obfuscation settings in TunnelManager.
 /// Used as the basis for ViewModels for SwiftUI interfaces for these settings.

@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 
 class DAITATunnelSettingsViewModel: TunnelSettingsObserver {
     typealias TunnelSetting = DAITASettings

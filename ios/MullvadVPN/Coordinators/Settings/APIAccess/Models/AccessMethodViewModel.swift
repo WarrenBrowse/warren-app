@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 /// The view model used by view controllers editing access method data.

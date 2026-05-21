@@ -1,6 +1,6 @@
 //
 //  QuantumResistanceSettings.swift
-//  MullvadSettings
+//  WarrenSettings
 //
 //  Created by Andrew Bulhak on 2024-02-08.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

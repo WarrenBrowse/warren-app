@@ -10,7 +10,7 @@ import XCTest
 
 @testable import WarrenMockData
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 extension MigrationManagerTests {

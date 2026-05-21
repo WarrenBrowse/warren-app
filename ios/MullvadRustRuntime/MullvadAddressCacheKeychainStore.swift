@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadSettings
+import WarrenSettings
 
 /// Whether the settings store is available. It requires `ApplicationSecurityGroupIdentifier`
 /// to be present in the main bundle's Info.plist, which is not the case in e.g. UI test runners.

@@ -1,6 +1,6 @@
 //
 //  AppStorage.swift
-//  MullvadSettings
+//  WarrenSettings
 //
 //  Created by Mojgan on 2024-01-05.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

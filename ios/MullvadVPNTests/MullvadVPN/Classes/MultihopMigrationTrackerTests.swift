@@ -10,7 +10,7 @@ import WarrenMockData
 import Testing
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 final class MultihopMigrationTrackerTests {

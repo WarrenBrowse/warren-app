@@ -9,7 +9,7 @@
 import Combine
 import Testing
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 @Suite("RecentConnectionsRepositoryTests")

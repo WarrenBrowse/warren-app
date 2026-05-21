@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 
 final class SettingsInteractorFactory {
     private let apiProxy: APIQuerying

@@ -1,6 +1,6 @@
 //
 //  TunnelSettingsV4.swift
-//  MullvadSettings
+//  WarrenSettings
 //
 //  Created by Marco Nikic on 2024-02-06.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

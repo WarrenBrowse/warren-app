@@ -9,7 +9,7 @@
 import Combine
 import WarrenREST
 import MullvadRustRuntime
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import Routing
 import UIKit

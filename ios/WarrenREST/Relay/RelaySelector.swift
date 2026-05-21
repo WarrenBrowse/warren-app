@@ -7,7 +7,7 @@
 //
 
 import CoreLocation
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 public enum RelaySelector {

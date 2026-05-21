@@ -1,6 +1,6 @@
 //
 //  StoredWgKeyData.swift
-//  MullvadSettings
+//  WarrenSettings
 //
 //  Created by Marco Nikic on 2023-10-23.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

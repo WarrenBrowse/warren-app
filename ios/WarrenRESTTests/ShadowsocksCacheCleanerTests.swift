@@ -10,7 +10,7 @@ import Network
 import Testing
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 actor ShadowsocksCacheCleanerTests {

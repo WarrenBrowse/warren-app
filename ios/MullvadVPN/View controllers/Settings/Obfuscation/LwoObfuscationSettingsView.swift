@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadSettings
+import WarrenSettings
 import SwiftUI
 
 struct LwoObfuscationSettingsView<VM>: View where VM: LwoObfuscationSettingsViewModel {

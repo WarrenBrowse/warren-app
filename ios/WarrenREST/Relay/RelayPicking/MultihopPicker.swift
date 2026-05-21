@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 public struct MultihopPicker: RelayPicking {

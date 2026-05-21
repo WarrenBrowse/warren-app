@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import MullvadRustRuntime
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 /**

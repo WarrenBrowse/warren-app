@@ -3,7 +3,7 @@ import Testing
 @testable import WarrenMockData
 @testable import WarrenREST
 @testable import MullvadRustRuntime
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 struct CustomListInteractorTests {

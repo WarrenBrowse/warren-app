@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 // this is still very minimal, and will be fleshed out as needed.

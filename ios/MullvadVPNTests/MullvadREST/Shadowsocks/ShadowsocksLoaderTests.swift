@@ -10,7 +10,7 @@ import WarrenMockData
 @preconcurrency import XCTest
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 @testable import MullvadTypes
 
 class ShadowsocksLoaderTests: XCTestCase {

@@ -1,6 +1,6 @@
 //
 //  IPVersionSettings.swift
-//  MullvadSettings
+//  WarrenSettings
 //
 //  Created by Emīls Piņķis on 2025-12-30.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

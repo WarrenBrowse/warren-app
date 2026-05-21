@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenREST
-import MullvadSettings
+import WarrenSettings
 import NetworkExtension
 import Operations
 import PacketTunnelCore

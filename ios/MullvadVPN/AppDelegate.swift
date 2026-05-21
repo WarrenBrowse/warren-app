@@ -11,7 +11,7 @@ import WarrenLogging
 import WarrenMockData
 import WarrenREST
 import MullvadRustRuntime
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 import Operations
 import UIKit

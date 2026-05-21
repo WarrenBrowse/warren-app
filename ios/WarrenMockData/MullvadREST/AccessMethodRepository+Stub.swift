@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 
 public struct AccessMethodRepositoryStub: AccessMethodRepositoryDataSource, @unchecked Sendable {

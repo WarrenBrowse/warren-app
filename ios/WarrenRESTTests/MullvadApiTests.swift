@@ -13,7 +13,7 @@ import Network
 import XCTest
 
 @testable import WarrenREST
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 /// This tests main purpose is to test the functionallity of the FFI rather than every function of the proxy itself.
 /// It makes sure the response and errors are parsed correctly.

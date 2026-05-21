@@ -10,7 +10,7 @@ import Foundation
 import WarrenLogging
 import WarrenREST
 import MullvadRustRuntime
-import MullvadSettings
+import WarrenSettings
 import MullvadTypes
 @preconcurrency import NetworkExtension
 import PacketTunnelCore

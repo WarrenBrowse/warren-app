@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadSettings
+import WarrenSettings
 import UIKit
 
 class IPOverrideViewController: UIViewController {
