@@ -14,10 +14,12 @@ import kotlinx.coroutines.selects.onTimeout
 import kotlinx.coroutines.selects.select
 import com.warrenbrowse.vpn.lib.common.util.isBeforeNowInstant
 import com.warrenbrowse.vpn.lib.model.DeviceState
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
 
 data class SplashScreenState(val splashComplete: Boolean = false)
 
@@ -26,6 +28,7 @@ class SplashViewModel(
     private val accountRepository: AccountRepository,
     private val deviceRepository: DeviceRepository,
     private val splashCompleteRepository: SplashCompleteRepository,
+    private val walletRepository: WalletRepository,
 ) : ViewModel() {
 
     val uiSideEffect = flow {
@@ -39,6 +42,16 @@ class SplashViewModel(
     private suspend fun getStartDestination(): SplashUiSideEffect {
         if (!userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
             return SplashUiSideEffect.NavigateToPrivacyDisclaimer
+        }
+
+        // D.5: Warren-side wallet gate. The Mullvad device-state machine
+        // below is preserved for now to keep the rest of the legacy UI
+        // compiling, but on Warren mobile, "no wallet persisted" is the
+        // first-launch signal. The wallet flow routes to ConnectNavKey
+        // on completion, after which the existing device-state branch
+        // is bypassed by `clearBackStack = true`.
+        if (walletRepository.state.value is WalletState.Absent) {
+            return SplashUiSideEffect.NavigateToWallet
         }
 
         val deviceState =
@@ -98,4 +111,6 @@ sealed interface SplashUiSideEffect {
     data object NavigateToConnect : SplashUiSideEffect
 
     data object NavigateToOutOfTime : SplashUiSideEffect
+
+    data object NavigateToWallet : SplashUiSideEffect
 }
