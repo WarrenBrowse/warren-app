@@ -7,21 +7,34 @@ repository.workspace = true
 license.workspace = true
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
+# Cross-platform deps. The pure-rust `wallet` module is unit-tested on the
+# host, so its transitive deps (`warren-identity`, `bip39`, `ed25519-dalek`)
+# must not be Android-only. `thiserror` is here for the same reason.
+[dependencies]
+thiserror = { workspace = true }
+hex = "0.4"
+# Explicit versions (rather than `{ workspace = true }`): warren-app's
+# workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
+# pinned to the same versions that warren-core uses so the resolved graph
+# stays single-version.
+bip39 = { version = "2", features = ["rand"] }
+ed25519-dalek = { version = "2", features = ["zeroize", "rand_core"] }
+warren-identity = { path = "../../warren-core/crates/warren-identity" }
+
+# Android-only deps: the JNI surface + log + Tokio runtime for the (still
+# stubbed) tunnel lifecycle exports.
 [target.'cfg(target_os = "android")'.dependencies]
 jnix = { version = "0.5.1", features = ["derive"] }
 log = { workspace = true }
 log-panics = "2"
-thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { workspace = true }
-hex = "0.4"
 
 # Warren auth wallet + relay selector + HTTP API client - these crates build
 # cleanly for `target_os = "android"` today.
-warren-identity = { path = "../../warren-core/crates/warren-identity" }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 

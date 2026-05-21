@@ -21,22 +21,29 @@ object WarrenJni {
      */
     external fun initLogger(filesDirectory: String)
 
-    // -- BIP39 mnemonic + Ed25519 wallet (D.5) -----------------------------
+    // -- BIP39 mnemonic + Ed25519 wallet -----------------------------------
+    //
+    // Backed by warren-identity (`warren-jni/src/wallet.rs`). The three
+    // primitives are stateless: the mnemonic is passed in per signing call
+    // rather than cached in JNI memory, so the secret never lives in the
+    // Rust process beyond the call boundary. Kotlin owns the
+    // Keystore-encrypted persistence (D.5 wallet feature module).
 
     /** Generate a fresh 12-word BIP39 English mnemonic. */
     external fun generateMnemonic(): String
 
     /**
-     * Import an existing BIP39 mnemonic and return the derived Ed25519 public
-     * key (32 raw bytes).
+     * Parse `mnemonic` and return the derived Ed25519 public key (32 raw
+     * bytes). Throws a Java exception if the mnemonic is malformed.
      */
     external fun importMnemonic(mnemonic: String): ByteArray
 
     /**
-     * Sign canonical request bytes with the active wallet's Ed25519 key.
-     * Returns a 64-byte signature suitable for the `X-Warren-Signature` header.
+     * Ed25519-sign `canonicalMessage` with the key derived from `mnemonic`.
+     * Returns a 64-byte signature suitable for the `X-Warren-Signature`
+     * header (cf. warren-identity `auth::canonical_message`).
      */
-    external fun signRequest(canonicalMessage: ByteArray): ByteArray
+    external fun signRequest(mnemonic: String, canonicalMessage: ByteArray): ByteArray
 
     // -- Tunnel lifecycle (D.4) --------------------------------------------
 

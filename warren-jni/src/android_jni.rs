@@ -1,0 +1,299 @@
+// Warren VPN Android JNI bridge.
+//
+// Replaces upstream `mullvad-jni`. Drops the `mullvad-daemon` dependency: on
+// Android the tunnel lifecycle is owned by Kotlin (`WarrenVpnService` /
+// `WarrenQuinnAdapter`), not by a full state-machine running in-process. The
+// JNI surface is therefore a thin set of primitives:
+//
+//   - logging init (`initLogger`)
+//   - BIP39 mnemonic generation / import via warren-identity
+//   - canonical-request Ed25519 signing for `X-Warren-*` API auth
+//   - Quinn tunnel start / stop driven by Kotlin once a TUN fd is granted
+//   - relay-selector queries via warren-relay-selector
+//   - optional NAT-PMP port-forwarding via warren-natpmp-client
+//
+// All JNI exports follow the
+// `Java_com_warrenbrowse_vpn_jni_WarrenJni_<method>` naming convention
+// dictated by the Kotlin `WarrenJni` companion object (`android/lib/...`).
+//
+// NOTE (D.3 scope): wallet primitives (`generateMnemonic`,
+// `importMnemonic`, `signRequest`) call into real warren-identity code via
+// the pure-rust [`crate::wallet`] module - those work today and are
+// covered by host tests. The tunnel lifecycle JNI exports remain stubs;
+// see `.planning/session-d-d3-warren-jni-design.md` for the D.4 plan.
+
+use std::{
+    path::{Path, PathBuf},
+    sync::{Mutex, OnceLock},
+};
+
+use jnix::{
+    FromJava, JnixEnv,
+    jni::{
+        JNIEnv,
+        objects::{JClass, JObject, JString},
+        sys::{jbyteArray, jint, jstring},
+    },
+};
+use tokio::sync::oneshot;
+
+// ---------------------------------------------------------------------------
+// Error / runtime state
+// ---------------------------------------------------------------------------
+
+// Native-side error taxonomy reserved for the D.4 tunnel lifecycle work.
+// `dead_code` is allowed until the connectTunnel body actually produces
+// these variants; keeping the enum here documents the surface the JNI
+// callers should expect to surface via `throw`.
+#[allow(dead_code)]
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Failed to initialize logging: {0}")]
+    InitializeLogging(String),
+
+    #[error("Failed to create Tokio runtime")]
+    InitTokio(#[source] std::io::Error),
+
+    #[error("Warren tunnel: {0}")]
+    Tunnel(String),
+
+    #[error("Tunnel already running")]
+    TunnelAlreadyRunning,
+
+    #[error("No active tunnel")]
+    NoActiveTunnel,
+}
+
+/// Process-wide tokio runtime, started lazily by `initLogger` and reused
+/// across JNI calls so async warren-core APIs can be driven from synchronous
+/// JNI entry points.
+static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+
+/// Active tunnel handle. Populated by `connectTunnel`, cleared by
+/// `disconnectTunnel`. Only one tunnel at a time on Android (parity with
+/// upstream VpnService model).
+static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
+
+/// Opaque handle stored while a tunnel is alive. The cancel sender lets
+/// `disconnectTunnel` tear down the Quinn task gracefully.
+struct TunnelHandle {
+    _cancel_tx: oneshot::Sender<()>,
+}
+
+// ---------------------------------------------------------------------------
+// Logging
+// ---------------------------------------------------------------------------
+
+/// Initialise Rust-side logging and the shared tokio runtime.
+///
+/// Must be called once at process start (typically from
+/// `WarrenApplication.onCreate`). Idempotent calls are no-ops.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+    files_directory: JString<'_>,
+) {
+    let env = JnixEnv::from(env);
+    let files_dir = pathbuf_from_java(&env, files_directory.into());
+
+    if RUNTIME.get().is_none() {
+        let rt = match tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+        {
+            Ok(rt) => rt,
+            Err(err) => {
+                let _ = env.throw(format!("Failed to create Tokio runtime: {err}"));
+                return;
+            }
+        };
+        let _ = RUNTIME.set(rt);
+    }
+
+    if let Err(err) = init_log_file(&files_dir) {
+        let _ = env.throw(format!("Failed to init log file: {err}"));
+        return;
+    }
+
+    log_panics::init();
+    log::info!("Warren JNI logger initialised in {}", files_dir.display());
+}
+
+fn init_log_file(_log_dir: &Path) -> Result<(), String> {
+    // TODO (D.4): wire a file appender writing to <log_dir>/warren.log with
+    // rotation. For now Android logcat capture via the default log facade is
+    // sufficient for development.
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// BIP39 mnemonic + Ed25519 wallet (warren-identity)
+// ---------------------------------------------------------------------------
+
+/// Generate a fresh 12-word BIP39 English mnemonic. Returns the phrase as a
+/// space-separated UTF-8 string. The mnemonic is **never persisted by Rust**
+/// - the Kotlin caller is responsible for storing it via Android Keystore /
+/// EncryptedSharedPreferences (D.5).
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_generateMnemonic(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    let phrase = crate::wallet::generate_mnemonic();
+    match env.new_string(phrase) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Import an existing BIP39 mnemonic and return the derived Ed25519 public
+/// key (32 bytes). The mnemonic string is **borrowed** for the call only.
+/// On parse error, throws a Java exception and returns null.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jbyteArray {
+    let env = JnixEnv::from(env);
+    let phrase = String::from_java(&env, mnemonic);
+    let pubkey = match crate::wallet::pubkey_from_mnemonic(&phrase) {
+        Ok(p) => p,
+        Err(e) => {
+            let _ = env.throw(e.to_string());
+            return std::ptr::null_mut();
+        }
+    };
+    new_byte_array_from(&env, &pubkey)
+}
+
+/// Sign `canonicalMessage` bytes with the Ed25519 signing key derived from
+/// `mnemonic`. Returns a 64-byte signature suitable for the
+/// `X-Warren-Signature` header (cf. `warren-identity::auth`).
+///
+/// The mnemonic is passed per-call rather than cached in a static so the
+/// secret never lives in Rust memory beyond the signing call.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signRequest<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    canonical_message: jbyteArray,
+) -> jbyteArray {
+    let env = JnixEnv::from(env);
+    let phrase = String::from_java(&env, mnemonic);
+    let msg = match env.convert_byte_array(canonical_message) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw(format!("convert_byte_array failed: {e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let sig = match crate::wallet::sign_message(&phrase, &msg) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e.to_string());
+            return std::ptr::null_mut();
+        }
+    };
+    new_byte_array_from(&env, &sig)
+}
+
+/// Allocate a Java `byte[]` and copy `bytes` into it. Returns a null pointer
+/// (and leaves any pending JVM exception unchanged) on allocation failure.
+fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
+    let len = bytes.len() as i32;
+    let arr = match env.new_byte_array(len) {
+        Ok(a) => a,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    // SAFETY: `bytes` are read-only and len matches the allocation. The
+    // sign-cast goes through `as i8` to satisfy the `&[i8]` JNI signature
+    // without touching the underlying bytes.
+    let i8_view: &[i8] =
+        unsafe { std::slice::from_raw_parts(bytes.as_ptr().cast::<i8>(), bytes.len()) };
+    if env.set_byte_array_region(arr, 0, i8_view).is_err() {
+        return std::ptr::null_mut();
+    }
+    arr
+}
+
+// ---------------------------------------------------------------------------
+// Tunnel lifecycle (warren-tunnel + warren-multihop)
+// ---------------------------------------------------------------------------
+
+/// Start a Warren Quinn tunnel.
+///
+/// Called by `WarrenQuinnAdapter` once Kotlin has obtained a TUN
+/// `ParcelFileDescriptor` from `VpnService.Builder.establish()`. The
+/// caller passes:
+///   - `tun_fd`: the raw file descriptor (duplicated by Kotlin so we own
+///     this lifetime).
+///   - `config_json`: serde-encoded `WarrenTunnelConfig` (exit pubkey, exit
+///     IP:port, optional multi-hop entry, optional DAITA spec, bypass
+///     CIDRs, NAT-PMP enable, wallet pubkey).
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    _tun_fd: jint,
+    _config_json: JString<'local>,
+) -> jint {
+    let mut slot = ACTIVE_TUNNEL.lock().expect("ACTIVE_TUNNEL poisoned");
+    if slot.is_some() {
+        let _ = env.throw("Tunnel already running");
+        return -1;
+    }
+    // TODO (D.4): deserialize WarrenTunnelConfig from config_json, build a
+    // warren_tunnel::ClientConfig from it, spawn the Quinn pump on
+    // `RUNTIME`, wire TUN <-> Quinn datagram path, and (when entry hop is
+    // set) hand off to warren_multihop::MultiHopClient.
+    let (cancel_tx, _cancel_rx) = oneshot::channel();
+    *slot = Some(TunnelHandle {
+        _cancel_tx: cancel_tx,
+    });
+    0
+}
+
+/// Stop the active tunnel. No-op if none is running.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) {
+    if let Some(_handle) = ACTIVE_TUNNEL
+        .lock()
+        .expect("ACTIVE_TUNNEL poisoned")
+        .take()
+    {
+        // Dropping `_cancel_tx` notifies the Quinn task to wind down. The
+        // tokio runtime continues running for future tunnels.
+    }
+}
+
+/// Returns 0 = disconnected, 1 = connecting, 2 = connected, 3 = reconnecting.
+/// Matches the `WarrenTunnelState` Kotlin enum.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jint {
+    if ACTIVE_TUNNEL
+        .lock()
+        .expect("ACTIVE_TUNNEL poisoned")
+        .is_some()
+    {
+        2
+    } else {
+        0
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+fn pathbuf_from_java(env: &JnixEnv<'_>, path: JObject<'_>) -> PathBuf {
+    PathBuf::from(String::from_java(env, path))
+}

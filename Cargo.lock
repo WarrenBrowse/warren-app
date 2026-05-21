@@ -7187,20 +7187,20 @@ dependencies = [
  "mullvad-types",
  "shadowsocks",
  "talpid-future",
- "talpid-tunnel-config-client",
  "talpid-types",
  "tokio",
  "tonic",
  "tower",
  "tracing",
  "tracing-subscriber",
- "tunnel-obfuscation",
 ]
 
 [[package]]
 name = "warren-jni"
 version = "0.0.0"
 dependencies = [
+ "bip39",
+ "ed25519-dalek",
  "hex",
  "jnix",
  "log",
