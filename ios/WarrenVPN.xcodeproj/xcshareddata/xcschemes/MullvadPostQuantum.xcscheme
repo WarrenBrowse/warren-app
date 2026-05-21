@@ -17,7 +17,7 @@
                BlueprintIdentifier = "A944F25B2B8DEFDB00473F4C"
                BuildableName = "MullvadPostQuantum.framework"
                BlueprintName = "MullvadPostQuantum"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -52,7 +52,7 @@
             BlueprintIdentifier = "A944F25B2B8DEFDB00473F4C"
             BuildableName = "MullvadPostQuantum.framework"
             BlueprintName = "MullvadPostQuantum"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

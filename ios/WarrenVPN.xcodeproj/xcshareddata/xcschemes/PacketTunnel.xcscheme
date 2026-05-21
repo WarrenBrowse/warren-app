@@ -18,7 +18,7 @@
                BlueprintIdentifier = "58CE5E78224146470008646E"
                BuildableName = "PacketTunnel.appex"
                BlueprintName = "PacketTunnel"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -32,7 +32,7 @@
                BlueprintIdentifier = "58CE5E5F224146200008646E"
                BuildableName = "MullvadVPN.app"
                BlueprintName = "MullvadVPN"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -70,7 +70,7 @@
             BlueprintIdentifier = "58CE5E5F224146200008646E"
             BuildableName = "MullvadVPN.app"
             BlueprintName = "MullvadVPN"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </LaunchAction>
@@ -88,7 +88,7 @@
             BlueprintIdentifier = "58CE5E5F224146200008646E"
             BuildableName = "MullvadVPN.app"
             BlueprintName = "MullvadVPN"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

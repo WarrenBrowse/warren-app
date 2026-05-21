@@ -17,7 +17,7 @@
                BlueprintIdentifier = "5898D29729017DAC00EB5EBA"
                BuildableName = "libRelaySelector.a"
                BlueprintName = "RelaySelector"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -60,7 +60,7 @@
             BlueprintIdentifier = "5898D29729017DAC00EB5EBA"
             BuildableName = "libRelaySelector.a"
             BlueprintName = "RelaySelector"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

@@ -17,7 +17,7 @@
                BlueprintIdentifier = "5840231E2A406BF5007B27AC"
                BuildableName = "TunnelObfuscation.framework"
                BlueprintName = "TunnelObfuscation"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -60,7 +60,7 @@
             BlueprintIdentifier = "5840231E2A406BF5007B27AC"
             BuildableName = "TunnelObfuscation.framework"
             BlueprintName = "TunnelObfuscation"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

@@ -17,7 +17,7 @@
                BlueprintIdentifier = "7A88DCCD2A8FABBE00D2FF0E"
                BuildableName = "Routing.framework"
                BlueprintName = "Routing"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -52,7 +52,7 @@
             BlueprintIdentifier = "7A88DCCD2A8FABBE00D2FF0E"
             BuildableName = "Routing.framework"
             BlueprintName = "Routing"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

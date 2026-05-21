@@ -29,7 +29,7 @@
                BlueprintIdentifier = "58695A9C2A4ADA9100328DB3"
                BuildableName = "TunnelObfuscationTests.xctest"
                BlueprintName = "TunnelObfuscationTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>

@@ -17,7 +17,7 @@
                BlueprintIdentifier = "58FBDA9722A519BC00EB69A3"
                BuildableName = "WireGuardGoBridge"
                BlueprintName = "WireGuardGoBridge"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,7 +46,7 @@
             BlueprintIdentifier = "58FBDA9722A519BC00EB69A3"
             BuildableName = "WireGuardGoBridge"
             BlueprintName = "WireGuardGoBridge"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </LaunchAction>
@@ -62,7 +62,7 @@
             BlueprintIdentifier = "58FBDA9722A519BC00EB69A3"
             BuildableName = "WireGuardGoBridge"
             BlueprintName = "WireGuardGoBridge"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

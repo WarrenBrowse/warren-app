@@ -17,7 +17,7 @@
                BlueprintIdentifier = "58C7A4352A863F440060C66F"
                BuildableName = "PacketTunnelCore.framework"
                BlueprintName = "PacketTunnelCore"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -52,7 +52,7 @@
             BlueprintIdentifier = "58C7A4352A863F440060C66F"
             BuildableName = "PacketTunnelCore.framework"
             BlueprintName = "PacketTunnelCore"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

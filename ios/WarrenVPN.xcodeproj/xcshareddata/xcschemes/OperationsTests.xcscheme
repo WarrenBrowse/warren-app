@@ -29,7 +29,7 @@
                BlueprintIdentifier = "589A455128E094B300565204"
                BuildableName = "OperationsTests.xctest"
                BlueprintName = "OperationsTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>

@@ -21,7 +21,7 @@
                BlueprintIdentifier = "A98F1B4D2C19C48D003C869E"
                BuildableName = "MullvadPostQuantumTests.xctest"
                BlueprintName = "MullvadPostQuantumTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>

@@ -17,7 +17,7 @@
                BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
                BuildableName = "MullvadVPNTests.xctest"
                BlueprintName = "MullvadVPNTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,7 +44,7 @@
                BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
                BuildableName = "MullvadVPNTests.xctest"
                BlueprintName = "MullvadVPNTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -55,7 +55,7 @@
                BlueprintIdentifier = "7A88DCD62A8FABBE00D2FF0E"
                BuildableName = "RoutingTests.xctest"
                BlueprintName = "RoutingTests"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -83,7 +83,7 @@
             BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
             BuildableName = "MullvadVPNTests.xctest"
             BlueprintName = "MullvadVPNTests"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

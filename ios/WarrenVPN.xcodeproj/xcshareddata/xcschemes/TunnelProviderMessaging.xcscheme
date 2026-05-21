@@ -17,7 +17,7 @@
                BlueprintIdentifier = "5898D28829017BD300EB5EBA"
                BuildableName = "libTunnelProviderMessaging.a"
                BlueprintName = "TunnelProviderMessaging"
-               ReferencedContainer = "container:MullvadVPN.xcodeproj">
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -60,7 +60,7 @@
             BlueprintIdentifier = "5898D28829017BD300EB5EBA"
             BuildableName = "libTunnelProviderMessaging.a"
             BlueprintName = "TunnelProviderMessaging"
-            ReferencedContainer = "container:MullvadVPN.xcodeproj">
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
