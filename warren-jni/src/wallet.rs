@@ -69,6 +69,40 @@ pub fn sign_message(mnemonic: &str, message: &[u8]) -> Result<[u8; 64], WalletEr
     Ok(key.sign(message).to_bytes())
 }
 
+/// Build the canonical message that Warren signs for the
+/// `X-Warren-Signature` header, then sign it with `mnemonic`.
+///
+/// The canonical bytes are produced by
+/// `warren_identity::auth::canonical_message` so this helper is the
+/// single source of truth on the client side: Kotlin (or Swift, on iOS)
+/// callers do not duplicate the byte-stable string concatenation, which
+/// keeps wire-format drift impossible from the app layer.
+///
+/// Field semantics mirror the `X-Warren-*` headers:
+///   - `method`: HTTP verb, uppercase (`GET`, `POST`, ...)
+///   - `path`: URL path with leading `/` (no host)
+///   - `timestamp`: Unix epoch seconds
+///   - `nonce_hex`: 16-byte random nonce, hex-encoded (no `0x`)
+///   - `body_hash_hex`: SHA-256 of the request body, hex-encoded
+///     (empty-string SHA-256 for GET / empty body)
+pub fn sign_canonical_request(
+    mnemonic: &str,
+    method: &str,
+    path: &str,
+    timestamp: u64,
+    nonce_hex: &str,
+    body_hash_hex: &str,
+) -> Result<[u8; 64], WalletError> {
+    let msg = warren_identity::auth::canonical_message(
+        method,
+        path,
+        timestamp,
+        nonce_hex,
+        body_hash_hex,
+    );
+    sign_message(mnemonic, msg.as_bytes())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,6 +173,32 @@ mod tests {
 
         let tampered = b"original-tampered";
         assert!(pubkey.verify(tampered, &sig).is_err());
+    }
+
+    #[test]
+    fn sign_canonical_request_verifies() {
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+
+        let phrase = generate_mnemonic();
+        let pubkey_bytes = pubkey_from_mnemonic(&phrase).unwrap();
+        let pubkey = VerifyingKey::from_bytes(&pubkey_bytes).unwrap();
+
+        let sig_bytes =
+            sign_canonical_request(&phrase, "GET", "/v1/exits", 42, "abcd1234", "ff00").unwrap();
+        let sig = Signature::from_bytes(&sig_bytes);
+
+        // Reconstruct the canonical message exactly as warren-identity
+        // builds it, then verify against the pubkey.
+        let expected = warren_identity::auth::canonical_message(
+            "GET",
+            "/v1/exits",
+            42,
+            "abcd1234",
+            "ff00",
+        );
+        pubkey
+            .verify(expected.as_bytes(), &sig)
+            .expect("canonical-request signature must verify against the warren-identity-built message");
     }
 
     /// Wire vector: a fixed mnemonic must always derive the same pubkey.

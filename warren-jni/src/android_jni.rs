@@ -200,6 +200,52 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signRequest<'loca
     new_byte_array_from(&env, &sig)
 }
 
+/// Build the canonical `X-Warren-*` request message from its 5 fields and
+/// sign it with the key derived from `mnemonic`. Returns the 64-byte
+/// signature.
+///
+/// This is the recommended entry point for API request authentication:
+/// it keeps the canonical byte-format ownership in Rust
+/// (`warren_identity::auth::canonical_message`), so a future schema bump
+/// only needs a single touch site, not one per client platform.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequest<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    method: JString<'local>,
+    path: JString<'local>,
+    timestamp: jnix::jni::sys::jlong,
+    nonce_hex: JString<'local>,
+    body_hash_hex: JString<'local>,
+) -> jbyteArray {
+    let env = JnixEnv::from(env);
+    let phrase = String::from_java(&env, mnemonic);
+    let method = String::from_java(&env, method);
+    let path = String::from_java(&env, path);
+    let nonce_hex = String::from_java(&env, nonce_hex);
+    let body_hash_hex = String::from_java(&env, body_hash_hex);
+    if timestamp < 0 {
+        let _ = env.throw(format!("timestamp must be >= 0, got {timestamp}"));
+        return std::ptr::null_mut();
+    }
+    let sig = match crate::wallet::sign_canonical_request(
+        &phrase,
+        &method,
+        &path,
+        timestamp as u64,
+        &nonce_hex,
+        &body_hash_hex,
+    ) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e.to_string());
+            return std::ptr::null_mut();
+        }
+    };
+    new_byte_array_from(&env, &sig)
+}
+
 /// Allocate a Java `byte[]` and copy `bytes` into it. Returns a null pointer
 /// (and leaves any pending JVM exception unchanged) on allocation failure.
 fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {

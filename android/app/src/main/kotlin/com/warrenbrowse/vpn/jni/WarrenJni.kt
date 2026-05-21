@@ -42,8 +42,33 @@ object WarrenJni {
      * Ed25519-sign `canonicalMessage` with the key derived from `mnemonic`.
      * Returns a 64-byte signature suitable for the `X-Warren-Signature`
      * header (cf. warren-identity `auth::canonical_message`).
+     *
+     * Prefer [signCanonicalRequest] for actual API authentication: it
+     * builds the canonical byte format from the 5 `X-Warren-*` fields in
+     * Rust, keeping wire-format ownership single-source.
      */
     external fun signRequest(mnemonic: String, canonicalMessage: ByteArray): ByteArray
+
+    /**
+     * Build the canonical message from the 5 `X-Warren-*` request fields
+     * and Ed25519-sign it with the key derived from `mnemonic`. Returns a
+     * 64-byte signature.
+     *
+     * @param method HTTP verb, uppercase (`"GET"`, `"POST"`, ...)
+     * @param path URL path with leading `/` (no host)
+     * @param timestamp Unix epoch seconds (rejected if negative)
+     * @param nonceHex 16-byte random nonce, hex-encoded (no `0x`)
+     * @param bodyHashHex SHA-256 of the request body, hex-encoded
+     *   (empty-string SHA-256 for GET / empty body)
+     */
+    external fun signCanonicalRequest(
+        mnemonic: String,
+        method: String,
+        path: String,
+        timestamp: Long,
+        nonceHex: String,
+        bodyHashHex: String,
+    ): ByteArray
 
     // -- Tunnel lifecycle (D.4) --------------------------------------------
 
