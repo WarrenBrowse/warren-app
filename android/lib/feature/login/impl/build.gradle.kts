@@ -16,6 +16,10 @@ dependencies {
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.repository)
     implementation(projects.lib.usecase)
+    // D.5 wallet UI: WarrenWalletLoginScreen consumes MnemonicInput from
+    // lib/ui/component and WalletState from lib/model.
+    implementation(projects.lib.model)
+    implementation(projects.lib.ui.component)
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)
