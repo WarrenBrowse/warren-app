@@ -198,32 +198,32 @@ class WarrenVpnService : TalpidVpnService() {
             intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {
                 // D.4 step 7: dedicated Quinn connect path. Caller has
                 // already retrieved the mnemonic via the UI-side
-                // BiometricPromptAuthorizer and serialised a
-                // WarrenTunnelConfig in the extras.
+                // BiometricPromptAuthorizer, stashed it in MnemonicCache,
+                // and serialised a WarrenTunnelConfig in the extras.
                 foregroundNotificationHandler.startForeground()
                 val configJson = intent.getStringExtra(KEY_WARREN_TUNNEL_CONFIG_JSON)
-                if (configJson == null) {
-                    Logger.e("$KEY_WARREN_CONNECT_QUINN_ACTION missing config JSON extra")
-                } else {
-                    val config = try {
-                        Json.decodeFromString<WarrenTunnelConfig>(configJson)
-                    } catch (e: Exception) {
-                        Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
-                        null
+                val mnemonic = MnemonicCache.consume()
+                when {
+                    configJson == null -> {
+                        Logger.e("$KEY_WARREN_CONNECT_QUINN_ACTION missing config JSON extra")
                     }
-                    if (config != null) {
-                        lifecycleScope.launch {
-                            // TODO (D.4 step 7 follow-up): the mnemonic
-                            // must be passed through a secure in-process
-                            // channel (Binder IPC carrying a parcelable
-                            // SecureMnemonic with auto-zero on consume),
-                            // NOT via Intent extras. For now, the
-                            // mnemonic source is a placeholder; the wiring
-                            // proves the action / dispatch path.
-                            Logger.w(
-                                "Quinn connect dispatch ready, awaiting secure mnemonic " +
-                                    "channel (D.4 step 7 follow-up)"
-                            )
+                    mnemonic == null -> {
+                        Logger.e(
+                            "$KEY_WARREN_CONNECT_QUINN_ACTION fired without a staged mnemonic " +
+                                "(UI must call MnemonicCache.put() before startService)"
+                        )
+                    }
+                    else -> {
+                        val config = try {
+                            Json.decodeFromString<WarrenTunnelConfig>(configJson)
+                        } catch (e: Exception) {
+                            Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
+                            null
+                        }
+                        if (config != null) {
+                            lifecycleScope.launch {
+                                quinnAdapter.connect(config, mnemonic.phrase)
+                            }
                         }
                     }
                 }
