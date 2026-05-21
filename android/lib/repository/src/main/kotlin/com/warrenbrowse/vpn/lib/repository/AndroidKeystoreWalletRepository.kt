@@ -8,6 +8,7 @@ import android.util.Base64
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import java.security.KeyStore
@@ -81,11 +82,24 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
         }
     }
 
-    override suspend fun unlock(): Mnemonic = lock.withLock {
+    override suspend fun unlock(
+        authorizer: SensitiveOpAuthorizer,
+        reason: String,
+    ): Mnemonic = lock.withLock {
+        // Gate the cleartext read behind the user's biometric / device
+        // credential prompt. The repository never owns the prompt UI -
+        // the `authorizer` is supplied by the UI layer (typically
+        // `lib/ui/component/wallet/BiometricGate.promptBiometric`).
+        if (!authorizer.authorize(reason)) {
+            throw WalletAuthorizationDeniedException(
+                "User declined or device cannot authenticate"
+            )
+        }
         withContext(Dispatchers.IO) {
             val phrase = decryptMnemonic()
-                ?: throw IllegalStateException("no wallet on disk - call createWallet/importWallet first")
-            // TODO (D.5 step 2): gate this branch behind a BiometricPrompt.
+                ?: throw IllegalStateException(
+                    "no wallet on disk - call createWallet/importWallet first"
+                )
             Mnemonic(phrase)
         }
     }

@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.lib.repository
 
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import kotlinx.coroutines.flow.StateFlow
@@ -39,12 +40,19 @@ interface WalletRepository {
     suspend fun importWallet(mnemonic: Mnemonic): WalletPubkeyHex
 
     /**
-     * Decrypt the persisted mnemonic just-in-time. Implementations gate
-     * this behind a `BiometricPrompt` so the user explicitly authorises
-     * each cleartext read. The returned `Mnemonic` reference must NOT be
-     * stored; the caller passes it to the signing call and discards it.
+     * Decrypt the persisted mnemonic just-in-time. The repository invokes
+     * [authorizer.authorize] with a human-readable reason before reading
+     * the cleartext; if the user cancels or hardware authentication is
+     * unavailable the call throws [WalletAuthorizationDeniedException].
+     *
+     * The returned `Mnemonic` reference must NOT be stored long-term -
+     * the caller passes it to the signing operation and lets it drop.
      */
-    suspend fun unlock(): Mnemonic
+    @Throws(WalletAuthorizationDeniedException::class)
+    suspend fun unlock(
+        authorizer: SensitiveOpAuthorizer,
+        reason: String = "Confirm to access your Warren wallet",
+    ): Mnemonic
 
     /**
      * Erase the persisted wallet. Irreversible; the user is expected to
@@ -53,3 +61,7 @@ interface WalletRepository {
      */
     suspend fun erase()
 }
+
+/** Thrown when [WalletRepository.unlock] is called but the user cancels
+ * or the device cannot authenticate. */
+class WalletAuthorizationDeniedException(message: String) : Exception(message)
