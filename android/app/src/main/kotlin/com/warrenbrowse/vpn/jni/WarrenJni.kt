@@ -84,12 +84,17 @@ object WarrenJni {
      * Start a Warren Quinn tunnel on the supplied TUN file descriptor.
      *
      * @param tunFd raw fd duplicated from `VpnService.Builder.establish()`
+     * @param mnemonic BIP39 mnemonic used to derive the wallet `SigningKey`
+     *  that authenticates the QUIC handshake. Passed per-call so the secret
+     *  never lives in JNI memory beyond the spawned session task.
      * @param configJson serde-encoded `WarrenTunnelConfig` (exit pubkey,
      *  optional multi-hop entry, optional DAITA spec, bypass CIDRs,
      *  NAT-PMP toggle, wallet pubkey).
-     * @return 0 on success, negative on error (exception also thrown).
+     * @return 0 on success, negative on synchronous error (exception
+     *  also thrown). Long-running connect + handshake happens
+     *  asynchronously; poll [getTunnelStatus] for transitions.
      */
-    external fun connectTunnel(tunFd: Int, configJson: String): Int
+    external fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int
 
     /** Stop the active tunnel. No-op if none is running. */
     external fun disconnectTunnel()

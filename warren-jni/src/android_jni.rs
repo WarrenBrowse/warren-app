@@ -76,14 +76,19 @@ static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 /// upstream VpnService model).
 static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 
+/// Atomic mirror of the active session status (cf.
+/// [`crate::tunnel::SessionStatus`]). Read by [`getTunnelStatus`] without
+/// taking the `ACTIVE_TUNNEL` mutex, so polling from Kotlin is cheap.
+static SESSION_STATUS: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
+
 /// Opaque handle stored while a tunnel is alive. The cancel sender lets
 /// `disconnectTunnel` tear down the Quinn task gracefully. With the
-/// `tunnel` feature on, we additionally pin the [`warren_tunnel::AndroidTun`]
-/// so its `OwnedFd` lives as long as the active session.
+/// `tunnel` feature on, we additionally pin the spawned task handle so
+/// it stays alive after the JNI entry returns.
 struct TunnelHandle {
     _cancel_tx: oneshot::Sender<()>,
     #[cfg(feature = "tunnel")]
-    _tun: std::sync::Arc<warren_tunnel::AndroidTun>,
+    _task: tokio::task::JoinHandle<()>,
 }
 
 // ---------------------------------------------------------------------------
@@ -326,7 +331,8 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     tun_fd: jint,
-    _config_json: JString<'local>,
+    mnemonic: JString<'local>,
+    config_json: JString<'local>,
 ) -> jint {
     let mut slot = ACTIVE_TUNNEL.lock().expect("ACTIVE_TUNNEL poisoned");
     if slot.is_some() {
@@ -334,39 +340,72 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         return -1;
     }
 
+    let jnix_env = JnixEnv::from(env);
+    let mnemonic_str = String::from_java(&jnix_env, mnemonic);
+    let config_str = String::from_java(&jnix_env, config_json);
+
     #[cfg(feature = "tunnel")]
-    let tun = {
+    {
         use std::os::fd::{FromRawFd, OwnedFd};
+        use std::sync::atomic::Ordering;
+
         if tun_fd < 0 {
-            let _ = env.throw(format!("invalid tun_fd: {tun_fd}"));
+            let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
             return -1;
         }
         // SAFETY: Kotlin passes a freshly `detachFd()`-ed fd whose ownership
         // is now transferred to us. The fd is closed when AndroidTun drops.
         let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(tun_fd) };
-        match warren_tunnel::AndroidTun::from_fd(owned) {
-            Ok(t) => std::sync::Arc::new(t),
+        let tun = match warren_tunnel::AndroidTun::from_fd(owned) {
+            Ok(t) => t,
             Err(e) => {
-                let _ = env.throw(format!("AndroidTun::from_fd failed: {e}"));
+                let _ = jnix_env.throw(format!("AndroidTun::from_fd failed: {e}"));
                 return -1;
             }
-        }
-    };
-    #[cfg(not(feature = "tunnel"))]
-    let _ = tun_fd;
+        };
 
-    // TODO (D.4 step 2): deserialize WarrenTunnelConfig from config_json,
-    // build a warren_tunnel::ClientConfig + ClientSession from it, spawn the
-    // Quinn pump on `RUNTIME` against `tun`, and (when entry hop is set)
-    // hand off to warren_multihop::MultiHopClient. For now the TUN is owned
-    // by the JNI side; nothing reads/writes packets to it yet.
-    let (cancel_tx, _cancel_rx) = oneshot::channel();
-    *slot = Some(TunnelHandle {
-        _cancel_tx: cancel_tx,
-        #[cfg(feature = "tunnel")]
-        _tun: tun,
-    });
-    0
+        let config = match crate::tunnel::parse_config(&config_str) {
+            Ok(c) => c,
+            Err(e) => {
+                let _ = jnix_env.throw(format!("invalid tunnel config JSON: {e}"));
+                return -1;
+            }
+        };
+
+        let runtime = match RUNTIME.get() {
+            Some(rt) => rt,
+            None => {
+                let _ = jnix_env
+                    .throw("initLogger() must be called before connectTunnel()");
+                return -1;
+            }
+        };
+
+        let (cancel_tx, cancel_rx) = oneshot::channel();
+        // Reset status to Connecting before spawning so the Kotlin side can
+        // poll it deterministically right after this JNI returns.
+        SESSION_STATUS.store(1, Ordering::SeqCst);
+
+        let task = runtime.spawn(crate::tunnel::run_session(
+            tun,
+            mnemonic_str,
+            config,
+            &SESSION_STATUS,
+            cancel_rx,
+        ));
+
+        *slot = Some(TunnelHandle {
+            _cancel_tx: cancel_tx,
+            _task: task,
+        });
+        0
+    }
+    #[cfg(not(feature = "tunnel"))]
+    {
+        let _ = (tun_fd, mnemonic_str, config_str);
+        let _ = jnix_env.throw("warren-jni built without the `tunnel` feature");
+        -1
+    }
 }
 
 /// Stop the active tunnel. No-op if none is running.
@@ -381,26 +420,23 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         .take()
     {
         // Dropping `_cancel_tx` notifies the Quinn task to wind down. The
-        // tokio runtime continues running for future tunnels.
+        // task itself flips `SESSION_STATUS` back to Disconnected when its
+        // `tokio::select!` falls through; we also do it here for symmetry
+        // so the status flip is observable even before the task wakes.
+        SESSION_STATUS.store(0, std::sync::atomic::Ordering::SeqCst);
     }
 }
 
 /// Returns 0 = disconnected, 1 = connecting, 2 = connected, 3 = reconnecting.
-/// Matches the `WarrenTunnelState` Kotlin enum.
+/// Matches the `WarrenTunnelState` Kotlin enum. Reads `SESSION_STATUS`
+/// without taking the `ACTIVE_TUNNEL` mutex so polling from Kotlin is
+/// cheap.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) -> jint {
-    if ACTIVE_TUNNEL
-        .lock()
-        .expect("ACTIVE_TUNNEL poisoned")
-        .is_some()
-    {
-        2
-    } else {
-        0
-    }
+    SESSION_STATUS.load(std::sync::atomic::Ordering::SeqCst)
 }
 
 // ---------------------------------------------------------------------------

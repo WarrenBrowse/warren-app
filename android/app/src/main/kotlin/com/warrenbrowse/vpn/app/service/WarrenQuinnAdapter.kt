@@ -53,7 +53,7 @@ class WarrenQuinnAdapter(
     private var activeFd: ParcelFileDescriptor? = null
     private var statusPollJob: Job? = null
 
-    suspend fun connect(config: WarrenTunnelConfig) = lock.withLock {
+    suspend fun connect(config: WarrenTunnelConfig, mnemonic: String) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
             Logger.w("WarrenQuinnAdapter: connect() called while not disconnected")
             return@withLock
@@ -67,16 +67,17 @@ class WarrenQuinnAdapter(
         }
         activeFd = fd
 
-        val rc = WarrenJni.connectTunnel(fd.detachFd(), Json.encodeToString(config))
+        val rc = WarrenJni.connectTunnel(fd.detachFd(), mnemonic, Json.encodeToString(config))
         if (rc != 0) {
             _state.value = WarrenTunnelState.Failed("connectTunnel returned $rc")
             return@withLock
         }
 
-        // TODO (D.4): register ConnectivityManager.NetworkCallback for
+        // TODO (D.4 step 3): register ConnectivityManager.NetworkCallback for
         //   handover-triggered reconnect (Backoff::HANDSHAKE = 15 s).
-        // TODO (D.4): observe Rust-side status changes via a callback
-        //   channel instead of polling.
+        // TODO (D.4 step 3): observe Rust-side status changes via a callback
+        //   channel instead of polling. For now we poll WarrenJni.getTunnelStatus()
+        //   from this coroutine and translate to WarrenTunnelState.
         statusPollJob = scope.launch {
             // Placeholder: in a real impl, the Rust side pushes status
             // transitions through a JNI callback.

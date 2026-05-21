@@ -17,6 +17,7 @@
 // inside the JNI library would put a wallet secret in app memory for the
 // entire session lifetime - we avoid that.
 
+use ed25519_dalek::SigningKey;
 use warren_identity::{derive_node_key, seed_from_mnemonic};
 
 #[derive(Debug, thiserror::Error)]
@@ -61,6 +62,17 @@ pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
 pub fn pubkey_hex_from_mnemonic(mnemonic: &str) -> Result<String, WalletError> {
     let pubkey = pubkey_from_mnemonic(mnemonic)?;
     Ok(hex::encode(pubkey))
+}
+
+/// Derive the Ed25519 [`SigningKey`] from a BIP39 mnemonic.
+///
+/// Same derivation chain as [`pubkey_from_mnemonic`] - the two are
+/// guaranteed to produce key pairs that agree (`signing.verifying_key() ==
+/// pubkey`). Used by the tunnel session bootstrap to feed
+/// `ClientTunnel::with_signing_key`.
+pub fn signing_key_from_mnemonic(mnemonic: &str) -> Result<SigningKey, WalletError> {
+    let seed = seed_from_mnemonic(mnemonic)?;
+    Ok(derive_node_key(&seed))
 }
 
 /// Sign `message` with the Ed25519 signing key derived from `mnemonic`.
