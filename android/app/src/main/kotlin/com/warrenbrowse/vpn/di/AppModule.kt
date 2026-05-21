@@ -10,6 +10,8 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
+import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
@@ -66,6 +68,11 @@ val appModule = module {
     single { UserPreferencesRepository(get(), get()) }
     single { ConnectionProxy(androidContext(), get(), get()) }
     single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
+
+    // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
+    // service dispatch for Warren Quinn connect.
+    single { WarrenTunnelConfigBuilder() }
+    single { WarrenConnectUseCase(walletRepository = get(), configBuilder = get()) }
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
     single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }
