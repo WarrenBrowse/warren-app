@@ -2500,7 +2500,7 @@
 		A9C75BC12C2D8C9E00B4CDF5 /* libmullvad_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmullvad_ios.a; path = "../target/aarch64-apple-ios/debug/libmullvad_ios.a"; sourceTree = "<group>"; };
 		A9C7B62B2EB9F71D002CABB1 /* LoggerBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerBuilderTests.swift; sourceTree = "<group>"; };
 		A9D96B192A8247C100A5C673 /* MigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationManager.swift; sourceTree = "<group>"; };
-		A9D9A4C02C36D53C004088DD /* MullvadRustRuntimeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MullvadRustRuntimeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WarrenRustRuntimeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9D9A4D32C36E1EA004088DD /* mullvad_rust_runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mullvad_rust_runtime.h; path = include/mullvad_rust_runtime.h; sourceTree = "<group>"; };
 		A9E031762ACB08950095D843 /* BackgroundTaskProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskProvider.swift; sourceTree = "<group>"; };
 		A9E031792ACB0AE70095D843 /* UIApplication+Stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Stubs.swift"; sourceTree = "<group>"; };
@@ -4093,7 +4093,7 @@
 				06799ABD28F98E1D00ACD94E /* MullvadREST */,
 				58FBFBE7291622580020E046 /* MullvadRESTTests */,
 				A992DA1E2C24709F00DE7CE5 /* MullvadRustRuntime */,
-				A9D9A4C12C36D53C004088DD /* MullvadRustRuntimeTests */,
+				A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */,
 				58B2FDD42AA71D2A003EB5C6 /* MullvadSettings */,
 				581943F228F8014500B0CB5E /* MullvadTypes */,
 				58CE5E62224146200008646E /* MullvadVPN */,
@@ -4133,7 +4133,7 @@
 				852969252B4D9C1F007EAD4C /* MullvadVPNUITests.xctest */,
 				F0ACE3082BE4E478006D5333 /* MullvadMockData.framework */,
 				A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */,
-				A9D9A4C02C36D53C004088DD /* MullvadRustRuntimeTests.xctest */,
+				A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4811,7 +4811,7 @@
 			path = MullvadRustRuntime;
 			sourceTree = "<group>";
 		};
-		A9D9A4C12C36D53C004088DD /* MullvadRustRuntimeTests */ = {
+		A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */ = {
 			isa = PBXGroup;
 			children = (
 				7AE16DCF2F9F7DB100A72A39 /* MullvadConnectionModeProviderTests.swift */,
@@ -4823,7 +4823,7 @@
 				585A02E82A4B283000C6CAFF /* UnsafeListener.swift */,
 				016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */,
 			);
-			path = MullvadRustRuntimeTests;
+			path = WarrenRustRuntimeTests;
 			sourceTree = "<group>";
 		};
 		F028A5472A336E1900C0CAA3 /* RedeemVoucher */ = {
@@ -5657,9 +5657,9 @@
 			productReference = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		A9D9A4BF2C36D53C004088DD /* MullvadRustRuntimeTests */ = {
+		A9D9A4BF2C36D53C004088DD /* WarrenRustRuntimeTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A9D9A4C72C36D53C004088DD /* Build configuration list for PBXNativeTarget "MullvadRustRuntimeTests" */;
+			buildConfigurationList = A9D9A4C72C36D53C004088DD /* Build configuration list for PBXNativeTarget "WarrenRustRuntimeTests" */;
 			buildPhases = (
 				A9D9A4BC2C36D53C004088DD /* Sources */,
 				A9D9A4BD2C36D53C004088DD /* Frameworks */,
@@ -5672,12 +5672,12 @@
 				F08B6B802C52927600D0A121 /* PBXTargetDependency */,
 				A9D9A4C62C36D53C004088DD /* PBXTargetDependency */,
 			);
-			name = MullvadRustRuntimeTests;
+			name = WarrenRustRuntimeTests;
 			packageProductDependencies = (
 				44A2626A2D63746400085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadRustRuntimeTests;
-			productReference = A9D9A4C02C36D53C004088DD /* MullvadRustRuntimeTests.xctest */;
+			productName = WarrenRustRuntimeTests;
+			productReference = A9D9A4C02C36D53C004088DD /* WarrenRustRuntimeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F0ACE3072BE4E478006D5333 /* MullvadMockData */ = {
@@ -5843,7 +5843,7 @@
 				7A88DCD62A8FABBE00D2FF0E /* RoutingTests */,
 				F0ACE3072BE4E478006D5333 /* MullvadMockData */,
 				A992DA1C2C24709F00DE7CE5 /* MullvadRustRuntime */,
-				A9D9A4BF2C36D53C004088DD /* MullvadRustRuntimeTests */,
+				A9D9A4BF2C36D53C004088DD /* WarrenRustRuntimeTests */,
 			);
 		};
 /* End PBXProject section */
@@ -9458,7 +9458,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.WarrenRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9484,7 +9484,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.WarrenRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9509,7 +9509,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.WarrenRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -9535,7 +9535,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.MullvadRustRuntimeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.warrenbrowse.vpn.ios.WarrenRustRuntimeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -10428,7 +10428,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A9D9A4C72C36D53C004088DD /* Build configuration list for PBXNativeTarget "MullvadRustRuntimeTests" */ = {
+		A9D9A4C72C36D53C004088DD /* Build configuration list for PBXNativeTarget "WarrenRustRuntimeTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A9D9A4C82C36D53C004088DD /* Debug */,
