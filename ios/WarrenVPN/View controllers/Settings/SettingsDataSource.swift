@@ -62,6 +62,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case language
         case notificationSettings
         case includeAllNetworks
+        case warrenWalletBackup
+        case warrenPortForwarding
 
         var accessibilityIdentifier: AccessibilityIdentifier {
             switch self {
@@ -85,6 +87,10 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .notificationSettingsCell
             case .includeAllNetworks:
                 .includeAllNetworksCell
+            case .warrenWalletBackup:
+                .warrenWalletBackupCell
+            case .warrenPortForwarding:
+                .warrenPortForwardingCell
             }
         }
 
@@ -250,12 +256,23 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         }
 
         snapshot.appendItems([.includeAllNetworks], toSection: .vpnSettings)
+        if isLoggedIn {
+            // Warren-specific tunnel features that depend on an active
+            // wallet session.
+            snapshot.appendItems([.warrenPortForwarding], toSection: .vpnSettings)
+        }
 
         snapshot.appendSections([.apiAccess])
         snapshot.appendItems([.apiAccess], toSection: .apiAccess)
 
         snapshot.appendSections([.general])
-        snapshot.appendItems([.notificationSettings, .changelog], toSection: .general)
+        var generalItems: [Item] = [.notificationSettings, .changelog]
+        // Surface the wallet backup CTA only when a wallet has been
+        // provisioned ; otherwise the row is misleading.
+        if WarrenWalletKeychain.exists() {
+            generalItems.insert(.warrenWalletBackup, at: 0)
+        }
+        snapshot.appendItems(generalItems, toSection: .general)
 
         snapshot.appendSections([.misc])
         snapshot.appendItems([.problemReport, .faq, .language], toSection: .misc)

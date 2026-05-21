@@ -155,6 +155,14 @@ final class WarrenWalletBackupViewController: UIViewController {
     }
 
     @objc private func handleDone() {
-        delegate?.walletBackupControllerDidFinish(self)
+        if let delegate {
+            delegate.walletBackupControllerDidFinish(self)
+        } else if let nav = navigationController {
+            // Fallback when embedded directly in a UINavigationController
+            // without a Coordinator delegate (Settings flow injection).
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 }

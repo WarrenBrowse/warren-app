@@ -151,6 +151,32 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .includeAllNetworks }
+
+        case .warrenWalletBackup:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = String(
+                localized: "Recovery phrase",
+                table: "Wallet",
+                comment: "Settings row that opens the Face ID gated wallet backup view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletBackup }
+
+        case .warrenPortForwarding:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = String(
+                localized: "Port forwarding",
+                table: "Settings",
+                comment: "Settings row that opens the NAT-PMP port forwarding configuration"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenPortForwarding }
         }
     }
 

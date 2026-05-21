@@ -118,6 +118,10 @@ private extension SettingsDataSource.Item {
             .notificationSettings
         case .includeAllNetworks:
             .includeAllNetworks
+        case .warrenWalletBackup:
+            .warrenWalletBackup
+        case .warrenPortForwarding:
+            .warrenPortForwarding
         }
     }
 }

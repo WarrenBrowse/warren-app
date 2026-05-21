@@ -85,6 +85,10 @@ final class SettingsViewControllerFactory {
             makeNotificationSettingsCoordinator()
         case .includeAllNetworks:
             makeIncludeAllNetworksSettingsCoordinator()
+        case .warrenWalletBackup:
+            makeWarrenWalletBackupViewController()
+        case .warrenPortForwarding:
+            makeWarrenPortForwardingViewController()
         }
     }
 
@@ -175,5 +179,23 @@ final class SettingsViewControllerFactory {
         )
 
         return .childCoordinator(coordinator)
+    }
+
+    // MARK: - Warren-specific routes
+
+    /// Wallet backup view (Settings → Recovery phrase, Face ID gated).
+    private func makeWarrenWalletBackupViewController() -> MakeChildResult {
+        let interactor = WarrenWalletInteractor()
+        let controller = WarrenWalletBackupViewController(interactor: interactor)
+        return .viewController(controller)
+    }
+
+    /// NAT-PMP port forwarding settings (Settings → Port forwarding).
+    private func makeWarrenPortForwardingViewController() -> MakeChildResult {
+        let view = WarrenNatPmpSettingsView()
+        let controller = UIHostingController(rootView: view)
+        controller.view.backgroundColor = .Warren.navy
+        controller.title = String(localized: "Port forwarding", table: "Settings")
+        return .viewController(controller)
     }
 }

@@ -122,6 +122,8 @@ public enum AccessibilityIdentifier: Equatable {
     case includeAllNetworksCell
     case multihopCell
     case daitaCell
+    case warrenWalletBackupCell
+    case warrenPortForwardingCell
     case daitaFilterPill
     case obfuscationFilterPill
     case ipv6FilterPill

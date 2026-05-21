@@ -40,4 +40,10 @@ enum SettingsNavigationRoute: Equatable {
 
     /// IAN route.
     case includeAllNetworks
+
+    /// Warren wallet backup (View recovery phrase, Face ID gated).
+    case warrenWalletBackup
+
+    /// Warren NAT-PMP port forwarding settings.
+    case warrenPortForwarding
 }
