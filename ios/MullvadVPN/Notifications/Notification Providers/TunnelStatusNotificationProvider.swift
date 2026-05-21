@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 import UIKit
 

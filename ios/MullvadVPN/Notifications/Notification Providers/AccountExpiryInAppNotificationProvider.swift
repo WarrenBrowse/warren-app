@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 final class AccountExpiryInAppNotificationProvider: NotificationProvider, InAppNotificationProvider,
     @unchecked Sendable

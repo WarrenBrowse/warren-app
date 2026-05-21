@@ -12,7 +12,7 @@ import XCTest
 
 @testable import WarrenREST
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class RelayPickingTests: XCTestCase {
     let sampleRelays = ServerRelaysResponseStubs.sampleRelays

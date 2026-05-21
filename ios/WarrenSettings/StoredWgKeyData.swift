@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public struct StoredWgKeyData: Codable, Equatable, Sendable {
     /// Private key creation date.

@@ -7,7 +7,7 @@
 //
 
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 public protocol APITransportProtocol {
     var name: String { get }

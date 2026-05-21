@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// A concrete implementation of an API access list interactor.
 struct ListAccessMethodInteractor: ListAccessMethodInteractorProtocol {

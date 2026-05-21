@@ -8,7 +8,7 @@
 
 import Foundation
 @preconcurrency import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 import NetworkExtension
 import PacketTunnelCore
 @preconcurrency import WireGuardKit

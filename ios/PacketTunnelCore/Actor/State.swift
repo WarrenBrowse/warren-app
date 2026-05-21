@@ -10,7 +10,7 @@ import Foundation
 import WarrenREST
 import MullvadRustRuntime
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /**
  Tunnel actor state with metadata describing the current phase of packet tunnel lifecycle.

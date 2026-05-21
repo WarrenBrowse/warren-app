@@ -9,7 +9,7 @@
 
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 protocol DestinationDescribing {
     func describe(_ destination: UserSelectedRelays) -> String?

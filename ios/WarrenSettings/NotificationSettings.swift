@@ -5,7 +5,7 @@
 //  Created by Mojgan on 2026-01-20.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
-import MullvadTypes
+import WarrenTypes
 
 public enum NotificationKeys: String, CaseIterable {
     case account

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import UIKit.UIImage
 
 /// Struct describing in-app notification.

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public struct TunnelSettingsV8: Codable, Equatable, TunnelSettings, Sendable {
     /// Relay constraints.

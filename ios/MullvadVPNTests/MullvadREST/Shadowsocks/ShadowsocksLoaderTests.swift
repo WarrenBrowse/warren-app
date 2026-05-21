@@ -11,7 +11,7 @@ import WarrenMockData
 
 @testable import WarrenREST
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class ShadowsocksLoaderTests: XCTestCase {
     private let sampleRelays = ServerRelaysResponseStubs.sampleRelays

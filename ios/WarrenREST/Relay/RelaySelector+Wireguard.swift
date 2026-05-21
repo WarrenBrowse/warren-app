@@ -8,7 +8,7 @@
 
 import CoreLocation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 extension RelaySelector {
     public enum WireGuard {

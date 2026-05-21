@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import NetworkExtension
 
 struct TunnelStoreStub: TunnelStoreProtocol, Sendable {

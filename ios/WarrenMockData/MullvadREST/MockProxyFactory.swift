@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 public struct MockProxyFactory: ProxyFactoryProtocol {
     public var apiTransportProvider: APITransportProviderProtocol

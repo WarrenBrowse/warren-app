@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 
 /// Dummy tunnel adapter that does nothing and reports no errors.

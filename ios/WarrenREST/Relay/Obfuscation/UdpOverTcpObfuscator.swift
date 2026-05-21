@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct UdpOverTcpObfuscator: RelayObfuscating {
     let relays: REST.ServerRelaysResponse

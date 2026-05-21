@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 import Network
 import NetworkExtension
 import PacketTunnelCore

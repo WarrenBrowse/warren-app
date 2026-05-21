@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 extension REST {

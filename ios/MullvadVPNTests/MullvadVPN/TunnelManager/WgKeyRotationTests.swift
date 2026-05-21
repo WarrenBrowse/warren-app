@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import XCTest
 
 final class WgKeyRotationTests: XCTestCase {

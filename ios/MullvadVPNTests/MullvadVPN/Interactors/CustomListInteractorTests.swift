@@ -4,7 +4,7 @@ import Testing
 @testable import WarrenREST
 @testable import MullvadRustRuntime
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 struct CustomListInteractorTests {
     static let store = InMemorySettingsStore<SettingNotFound>()

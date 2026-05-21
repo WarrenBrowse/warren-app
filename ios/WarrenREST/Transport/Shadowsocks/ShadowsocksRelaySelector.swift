@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public protocol ShadowsocksRelaySelectorProtocol: Sendable {
     func selectBridge(with settings: LatestTunnelSettings) throws -> REST.BridgeRelay?

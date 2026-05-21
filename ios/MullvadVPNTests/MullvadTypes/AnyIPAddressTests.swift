@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 final class AnyIPAddressTests: XCTestCase {
     func testAnyIPAddressFromString() {

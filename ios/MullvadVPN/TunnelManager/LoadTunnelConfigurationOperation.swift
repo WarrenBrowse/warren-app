@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 class LoadTunnelConfigurationOperation: ResultOperation<Void>, @unchecked Sendable {

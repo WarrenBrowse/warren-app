@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// The view model used by view controllers editing access method data.
 struct AccessMethodViewModel: Identifiable {

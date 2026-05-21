@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// The type implementing the facilities for testing proxy configuration.
 protocol ProxyConfigurationInteractorProtocol {

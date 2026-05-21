@@ -7,7 +7,7 @@
 //
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct FilterDescriptor {
     let relayFilterResult: RelayCandidates

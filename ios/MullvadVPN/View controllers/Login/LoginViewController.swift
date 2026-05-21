@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 import Operations
 import UIKit
 

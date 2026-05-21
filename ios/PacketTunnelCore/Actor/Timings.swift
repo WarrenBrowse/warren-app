@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Struct holding all timings used by tunnel actor.
 public struct PacketTunnelActorTimings: Sendable {

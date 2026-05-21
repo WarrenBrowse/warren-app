@@ -10,7 +10,7 @@ import Combine
 import XCTest
 
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 final class APIAccessMethodsTests: XCTestCase {
     static let store = InMemorySettingsStore<SettingNotFound>()

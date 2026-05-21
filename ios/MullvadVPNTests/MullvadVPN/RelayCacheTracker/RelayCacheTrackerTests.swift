@@ -11,7 +11,7 @@ import XCTest
 
 @testable import WarrenMockData
 @testable import WarrenREST
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class RelayCacheTrackerTests: XCTestCase {
     func testUpdateRelaysIsThrottledWhenCacheIsFresh() {

@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 import Network
 
 /// Stub actor for GotaTun tunnel implementation.

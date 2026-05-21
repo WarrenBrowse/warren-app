@@ -9,7 +9,7 @@
 import Combine
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 public class AccessMethodRepository: AccessMethodRepositoryProtocol, @unchecked Sendable {
     public static let directId = UUID(uuidString: "C9DB7457-2A55-42C3-A926-C07F82131994")!

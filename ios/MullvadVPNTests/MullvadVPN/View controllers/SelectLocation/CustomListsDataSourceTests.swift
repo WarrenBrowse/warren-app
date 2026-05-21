@@ -10,7 +10,7 @@ import WarrenMockData
 import XCTest
 
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class CustomListsDataSourceTests: XCTestCase {
     var allLocationNodes = [LocationNode]()

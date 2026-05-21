@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public final class IPOverrideWrapper: RelayCacheProtocol {
     private let relayCache: RelayCacheProtocol

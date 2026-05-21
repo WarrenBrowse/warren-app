@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import UIKit
 
 class AddLocationsDataSource:

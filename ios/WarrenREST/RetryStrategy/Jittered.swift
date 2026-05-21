@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 struct Jittered<InnerIterator: IteratorProtocol>: IteratorProtocol
 where InnerIterator.Element == Duration {

@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 private enum MullvadApiTransportError: Error {

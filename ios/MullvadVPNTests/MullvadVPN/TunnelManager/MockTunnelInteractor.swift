@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 // this is still very minimal, and will be fleshed out as needed.
 final class MockTunnelInteractor: TunnelInteractor, @unchecked Sendable {

@@ -10,7 +10,7 @@ import Combine
 import Testing
 
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 @Suite("RecentConnectionsRepositoryTests")
 final class RecentConnectionsRepositoryTests {

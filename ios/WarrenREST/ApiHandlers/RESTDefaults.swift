@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 extension REST {
     /// The API hostname and endpoint are defined in the Info.plist of the MullvadREST framework bundle

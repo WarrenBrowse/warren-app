@@ -9,7 +9,7 @@
 import Foundation
 import XCTest
 
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class FileCacheTests: XCTestCase {
     var testFileURL: URL!

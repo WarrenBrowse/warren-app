@@ -7,7 +7,7 @@
 //
 
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 public protocol RESTAccountHandling: Sendable {

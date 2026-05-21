@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Network
 import Operations
 import XCTest

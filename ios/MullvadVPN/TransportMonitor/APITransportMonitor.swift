@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 final class APITransportMonitor: APITransportProviderProtocol {
     private let tunnelManager: TunnelManager

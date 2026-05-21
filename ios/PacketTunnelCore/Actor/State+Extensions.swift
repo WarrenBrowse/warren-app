@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 extension State {
     /// Target state the actor should transition into upon request to either start (connect) or reconnect.

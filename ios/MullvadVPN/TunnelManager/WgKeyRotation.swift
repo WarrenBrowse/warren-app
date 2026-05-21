@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /**
  Implements manipulations related to marking the beginning and the completion of key rotation, private key creation and other tasks relevant to handling the state of

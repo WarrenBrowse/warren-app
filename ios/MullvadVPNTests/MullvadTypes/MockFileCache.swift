@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// File cache implementation that simulates file state and uses internal lock to synchronize access to it.
 final class MockFileCache<Content: Codable & Equatable>: FileCacheProtocol {

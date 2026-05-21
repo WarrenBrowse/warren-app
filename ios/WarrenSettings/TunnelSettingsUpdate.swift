@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 // Note:
 // Existing keys in `TunnelSettingsUpdate` must not be removed.

@@ -9,7 +9,7 @@
 import Combine
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 protocol RecentsInteractorProtocol {
     var isEnabledPublisher: AnyPublisher<Bool, Never> { get }

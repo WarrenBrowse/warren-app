@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Base protocol for notification providers.
 protocol NotificationProviderProtocol {

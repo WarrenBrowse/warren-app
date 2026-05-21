@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 import XCTest
 

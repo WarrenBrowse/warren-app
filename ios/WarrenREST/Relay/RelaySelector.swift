@@ -8,7 +8,7 @@
 
 import CoreLocation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public enum RelaySelector {
     // MARK: - public

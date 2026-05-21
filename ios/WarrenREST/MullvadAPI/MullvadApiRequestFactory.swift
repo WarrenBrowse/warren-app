@@ -7,7 +7,7 @@
 //
 
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 public struct MullvadApiRequestFactory: Sendable {
     public let apiContext: MullvadApiContext

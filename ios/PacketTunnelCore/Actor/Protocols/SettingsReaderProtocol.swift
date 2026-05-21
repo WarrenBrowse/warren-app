@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Network
 
 /// A type that implements a reader that can return settings required by `PacketTunnelActor` in order to configure the tunnel.

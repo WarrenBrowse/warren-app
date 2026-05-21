@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 class RecentListDataSource: LocationDataSourceProtocol {
     private(set) var nodes = [LocationNode]()

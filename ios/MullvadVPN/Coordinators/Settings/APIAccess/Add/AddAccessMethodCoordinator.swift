@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Routing
 import UIKit
 

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0107F40B2F5B02580012451B /* WireGuardKitTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 0107F40A2F5B02580012451B /* WireGuardKitTypes */; };
-		0107F40D2F5B02840012451B /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
+		0107F40D2F5B02840012451B /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
 		0107F4142F5B02D70012451B /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		0107F4152F5B02D70012451B /* WarrenLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F4172F5B02D80012451B /* WarrenREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; };
@@ -17,7 +17,7 @@
 		0107F41A2F5B02D90012451B /* MullvadRustRuntime.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* MullvadRustRuntime.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F41B2F5B02DA0012451B /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
 		0107F41C2F5B02DA0012451B /* WarrenSettings.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		0107F41D2F5B02DB0012451B /* MullvadTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0107F41D2F5B02DB0012451B /* WarrenTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F41E2F5B02DC0012451B /* Operations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; };
 		0107F41F2F5B02DC0012451B /* Operations.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0107F4202F5B02DE0012451B /* WireGuardKitTypes in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 0107F40A2F5B02580012451B /* WireGuardKitTypes */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -195,7 +195,7 @@
 		58677712290976FB006F721F /* SettingsInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58677711290976FB006F721F /* SettingsInteractor.swift */; };
 		5867771429097BCD006F721F /* PaymentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5867771329097BCD006F721F /* PaymentState.swift */; };
 		5868585524054096000B8131 /* CustomButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5868585424054096000B8131 /* CustomButton.swift */; };
-		586A0DCB2A20E359006C731C /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
+		586A0DCB2A20E359006C731C /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
 		586A950C290125EE007BAF2B /* AlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B9EB122488ED2100095626 /* AlertPresenter.swift */; };
 		586A950F29012BEE007BAF2B /* AddressCacheUpdateScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AC114028F841390037AF9A /* AddressCacheUpdateScheduler.swift */; };
 		586C0D782B039CC000E7CDD7 /* AccessMethodProtocolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C0D772B039CC000E7CDD7 /* AccessMethodProtocolPicker.swift */; };
@@ -364,11 +364,11 @@
 		58D223C6294C8B970029F5F8 /* Operations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; };
 		58D223CC294C8BCB0029F5F8 /* Operations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; };
 		58D223CD294C8BCB0029F5F8 /* Operations.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		58D223D8294C8E5E0029F5F8 /* MullvadTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 58D223D7294C8E5E0029F5F8 /* MullvadTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		58D223DC294C8EB90029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
-		58D223E6294C8F120029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
-		58D223E7294C8F120029F5F8 /* MullvadTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		58D223EA294C8F3C0029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
+		58D223D8294C8E5E0029F5F8 /* WarrenTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 58D223D7294C8E5E0029F5F8 /* WarrenTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		58D223DC294C8EB90029F5F8 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
+		58D223E6294C8F120029F5F8 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
+		58D223E7294C8F120029F5F8 /* WarrenTypes.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		58D223EA294C8F3C0029F5F8 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
 		58D223F6294C8FF00029F5F8 /* WarrenLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 58D223F5294C8FF00029F5F8 /* WarrenLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		58D223F9294C8FF00029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58D223FA294C8FF10029F5F8 /* WarrenLogging.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -398,7 +398,7 @@
 		58D2241A294C90380029F5F8 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 58D22419294C90380029F5F8 /* Logging */; };
 		58D2241D294C91D20029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58D22422294C921B0029F5F8 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
-		58D22426294C92750029F5F8 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; platformFilter = ios; };
+		58D22426294C92750029F5F8 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; platformFilter = ios; };
 		58D22435294C975B0029F5F8 /* Operations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223A5294C8A480029F5F8 /* Operations.framework */; platformFilter = ios; };
 		58DDA18F2ABC32380039C360 /* Timings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DDA18E2ABC32380039C360 /* Timings.swift */; };
 		58DF28A52417CB4B00E836B0 /* StorePaymentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DF28A42417CB4B00E836B0 /* StorePaymentManager.swift */; };
@@ -456,7 +456,7 @@
 		58FE25EE2AA7764E003D1918 /* TunnelAdapterDummy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FE25ED2AA7764E003D1918 /* TunnelAdapterDummy.swift */; };
 		58FE25F22AA77674003D1918 /* SettingsReaderStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FE25F12AA77674003D1918 /* SettingsReaderStub.swift */; };
 		58FE25F42AA9D730003D1918 /* PacketTunnelActor+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FE25F32AA9D730003D1918 /* PacketTunnelActor+Extensions.swift */; };
-		58FE65952AB1D90600E53CB5 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
+		58FE65952AB1D90600E53CB5 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
 		58FEEB58260B662E00A621A8 /* AutomaticKeyboardResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FEEB57260B662E00A621A8 /* AutomaticKeyboardResponder.swift */; };
 		58FF23A32AB09BEE003A2AF2 /* DeviceChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FF23A22AB09BEE003A2AF2 /* DeviceChecker.swift */; };
 		58FF9FE02B075ABC00E4C97D /* EditAccessMethodViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FF9FDF2B075ABC00E4C97D /* EditAccessMethodViewController.swift */; };
@@ -789,7 +789,7 @@
 		A90C48692C36BF3900DCB94C /* TunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90C48682C36BF3900DCB94C /* TunnelProvider.swift */; };
 		A91614D12B108D1B00F416EB /* TransportLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91614D02B108D1B00F416EB /* TransportLayer.swift */; };
 		A9173C322C36CCDD00F6A08C /* EphemeralPeerReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A557F42B7E3E5C0017ADA8 /* EphemeralPeerReceiver.swift */; };
-		A9173C372C36CD2B00F6A08C /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; platformFilter = ios; };
+		A9173C372C36CD2B00F6A08C /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; platformFilter = ios; };
 		A91D78E42B03C01600FCD5D3 /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
 		A91E26E02E7BE41F00440AB8 /* ShadowsocksCacheCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91E26DF2E7BE41F00440AB8 /* ShadowsocksCacheCleaner.swift */; };
 		A91E26E22E7BE4B300440AB8 /* ShadowsocksCacheCleanerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91E26E12E7BE4B300440AB8 /* ShadowsocksCacheCleanerTests.swift */; };
@@ -798,7 +798,7 @@
 		A939661B2CAE6CE1008128CA /* MigrationManagerMultiProcessUpgradeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A939661A2CAE6CE1008128CA /* MigrationManagerMultiProcessUpgradeTests.swift */; };
 		A93969812CE606190032A7A0 /* Maybenot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9840BB32C69F78A0030F05E /* Maybenot.swift */; };
 		A959E23E2D75F33300F95DDB /* PersistentAccessMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C0D962B04E0AC00E7CDD7 /* PersistentAccessMethod.swift */; };
-		A959E2412D75F39A00F95DDB /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; };
+		A959E2412D75F39A00F95DDB /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; };
 		A959E2422D75F3D200F95DDB /* AccessMethodKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588D7ED72AF3A533005DF40A /* AccessMethodKind.swift */; };
 		A95EEE362B722CD600A8A39B /* TunnelMonitorState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95EEE352B722CD600A8A39B /* TunnelMonitorState.swift */; };
 		A95EEE382B722DFC00A8A39B /* PingStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95EEE372B722DFC00A8A39B /* PingStats.swift */; };
@@ -1063,7 +1063,7 @@
 		F0ACE31E2BE4E4F2006D5333 /* AccountsProxy+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A900E9B72ACC5C2B00C95F67 /* AccountsProxy+Stubs.swift */; };
 		F0ACE3222BE4E4F2006D5333 /* APIProxy+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A900E9BD2ACC654100C95F67 /* APIProxy+Stubs.swift */; };
 		F0ACE3232BE4E53B006D5333 /* WarrenREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; platformFilter = ios; };
-		F0ACE3262BE4E6C7006D5333 /* MullvadTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */; platformFilter = ios; };
+		F0ACE3262BE4E6C7006D5333 /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; platformFilter = ios; };
 		F0ACE32C2BE4E77E006D5333 /* DeviceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449EB9FC2B95F8AD00DFA4EB /* DeviceMock.swift */; };
 		F0ACE32D2BE4E784006D5333 /* AccountMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449EB9FE2B95FF2500DFA4EB /* AccountMock.swift */; };
 		F0ACE32F2BE4EA8B006D5333 /* MockProxyFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACE32E2BE4EA8B006D5333 /* MockProxyFactory.swift */; };
@@ -1211,7 +1211,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		0107F4082F5B024D0012451B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1225,7 +1225,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		0107F4122F5B02AD0012451B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1379,21 +1379,21 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		58D223E8294C8F120029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		58D223EC294C8F3D0029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		58D223F7294C8FF00029F5F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1421,14 +1421,14 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		58EED36D29FBEF040000CBAF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		58FBDAA122A52A6800EB69A3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1470,7 +1470,7 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		7A4BFF7F2C2AAB3900754DCB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1533,14 +1533,14 @@
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		A959E23F2D75F37600F95DDB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
-			remoteInfo = MullvadTypes;
+			remoteInfo = WarrenTypes;
 		};
 		A9609B6D2D004D1F0065A3D3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1595,7 +1595,7 @@
 			files = (
 				0107F41A2F5B02D90012451B /* MullvadRustRuntime.framework in Embed Frameworks */,
 				0107F4182F5B02D80012451B /* WarrenREST.framework in Embed Frameworks */,
-				0107F41D2F5B02DB0012451B /* MullvadTypes.framework in Embed Frameworks */,
+				0107F41D2F5B02DB0012451B /* WarrenTypes.framework in Embed Frameworks */,
 				0107F4202F5B02DE0012451B /* WireGuardKitTypes in Embed Frameworks */,
 				0107F4152F5B02D70012451B /* WarrenLogging.framework in Embed Frameworks */,
 				0107F41F2F5B02DC0012451B /* Operations.framework in Embed Frameworks */,
@@ -1611,7 +1611,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				F0ACE3112BE4E478006D5333 /* WarrenMockData.framework in Embed Frameworks */,
-				58D223E7294C8F120029F5F8 /* MullvadTypes.framework in Embed Frameworks */,
+				58D223E7294C8F120029F5F8 /* WarrenTypes.framework in Embed Frameworks */,
 				44A262432D6373B400085380 /* WireGuardKitTypes in Embed Frameworks */,
 				58D223FA294C8FF10029F5F8 /* WarrenLogging.framework in Embed Frameworks */,
 				A992DA242C24709F00DE7CE5 /* MullvadRustRuntime.framework in Embed Frameworks */,
@@ -2085,8 +2085,8 @@
 		58D0C79D23F1CEBA00FE9BA7 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
 		58D223A5294C8A480029F5F8 /* Operations.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Operations.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D223A7294C8A490029F5F8 /* Operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Operations.h; sourceTree = "<group>"; };
-		58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MullvadTypes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		58D223D7294C8E5E0029F5F8 /* MullvadTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MullvadTypes.h; sourceTree = "<group>"; };
+		58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WarrenTypes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		58D223D7294C8E5E0029F5F8 /* WarrenTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WarrenTypes.h; sourceTree = "<group>"; };
 		58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WarrenLogging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D223F5294C8FF00029F5F8 /* WarrenLogging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WarrenLogging.h; sourceTree = "<group>"; };
 		58DDA18E2ABC32380039C360 /* Timings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timings.swift; sourceTree = "<group>"; };
@@ -2751,7 +2751,7 @@
 				F0C3333C2B31A29C00D1A478 /* WarrenSettings.framework in Frameworks */,
 				58D223BF294C8AE90029F5F8 /* Operations.framework in Frameworks */,
 				58D2241D294C91D20029F5F8 /* WarrenLogging.framework in Frameworks */,
-				58D223DC294C8EB90029F5F8 /* MullvadTypes.framework in Frameworks */,
+				58D223DC294C8EB90029F5F8 /* WarrenTypes.framework in Frameworks */,
 				01B2FF862D70B914004AED35 /* MullvadRustRuntime.framework in Frameworks */,
 				44A2624B2D6373E000085380 /* WireGuardKitTypes in Frameworks */,
 			);
@@ -2778,7 +2778,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A959E2412D75F39A00F95DDB /* MullvadTypes.framework in Frameworks */,
+				A959E2412D75F39A00F95DDB /* WarrenTypes.framework in Frameworks */,
 				44A2625F2D63745000085380 /* WireGuardKitTypes in Frameworks */,
 				58FE25BB2AA72188003D1918 /* WarrenLogging.framework in Frameworks */,
 			);
@@ -2791,7 +2791,7 @@
 				A91D78E42B03C01600FCD5D3 /* WarrenSettings.framework in Frameworks */,
 				58238CB92AD57EC700768310 /* WarrenREST.framework in Frameworks */,
 				44A262572D63744400085380 /* WireGuardKitTypes in Frameworks */,
-				58FE65952AB1D90600E53CB5 /* MullvadTypes.framework in Frameworks */,
+				58FE65952AB1D90600E53CB5 /* WarrenTypes.framework in Frameworks */,
 				58C7A45C2A8640490060C66F /* WarrenLogging.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2812,7 +2812,7 @@
 				58C7A4492A863F490060C66F /* PacketTunnelCore.framework in Frameworks */,
 				58D223F9294C8FF00029F5F8 /* WarrenLogging.framework in Frameworks */,
 				44A262422D6373B400085380 /* WireGuardKitTypes in Frameworks */,
-				58D223E6294C8F120029F5F8 /* MullvadTypes.framework in Frameworks */,
+				58D223E6294C8F120029F5F8 /* WarrenTypes.framework in Frameworks */,
 				7ABCA5B32A9349F20044A708 /* Routing.framework in Frameworks */,
 				58D223CC294C8BCB0029F5F8 /* Operations.framework in Frameworks */,
 				F0ACE3102BE4E478006D5333 /* WarrenMockData.framework in Frameworks */,
@@ -2828,7 +2828,7 @@
 			files = (
 				58FE25C62AA72779003D1918 /* PacketTunnelCore.framework in Frameworks */,
 				58FE25CE2AA72802003D1918 /* WarrenSettings.framework in Frameworks */,
-				58D223EA294C8F3C0029F5F8 /* MullvadTypes.framework in Frameworks */,
+				58D223EA294C8F3C0029F5F8 /* WarrenTypes.framework in Frameworks */,
 				58D223C6294C8B970029F5F8 /* Operations.framework in Frameworks */,
 				58153071294CBE8B00D1702E /* WarrenREST.framework in Frameworks */,
 				44A262452D6373C400085380 /* WireGuardKit in Frameworks */,
@@ -2840,7 +2840,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				586A0DCB2A20E359006C731C /* MullvadTypes.framework in Frameworks */,
+				586A0DCB2A20E359006C731C /* WarrenTypes.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2856,7 +2856,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				58D22426294C92750029F5F8 /* MullvadTypes.framework in Frameworks */,
+				58D22426294C92750029F5F8 /* WarrenTypes.framework in Frameworks */,
 				58D2241A294C90380029F5F8 /* Logging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2894,7 +2894,7 @@
 				0107F41E2F5B02DC0012451B /* Operations.framework in Frameworks */,
 				0107F4142F5B02D70012451B /* WarrenLogging.framework in Frameworks */,
 				0107F41B2F5B02DA0012451B /* WarrenSettings.framework in Frameworks */,
-				0107F40D2F5B02840012451B /* MullvadTypes.framework in Frameworks */,
+				0107F40D2F5B02840012451B /* WarrenTypes.framework in Frameworks */,
 				0107F4172F5B02D80012451B /* WarrenREST.framework in Frameworks */,
 				0107F40B2F5B02580012451B /* WireGuardKitTypes in Frameworks */,
 				0107F4192F5B02D90012451B /* MullvadRustRuntime.framework in Frameworks */,
@@ -2906,7 +2906,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */,
-				A9173C372C36CD2B00F6A08C /* MullvadTypes.framework in Frameworks */,
+				A9173C372C36CD2B00F6A08C /* WarrenTypes.framework in Frameworks */,
 				44A262672D63745C00085380 /* WireGuardKitTypes in Frameworks */,
 				0107F42D2F5F62950012451B /* WarrenSettings.framework in Frameworks */,
 				A9D4A4792C2DAB5F00F1E522 /* libmullvad_ios.a in Frameworks */,
@@ -2926,7 +2926,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F0ACE3262BE4E6C7006D5333 /* MullvadTypes.framework in Frameworks */,
+				F0ACE3262BE4E6C7006D5333 /* WarrenTypes.framework in Frameworks */,
 				44A262632D63745700085380 /* WireGuardKitTypes in Frameworks */,
 				F0ACE3232BE4E53B006D5333 /* WarrenREST.framework in Frameworks */,
 			);
@@ -3056,7 +3056,7 @@
 			path = DeviceCheck;
 			sourceTree = "<group>";
 		};
-		440E9EF92BDA95FC00B1FD11 /* MullvadTypes */ = {
+		440E9EF92BDA95FC00B1FD11 /* WarrenTypes */ = {
 			isa = PBXGroup;
 			children = (
 				7AF36A992CA2964000E1D497 /* AnyIPAddressTests.swift */,
@@ -3065,7 +3065,7 @@
 				58C3FA652A38549D006A450A /* MockFileCache.swift */,
 				7ABFB09D2BA316220074A49E /* RelayConstraintsTests.swift */,
 			);
-			path = MullvadTypes;
+			path = WarrenTypes;
 			sourceTree = "<group>";
 		};
 		440E9EFA2BDA976800B1FD11 /* WarrenLogging */ = {
@@ -3227,7 +3227,7 @@
 			path = Router;
 			sourceTree = "<group>";
 		};
-		581943F228F8014500B0CB5E /* MullvadTypes */ = {
+		581943F228F8014500B0CB5E /* WarrenTypes */ = {
 			isa = PBXGroup;
 			children = (
 				016EE0432F8640B00035B25C /* DaitaConfiguration.swift */,
@@ -3252,7 +3252,7 @@
 				F07B53562C53B5270024F547 /* LocalNetworkIPs.swift */,
 				58A1AA8623F43901009F7EA6 /* Location.swift */,
 				5840250322B11AB700E4CFEC /* MullvadEndpoint.swift */,
-				58D223D7294C8E5E0029F5F8 /* MullvadTypes.h */,
+				58D223D7294C8E5E0029F5F8 /* WarrenTypes.h */,
 				F99E32412E7AA109004A7EFE /* MultihopContext.swift */,
 				7A7AD14D2BF21DCE00B30B3C /* NameInputFormatter.swift */,
 				7AB401842DA53D4E00522E17 /* NewAccountData.swift */,
@@ -3279,7 +3279,7 @@
 				016EE03B2F8524EB0035B25C /* WireGuardKey.swift */,
 				58E511E028DDB7F100B0BCDE /* WrappingError.swift */,
 			);
-			path = MullvadTypes;
+			path = WarrenTypes;
 			sourceTree = "<group>";
 		};
 		5823FA5726CE4A4100283BF8 /* TunnelManager */ = {
@@ -3903,7 +3903,7 @@
 				440E9EFA2BDA976800B1FD11 /* WarrenLogging */,
 				440E9EF32BDA942E00B1FD11 /* WarrenREST */,
 				449872E22B7CB91B00094DDC /* WarrenSettings */,
-				440E9EF92BDA95FC00B1FD11 /* MullvadTypes */,
+				440E9EF92BDA95FC00B1FD11 /* WarrenTypes */,
 				440E9EF02BDA93CB00B1FD11 /* MullvadVPN */,
 				58B0A2A4238EE67E00BC001D /* Info.plist */,
 				F0B0E6962AFE6E7E001DC66B /* XCTest+Async.swift */,
@@ -4095,7 +4095,7 @@
 				A992DA1E2C24709F00DE7CE5 /* MullvadRustRuntime */,
 				A9D9A4C12C36D53C004088DD /* WarrenRustRuntimeTests */,
 				58B2FDD42AA71D2A003EB5C6 /* WarrenSettings */,
-				581943F228F8014500B0CB5E /* MullvadTypes */,
+				581943F228F8014500B0CB5E /* WarrenTypes */,
 				58CE5E62224146200008646E /* MullvadVPN */,
 				58B0A2A1238EE67E00BC001D /* MullvadVPNTests */,
 				852969262B4D9C1F007EAD4C /* WarrenVPNUITests */,
@@ -4123,7 +4123,7 @@
 				06799ABC28F98E1D00ACD94E /* WarrenREST.framework */,
 				58FBFBE6291622580020E046 /* WarrenRESTTests.xctest */,
 				58D223A5294C8A480029F5F8 /* Operations.framework */,
-				58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */,
+				58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */,
 				58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */,
 				58C7A4362A863F440060C66F /* PacketTunnelCore.framework */,
 				58C7A43D2A863F460060C66F /* PacketTunnelCoreTests.xctest */,
@@ -4916,7 +4916,7 @@
 				F0ACE30A2BE4E478006D5333 /* WarrenMockData.h */,
 				7AEBA52D2C2310D20018BEC5 /* Extensions */,
 				F0ACE3172BE4E487006D5333 /* WarrenREST */,
-				F0ACE32B2BE4E748006D5333 /* MullvadTypes */,
+				F0ACE32B2BE4E748006D5333 /* WarrenTypes */,
 			);
 			path = WarrenMockData;
 			sourceTree = "<group>";
@@ -4937,7 +4937,7 @@
 			path = WarrenREST;
 			sourceTree = "<group>";
 		};
-		F0ACE32B2BE4E748006D5333 /* MullvadTypes */ = {
+		F0ACE32B2BE4E748006D5333 /* WarrenTypes */ = {
 			isa = PBXGroup;
 			children = (
 				449EB9FE2B95FF2500DFA4EB /* AccountMock.swift */,
@@ -4945,7 +4945,7 @@
 				7AB401862DA53D9B00522E17 /* NewAccountDataMock.swift */,
 				F09D04BA2AE95396003D4F89 /* URLSessionStub.swift */,
 			);
-			path = MullvadTypes;
+			path = WarrenTypes;
 			sourceTree = "<group>";
 		};
 		F0ADF1CF2D01B50B00299F09 /* ChipView */ = {
@@ -5216,7 +5216,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				58D223D8294C8E5E0029F5F8 /* MullvadTypes.h in Headers */,
+				58D223D8294C8E5E0029F5F8 /* WarrenTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5495,9 +5495,9 @@
 			productReference = 58D223A5294C8A480029F5F8 /* Operations.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		58D223D4294C8E5E0029F5F8 /* MullvadTypes */ = {
+		58D223D4294C8E5E0029F5F8 /* WarrenTypes */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58D223D9294C8E5E0029F5F8 /* Build configuration list for PBXNativeTarget "MullvadTypes" */;
+			buildConfigurationList = 58D223D9294C8E5E0029F5F8 /* Build configuration list for PBXNativeTarget "WarrenTypes" */;
 			buildPhases = (
 				58D223D0294C8E5E0029F5F8 /* Headers */,
 				58D223D1294C8E5E0029F5F8 /* Sources */,
@@ -5511,12 +5511,12 @@
 				44A262402D5CFA0F00085380 /* PBXTargetDependency */,
 				44A2623E2D5CF9FD00085380 /* PBXTargetDependency */,
 			);
-			name = MullvadTypes;
+			name = WarrenTypes;
 			packageProductDependencies = (
 				44A262522D63743A00085380 /* WireGuardKitTypes */,
 			);
-			productName = MullvadTypes;
-			productReference = 58D223D5294C8E5E0029F5F8 /* MullvadTypes.framework */;
+			productName = WarrenTypes;
+			productReference = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		58D223F2294C8FF00029F5F8 /* WarrenLogging */ = {
@@ -5834,7 +5834,7 @@
 				589A455128E094B300565204 /* OperationsTests */,
 				06799ABB28F98E1D00ACD94E /* WarrenREST */,
 				58FBFBE5291622580020E046 /* WarrenRESTTests */,
-				58D223D4294C8E5E0029F5F8 /* MullvadTypes */,
+				58D223D4294C8E5E0029F5F8 /* WarrenTypes */,
 				58D223F2294C8FF00029F5F8 /* WarrenLogging */,
 				58C7A4352A863F440060C66F /* PacketTunnelCore */,
 				58C7A43C2A863F450060C66F /* PacketTunnelCoreTests */,
@@ -7302,7 +7302,7 @@
 		};
 		0107F4052F5B02310012451B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 0107F4042F5B02310012451B /* PBXContainerItemProxy */;
 		};
 		0107F4092F5B024D0012451B /* PBXTargetDependency */ = {
@@ -7312,7 +7312,7 @@
 		};
 		0107F40F2F5B02840012451B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 0107F40E2F5B02840012451B /* PBXContainerItemProxy */;
 		};
 		0107F4132F5B02AD0012451B /* PBXTargetDependency */ = {
@@ -7432,17 +7432,17 @@
 		};
 		58D223E4294C8EE70029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58D223E3294C8EE70029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D223E9294C8F120029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58D223E8294C8F120029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D223ED294C8F3D0029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58D223EC294C8F3D0029F5F8 /* PBXContainerItemProxy */;
 		};
 		58D223F8294C8FF00029F5F8 /* PBXTargetDependency */ = {
@@ -7467,12 +7467,12 @@
 		58D22429294C92750029F5F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58D22428294C92750029F5F8 /* PBXContainerItemProxy */;
 		};
 		58EED36E29FBEF040000CBAF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58EED36D29FBEF040000CBAF /* PBXContainerItemProxy */;
 		};
 		58FBDAA222A52A6800EB69A3 /* PBXTargetDependency */ = {
@@ -7502,7 +7502,7 @@
 		};
 		58FE65982AB1D90600E53CB5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58FE65972AB1D90600E53CB5 /* PBXContainerItemProxy */;
 		};
 		7A4BFF812C2AB2B100754DCB /* PBXTargetDependency */ = {
@@ -7547,12 +7547,12 @@
 		};
 		A9173C342C36CCFB00F6A08C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = A9173C332C36CCFB00F6A08C /* PBXContainerItemProxy */;
 		};
 		A959E2402D75F37600F95DDB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 58D223D4294C8E5E0029F5F8 /* MullvadTypes */;
+			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = A959E23F2D75F37600F95DDB /* PBXContainerItemProxy */;
 		};
 		A9609B6E2D004D1F0065A3D3 /* PBXTargetDependency */ = {
@@ -8309,7 +8309,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadTypes";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenTypes";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -8345,7 +8345,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadTypes";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenTypes";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -8998,7 +8998,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadTypes";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenTypes";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -9836,7 +9836,7 @@
 				);
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).MullvadTypes";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenTypes";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -10340,7 +10340,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58D223D9294C8E5E0029F5F8 /* Build configuration list for PBXNativeTarget "MullvadTypes" */ = {
+		58D223D9294C8E5E0029F5F8 /* Build configuration list for PBXNativeTarget "WarrenTypes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58D223DA294C8E5E0029F5F8 /* Debug */,

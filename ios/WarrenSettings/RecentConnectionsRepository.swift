@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadTypes
+import WarrenTypes
 
 public enum RecentConnectionsRepositoryError: LocalizedError, Hashable {
     case recentsDisabled

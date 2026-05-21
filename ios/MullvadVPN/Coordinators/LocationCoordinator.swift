@@ -8,7 +8,7 @@
 
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Routing
 import SwiftUI
 

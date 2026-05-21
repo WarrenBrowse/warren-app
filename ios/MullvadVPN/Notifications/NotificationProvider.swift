@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import UserNotifications
 
 /// Notification provider delegate primarily used by `NotificationManager`.

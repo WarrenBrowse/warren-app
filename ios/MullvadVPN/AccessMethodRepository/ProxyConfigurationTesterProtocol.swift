@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Type implementing access method proxy configuration testing.
 protocol ProxyConfigurationTesterProtocol {

@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct CustomListViewModel {
     var id: UUID

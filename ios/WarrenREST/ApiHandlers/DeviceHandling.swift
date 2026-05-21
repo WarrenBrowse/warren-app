@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public protocol DeviceHandling: Sendable {
     func getDevice(

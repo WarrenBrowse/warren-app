@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 protocol CustomListInteractorProtocol {
     func fetch(by id: UUID) -> CustomList?

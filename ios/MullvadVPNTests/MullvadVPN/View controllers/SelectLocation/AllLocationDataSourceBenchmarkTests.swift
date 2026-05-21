@@ -8,7 +8,7 @@
 
 import WarrenMockData
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import XCTest
 
 @testable import WarrenSettings

@@ -7,7 +7,7 @@
 
 import WarrenMockData
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Network
 import XCTest
 

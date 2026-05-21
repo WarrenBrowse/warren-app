@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Protocol describing in-app notification provider.
 protocol InAppNotificationProvider: NotificationProviderProtocol {

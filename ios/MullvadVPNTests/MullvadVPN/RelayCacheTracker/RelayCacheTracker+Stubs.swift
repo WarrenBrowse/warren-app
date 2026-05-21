@@ -10,7 +10,7 @@ import Foundation
 import WarrenMockData
 
 @testable import WarrenREST
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 struct RelayCacheTrackerStub: RelayCacheTrackerProtocol {
     func startPeriodicUpdates() {}

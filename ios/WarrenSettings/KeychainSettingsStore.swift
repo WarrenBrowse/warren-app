@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import Security
 
 final public class KeychainSettingsStore: SettingsStore, Sendable {

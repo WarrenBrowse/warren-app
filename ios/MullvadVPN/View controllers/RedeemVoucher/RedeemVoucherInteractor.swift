@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 final class RedeemVoucherInteractor: @unchecked Sendable {
     private let tunnelManager: TunnelManager

@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 public struct ShadowsocksCipherService {
     public init() {}

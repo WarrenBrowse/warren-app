@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public class MullvadAccessMethodReceiver {
     private var cancellables = Set<Combine.AnyCancellable>()

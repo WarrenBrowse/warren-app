@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import UserNotifications
 
 final class AccountExpirySystemNotificationProvider: NotificationProvider, SystemNotificationProvider,

@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 public enum EphemeralPeerNegotiationState: Equatable, Sendable {
     case single(EphemeralPeerRelayConfiguration)

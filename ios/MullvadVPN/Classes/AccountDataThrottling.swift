@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Struct used for throttling UI calls to update account data via tunnel manager.
 struct AccountDataThrottling {

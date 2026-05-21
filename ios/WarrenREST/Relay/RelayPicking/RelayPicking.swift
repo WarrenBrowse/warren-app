@@ -8,7 +8,7 @@
 
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Network
 
 public protocol RelayPicking {

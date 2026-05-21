@@ -9,7 +9,7 @@
 import Foundation
 import WarrenLogging
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import Operations
 import UIKit
 

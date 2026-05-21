@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// An object that provides access to `DeviceState` used by `DeviceCheckOperation`.
 struct DeviceStateAccessor: DeviceStateAccessorProtocol {

@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 extension PersistentAccessMethod {
     /// Convert persistent model into view model.

@@ -7,7 +7,7 @@
 //
 
 @preconcurrency import Combine
-import MullvadTypes
+import WarrenTypes
 import Network
 import XCTest
 

@@ -8,7 +8,7 @@
 
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct MultihopRule<Output>: Sendable {
     let name: String

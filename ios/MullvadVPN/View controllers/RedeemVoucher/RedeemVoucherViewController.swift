@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import UIKit
 
 protocol RedeemVoucherViewControllerDelegate: AnyObject, Sendable {

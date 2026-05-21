@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadTypes
+import WarrenTypes
 
 public protocol AccessMethodRepositoryDataSource: Sendable {
     /// Available Shadowsocks ciphers.

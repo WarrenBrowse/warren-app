@@ -1,4 +1,4 @@
-import MullvadTypes
+import WarrenTypes
 import SwiftUI
 
 extension ExitLocationView {

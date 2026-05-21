@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 struct APIProxyStubError: Error {}
 

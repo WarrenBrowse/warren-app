@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 extension RelaySelector {
     public enum Shadowsocks {

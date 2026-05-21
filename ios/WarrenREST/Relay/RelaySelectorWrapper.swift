@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public final class RelaySelectorWrapper: RelaySelectorProtocol, Sendable {
     public let relayCache: RelayCacheProtocol

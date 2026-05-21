@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 struct UnsetTunnelError: LocalizedError {
     var errorDescription: String? {

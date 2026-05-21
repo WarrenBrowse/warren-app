@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 struct ExponentialBackoff: IteratorProtocol {
     private var _next: Duration

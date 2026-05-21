@@ -7,7 +7,7 @@
 //
 
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 import StoreKit
 
 /// Manager responsible for handling App Store payments and passing StoreKit receipts to the backend.

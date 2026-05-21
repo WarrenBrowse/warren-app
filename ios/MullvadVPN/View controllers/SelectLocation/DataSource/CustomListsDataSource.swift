@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 class CustomListsDataSource: SearchableLocationDataSource {
     private(set) var nodes = [LocationNode]()

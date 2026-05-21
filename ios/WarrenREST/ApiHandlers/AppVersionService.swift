@@ -8,7 +8,7 @@
 
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public final class AppVersionService: @unchecked Sendable {
     public enum Deadline {

@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 protocol DeviceManaging {
     var currentDeviceId: String? { get }

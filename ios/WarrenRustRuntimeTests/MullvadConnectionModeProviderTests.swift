@@ -8,7 +8,7 @@
 
 import WarrenMockData
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import XCTest
 
 class MullvadConnectionModeProviderTests: XCTestCase {

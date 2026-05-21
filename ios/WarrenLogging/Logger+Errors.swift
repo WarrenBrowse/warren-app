@@ -8,7 +8,7 @@
 
 import Foundation
 import Logging
-import MullvadTypes
+import WarrenTypes
 
 extension Logger {
     public func error(

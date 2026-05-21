@@ -10,7 +10,7 @@ import Foundation
 import WarrenLogging
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 class UpdateAccountDataOperation: ResultOperation<Void>, @unchecked Sendable {

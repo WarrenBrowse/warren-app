@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 final class TunnelViewControllerInteractor: @unchecked Sendable {
     private let tunnelManager: TunnelManager

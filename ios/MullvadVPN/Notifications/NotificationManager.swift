@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 @preconcurrency import UserNotifications
 
 final class NotificationManager: NotificationProviderDelegate {

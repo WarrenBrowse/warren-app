@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntimeProxy
-import MullvadTypes
+import WarrenTypes
 import Network
 
 public enum TunnelObfuscationProtocol {

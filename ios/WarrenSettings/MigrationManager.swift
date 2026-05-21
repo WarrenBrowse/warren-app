@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 public enum SettingsMigrationResult: Sendable {
     /// Nothing to migrate.

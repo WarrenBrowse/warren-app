@@ -7,7 +7,7 @@
 //
 
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 public protocol APIRequestProxyProtocol {
     func sendRequest(_ proxyRequest: ProxyAPIRequest, completion: @escaping @Sendable (ProxyAPIResponse) -> Void)

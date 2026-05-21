@@ -8,7 +8,7 @@ import XCTest
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class SettingsUpdaterTests: XCTestCase {
     private var settingsListener: TunnelSettingsListener!

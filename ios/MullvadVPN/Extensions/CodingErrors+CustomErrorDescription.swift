@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 extension DecodingError: MullvadTypes.CustomErrorDescriptionProtocol {
     public var customErrorDescription: String? {

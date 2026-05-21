@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 
 @testable import WarrenREST
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 class RetryStrategyTests: XCTestCase {
     func testJitteredBackoffDoesNotGoBeyondMaxDelay() throws {

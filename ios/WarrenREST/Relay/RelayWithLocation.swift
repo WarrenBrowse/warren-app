@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public struct RelayWithLocation<T: AnyRelay & Sendable>: Sendable {
     public let relay: T

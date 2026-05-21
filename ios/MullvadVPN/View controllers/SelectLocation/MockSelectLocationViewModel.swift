@@ -1,6 +1,6 @@
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 class MockSelectLocationViewModel: SelectLocationViewModel {
     var isRecentsEnabled: Bool = true

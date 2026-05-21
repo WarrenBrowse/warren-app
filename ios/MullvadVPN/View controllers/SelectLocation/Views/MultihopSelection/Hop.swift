@@ -1,5 +1,5 @@
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import SwiftUI
 
 struct Hop {

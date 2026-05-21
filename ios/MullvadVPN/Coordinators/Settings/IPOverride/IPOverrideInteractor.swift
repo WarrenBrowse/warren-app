@@ -9,7 +9,7 @@
 import Combine
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 final class IPOverrideInteractor {
     private let logger = Logger(label: "IPOverrideInteractor")

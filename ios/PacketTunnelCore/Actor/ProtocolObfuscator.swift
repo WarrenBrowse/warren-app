@@ -10,7 +10,7 @@ import Foundation
 import WarrenREST
 import MullvadRustRuntime
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public struct ProtocolObfuscationResult {
     public let endpoint: SelectedEndpoint

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public protocol ShadowsocksConfigurationCacheProtocol: Sendable {
     func read() throws -> ShadowsocksConfiguration

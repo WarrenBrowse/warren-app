@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct LwoObfuscator: RelayObfuscating {
     let relays: REST.ServerRelaysResponse

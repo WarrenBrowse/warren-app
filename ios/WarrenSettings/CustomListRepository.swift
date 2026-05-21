@@ -9,7 +9,7 @@
 import Combine
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 public enum CustomRelayListError: LocalizedError, Hashable {
     case duplicateName

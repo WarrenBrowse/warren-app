@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 protocol RelayObfuscating {
     var relays: REST.ServerRelaysResponse { get }

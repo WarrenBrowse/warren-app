@@ -7,7 +7,7 @@
 //
 
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import Routing
 import UIKit
 

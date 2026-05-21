@@ -9,7 +9,7 @@
 import Combine
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 final class RelayFilterViewModel {
     @Published var relayFilter: RelayFilter

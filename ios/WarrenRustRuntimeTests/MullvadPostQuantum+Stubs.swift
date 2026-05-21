@@ -9,7 +9,7 @@
 import NetworkExtension
 
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 @testable import PacketTunnelCore
 
 class TunnelProviderStub: TunnelProvider {

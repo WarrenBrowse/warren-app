@@ -8,7 +8,7 @@
 
 import XCTest
 
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 // There's currently no test for migrating from V2 (RelayConstraint<RelayLocations>) to
 // V3 (RelayConstraint<UserSelectedLocations>) due to the only part being changed was an

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 extension PersistentProxyConfiguration {
     /// View model for socks configuration.

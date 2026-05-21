@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// Access method validation error that holds an array of individual per-field validation errors.
 struct AccessMethodValidationError: LocalizedError, Equatable {

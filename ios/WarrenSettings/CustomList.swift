@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public struct CustomList: Codable, Equatable {
     public let id: UUID

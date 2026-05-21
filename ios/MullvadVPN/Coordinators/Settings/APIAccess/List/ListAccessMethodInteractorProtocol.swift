@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// Types describing API access list interactor.
 protocol ListAccessMethodInteractorProtocol {

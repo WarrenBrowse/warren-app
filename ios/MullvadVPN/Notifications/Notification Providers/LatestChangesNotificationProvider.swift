@@ -7,7 +7,7 @@
 //
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import UIKit
 
 class LatestChangesNotificationProvider: NotificationProvider, InAppNotificationProvider, @unchecked Sendable {

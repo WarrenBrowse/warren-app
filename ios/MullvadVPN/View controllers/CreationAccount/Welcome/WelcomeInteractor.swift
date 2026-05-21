@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 final class WelcomeInteractor: @unchecked Sendable {
     private let tunnelManager: TunnelManager

@@ -11,7 +11,7 @@ import Testing
 
 @testable import WarrenREST
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 // Not meant to be run as a test, only for gathering data about multihop relay selection.
 

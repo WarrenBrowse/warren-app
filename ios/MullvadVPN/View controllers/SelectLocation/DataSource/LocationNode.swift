@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 @Observable
 class LocationNode: @unchecked Sendable {

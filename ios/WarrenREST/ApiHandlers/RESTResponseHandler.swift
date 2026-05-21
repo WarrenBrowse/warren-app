@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 protocol RESTResponseHandler<Success> {
     associatedtype Success

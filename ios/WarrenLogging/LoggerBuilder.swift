@@ -8,7 +8,7 @@
 
 import Foundation
 @_exported import Logging
-import MullvadTypes
+import WarrenTypes
 
 private enum LoggerOutput {
     case fileOutput(_ fileOutput: LogFileOutputStream)

@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 
 protocol TunnelInteractor {

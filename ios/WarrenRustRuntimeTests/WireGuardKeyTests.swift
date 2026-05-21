@@ -9,7 +9,7 @@
 import XCTest
 
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 @testable import WireGuardKitTypes
 
 // Namespace the new types so they don't collide with WireGuardKitTypes in this test file.

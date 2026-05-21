@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public final class ShadowsocksLoader: ShadowsocksLoaderProtocol, SwiftShadowsocksBridgeProviding, Sendable {
     let cache: ShadowsocksConfigurationCacheProtocol

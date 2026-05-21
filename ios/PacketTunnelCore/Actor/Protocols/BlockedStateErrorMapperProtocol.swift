@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// A type responsible for mapping errors returned by dependencies of `PacketTunnelActor` to `BlockedStateReason`.
 public protocol BlockedStateErrorMapperProtocol {

@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct ShadowsocksObfuscator: RelayObfuscating {
     let relays: REST.ServerRelaysResponse

@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public struct AccessMethodRepositoryStub: AccessMethodRepositoryDataSource, @unchecked Sendable {
     public let shadowsocksCiphers: [String] = []

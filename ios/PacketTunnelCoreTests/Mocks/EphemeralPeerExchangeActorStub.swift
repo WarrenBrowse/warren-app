@@ -9,7 +9,7 @@
 import NetworkExtension
 
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 @testable import PacketTunnelCore
 
 final class EphemeralPeerExchangeActorStub: EphemeralPeerExchangeActorProtocol, @unchecked Sendable {

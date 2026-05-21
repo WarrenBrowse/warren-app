@@ -7,7 +7,7 @@
 //
 
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 struct KeyExchangingResultStub: EphemeralPeerReceiving {
     var onFailure: (() -> Void)?

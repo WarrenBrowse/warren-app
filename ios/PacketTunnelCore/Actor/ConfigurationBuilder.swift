@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import Network
 
 /// Error returned when there is an endpoint but its public key is invalid.

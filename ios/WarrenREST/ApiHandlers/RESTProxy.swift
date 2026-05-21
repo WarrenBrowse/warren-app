@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 public typealias ProxyCompletionHandler<Success: Sendable> = @Sendable (Result<Success, Swift.Error>) -> Void

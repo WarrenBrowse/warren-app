@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public struct StoredDeviceData: Codable, Equatable, Sendable {
     /// Device creation date.

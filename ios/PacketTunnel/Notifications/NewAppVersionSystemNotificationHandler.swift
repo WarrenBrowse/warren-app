@@ -9,7 +9,7 @@
 import WarrenLogging
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import UserNotifications
 
 final class NewAppVersionSystemNotificationHandler {

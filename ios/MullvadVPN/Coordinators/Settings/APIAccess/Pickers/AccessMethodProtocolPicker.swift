@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import UIKit
 
 /// Type implementing the access method protocol picker.

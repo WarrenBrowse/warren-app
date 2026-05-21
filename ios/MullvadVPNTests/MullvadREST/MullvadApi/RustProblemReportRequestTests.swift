@@ -9,7 +9,7 @@
 import Testing
 
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 struct RustProblemReportRequestTests {
     @Test(

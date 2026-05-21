@@ -8,7 +8,7 @@
 
 import Foundation
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 
 extension REST {
     public struct RetryStrategy: Codable, Sendable {

@@ -8,7 +8,7 @@
 
 #if canImport(UIKit)
 
-    import MullvadTypes
+    import WarrenTypes
     import UIKit
 
     @available(iOSApplicationExtension, unavailable)

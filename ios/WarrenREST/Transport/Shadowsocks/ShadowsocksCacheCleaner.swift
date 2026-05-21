@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public class ShadowsocksCacheCleaner: MullvadAccessMethodChangeListening {
     let cache: ShadowsocksConfigurationCacheProtocol

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public protocol RelayCacheProtocol: Sendable {
     /// Reads from a cached list,

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 /// The verdict of an account status check.
 enum AccountVerdict: Equatable {

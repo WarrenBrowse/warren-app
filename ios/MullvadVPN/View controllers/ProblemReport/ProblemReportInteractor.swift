@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import Operations
 
 final class ProblemReportInteractor: @unchecked Sendable {

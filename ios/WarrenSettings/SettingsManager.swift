@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 private let keychainServiceName = "Mullvad VPN"
 private let accountTokenKey = "accountToken"

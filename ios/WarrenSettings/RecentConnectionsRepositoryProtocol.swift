@@ -7,7 +7,7 @@
 //
 
 import Combine
-import MullvadTypes
+import WarrenTypes
 
 public enum RecentConnectionsResult {
     case success(RecentConnections)

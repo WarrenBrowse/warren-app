@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// Protocol describing a type that can select a relay.
 public protocol RelaySelectorProtocol: Sendable {

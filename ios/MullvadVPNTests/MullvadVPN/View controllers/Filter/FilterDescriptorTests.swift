@@ -10,7 +10,7 @@ import Testing
 
 @testable import WarrenREST
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 @Suite("FilterDescriptorTests")
 struct FilterDescriptorTests {

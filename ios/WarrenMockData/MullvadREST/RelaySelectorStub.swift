@@ -8,7 +8,7 @@
 
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Network
 
 /// Relay selector stub that accepts a block that can be used to provide custom implementation.

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 protocol NotificationManagerDelegate: AnyObject {
     func notificationManagerDidUpdateInAppNotifications(

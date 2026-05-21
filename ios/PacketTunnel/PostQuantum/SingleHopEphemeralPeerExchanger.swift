@@ -9,7 +9,7 @@
 import WarrenREST
 import MullvadRustRuntime
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 
 struct SingleHopEphemeralPeerExchanger: EphemeralPeerExchangingProtocol {

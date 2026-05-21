@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 struct RESTRequestExecutorStub<Success: Sendable>: RESTRequestExecutor {
     var success: (() -> Success)?

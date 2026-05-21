@@ -8,7 +8,7 @@
 
 import CoreLocation
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public enum Midpoint {
     /// Computes the approximate midpoint of a set of locations.

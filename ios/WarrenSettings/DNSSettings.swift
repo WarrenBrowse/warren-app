@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import Network
 
 /// A struct describing Mullvad DNS blocking options.

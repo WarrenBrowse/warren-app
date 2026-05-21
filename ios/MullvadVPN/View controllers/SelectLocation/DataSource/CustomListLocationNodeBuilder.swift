@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 struct CustomListLocationNodeBuilder {
     let customList: CustomList

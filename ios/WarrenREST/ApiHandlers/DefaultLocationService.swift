@@ -8,7 +8,7 @@
 
 import CoreLocation
 import WarrenLogging
-import MullvadTypes
+import WarrenTypes
 
 public struct DefaultLocationService {
     private let urlSession: URLSessionProtocol

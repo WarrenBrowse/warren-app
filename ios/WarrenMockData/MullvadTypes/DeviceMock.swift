@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 extension Device {
     public static func mock(publicKey: WireGuard.PublicKey) -> Device {

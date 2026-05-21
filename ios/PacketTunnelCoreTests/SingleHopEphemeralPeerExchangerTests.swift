@@ -11,7 +11,7 @@ import XCTest
 @testable import WarrenMockData
 @testable import WarrenREST
 @testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 final class SingleHopEphemeralPeerExchangerTests: XCTestCase {
     var exitRelay: SelectedRelay!

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public enum Haversine {
     /// Approximation of the radius of the average circumference,

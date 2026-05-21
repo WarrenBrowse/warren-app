@@ -10,7 +10,7 @@ import Combine
 import Foundation
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 /// A concrete implementation of an access method proxy configuration.
 class ProxyConfigurationTester: ProxyConfigurationTesterProtocol {

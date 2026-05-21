@@ -11,7 +11,7 @@ import WarrenLogging
 import WarrenREST
 import MullvadRustRuntime
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 @preconcurrency import NetworkExtension
 import PacketTunnelCore
 

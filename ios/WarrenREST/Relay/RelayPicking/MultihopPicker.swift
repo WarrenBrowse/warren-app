@@ -8,7 +8,7 @@
 
 import WarrenLogging
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public struct MultihopPicker: RelayPicking {
     public let logger = Logger(label: "MultihopPicker")

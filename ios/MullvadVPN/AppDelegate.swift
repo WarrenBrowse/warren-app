@@ -12,7 +12,7 @@ import WarrenMockData
 import WarrenREST
 import MullvadRustRuntime
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 import Operations
 import UIKit
 import UserNotifications

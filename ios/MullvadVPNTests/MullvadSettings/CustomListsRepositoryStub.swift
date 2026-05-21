@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 class CustomListsRepositoryStub: CustomListRepositoryProtocol {
     var customLists: [CustomList]

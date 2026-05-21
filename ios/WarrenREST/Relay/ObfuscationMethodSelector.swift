@@ -7,7 +7,7 @@
 //
 
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 public protocol ObfuscationProviding {
     func bypassUnsupportedObfuscation(_: WireGuardObfuscationState) -> WireGuardObfuscationState

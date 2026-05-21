@@ -8,7 +8,7 @@
 
 import Combine
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 import UIKit
 
 final class RelayFilterDataSource: UITableViewDiffableDataSource<

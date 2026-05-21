@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 struct URLSessionTaskWrapper: Cancellable {
     let task: URLSessionTask

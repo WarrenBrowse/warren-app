@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 class LogFileOutputStream: TextOutputStream, @unchecked Sendable {
     private let queue = DispatchQueue(label: "LogFileOutputStreamQueue")

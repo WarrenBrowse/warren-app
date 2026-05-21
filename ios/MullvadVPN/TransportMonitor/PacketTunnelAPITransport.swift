@@ -9,7 +9,7 @@
 import Foundation
 import WarrenREST
 import MullvadRustRuntime
-import MullvadTypes
+import WarrenTypes
 import Operations
 import PacketTunnelCore
 

@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 struct UIApplicationStub: BackgroundTaskProviding {
     var backgroundTimeRemaining: TimeInterval { .infinity }

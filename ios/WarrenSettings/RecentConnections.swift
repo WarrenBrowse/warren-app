@@ -5,7 +5,7 @@
 //  Created by Mojgan on 2025-10-15.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
-import MullvadTypes
+import WarrenTypes
 
 public struct RecentConnections: Codable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey {

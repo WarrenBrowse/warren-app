@@ -11,7 +11,7 @@ import XCTest
 @testable import WarrenMockData
 @testable import WarrenREST
 @testable import WarrenSettings
-@testable import MullvadTypes
+@testable import WarrenTypes
 
 final class MigrationManagerTests: XCTestCase, @unchecked Sendable {
     static let store = InMemorySettingsStore<SettingNotFound>()

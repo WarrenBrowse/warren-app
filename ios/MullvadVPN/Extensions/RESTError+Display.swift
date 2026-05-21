@@ -8,7 +8,7 @@
 
 import Foundation
 import WarrenREST
-import MullvadTypes
+import WarrenTypes
 
 extension REST.Error: MullvadTypes.DisplayError {
     public var displayErrorDescription: String? {

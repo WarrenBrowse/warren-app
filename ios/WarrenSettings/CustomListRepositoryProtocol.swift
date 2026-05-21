@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-import MullvadTypes
+import WarrenTypes
 
 public protocol CustomListRepositoryProtocol {
     /// Save a custom list. If the list doesn't already exist, it must have a unique name.

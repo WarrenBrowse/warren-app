@@ -8,7 +8,7 @@
 
 import WarrenREST
 import WarrenSettings
-import MullvadTypes
+import WarrenTypes
 
 final actor StorePaymentManagerInteractor {
     private let tunnelManager: TunnelManager
