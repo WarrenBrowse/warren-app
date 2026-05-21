@@ -22,6 +22,12 @@ dependencies {
     implementation(projects.lib.feature.splittunneling.api)
     implementation(projects.lib.feature.vpnsettings.api)
     implementation(projects.lib.repository)
+    // D.5 wallet UI: WarrenWalletSettingsSection consumes Mnemonic /
+    // WalletState (lib/model) + MnemonicDisplay / BiometricPromptAuthorizer
+    // (lib/ui/component).
+    implementation(projects.lib.model)
+    implementation(projects.lib.ui.component)
+    implementation(libs.androidx.fragment)
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)
