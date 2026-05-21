@@ -10,52 +10,55 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
-import com.warrenbrowse.vpn.lib.model.wallet.WalletState
-import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
-import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * D.5 wallet entry-point screen.
  *
  * On first launch with no persisted wallet, the user is offered two
  * branches:
- *   - `Generate recovery phrase` -> route to a Backup screen that displays
- *     the freshly-generated mnemonic via `MnemonicDisplay`.
+ *   - `Generate recovery phrase` -> emit `BackupGeneratedMnemonic` so
+ *     the host NavController routes to `WarrenWalletBackupScreen`.
  *   - `Restore from recovery phrase` -> inline `MnemonicInput` for the
- *     12-word phrase, then `WalletRepository.importWallet`.
+ *     12-word phrase, then `WarrenWalletViewModel.importWallet`, which
+ *     emits `WalletReady` on success.
  *
- * Once the repository transitions to [WalletState.Ready] the navigation
- * graph (NavHost) is responsible for routing forward to the home screen.
- * That orchestration lives in the app module; this screen only owns the
- * branch decision and the import inline flow.
+ * The ViewModel owns the repository interaction and one-shot event
+ * dispatch (Channel) so re-emission on config change does not
+ * re-navigate. Navigation routing itself is owned by the app NavGraph;
+ * this screen only forwards events.
  */
 @Composable
 fun WarrenWalletLoginScreen(
-    walletRepository: WalletRepository,
     onWalletCreated: (Mnemonic) -> Unit,
     onWalletReady: () -> Unit,
     modifier: Modifier = Modifier,
+    vm: WarrenWalletViewModel = koinViewModel(),
 ) {
-    val state by walletRepository.state.collectAsState()
-    val scope = rememberCoroutineScope()
+    val state by vm.state.collectAsStateWithLifecycle()
 
     var importMode by remember { mutableStateOf(false) }
     var importPhrase by remember { mutableStateOf("") }
-    var importError by remember { mutableStateOf<String?>(null) }
+    var inlineError by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(state) {
-        if (state is WalletState.Ready) onWalletReady()
+    LaunchedEffect(Unit) {
+        vm.events.collect { event ->
+            when (event) {
+                is WarrenWalletEvent.BackupGeneratedMnemonic -> onWalletCreated(event.mnemonic)
+                WarrenWalletEvent.WalletReady -> onWalletReady()
+                is WarrenWalletEvent.Error -> inlineError = event.message
+            }
+        }
     }
 
     Column(
@@ -82,45 +85,39 @@ fun WarrenWalletLoginScreen(
             MnemonicInput(
                 onPhraseChange = { phrase ->
                     importPhrase = phrase
-                    importError = null
+                    inlineError = null
                 },
             )
-            importError?.let { msg ->
+            inlineError?.let { msg ->
                 Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
             Button(
-                onClick = {
-                    scope.launch {
-                        try {
-                            walletRepository.importWallet(Mnemonic(importPhrase))
-                        } catch (e: IllegalArgumentException) {
-                            importError = "Invalid recovery phrase"
-                        } catch (e: Exception) {
-                            importError = "Import failed: ${e.message}"
-                        }
-                    }
-                },
+                onClick = { vm.importWallet(importPhrase) },
                 enabled = importPhrase.isNotBlank(),
             ) {
                 Text(text = "Restore wallet")
             }
-            OutlinedButton(onClick = { importMode = false }) {
+            OutlinedButton(onClick = { importMode = false; inlineError = null }) {
                 Text(text = "Back")
             }
         } else {
-            Button(
-                onClick = {
-                    scope.launch {
-                        val mnemonic = walletRepository.createWallet()
-                        onWalletCreated(mnemonic)
-                    }
-                },
-            ) {
+            inlineError?.let { msg ->
+                Text(text = msg, color = MaterialTheme.colorScheme.error)
+            }
+            Button(onClick = { vm.createWallet() }) {
                 Text(text = "Generate recovery phrase")
             }
             OutlinedButton(onClick = { importMode = true }) {
                 Text(text = "Restore from recovery phrase")
             }
         }
+
+        // `state` is observed so the host can still react if the wallet
+        // gets persisted out-of-band (e.g. import succeeded just before
+        // a config change re-composed us). The ViewModel emits a
+        // `WalletReady` event in that path too, so navigation is event-
+        // driven; the observation here just keeps the recomposition
+        // model honest.
+        @Suppress("UNUSED_EXPRESSION") state
     }
 }

@@ -47,6 +47,7 @@ import com.warrenbrowse.vpn.feature.location.impl.bottomsheet.LocationBottomShee
 import com.warrenbrowse.vpn.feature.location.impl.list.SelectLocationListViewModel
 import com.warrenbrowse.vpn.feature.location.impl.search.SearchLocationViewModel
 import com.warrenbrowse.vpn.feature.login.impl.LoginViewModel
+import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.login.impl.apiunreachable.ApiUnreachableViewModel
 import com.warrenbrowse.vpn.feature.login.impl.devicelist.DeviceListViewModel
 import com.warrenbrowse.vpn.feature.managedevices.impl.ManageDevicesViewModel
@@ -307,6 +308,7 @@ val uiModule = module {
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
     viewModel { params -> CustomPortDialogViewModel(navArgs = params.get()) }
     viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
+    viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     viewModel {
         SelectLocationViewModel(

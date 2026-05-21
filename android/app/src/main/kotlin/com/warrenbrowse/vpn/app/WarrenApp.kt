@@ -62,6 +62,7 @@ import com.warrenbrowse.vpn.feature.location.impl.navigation.selectLocationEntry
 import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.deviceListEntry
 import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.removeDeviceConfirmationDialogEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.loginEntry
+import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.managedevices.impl.navigation.manageDevicesEntry
 import com.warrenbrowse.vpn.feature.multihop.impl.navigation.multihopEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
@@ -138,6 +139,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
             languageEntry(nav3)
         }
         loginEntry(nav3)
+        walletEntry(nav3)
         manageDevicesEntry(nav3)
         multihopEntry(nav3)
         noDaemonEntry(nav3)
