@@ -35,6 +35,12 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Settings/WarrenMultiHopSettingsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenObfuscationIndicatorView.swift" => "WarrenVPN",
 
+  # C.4.3 Warren Quinn tunnel implementation + actor scaffold inside
+  # `PacketTunnelCore` (slots next to GotaTunTunnelImplementation +
+  # GotaTunActor, conforms `TunnelImplementation` + `PacketTunnelActorProtocol`).
+  "PacketTunnelCore/Actor/WarrenQuinnActor.swift" => "PacketTunnelCore",
+  "PacketTunnelCore/Actor/WarrenQuinnTunnelImplementation.swift" => "PacketTunnelCore",
+
   # WarrenRustRuntime FFI wrappers.
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
