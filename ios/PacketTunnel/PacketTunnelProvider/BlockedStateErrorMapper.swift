@@ -11,7 +11,6 @@ import WarrenREST
 import WarrenSettings
 import WarrenTypes
 import PacketTunnelCore
-import WireGuardKit
 
 /**
  Struct responsible for mapping errors that may occur in the packet tunnel to the `BlockedStateReason`.
