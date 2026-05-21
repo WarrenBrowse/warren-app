@@ -80,13 +80,12 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.account.api.AccountNavKey
 import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
 import com.warrenbrowse.vpn.feature.daita.api.DaitaNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
-import com.warrenbrowse.vpn.feature.home.api.OutOfTimeNavKey
+import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.ConnectionButton
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.SwitchLocationButton
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionDetailPanel
@@ -238,7 +237,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 openAccountPage(sideEffect.token)
 
             is ConnectViewModel.UiSideEffect.OutOfTime ->
-                navigator.navigate(OutOfTimeNavKey, clearBackStack = true)
+                // D.4 step 18: OutOfTime route is gone (Mullvad account
+                // model). On Warren this side effect never fires because
+                // the ConnectViewModel state machine reads from a dead
+                // daemon; fallback to Connect to keep the navigation
+                // graph total in case of an upstream re-emission bug.
+                navigator.navigate(ConnectNavKey, clearBackStack = true)
 
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)

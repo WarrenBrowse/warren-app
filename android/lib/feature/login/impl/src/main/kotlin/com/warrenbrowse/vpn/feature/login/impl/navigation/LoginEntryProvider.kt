@@ -5,8 +5,6 @@ import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.core.animation.loginTransition
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
-import com.warrenbrowse.vpn.feature.home.api.OutOfTimeNavKey
-import com.warrenbrowse.vpn.feature.home.api.WelcomeNavKey
 import com.warrenbrowse.vpn.feature.login.api.DeviceListNavKey
 import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
 import com.warrenbrowse.vpn.feature.login.impl.Login
@@ -18,8 +16,6 @@ fun EntryProviderScope<NavKey2>.loginEntry(navigator: Navigator) {
             loginTransition {
                 // Fade out if we are navigating to one of the following
                 when (navigator.backStack.dropLast(1).lastOrNull()) {
-                    OutOfTimeNavKey,
-                    WelcomeNavKey,
                     ConnectNavKey,
                     is DeviceListNavKey -> true
                     else -> false

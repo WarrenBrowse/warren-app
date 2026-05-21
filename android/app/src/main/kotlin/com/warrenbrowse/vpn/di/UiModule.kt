@@ -34,8 +34,6 @@ import com.warrenbrowse.vpn.feature.filter.impl.FilterViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
-import com.warrenbrowse.vpn.feature.home.impl.outoftime.OutOfTimeViewModel
-import com.warrenbrowse.vpn.feature.home.impl.welcome.WelcomeViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
 import com.warrenbrowse.vpn.feature.location.api.LocationBottomSheetState
 import com.warrenbrowse.vpn.feature.location.impl.RelayListScrollConnection
@@ -322,7 +320,6 @@ val uiModule = module {
     viewModel { SplashViewModel(get(), get(), get(), get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
     viewModel { params -> AntiCensorshipSettingsViewModel(isModal = params.get(), get()) }
-    viewModel { WelcomeViewModel(get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
     viewModel {
         ReportProblemViewModel(
             warrenProblemReporter = get(),
@@ -332,7 +329,6 @@ val uiModule = module {
         )
     }
     viewModel { ViewLogsViewModel(get()) }
-    viewModel { OutOfTimeViewModel(get(), get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
     viewModel { FilterViewModel(get(), get()) }
     viewModel { params ->
         CreateCustomListDialogViewModel(locationCode = params.getOrNull(), get())

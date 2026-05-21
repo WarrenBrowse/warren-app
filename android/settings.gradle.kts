@@ -34,10 +34,9 @@ include(
     ":lib:common-test",
     ":lib:grpc",
     ":lib:endpoint",
-    ":lib:feature:account:impl",
-    ":lib:feature:account:api",
-    ":lib:feature:addtime:impl",
-    ":lib:feature:addtime:api",
+    // D.4 step 18: account / addtime modules removed (Mullvad-account
+    // identity model ; Warren uses BIP39 wallet via the login/wallet
+    // module instead).
     ":lib:feature:anticensorship:impl",
     ":lib:feature:anticensorship:api",
     ":lib:feature:apiaccess:impl",
@@ -56,8 +55,7 @@ include(
     ":lib:feature:customlist:api",
     ":lib:feature:daita:impl",
     ":lib:feature:daita:api",
-    ":lib:feature:deleteaccount:impl",
-    ":lib:feature:deleteaccount:api",
+    // D.4 step 18: deleteaccount module removed (no Mullvad account on Warren).
     ":lib:feature:filter:impl",
     ":lib:feature:filter:api",
     ":lib:feature:home:impl",
@@ -68,16 +66,16 @@ include(
     ":lib:feature:location:api",
     ":lib:feature:login:impl",
     ":lib:feature:login:api",
-    ":lib:feature:managedevices:impl",
-    ":lib:feature:managedevices:api",
+    // D.4 step 18: managedevices module removed (Mullvad multi-device
+    // accounting model ; Warren manages devices via the wallet).
     ":lib:feature:multihop:impl",
     ":lib:feature:multihop:api",
     ":lib:feature:notification:impl",
     ":lib:feature:notification:api",
     ":lib:feature:problemreport:impl",
     ":lib:feature:problemreport:api",
-    ":lib:feature:redeemvoucher:impl",
-    ":lib:feature:redeemvoucher:api",
+    // D.4 step 18: redeemvoucher module removed (Mullvad voucher
+    // subscription model ; Warren billing model is different).
     ":lib:feature:serveripoverride:impl",
     ":lib:feature:serveripoverride:api",
     ":lib:feature:settings:impl",

@@ -13,6 +13,5 @@ dependencies {
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)
-    implementation(projects.lib.feature.redeemvoucher.api)
     implementation(projects.lib.feature.problemreport.api)
 }

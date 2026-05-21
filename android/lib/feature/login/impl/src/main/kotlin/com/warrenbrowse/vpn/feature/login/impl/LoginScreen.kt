@@ -94,8 +94,6 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
-import com.warrenbrowse.vpn.feature.home.api.OutOfTimeNavKey
-import com.warrenbrowse.vpn.feature.home.api.WelcomeNavKey
 import com.warrenbrowse.vpn.feature.login.api.ApiUnreachableInfoDialogResult
 import com.warrenbrowse.vpn.feature.login.api.ApiUnreachableNavKey
 import com.warrenbrowse.vpn.feature.login.api.CreateAccountConfirmationNavKey
@@ -184,13 +182,19 @@ fun Login(
     CollectSideEffectWithLifecycle(vm.uiSideEffect) {
         when (it) {
             LoginUiSideEffect.NavigateToWelcome ->
-                navigator.navigate(WelcomeNavKey, clearBackStack = true)
+                // D.4 step 18: Welcome screen is gone (Mullvad account model);
+                // route to Connect instead. The Mullvad login flow is itself
+                // dead on Warren mobile (wallet onboarding via
+                // WarrenWalletNavKey replaces it), so this code path is never
+                // exercised at runtime.
+                navigator.navigate(ConnectNavKey, clearBackStack = true)
             is LoginUiSideEffect.NavigateToConnect ->
                 navigator.navigate(ConnectNavKey, clearBackStack = true)
             is LoginUiSideEffect.TooManyDevices ->
                 navigator.navigate(DeviceListNavKey(it.accountNumber))
             LoginUiSideEffect.NavigateToOutOfTime ->
-                navigator.navigate(OutOfTimeNavKey, clearBackStack = true)
+                // D.4 step 18: OutOfTime is gone. Same rationale as above.
+                navigator.navigate(ConnectNavKey, clearBackStack = true)
             LoginUiSideEffect.NavigateToCreateAccountConfirmation ->
                 navigator.navigate(CreateAccountConfirmationNavKey)
             LoginUiSideEffect.GenericError ->

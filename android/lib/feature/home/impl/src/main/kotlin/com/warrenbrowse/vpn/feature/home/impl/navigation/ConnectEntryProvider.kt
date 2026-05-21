@@ -26,6 +26,10 @@ fun EntryProviderScope<NavKey2>.homeEntry(navigator: Navigator) {
     android16UpgradeInfoEntry(navigator)
     deviceRevokedEntry(navigator)
     deviceNameInfoEntry(navigator)
-    outOfTimeEntry(navigator)
-    welcomeEntry(navigator)
+    // D.4 step 18: outOfTimeEntry + welcomeEntry removed - both screens are
+    // Mullvad account-driven (out-of-time = subscription expired ;
+    // welcome = "your new account number is X"). Warren uses BIP39 wallet
+    // identity ; neither screen has a Warren equivalent so the routes
+    // are gone. Splash + login-screen call sites that referenced these
+    // NavKeys were rewired to ConnectNavKey directly.
 }

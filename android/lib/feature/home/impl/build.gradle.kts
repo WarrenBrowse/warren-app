@@ -9,10 +9,8 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.home.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.account.api)
-    implementation(projects.lib.feature.account.impl)
-    implementation(projects.lib.feature.addtime.api)
-    implementation(projects.lib.feature.addtime.impl)
+    // D.4 step 18: home/impl no longer depends on account/addtime/redeemvoucher
+    // modules ; WelcomeScreen + OutOfTimeScreen (sole consumers) are gone.
     implementation(projects.lib.feature.anticensorship.api)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
@@ -21,7 +19,6 @@ dependencies {
     implementation(projects.lib.feature.location.api)
     implementation(projects.lib.feature.login.api)
     implementation(projects.lib.feature.multihop.api)
-    implementation(projects.lib.feature.redeemvoucher.api)
     implementation(projects.lib.feature.serveripoverride.api)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
