@@ -1,20 +1,22 @@
-# Session C — iOS fork rapport (partiel, C.1 DONE)
+# Session C — iOS fork rapport (partiel, C.1 + C.2 DONE)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
 **Brief source** : `.planning/session-c-ios-fork-brief.md`
 **Effort estimé brief** : 1-2 mois wall-clock (7 sous-phases)
-**Effort livré cette session** : C.1 complet (sauf assets visuels) + scaffolding `wireguard-apple` stub
+**Effort livré cette session** : C.1 complet (sauf assets visuels) + C.2 complet (8 modules rebrand + MullvadRustRuntime déféré C.3 + MullvadPostQuantum déféré C.4) + scaffolding `wireguard-apple` stub
 
 ---
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 (sous-phase 1/7) livrée. C.2 à C.7 non démarrées. Le scope total
-du brief (1.5-2 mois wall-clock) excède ce qu'une session unique d'agent peut produire,
-et le travail iOS reposant lourdement sur Xcode + iOS Simulator + Apple Developer
-account sort du périmètre raisonnable d'une exécution autonome single-shot. Reprise
-via une série de briefs `Session C.2`, `Session C.3`, … (un par sous-phase) recommandée.
+**GO PARTIEL** — C.1 + C.2 (sous-phases 1-2/7) livrées. C.3 à C.7 non démarrées. Le scope
+restant (C.3 warren-ios crate + C.4 PacketTunnelProvider Quinn rewrite + C.5 UI wallet + C.6
+multi-hop/DAITA/NAT-PMP UI parity + C.7 TestFlight) reste dimensionné pour 25-40 jours
+wall-clock supplémentaires, hors single-session.
+
+Reprise via une série de briefs `Session C.3`, `Session C.4`, … (un par sous-phase)
+recommandée.
 
 §0.0 INVIOLABLE respecté : aucune commande `git stash`, `git checkout <path>`,
 `git restore`, `git reset --hard`, ni `git clean`. Aucun fichier WIP poka touché.
@@ -71,18 +73,65 @@ d'un stub local Package.swift).
 
 ---
 
-## C.2 à C.7 — NOT STARTED
+## C.2 — Rebrand Swift packages ✅ GO (8 modules cette session)
+
+### Livré
+
+| Item | Statut | Commit |
+|------|--------|--------|
+| C.2 scaffold (drop 2 schemes orphans PostQuantum + plan migration) | ✅ | `cb1d092fdb` |
+| MullvadRustRuntimeTests → WarrenRustRuntimeTests (pilot ; 10 files) | ✅ | `6d30fc9e00` |
+| MullvadMockData → WarrenMockData (49 files cross-targets) | ✅ | `310e1a3890` |
+| MullvadLogging → WarrenLogging (86 files) | ✅ | `90dd7dbdc9` |
+| MullvadREST + MullvadRESTTests → WarrenREST + WarrenRESTTests (212 files) | ✅ | `1d53918ef6` |
+| MullvadVPNUITests → WarrenVPNUITests (74 files) | ✅ | `293d1a9518` |
+| MullvadSettings → WarrenSettings (257 files) | ✅ | `ce62d5d839` |
+| MullvadTypes → WarrenTypes (401 files, racine 305 importers) | ✅ | `b7a65f2541` |
+| MullvadVPN host app + MullvadVPNTests + MullvadVPNScreenshotTests → WarrenVPN* (695 files) | ✅ | `26b00faa4a` |
+| `xcodebuild -list -project WarrenVPN.xcodeproj` PASS après chaque commit | ✅ | observé |
+
+### Méthode
+
+Script bash pattern par module :
+1. `sed pbxproj MullvadX → WarrenX`
+2. `git mv ios/MullvadX → ios/WarrenX`
+3. Rename umbrella header `MullvadX.h → WarrenX.h` (si présent)
+4. `grep -rl "import MullvadX" | xargs sed "import WarrenX"`
+5. Sed file-level header comments `// MullvadX → // WarrenX`
+6. Rename scheme file `MullvadX.xcscheme → WarrenX.xcscheme` + sed contenu
+7. `xcodebuild -list` verify
+8. `git add ios/ && git commit && git push` (avec verification scope ios/ uniquement)
+
+Cleanup pass intermédiaire pour mettre à jour les références stale dans `WarrenVPN.xcscheme` (BuildableName `MullvadX.framework` → `WarrenX.framework`).
+
+### Différés
+
+| Module | Raison défer | Sous-phase cible |
+|--------|--------------|------------------|
+| MullvadRustRuntime → WarrenRustRuntime | Couplé à la génération `mullvad_rust_runtime.h` par cbindgen depuis le crate Rust `mullvad-ios`. Rename Swift seul = écrasement au prochain `cargo build`. | C.3 |
+| MullvadPostQuantum (drop + 5 .swift PostQuantum-related dans PacketTunnel/MullvadVPN) | Couplé au PacketTunnelProvider rewrite (replace WireGuardAdapter par WarrenQuinnAdapter). Drop seul = casse compile car les .swift orchestrent PostQuantum WG key exchange utilisé par WireGuardAdapter actuel. | C.4 |
+
+### Kept (modules génériques, pas Mullvad-branded)
+
+`Operations`, `OperationsTests`, `PacketTunnel`, `PacketTunnelCore`, `PacketTunnelCoreTests`, `Routing`, `RoutingTests`, `RelaySelector`, `TunnelObfuscation`, `TunnelObfuscationTests`, `TunnelProviderMessaging`, `WireGuardGoBridge`, `WireGuardKit`, `WireGuardKitTypes` (stub local). Pas de rename nécessaire.
+
+### Caveats C.2
+
+1. **Tests target builds non-vérifiés** : `xcodebuild -list` PASS confirme l'arbre de targets/schemes, mais `xcodebuild build -scheme WarrenVPN` ne PASS pas (WireGuardKit*.framework refs résiduelles dans pbxproj + .swift files PostQuantum dépendent de WireGuardKit API absentes — scope C.4 retire ces deps proprement).
+2. **File-level header comments `Copyright © 2026 Mullvad VPN AB`** : non sed (cosmétique, ~hundreds .swift files). À nettoyer en C.2.bis ou opportuniste lors C.4-C.6.
+3. **Types `MullvadFoo` Warren-specific dans le code Swift** (ex: `MullvadEndpoint`, `MullvadApiContext`, etc.) : non renommés. Représentent l'API publique des modules ; rename = source de churn. Recommandé en C.6 ou plus tard quand le scope sera plus mûr.
+
+## C.3 à C.7 — NOT STARTED
 
 | Sous-phase | Effort estimé brief | Statut | Raison |
 |------------|---------------------|--------|--------|
-| C.2 Rebrand 15 Swift packages | 5-7j | ❌ NOT STARTED | Scope incompatible single-session ; à reprendre via brief `Session C.2 — Swift packages rebrand` |
-| C.3 `mullvad-ios` → `warren-ios` crate + wire warren-core | 7-10j | ❌ NOT STARTED | Idem ; nécessite cargo-lipo iOS toolchain validation + cbindgen header gen + Swift wrappers, dependencies cross-repo warren-core ↔ warren-app |
-| C.4 PacketTunnelProvider Quinn | 10-14j | ❌ NOT STARTED | Sous-phase la plus complexe (NetworkExtension + warren-tunnel FFI + reconnect handler + killswitch) ; nécessite iOS Simulator full-cycle testing |
-| C.5 UI Swift wallet Ed25519 mnemonic | 5-7j | ❌ NOT STARTED | Refonte écrans login + signup wizard 5-step + Keychain integration |
+| C.3 `mullvad-ios` → `warren-ios` crate + wire warren-core | 7-10j | ❌ NOT STARTED | Nécessite cargo-lipo iOS toolchain validation + cbindgen header gen + Swift wrappers + bumps cross-repo warren-core ↔ warren-app ; idéalement couplé au rename Swift MullvadRustRuntime → WarrenRustRuntime |
+| C.4 PacketTunnelProvider Quinn | 10-14j | ❌ NOT STARTED | Sous-phase la plus complexe (NetworkExtension + warren-tunnel FFI + reconnect handler + killswitch + drop MullvadPostQuantum + WireGuardKit deps) ; nécessite iOS Simulator full-cycle testing + iPhone device pour Wi-Fi/cellular handover |
+| C.5 UI Swift wallet Ed25519 mnemonic | 5-7j | ❌ NOT STARTED | Refonte écrans login + signup wizard 5-step + iOS Keychain + Face ID/Touch ID |
 | C.6 Multi-hop + DAITA + NAT-PMP UI | 5-7j | ❌ NOT STARTED | Parité desktop M4.H.C + session B mobile-side |
-| C.7 Build TestFlight + smoke simulator | 3-5j | ❌ NOT STARTED | Signing pending poka, mais smoke simulator faisable sans cert |
+| C.7 Build TestFlight + smoke simulator | 3-5j | ❌ NOT STARTED | Signing pending poka, smoke simulator faisable sans cert |
 
-**Total restant** : ~35-50 jours wall-clock estimés, hors tests/fix breakage/itérations.
+**Total restant** : ~25-40 jours wall-clock estimés, hors tests/fix breakage/itérations.
 
 ---
 
