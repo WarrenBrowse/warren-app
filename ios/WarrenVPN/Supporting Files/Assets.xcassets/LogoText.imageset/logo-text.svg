@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Warren_VPN_Logo_Positive" width="959.5" height="103.7" version="1.1" viewBox="0 0 959.5 103.7" xmlns="http://www.w3.org/2000/svg">
-  <text x="381" y="225" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="105" fill="#FFFFFF" letter-spacing="3">WARREN VPN</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="959.5" height="103.7" viewBox="0 0 959.5 103.7">
+  <g fill="#FFFFFF">
+    <!-- W -->
+    <path d="M 20 15 L 35 15 L 50 80 L 65 15 L 75 15 L 90 80 L 105 15 L 120 15 L 100 90 L 80 90 L 70 35 L 60 90 L 40 90 Z"/>
+    <!-- A -->
+    <path d="M 140 90 L 165 15 L 180 15 L 205 90 L 188 90 L 184 75 L 161 75 L 157 90 Z M 165 60 L 180 60 L 172.5 30 Z"/>
+    <!-- R -->
+    <path d="M 225 90 L 225 15 L 265 15 Q 280 15 280 35 Q 280 50 268 53 L 285 90 L 268 90 L 254 56 L 240 56 L 240 90 Z M 240 28 L 240 44 L 260 44 Q 266 44 266 36 Q 266 28 260 28 Z"/>
+    <!-- R -->
+    <path d="M 305 90 L 305 15 L 345 15 Q 360 15 360 35 Q 360 50 348 53 L 365 90 L 348 90 L 334 56 L 320 56 L 320 90 Z M 320 28 L 320 44 L 340 44 Q 346 44 346 36 Q 346 28 340 28 Z"/>
+    <!-- E -->
+    <path d="M 385 90 L 385 15 L 440 15 L 440 28 L 400 28 L 400 45 L 432 45 L 432 58 L 400 58 L 400 77 L 442 77 L 442 90 Z"/>
+    <!-- N -->
+    <path d="M 460 90 L 460 15 L 477 15 L 510 65 L 510 15 L 525 15 L 525 90 L 508 90 L 475 40 L 475 90 Z"/>
+    <!-- space then V -->
+    <path d="M 570 15 L 587 15 L 605 78 L 623 15 L 640 15 L 615 90 L 595 90 Z"/>
+    <!-- P -->
+    <path d="M 660 90 L 660 15 L 705 15 Q 720 15 720 37 Q 720 60 705 60 L 676 60 L 676 90 Z M 676 28 L 676 47 L 700 47 Q 706 47 706 37 Q 706 28 700 28 Z"/>
+    <!-- N -->
+    <path d="M 740 90 L 740 15 L 757 15 L 790 65 L 790 15 L 805 15 L 805 90 L 788 90 L 755 40 L 755 90 Z"/>
+  </g>
 </svg>
