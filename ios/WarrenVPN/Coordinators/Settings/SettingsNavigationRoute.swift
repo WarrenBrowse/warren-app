@@ -57,6 +57,9 @@ enum SettingsNavigationRoute: Equatable {
     /// in a screenshot-friendly support-ticket payload).
     case warrenDiagnosticInfo
 
+    /// About Warren (marketing site + privacy + ToS + AGPL source links).
+    case warrenAbout
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

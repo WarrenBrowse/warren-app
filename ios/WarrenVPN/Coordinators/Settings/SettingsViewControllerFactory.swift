@@ -95,6 +95,8 @@ final class SettingsViewControllerFactory {
             makeWarrenTunnelStatisticsViewController()
         case .warrenDiagnosticInfo:
             makeWarrenDiagnosticInfoViewController()
+        case .warrenAbout:
+            makeWarrenAboutViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -303,6 +305,18 @@ final class SettingsViewControllerFactory {
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
         host.title = String(localized: "Diagnostic info", table: "Settings")
+        return .viewController(host)
+    }
+
+    /// About Warren (Settings → About). Marketing + privacy + ToS
+    /// + AGPL source code links + version banner.
+    private func makeWarrenAboutViewController() -> MakeChildResult {
+        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        let view = WarrenAboutView(appVersion: appVersion, buildNumber: build)
+        let host = UIHostingController(rootView: view)
+        host.view.backgroundColor = .Warren.navy
+        host.title = String(localized: "About Warren", table: "Settings")
         return .viewController(host)
     }
 

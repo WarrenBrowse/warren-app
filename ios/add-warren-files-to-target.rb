@@ -61,6 +61,7 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenTunnelStatisticsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Settings/WarrenDiagnosticInfoView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Settings/WarrenAboutView.swift" => "WarrenVPN",
 
   # Onboarding wizard 5-step (SwiftUI) + coordinator.
   "WarrenVPN/View controllers/Onboarding/OnboardingWizardView.swift" => "WarrenVPN",

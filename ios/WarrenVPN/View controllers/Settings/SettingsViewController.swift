@@ -128,6 +128,8 @@ private extension SettingsDataSource.Item {
             .warrenTunnelStatistics
         case .warrenDiagnosticInfo:
             .warrenDiagnosticInfo
+        case .warrenAbout:
+            .warrenAbout
         case .warrenPortForwarding:
             .warrenPortForwarding
         }

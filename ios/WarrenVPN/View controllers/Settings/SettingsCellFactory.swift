@@ -214,6 +214,18 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenDiagnosticInfo }
 
+        case .warrenAbout:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "About Warren",
+                table: "Settings",
+                comment: "Settings row that opens the marketing/privacy/source-code links view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenAbout }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 
