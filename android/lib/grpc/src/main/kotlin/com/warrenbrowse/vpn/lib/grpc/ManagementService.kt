@@ -50,15 +50,12 @@ import com.warrenbrowse.vpn.lib.model.AccountData
 import com.warrenbrowse.vpn.lib.model.AccountNumber
 import com.warrenbrowse.vpn.lib.model.AddSplitTunnelingAppError
 import com.warrenbrowse.vpn.lib.model.AppVersionInfo as ModelAppVersionInfo
-import com.warrenbrowse.vpn.lib.model.ClearAccountHistoryError
 import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.Constraint
-import com.warrenbrowse.vpn.lib.model.CreateAccountError
 import com.warrenbrowse.vpn.lib.model.CustomList as ModelCustomList
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.CustomListName
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
-import com.warrenbrowse.vpn.lib.model.DeleteAccountError
 import com.warrenbrowse.vpn.lib.model.DeleteDeviceError
 import com.warrenbrowse.vpn.lib.model.Device
 import com.warrenbrowse.vpn.lib.model.DeviceId
@@ -71,12 +68,10 @@ import com.warrenbrowse.vpn.lib.model.DnsState as ModelDnsState
 import com.warrenbrowse.vpn.lib.model.DnsState
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
 import com.warrenbrowse.vpn.lib.model.GetAccountDataError
-import com.warrenbrowse.vpn.lib.model.GetAccountHistoryError
 import com.warrenbrowse.vpn.lib.model.GetDeviceListError
 import com.warrenbrowse.vpn.lib.model.GetDeviceStateError
 import com.warrenbrowse.vpn.lib.model.GetVersionInfoError
 import com.warrenbrowse.vpn.lib.model.IpVersion
-import com.warrenbrowse.vpn.lib.model.LoginAccountError
 import com.warrenbrowse.vpn.lib.model.LogoutAccountError
 import com.warrenbrowse.vpn.lib.model.NameAlreadyExists
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
@@ -326,59 +321,9 @@ class ManagementService(
             .mapLeft(LogoutAccountError::Unknown)
             .mapEmpty()
 
-    suspend fun loginAccount(accountNumber: AccountNumber): Either<LoginAccountError, Unit> =
-        Either.catch { grpc.loginAccount(StringValue.of(accountNumber.value)) }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.UNAUTHENTICATED -> LoginAccountError.InvalidAccount
-                    Status.Code.RESOURCE_EXHAUSTED if it.status.isTooManyRequests() ->
-                        LoginAccountError.TooManyAttempts
-                    Status.Code.RESOURCE_EXHAUSTED ->
-                        LoginAccountError.MaxDevicesReached(accountNumber)
-                    Status.Code.DEADLINE_EXCEEDED -> LoginAccountError.Timeout
-                    Status.Code.INVALID_ARGUMENT -> LoginAccountError.InvalidInput(accountNumber)
-                    Status.Code.UNAVAILABLE -> LoginAccountError.ApiUnreachable
-                    else -> {
-                        Logger.e("Unknown login account error")
-                        LoginAccountError.Unknown(it)
-                    }
-                }
-            }
-            .mapEmpty()
-
-    suspend fun deleteAccount(): Either<DeleteAccountError, Unit> =
-        Either.catch { grpc.deleteAccount(Empty.getDefaultInstance()) }
-            .onLeft { Logger.e("Delete account error") }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.INVALID_ARGUMENT -> DeleteAccountError.AccountNumberDoesNotMatch
-                    Status.Code.DEADLINE_EXCEEDED,
-                    Status.Code.UNAVAILABLE -> DeleteAccountError.UnableToReachApi(it)
-                    else -> {
-                        Logger.e("Unknown delete account error")
-                        DeleteAccountError.Unknown(it)
-                    }
-                }
-            }
-            .mapEmpty()
-
-    suspend fun clearAccountHistory(): Either<ClearAccountHistoryError, Unit> =
-        Either.catch { grpc.clearAccountHistory(Empty.getDefaultInstance()) }
-            .onLeft { Logger.e("Clear account history error") }
-            .mapLeft(ClearAccountHistoryError::Unknown)
-            .mapEmpty()
-
-    suspend fun getAccountHistory(): Either<GetAccountHistoryError, AccountNumber?> =
-        Either.catch {
-                val history = grpc.getAccountHistory(Empty.getDefaultInstance())
-                if (history.hasNumber()) {
-                    AccountNumber(history.number.value)
-                } else {
-                    null
-                }
-            }
-            .onLeft { Logger.e("Get account history error") }
-            .mapLeft(GetAccountHistoryError::Unknown)
+    // D.4 step 49: loginAccount + deleteAccount + clearAccountHistory +
+    // getAccountHistory dropped (Mullvad account-number login + DeleteAccount
+    // + AccountHistory screens deleted in steps 18/28).
 
     private suspend fun getInitialServiceState() {
         withContext(Dispatchers.IO) {
@@ -401,22 +346,7 @@ class ManagementService(
             .onLeft { Logger.e("Get account data error") }
             .mapLeft(GetAccountDataError::Unknown)
 
-    suspend fun createAccount(): Either<CreateAccountError, AccountNumber> =
-        Either.catch {
-                val accountNumberStringValue = grpc.createNewAccount(Empty.getDefaultInstance())
-                AccountNumber(accountNumberStringValue.value)
-            }
-            .onLeft { Logger.e("Create account error ${it.message}") }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.RESOURCE_EXHAUSTED -> CreateAccountError.TooManyAttempts
-                    Status.Code.UNAVAILABLE -> CreateAccountError.ApiUnreachable
-                    Status.Code.DEADLINE_EXCEEDED -> CreateAccountError.TimeOut
-                    else -> {
-                        CreateAccountError.Unknown(it)
-                    }
-                }
-            }
+    // D.4 step 49: createAccount dropped (Mullvad account creation flow dead).
 
     suspend fun updateDnsContentBlockers(
         update: (DefaultDnsOptions) -> DefaultDnsOptions
