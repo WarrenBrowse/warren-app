@@ -26,11 +26,18 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
-import com.warrenbrowse.talpid.TalpidVpnService
+import com.warrenbrowse.talpid.LifecycleVpnService
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
-class WarrenVpnService : TalpidVpnService() {
+// D.4 step 56: WarrenVpnService now extends LifecycleVpnService directly.
+// The old TalpidVpnService superclass was Mullvad daemon JNI glue (openTun /
+// closeTun / bypass / connectivityListener marshalling) — entirely dead on
+// Warren since the tunnel lifecycle is managed by `quinnAdapter` :
+// `WarrenQuinnAdapter` builds + establishes the VpnService.Builder itself,
+// owns its own ConnectivityManager handover hook, and never calls back into
+// the Mullvad daemon JNI.
+class WarrenVpnService : LifecycleVpnService() {
 
     private lateinit var keyguardManager: KeyguardManager
 
