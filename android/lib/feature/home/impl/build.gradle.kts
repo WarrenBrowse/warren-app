@@ -23,7 +23,7 @@ dependencies {
     implementation(projects.lib.feature.splittunneling.api)
     implementation(projects.lib.feature.vpnsettings.api)
     implementation(projects.lib.map)
-    implementation(projects.lib.payment)
+    // D.4 step 36: lib.payment dropped (Mullvad billing dead on Warren).
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.repository)
     implementation(projects.lib.tv)

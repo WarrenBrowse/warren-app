@@ -29,7 +29,7 @@ dependencies {
     implementation(projects.lib.common)
     implementation(projects.lib.grpc)
     implementation(projects.lib.model)
-    implementation(projects.lib.payment)
+    // D.4 step 36: lib.payment dropped (Mullvad billing dead on Warren).
     implementation(projects.lib.endpoint)
 
     implementation(libs.arrow)

@@ -33,7 +33,6 @@ import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
-import com.warrenbrowse.vpn.lib.repository.PaymentLogic
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -69,9 +68,6 @@ class ConnectViewModelTest {
 
     // Select location use case
     private val mockSelectedLocationTitleUseCase: SelectedLocationTitleUseCase = mockk()
-
-    // Payment use case
-    private val mockPaymentUseCase: PaymentLogic = mockk(relaxed = true)
 
     // Flows
     private val tunnelState = MutableStateFlow<TunnelState>(TunnelState.Disconnected())
@@ -118,7 +114,6 @@ class ConnectViewModelTest {
                 newDeviceRepository = mockk(),
                 userPreferencesRepository = mockk(),
                 outOfTimeUseCase = outOfTimeUseCase,
-                paymentUseCase = mockPaymentUseCase,
                 selectedLocationTitleUseCase = mockSelectedLocationTitleUseCase,
                 connectionProxy = mockConnectionProxy,
                 lastKnownLocationUseCase = mockLastKnownLocationUseCase,

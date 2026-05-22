@@ -18,7 +18,6 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import com.warrenbrowse.vpn.di.paymentModule
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
@@ -69,7 +68,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private var isReadyNextDraw: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        loadKoinModules(listOf(uiModule, paymentModule))
+        loadKoinModules(listOf(uiModule))
 
         lifecycle.addObserver(warrenAppViewModel)
 

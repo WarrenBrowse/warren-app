@@ -30,13 +30,11 @@ import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
-import com.warrenbrowse.vpn.lib.payment.model.VerificationResult
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.NewDeviceRepository
-import com.warrenbrowse.vpn.lib.repository.PaymentLogic
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
@@ -53,7 +51,6 @@ class ConnectViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     selectedLocationTitleUseCase: SelectedLocationTitleUseCase,
     private val outOfTimeUseCase: OutOfTimeUseCase,
-    private val paymentUseCase: PaymentLogic,
     private val connectionProxy: ConnectionProxy,
     lastKnownLocationUseCase: LastKnownLocationUseCase,
     private val systemVpnSettingsUseCase: SystemVpnSettingsAvailableUseCase,
@@ -126,11 +123,8 @@ class ConnectViewModel(
             )
 
     init {
-        viewModelScope.launch {
-            if (paymentUseCase.verifyPurchases().getOrNull() == VerificationResult.Success) {
-                accountRepository.refreshAccountData()
-            }
-        }
+        // D.4 step 36: Mullvad Play Store purchase verification dropped (Warren
+        // identity is BIP39 wallet, no VPN subscription billing).
         viewModelScope.launch { deviceRepository.updateDevice() }
     }
 

@@ -28,7 +28,8 @@ rootProject.name = "WarrenVPN"
 include(":app")
 
 include(
-    ":lib:billing",
+    // D.4 step 36: lib:billing deleted (Mullvad Play Store VPN billing
+    // dead on Warren - BIP39 wallet replaces VPN subscriptions).
     ":lib:common",
     ":lib:common-compose",
     ":lib:common-test",
@@ -79,7 +80,8 @@ include(
     ":lib:map",
     ":lib:model",
     ":lib:navigation",
-    ":lib:payment",
+    // D.4 step 36: lib:payment deleted (Mullvad PaymentProvider abstraction
+    // is dead alongside lib:billing on Warren).
     ":lib:push-notification",
     ":lib:repository",
     ":lib:screen-test",

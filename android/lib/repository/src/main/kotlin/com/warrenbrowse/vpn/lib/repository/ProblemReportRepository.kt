@@ -16,7 +16,6 @@ import kotlinx.coroutines.withContext
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.model.UserReport
-import com.warrenbrowse.vpn.lib.payment.model.PaymentStatus
 
 const val PROBLEM_REPORT_LOGS_FILE = "problem_report.txt"
 
@@ -37,7 +36,6 @@ class ProblemReportRepository(
     private val apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder,
     private val accountRepository: AccountRepository,
     kermitFileLogDirName: String,
-    private val paymentLogic: PaymentLogic,
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     init {
@@ -66,18 +64,14 @@ class ProblemReportRepository(
                 // Delete any old report
                 deleteLogs()
 
-                val availableProducts = paymentLogic.allAvailableProducts()
-
+                // D.4 step 36: Mullvad Play Store purchase counts dropped from
+                // problem report metadata (Warren has no VPN subscription billing).
                 collectReport(
                     logDirectory = logDirectory.absolutePath,
                     kermitFileLogDir = kermitFileLogDirPath.absolutePath,
                     problemReportOutputPath = problemReportOutputPath.absolutePath,
-                    unverifiedPurchases =
-                        availableProducts?.count {
-                            it.status == PaymentStatus.VERIFICATION_IN_PROGRESS
-                        } ?: 0,
-                    pendingPurchases =
-                        availableProducts?.count { it.status == PaymentStatus.PENDING } ?: 0,
+                    unverifiedPurchases = 0,
+                    pendingPurchases = 0,
                 )
             }
         }

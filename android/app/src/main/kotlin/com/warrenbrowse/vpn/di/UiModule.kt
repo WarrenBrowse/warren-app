@@ -33,16 +33,12 @@ import com.warrenbrowse.vpn.feature.vpnsettings.impl.dns.DnsDialogViewModel
 import com.warrenbrowse.vpn.feature.vpnsettings.impl.mtu.MtuDialogViewModel
 import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
-import com.warrenbrowse.vpn.lib.payment.PaymentProvider
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.CustomListsRepository
-import com.warrenbrowse.vpn.lib.repository.EmptyPaymentUseCase
 import com.warrenbrowse.vpn.lib.repository.NewDeviceRepository
-import com.warrenbrowse.vpn.lib.repository.PaymentLogic
-import com.warrenbrowse.vpn.lib.repository.PlayPaymentLogic
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListFilterRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
@@ -110,7 +106,6 @@ val uiModule = module {
             apiEndpointFromIntentHolder = get(),
             kermitFileLogDirName = KERMIT_FILE_LOG_DIR_NAME,
             accountRepository = get(),
-            paymentLogic = get(),
         )
     }
     // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
@@ -191,17 +186,9 @@ val uiModule = module {
 
     single { ChangelogDataProvider(get()) }
 
-    // Will be resolved using from either of the two PaymentModule.kt classes.
-    single { PaymentProvider(get()) }
-
-    single<PaymentLogic> {
-        val paymentRepository = get<PaymentProvider>().paymentRepository
-        if (paymentRepository != null) {
-            PlayPaymentLogic(paymentRepository = paymentRepository)
-        } else {
-            EmptyPaymentUseCase()
-        }
-    }
+    // D.4 step 36: PaymentProvider + PaymentLogic + PlayPaymentLogic /
+    // EmptyPaymentUseCase dropped (Mullvad Play Store billing dead on
+    // Warren — BIP39 wallet identity replaces VPN subscriptions).
 
     single { AppVersionInfoRepository(get(), get()) }
 
@@ -230,7 +217,6 @@ val uiModule = module {
             userPreferencesRepository = get(),
             selectedLocationTitleUseCase = get(),
             outOfTimeUseCase = get(),
-            paymentUseCase = get(),
             connectionProxy = get(),
             lastKnownLocationUseCase = get(),
             systemVpnSettingsUseCase = get(),

@@ -16,7 +16,6 @@ import utilities.getStringListProperty
 import utilities.isReleaseBuild
 import utilities.matchesAny
 import utilities.ossProdAnyBuildType
-import utilities.playImplementation
 import utilities.registerReleaseTask
 
 plugins {
@@ -404,7 +403,8 @@ dependencies {
     implementation(projects.lib.model)
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.navigation)
-    implementation(projects.lib.payment)
+    // D.4 step 36: lib.payment + lib.billing dropped (Mullvad Play Store
+    // billing dead on Warren - BIP39 wallet replaces VPN subscriptions).
     implementation(projects.lib.repository)
     implementation(projects.lib.talpid)
     implementation(projects.lib.tv)
@@ -422,8 +422,7 @@ dependencies {
     // Baseline profile
     baselineProfile(projects.test.baselineprofile)
 
-    // Play implementation
-    playImplementation(projects.lib.billing)
+    // D.4 step 36: playImplementation(projects.lib.billing) dropped.
 
     // This dependency can be replaced when minimum SDK is 29 or higher.
     // It can then be replaced with InetAddress.isNumericAddress
