@@ -26,9 +26,7 @@
 		014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		014E8C302F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		014E8C312F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
-		016EE0382F850C0E0035B25C /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0372F850C0E0035B25C /* WireGuardKey.swift */; };
 		016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */; };
-		016EE03C2F8524EB0035B25C /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE03B2F8524EB0035B25C /* WireGuardKey.swift */; };
 		016EE0422F8540B00035B25C /* IPAddressRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0412F8540B00035B25C /* IPAddressRange.swift */; };
 		016EE0442F8640B00035B25C /* DaitaConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0432F8640B00035B25C /* DaitaConfiguration.swift */; };
 		01B2FF862D70B914004AED35 /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
@@ -79,6 +77,7 @@
 		3150505A447A1F806C4A18FE /* WarrenAppGroupKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5968217D68AEED5186653B3 /* WarrenAppGroupKeyTests.swift */; };
 		34C0CD946F4CFE1D8F6120AF /* WarrenWalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A878961076F78F42C4BD70 /* WarrenWalletTests.swift */; };
 		36A9D443214464D1D5725BC3 /* WarrenWalletGenerateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE61426DEC27860AFC0D2EA /* WarrenWalletGenerateViewController.swift */; };
+		379087ADD90652580F039494 /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0372F850C0E0035B25C /* WireGuardKey.swift */; };
 		3A16D8BCDA037FB3F631334E /* WarrenWalletEraseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */; };
 		44075DFB2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44075DFA2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift */; };
 		440870822D7A00B70038972F /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
@@ -86,6 +85,7 @@
 		440870842D809C980038972F /* UIImage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F062000B2CB7EB5D002E6DB9 /* UIImage+Helpers.swift */; };
 		440E5AB02CDBD67D00B09614 /* StatefulPreviewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440E5AAF2CDBD67D00B09614 /* StatefulPreviewWrapper.swift */; };
 		440E5AB42CDCF24500B09614 /* TunnelObfuscationSettingsWatchingObservableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440E5AB32CDCF24500B09614 /* TunnelObfuscationSettingsWatchingObservableObject.swift */; };
+		4410117CBA1776F82293707A /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0372F850C0E0035B25C /* WireGuardKey.swift */; };
 		4419AA8B2D2826E5001B13C9 /* DetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4419AA8A2D2826E5001B13C9 /* DetailsView.swift */; };
 		4419AA8E2D2828A4001B13C9 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4419AA8D2D2828A4001B13C9 /* HeaderView.swift */; };
 		4422C0712CCFF6790001A385 /* UDPOverTCPObfuscationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4422C0702CCFF6790001A385 /* UDPOverTCPObfuscationSettingsView.swift */; };
@@ -795,10 +795,8 @@
 		9A9178B0D184553274A03720 /* WarrenAppGroupEventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D9EA944346A66F854BBE62 /* WarrenAppGroupEventsTests.swift */; };
 		A52963DB473093BE6F037914 /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
 		A902E7A62D3FB0D9007F844A /* LogFileOutputStreamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A902E7A52D3FB0D9007F844A /* LogFileOutputStreamTests.swift */; };
-		A90C48672C36BC2600DCB94C /* EphemeralPeerReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90C48662C36BC2600DCB94C /* EphemeralPeerReceiver.swift */; };
 		A90C48692C36BF3900DCB94C /* TunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90C48682C36BF3900DCB94C /* TunnelProvider.swift */; };
 		A91614D12B108D1B00F416EB /* TransportLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91614D02B108D1B00F416EB /* TransportLayer.swift */; };
-		A9173C322C36CCDD00F6A08C /* EphemeralPeerReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A557F42B7E3E5C0017ADA8 /* EphemeralPeerReceiver.swift */; };
 		A9173C372C36CD2B00F6A08C /* WarrenTypes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223D5294C8E5E0029F5F8 /* WarrenTypes.framework */; platformFilter = ios; };
 		A91D78E42B03C01600FCD5D3 /* WarrenSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B2FDD32AA71D2A003EB5C6 /* WarrenSettings.framework */; };
 		A91E26E02E7BE41F00440AB8 /* ShadowsocksCacheCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91E26DF2E7BE41F00440AB8 /* ShadowsocksCacheCleaner.swift */; };
@@ -933,14 +931,11 @@
 		A9C342C32ACC3EE90045F00E /* RelayCacheTracker+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C342C22ACC3EE90045F00E /* RelayCacheTracker+Stubs.swift */; };
 		A9C7B62C2EB9F71D002CABB1 /* LoggerBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C7B62B2EB9F71D002CABB1 /* LoggerBuilderTests.swift */; };
 		A9D4A4792C2DAB5F00F1E522 /* libwarren_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9C75BC12C2D8C9E00B4CDF5 /* libwarren_ios.a */; };
-		A9D9A4B22C36D12D004088DD /* TunnelObfuscator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584023212A406BF5007B27AC /* TunnelObfuscator.swift */; };
-		A9D9A4BB2C36D397004088DD /* EphemeralPeerNegotiator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EB4F9C2B7FAB21002A2D7A /* EphemeralPeerNegotiator.swift */; };
 		A9D9A4C42C36D53C004088DD /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
 		A9D9A4CC2C36D54E004088DD /* UnsafeListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02E82A4B283000C6CAFF /* UnsafeListener.swift */; };
 		A9D9A4CD2C36D54E004088DD /* UDPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02EA2A4B285800C6CAFF /* UDPConnection.swift */; };
 		A9D9A4CE2C36D54E004088DD /* TunnelObfuscationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58695A9F2A4ADA9200328DB3 /* TunnelObfuscationTests.swift */; };
 		A9D9A4CF2C36D54E004088DD /* TCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585A02EC2A4B28F300C6CAFF /* TCPConnection.swift */; };
-		A9D9A4D22C36DBAF004088DD /* MullvadPostQuantum+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C308392C19DDA7008715F1 /* MullvadPostQuantum+Stubs.swift */; };
 		A9D9A4D42C36E1EA004088DD /* warren_rust_runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = A9D9A4D32C36E1EA004088DD /* warren_rust_runtime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A9DF789D2B7D1E8B0094E4AD /* LoggedInWithTimeUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 859089692B61763B003AF5F5 /* LoggedInWithTimeUITestCase.swift */; };
 		A9E031782ACB09930095D843 /* BackgroundTaskProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E031762ACB08950095D843 /* BackgroundTaskProvider.swift */; };
@@ -1018,7 +1013,6 @@
 		F05769B92C6656E400D9778B /* TunnelSettingsPropagator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05769B82C6656E400D9778B /* TunnelSettingsPropagator.swift */; };
 		F05769BB2C6661EE00D9778B /* TunnelSettingsStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05769BA2C6661EE00D9778B /* TunnelSettingsStrategy.swift */; };
 		F05919752C45194B00C301F3 /* EphemeralPeerKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919742C45194B00C301F3 /* EphemeralPeerKey.swift */; };
-		F05919802C45515200C301F3 /* EphemeralPeerExchangeActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A948809A2BC9308D0090A44C /* EphemeralPeerExchangeActor.swift */; };
 		F05F39972B21C735006E60A7 /* RelayCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5820675A26E6576800655B05 /* RelayCache.swift */; };
 		F05F39982B21C73C006E60A7 /* CachedRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585DA87626B024A600B8C587 /* CachedRelays.swift */; };
 		F06045E62B231EB700B2D37A /* URLSessionTaskWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F06045E52B231EB700B2D37A /* URLSessionTaskWrapper.swift */; };
@@ -7269,7 +7263,6 @@
 				58D2240A294C90210029F5F8 /* IPAddress+Codable.swift in Sources */,
 				58E45A5729F12C5100281ECF /* Result+Extensions.swift in Sources */,
 				F924C5A42DA65F28001F4660 /* Storekit.swift in Sources */,
-				A90C48672C36BC2600DCB94C /* EphemeralPeerReceiver.swift in Sources */,
 				A9E031782ACB09930095D843 /* BackgroundTaskProvider.swift in Sources */,
 				58D2240B294C90210029F5F8 /* Cancellable.swift in Sources */,
 				58D2240C294C90210029F5F8 /* WrappingError.swift in Sources */,
@@ -7280,7 +7273,6 @@
 				016EE0422F8540B00035B25C /* IPAddressRange.swift in Sources */,
 				01FFF95F2F0BE13900BDAF45 /* SelectedEndpoint.swift in Sources */,
 				44EC6C5A2E3BB3F60087F54A /* PersistentProxyConfiguration.swift in Sources */,
-				016EE03C2F8524EB0035B25C /* WireGuardKey.swift in Sources */,
 				A98207EF2D9192A300654558 /* ShadowsocksBridgeProviding.swift in Sources */,
 				58D2240E294C90210029F5F8 /* Error+Chain.swift in Sources */,
 				7A460FA12F35D854005A265D /* InAppNotificationDescriptor.swift in Sources */,
@@ -7309,6 +7301,7 @@
 				58D22417294C90210029F5F8 /* FixedWidthInteger+Arithmetics.swift in Sources */,
 				F0F56B092C0E058A009D676B /* ObserverList.swift in Sources */,
 				7AFE63312ED7526300D27DC7 /* MultihopContext.swift in Sources */,
+				379087ADD90652580F039494 /* WireGuardKey.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7457,26 +7450,22 @@
 			files = (
 				F0A89CB52D9D864B00580C27 /* RustProblemReportRequest.swift in Sources */,
 				7AB931242D43C2CA005FCEBA /* MullvadApiContext.swift in Sources */,
-				A9D9A4BB2C36D397004088DD /* EphemeralPeerNegotiator.swift in Sources */,
 				F0A89CB72D9D923300580C27 /* String+UnsafePointer.swift in Sources */,
-				A9D9A4B22C36D12D004088DD /* TunnelObfuscator.swift in Sources */,
 				A9B95DEF2EC73BB800C7FE9B /* MullvadAPIMock.swift in Sources */,
 				A98207F12D91A0AC00654558 /* MullvadShadowsocksBridgeProvider.swift in Sources */,
 				44DFB71C2F3DD8AB002C528E /* SwiftData.swift in Sources */,
 				7AB931262D43D22F005FCEBA /* MullvadApiResponse.swift in Sources */,
 				A98207F32D9ACE4C00654558 /* MullvadAccessMethodReceiver.swift in Sources */,
-				A9173C322C36CCDD00F6A08C /* EphemeralPeerReceiver.swift in Sources */,
 				A96D0B452D675F0400DD6C59 /* MullvadConnectionModeProvider.swift in Sources */,
 				4491AC7B2ECF5FE4005789DF /* MullvadAddressCacheKeychainStore.swift in Sources */,
 				7A99D3712D56222000891FF7 /* MullvadApiCancellable.swift in Sources */,
 				01D13C212F11130500EC63DE /* RustLogging.swift in Sources */,
 				A93969812CE606190032A7A0 /* Maybenot.swift in Sources */,
-				016EE0382F850C0E0035B25C /* WireGuardKey.swift in Sources */,
-				F05919802C45515200C301F3 /* EphemeralPeerExchangeActor.swift in Sources */,
 				7A4080AA2F5AFDE300C02173 /* ShadowsocksCipherService.swift in Sources */,
 				7A3215722D3934E6005DF395 /* MullvadApiCompletion.swift in Sources */,
 				048CADB4C4829811E348CEA5 /* WarrenWallet.swift in Sources */,
 				C23BFD5AAA8E64A4556D4BA4 /* WarrenQuinnAdapter.swift in Sources */,
+				4410117CBA1776F82293707A /* WireGuardKey.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7484,7 +7473,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A9D9A4D22C36DBAF004088DD /* MullvadPostQuantum+Stubs.swift in Sources */,
 				F08B6B772C52878400D0A121 /* EphemeralPeerExchangeActorTests.swift in Sources */,
 				016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */,
 				A9D9A4CF2C36D54E004088DD /* TCPConnection.swift in Sources */,
@@ -10837,11 +10825,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		58D22419294C90380029F5F8 /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 585834F624D2BC1F00A8AF56 /* XCRemoteSwiftPackageReference "swift-log" */;
-			productName = Logging;
-		};
 		58D2241B294C90450029F5F8 /* Logging */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 585834F624D2BC1F00A8AF56 /* XCRemoteSwiftPackageReference "swift-log" */;

@@ -138,7 +138,7 @@ public final class WarrenWallet {
                     warren_wallet_sign(
                         seedRaw.bindMemory(to: UInt8.self).baseAddress,
                         payloadRaw.bindMemory(to: UInt8.self).baseAddress,
-                        payload.count,
+                        UInt(payload.count),
                         sigPtr.baseAddress
                     )
                 }
