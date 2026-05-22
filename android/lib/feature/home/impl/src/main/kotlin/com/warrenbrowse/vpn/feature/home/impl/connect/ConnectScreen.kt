@@ -71,7 +71,6 @@ import com.warrenbrowse.vpn.common.compose.LocalNavAnimatedVisibilityScope
 import com.warrenbrowse.vpn.common.compose.SECURE_ZOOM
 import com.warrenbrowse.vpn.common.compose.SECURE_ZOOM_ANIMATION_MILLIS
 import com.warrenbrowse.vpn.common.compose.UNSECURE_ZOOM
-import com.warrenbrowse.vpn.common.compose.createOpenAccountPageHook
 import com.warrenbrowse.vpn.common.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.fallbackLatLong
 import com.warrenbrowse.vpn.common.compose.isTv
@@ -225,7 +224,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             connectViewModel.createVpnProfileResult(it)
         }
 
-    val openAccountPage = LocalUriHandler.current.createOpenAccountPageHook()
     val uriHandler = LocalUriHandler.current
     val resources = LocalResources.current
     CollectSideEffectWithLifecycle(
@@ -233,8 +231,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            is ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser ->
-                openAccountPage(sideEffect.token)
+            is ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser -> {
+                // D.4 step 23: dead Mullvad path (mullvad.net/account doesn't
+                // exist on Warren). The user is routed to the wallet
+                // settings via `onManageAccountClick` instead; this side
+                // effect is left as a no-op for parity with the legacy
+                // ConnectViewModel still emitting it.
+            }
 
             is ConnectViewModel.UiSideEffect.OutOfTime ->
                 // D.4 step 18: OutOfTime route is gone (Mullvad account
@@ -327,7 +330,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
-            onManageAccountClick = connectViewModel::onManageAccountClick,
+            onManageAccountClick =
+                // D.4 step 23: "Manage account" routes to the wallet settings
+                // instead of mullvad.net/account (which doesn't exist on
+                // Warren - identity is the BIP39 wallet, not a server-side
+                // account).
+                dropUnlessResumed { navigator.navigate(WarrenWalletSettingsNavKey) },
             onChangelogClick =
                 dropUnlessResumed { navigator.navigate(ChangelogNavKey(isModal = true)) },
             onDismissChangelogClick = connectViewModel::dismissNewChangelogNotification,
