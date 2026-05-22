@@ -236,8 +236,9 @@ final class SettingsViewControllerFactory {
     /// PacketTunnel extension. Refreshes on each push (no continuous
     /// poll).
     private func makeWarrenTunnelStatisticsViewController() -> MakeChildResult {
-        let stats = Self.loadTunnelStatistics()
-        let view = WarrenTunnelStatisticsView(stats: stats)
+        // Live source : the view's TimelineView re-fetches every 2 s,
+        // matching the PacketTunnel extension's stats broadcast cadence.
+        let view = WarrenTunnelStatisticsView(fetch: Self.loadTunnelStatistics)
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
         host.title = String(localized: "Tunnel statistics", table: "Settings")

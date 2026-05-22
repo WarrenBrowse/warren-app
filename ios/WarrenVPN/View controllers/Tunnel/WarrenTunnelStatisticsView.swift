@@ -39,13 +39,45 @@ public struct WarrenTunnelStatistics: Equatable {
 }
 
 public struct WarrenTunnelStatisticsView: View {
-    public let stats: WarrenTunnelStatistics
+    /// Either a static snapshot (for previews + initial render) or a
+    /// closure that re-fetches the snapshot from App Group
+    /// `UserDefaults` every 2 s. The `TimelineView`-driven mode lets
+    /// the view stay in sync with the producer side
+    /// (`WarrenQuinnTunnelImplementation.startStatsBroadcastTask`)
+    /// without coupling the view to a Combine publisher.
+    private enum Source {
+        case fixed(WarrenTunnelStatistics)
+        case live(() -> WarrenTunnelStatistics)
+    }
 
+    private let source: Source
+
+    /// Build from a static snapshot. Used for previews + unit-test
+    /// rendering paths.
     public init(stats: WarrenTunnelStatistics) {
-        self.stats = stats
+        self.source = .fixed(stats)
+    }
+
+    /// Build from a closure that re-fetches the snapshot on each tick.
+    /// Used by the production Settings VC so the view follows the
+    /// PacketTunnel extension's broadcast cadence.
+    public init(fetch: @escaping () -> WarrenTunnelStatistics) {
+        self.source = .live(fetch)
     }
 
     public var body: some View {
+        switch source {
+        case .fixed(let snapshot):
+            content(for: snapshot)
+        case .live(let fetch):
+            TimelineView(.periodic(from: .now, by: 2)) { _ in
+                content(for: fetch())
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func content(for stats: WarrenTunnelStatistics) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(
                 String(
