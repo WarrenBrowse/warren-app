@@ -158,8 +158,6 @@
     <string name="navigate">Перейти</string>
     <string name="new_changelog_notification_message">Натисніть тут, щоб дізнатися, що нового.</string>
     <string name="new_changelog_notification_title">УСТАНОВЛЕНО НОВУ ВЕРСІЮ</string>
-    <string name="new_device_notification_message">Ласкаво просимо! Цей пристрій тепер називається <b>«%1$s»</b>.</string>
-    <string name="new_device_notification_title">СТВОРЕНО НОВИЙ ПРИСТРІЙ</string>
     <string name="no_matching_relay">Жоден сервер не відповідає налаштуванням, спробуйте змінити сервер чи налаштування.</string>
     <string name="no_matching_relay_entry">Жоден сервер входу не відповідає налаштуванням, спробуйте змінити сервер чи інші параметри.</string>
     <string name="no_matching_relay_exit">Жоден сервер виходу не відповідає налаштуванням, спробуйте змінити сервер чи інші параметри.</string>

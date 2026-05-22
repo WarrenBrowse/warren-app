@@ -38,7 +38,6 @@ import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.CustomListsRepository
-import com.warrenbrowse.vpn.lib.repository.NewDeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListFilterRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
@@ -60,7 +59,6 @@ import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
-import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewDeviceNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
 import com.warrenbrowse.vpn.receiver.AutoStartVpnBootCompletedReceiver
@@ -118,7 +116,8 @@ val uiModule = module {
     // D.4 step 33: ApiAccessRepository removed - Mullvad-only API
     // access method configuration (HTTPS proxies/Tor bridges to reach
     // mullvad.net). Warren's API endpoint is fixed at build time.
-    single { NewDeviceRepository() }
+    // D.4 step 41: NewDeviceRepository dropped (Mullvad multi-device account
+    // tracking dead on Warren).
     single { SplashCompleteRepository() }
     single {
         AutoStartAndConnectOnBootRepository(
@@ -134,7 +133,7 @@ val uiModule = module {
     single {
         VersionNotificationUseCase(get(), BuildConfig.ENABLE_IN_APP_VERSION_NOTIFICATIONS)
     } bind InAppNotificationUseCase::class
-    single { NewDeviceNotificationUseCase(get(), get()) } bind InAppNotificationUseCase::class
+    // D.4 step 41: NewDeviceNotificationUseCase dropped.
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.BAKLAVA) {
         single { Android16UpdateWarningUseCase(get(), get()) } bind InAppNotificationUseCase::class
@@ -212,7 +211,6 @@ val uiModule = module {
             deviceRepository = get(),
             changelogRepository = get(),
             inAppNotificationController = get(),
-            newDeviceRepository = get(),
             userPreferencesRepository = get(),
             selectedLocationTitleUseCase = get(),
             connectionProxy = get(),

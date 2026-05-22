@@ -81,28 +81,11 @@ fun InAppNotification.toNotificationData(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickDismissNewDevice: () -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) =
     when (this) {
-        is InAppNotification.NewDevice ->
-            NotificationData(
-                title =
-                    AnnotatedString(stringResource(id = R.string.new_device_notification_title)),
-                message =
-                    Text(
-                        stringResource(id = R.string.new_device_notification_message, deviceName)
-                            .formatWithHtml()
-                    ),
-                statusLevel = statusLevel,
-                action =
-                    NotificationAction(
-                        Icons.Rounded.Clear,
-                        onClickDismissNewDevice,
-                        stringResource(id = R.string.dismiss),
-                    ),
-            )
+        // D.4 step 41: NewDevice banner branch removed (multi-device dead).
         // D.4 step 38: AccountExpiry banner branch removed (subscription dead).
         InAppNotification.TunnelStateBlocked ->
             NotificationData(

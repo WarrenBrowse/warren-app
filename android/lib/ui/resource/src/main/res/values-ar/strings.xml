@@ -158,8 +158,6 @@
     <string name="navigate">تنقل</string>
     <string name="new_changelog_notification_message">انقر هنا للاطلاع على آخر المستجدات.</string>
     <string name="new_changelog_notification_title">تم تثبيت إصدار جديد</string>
-    <string name="new_device_notification_message">مرحبًا، يُسمَّى هذا الجهاز الآن <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">تم إنشاء جهاز جديد</string>
     <string name="no_matching_relay">لا توجد خوادم تتطابق مع إعداداتك، حاول تغيير الخادم أو الإعدادات الأخرى.</string>
     <string name="no_matching_relay_entry">لا يوجد خادم دخول متطابق مع إعداداتك، جرِّب تغيير الخادم أو أي إعدادات أخرى.</string>
     <string name="no_matching_relay_exit">لا يوجد خادم خروج متطابق مع إعداداتك، جرِّب تغيير الخادم أو أي إعدادات أخرى.</string>

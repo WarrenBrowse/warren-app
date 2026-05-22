@@ -105,7 +105,6 @@ class ConnectViewModelTest {
                 deviceRepository = mockDeviceRepository,
                 changelogRepository = mockChangelogRepository,
                 inAppNotificationController = mockInAppNotificationController,
-                newDeviceRepository = mockk(),
                 userPreferencesRepository = mockk(),
                 selectedLocationTitleUseCase = mockSelectedLocationTitleUseCase,
                 connectionProxy = mockConnectionProxy,

@@ -158,8 +158,6 @@
     <string name="navigate">သွားရန်</string>
     <string name="new_changelog_notification_message">အသစ်ထူးသော အကြောင်းအရာကို ကြည့်ရန် ဤနေရာကို နှိပ်ပါ</string>
     <string name="new_changelog_notification_title">ဗားရှင်းအသစ်ကို ထည့်သွင်းထားသည်</string>
-    <string name="new_device_notification_message">ကြိုဆိုပါတယ်၊ ဤစက်ကို ယခု <b>%1$s</b> ဟု ခေါ်ပါသည်။</string>
-    <string name="new_device_notification_title">စက်အသစ် ဖန်တီးထားသည်</string>
     <string name="no_matching_relay">သင့်ဆက်တင်နှင့် ကိုက်ညီသော ဆာဗာများ မရှိပါ၊ ဆာဗာ သို့မဟုတ် အခြားဆက်တင်တို့ကို ပြောင်းလဲရန် ကြိုးစားကြည့်ပါ။</string>
     <string name="no_matching_relay_entry">သင့်ဆက်တင်နှင့် ကိုက်ညီသော အဝင်ဆာဗာ မရှိပါ၊ ဆာဗာ သို့မဟုတ် အခြားဆက်တင်တို့ကို ပြောင်းလဲရန် ကြိုးစားကြည့်ပါ။</string>
     <string name="no_matching_relay_exit">သင့်ဆက်တင်နှင့် ကိုက်ညီသော အထွက်ဆာဗာ မရှိပါ၊ ဆာဗာ သို့မဟုတ် အခြားဆက်တင်တို့ကို ပြောင်းလဲရန် ကြိုးစားကြည့်ပါ။</string>

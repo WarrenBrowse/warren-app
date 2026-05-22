@@ -160,7 +160,6 @@ private fun PreviewAccountScreen(
             onDismissChangelogClick = {},
             onSettingsClick = {},
             onAccountClick = {},
-            onDismissNewDeviceClick = {},
             onNavigateToFeature = {},
             onClickShowWireguardPortSettings = {},
             onClickDismissAndroid16UpgradeWarning = {},
@@ -356,7 +355,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     // settings instead.
                     navigator.navigate(WarrenWalletSettingsNavKey)
                 },
-            onDismissNewDeviceClick = connectViewModel::dismissNewDeviceNotification,
             onNavigateToFeature =
                 dropUnlessResumed { feature: FeatureIndicator ->
                     navigator.navigate(feature.navKey())
@@ -430,7 +428,6 @@ fun ConnectScreen(
     onDismissChangelogClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAccountClick: () -> Unit,
-    onDismissNewDeviceClick: () -> Unit,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
@@ -453,7 +450,6 @@ fun ConnectScreen(
                 onManageAccountClick,
                 onChangelogClick,
                 onDismissChangelogClick,
-                onDismissNewDeviceClick,
                 onNavigateToFeature,
                 onClickShowWireguardPortSettings,
                 onClickDismissAndroid16UpgradeWarning,
@@ -510,7 +506,6 @@ private fun Content(
     onManageAccountClick: () -> Unit,
     onChangelogClick: () -> Unit,
     onDismissChangelogClick: () -> Unit,
-    onDismissNewDeviceClick: () -> Unit,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
@@ -565,7 +560,6 @@ private fun Content(
                 onClickShowChangelog = onChangelogClick,
                 onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
                 onClickDismissChangelog = onDismissChangelogClick,
-                onClickDismissNewDevice = onDismissNewDeviceClick,
                 onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
                 onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
             )

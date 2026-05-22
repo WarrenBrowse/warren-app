@@ -158,8 +158,6 @@
     <string name="navigate">이동</string>
     <string name="new_changelog_notification_message">업데이트 내역을 확인하려면 여기를 클릭하세요.</string>
     <string name="new_changelog_notification_title">새 버전 설치 완료</string>
-    <string name="new_device_notification_message">환영합니다. 이 장치의 호칭은 이제 <b>%1$s</b>입니다.</string>
-    <string name="new_device_notification_title">새 장치가 생성됨</string>
     <string name="no_matching_relay">설정과 일치하는 서버가 없습니다. 서버 또는 기타 설정을 변경해 보세요.</string>
     <string name="no_matching_relay_entry">설정과 일치하는 진입 서버가 없습니다. 서버나 다른 설정을 변경해 주세요.</string>
     <string name="no_matching_relay_exit">설정과 일치하는 종료 서버가 없습니다. 서버나 다른 설정을 변경해 주세요.</string>

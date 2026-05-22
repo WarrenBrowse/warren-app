@@ -37,11 +37,8 @@ sealed class InAppNotification {
     }
 
     // D.4 step 38: AccountExpiry InAppNotification dropped (subscription dead).
-
-    data class NewDevice(val deviceName: String) : InAppNotification() {
-        override val statusLevel = StatusLevel.Info
-        override val priority: Long = 1001
-    }
+    // D.4 step 41: NewDevice InAppNotification dropped (Mullvad multi-device
+    // account-tracking dead on Warren — BIP39 wallet has no device side-band).
 
     data object NewVersionChangelog : InAppNotification() {
         override val statusLevel = StatusLevel.Info

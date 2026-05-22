@@ -158,8 +158,6 @@
     <string name="navigate">Navigieren</string>
     <string name="new_changelog_notification_message">Klicken Sie hier, um die Änderungen zu sehen.</string>
     <string name="new_changelog_notification_title">NEUE VERSION INSTALLIERT</string>
-    <string name="new_device_notification_message">Willkommen, dieses Gerät heißt jetzt <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">NEUES GERÄT ERSTELLT</string>
     <string name="no_matching_relay">Kein Server entspricht Ihren Einstellungen. Versuchen Sie, den Server oder andere Einstellungen zu ändern.</string>
     <string name="no_matching_relay_entry">Kein Eingangsserver entspricht Ihren Einstellungen. Versuchen Sie, den Server oder andere Einstellungen zu ändern.</string>
     <string name="no_matching_relay_exit">Kein Ausgangsserver entspricht Ihren Einstellungen. Versuchen Sie, den Server oder andere Einstellungen zu ändern.</string>

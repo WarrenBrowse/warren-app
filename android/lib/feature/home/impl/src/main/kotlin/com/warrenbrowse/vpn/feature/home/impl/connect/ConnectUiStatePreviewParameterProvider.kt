@@ -45,8 +45,10 @@ private val otherStates =
                     ),
                 selectedRelayItemTitle = "Relay Title",
                 tunnelState = state,
+                // D.4 step 41: NewDevice preview swapped to NewVersionChangelog
+                // (NewDevice notification dropped with Mullvad multi-device model).
                 inAppNotification =
-                    if (index == 0) InAppNotification.NewDevice("Test Device") else null,
+                    if (index == 0) InAppNotification.NewVersionChangelog else null,
                 deviceName = "Cool Beans",
                 daysLeftUntilExpiry = 42,
                 isPlayBuild = true,

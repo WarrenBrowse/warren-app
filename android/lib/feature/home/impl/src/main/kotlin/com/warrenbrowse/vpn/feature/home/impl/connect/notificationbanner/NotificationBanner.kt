@@ -32,7 +32,6 @@ private fun PreviewNotificationBanner() {
                         versionInfo = VersionInfo(currentVersion = "1.0", isSupported = false)
                     ),
                     InAppNotification.TunnelStateBlocked,
-                    InAppNotification.NewDevice("Courageous Turtle"),
                     InAppNotification.TunnelStateError(
                         error = ErrorState(ErrorStateCause.FirewallPolicyError.Generic, true)
                     ),
@@ -54,7 +53,6 @@ private fun PreviewNotificationBanner() {
                     onClickShowChangelog = {},
                     onClickShowAndroid16UpgradeInfo = {},
                     onClickDismissChangelog = {},
-                    onClickDismissNewDevice = {},
                     onClickShowWireguardPortSettings = {},
                     onClickDismissAndroid16UpgradeWarning = {},
                 )
@@ -75,7 +73,6 @@ fun NotificationBanner(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickDismissNewDevice: () -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
@@ -90,7 +87,6 @@ fun NotificationBanner(
             onClickShowChangelog = onClickShowChangelog,
             onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
             onClickDismissChangelog = onClickDismissChangelog,
-            onClickDismissNewDevice = onClickDismissNewDevice,
             onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
         )
@@ -106,7 +102,6 @@ fun NotificationBanner(
             onClickShowChangelog = onClickShowChangelog,
             onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
             onClickDismissChangelog = onClickDismissChangelog,
-            onClickDismissNewDevice = onClickDismissNewDevice,
             onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
         )

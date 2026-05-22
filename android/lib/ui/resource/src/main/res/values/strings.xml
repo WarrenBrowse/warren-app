@@ -107,10 +107,6 @@
     <string name="vpn_permission_error_notification_title">VPN permission error</string>
     <string name="vpn_permission_error_notification_message">Please press connect to request VPN permission</string>
 
-    <string name="new_device_notification_title">NEW DEVICE CREATED</string>
-    <string name="new_device_notification_message">
-        <![CDATA[Welcome, this device is now called <b>%s</b>.]]>
-    </string>
     <string name="new_changelog_notification_title">NEW VERSION INSTALLED</string>
     <string name="new_changelog_notification_message">Click here to see what’s new.</string>
     <string name="agree_and_continue">Agree and continue</string>

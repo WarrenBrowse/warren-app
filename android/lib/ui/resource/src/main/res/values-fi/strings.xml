@@ -158,8 +158,6 @@
     <string name="navigate">Siirry</string>
     <string name="new_changelog_notification_message">Katso uudet ominaisuudet napsauttamalla tästä.</string>
     <string name="new_changelog_notification_title">UUSI VERSIO ASENNETTIIN</string>
-    <string name="new_device_notification_message">Tervetuloa! Tämän laitteen nimi on nyt <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">UUSI LAITE LUOTIIN</string>
     <string name="no_matching_relay">Mikään palvelin ei vastaa asetuksiasi. Kokeile vaihtaa palvelinta tai muuttaa muita asetuksia.</string>
     <string name="no_matching_relay_entry">Mikään tulopalvelin ei vastaa asetuksiasi. Kokeile vaihtaa palvelinta tai muuttaa muita asetuksia.</string>
     <string name="no_matching_relay_exit">Mikään poistumispalvelin ei vastaa asetuksiasi. Kokeile vaihtaa palvelinta tai muuttaa muita asetuksia.</string>

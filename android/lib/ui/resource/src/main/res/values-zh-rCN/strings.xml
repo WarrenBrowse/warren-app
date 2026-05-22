@@ -158,8 +158,6 @@
     <string name="navigate">导航</string>
     <string name="new_changelog_notification_message">点击此处查看最新变化。</string>
     <string name="new_changelog_notification_title">已安装新版本</string>
-    <string name="new_device_notification_message">欢迎，此设备现已命名为 <b>%1$s</b>。</string>
-    <string name="new_device_notification_title">已创建新设备</string>
     <string name="no_matching_relay">没有与您的设置匹配的服务器，请尝试更改服务器或其他设置。</string>
     <string name="no_matching_relay_entry">没有与您的设置匹配的入口服务器，请尝试更改服务器或其他设置。</string>
     <string name="no_matching_relay_exit">没有与您的设置匹配的出口服务器，请尝试更改服务器或其他设置。</string>

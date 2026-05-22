@@ -158,8 +158,6 @@
     <string name="navigate">Git</string>
     <string name="new_changelog_notification_message">Yenilikleri incelemek için buraya tıklayın.</string>
     <string name="new_changelog_notification_title">YENİ SÜRÜM YÜKLENDİ</string>
-    <string name="new_device_notification_message">Hoş geldiniz, bu cihazın yeni adı artık <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">YENİ CİHAZ OLUŞTURULDU</string>
     <string name="no_matching_relay">Ayarlarınızla eşleşen sunucu yok. Sunucuyu veya diğer ayarları değiştirmeyi deneyin.</string>
     <string name="no_matching_relay_entry">Ayarlarınızla eşleşen giriş sunucusu yok. Sunucuyu veya diğer ayarları değiştirmeyi deneyin.</string>
     <string name="no_matching_relay_exit">Ayarlarınızla eşleşen çıkış sunucusu yok. Sunucuyu veya diğer ayarları değiştirmeyi deneyin.</string>

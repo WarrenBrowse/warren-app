@@ -158,8 +158,6 @@
     <string name="navigate">Nawiguj</string>
     <string name="new_changelog_notification_message">Kliknij tutaj, aby zobaczyć, co nowego.</string>
     <string name="new_changelog_notification_title">ZAINSTALOWANO NOWĄ WERSJĘ</string>
-    <string name="new_device_notification_message">To urządzenie ma teraz nazwę <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">UTWORZONO NOWE URZĄDZENIE</string>
     <string name="no_matching_relay">Żaden serwer nie odpowiada ustawieniom. Spróbuj zmienić serwer lub inne ustawienia.</string>
     <string name="no_matching_relay_entry">Żaden serwer wejściowy nie odpowiada ustawieniom. Spróbuj zmienić serwer lub inne ustawienia.</string>
     <string name="no_matching_relay_exit">Żaden serwer wyjściowy nie odpowiada ustawieniom. Spróbuj zmienić serwer lub inne ustawienia.</string>

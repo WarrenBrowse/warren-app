@@ -19,14 +19,13 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 fun PreviewNotificationBannerTv() {
     AppTheme {
         NotificationBannerTv(
-            notification = InAppNotification.NewDevice("Sad Panda"),
+            notification = InAppNotification.NewVersionChangelog,
             isPlayBuild = true,
             openAppListing = {},
             onClickShowAccount = {},
             onClickShowChangelog = {},
             onClickShowAndroid16UpgradeInfo = {},
             onClickDismissChangelog = {},
-            onClickDismissNewDevice = {},
             onClickShowWireguardPortSettings = {},
             onClickDismissAndroid16UpgradeWarning = {},
         )
@@ -44,7 +43,6 @@ fun NotificationBannerTv(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickDismissNewDevice: () -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
@@ -69,7 +67,6 @@ fun NotificationBannerTv(
         onClickShowChangelog = onClickShowChangelog,
         onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
         onClickDismissChangelog = onClickDismissChangelog,
-        onClickDismissNewDevice = onClickDismissNewDevice,
         onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
         onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
     )

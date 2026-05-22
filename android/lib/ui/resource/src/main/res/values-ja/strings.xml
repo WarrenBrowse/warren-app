@@ -158,8 +158,6 @@
     <string name="navigate">移動</string>
     <string name="new_changelog_notification_message">新機能を確認するにはここをクリックしてください。</string>
     <string name="new_changelog_notification_title">新バージョンがインストールされました</string>
-    <string name="new_device_notification_message">ようこそ。このデバイス名は<b>%1$s</b>です。</string>
-    <string name="new_device_notification_title">新しいデバイスが作成されました</string>
     <string name="no_matching_relay">設定に一致するサーバーはありません。サーバーまたは他の設定を変更してみてください。</string>
     <string name="no_matching_relay_entry">設定に一致する入口サーバーが見つかりません。サーバーやその他の設定の変更をお試しください。</string>
     <string name="no_matching_relay_exit">設定に一致する出口サーバーが見つかりません。サーバーやその他の設定の変更をお試しください。</string>

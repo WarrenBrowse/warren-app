@@ -158,8 +158,6 @@
     <string name="navigate">นำทาง</string>
     <string name="new_changelog_notification_message">คลิกที่นี่ เพื่อดูว่ามีอะไรใหม่</string>
     <string name="new_changelog_notification_title">ติดตั้งเวอร์ชันใหม่แล้ว</string>
-    <string name="new_device_notification_message">ยินดีต้อนรับ อุปกรณ์นี้มีชื่อว่า <b>%1$s</b> แล้ว</string>
-    <string name="new_device_notification_title">สร้างอุปกรณ์ใหม่แล้ว</string>
     <string name="no_matching_relay">ไม่มีเซิร์ฟเวอร์ที่ตรงกับการตั้งค่าของคุณ โปรดลองเปลี่ยนเซิร์ฟเวอร์ หรือการตั้งค่าอื่นๆ</string>
     <string name="no_matching_relay_entry">ไม่มีเซิร์ฟเวอร์รายการที่ตรงกับการตั้งค่าของคุณ ลองเปลี่ยนเซิร์ฟเวอร์หรือการตั้งค่าอื่น</string>
     <string name="no_matching_relay_exit">ไม่มีเซิร์ฟเวอร์ทางออกที่ตรงกับการตั้งค่าของคุณ ลองเปลี่ยนเซิร์ฟเวอร์หรือการตั้งค่าอื่นๆ</string>

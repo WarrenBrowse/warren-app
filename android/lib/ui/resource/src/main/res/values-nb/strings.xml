@@ -158,8 +158,6 @@
     <string name="navigate">Navigér</string>
     <string name="new_changelog_notification_message">Klikk her for å se hva som er nytt.</string>
     <string name="new_changelog_notification_title">NY VERSJON INSTALLERT</string>
-    <string name="new_device_notification_message">Velkommen. Denne enheten har fått navnet <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">NY ENHET OPPRETTET</string>
     <string name="no_matching_relay">Ingen servere passer til innstillingene dine. Prøv å endre server eller andre innstillinger.</string>
     <string name="no_matching_relay_entry">Ingen inngangsserver passer til innstillingene dine. Prøv å endre server eller andre innstillinger.</string>
     <string name="no_matching_relay_exit">Ingen utgangsserver passer til innstillingene dine. Prøv å endre server eller andre innstillinger.</string>

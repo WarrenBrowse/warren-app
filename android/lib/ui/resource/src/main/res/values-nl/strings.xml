@@ -158,8 +158,6 @@
     <string name="navigate">Navigeren</string>
     <string name="new_changelog_notification_message">Klik hier om te zien wat er nieuw is.</string>
     <string name="new_changelog_notification_title">NIEUWE VERSIE GEÏNSTALLEERD</string>
-    <string name="new_device_notification_message">Welkom. De naam van dit apparaat is nu <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">NIEUW APPARAAT GEMAAKT</string>
     <string name="no_matching_relay">Er zijn geen servers die overeenkomen met uw instellingen. Probeer een andere server of andere instellingen.</string>
     <string name="no_matching_relay_entry">Er zijn geen inkomende servers die overeenkomen met uw instellingen. Probeer een andere server of andere instellingen.</string>
     <string name="no_matching_relay_exit">Er zijn geen uitgaande servers die overeenkomen met uw instellingen. Probeer een andere server of andere instellingen.</string>

@@ -16,7 +16,6 @@ import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
-import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewDeviceNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
 import org.junit.jupiter.api.AfterEach
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 class InAppNotificationControllerTest {
 
     private lateinit var inAppNotificationController: InAppNotificationController
-    private val newDeviceNotifications = MutableStateFlow<InAppNotification.NewDevice?>(null)
     private val newVersionChangelogNotifications =
         MutableStateFlow<InAppNotification.NewVersionChangelog?>(null)
     private val versionNotifications = MutableStateFlow<InAppNotification.UnsupportedVersion?>(null)
@@ -41,11 +39,9 @@ class InAppNotificationControllerTest {
     fun setup() {
         MockKAnnotations.init(this)
 
-        val newDeviceNotificationUseCase: NewDeviceNotificationUseCase = mockk()
         val newVersionChangelogUseCase: NewChangelogNotificationUseCase = mockk()
         val versionNotificationUseCase: VersionNotificationUseCase = mockk()
         val tunnelStateNotificationUseCase: TunnelStateNotificationUseCase = mockk()
-        every { newDeviceNotificationUseCase.invoke() } returns newDeviceNotifications
         every { newVersionChangelogUseCase.invoke() } returns newVersionChangelogNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
@@ -55,7 +51,6 @@ class InAppNotificationControllerTest {
         inAppNotificationController =
             InAppNotificationController(
                 listOf(
-                    newDeviceNotificationUseCase,
                     newVersionChangelogUseCase,
                     versionNotificationUseCase,
                     tunnelStateNotificationUseCase,
@@ -72,9 +67,6 @@ class InAppNotificationControllerTest {
 
     @Test
     fun `ensure all notifications have the right priority`() = runTest {
-        val newDevice = InAppNotification.NewDevice("")
-        newDeviceNotifications.value = newDevice
-
         val newVersionChangelog = InAppNotification.NewVersionChangelog
         newVersionChangelogNotifications.value = newVersionChangelog
 
@@ -86,6 +78,7 @@ class InAppNotificationControllerTest {
         val unsupportedVersion = InAppNotification.UnsupportedVersion(mockk())
         versionNotifications.value = unsupportedVersion
 
+        // D.4 step 41: NewDevice priority slot dropped (multi-device dead).
         // D.4 step 38: AccountExpiry priority slot dropped (subscription dead).
 
         inAppNotificationController.notifications.test {
@@ -95,7 +88,6 @@ class InAppNotificationControllerTest {
                 listOf(
                     tunnelStateBlocked,
                     unsupportedVersion,
-                    newDevice,
                     newVersionChangelog,
                 ),
                 notifications,

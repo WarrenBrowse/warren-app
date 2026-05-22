@@ -158,8 +158,6 @@
     <string name="navigate">پیمایش</string>
     <string name="new_changelog_notification_message">برای مشاهدهٔ تغییرات جدید، اینجا کلیک کنید.</string>
     <string name="new_changelog_notification_title">نسخهٔ جدید نصب شد</string>
-    <string name="new_device_notification_message">خوش آمدید، این دستگاه اکنون <b>%1$s</b> نام دارد.</string>
-    <string name="new_device_notification_title">دستگاه جدید ایجاد شد</string>
     <string name="no_matching_relay">هیچ سروری با تنظیمات شما مطابقت ندارد؛ لطفاً سرور یا سایر تنظیمات را تغییر دهید.</string>
     <string name="no_matching_relay_entry">هیچ سرور ورودی با تنظیمات شما مطابقت ندارد، لطفاً سرور یا سایر تنظیمات را تغییر دهید.</string>
     <string name="no_matching_relay_exit">هیچ سرور خروجی با تنظیمات شما مطابقت ندارد، لطفاً سرور یا سایر تنظیمات را تغییر دهید.</string>

@@ -33,7 +33,6 @@ import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
-import com.warrenbrowse.vpn.lib.repository.NewDeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -45,7 +44,6 @@ class ConnectViewModel(
     private val deviceRepository: DeviceRepository,
     private val changelogRepository: ChangelogRepository,
     inAppNotificationController: InAppNotificationController,
-    private val newDeviceRepository: NewDeviceRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     selectedLocationTitleUseCase: SelectedLocationTitleUseCase,
     private val connectionProxy: ConnectionProxy,
@@ -194,9 +192,7 @@ class ConnectViewModel(
         _uiSideEffect.send(sideEffect)
     }
 
-    fun dismissNewDeviceNotification() {
-        newDeviceRepository.clearNewDeviceCreatedNotification()
-    }
+    // D.4 step 41: dismissNewDeviceNotification removed (NewDeviceRepository dead).
 
     fun dismissAndroid16UpgradeWarning() = viewModelScope.launch {
         userPreferencesRepository.setShowAndroid16ConnectWarning(false)

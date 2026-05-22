@@ -158,8 +158,6 @@
     <string name="navigate">Navegar</string>
     <string name="new_changelog_notification_message">Haga clic aquí para ver las novedades.</string>
     <string name="new_changelog_notification_title">NUEVA VERSIÓN INSTALADA</string>
-    <string name="new_device_notification_message">¡Le damos la bienvenida! Este dispositivo ahora se llama <b>%1$s</b>.</string>
-    <string name="new_device_notification_title">NUEVO DISPOSITIVO CREADO</string>
     <string name="no_matching_relay">Ningún servidor coincide con su configuración, pruebe con otro servidor u otra configuración.</string>
     <string name="no_matching_relay_entry">Ningún servidor de entrada coincide con su configuración. Pruebe con otro servidor u otra configuración.</string>
     <string name="no_matching_relay_exit">Ningún servidor de salida coincide con su configuración. Pruebe con otro servidor u otra configuración.</string>

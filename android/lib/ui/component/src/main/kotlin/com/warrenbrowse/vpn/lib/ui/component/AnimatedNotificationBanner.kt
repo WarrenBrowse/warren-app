@@ -52,7 +52,6 @@ fun AnimatedNotificationBanner(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickDismissNewDevice: () -> Unit,
     onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
@@ -86,7 +85,6 @@ fun AnimatedNotificationBanner(
                     onClickShowChangelog = onClickShowChangelog,
                     onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
                     onClickDismissChangelog = onClickDismissChangelog,
-                    onClickDismissNewDevice = onClickDismissNewDevice,
                     onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
                     onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
                 ),
