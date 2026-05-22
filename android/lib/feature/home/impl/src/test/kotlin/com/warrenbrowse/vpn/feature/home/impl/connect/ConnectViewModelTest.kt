@@ -21,7 +21,6 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.DeviceState
-import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.InAppNotification
@@ -100,6 +99,8 @@ class ConnectViewModelTest {
                 connectionProxy = mockConnectionProxy,
                 lastKnownLocationUseCase = mockLastKnownLocationUseCase,
                 systemVpnSettingsUseCase = mockSystemVpnSettingsUseCase,
+                warrenDisconnect = mockk(relaxed = true),
+                warrenReconnect = mockk(relaxed = true),
                 isPlayBuild = false,
                 resolveAppListing = mockk(),
             )
@@ -195,55 +196,12 @@ class ConnectViewModelTest {
             viewModel.uiState.test { assertEquals(locationTestItem, awaitItem().location) }
         }
 
-    @Test
-    fun `onDisconnectClick should invoke disconnect on ConnectionProxy`() = runTest {
-        // Arrange
-        val mockDisconnectReason = DisconnectReason.USER_INITIATED_DISCONNECT_BUTTON
-        coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
-
-        // Act
-        viewModel.onDisconnectClick()
-
-        // Assert
-        coVerify { mockConnectionProxy.disconnect(mockDisconnectReason) }
-    }
-
-    @Test
-    fun `onReconnectClick should invoke reconnect on ConnectionProxy`() = runTest {
-        // Arrange
-        coEvery { mockConnectionProxy.reconnect() } returns true.right()
-
-        // Act
-        viewModel.onReconnectClick()
-
-        // Assert
-        coVerify { mockConnectionProxy.reconnect() }
-    }
-
-    @Test
-    fun `onConnectClick should invoke connect on ConnectionProxy`() = runTest {
-        // Arrange
-        coEvery { mockConnectionProxy.connect() } returns true.right()
-
-        // Act
-        viewModel.onConnectClick()
-
-        // Asser
-        coVerify { mockConnectionProxy.connect() }
-    }
-
-    @Test
-    fun `onCancelClick should invoke disconnect on ConnectionProxy`() = runTest {
-        // Arrange
-        val mockDisconnectReason = DisconnectReason.USER_INITIATED_CANCEL_BUTTON
-        coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
-
-        // Act
-        viewModel.onCancelClick()
-
-        // Assert
-        coVerify { mockConnectionProxy.disconnect(mockDisconnectReason) }
-    }
+    // D.4 step 60: connect/disconnect/reconnect/cancel tests dropped — the
+    // Mullvad ConnectionProxy.disconnect path is now a no-op stub. The real
+    // Warren connect path goes through WarrenQuinnConnectInvoker (dispatched
+    // from ConnectScreen on the FragmentActivity for biometric unlock) and
+    // disconnect/reconnect through WarrenQuinnDisconnect/ReconnectInvoker —
+    // those invokers are integration-tested end-to-end (D.6).
 
     @Test
     fun `given InAppNotificationController returns TunnelStateError notification uiState should emit notification`() =

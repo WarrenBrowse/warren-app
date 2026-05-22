@@ -180,6 +180,8 @@ val uiModule = module {
             connectionProxy = get(),
             lastKnownLocationUseCase = get(),
             systemVpnSettingsUseCase = get(),
+            warrenDisconnect = get(),
+            warrenReconnect = get(),
             isPlayBuild = IS_PLAY_BUILD,
             resolveAppListing = get(),
         )

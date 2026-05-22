@@ -21,15 +21,15 @@ import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.util.combine
 import com.warrenbrowse.vpn.lib.common.util.withPrev
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
-import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.DeviceState
-import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -44,6 +44,8 @@ class ConnectViewModel(
     private val connectionProxy: ConnectionProxy,
     lastKnownLocationUseCase: LastKnownLocationUseCase,
     private val systemVpnSettingsUseCase: SystemVpnSettingsAvailableUseCase,
+    private val warrenDisconnect: WarrenQuinnDisconnectInvoker,
+    private val warrenReconnect: WarrenQuinnReconnectInvoker,
     private val isPlayBuild: Boolean,
     private val resolveAppListing: ResolveAppListingUseCase,
 ) : ViewModel() {
@@ -112,36 +114,38 @@ class ConnectViewModel(
 
     fun onDisconnectClick() {
         viewModelScope.launch {
-            connectionProxy.disconnect(DisconnectReason.USER_INITIATED_DISCONNECT_BUTTON).onLeft {
-                _uiSideEffect.send(UiSideEffect.ConnectError.Generic)
-            }
+            // D.4 step 60: route disconnect through WarrenQuinnDisconnectInvoker
+            // (real Warren tunnel teardown). The legacy ConnectionProxy.disconnect
+            // is now a no-op stub.
+            warrenDisconnect.disconnect()
         }
     }
 
     fun onReconnectClick() {
         viewModelScope.launch {
-            connectionProxy.reconnect().onLeft {
-                _uiSideEffect.send(UiSideEffect.ConnectError.Generic)
-            }
+            // D.4 step 60: WarrenQuinnReconnectInvoker (real Warren reconnect).
+            warrenReconnect.reconnect()
         }
     }
 
     fun onConnectClick() {
+        // D.4 step 60: connect is dispatched from `ConnectScreen` directly
+        // through `WarrenQuinnConnectInvoker.connect(activity)` since the
+        // invoker needs a FragmentActivity for biometric unlock — the
+        // ViewModel can only emit a side effect requesting the screen to
+        // perform the dispatch. The legacy connectionProxy.connect() call
+        // here was a no-op stub anyway.
         viewModelScope.launch {
-            connectionProxy.connect().onLeft { connectError ->
-                when (connectError) {
-                    is ConnectError.Unknown -> _uiSideEffect.send(UiSideEffect.ConnectError.Generic)
-                    is ConnectError.NotPrepared ->
-                        _uiSideEffect.send(UiSideEffect.NotPrepared(connectError.error))
-                }
-            }
+            _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
         }
     }
 
     fun createVpnProfileResult(hasVpnPermission: Boolean) {
         viewModelScope.launch {
             if (hasVpnPermission) {
-                connectionProxy.connect()
+                // D.4 step 60: VPN permission granted → request UI to dispatch
+                // WarrenQuinnConnectInvoker.connect(activity).
+                _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
             } else {
                 // Either the user denied the permission or another always-on-vpn is active (if
                 // Android 11+ and run from Android Studio)
@@ -156,9 +160,9 @@ class ConnectViewModel(
 
     fun onCancelClick() {
         viewModelScope.launch {
-            connectionProxy.disconnect(DisconnectReason.USER_INITIATED_CANCEL_BUTTON).onLeft {
-                _uiSideEffect.send(UiSideEffect.ConnectError.Generic)
-            }
+            // D.4 step 60: cancel-in-progress-connect = disconnect (Warren has
+            // no separate Cancel command; tear down the in-flight tunnel).
+            warrenDisconnect.disconnect()
         }
     }
 
@@ -196,6 +200,11 @@ class ConnectViewModel(
         data class OpenUri(val uri: Uri, val errorMessage: String) : UiSideEffect
 
         data object RevokedDevice : UiSideEffect
+
+        // D.4 step 60: connect dispatch needs a FragmentActivity for biometric
+        // unlock, so the VM emits this side effect and ConnectScreen invokes
+        // WarrenQuinnConnectInvoker.connect(activity) on the current Activity.
+        data object RequestWarrenConnect : UiSideEffect
 
         data class NotPrepared(val prepareError: PrepareError) : UiSideEffect
 

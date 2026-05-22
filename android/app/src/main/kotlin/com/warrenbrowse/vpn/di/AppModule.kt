@@ -64,7 +64,8 @@ val appModule = module {
     single { UserPreferencesRepository(get(), get()) }
     // D.4 step 58: ConnectionProxy slimmed to Warren-native stub (no
     // ManagementService / RelayLocationTranslationRepository deps).
-    single { ConnectionProxy() }
+    // D.4 step 59: rewired to WarrenTunnelStateProvider (real tunnel state).
+    single { ConnectionProxy(tunnelStateProvider = get()) }
     single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
 
     // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).

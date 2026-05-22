@@ -233,6 +233,11 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
 
+            // D.4 step 60: VM requests a Warren connect dispatch — invoke the
+            // WarrenQuinnConnectInvoker on the current FragmentActivity (the
+            // invoker needs the Activity host for the biometric prompt).
+            ConnectViewModel.UiSideEffect.RequestWarrenConnect -> onWarrenConnectClick()
+
             is ConnectViewModel.UiSideEffect.NotPrepared ->
                 when (sideEffect.prepareError) {
                     is PrepareError.OtherLegacyAlwaysOnVpn ->
