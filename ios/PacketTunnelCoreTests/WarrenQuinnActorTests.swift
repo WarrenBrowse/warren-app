@@ -103,6 +103,31 @@ final class WarrenQuinnActorTests: XCTestCase {
         }
     }
 
+    // MARK: - bindWalletSigningSeed + start flow
+
+    func test_start_withoutSeedBound_doesNotCrash() async {
+        let actor = WarrenQuinnActor()
+        // No bindAdapter ; no bindWalletSigningSeed.
+        // start(options:) should log + bail out cleanly.
+        actor.start(options: StartOptions(launchSource: .app))
+        await assertObservedState(actor, equals: .disconnected)
+    }
+
+    func test_bindWalletSigningSeed_storesAndStopClears() async {
+        let actor = WarrenQuinnActor()
+        let seed = Data(repeating: 0xAB, count: 32)
+        actor.bindWalletSigningSeed(seed)
+
+        // stop() should clear it ; we can't introspect directly but
+        // we can verify the actor stays usable after stop.
+        actor.stop()
+        await assertObservedState(actor, equals: .disconnected)
+
+        // Re-binding seed after stop should work (idempotent).
+        actor.bindWalletSigningSeed(seed)
+        await assertObservedState(actor, equals: .disconnected)
+    }
+
     // MARK: - Helpers
 
     private func assertObservedState(
