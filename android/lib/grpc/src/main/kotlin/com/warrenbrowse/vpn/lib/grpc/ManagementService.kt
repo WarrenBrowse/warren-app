@@ -132,7 +132,6 @@ import com.warrenbrowse.vpn.lib.model.UpdateApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.UpdateCustomListError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
 import com.warrenbrowse.vpn.lib.model.VoucherCode
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
 import com.warrenbrowse.vpn.lib.model.WireguardConstraints
 import com.warrenbrowse.vpn.lib.model.WireguardEndpointData as ModelWireguardEndpointData
 import com.warrenbrowse.vpn.lib.model.addresses
@@ -836,10 +835,7 @@ class ManagementService(
             .mapLeft(RemoveSplitTunnelingAppError::Unknown)
             .mapEmpty()
 
-    suspend fun getWebsiteAuthToken(): Either<Throwable, WebsiteAuthToken> =
-        Either.catch { grpc.getWwwAuthToken(Empty.getDefaultInstance()) }
-            .onLeft { Logger.e("Get website auth token error") }
-            .map { WebsiteAuthToken.fromString(it.value) }
+    // D.4 step 46: getWebsiteAuthToken removed (mullvad.net web-account flow dead).
 
     suspend fun addApiAccessMethod(
         newAccessMethodSetting: NewAccessMethodSetting

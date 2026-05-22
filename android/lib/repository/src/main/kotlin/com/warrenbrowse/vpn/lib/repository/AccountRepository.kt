@@ -22,7 +22,6 @@ import com.warrenbrowse.vpn.lib.model.CreateAccountError
 import com.warrenbrowse.vpn.lib.model.DeleteAccountError
 import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.LoginAccountError
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
 
 class AccountRepository(
     private val managementService: ManagementService,
@@ -109,8 +108,8 @@ class AccountRepository(
         }
     }
 
-    suspend fun getWebsiteAuthToken(): WebsiteAuthToken? =
-        managementService.getWebsiteAuthToken().getOrNull()
+    // D.4 step 46: getWebsiteAuthToken removed (no consumer — Mullvad
+    // mullvad.net/account web-account flow dead on Warren).
 
     internal suspend fun onVoucherRedeemed(newExpiry: ZonedDateTime) {
         accountData.value?.copy(expiryDate = newExpiry)?.let { _mutableAccountDataCache.emit(it) }

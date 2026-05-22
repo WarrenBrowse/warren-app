@@ -3,7 +3,6 @@ package com.warrenbrowse.vpn.lib.common.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS
 import android.provider.Settings.ACTION_VPN_SETTINGS
@@ -11,18 +10,9 @@ import android.provider.Settings.EXTRA_APP_PACKAGE
 import androidx.core.net.toUri
 import arrow.core.Either
 import co.touchlab.kermit.Logger
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
 
-fun createAccountUri(accountUri: String, websiteAuthToken: WebsiteAuthToken?): Uri {
-    val urlString = buildString {
-        append(accountUri)
-        if (websiteAuthToken != null) {
-            append("?token=")
-            append(websiteAuthToken.value)
-        }
-    }
-    return urlString.toUri()
-}
+// D.4 step 46: createAccountUri removed — only consumer was the now-dead
+// createOpenAccountPageHook (mullvad.net/account?token=… web flow).
 
 // Activity not found can be return if the device does not have system vpn settings available.
 // This is the case for Android TV devices. In normal cases, this action should not be available

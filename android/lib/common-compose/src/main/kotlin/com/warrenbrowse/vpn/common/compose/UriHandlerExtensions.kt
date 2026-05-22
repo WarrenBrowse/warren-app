@@ -1,22 +1,11 @@
 package com.warrenbrowse.vpn.common.compose
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.UriHandler
-import androidx.compose.ui.res.stringResource
 import arrow.core.Either
 import co.touchlab.kermit.Logger
-import com.warrenbrowse.vpn.lib.common.util.createAccountUri
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
-import com.warrenbrowse.vpn.lib.ui.resource.R
 
-@Composable
-fun UriHandler.createOpenAccountPageHook(): (WebsiteAuthToken?) -> Unit {
-    val accountUrl = stringResource(id = R.string.account_url)
-    return { token ->
-        val accountUri = createAccountUri(accountUrl, token).toString()
-        safeOpenUri(accountUri)
-    }
-}
+// D.4 step 46: createOpenAccountPageHook removed — only consumer was the
+// OpenAccountManagementPageInBrowser side effect (deleted in step 43).
 
 fun UriHandler.createUriHook(uri: String): () -> Unit = { safeOpenUri(uri) }
 
