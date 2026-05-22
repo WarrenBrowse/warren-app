@@ -14,6 +14,7 @@
 
 import UIKit
 import WarrenLogging
+import WarrenSettings
 
 protocol WarrenWalletEraseViewControllerDelegate: AnyObject {
     /// Called when the user has confirmed the wipe and the Keychain
@@ -142,7 +143,14 @@ final class WarrenWalletEraseViewController: UIViewController {
     private func performWipe() {
         do {
             try WarrenWalletKeychain.delete()
-            logger.info("Warren wallet wiped from Keychain")
+            // Reset the onboarding flag so the next app launch routes
+            // back through the OnboardingWizard (cf.
+            // `ApplicationCoordinator.evaluateNextRoutes()` guard).
+            // The user has just erased their wallet ; they need a
+            // fresh wallet provisioning step.
+            var prefs = AppPreferences()
+            prefs.hasCompletedWarrenOnboarding = false
+            logger.info("Warren wallet wiped from Keychain ; hasCompletedWarrenOnboarding reset")
             if let delegate {
                 delegate.walletEraseControllerDidWipe(self)
             } else if let nav = navigationController {
