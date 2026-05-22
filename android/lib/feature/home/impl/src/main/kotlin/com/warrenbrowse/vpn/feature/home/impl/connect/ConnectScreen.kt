@@ -90,7 +90,6 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.FeatureIndi
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
-import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
@@ -909,7 +908,9 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.MULTIHOP -> WarrenTunnelSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
 
-        FeatureIndicator.SERVER_IP_OVERRIDE -> ServerIpOverrideNavKey(isModal = true)
+        // D.4 step 35: SERVER_IP_OVERRIDE indicator routes to WarrenTunnelSettings
+        // (Mullvad relay-IP override is dead on Warren — exit fleet is sovereign).
+        FeatureIndicator.SERVER_IP_OVERRIDE -> WarrenTunnelSettingsNavKey
 
         // D.4 step 34: Mullvad anti-censorship transport indicators
         // (UDP-over-TCP, QUIC-over-WG, WireGuard port, Shadowsocks, LWO)

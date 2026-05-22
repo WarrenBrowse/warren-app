@@ -23,8 +23,6 @@ import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.viewlogs.ViewLogsViewModel
-import com.warrenbrowse.vpn.feature.serveripoverride.impl.ServerIpOverridesViewModel
-import com.warrenbrowse.vpn.feature.serveripoverride.impl.reset.ResetServerIpOverridesConfirmationViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.SettingsViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
@@ -48,7 +46,6 @@ import com.warrenbrowse.vpn.lib.repository.PlayPaymentLogic
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListFilterRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
-import com.warrenbrowse.vpn.lib.repository.RelayOverridesRepository
 import com.warrenbrowse.vpn.lib.repository.SettingsRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
@@ -116,7 +113,8 @@ val uiModule = module {
             paymentLogic = get(),
         )
     }
-    single { RelayOverridesRepository(get()) }
+    // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
+    // sovereign, no per-relay IP overrides.
     single { CustomListsRepository(get()) }
     single { RelayListRepository(get(), get()) }
     single { RelayListFilterRepository(get()) }
@@ -264,8 +262,8 @@ val uiModule = module {
     viewModel { ViewLogsViewModel(get()) }
     // D.4 step 27: Filter + CustomList ViewModels removed (only reached
     // from dead SelectLocationScreen).
-    viewModel { params -> ServerIpOverridesViewModel(navArgs = params.get(), get(), get()) }
-    viewModel { ResetServerIpOverridesConfirmationViewModel(get()) }
+    // D.4 step 35: ServerIpOverrides + ResetServerIpOverridesConfirmation
+    // ViewModels removed (Mullvad relay-IP override is dead on Warren).
     // D.4 step 33: ApiAccess ViewModels removed (5 VMs : List, Edit,
     // Save, Details, DeleteConfirmation). Warren API endpoint is
     // hardcoded - no per-user access method configuration.

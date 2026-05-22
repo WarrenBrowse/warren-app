@@ -82,8 +82,6 @@ sealed interface VpnSettingItem {
 
     data class Mtu(val mtu: com.warrenbrowse.vpn.lib.model.Mtu?) : VpnSettingItem
 
-    data object ServerIpOverrides : VpnSettingItem
-
     data object Divider : VpnSettingItem
 
     data object Spacer : VpnSettingItem

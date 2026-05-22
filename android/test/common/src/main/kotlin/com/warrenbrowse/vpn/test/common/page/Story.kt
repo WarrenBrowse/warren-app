@@ -84,27 +84,6 @@ fun ConnectPage.enableDeviceIpv6Story() {
     uiDevice.pressBackTwice()
 }
 
-fun ConnectPage.enableServerIpOverrideStory(relay: String, overrideIp: String) {
-    clickSettings()
-    on<SettingsPage> { clickVpnSettings() }
-    on<VpnSettingsPage> {
-        // Open ServerIPOverrideScreen
-        scrollUntilServerIpOverride()
-        clickServerIpOverrideButton()
-    }
-    on<ServerIpOverridesPage> { clickImportButton() }
-    on<ImportOverridesBottomSheet> { clickText() }
-    on<ImportViaTextPage> {
-        input(
-            "{ \"relay_overrides\": [ { \"hostname\": \"$relay\", \"ipv4_addr_in\": \"$overrideIp\" } ] }"
-        )
-        uiDevice.waitForStableInActiveWindow()
-        clickImport()
-    }
-    on<ServerIpOverridesPage> { assertOverrideActive() }
-    repeat(3) { uiDevice.pressBack() }
-}
-
 fun ConnectPage.enableWireGuardCustomPortStory(port: Int) {
     if (port != 51820 && port != 53) {
         error("Port needs to be one of the predefined ports")

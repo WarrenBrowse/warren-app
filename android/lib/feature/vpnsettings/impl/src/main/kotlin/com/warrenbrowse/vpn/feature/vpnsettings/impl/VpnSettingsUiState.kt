@@ -178,10 +178,6 @@ data class VpnSettingsUiState(
                     // MTU
                     add(VpnSettingItem.Mtu(mtu))
                     add(VpnSettingItem.Spacer)
-
-                    // Server IP override
-                    add(VpnSettingItem.ServerIpOverrides)
-                    add(VpnSettingItem.Spacer)
                 },
                 isModal = isModal,
                 obfuscationMode = obfuscationMode,

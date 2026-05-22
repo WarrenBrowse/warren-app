@@ -56,7 +56,6 @@ import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPicke
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
-import com.warrenbrowse.vpn.feature.serveripoverride.impl.navigation.serverIpOverrideEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
 import com.warrenbrowse.vpn.feature.vpnsettings.impl.navigation.vpnSettingsEntry
@@ -148,7 +147,8 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         problemReportEntry(nav3)
         // D.4 step 25: selectLocationEntry removed - Mullvad SelectLocation
         // is unreachable (Switch button routes to WarrenLocationPicker).
-        serverIpOverrideEntry(nav3)
+        // D.4 step 35: serverIpOverrideEntry removed - Warren exit fleet
+        // is sovereign, no per-relay overrides needed.
         settingsEntry(nav3)
         splashEntry(nav3)
         splitTunnelingEntry(nav3)

@@ -68,8 +68,8 @@ include(
     ":lib:feature:problemreport:api",
     // D.4 step 18: redeemvoucher module removed (Mullvad voucher
     // subscription model ; Warren billing model is different).
-    ":lib:feature:serveripoverride:impl",
-    ":lib:feature:serveripoverride:api",
+    // D.4 step 35: serveripoverride module deleted (Warren exit fleet
+    // is sovereign ; no per-relay IP overrides).
     ":lib:feature:settings:impl",
     ":lib:feature:settings:api",
     ":lib:feature:splittunneling:impl",
