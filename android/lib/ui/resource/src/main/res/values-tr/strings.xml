@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Hesap numarası rakamlarını girin</string>
     <string name="account_deleted">Hesap silindi</string>
     <string name="account_number">Hesap Kimliği</string>
-    <string name="account_time_notification_channel_description">Hesap süresinin dolmak üzere olduğunu bildiren hatırlatıcıları gösterir</string>
-    <string name="account_time_notification_channel_name">Hesap süresi hatırlatıcıları</string>
     <string name="add">Ekle</string>
     <string name="add_30_days_time_x">30 gün süre ekleyin (%1$s)</string>
     <string name="add_90_days_time_x">90 gün uzatın (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Dil</string>
     <string name="legacy_always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Mullvad VPN\'i kullanmadan önce lütfen \"Her zaman açık VPN\"i devre dışı bırakın.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Her zaman açık VPN diğer VPN\'e atandı</string>
-    <string name="less_than_a_day_left">Bu hesapta bir günden daha az süre kaldı</string>
     <string name="less_than_one_day">bir günden az</string>
     <string name="list_name">Liste adı</string>
     <string name="loading_products">Ürünler yükleniyor</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Uygulama ayrıntılarını aç</string>
     <string name="open_feature_settings">%1$s ayarlarını aç</string>
     <string name="open_url">URL\'yi aç</string>
-    <string name="out_of_time">Süre doldu</string>
     <string name="overrides_cleared">Geçersiz kılmalar temizlendi</string>
     <string name="owned">Tarafımıza ait olanlar</string>
     <string name="ownership">Sahiplik durumu</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (Giriş)</string>
     <string name="x_exit">%1$s (Çıkış)</string>
     <string name="x_via_x">%2$s aracılığıyla %1$s</string>
-    <string name="you_can_add_more_time_oss">VPN kullanmaya devam etmek için hesap görünümünden ya da web sitesinden daha fazla süre ekleyebilirsiniz.</string>
-    <string name="you_can_add_more_time_play">VPN kullanmaya devam etmek için hesap görünümünden daha fazla süre ekleyebilirsiniz.</string>
 </resources>

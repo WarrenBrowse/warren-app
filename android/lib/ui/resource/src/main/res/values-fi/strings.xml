@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Anna tilin numero</string>
     <string name="account_deleted">Tili poistettiin</string>
     <string name="account_number">Tilin numero</string>
-    <string name="account_time_notification_channel_description">Näyttää muistutuksia, kun tilin käyttöaika on umpeutumassa</string>
-    <string name="account_time_notification_channel_name">Muistutukset tilin käyttöajasta</string>
     <string name="add">Lisää</string>
     <string name="add_30_days_time_x">Lisää 30 päivää käyttöaikaa (%1$s)</string>
     <string name="add_90_days_time_x">Lisää 90 päivää käyttöaikaa (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Kieli</string>
     <string name="legacy_always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä ennen Mullvad VPN:n käyttämistä.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Aina päällä oleva VPN on määritetty toiselle VPN:lle</string>
-    <string name="less_than_a_day_left">Tilin käyttöaikaa on jäljellä alle päivä</string>
     <string name="less_than_one_day">alle vuorokausi</string>
     <string name="list_name">Luettelon nimi</string>
     <string name="loading_products">Ladataan tuotteita</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Avaa sovelluksen tiedot</string>
     <string name="open_feature_settings">Avaa %1$s-asetukset</string>
     <string name="open_url">Avaa URL</string>
-    <string name="out_of_time">Ei käyttöaikaa</string>
     <string name="overrides_cleared">Ohitukset on poistettu</string>
     <string name="owned">Omistettu</string>
     <string name="ownership">Omistajuus</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (tulo)</string>
     <string name="x_exit">%1$s (lähtö)</string>
     <string name="x_via_x">%1$s, yhteys: %2$s</string>
-    <string name="you_can_add_more_time_oss">Voit lisätä aikaa tilinäkymän tai verkkosivuston kautta, jotta voit jatkaa VPN:n käyttöä.</string>
-    <string name="you_can_add_more_time_play">Voit jatkaa VPN:n käyttöä lisäämällä aikaa tilinäkymän kautta.</string>
 </resources>

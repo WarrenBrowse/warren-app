@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Введіть номер облікового запису</string>
     <string name="account_deleted">Обліковий запис видалено</string>
     <string name="account_number">Номер облікового запису</string>
-    <string name="account_time_notification_channel_description">Показує нагадування, коли час в обліковому записі закінчується</string>
-    <string name="account_time_notification_channel_name">Нагадування про час, який залишився</string>
     <string name="add">Додати</string>
     <string name="add_30_days_time_x">Додати 30 днів (%1$s)</string>
     <string name="add_90_days_time_x">Додати 90 днів (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Мова</string>
     <string name="legacy_always_on_vpn_error_notification_content">Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» перед використанням Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Опція «Завжди увімкнений VPN» призначена іншому VPN</string>
-    <string name="less_than_a_day_left">На балансі облікового запису залишилося менше ніж один день</string>
     <string name="less_than_one_day">менше ніж 1 день</string>
     <string name="list_name">Ім’я списку</string>
     <string name="loading_products">Завантаження продуктів</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Відкрити відомості про застосунок</string>
     <string name="open_feature_settings">Відкрити налаштування %1$s</string>
     <string name="open_url">Відкрити URL</string>
-    <string name="out_of_time">Закінчився час</string>
     <string name="overrides_cleared">Перевизначення видалені</string>
     <string name="owned">Власні</string>
     <string name="ownership">Власність</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (вхід)</string>
     <string name="x_exit">%1$s (вихід)</string>
     <string name="x_via_x">%1$s через %2$s</string>
-    <string name="you_can_add_more_time_oss">Щоб продовжити використовувати VPN, додайте час у розділі «Обліковий запис» або на вебсайті.</string>
-    <string name="you_can_add_more_time_play">Щоб продовжити використовувати VPN, додайте час у розділі «Обліковий запис».</string>
 </resources>

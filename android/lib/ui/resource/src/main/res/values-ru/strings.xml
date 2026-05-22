@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Введите номер учетной записи</string>
     <string name="account_deleted">Учетная запись удалена</string>
     <string name="account_number">Номер учетной записи</string>
-    <string name="account_time_notification_channel_description">Показывает уведомления, когда время на учетной записи скоро закончится</string>
-    <string name="account_time_notification_channel_name">Напоминания о времени на учетной записи</string>
     <string name="add">Добавить</string>
     <string name="add_30_days_time_x">Добавить 30 дней (%1$s)</string>
     <string name="add_90_days_time_x">Добавить 90 дней (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Язык</string>
     <string name="legacy_always_on_vpn_error_notification_content">Не удалось запустить туннельное соединение. Перед использованием Mullvad VPN отключите опцию «Постоянная VPN».</string>
     <string name="legacy_always_on_vpn_error_notification_title">Опция «Постоянная VPN» назначена другой VPN</string>
-    <string name="less_than_a_day_left">На этой учетной записи осталось менее одного дня</string>
     <string name="less_than_one_day">менее суток</string>
     <string name="list_name">Имя списка</string>
     <string name="loading_products">Загрузка продуктов</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Открыть сведения о приложении</string>
     <string name="open_feature_settings">Открыть настройки %1$s</string>
     <string name="open_url">Открыть URL</string>
-    <string name="out_of_time">Закончилось время</string>
     <string name="overrides_cleared">Переопределения удалены</string>
     <string name="owned">Во владении</string>
     <string name="ownership">Собственность</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (вход)</string>
     <string name="x_exit">%1$s (выход)</string>
     <string name="x_via_x">%1$s через %2$s</string>
-    <string name="you_can_add_more_time_oss">Чтобы продолжить пользоваться VPN, добавьте время через раздел учетной записи или сайт.</string>
-    <string name="you_can_add_more_time_play">Чтобы продолжить пользоваться VPN, добавьте время через раздел учетной записи.</string>
 </resources>

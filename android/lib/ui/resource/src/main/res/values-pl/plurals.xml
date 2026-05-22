@@ -18,18 +18,6 @@
         <item quantity="many">%1$d miesięcy</item>
         <item quantity="other">%1$d miesiąca</item>
     </plurals>
-    <plurals name="days_left">
-        <item quantity="one">Na tym koncie pozostał 1 dzień</item>
-        <item quantity="few">Na tym koncie pozostały %1$d dni</item>
-        <item quantity="many">Na tym koncie pozostało %1$d dni</item>
-        <item quantity="other">Na tym koncie pozostało %1$d dni</item>
-    </plurals>
-    <plurals name="years_left">
-        <item quantity="one">Na tym koncie pozostał 1 rok</item>
-        <item quantity="few">Na tym koncie pozostały %1$d lata</item>
-        <item quantity="many">Na tym koncie pozostało %1$d lat</item>
-        <item quantity="other">Na tym koncie pozostało %1$d lat</item>
-    </plurals>
     <plurals name="account_credit_expires_in_days">
         <item quantity="one">Doładowanie konta wygasa za 1 dzień</item>
         <item quantity="few">Doładowanie konta wygasa za %1$d dni</item>
@@ -41,11 +29,5 @@
         <item quantity="few">Doładowanie konta wygasa za %1$d godziny</item>
         <item quantity="many">Doładowanie konta wygasa za %1$d godzin</item>
         <item quantity="other">Doładowanie konta wygasa za %1$d godziny</item>
-    </plurals>
-    <plurals name="delete_account_days_left_warning">
-        <item quantity="one">Utracisz pozostały dzień.</item>
-        <item quantity="few">Utracisz pozostałe %1$d dni.</item>
-        <item quantity="many">Utracisz pozostałych %1$d dni.</item>
-        <item quantity="other">Utracisz pozostałe %1$d dnia.</item>
     </plurals>
 </resources>

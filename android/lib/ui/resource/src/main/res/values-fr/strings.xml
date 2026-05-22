@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Saisissez les chiffres du numéro de compte</string>
     <string name="account_deleted">Compte supprimé</string>
     <string name="account_number">Numéro de compte</string>
-    <string name="account_time_notification_channel_description">Affiche des rappels lorsque le temps du compte va expirer</string>
-    <string name="account_time_notification_channel_name">Rappels de temps pour le compte</string>
     <string name="add">Ajouter</string>
     <string name="add_30_days_time_x">Ajouter 30 jours de temps (%1$s)</string>
     <string name="add_90_days_time_x">Ajouter 90 jours de temps (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Langue</string>
     <string name="legacy_always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver Toujours exiger un VPN avant d\'utiliser Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">« Toujours exiger un VPN » est assigné à un autre VPN</string>
-    <string name="less_than_a_day_left">Moins d\'un jour restant sur ce compte</string>
     <string name="less_than_one_day">moins d\'un jour</string>
     <string name="list_name">Nom de la liste</string>
     <string name="loading_products">Chargement des produits</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Ouvrir les détails de l\'application</string>
     <string name="open_feature_settings">Ouvrir les paramètres %1$s</string>
     <string name="open_url">Ouvrir l\'URL</string>
-    <string name="out_of_time">Plus de temps</string>
     <string name="overrides_cleared">Substitutions supprimées</string>
     <string name="owned">Possédé</string>
     <string name="ownership">Propriété</string>
@@ -506,9 +502,6 @@
     <string name="x_entry">%1$s (Entrée)</string>
     <string name="x_exit">%1$s (Sortie)</string>
     <string name="x_via_x">%1$s via %2$s</string>
-    <string name="you_can_add_more_time_oss">Vous pouvez ajouter plus de temps via la page de visualisation du compte ou le site Web pour continuer d\'utiliser le VPN.</string>
-    <string name="you_can_add_more_time_play">Vous pouvez ajouter plus de temps via la vue du compte pour continuer d\'utiliser le VPN.</string>
-
     <!-- Wallet UI (D.5) -->
     <string name="wallet_create_title">Créez votre portefeuille Warren</string>
     <string name="wallet_create_description">Une phrase de récupération de 12 mots est votre seul moyen de retrouver ce compte. Notez-la et conservez-la hors ligne.</string>

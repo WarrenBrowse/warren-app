@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">输入帐号数字</string>
     <string name="account_deleted">帐户已删除</string>
     <string name="account_number">帐号</string>
-    <string name="account_time_notification_channel_description">在帐户时间即将到期时显示提醒</string>
-    <string name="account_time_notification_channel_name">帐户时间提醒</string>
     <string name="add">添加</string>
     <string name="add_30_days_time_x">增加 30 天 (%1$s)</string>
     <string name="add_90_days_time_x">添加 90 天 (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">语言</string>
     <string name="legacy_always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Mullvad VPN 之前，请停用“始终开启 VPN”。</string>
     <string name="legacy_always_on_vpn_error_notification_title">“始终开启 VPN”已分配给其他 VPN</string>
-    <string name="less_than_a_day_left">此帐户还剩不到 1 天</string>
     <string name="less_than_one_day">不足 1 天</string>
     <string name="list_name">列表名称</string>
     <string name="loading_products">正在加载商品</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">打开应用详细信息</string>
     <string name="open_feature_settings">打开 %1$s 设置</string>
     <string name="open_url">打开网址</string>
-    <string name="out_of_time">已没有时间</string>
     <string name="overrides_cleared">覆盖设置已清除</string>
     <string name="owned">自有</string>
     <string name="ownership">所有权</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s（入口）</string>
     <string name="x_exit">%1$s（出口）</string>
     <string name="x_via_x">%1$s，经由 %2$s</string>
-    <string name="you_can_add_more_time_oss">您可以通过帐户视图或网站添加更多时间，以继续使用 VPN。</string>
-    <string name="you_can_add_more_time_play">您可以通过帐户视图添加更多时间，以继续使用 VPN。</string>
 </resources>

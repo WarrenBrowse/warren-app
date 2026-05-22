@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Voer accountnummer in</string>
     <string name="account_deleted">Account verwijderd</string>
     <string name="account_number">Accountnummer</string>
-    <string name="account_time_notification_channel_description">Toont herinneringen wanneer de accounttijd op het punt staat te verlopen</string>
-    <string name="account_time_notification_channel_name">Accounttijdherinneringen</string>
     <string name="add">Toevoegen</string>
     <string name="add_30_days_time_x">30 dagen tijd toevoegen (%1$s)</string>
     <string name="add_90_days_time_x">90 dagen tijd toevoegen (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Taal</string>
     <string name="legacy_always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voordat u Mullvad VPN gebruikt.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Altijd-aan VPN toegewezen aan andere VPN</string>
-    <string name="less_than_a_day_left">Minder dan een dag resterend op dit account</string>
     <string name="less_than_one_day">minder dan één dag</string>
     <string name="list_name">Lijstnaam</string>
     <string name="loading_products">Producten worden geladen</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Appgegevens openen</string>
     <string name="open_feature_settings">%1$s-instellingen openen</string>
     <string name="open_url">URL openen</string>
-    <string name="out_of_time">Geen tijd meer</string>
     <string name="overrides_cleared">Overschrijvingen gewist</string>
     <string name="owned">In eigendom</string>
     <string name="ownership">Eigendom</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (ingang)</string>
     <string name="x_exit">%1$s (uitgang)</string>
     <string name="x_via_x">%1$s via %2$s</string>
-    <string name="you_can_add_more_time_oss">U kunt meer tijd toevoegen via de accountweergave of via de website om de VPN te blijven gebruiken.</string>
-    <string name="you_can_add_more_time_play">U kunt meer tijd toevoegen via de accountweergave om de VPN te blijven gebruiken.</string>
 </resources>

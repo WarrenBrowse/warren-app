@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">أدخل رقم الحساب بالأرقام</string>
     <string name="account_deleted">تم حذف الحساب</string>
     <string name="account_number">رقم الحساب</string>
-    <string name="account_time_notification_channel_description">يظهر تذكيرات عندما يكون وقت الحساب على وشك الانتهاء</string>
-    <string name="account_time_notification_channel_name">تذكيرات بوقت الحساب</string>
     <string name="add">إضافة</string>
     <string name="add_30_days_time_x">إضافة 30 يومًا (%1$s)</string>
     <string name="add_90_days_time_x">إضافة 90 يومًا (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">اللغة</string>
     <string name="legacy_always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">تم تعيين \"تشغيل VPN دائمًا\" إلى شبكة VPN أخرى</string>
-    <string name="less_than_a_day_left">يتبقى أقل من يوم لهذا الحساب</string>
     <string name="less_than_one_day">أقل من يوم</string>
     <string name="list_name">اسم القائمة</string>
     <string name="loading_products">جارٍ تحميل المنتجات</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">فتح تفاصيل التطبيق</string>
     <string name="open_feature_settings">فتح إعدادات ميزة %1$s</string>
     <string name="open_url">فتح عنوان URL</string>
-    <string name="out_of_time">انتهى الوقت</string>
     <string name="overrides_cleared">تم مسح التجاوزات</string>
     <string name="owned">مملوك</string>
     <string name="ownership">الملكية</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (دخول)</string>
     <string name="x_exit">%1$s (خروج)</string>
     <string name="x_via_x">%1$s عبر %2$s</string>
-    <string name="you_can_add_more_time_oss">يمكنك إضافة المزيد من الوقت من خلال طريقة عرض الحساب أو موقع الويب لمتابعة استخدام VPN.</string>
-    <string name="you_can_add_more_time_play">يمكنك إضافة المزيد من الوقت من خلال طريقة عرض الحساب لمتابعة استخدام VPN.</string>
 </resources>

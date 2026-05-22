@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">ป้อนหมายเลขบัญชี</string>
     <string name="account_deleted">ลบบัญชีเสร็จแล้ว</string>
     <string name="account_number">หมายเลขบัญชี</string>
-    <string name="account_time_notification_channel_description">แสดงการแจ้งเตือน ในขณะที่เวลาบัญชีใกล้หมดอายุ</string>
-    <string name="account_time_notification_channel_name">การแจ้งเตือนเวลาบัญชี</string>
     <string name="add">เพิ่ม</string>
     <string name="add_30_days_time_x">เพิ่มเวลา 30 วัน (%1$s)</string>
     <string name="add_90_days_time_x">เพิ่มเวลา 90 วัน (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">ภาษา</string>
     <string name="legacy_always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Mullvad VPN</string>
     <string name="legacy_always_on_vpn_error_notification_title">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง VPN อื่นแล้ว</string>
-    <string name="less_than_a_day_left">บัญชีนี้เหลือเวลาไม่ถึงหนึ่งวัน</string>
     <string name="less_than_one_day">น้อยกว่าหนึ่งวัน</string>
     <string name="list_name">ชื่อรายการ</string>
     <string name="loading_products">กำลังโหลดผลิตภัณฑ์</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">เปิดรายละเอียดแอป</string>
     <string name="open_feature_settings">เปิดการตั้งค่า %1$s</string>
     <string name="open_url">Open URL</string>
-    <string name="out_of_time">หมดเวลา</string>
     <string name="overrides_cleared">ล้างโอเวอร์ไรด์แล้ว</string>
     <string name="owned">เป็นเจ้าของ</string>
     <string name="ownership">ความเป็นเจ้าของ</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (ขาเข้า)</string>
     <string name="x_exit">%1$s (ขาออก)</string>
     <string name="x_via_x">%1$s ผ่าน %2$s</string>
-    <string name="you_can_add_more_time_oss">คุณสามารถเพิ่มเวลาเพิ่มเติมได้โดยการดูบัญชีหรือเว็บไซต์เพื่อใช้งาน VPN ต่อไป</string>
-    <string name="you_can_add_more_time_play">คุณสามารถเพิ่มเวลาผ่านทางหน้าบัญชีเพื่อใช้งาน VPN ต่อได้</string>
 </resources>

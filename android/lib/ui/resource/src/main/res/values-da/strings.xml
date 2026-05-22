@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Indtast kontonummerets cifre</string>
     <string name="account_deleted">Konto slettet</string>
     <string name="account_number">Kontonummer</string>
-    <string name="account_time_notification_channel_description">Viser påmindelser, når kontotiden er ved at udløbe</string>
-    <string name="account_time_notification_channel_name">Påmindelser om kontotid</string>
     <string name="add">Tilføj</string>
     <string name="add_30_days_time_x">Tilføj 30 dages tid (%1$s)</string>
     <string name="add_90_days_time_x">Tilføj 90 dages tid (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Sprog</string>
     <string name="legacy_always_on_vpn_error_notification_content">Kunne ikke starte tunnelforbindelse. Deaktiver Altid-til VPN før brug af Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Altid-til VPN tildelt en anden VPN</string>
-    <string name="less_than_a_day_left">Mindre end en dag tilbage på denne konto</string>
     <string name="less_than_one_day">mindre end én dag</string>
     <string name="list_name">Listenavn</string>
     <string name="loading_products">Indlæser produkter</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Se oplysninger om app</string>
     <string name="open_feature_settings">Åbn indstillinger for %1$s</string>
     <string name="open_url">Åbn URL</string>
-    <string name="out_of_time">Tid udløbet</string>
     <string name="overrides_cleared">Tilsidesættelser ryddet</string>
     <string name="owned">Ejet</string>
     <string name="ownership">Ejerskab</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (indgang)</string>
     <string name="x_exit">%1$s (udgang)</string>
     <string name="x_via_x">%1$s via %2$s</string>
-    <string name="you_can_add_more_time_oss">Du kan tilføje mere tid via kontoens visning eller hjemmeside for at blive ved med at bruge VPN\'en.</string>
-    <string name="you_can_add_more_time_play">Du kan tilføje mere tid via kontovisning for at fortsætte med at bruge VPN\'en.</string>
 </resources>

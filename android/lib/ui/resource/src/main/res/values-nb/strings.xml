@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Skriv inn sifrene i kontonummeret ditt</string>
     <string name="account_deleted">Konto slettet</string>
     <string name="account_number">Kontonummer</string>
-    <string name="account_time_notification_channel_description">Viser påminnelser når tidsavbrudd for kontoen er i ferd med å inntreffe</string>
-    <string name="account_time_notification_channel_name">Påminnelser om tidsavbrudd for konto</string>
     <string name="add">Legg til</string>
     <string name="add_30_days_time_x">Legg til 30 dager (%1$s)</string>
     <string name="add_90_days_time_x">Legg til 90 dager (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Språk</string>
     <string name="legacy_always_on_vpn_error_notification_content">Kunne ikke starte tunneltilkobling. Deaktiver VPN som alltid er på, før du bruker Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">VPN som alltid er på, er tilordnet en annen VPN</string>
-    <string name="less_than_a_day_left">Mindre enn én dag igjen på denne kontoen</string>
     <string name="less_than_one_day">mindre enn én dag</string>
     <string name="list_name">Listenavn</string>
     <string name="loading_products">Laster inn produkter</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Åpne appdetaljer</string>
     <string name="open_feature_settings">Åpne innstillinger for %1$s</string>
     <string name="open_url">Åpne URL</string>
-    <string name="out_of_time">Tiden har utløpt</string>
     <string name="overrides_cleared">Overstyringer fjernet</string>
     <string name="owned">Eid</string>
     <string name="ownership">Eierskap</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (inngang)</string>
     <string name="x_exit">%1$s (utgang)</string>
     <string name="x_via_x">%1$s via %2$s</string>
-    <string name="you_can_add_more_time_oss">Du kan legge til mer tid via kontooversikten eller nettstedet for å fortsette å bruke VPN.</string>
-    <string name="you_can_add_more_time_play">Du kan legge til mer tid via kontooversikten for å fortsette å bruke VPN.</string>
 </resources>

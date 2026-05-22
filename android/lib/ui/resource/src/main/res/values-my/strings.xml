@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">အကောင့်နံပါတ်ဂဏန်းများကို ထည့်ပါ</string>
     <string name="account_deleted">အကောင့်ကို ဖျက်လိုက်ပါပြီ</string>
     <string name="account_number">အကောင့် နံပါတ်</string>
-    <string name="account_time_notification_channel_description">အကောင့်အချိန် သက်တမ်းကုန်ခါနီးချိန်၌ သတိပေးချက်များ ပြသပေးပါသည်</string>
-    <string name="account_time_notification_channel_name">အကောင့်အချိန် သတိပေးချက်များ</string>
     <string name="add">ပေါင်းထည့်ရန်</string>
     <string name="add_30_days_time_x">အချိန် ရက် 30 ကို‌ ပေါင်းထည့်ရန် (%1$s)</string>
     <string name="add_90_days_time_x">အချိန် ရက် 90 တိုးရန် (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">ဘာသာစကား</string>
     <string name="legacy_always_on_vpn_error_notification_content">Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Mullvad VPN ကို မသုံးမီ အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။</string>
     <string name="legacy_always_on_vpn_error_notification_title">အမြဲဖွင့် VPN ကို အခြား VPN တစ်ခုသို့ သတ်မှတ်ထားပါသည်</string>
-    <string name="less_than_a_day_left">ဤအကောင့်တွင် ကျန်ချိန် တစ်ရက်မပြည့်တော့ပါ</string>
     <string name="less_than_one_day">တစ်ရက်အောက် နည်းသည်။</string>
     <string name="list_name">စာရင်း အမည်</string>
     <string name="loading_products">ထုတ်ကုန်များကို လုပ်ဆောင်နေသည်</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">အက်ပ်အသေးစိတ်အချက်အလက်များကို ဖွင့်ပါ</string>
     <string name="open_feature_settings">%1$s ဆက်တင်များကို ဖွင့်ရန်</string>
     <string name="open_url">URL ဖွင့်ရန်</string>
-    <string name="out_of_time">အချိန်စေ့သွားပါပြီ</string>
     <string name="overrides_cleared">ကျော်လွန် ပယ်ဖျက်မှုများ ရှင်းပြီးပါပြီ</string>
     <string name="owned">အပိုင်</string>
     <string name="ownership">ပိုင်ဆိုင်မှု</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (အဝင်)</string>
     <string name="x_exit">%1$s (အထွက်)</string>
     <string name="x_via_x">%2$s မှတစ်ဆင့် %1$s</string>
-    <string name="you_can_add_more_time_oss">VPN ကို ဆက်လက်အသုံးပြုရန် အကောင့် ပြသမှု သို့မဟုတ် ဝက်ဘ်ဆိုက်မှတစ်ဆင့် အချိန်ထပ်တိုးနိုင်ပါသည်။</string>
-    <string name="you_can_add_more_time_play">VPN ကို ဆက်လက်အသုံးပြုရန် အကောင့် ပြသမှုမှတစ်ဆင့် အချိန်ထပ်တိုးနိုင်ပါသည်။</string>
 </resources>

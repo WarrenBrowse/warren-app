@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">アカウント番号を入力してください</string>
     <string name="account_deleted">アカウントを削除しました</string>
     <string name="account_number">アカウント番号</string>
-    <string name="account_time_notification_channel_description">アカウントの期限切れが迫っているときにリマインダーを表示します</string>
-    <string name="account_time_notification_channel_name">アカウント時間のリマインダー</string>
     <string name="add">追加</string>
     <string name="add_30_days_time_x">30日分を追加する (%1$s)</string>
     <string name="add_90_days_time_x">90日分を追加 (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">言語</string>
     <string name="legacy_always_on_vpn_error_notification_content">トンネル接続を開始できません。Mullvad VPNを使用する前にAlways-on VPNを無効にしてください。</string>
     <string name="legacy_always_on_vpn_error_notification_title">Always-on VPNは他のVPNに割り当てられました</string>
-    <string name="less_than_a_day_left">このアカウントの残り時間は1日未満です</string>
     <string name="less_than_one_day">1日未満</string>
     <string name="list_name">リスト名</string>
     <string name="loading_products">製品を読み込み中</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">アプリの詳細を開く</string>
     <string name="open_feature_settings">%1$s設定を開く</string>
     <string name="open_url">URLを開く</string>
-    <string name="out_of_time">時間切れ</string>
     <string name="overrides_cleared">オーバーライドがクリアされました</string>
     <string name="owned">自社サーバー</string>
     <string name="ownership">所有権</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (入口)</string>
     <string name="x_exit">%1$s (出口)</string>
     <string name="x_via_x">%1$s (%2$s経由)</string>
-    <string name="you_can_add_more_time_oss">アカウント画面かウェブサイトから時間を追加することで、VPNを引き続き使用できます。</string>
-    <string name="you_can_add_more_time_play">アカウント画面から時間を追加することで、VPNを引き続き使用できます。</string>
 </resources>

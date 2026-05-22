@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Wprowadź cyfry numeru konta</string>
     <string name="account_deleted">Usunięto konto</string>
     <string name="account_number">Numer konta</string>
-    <string name="account_time_notification_channel_description">Pokazuje przypomnienia, gdy kończy się czas na koncie</string>
-    <string name="account_time_notification_channel_name">Przypomnienia o czasie na koncie</string>
     <string name="add">Dodaj</string>
     <string name="add_30_days_time_x">Dodaj 30 dni (%1$s)</string>
     <string name="add_90_days_time_x">Dodaj 90 dni (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Język</string>
     <string name="legacy_always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Mullvad VPN wyłącz opcję „Zawsze włączony VPN”.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Opcja „Zawsze włączony VPN” przypisana jest do innej aplikacji VPN</string>
-    <string name="less_than_a_day_left">Na koncie pozostał mniej niż jeden dzień</string>
     <string name="less_than_one_day">mniej niż jeden dzień</string>
     <string name="list_name">Nazwa listy</string>
     <string name="loading_products">Ładowanie produktów</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Otwórz szczegóły aplikacji</string>
     <string name="open_feature_settings">Otwórz ustawienia %1$s</string>
     <string name="open_url">Otwórz adres URL</string>
-    <string name="out_of_time">Koniec czasu</string>
     <string name="overrides_cleared">Usunięto zastąpienia</string>
     <string name="owned">Posiadane</string>
     <string name="ownership">Własność</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (wejście)</string>
     <string name="x_exit">%1$s (wyjście)</string>
     <string name="x_via_x">%1$s przez %2$s</string>
-    <string name="you_can_add_more_time_oss">Aby kontynuować korzystanie z VPN, można dodać więcej czasu w widoku konta lub na stronie internetowej.</string>
-    <string name="you_can_add_more_time_play">Aby kontynuować korzystanie z VPN, w widoku konta można dodać więcej czasu.</string>
 </resources>

@@ -5,8 +5,6 @@
     <string name="account_delete_placeholder">Introduzca los dígitos del número de cuenta</string>
     <string name="account_deleted">Cuenta eliminada</string>
     <string name="account_number">Número de cuenta</string>
-    <string name="account_time_notification_channel_description">Muestra avisos cuando el tiempo de la cuenta está a punto de caducar</string>
-    <string name="account_time_notification_channel_name">Recordatorios de tiempo de la cuenta</string>
     <string name="add">Añadir</string>
     <string name="add_30_days_time_x">Añadir 30 días (%1$s)</string>
     <string name="add_90_days_time_x">Añadir 90 días (%1$s)</string>
@@ -272,7 +270,6 @@
     <string name="language">Idioma</string>
     <string name="legacy_always_on_vpn_error_notification_content">No se puede iniciar la conexión de túnel. Deshabilite la VPN siempre activa antes de utilizar la Mullvad VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">La VPN siempre activa se ha asignado a otra VPN</string>
-    <string name="less_than_a_day_left">A esta cuenta le queda menos de un día</string>
     <string name="less_than_one_day">menos de un día</string>
     <string name="list_name">Nombre de la lista</string>
     <string name="loading_products">Cargando productos</string>
@@ -343,7 +340,6 @@
     <string name="open_app_details">Abrir detalles de la aplicación</string>
     <string name="open_feature_settings">Abrir la configuración de %1$s</string>
     <string name="open_url">Abrir URL</string>
-    <string name="out_of_time">Tiempo agotado</string>
     <string name="overrides_cleared">Anulaciones borradas</string>
     <string name="owned">Propios</string>
     <string name="ownership">Propiedad</string>
@@ -506,6 +502,4 @@
     <string name="x_entry">%1$s (Entrada)</string>
     <string name="x_exit">%1$s (Salida)</string>
     <string name="x_via_x">%1$s a través de %2$s</string>
-    <string name="you_can_add_more_time_oss">Puede añadir más tiempo en la vista de la cuenta o en el sitio web para seguir usando la VPN.</string>
-    <string name="you_can_add_more_time_play">Puede añadir más tiempo en la vista de la cuenta para seguir usando la VPN.</string>
 </resources>
