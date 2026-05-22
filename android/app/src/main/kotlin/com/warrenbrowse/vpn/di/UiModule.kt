@@ -63,7 +63,6 @@ import com.warrenbrowse.vpn.lib.repository.RelayOverridesRepository
 import com.warrenbrowse.vpn.lib.repository.SettingsRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
-import com.warrenbrowse.vpn.lib.repository.VoucherRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
 import com.warrenbrowse.vpn.lib.usecase.FilterChipUseCase
@@ -142,7 +141,8 @@ val uiModule = module {
     single { CustomListsRepository(get()) }
     single { RelayListRepository(get(), get()) }
     single { RelayListFilterRepository(get()) }
-    single { VoucherRepository(get(), get()) }
+    // D.4 step 29: VoucherRepository removed - only consumer was the
+    // deleted VoucherDialogViewModel.
     single { SplitTunnelingRepository(get()) }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
     single { ApiAccessRepository(get()) }
