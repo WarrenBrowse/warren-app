@@ -23,8 +23,10 @@
 //  callback, both threaded through `setUp`).
 //
 
+import Foundation
 import WarrenLogging
 import WarrenREST
+import WarrenRustRuntime
 @preconcurrency import NetworkExtension
 
 /// Quinn-based tunnel implementation. Replaces
@@ -36,10 +38,29 @@ import WarrenREST
 public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unchecked Sendable {
     private let logger = Logger(label: "WarrenQuinnTunnelImplementation")
 
-    private let _actor = WarrenQuinnActor()
+    private let _actor: WarrenQuinnActor
     public var actor: any PacketTunnelActorProtocol { _actor }
 
-    public init() {}
+    /// The Rust-backed Quinn adapter. Created lazily in
+    /// [`setUp(provider:...)`] because it needs the live
+    /// `NEPacketTunnelFlow` from the system-provided
+    /// `NEPacketTunnelProvider`. Nil until `setUp` has been called.
+    private var adapter: WarrenQuinnAdapter?
+
+    /// Strong reference to the App Group `UserDefaults` used to
+    /// broadcast tunnel events to the main app. Pinned for the lifetime
+    /// of the implementation so the event callback can fire-and-forget
+    /// without re-resolving the suite.
+    private let appGroupDefaults: UserDefaults?
+
+    public init() {
+        self._actor = WarrenQuinnActor()
+        // Best-effort App Group defaults handle. When the bundle is
+        // not yet configured (unit tests), this returns nil and the
+        // event broadcast becomes a no-op.
+        let suite = Bundle.main.object(forInfoDictionaryKey: "ApplicationSecurityGroupIdentifier") as? String
+        self.appGroupDefaults = suite.flatMap { UserDefaults(suiteName: $0) }
+    }
 
     public func setUp(
         provider: NEPacketTunnelProvider,
@@ -48,19 +69,35 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         settingsReader: sending TunnelSettingsManager,
         apiTransportProvider: APITransportProvider
     ) {
-        // C.4.3.X TODO: instantiate `WarrenQuinnAdapter` here with
-        // `provider.packetFlow` + an event callback that mirrors into
-        // App Group UserDefaults (cf. `WarrenAppGroupEvents` consumer
-        // in TunnelViewController). Pass the adapter handle to the
-        // actor so `start(options:)` can call `adapter.start(config:)`.
-        logger.info("WarrenQuinnTunnelImplementation.setUp called (C.4.3 scaffold)")
+        logger.info("WarrenQuinnTunnelImplementation.setUp (instantiate adapter + wire event callback)")
+        // Adapter owns the NEPacketTunnelFlow bridge to the Rust IosTun
+        // PacketDevice. The event callback mirrors transitions + NAT-PMP
+        // events into the App Group so the main app's
+        // `WarrenAppGroupEvents` observer surfaces them in UI
+        // (FailoverBanner + ObfuscationIndicator + NAT-PMP port row).
+        let appDefaults = appGroupDefaults
+        let weakActor = _actor
+        let adapter = WarrenQuinnAdapter(
+            packetFlow: provider.packetFlow,
+            eventCallback: { event in
+                // Surface to App Group for cross-process UI consumers.
+                Self.broadcastEvent(event, into: appDefaults)
+                // Feed actor's observed state stream (C.4.3.X follow-up
+                // will turn this into a proper AsyncStream backed by the
+                // events ; for now we update the snapshot directly).
+                weakActor.applyEvent(event)
+            }
+        )
+        self.adapter = adapter
+        _actor.bindAdapter(adapter)
     }
 
     public func startTunnel(options: StartOptions) async {
-        // Like `GotaTunTunnelImplementation`, no external state
-        // observer is started ; the actor manages transitions
-        // internally. The Rust-side `warren_tunnel_set_event_callback`
-        // dispatcher will feed the actor's observed state stream.
+        // Forward to the actor ; the actor decides whether to call
+        // `adapter.start(config:)` based on the resolved tunnel config
+        // (built from `options` + tunnel settings). No external state
+        // observer like WireGuardGo : the Rust-side event callback
+        // drives state transitions through `applyEvent`.
         actor.start(options: options)
     }
 
@@ -75,5 +112,27 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
 
     public func wake() {
         actor.onWake()
+    }
+
+    // MARK: - App Group event broadcasting
+
+    /// Mirror a `WarrenTunnelEvent` into the App Group `UserDefaults`
+    /// keys consumed by `WarrenAppGroupEvents` in the main-app process.
+    /// Keys mirror those declared in
+    /// `ios/WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift`.
+    private static func broadcastEvent(_ event: WarrenTunnelEvent, into defaults: UserDefaults?) {
+        guard let defaults else { return }
+        switch event {
+        case .failover(let exit):
+            defaults.set(exit, forKey: "WarrenTunnel.lastFailoverExit")
+            defaults.set(Date(), forKey: "WarrenTunnel.lastFailoverAt")
+        case .natPmpMapped(_, let externalPort, _),
+             .natPmpRenewed(let externalPort):
+            defaults.set(Int(externalPort), forKey: "WarrenTunnel.natPmpExternalPort")
+        case .connected, .disconnected, .reconnecting, .natPmpFailed:
+            // These are transient ; the obfuscation indicator + tunnel
+            // status surface via cargo metrics, not App Group keys.
+            break
+        }
     }
 }

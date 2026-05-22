@@ -24,6 +24,7 @@
 import Foundation
 import Network
 import WarrenLogging
+import WarrenRustRuntime
 import WarrenTypes
 
 /// Stub-level `PacketTunnelActorProtocol` for the Warren Quinn tunnel.
@@ -35,69 +36,173 @@ import WarrenTypes
 public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Sendable {
     private let logger = Logger(label: "WarrenQuinnActor")
 
-    /// Snapshot of the most recently observed state. Updated by the
-    /// `WarrenQuinnAdapter` event callback once C.4.3.X wires the
-    /// bridge. Starts at `.disconnected` for cold launches.
+    /// Snapshot of the most recently observed state. Updated by
+    /// [`applyEvent(_:)`] when the Rust-side event callback fires.
+    private let stateLock = NSLock()
     private var currentState: ObservedState = .disconnected
 
+    /// Continuation feeding the [`observedStates`] AsyncStream. Set
+    /// when a consumer first awaits `observedStates`. Subsequent
+    /// `applyEvent(_:)` calls push transitions onto it.
+    private var observedStatesContinuation: AsyncStream<ObservedState>.Continuation?
+
+    /// One-shot signal fired when the tunnel transitions to
+    /// `.disconnected`. `waitUntilDisconnected()` awaits it.
+    private var disconnectedSignal: CheckedContinuation<Void, Never>?
+
+    /// Strong reference to the [`WarrenQuinnAdapter`] bound by the
+    /// owning `WarrenQuinnTunnelImplementation` via [`bindAdapter(_:)`].
+    /// `nil` until `bindAdapter` is called ; `start(options:)` is a
+    /// no-op until then.
+    private var adapter: WarrenQuinnAdapter?
+
     public var observedState: ObservedState {
-        get async { currentState }
+        get async {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return currentState
+        }
     }
 
     public var observedStates: AsyncStream<ObservedState> {
         get async {
-            // C.4.3.X TODO: emit values from the Rust-side event
-            // callback (Connected/Disconnected/Reconnecting/Failover).
-            // For now, yield a single snapshot of the current state and
-            // close the stream - same UX as `GotaTunActor`.
             AsyncStream { continuation in
-                continuation.yield(currentState)
-                continuation.finish()
+                stateLock.lock()
+                self.observedStatesContinuation = continuation
+                let snapshot = self.currentState
+                stateLock.unlock()
+                continuation.yield(snapshot)
+                continuation.onTermination = { @Sendable [weak self] _ in
+                    self?.stateLock.lock()
+                    self?.observedStatesContinuation = nil
+                    self?.stateLock.unlock()
+                }
             }
         }
     }
 
     public init() {
-        logger.info("WarrenQuinnActor initialized (C.4.3 scaffold)")
+        logger.info("WarrenQuinnActor initialized (C.4.3.X wired)")
+    }
+
+    // MARK: - Binding + event dispatch (C.4.3.X)
+
+    /// Bind a `WarrenQuinnAdapter` instance owned by the parent
+    /// `WarrenQuinnTunnelImplementation`. Called once during the
+    /// implementation's `setUp(provider:...)` ; subsequent calls are
+    /// idempotent (replace).
+    public func bindAdapter(_ adapter: WarrenQuinnAdapter) {
+        stateLock.lock()
+        self.adapter = adapter
+        stateLock.unlock()
+    }
+
+    /// Apply a `WarrenTunnelEvent` produced by the Rust-side event
+    /// callback. Maps the typed event into an `ObservedState` and
+    /// pushes it onto the `observedStates` stream + the snapshot.
+    /// Called from the Rust dispatcher thread ; thread-safe via
+    /// `stateLock`.
+    public func applyEvent(_ event: WarrenTunnelEvent) {
+        let nextState: ObservedState
+        var disconnectContinuation: CheckedContinuation<Void, Never>? = nil
+        switch event {
+        case .connected:
+            nextState = .connected
+        case .reconnecting, .failover:
+            nextState = .reconnecting
+        case .disconnected:
+            nextState = .disconnected
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
+            // NAT-PMP events do not change the tunnel state ; they are
+            // surfaced separately via the App Group broadcast layer.
+            return
+        }
+
+        stateLock.lock()
+        currentState = nextState
+        let continuation = observedStatesContinuation
+        if case .disconnected = nextState {
+            disconnectContinuation = disconnectedSignal
+            disconnectedSignal = nil
+        }
+        stateLock.unlock()
+
+        continuation?.yield(nextState)
+        disconnectContinuation?.resume()
     }
 
     public func start(options: StartOptions) {
-        // C.4.3.X TODO: marshal `options` (selected relays, source) to
-        // `WarrenQuinnAdapter.WarrenTunnelConfig` and call
-        // `adapter.start(config:)` ; update currentState on event.
-        logger.info("start called (C.4.3 scaffold no-op)")
+        // C.4.3.Y TODO: marshal `options` (selected relays, source) +
+        // the persisted wallet identity (via WarrenWallet/Keychain) +
+        // a freshly-selected relay descriptor into
+        // `WarrenTunnelConfig` and call `adapter.start(config:)`.
+        // Today the adapter is bound but the config marshalling needs
+        // a settings reader handoff to thread the exit/relay/wallet
+        // through ; tracked separately.
+        logger.info("start called (adapter bound, config marshalling deferred to C.4.3.Y)")
     }
 
     public func stop() {
-        // C.4.3.X TODO: `adapter.stop()` + transition currentState to
-        // `.disconnected` ; signal `waitUntilDisconnected` waiters.
-        logger.info("stop called (C.4.3 scaffold no-op)")
+        stateLock.lock()
+        let adapter = self.adapter
+        stateLock.unlock()
+        adapter?.stop()
+        // The adapter's `stop()` triggers a Disconnected event on the
+        // Rust side ; `applyEvent(.disconnected)` will fire and resume
+        // any waiter on `waitUntilDisconnected()`. As a fallback (in
+        // case the Rust dispatcher never fires post-stop), we also
+        // synthesize the transition here.
+        applyEvent(.disconnected)
     }
 
     public func waitUntilDisconnected() async {
-        // C.4.3.X TODO: await a one-shot signal fed by the Disconnected
-        // event from the Rust-side dispatcher.
-        logger.info("waitUntilDisconnected called (C.4.3 scaffold no-op)")
+        stateLock.lock()
+        if case .disconnected = currentState {
+            stateLock.unlock()
+            return
+        }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            disconnectedSignal = continuation
+            stateLock.unlock()
+        }
     }
 
     public func onSleep() {
-        // C.4.3.X TODO: hibernate the Quinn endpoint (close idle
-        // connections, cancel pump tasks) to satisfy iOS background
-        // suspension limits without losing the tunnel parameters.
-        logger.info("onSleep called (C.4.3 scaffold no-op)")
+        // iOS background suspension : drop the connection but keep
+        // adapter binding so `onWake` can immediately reconnect.
+        stateLock.lock()
+        let adapter = self.adapter
+        stateLock.unlock()
+        adapter?.stop()
     }
 
     public func onWake() {
-        // C.4.3.X TODO: reconnect via `adapter.reconnect()` using the
-        // last known parameters.
-        logger.info("onWake called (C.4.3 scaffold no-op)")
+        // Reconnect via the adapter's `reconnect()` (uses
+        // warren_backoff::Backoff::HANDSHAKE = 15 s, cf. M4.H.G).
+        stateLock.lock()
+        let adapter = self.adapter
+        stateLock.unlock()
+        adapter?.reconnect()
     }
 
+    private var lastNetworkPathStatus: NWPath.Status = .satisfied
     public func updateNetworkReachability(networkPathStatus: NWPath.Status) {
-        // C.4.3.X TODO: when status transitions to `.satisfied` after
-        // a `.unsatisfied` window, fire `adapter.reconnect()` (Wi-Fi
-        // <-> cellular handover, cf. M4.H.G HANDSHAKE 15s).
-        logger.info("updateNetworkReachability called (C.4.3 scaffold no-op)")
+        // Fire reconnect on Wi-Fi <-> cellular handover (transition
+        // from `.unsatisfied` to `.satisfied`).
+        let shouldReconnect: Bool = {
+            switch (lastNetworkPathStatus, networkPathStatus) {
+            case (.unsatisfied, .satisfied):
+                return true
+            default:
+                return false
+            }
+        }()
+        lastNetworkPathStatus = networkPathStatus
+        guard shouldReconnect else { return }
+        stateLock.lock()
+        let adapter = self.adapter
+        stateLock.unlock()
+        adapter?.reconnect()
     }
 
     public func reconnect(to nextRelays: NextRelays, reconnectReason: ActorReconnectReason) {
