@@ -54,13 +54,10 @@ import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.Constraint
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.CustomListName
-import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
 import com.warrenbrowse.vpn.lib.model.Device
 import com.warrenbrowse.vpn.lib.model.DeviceState as ModelDeviceState
 import com.warrenbrowse.vpn.lib.model.DeviceUpdateError
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
-import com.warrenbrowse.vpn.lib.model.DnsOptions as ModelDnsOptions
-import com.warrenbrowse.vpn.lib.model.DnsOptions
 import com.warrenbrowse.vpn.lib.model.DnsState as ModelDnsState
 import com.warrenbrowse.vpn.lib.model.DnsState
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
@@ -86,11 +83,9 @@ import com.warrenbrowse.vpn.lib.model.RelaySettings
 import com.warrenbrowse.vpn.lib.model.RemoveSplitTunnelingAppError
 import com.warrenbrowse.vpn.lib.model.SetAllowLanError
 import com.warrenbrowse.vpn.lib.model.SetDaitaSettingsError
-import com.warrenbrowse.vpn.lib.model.SetDnsOptionsError
 import com.warrenbrowse.vpn.lib.model.SetObfuscationOptionsError
 import com.warrenbrowse.vpn.lib.model.SetRelayLocationError
 import com.warrenbrowse.vpn.lib.model.SetWireguardConstraintsError
-import com.warrenbrowse.vpn.lib.model.SetWireguardMtuError
 import com.warrenbrowse.vpn.lib.model.SetWireguardQuantumResistantError
 import com.warrenbrowse.vpn.lib.model.Settings as ModelSettings
 import com.warrenbrowse.vpn.lib.model.TunnelState as ModelTunnelState
@@ -318,97 +313,6 @@ class ManagementService(
 
     // D.4 step 49: createAccount dropped (Mullvad account creation flow dead).
 
-    suspend fun updateDnsContentBlockers(
-        update: (DefaultDnsOptions) -> DefaultDnsOptions
-    ): Either<SetDnsOptionsError, Unit> =
-        Either.catch {
-                val currentDnsOptions = getSettings().tunnelOptions.dnsOptions
-                val newDefaultDnsOptions = update(currentDnsOptions.defaultOptions)
-                val updated = DnsOptions.defaultOptions.set(currentDnsOptions, newDefaultDnsOptions)
-                grpc.setDnsOptions(updated.fromDomain())
-            }
-            .onLeft { Logger.e("Set dns state error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setDnsOptions(dnsOptions: ModelDnsOptions): Either<SetDnsOptionsError, Unit> =
-        Either.catch { grpc.setDnsOptions(dnsOptions.fromDomain()) }
-            .onLeft { Logger.e("Set dns options error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setDnsState(dnsState: ModelDnsState): Either<SetDnsOptionsError, Unit> =
-        Either.catch {
-                val currentDnsOptions = getSettings().tunnelOptions.dnsOptions
-                val updated = DnsOptions.state.set(currentDnsOptions, dnsState)
-                grpc.setDnsOptions(updated.fromDomain())
-            }
-            .onLeft { Logger.e("Set dns state error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setCustomDns(index: Int, address: InetAddress): Either<SetDnsOptionsError, Unit> =
-        Either.catch {
-                val currentDnsOptions = getSettings().tunnelOptions.dnsOptions
-                val updatedDnsOptions =
-                    DnsOptions.customOptions.addresses
-                        .index(Index.list(), index)
-                        .set(currentDnsOptions, address)
-
-                grpc.setDnsOptions(updatedDnsOptions.fromDomain())
-            }
-            .onLeft { Logger.e("Set custom dns error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun addCustomDns(address: InetAddress): Either<SetDnsOptionsError, Int> =
-        Either.catch {
-                val currentDnsOptions = getSettings().tunnelOptions.dnsOptions
-                val updatedDnsOptions = currentDnsOptions.copy {
-                    DnsOptions.customOptions.addresses set
-                        currentDnsOptions.customOptions.addresses + address
-                    // If it is the first address, then turn on Custom Dns
-                    DnsOptions.state set
-                        if (currentDnsOptions.customOptions.addresses.isEmpty()) DnsState.Custom
-                        else currentDnsOptions.state
-                }
-                grpc.setDnsOptions(updatedDnsOptions.fromDomain())
-                updatedDnsOptions.customOptions.addresses.lastIndex
-            }
-            .onLeft { Logger.e("Add custom dns error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-
-    suspend fun deleteCustomDns(index: Int): Either<SetDnsOptionsError, Unit> =
-        Either.catch {
-                val currentDnsOptions = getSettings().tunnelOptions.dnsOptions
-                val mutableAddresses = currentDnsOptions.customOptions.addresses.toMutableList()
-                mutableAddresses.removeAt(index)
-
-                val updatedDnsOptions = currentDnsOptions.copy {
-                    DnsOptions.customOptions.addresses set mutableAddresses.toList()
-                    // If it is the last address, then turn off Custom Dns
-                    DnsOptions.state set
-                        if (mutableAddresses.isEmpty()) DnsState.Default
-                        else currentDnsOptions.state
-                }
-                grpc.setDnsOptions(updatedDnsOptions.fromDomain())
-            }
-            .onLeft { Logger.e("Delete custom dns error") }
-            .mapLeft(SetDnsOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setWireguardMtu(value: Int): Either<SetWireguardMtuError, Unit> =
-        Either.catch { grpc.setWireguardMtu(UInt32Value.of(value)) }
-            .onLeft { Logger.e("Set wireguard mtu error") }
-            .mapLeft(SetWireguardMtuError::Unknown)
-            .mapEmpty()
-
-    suspend fun resetWireguardMtu(): Either<SetWireguardMtuError, Unit> =
-        Either.catch { grpc.setWireguardMtu(UInt32Value.newBuilder().clearValue().build()) }
-            .onLeft { Logger.e("Reset wireguard mtu error") }
-            .mapLeft(SetWireguardMtuError::Unknown)
-            .mapEmpty()
-
     suspend fun setWireguardQuantumResistant(
         value: ModelQuantumResistantState
     ): Either<SetWireguardQuantumResistantError, Unit> =
@@ -442,33 +346,6 @@ class ManagementService(
                 grpc.setObfuscationSettings(updatedSettings.fromDomain())
             }
             .onLeft { Logger.e("Set wireguard port error") }
-            .mapLeft(SetObfuscationOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setUdp2TcpObfuscationPort(
-        portConstraint: Constraint<Port>
-    ): Either<SetObfuscationOptionsError, Unit> =
-        Either.catch {
-                val updatedSettings =
-                    ObfuscationSettings.udp2tcp.modify(getSettings().obfuscationSettings) {
-                        it.copy(port = portConstraint)
-                    }
-                grpc.setObfuscationSettings(updatedSettings.fromDomain())
-            }
-            .onLeft { Logger.e("Set obfuscation port error") }
-            .mapLeft(SetObfuscationOptionsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setShadowsocksObfuscationPort(
-        portConstraint: Constraint<Port>
-    ): Either<SetObfuscationOptionsError, Unit> =
-        Either.catch {
-                val updatedSettings =
-                    ObfuscationSettings.shadowsocks.modify(getSettings().obfuscationSettings) {
-                        it.copy(port = portConstraint)
-                    }
-                grpc.setObfuscationSettings(updatedSettings.fromDomain())
-            }
             .mapLeft(SetObfuscationOptionsError::Unknown)
             .mapEmpty()
 
@@ -531,48 +408,9 @@ class ManagementService(
     // clearAllRelayOverrides + applySettingsPatch dropped (CustomList /
     // ServerIpOverride / SettingsPatch features dead).
 
-    suspend fun setOwnershipAndProviders(
-        ownershipConstraint: Constraint<ModelOwnership>,
-        providersConstraint: Constraint<Providers>,
-    ): Either<SetWireguardConstraintsError, Unit> =
-        Either.catch {
-                val relaySettings = getSettings().relaySettings
-                val updated = relaySettings.copy {
-                    inside(RelaySettings.relayConstraints) {
-                        RelayConstraints.providers set providersConstraint
-                        RelayConstraints.ownership set ownershipConstraint
-                    }
-                }
-                grpc.setRelaySettings(updated.fromDomain())
-            }
-            .onLeft { Logger.e("Set ownership and providers error") }
-            .mapLeft(SetWireguardConstraintsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setOwnership(
-        ownership: Constraint<ModelOwnership>
-    ): Either<SetWireguardConstraintsError, Unit> =
-        Either.catch {
-                val relaySettings = getSettings().relaySettings
-                val updated = RelaySettings.relayConstraints.ownership.set(relaySettings, ownership)
-                grpc.setRelaySettings(updated.fromDomain())
-            }
-            .onLeft { Logger.e("Set ownership error") }
-            .mapLeft(SetWireguardConstraintsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setProviders(
-        providersConstraint: Constraint<Providers>
-    ): Either<SetWireguardConstraintsError, Unit> =
-        Either.catch {
-                val relaySettings = getSettings().relaySettings
-                val updated =
-                    RelaySettings.relayConstraints.providers.set(relaySettings, providersConstraint)
-                grpc.setRelaySettings(updated.fromDomain())
-            }
-            .onLeft { Logger.e("Set providers error") }
-            .mapLeft(SetWireguardConstraintsError::Unknown)
-            .mapEmpty()
+    // D.4 step 55: setOwnership / setProviders / setOwnershipAndProviders
+    // dropped (Mullvad relay-ownership/provider filter feature was wired to
+    // the deleted Filter screen).
 
     // D.4 step 50: submitVoucher + verifyPlayPurchase + initializePlayPurchase
     // accessors all dropped (Mullvad voucher redeem + Play Store VPN billing
@@ -650,16 +488,6 @@ class ManagementService(
                 grpc.setRelaySettings(updated.fromDomain())
             }
             .onLeft { Logger.e("Set multihop error") }
-            .mapLeft(SetWireguardConstraintsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setIpv6Enabled(enabled: Boolean): Either<SetDaitaSettingsError, Unit> =
-        Either.catch { grpc.setEnableIpv6(BoolValue.of(enabled)) }
-            .mapLeft(SetDaitaSettingsError::Unknown)
-            .mapEmpty()
-
-    suspend fun setRecentsEnabled(enabled: Boolean): Either<SetWireguardConstraintsError, Unit> =
-        Either.catch { grpc.setEnableRecents(BoolValue.of(enabled)) }
             .mapLeft(SetWireguardConstraintsError::Unknown)
             .mapEmpty()
 

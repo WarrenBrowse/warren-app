@@ -38,7 +38,6 @@ import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
-import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -113,7 +112,7 @@ val uiModule = module {
             get(named(BOOT_COMPLETED_RECEIVER_COMPONENT_NAME)),
         )
     }
-    single { WireguardConstraintsRepository(get()) }
+    // D.4 step 55: WireguardConstraintsRepository dropped (orphan - VpnSettings deleted).
 
     // D.4 step 38: AccountExpiryInAppNotificationUseCase dropped (subscription dead).
     single { TunnelStateNotificationUseCase(get()) } bind
