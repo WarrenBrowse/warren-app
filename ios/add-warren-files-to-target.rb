@@ -60,6 +60,7 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Tunnel/WarrenFailoverBannerView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenTunnelStatisticsView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Settings/WarrenDiagnosticInfoView.swift" => "WarrenVPN",
 
   # Onboarding wizard 5-step (SwiftUI) + coordinator.
   "WarrenVPN/View controllers/Onboarding/OnboardingWizardView.swift" => "WarrenVPN",
@@ -73,6 +74,8 @@ FILES_TO_ADD = {
     "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Shared/WarrenAppGroupKeyTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/WarrenTunnelStatisticsViewTests.swift" =>
+    "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenDiagnosticInfoViewTests.swift" =>
     "WarrenVPNTests",
 
   # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.

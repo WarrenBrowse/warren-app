@@ -126,6 +126,7 @@ public enum AccessibilityIdentifier: Equatable {
     case warrenWalletEraseCell
     case warrenWalletIdentityCell
     case warrenTunnelStatisticsCell
+    case warrenDiagnosticInfoCell
     case warrenPortForwardingCell
     case daitaFilterPill
     case obfuscationFilterPill

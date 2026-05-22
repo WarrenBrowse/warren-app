@@ -202,6 +202,18 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenTunnelStatistics }
 
+        case .warrenDiagnosticInfo:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Diagnostic info",
+                table: "Settings",
+                comment: "Settings row that opens the screenshot-friendly support payload view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenDiagnosticInfo }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 

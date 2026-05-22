@@ -53,6 +53,10 @@ enum SettingsNavigationRoute: Equatable {
     /// Warren tunnel statistics (status + bytes + duration + failover count).
     case warrenTunnelStatistics
 
+    /// Warren diagnostic info (app version + wallet pubkey + tunnel stats
+    /// in a screenshot-friendly support-ticket payload).
+    case warrenDiagnosticInfo
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

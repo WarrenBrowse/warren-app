@@ -66,6 +66,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case warrenWalletErase
         case warrenWalletIdentity
         case warrenTunnelStatistics
+        case warrenDiagnosticInfo
         case warrenPortForwarding
 
         var accessibilityIdentifier: AccessibilityIdentifier {
@@ -98,6 +99,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .warrenWalletIdentityCell
             case .warrenTunnelStatistics:
                 .warrenTunnelStatisticsCell
+            case .warrenDiagnosticInfo:
+                .warrenDiagnosticInfoCell
             case .warrenPortForwarding:
                 .warrenPortForwardingCell
             }
@@ -294,7 +297,12 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         snapshot.appendItems(generalItems, toSection: .general)
 
         snapshot.appendSections([.misc])
-        snapshot.appendItems([.problemReport, .faq, .language], toSection: .misc)
+        // Diagnostic info appears in misc near problem report — both
+        // are user-facing support tools.
+        snapshot.appendItems(
+            [.warrenDiagnosticInfo, .problemReport, .faq, .language],
+            toSection: .misc
+        )
 
         apply(snapshot)
     }

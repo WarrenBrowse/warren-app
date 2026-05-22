@@ -93,6 +93,8 @@ final class SettingsViewControllerFactory {
             makeWarrenWalletIdentityViewController()
         case .warrenTunnelStatistics:
             makeWarrenTunnelStatisticsViewController()
+        case .warrenDiagnosticInfo:
+            makeWarrenDiagnosticInfoViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -265,6 +267,43 @@ final class SettingsViewControllerFactory {
             connectedDurationSeconds: duration > 0 ? duration : nil,
             failoverCount: failover
         )
+    }
+
+    /// Diagnostic info (Settings → Diagnostic info, screenshot-safe
+    /// support payload). Builds the snapshot from bundle version +
+    /// optional wallet pubkey (when wallet present) + App Group tunnel
+    /// stats.
+    private func makeWarrenDiagnosticInfoViewController() -> MakeChildResult {
+        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        var walletShort: String?
+        if WarrenWalletKeychain.exists() {
+            if let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            {
+                // Render as `<first 4 hex>...<last 4 hex>` so the
+                // identifier fits one line on small phones but still
+                // disambiguates between wallets.
+                let hex = wallet.publicKeyHex
+                if hex.count >= 8 {
+                    let prefix = hex.prefix(4)
+                    let suffix = hex.suffix(4)
+                    walletShort = "\(prefix)...\(suffix)"
+                }
+                wallet.forgetSecret()
+            }
+        }
+        let info = WarrenDiagnosticInfo(
+            appVersion: appVersion,
+            buildNumber: build,
+            walletPubkeyShortHex: walletShort,
+            tunnelStats: Self.loadTunnelStatistics()
+        )
+        let view = WarrenDiagnosticInfoView(info: info)
+        let host = UIHostingController(rootView: view)
+        host.view.backgroundColor = .Warren.navy
+        host.title = String(localized: "Diagnostic info", table: "Settings")
+        return .viewController(host)
     }
 
     /// NAT-PMP port forwarding settings (Settings → Port forwarding).

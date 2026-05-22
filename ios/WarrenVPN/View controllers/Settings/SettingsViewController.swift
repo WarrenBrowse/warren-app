@@ -126,6 +126,8 @@ private extension SettingsDataSource.Item {
             .warrenWalletIdentity
         case .warrenTunnelStatistics:
             .warrenTunnelStatistics
+        case .warrenDiagnosticInfo:
+            .warrenDiagnosticInfo
         case .warrenPortForwarding:
             .warrenPortForwarding
         }
