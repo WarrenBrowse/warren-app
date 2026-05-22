@@ -25,7 +25,6 @@ class NotificationChannelFactory(
 
     private fun NotificationChannel.toAndroidNotificationChannel(): NotificationChannelCompat =
         when (this) {
-            NotificationChannel.AccountUpdates -> NotificationChannel.AccountUpdates.toChannel()
             NotificationChannel.TunnelUpdates -> NotificationChannel.TunnelUpdates.toChannel()
         }
 
@@ -37,15 +36,5 @@ class NotificationChannelFactory(
             )
             .setShowBadge(false)
             .setVibrationEnabled(false)
-            .build()
-
-    private fun NotificationChannel.AccountUpdates.toChannel(): NotificationChannelCompat =
-        NotificationChannelCompat.Builder(id.value, NotificationManager.IMPORTANCE_HIGH)
-            .setName(resources.getString(R.string.account_time_notification_channel_name))
-            .setDescription(
-                resources.getString(R.string.account_time_notification_channel_description)
-            )
-            .setShowBadge(true)
-            .setVibrationEnabled(true)
             .build()
 }

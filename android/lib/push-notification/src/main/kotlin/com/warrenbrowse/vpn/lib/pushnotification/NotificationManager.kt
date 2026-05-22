@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.model.Notification
 import com.warrenbrowse.vpn.lib.model.NotificationUpdate
-import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.toNotification
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.toNotification
 
 @OptIn(FlowPreview::class)
@@ -59,7 +58,6 @@ class NotificationManager(
     private fun Notification.toAndroidNotification(context: Context): android.app.Notification =
         when (this) {
             is Notification.Tunnel -> toNotification(context)
-            is Notification.AccountExpiry -> toNotification(context)
         }
 
     companion object {

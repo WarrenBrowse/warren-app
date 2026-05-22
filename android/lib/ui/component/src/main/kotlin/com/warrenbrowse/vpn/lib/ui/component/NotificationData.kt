@@ -103,27 +103,7 @@ fun InAppNotification.toNotificationData(
                         stringResource(id = R.string.dismiss),
                     ),
             )
-        is InAppNotification.AccountExpiry ->
-            NotificationData(
-                title = LocalResources.current.getExpiryQuantityString(expiry),
-                message =
-                    stringResource(
-                        if (isPlayBuild) {
-                            R.string.you_can_add_more_time_play
-                        } else {
-                            R.string.you_can_add_more_time_oss
-                        }
-                    ),
-                statusLevel = statusLevel,
-                action =
-                    if (isPlayBuild) null
-                    else
-                        NotificationAction(
-                            Icons.AutoMirrored.Rounded.OpenInNew,
-                            onClickShowAccount,
-                            stringResource(id = R.string.open_url),
-                        ),
-            )
+        // D.4 step 38: AccountExpiry banner branch removed (subscription dead).
         InAppNotification.TunnelStateBlocked ->
             NotificationData(
                 title = stringResource(id = R.string.blocking_internet),

@@ -57,7 +57,6 @@ import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SupportEmailUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
-import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryInAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
@@ -129,7 +128,7 @@ val uiModule = module {
     }
     single { WireguardConstraintsRepository(get()) }
 
-    single { AccountExpiryInAppNotificationUseCase(get()) } bind InAppNotificationUseCase::class
+    // D.4 step 38: AccountExpiryInAppNotificationUseCase dropped (subscription dead).
     single { TunnelStateNotificationUseCase(get(), get(), get()) } bind
         InAppNotificationUseCase::class
     single {
@@ -226,7 +225,7 @@ val uiModule = module {
     // D.4 step 28: DeviceListViewModel + LoginViewModel removed
     // (Mullvad multi-device + account-number flows, replaced by
     // WarrenWalletViewModel).
-    viewModel { DeviceRevokedViewModel(get(), get(), get(), get()) }
+    viewModel { DeviceRevokedViewModel(get(), get()) }
     viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
     viewModel { WarrenWalletViewModel(get()) }

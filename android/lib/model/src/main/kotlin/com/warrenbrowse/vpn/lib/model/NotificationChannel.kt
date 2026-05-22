@@ -8,8 +8,6 @@ sealed interface NotificationChannel {
         override val id: NotificationChannelId = NotificationChannelId(CHANNEL_ID)
     }
 
-    data object AccountUpdates : NotificationChannel {
-        private const val CHANNEL_ID = "mullvad_account_time"
-        override val id: NotificationChannelId = NotificationChannelId(CHANNEL_ID)
-    }
+    // D.4 step 38: AccountUpdates channel dropped (Mullvad subscription
+    // expiry notifications dead on Warren).
 }

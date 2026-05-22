@@ -33,8 +33,6 @@ import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationProvider
-import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCase
-import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
@@ -47,7 +45,6 @@ import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
-import com.warrenbrowse.vpn.lib.usecase.AccountExpiryNotificationActionUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
@@ -109,8 +106,8 @@ val appModule = module {
         WarrenQuinnReconnectInvoker::class
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
-    single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }
-    single { AccountExpiryNotificationActionUseCase(get(), get()) }
+    // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
+    // ActionUseCase dropped (Mullvad subscription expiry notifications dead).
     // TODO Move these back to UiModule when fixDisableBug is removed
     single { AppObfuscationRepository(get(), get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -119,7 +116,6 @@ val appModule = module {
     single<PackageManager> { androidContext().packageManager }
 
     single { NotificationChannel.TunnelUpdates } bind NotificationChannel::class
-    single { NotificationChannel.AccountUpdates } bind NotificationChannel::class
     single { NotificationChannelFactory(get(), get(), getAll()) } withOptions { createdAtStart() }
     single { NotificationManagerCompat.from(androidContext()) }
     single { NotificationManager(get(), getAll(), get(), MainScope()) } withOptions
@@ -136,8 +132,6 @@ val appModule = module {
             MainScope(),
         )
     } bind NotificationProvider::class
-    single { AccountExpiryNotificationProvider(get<NotificationChannel.AccountUpdates>().id) } bind
-        NotificationProvider::class
     if (BuildConfig.FLAVOR_infrastructure != "prod") {
         single<ApiEndpointOverride> {
             ApiEndpointOverride(BuildConfig.API_ENDPOINT, BuildConfig.API_IP)

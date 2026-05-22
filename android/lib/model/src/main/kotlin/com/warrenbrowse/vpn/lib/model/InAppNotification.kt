@@ -1,7 +1,5 @@
 package com.warrenbrowse.vpn.lib.model
 
-import java.time.Duration
-
 enum class StatusLevel {
     Error,
     Warning,
@@ -38,10 +36,7 @@ sealed class InAppNotification {
         override val priority: Long = 1002
     }
 
-    data class AccountExpiry(val expiry: Duration) : InAppNotification() {
-        override val statusLevel = StatusLevel.Warning
-        override val priority: Long = 1001
-    }
+    // D.4 step 38: AccountExpiry InAppNotification dropped (subscription dead).
 
     data class NewDevice(val deviceName: String) : InAppNotification() {
         override val statusLevel = StatusLevel.Info

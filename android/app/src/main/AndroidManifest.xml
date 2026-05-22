@@ -135,9 +135,7 @@
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
         </receiver>
-        <receiver
-                android:name=".lib.pushnotification.receiver.NotificationAlarmReceiver"
-                android:exported="false" />
+        <!-- D.4 step 38: NotificationAlarmReceiver removed (account-expiry alarm dead). -->
         <receiver
                 android:name=".receiver.AutoStartVpnBootCompletedReceiver"
                 android:enabled="false"
@@ -147,14 +145,9 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver
-                android:name=".receiver.ScheduleNotificationBootCompletedReceiver"
-                android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
+        <!-- D.4 step 38: ScheduleNotificationBootCompletedReceiver removed
+             (was rescheduling account-expiry alarms after boot). -->
+
         <!--
          Receiver to warn Android 16 users about VPN upgrade issue
          https://issuetracker.google.com/issues/441315112

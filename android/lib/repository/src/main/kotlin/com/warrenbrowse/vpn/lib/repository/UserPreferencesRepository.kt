@@ -1,9 +1,6 @@
 package com.warrenbrowse.vpn.lib.repository
 
 import androidx.datastore.core.DataStore
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -33,32 +30,16 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun setAccountExpiry(expiry: ZonedDateTime) {
-        userPreferencesStore.updateData { prefs ->
-            prefs.toBuilder().setAccountExpiryUnixTimeSeconds(expiry.toEpochSecond()).build()
-        }
-    }
+    // D.4 step 38: setAccountExpiry / clearAccountExpiry / accountExpiry()
+    // methods dropped (Mullvad subscription expiry tracking dead on Warren ;
+    // accountExpiryUnixTimeSeconds proto field is orphaned and will be removed
+    // in a future UserPreferences proto cleanup).
 
     suspend fun setLocationInNotificationEnabled(enable: Boolean) {
         userPreferencesStore.updateData { prefs ->
             prefs.toBuilder().setShowLocationInSystemNotification(enable).build()
         }
     }
-
-    suspend fun clearAccountExpiry() {
-        userPreferencesStore.updateData { prefs ->
-            prefs.toBuilder().setAccountExpiryUnixTimeSeconds(0).build()
-        }
-    }
-
-    // Returns the account expiry time or null if there is no account expiry (e.g. the user
-    // is not logged in on an account).
-    suspend fun accountExpiry(): ZonedDateTime? =
-        preferences().let { prefs ->
-            val expiryTime = prefs.accountExpiryUnixTimeSeconds
-            if (expiryTime == 0L) return null
-            Instant.ofEpochSecond(expiryTime).atZone(ZoneId.systemDefault())
-        }
 
     suspend fun setShowAndroid16ConnectWarning(show: Boolean) =
         userPreferencesStore.updateData { prefs ->

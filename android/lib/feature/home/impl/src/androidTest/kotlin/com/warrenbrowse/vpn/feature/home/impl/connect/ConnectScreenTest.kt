@@ -10,9 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
-import java.time.Duration
-import java.time.Instant
-import java.time.ZonedDateTime
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.ErrorStateCause
@@ -543,33 +540,7 @@ class ConnectScreenTest {
         }
     }
 
-    @Test
-    fun testAccountExpiredNotification() {
-        composeExtension.use {
-            // Arrange
-            val expiryDate = ZonedDateTime.parse("2020-11-11T10:10Z")
-            initScreen(
-                state =
-                    ConnectUiState(
-                        location = null,
-                        selectedRelayItemTitle = null,
-                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
-                        daysLeftUntilExpiry = null,
-                        inAppNotification =
-                            InAppNotification.AccountExpiry(
-                                Duration.between(Instant.now(), expiryDate)
-                            ),
-                        isPlayBuild = false,
-                    )
-            )
-
-            // Assert
-            onNodeWithText("OUT OF TIME").assertExists()
-            onNodeWithText("You can add more time via the account view", substring = true)
-                .assertExists()
-        }
-    }
+    // D.4 step 38: testAccountExpiredNotification removed (subscription dead).
 
     @Test
     fun testOnUpdateVersionClick() {
@@ -599,36 +570,7 @@ class ConnectScreenTest {
         }
     }
 
-    @Test
-    fun testOnShowAccountClick() {
-        composeExtension.use {
-            // Arrange
-            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
-            val expiryDate = ZonedDateTime.parse("2020-11-11T10:10Z")
-            initScreen(
-                onManageAccountClick = mockedClickHandler,
-                state =
-                    ConnectUiState(
-                        location = null,
-                        selectedRelayItemTitle = null,
-                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
-                        daysLeftUntilExpiry = null,
-                        inAppNotification =
-                            InAppNotification.AccountExpiry(
-                                Duration.between(Instant.now(), expiryDate)
-                            ),
-                        isPlayBuild = false,
-                    ),
-            )
-
-            // Act
-            onNodeWithTag(NOTIFICATION_BANNER_ACTION_TEST_TAG).performClick()
-
-            // Assert
-            verify { mockedClickHandler.invoke() }
-        }
-    }
+    // D.4 step 38: testOnShowAccountClick removed (AccountExpiry banner dead).
 
     @Test
     fun testOnNewChangelogMessageClick() {

@@ -2,9 +2,7 @@ package com.warrenbrowse.vpn.lib.model
 
 sealed interface NotificationAction {
 
-    sealed interface AccountExpiry : NotificationAction {
-        data object Open : AccountExpiry
-    }
+    // D.4 step 38: AccountExpiry actions dropped (subscription expiry dead).
 
     sealed interface Tunnel : NotificationAction {
         data object Connect : Tunnel

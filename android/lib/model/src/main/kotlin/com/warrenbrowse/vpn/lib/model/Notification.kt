@@ -1,7 +1,5 @@
 package com.warrenbrowse.vpn.lib.model
 
-import java.time.Duration
-
 sealed interface Notification {
     val actions: List<NotificationAction>
     val ongoing: Boolean
@@ -14,11 +12,6 @@ sealed interface Notification {
         override val ongoing: Boolean,
     ) : Notification
 
-    data class AccountExpiry(
-        override val channelId: NotificationChannelId,
-        override val actions: List<NotificationAction.AccountExpiry>,
-        val durationUntilExpiry: Duration,
-    ) : Notification {
-        override val ongoing: Boolean = false
-    }
+    // D.4 step 38: Notification.AccountExpiry dropped (Mullvad subscription
+    // expiry notifications dead on Warren).
 }

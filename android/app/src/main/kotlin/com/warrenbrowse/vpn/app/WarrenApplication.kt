@@ -20,10 +20,6 @@ import com.warrenbrowse.vpn.di.KERMIT_FILE_LOG_DIR_NAME
 import com.warrenbrowse.vpn.di.appModule
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
-import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCase
-import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
-import com.warrenbrowse.vpn.lib.usecase.AccountExpiryNotificationActionUseCase
-import com.warrenbrowse.vpn.lib.usecase.NotificationAction
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -51,13 +47,8 @@ class WarrenApplication : Application() {
             get<NotificationChannelFactory>()
             get<NotificationManager>()
             initFileLogger(get<ApplicationScope>())
-
-            handleAccountExpiry(
-                scope = get<ApplicationScope>(),
-                accountExpiryUseCase = get<AccountExpiryNotificationActionUseCase>(),
-                scheduleNotificationAlarmUseCase = get<ScheduleNotificationAlarmUseCase>(),
-                accountExpiryNotificationProvider = get<AccountExpiryNotificationProvider>(),
-            )
+            // D.4 step 38: handleAccountExpiry coroutine dropped (Mullvad
+            // subscription expiry notifications dead on Warren).
         }
     }
 
@@ -72,27 +63,6 @@ class WarrenApplication : Application() {
                 Logger.addLogWriter(fileLogWriter)
             } catch (e: IOException) { // This shouldn't happen but just in case catch here.
                 Logger.e("Failed to initialize file log writer", e)
-            }
-        }
-    }
-
-    private fun handleAccountExpiry(
-        scope: CoroutineScope,
-        accountExpiryUseCase: AccountExpiryNotificationActionUseCase,
-        scheduleNotificationAlarmUseCase: ScheduleNotificationAlarmUseCase,
-        accountExpiryNotificationProvider: AccountExpiryNotificationProvider,
-    ) {
-        scope.launch {
-            accountExpiryUseCase().collect { action ->
-                when (action) {
-                    NotificationAction.CancelExisting -> {
-                        accountExpiryNotificationProvider.cancelNotification()
-                        scheduleNotificationAlarmUseCase(accountExpiry = null)
-                    }
-
-                    is NotificationAction.ScheduleAlarm ->
-                        scheduleNotificationAlarmUseCase(accountExpiry = action.alarmTime)
-                }
             }
         }
     }

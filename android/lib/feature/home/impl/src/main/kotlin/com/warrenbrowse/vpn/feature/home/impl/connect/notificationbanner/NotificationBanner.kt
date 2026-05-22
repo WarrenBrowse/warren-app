@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.time.Duration
 import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.ErrorStateCause
@@ -32,7 +31,6 @@ private fun PreviewNotificationBanner() {
                     InAppNotification.UnsupportedVersion(
                         versionInfo = VersionInfo(currentVersion = "1.0", isSupported = false)
                     ),
-                    InAppNotification.AccountExpiry(expiry = Duration.ZERO),
                     InAppNotification.TunnelStateBlocked,
                     InAppNotification.NewDevice("Courageous Turtle"),
                     InAppNotification.TunnelStateError(

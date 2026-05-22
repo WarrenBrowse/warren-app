@@ -17,8 +17,6 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCase
-import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import org.junit.jupiter.api.AfterEach
@@ -38,12 +36,6 @@ class DeviceRevokedViewModelTest {
 
     private val tunnelStateFlow = MutableSharedFlow<TunnelState>()
 
-    private val mockScheduleNotificationAlarmUseCase =
-        mockk<ScheduleNotificationAlarmUseCase>(relaxed = true)
-
-    private val mockAccountExpiryNotificationProvider =
-        mockk<AccountExpiryNotificationProvider>(relaxed = true)
-
     @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
@@ -52,8 +44,6 @@ class DeviceRevokedViewModelTest {
             DeviceRevokedViewModel(
                 accountRepository = mockedAccountRepository,
                 connectionProxy = mockConnectionProxy,
-                scheduleNotificationAlarmUseCase = mockScheduleNotificationAlarmUseCase,
-                accountExpiryNotificationProvider = mockAccountExpiryNotificationProvider,
             )
     }
 
@@ -76,16 +66,7 @@ class DeviceRevokedViewModelTest {
         }
     }
 
-    @Test
-    fun `when subscription starts the user account expiry notification should be cancelled`() =
-        runTest {
-            // Act, Assert
-            viewModel.uiState.test {
-                assertEquals(DeviceRevokedUiState.UNKNOWN, awaitItem())
-                coVerify { mockScheduleNotificationAlarmUseCase(null, null) }
-                coVerify { mockAccountExpiryNotificationProvider.cancelNotification() }
-            }
-        }
+    // D.4 step 38: account-expiry cancel test dropped (subscription dead).
 
     @Test
     fun `onGoToLoginClicked should invoke logout on AccountRepository`() {

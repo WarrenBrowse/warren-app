@@ -6,30 +6,23 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
-import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCase
-import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 
 class DeviceRevokedViewModel(
     private val accountRepository: AccountRepository,
     private val connectionProxy: ConnectionProxy,
-    private val scheduleNotificationAlarmUseCase: ScheduleNotificationAlarmUseCase,
-    private val accountExpiryNotificationProvider: AccountExpiryNotificationProvider,
+    // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
+    // Provider dropped (Mullvad subscription expiry plumbing is dead on Warren).
 ) : ViewModel() {
 
     val uiState =
         connectionProxy.tunnelState
-            .onStart {
-                accountExpiryNotificationProvider.cancelNotification()
-                scheduleNotificationAlarmUseCase(accountExpiry = null)
-            }
             .map {
                 if (it.isSecured()) {
                     DeviceRevokedUiState.SECURED
