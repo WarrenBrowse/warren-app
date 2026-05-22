@@ -56,9 +56,7 @@ import com.warrenbrowse.vpn.lib.model.CustomList as ModelCustomList
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.CustomListName
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
-import com.warrenbrowse.vpn.lib.model.DeleteDeviceError
 import com.warrenbrowse.vpn.lib.model.Device
-import com.warrenbrowse.vpn.lib.model.DeviceId
 import com.warrenbrowse.vpn.lib.model.DeviceState as ModelDeviceState
 import com.warrenbrowse.vpn.lib.model.DeviceUpdateError
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
@@ -68,7 +66,6 @@ import com.warrenbrowse.vpn.lib.model.DnsState as ModelDnsState
 import com.warrenbrowse.vpn.lib.model.DnsState
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
 import com.warrenbrowse.vpn.lib.model.GetAccountDataError
-import com.warrenbrowse.vpn.lib.model.GetDeviceListError
 import com.warrenbrowse.vpn.lib.model.GetDeviceStateError
 import com.warrenbrowse.vpn.lib.model.GetVersionInfoError
 import com.warrenbrowse.vpn.lib.model.IpVersion
@@ -252,27 +249,8 @@ class ManagementService(
             .onLeft { Logger.e("Update device error") }
             .mapLeft { DeviceUpdateError(it) }
 
-    suspend fun getDeviceList(token: AccountNumber): Either<GetDeviceListError, List<Device>> =
-        Either.catch { grpc.listDevices(StringValue.of(token.value)) }
-            .map { it.devicesList.map(ManagementInterface.Device::toDomain) }
-            .onLeft { Logger.e("Get device list error") }
-            .mapLeft { GetDeviceListError.Unknown(it) }
-
-    suspend fun removeDevice(
-        token: AccountNumber,
-        deviceId: DeviceId,
-    ): Either<DeleteDeviceError, Unit> =
-        Either.catch {
-                grpc.removeDevice(
-                    ManagementInterface.DeviceRemoval.newBuilder()
-                        .setAccountNumber(token.value)
-                        .setDeviceId(deviceId.value.toString())
-                        .build()
-                )
-            }
-            .mapEmpty()
-            .onLeft { Logger.e("Remove device error") }
-            .mapLeft { DeleteDeviceError.Unknown(it) }
+    // D.4 step 51: getDeviceList + removeDevice dropped (Mullvad ManageDevices
+    // screen deleted, no consumer outside).
 
     suspend fun connect(): Either<ConnectError, Boolean> =
         Either.catch { grpc.connectTunnel(Empty.getDefaultInstance()).value }
