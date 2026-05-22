@@ -28,7 +28,6 @@ import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.common.compose.itemWithDivider
 import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
 import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
@@ -101,7 +100,10 @@ fun Settings(navigator: Navigator) {
         onVpnSettingCellClick =
             dropUnlessResumed {
                 if (navigator.screenIsListDetailTargetWidth) {
-                    val detailKey = if (isTv) AntiCensorshipNavKey() else AutoConnectNavKey
+                    // D.4 step 34: TV detail-pane default switched from
+                    // Mullvad AntiCensorship to Warren tunnel toggles.
+                    val detailKey =
+                        if (isTv) WarrenTunnelSettingsNavKey else AutoConnectNavKey
                     navigator.navigate(VpnSettingsNavKey(), detailKey)
                 } else {
                     navigator.navigate(VpnSettingsNavKey())

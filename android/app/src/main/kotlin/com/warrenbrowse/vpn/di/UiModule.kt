@@ -7,9 +7,6 @@ import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.AntiCensorshipSettingsViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.customport.CustomPortDialogViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.selectport.SelectPortViewModel
 import com.warrenbrowse.vpn.feature.appicon.impl.AppIconViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
@@ -249,7 +246,6 @@ val uiModule = module {
     viewModel { DeviceRevokedViewModel(get(), get(), get(), get()) }
     viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
-    viewModel { params -> CustomPortDialogViewModel(navArgs = params.get()) }
     viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
@@ -257,7 +253,6 @@ val uiModule = module {
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { SplashViewModel(get(), get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
-    viewModel { params -> AntiCensorshipSettingsViewModel(isModal = params.get(), get()) }
     viewModel {
         ReportProblemViewModel(
             warrenProblemReporter = get(),
@@ -274,7 +269,9 @@ val uiModule = module {
     // D.4 step 33: ApiAccess ViewModels removed (5 VMs : List, Edit,
     // Save, Details, DeleteConfirmation). Warren API endpoint is
     // hardcoded - no per-user access method configuration.
-    viewModel { params -> SelectPortViewModel(navArgs = params.get(), get(), get(), get()) }
+    // D.4 step 34: anticensorship VMs removed (AntiCensorshipSettings +
+    // CustomPortDialog + SelectPort - all Mullvad WG-over-X transport
+    // features ; Warren uses native Quinn + M4.0 toggle).
     // D.4 step 32: MultihopViewModel removed (multihop now configured
     // via WarrenTunnelSettings toggles).
     viewModel { NotificationSettingsViewModel(get()) }

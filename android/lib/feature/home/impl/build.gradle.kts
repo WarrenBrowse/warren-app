@@ -11,7 +11,7 @@ android { namespace = "com.warrenbrowse.vpn.feature.home.impl" }
 dependencies {
     // D.4 step 18: home/impl no longer depends on account/addtime/redeemvoucher
     // modules ; WelcomeScreen + OutOfTimeScreen (sole consumers) are gone.
-    implementation(projects.lib.feature.anticensorship.api)
+    // D.4 step 34: anticensorship.api dep dropped.
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
     implementation(projects.lib.feature.home.api)

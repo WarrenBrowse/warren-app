@@ -44,7 +44,6 @@ import com.warrenbrowse.vpn.core.rememberResultStore
 import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
-import com.warrenbrowse.vpn.feature.anticensorship.impl.navigation.anticensorshipEntry
 import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
@@ -114,7 +113,8 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         // manageDevices / redeemVoucher) removed from the live navigation graph.
         // The screens still compile (modules retained) but no NavKey routes them
         // anymore. Full module deletion is a follow-up.
-        anticensorshipEntry(nav3)
+        // D.4 step 34: anticensorshipEntry removed (Warren uses native
+        // Quinn + M4.0 toggle in WarrenTunnelSettings).
         // D.4 step 33: apiAccessEntry removed (Warren API endpoint fixed).
         appIconEntry(nav3)
         appearanceEntry(nav3)

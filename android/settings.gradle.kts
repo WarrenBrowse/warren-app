@@ -37,8 +37,7 @@ include(
     // D.4 step 18: account / addtime modules removed (Mullvad-account
     // identity model ; Warren uses BIP39 wallet via the login/wallet
     // module instead).
-    ":lib:feature:anticensorship:impl",
-    ":lib:feature:anticensorship:api",
+    // D.4 step 34: anticensorship module deleted.
     // D.4 step 33: apiaccess module deleted.
     ":lib:feature:appicon:impl",
     ":lib:feature:appicon:api",

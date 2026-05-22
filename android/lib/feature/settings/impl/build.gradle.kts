@@ -9,7 +9,7 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.settings.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.anticensorship.api)
+    // D.4 step 34: anticensorship.api dep dropped.
     // D.4 step 33: apiaccess.api dep dropped (NavKey unused).
     implementation(projects.lib.feature.appearance.api)
     implementation(projects.lib.feature.appinfo.api)

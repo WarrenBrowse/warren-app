@@ -373,8 +373,7 @@ dependencies {
     implementation(projects.lib.endpoint)
     // D.4 step 18: account/addtime/deleteaccount/managedevices/redeemvoucher
     // modules deleted (Mullvad-account features without Warren equivalent).
-    implementation(projects.lib.feature.anticensorship.impl)
-    implementation(projects.lib.feature.anticensorship.api)
+    // D.4 step 34: anticensorship module deleted.
     // D.4 step 33: apiaccess module deleted.
     implementation(projects.lib.feature.appicon.impl)
     implementation(projects.lib.feature.appinfo.impl)

@@ -79,7 +79,6 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
@@ -912,11 +911,16 @@ private fun FeatureIndicator.navKey(): NavKey2 =
 
         FeatureIndicator.SERVER_IP_OVERRIDE -> ServerIpOverrideNavKey(isModal = true)
 
+        // D.4 step 34: Mullvad anti-censorship transport indicators
+        // (UDP-over-TCP, QUIC-over-WG, WireGuard port, Shadowsocks, LWO)
+        // route to the unified WarrenTunnelSettings (Warren uses native
+        // Quinn + M4.0 obfuscation toggle ; the Mullvad WG-over-X
+        // family is gone).
         FeatureIndicator.UDP_2_TCP,
         FeatureIndicator.QUIC,
         FeatureIndicator.WIREGUARD_PORT,
         FeatureIndicator.SHADOWSOCKS,
-        FeatureIndicator.LWO -> AntiCensorshipNavKey(selectedFeature = this, isModal = true)
+        FeatureIndicator.LWO -> WarrenTunnelSettingsNavKey
 
         FeatureIndicator.QUANTUM_RESISTANCE,
         FeatureIndicator.LAN_SHARING,

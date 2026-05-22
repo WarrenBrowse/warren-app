@@ -9,9 +9,9 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.vpnsettings.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.anticensorship.api)
     implementation(projects.lib.feature.autoconnect.api)
     implementation(projects.lib.feature.serveripoverride.api)
+    implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.vpnsettings.api)
     implementation(projects.lib.navigation)
     implementation(projects.lib.repository)
