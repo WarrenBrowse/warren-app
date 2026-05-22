@@ -53,6 +53,12 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// without re-resolving the suite.
     private let appGroupDefaults: UserDefaults?
 
+    /// Background Task that periodically snapshots the adapter status
+    /// + writes counters into App Group `UserDefaults` so the
+    /// main-app `WarrenTunnelStatisticsView` can render live numbers.
+    /// Spawned in `setUp(provider:...)` ; cancelled in deinit.
+    private var statsBroadcastTask: Task<Void, Never>?
+
     public init() {
         self._actor = WarrenQuinnActor()
         // Best-effort App Group defaults handle. When the bundle is
@@ -90,6 +96,53 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         )
         self.adapter = adapter
         _actor.bindAdapter(adapter)
+        startStatsBroadcastTask(adapter: adapter)
+    }
+
+    deinit {
+        statsBroadcastTask?.cancel()
+    }
+
+    /// Spawn the periodic stats snapshot task that drives
+    /// `WarrenTunnelStatisticsView` in the main app. Pulls
+    /// `adapter.status()` every 2 s and writes counters to App Group
+    /// `UserDefaults` under the `WarrenAppGroupKey.*` keys. 2 s strikes
+    /// a balance between freshness in the UI and minimal CPU spend in
+    /// the extension's tight background time budget.
+    private func startStatsBroadcastTask(adapter: WarrenQuinnAdapter) {
+        statsBroadcastTask?.cancel()
+        let defaults = appGroupDefaults
+        statsBroadcastTask = Task.detached(priority: .background) {
+            while !Task.isCancelled {
+                let snapshot = adapter.status()
+                Self.broadcastStats(snapshot, into: defaults)
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+        }
+    }
+
+    private static func broadcastStats(_ status: WarrenTunnelStatus, into defaults: UserDefaults?) {
+        guard let defaults else { return }
+        defaults.set(Int(status.bytesIn), forKey: WarrenAppGroupKey.bytesIn.rawValue)
+        defaults.set(Int(status.bytesOut), forKey: WarrenAppGroupKey.bytesOut.rawValue)
+        defaults.set(
+            Int(status.connectedDurationSeconds ?? 0),
+            forKey: WarrenAppGroupKey.connectedDurationSeconds.rawValue
+        )
+        defaults.set(Int(status.failoverCount), forKey: WarrenAppGroupKey.failoverCount.rawValue)
+        defaults.set(Self.stateLabel(for: status.state), forKey: WarrenAppGroupKey.stateLabel.rawValue)
+    }
+
+    /// Localized label for the current state. Falls back to "Failed"
+    /// with the underlying message for the `.failed(_)` variant.
+    private static func stateLabel(for state: WarrenTunnelStatus.State) -> String {
+        switch state {
+        case .disconnected: return "Disconnected"
+        case .connecting: return "Connecting"
+        case .connected: return "Connected"
+        case .reconnecting: return "Reconnecting"
+        case .failed(let reason): return "Failed (\(reason))"
+        }
     }
 
     public func startTunnel(options: StartOptions) async {
