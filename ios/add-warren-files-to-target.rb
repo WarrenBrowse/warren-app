@@ -69,6 +69,7 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/WarrenAppGroupEventsTests.swift" =>
     "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Shared/WarrenAppGroupKeyTests.swift" => "WarrenVPNTests",
 
   # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.
   "Assets/Wallet.xcstrings" => "WarrenVPN",
