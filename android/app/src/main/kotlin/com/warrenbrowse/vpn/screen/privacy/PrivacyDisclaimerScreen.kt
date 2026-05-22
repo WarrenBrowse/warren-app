@@ -38,7 +38,7 @@ import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
+import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
@@ -71,7 +71,13 @@ fun PrivacyDisclaimer(navigator: Navigator) {
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) {
         when (it) {
             PrivacyDisclaimerUiSideEffect.NavigateToLogin ->
-                navigator.navigate(LoginNavKey(), clearBackStack = true)
+                // D.4 step 22: post-privacy on Warren mobile routes
+                // straight to the wallet onboarding instead of the
+                // Mullvad login screen (which is dead - no account
+                // number model on Warren). The wallet flow self-routes
+                // to ConnectNavKey on completion via the
+                // `WarrenWalletEvent.WalletReady` channel.
+                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
             PrivacyDisclaimerUiSideEffect.StartService ->
                 launch {
                     try {

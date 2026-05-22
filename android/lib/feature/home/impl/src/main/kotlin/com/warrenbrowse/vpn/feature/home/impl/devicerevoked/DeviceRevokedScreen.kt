@@ -23,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
+import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
@@ -52,7 +52,11 @@ fun DeviceRevoked(navigator: Navigator) {
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) { sideEffect ->
         when (sideEffect) {
             DeviceRevokedSideEffect.NavigateToLogin ->
-                navigator.navigate(LoginNavKey(), clearBackStack = true)
+                // D.4 step 22: device-revoked flow is itself Mullvad-only
+                // (Warren wallet is the identity ; no notion of "device
+                // revoked" without a server-side multi-device tracker).
+                // Route to the wallet flow so the user can re-onboard.
+                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
         }
     }
 
