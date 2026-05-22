@@ -65,7 +65,6 @@ import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
-import com.warrenbrowse.vpn.lib.usecase.FilterChipUseCase
 import com.warrenbrowse.vpn.lib.usecase.FilteredRelayListUseCase
 import com.warrenbrowse.vpn.lib.usecase.HopSelectionUseCase
 import com.warrenbrowse.vpn.lib.usecase.InternetAvailableUseCase
@@ -82,10 +81,6 @@ import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SupportEmailUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListActionUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListRelayItemsUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListsRelayItemUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.FilterCustomListsRelayItemUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryInAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
@@ -171,16 +166,16 @@ val uiModule = module {
     single { OutOfTimeUseCase(get(), get(), MainScope()) }
     single { InternetAvailableUseCase(get()) }
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
-    single { CustomListActionUseCase(get(), get()) }
+    // D.4 step 29: CustomList* + FilterChip + Filtered/Selected relay use
+    // cases removed - all consumers were the deleted Mullvad
+    // SelectLocation/CustomList screens. SelectedLocationTitleUseCase +
+    // LastKnownLocationUseCase + ProviderToOwnershipsUseCase + their
+    // dependents kept because ConnectViewModel still references them.
     single { SelectedLocationTitleUseCase(get(), get()) }
     single { ProviderToOwnershipsUseCase(get()) }
-    single { FilterCustomListsRelayItemUseCase(get(), get()) }
-    single { CustomListsRelayItemUseCase(get(), get()) }
-    single { CustomListRelayItemsUseCase(get(), get()) }
     single { FilteredRelayListUseCase(get(), get(), get()) }
     single { LastKnownLocationUseCase(get()) }
     single { SelectedLocationUseCase(get(), get()) }
-    single { FilterChipUseCase(get(), get(), get()) }
     single { DeleteCustomDnsUseCase(get()) }
     single { RecentsUseCase(get(), get(), get()) }
     single { SelectSinglehopUseCase(relayListRepository = get()) }
