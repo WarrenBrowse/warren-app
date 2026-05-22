@@ -35,7 +35,7 @@ struct ExternalLinkView: View {
 
 #Preview {
     ExternalLinkView(
-        url: URL(string: "http://www.mullvad.net")!,
+        url: URL(string: "https://www.warrenbrowse.com")!,
         label: NSLocalizedString("Warren website", comment: ""),
         font: .mullvadTiny,
         color: Color.red

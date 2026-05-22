@@ -74,7 +74,7 @@ enum ApplicationConfiguration {
 
     /// FAQ & Guides URL.
     static func faqAndGuidesURL(for language: String) -> URL {
-        URL(string: "https://\(Self.hostName)/\(language)/help/tag/mullvad-app/")!
+        URL(string: "https://\(Self.hostName)/\(language)/help/tag/warren-app/")!
     }
 
     /// Maximum number of devices per account.
