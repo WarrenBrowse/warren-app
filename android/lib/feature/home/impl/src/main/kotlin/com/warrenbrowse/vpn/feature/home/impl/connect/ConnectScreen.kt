@@ -81,7 +81,6 @@ import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
-import com.warrenbrowse.vpn.feature.daita.api.DaitaNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
@@ -92,7 +91,6 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.FeatureIndi
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
-import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
@@ -349,7 +347,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             onSettingsClick =
                 dropUnlessResumed {
                     if (navigator.screenIsListDetailTargetWidth) {
-                        navigator.navigate(SettingsNavKey, DaitaNavKey())
+                        // D.4 step 32: tablet detail-pane default for Settings
+                        // is the unified Warren tunnel toggles screen.
+                        navigator.navigate(SettingsNavKey, WarrenTunnelSettingsNavKey)
                     } else {
                         navigator.navigate(SettingsNavKey)
                     }
@@ -903,9 +903,11 @@ private fun PrepareError.OtherAlwaysOnApp.toMessage(resources: Resources) =
 
 private fun FeatureIndicator.navKey(): NavKey2 =
     when (this) {
+        // D.4 step 32: DAITA + Multihop indicators route to the unified
+        // Warren tunnel settings screen (was dedicated Mullvad screens).
         FeatureIndicator.DAITA,
-        FeatureIndicator.DAITA_MULTIHOP -> DaitaNavKey(isModal = true)
-        FeatureIndicator.MULTIHOP -> MultihopNavKey(isModal = true)
+        FeatureIndicator.DAITA_MULTIHOP,
+        FeatureIndicator.MULTIHOP -> WarrenTunnelSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
 
         FeatureIndicator.SERVER_IP_OVERRIDE -> ServerIpOverrideNavKey(isModal = true)
