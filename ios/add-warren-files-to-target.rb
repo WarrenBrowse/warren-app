@@ -41,6 +41,12 @@ FILES_TO_ADD = {
   "PacketTunnelCore/Actor/WarrenQuinnActor.swift" => "PacketTunnelCore",
   "PacketTunnelCore/Actor/WarrenQuinnTunnelImplementation.swift" => "PacketTunnelCore",
 
+  # C.4.3.X follow-up : shared App Group key constants consumed by both
+  # the PacketTunnel extension (producer) and the main app
+  # (consumer). Wired into WarrenVPN target alongside the existing
+  # Shared/* files (ApplicationConfiguration etc.).
+  "Shared/WarrenAppGroupKey.swift" => "WarrenVPN",
+
   # WarrenRustRuntime FFI wrappers.
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
@@ -67,6 +73,15 @@ FILES_TO_ADD = {
   "Assets/Wallet.xcstrings" => "WarrenVPN",
   "Assets/Settings.xcstrings" => "WarrenVPN",
   "Assets/Onboarding.xcstrings" => "WarrenVPN",
+}.freeze
+
+# Files that need to live in MULTIPLE targets (mirrors the Mullvad
+# `Shared/` pattern : each target compiles its own copy via PBXBuildFile
+# entries pointing at the same file_ref). Hash key is path ; value is
+# the array of *additional* target names beyond what FILES_TO_ADD
+# declares.
+SHARED_MULTI_TARGET = {
+  "Shared/WarrenAppGroupKey.swift" => %w[PacketTunnelCore PacketTunnel],
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree
@@ -127,6 +142,27 @@ FILES_TO_ADD.each do |rel_path, target_name|
   end
 
   added << rel_path
+end
+
+# Add SHARED_MULTI_TARGET extra wires after primary pass so file_refs
+# always exist (so we hit the `existing_ref` branch above and just
+# attach to the secondary target's source build phase).
+SHARED_MULTI_TARGET.each do |rel_path, extra_targets|
+  existing_ref = project.files.find { |f| f.real_path.to_s == File.join(SCRIPT_DIR, rel_path) }
+  unless existing_ref
+    warn "SHARED_MULTI_TARGET: file_ref for #{rel_path} not yet present, skipping"
+    next
+  end
+  extra_targets.each do |target_name|
+    target = project.targets.find { |t| t.name == target_name }
+    if target.nil?
+      warn "SHARED_MULTI_TARGET: target #{target_name} not found, skipping"
+      next
+    end
+    next if target.source_build_phase.files_references.include?(existing_ref)
+    target.add_file_references([existing_ref])
+    added << "#{rel_path} -> #{target_name}"
+  end
 end
 
 if added.empty? && skipped.size == FILES_TO_ADD.size

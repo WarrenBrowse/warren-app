@@ -124,14 +124,14 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         guard let defaults else { return }
         switch event {
         case .failover(let exit):
-            defaults.set(exit, forKey: "WarrenTunnel.lastFailoverExit")
-            defaults.set(Date(), forKey: "WarrenTunnel.lastFailoverAt")
+            defaults.set(exit, forKey: WarrenAppGroupKey.lastFailoverExit.rawValue)
+            defaults.set(Date(), forKey: WarrenAppGroupKey.lastFailoverAt.rawValue)
         case .natPmpMapped(_, let externalPort, _),
              .natPmpRenewed(let externalPort):
-            defaults.set(Int(externalPort), forKey: "WarrenTunnel.natPmpExternalPort")
+            defaults.set(Int(externalPort), forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
         case .connected, .disconnected, .reconnecting, .natPmpFailed:
-            // These are transient ; the obfuscation indicator + tunnel
-            // status surface via cargo metrics, not App Group keys.
+            // Transient transitions surface via the actor's
+            // observedStates AsyncStream, not via App Group keys.
             break
         }
     }

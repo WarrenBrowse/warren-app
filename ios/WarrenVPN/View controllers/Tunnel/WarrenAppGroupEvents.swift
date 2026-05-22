@@ -18,12 +18,9 @@
 import Combine
 import Foundation
 
-public enum WarrenAppGroupKey: String {
-    case lastFailoverExit = "WarrenTunnel.lastFailoverExit"
-    case lastFailoverAt = "WarrenTunnel.lastFailoverAt"
-    case obfuscationActive = "WarrenTunnel.obfuscationActive"
-    case natPmpExternalPort = "WarrenTunnel.natPmpExternalPort"
-}
+// `WarrenAppGroupKey` lives in `Shared/WarrenAppGroupKey.swift` so the
+// PacketTunnel extension (producer) and the main app (consumer) share
+// a single source of truth. Keys cannot drift silently any more.
 
 public struct WarrenFailoverEvent: Equatable {
     public let country: String
