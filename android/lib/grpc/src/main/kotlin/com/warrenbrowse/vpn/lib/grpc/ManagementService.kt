@@ -52,7 +52,6 @@ import com.warrenbrowse.vpn.lib.model.AddSplitTunnelingAppError
 import com.warrenbrowse.vpn.lib.model.AppVersionInfo as ModelAppVersionInfo
 import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.Constraint
-import com.warrenbrowse.vpn.lib.model.CustomList as ModelCustomList
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.CustomListName
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
@@ -70,7 +69,6 @@ import com.warrenbrowse.vpn.lib.model.GetDeviceStateError
 import com.warrenbrowse.vpn.lib.model.GetVersionInfoError
 import com.warrenbrowse.vpn.lib.model.IpVersion
 import com.warrenbrowse.vpn.lib.model.LogoutAccountError
-import com.warrenbrowse.vpn.lib.model.NameAlreadyExists
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
 import com.warrenbrowse.vpn.lib.model.ObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Ownership as ModelOwnership
@@ -96,7 +94,6 @@ import com.warrenbrowse.vpn.lib.model.SetWireguardMtuError
 import com.warrenbrowse.vpn.lib.model.SetWireguardQuantumResistantError
 import com.warrenbrowse.vpn.lib.model.Settings as ModelSettings
 import com.warrenbrowse.vpn.lib.model.TunnelState as ModelTunnelState
-import com.warrenbrowse.vpn.lib.model.UpdateCustomListError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
 import com.warrenbrowse.vpn.lib.model.WireguardConstraints
 import com.warrenbrowse.vpn.lib.model.WireguardEndpointData as ModelWireguardEndpointData
@@ -530,23 +527,9 @@ class ManagementService(
             .mapLeft(SetRelayLocationError::Unknown)
             .mapEmpty()
 
-    // D.4 step 47: createCustomList dropped (CustomList feature dead).
-
-    suspend fun updateCustomList(customList: ModelCustomList): Either<UpdateCustomListError, Unit> =
-        Either.catch { grpc.updateCustomList(customList.fromDomain()) }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.ALREADY_EXISTS -> NameAlreadyExists(customList.name)
-                    else -> {
-                        Logger.e("Unknown update custom list error")
-                        UnknownCustomListError(it)
-                    }
-                }
-            }
-            .mapEmpty()
-
-    // D.4 step 47: deleteCustomList + clearAllRelayOverrides + applySettingsPatch
-    // dropped (CustomList / ServerIpOverride / SettingsPatch features dead).
+    // D.4 step 47/52: createCustomList + updateCustomList + deleteCustomList +
+    // clearAllRelayOverrides + applySettingsPatch dropped (CustomList /
+    // ServerIpOverride / SettingsPatch features dead).
 
     suspend fun setOwnershipAndProviders(
         ownershipConstraint: Constraint<ModelOwnership>,

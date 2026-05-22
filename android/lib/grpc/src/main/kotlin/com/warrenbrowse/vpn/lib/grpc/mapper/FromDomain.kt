@@ -8,7 +8,6 @@ import com.warrenbrowse.vpn.lib.model.ApiAccessMethodId
 import com.warrenbrowse.vpn.lib.model.ApiAccessMethodSetting
 import com.warrenbrowse.vpn.lib.model.Constraint
 import com.warrenbrowse.vpn.lib.model.CustomDnsOptions
-import com.warrenbrowse.vpn.lib.model.CustomList
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.DaitaSettings
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
@@ -137,12 +136,7 @@ internal fun GeoLocationId.fromDomain(): ManagementInterface.GeographicLocationC
         }
         .build()
 
-internal fun CustomList.fromDomain(): ManagementInterface.CustomList =
-    ManagementInterface.CustomList.newBuilder()
-        .setId(id.value)
-        .setName(name.value)
-        .addAllLocations(locations.map { it.fromDomain() })
-        .build()
+// D.4 step 52: CustomList.fromDomain dropped (updateCustomList accessor gone).
 
 internal fun WireguardConstraints.fromDomain(): ManagementInterface.WireguardConstraints =
     ManagementInterface.WireguardConstraints.newBuilder()
