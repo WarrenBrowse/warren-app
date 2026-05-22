@@ -153,8 +153,11 @@ public enum WarrenQuinnAdapterError: Error {
 /// from any thread (`NEPacketTunnelFlow.writePackets` is thread-safe).
 /// Internal mutable state is guarded by an `NSLock`.
 public final class WarrenQuinnAdapter: @unchecked Sendable {
-    private let packetFlow: NEPacketTunnelFlow
-    private let eventCallback: @Sendable (WarrenTunnelEvent) -> Void
+    // `fileprivate` (not `private`) so the file-level @convention(c)
+    // callbacks below can access these via the Unmanaged self-ref
+    // recovered from the FFI context pointer.
+    fileprivate let packetFlow: NEPacketTunnelFlow
+    fileprivate let eventCallback: @Sendable (WarrenTunnelEvent) -> Void
 
     private let lock = NSLock()
     private var handle: OpaquePointer?
@@ -347,7 +350,7 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
                     return warren_tunnel_inject_inbound_packet(
                         rawTunnelHandle(handle),
                         base.assumingMemoryBound(to: UInt8.self),
-                        packet.count
+                        UInt(packet.count)
                     )
                 }
             }
@@ -523,11 +526,11 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
 /// `context` pointer is the `Unmanaged` self-reference set at
 /// registration time.
 private let outboundCallback:
-    @convention(c) (UnsafePointer<UInt8>?, Int, UnsafeMutableRawPointer?) -> Void = {
+    @convention(c) (UnsafePointer<UInt8>?, UInt, UnsafeMutableRawPointer?) -> Void = {
         dataPtr, len, contextPtr in
         guard let dataPtr, let contextPtr, len > 0 else { return }
         let adapter = Unmanaged<WarrenQuinnAdapter>.fromOpaque(contextPtr).takeUnretainedValue()
-        let buf = UnsafeBufferPointer(start: dataPtr, count: len)
+        let buf = UnsafeBufferPointer(start: dataPtr, count: Int(len))
         let packet = Data(buf)
         // Default IPv4 protocol number ; iOS auto-detects on writePackets
         // if the packet is IPv6 but we still need to pass *something*.

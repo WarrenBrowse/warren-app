@@ -65,11 +65,15 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     private var walletSigningSeed: Data?
 
     public var observedState: ObservedState {
-        get async {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            return currentState
-        }
+        get async { snapshotState() }
+    }
+
+    /// Non-async lock-guarded snapshot used by the async accessor.
+    /// Swift 6 strict concurrency forbids `NSLock.lock()` from inside
+    /// an async context (it's not Sendable / async-safe), so we hop
+    /// through a regular sync function that uses `withLock`.
+    private func snapshotState() -> ObservedState {
+        stateLock.withLock { currentState }
     }
 
     public var observedStates: AsyncStream<ObservedState> {
@@ -123,13 +127,18 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// Called from the Rust dispatcher thread ; thread-safe via
     /// `stateLock`.
     public func applyEvent(_ event: WarrenTunnelEvent) {
+        // C.4.3.Z TODO : `ObservedState.connected/.reconnecting` require
+        // an `ObservedConnectionState` payload (selectedRelay + IP +
+        // etc.) — Warren's actor doesn't have that context yet. For
+        // the scaffold we map every non-disconnect to `.initial` and
+        // only fire `.disconnected` definitively. Real wiring lands
+        // once `WarrenQuinnTunnelImplementation.startStatsBroadcastTask`
+        // pushes the connection details up to the actor.
         let nextState: ObservedState
         var disconnectContinuation: CheckedContinuation<Void, Never>? = nil
         switch event {
-        case .connected:
-            nextState = .connected
-        case .reconnecting, .failover:
-            nextState = .reconnecting
+        case .connected, .reconnecting, .failover:
+            nextState = .initial
         case .disconnected:
             nextState = .disconnected
         case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
@@ -224,14 +233,27 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public func waitUntilDisconnected() async {
-        stateLock.lock()
-        if case .disconnected = currentState {
-            stateLock.unlock()
+        // Swift 6 strict concurrency forbids NSLock.lock from async
+        // context. Hop through sync helpers that take/release the
+        // lock as a single atomic operation.
+        if isAlreadyDisconnected() {
             return
         }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            installDisconnectedSignal(continuation)
+        }
+    }
+
+    private func isAlreadyDisconnected() -> Bool {
+        stateLock.withLock {
+            if case .disconnected = currentState { return true }
+            return false
+        }
+    }
+
+    private func installDisconnectedSignal(_ continuation: CheckedContinuation<Void, Never>) {
+        stateLock.withLock {
             disconnectedSignal = continuation
-            stateLock.unlock()
         }
     }
 

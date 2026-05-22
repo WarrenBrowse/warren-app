@@ -47,10 +47,15 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// `NEPacketTunnelProvider`. Nil until `setUp` has been called.
     private var adapter: WarrenQuinnAdapter?
 
-    /// Strong reference to the App Group `UserDefaults` used to
-    /// broadcast tunnel events to the main app. Pinned for the lifetime
-    /// of the implementation so the event callback can fire-and-forget
-    /// without re-resolving the suite.
+    /// App Group suite name (Sendable String, cf. Swift 6 strict
+    /// concurrency). Used to re-resolve `UserDefaults` inside detached
+    /// tasks (UserDefaults is not Sendable even though it's
+    /// thread-safe at runtime).
+    private let appGroupSuiteName: String?
+
+    /// Cached `UserDefaults` for the synchronous broadcastEvent path.
+    /// Re-resolved per-call in the async statsBroadcastTask to avoid
+    /// the Sendable capture.
     private let appGroupDefaults: UserDefaults?
 
     /// Background Task that periodically snapshots the adapter status
@@ -65,6 +70,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // not yet configured (unit tests), this returns nil and the
         // event broadcast becomes a no-op.
         let suite = Bundle.main.object(forInfoDictionaryKey: "ApplicationSecurityGroupIdentifier") as? String
+        self.appGroupSuiteName = suite
         self.appGroupDefaults = suite.flatMap { UserDefaults(suiteName: $0) }
     }
 
@@ -132,8 +138,13 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// the extension's tight background time budget.
     private func startStatsBroadcastTask(adapter: WarrenQuinnAdapter) {
         statsBroadcastTask?.cancel()
-        let defaults = appGroupDefaults
+        // UserDefaults isn't Sendable in Swift 6 strict concurrency,
+        // even though it IS thread-safe at runtime. Capture the suite
+        // name as a String (Sendable) and re-resolve UserDefaults
+        // inside the detached task.
+        let suiteName = appGroupSuiteName
         statsBroadcastTask = Task.detached(priority: .background) {
+            let defaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
             while !Task.isCancelled {
                 let snapshot = adapter.status()
                 Self.broadcastStats(snapshot, into: defaults)

@@ -1,0 +1,25 @@
+{
+  "_comment": "Warren stub relays.json - Warren tunnels via Quinn over wallet identity, not WireGuard. This file satisfies the legacy Check relays build script (checkRelays.swift) which requires a non-empty wireguard.relays array. Real relay selection in Warren happens at runtime via warren-api-client (see Settings -> Diagnostic info for the active session's exit relay). Slated for removal in C.4.5 once the Mullvad Device/relay flows are fully migrated.",
+  "wireguard": {
+    "relays": [
+      {
+        "hostname": "warren-stub-exit-1",
+        "active": true,
+        "owned": true,
+        "provider": "warren",
+        "ipv4_addr_in": "0.0.0.0",
+        "ipv6_addr_in": "::",
+        "public_key": "0000000000000000000000000000000000000000000000000000000000000000",
+        "location": "se-sto",
+        "include_in_country": false
+      }
+    ],
+    "port_ranges": [[51820, 51820]],
+    "ipv4_gateway": "10.64.0.1",
+    "ipv6_gateway": "fd00::1"
+  },
+  "bridge": {
+    "shadowsocks": [],
+    "relays": []
+  }
+}
