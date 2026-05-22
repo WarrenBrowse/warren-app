@@ -14,6 +14,7 @@
 import Foundation
 import LocalAuthentication
 import WarrenLogging
+import WarrenRustRuntime
 
 /// Errors emitted by `WarrenWalletInteractor`.
 public enum WarrenWalletInteractorError: Error, Equatable {

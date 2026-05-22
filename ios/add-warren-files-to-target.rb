@@ -57,6 +57,12 @@ FILES_TO_ADD = {
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
 
+  # C.4.5 partial : no-op TunnelObfuscation stub. Provides the
+  # namespace + protocol + enum surface that ProtocolObfuscator
+  # consumes, without the Rust FFI dep (Warren's HTTP/3 mimicry is
+  # baked into the warren-tunnel Quinn layer, not a local proxy).
+  "WarrenRustRuntime/TunnelObfuscationTypes.swift" => "WarrenRustRuntime",
+
   # C.6 remainder: DAITA / NAT-PMP settings + failover banner +
   # App Group event observer wired into TunnelViewController.
   "WarrenVPN/View controllers/Settings/WarrenDaitaSettingsView.swift" => "WarrenVPN",

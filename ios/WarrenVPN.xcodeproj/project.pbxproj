@@ -63,7 +63,6 @@
 		0697D6E728F01513007A9E99 /* APITransportMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0697D6E628F01513007A9E99 /* APITransportMonitor.swift */; };
 		06AC116228F94C450037AF9A /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
 		07210005B6715F4501377AE9 /* WarrenTunnelStatisticsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A436FEFD79CF74A9A98F5160 /* WarrenTunnelStatisticsViewTests.swift */; };
-		13192F49A660D1542B2AB3F3 /* TunnelObfuscator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584023212A406BF5007B27AC /* TunnelObfuscator.swift */; };
 		1553A67903D811C3B2B0758B /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3551208643554FEF36479DE8 /* OnboardingWizardView.swift */; };
 		159583073F2424FC16CE3287 /* WarrenTunnelStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A13ECB1DF8DA8EC8980AA6 /* WarrenTunnelStatisticsView.swift */; };
 		176F73E06E245707A9927E0C /* WarrenWalletKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA06E7B2FEC1E4E3AD8756 /* WarrenWalletKeychain.swift */; };
@@ -108,7 +107,6 @@
 		44B02E3B2BC5732D008EDF34 /* LoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */; };
 		44B3C43A2BFE2C800079782C /* PacketTunnelActorReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3C4392BFE2C800079782C /* PacketTunnelActorReducer.swift */; };
 		44B3C43D2C00CBBD0079782C /* PacketTunnelActorReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3C43C2C00CBBC0079782C /* PacketTunnelActorReducerTests.swift */; };
-		44C18DE32C74DF93009BE3E1 /* TunnelPinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449275432C3C3029000526DE /* TunnelPinger.swift */; };
 		44CAEAA12D442F5E004A8E65 /* LocationIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAEAA02D442F56004A8E65 /* LocationIdentifier.swift */; };
 		44DD7D242B6CFFD70005F67F /* StartTunnelOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DD7D232B6CFFD70005F67F /* StartTunnelOperationTests.swift */; };
 		44DD7D272B6D18FB0005F67F /* MockTunnelInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DD7D262B6D18FB0005F67F /* MockTunnelInteractor.swift */; };
@@ -789,6 +787,7 @@
 		85FB5A0C2B6903990015DCED /* WelcomePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB5A0B2B6903990015DCED /* WelcomePage.swift */; };
 		85FB5A102B6960A30015DCED /* AccountDeletionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB5A0F2B6960A30015DCED /* AccountDeletionPage.swift */; };
 		87A647B96EC28D42434F4D03 /* AllLocationDataSourceBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A647B96EC28D42434F4D02 /* AllLocationDataSourceBenchmarkTests.swift */; };
+		8BA4776E2C832F697FE7190D /* TunnelObfuscationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DAA9F44837ACF0BE222048 /* TunnelObfuscationTypes.swift */; };
 		8C15E1D89D2368BF0F9E5289 /* WarrenQuinnActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2924177537FDF6009557600 /* WarrenQuinnActor.swift */; };
 		8D575D2BE82ABFD999B5297E /* WarrenObfuscationIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF58C66213C70276492438AD /* WarrenObfuscationIndicatorView.swift */; };
 		919C76F699EB2C74D4BBC11E /* WarrenMultiHopSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB89BFA251FFA1708D36A8B6 /* WarrenMultiHopSettingsView.swift */; };
@@ -1008,9 +1007,6 @@
 		F053601D2EA03D8A00D6EDFF /* RecentConnectionsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00FEA192E9FC0A600F7EC6C /* RecentConnectionsRepository.swift */; };
 		F053601E2EA03D8A00D6EDFF /* RecentConnections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00FEA1D2E9FCF2D00F7EC6C /* RecentConnections.swift */; };
 		F053601F2EA03D8A00D6EDFF /* RecentConnectionsRepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00FEA1F2E9FCF7C00F7EC6C /* RecentConnectionsRepositoryProtocol.swift */; };
-		F0570CD12C4FB8E1007BDF2D /* EphemeralPeerExchangingPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919762C453FAF00C301F3 /* EphemeralPeerExchangingPipeline.swift */; };
-		F0570CD22C4FB8E1007BDF2D /* SingleHopEphemeralPeerExchanger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919782C45402E00C301F3 /* SingleHopEphemeralPeerExchanger.swift */; };
-		F0570CD42C4FB8E1007BDF2D /* MultiHopEphemeralPeerExchanger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F059197C2C454C9200C301F3 /* MultiHopEphemeralPeerExchanger.swift */; };
 		F05769B92C6656E400D9778B /* TunnelSettingsPropagator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05769B82C6656E400D9778B /* TunnelSettingsPropagator.swift */; };
 		F05769BB2C6661EE00D9778B /* TunnelSettingsStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05769BA2C6661EE00D9778B /* TunnelSettingsStrategy.swift */; };
 		F05919752C45194B00C301F3 /* EphemeralPeerKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919742C45194B00C301F3 /* EphemeralPeerKey.swift */; };
@@ -2469,6 +2465,7 @@
 		7AFF5B9D2F60079B0088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvalidShadowsocksCipherInAppNotificationProvider.swift; sourceTree = "<group>"; };
 		8058EA0701064C65079095EC /* Logging.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		81BB970369A93560F440D57E /* WarrenQuinnAdapter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenQuinnAdapter.swift; sourceTree = "<group>"; };
+		81DAA9F44837ACF0BE222048 /* TunnelObfuscationTypes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TunnelObfuscationTypes.swift; sourceTree = "<group>"; };
 		85006A8E2B73EF67004AD8FB /* WarrenVPNUITestsSmoke.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = WarrenVPNUITestsSmoke.xctestplan; sourceTree = "<group>"; };
 		850201DA2B503D7700EF8C96 /* RelayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayTests.swift; sourceTree = "<group>"; };
 		850201DC2B503D8C00EF8C96 /* SelectLocationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLocationPage.swift; sourceTree = "<group>"; };
@@ -4956,6 +4953,7 @@
 				584023212A406BF5007B27AC /* TunnelObfuscator.swift */,
 				197FF985CD18EA65FE765862 /* WarrenWallet.swift */,
 				81BB970369A93560F440D57E /* WarrenQuinnAdapter.swift */,
+				81DAA9F44837ACF0BE222048 /* TunnelObfuscationTypes.swift */,
 			);
 			path = WarrenRustRuntime;
 			sourceTree = "<group>";
@@ -7209,10 +7207,6 @@
 				7A9ED2A72F3CA781005BC0D9 /* NewAppVersionSystemNotificationHandler.swift in Sources */,
 				58F3F36A2AA08E3C00D3B0A4 /* PacketTunnelProvider.swift in Sources */,
 				58906DE02445C7A5002F0673 /* NEProviderStopReason+Debug.swift in Sources */,
-				F0570CD12C4FB8E1007BDF2D /* EphemeralPeerExchangingPipeline.swift in Sources */,
-				F0570CD22C4FB8E1007BDF2D /* SingleHopEphemeralPeerExchanger.swift in Sources */,
-				F0570CD42C4FB8E1007BDF2D /* MultiHopEphemeralPeerExchanger.swift in Sources */,
-				44C18DE32C74DF93009BE3E1 /* TunnelPinger.swift in Sources */,
 				58C7A45B2A8640030060C66F /* PacketTunnelPathObserver.swift in Sources */,
 				580D6B8E2AB33BBF00B2D6E0 /* BlockedStateErrorMapper.swift in Sources */,
 				06AC116228F94C450037AF9A /* ApplicationConfiguration.swift in Sources */,
@@ -7467,7 +7461,7 @@
 				048CADB4C4829811E348CEA5 /* WarrenWallet.swift in Sources */,
 				C23BFD5AAA8E64A4556D4BA4 /* WarrenQuinnAdapter.swift in Sources */,
 				4410117CBA1776F82293707A /* WireGuardKey.swift in Sources */,
-				13192F49A660D1542B2AB3F3 /* TunnelObfuscator.swift in Sources */,
+				8BA4776E2C832F697FE7190D /* TunnelObfuscationTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

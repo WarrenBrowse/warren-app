@@ -19,12 +19,7 @@ import SwiftUI
 import UIKit
 import WarrenLogging
 
-/// Owner-supplied callback hooks. Set before calling `start`.
-public protocol OnboardingWizardCoordinatorDelegate: AnyObject {
-    /// Called when the user taps "Launch Warren" on the final step.
-    /// The owner is responsible for persisting an
-    /// `appPreferences.hasCompletedOnboarding = true` flag and
-    /// transitioning to the main app coordinator stack.
+protocol OnboardingWizardCoordinatorDelegate: AnyObject {
     @MainActor func onboardingWizardDidFinish(_ coordinator: OnboardingWizardCoordinator)
 }
 

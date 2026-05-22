@@ -31,7 +31,7 @@ class TunnelViewController: UIViewController, RootContainment {
         suiteName: ApplicationConfiguration.securityGroupIdentifier
     )
     private var failoverBannerController: UIHostingController<WarrenFailoverBannerView>?
-    private var failoverCancellable: AnyCancellable?
+    private var failoverCancellable: Combine.AnyCancellable?
     private var failoverHideTask: Task<Void, Never>?
     private var lastShownFailoverDate: Date?
 

@@ -150,7 +150,7 @@ final class WarrenWalletGenerateViewController: UIViewController {
             return NSLocalizedString("Failed to generate a new recovery phrase. Please try again.", tableName: "Wallet", comment: "")
         case .keychain:
             return NSLocalizedString("Failed to securely store the wallet. Make sure your device is unlocked and try again.", tableName: "Wallet", comment: "")
-        case .authenticationFailed(let message), .keychain where false == true:
+        case .authenticationFailed(let message):
             return message
         case .noWallet:
             return NSLocalizedString("No wallet is currently provisioned on this device.", tableName: "Wallet", comment: "")

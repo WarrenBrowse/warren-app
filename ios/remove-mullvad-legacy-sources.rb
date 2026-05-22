@@ -35,6 +35,12 @@ LEGACY_BASENAMES = %w[
 # 62). Keep it for now ; full Warren tunnel actor refactor is
 # C.4.5 follow-up where PacketTunnelActor is replaced by a
 # Warren-native actor that doesn't depend on Mullvad obfuscation.
+#
+# NOTE : TunnelObfuscator.swift (FFI-backed) IS removed but a no-op
+# stub `TunnelObfuscator` + the `TunnelObfuscationProtocol` enum and
+# `TunnelObfuscation` protocol live in `TunnelObfuscationTypes.swift`
+# instead. ProtocolObfuscator can consume the stub since the
+# protocol surface is identical.
 
 # NOTE : WireGuardKey.swift is NOT removed. It provides the
 # `WireGuard.PublicKey` namespace used by `WarrenTypes.RESTTypes.Device`

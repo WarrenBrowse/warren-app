@@ -87,13 +87,16 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // events into the App Group so the main app's
         // `WarrenAppGroupEvents` observer surfaces them in UI
         // (FailoverBanner + ObfuscationIndicator + NAT-PMP port row).
-        let appDefaults = appGroupDefaults
+        // UserDefaults isn't Sendable in Swift 6 strict concurrency.
+        // Capture the suite name (Sendable String) and re-resolve the
+        // UserDefaults inside the @Sendable event callback.
+        let suiteName = appGroupSuiteName
         let weakActor = _actor
         let adapter = WarrenQuinnAdapter(
             packetFlow: provider.packetFlow,
             eventCallback: { event in
-                // Surface to App Group for cross-process UI consumers.
-                Self.broadcastEvent(event, into: appDefaults)
+                let defaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
+                Self.broadcastEvent(event, into: defaults)
                 // Feed actor's observed state stream (C.4.3.X follow-up
                 // will turn this into a proper AsyncStream backed by the
                 // events ; for now we update the snapshot directly).

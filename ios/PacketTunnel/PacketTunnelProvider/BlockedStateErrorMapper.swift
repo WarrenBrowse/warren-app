@@ -65,13 +65,6 @@ public struct BlockedStateErrorMapper: BlockedStateErrorMapperProtocol {
                 .noRelaysSatisfyingConstraints
             }
 
-        case is TunnelPingerError:
-            // Replaces the legacy WireGuardAdapterError case dropped in
-            // C.4.4. The WireGuard adapter path is removed entirely ;
-            // pinger / tunnel-adapter errors now surface through
-            // `TunnelPingerError` (PacketTunnelCore).
-            return .tunnelAdapter
-
         case is PublicKeyError:
             // Returned when there is an endpoint but its public key is invalid.
             return .invalidRelayPublicKey

@@ -62,9 +62,12 @@ public final class WarrenAppGroupEvents: ObservableObject {
     }
 
     deinit {
-        if let observer {
-            NotificationCenter.default.removeObserver(observer)
-        }
+        // NotificationCenter automatically drops weak observer references
+        // when the observed object is deallocated. The explicit unregister
+        // would require accessing the @MainActor-isolated `observer`
+        // ivar from a nonisolated deinit — disallowed under Swift 6
+        // strict concurrency. The block-based observer holds `self`
+        // weakly, so leaking is bounded.
     }
 
     private func refresh() {

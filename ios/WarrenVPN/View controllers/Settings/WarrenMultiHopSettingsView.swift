@@ -60,12 +60,14 @@ public struct WarrenMultiHopSettingsView: View {
                         }
                     }
                 }
-                Section(String(localized: "Exit relay", table: "Settings")) {
+                Section {
                     Picker(String(localized: "Country", table: "Settings"), selection: $exitCountryCode) {
                         ForEach(Self.availableCountries.filter { $0.code != entryCountryCode }, id: \.code) { country in
                             Text(country.name).tag(country.code)
                         }
                     }
+                } header: {
+                    Text(String(localized: "Exit relay", table: "Settings"))
                 } footer: {
                     Text(String(localized: "The exit relay determines your apparent location to websites.", table: "Settings"))
                         .font(.mullvadMicro)
