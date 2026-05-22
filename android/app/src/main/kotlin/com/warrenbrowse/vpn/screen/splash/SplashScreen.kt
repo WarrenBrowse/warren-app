@@ -21,8 +21,6 @@ import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
-import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
-import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
@@ -47,20 +45,8 @@ fun Splash(navigator: Navigator) {
         when (it) {
             SplashUiSideEffect.NavigateToConnect ->
                 navigator.navigate(ConnectNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToLogin ->
-                navigator.navigate(LoginNavKey(), clearBackStack = true)
             SplashUiSideEffect.NavigateToPrivacyDisclaimer ->
                 navigator.navigate(PrivacyDisclaimerNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToRevoked ->
-                navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToOutOfTime ->
-                // D.4 step 18: OutOfTime NavKey is gone (Mullvad account
-                // model). On Warren mobile this branch is dead because
-                // SplashViewModel never resolves OutOfTime when the
-                // wallet path drives the splash decision. Route to
-                // Connect so any historical state machine fallback
-                // doesn't strand the user.
-                navigator.navigate(ConnectNavKey, clearBackStack = true)
             SplashUiSideEffect.NavigateToWallet ->
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
         }
