@@ -406,13 +406,16 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // already enabled in `warren-ios/Cargo.toml`.
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
 
-        // C.4.1 caveat (per memory `warren_session_n_delivered`) :
-        // multi-hop + DAITA path has an outstanding silent data-plane
-        // bug. Single-hop only on this first wire-up ; multi-hop +
-        // DAITA marshalling is in place Swift-side (cf. C.4.2) but the
-        // Rust dispatcher here ignores those fields until the
-        // production-grade fix lands. The presence of `params.multi_hop_relay`
-        // or `params.daita_spec` is **NOT YET** honored.
+        // C.4.1 wire-up : single-hop only on this first pass. The
+        // multi-hop + DAITA bug flagged in memory `warren_session_n`
+        // was resolved by Session R (warren-core `f8f2d59`, B.1.8
+        // caveat closed at 5.6% overhead) ; the marshalling for
+        // multi-hop relay + DAITA spec is already in place Swift-side
+        // (cf. C.4.2 `withMultiHopRelayPinned` + `withDaitaPinned`)
+        // and the Rust dispatcher can now safely consume them in a
+        // C.4.1.X follow-up (route to `warren_client::run_multi_hop`
+        // + `pump_bidirectional_with_daita`). Leaving them ignored
+        // here keeps this first wire-up scope-minimal.
         let _ = params.multi_hop_relay;
         let _ = params.daita_spec;
         let _ = params.nat_pmp_enabled;
