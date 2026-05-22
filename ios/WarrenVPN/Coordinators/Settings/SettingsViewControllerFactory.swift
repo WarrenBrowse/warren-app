@@ -267,8 +267,12 @@ final class SettingsViewControllerFactory {
     /// optional wallet pubkey (when wallet present) + App Group tunnel
     /// stats.
     private func makeWarrenDiagnosticInfoViewController() -> MakeChildResult {
-        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        // Reuse the Mullvad-pattern `Bundle.shortVersion` / build
+        // accessors so the same strings surface here as in
+        // `Bundle.main.productVersion` (used by ConsolidatedApplicationLog
+        // + Changelog).
+        let appVersion = Bundle.main.shortVersion
+        let build = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "?"
         // `<first 4 hex>...<last 4 hex>` short form fits one line on
         // small phones but still disambiguates between wallets.
         let walletShort = WarrenWalletInteractor().publicKeyShort()
@@ -288,8 +292,8 @@ final class SettingsViewControllerFactory {
     /// About Warren (Settings → About). Marketing + privacy + ToS
     /// + AGPL source code links + version banner.
     private func makeWarrenAboutViewController() -> MakeChildResult {
-        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        let appVersion = Bundle.main.shortVersion
+        let build = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "?"
         let view = WarrenAboutView(appVersion: appVersion, buildNumber: build)
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
