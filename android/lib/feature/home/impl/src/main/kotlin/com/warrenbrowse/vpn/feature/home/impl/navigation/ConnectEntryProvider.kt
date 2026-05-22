@@ -7,14 +7,15 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.core.animation.homeTransition
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.Connect
-import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
+import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 
 fun EntryProviderScope<NavKey2>.homeEntry(navigator: Navigator) {
     entry<ConnectNavKey>(
         metadata =
             homeTransition {
-                // Fade in if we came from the login screen
-                navigator.previousBackStack.last() is LoginNavKey
+                // D.4 step 28: fade in when arriving from the wallet
+                // onboarding (was Mullvad LoginNavKey).
+                navigator.previousBackStack.last() is WarrenWalletNavKey
             }
     ) {
         Connect(

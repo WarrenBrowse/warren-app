@@ -28,10 +28,7 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
-import com.warrenbrowse.vpn.feature.login.impl.LoginViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
-import com.warrenbrowse.vpn.feature.login.impl.apiunreachable.ApiUnreachableViewModel
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.DeviceListViewModel
 import com.warrenbrowse.vpn.feature.multihop.impl.MultihopViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
@@ -280,12 +277,13 @@ val uiModule = module {
             resolveAppListing = get(),
         )
     }
-    viewModel { params -> DeviceListViewModel(accountNumber = params.get(), get()) }
+    // D.4 step 28: DeviceListViewModel + LoginViewModel removed
+    // (Mullvad multi-device + account-number flows, replaced by
+    // WarrenWalletViewModel).
     viewModel { DeviceRevokedViewModel(get(), get(), get(), get()) }
     viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
     viewModel { params -> CustomPortDialogViewModel(navArgs = params.get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
     viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
@@ -322,13 +320,9 @@ val uiModule = module {
     // D.4 step 27: SearchLocation + SelectLocationList ViewModels removed
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
     viewModel { params -> DaitaViewModel(isModal = params.get(), get()) }
-    viewModel { params ->
-        ApiUnreachableViewModel(
-            navArgs = params.get(),
-            apiAccessRepository = get(),
-            supportEmailUseCase = get(),
-        )
-    }
+    // D.4 step 28: ApiUnreachableViewModel removed - the
+    // ApiUnreachable screen was reached only from Mullvad LoginScreen,
+    // which is gone.
     // D.4 step 27: LocationBottomSheetViewModel removed (Mullvad
     // location bottom-sheet from SelectLocationScreen).
     viewModel { AppIconViewModel(get()) }
