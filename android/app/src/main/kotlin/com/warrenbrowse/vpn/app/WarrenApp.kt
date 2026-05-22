@@ -50,14 +50,12 @@ import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
-import com.warrenbrowse.vpn.feature.daita.impl.navigation.daitaEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
-import com.warrenbrowse.vpn.feature.multihop.impl.navigation.multihopEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.navigation.serverIpOverrideEntry
@@ -125,7 +123,9 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         changelogEntry(nav3)
         // D.4 step 26: customListEntry removed - Mullvad custom relay lists
         // were reached only from SelectLocationScreen (now unreachable).
-        daitaEntry(nav3)
+        // D.4 step 32: daitaEntry removed - DAITA is now configured via
+        // the unified WarrenTunnelSettings toggles (the dedicated Mullvad
+        // DaitaScreen is unreachable).
         // D.4 step 26: filterEntry removed - Mullvad relay filter was
         // reached only from SelectLocationScreen (now unreachable).
         homeEntry(nav3)
@@ -141,7 +141,8 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
         warrenLocationPickerEntry(nav3)
-        multihopEntry(nav3)
+        // D.4 step 32: multihopEntry removed - Multihop now configured
+        // via the unified WarrenTunnelSettings toggles.
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         privacyDisclaimerEntry(nav3)

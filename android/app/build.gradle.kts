@@ -386,14 +386,13 @@ dependencies {
     implementation(projects.lib.feature.autoconnect.impl)
     // D.4 step 27: customlist + filter + location modules deleted
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
-    implementation(projects.lib.feature.daita.impl)
-    implementation(projects.lib.feature.daita.api)
+    // D.4 step 32: daita module deleted (DAITA via WarrenTunnelSettings).
     implementation(projects.lib.feature.home.impl)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.language.impl)
     implementation(projects.lib.feature.login.impl)
     implementation(projects.lib.feature.login.api)
-    implementation(projects.lib.feature.multihop.impl)
+    // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.impl)
     implementation(projects.lib.feature.problemreport.impl)
     implementation(projects.lib.feature.serveripoverride.impl)

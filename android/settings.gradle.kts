@@ -53,8 +53,7 @@ include(
     ":lib:feature:autoconnect:api",
     // D.4 step 27: customlist + filter + location modules deleted
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
-    ":lib:feature:daita:impl",
-    ":lib:feature:daita:api",
+    // D.4 step 32: daita module deleted (DAITA via WarrenTunnelSettings).
     // D.4 step 18: deleteaccount module removed (no Mullvad account on Warren).
     ":lib:feature:home:impl",
     ":lib:feature:home:api",
@@ -64,8 +63,7 @@ include(
     ":lib:feature:login:api",
     // D.4 step 18: managedevices module removed (Mullvad multi-device
     // accounting model ; Warren manages devices via the wallet).
-    ":lib:feature:multihop:impl",
-    ":lib:feature:multihop:api",
+    // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
     ":lib:feature:notification:impl",
     ":lib:feature:notification:api",
     ":lib:feature:problemreport:impl",

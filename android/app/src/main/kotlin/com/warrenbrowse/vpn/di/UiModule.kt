@@ -23,13 +23,11 @@ import com.warrenbrowse.vpn.feature.applisting.impl.AndroidInstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.InstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.ResolveAppListingUseCaseImpl
 import com.warrenbrowse.vpn.feature.autoconnect.impl.AutoConnectAndLockdownModeViewModel
-import com.warrenbrowse.vpn.feature.daita.impl.DaitaViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
-import com.warrenbrowse.vpn.feature.multihop.impl.MultihopViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.viewlogs.ViewLogsViewModel
@@ -287,11 +285,13 @@ val uiModule = module {
         DeleteApiAccessMethodConfirmationViewModel(apiAccessMethodId = params.get(), get())
     }
     viewModel { params -> SelectPortViewModel(navArgs = params.get(), get(), get(), get()) }
-    viewModel { params -> MultihopViewModel(isModal = params.get(), get()) }
+    // D.4 step 32: MultihopViewModel removed (multihop now configured
+    // via WarrenTunnelSettings toggles).
     viewModel { NotificationSettingsViewModel(get()) }
     // D.4 step 27: SearchLocation + SelectLocationList ViewModels removed
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
-    viewModel { params -> DaitaViewModel(isModal = params.get(), get()) }
+    // D.4 step 32: DaitaViewModel removed (DAITA now toggled via
+    // WarrenTunnelSettings).
     // D.4 step 28: ApiUnreachableViewModel removed - the
     // ApiUnreachable screen was reached only from Mullvad LoginScreen,
     // which is gone.

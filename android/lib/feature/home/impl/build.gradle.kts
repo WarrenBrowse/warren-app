@@ -14,10 +14,9 @@ dependencies {
     implementation(projects.lib.feature.anticensorship.api)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
-    implementation(projects.lib.feature.daita.api)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.login.api)
-    implementation(projects.lib.feature.multihop.api)
+    // D.4 step 32: daita.api + multihop.api dropped.
     implementation(projects.lib.feature.serveripoverride.api)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)

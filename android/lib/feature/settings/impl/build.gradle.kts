@@ -14,8 +14,9 @@ dependencies {
     implementation(projects.lib.feature.appearance.api)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.autoconnect.api)
-    implementation(projects.lib.feature.daita.api)
-    implementation(projects.lib.feature.multihop.api)
+    // D.4 step 32: daita.api + multihop.api deps dropped (NavKeys
+    // unused since onMultihopClick/onDaitaClick rewired to
+    // WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.api)
     implementation(projects.lib.feature.problemreport.api)
     implementation(projects.lib.feature.settings.api)
