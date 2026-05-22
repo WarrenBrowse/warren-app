@@ -158,7 +158,7 @@ mod tests {
             relay_sig_bytes[0] ^= 0xff;
         }
 
-        let exit_id = ExitId([0x33; 16]);
+        let exit_id = ExitId::from_bytes([0x33; 16]);
         let exit_x25519 = [0x44; 32];
         let exit_payload = exit_descriptor_signing_payload(exit_id, &exit_x25519);
         let mut exit_sig_bytes = op.sign(&exit_payload).to_bytes();
@@ -311,7 +311,7 @@ mod tests {
         let relay_pubkey = [0x22; 32];
         let relay_payload = relay_descriptor_signing_payload(&relay_id, &relay_pubkey);
         let relay_sig = op.sign(&relay_payload).to_bytes();
-        let exit_id = ExitId([0x33; 16]);
+        let exit_id = ExitId::from_bytes([0x33; 16]);
         let exit_x25519 = [0x44; 32];
         let exit_payload = exit_descriptor_signing_payload(exit_id, &exit_x25519);
         let exit_sig = op.sign(&exit_payload).to_bytes();

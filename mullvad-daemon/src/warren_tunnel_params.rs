@@ -324,11 +324,12 @@ mod tests {
                 signature: [0xa3; 64],
             },
             exit: MultiHopExitDescriptor {
-                exit_id: ExitId([0xb1; 16]),
+                exit_id: ExitId::from_bytes([0xb1; 16]),
                 exit_ed25519_pubkey: [0xb2; 32],
                 exit_x25519_multihop_pubkey: [0xb3; 32],
                 endpoint: "198.51.100.20:443".parse().unwrap(),
                 signature: [0xb4; 64],
+                dns_disabled: false,
             },
             operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
             enable_gso: false,

@@ -144,6 +144,18 @@ impl DaemonWarrenRelaySelector {
             .find(|r| r.endpoint_id() == *pubkey)
     }
 
+    /// Session H caveat C1: returns the relay whose `exit_id` matches
+    /// the supplied identifier, or `None` if the list has no such
+    /// entry. Used by the multi-hop verify hook to recover the
+    /// operator-curated `Location` for the exit identified by
+    /// `MultiHopConfig::exit::exit_id`. The 16-byte representation is
+    /// canonical across both sides (`warren_multihop::session::ExitId`
+    /// and `warren_protocol::ExitId` share the same byte layout).
+    #[must_use]
+    pub fn relay_by_exit_id(&self, exit_id: &ExitId) -> Option<&WarrenRelay> {
+        self.list.relays().iter().find(|r| r.exit_id() == *exit_id)
+    }
+
     /// Loads the `WarrenRelayList` from `<cache_dir>/warren-relays.json`.
     ///
     /// No-fail policy at boot: if the file is absent or
@@ -294,6 +306,41 @@ mod tests {
                 "attempt {attempt} must always return the FR relay"
             );
         }
+    }
+
+    #[test]
+    fn relay_by_exit_id_resolves_matching_entry_with_location() {
+        // Session H caveat C1: the multi-hop verify hook uses this
+        // accessor to recover the forensic snapshot (country/city)
+        // for the exit identified by `MultiHopConfig.exit.exit_id`.
+        // The relay's `Location` must come back intact so the TOFU
+        // pin insert + the `/v1/incidents/pubkey-mismatch` report
+        // both carry the user-readable geo.
+        let list = WarrenRelayList::new(vec![
+            relay(1, "se", "198.51.100.1:51820"),
+            relay(7, "fr", "198.51.100.2:51820"),
+        ]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+        let resolved = selector
+            .relay_by_exit_id(&ExitId::from_bytes([7; 16]))
+            .expect("seed=7 relay must be found");
+        assert_eq!(resolved.location().country_code(), "fr");
+        assert_eq!(resolved.location().city(), "_");
+    }
+
+    #[test]
+    fn relay_by_exit_id_returns_none_on_unknown_id() {
+        // If the relay list does not contain the supplied exit_id
+        // (descriptor out-of-band of the cached relays.json), the
+        // accessor must return None so the caller can fall back to
+        // empty forensic fields without crashing.
+        let list = WarrenRelayList::new(vec![relay(1, "se", "198.51.100.1:51820")]);
+        let selector = DaemonWarrenRelaySelector::new(list);
+        assert!(
+            selector
+                .relay_by_exit_id(&ExitId::from_bytes([99; 16]))
+                .is_none()
+        );
     }
 
     #[test]

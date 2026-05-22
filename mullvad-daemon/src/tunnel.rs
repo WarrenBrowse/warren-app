@@ -486,19 +486,42 @@ impl ParametersGenerator {
         // entry pubkey only secures the cleartext header, not the
         // payload encryption. Adversarial entry swap is a low-severity
         // event compared to exit substitution.
-        let (exit_id_hex, observed_pubkey_hex) =
+        // Session H caveat C1: on the multi-hop path, the
+        // `params.country_code/city` carries the SELECTION-side relay
+        // location (the single-hop fallback assembly), which can be
+        // unrelated to the multi-hop exit. Resolve the forensic
+        // snapshot from the signed relay list using
+        // `multi_hop.exit.exit_id`. Falls back to empty strings if
+        // the relay list has no matching entry (descriptor
+        // out-of-band of the cached relays.json).
+        let (exit_id_hex, observed_pubkey_hex, country_code, city) =
             if let Some(multi_hop) = params.multi_hop.as_ref() {
                 let exit_id = talpid_warren_tunnel::RelayExitId::from_bytes(
                     *multi_hop.exit.exit_id.as_bytes(),
                 );
+                let (mh_country, mh_city) = inner
+                    .warren_relay_selector
+                    .as_ref()
+                    .and_then(|sel| sel.relay_by_exit_id(&exit_id))
+                    .map(|r| {
+                        (
+                            r.location().country_code().to_owned(),
+                            r.location().city().to_owned(),
+                        )
+                    })
+                    .unwrap_or_default();
                 (
                     exit_id.to_hex(),
                     hex::encode(multi_hop.exit.exit_ed25519_pubkey),
+                    mh_country,
+                    mh_city,
                 )
             } else {
                 (
                     params.exit_id.to_hex(),
                     hex::encode(params.exit_addr.id.as_bytes()),
+                    params.country_code.clone(),
+                    params.city.clone(),
                 )
             };
         {
@@ -507,8 +530,8 @@ impl ParametersGenerator {
                 &mut inner.warren_pinned_exit_pubkeys,
                 &exit_id_hex,
                 &observed_pubkey_hex,
-                &params.country_code,
-                &params.city,
+                &country_code,
+                &city,
                 now_unix,
             );
             match pin_outcome {
@@ -523,15 +546,15 @@ impl ParametersGenerator {
                             exit_id_hex: exit_id_hex.clone(),
                             pinned_pubkey_hex: pinned.clone(),
                             observed_pubkey_hex: observed_pubkey_hex.clone(),
-                            // Session H.6: forensic context threaded
-                            // through `WarrenSelection`. Single-hop
-                            // pulls from `params.country_code/city`;
-                            // multi-hop currently lacks descriptor-
-                            // side location so the field is left
-                            // empty (caveat documented in
-                            // session-h-report.md).
-                            country_code: params.country_code.clone(),
-                            city: params.city.clone(),
+                            // Session H caveat C1: forensic context
+                            // resolved above (`country_code` / `city`
+                            // locals). Single-hop carries the
+                            // selection-side location; multi-hop
+                            // resolves the descriptor's `exit_id`
+                            // against the signed relay list so the
+                            // pair maps to the operator-curated geo.
+                            country_code: country_code.clone(),
+                            city: city.clone(),
                         });
                     }
                     return Err(Error::WarrenPubkeyPinMismatch {
@@ -548,14 +571,16 @@ impl ParametersGenerator {
                         let _ = tx.send(WarrenPinUpdate::PinNewExit {
                             exit_id_hex,
                             pubkey_hex: observed_pubkey_hex,
-                            // Session H.6: forensic context threaded
-                            // through `WarrenSelection`. The TOFU
-                            // pin row now carries the user-readable
-                            // location (no GeoIP lookup needed
-                            // because the relay-list already ships
-                            // operator-curated geo).
-                            country_code: params.country_code.clone(),
-                            city: params.city.clone(),
+                            // Session H.6 + caveat C1: forensic
+                            // context resolved above
+                            // (`country_code` / `city` locals).
+                            // Single-hop carries the
+                            // selection-side location; multi-hop
+                            // resolves the descriptor's `exit_id`
+                            // against the signed relay list so the
+                            // pair maps to the operator-curated geo.
+                            country_code,
+                            city,
                             now_unix,
                         });
                     }
@@ -593,8 +618,20 @@ impl ParametersGenerator {
             ) {
                 tokio::spawn(async move {
                     let client = warren_api_client::WarrenApiClient::new(api_url, signing_key);
+                    let hex_pubkey = hex::encode(excluded.as_bytes());
+                    let exit_pubkey_hex =
+                        match warren_api_client::PubkeyHex::try_from(hex_pubkey.as_str()) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                log::debug!(
+                                    "exit-down report suppressed: failed to wrap pubkey \
+                                     {hex_pubkey} into PubkeyHex ({e})"
+                                );
+                                return;
+                            }
+                        };
                     let req = warren_api_client::IncidentExitDownRequest {
-                        exit_pubkey_hex: hex::encode(excluded.as_bytes()),
+                        exit_pubkey_hex,
                         // We do not know the precise failure cause
                         // from this call site (the tunnel-state
                         // machine only tells us "the previous attempt
