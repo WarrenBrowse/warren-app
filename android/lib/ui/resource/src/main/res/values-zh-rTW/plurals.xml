@@ -3,16 +3,4 @@
     <plurals name="days">
         <item quantity="other">%1$d 天</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="other">%1$d 個位置</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="other">%1$d 個月</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="other">帳戶點數將在 %1$d 天後到期</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="other">帳戶點數將在 %1$d 小時後到期</item>
-    </plurals>
 </resources>

@@ -6,28 +6,4 @@
         <item quantity="many">%1$d dni</item>
         <item quantity="other">%1$d dnia</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="one">%1$d lokalizacja</item>
-        <item quantity="few">%1$d lokalizacje</item>
-        <item quantity="many">%1$d lokalizacji</item>
-        <item quantity="other">%1$d lokalizacji</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="one">%1$d miesiąc</item>
-        <item quantity="few">%1$d miesiące</item>
-        <item quantity="many">%1$d miesięcy</item>
-        <item quantity="other">%1$d miesiąca</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="one">Doładowanie konta wygasa za 1 dzień</item>
-        <item quantity="few">Doładowanie konta wygasa za %1$d dni</item>
-        <item quantity="many">Doładowanie konta wygasa za %1$d dni</item>
-        <item quantity="other">Doładowanie konta wygasa za %1$d dnia</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="one">Doładowanie konta wygasa za 1 godzinę</item>
-        <item quantity="few">Doładowanie konta wygasa za %1$d godziny</item>
-        <item quantity="many">Doładowanie konta wygasa za %1$d godzin</item>
-        <item quantity="other">Doładowanie konta wygasa za %1$d godziny</item>
-    </plurals>
 </resources>

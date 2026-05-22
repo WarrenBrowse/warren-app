@@ -6,28 +6,4 @@
         <item quantity="many">%1$d днів</item>
         <item quantity="other">%1$d дня</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="one">%1$d розташування</item>
-        <item quantity="few">%1$d розташування</item>
-        <item quantity="many">%1$d розташувань</item>
-        <item quantity="other">%1$d розташування</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="one">%1$d місяць</item>
-        <item quantity="few">%1$d місяці</item>
-        <item quantity="many">%1$d місяців</item>
-        <item quantity="other">%1$d місяця</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="one">Баланс облікового запису закінчується за %1$d день</item>
-        <item quantity="few">Баланс облікового запису закінчується за %1$d дні</item>
-        <item quantity="many">Баланс облікового запису закінчується за %1$d днів</item>
-        <item quantity="other">Баланс облікового запису закінчується за %1$d дня</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="one">Баланс облікового запису закінчується за %1$d годину</item>
-        <item quantity="few">Баланс облікового запису закінчується за %1$d години</item>
-        <item quantity="many">Баланс облікового запису закінчується за %1$d годин</item>
-        <item quantity="other">Баланс облікового запису закінчується за %1$d години</item>
-    </plurals>
 </resources>

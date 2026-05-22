@@ -4,20 +4,4 @@
         <item quantity="one">%1$d päivä</item>
         <item quantity="other">%1$d päivää</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="one">%1$d sijainti</item>
-        <item quantity="other">%1$d sijaintia</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="one">%1$d kuukausi</item>
-        <item quantity="other">%1$d kuukautta</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="one">Tilin käyttöaika päättyy vuorokauden kuluttua</item>
-        <item quantity="other">Tilin käyttöaika päättyy %1$d vuorokauden kuluttua</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="one">Tilin käyttöaika päättyy tunnin kuluttua</item>
-        <item quantity="other">Tilin käyttöaika päättyy %1$d tunnin kuluttua</item>
-    </plurals>
 </resources>

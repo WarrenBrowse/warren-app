@@ -4,20 +4,4 @@
         <item quantity="one">%1$d Tag</item>
         <item quantity="other">%1$d Tage</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="one">%1$d Standort</item>
-        <item quantity="other">%1$d Standorte</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="one">%1$d Monat</item>
-        <item quantity="other">%1$d Monate</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="one">Kontoguthaben läuft in einem Tag ab</item>
-        <item quantity="other">Kontoguthaben läuft in %1$d Tagen ab</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="one">Kontoguthaben läuft in einer Stunde ab</item>
-        <item quantity="other">Kontoguthaben läuft in %1$d Stunden ab</item>
-    </plurals>
 </resources>

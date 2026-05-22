@@ -4,20 +4,4 @@
         <item quantity="one">%1$d dag</item>
         <item quantity="other">%1$d dager</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="one">%1$d plassering</item>
-        <item quantity="other">%1$d plasseringer</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="one">%1$d måned</item>
-        <item quantity="other">%1$d måneder</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="one">Kontokreditt utløper om én dag</item>
-        <item quantity="other">Kontokreditt utløper om %1$d dager</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="one">Kontokreditt utløper om én time</item>
-        <item quantity="other">Kontokreditt utløper om %1$d timer</item>
-    </plurals>
 </resources>

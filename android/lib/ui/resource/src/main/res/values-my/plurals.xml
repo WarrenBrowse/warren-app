@@ -3,16 +3,4 @@
     <plurals name="days">
         <item quantity="other">%1$d ရက်</item>
     </plurals>
-    <plurals name="number_of_locations">
-        <item quantity="other">%1$d တည်နေရာများ</item>
-    </plurals>
-    <plurals name="months">
-        <item quantity="other">%1$d လ</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_days">
-        <item quantity="other">%1$d ရက်အကြာတွင် အကောင့်ခရက်ဒစ် သက်တမ်းကုန်ပါတော့မည်</item>
-    </plurals>
-    <plurals name="account_credit_expires_in_hours">
-        <item quantity="other">%1$d နာရီအကြာတွင် အကောင့်ခရက်ဒစ် သက်တမ်းကုန်ပါတော့မည်</item>
-    </plurals>
 </resources>
