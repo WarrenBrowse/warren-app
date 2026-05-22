@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">၎င်းကို လက်ရှိအဖြစ် သတ်မှတ်ထားပြီးပါပြီ</string>
     <string name="toggle_vpn">VPN ရွေးသုံးရန်</string>
     <string name="top_bar_device_name">စက်အမည်- %1$s</string>
-    <string name="top_bar_time_left">ကျန်သည့် အချိန်- %1$s</string>
     <string name="try_again">ထပ်ကြိုးစားရန်</string>
     <string name="type">အမျိုးအစား</string>
     <string name="udp">UDP</string>

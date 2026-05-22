@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">Este ya está configurado como actual</string>
     <string name="toggle_vpn">Alternar VPN</string>
     <string name="top_bar_device_name">Nombre del dispositivo: %1$s</string>
-    <string name="top_bar_time_left">Tiempo restante: %1$s</string>
     <string name="try_again">Volver a intentarlo</string>
     <string name="type">Tipo</string>
     <string name="udp">UDP</string>

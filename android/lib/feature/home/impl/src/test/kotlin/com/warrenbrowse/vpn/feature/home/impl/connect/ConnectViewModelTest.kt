@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
-import com.warrenbrowse.vpn.lib.model.AccountData
 import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.ErrorState
@@ -45,7 +44,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 class ConnectViewModelTest {
     private lateinit var viewModel: ConnectViewModel
 
-    private val accountExpiryState = MutableStateFlow<AccountData?>(null)
     private val device = MutableStateFlow<DeviceState?>(null)
     private val notifications = MutableStateFlow<List<InAppNotification>>(emptyList())
 
@@ -81,8 +79,6 @@ class ConnectViewModelTest {
 
     @BeforeEach
     fun setup() {
-        every { mockAccountRepository.accountData } returns accountExpiryState
-
         every { mockDeviceRepository.deviceState } returns device
 
         coEvery { mockDeviceRepository.updateDevice() } just Runs

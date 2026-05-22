@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">Diese ist bereits die aktuelle</string>
     <string name="toggle_vpn">VPN umschalten</string>
     <string name="top_bar_device_name">Gerätename: %1$s</string>
-    <string name="top_bar_time_left">Verbleibende Zeit: %1$s</string>
     <string name="try_again">Erneut versuchen</string>
     <string name="type">Typ</string>
     <string name="udp">UDP</string>

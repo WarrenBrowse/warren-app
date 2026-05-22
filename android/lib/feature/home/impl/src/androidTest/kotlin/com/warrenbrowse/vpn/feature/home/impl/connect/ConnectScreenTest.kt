@@ -116,7 +116,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -143,7 +142,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -167,7 +165,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Nothing),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -192,7 +189,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = mockSelectedRelayTitle,
                         tunnelState = TunnelState.Disconnected(),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -217,7 +213,6 @@ class ConnectScreenTest {
                         tunnelState =
                             TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, true)),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification =
                             InAppNotification.TunnelStateError(
                                 ErrorState(ErrorStateCause.StartTunnelError, true)
@@ -246,7 +241,6 @@ class ConnectScreenTest {
                         tunnelState =
                             TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, false)),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification =
                             InAppNotification.TunnelStateError(
                                 ErrorState(ErrorStateCause.StartTunnelError, false)
@@ -275,7 +269,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Reconnect),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -301,7 +294,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Block),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -328,7 +320,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = mockSelectedRelayItemTitle,
                         tunnelState = TunnelState.Disconnected(),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -356,7 +347,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -384,7 +374,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -411,7 +400,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnected(),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -438,7 +426,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -489,7 +476,6 @@ class ConnectScreenTest {
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -523,7 +509,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
                         isPlayBuild = false,
                     )
@@ -554,7 +539,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
                         isPlayBuild = false,
                     ),
@@ -583,7 +567,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = InAppNotification.NewVersionChangelog,
                         isPlayBuild = false,
                     ),
@@ -647,7 +630,6 @@ class ConnectScreenTest {
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -704,7 +686,6 @@ class ConnectScreenTest {
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -753,7 +734,6 @@ class ConnectScreenTest {
                                 listOf(FeatureIndicator.MULTIHOP),
                             ),
                         deviceName = "",
-                        daysLeftUntilExpiry = null,
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),

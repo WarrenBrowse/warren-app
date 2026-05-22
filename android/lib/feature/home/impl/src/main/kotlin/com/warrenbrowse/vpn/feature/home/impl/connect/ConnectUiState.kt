@@ -10,7 +10,7 @@ data class ConnectUiState(
     val tunnelState: TunnelState,
     val inAppNotification: InAppNotification?,
     val deviceName: String?,
-    val daysLeftUntilExpiry: Long?,
+    // D.4 step 42: daysLeftUntilExpiry dropped (Mullvad subscription dead).
     val isPlayBuild: Boolean,
 ) {
 
@@ -25,7 +25,6 @@ data class ConnectUiState(
                 tunnelState = TunnelState.Disconnected(),
                 inAppNotification = null,
                 deviceName = null,
-                daysLeftUntilExpiry = null,
                 isPlayBuild = false,
             )
     }

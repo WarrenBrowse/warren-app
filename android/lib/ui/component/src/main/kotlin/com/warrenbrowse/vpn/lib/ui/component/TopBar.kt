@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -220,7 +219,6 @@ private fun PreviewWarrenTopBarWithLongDeviceName() {
                 onSettingsClicked = null,
                 onAccountClicked = null,
                 deviceName = "Superstitious Hippopotamus with extra weight",
-                daysLeftUntilExpiry = 1,
             )
         }
     }
@@ -237,7 +235,6 @@ private fun PreviewWarrenTopBarWithShortDeviceName() {
                 onSettingsClicked = null,
                 onAccountClicked = null,
                 deviceName = "Fit Ant",
-                daysLeftUntilExpiry = 1,
             )
         }
     }
@@ -251,7 +248,6 @@ fun WarrenTopBarWithDeviceName(
     iconTintColor: Color,
     isIconAndLogoVisible: Boolean = true,
     deviceName: String?,
-    daysLeftUntilExpiry: Long?,
 ) {
     Column {
         WarrenTopBar(
@@ -294,27 +290,8 @@ fun WarrenTopBarWithDeviceName(
                 style = MaterialTheme.typography.labelLarge,
                 color = iconTintColor,
             )
-            if (daysLeftUntilExpiry != null) {
-                Text(
-                    text =
-                        stringResource(
-                            id = R.string.top_bar_time_left,
-                            if (daysLeftUntilExpiry >= 0) {
-                                pluralStringResource(
-                                    id = R.plurals.days,
-                                    daysLeftUntilExpiry.toInt(),
-                                    daysLeftUntilExpiry.toInt(),
-                                )
-                            } else {
-                                stringResource(id = R.string.out_of_time)
-                            },
-                        ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = iconTintColor,
-                )
-            } else {
-                Spacer(Modifier)
-            }
+            // D.4 step 42: days-left display dropped (Mullvad subscription dead).
+            Spacer(Modifier)
         }
     }
 }

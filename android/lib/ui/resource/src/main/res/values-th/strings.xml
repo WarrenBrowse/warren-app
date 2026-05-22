@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">นี่ได้รับการตั้งค่าเป็นปัจจุบันแล้ว</string>
     <string name="toggle_vpn">เปิด/ปิด VPN</string>
     <string name="top_bar_device_name">ชื่ออุปกรณ์: %1$s</string>
-    <string name="top_bar_time_left">เหลือเวลา: %1$s</string>
     <string name="try_again">ลองอีกครั้ง</string>
     <string name="type">ประเภท</string>
     <string name="udp">UDP</string>

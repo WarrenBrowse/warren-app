@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,7 +60,6 @@ fun PreviewNavigationDrawerTvClosed(
 ) {
     AppTheme {
         NavigationDrawerTv(
-            daysLeftUntilExpiry = 30,
             deviceName = "Cool Cat",
             initialDrawerValue = drawerValue,
             onSettingsClick = {},
@@ -74,7 +72,6 @@ fun PreviewNavigationDrawerTvClosed(
 @Composable
 @Suppress("LongMethod")
 fun NavigationDrawerTv(
-    daysLeftUntilExpiry: Long?,
     deviceName: String?,
     initialDrawerValue: DrawerValue = DrawerValue.Closed,
     onSettingsClick: (() -> Unit),
@@ -121,7 +118,6 @@ fun NavigationDrawerTv(
                     modifier =
                         Modifier.align(Alignment.TopStart).padding(start = animatedPadding.value),
                     isExpanded = hasFocus,
-                    daysLeftUntilExpiry = daysLeftUntilExpiry,
                     deviceName = deviceName,
                 )
                 DrawerItemTv(
@@ -175,7 +171,6 @@ private fun NavigationDrawerScope.DrawerItemTv(
 private fun NavigationDrawerTvHeader(
     modifier: Modifier = Modifier,
     isExpanded: Boolean,
-    daysLeftUntilExpiry: Long?,
     deviceName: String?,
 ) {
     Column(
@@ -215,28 +210,7 @@ private fun NavigationDrawerTvHeader(
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
             )
-            Spacer(Modifier.height(4.dp))
-            if (daysLeftUntilExpiry != null) {
-                Text(
-                    text =
-                        stringResource(
-                            id = R.string.top_bar_time_left,
-                            if (daysLeftUntilExpiry >= 0) {
-                                pluralStringResource(
-                                    id = R.plurals.days,
-                                    daysLeftUntilExpiry.toInt(),
-                                    daysLeftUntilExpiry.toInt(),
-                                )
-                            } else {
-                                stringResource(id = R.string.out_of_time)
-                            },
-                        ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                )
-            }
+            // D.4 step 42: days-left display removed (subscription dead).
         }
     }
 }

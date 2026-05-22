@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">이미 현재로 설정되어 있습니다</string>
     <string name="toggle_vpn">VPN 전환</string>
     <string name="top_bar_device_name">장치 이름: %1$s</string>
-    <string name="top_bar_time_left">남은 시간: %1$s</string>
     <string name="try_again">다시 시도</string>
     <string name="type">유형</string>
     <string name="udp">UDP</string>

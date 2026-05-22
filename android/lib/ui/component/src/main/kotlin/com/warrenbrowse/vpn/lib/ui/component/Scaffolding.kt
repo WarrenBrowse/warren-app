@@ -62,7 +62,9 @@ fun ScaffoldWithTopBarAndDeviceName(
     isIconAndLogoVisible: Boolean = true,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     deviceName: String?,
-    timeLeft: Long?,
+    // D.4 step 42: timeLeft param kept for binary compat at the call sites but
+    // no longer rendered (Mullvad subscription expiry dead on Warren).
+    @Suppress("UNUSED_PARAMETER") timeLeft: Long? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -76,7 +78,6 @@ fun ScaffoldWithTopBarAndDeviceName(
                     onAccountClicked = onAccountClicked,
                     isIconAndLogoVisible = isIconAndLogoVisible,
                     deviceName = deviceName,
-                    daysLeftUntilExpiry = timeLeft,
                 )
             }
         },

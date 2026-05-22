@@ -148,7 +148,6 @@
     <string name="search_placeholder">Search for...</string>
     <string name="search_no_matches_for_text">No result for \"%s\", please try a different search</string>
     <string name="port">Port</string>
-    <string name="top_bar_time_left">Time left: %s</string>
     <string name="top_bar_device_name">Device name: %s</string>
     <string name="got_it">Got it!</string>
     <string name="connecting">Connecting...</string>

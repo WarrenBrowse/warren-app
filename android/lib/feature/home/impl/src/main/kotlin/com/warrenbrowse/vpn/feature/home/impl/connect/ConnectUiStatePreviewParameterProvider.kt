@@ -50,7 +50,6 @@ private val otherStates =
                 inAppNotification =
                     if (index == 0) InAppNotification.NewVersionChangelog else null,
                 deviceName = "Cool Beans",
-                daysLeftUntilExpiry = 42,
                 isPlayBuild = true,
             )
         }

@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">این مورد هم‌اکنون به‌عنوان گزینهٔ فعلی تنظیم شده است</string>
     <string name="toggle_vpn">تغییر وضعیت VPN</string>
     <string name="top_bar_device_name">نام دستگاه: %1$s</string>
-    <string name="top_bar_time_left">زمان باقی‌مانده: %1$s</string>
     <string name="try_again">دوباره تلاش کنید</string>
     <string name="type">نوع</string>
     <string name="udp">UDP</string>

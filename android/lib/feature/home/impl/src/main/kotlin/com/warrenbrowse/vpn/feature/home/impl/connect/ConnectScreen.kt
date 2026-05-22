@@ -467,7 +467,6 @@ fun ConnectScreen(
             }
         ) {
             NavigationDrawerTv(
-                daysLeftUntilExpiry = state.daysLeftUntilExpiry,
                 deviceName = state.deviceName,
                 onSettingsClick = onSettingsClick,
                 onAccountClick = onAccountClick,
@@ -483,7 +482,6 @@ fun ConnectScreen(
             onSettingsClicked = onSettingsClick,
             onAccountClicked = onAccountClick,
             deviceName = state.deviceName,
-            timeLeft = state.daysLeftUntilExpiry,
             snackbarHostState = snackbarHostState,
         ) {
             content(it)

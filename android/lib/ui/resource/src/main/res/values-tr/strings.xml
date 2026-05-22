@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">Bu, zaten geçerli olarak ayarlı yöntemdir</string>
     <string name="toggle_vpn">VPN\'i aç/kapat</string>
     <string name="top_bar_device_name">Cihaz adı: %1$s</string>
-    <string name="top_bar_time_left">Kalan süre: %1$s</string>
     <string name="try_again">Tekrar dene</string>
     <string name="type">Tür</string>
     <string name="udp">UDP</string>

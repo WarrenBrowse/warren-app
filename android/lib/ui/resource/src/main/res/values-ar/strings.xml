@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">تم بالفعل تعيين هذه الطريقة كالطريقة الحالية</string>
     <string name="toggle_vpn">زر تبديل VPN</string>
     <string name="top_bar_device_name">اسم الجهاز: %1$s</string>
-    <string name="top_bar_time_left">الوقت المتبقي: %1$s</string>
     <string name="try_again">إعادة المحاولة</string>
     <string name="type">النوع</string>
     <string name="udp">UDP</string>

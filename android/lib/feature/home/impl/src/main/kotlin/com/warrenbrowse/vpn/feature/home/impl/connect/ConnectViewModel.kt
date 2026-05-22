@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,7 +19,6 @@ import com.warrenbrowse.vpn.feature.applisting.api.ResolveAppListingUseCase
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.util.combine
-import com.warrenbrowse.vpn.lib.common.util.daysLeft
 import com.warrenbrowse.vpn.lib.common.util.withPrev
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.ConnectError
@@ -64,14 +62,12 @@ class ConnectViewModel(
                 inAppNotificationController.notifications,
                 connectionProxy.tunnelState.withPrev(),
                 lastKnownLocationUseCase.lastKnownDisconnectedLocation,
-                accountRepository.accountData,
                 deviceRepository.deviceState.map { it?.displayName() },
             ) {
                 selectedRelayItemTitle,
                 notifications,
                 (tunnelState, prevTunnelState),
                 lastKnownDisconnectedLocation,
-                accountData,
                 deviceName ->
                 ConnectUiState(
                     location =
@@ -102,14 +98,8 @@ class ConnectViewModel(
                     tunnelState = tunnelState,
                     inAppNotification = notifications.firstOrNull(),
                     deviceName = deviceName,
-                    daysLeftUntilExpiry = accountData?.expiryDate?.daysLeft(),
                     isPlayBuild = isPlayBuild,
                 )
-            }
-            .onStart {
-                viewModelScope.launch {
-                    accountRepository.refreshAccountData(ignoreTimeout = false)
-                }
             }
             .stateIn(
                 viewModelScope,
@@ -175,10 +165,12 @@ class ConnectViewModel(
         }
     }
 
+    // D.4 step 42: onManageAccountClick logic stripped (Mullvad mullvad.net auth
+    // token URL is dead — ConnectScreen routes Manage Account taps to
+    // WarrenWalletSettings instead, side-effect kept as no-op for parity).
     fun onManageAccountClick() {
         viewModelScope.launch {
-            val wwwAuthToken = accountRepository.getWebsiteAuthToken()
-            _uiSideEffect.send(UiSideEffect.OpenAccountManagementPageInBrowser(wwwAuthToken))
+            _uiSideEffect.send(UiSideEffect.OpenAccountManagementPageInBrowser(null))
         }
     }
 

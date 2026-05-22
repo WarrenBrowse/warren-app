@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">Tämä on jo asetettu nykyiseksi</string>
     <string name="toggle_vpn">Vaihda VPN:ää</string>
     <string name="top_bar_device_name">Laitteen nimi: %1$s</string>
-    <string name="top_bar_time_left">Aikaa jäljellä: %1$s</string>
     <string name="try_again">Yritä uudelleen</string>
     <string name="type">Tyyppi</string>
     <string name="udp">UDP</string>

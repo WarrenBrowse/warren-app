@@ -222,7 +222,6 @@
     <string name="this_is_already_set_as_current">它已被设置为当前方法</string>
     <string name="toggle_vpn">切换 VPN</string>
     <string name="top_bar_device_name">设备名称：%1$s</string>
-    <string name="top_bar_time_left">剩余时间：%1$s</string>
     <string name="try_again">重试</string>
     <string name="type">类型</string>
     <string name="udp">UDP</string>
