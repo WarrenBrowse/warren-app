@@ -73,6 +73,7 @@
 		2F169CDAE6E8C601F85C543E /* TunnelImplementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24C2F93919B5526A741ADA8 /* TunnelImplementation.swift */; };
 		34C0CD946F4CFE1D8F6120AF /* WarrenWalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A878961076F78F42C4BD70 /* WarrenWalletTests.swift */; };
 		36A9D443214464D1D5725BC3 /* WarrenWalletGenerateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE61426DEC27860AFC0D2EA /* WarrenWalletGenerateViewController.swift */; };
+		3A16D8BCDA037FB3F631334E /* WarrenWalletEraseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */; };
 		44075DFB2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44075DFA2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift */; };
 		440870822D7A00B70038972F /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
 		440870832D809B550038972F /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
@@ -1812,6 +1813,7 @@
 		06FAE67B28F83CA50033DD93 /* REST.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = REST.swift; sourceTree = "<group>"; };
 		197FF985CD18EA65FE765862 /* WarrenWallet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWallet.swift; sourceTree = "<group>"; };
 		1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenAppGroupKey.swift; sourceTree = "<group>"; };
+		1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletEraseViewController.swift; sourceTree = "<group>"; };
 		26AF969EC5F8DB7B39216445 /* Settings.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Settings.xcstrings; sourceTree = "<group>"; };
 		28CA642BD064C2972F7792BE /* WarrenMnemonicDisplayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenMnemonicDisplayView.swift; sourceTree = "<group>"; };
 		29ACE2686C7ABAE92EBB8423 /* Wallet.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Wallet.xcstrings; sourceTree = "<group>"; };
@@ -5285,6 +5287,7 @@
 				2AE61426DEC27860AFC0D2EA /* WarrenWalletGenerateViewController.swift */,
 				889423709B53600B90FE0DF7 /* WarrenWalletImportViewController.swift */,
 				2AA4BA60D784465FCA33AC51 /* WarrenWalletBackupViewController.swift */,
+				1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */,
 			);
 			name = Wallet;
 			path = Wallet;
@@ -7105,6 +7108,7 @@
 				2E0C2C56CC9C0EA6779C44DA /* OnboardingWizardCoordinator.swift in Sources */,
 				982C0E988565162719F1F6CD /* WarrenAppGroupEvents.swift in Sources */,
 				FC4C2AD15736BFF3BE2D5D2A /* WarrenAppGroupKey.swift in Sources */,
+				3A16D8BCDA037FB3F631334E /* WarrenWalletEraseViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

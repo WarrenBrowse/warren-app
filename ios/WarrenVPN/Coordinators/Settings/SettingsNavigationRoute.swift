@@ -44,6 +44,9 @@ enum SettingsNavigationRoute: Equatable {
     /// Warren wallet backup (View recovery phrase, Face ID gated).
     case warrenWalletBackup
 
+    /// Warren wallet wipe (destructive, requires confirmation).
+    case warrenWalletErase
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

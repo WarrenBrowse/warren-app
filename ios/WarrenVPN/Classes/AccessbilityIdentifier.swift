@@ -123,6 +123,7 @@ public enum AccessibilityIdentifier: Equatable {
     case multihopCell
     case daitaCell
     case warrenWalletBackupCell
+    case warrenWalletEraseCell
     case warrenPortForwardingCell
     case daitaFilterPill
     case obfuscationFilterPill

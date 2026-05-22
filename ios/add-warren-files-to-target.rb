@@ -29,6 +29,7 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Wallet/WarrenWalletGenerateViewController.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Wallet/WarrenWalletImportViewController.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Wallet/WarrenWalletBackupViewController.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Wallet/WarrenWalletEraseViewController.swift" => "WarrenVPN",
   "WarrenVPN/Coordinators/WarrenWalletCoordinator.swift" => "WarrenVPN",
 
   # Settings + Tunnel Warren-specific views.

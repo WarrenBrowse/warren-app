@@ -63,6 +63,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case notificationSettings
         case includeAllNetworks
         case warrenWalletBackup
+        case warrenWalletErase
         case warrenPortForwarding
 
         var accessibilityIdentifier: AccessibilityIdentifier {
@@ -89,6 +90,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .includeAllNetworksCell
             case .warrenWalletBackup:
                 .warrenWalletBackupCell
+            case .warrenWalletErase:
+                .warrenWalletEraseCell
             case .warrenPortForwarding:
                 .warrenPortForwardingCell
             }
@@ -271,6 +274,9 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         // provisioned ; otherwise the row is misleading.
         if WarrenWalletKeychain.exists() {
             generalItems.insert(.warrenWalletBackup, at: 0)
+            // Erase appears below backup so users always see Backup
+            // first ; destructive actions stay below safe ones.
+            generalItems.insert(.warrenWalletErase, at: 1)
         }
         snapshot.appendItems(generalItems, toSection: .general)
 

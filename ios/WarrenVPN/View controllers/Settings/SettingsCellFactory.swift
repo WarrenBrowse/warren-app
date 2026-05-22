@@ -165,6 +165,19 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletBackup }
 
+        case .warrenWalletErase:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Erase wallet",
+                table: "Wallet",
+                comment: "Destructive Settings row that opens the wallet wipe confirmation flow"
+            )
+            cell.titleLabel.textColor = .Warren.error
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletErase }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 

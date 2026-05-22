@@ -87,6 +87,8 @@ final class SettingsViewControllerFactory {
             makeIncludeAllNetworksSettingsCoordinator()
         case .warrenWalletBackup:
             makeWarrenWalletBackupViewController()
+        case .warrenWalletErase:
+            makeWarrenWalletEraseViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -187,6 +189,13 @@ final class SettingsViewControllerFactory {
     private func makeWarrenWalletBackupViewController() -> MakeChildResult {
         let interactor = WarrenWalletInteractor()
         let controller = WarrenWalletBackupViewController(interactor: interactor)
+        return .viewController(controller)
+    }
+
+    /// Wallet wipe (Settings → Erase wallet, destructive). Pushes the
+    /// dedicated VC with its own confirmation alert.
+    private func makeWarrenWalletEraseViewController() -> MakeChildResult {
+        let controller = WarrenWalletEraseViewController()
         return .viewController(controller)
     }
 
