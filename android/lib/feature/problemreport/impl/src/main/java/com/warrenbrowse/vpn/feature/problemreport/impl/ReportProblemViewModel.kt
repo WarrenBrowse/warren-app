@@ -15,18 +15,19 @@ import com.warrenbrowse.vpn.common.compose.MINIMUM_LOADING_TIME_MILLIS
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.util.combine
 import com.warrenbrowse.vpn.lib.model.UserReport
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.SendProblemReportResult
 
+// D.4 step 57: Mullvad "include my account ID" checkbox surface removed —
+// showIncludeAccountId, includeAccountId, showIncludeAccountWarningMessage,
+// onIncludeAccountIdCheckChange, showIncludeAccountInformationWarningMessage,
+// accountRepository dependency all dropped. Warren BIP39 wallet pubkey signing
+// will land in D.6 alongside the warren-api `/v1/support` endpoint.
 data class ReportProblemUiState(
     val sendingState: SendingReportUiState? = null,
     val email: String = "",
     val description: String = "",
     val descriptionError: DescriptionError? = null,
-    val showIncludeAccountId: Boolean = false,
-    val includeAccountId: Boolean = false,
-    val showIncludeAccountWarningMessage: Boolean = false,
     val logCollectingState: LogCollectingState = LogCollectingState.Loading,
     val isPlayBuild: Boolean = false,
 )
@@ -58,14 +59,10 @@ sealed interface DescriptionError {
 class ReportProblemViewModel(
     private val warrenProblemReporter: ProblemReportRepository,
     private val problemReportRepository: ProblemReportRepository,
-    accountRepository: AccountRepository,
     private val isPlayBuild: Boolean,
 ) : ViewModel() {
 
     private val sendingState: MutableStateFlow<SendingReportUiState?> = MutableStateFlow(null)
-    private val includeAccountIdState: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val showIncludeAccountWarningMessage: MutableStateFlow<Boolean> =
-        MutableStateFlow(false)
     private val areLogsCollected: MutableStateFlow<LogCollectingState> =
         MutableStateFlow(LogCollectingState.Loading)
     private val descriptionError: MutableStateFlow<DescriptionError?> = MutableStateFlow(null)
@@ -73,27 +70,14 @@ class ReportProblemViewModel(
     val uiState =
         combine(
                 sendingState,
-                includeAccountIdState,
-                showIncludeAccountWarningMessage,
                 problemReportRepository.problemReport,
-                accountRepository.accountData,
                 areLogsCollected,
                 descriptionError,
-            ) {
-                sendingState,
-                includeAccountToken,
-                showIncludeAccountWarningMessage,
-                userReport,
-                accountData,
-                areLogsCollected,
-                descriptionError ->
+            ) { sendingState, userReport, areLogsCollected, descriptionError ->
                 ReportProblemUiState(
                     sendingState = sendingState,
                     email = userReport.email ?: "",
                     description = userReport.description,
-                    showIncludeAccountId = accountData != null,
-                    includeAccountId = includeAccountToken,
-                    showIncludeAccountWarningMessage = showIncludeAccountWarningMessage,
                     logCollectingState = areLogsCollected,
                     isPlayBuild = isPlayBuild,
                     descriptionError = descriptionError,
@@ -124,10 +108,7 @@ class ReportProblemViewModel(
 
                 // Ensure we show loading for at least MINIMUM_LOADING_TIME_MILLIS
                 val deferredResult = async {
-                    warrenProblemReporter.sendReport(
-                        UserReport(nullableEmail, description),
-                        includeAccountIdState.value,
-                    )
+                    warrenProblemReporter.sendReport(UserReport(nullableEmail, description))
                 }
                 delay(MINIMUM_LOADING_TIME_MILLIS)
 
@@ -153,14 +134,6 @@ class ReportProblemViewModel(
     fun updateDescription(description: String) {
         problemReportRepository.setDescription(description)
         descriptionError.tryEmit(null)
-    }
-
-    fun onIncludeAccountIdCheckChange(checked: Boolean) {
-        includeAccountIdState.tryEmit(checked)
-    }
-
-    fun showIncludeAccountInformationWarningMessage(show: Boolean) {
-        showIncludeAccountWarningMessage.tryEmit(show)
     }
 
     private fun shouldShowConfirmNoEmail(userEmail: String?): Boolean =

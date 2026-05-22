@@ -1,8 +1,6 @@
 package com.warrenbrowse.vpn.feature.problemreport.impl
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -38,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,8 +42,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
-import com.warrenbrowse.vpn.common.compose.clickableAnnotatedString
-import com.warrenbrowse.vpn.common.compose.createUriHook
 import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.LocalResultStore
@@ -56,9 +49,6 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNoEmailConfirmedNavResult
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNoEmailNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ViewLogsNavKey
-import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
-import com.warrenbrowse.vpn.lib.ui.component.CheckboxConfirmation
-import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
@@ -70,7 +60,6 @@ import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
@@ -90,8 +79,6 @@ private fun PreviewReportProblemScreen(
             onNavigateToViewLogs = {},
             onEmailChanged = {},
             onDescriptionChanged = {},
-            onIncludeAccountIdCheckChange = {},
-            toggleShowIncludeAccountInformationWarningMessage = {},
             onBackClick = {},
         )
     }
@@ -120,9 +107,6 @@ fun ReportProblem(navigator: Navigator) {
         onNavigateToViewLogs = dropUnlessResumed { navigator.navigate(ViewLogsNavKey) },
         onEmailChanged = vm::updateEmail,
         onDescriptionChanged = vm::updateDescription,
-        onIncludeAccountIdCheckChange = vm::onIncludeAccountIdCheckChange,
-        toggleShowIncludeAccountInformationWarningMessage =
-            vm::showIncludeAccountInformationWarningMessage,
         onBackClick = dropUnlessResumed { navigator.goBack() },
     )
 }
@@ -135,8 +119,6 @@ private fun ReportProblemScreen(
     onNavigateToViewLogs: () -> Unit,
     onEmailChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    onIncludeAccountIdCheckChange: (Boolean) -> Unit,
-    toggleShowIncludeAccountInformationWarningMessage: (Boolean) -> Unit,
     onBackClick: () -> Unit,
 ) {
 
@@ -184,9 +166,6 @@ private fun ReportProblemScreen(
                     state = state,
                     onEmailChanged = onEmailChanged,
                     onDescriptionChanged = onDescriptionChanged,
-                    onIncludeAccountIdCheckChange = onIncludeAccountIdCheckChange,
-                    toggleShowIncludeAccountInformationWarningMessage =
-                        toggleShowIncludeAccountInformationWarningMessage,
                     onNavigateToViewLogs = onNavigateToViewLogs,
                     onSendReport = onSendReport,
                 )
@@ -200,8 +179,6 @@ private fun InputContent(
     state: ReportProblemUiState,
     onEmailChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    onIncludeAccountIdCheckChange: (Boolean) -> Unit,
-    toggleShowIncludeAccountInformationWarningMessage: (Boolean) -> Unit,
     onNavigateToViewLogs: () -> Unit,
     onSendReport: () -> Unit,
 ) {
@@ -230,16 +207,9 @@ private fun InputContent(
         onDescriptionChanged = onDescriptionChanged,
     )
 
-    if (state.showIncludeAccountId) {
-        IncludeAccountInformationCheckBox(
-            includeAccountInformation = state.includeAccountId,
-            onIncludeAccountInformationCheckChange = onIncludeAccountIdCheckChange,
-            toggleShowIncludeAccountInformationWarningMessage =
-                toggleShowIncludeAccountInformationWarningMessage,
-            showIncludeAccountInformationWarningMessage = state.showIncludeAccountWarningMessage,
-            isPlayBuild = state.isPlayBuild,
-        )
-    }
+    // D.4 step 57: "include my account ID" checkbox + privacy-policy warning
+    // dropped (Mullvad account-number is dead on Warren ; the warren-api
+    // /v1/support endpoint will sign with the BIP39 wallet pubkey in D.6).
 
     Column {
         PrimaryButton(
@@ -264,115 +234,9 @@ private fun Description() {
     }
 }
 
-@Composable
-private fun IncludeAccountInformationCheckBox(
-    includeAccountInformation: Boolean,
-    showIncludeAccountInformationWarningMessage: Boolean,
-    onIncludeAccountInformationCheckChange: (Boolean) -> Unit,
-    toggleShowIncludeAccountInformationWarningMessage: (Boolean) -> Unit,
-    isPlayBuild: Boolean,
-) {
-    val openPrivacyPolicy =
-        LocalUriHandler.current.createUriHook(
-            stringResource(R.string.privacy_policy_url).appendHideNavOnPlayBuild(isPlayBuild)
-        )
-    CheckboxConfirmation(
-        text = stringResource(R.string.include_account_token_checkbox_text),
-        includeAccountInformation,
-        onIncludeAccountInformationCheckChange,
-    ) {
-        AccountInformationWarning(
-            showIncludeAccountInformationWarningMessage =
-                showIncludeAccountInformationWarningMessage,
-            toggleShowIncludeAccountInformationWarningMessage =
-                toggleShowIncludeAccountInformationWarningMessage,
-            openPrivacyPolicy = openPrivacyPolicy,
-        )
-    }
-}
-
-@Composable
-private fun AccountInformationWarning(
-    showIncludeAccountInformationWarningMessage: Boolean,
-    toggleShowIncludeAccountInformationWarningMessage: (Boolean) -> Unit,
-    openPrivacyPolicy: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier.padding(horizontal = Dimens.tinyPadding)
-                .background(
-                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = Alpha40),
-                    shape = MaterialTheme.shapes.medium,
-                )
-                .animateContentSize()
-    ) {
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            toggleShowIncludeAccountInformationWarningMessage(
-                                !showIncludeAccountInformationWarningMessage
-                            )
-                        }
-                    )
-                    .padding(
-                        top = Dimens.smallPadding,
-                        start = Dimens.smallPadding,
-                        end = Dimens.smallPadding,
-                        bottom =
-                            if (showIncludeAccountInformationWarningMessage) Dimens.tinyPadding
-                            else Dimens.smallPadding,
-                    )
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ErrorOutline,
-                contentDescription = stringResource(R.string.include_account_token_warning_title),
-                tint = MaterialTheme.colorScheme.warning,
-            )
-            Text(
-                modifier =
-                    Modifier.padding(horizontal = Dimens.smallPadding)
-                        .weight(1f)
-                        .align(Alignment.CenterVertically),
-                style = MaterialTheme.typography.labelLarge,
-                text = stringResource(R.string.include_account_token_warning_title),
-            )
-            ExpandChevron(isExpanded = showIncludeAccountInformationWarningMessage)
-        }
-        if (showIncludeAccountInformationWarningMessage) {
-            Text(
-                modifier =
-                    Modifier.padding(horizontal = Dimens.smallPadding)
-                        .padding(bottom = Dimens.smallPadding),
-                style = MaterialTheme.typography.bodySmall,
-                text =
-                    clickableAnnotatedString(
-                        text =
-                            buildString {
-                                appendLine(
-                                    stringResource(
-                                        R.string.include_account_token_warning_message_first
-                                    )
-                                )
-                                append(
-                                    stringResource(
-                                        R.string.include_account_token_warning_message_second
-                                    )
-                                )
-                            },
-                        argument = stringResource(R.string.privacy_policy_lower_case),
-                        linkStyle =
-                            SpanStyle(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textDecoration = TextDecoration.Underline,
-                            ),
-                        onClick = { openPrivacyPolicy() },
-                    ),
-            )
-        }
-    }
-}
+// D.4 step 57: IncludeAccountInformationCheckBox + AccountInformationWarning
+// helpers + the entire account-token disclosure UI dropped (Mullvad account-
+// token flow dead on Warren).
 
 @Composable
 private fun ProblemMessageTextField(

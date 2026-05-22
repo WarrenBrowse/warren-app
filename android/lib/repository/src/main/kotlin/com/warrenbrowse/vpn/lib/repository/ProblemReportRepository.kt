@@ -30,11 +30,14 @@ sealed interface SendProblemReportResult {
     }
 }
 
+// D.4 step 57: ProblemReportRepository.accountRepository dropped — the Mullvad
+// "include my account ID" checkbox flow is dead on Warren (no Mullvad account
+// number). The Warren-native problem-report endpoint (D.6) will sign requests
+// with the BIP39 wallet pubkey instead, not pass an opaque account ID.
 class ProblemReportRepository(
     context: Context,
     private val apiEndpointOverride: ApiEndpointOverride?,
     private val apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder,
-    private val accountRepository: AccountRepository,
     kermitFileLogDirName: String,
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
@@ -76,10 +79,7 @@ class ProblemReportRepository(
             }
         }
 
-    suspend fun sendReport(
-        userReport: UserReport,
-        includeAccountId: Boolean,
-    ): SendProblemReportResult {
+    suspend fun sendReport(userReport: UserReport): SendProblemReportResult {
         // If report is not collected then, collect it, if it fails then return error
         if (!logsExists() && !collectLogs()) {
             return SendProblemReportResult.Error.CollectLog
@@ -98,12 +98,9 @@ class ProblemReportRepository(
                 sendProblemReport(
                     userEmail = userReport.email ?: "",
                     userMessage = userReport.description,
-                    accountId =
-                        if (includeAccountId) {
-                            accountRepository.accountData.value?.id?.value?.toString()
-                        } else {
-                            null
-                        },
+                    // D.4 step 57: accountId hardcoded null — Mullvad account
+                    // number flow dead, Warren wallet pubkey signing TBD (D.6).
+                    accountId = null,
                     reportPath = problemReportOutputPath.absolutePath,
                     cacheDirectory = cacheDirectory.absolutePath,
                     apiEndpointOverride = apiOverride,

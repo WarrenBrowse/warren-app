@@ -8,13 +8,7 @@ class ReportProblemUiStatePreviewParameterProvider :
     override val values: Sequence<ReportProblemUiState>
         get() =
             sequenceOf(
-                ReportProblemUiState(showIncludeAccountId = true),
-                ReportProblemUiState(showIncludeAccountId = true, includeAccountId = true),
-                ReportProblemUiState(
-                    showIncludeAccountId = true,
-                    includeAccountId = true,
-                    showIncludeAccountWarningMessage = true,
-                ),
+                ReportProblemUiState(),
                 ReportProblemUiState(sendingState = SendingReportUiState.Sending),
                 ReportProblemUiState(sendingState = SendingReportUiState.Success("email@mail.com")),
                 ReportProblemUiState(

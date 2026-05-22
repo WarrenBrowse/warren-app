@@ -87,7 +87,6 @@ val uiModule = module {
             apiEndpointOverride = getOrNull(),
             apiEndpointFromIntentHolder = get(),
             kermitFileLogDirName = KERMIT_FILE_LOG_DIR_NAME,
-            accountRepository = get(),
         )
     }
     // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
@@ -200,7 +199,6 @@ val uiModule = module {
         ReportProblemViewModel(
             warrenProblemReporter = get(),
             problemReportRepository = get(),
-            accountRepository = get(),
             isPlayBuild = IS_PLAY_BUILD,
         )
     }
