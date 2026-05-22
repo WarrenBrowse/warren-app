@@ -375,8 +375,7 @@ dependencies {
     // modules deleted (Mullvad-account features without Warren equivalent).
     implementation(projects.lib.feature.anticensorship.impl)
     implementation(projects.lib.feature.anticensorship.api)
-    implementation(projects.lib.feature.apiaccess.impl)
-    implementation(projects.lib.feature.apiaccess.api)
+    // D.4 step 33: apiaccess module deleted.
     implementation(projects.lib.feature.appicon.impl)
     implementation(projects.lib.feature.appinfo.impl)
     implementation(projects.lib.feature.appinfo.api)

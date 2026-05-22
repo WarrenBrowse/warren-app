@@ -45,7 +45,6 @@ import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
 import com.warrenbrowse.vpn.feature.anticensorship.impl.navigation.anticensorshipEntry
-import com.warrenbrowse.vpn.feature.apiaccess.impl.navigation.apiAccessEntry
 import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
@@ -116,7 +115,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         // The screens still compile (modules retained) but no NavKey routes them
         // anymore. Full module deletion is a follow-up.
         anticensorshipEntry(nav3)
-        apiAccessEntry(nav3)
+        // D.4 step 33: apiAccessEntry removed (Warren API endpoint fixed).
         appIconEntry(nav3)
         appearanceEntry(nav3)
         autoConnectEntry(nav3)

@@ -29,7 +29,6 @@ import com.warrenbrowse.vpn.common.compose.itemWithDivider
 import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
-import com.warrenbrowse.vpn.feature.apiaccess.api.ApiAccessNavKey
 import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
@@ -111,8 +110,12 @@ fun Settings(navigator: Navigator) {
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },
         onAppInfoClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppInfoNavKey) },
-        onApiAccessClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ApiAccessNavKey) },
+        // D.4 step 33: API access cell is a no-op on Warren (the Warren
+        // API endpoint is hardcoded; users cannot configure HTTPS proxies
+        // / Tor bridges to reach Mullvad's API since the API itself is
+        // gone). Click handler kept as no-op until the cell is fully
+        // removed from the list layout.
+        onApiAccessClick = {},
         onReportProblemCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ProblemReportNavKey) },
         // D.4 step 31: Multihop + DAITA cells route to the unified Warren
@@ -249,14 +252,8 @@ private fun LazyListScope.content(
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
     }
 
-    item {
-        NavigationListItem(
-            title = stringResource(id = R.string.settings_api_access),
-            onClick = onApiAccessClick,
-        )
-    }
-
-    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+    // D.4 step 33: API access cell removed (Warren has no per-user API
+    // access method configuration; the Warren API endpoint is fixed).
 
     itemWithDivider {
         NavigationListItem(

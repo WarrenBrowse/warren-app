@@ -10,11 +10,6 @@ import com.warrenbrowse.vpn.app.WarrenAppViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.AntiCensorshipSettingsViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.customport.CustomPortDialogViewModel
 import com.warrenbrowse.vpn.feature.anticensorship.impl.selectport.SelectPortViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.delete.DeleteApiAccessMethodConfirmationViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.detail.ApiAccessMethodDetailsViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.edit.EditApiAccessMethodViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.list.ApiAccessListViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.save.SaveApiAccessMethodViewModel
 import com.warrenbrowse.vpn.feature.appicon.impl.AppIconViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
@@ -44,7 +39,6 @@ import com.warrenbrowse.vpn.feature.vpnsettings.impl.mtu.MtuDialogViewModel
 import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.payment.PaymentProvider
-import com.warrenbrowse.vpn.lib.repository.ApiAccessRepository
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
@@ -133,7 +127,9 @@ val uiModule = module {
     // deleted VoucherDialogViewModel.
     single { SplitTunnelingRepository(get()) }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
-    single { ApiAccessRepository(get()) }
+    // D.4 step 33: ApiAccessRepository removed - Mullvad-only API
+    // access method configuration (HTTPS proxies/Tor bridges to reach
+    // mullvad.net). Warren's API endpoint is fixed at build time.
     single { NewDeviceRepository() }
     single { SplashCompleteRepository() }
     single {
@@ -275,15 +271,9 @@ val uiModule = module {
     // from dead SelectLocationScreen).
     viewModel { params -> ServerIpOverridesViewModel(navArgs = params.get(), get(), get()) }
     viewModel { ResetServerIpOverridesConfirmationViewModel(get()) }
-    viewModel { ApiAccessListViewModel(get()) }
-    viewModel { params ->
-        EditApiAccessMethodViewModel(apiAccessMethodId = params.getOrNull(), get(), get())
-    }
-    viewModel { params -> SaveApiAccessMethodViewModel(navArgs = params.get(), get()) }
-    viewModel { params -> ApiAccessMethodDetailsViewModel(apiAccessMethodId = params.get(), get()) }
-    viewModel { params ->
-        DeleteApiAccessMethodConfirmationViewModel(apiAccessMethodId = params.get(), get())
-    }
+    // D.4 step 33: ApiAccess ViewModels removed (5 VMs : List, Edit,
+    // Save, Details, DeleteConfirmation). Warren API endpoint is
+    // hardcoded - no per-user access method configuration.
     viewModel { params -> SelectPortViewModel(navArgs = params.get(), get(), get(), get()) }
     // D.4 step 32: MultihopViewModel removed (multihop now configured
     // via WarrenTunnelSettings toggles).
