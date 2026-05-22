@@ -47,6 +47,9 @@ enum SettingsNavigationRoute: Equatable {
     /// Warren wallet wipe (destructive, requires confirmation).
     case warrenWalletErase
 
+    /// Warren wallet identity (read-only pubkey display for support).
+    case warrenWalletIdentity
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

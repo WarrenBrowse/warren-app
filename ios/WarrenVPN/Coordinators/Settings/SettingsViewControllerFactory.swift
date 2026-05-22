@@ -89,6 +89,8 @@ final class SettingsViewControllerFactory {
             makeWarrenWalletBackupViewController()
         case .warrenWalletErase:
             makeWarrenWalletEraseViewController()
+        case .warrenWalletIdentity:
+            makeWarrenWalletIdentityViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -197,6 +199,34 @@ final class SettingsViewControllerFactory {
     private func makeWarrenWalletEraseViewController() -> MakeChildResult {
         let controller = WarrenWalletEraseViewController()
         return .viewController(controller)
+    }
+
+    /// Wallet identity (Settings → Wallet identity, read-only pubkey).
+    /// Loads the mnemonic from the Keychain synchronously (the iOS
+    /// Keychain entry uses `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+    /// so the device must be unlocked, but no extra Face ID prompt is
+    /// required since the pubkey is non-secret — sharing it cannot
+    /// grant wallet access).
+    private func makeWarrenWalletIdentityViewController() -> MakeChildResult {
+        let hex: String
+        do {
+            let mnemonic = try WarrenWalletKeychain.load()
+            let wallet = try WarrenWallet.fromMnemonic(mnemonic)
+            hex = wallet.publicKey.map { String(format: "%02x", $0) }.joined()
+            // Wipe the seed material immediately ; we only needed the
+            // pubkey (non-secret per Ed25519).
+            wallet.forgetSecret()
+        } catch {
+            // No wallet present or Keychain read failed : empty state.
+            // The row is hidden when `WarrenWalletKeychain.exists()`
+            // returns false ; this is defensive only.
+            hex = ""
+        }
+        let view = WarrenWalletIdentityView(pubkeyHex: hex)
+        let host = UIHostingController(rootView: view)
+        host.view.backgroundColor = .Warren.navy
+        host.title = String(localized: "Wallet identity", table: "Wallet")
+        return .viewController(host)
     }
 
     /// NAT-PMP port forwarding settings (Settings → Port forwarding).

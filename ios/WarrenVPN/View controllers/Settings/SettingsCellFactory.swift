@@ -178,6 +178,18 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletErase }
 
+        case .warrenWalletIdentity:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Wallet identity",
+                table: "Wallet",
+                comment: "Settings row that opens the read-only pubkey display"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletIdentity }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 
