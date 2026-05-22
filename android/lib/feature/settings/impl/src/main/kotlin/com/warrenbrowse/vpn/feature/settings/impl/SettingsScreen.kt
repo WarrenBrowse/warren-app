@@ -33,8 +33,6 @@ import com.warrenbrowse.vpn.feature.apiaccess.api.ApiAccessNavKey
 import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
-import com.warrenbrowse.vpn.feature.daita.api.DaitaNavKey
-import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
@@ -95,7 +93,9 @@ fun Settings(navigator: Navigator) {
         navigator.goBackUntil(SettingsNavKey, inclusive = true)
     }
 
-    navigator.assureHasDetailPane<SettingsNavKey>(DaitaNavKey())
+    // D.4 step 31: tablet detail-pane default is the Warren tunnel
+    // toggles screen (was legacy Mullvad Daita-only detail pane).
+    navigator.assureHasDetailPane<SettingsNavKey>(WarrenTunnelSettingsNavKey)
 
     SettingsScreen(
         state = state,
@@ -115,9 +115,15 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ApiAccessNavKey) },
         onReportProblemCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ProblemReportNavKey) },
+        // D.4 step 31: Multihop + DAITA cells route to the unified Warren
+        // tunnel settings screen (4-toggle view with picker). The
+        // dedicated Mullvad MultihopScreen + DaitaScreen are no longer
+        // referenced; their entries stay registered for now in case the
+        // FeatureIndicator panel still navigates to them.
         onMultihopClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(MultihopNavKey()) },
-        onDaitaClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(DaitaNavKey()) },
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
+        onDaitaClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onNotificationSettingsCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(NotificationSettingsNavKey) },
         onAppObfuscationClick =
