@@ -68,6 +68,35 @@ fun WarrenWalletSettingsSection(
             style = MaterialTheme.typography.titleMedium,
         )
 
+        // Show the wallet pubkey when the wallet exists - this is the
+        // user's stable identity (the BIP39-derived Ed25519 public key
+        // hex). Truncated for readability; the full 64-char hex is
+        // accessible via the recovery-phrase reveal below.
+        when (val s = state) {
+            is WalletState.Ready -> {
+                val truncated = s.pubkey.value.take(8) + "…" + s.pubkey.value.takeLast(8)
+                Text(
+                    text = "Pubkey: $truncated",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+            }
+            WalletState.Locked -> {
+                Text(
+                    text = "Wallet locked. Authenticate to view.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+            }
+            WalletState.Absent -> {
+                Text(
+                    text = "No wallet on this device.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+            }
+        }
+
         viewError?.let { msg ->
             Text(text = msg, color = MaterialTheme.colorScheme.error)
         }
