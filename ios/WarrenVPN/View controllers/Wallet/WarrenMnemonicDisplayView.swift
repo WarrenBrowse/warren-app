@@ -14,6 +14,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// 12-word BIP39 mnemonic backup view. The phrase is hidden under a
 /// blur overlay by default; tap-and-hold reveals it, releasing hides
@@ -30,6 +31,14 @@ public struct WarrenMnemonicDisplayView: View {
     public var onConfirmed: () -> Void
 
     @State private var isRevealed: Bool = false
+
+    /// `true` while the user-screenshot warning alert is presented.
+    /// Triggered by `UIApplication.userDidTakeScreenshotNotification`
+    /// when iOS reports a screenshot was just captured — Warren cannot
+    /// scrub the screenshot from the Photos library (iOS doesn't
+    /// expose that API), but we can immediately re-hide the mnemonic
+    /// AND surface a warning that the screenshot leaked.
+    @State private var screenshotWarningPresented: Bool = false
 
     public init(mnemonic: String, onConfirmed: @escaping () -> Void) {
         self.mnemonic = mnemonic
@@ -77,6 +86,37 @@ public struct WarrenMnemonicDisplayView: View {
         }
         .padding()
         .background(Color.Warren.navy)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+            // Force-hide the mnemonic + surface a strong-language
+            // warning. The screenshot has already been captured —
+            // iOS doesn't expose a way to scrub it from Photos —
+            // but immediate re-hide prevents follow-on screenshots
+            // showing a different angle, and the alert tells the user
+            // the leak happened so they can rotate the wallet.
+            isRevealed = false
+            screenshotWarningPresented = true
+        }
+        .alert(
+            String(
+                localized: "Screenshot detected",
+                table: "Wallet",
+                comment: "Title of the alert shown when iOS reports a screenshot was just taken"
+            ),
+            isPresented: $screenshotWarningPresented
+        ) {
+            Button(
+                String(localized: "Close", table: "Wallet", comment: ""),
+                role: .cancel
+            ) {}
+        } message: {
+            Text(
+                String(
+                    localized: "Your recovery phrase has been captured in a screenshot. Anyone with access to that screenshot can recover your wallet. Generate a new wallet and move your funds if you cannot guarantee the screenshot stays private.",
+                    table: "Wallet",
+                    comment: "Body of the post-screenshot warning explaining the threat model"
+                )
+            )
+        }
     }
 
     private var words: [String] {
@@ -110,7 +150,7 @@ public struct WarrenMnemonicDisplayView: View {
                 .fill(Color.Warren.navy.opacity(0.85))
                 .overlay(
                     Image(systemName: "eye.slash.fill")
-                        .foregroundColor(.warrenYellow)
+                        .foregroundColor(Color.Warren.yellow)
                         .font(.title)
                 )
                 .allowsHitTesting(false)
