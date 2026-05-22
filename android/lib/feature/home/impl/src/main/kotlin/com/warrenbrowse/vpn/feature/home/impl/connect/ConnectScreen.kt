@@ -225,18 +225,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            is ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser -> {
-                // D.4 step 23: dead Mullvad path (mullvad.net/account doesn't
-                // exist on Warren). The user is routed to the wallet
-                // settings via `onManageAccountClick` instead; this side
-                // effect is left as a no-op for parity with the legacy
-                // ConnectViewModel still emitting it.
-            }
-
+            // D.4 step 43: UiSideEffect.OpenAccountManagementPageInBrowser
+            // dropped (mullvad.net web-account flow dead - Manage Account
+            // navigates directly to WarrenWalletSettings via NavKey).
             // D.4 step 37: UiSideEffect.OutOfTime removed entirely (Mullvad
             // subscription expiry model is dead on Warren - BIP39 wallet
             // identity has no time-based subscription).
-
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
 

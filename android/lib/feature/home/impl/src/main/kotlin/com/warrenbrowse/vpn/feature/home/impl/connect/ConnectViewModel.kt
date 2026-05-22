@@ -26,8 +26,6 @@ import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
@@ -38,7 +36,6 @@ import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 
 @Suppress("LongParameterList")
 class ConnectViewModel(
-    private val accountRepository: AccountRepository,
     private val deviceRepository: DeviceRepository,
     private val changelogRepository: ChangelogRepository,
     inAppNotificationController: InAppNotificationController,
@@ -165,14 +162,10 @@ class ConnectViewModel(
         }
     }
 
-    // D.4 step 42: onManageAccountClick logic stripped (Mullvad mullvad.net auth
-    // token URL is dead — ConnectScreen routes Manage Account taps to
-    // WarrenWalletSettings instead, side-effect kept as no-op for parity).
-    fun onManageAccountClick() {
-        viewModelScope.launch {
-            _uiSideEffect.send(UiSideEffect.OpenAccountManagementPageInBrowser(null))
-        }
-    }
+    // D.4 step 43: onManageAccountClick + OpenAccountManagementPageInBrowser
+    // side effect removed entirely (mullvad.net web-account flow dead).
+    // ConnectScreen routes Manage Account taps directly to
+    // WarrenWalletSettings via NavKey now.
 
     fun openAppListing() = viewModelScope.launch {
         val target = resolveAppListing()
@@ -200,8 +193,6 @@ class ConnectViewModel(
         }
 
     sealed interface UiSideEffect {
-        data class OpenAccountManagementPageInBrowser(val token: WebsiteAuthToken?) : UiSideEffect
-
         data class OpenUri(val uri: Uri, val errorMessage: String) : UiSideEffect
 
         data object RevokedDevice : UiSideEffect

@@ -27,8 +27,6 @@ import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
 import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.model.WebsiteAuthToken
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
@@ -50,9 +48,6 @@ class ConnectViewModelTest {
     // Service connections
     private val mockConnectionProxy: ConnectionProxy = mockk()
     private val mockLocation: GeoIpLocation = mockk(relaxed = true)
-
-    // Account Repository
-    private val mockAccountRepository: AccountRepository = mockk(relaxed = true)
 
     // Device Repository
     private val mockDeviceRepository: DeviceRepository = mockk()
@@ -97,7 +92,6 @@ class ConnectViewModelTest {
 
         viewModel =
             ConnectViewModel(
-                accountRepository = mockAccountRepository,
                 deviceRepository = mockDeviceRepository,
                 changelogRepository = mockChangelogRepository,
                 inAppNotificationController = mockInAppNotificationController,
@@ -268,22 +262,9 @@ class ConnectViewModelTest {
             }
         }
 
-    @Test
-    fun `onShowAccountClick call should result in uiSideEffect emitting OpenAccountManagementPageInBrowser`() =
-        runTest {
-            // Arrange
-            val mockToken = WebsiteAuthToken.fromString("154c4cc94810fddac78398662b7fa0c7")
-            coEvery { mockAccountRepository.getWebsiteAuthToken() } returns mockToken
-
-            // Act, Assert
-            viewModel.uiSideEffect.test {
-                viewModel.onManageAccountClick()
-                val action = awaitItem()
-                assertIs<ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser>(action)
-                assertEquals(mockToken, action.token)
-            }
-        }
-
+    // D.4 step 43: onShowAccountClick test dropped (OpenAccountManagementPage-
+    // InBrowser side effect + onManageAccountClick + AccountRepository all
+    // removed - Manage Account routes directly to WarrenWalletSettings now).
     // D.4 step 37: OutOfTime side effect test dropped (subscription model dead).
 
     @Test
