@@ -56,6 +56,27 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
 
     /// Returns true if a wallet entry exists in the Keychain. Safe to
     /// call from the main actor (does not trigger biometric prompt).
+    /// Synchronously loads the wallet pubkey as a hex string from the
+    /// Keychain. Returns `nil` if no wallet is present or the Keychain
+    /// entry is unreadable.
+    ///
+    /// Public key is non-secret per Ed25519 cryptography ; no
+    /// biometric prompt is required (in contrast to
+    /// `loadMnemonicWithAuth(reason:completion:)` which gates on
+    /// Face ID / Touch ID because the mnemonic IS secret). The seed
+    /// material is zeroed via `forgetSecret()` immediately after
+    /// derivation.
+    public func publicKeyHex() -> String? {
+        guard let mnemonic = try? WarrenWalletKeychain.load(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        let hex = wallet.publicKeyHex
+        wallet.forgetSecret()
+        return hex
+    }
+
     public func walletExists() -> Bool {
         WarrenWalletKeychain.exists()
     }

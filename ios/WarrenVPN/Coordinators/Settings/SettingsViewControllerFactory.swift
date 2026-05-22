@@ -214,20 +214,11 @@ final class SettingsViewControllerFactory {
     /// required since the pubkey is non-secret — sharing it cannot
     /// grant wallet access).
     private func makeWarrenWalletIdentityViewController() -> MakeChildResult {
-        let hex: String
-        do {
-            let mnemonic = try WarrenWalletKeychain.load()
-            let wallet = try WarrenWallet.fromMnemonic(mnemonic)
-            hex = wallet.publicKeyHex
-            // Wipe the seed material immediately ; we only needed the
-            // pubkey (non-secret per Ed25519).
-            wallet.forgetSecret()
-        } catch {
-            // No wallet present or Keychain read failed : empty state.
-            // The row is hidden when `WarrenWalletKeychain.exists()`
-            // returns false ; this is defensive only.
-            hex = ""
-        }
+        // `publicKeyHex()` returns nil when no wallet is present ; the
+        // row is hidden in that case (see `SettingsDataSource`), so
+        // this is defensive only — fall back to an empty hex string
+        // which the view renders as a blank field.
+        let hex = WarrenWalletInteractor().publicKeyHex() ?? ""
         let view = WarrenWalletIdentityView(pubkeyHex: hex)
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
@@ -278,22 +269,12 @@ final class SettingsViewControllerFactory {
     private func makeWarrenDiagnosticInfoViewController() -> MakeChildResult {
         let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        var walletShort: String?
-        if WarrenWalletKeychain.exists() {
-            if let mnemonic = try? WarrenWalletKeychain.load(),
-                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
-            {
-                // Render as `<first 4 hex>...<last 4 hex>` so the
-                // identifier fits one line on small phones but still
-                // disambiguates between wallets.
-                let hex = wallet.publicKeyHex
-                if hex.count >= 8 {
-                    let prefix = hex.prefix(4)
-                    let suffix = hex.suffix(4)
-                    walletShort = "\(prefix)...\(suffix)"
-                }
-                wallet.forgetSecret()
-            }
+        // Render as `<first 4 hex>...<last 4 hex>` so the identifier
+        // fits one line on small phones but still disambiguates
+        // between wallets.
+        let walletShort: String? = WarrenWalletInteractor().publicKeyHex().flatMap { hex in
+            guard hex.count >= 8 else { return nil }
+            return "\(hex.prefix(4))...\(hex.suffix(4))"
         }
         let info = WarrenDiagnosticInfo(
             appVersion: appVersion,
