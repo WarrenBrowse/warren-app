@@ -71,6 +71,7 @@ FILES_TO_ADD = {
   # iOS Simulator).
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletKeychainTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Wallet/WarrenWalletInteractorTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/WarrenAppGroupEventsTests.swift" =>
     "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Shared/WarrenAppGroupKeyTests.swift" => "WarrenVPNTests",
