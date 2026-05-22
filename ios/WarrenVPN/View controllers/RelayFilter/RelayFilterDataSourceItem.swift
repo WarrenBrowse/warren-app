@@ -25,7 +25,7 @@ struct RelayFilterDataSourceItem: Hashable, Comparable {
     )
 
     static let ownedOwnershipItem = RelayFilterDataSourceItem(
-        name: NSLocalizedString("Mullvad owned only", comment: ""),
+        name: NSLocalizedString("Warren owned only", comment: ""),
         type: .ownershipOwned,
         isEnabled: true
     )

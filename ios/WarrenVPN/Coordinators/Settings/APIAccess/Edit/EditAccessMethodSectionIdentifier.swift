@@ -20,7 +20,7 @@ enum EditAccessMethodSectionIdentifier: Hashable {
     var sectionFooter: String? {
         switch self {
         case .testMethod:
-            NSLocalizedString("Performs a connection test to a Mullvad API server via this access method.", comment: "")
+            NSLocalizedString("Performs a connection test to a Warren API server via this access method.", comment: "")
         case .enableMethod:
             NSLocalizedString("At least one method needs to be enabled.", comment: "")
         case .methodSettings, .cancelTest, .testingStatus, .deleteMethod:

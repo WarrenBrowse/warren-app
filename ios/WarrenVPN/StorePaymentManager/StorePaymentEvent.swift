@@ -46,10 +46,9 @@ enum StorePaymentError: Error {
         case .verification:
             NSLocalizedString("Failed to verify transaction receipt", comment: "")
         case .getPaymentToken:
-            NSLocalizedString("Failed to reach Mullvad servers to initiate purchase", comment: "")
+            NSLocalizedString("Failed to reach Warren servers to initiate purchase", comment: "")
         case .receiptUpload:
-            NSLocalizedString(
-                "Failed to upload one or more receipts to Mullvad servers. Try again later or contact support for help.",
+            NSLocalizedString("Failed to upload one or more receipts to Warren servers. Try again later or contact support for help.",
                 comment: ""
             )
         case .restorationError:

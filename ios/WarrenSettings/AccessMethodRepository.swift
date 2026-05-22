@@ -31,7 +31,7 @@ public class AccessMethodRepository: AccessMethodRepositoryProtocol, @unchecked 
 
     private let bridge = PersistentAccessMethod(
         id: AccessMethodRepository.bridgeId,
-        name: "Mullvad bridges",
+        name: "Warren bridges",
         isEnabled: true,
         proxyConfiguration: .bridges
     )
