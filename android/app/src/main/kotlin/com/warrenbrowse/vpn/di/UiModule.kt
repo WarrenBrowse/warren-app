@@ -65,16 +65,11 @@ import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
-import com.warrenbrowse.vpn.lib.usecase.FilteredRelayListUseCase
-import com.warrenbrowse.vpn.lib.usecase.HopSelectionUseCase
 import com.warrenbrowse.vpn.lib.usecase.InternetAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
-import com.warrenbrowse.vpn.lib.usecase.ProviderToOwnershipsUseCase
-import com.warrenbrowse.vpn.lib.usecase.RecentsUseCase
-import com.warrenbrowse.vpn.lib.usecase.RelayItemCanBeSelectedUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectSinglehopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -172,12 +167,9 @@ val uiModule = module {
     // LastKnownLocationUseCase + ProviderToOwnershipsUseCase + their
     // dependents kept because ConnectViewModel still references them.
     single { SelectedLocationTitleUseCase(get(), get()) }
-    single { ProviderToOwnershipsUseCase(get()) }
-    single { FilteredRelayListUseCase(get(), get(), get()) }
     single { LastKnownLocationUseCase(get()) }
     single { SelectedLocationUseCase(get(), get()) }
     single { DeleteCustomDnsUseCase(get()) }
-    single { RecentsUseCase(get(), get(), get()) }
     single { SelectSinglehopUseCase(relayListRepository = get()) }
     single {
         ModifyMultihopUseCase(
@@ -195,22 +187,7 @@ val uiModule = module {
         )
     }
     single {
-        HopSelectionUseCase(
-            customListRelayItemUseCase = get(),
-            relayListRepository = get(),
-            settingsRepository = get(),
-        )
-    }
-    single {
         SelectAndEnableMultihopUseCase(relayListRepository = get(), settingsRepository = get())
-    }
-    single {
-        RelayItemCanBeSelectedUseCase(
-            filteredRelayListUseCase = get(),
-            hopSelectionUseCase = get(),
-            settingsRepository = get(),
-            relayListRepository = get(),
-        )
     }
     single {
         ModifyAndEnableMultihopUseCase(
