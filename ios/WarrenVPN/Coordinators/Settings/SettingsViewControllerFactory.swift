@@ -269,13 +269,9 @@ final class SettingsViewControllerFactory {
     private func makeWarrenDiagnosticInfoViewController() -> MakeChildResult {
         let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        // Render as `<first 4 hex>...<last 4 hex>` so the identifier
-        // fits one line on small phones but still disambiguates
-        // between wallets.
-        let walletShort: String? = WarrenWalletInteractor().publicKeyHex().flatMap { hex in
-            guard hex.count >= 8 else { return nil }
-            return "\(hex.prefix(4))...\(hex.suffix(4))"
-        }
+        // `<first 4 hex>...<last 4 hex>` short form fits one line on
+        // small phones but still disambiguates between wallets.
+        let walletShort = WarrenWalletInteractor().publicKeyShort()
         let info = WarrenDiagnosticInfo(
             appVersion: appVersion,
             buildNumber: build,

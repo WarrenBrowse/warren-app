@@ -58,4 +58,23 @@ final class WarrenWalletInteractorTests: XCTestCase {
         XCTAssertEqual(first, second)
         XCTAssertEqual(second, third)
     }
+
+    func test_publicKeyShort_returnsNil_whenNoWallet() {
+        let interactor = WarrenWalletInteractor()
+        XCTAssertNil(interactor.publicKeyShort())
+    }
+
+    func test_publicKeyShort_formatsAsFirst4DotsLast4_whenWalletExists() throws {
+        let wallet = try WarrenWallet.generate()
+        try WarrenWalletKeychain.save(mnemonic: wallet.revealMnemonic())
+        let fullHex = wallet.publicKeyHex
+        wallet.forgetSecret()
+
+        let interactor = WarrenWalletInteractor()
+        let short = interactor.publicKeyShort()
+        XCTAssertNotNil(short)
+        XCTAssertEqual(short, "\(fullHex.prefix(4))...\(fullHex.suffix(4))")
+        // Total length : 4 + 3 + 4 = 11
+        XCTAssertEqual(short?.count, 11)
+    }
 }

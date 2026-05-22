@@ -77,6 +77,15 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         return hex
     }
 
+    /// Convenience : `<first 4 hex>...<last 4 hex>` short form of
+    /// the wallet pubkey. Used in compact UI surfaces (Diagnostic
+    /// info row, App Group status) where the full 64-char hex would
+    /// wrap to multiple lines. Returns `nil` when no wallet exists.
+    public func publicKeyShort() -> String? {
+        guard let hex = publicKeyHex(), hex.count >= 8 else { return nil }
+        return "\(hex.prefix(4))...\(hex.suffix(4))"
+    }
+
     public func walletExists() -> Bool {
         WarrenWalletKeychain.exists()
     }
