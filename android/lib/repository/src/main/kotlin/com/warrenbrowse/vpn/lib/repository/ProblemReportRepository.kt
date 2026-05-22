@@ -30,13 +30,16 @@ sealed interface SendProblemReportResult {
     }
 }
 
-// D.4 step 57: ProblemReportRepository.accountRepository dropped — the Mullvad
-// "include my account ID" checkbox flow is dead on Warren (no Mullvad account
-// number). The Warren-native problem-report endpoint (D.6) will sign requests
-// with the BIP39 wallet pubkey instead, not pass an opaque account ID.
+// D.6 step 65: ProblemReportRepository slimmed to the local log surface
+// (collect / read / delete). The send path moved to
+// WarrenSupportReportInvoker which routes through WarrenJni's signed POST
+// to /v1/support. The repository keeps the StateFlow<UserReport> form
+// state + the log file lifecycle (UI continues to call setEmail /
+// setDescription / collectLogs / readLogs / deleteLogs).
 class ProblemReportRepository(
     context: Context,
-    private val apiEndpointOverride: ApiEndpointOverride?,
+    @Suppress("UnusedPrivateProperty") private val apiEndpointOverride: ApiEndpointOverride?,
+    @Suppress("UnusedPrivateProperty")
     private val apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder,
     kermitFileLogDirName: String,
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -47,9 +50,9 @@ class ProblemReportRepository(
 
     private val _problemReport = MutableStateFlow(UserReport("", ""))
     val problemReport: StateFlow<UserReport> = _problemReport.asStateFlow()
-    private val cacheDirectory = File(context.cacheDir.toURI())
     private val logDirectory = File(context.filesDir.toURI())
     private val problemReportOutputPath = File(logDirectory, PROBLEM_REPORT_LOGS_FILE)
+    @Suppress("UnusedPrivateProperty", "unused")
     private val kermitFileLogDirPath = File(logDirectory, kermitFileLogDirName)
     private val collectReportMutex = Mutex()
 
@@ -61,59 +64,22 @@ class ProblemReportRepository(
 
     suspend fun collectLogs(): Boolean =
         withContext(dispatcher) {
-
-            // Lock to avoid potential truncation of the log file that the daemon creates
             collectReportMutex.withLock {
-                // Delete any old report
                 deleteLogs()
-
-                // D.4 step 36: Mullvad Play Store purchase counts dropped from
-                // problem report metadata (Warren has no VPN subscription billing).
-                collectReport(
-                    logDirectory = logDirectory.absolutePath,
-                    kermitFileLogDir = kermitFileLogDirPath.absolutePath,
-                    problemReportOutputPath = problemReportOutputPath.absolutePath,
-                    unverifiedPurchases = 0,
-                    pendingPurchases = 0,
-                )
+                // D.6: WarrenJni.collectReport returns the redacted bundle
+                // as a single string (empty until the file-appender lands).
+                // We mirror it into the legacy on-disk path so the existing
+                // ViewLogs screen + readLogs API continue to function.
+                val bundle = runCatching { com.warrenbrowse.vpn.jni.WarrenJni.collectReport() }
+                    .getOrElse { "" }
+                try {
+                    problemReportOutputPath.writeText(bundle)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
             }
         }
-
-    suspend fun sendReport(userReport: UserReport): SendProblemReportResult {
-        // If report is not collected then, collect it, if it fails then return error
-        if (!logsExists() && !collectLogs()) {
-            return SendProblemReportResult.Error.CollectLog
-        }
-
-        val sentSuccessfully =
-            withContext(dispatcher) {
-                val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
-                val apiOverride =
-                    if (BuildConfig.DEBUG && intentApiOverride != null) {
-                        intentApiOverride
-                    } else {
-                        apiEndpointOverride
-                    }
-
-                sendProblemReport(
-                    userEmail = userReport.email ?: "",
-                    userMessage = userReport.description,
-                    // D.4 step 57: accountId hardcoded null — Mullvad account
-                    // number flow dead, Warren wallet pubkey signing TBD (D.6).
-                    accountId = null,
-                    reportPath = problemReportOutputPath.absolutePath,
-                    cacheDirectory = cacheDirectory.absolutePath,
-                    apiEndpointOverride = apiOverride,
-                )
-            }
-
-        return if (sentSuccessfully) {
-            deleteLogs()
-            SendProblemReportResult.Success
-        } else {
-            SendProblemReportResult.Error.SendReport
-        }
-    }
 
     suspend fun readLogs(): List<String> {
         if (!logsExists()) {
@@ -131,38 +97,5 @@ class ProblemReportRepository(
 
     fun deleteLogs() {
         problemReportOutputPath.delete()
-    }
-
-    // Warren-specific problem report path is unimplemented (D.6 follow-up).
-    // The upstream `mullvad-problem-report` Rust crate was dropped from
-    // warren-jni during D.3 and the Warren-native equivalent (collect a
-    // tarball of Kotlin + Rust logs, POST to warren-api `/v1/support`) has
-    // not landed yet. These stubs let the repository link without an
-    // `UnsatisfiedLinkError` at runtime and signal failure cleanly to
-    // callers, who already handle `SendProblemReportResult.Error.*`.
-    @Suppress("UnusedPrivateMember")
-    private fun collectReport(
-        logDirectory: String,
-        kermitFileLogDir: String,
-        problemReportOutputPath: String,
-        unverifiedPurchases: Int,
-        pendingPurchases: Int,
-    ): Boolean {
-        // TODO (D.6): wire warren-side problem-report collector.
-        return false
-    }
-
-    @Suppress("UnusedPrivateMember")
-    private fun sendProblemReport(
-        userEmail: String,
-        userMessage: String,
-        accountId: String?,
-        reportPath: String,
-        cacheDirectory: String,
-        apiEndpointOverride: ApiEndpointOverride?,
-    ): Boolean {
-        // TODO (D.6): POST report to warren-api `/v1/support` with the
-        // signed canonical request flow (see warren-jni signCanonicalRequest).
-        return false
     }
 }

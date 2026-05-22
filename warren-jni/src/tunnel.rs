@@ -51,16 +51,13 @@ pub struct WarrenTunnelConfig {
     pub daita: Option<serde_json::Value>,
     #[expect(dead_code, reason = "Android does not surface bypass-CIDR routing yet (D.4 follow-up)")]
     pub bypass_cidrs: Option<Vec<String>>,
-    /// Client opt-in for the NAT-PMP refresh loop. The full wiring
-    /// (spawn `warren_natpmp_client::refresh_loop` post-handshake +
-    /// channel the assigned port back to Kotlin) is a follow-up; the
-    /// field exists so the wire shape lines up with the Kotlin
-    /// `WarrenTunnelConfig` and surfaces a "TODO" path for the next
-    /// session.
-    #[expect(
-        dead_code,
-        reason = "NAT-PMP spawn + assigned-port readback is a D.4 follow-up; field already on the wire"
-    )]
+    /// Client opt-in for the NAT-PMP refresh loop. When `Some(true)`
+    /// the session spawns a `warren_natpmp_client::spawn_refresh_loop_from_addr`
+    /// after the handshake completes, binding the UDP socket to the
+    /// assigned tunnel inner IPv4 so the request egresses through the
+    /// tunnel (and not the underlying mobile-data / Wi-Fi interface).
+    /// Assigned external port surfacing to Kotlin is a follow-up; for
+    /// now we log it at INFO.
     pub nat_pmp_enabled: Option<bool>,
     #[expect(
         dead_code,
@@ -180,6 +177,15 @@ pub async fn run_session(
     );
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
 
+    // D.6 NAT-PMP wiring: if the client opted in, spawn the refresh
+    // loop with the assigned tunnel inner IPv4 as bind addr so the
+    // request egresses through the tunnel. The loop runs alongside
+    // the bidirectional pump and is cancelled implicitly when the
+    // session task exits (the cancel oneshot inside the manager fires
+    // on drop). Currently the assigned external port surfaces only
+    // via INFO log; piping it back to Kotlin is a future iteration.
+    let _nat_pmp_guard = maybe_spawn_nat_pmp(&config, session.assigned_ipv4());
+
     // Build the DAITA state from the exit-supplied spec. If the client
     // requested DAITA but the exit declined (returned daita_spec=None),
     // we silently fall back to the plain pump - this matches the
@@ -238,4 +244,49 @@ pub async fn run_session(
 /// Parse the JSON config blob handed in by the Kotlin caller.
 pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> {
     serde_json::from_str(json).map_err(TunnelStartError::InvalidConfig)
+}
+
+/// Guard returned by [`maybe_spawn_nat_pmp`]. Drops the NAT-PMP
+/// refresh loop on drop (via the `RefreshLoopHandle`'s drop impl).
+/// `None` means NAT-PMP was disabled in config or unsupported on the
+/// assigned interface (IPv6-only is not yet wired).
+struct NatPmpGuard {
+    #[expect(dead_code, reason = "handle dropped on session teardown; field is the lifetime owner")]
+    handle: warren_natpmp_client::RefreshLoopHandle,
+}
+
+fn maybe_spawn_nat_pmp(
+    config: &WarrenTunnelConfig,
+    assigned_ipv4: std::net::Ipv4Addr,
+) -> Option<NatPmpGuard> {
+    if !config.nat_pmp_enabled.unwrap_or(false) {
+        return None;
+    }
+    let server = warren_natpmp_client::default_server_addr();
+    let bind_addr = std::net::IpAddr::V4(assigned_ipv4);
+    let (tx, mut rx) =
+        tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
+    let handle = warren_natpmp_client::spawn_refresh_loop_from_addr(
+        server,
+        warren_natpmp_client::MapProtocol::Udp,
+        // D.6 placeholder: request external mapping for the QUIC
+        // datagram port. The internal port is informative only on the
+        // PCP/NAT-PMP wire (the exit allocates an arbitrary external
+        // port). Use 0 as "client does not own a specific local port"
+        // and let the exit pick.
+        0,
+        0,
+        3600,
+        tx,
+        Some(bind_addr),
+    );
+    tokio::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            log::info!("NAT-PMP event from Android tunnel: {event:?}");
+        }
+    });
+    log::info!(
+        "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})"
+    );
+    Some(NatPmpGuard { handle })
 }

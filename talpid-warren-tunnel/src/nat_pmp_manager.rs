@@ -18,12 +18,12 @@
 //! - Dropping the manager calls `cancel` defensively, so a panicking
 //!   tunnel teardown cannot leak the spawned tasks.
 
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
 
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use warren_natpmp_client::{RefreshLoopHandle, spawn_refresh_loop};
+use warren_natpmp_client::{RefreshLoopHandle, spawn_refresh_loop_from_addr};
 
 use crate::NatPmpConfig;
 
@@ -68,14 +68,33 @@ impl NatPmpManager {
         config: &NatPmpConfig,
         observer: NatPmpEventObserver,
     ) -> Self {
+        Self::start_from_addr(runtime, server, config, observer, None)
+    }
+
+    /// Variant of [`start`] that forces the local UDP source IP via
+    /// `bind_addr`. Required on Android (and any host whose default
+    /// route bypasses the tunnel) so the NAT-PMP request egresses
+    /// through the tunnel rather than the underlying mobile-data /
+    /// Wi-Fi interface — otherwise the exit's NAT-PMP server never
+    /// sees the request. Pass the assigned tunnel inner IPv4 (typ.
+    /// `10.66.0.x` after the IP allocator's IpAssign frame).
+    #[must_use = "the returned manager owns the spawned tasks; drop discards control"]
+    pub fn start_from_addr(
+        runtime: &tokio::runtime::Handle,
+        server: SocketAddr,
+        config: &NatPmpConfig,
+        observer: NatPmpEventObserver,
+        bind_addr: Option<IpAddr>,
+    ) -> Self {
         let (tx, mut rx) = mpsc::unbounded_channel::<NatPmpEvent>();
-        let refresh_handle = spawn_refresh_loop(
+        let refresh_handle = spawn_refresh_loop_from_addr(
             server,
             config.protocol,
             config.internal_port,
             config.suggested_external_port,
             config.lifetime_secs,
             tx,
+            bind_addr,
         );
         let forward_handle = runtime.spawn(async move {
             // recv() returns None once the inner refresh loop exits

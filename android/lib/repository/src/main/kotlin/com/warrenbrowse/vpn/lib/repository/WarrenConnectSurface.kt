@@ -81,3 +81,43 @@ interface WarrenRelayProvider {
     /** Snapshot of the available relays. Empty list = catalogue unreachable. */
     fun list(): List<WarrenRelaySummary>
 }
+
+/**
+ * Outcome of a Warren support-report submission. Returned to the
+ * feature-module UI so it can render the right success / failure
+ * state without depending on the app-private use-case type.
+ */
+sealed interface WarrenSupportReportOutcome {
+    /** Server accepted the report. `referenceId` is a 32-hex tracker id. */
+    data class Success(val referenceId: String) : WarrenSupportReportOutcome
+    /** Wallet not unlocked or user cancelled the biometric prompt. */
+    data object AuthorizationDenied : WarrenSupportReportOutcome
+    /** Wallet has no mnemonic yet (the onboarding hasn't run). */
+    data object WalletNotReady : WarrenSupportReportOutcome
+    /** Network / server / signature error - `message` is loggable, not user-facing. */
+    data class Failure(val message: String) : WarrenSupportReportOutcome
+}
+
+/**
+ * Lib-side surface for submitting a D.6 problem report. The concrete
+ * impl lives in `app/connect/WarrenSendProblemReportUseCase` and is
+ * bound to this interface in `di/AppModule`. The submission flow is
+ * Activity-coupled (mirror of [WarrenQuinnConnectInvoker]) because it
+ * needs to raise a biometric prompt to unlock the BIP39 mnemonic
+ * that signs the request.
+ */
+interface WarrenSupportReportInvoker {
+    /**
+     * Sign + ship a support report.
+     *
+     * @param activity Fragment host for the biometric prompt.
+     * @param userMessage Free-form user description.
+     * @param redactedLogs Pre-redacted log bundle (empty when the
+     *  user unchecked "Include logs").
+     */
+    suspend fun submit(
+        activity: FragmentActivity,
+        userMessage: String,
+        redactedLogs: String,
+    ): WarrenSupportReportOutcome
+}

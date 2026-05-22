@@ -443,23 +443,223 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
 /// available Warren exits. The Kotlin side parses this into a list of
 /// `RelayInfo` and feeds the relay selector / location picker UI.
 ///
-/// D.6 transition surface: a real implementation fetches the signed
-/// relay list via `warren-api-client`, verifies the signature with
-/// `warren-relay-selector::verify_signed_relay_list`, and projects each
-/// `WarrenRelay` to the JSON shape the Kotlin side expects. Until that
-/// fetch is wired we ship a single hardcoded entry (`warren-exit-1`
-/// prod, Hetzner fsn1-dc14) so the picker UI has data to render and
-/// the end-to-end connect path keeps working when the user mutates the
-/// selection.
+/// D.6 wired: fetches `GET /v1/exits` via `warren-api-client`, verifies
+/// the embedded signature against the pinned server pubkey, and
+/// projects each `JsonRelay` to the JSON shape Kotlin expects. The
+/// fetch runs on the shared Tokio runtime initialised by `initLogger`.
+///
+/// On any failure (network, signature, server pubkey mismatch) the
+/// JNI surface returns a single-entry fallback pointing at the
+/// known-good `warren-exit-1` so the user is never left with an
+/// empty picker on a flaky network. A `log::warn!` records the
+/// failure for the operator.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
     env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) -> jstring {
-    // Single-entry hardcoded list. Schema MUST line up with the Kotlin
-    // `com.warrenbrowse.vpn.app.connect.RelayInfo` data class.
-    let json = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
+    let json = fetch_relays_or_fallback();
     match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Production warren-api base URL. The Android build does NOT support
+/// `--api-override` runtime switching (that path is gated behind the
+/// `api-override` Cargo feature for dev/staging builds only).
+const PROD_API_URL: &str = "https://api.warrenbrowse.com";
+
+/// Production server signing pubkey hex (64 lowercase chars). The
+/// signed relay list MUST be signed by this key; any other pubkey is
+/// rejected.
+const PROD_SERVER_PUBKEY_HEX: &str =
+    "2921abad869e94064b56cf48c8da36312921abad869e94064b56cf48c8da3631";
+
+/// Hardcoded fallback used when the live fetch fails. Schema lined up
+/// with the Kotlin `RelayInfo` data class.
+const FALLBACK_RELAYS_JSON: &str = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
+
+/// Fetch + verify the signed relay list, projecting the result to the
+/// Kotlin-side JSON shape. Returns the fallback on any error.
+#[cfg(target_os = "android")]
+fn fetch_relays_or_fallback() -> String {
+    use ed25519_dalek::SigningKey;
+
+    let runtime = match RUNTIME.get() {
+        Some(rt) => rt,
+        None => {
+            log::warn!("listRelays called before initLogger; returning fallback");
+            return FALLBACK_RELAYS_JSON.to_owned();
+        }
+    };
+
+    // The `/v1/exits` endpoint is unsigned (response is server-signed)
+    // but `WarrenApiClient::new` requires a SigningKey for its signed
+    // helpers. Use an all-zero throwaway: the key never hits the wire
+    // for this call since `list_exits` issues a plain GET.
+    let throwaway_key = SigningKey::from_bytes(&[0u8; 32]);
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), throwaway_key);
+
+    let raw = match runtime.block_on(client.list_exits()) {
+        Ok(s) => s,
+        Err(e) => {
+            log::warn!("listRelays: GET /v1/exits failed: {e}; returning fallback");
+            return FALLBACK_RELAYS_JSON.to_owned();
+        }
+    };
+
+    let signed = match warren_relay_selector::verify_signed_relay_list(
+        &raw,
+        Some(PROD_SERVER_PUBKEY_HEX),
+    ) {
+        Ok(s) => s,
+        Err(e) => {
+            log::warn!("listRelays: signature verify failed: {e}; returning fallback");
+            return FALLBACK_RELAYS_JSON.to_owned();
+        }
+    };
+
+    // Project each WarrenRelay to the Kotlin schema: { exit_id,
+    // exit_pubkey_hex, endpoint, country, city, active, weight }.
+    // Pick the first ip_addr entry as the endpoint (the schema is
+    // single-endpoint on the Kotlin side until multi-endpoint
+    // failover lands).
+    let projected: Vec<serde_json::Value> = signed
+        .relays()
+        .iter()
+        .map(|r| {
+            let endpoint = r
+                .endpoint_addr()
+                .ip_addrs()
+                .next()
+                .map(|sa| sa.to_string())
+                .unwrap_or_else(|| "0.0.0.0:443".to_owned());
+            serde_json::json!({
+                "exit_id": r.exit_id().to_hex(),
+                "exit_pubkey_hex": r.endpoint_id().to_hex(),
+                "endpoint": endpoint,
+                "country": r.location().country_code(),
+                "city": r.location().city(),
+                "active": r.is_active(),
+                "weight": r.weight(),
+            })
+        })
+        .collect();
+
+    serde_json::to_string(&projected).unwrap_or_else(|_| FALLBACK_RELAYS_JSON.to_owned())
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn fetch_relays_or_fallback() -> String {
+    FALLBACK_RELAYS_JSON.to_owned()
+}
+
+/// Submit a problem report (D.6). Called by the Android
+/// `ProblemReportRepository` once the user taps "Send". The Kotlin
+/// side passes:
+///   - `mnemonic`: BIP39 phrase to derive the signing key.
+///   - `user_message`: free-form user description.
+///   - `redacted_logs`: pre-redacted log bundle (or "" when the
+///     user unchecked "Include logs").
+///   - `app_version`, `platform`: free-form context strings.
+///
+/// Returns a JSON object `{"ok": bool, "reference_id": "...",
+/// "error": "..."}`. `reference_id` is present iff `ok == true`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_sendProblemReport<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    user_message: JString<'local>,
+    redacted_logs: JString<'local>,
+    app_version: JString<'local>,
+    platform: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let user_message = String::from_java(&jnix_env, user_message);
+    let redacted_logs = String::from_java(&jnix_env, redacted_logs);
+    let app_version = String::from_java(&jnix_env, app_version);
+    let platform = String::from_java(&jnix_env, platform);
+
+    let result = send_problem_report_inner(
+        &phrase,
+        &user_message,
+        &redacted_logs,
+        &app_version,
+        &platform,
+    );
+    let json = match result {
+        Ok(reference_id) => {
+            serde_json::json!({"ok": true, "reference_id": reference_id}).to_string()
+        }
+        Err(e) => {
+            log::warn!("sendProblemReport failed: {e}");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn send_problem_report_inner(
+    mnemonic: &str,
+    user_message: &str,
+    redacted_logs: &str,
+    app_version: &str,
+    platform: &str,
+) -> Result<String, String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before sendProblemReport".to_owned())?;
+    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    let req = warren_api_client::SupportReportRequest {
+        user_message: user_message.to_owned(),
+        redacted_logs: redacted_logs.to_owned(),
+        app_version: app_version.to_owned(),
+        platform: platform.to_owned(),
+    };
+    let resp = runtime
+        .block_on(client.submit_support_report(&req))
+        .map_err(|e| format!("submit failed: {e}"))?;
+    Ok(resp.reference_id)
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn send_problem_report_inner(
+    _mnemonic: &str,
+    _user_message: &str,
+    _redacted_logs: &str,
+    _app_version: &str,
+    _platform: &str,
+) -> Result<String, String> {
+    Err("sendProblemReport is Android-only".to_owned())
+}
+
+/// Collect a redacted log bundle from the in-process logger ring
+/// buffer. D.6: the current implementation returns an empty string
+/// because Android `init_log_file` only bridges `log` -> logcat; a
+/// future iteration wires a file appender at
+/// `<files_dir>/warren.log` with rotation and reads the latest N
+/// bytes. Until that lands, the Kotlin side can still ship the
+/// user_message via `sendProblemReport` with empty logs.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_collectReport(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    // Empty string = "logs not available" sentinel (the Kotlin side
+    // already handles the user-unchecked-include-logs path with the
+    // same shape).
+    match env.new_string("") {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
     }

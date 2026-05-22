@@ -88,6 +88,10 @@ private fun PreviewReportProblemScreen(
 fun ReportProblem(navigator: Navigator) {
     val vm = koinViewModel<ReportProblemViewModel>()
     val state by vm.uiState.collectAsStateWithLifecycle()
+    // D.6: BiometricPrompt (raised by WarrenSendProblemReportUseCase to
+    // unlock the wallet mnemonic that signs /v1/support) needs a
+    // FragmentActivity host. Composables receive it via LocalContext.
+    val activity = androidx.compose.ui.platform.LocalContext.current as androidx.fragment.app.FragmentActivity
 
     CollectSideEffectWithLifecycle(vm.uiSideEffect) {
         when (it) {
@@ -97,12 +101,12 @@ fun ReportProblem(navigator: Navigator) {
     }
 
     LocalResultStore.current.consumeResult<ProblemReportNoEmailConfirmedNavResult> {
-        vm.sendReport(state.email, state.description, true)
+        vm.sendReport(activity, state.email, state.description, true)
     }
 
     ReportProblemScreen(
         state = state,
-        onSendReport = { vm.sendReport(state.email, state.description) },
+        onSendReport = { vm.sendReport(activity, state.email, state.description) },
         onClearSendResult = vm::clearSendResult,
         onNavigateToViewLogs = dropUnlessResumed { navigator.navigate(ViewLogsNavKey) },
         onEmailChanged = vm::updateEmail,

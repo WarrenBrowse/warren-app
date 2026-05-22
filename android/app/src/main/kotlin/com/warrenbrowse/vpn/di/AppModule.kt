@@ -13,12 +13,14 @@ import com.warrenbrowse.vpn.app.connect.RelayCatalog
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenSendProblemReportUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
@@ -95,6 +97,13 @@ val appModule = module {
 
     single { WarrenReconnectUseCase(context = androidContext()) } bind
         WarrenQuinnReconnectInvoker::class
+
+    // D.6 support-report submission orchestrator: biometric unlock + JNI
+    // sign + POST /v1/support. Activity-coupled because of the biometric
+    // prompt; the lib-side ReportProblemScreen invokes this via the
+    // WarrenSupportReportInvoker surface and feeds it the FragmentActivity.
+    single { WarrenSendProblemReportUseCase(walletRepository = get()) } bind
+        WarrenSupportReportInvoker::class
     single { LocaleRepository(get()) }
     // D.4 step 58: RelayLocationTranslationRepository dropped (orphan now).
     // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-

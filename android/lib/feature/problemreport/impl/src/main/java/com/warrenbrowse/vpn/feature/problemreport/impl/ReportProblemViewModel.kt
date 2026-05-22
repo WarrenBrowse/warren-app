@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.problemreport.impl
 
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
@@ -14,15 +15,15 @@ import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.common.compose.MINIMUM_LOADING_TIME_MILLIS
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.util.combine
-import com.warrenbrowse.vpn.lib.model.UserReport
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.SendProblemReportResult
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportOutcome
 
-// D.4 step 57: Mullvad "include my account ID" checkbox surface removed —
-// showIncludeAccountId, includeAccountId, showIncludeAccountWarningMessage,
-// onIncludeAccountIdCheckChange, showIncludeAccountInformationWarningMessage,
-// accountRepository dependency all dropped. Warren BIP39 wallet pubkey signing
-// will land in D.6 alongside the warren-api `/v1/support` endpoint.
+// D.4 step 57: Mullvad "include my account ID" checkbox surface removed.
+// D.6: send path rewired to WarrenSupportReportInvoker (biometric unlock +
+// signed POST /v1/support via warren-api-client). ProblemReportRepository
+// keeps the local log-collection surface only.
 data class ReportProblemUiState(
     val sendingState: SendingReportUiState? = null,
     val email: String = "",
@@ -60,6 +61,7 @@ class ReportProblemViewModel(
     private val warrenProblemReporter: ProblemReportRepository,
     private val problemReportRepository: ProblemReportRepository,
     private val isPlayBuild: Boolean,
+    private val supportReportInvoker: WarrenSupportReportInvoker,
 ) : ViewModel() {
 
     private val sendingState: MutableStateFlow<SendingReportUiState?> = MutableStateFlow(null)
@@ -92,7 +94,12 @@ class ReportProblemViewModel(
     private val _uiSideEffect = Channel<ReportProblemSideEffect>()
     val uiSideEffect = _uiSideEffect.receiveAsFlow()
 
-    fun sendReport(email: String, description: String, skipEmptyEmailCheck: Boolean = false) {
+    fun sendReport(
+        activity: FragmentActivity,
+        email: String,
+        description: String,
+        skipEmptyEmailCheck: Boolean = false,
+    ) {
         viewModelScope.launch {
             if (description.isBlank()) {
                 descriptionError.emit(DescriptionError.Empty)
@@ -106,19 +113,21 @@ class ReportProblemViewModel(
             } else {
                 sendingState.emit(SendingReportUiState.Sending)
 
-                // Ensure we show loading for at least MINIMUM_LOADING_TIME_MILLIS
+                val redactedLogs = warrenProblemReporter.readLogs().joinToString("\n")
+                val userMessage = composeUserMessage(nullableEmail, description)
+
                 val deferredResult = async {
-                    warrenProblemReporter.sendReport(UserReport(nullableEmail, description))
+                    supportReportInvoker.submit(activity, userMessage, redactedLogs)
                 }
                 delay(MINIMUM_LOADING_TIME_MILLIS)
+                val outcome = deferredResult.await()
 
-                val result = deferredResult.await()
-                // Clear saved problem report if report was sent successfully
-                if (result is SendProblemReportResult.Success) {
+                if (outcome is WarrenSupportReportOutcome.Success) {
                     problemReportRepository.setEmail("")
                     problemReportRepository.setDescription("")
+                    warrenProblemReporter.deleteLogs()
                 }
-                sendingState.tryEmit(deferredResult.await().toUiResult(nullableEmail))
+                sendingState.tryEmit(outcome.toUiResult(nullableEmail))
             }
         }
     }
@@ -139,10 +148,24 @@ class ReportProblemViewModel(
     private fun shouldShowConfirmNoEmail(userEmail: String?): Boolean =
         userEmail.isNullOrEmpty() && uiState.value.sendingState !is SendingReportUiState
 
-    private fun SendProblemReportResult.toUiResult(email: String?): SendingReportUiState =
+    // D.6: the warren-api /v1/support endpoint has a single free-form
+    // user_message field. We prepend the email when supplied so the
+    // operator can correlate; the wallet pubkey (= signer identity) is
+    // already carried in the auth header.
+    private fun composeUserMessage(email: String?, description: String): String =
+        if (email.isNullOrEmpty()) {
+            description
+        } else {
+            "Reply-to: $email\n\n$description"
+        }
+
+    private fun WarrenSupportReportOutcome.toUiResult(email: String?): SendingReportUiState =
         when (this) {
-            is SendProblemReportResult.Error -> SendingReportUiState.Error(this)
-            SendProblemReportResult.Success -> SendingReportUiState.Success(email)
+            is WarrenSupportReportOutcome.Success -> SendingReportUiState.Success(email)
+            // D.6: collapse all server-side / network / auth failures to
+            // the legacy SendReport error so the UI continues to render
+            // the existing error sheet without bespoke per-cause copy.
+            else -> SendingReportUiState.Error(SendProblemReportResult.Error.SendReport)
         }
 
     init {

@@ -202,6 +202,7 @@ val uiModule = module {
             warrenProblemReporter = get(),
             problemReportRepository = get(),
             isPlayBuild = IS_PLAY_BUILD,
+            supportReportInvoker = get(),
         )
     }
     viewModel { ViewLogsViewModel(get()) }

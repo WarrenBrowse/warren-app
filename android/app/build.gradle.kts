@@ -85,9 +85,41 @@ android {
         generateLocaleConfig = false
     }
 
+    // D.7 release signing: opt-in via env vars so unsigned dev builds
+    // keep working. Set WARREN_KEYSTORE_PATH (absolute), WARREN_KEYSTORE_PASSWORD,
+    // WARREN_KEY_ALIAS, and WARREN_KEY_PASSWORD to enable the
+    // `warrenRelease` signingConfig; otherwise the release build stays
+    // unsigned (suitable for local profiling, NOT for Play Store).
+    val warrenKeystorePath: String? = System.getenv("WARREN_KEYSTORE_PATH")
+    val warrenKeystorePassword: String? = System.getenv("WARREN_KEYSTORE_PASSWORD")
+    val warrenKeyAlias: String? = System.getenv("WARREN_KEY_ALIAS")
+    val warrenKeyPassword: String? = System.getenv("WARREN_KEY_PASSWORD")
+    val signingConfigured =
+        warrenKeystorePath != null &&
+            warrenKeystorePassword != null &&
+            warrenKeyAlias != null &&
+            warrenKeyPassword != null
+
+    if (signingConfigured) {
+        signingConfigs {
+            create("warrenRelease") {
+                storeFile = file(warrenKeystorePath!!)
+                storePassword = warrenKeystorePassword
+                keyAlias = warrenKeyAlias
+                keyPassword = warrenKeyPassword
+                // AGP defaults: v1 (jar) ON, v2 ON, v3 OFF, v4 OFF.
+                // Play Store accepts v2+, so the defaults are fine.
+            }
+        }
+    }
+
     buildTypes {
         getByName(BuildTypes.RELEASE) {
-            signingConfig = null
+            signingConfig = if (signingConfigured) {
+                signingConfigs.getByName("warrenRelease")
+            } else {
+                null
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

@@ -119,12 +119,41 @@ object WarrenJni {
      *   - `active`         : whether the relay accepts new sessions today
      *   - `weight`         : selector-weight hint (higher = preferred)
      *
-     * D.6 surface: the Kotlin caller deserialises via
-     * `kotlinx.serialization.json.Json.decodeFromString<List<RelayInfo>>`
-     * and feeds the result into the location picker. The current
-     * implementation ships a single hardcoded warren-exit-1 entry; the
-     * real fetch (warren-api-client signed relay list) is a D.6
-     * follow-up.
+     * D.6 wired: fetches `GET /v1/exits` via warren-api-client and
+     * verifies the embedded server signature. On network / signature
+     * failure, falls back to a hardcoded warren-exit-1 entry so the
+     * picker UI is never empty (a `WarrenJni` warning is logged).
      */
     external fun listRelays(): String
+
+    // -- Problem report (D.6) ----------------------------------------------
+
+    /**
+     * Submit a problem report bundle to the operator's support inbox.
+     * Returns a JSON object `{"ok": Boolean, "reference_id": String?,
+     * "error": String?}`. `reference_id` is present iff `ok` is true.
+     *
+     * @param mnemonic BIP39 mnemonic used to sign the request with the
+     *  user's wallet pubkey (= the user identity on the server side).
+     * @param userMessage free-form user description (max 4 KiB).
+     * @param redactedLogs newline-joined redacted log lines (max 256 KiB).
+     *  Pass an empty string when the user unchecked "Include logs".
+     * @param appVersion app version string ("1.2.3"), free-form.
+     * @param platform platform tag ("android-arm64"), free-form.
+     */
+    external fun sendProblemReport(
+        mnemonic: String,
+        userMessage: String,
+        redactedLogs: String,
+        appVersion: String,
+        platform: String,
+    ): String
+
+    /**
+     * Collect the latest redacted log bundle from the Rust ring buffer.
+     * Returns an empty string until the file-appender wiring lands; the
+     * Kotlin side should treat the empty case as "no logs available"
+     * and ship the report with `redactedLogs = ""`.
+     */
+    external fun collectReport(): String
 }

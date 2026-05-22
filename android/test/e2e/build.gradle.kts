@@ -1,9 +1,8 @@
 import utilities.FlavorDimensions
 import utilities.Flavors
 import utilities.Variant
-import utilities.matchesAny
-import utilities.ossProdDebug
-import utilities.playProdDebug
+import utilities.matches
+import utilities.prodDebug
 
 plugins {
     alias(libs.plugins.warren.utilities)
@@ -77,7 +76,7 @@ androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
             Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matchesAny(ossProdDebug, playProdDebug)
+                .matches(prodDebug)
     }
 }
 
