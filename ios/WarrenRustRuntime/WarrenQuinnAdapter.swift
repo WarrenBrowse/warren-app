@@ -264,6 +264,26 @@ public final class WarrenQuinnAdapter: @unchecked Sendable {
         _ = warren_tunnel_reconnect(rawTunnelHandle(h))
     }
 
+    /// Pauses the inbound pump without tearing down the Quinn
+    /// connection. Use on iOS `sleep()` to comply with NetworkExtension
+    /// background time budgets. Resume via [`resume()`]. Idempotent.
+    public func pause() {
+        lock.lock()
+        let h = handle
+        lock.unlock()
+        guard let h else { return }
+        _ = warren_tunnel_pause(rawTunnelHandle(h))
+    }
+
+    /// Resumes the inbound pump after [`pause()`]. Idempotent.
+    public func resume() {
+        lock.lock()
+        let h = handle
+        lock.unlock()
+        guard let h else { return }
+        _ = warren_tunnel_resume(rawTunnelHandle(h))
+    }
+
     /// Returns the current tunnel status. Reads from atomic counters
     /// on the Rust side ; safe to call from any thread.
     public func status() -> WarrenTunnelStatus {

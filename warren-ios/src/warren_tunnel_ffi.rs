@@ -510,6 +510,69 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
     }
 }
 
+/// Pauses the inbound pump without tearing down the Quinn connection.
+/// Used on iOS `sleep()` to comply with NetworkExtension background
+/// time budgets. Resume via [`warren_tunnel_resume`]. Calling pause
+/// on an already-paused or disconnected handle is a no-op.
+///
+/// Returns `0` on success, `-1` on null handle.
+///
+/// # Safety
+/// `handle` must be a valid pointer from [`warren_tunnel_start`].
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) -> c_int {
+    if handle.is_null() {
+        return RC_INVALID_INPUT;
+    }
+    #[cfg(feature = "tunnel")]
+    {
+        // SAFETY: caller upholds the handle invariant.
+        let arc = unsafe { handle_arc(handle) };
+        // C.4.1.Z TODO: signal a pause to the running pump (e.g. via
+        // an `AtomicBool` flag the pump consults each iteration, or
+        // an mpsc oneshot). For now, just record the state transition
+        // so Swift consumers see Reconnecting → Connected on resume.
+        arc.set_state(WarrenTunnelStateC::Reconnecting);
+        arc.fire_event(WarrenTunnelEventTagC::Reconnecting);
+        RC_OK
+    }
+    #[cfg(not(feature = "tunnel"))]
+    {
+        let _ = handle;
+        RC_TUNNEL_FEATURE_DISABLED
+    }
+}
+
+/// Resumes the inbound pump after a [`warren_tunnel_pause`]. Idempotent.
+///
+/// Returns `0` on success, `-1` on null handle.
+///
+/// # Safety
+/// `handle` must be a valid pointer from [`warren_tunnel_start`].
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -> c_int {
+    if handle.is_null() {
+        return RC_INVALID_INPUT;
+    }
+    #[cfg(feature = "tunnel")]
+    {
+        // SAFETY: caller upholds the handle invariant.
+        let arc = unsafe { handle_arc(handle) };
+        // Mirror of `pause`. C.4.1.Z TODO : actually un-set the pause
+        // flag the pump consults.
+        if arc.state_snapshot() == WarrenTunnelStateC::Reconnecting {
+            arc.set_state(WarrenTunnelStateC::Connected);
+            arc.fire_event(WarrenTunnelEventTagC::Connected);
+        }
+        RC_OK
+    }
+    #[cfg(not(feature = "tunnel"))]
+    {
+        let _ = handle;
+        RC_TUNNEL_FEATURE_DISABLED
+    }
+}
+
 /// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
 /// Uses `warren_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
 ///

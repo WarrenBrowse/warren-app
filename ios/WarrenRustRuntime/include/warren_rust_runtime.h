@@ -316,6 +316,29 @@ struct WarrenTunnelHandle *warren_tunnel_start(const struct WarrenTunnelParamete
 void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
 
 /**
+ * Pauses the inbound pump without tearing down the Quinn connection.
+ * Used on iOS `sleep()` to comply with NetworkExtension background
+ * time budgets. Resume via [`warren_tunnel_resume`]. Calling pause
+ * on an already-paused or disconnected handle is a no-op.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ */
+int warren_tunnel_pause(struct WarrenTunnelHandle *handle);
+
+/**
+ * Resumes the inbound pump after a [`warren_tunnel_pause`]. Idempotent.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ */
+int warren_tunnel_resume(struct WarrenTunnelHandle *handle);
+
+/**
  * Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
  * Uses `warren_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
  *

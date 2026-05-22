@@ -7285,6 +7285,7 @@ dependencies = [
  "subtle",
  "thiserror 2.0.18",
  "tracing",
+ "warren-protocol",
  "x25519-dalek",
  "zeroize",
 ]
@@ -7337,6 +7338,7 @@ dependencies = [
  "data-encoding",
  "ed25519-dalek",
  "hex",
+ "mimalloc",
  "parking_lot",
  "postcard",
  "quinn",

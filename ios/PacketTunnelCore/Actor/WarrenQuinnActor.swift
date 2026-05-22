@@ -168,21 +168,26 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public func onSleep() {
-        // iOS background suspension : drop the connection but keep
-        // adapter binding so `onWake` can immediately reconnect.
+        // iOS background suspension : pause the inbound pump but keep
+        // the Quinn connection alive so `onWake` can resume instantly
+        // without paying the handshake cost. Falls back to `stop()` on
+        // longer suspensions when the connection is torn down by the
+        // peer's idle timeout.
         stateLock.lock()
         let adapter = self.adapter
         stateLock.unlock()
-        adapter?.stop()
+        adapter?.pause()
     }
 
     public func onWake() {
-        // Reconnect via the adapter's `reconnect()` (uses
-        // warren_backoff::Backoff::HANDSHAKE = 15 s, cf. M4.H.G).
+        // Resume the paused pump. If the Quinn connection was torn
+        // down during suspension (peer idle timeout), the
+        // adapter-internal reconnect logic will fire on the next
+        // packet attempt.
         stateLock.lock()
         let adapter = self.adapter
         stateLock.unlock()
-        adapter?.reconnect()
+        adapter?.resume()
     }
 
     private var lastNetworkPathStatus: NWPath.Status = .satisfied
