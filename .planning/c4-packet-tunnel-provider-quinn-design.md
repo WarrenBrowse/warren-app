@@ -103,6 +103,22 @@ NOT blockers for the `cargo` / `cargo clippy` validation flow used
 throughout C.4.0 (warren-ios + warren-tunnel compile + lint cleanly
 without touching xcodebuild).
 
+### C.4 phase tracker (updated 2026-05-22)
+
+| Sub-phase | Status | Notes |
+|---|---|---|
+| C.4.0 foundations (IosTun + FFI handle lifecycle + Swift WarrenQuinnAdapter) | ✅ DONE | cargo + clippy CLEAN |
+| C.4.1 Quinn handshake single-hop wire | ✅ DONE | `warren_tunnel_start` parses params + spawns ClientTunnel::connect + pump_bidirectional |
+| C.4.2 multi-hop + DAITA Swift marshalling | ✅ DONE | `withMultiHopRelayPinned` + `withDaitaPinned` helpers |
+| C.4.3 WarrenQuinnTunnelImplementation scaffold | ✅ DONE | conforms TunnelImplementation + PacketTunnelActorProtocol |
+| C.4.4 WireGuardKit removal | ✅ DONE | 45 entries dropped from pbxproj + 5 WG source files removed from build target |
+| C.2.X module rename | ✅ DONE | 58 .swift files Mullvad → Warren |
+| C.2.X.B disable explicit modules | ✅ DONE | workaround Xcode 26.4 swift-driver SPM race |
+| **C.2.X.C Logging SPM consumer-path** | ❌ BLOCKED | 4 attempts failed (OTHER_SWIFT_FLAGS -I + SWIFT_INCLUDE_PATHS + FRAMEWORK_SEARCH_PATHS + dummy WG package_reference). Structural Xcode 26.4 regression. Candidates : vendor swift-log into WarrenLogging, Xcode 15.x downgrade, alternate workspace layout. |
+| C.4.1.X multi-hop dispatcher (Rust-side) | ⏳ DEFERRED | Needs expanded FFI surface : `RelayDescriptorSigned` + `ExitDescriptorSigned` (PKI-verified, ~1 KB JSON each) passed via FFI OR Swift-side warren-api-client integration to fetch descriptors at runtime. B.1.8 caveat closed by Session R warren-core `f8f2d59` (5.6% DAITA overhead), so safe to wire. |
+| C.4.3.X actor lifecycle wire-up | ⏳ DEFERRED | `WarrenQuinnActor.start(options:)` → `WarrenQuinnAdapter.start(config:)` + plumb Rust-side event callback into actor's `observedStates` AsyncStream |
+| C.7 TestFlight | ⏳ BLOCKED | Apple Developer signing key pending poka, post-build-green |
+
 ### C.4.1+ remaining work
 
 The C.4.0 plumbing is in place ; what's still needed :
