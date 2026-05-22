@@ -5,30 +5,26 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.core.NavKey2
-import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
-import com.warrenbrowse.vpn.screen.navigation.PrivacyDisclaimerNavKey
-import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 
-private val noServiceNavKeys = listOf(SplashNavKey, PrivacyDisclaimerNavKey)
-
-class WarrenAppViewModel(
-    managementService: ManagementService,
-) : ViewModel(), LifecycleEventObserver {
-
-    private val lifecycleFlow: MutableSharedFlow<Lifecycle.Event> = MutableSharedFlow()
+/**
+ * Process-wide observer hooked into [MainActivity]'s lifecycle. Owns
+ * the back-stack snapshot used by the splash decision tree (cf.
+ * `WarrenApp.kt`) and exposes a [DaemonScreenEvent] side-effect flow.
+ *
+ * D.4 step 19: the legacy Mullvad daemon-connectivity overlay has been
+ * removed. On Warren mobile the gRPC management service does not exist;
+ * the prior implementation kept emitting "Show NoDaemonScreen" on every
+ * resume, blocking the rest of the UI. The flow now stays empty (the
+ * subscriber in `WarrenApp.kt` is left in place so a future Warren-
+ * native "service unreachable" overlay can plug in via the same wire).
+ */
+class WarrenAppViewModel : ViewModel(), LifecycleEventObserver {
 
     private val backStackFlow: MutableStateFlow<List<NavKey2>> = MutableStateFlow(emptyList())
 
@@ -36,74 +32,20 @@ class WarrenAppViewModel(
         backStackFlow.value = backStack
     }
 
-    @OptIn(FlowPreview::class)
-    val uiSideEffect =
-        combine(lifecycleFlow, managementService.connectionState, backStackFlow) {
-                event,
-                connEvent,
-                backStack ->
-                toDaemonState(event, connEvent, backStack.lastOrNull())
-            }
-            .map { state ->
-                when (state) {
-                    is DaemonState.Show -> DaemonScreenEvent.Show
-                    is DaemonState.Hidden.Ignored -> DaemonScreenEvent.Remove
-                    DaemonState.Hidden.Connected -> DaemonScreenEvent.Remove
-                }
-            }
-            .distinctUntilChanged()
-            // We debounce any disconnected state to let the UI have some time to connect after a
-            // onStart/onStop event.
-            .debounce {
-                when (it) {
-                    is DaemonScreenEvent.Remove -> 0.seconds
-                    is DaemonScreenEvent.Show -> SERVICE_DISCONNECT_DEBOUNCE
-                }
-            }
-            .distinctUntilChanged()
-            .shareIn(viewModelScope, SharingStarted.Eagerly)
+    /**
+     * Empty stream today. Kept as a [SharedFlow] so the subscriber in
+     * `WarrenApp.kt` still compiles and a future Warren-native overlay
+     * (exit unreachable, wallet locked, etc.) can swap the underlying
+     * source without ceremony.
+     */
+    val uiSideEffect: SharedFlow<DaemonScreenEvent> =
+        flowOf<DaemonScreenEvent>().shareIn(viewModelScope, SharingStarted.Eagerly)
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        viewModelScope.launch { lifecycleFlow.emit(event) }
-    }
-
-    private fun toDaemonState(
-        lifecycleEvent: Lifecycle.Event,
-        serviceState: GrpcConnectivityState,
-        currentDestination: NavKey2?,
-    ): DaemonState {
-        // In these destinations we don't care about showing the NoDaemonScreen
-        if (currentDestination in noServiceNavKeys) {
-            return DaemonState.Hidden.Ignored
-        }
-
-        return if (lifecycleEvent.targetState.isAtLeast(Lifecycle.State.STARTED)) {
-            // If we are started we want to show the overlay if we are not connected to daemon
-            when (serviceState) {
-                GrpcConnectivityState.Connecting,
-                GrpcConnectivityState.Shutdown,
-                GrpcConnectivityState.TransientFailure,
-                GrpcConnectivityState.Idle -> DaemonState.Show
-                GrpcConnectivityState.Ready -> DaemonState.Hidden.Connected
-            }
-        } else {
-            // If we are stopped we intentionally stop service and don't care about showing overlay.
-            DaemonState.Hidden.Ignored
-        }
-    }
-
-    companion object {
-        private val SERVICE_DISCONNECT_DEBOUNCE = 2.seconds
-    }
-}
-
-sealed interface DaemonState {
-    data object Show : DaemonState
-
-    sealed interface Hidden : DaemonState {
-        data object Ignored : Hidden
-
-        data object Connected : Hidden
+        // No-op on Warren: the daemon-state machine that consumed
+        // lifecycle events is gone. Kept as an explicit override to
+        // satisfy [LifecycleEventObserver] in case the activity hook is
+        // re-added later.
     }
 }
 
