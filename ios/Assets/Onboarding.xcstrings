@@ -1,156 +1,406 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un VPN décentralisé avec authentification par portefeuille non-custodial, mimétisme HTTP/3 toujours actif et routage multi-hop optionnel." } }
+  "sourceLanguage": "en",
+  "strings": {
+    "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un VPN décentralisé avec authentification par portefeuille non-custodial, mimétisme HTTP/3 toujours actif et routage multi-hop optionnel."
+          }
+        }
       }
     },
-    "Activate your subscription" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activate your subscription" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer votre abonnement" } }
+    "Activate your subscription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activate your subscription"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer votre abonnement"
+          }
+        }
       }
     },
-    "Adds an entry relay before your exit. Extra latency for harder traffic correlation." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Adds an entry relay before your exit. Extra latency for harder traffic correlation." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajoute un relais d'entrée avant la sortie. Latence supplémentaire pour rendre la corrélation de trafic plus difficile." } }
+    "Adds an entry relay before your exit. Extra latency for harder traffic correlation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds an entry relay before your exit. Extra latency for harder traffic correlation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute un relais d'entrée avant la sortie. Latence supplémentaire pour rendre la corrélation de trafic plus difficile."
+          }
+        }
       }
     },
-    "Always on. Makes VPN traffic indistinguishable from regular HTTPS." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Always on. Makes VPN traffic indistinguishable from regular HTTPS." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Toujours actif. Rend le trafic VPN indissociable d'un HTTPS classique." } }
+    "Always on. Makes VPN traffic indistinguishable from regular HTTPS.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always on. Makes VPN traffic indistinguishable from regular HTTPS."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours actif. Rend le trafic VPN indissociable d'un HTTPS classique."
+          }
+        }
       }
     },
-    "Continue" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Continuer" } }
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        }
       }
     },
-    "DAITA traffic shaping" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "DAITA traffic shaping" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modelage de trafic DAITA" } }
+    "DAITA traffic shaping": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA traffic shaping"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelage de trafic DAITA"
+          }
+        }
       }
     },
-    "Defense against AI-guided traffic analysis. ~10% bandwidth overhead." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Defense against AI-guided traffic analysis. ~10% bandwidth overhead." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Défense contre l'analyse de trafic guidée par IA. ~10 % de surcharge de bande passante." } }
+    "Defense against AI-guided traffic analysis. ~10% bandwidth overhead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defense against AI-guided traffic analysis. ~10% bandwidth overhead."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Défense contre l'analyse de trafic guidée par IA. ~10 % de surcharge de bande passante."
+          }
+        }
       }
     },
-    "Generate new wallet" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Generate new wallet" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Générer un nouveau portefeuille" } }
+    "Generate new wallet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate new wallet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer un nouveau portefeuille"
+          }
+        }
       }
     },
-    "Get started" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get started" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Commencer" } }
+    "Get started": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer"
+          }
+        }
       }
     },
-    "HTTP/3 mimicry" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "HTTP/3 mimicry" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mimétisme HTTP/3" } }
+    "HTTP/3 mimicry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 mimicry"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mimétisme HTTP/3"
+          }
+        }
       }
     },
-    "I already have a recovery phrase" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "I already have a recovery phrase" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "J'ai déjà une phrase de récupération" } }
+    "I already have a recovery phrase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already have a recovery phrase"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J'ai déjà une phrase de récupération"
+          }
+        }
       }
     },
-    "Launch Warren" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Launch Warren" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lancer Warren" } }
+    "Launch Warren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch Warren"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer Warren"
+          }
+        }
       }
     },
-    "Maybe later" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Maybe later" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plus tard" } }
+    "Maybe later": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe later"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
       }
     },
-    "Multi-hop routing" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Multi-hop routing" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Routage multi-hop" } }
+    "Multi-hop routing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multi-hop routing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routage multi-hop"
+          }
+        }
       }
     },
-    "Open warrenbrowse.com" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open warrenbrowse.com" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir warrenbrowse.com" } }
+    "Open warrenbrowse.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open warrenbrowse.com"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir warrenbrowse.com"
+          }
+        }
       }
     },
-    "Pick your defaults. You can change these anytime in Settings." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick your defaults. You can change these anytime in Settings." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez vos préférences par défaut. Vous pouvez les modifier à tout moment dans les Paramètres." } }
+    "Pick your defaults. You can change these anytime in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick your defaults. You can change these anytime in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez vos préférences par défaut. Vous pouvez les modifier à tout moment dans les Paramètres."
+          }
+        }
       }
     },
-    "Privacy preferences" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Privacy preferences" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préférences de confidentialité" } }
+    "Privacy preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy preferences"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préférences de confidentialité"
+          }
+        }
       }
     },
-    "Step %lld of %lld" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Step %lld of %lld" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étape %1$lld sur %2$lld" } }
+    "Step %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %lld of %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %1$lld sur %2$lld"
+          }
+        }
       }
     },
-    "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les abonnements sont payés en monnaies respectueuses de la vie privée sur warrenbrowse.com. Votre clé publique de portefeuille est le seul identifiant que voit le réseau Warren ; aucun e-mail ni numéro de compte requis." } }
+    "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les abonnements sont payés en monnaies respectueuses de la vie privée sur warrenbrowse.com. Votre clé publique de portefeuille est le seul identifiant que voit le réseau Warren ; aucun e-mail ni numéro de compte requis."
+          }
+        }
       }
     },
-    "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appuyez sur Lancer Warren pour vous connecter au réseau. Votre portefeuille reste dans votre Secure Enclave ; aucun serveur Warren ne voit votre clé privée." } }
+    "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez sur Lancer Warren pour vous connecter au réseau. Votre portefeuille reste dans votre Secure Enclave ; aucun serveur Warren ne voit votre clé privée."
+          }
+        }
       }
     },
-    "Wallet ready" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wallet ready" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Portefeuille prêt" } }
+    "Wallet ready": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet ready"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portefeuille prêt"
+          }
+        }
       }
     },
-    "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Warren utilise un portefeuille Ed25519 non-custodial dérivé d'une phrase de récupération de 12 mots. Vous seul détenez les clés et pouvez restaurer votre abonnement sur n'importe quel appareil avec la même phrase." } }
+    "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren utilise un portefeuille Ed25519 non-custodial dérivé d'une phrase de récupération de 12 mots. Vous seul détenez les clés et pouvez restaurer votre abonnement sur n'importe quel appareil avec la même phrase."
+          }
+        }
       }
     },
-    "Welcome to Warren VPN" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to Warren VPN" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bienvenue dans Warren VPN" } }
+    "Welcome to Warren VPN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Warren VPN"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue dans Warren VPN"
+          }
+        }
       }
     },
-    "You're all set" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "You're all set" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout est prêt" } }
+    "You're all set": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout est prêt"
+          }
+        }
       }
     },
-    "Your Warren wallet" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your Warren wallet" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre portefeuille Warren" } }
+    "Your Warren wallet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Warren wallet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre portefeuille Warren"
+          }
+        }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

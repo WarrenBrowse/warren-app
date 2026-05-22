@@ -1,406 +1,406 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Anyone with access to these words can recover your Warren wallet." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anyone with access to these words can recover your Warren wallet."
+  "sourceLanguage": "en",
+  "strings": {
+    "Anyone with access to these words can recover your Warren wallet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone with access to these words can recover your Warren wallet."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toute personne ayant accès à ces mots peut récupérer votre portefeuille Warren."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toute personne ayant accès à ces mots peut récupérer votre portefeuille Warren."
           }
         }
       }
     },
-    "Cancel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
           }
         }
       }
     },
-    "Cannot reveal phrase" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cannot reveal phrase"
+    "Cannot reveal phrase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot reveal phrase"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible d'afficher la phrase"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'afficher la phrase"
           }
         }
       }
     },
-    "Close" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
           }
         }
       }
     },
-    "Enter your 12 recovery words" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter your 12 recovery words"
+    "Enter your 12 recovery words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your 12 recovery words"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saisissez vos 12 mots de récupération"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez vos 12 mots de récupération"
           }
         }
       }
     },
-    "Failed to generate a new recovery phrase. Please try again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to generate a new recovery phrase. Please try again."
+    "Failed to generate a new recovery phrase. Please try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to generate a new recovery phrase. Please try again."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de générer une nouvelle phrase de récupération. Veuillez réessayer."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de générer une nouvelle phrase de récupération. Veuillez réessayer."
           }
         }
       }
     },
-    "Failed to read the wallet from secure storage." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to read the wallet from secure storage."
+    "Failed to read the wallet from secure storage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to read the wallet from secure storage."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de lire le portefeuille depuis le stockage sécurisé."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire le portefeuille depuis le stockage sécurisé."
           }
         }
       }
     },
-    "Failed to securely store the wallet. Make sure your device is unlocked and try again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to securely store the wallet. Make sure your device is unlocked and try again."
+    "Failed to securely store the wallet. Make sure your device is unlocked and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to securely store the wallet. Make sure your device is unlocked and try again."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de stocker le portefeuille en sécurité. Vérifiez que votre appareil est déverrouillé et réessayez."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de stocker le portefeuille en sécurité. Vérifiez que votre appareil est déverrouillé et réessayez."
           }
         }
       }
     },
-    "I have written them down" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I have written them down"
+    "I have written them down": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have written them down"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je les ai notés"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je les ai notés"
           }
         }
       }
     },
-    "No wallet is currently provisioned on this device." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No wallet is currently provisioned on this device."
+    "No wallet is currently provisioned on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No wallet is currently provisioned on this device."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun portefeuille n'est actuellement présent sur cet appareil."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun portefeuille n'est actuellement présent sur cet appareil."
           }
         }
       }
     },
-    "No wallet is currently provisioned on this device. Generate or import one first." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No wallet is currently provisioned on this device. Generate or import one first."
+    "No wallet is currently provisioned on this device. Generate or import one first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No wallet is currently provisioned on this device. Generate or import one first."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun portefeuille n'est actuellement présent. Générez-en un ou importez-en un d'abord."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun portefeuille n'est actuellement présent. Générez-en un ou importez-en un d'abord."
           }
         }
       }
     },
-    "OK" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
     },
-    "Press and hold to reveal. Do not screenshot." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Press and hold to reveal. Do not screenshot."
+    "Press and hold to reveal. Do not screenshot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press and hold to reveal. Do not screenshot."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appuyez longuement pour afficher. Ne faites pas de capture d'écran."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez longuement pour afficher. Ne faites pas de capture d'écran."
           }
         }
       }
     },
-    "Recovery phrase" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recovery phrase"
+    "Recovery phrase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery phrase"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Phrase de récupération"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phrase de récupération"
           }
         }
       }
     },
-    "Restore failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore failed"
+    "Restore failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore failed"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Échec de la restauration"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la restauration"
           }
         }
       }
     },
-    "Restore wallet" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore wallet"
+    "Restore wallet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore wallet"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurer le portefeuille"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer le portefeuille"
           }
         }
       }
     },
-    "Reveal the recovery phrase for your Warren wallet" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reveal the recovery phrase for your Warren wallet"
+    "Reveal the recovery phrase for your Warren wallet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal the recovery phrase for your Warren wallet"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher la phrase de récupération de votre portefeuille Warren"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher la phrase de récupération de votre portefeuille Warren"
           }
         }
       }
     },
-    "The recovery phrase is invalid." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The recovery phrase is invalid."
+    "The recovery phrase is invalid.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recovery phrase is invalid."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La phrase de récupération est invalide."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La phrase de récupération est invalide."
           }
         }
       }
     },
-    "The recovery phrase is invalid. Check each word against the BIP39 wordlist and try again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The recovery phrase is invalid. Check each word against the BIP39 wordlist and try again."
+    "The recovery phrase is invalid. Check each word against the BIP39 wordlist and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recovery phrase is invalid. Check each word against the BIP39 wordlist and try again."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La phrase de récupération est invalide. Vérifiez chaque mot par rapport à la liste BIP39 et réessayez."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La phrase de récupération est invalide. Vérifiez chaque mot par rapport à la liste BIP39 et réessayez."
           }
         }
       }
     },
-    "Try again" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again"
+    "Try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réessayer"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer"
           }
         }
       }
     },
-    "An unexpected error occurred." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An unexpected error occurred."
+    "An unexpected error occurred.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unexpected error occurred."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Une erreur inattendue est survenue."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une erreur inattendue est survenue."
           }
         }
       }
     },
-    "An unexpected error occurred while restoring your wallet." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An unexpected error occurred while restoring your wallet."
+    "An unexpected error occurred while restoring your wallet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unexpected error occurred while restoring your wallet."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Une erreur inattendue est survenue lors de la restauration de votre portefeuille."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une erreur inattendue est survenue lors de la restauration de votre portefeuille."
           }
         }
       }
     },
-    "Wallet creation failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wallet creation failed"
+    "Wallet creation failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet creation failed"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Échec de la création du portefeuille"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la création du portefeuille"
           }
         }
       }
     },
-    "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet."
+    "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Écrivez-les sur papier et conservez-les en lieu sûr. Toute personne ayant accès à ces mots peut récupérer votre portefeuille Warren."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez-les sur papier et conservez-les en lieu sûr. Toute personne ayant accès à ces mots peut récupérer votre portefeuille Warren."
           }
         }
       }
     },
-    "Your 12 recovery words" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your 12 recovery words"
+    "Your 12 recovery words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your 12 recovery words"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vos 12 mots de récupération"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos 12 mots de récupération"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
