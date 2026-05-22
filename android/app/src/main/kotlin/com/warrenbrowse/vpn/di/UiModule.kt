@@ -46,15 +46,8 @@ import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
-import com.warrenbrowse.vpn.lib.usecase.InternetAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.ModifyAndEnableMultihopUseCase
-import com.warrenbrowse.vpn.lib.usecase.ModifyMultihopUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectAndEnableMultihopUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectSinglehopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectedLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.SupportEmailUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
@@ -141,7 +134,12 @@ val uiModule = module {
 
     // D.4 step 37: OutOfTimeUseCase dropped (Mullvad subscription expiry
     // model dead on Warren).
-    single { InternetAvailableUseCase(get()) }
+    // D.4 step 44: InternetAvailableUseCase + SupportEmailUseCase +
+    // SelectedLocationUseCase + SelectSinglehopUseCase + ModifyMultihopUseCase
+    // + SelectAndEnableMultihopUseCase + ModifyAndEnableMultihopUseCase all
+    // dropped — orphan koin singles, no consumer outside their own files +
+    // tests (deleted CustomList/SelectLocation/Multihop screens, plus
+    // ReportProblemViewModel no longer wires SupportEmailUseCase).
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
     // D.4 step 29: CustomList* + FilterChip + Filtered/Selected relay use
     // cases removed - all consumers were the deleted Mullvad
@@ -150,35 +148,7 @@ val uiModule = module {
     // dependents kept because ConnectViewModel still references them.
     single { SelectedLocationTitleUseCase(get(), get()) }
     single { LastKnownLocationUseCase(get()) }
-    single { SelectedLocationUseCase(get(), get()) }
     single { DeleteCustomDnsUseCase(get()) }
-    single { SelectSinglehopUseCase(relayListRepository = get()) }
-    single {
-        ModifyMultihopUseCase(
-            relayListRepository = get(),
-            settingsRepository = get(),
-            customListsRepository = get(),
-            wireguardConstraintsRepository = get(),
-        )
-    }
-    single {
-        SupportEmailUseCase(
-            context = androidContext(),
-            problemReportRepository = get(),
-            buildVersion = get(),
-        )
-    }
-    single {
-        SelectAndEnableMultihopUseCase(relayListRepository = get(), settingsRepository = get())
-    }
-    single {
-        ModifyAndEnableMultihopUseCase(
-            relayListRepository = get(),
-            settingsRepository = get(),
-            customListsRepository = get(),
-            wireguardConstraintsRepository = get(),
-        )
-    }
 
     single { InAppNotificationController(getAll(), MainScope()) }
 
