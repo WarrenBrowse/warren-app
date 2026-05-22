@@ -36,11 +36,9 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
-import com.warrenbrowse.vpn.lib.repository.SettingsRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
-import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -82,7 +80,8 @@ val uiModule = module {
     single { androidContext().contentResolver }
 
     single { ChangelogRepository(get(), get(), get()) }
-    single { SettingsRepository(get()) }
+    // D.4 step 54: SettingsRepository dropped (Mullvad daemon settings sync
+    // dead - VpnSettings module deleted in step 53).
     single {
         ProblemReportRepository(
             context = androidContext(),
@@ -117,7 +116,7 @@ val uiModule = module {
     single { WireguardConstraintsRepository(get()) }
 
     // D.4 step 38: AccountExpiryInAppNotificationUseCase dropped (subscription dead).
-    single { TunnelStateNotificationUseCase(get(), get(), get()) } bind
+    single { TunnelStateNotificationUseCase(get()) } bind
         InAppNotificationUseCase::class
     single {
         VersionNotificationUseCase(get(), BuildConfig.ENABLE_IN_APP_VERSION_NOTIFICATIONS)
@@ -144,7 +143,7 @@ val uiModule = module {
     // dependents kept because ConnectViewModel still references them.
     single { SelectedLocationTitleUseCase(get()) }
     single { LastKnownLocationUseCase(get()) }
-    single { DeleteCustomDnsUseCase(get()) }
+    // D.4 step 54: DeleteCustomDnsUseCase dropped (DnsDialog dead).
 
     single { InAppNotificationController(getAll(), MainScope()) }
 
