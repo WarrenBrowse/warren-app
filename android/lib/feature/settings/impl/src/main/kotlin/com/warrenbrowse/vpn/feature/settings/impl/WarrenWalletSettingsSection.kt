@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -68,17 +69,23 @@ fun WarrenWalletSettingsSection(
             style = MaterialTheme.typography.titleMedium,
         )
 
-        // Show the wallet pubkey when the wallet exists - this is the
-        // user's stable identity (the BIP39-derived Ed25519 public key
-        // hex). Truncated for readability; the full 64-char hex is
-        // accessible via the recovery-phrase reveal below.
+        // Wallet identity: pubkey + state hint. Tap the pubkey row to
+        // reveal the full 64-char hex (default view truncates for
+        // readability). Pubkey is not sensitive (it's the public key);
+        // we still avoid auto-displaying the full string because the
+        // truncated form keeps the Settings UI compact.
+        var pubkeyExpanded by remember { mutableStateOf(false) }
         when (val s = state) {
             is WalletState.Ready -> {
-                val truncated = s.pubkey.value.take(8) + "…" + s.pubkey.value.takeLast(8)
+                val full = s.pubkey.value
+                val display = if (pubkeyExpanded) full else full.take(8) + "…" + full.takeLast(8)
                 Text(
-                    text = "Pubkey: $truncated",
+                    text = "Pubkey: $display",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 8.dp)
+                        .clickable { pubkeyExpanded = !pubkeyExpanded },
                 )
             }
             WalletState.Locked -> {
