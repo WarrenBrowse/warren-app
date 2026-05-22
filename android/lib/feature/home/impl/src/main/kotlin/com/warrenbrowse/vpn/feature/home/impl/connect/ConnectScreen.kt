@@ -91,7 +91,7 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionD
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.FeatureIndicatorsPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
-import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavResult
 import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
@@ -328,7 +328,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 onReconnectClick = { warrenReconnect.reconnect() },
                 onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
-            onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
+            onSwitchLocationClick =
+                // D.4 step 25: switch location routes to the Warren picker
+                // (consumes RelayCatalog) instead of the legacy Mullvad
+                // SelectLocationScreen (Mullvad signed relay list source,
+                // not available on Warren).
+                dropUnlessResumed { navigator.navigate(WarrenLocationPickerNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
             onManageAccountClick =
                 // D.4 step 23: "Manage account" routes to the wallet settings
