@@ -92,7 +92,6 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.FeatureIndi
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
-import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavResult
 import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
@@ -313,11 +312,14 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         }
     }
 
-    LocalResultStore.current.consumeResult<SelectLocationNavResult> { result ->
-        if (result.connect) {
-            onWarrenConnectClick()
-        }
-    }
+    // D.4 step 27: SelectLocationNavResult consumer removed - the
+    // Mullvad SelectLocationScreen that produced this result is no
+    // longer reachable (the Switch-location button routes to
+    // WarrenLocationPicker). WarrenLocationPicker does not surface a
+    // "connect now" hint today; the user taps Connect on the home
+    // screen after picking. A future iteration can re-add the
+    // "select-and-connect" affordance via a Warren-native NavResult.
+
 
     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides animatedVisibilityScope) {
         androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {

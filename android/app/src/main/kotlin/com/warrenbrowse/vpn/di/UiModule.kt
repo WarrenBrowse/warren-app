@@ -23,24 +23,11 @@ import com.warrenbrowse.vpn.feature.applisting.impl.AndroidInstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.InstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.ResolveAppListingUseCaseImpl
 import com.warrenbrowse.vpn.feature.autoconnect.impl.AutoConnectAndLockdownModeViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.create.CreateCustomListDialogViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.delete.DeleteCustomListConfirmationViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editlist.EditCustomListViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editlocations.CustomListLocationsViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editname.EditCustomListNameDialogViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.lists.CustomListsViewModel
 import com.warrenbrowse.vpn.feature.daita.impl.DaitaViewModel
-import com.warrenbrowse.vpn.feature.filter.impl.FilterViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
-import com.warrenbrowse.vpn.feature.location.api.LocationBottomSheetState
-import com.warrenbrowse.vpn.feature.location.impl.RelayListScrollConnection
-import com.warrenbrowse.vpn.feature.location.impl.SelectLocationViewModel
-import com.warrenbrowse.vpn.feature.location.impl.bottomsheet.LocationBottomSheetViewModel
-import com.warrenbrowse.vpn.feature.location.impl.list.SelectLocationListViewModel
-import com.warrenbrowse.vpn.feature.location.impl.search.SearchLocationViewModel
 import com.warrenbrowse.vpn.feature.login.impl.LoginViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.login.impl.apiunreachable.ApiUnreachableViewModel
@@ -61,7 +48,6 @@ import com.warrenbrowse.vpn.feature.vpnsettings.impl.dns.DnsDialogViewModel
 import com.warrenbrowse.vpn.feature.vpnsettings.impl.mtu.MtuDialogViewModel
 import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
-import com.warrenbrowse.vpn.lib.model.RelayListType
 import com.warrenbrowse.vpn.lib.payment.PaymentProvider
 import com.warrenbrowse.vpn.lib.repository.ApiAccessRepository
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
@@ -261,7 +247,8 @@ val uiModule = module {
 
     single { AppVersionInfoRepository(get(), get()) }
 
-    single { RelayListScrollConnection() }
+    // D.4 step 27: RelayListScrollConnection (Mullvad relay-list scroll position
+    // for SelectLocationScreen) removed - SelectLocation is dead.
 
     // View models (D.4 step 16: AccountViewModel + DeleteAccountConfirmation +
     // ManageDevicesViewModel + VoucherDialogViewModel + AddTimeViewModel
@@ -301,21 +288,8 @@ val uiModule = module {
     viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
     viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
-    viewModel {
-        SelectLocationViewModel(
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
+    // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
+    // picker, replaced by WarrenLocationPicker).
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { SplashViewModel(get(), get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
@@ -329,17 +303,8 @@ val uiModule = module {
         )
     }
     viewModel { ViewLogsViewModel(get()) }
-    viewModel { FilterViewModel(get(), get()) }
-    viewModel { params ->
-        CreateCustomListDialogViewModel(locationCode = params.getOrNull(), get())
-    }
-    viewModel { params ->
-        CustomListLocationsViewModel(navArgs = params.get(), get(), get(), get())
-    }
-    viewModel { params -> EditCustomListViewModel(customListId = params.get(), get()) }
-    viewModel { params -> EditCustomListNameDialogViewModel(navArgs = params.get(), get()) }
-    viewModel { CustomListsViewModel(get(), get()) }
-    viewModel { params -> DeleteCustomListConfirmationViewModel(navArgs = params.get(), get()) }
+    // D.4 step 27: Filter + CustomList ViewModels removed (only reached
+    // from dead SelectLocationScreen).
     viewModel { params -> ServerIpOverridesViewModel(navArgs = params.get(), get(), get()) }
     viewModel { ResetServerIpOverridesConfirmationViewModel(get()) }
     viewModel { ApiAccessListViewModel(get()) }
@@ -354,34 +319,8 @@ val uiModule = module {
     viewModel { params -> SelectPortViewModel(navArgs = params.get(), get(), get(), get()) }
     viewModel { params -> MultihopViewModel(isModal = params.get(), get()) }
     viewModel { NotificationSettingsViewModel(get()) }
-    viewModel { params ->
-        SearchLocationViewModel(
-            relayListType = params.get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
-    viewModel { (relayListType: RelayListType) ->
-        SelectLocationListViewModel(
-            relayListType,
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
+    // D.4 step 27: SearchLocation + SelectLocationList ViewModels removed
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
     viewModel { params -> DaitaViewModel(isModal = params.get(), get()) }
     viewModel { params ->
         ApiUnreachableViewModel(
@@ -390,21 +329,8 @@ val uiModule = module {
             supportEmailUseCase = get(),
         )
     }
-    viewModel { (locationBottomSheetState: LocationBottomSheetState) ->
-        LocationBottomSheetViewModel(
-            locationBottomSheetState = locationBottomSheetState,
-            customListActionUseCase = get(),
-            canBeSelectedUseCase = get(),
-            customListsRelayItemUseCase = get(),
-            selectedLocationUseCase = get(),
-            modifyMultihopUseCase = get(),
-            wireguardConstraintsRepository = get(),
-            selectAndEnableMultihopUseCase = get(),
-            hopSelectionUseCase = get(),
-            modifyAndEnableMultihopUseCase = get(),
-            customListsRepository = get(),
-        )
-    }
+    // D.4 step 27: LocationBottomSheetViewModel removed (Mullvad
+    // location bottom-sheet from SelectLocationScreen).
     viewModel { AppIconViewModel(get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }

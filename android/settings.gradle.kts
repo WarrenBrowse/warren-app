@@ -51,19 +51,15 @@ include(
     ":lib:feature:appearance:api",
     ":lib:feature:autoconnect:impl",
     ":lib:feature:autoconnect:api",
-    ":lib:feature:customlist:impl",
-    ":lib:feature:customlist:api",
+    // D.4 step 27: customlist + filter + location modules deleted
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
     ":lib:feature:daita:impl",
     ":lib:feature:daita:api",
     // D.4 step 18: deleteaccount module removed (no Mullvad account on Warren).
-    ":lib:feature:filter:impl",
-    ":lib:feature:filter:api",
     ":lib:feature:home:impl",
     ":lib:feature:home:api",
     ":lib:feature:language:impl",
     ":lib:feature:language:api",
-    ":lib:feature:location:impl",
-    ":lib:feature:location:api",
     ":lib:feature:login:impl",
     ":lib:feature:login:api",
     // D.4 step 18: managedevices module removed (Mullvad multi-device
