@@ -18,49 +18,49 @@ dependencies {
 gradlePlugin {
     plugins {
         register("kotlin-toolchain") {
-            id = "mullvad.kotlin-toolchain"
+            id = "warren.kotlin-toolchain"
             implementationClass = "KotlinToolchainPlugin"
         }
     }
     plugins {
         register("utilities") {
-            id = "mullvad.utilities"
+            id = "warren.utilities"
             implementationClass = "UtilitiesPlugin"
         }
     }
     plugins {
         register("unit-test") {
-            id = "mullvad.unit-test"
+            id = "warren.unit-test"
             implementationClass = "UnitTestPlugin"
         }
     }
     plugins {
         register("android-library") {
-            id = "mullvad.android-library"
+            id = "warren.android-library"
             implementationClass = "AndroidLibraryPlugin"
         }
     }
     plugins {
         register("android-library-feature-impl") {
-            id = "mullvad.android-library-feature-impl"
+            id = "warren.android-library-feature-impl"
             implementationClass = "AndroidLibraryFeatureImplPlugin"
         }
     }
     plugins {
         register("android-library-feature-api") {
-            id = "mullvad.android-library-feature-api"
+            id = "warren.android-library-feature-api"
             implementationClass = "AndroidLibraryFeatureApiPlugin"
         }
     }
     plugins {
         register("android-library-compose") {
-            id = "mullvad.android-library-compose"
+            id = "warren.android-library-compose"
             implementationClass = "AndroidLibraryComposePlugin"
         }
     }
     plugins {
         register("android-library-instrumented-test") {
-            id = "mullvad.android-library-instrumented-test"
+            id = "warren.android-library-instrumented-test"
             implementationClass = "AndroidLibraryInstrumentedTestPlugin"
         }
     }

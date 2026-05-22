@@ -88,15 +88,21 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
 
         deviceChecker = DeviceChecker(accountsProxy: accountsProxy, devicesProxy: devicesProxy)
 
+        // C.4.4 : Warren tunnels via Quinn (`warren-tunnel`) ; the
+        // legacy WireGuardGo path is removed. The debug `GotaTun`
+        // toggle is preserved as an alternate path for local
+        // development (no real tunnel traffic, useful for UI/iOS
+        // lifecycle smoke tests). Default = `WarrenQuinnTunnelImplementation`.
         #if DEBUG
             if PacketTunnelDebugSettings.useGotaTun {
                 providerLogger.info("Using GotaTun implementation (debug)")
                 implementation = GotaTunTunnelImplementation()
             } else {
-                implementation = makeWireGuardGoImplementation()
+                providerLogger.info("Using Warren Quinn implementation")
+                implementation = WarrenQuinnTunnelImplementation()
             }
         #else
-            implementation = makeWireGuardGoImplementation()
+            implementation = WarrenQuinnTunnelImplementation()
         #endif
 
         implementation.setUp(
@@ -253,12 +259,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
             accessMethodsDataSource: accessMethodRepository.accessMethodsPublisher,
             requestDataSource: accessMethodRepository.requestAccessMethodPublisher
         )
-    }
-
-    private func makeWireGuardGoImplementation() -> WireGuardGoTunnelImplementation {
-        let wgImpl = WireGuardGoTunnelImplementation()
-        wgImpl.onDeviceCheck = { [weak self] in self?.startDeviceCheck() }
-        return wgImpl
     }
 
     private func initialTunnelNetworkSettings() -> NETunnelNetworkSettings {

@@ -8,7 +8,7 @@
 
 import Foundation
 
-import protocol MullvadTypes.Cancellable
+import protocol WarrenTypes.Cancellable
 
 /// Asynchronous block operation
 public class AsyncBlockOperation: AsyncOperation, @unchecked Sendable {

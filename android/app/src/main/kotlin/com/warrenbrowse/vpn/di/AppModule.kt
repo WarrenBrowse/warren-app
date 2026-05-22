@@ -10,7 +10,18 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
+import com.warrenbrowse.vpn.app.connect.RelayCatalog
+import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
 import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAMED_ARGUMENT
@@ -26,6 +37,7 @@ import com.warrenbrowse.vpn.lib.pushnotification.ScheduleNotificationAlarmUseCas
 import com.warrenbrowse.vpn.lib.pushnotification.accountexpiry.AccountExpiryNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
+import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
@@ -33,6 +45,8 @@ import com.warrenbrowse.vpn.lib.repository.RelayLocationTranslationRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.usecase.AccountExpiryNotificationActionUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import org.koin.android.ext.koin.androidContext
@@ -63,6 +77,36 @@ val appModule = module {
     single { DeviceRepository(get()) }
     single { UserPreferencesRepository(get(), get()) }
     single { ConnectionProxy(androidContext(), get(), get()) }
+    single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
+
+    // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    // Kept separate from the proto-backed UserPreferencesRepository so we can
+    // drop the legacy Mullvad surface without touching these.
+    single { WarrenLocalSettingsRepository(androidContext()) }
+
+    // D.4 step 17: relay catalogue via WarrenJni.listRelays. Hardcoded entry
+    // today; D.6 wires the signed-relay-list fetch via warren-api-client.
+    single { RelayCatalog() } bind WarrenRelayProvider::class
+
+    // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
+    // Composables can read tunnel transitions without binding the service.
+    single { WarrenQuinnStateProxy() } bind WarrenTunnelStateProvider::class
+
+    // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
+    // service dispatch for Warren Quinn connect.
+    single { WarrenTunnelConfigBuilder(localSettings = get(), relayCatalog = get()) }
+    single {
+        WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
+    } bind WarrenQuinnConnectInvoker::class
+
+    // D.4 step 12: disconnect path bound to the same lib-side surface
+    // contract; Connect button + tile service + notification action all
+    // resolve this single binding.
+    single { WarrenDisconnectUseCase(context = androidContext()) } bind
+        WarrenQuinnDisconnectInvoker::class
+
+    single { WarrenReconnectUseCase(context = androidContext()) } bind
+        WarrenQuinnReconnectInvoker::class
     single { LocaleRepository(get()) }
     single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
     single { ScheduleNotificationAlarmUseCase(androidContext(), get()) }

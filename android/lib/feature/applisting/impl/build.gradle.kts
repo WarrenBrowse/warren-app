@@ -1,6 +1,6 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.android.library.feature.impl)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.android.library.feature.impl)
 }
 
 android { namespace = "com.warrenbrowse.vpn.feature.applisting.impl" }

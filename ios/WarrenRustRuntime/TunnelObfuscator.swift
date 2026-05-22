@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadRustRuntimeProxy
+import WarrenRustRuntimeProxy
 import WarrenTypes
 import Network
 

@@ -508,4 +508,25 @@
     <string name="x_via_x">%1$s via %2$s</string>
     <string name="you_can_add_more_time_oss">Vous pouvez ajouter plus de temps via la page de visualisation du compte ou le site Web pour continuer d\'utiliser le VPN.</string>
     <string name="you_can_add_more_time_play">Vous pouvez ajouter plus de temps via la vue du compte pour continuer d\'utiliser le VPN.</string>
+
+    <!-- Wallet UI (D.5) -->
+    <string name="wallet_create_title">Créez votre portefeuille Warren</string>
+    <string name="wallet_create_description">Une phrase de récupération de 12 mots est votre seul moyen de retrouver ce compte. Notez-la et conservez-la hors ligne.</string>
+    <string name="wallet_create_cta">Générer la phrase de récupération</string>
+    <string name="wallet_import_title">Restaurer depuis une phrase de récupération</string>
+    <string name="wallet_import_description">Saisissez les 12 mots exactement dans l\'ordre où vous les avez sauvegardés.</string>
+    <string name="wallet_import_cta">Restaurer le portefeuille</string>
+    <string name="wallet_import_error_invalid">Cette phrase de récupération n\'est pas valide. Vérifiez les mots et l\'orthographe.</string>
+    <string name="wallet_backup_title">Notez votre phrase de récupération</string>
+    <string name="wallet_backup_warning">Toute personne possédant ces 12 mots peut accéder à votre compte. Ne les partagez jamais et ne les stockez pas en ligne.</string>
+    <string name="wallet_backup_confirm_cta">Je l\'ai notée</string>
+    <string name="wallet_mnemonic_reveal_hint">Appuyez pour révéler</string>
+    <string name="wallet_mnemonic_hide_hint">Appuyez sur un mot pour masquer</string>
+    <string name="wallet_biometric_view_phrase_reason">Confirmez pour voir votre phrase de récupération</string>
+    <string name="wallet_biometric_sign_reason">Confirmez pour vous connecter à Warren</string>
+    <string name="wallet_settings_section">Portefeuille</string>
+    <string name="wallet_settings_view_phrase">Voir la phrase de récupération</string>
+    <string name="wallet_settings_erase">Effacer le portefeuille</string>
+    <string name="wallet_settings_erase_confirm_title">Effacer ce portefeuille ?</string>
+    <string name="wallet_settings_erase_confirm_description">Cette action est irréversible. Vous aurez besoin de votre phrase de récupération pour retrouver ce compte.</string>
 </resources>

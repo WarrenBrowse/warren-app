@@ -6,9 +6,9 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import Logging
 import Routing
 import SwiftUI
+import WarrenLogging
 
 class IncludeAllNetworksSettingsCoordinator: Coordinator, SettingsChildCoordinator, Presentable, Presenting {
     private lazy var logger = Logger(label: "NotificationManager")

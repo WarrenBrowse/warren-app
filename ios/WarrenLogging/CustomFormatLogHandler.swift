@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Logging
 
 // FIXME: remobe @unchecked Sendable when we upgrade to Xcode26 everywhere
 public struct CustomFormatLogHandler: @unchecked Sendable, LogHandler {

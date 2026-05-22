@@ -10,6 +10,19 @@ license.workspace = true
 bench = false
 crate-type = ["staticlib"]
 
+# Cross-platform Warren deps. The pure-rust `warren-identity` and
+# `warren-api-client` build cleanly on host + iOS targets, so they live
+# outside the `cfg(target_os = "ios")` gate to keep host unit tests
+# building. Same pattern as `warren-jni` for Android.
+[dependencies]
+thiserror = { workspace = true }
+hex = "0.4"
+bip39 = { version = "2", features = ["rand"] }
+ed25519-dalek = { version = "2", features = ["zeroize", "rand_core"] }
+warren-identity = { path = "../../warren-core/crates/warren-identity" }
+warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
+warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
+
 [target.'cfg(target_os = "ios")'.dependencies]
 futures = { workspace = true }
 hyper = { version = "1.4.1", features = ["client", "http1"] }
@@ -18,14 +31,18 @@ libc = "0.2"
 log = { workspace = true }
 mockito = { workspace = true }
 # Mullvad API client retained transitionally for legacy account-number flows
-# in `src/api_client/`. To be replaced by `warren-api-client` (path-dep on
-# warren-core via the Warren workspace) in the C.3 deep-work follow-up.
+# in `src/api_client/`. To be replaced by `warren-api-client` in the
+# C.3 deep-step-2 follow-up (cf. `.planning/session-c-followup-briefs.md`).
 mullvad-api = { path = "../mullvad-api", default-features = false }
 mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-logging = { path = "../mullvad-logging" }
 mullvad-types = { path = "../mullvad-types" }
 shadowsocks = { workspace = true }
 talpid-future = { path = "../talpid-future" }
+# Note: talpid-platform-metadata lacks an iOS backend ; it only ships
+# macos/windows/android impls. Warren iOS uses
+# `UIDevice.systemVersion` / `UIDevice.model` directly via Swift, which
+# the Swift side passes to FFI as platform user-agent string.
 talpid-types = { path = "../talpid-types" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
@@ -33,12 +50,33 @@ tower = { workspace = true }
 tracing = "0.1"
 tracing-subscriber = { workspace = true }
 
+# Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature.
+# warren-tunnel currently uses `tun-rs::DeviceBuilder`, which has no iOS
+# backend in tun-rs 2.8 (same blocker as Android, cf. memory
+# `warren_session_d_delivered`). C.4 will either contribute an iOS backend
+# to tun-rs upstream or bridge via `NEPacketTunnelFlow.readPackets/
+# writePackets` (preferred, cf. `.planning/c4-packet-tunnel-provider-
+# quinn-design.md` §3.2). The feature is enabled in this crate once the
+# adapter lands.
+warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
+warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
+warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
+warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
+# Direct dep on `warren-protocol` for `WarrenExitAddr` + `WarrenPubkey`
+# types passed to `warren_tunnel::ClientTunnel::connect`. Optional so
+# the no-tunnel build path stays minimal.
+warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
+
 [target.'cfg(target_os = "macos")'.build-dependencies]
 cbindgen = { version = "0.28.0", default-features = false }
 
 [features]
+default = []
 # Allow the API server to be used
 api-override = ["mullvad-api/api-override"]
+# Pull in the Quinn tunnel stack. Requires an iOS `PacketDevice` adapter
+# (cf. C.4 design doc §3.2). OFF by default until the bridge lands.
+tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol"]
 
 [lints]
 workspace = true

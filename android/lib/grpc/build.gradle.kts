@@ -1,10 +1,10 @@
 import com.google.protobuf.gradle.proto
 
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.protobuf.core)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {

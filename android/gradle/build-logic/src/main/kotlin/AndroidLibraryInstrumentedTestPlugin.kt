@@ -10,7 +10,7 @@ import utilities.libs
 class AndroidLibraryInstrumentedTestPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            apply(plugin = "mullvad.android-library")
+            apply(plugin = "warren.android-library")
             apply(plugin = "de.mannodermaus.android-junit5")
 
             extensions.configure<LibraryExtension> {

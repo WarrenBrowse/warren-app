@@ -4,10 +4,146 @@ Design document for sub-phase C.4 of Session C iOS fork brief. Replaces the
 upstream Mullvad WireGuardAdapter pattern with a Warren Quinn-based packet
 tunnel provider backed by the warren-tunnel crate (warren-core).
 
-**Status** : DESIGN (handoff for `Session C.4 — PacketTunnelProvider Quinn` brief).
+**Status** : C.4.0 DELIVERED (warren-core IosTun + warren-ios FFI handle
+lifecycle + Swift WarrenQuinnAdapter wire-in), C.4.1+ TODO.
 Effort estimate brief : 10-14 days wall-clock. Probably underestimated due to
 NetworkExtension iOS subtleties (Wi-Fi <-> cellular handover, App Group event
 broadcasting, killswitch via Disconnect on Demand).
+
+### C.4.0 delivered (2026-05-21)
+
+- `warren-core::IosTun` (`warren-core/crates/warren-tunnel/src/ios_tun.rs`,
+  157 LOC) — `PacketDevice` impl bridging `NEPacketTunnelFlow` via
+  symmetric inbound/outbound mpsc channels (no raw fd, no unsafe). 5
+  host unit tests cover round-trip + clone-shared-channels + try_recv
+  empty.
+- `warren-ios::warren_tunnel_ffi` refactor — Box<Arc<WarrenTunnelHandleImpl>>
+  lifecycle, multi-thread Tokio runtime, IosTun ownership, spawned
+  outbound dispatcher draining `IosTun::next_outbound`, atomic state
+  counters surfaced via `warren_tunnel_status`.
+- 3 new FFI entry points :
+  - `warren_tunnel_inject_inbound_packet(handle, data, len)` — Swift →
+    Rust uplink push (consumed by `readPackets` loop).
+  - `warren_tunnel_set_outbound_callback(handle, cb, ctx)` — registers
+    plain-C-fn-pointer downlink callback (Rust dispatcher → Swift
+    `writePackets`).
+  - `warren_tunnel_set_event_callback(handle, cb, ctx)` — registers
+    tagged-event callback (Connected / Disconnected / Reconnecting /
+    Failover / NatPmp*).
+- Swift `WarrenQuinnAdapter` (`ios/WarrenRustRuntime/WarrenQuinnAdapter.swift`,
+  390 LOC) — final class (not actor for callback ergonomics),
+  `Unmanaged.passRetained` self-ref as FFI context, `@convention(c)`
+  `outboundCallback` and `eventCallbackBridge` mapping C → Swift enum
+  variants, inbound `Task` looping on `packetFlow.readPackets`, IPv4/IPv6
+  protocol auto-detect via first-nibble header inspection, single-hop
+  marshalling (multi-hop + DAITA C-struct pinning deferred C.4.1).
+- Pin warren-core `732869d` → `8779843`.
+
+### C.4.0 build-chain unblock work (2026-05-21 continuation)
+
+Subsequent investigation surfaced multiple incomplete C.2 rebrand items
+that block `xcodebuild build -target WarrenVPN`. Discoveries + applied
+fixes :
+
+- **Duplicate-task linker error** : `WarrenVPN` target had
+  `WireGuardKitTypes` listed *both* in `Embed Frameworks` phase AND in
+  `packageProductDependencies` (Xcode 15+ auto-embed). Manual removal
+  exposed a downstream `WireGuardKitTypes.modulemap not found`
+  cascade ; reverted manual removal. **TBD** : either (a) remove the
+  manual entry AND fix the modulemap path, or (b) drop the SPM
+  dependency entirely (C.4.4 path).
+- **`WireGuardGoBridge` Legacy Target** invokes
+  `build-wireguard-go.sh` which `make`s
+  `wireguard-apple/Sources/WireGuardKitGo` — directory absent in the
+  Warren stub `wireguard-apple` submodule. **Fix applied** : early-skip
+  in `build-wireguard-go.sh` when the directory is missing.
+- **`WarrenMockData/{MullvadREST,MullvadTypes}` directories** kept
+  Mullvad names but pbxproj referenced new `WarrenREST/WarrenTypes`
+  paths. **Fix applied** : `git mv` to match pbxproj expectations.
+- **`WarrenRustRuntime/MullvadRustRuntime.h` umbrella header** kept old
+  name + imported `mullvad_rust_runtime.h` (lowercase). pbxproj already
+  pointed to `WarrenRustRuntime.h` + cbindgen emits
+  `warren_rust_runtime.h`. **Fix applied** : `git mv` + content update.
+- **`WarrenMockData` target had `dependencies = ()`** despite importing
+  WarrenREST/Types/Settings/RustRuntime/Logging/Operations. Xcode 15+
+  explicit-module build requires explicit deps. **Fix applied** :
+  `fix-warrenmockdata-deps.rb` Ruby script (xcodeproj gem) adds all 6.
+- **`WarrenVPN/.../BlockedStateErrorMapper.swift`** had an unused
+  `import WireGuardKit`. **Fix applied** : dropped.
+
+After these fixes the build progresses past linker + Go bridge stages
+and now fails on deeper C.2 rebrand incompleteness :
+
+- ~~704 `.swift` files Mullvad module refs~~ **DONE** in C.2.X (2026-05-21
+  continuation, commit on origin/main). Sed-bulk-replaced 5 module name
+  patterns (`MullvadREST/Types/Settings/Logging/RustRuntime` →
+  `Warren*`) across 58 .swift files. `MullvadVPN` + `MullvadApi*` class
+  names preserved (intentional — non-module-name refs). The previous
+  704 number was over-counted ; once filtered to actual module-name
+  imports + qualified refs, the real footprint was 58 files.
+- **`WarrenLogging` cannot resolve module `Logging`** (provided by
+  `apple/swift-log` SPM dep). The package IS resolved + listed as
+  explicit dep on the WarrenLogging target (verified
+  `xcodebuild -resolvePackageDependencies` + dep graph). Yet swift-driver
+  in explicit-module mode (Xcode 26.4 default) reports
+  "Unable to resolve module dependency: 'Logging'". Likely a SPM build
+  race between `Logging.swiftmodule` emit + WarrenLogging compile.
+  **Workaround paths** : (a) downgrade Xcode minimum to 15.x where
+  implicit-module mode is default ; (b) set
+  `SWIFT_ENABLE_EXPLICIT_MODULES = NO` on affected targets ; (c)
+  pin swift-log to a different version. **Defer to C.2.X follow-up** ;
+  not a C.4 blocker for cargo / cargo clippy validation flow.
+- **`WireGuardKitTypes.modulemap`** generated module map dir is empty
+  for `iphoneos` builds when the manual Embed Frameworks entry is
+  removed. Tied to the auto-embed / manual-embed duplicate dance ;
+  resolves once `WireGuardKitTypes` is fully retired (C.4.4).
+
+These are documented as **C.2.X / C.4.4 follow-up** scope ; they are
+NOT blockers for the `cargo` / `cargo clippy` validation flow used
+throughout C.4.0 (warren-ios + warren-tunnel compile + lint cleanly
+without touching xcodebuild).
+
+### C.4 phase tracker (updated 2026-05-22)
+
+| Sub-phase | Status | Notes |
+|---|---|---|
+| C.4.0 foundations (IosTun + FFI handle lifecycle + Swift WarrenQuinnAdapter) | ✅ DONE | cargo + clippy CLEAN |
+| C.4.1 Quinn handshake single-hop wire | ✅ DONE | `warren_tunnel_start` parses params + spawns ClientTunnel::connect + pump_bidirectional |
+| C.4.2 multi-hop + DAITA Swift marshalling | ✅ DONE | `withMultiHopRelayPinned` + `withDaitaPinned` helpers |
+| C.4.3 WarrenQuinnTunnelImplementation scaffold | ✅ DONE | conforms TunnelImplementation + PacketTunnelActorProtocol |
+| C.4.4 WireGuardKit removal | ✅ DONE | 45 entries dropped from pbxproj + 5 WG source files removed from build target |
+| C.2.X module rename | ✅ DONE | 58 .swift files Mullvad → Warren |
+| C.2.X.B disable explicit modules | ✅ DONE | workaround Xcode 26.4 swift-driver SPM race |
+| **C.2.X.C Logging SPM consumer-path** | ❌ BLOCKED | 4 attempts failed (OTHER_SWIFT_FLAGS -I + SWIFT_INCLUDE_PATHS + FRAMEWORK_SEARCH_PATHS + dummy WG package_reference). Structural Xcode 26.4 regression. Candidates : vendor swift-log into WarrenLogging, Xcode 15.x downgrade, alternate workspace layout. |
+| C.4.1.X multi-hop dispatcher (Rust-side) | ⏳ DEFERRED | Needs expanded FFI surface : `RelayDescriptorSigned` + `ExitDescriptorSigned` (PKI-verified, ~1 KB JSON each) passed via FFI OR Swift-side warren-api-client integration to fetch descriptors at runtime. B.1.8 caveat closed by Session R warren-core `f8f2d59` (5.6% DAITA overhead), so safe to wire. |
+| C.4.3.X actor lifecycle wire-up | ⏳ DEFERRED | `WarrenQuinnActor.start(options:)` → `WarrenQuinnAdapter.start(config:)` + plumb Rust-side event callback into actor's `observedStates` AsyncStream |
+| C.7 TestFlight | ⏳ BLOCKED | Apple Developer signing key pending poka, post-build-green |
+
+### C.4.1+ remaining work
+
+The C.4.0 plumbing is in place ; what's still needed :
+
+1. **Quinn handshake** : `warren_tunnel_start` body currently allocates
+   handle + spawns outbound dispatcher but does not initiate a Quinn
+   connection. Wire `warren_tunnel::ClientTunnel::connect` with the
+   marshalled parameters. Needs `Connecting` → `Connected` state
+   transition + event dispatch.
+2. **Multi-hop + DAITA marshalling** : extend `WarrenQuinnAdapter.callTunnelStart`
+   to pin `WarrenRelayConfigC` + `WarrenDaitaSpecC` C structs across
+   the FFI call boundary (current single-hop pass uses `nil`).
+3. **Event dispatch from Rust side** : the `handle_impl.event_callback`
+   Mutex storage is wired ; the future Quinn connection task must
+   actually invoke the stored callback when state transitions happen.
+4. **PacketTunnelProvider rewrite** : add `WarrenQuinnTunnelImplementation`
+   conforming to `TunnelImplementation` protocol so it slots into the
+   existing dispatcher next to `WireGuardGoTunnelImplementation` /
+   `GotaTunTunnelImplementation`. Toggle via `PacketTunnelDebugSettings.useWarrenQuinn`
+   debug flag first, then remove the WG path for the production build.
+5. **WireGuardKit removal** : drop `WireGuardKitTypes` + `WireGuardKit`
+   framework refs from pbxproj after all WG consumers (WgAdapter,
+   TunnelPinger, BlockedStateErrorMapper unused import) are stubbed
+   or removed. Resolves the standing "Unexpected duplicate tasks"
+   linker error in `xcodebuild build -target WarrenVPN`.
 
 **Pre-conditions** :
 - C.1 + C.2 + C.3 skeleton DONE (cf. `.planning/session-c-report.md`).

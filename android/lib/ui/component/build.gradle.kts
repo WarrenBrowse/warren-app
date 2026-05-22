@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.compose)
     alias(libs.plugins.kotlin.parcelize)
 }
@@ -33,4 +33,8 @@ dependencies {
     implementation(libs.androidx.animation)
 
     implementation(libs.accompanist.drawablepainter)
+
+    // Warren wallet UI (D.5) - BiometricPrompt gating in `BiometricGate.kt`.
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment)
 }

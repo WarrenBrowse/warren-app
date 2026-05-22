@@ -89,44 +89,56 @@ Same pattern for `armv7-linux-androideabi` (uses
 `armv7a-linux-androideabi26-clang`) and `x86_64-linux-android`. All three
 targets compile cleanly with the default feature set as of this commit.
 
-## 5. The Android TUN gap (deferred to D.4)
+## 5. The Android TUN gap (resolved)
 
-The `warren-tunnel` crate uses `tun-rs::DeviceBuilder` to build the in-Rust
-TUN endpoint. `tun-rs` 2.8 exposes `DeviceBuilder` only on Linux, macOS,
-Windows, FreeBSD, OpenBSD, and NetBSD - **not Android**. The kernel-side
-TUN/TAP path on Android is unreachable to a non-root userspace process;
-instead the system VpnService hands the app a TUN file descriptor.
+**Landed in warren-core `d59fd15` (2026-05-21).** A new
+`warren_tunnel::AndroidTun` impl of `PacketDevice` wraps the
+VpnService-provided fd via `tokio::io::unix::AsyncFd` + safe POSIX wrappers
+from `nix` (the workspace `unsafe_code = "forbid"` lint forbids raw
+`libc`). The fd lifetime is managed by `OwnedFd`; non-blocking is set via
+`fcntl(F_SETFL | O_NONBLOCK)` once at construction time. No virtio_net_hdr
+/ GSO offload: Android's TUN driver does not expose those.
 
-Two viable strategies, both cross-repo work in `warren-core`:
+Background (kept for reference): `warren-tunnel` originally used
+`tun-rs::DeviceBuilder` to build the in-Rust TUN endpoint. `tun-rs` 2.8
+exposes `DeviceBuilder` only on Linux, macOS, Windows, FreeBSD, OpenBSD,
+and NetBSD - **not Android**. The kernel-side TUN/TAP path on Android is
+unreachable to a non-root userspace process; instead the system
+VpnService hands the app a TUN file descriptor. We chose option (1)
+"direct fd wrap" rather than patching tun-rs upstream because the surface
+is small and the iOS side (C.4) needs an equivalent
+`PacketTunnelProvider`-backed adapter anyway.
 
-1. **Direct fd wrap (recommended).** Add a thin
-   `warren_tunnel::PacketDevice` impl backed by a raw OS fd
-   (`std::os::fd::OwnedFd` + tokio `AsyncFd`). The fd is duped from Kotlin
-   via JNI, handed into `warren-jni::connectTunnel`, then into
-   `warren_tunnel::ClientConfig::with_packet_device(...)`. No tun-rs
-   involvement on Android. Side benefits: same impl can serve iOS once
-   C.4 needs it.
+`warren-jni`'s `tunnel` Cargo feature is now **on by default**. The
+`connectTunnel` JNI export takes the fd from Kotlin, constructs an
+`AndroidTun` (which `fcntl`s the fd non-blocking), and pins it in the
+`ACTIVE_TUNNEL` slot. The Quinn pump spawning + `ClientConfig` wiring is
+the remaining work for D.4 step 2 (Section 6 below).
 
-2. **Patch tun-rs.** Submit a `target_os = "android"` arm upstream. Bigger
-   blast radius (tun-rs has its own backend matrix) and lands on tun-rs's
-   schedule, not ours.
+## 6. Open D.4 work items
 
-Until either lands, `warren-jni`'s `tunnel` Cargo feature stays off by
-default. The skeleton ships the JNI symbols (so Kotlin can call them) but
-the implementation slot is empty.
+Cross-repo `warren-core` portion (~Section 5~ **DONE** `d59fd15`):
 
-## 6. Open D.4 work items (cross-repo)
+- ~`warren-core`: add `PacketDevice::from_fd(fd: OwnedFd)` constructor +
+  feature-gate `tun-rs` to `not(target_os = "android")`.~
 
-- `warren-core`: add `PacketDevice::from_fd(fd: OwnedFd)` constructor +
-  feature-gate the `tun-rs` import in `warren-tunnel/src/real_tun.rs` to
-  `not(target_os = "android")`.
-- `warren-app/warren-jni`: enable `features = ["tunnel"]` in the Cargo.toml
-  consumed by the Android build, write the real `connectTunnel` body
-  (deserialize `WarrenTunnelConfig`, build `warren_tunnel::ClientConfig`,
-  spawn the Quinn pump on the shared runtime, hand the tun fd in).
-- `warren-app/android`: drop `WarrenDaemon.kt` and the `lib/talpid` module's
-  Mullvad-flavoured `TalpidVpnService` once `WarrenVpnService` is wired
-  directly against `WarrenJni`.
+Remaining `warren-app` D.4 work:
+
+- ~`warren-jni`: enable `features = ["tunnel"]` by default.~ **DONE** (post
+  `d59fd15` pin bump). `connectTunnel` now instantiates `AndroidTun`.
+- `warren-jni`: write the real `connectTunnel` body - deserialize the JSON
+  `WarrenTunnelConfig` blob, build `warren_tunnel::ClientConfig` +
+  `ClientSession`, spawn the Quinn pump on the shared runtime against
+  `AndroidTun`, and (when an entry hop is set) hand off to
+  `warren_multihop::MultiHopClient`.
+- ~`warren-app/android`: drop `WarrenDaemon.kt`~ **DONE** (`6076445631`).
+- ~Drop `DaemonConfig` dataclass + Koin factory~ **DONE** (`b189bd73b1`).
+- `WarrenVpnService.kt`: drop `managementService.start()` /
+  `connectionProxy.*` calls (dead at runtime, no daemon), wire
+  `WarrenQuinnAdapter` to invoke `WarrenJni.connectTunnel` once the
+  VpnService Builder has handed back a TUN fd.
+- Drop `lib/talpid/` module entirely once `WarrenVpnService` no longer
+  extends `TalpidVpnService`.
 
 ## 7. What is not in scope (will surface naturally)
 

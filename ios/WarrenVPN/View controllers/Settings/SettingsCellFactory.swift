@@ -151,6 +151,93 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .includeAllNetworks }
+
+        case .warrenWalletBackup:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = String(
+                localized: "Recovery phrase",
+                table: "Wallet",
+                comment: "Settings row that opens the Face ID gated wallet backup view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletBackup }
+
+        case .warrenWalletErase:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Erase wallet",
+                table: "Wallet",
+                comment: "Destructive Settings row that opens the wallet wipe confirmation flow"
+            )
+            cell.titleLabel.textColor = .Warren.error
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletErase }
+
+        case .warrenWalletIdentity:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Wallet identity",
+                table: "Wallet",
+                comment: "Settings row that opens the read-only pubkey display"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletIdentity }
+
+        case .warrenTunnelStatistics:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Tunnel statistics",
+                table: "Settings",
+                comment: "Settings row that opens the live tunnel counters view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenTunnelStatistics }
+
+        case .warrenDiagnosticInfo:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Diagnostic info",
+                table: "Settings",
+                comment: "Settings row that opens the screenshot-friendly support payload view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenDiagnosticInfo }
+
+        case .warrenAbout:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "About Warren",
+                table: "Settings",
+                comment: "Settings row that opens the marketing/privacy/source-code links view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenAbout }
+
+        case .warrenPortForwarding:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = String(
+                localized: "Port forwarding",
+                table: "Settings",
+                comment: "Settings row that opens the NAT-PMP port forwarding configuration"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenPortForwarding }
         }
     }
 

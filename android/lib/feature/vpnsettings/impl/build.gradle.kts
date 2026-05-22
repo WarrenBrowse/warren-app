@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.android.library.feature.impl)
-    alias(libs.plugins.mullvad.android.library.compose)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.android.library.feature.impl)
+    alias(libs.plugins.warren.android.library.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
 }
@@ -9,9 +9,9 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.vpnsettings.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.anticensorship.api)
     implementation(projects.lib.feature.autoconnect.api)
     implementation(projects.lib.feature.serveripoverride.api)
+    implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.vpnsettings.api)
     implementation(projects.lib.navigation)
     implementation(projects.lib.repository)

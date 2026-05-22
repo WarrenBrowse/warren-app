@@ -20,14 +20,14 @@ import utilities.playImplementation
 import utilities.registerReleaseTask
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.application)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.compose)
     alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
     alias(libs.plugins.rust.android)
     id("de.mannodermaus.android-junit5")
 }
@@ -371,12 +371,10 @@ dependencies {
     implementation(project(":lib:common-compose"))
     implementation(projects.lib.grpc)
     implementation(projects.lib.endpoint)
-    implementation(projects.lib.feature.account.impl)
-    implementation(projects.lib.feature.addtime.impl)
-    implementation(projects.lib.feature.anticensorship.impl)
-    implementation(projects.lib.feature.anticensorship.api)
-    implementation(projects.lib.feature.apiaccess.impl)
-    implementation(projects.lib.feature.apiaccess.api)
+    // D.4 step 18: account/addtime/deleteaccount/managedevices/redeemvoucher
+    // modules deleted (Mullvad-account features without Warren equivalent).
+    // D.4 step 34: anticensorship module deleted.
+    // D.4 step 33: apiaccess module deleted.
     implementation(projects.lib.feature.appicon.impl)
     implementation(projects.lib.feature.appinfo.impl)
     implementation(projects.lib.feature.appinfo.api)
@@ -384,24 +382,17 @@ dependencies {
     implementation(projects.lib.feature.applisting.api)
     implementation(projects.lib.feature.appearance.impl)
     implementation(projects.lib.feature.autoconnect.impl)
-    implementation(projects.lib.feature.customlist.impl)
-    implementation(projects.lib.feature.customlist.api)
-    implementation(projects.lib.feature.daita.impl)
-    implementation(projects.lib.feature.deleteaccount.impl)
-    implementation(projects.lib.feature.daita.api)
-    implementation(projects.lib.feature.filter.impl)
+    // D.4 step 27: customlist + filter + location modules deleted
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
+    // D.4 step 32: daita module deleted (DAITA via WarrenTunnelSettings).
     implementation(projects.lib.feature.home.impl)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.language.impl)
-    implementation(projects.lib.feature.location.impl)
-    implementation(projects.lib.feature.location.api)
     implementation(projects.lib.feature.login.impl)
     implementation(projects.lib.feature.login.api)
-    implementation(projects.lib.feature.managedevices.impl)
-    implementation(projects.lib.feature.multihop.impl)
+    // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.impl)
     implementation(projects.lib.feature.problemreport.impl)
-    implementation(projects.lib.feature.redeemvoucher.impl)
     implementation(projects.lib.feature.serveripoverride.impl)
     implementation(projects.lib.feature.serveripoverride.api)
     implementation(projects.lib.feature.settings.impl)
@@ -446,6 +437,8 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
+    // FragmentActivity baseline for MainActivity (BiometricPrompt host, D.5).
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.coresplashscreen)
     implementation(libs.androidx.credentials) {

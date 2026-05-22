@@ -13,7 +13,7 @@ struct OutgoingConnectionProxyStub: OutgoingConnectionHandling {
     var ipV6: IPV6ConnectionData
     var error: Error?
 
-    func getIPV6(retryStrategy: MullvadREST.REST.RetryStrategy) async throws -> IPV6ConnectionData {
+    func getIPV6(retryStrategy: WarrenREST.REST.RetryStrategy) async throws -> IPV6ConnectionData {
         if let error {
             throw error
         } else {
@@ -21,7 +21,7 @@ struct OutgoingConnectionProxyStub: OutgoingConnectionHandling {
         }
     }
 
-    func getIPV4(retryStrategy: MullvadREST.REST.RetryStrategy) async throws -> IPV4ConnectionData {
+    func getIPV4(retryStrategy: WarrenREST.REST.RetryStrategy) async throws -> IPV4ConnectionData {
         if let error {
             throw error
         } else {

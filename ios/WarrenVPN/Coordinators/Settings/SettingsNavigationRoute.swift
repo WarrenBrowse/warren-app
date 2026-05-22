@@ -40,4 +40,26 @@ enum SettingsNavigationRoute: Equatable {
 
     /// IAN route.
     case includeAllNetworks
+
+    /// Warren wallet backup (View recovery phrase, Face ID gated).
+    case warrenWalletBackup
+
+    /// Warren wallet wipe (destructive, requires confirmation).
+    case warrenWalletErase
+
+    /// Warren wallet identity (read-only pubkey display for support).
+    case warrenWalletIdentity
+
+    /// Warren tunnel statistics (status + bytes + duration + failover count).
+    case warrenTunnelStatistics
+
+    /// Warren diagnostic info (app version + wallet pubkey + tunnel stats
+    /// in a screenshot-friendly support-ticket payload).
+    case warrenDiagnosticInfo
+
+    /// About Warren (marketing site + privacy + ToS + AGPL source links).
+    case warrenAbout
+
+    /// Warren NAT-PMP port forwarding settings.
+    case warrenPortForwarding
 }

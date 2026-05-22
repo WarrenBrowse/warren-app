@@ -1,0 +1,43 @@
+{
+  "locations": {
+    "se-sto": {
+      "country": "Sweden",
+      "city": "Stockholm",
+      "latitude": 59.3294,
+      "longitude": 18.0686
+    },
+    "de-fra": {
+      "country": "Germany",
+      "city": "Frankfurt",
+      "latitude": 50.1109,
+      "longitude": 8.6821
+    }
+  },
+  "wireguard": {
+    "ipv4_gateway": "10.64.0.1",
+    "ipv6_gateway": "fd00::1",
+    "port_ranges": [[51820, 51820]],
+    "shadowsocks_port_ranges": [],
+    "relays": [
+      {
+        "hostname": "warren-stub-exit-1",
+        "active": true,
+        "owned": true,
+        "provider": "warren",
+        "weight": 1,
+        "ipv4_addr_in": "0.0.0.0",
+        "ipv6_addr_in": "::",
+        "public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "location": "se-sto",
+        "include_in_country": true,
+        "daita": false,
+        "shadowsocks_extra_addr_in": [],
+        "features": null
+      }
+    ]
+  },
+  "bridge": {
+    "shadowsocks": [],
+    "relays": []
+  }
+}

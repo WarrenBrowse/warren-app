@@ -2,8 +2,8 @@ package com.warrenbrowse.vpn.lib.common.constant
 
 // Do not use in cases where the application id is expected since the application id will differ
 // between different builds.
-internal const val MULLVAD_PACKAGE_NAME = "com.warrenbrowse.vpn"
+internal const val WARREN_PACKAGE_NAME = "com.warrenbrowse.vpn"
 
 // Classes
-const val MAIN_ACTIVITY_CLASS = "$MULLVAD_PACKAGE_NAME.app.MainActivity"
-const val VPN_SERVICE_CLASS = "$MULLVAD_PACKAGE_NAME.app.service.WarrenVpnService"
+const val MAIN_ACTIVITY_CLASS = "$WARREN_PACKAGE_NAME.app.MainActivity"
+const val VPN_SERVICE_CLASS = "$WARREN_PACKAGE_NAME.app.service.WarrenVpnService"

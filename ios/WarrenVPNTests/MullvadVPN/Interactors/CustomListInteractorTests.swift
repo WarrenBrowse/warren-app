@@ -281,7 +281,7 @@ struct CustomListInteractorTests {
 private class SettingsUpdatingMock: SettingsUpdating {
     var updateCalled = false
     func updateSettings(
-        _ updates: [MullvadSettings.TunnelSettingsUpdate],
+        _ updates: [WarrenSettings.TunnelSettingsUpdate],
         completionHandler: (@Sendable () -> Void)?
     ) {
         for update in updates {

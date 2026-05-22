@@ -23,6 +23,18 @@ class TunnelViewController: UIViewController, RootContainment {
     private var connectionView: ConnectionView
     private var connectionController: UIHostingController<ConnectionView>?
 
+    // Warren multi-exit failover notification surface. Reads App Group
+    // UserDefaults keys written by the tunnel extension on exit-down
+    // recovery (cf. `.planning/c4-packet-tunnel-provider-quinn-design.md`
+    // §2.3). Until C.4 lands, this observer simply never fires.
+    private lazy var appGroupEvents = WarrenAppGroupEvents(
+        suiteName: ApplicationConfiguration.securityGroupIdentifier
+    )
+    private var failoverBannerController: UIHostingController<WarrenFailoverBannerView>?
+    private var failoverCancellable: Combine.AnyCancellable?
+    private var failoverHideTask: Task<Void, Never>?
+    private var lastShownFailoverDate: Date?
+
     var shouldShowSelectLocationPicker: (() -> Void)?
     var shouldShowCancelTunnelAlert: (() -> Void)?
     var shouldShowSettingsForFeature: ((FeatureType) -> Void)?
@@ -147,6 +159,7 @@ class TunnelViewController: UIViewController, RootContainment {
         addActivityIndicator()
         addConnectionView()
         updateMap(animated: false)
+        subscribeToFailoverEvents()
     }
 
     func setMainContentHidden(_ isHidden: Bool, animated: Bool) {
@@ -251,5 +264,80 @@ class TunnelViewController: UIViewController, RootContainment {
         view.addConstrainedSubviews([activityIndicator, connectionViewProxy]) {
             connectionViewProxy.pinEdgesToSuperview(.all())
         }
+    }
+
+    // MARK: - Warren failover banner
+
+    private func subscribeToFailoverEvents() {
+        failoverCancellable = appGroupEvents.$lastFailover
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] event in
+                guard let self, let event, event.isFresh else { return }
+                // Skip if we already surfaced this exact event in this
+                // VC's lifetime (UserDefaults observers can re-fire on
+                // unrelated key changes).
+                if let last = self.lastShownFailoverDate, last == event.occurredAt {
+                    return
+                }
+                self.lastShownFailoverDate = event.occurredAt
+                self.showFailoverBanner(event)
+            }
+    }
+
+    private func showFailoverBanner(_ event: WarrenFailoverEvent) {
+        // Cancel any pending auto-hide so the new banner is not pre-empted
+        // by a stale dismiss task from a previous failover.
+        failoverHideTask?.cancel()
+        hideFailoverBanner(animated: false)
+
+        let banner = WarrenFailoverBannerView(
+            info: WarrenFailoverBannerInfo(country: event.country, occurredAt: event.occurredAt),
+            onDismiss: { [weak self] in self?.hideFailoverBanner(animated: true) }
+        )
+
+        let host = UIHostingController(rootView: banner)
+        host.view.backgroundColor = .clear
+        host.view.alpha = 0
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        addChild(host)
+        view.addSubview(host.view)
+        host.didMove(toParent: self)
+        NSLayoutConstraint.activate([
+            host.view.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 8),
+            host.view.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -8),
+            host.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+        ])
+        failoverBannerController = host
+
+        UIView.animate(withDuration: 0.25) {
+            host.view.alpha = 1
+        }
+
+        failoverHideTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            await MainActor.run {
+                guard let self else { return }
+                self.hideFailoverBanner(animated: true)
+            }
+        }
+    }
+
+    private func hideFailoverBanner(animated: Bool) {
+        guard let host = failoverBannerController else { return }
+        let cleanup = {
+            host.willMove(toParent: nil)
+            host.view.removeFromSuperview()
+            host.removeFromParent()
+        }
+        if animated {
+            UIView.animate(
+                withDuration: 0.2,
+                animations: { host.view.alpha = 0 },
+                completion: { _ in cleanup() }
+            )
+        } else {
+            cleanup()
+        }
+        failoverBannerController = nil
     }
 }

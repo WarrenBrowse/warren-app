@@ -1,4 +1,4 @@
-// This file is generated automatically. To update it forcefully, run `cargo run -p mullvad-ios --target aarch64-apple-ios`.
+// This file is generated automatically. To update it forcefully, run `cargo run -p warren-ios --target aarch64-apple-ios`.
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -18,11 +18,39 @@ enum SwiftAccessMethodKind {
 };
 typedef uint8_t SwiftAccessMethodKind;
 
+/**
+ * Event tag for the variant union below. Variants are constructed by
+ * the warren-tunnel dispatcher once the Quinn connection task is
+ * wired (C.4.1).
+ */
+typedef enum WarrenTunnelEventTagC {
+  EventConnected = 0,
+  EventDisconnected = 1,
+  EventReconnecting = 2,
+  EventFailover = 3,
+  EventNatPmpMapped = 4,
+  EventNatPmpRenewed = 5,
+  EventNatPmpFailed = 6,
+} WarrenTunnelEventTagC;
+
+/**
+ * Tunnel state enum surfaced via `warren_tunnel_status`. Variants
+ * other than `Disconnected` are constructed by the warren-tunnel
+ * dispatcher once the Quinn connection task is wired (C.4.1). On the
+ * `not(tunnel)` feature path the enum has no constructor at all,
+ * hence the `cfg_attr(expect)` suppression scoped to that path.
+ */
+typedef enum WarrenTunnelStateC {
+  Disconnected = 0,
+  Connecting = 1,
+  Connected = 2,
+  Reconnecting = 3,
+  Failed = 4,
+} WarrenTunnelStateC;
+
 typedef struct ApiContext ApiContext;
 
 typedef struct DomainFrontingConfigContext DomainFrontingConfigContext;
-
-typedef struct ExchangeCancelToken ExchangeCancelToken;
 
 typedef struct Map Map;
 
@@ -31,6 +59,160 @@ typedef struct RequestCancelHandle RequestCancelHandle;
 typedef struct RetryStrategy RetryStrategy;
 
 typedef struct SwiftAccessMethodSettingsContext SwiftAccessMethodSettingsContext;
+
+/**
+ * Opaque handle representing an active Warren tunnel. Created by
+ * [`warren_tunnel_start`] ; destroyed by [`warren_tunnel_stop`].
+ * The Swift side treats this as an `OpaquePointer`.
+ */
+typedef struct WarrenTunnelHandle {
+  uint8_t _private[0];
+} WarrenTunnelHandle;
+
+/**
+ * Multi-hop entry relay configuration.
+ */
+typedef struct WarrenRelayConfigC {
+  /**
+   * 32-byte Ed25519 public key of the entry relay.
+   */
+  uint8_t pubkey[32];
+  /**
+   * Null-terminated UTF-8 "IP:port" of the entry relay.
+   */
+  const char *endpoint;
+  /**
+   * Null-terminated UTF-8 ISO 3166-1 alpha-2 country code.
+   */
+  const char *country_code;
+} WarrenRelayConfigC;
+
+/**
+ * DAITA defensive shaping spec (cf. memory `warren_session_b_delivered`
+ * M5.B.1 / `warren_daita_doctrine_v1`).
+ */
+typedef struct WarrenDaitaSpecC {
+  /**
+   * 32-byte Maybenot machine seed.
+   */
+  uint8_t machine_seed[32];
+  /**
+   * Padding budget in packets/sec.
+   */
+  uint32_t padding_pps;
+} WarrenDaitaSpecC;
+
+/**
+ * Parameters passed from Swift to start a Warren tunnel. Mirrors the
+ * public surface of `warren_tunnel::WarrenTunnelParameters`.
+ *
+ * String fields are null-terminated UTF-8 ; the Swift side allocates
+ * and retains them for the duration of the `warren_tunnel_start`
+ * call (Rust only borrows during marshalling).
+ */
+typedef struct WarrenTunnelParametersC {
+  /**
+   * 32-byte Ed25519 public key of the exit relay.
+   */
+  uint8_t exit_pubkey[32];
+  /**
+   * Null-terminated UTF-8 "IP:port" of the exit relay.
+   */
+  const char *exit_endpoint;
+  /**
+   * 32-byte Ed25519 signing seed derived from the user wallet
+   * (see `warren_wallet_seed_from_mnemonic` + `derive_node_key`).
+   */
+  uint8_t wallet_signing_seed[32];
+  /**
+   * Optional multi-hop entry relay. Null when single-hop.
+   */
+  const struct WarrenRelayConfigC *multi_hop_relay;
+  /**
+   * Optional DAITA defensive shaping spec. Null when DAITA OFF.
+   */
+  const struct WarrenDaitaSpecC *daita_spec;
+  /**
+   * 1 enables NAT-PMP port forwarding through the tunnel ; 0 disables.
+   */
+  uint8_t nat_pmp_enabled;
+  /**
+   * Pointer to an array of null-terminated UTF-8 CIDRs to bypass
+   * (see M4.H.G `--bypass-cidr`). Length given by `bypass_cidrs_count`.
+   */
+  const char *const *bypass_cidrs;
+  /**
+   * Number of entries in `bypass_cidrs`.
+   */
+  uint32_t bypass_cidrs_count;
+} WarrenTunnelParametersC;
+
+/**
+ * Tunnel status snapshot.
+ */
+typedef struct WarrenTunnelStatusC {
+  enum WarrenTunnelStateC state;
+  uint64_t bytes_in;
+  uint64_t bytes_out;
+  /**
+   * Seconds since the current connection was established. 0 when
+   * `state != Connected`.
+   */
+  uint64_t connected_duration_seconds;
+  /**
+   * Cumulative failover count this session (cf. M5.B.2).
+   */
+  uint32_t failover_count;
+} WarrenTunnelStatusC;
+
+/**
+ * Tagged-union event payload.
+ * The Swift side reads `tag` first then accesses the matching
+ * `data_*` field (e.g. `data_failover_country_code` when tag ==
+ * `Failover`). cbindgen emits this as a C struct with a discriminator.
+ */
+typedef struct WarrenTunnelEventC {
+  enum WarrenTunnelEventTagC tag;
+  /**
+   * Failover : null-terminated UTF-8 country code of new exit.
+   */
+  const char *data_failover_country_code;
+  /**
+   * NatPmp* : forwarded port (external).
+   */
+  uint16_t data_nat_pmp_external_port;
+  /**
+   * NatPmpMapped : internal port + lifetime.
+   */
+  uint16_t data_nat_pmp_internal_port;
+  uint32_t data_nat_pmp_lifetime_seconds;
+  /**
+   * NatPmpFailed : null-terminated UTF-8 reason.
+   */
+  const char *data_nat_pmp_failure_reason;
+} WarrenTunnelEventC;
+
+/**
+ * Event callback signature. Called from a Tokio task on the
+ * warren-tunnel runtime ; the Swift side must marshal back to the
+ * MainActor if the callback updates UI state.
+ *
+ * `event` pointer is owned by Rust for the duration of the callback
+ * only ; Swift must copy any UTF-8 strings before returning.
+ */
+typedef void (*WarrenTunnelEventCallback)(const struct WarrenTunnelEventC *event, void *context);
+
+/**
+ * Outbound packet callback signature. Called from a Tokio task that
+ * drains [`warren_tunnel::IosTun`] after each `PacketDevice::send` from
+ * the downlink pump. The Swift side bridges to
+ * `NEPacketTunnelFlow.writePackets(_:withProtocols:)`.
+ *
+ * `data` + `len` are owned by Rust for the duration of the call ;
+ * Swift must copy before returning. `context` is the opaque pointer
+ * passed at registration time.
+ */
+typedef void (*WarrenTunnelOutboundCallback)(const uint8_t *data, uintptr_t len, void *context);
 
 typedef struct SwiftApiContext {
   const struct ApiContext *_0;
@@ -99,26 +281,6 @@ typedef struct SwiftProblemReportRequest {
   struct ProblemReportMetadata metadata;
 } SwiftProblemReportRequest;
 
-typedef struct DaitaParameters {
-  uint8_t *machines;
-  double max_padding_frac;
-  double max_blocking_frac;
-} DaitaParameters;
-
-typedef struct WgTcpConnectionFunctions {
-  int32_t (*open_fn)(int32_t tunnel_handle, const char *address, uint64_t timeout);
-  int32_t (*close_fn)(int32_t tunnel_handle, int32_t socket_handle);
-  int32_t (*recv_fn)(int32_t tunnel_handle, int32_t socket_handle, uint8_t *data, int32_t len);
-  int32_t (*send_fn)(int32_t tunnel_handle, int32_t socket_handle, const uint8_t *data, int32_t len);
-} WgTcpConnectionFunctions;
-
-typedef struct EphemeralPeerParameters {
-  uint64_t peer_exchange_timeout;
-  bool enable_post_quantum;
-  bool enable_daita;
-  struct WgTcpConnectionFunctions funcs;
-} EphemeralPeerParameters;
-
 /**
  * Callback function type for logging.
  * - `level`: The log level (1=Error, 2=Warn, 3=Info, 4=Debug, 5=Trace)
@@ -126,12 +288,204 @@ typedef struct EphemeralPeerParameters {
  */
 typedef void (*LogCallback)(uint8_t level, const char *message);
 
-typedef struct ProxyHandle {
-  void *context;
-  uint16_t port;
-} ProxyHandle;
+/**
+ * Starts a Warren tunnel with the given parameters. Returns an opaque
+ * handle on success, or null on failure (invalid parameters, tunnel
+ * feature disabled at build time, runtime allocation failure).
+ *
+ * `packet_fd` is the iOS `NEPacketTunnelFlow` file descriptor. iOS
+ * does *not* expose the TUN fd directly through `NEPacketTunnelFlow` ;
+ * pass `-1` and use [`warren_tunnel_inject_inbound_packet`] +
+ * [`warren_tunnel_set_outbound_callback`] for the Swift bridge.
+ *
+ * # Safety
+ * `parameters` must point to a valid `WarrenTunnelParametersC` (all
+ * inner pointers valid for the duration of this call).
+ */
+struct WarrenTunnelHandle *warren_tunnel_start(const struct WarrenTunnelParametersC *parameters,
+                                               int32_t _packet_fd);
 
-extern const uint16_t CONFIG_SERVICE_PORT;
+/**
+ * Stops the tunnel and releases all resources. Idempotent : safe to
+ * call on a null handle (no-op).
+ *
+ * # Safety
+ * `handle` must have been returned by [`warren_tunnel_start`] and must
+ * not have been stopped already.
+ */
+void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
+
+/**
+ * Pauses the inbound pump without tearing down the Quinn connection.
+ * Used on iOS `sleep()` to comply with NetworkExtension background
+ * time budgets. Resume via [`warren_tunnel_resume`]. Calling pause
+ * on an already-paused or disconnected handle is a no-op.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ */
+int warren_tunnel_pause(struct WarrenTunnelHandle *handle);
+
+/**
+ * Resumes the inbound pump after a [`warren_tunnel_pause`]. Idempotent.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ */
+int warren_tunnel_resume(struct WarrenTunnelHandle *handle);
+
+/**
+ * Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
+ * Uses `warren_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
+ *
+ * Returns `0` on success, `-3` if the tunnel is not connected.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ */
+int warren_tunnel_reconnect(struct WarrenTunnelHandle *handle);
+
+/**
+ * Reads the current tunnel status into `out_status`.
+ *
+ * Returns `0` on success, `-1` on invalid input.
+ *
+ * # Safety
+ * `handle` may be null (status reports `Disconnected`). When non-null
+ * it must be a valid pointer from [`warren_tunnel_start`].
+ * `out_status` must point to a writable `WarrenTunnelStatusC`.
+ */
+int warren_tunnel_status(struct WarrenTunnelHandle *handle, struct WarrenTunnelStatusC *out_status);
+
+/**
+ * Registers a callback invoked on tunnel events (connected,
+ * disconnected, reconnecting, failover, NAT-PMP events).
+ *
+ * Replaces any previously registered callback. Passing a null
+ * callback clears the registration.
+ *
+ * Returns `0` on success.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ * `callback` (if non-null) must outlive the call to
+ * [`warren_tunnel_stop`]. `context` is passed back unchanged ; lifetime
+ * is the caller's responsibility.
+ */
+int warren_tunnel_set_event_callback(struct WarrenTunnelHandle *handle,
+                                     WarrenTunnelEventCallback callback,
+                                     void *context);
+
+/**
+ * Registers a callback that ships outbound IP packets to Swift for
+ * `NEPacketTunnelFlow.writePackets`. Replaces any previously
+ * registered callback.
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * Same invariants as [`warren_tunnel_set_event_callback`].
+ */
+int warren_tunnel_set_outbound_callback(struct WarrenTunnelHandle *handle,
+                                        WarrenTunnelOutboundCallback callback,
+                                        void *context);
+
+/**
+ * Pushes an inbound IP packet onto the tunnel uplink queue. Called
+ * by Swift after each `NEPacketTunnelFlow.readPackets` completion.
+ *
+ * `data` is borrowed for the duration of this call ; Rust copies the
+ * bytes before returning.
+ *
+ * Returns `0` on success, `-1` on null handle / null data / zero
+ * length.
+ *
+ * # Safety
+ * `handle` must be a valid pointer from [`warren_tunnel_start`].
+ * `data` must point to at least `len` bytes of readable memory.
+ */
+int warren_tunnel_inject_inbound_packet(struct WarrenTunnelHandle *handle,
+                                        const uint8_t *data,
+                                        uintptr_t len);
+
+/**
+ * Generates a new BIP39 mnemonic with `word_count` words (12 or 24).
+ *
+ * Returns a heap-allocated C string. Caller MUST free via
+ * `warren_wallet_free_mnemonic`. Returns null on error (invalid
+ * word_count or RNG failure).
+ *
+ * # Safety
+ * The returned pointer must be passed back to
+ * `warren_wallet_free_mnemonic` exactly once. Reading the string after
+ * freeing is undefined behaviour.
+ */
+char *warren_wallet_generate_mnemonic(uint32_t word_count);
+
+/**
+ * Frees a mnemonic string previously returned by
+ * `warren_wallet_generate_mnemonic`. No-op on null.
+ *
+ * # Safety
+ * `ptr` must have been returned by `warren_wallet_generate_mnemonic`
+ * and must not have been freed already.
+ */
+void warren_wallet_free_mnemonic(char *ptr);
+
+/**
+ * Derives the Warren identity 32-byte seed from a BIP39 mnemonic.
+ *
+ * `mnemonic` : null-terminated UTF-8 BIP39 phrase (12 or 24 words).
+ * `out_seed` : caller-provided buffer of at least 32 bytes ; written
+ * on success.
+ *
+ * Returns `0` on success, `-1` on invalid input.
+ *
+ * # Safety
+ * `mnemonic` must point to a valid null-terminated C string.
+ * `out_seed` must point to a writable buffer of at least 32 bytes.
+ */
+int warren_wallet_seed_from_mnemonic(const char *mnemonic, uint8_t *out_seed);
+
+/**
+ * Derives the Ed25519 public key from a 32-byte seed.
+ *
+ * `seed` : caller-provided buffer of 32 bytes.
+ * `out_pubkey` : caller-provided buffer of at least 32 bytes ; written
+ * on success.
+ *
+ * Returns `0` on success, `-1` on invalid input.
+ *
+ * # Safety
+ * Both `seed` and `out_pubkey` must point to writable buffers of at
+ * least 32 bytes each.
+ */
+int warren_wallet_derive_pubkey(const uint8_t *seed, uint8_t *out_pubkey);
+
+/**
+ * Signs an arbitrary payload with the Ed25519 signing key derived
+ * from `seed`.
+ *
+ * `seed` : 32-byte seed buffer.
+ * `payload` : pointer to `payload_len` bytes.
+ * `out_signature` : caller-provided buffer of at least 64 bytes ;
+ * written on success.
+ *
+ * Returns `0` on success, `-1` on invalid input, `-2` on internal
+ * signing error.
+ *
+ * # Safety
+ * All pointers must be non-null and point to buffers of the documented
+ * sizes.
+ */
+int warren_wallet_sign(const uint8_t *seed,
+                       const uint8_t *payload,
+                       uintptr_t payload_len,
+                       uint8_t *out_signature);
 
 /**
  * Called by Swift to set the available access methods
@@ -807,58 +1161,6 @@ extern uintptr_t swift_data_get_len(const struct SwiftData *data);
 extern void swift_data_drop(struct SwiftData *data);
 
 /**
- * To be called when ephemeral peer exchange has finished. All parameters except
- * `raw_packet_tunnel` are optional.
- *
- * # Safety:
- * If the key exchange failed, all pointers except `raw_packet_tunnel` must be null. If the
- * key exchange was successful, `raw_ephemeral_private_key` must be a valid pointer to 32
- * bytes for the lifetime of this call. If PQ was enabled, `raw_preshared_key` must be a valid
- * pointer to 32 bytes for the lifetime of this call. If DAITA was requested, the
- * `daita_prameters` must point to a valid instance of `DaitaParameters`.
- */
-extern void swift_ephemeral_peer_ready(const void *raw_packet_tunnel,
-                                       const uint8_t *raw_preshared_key,
-                                       const uint8_t *raw_ephemeral_private_key,
-                                       const struct DaitaParameters *daita_parameters);
-
-/**
- * Called by the Swift side to signal that the ephemeral peer exchange should be cancelled.
- * After this call, the cancel token is no longer valid.
- *
- * # Safety
- * `sender` must be pointing to a valid instance of a `EphemeralPeerCancelToken` created by the
- * `PacketTunnelProvider`.
- */
-void cancel_ephemeral_peer_exchange(struct ExchangeCancelToken *sender);
-
-/**
- * Called by the Swift side to signal that the Rust `EphemeralPeerCancelToken` can be safely
- * dropped from memory.
- *
- * # Safety
- * `sender` must be pointing to a valid instance of a `EphemeralPeerCancelToken` created by the
- * `PacketTunnelProvider`.
- */
-void drop_ephemeral_peer_exchange_token(struct ExchangeCancelToken *sender);
-
-/**
- * Entry point for requesting ephemeral peers on iOS.
- * The TCP connection must be created to go through the tunnel.
- * # Safety
- * `public_key` and `ephemeral_key` must be valid respective `PublicKey` and `PrivateKey` types,
- * specifically, they must be valid pointers to 32 bytes. They will not be valid after this
- * function is called, and thus must be copied here. `packet_tunnel` must be valid pointers to a
- * packet tunnel, the packet tunnel pointer must outlive the ephemeral peer exchange.
- * `cancel_token` should be owned by the caller of this function.
- */
-struct ExchangeCancelToken *request_ephemeral_peer(const uint8_t *public_key,
-                                                   const uint8_t *ephemeral_key,
-                                                   const void *packet_tunnel,
-                                                   int32_t tunnel_handle,
-                                                   struct EphemeralPeerParameters peer_parameters);
-
-/**
  * Initialize the Rust logger with a Swift callback.
  *
  * This function should be called once early in the application lifecycle,
@@ -869,49 +1171,3 @@ struct ExchangeCancelToken *request_ephemeral_peer(const uint8_t *public_key,
  * - This function is safe to call multiple times, but only the first call will have an effect.
  */
 void init_rust_logging(LogCallback callback);
-
-int32_t start_udp2tcp_obfuscator_proxy(const uint8_t *peer_address,
-                                       uintptr_t peer_address_len,
-                                       uint16_t peer_port,
-                                       struct ProxyHandle *proxy_handle);
-
-int32_t start_shadowsocks_obfuscator_proxy(const uint8_t *peer_address,
-                                           uintptr_t peer_address_len,
-                                           uint16_t peer_port,
-                                           struct ProxyHandle *proxy_handle);
-
-int32_t start_quic_obfuscator_proxy(const uint8_t *peer_address,
-                                    uintptr_t peer_address_len,
-                                    uint16_t peer_port,
-                                    const char *hostname,
-                                    const char *token,
-                                    struct ProxyHandle *proxy_handle);
-
-int32_t start_lwo_obfuscator_proxy(const uint8_t *peer_address,
-                                   uintptr_t peer_address_len,
-                                   uint16_t peer_port,
-                                   const uint8_t *client_public_key,
-                                   const uint8_t *server_public_key,
-                                   struct ProxyHandle *proxy_handle);
-
-int32_t stop_tunnel_obfuscator_proxy(struct ProxyHandle *proxy_handle);
-
-/**
- * Generate a new random WireGuard private key, writing 32 bytes to `key_out`.
- * This function is safe to call concurrently with different pointers. Not safe to call
- * concurrently with the same pointers.
- *
- * # Safety
- * `key_out` must be a valid pointer to a 32-byte buffer.
- */
-void mullvad_generate_private_key(uint8_t *key_out);
-
-/**
- * Derive a WireGuard public key from a private key.
- * This function is safe to call concurrently if different parameters are used.
- *
- * # Safety
- * `private_key` must be a valid pointer to 32 bytes.
- * `public_key_out` must be a valid pointer to a 32-byte buffer.
- */
-void mullvad_derive_public_key(const uint8_t *private_key, uint8_t *public_key_out);

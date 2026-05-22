@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.android.library.feature.impl)
-    alias(libs.plugins.mullvad.android.library.compose)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.android.library.feature.impl)
+    alias(libs.plugins.warren.android.library.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
 }
@@ -9,19 +9,14 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.home.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.account.api)
-    implementation(projects.lib.feature.account.impl)
-    implementation(projects.lib.feature.addtime.api)
-    implementation(projects.lib.feature.addtime.impl)
-    implementation(projects.lib.feature.anticensorship.api)
+    // D.4 step 18: home/impl no longer depends on account/addtime/redeemvoucher
+    // modules ; WelcomeScreen + OutOfTimeScreen (sole consumers) are gone.
+    // D.4 step 34: anticensorship.api dep dropped.
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
-    implementation(projects.lib.feature.daita.api)
     implementation(projects.lib.feature.home.api)
-    implementation(projects.lib.feature.location.api)
     implementation(projects.lib.feature.login.api)
-    implementation(projects.lib.feature.multihop.api)
-    implementation(projects.lib.feature.redeemvoucher.api)
+    // D.4 step 32: daita.api + multihop.api dropped.
     implementation(projects.lib.feature.serveripoverride.api)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)

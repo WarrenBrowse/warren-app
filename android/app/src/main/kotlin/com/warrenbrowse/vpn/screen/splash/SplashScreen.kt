@@ -21,9 +21,7 @@ import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
-import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
-import com.warrenbrowse.vpn.feature.home.api.OutOfTimeNavKey
-import com.warrenbrowse.vpn.feature.login.api.LoginNavKey
+import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
@@ -47,14 +45,10 @@ fun Splash(navigator: Navigator) {
         when (it) {
             SplashUiSideEffect.NavigateToConnect ->
                 navigator.navigate(ConnectNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToLogin ->
-                navigator.navigate(LoginNavKey(), clearBackStack = true)
             SplashUiSideEffect.NavigateToPrivacyDisclaimer ->
                 navigator.navigate(PrivacyDisclaimerNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToRevoked ->
-                navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
-            SplashUiSideEffect.NavigateToOutOfTime ->
-                navigator.navigate(OutOfTimeNavKey, clearBackStack = true)
+            SplashUiSideEffect.NavigateToWallet ->
+                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
         }
     }
 

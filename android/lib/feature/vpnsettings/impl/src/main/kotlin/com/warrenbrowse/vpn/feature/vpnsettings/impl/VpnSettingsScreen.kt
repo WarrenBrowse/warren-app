@@ -52,7 +52,7 @@ import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.ConnectOnStartupInfoNavKey
@@ -247,8 +247,13 @@ fun SharedTransitionScope.VpnSettings(
         navigateToDeviceIpInfo = dropUnlessResumed { navigator.navigate(DeviceIpInfoNavKey) },
         navigateToConnectOnDeviceOnStartUpInfo =
             dropUnlessResumed { navigator.navigate(ConnectOnStartupInfoNavKey) },
+        // D.4 step 34: anti-censorship routes to WarrenTunnelSettings
+        // (M4.0 obfuscation toggle lives there ; Mullvad WG-over-TCP
+        // anti-censorship transport is gone with the Quinn migration).
         navigateToAntiCensorship =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AntiCensorshipNavKey()) },
+            dropUnlessResumed {
+                navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey)
+            },
         onBackClick =
             dropUnlessResumed { navigator.goBackUntil(VpnSettingsNavKey(), inclusive = true) },
     )

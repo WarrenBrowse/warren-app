@@ -44,29 +44,18 @@ import com.warrenbrowse.vpn.core.rememberResultStore
 import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
-import com.warrenbrowse.vpn.feature.account.impl.navigation.accountEntry
-import com.warrenbrowse.vpn.feature.addtime.impl.navigation.addTimeVerificationPendingEntry
-import com.warrenbrowse.vpn.feature.anticensorship.impl.navigation.anticensorshipEntry
-import com.warrenbrowse.vpn.feature.apiaccess.impl.navigation.apiAccessEntry
 import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
-import com.warrenbrowse.vpn.feature.customlist.impl.navigation.customListEntry
-import com.warrenbrowse.vpn.feature.daita.impl.navigation.daitaEntry
-import com.warrenbrowse.vpn.feature.deleteaccount.impl.navigation.deleteAccountEntry
-import com.warrenbrowse.vpn.feature.filter.impl.navigation.filterEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
-import com.warrenbrowse.vpn.feature.location.impl.navigation.selectLocationEntry
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.deviceListEntry
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.removeDeviceConfirmationDialogEntry
-import com.warrenbrowse.vpn.feature.login.impl.navigation.loginEntry
-import com.warrenbrowse.vpn.feature.managedevices.impl.navigation.manageDevicesEntry
-import com.warrenbrowse.vpn.feature.multihop.impl.navigation.multihopEntry
+import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
-import com.warrenbrowse.vpn.feature.redeemvoucher.impl.navigation.redeemVoucherEntry
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.navigation.serverIpOverrideEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
@@ -120,33 +109,45 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     }
 
     val entryProvider = entryProvider {
-        accountEntry(nav3)
-        addTimeVerificationPendingEntry(nav3)
-        anticensorshipEntry(nav3)
-        apiAccessEntry(nav3)
+        // D.4 step 16: Mullvad-legacy entries (account / addTime / deleteAccount /
+        // manageDevices / redeemVoucher) removed from the live navigation graph.
+        // The screens still compile (modules retained) but no NavKey routes them
+        // anymore. Full module deletion is a follow-up.
+        // D.4 step 34: anticensorshipEntry removed (Warren uses native
+        // Quinn + M4.0 toggle in WarrenTunnelSettings).
+        // D.4 step 33: apiAccessEntry removed (Warren API endpoint fixed).
         appIconEntry(nav3)
         appearanceEntry(nav3)
         autoConnectEntry(nav3)
         changelogEntry(nav3)
-        customListEntry(nav3)
-        daitaEntry(nav3)
-        deleteAccountEntry(nav3)
-        deviceListEntry(nav3)
-        filterEntry(nav3)
+        // D.4 step 26: customListEntry removed - Mullvad custom relay lists
+        // were reached only from SelectLocationScreen (now unreachable).
+        // D.4 step 32: daitaEntry removed - DAITA is now configured via
+        // the unified WarrenTunnelSettings toggles (the dedicated Mullvad
+        // DaitaScreen is unreachable).
+        // D.4 step 26: filterEntry removed - Mullvad relay filter was
+        // reached only from SelectLocationScreen (now unreachable).
         homeEntry(nav3)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             languageEntry(nav3)
         }
-        loginEntry(nav3)
-        manageDevicesEntry(nav3)
-        multihopEntry(nav3)
+        // D.4 step 24: loginEntry + deviceListEntry +
+        // removeDeviceConfirmationDialogEntry removed from the live
+        // navigation graph - on Warren, onboarding goes via
+        // WarrenWalletNavKey (D.5) and no path pushes Mullvad
+        // LoginNavKey / DeviceListNavKey anymore.
+        walletEntry(nav3)
+        walletSettingsEntry(nav3)
+        warrenTunnelSettingsEntry(nav3)
+        warrenLocationPickerEntry(nav3)
+        // D.4 step 32: multihopEntry removed - Multihop now configured
+        // via the unified WarrenTunnelSettings toggles.
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
-        redeemVoucherEntry(nav3)
-        removeDeviceConfirmationDialogEntry(nav3)
-        selectLocationEntry(nav3)
+        // D.4 step 25: selectLocationEntry removed - Mullvad SelectLocation
+        // is unreachable (Switch button routes to WarrenLocationPicker).
         serverIpOverrideEntry(nav3)
         settingsEntry(nav3)
         splashEntry(nav3)

@@ -1,6 +1,6 @@
 //
 //  RESTRequestExecutor.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by pronebird on 21/08/2023.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-import protocol MullvadTypes.Cancellable
+import protocol WarrenTypes.Cancellable
 
 public protocol RESTRequestExecutor<Success> {
     associatedtype Success: Sendable

@@ -28,16 +28,14 @@ import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.common.compose.itemWithDivider
 import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
-import com.warrenbrowse.vpn.feature.apiaccess.api.ApiAccessNavKey
 import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
-import com.warrenbrowse.vpn.feature.daita.api.DaitaNavKey
-import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -93,14 +91,19 @@ fun Settings(navigator: Navigator) {
         navigator.goBackUntil(SettingsNavKey, inclusive = true)
     }
 
-    navigator.assureHasDetailPane<SettingsNavKey>(DaitaNavKey())
+    // D.4 step 31: tablet detail-pane default is the Warren tunnel
+    // toggles screen (was legacy Mullvad Daita-only detail pane).
+    navigator.assureHasDetailPane<SettingsNavKey>(WarrenTunnelSettingsNavKey)
 
     SettingsScreen(
         state = state,
         onVpnSettingCellClick =
             dropUnlessResumed {
                 if (navigator.screenIsListDetailTargetWidth) {
-                    val detailKey = if (isTv) AntiCensorshipNavKey() else AutoConnectNavKey
+                    // D.4 step 34: TV detail-pane default switched from
+                    // Mullvad AntiCensorship to Warren tunnel toggles.
+                    val detailKey =
+                        if (isTv) WarrenTunnelSettingsNavKey else AutoConnectNavKey
                     navigator.navigate(VpnSettingsNavKey(), detailKey)
                 } else {
                     navigator.navigate(VpnSettingsNavKey())
@@ -109,17 +112,31 @@ fun Settings(navigator: Navigator) {
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },
         onAppInfoClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppInfoNavKey) },
-        onApiAccessClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ApiAccessNavKey) },
+        // D.4 step 33: API access cell is a no-op on Warren (the Warren
+        // API endpoint is hardcoded; users cannot configure HTTPS proxies
+        // / Tor bridges to reach Mullvad's API since the API itself is
+        // gone). Click handler kept as no-op until the cell is fully
+        // removed from the list layout.
+        onApiAccessClick = {},
         onReportProblemCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ProblemReportNavKey) },
+        // D.4 step 31: Multihop + DAITA cells route to the unified Warren
+        // tunnel settings screen (4-toggle view with picker). The
+        // dedicated Mullvad MultihopScreen + DaitaScreen are no longer
+        // referenced; their entries stay registered for now in case the
+        // FeatureIndicator panel still navigates to them.
         onMultihopClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(MultihopNavKey()) },
-        onDaitaClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(DaitaNavKey()) },
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
+        onDaitaClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onNotificationSettingsCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(NotificationSettingsNavKey) },
         onAppObfuscationClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppearanceNavKey) },
+        onWalletClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
+        onWarrenTunnelClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
 }
@@ -137,6 +154,8 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
+    onWalletClick: () -> Unit = {},
+    onWarrenTunnelClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -170,6 +189,8 @@ fun SettingsScreen(
                         onDaitaClick = onDaitaClick,
                         onNotificationSettingsCellClick = onNotificationSettingsCellClick,
                         onAppObfuscationClick = onAppObfuscationClick,
+                        onWalletClick = onWalletClick,
+                        onWarrenTunnelClick = onWarrenTunnelClick,
                     )
                 }
             }
@@ -188,7 +209,28 @@ private fun LazyListScope.content(
     onDaitaClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
     onAppObfuscationClick: () -> Unit = {},
+    onWalletClick: () -> Unit = {},
+    onWarrenTunnelClick: () -> Unit = {},
 ) {
+    // D.5 wallet entry - shown at the very top so it's prominent
+    // (Warren's identity model = the wallet, not a Mullvad account).
+    itemWithDivider {
+        NavigationListItem(
+            title = "Wallet",
+            onClick = onWalletClick,
+            position = Position.Top,
+        )
+    }
+    // D.4 step 8 — Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    itemWithDivider {
+        NavigationListItem(
+            title = "Warren tunnel",
+            onClick = onWarrenTunnelClick,
+            position = Position.Bottom,
+        )
+    }
+    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+
     if (state.isLoggedIn) {
         itemWithDivider {
             DaitaListItem(isDaitaEnabled = state.isDaitaEnabled, onDaitaClick = onDaitaClick)
@@ -212,14 +254,8 @@ private fun LazyListScope.content(
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
     }
 
-    item {
-        NavigationListItem(
-            title = stringResource(id = R.string.settings_api_access),
-            onClick = onApiAccessClick,
-        )
-    }
-
-    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+    // D.4 step 33: API access cell removed (Warren has no per-user API
+    // access method configuration; the Warren API endpoint is fixed).
 
     itemWithDivider {
         NavigationListItem(

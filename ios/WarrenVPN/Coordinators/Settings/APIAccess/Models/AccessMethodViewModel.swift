@@ -81,29 +81,26 @@ extension AccessMethodViewModel {
         switch id {
         case AccessMethodRepository.directId:
             InfoHeaderConfig(
-                body: NSLocalizedString("The app communicates with a Mullvad API server directly.", comment: ""),
+                body: NSLocalizedString("The app communicates with a Warren API server directly.", comment: ""),
                 link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Direct")
             )
         case AccessMethodRepository.bridgeId:
             InfoHeaderConfig(
-                body: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via a Mullvad bridge server.",
+                body: NSLocalizedString("The app communicates with a Warren API server via a Warren bridge server.",
                     comment: ""
                 ),
-                link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Mullvad bridges")
+                link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Warren bridges")
             )
         case AccessMethodRepository.encryptedDNSId:
             InfoHeaderConfig(
-                body: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via a proxy address.",
+                body: NSLocalizedString("The app communicates with a Warren API server via a proxy address.",
                     comment: ""
                 ),
                 link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Encrypted DNS proxy")
             )
         case AccessMethodRepository.domainFrontingId:
             InfoHeaderConfig(
-                body: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via domain fronting.",
+                body: NSLocalizedString("The app communicates with a Warren API server via domain fronting.",
                     comment: ""
                 ),
                 link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Domain fronting")
@@ -118,10 +115,9 @@ extension AccessMethodViewModel {
         case AccessMethodRepository.directId:
             InfoModalConfig(
                 header: "Direct",
-                preamble: NSLocalizedString("The app communicates with a Mullvad API server directly.", comment: ""),
+                preamble: NSLocalizedString("The app communicates with a Warren API server directly.", comment: ""),
                 body: [
-                    NSLocalizedString(
-                        "With the “Direct” method, the app communicates with a Mullvad API "
+                    NSLocalizedString("With the “Direct” method, the app communicates with a Warren API "
                             + "server directly without any intermediate proxies.",
                         comment: ""
                     ),
@@ -130,19 +126,16 @@ extension AccessMethodViewModel {
             )
         case AccessMethodRepository.bridgeId:
             InfoModalConfig(
-                header: "Mullvad bridges",
-                preamble: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via a Mullvad bridge server.",
+                header: "Warren bridges",
+                preamble: NSLocalizedString("The app communicates with a Warren API server via a Warren bridge server.",
                     comment: ""
                 ),
                 body: [
-                    NSLocalizedString(
-                        "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a "
+                    NSLocalizedString("With the “Warren bridges” method, the app communicates with a Warren API server via a "
                             + "Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks.",
                         comment: ""
                     ),
-                    NSLocalizedString(
-                        "This can be useful if the API is censored but Mullvad’s bridge servers are not.",
+                    NSLocalizedString("This can be useful if the API is censored but Warren’s bridge servers are not.",
                         comment: ""
                     ),
                 ]
@@ -150,8 +143,7 @@ extension AccessMethodViewModel {
         case AccessMethodRepository.encryptedDNSId:
             InfoModalConfig(
                 header: "Encrypted DNS proxy",
-                preamble: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via a proxy address.",
+                preamble: NSLocalizedString("The app communicates with a Warren API server via a proxy address.",
                     comment: ""
                 ),
                 body: [
@@ -175,14 +167,12 @@ extension AccessMethodViewModel {
         case AccessMethodRepository.domainFrontingId:
             InfoModalConfig(
                 header: "Domain fronting",
-                preamble: NSLocalizedString(
-                    "The app communicates with a Mullvad API server via domain fronting.",
+                preamble: NSLocalizedString("The app communicates with a Warren API server via domain fronting.",
                     comment: ""
                 ),
                 body: [
                     String(
-                        format: NSLocalizedString(
-                            "With the domain fronting access method, the app reaches the Mullvad API via a CDN, "
+                        format: NSLocalizedString("With the domain fronting access method, the app reaches the Warren API via a CDN, "
                                 + "mixing the traffic with a lot of other internet traffic, making it "
                                 + "more difficult to censor.",
                             comment: "'Domain fronting' should not be translated as it is a technical term"

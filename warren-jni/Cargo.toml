@@ -47,22 +47,27 @@ talpid-platform-metadata = { path = "../talpid-platform-metadata" }
 talpid-types = { path = "../talpid-types" }
 
 # Quinn tunnel + multi-hop + NAT-PMP are wired behind the `tunnel` feature.
-# Warren-tunnel currently uses `tun-rs::DeviceBuilder`, which has no
-# Android backend in tun-rs 2.8. D.4 introduces an Android `PacketDevice`
-# adapter in warren-core that wraps the VpnService-provided TUN fd; the
-# feature gets enabled here once that lands.
+# Warren-tunnel ships an `AndroidTun` PacketDevice impl since warren-core
+# `d59fd15` (cf. `crates/warren-tunnel/src/android_tun.rs`).
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
+warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
 warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
 warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
 
 [features]
-default = []
+default = ["tunnel"]
 # Allow the API endpoint URL to be overridden at runtime (dev/staging).
 api-override = []
-# Pull in the Quinn tunnel stack. Requires warren-core to ship an Android
-# `PacketDevice` (D.4 work).
-tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client"]
+# Pull in the Quinn tunnel stack. Enabled by default now that warren-core
+# `d59fd15+` ships `warren_tunnel::AndroidTun` (wraps the VpnService TUN fd).
+tunnel = [
+  "dep:warren-tunnel",
+  "dep:warren-protocol",
+  "dep:warren-client",
+  "dep:warren-multihop",
+  "dep:warren-natpmp-client",
+]
 
 [lints]
 workspace = true

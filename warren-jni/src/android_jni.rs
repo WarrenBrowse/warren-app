@@ -42,10 +42,12 @@ use tokio::sync::oneshot;
 // ---------------------------------------------------------------------------
 
 // Native-side error taxonomy reserved for the D.4 tunnel lifecycle work.
-// `dead_code` is allowed until the connectTunnel body actually produces
-// these variants; keeping the enum here documents the surface the JNI
-// callers should expect to surface via `throw`.
-#[allow(dead_code)]
+// Variants are unused until the connectTunnel body actually produces them;
+// keeping the enum here documents the surface the JNI callers should expect
+// to receive via `throw`. The `expect` form (rather than `allow`) makes
+// `cargo clippy -D warnings` fail loudly the day a variant goes from "still
+// unused" to "wrongly removed".
+#[expect(dead_code, reason = "D.4 tunnel lifecycle work in progress")]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Failed to initialize logging: {0}")]
@@ -74,10 +76,19 @@ static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 /// upstream VpnService model).
 static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 
+/// Atomic mirror of the active session status (cf.
+/// [`crate::tunnel::SessionStatus`]). Read by [`getTunnelStatus`] without
+/// taking the `ACTIVE_TUNNEL` mutex, so polling from Kotlin is cheap.
+static SESSION_STATUS: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
+
 /// Opaque handle stored while a tunnel is alive. The cancel sender lets
-/// `disconnectTunnel` tear down the Quinn task gracefully.
+/// `disconnectTunnel` tear down the Quinn task gracefully. With the
+/// `tunnel` feature on, we additionally pin the spawned task handle so
+/// it stays alive after the JNI entry returns.
 struct TunnelHandle {
     _cancel_tx: oneshot::Sender<()>,
+    #[cfg(feature = "tunnel")]
+    _task: tokio::task::JoinHandle<()>,
 }
 
 // ---------------------------------------------------------------------------
@@ -143,8 +154,8 @@ fn init_log_file(_log_dir: &Path) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 /// Generate a fresh 12-word BIP39 English mnemonic. Returns the phrase as a
-/// space-separated UTF-8 string. The mnemonic is **never persisted by Rust**
-/// - the Kotlin caller is responsible for storing it via Android Keystore /
+/// space-separated UTF-8 string. The mnemonic is **never persisted by Rust** -
+/// the Kotlin caller is responsible for storing it via Android Keystore /
 /// EncryptedSharedPreferences (D.5).
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_generateMnemonic(
@@ -177,6 +188,31 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'l
         }
     };
     new_byte_array_from(&env, &pubkey)
+}
+
+/// Convenience wrapper: derive the wallet pubkey and return it as a
+/// 64-character lowercase hex string. This is the form the
+/// `X-Warren-Pubkey-Hex` request header expects, so the Kotlin caller can
+/// pass the result straight through without bytes-to-hex round-tripping.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_mnemonicPubkeyHex<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let env = JnixEnv::from(env);
+    let phrase = String::from_java(&env, mnemonic);
+    let hex_str = match crate::wallet::pubkey_hex_from_mnemonic(&phrase) {
+        Ok(s) => s,
+        Err(e) => {
+            let _ = env.throw(e.to_string());
+            return std::ptr::null_mut();
+        }
+    };
+    match env.new_string(hex_str) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
 }
 
 /// Sign `canonicalMessage` bytes with the Ed25519 signing key derived from
@@ -294,23 +330,82 @@ fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
-    _tun_fd: jint,
-    _config_json: JString<'local>,
+    tun_fd: jint,
+    mnemonic: JString<'local>,
+    config_json: JString<'local>,
 ) -> jint {
     let mut slot = ACTIVE_TUNNEL.lock().expect("ACTIVE_TUNNEL poisoned");
     if slot.is_some() {
         let _ = env.throw("Tunnel already running");
         return -1;
     }
-    // TODO (D.4): deserialize WarrenTunnelConfig from config_json, build a
-    // warren_tunnel::ClientConfig from it, spawn the Quinn pump on
-    // `RUNTIME`, wire TUN <-> Quinn datagram path, and (when entry hop is
-    // set) hand off to warren_multihop::MultiHopClient.
-    let (cancel_tx, _cancel_rx) = oneshot::channel();
-    *slot = Some(TunnelHandle {
-        _cancel_tx: cancel_tx,
-    });
-    0
+
+    let jnix_env = JnixEnv::from(env);
+    let mnemonic_str = String::from_java(&jnix_env, mnemonic);
+    let config_str = String::from_java(&jnix_env, config_json);
+
+    #[cfg(feature = "tunnel")]
+    {
+        use std::os::fd::{FromRawFd, OwnedFd};
+        use std::sync::atomic::Ordering;
+
+        if tun_fd < 0 {
+            let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
+            return -1;
+        }
+        // SAFETY: Kotlin passes a freshly `detachFd()`-ed fd whose ownership
+        // is now transferred to us. The fd is closed when AndroidTun drops.
+        let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(tun_fd) };
+        let tun = match warren_tunnel::AndroidTun::from_fd(owned) {
+            Ok(t) => t,
+            Err(e) => {
+                let _ = jnix_env.throw(format!("AndroidTun::from_fd failed: {e}"));
+                return -1;
+            }
+        };
+
+        let config = match crate::tunnel::parse_config(&config_str) {
+            Ok(c) => c,
+            Err(e) => {
+                let _ = jnix_env.throw(format!("invalid tunnel config JSON: {e}"));
+                return -1;
+            }
+        };
+
+        let runtime = match RUNTIME.get() {
+            Some(rt) => rt,
+            None => {
+                let _ = jnix_env
+                    .throw("initLogger() must be called before connectTunnel()");
+                return -1;
+            }
+        };
+
+        let (cancel_tx, cancel_rx) = oneshot::channel();
+        // Reset status to Connecting before spawning so the Kotlin side can
+        // poll it deterministically right after this JNI returns.
+        SESSION_STATUS.store(1, Ordering::SeqCst);
+
+        let task = runtime.spawn(crate::tunnel::run_session(
+            tun,
+            mnemonic_str,
+            config,
+            &SESSION_STATUS,
+            cancel_rx,
+        ));
+
+        *slot = Some(TunnelHandle {
+            _cancel_tx: cancel_tx,
+            _task: task,
+        });
+        0
+    }
+    #[cfg(not(feature = "tunnel"))]
+    {
+        let _ = (tun_fd, mnemonic_str, config_str);
+        let _ = jnix_env.throw("warren-jni built without the `tunnel` feature");
+        -1
+    }
 }
 
 /// Stop the active tunnel. No-op if none is running.
@@ -325,25 +420,48 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         .take()
     {
         // Dropping `_cancel_tx` notifies the Quinn task to wind down. The
-        // tokio runtime continues running for future tunnels.
+        // task itself flips `SESSION_STATUS` back to Disconnected when its
+        // `tokio::select!` falls through; we also do it here for symmetry
+        // so the status flip is observable even before the task wakes.
+        SESSION_STATUS.store(0, std::sync::atomic::Ordering::SeqCst);
     }
 }
 
 /// Returns 0 = disconnected, 1 = connecting, 2 = connected, 3 = reconnecting.
-/// Matches the `WarrenTunnelState` Kotlin enum.
+/// Matches the `WarrenTunnelState` Kotlin enum. Reads `SESSION_STATUS`
+/// without taking the `ACTIVE_TUNNEL` mutex so polling from Kotlin is
+/// cheap.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) -> jint {
-    if ACTIVE_TUNNEL
-        .lock()
-        .expect("ACTIVE_TUNNEL poisoned")
-        .is_some()
-    {
-        2
-    } else {
-        0
+    SESSION_STATUS.load(std::sync::atomic::Ordering::SeqCst)
+}
+
+/// Returns a JSON-encoded array of [`RelayInfo`] objects describing the
+/// available Warren exits. The Kotlin side parses this into a list of
+/// `RelayInfo` and feeds the relay selector / location picker UI.
+///
+/// D.6 transition surface: a real implementation fetches the signed
+/// relay list via `warren-api-client`, verifies the signature with
+/// `warren-relay-selector::verify_signed_relay_list`, and projects each
+/// `WarrenRelay` to the JSON shape the Kotlin side expects. Until that
+/// fetch is wired we ship a single hardcoded entry (`warren-exit-1`
+/// prod, Hetzner fsn1-dc14) so the picker UI has data to render and
+/// the end-to-end connect path keeps working when the user mutates the
+/// selection.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    // Single-entry hardcoded list. Schema MUST line up with the Kotlin
+    // `com.warrenbrowse.vpn.app.connect.RelayInfo` data class.
+    let json = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
+    match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
     }
 }
 

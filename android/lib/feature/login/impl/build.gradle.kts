@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.android.library.feature.impl)
-    alias(libs.plugins.mullvad.android.library.compose)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.android.library.feature.impl)
+    alias(libs.plugins.warren.android.library.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
 }
@@ -16,6 +16,10 @@ dependencies {
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.repository)
     implementation(projects.lib.usecase)
+    // D.5 wallet UI: WarrenWalletLoginScreen consumes MnemonicInput from
+    // lib/ui/component and WalletState from lib/model.
+    implementation(projects.lib.model)
+    implementation(projects.lib.ui.component)
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)

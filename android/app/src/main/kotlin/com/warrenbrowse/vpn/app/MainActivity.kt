@@ -4,11 +4,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -17,8 +17,6 @@ import arrow.core.merge
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.di.paymentModule
 import com.warrenbrowse.vpn.di.uiModule
@@ -27,12 +25,11 @@ import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.getApiEndpointConfigurationExtras
-import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionState
@@ -41,18 +38,33 @@ import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.context.loadKoinModules
 
-class MainActivity : ComponentActivity(), AndroidScopeComponent {
+// `FragmentActivity` rather than `ComponentActivity`: `BiometricPrompt`
+// (used by `BiometricPromptAuthorizer` for D.5 wallet unlock) requires a
+// FragmentActivity host. FragmentActivity extends ComponentActivity, so
+// this is a compatible upgrade for all existing Compose plumbing.
+class MainActivity : FragmentActivity(), AndroidScopeComponent {
     override val scope by activityScope()
 
     private val launchVpnPermission =
-        registerForActivityResult(CreateVpnProfile()) { _ -> warrenAppViewModel.connect() }
+        registerForActivityResult(CreateVpnProfile()) { _ -> dispatchWarrenConnect() }
 
     private val apiEndpointFromIntentHolder by inject<ApiEndpointFromIntentHolder>()
     private val warrenAppViewModel by inject<WarrenAppViewModel>()
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
-    private val managementService by inject<ManagementService>()
+    private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
+
+    private fun dispatchWarrenConnect() {
+        // D.4 step 13: route the post-VPN-profile-grant connect (and the
+        // already-prepared `Prepared` branch in handleRequestVpnProfileIntent)
+        // through the Warren Quinn use-case. The legacy
+        // `warrenAppViewModel.connect()` proxied to a dead daemon.
+        lifecycleScope.launch {
+            runCatching { warrenConnect.connect(this@MainActivity) }
+                .onFailure { e -> Logger.e(throwable = e) { "Warren connect dispatch failed" } }
+        }
+    }
 
     private var isReadyNextDraw: Boolean = false
 
@@ -102,16 +114,14 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        lifecycleScope.launch {
-            if (userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
-                // If service is to be started wait for it to be connected before dismissing Splash
-                // screen
-                managementService.connectionState
-                    .filter { it is GrpcConnectivityState.Ready }
-                    .first()
-            }
-            splashCompleteRepository.onSplashCompleted()
-        }
+        // D.4 step 19: the legacy "wait for managementService to be Ready"
+        // gate is gone (the gRPC management service does not exist on
+        // Warren mobile so the wait never completed, keeping the splash
+        // screen up indefinitely after a process recreation). Splash
+        // dismissal is now unconditional - the splash decision tree in
+        // `SplashViewModel` already routes the user to the right
+        // destination before the splash completes.
+        lifecycleScope.launch { splashCompleteRepository.onSplashCompleted() }
     }
 
     fun bindService() {
@@ -148,7 +158,7 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
             // If legacy or other always on connect at let daemon generate a error state
             is PrepareError.OtherLegacyAlwaysOnVpn,
             is PrepareError.OtherAlwaysOnApp,
-            Prepared -> warrenAppViewModel.connect()
+            Prepared -> dispatchWarrenConnect()
         }
     }
 

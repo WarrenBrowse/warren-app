@@ -11,5 +11,8 @@
 
 pub mod wallet;
 
+#[cfg(all(target_os = "android", feature = "tunnel"))]
+mod tunnel;
+
 #[cfg(target_os = "android")]
 mod android_jni;

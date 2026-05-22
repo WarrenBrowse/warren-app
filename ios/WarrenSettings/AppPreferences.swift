@@ -18,6 +18,7 @@ public protocol AppPreferencesDataSource {
     var isNotificationPermissionAsked: Bool { get set }
     var notificationSettings: NotificationSettings { get set }
     var includeAllNetworksConsent: Bool { get set }
+    var hasCompletedWarrenOnboarding: Bool { get set }
 }
 
 enum AppStorageKey: String {
@@ -30,6 +31,7 @@ enum AppStorageKey: String {
     case isNotificationPermissionAsked
     case notificationSettings
     case includeAllNetworksConsent
+    case hasCompletedWarrenOnboarding
 }
 
 public final class AppPreferences: AppPreferencesDataSource {
@@ -61,4 +63,12 @@ public final class AppPreferences: AppPreferencesDataSource {
 
     @PrimitiveStorage(key: AppStorageKey.includeAllNetworksConsent.rawValue, container: .standard)
     public var includeAllNetworksConsent = false
+
+    /// Set to `true` once the Warren onboarding wizard has run to completion.
+    /// Reset on logout so re-login (or fresh wallet provisioning) replays the
+    /// flow. Persisted in UserDefaults.standard, NOT in the App Group, because
+    /// it tracks UI state that does not need to be shared with the packet
+    /// tunnel extension.
+    @PrimitiveStorage(key: AppStorageKey.hasCompletedWarrenOnboarding.rawValue, container: .standard)
+    public var hasCompletedWarrenOnboarding = false
 }

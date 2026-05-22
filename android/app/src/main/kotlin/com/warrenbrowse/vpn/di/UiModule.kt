@@ -7,16 +7,6 @@ import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
-import com.warrenbrowse.vpn.feature.account.impl.AccountViewModel
-import com.warrenbrowse.vpn.feature.addtime.impl.AddTimeViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.AntiCensorshipSettingsViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.customport.CustomPortDialogViewModel
-import com.warrenbrowse.vpn.feature.anticensorship.impl.selectport.SelectPortViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.delete.DeleteApiAccessMethodConfirmationViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.detail.ApiAccessMethodDetailsViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.edit.EditApiAccessMethodViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.list.ApiAccessListViewModel
-import com.warrenbrowse.vpn.feature.apiaccess.impl.screen.save.SaveApiAccessMethodViewModel
 import com.warrenbrowse.vpn.feature.appicon.impl.AppIconViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
@@ -25,36 +15,14 @@ import com.warrenbrowse.vpn.feature.applisting.impl.AndroidInstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.InstallSourceProvider
 import com.warrenbrowse.vpn.feature.applisting.impl.ResolveAppListingUseCaseImpl
 import com.warrenbrowse.vpn.feature.autoconnect.impl.AutoConnectAndLockdownModeViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.create.CreateCustomListDialogViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.delete.DeleteCustomListConfirmationViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editlist.EditCustomListViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editlocations.CustomListLocationsViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.editname.EditCustomListNameDialogViewModel
-import com.warrenbrowse.vpn.feature.customlist.impl.screen.lists.CustomListsViewModel
-import com.warrenbrowse.vpn.feature.daita.impl.DaitaViewModel
-import com.warrenbrowse.vpn.feature.deleteaccount.impl.deleteaccountconfirmation.DeleteAccountConfirmationViewModel
-import com.warrenbrowse.vpn.feature.filter.impl.FilterViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
-import com.warrenbrowse.vpn.feature.home.impl.outoftime.OutOfTimeViewModel
-import com.warrenbrowse.vpn.feature.home.impl.welcome.WelcomeViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
-import com.warrenbrowse.vpn.feature.location.api.LocationBottomSheetState
-import com.warrenbrowse.vpn.feature.location.impl.RelayListScrollConnection
-import com.warrenbrowse.vpn.feature.location.impl.SelectLocationViewModel
-import com.warrenbrowse.vpn.feature.location.impl.bottomsheet.LocationBottomSheetViewModel
-import com.warrenbrowse.vpn.feature.location.impl.list.SelectLocationListViewModel
-import com.warrenbrowse.vpn.feature.location.impl.search.SearchLocationViewModel
-import com.warrenbrowse.vpn.feature.login.impl.LoginViewModel
-import com.warrenbrowse.vpn.feature.login.impl.apiunreachable.ApiUnreachableViewModel
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.DeviceListViewModel
-import com.warrenbrowse.vpn.feature.managedevices.impl.ManageDevicesViewModel
-import com.warrenbrowse.vpn.feature.multihop.impl.MultihopViewModel
+import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.viewlogs.ViewLogsViewModel
-import com.warrenbrowse.vpn.feature.redeemvoucher.impl.VoucherDialogViewModel
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.ServerIpOverridesViewModel
 import com.warrenbrowse.vpn.feature.serveripoverride.impl.reset.ResetServerIpOverridesConfirmationViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.SettingsViewModel
@@ -67,9 +35,7 @@ import com.warrenbrowse.vpn.feature.vpnsettings.impl.dns.DnsDialogViewModel
 import com.warrenbrowse.vpn.feature.vpnsettings.impl.mtu.MtuDialogViewModel
 import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
-import com.warrenbrowse.vpn.lib.model.RelayListType
 import com.warrenbrowse.vpn.lib.payment.PaymentProvider
-import com.warrenbrowse.vpn.lib.repository.ApiAccessRepository
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
@@ -86,30 +52,19 @@ import com.warrenbrowse.vpn.lib.repository.RelayOverridesRepository
 import com.warrenbrowse.vpn.lib.repository.SettingsRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
-import com.warrenbrowse.vpn.lib.repository.VoucherRepository
 import com.warrenbrowse.vpn.lib.repository.WireguardConstraintsRepository
 import com.warrenbrowse.vpn.lib.usecase.DeleteCustomDnsUseCase
-import com.warrenbrowse.vpn.lib.usecase.FilterChipUseCase
-import com.warrenbrowse.vpn.lib.usecase.FilteredRelayListUseCase
-import com.warrenbrowse.vpn.lib.usecase.HopSelectionUseCase
 import com.warrenbrowse.vpn.lib.usecase.InternetAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
-import com.warrenbrowse.vpn.lib.usecase.ProviderToOwnershipsUseCase
-import com.warrenbrowse.vpn.lib.usecase.RecentsUseCase
-import com.warrenbrowse.vpn.lib.usecase.RelayItemCanBeSelectedUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectSinglehopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SupportEmailUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListActionUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListRelayItemsUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.CustomListsRelayItemUseCase
-import com.warrenbrowse.vpn.lib.usecase.customlists.FilterCustomListsRelayItemUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryInAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
@@ -165,10 +120,13 @@ val uiModule = module {
     single { CustomListsRepository(get()) }
     single { RelayListRepository(get(), get()) }
     single { RelayListFilterRepository(get()) }
-    single { VoucherRepository(get(), get()) }
+    // D.4 step 29: VoucherRepository removed - only consumer was the
+    // deleted VoucherDialogViewModel.
     single { SplitTunnelingRepository(get()) }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
-    single { ApiAccessRepository(get()) }
+    // D.4 step 33: ApiAccessRepository removed - Mullvad-only API
+    // access method configuration (HTTPS proxies/Tor bridges to reach
+    // mullvad.net). Warren's API endpoint is fixed at build time.
     single { NewDeviceRepository() }
     single { SplashCompleteRepository() }
     single {
@@ -194,18 +152,15 @@ val uiModule = module {
     single { OutOfTimeUseCase(get(), get(), MainScope()) }
     single { InternetAvailableUseCase(get()) }
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
-    single { CustomListActionUseCase(get(), get()) }
+    // D.4 step 29: CustomList* + FilterChip + Filtered/Selected relay use
+    // cases removed - all consumers were the deleted Mullvad
+    // SelectLocation/CustomList screens. SelectedLocationTitleUseCase +
+    // LastKnownLocationUseCase + ProviderToOwnershipsUseCase + their
+    // dependents kept because ConnectViewModel still references them.
     single { SelectedLocationTitleUseCase(get(), get()) }
-    single { ProviderToOwnershipsUseCase(get()) }
-    single { FilterCustomListsRelayItemUseCase(get(), get()) }
-    single { CustomListsRelayItemUseCase(get(), get()) }
-    single { CustomListRelayItemsUseCase(get(), get()) }
-    single { FilteredRelayListUseCase(get(), get(), get()) }
     single { LastKnownLocationUseCase(get()) }
     single { SelectedLocationUseCase(get(), get()) }
-    single { FilterChipUseCase(get(), get(), get()) }
     single { DeleteCustomDnsUseCase(get()) }
-    single { RecentsUseCase(get(), get(), get()) }
     single { SelectSinglehopUseCase(relayListRepository = get()) }
     single {
         ModifyMultihopUseCase(
@@ -223,22 +178,7 @@ val uiModule = module {
         )
     }
     single {
-        HopSelectionUseCase(
-            customListRelayItemUseCase = get(),
-            relayListRepository = get(),
-            settingsRepository = get(),
-        )
-    }
-    single {
         SelectAndEnableMultihopUseCase(relayListRepository = get(), settingsRepository = get())
-    }
-    single {
-        RelayItemCanBeSelectedUseCase(
-            filteredRelayListUseCase = get(),
-            hopSelectionUseCase = get(),
-            settingsRepository = get(),
-            relayListRepository = get(),
-        )
     }
     single {
         ModifyAndEnableMultihopUseCase(
@@ -267,11 +207,13 @@ val uiModule = module {
 
     single { AppVersionInfoRepository(get(), get()) }
 
-    single { RelayListScrollConnection() }
+    // D.4 step 27: RelayListScrollConnection (Mullvad relay-list scroll position
+    // for SelectLocationScreen) removed - SelectLocation is dead.
 
-    // View models
-    viewModel { AccountViewModel(get(), get(), get()) }
-    viewModel { DeleteAccountConfirmationViewModel(get(), get()) }
+    // View models (D.4 step 16: AccountViewModel + DeleteAccountConfirmation +
+    // ManageDevicesViewModel + VoucherDialogViewModel + AddTimeViewModel
+    // registrations removed; the corresponding Mullvad-legacy screens are no
+    // longer in the navigation graph)
     viewModel { params -> ChangelogViewModel(navArgs = params.get(), get(), get()) }
     viewModel {
         AppInfoViewModel(
@@ -298,37 +240,19 @@ val uiModule = module {
             resolveAppListing = get(),
         )
     }
-    viewModel { params -> DeviceListViewModel(accountNumber = params.get(), get()) }
-    viewModel { params ->
-        ManageDevicesViewModel(accountNumber = params.get(), get(), Dispatchers.IO)
-    }
+    // D.4 step 28: DeviceListViewModel + LoginViewModel removed
+    // (Mullvad multi-device + account-number flows, replaced by
+    // WarrenWalletViewModel).
     viewModel { DeviceRevokedViewModel(get(), get(), get(), get()) }
     viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
     viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
-    viewModel { params -> CustomPortDialogViewModel(navArgs = params.get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
+    viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
-    viewModel {
-        SelectLocationViewModel(
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), IS_PLAY_BUILD) }
-    viewModel { SplashViewModel(get(), get(), get(), get()) }
-    viewModel { VoucherDialogViewModel(get(), get()) }
+    // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
+    // picker, replaced by WarrenLocationPicker).
+    viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
+    viewModel { SplashViewModel(get(), get(), get()) }
     viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
-    viewModel { params -> AntiCensorshipSettingsViewModel(isModal = params.get(), get()) }
-    viewModel { WelcomeViewModel(get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
     viewModel {
         ReportProblemViewModel(
             warrenProblemReporter = get(),
@@ -338,91 +262,28 @@ val uiModule = module {
         )
     }
     viewModel { ViewLogsViewModel(get()) }
-    viewModel { OutOfTimeViewModel(get(), get(), get(), get(), get(), isPlayBuild = IS_PLAY_BUILD) }
-    viewModel { FilterViewModel(get(), get()) }
-    viewModel { params ->
-        CreateCustomListDialogViewModel(locationCode = params.getOrNull(), get())
-    }
-    viewModel { params ->
-        CustomListLocationsViewModel(navArgs = params.get(), get(), get(), get())
-    }
-    viewModel { params -> EditCustomListViewModel(customListId = params.get(), get()) }
-    viewModel { params -> EditCustomListNameDialogViewModel(navArgs = params.get(), get()) }
-    viewModel { CustomListsViewModel(get(), get()) }
-    viewModel { params -> DeleteCustomListConfirmationViewModel(navArgs = params.get(), get()) }
+    // D.4 step 27: Filter + CustomList ViewModels removed (only reached
+    // from dead SelectLocationScreen).
     viewModel { params -> ServerIpOverridesViewModel(navArgs = params.get(), get(), get()) }
     viewModel { ResetServerIpOverridesConfirmationViewModel(get()) }
-    viewModel { ApiAccessListViewModel(get()) }
-    viewModel { params ->
-        EditApiAccessMethodViewModel(apiAccessMethodId = params.getOrNull(), get(), get())
-    }
-    viewModel { params -> SaveApiAccessMethodViewModel(navArgs = params.get(), get()) }
-    viewModel { params -> ApiAccessMethodDetailsViewModel(apiAccessMethodId = params.get(), get()) }
-    viewModel { params ->
-        DeleteApiAccessMethodConfirmationViewModel(apiAccessMethodId = params.get(), get())
-    }
-    viewModel { params -> SelectPortViewModel(navArgs = params.get(), get(), get(), get()) }
-    viewModel { params -> MultihopViewModel(isModal = params.get(), get()) }
+    // D.4 step 33: ApiAccess ViewModels removed (5 VMs : List, Edit,
+    // Save, Details, DeleteConfirmation). Warren API endpoint is
+    // hardcoded - no per-user access method configuration.
+    // D.4 step 34: anticensorship VMs removed (AntiCensorshipSettings +
+    // CustomPortDialog + SelectPort - all Mullvad WG-over-X transport
+    // features ; Warren uses native Quinn + M4.0 toggle).
+    // D.4 step 32: MultihopViewModel removed (multihop now configured
+    // via WarrenTunnelSettings toggles).
     viewModel { NotificationSettingsViewModel(get()) }
-    viewModel { params ->
-        SearchLocationViewModel(
-            relayListType = params.get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
-    viewModel { (relayListType: RelayListType) ->
-        SelectLocationListViewModel(
-            relayListType,
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
-    viewModel { params -> DaitaViewModel(isModal = params.get(), get()) }
-    viewModel {
-        AddTimeViewModel(
-            paymentUseCase = get(),
-            accountRepository = get(),
-            connectionProxy = get(),
-            isPlayBuild = IS_PLAY_BUILD,
-        )
-    }
-    viewModel { params ->
-        ApiUnreachableViewModel(
-            navArgs = params.get(),
-            apiAccessRepository = get(),
-            supportEmailUseCase = get(),
-        )
-    }
-    viewModel { (locationBottomSheetState: LocationBottomSheetState) ->
-        LocationBottomSheetViewModel(
-            locationBottomSheetState = locationBottomSheetState,
-            customListActionUseCase = get(),
-            canBeSelectedUseCase = get(),
-            customListsRelayItemUseCase = get(),
-            selectedLocationUseCase = get(),
-            modifyMultihopUseCase = get(),
-            wireguardConstraintsRepository = get(),
-            selectAndEnableMultihopUseCase = get(),
-            hopSelectionUseCase = get(),
-            modifyAndEnableMultihopUseCase = get(),
-            customListsRepository = get(),
-        )
-    }
+    // D.4 step 27: SearchLocation + SelectLocationList ViewModels removed
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
+    // D.4 step 32: DaitaViewModel removed (DAITA now toggled via
+    // WarrenTunnelSettings).
+    // D.4 step 28: ApiUnreachableViewModel removed - the
+    // ApiUnreachable screen was reached only from Mullvad LoginScreen,
+    // which is gone.
+    // D.4 step 27: LocationBottomSheetViewModel removed (Mullvad
+    // location bottom-sheet from SelectLocationScreen).
     viewModel { AppIconViewModel(get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }
@@ -435,7 +296,7 @@ val uiModule = module {
     viewModel { SearchSplitTunnelingViewModel(get(), get(), Dispatchers.IO) }
 
     // This view model must be single so we correctly attach lifecycle and share it with activity
-    single { WarrenAppViewModel(get(), get()) }
+    single { WarrenAppViewModel() }
 }
 
 const val APP_PREFERENCES_NAME = "${BuildConfig.APPLICATION_ID}.app_preferences"

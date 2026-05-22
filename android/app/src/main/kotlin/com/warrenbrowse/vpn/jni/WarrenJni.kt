@@ -39,6 +39,14 @@ object WarrenJni {
     external fun importMnemonic(mnemonic: String): ByteArray
 
     /**
+     * Convenience wrapper: return the wallet pubkey directly as a 64-char
+     * lowercase hex string, ready for the `X-Warren-Pubkey-Hex` header.
+     * Saves Kotlin from a bytes-to-hex round-trip when only the hex form is
+     * needed.
+     */
+    external fun mnemonicPubkeyHex(mnemonic: String): String
+
+    /**
      * Ed25519-sign `canonicalMessage` with the key derived from `mnemonic`.
      * Returns a 64-byte signature suitable for the `X-Warren-Signature`
      * header (cf. warren-identity `auth::canonical_message`).
@@ -76,12 +84,17 @@ object WarrenJni {
      * Start a Warren Quinn tunnel on the supplied TUN file descriptor.
      *
      * @param tunFd raw fd duplicated from `VpnService.Builder.establish()`
+     * @param mnemonic BIP39 mnemonic used to derive the wallet `SigningKey`
+     *  that authenticates the QUIC handshake. Passed per-call so the secret
+     *  never lives in JNI memory beyond the spawned session task.
      * @param configJson serde-encoded `WarrenTunnelConfig` (exit pubkey,
      *  optional multi-hop entry, optional DAITA spec, bypass CIDRs,
      *  NAT-PMP toggle, wallet pubkey).
-     * @return 0 on success, negative on error (exception also thrown).
+     * @return 0 on success, negative on synchronous error (exception
+     *  also thrown). Long-running connect + handshake happens
+     *  asynchronously; poll [getTunnelStatus] for transitions.
      */
-    external fun connectTunnel(tunFd: Int, configJson: String): Int
+    external fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int
 
     /** Stop the active tunnel. No-op if none is running. */
     external fun disconnectTunnel()
@@ -94,4 +107,24 @@ object WarrenJni {
      * - 3: reconnecting
      */
     external fun getTunnelStatus(): Int
+
+    /**
+     * Returns a JSON-encoded array of relay descriptors. Each entry is a
+     * `RelayInfo`-shaped object with fields:
+     *   - `exit_id`        : 16-byte stable identifier, lowercase hex
+     *   - `exit_pubkey_hex`: 32-byte Ed25519 pubkey, lowercase hex
+     *   - `endpoint`       : "host:port" UDP endpoint
+     *   - `country`        : ISO 3166-1 alpha-2
+     *   - `city`           : city name
+     *   - `active`         : whether the relay accepts new sessions today
+     *   - `weight`         : selector-weight hint (higher = preferred)
+     *
+     * D.6 surface: the Kotlin caller deserialises via
+     * `kotlinx.serialization.json.Json.decodeFromString<List<RelayInfo>>`
+     * and feeds the result into the location picker. The current
+     * implementation ships a single hardcoded warren-exit-1 entry; the
+     * real fetch (warren-api-client signed relay list) is a D.6
+     * follow-up.
+     */
+    external fun listRelays(): String
 }

@@ -77,6 +77,17 @@ struct ConnectionView: View {
                                         .padding(.bottom, 8)
                                         .padding(.top, !hasFeatureIndicators ? 8 : 0)
                                         .showIf(isExpanded)
+
+                                    // Warren-specific: M4.0 always-on HTTP/3
+                                    // mimicry indicator. Shown inside expanded
+                                    // details only when the tunnel is secured
+                                    // — surfaces the baseline obfuscation so
+                                    // users know their traffic is
+                                    // indistinguishable from regular HTTPS.
+                                    WarrenObfuscationIndicatorView()
+                                        .padding(.top, 8)
+                                        .padding(.bottom, 4)
+                                        .showIf(isExpanded && connectionViewModel.tunnelStatus.state.isSecured)
                                 }
                                 Spacer()
                             }

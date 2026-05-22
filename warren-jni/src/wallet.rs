@@ -17,6 +17,7 @@
 // inside the JNI library would put a wallet secret in app memory for the
 // entire session lifetime - we avoid that.
 
+use ed25519_dalek::SigningKey;
 use warren_identity::{derive_node_key, seed_from_mnemonic};
 
 #[derive(Debug, thiserror::Error)]
@@ -53,6 +54,25 @@ pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
     let seed = seed_from_mnemonic(mnemonic)?;
     let key = derive_node_key(&seed);
     Ok(key.verifying_key().to_bytes())
+}
+
+/// Convenience wrapper: derive the Ed25519 verifying key from `mnemonic`
+/// and return its lowercase hex encoding (64 characters). This is the form
+/// the `X-Warren-Pubkey-Hex` request header expects.
+pub fn pubkey_hex_from_mnemonic(mnemonic: &str) -> Result<String, WalletError> {
+    let pubkey = pubkey_from_mnemonic(mnemonic)?;
+    Ok(hex::encode(pubkey))
+}
+
+/// Derive the Ed25519 [`SigningKey`] from a BIP39 mnemonic.
+///
+/// Same derivation chain as [`pubkey_from_mnemonic`] - the two are
+/// guaranteed to produce key pairs that agree (`signing.verifying_key() ==
+/// pubkey`). Used by the tunnel session bootstrap to feed
+/// `ClientTunnel::with_signing_key`.
+pub fn signing_key_from_mnemonic(mnemonic: &str) -> Result<SigningKey, WalletError> {
+    let seed = seed_from_mnemonic(mnemonic)?;
+    Ok(derive_node_key(&seed))
 }
 
 /// Sign `message` with the Ed25519 signing key derived from `mnemonic`.
@@ -122,6 +142,26 @@ mod tests {
         let a = generate_mnemonic();
         let b = generate_mnemonic();
         assert_ne!(a, b, "two consecutive generate_mnemonic() calls collided");
+    }
+
+    #[test]
+    fn pubkey_hex_is_64_lowercase_chars() {
+        let phrase = generate_mnemonic();
+        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
+        assert_eq!(hex.len(), 64, "Ed25519 pubkey hex must be 64 chars");
+        assert!(
+            hex.chars()
+                .all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())),
+            "expected lowercase hex digits only, got {hex}"
+        );
+    }
+
+    #[test]
+    fn pubkey_hex_matches_byte_form() {
+        let phrase = generate_mnemonic();
+        let bytes = pubkey_from_mnemonic(&phrase).unwrap();
+        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
+        assert_eq!(hex, hex::encode(bytes));
     }
 
     #[test]

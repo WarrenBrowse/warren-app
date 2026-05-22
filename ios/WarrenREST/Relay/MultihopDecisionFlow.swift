@@ -1,6 +1,6 @@
 //
 //  MultihopDecisionFlow.swift
-//  MullvadREST
+//  WarrenREST
 //
 //  Created by Jon Petersson on 2024-06-14.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.

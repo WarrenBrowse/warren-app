@@ -1,6 +1,6 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {

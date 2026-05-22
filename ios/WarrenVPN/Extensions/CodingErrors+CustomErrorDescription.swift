@@ -9,7 +9,7 @@
 import Foundation
 import WarrenTypes
 
-extension DecodingError: MullvadTypes.CustomErrorDescriptionProtocol {
+extension DecodingError: WarrenTypes.CustomErrorDescriptionProtocol {
     public var customErrorDescription: String? {
         switch self {
         case let .typeMismatch(type, context):
@@ -30,7 +30,7 @@ extension DecodingError: MullvadTypes.CustomErrorDescriptionProtocol {
     }
 }
 
-extension EncodingError: MullvadTypes.CustomErrorDescriptionProtocol {
+extension EncodingError: WarrenTypes.CustomErrorDescriptionProtocol {
     public var customErrorDescription: String? {
         switch self {
         case let .invalidValue(_, context):

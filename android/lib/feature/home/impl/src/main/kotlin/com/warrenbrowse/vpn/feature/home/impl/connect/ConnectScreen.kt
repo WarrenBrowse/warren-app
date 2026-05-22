@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,7 +71,6 @@ import com.warrenbrowse.vpn.common.compose.LocalNavAnimatedVisibilityScope
 import com.warrenbrowse.vpn.common.compose.SECURE_ZOOM
 import com.warrenbrowse.vpn.common.compose.SECURE_ZOOM_ANIMATION_MILLIS
 import com.warrenbrowse.vpn.common.compose.UNSECURE_ZOOM
-import com.warrenbrowse.vpn.common.compose.createOpenAccountPageHook
 import com.warrenbrowse.vpn.common.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.fallbackLatLong
 import com.warrenbrowse.vpn.common.compose.isTv
@@ -79,27 +79,28 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.account.api.AccountNavKey
-import com.warrenbrowse.vpn.feature.anticensorship.api.AntiCensorshipNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
-import com.warrenbrowse.vpn.feature.daita.api.DaitaNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
-import com.warrenbrowse.vpn.feature.home.api.OutOfTimeNavKey
+import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.ConnectionButton
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.SwitchLocationButton
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionDetailPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.FeatureIndicatorsPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
-import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavKey
-import com.warrenbrowse.vpn.feature.location.api.SelectLocationNavResult
-import com.warrenbrowse.vpn.feature.multihop.api.MultihopNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
+import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
 import com.warrenbrowse.vpn.lib.common.util.removeHtmlTags
 import com.warrenbrowse.vpn.lib.map.AnimatedMap
@@ -133,6 +134,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.util.visible
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
 private val SCREEN_HEIGHT_THRESHOLD = 700.dp
@@ -172,19 +174,52 @@ private fun PreviewAccountScreen(
 @Composable
 fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilityScope) {
     val connectViewModel: ConnectViewModel = koinViewModel()
+    val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
+    val warrenDisconnect = koinInject<WarrenQuinnDisconnectInvoker>()
+    val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
+    val warrenTunnelState = koinInject<WarrenTunnelStateProvider>()
+    val warrenState by warrenTunnelState.state.collectAsStateWithLifecycle()
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
 
+    val warrenScope = rememberCoroutineScope()
+    // D.4 step 11: route the user-initiated Connect button through the
+    // Warren Quinn use-case. The legacy `connectViewModel::onConnectClick`
+    // proxied to a dead daemon and is no longer wired here. The Quinn
+    // path requires a FragmentActivity host for BiometricPrompt; the
+    // app's MainActivity extends FragmentActivity (D.5 step 3).
+    val onWarrenConnectClick: () -> Unit = {
+        (context as? FragmentActivity)?.let { activity ->
+            warrenScope.launch {
+                runCatching { warrenConnect.connect(activity) }
+                    .onFailure { e -> co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" } }
+            }
+        }
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // D.4 step 13: surface Warren-side tunnel transitions as a snackbar
+    // until the legacy ConnectScreen card is replaced with a Warren-
+    // native one (D.6). Each state change pushes one snackbar; the
+    // initial "Disconnected" value is suppressed so the user doesn't
+    // see a no-op message on first open.
+    val previousWarrenState = remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(warrenState) {
+        val prev = previousWarrenState.value
+        previousWarrenState.value = warrenState
+        if (prev != null && prev != warrenState) {
+            snackbarHostState.showSnackbarImmediately(message = "Warren: $warrenState")
+        }
+    }
 
     val createVpnProfile =
         rememberLauncherForActivityResult(CreateVpnProfile()) {
             connectViewModel.createVpnProfileResult(it)
         }
 
-    val openAccountPage = LocalUriHandler.current.createOpenAccountPageHook()
     val uriHandler = LocalUriHandler.current
     val resources = LocalResources.current
     CollectSideEffectWithLifecycle(
@@ -192,11 +227,21 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            is ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser ->
-                openAccountPage(sideEffect.token)
+            is ConnectViewModel.UiSideEffect.OpenAccountManagementPageInBrowser -> {
+                // D.4 step 23: dead Mullvad path (mullvad.net/account doesn't
+                // exist on Warren). The user is routed to the wallet
+                // settings via `onManageAccountClick` instead; this side
+                // effect is left as a no-op for parity with the legacy
+                // ConnectViewModel still emitting it.
+            }
 
             is ConnectViewModel.UiSideEffect.OutOfTime ->
-                navigator.navigate(OutOfTimeNavKey, clearBackStack = true)
+                // D.4 step 18: OutOfTime route is gone (Mullvad account
+                // model). On Warren this side effect never fires because
+                // the ConnectViewModel state machine reads from a dead
+                // daemon; fallback to Connect to keep the navigation
+                // graph total in case of an upstream re-emission bug.
+                navigator.navigate(ConnectNavKey, clearBackStack = true)
 
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
@@ -264,35 +309,58 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         }
     }
 
-    LocalResultStore.current.consumeResult<SelectLocationNavResult> { result ->
-        if (result.connect) {
-            connectViewModel.onConnectClick()
-        }
-    }
+    // D.4 step 27: SelectLocationNavResult consumer removed - the
+    // Mullvad SelectLocationScreen that produced this result is no
+    // longer reachable (the Switch-location button routes to
+    // WarrenLocationPicker). WarrenLocationPicker does not surface a
+    // "connect now" hint today; the user taps Connect on the home
+    // screen after picking. A future iteration can re-add the
+    // "select-and-connect" affordance via a Warren-native NavResult.
+
 
     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides animatedVisibilityScope) {
-        ConnectScreen(
-            state = state,
-            snackbarHostState = snackbarHostState,
-            onDisconnectClick = connectViewModel::onDisconnectClick,
-            onReconnectClick = connectViewModel::onReconnectClick,
-            onConnectClick = connectViewModel::onConnectClick,
+        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+            ConnectScreen(
+                state = state,
+                snackbarHostState = snackbarHostState,
+                onDisconnectClick = { warrenDisconnect.disconnect() },
+                onReconnectClick = { warrenReconnect.reconnect() },
+                onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
-            onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
+            onSwitchLocationClick =
+                // D.4 step 25: switch location routes to the Warren picker
+                // (consumes RelayCatalog) instead of the legacy Mullvad
+                // SelectLocationScreen (Mullvad signed relay list source,
+                // not available on Warren).
+                dropUnlessResumed { navigator.navigate(WarrenLocationPickerNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
-            onManageAccountClick = connectViewModel::onManageAccountClick,
+            onManageAccountClick =
+                // D.4 step 23: "Manage account" routes to the wallet settings
+                // instead of mullvad.net/account (which doesn't exist on
+                // Warren - identity is the BIP39 wallet, not a server-side
+                // account).
+                dropUnlessResumed { navigator.navigate(WarrenWalletSettingsNavKey) },
             onChangelogClick =
                 dropUnlessResumed { navigator.navigate(ChangelogNavKey(isModal = true)) },
             onDismissChangelogClick = connectViewModel::dismissNewChangelogNotification,
             onSettingsClick =
                 dropUnlessResumed {
                     if (navigator.screenIsListDetailTargetWidth) {
-                        navigator.navigate(SettingsNavKey, DaitaNavKey())
+                        // D.4 step 32: tablet detail-pane default for Settings
+                        // is the unified Warren tunnel toggles screen.
+                        navigator.navigate(SettingsNavKey, WarrenTunnelSettingsNavKey)
                     } else {
                         navigator.navigate(SettingsNavKey)
                     }
                 },
-            onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
+            onAccountClick =
+                dropUnlessResumed {
+                    // D.4 step 14: on Warren mobile the "account" surface is the wallet
+                    // (BIP39 identity); the legacy Mullvad AccountNavKey routes to a
+                    // dead daemon-driven screen. Direct the account icon to the wallet
+                    // settings instead.
+                    navigator.navigate(WarrenWalletSettingsNavKey)
+                },
             onDismissNewDeviceClick = connectViewModel::dismissNewDeviceNotification,
             onNavigateToFeature =
                 dropUnlessResumed { feature: FeatureIndicator ->
@@ -304,6 +372,48 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 connectViewModel::dismissAndroid16UpgradeWarning,
             onClickShowAndroid16UpgradeInfo =
                 dropUnlessResumed { navigator.navigate(Android16UpgradeInfoNavKey) },
+            )
+
+            // D.4 step 20: live Warren tunnel state banner overlaid on top
+            // of the legacy Mullvad-shape ConnectScreen. The existing card
+            // below still renders from the dead `connectionProxy.tunnelState`
+            // (always "Disconnected" today); this banner reads the real
+            // Warren state from the proxy so the user can see what the
+            // actual tunnel is doing. The banner only shows when the state
+            // is non-Disconnected so the home screen stays clean at rest.
+            if (warrenState != "Disconnected") {
+                WarrenTunnelStateBanner(
+                    state = warrenState,
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.TopCenter)
+                        .padding(top = 64.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarrenTunnelStateBanner(
+    state: String,
+    modifier: Modifier = Modifier,
+) {
+    val containerColor = when {
+        state.startsWith("Connected") -> Color(0xFF2E7D32)
+        state.startsWith("Connecting") -> Color(0xFFF9A825)
+        state.startsWith("Reconnecting") -> Color(0xFFF9A825)
+        state.startsWith("Failed") -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    androidx.compose.material3.Card(
+        modifier = modifier.padding(horizontal = 24.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = containerColor),
+    ) {
+        androidx.compose.material3.Text(
+            text = state,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }
@@ -792,18 +902,25 @@ private fun PrepareError.OtherAlwaysOnApp.toMessage(resources: Resources) =
 
 private fun FeatureIndicator.navKey(): NavKey2 =
     when (this) {
+        // D.4 step 32: DAITA + Multihop indicators route to the unified
+        // Warren tunnel settings screen (was dedicated Mullvad screens).
         FeatureIndicator.DAITA,
-        FeatureIndicator.DAITA_MULTIHOP -> DaitaNavKey(isModal = true)
-        FeatureIndicator.MULTIHOP -> MultihopNavKey(isModal = true)
+        FeatureIndicator.DAITA_MULTIHOP,
+        FeatureIndicator.MULTIHOP -> WarrenTunnelSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
 
         FeatureIndicator.SERVER_IP_OVERRIDE -> ServerIpOverrideNavKey(isModal = true)
 
+        // D.4 step 34: Mullvad anti-censorship transport indicators
+        // (UDP-over-TCP, QUIC-over-WG, WireGuard port, Shadowsocks, LWO)
+        // route to the unified WarrenTunnelSettings (Warren uses native
+        // Quinn + M4.0 obfuscation toggle ; the Mullvad WG-over-X
+        // family is gone).
         FeatureIndicator.UDP_2_TCP,
         FeatureIndicator.QUIC,
         FeatureIndicator.WIREGUARD_PORT,
         FeatureIndicator.SHADOWSOCKS,
-        FeatureIndicator.LWO -> AntiCensorshipNavKey(selectedFeature = this, isModal = true)
+        FeatureIndicator.LWO -> WarrenTunnelSettingsNavKey
 
         FeatureIndicator.QUANTUM_RESISTANCE,
         FeatureIndicator.LAN_SHARING,

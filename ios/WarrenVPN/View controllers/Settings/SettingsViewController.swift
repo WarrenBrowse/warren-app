@@ -118,6 +118,20 @@ private extension SettingsDataSource.Item {
             .notificationSettings
         case .includeAllNetworks:
             .includeAllNetworks
+        case .warrenWalletBackup:
+            .warrenWalletBackup
+        case .warrenWalletErase:
+            .warrenWalletErase
+        case .warrenWalletIdentity:
+            .warrenWalletIdentity
+        case .warrenTunnelStatistics:
+            .warrenTunnelStatistics
+        case .warrenDiagnosticInfo:
+            .warrenDiagnosticInfo
+        case .warrenAbout:
+            .warrenAbout
+        case .warrenPortForwarding:
+            .warrenPortForwarding
         }
     }
 }

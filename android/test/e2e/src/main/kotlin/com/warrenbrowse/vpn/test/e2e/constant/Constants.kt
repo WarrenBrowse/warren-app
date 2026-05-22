@@ -5,7 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.warrenbrowse.vpn.test.e2e.BuildConfig
 import com.warrenbrowse.vpn.test.e2e.extension.getRequiredArgument
 
-const val LOG_TAG = "mullvad-e2e"
+const val LOG_TAG = "warren-e2e"
 
 fun Bundle.getPartnerAuth() =
     InstrumentationRegistry.getArguments()

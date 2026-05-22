@@ -1,8 +1,8 @@
 package com.warrenbrowse.vpn.app.service
 
 import android.app.KeyguardManager
-import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -10,24 +10,22 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import arrow.atomic.AtomicInt
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
+import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
+import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
+import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
-import com.warrenbrowse.vpn.lib.model.DisconnectReason
-import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
-import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.talpid.TalpidVpnService
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
@@ -36,13 +34,25 @@ class WarrenVpnService : TalpidVpnService() {
 
     private lateinit var keyguardManager: KeyguardManager
 
-    private lateinit var managementService: ManagementService
     private lateinit var migrateSplitTunneling: MigrateSplitTunneling
     private lateinit var apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder
-    private lateinit var connectionProxy: ConnectionProxy
-    private lateinit var daemonConfig: DaemonConfig
 
     private lateinit var foregroundNotificationHandler: ForegroundNotificationManager
+
+    /**
+     * Warren Quinn adapter owns the entire tunnel lifecycle. Constructed
+     * in `onCreate` (it holds the [android.net.VpnService] reference and
+     * the [android.net.ConnectivityManager] for handover reconnect, both
+     * of which are unique to this service instance).
+     *
+     * D.4 step 10: the legacy gRPC management service / connection
+     * proxy layer has been fully removed; this adapter is now the only
+     * tunnel-state authority.
+     */
+    lateinit var quinnAdapter: WarrenQuinnAdapter
+        private set
+
+    private lateinit var quinnStateProxy: WarrenQuinnStateProxy
 
     // Count number of binds to know if the service is needed. If user actively using the VPN, a
     // bind from the system, should always be present.
@@ -57,47 +67,64 @@ class WarrenVpnService : TalpidVpnService() {
             // Needed to create all the notification channels
             get<NotificationChannelFactory>()
 
-            managementService = get()
-
             foregroundNotificationHandler =
                 ForegroundNotificationManager(this@WarrenVpnService, get())
             get<NotificationManager>()
 
-            daemonConfig = get()
             migrateSplitTunneling = get()
             apiEndpointFromIntentHolder = get()
-            connectionProxy = get()
+            quinnStateProxy = get()
         }
 
         keyguardManager = getSystemService<KeyguardManager>()!!
+
+        // Quinn adapter must outlive every connect/disconnect cycle, so
+        // it is owned by the service and kept alive for the service's
+        // lifetime. The adapter's internal `SupervisorJob` is cancelled
+        // from `onDestroy` below.
+        quinnAdapter = WarrenQuinnAdapter(
+            vpnService = this,
+            connectivityManager = getSystemService<ConnectivityManager>()!!,
+        )
+
+        // Observe Quinn tunnel transitions:
+        //   1. mirror every state into the process-wide proxy so any
+        //      Composable can read it without binding the service;
+        //   2. stop the foreground notification on non-blocking failure
+        //      (mirrors the legacy `managementService.tunnelState`
+        //      collector below, which targets a daemon that does not
+        //      exist on Warren mobile).
+        lifecycleScope.launch {
+            quinnAdapter.state.collect { state ->
+                quinnStateProxy.update(state)
+                if (state is WarrenTunnelState.Failed) {
+                    Logger.w("Quinn tunnel failed: ${state.reason}")
+                    foregroundNotificationHandler.stopForeground()
+                }
+            }
+        }
 
         // Warren fetches relay lists via warren-api-client at runtime, so the
         // upstream `relays.json` asset extraction (`prepareFiles()`) is gone.
         migrateSplitTunneling.migrate()
 
-        // If it is a debug build and we have an api override in the intent, use it
-        // This is for injecting hostname and port for our mock api tests
+        // Log any API endpoint override seeded by mockapi tests so the
+        // future warren-api-client can pick it up (D.6 wiring).
         val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
-        val updatedConfig =
-            if (BuildConfig.DEBUG && intentApiOverride != null) {
-                daemonConfig.copy(apiEndpointOverride = intentApiOverride)
-            } else {
-                daemonConfig
-            }
-        Logger.i("Start daemon")
-        startDaemon(updatedConfig)
-
-        Logger.i("Start management service")
-        managementService.start()
-
-        lifecycleScope.launch {
-            // If the service is started with a connect command and a non-blocking error occur (e.g.
-            // unable to start the tunnel) then the service is demoted from foreground.
-            managementService.tunnelState
-                .filterIsInstance<TunnelState.Error>()
-                .filter { !it.errorState.isBlocking }
-                .collect { foregroundNotificationHandler.stopForeground() }
+        if (BuildConfig.DEBUG && intentApiOverride != null) {
+            Logger.i("API endpoint override present: $intentApiOverride")
         }
+
+        WarrenJni.initLogger(filesDir.absolutePath)
+        Logger.i("warren-jni initialised")
+
+        // D.4 step 10: the gRPC management service / connection proxy
+        // pathway has been entirely removed. The Quinn adapter now owns
+        // the tunnel lifecycle end-to-end; the only legacy components
+        // still resolved from Koin are the notification channel
+        // factory, foreground notification manager, split-tunnelling
+        // migration shim, and the API-endpoint intent holder (all of
+        // which are warren-native or trivial).
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -115,13 +142,60 @@ class WarrenVpnService : TalpidVpnService() {
             }
 
             intent.isFromSystem() || intent?.action == KEY_CONNECT_ACTION -> {
+                // D.4 step 10: legacy KEY_CONNECT_ACTION no longer
+                // dispatches to a daemon. Callers should migrate to
+                // KEY_WARREN_CONNECT_QUINN_ACTION (with a serialised
+                // WarrenTunnelConfig + a MnemonicCache.put preceding
+                // it). For now, a system-initiated connect with no
+                // config gets a no-op + log line; the legacy
+                // ConnectionProxy is gone.
                 foregroundNotificationHandler.startForeground()
-                lifecycleScope.launch { connectionProxy.connectWithoutPermissionCheck() }
+                Logger.w(
+                    "Received legacy KEY_CONNECT_ACTION (system or callsite); " +
+                        "migrate to KEY_WARREN_CONNECT_QUINN_ACTION"
+                )
             }
 
             intent?.action == KEY_RECONNECT_ACTION -> {
+                // D.4 step 13: reconnect routes through the Quinn adapter,
+                // which reuses the cached config + mnemonic (no biometric
+                // re-prompt). No-op if there is no active session.
                 foregroundNotificationHandler.startForeground()
-                lifecycleScope.launch { connectionProxy.reconnect() }
+                lifecycleScope.launch { quinnAdapter.reconnect() }
+            }
+
+            intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {
+                // D.4 step 7: dedicated Quinn connect path. Caller has
+                // already retrieved the mnemonic via the UI-side
+                // BiometricPromptAuthorizer, stashed it in MnemonicCache,
+                // and serialised a WarrenTunnelConfig in the extras.
+                foregroundNotificationHandler.startForeground()
+                val configJson = intent.getStringExtra(KEY_WARREN_TUNNEL_CONFIG_JSON)
+                val mnemonic = MnemonicCache.consume()
+                when {
+                    configJson == null -> {
+                        Logger.e("$KEY_WARREN_CONNECT_QUINN_ACTION missing config JSON extra")
+                    }
+                    mnemonic == null -> {
+                        Logger.e(
+                            "$KEY_WARREN_CONNECT_QUINN_ACTION fired without a staged mnemonic " +
+                                "(UI must call MnemonicCache.put() before startService)"
+                        )
+                    }
+                    else -> {
+                        val config = try {
+                            Json.decodeFromString<WarrenTunnelConfig>(configJson)
+                        } catch (e: Exception) {
+                            Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
+                            null
+                        }
+                        if (config != null) {
+                            lifecycleScope.launch {
+                                quinnAdapter.connect(config, mnemonic.phrase)
+                            }
+                        }
+                    }
+                }
             }
 
             intent?.action == KEY_DISCONNECT_ACTION -> {
@@ -129,8 +203,11 @@ class WarrenVpnService : TalpidVpnService() {
                 // being foreground, thus it must go into foreground to please the android system
                 // requirements.
                 foregroundNotificationHandler.startForeground()
+                // Disconnect always routes through the Quinn adapter
+                // now. If no session is running, this is a no-op
+                // (Mutex + state-machine guard inside the adapter).
                 lifecycleScope.launch {
-                    connectionProxy.disconnect(DisconnectReason.USER_INITIATED_NOTIFICATION_TILE)
+                    quinnAdapter.disconnect()
                 }
 
                 // If disconnect intent is received and no one is using this service, simply stop
@@ -170,19 +247,6 @@ class WarrenVpnService : TalpidVpnService() {
         }
     }
 
-    private fun startDaemon(daemonConfig: DaemonConfig) =
-        with(daemonConfig) {
-            WarrenDaemon.initialize(
-                vpnService = this@WarrenVpnService,
-                rpcSocketPath = rpcSocket.absolutePath,
-                filesDirectory = filesDir.absolutePath,
-                cacheDirectory = cacheDir.absolutePath,
-                apiEndpointOverride = apiEndpointOverride,
-                extraMetadata = mapOf("flavor" to BuildConfig.FLAVOR),
-            )
-            Logger.i("WarrenVpnService: Daemon initialized")
-        }
-
     private fun emptyBinder() =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             Binder(this.toString())
@@ -192,7 +256,8 @@ class WarrenVpnService : TalpidVpnService() {
 
     override fun onRevoke() {
         Logger.d("onRevoke")
-        runBlocking { connectionProxy.disconnect(DisconnectReason.SYSTEM_REVOKE) }
+        // Bring the Quinn session down cleanly on system revoke.
+        runBlocking { quinnAdapter.disconnect() }
     }
 
     override fun onUnbind(intent: Intent): Boolean {
@@ -211,14 +276,11 @@ class WarrenVpnService : TalpidVpnService() {
     override fun onDestroy() {
         super.onDestroy()
         Logger.i("WarrenVpnService: onDestroy")
-        // Shutting down the daemon gracefully
-        managementService.stop()
 
-        Logger.i("Shutdown WarrenDaemon")
-        WarrenDaemon.shutdown()
-
-        Logger.i("Enter Idle")
-        managementService.enterIdle()
+        // `disconnect()` is idempotent (state-machine guards a no-op if
+        // already disconnected), so it is safe even if no session was
+        // ever started.
+        runBlocking { quinnAdapter.disconnect() }
 
         Logger.i("Shutdown complete")
     }

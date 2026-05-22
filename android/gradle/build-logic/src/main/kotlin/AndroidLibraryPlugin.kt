@@ -12,7 +12,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             apply(plugin = "com.android.library")
-            apply(plugin = "mullvad.kotlin-toolchain")
+            apply(plugin = "warren.kotlin-toolchain")
 
             extensions.configure<LibraryExtension> {
                 compileSdk = libs.findVersion("compile-sdk-major").get().toString().toInt()

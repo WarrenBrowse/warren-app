@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadRustRuntimeProxy
+import WarrenRustRuntimeProxy
 
 public class MullvadApiMock {
     private let mock: SwiftServerMock
