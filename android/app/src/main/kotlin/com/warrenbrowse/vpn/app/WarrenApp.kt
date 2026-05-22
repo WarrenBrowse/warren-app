@@ -45,7 +45,6 @@ import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
 import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
-import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
@@ -114,7 +113,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         // D.4 step 34: anticensorshipEntry removed (Warren uses native
         // Quinn + M4.0 toggle in WarrenTunnelSettings).
         // D.4 step 33: apiAccessEntry removed (Warren API endpoint fixed).
-        appIconEntry(nav3)
+        // D.4 step 61: appIconEntry removed (Mullvad app-icon obfuscation dead).
         appearanceEntry(nav3)
         autoConnectEntry(nav3)
         changelogEntry(nav3)

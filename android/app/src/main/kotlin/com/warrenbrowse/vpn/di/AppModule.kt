@@ -15,7 +15,6 @@ import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
-import com.warrenbrowse.vpn.feature.appicon.impl.obfuscation.AppObfuscationRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
@@ -101,7 +100,8 @@ val appModule = module {
     // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
     // ActionUseCase dropped (Mullvad subscription expiry notifications dead).
     // TODO Move these back to UiModule when fixDisableBug is removed
-    single { AppObfuscationRepository(get(), get()) }
+    // D.4 step 61: AppObfuscationRepository dropped (Mullvad app-icon
+    // obfuscation feature dead - Warren is not Mullvad-branded).
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         single { LanguageRepository(androidContext()) }
     }

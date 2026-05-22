@@ -7,7 +7,6 @@ import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
-import com.warrenbrowse.vpn.feature.appicon.impl.AppIconViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
 import com.warrenbrowse.vpn.feature.applisting.api.ResolveAppListingUseCase
@@ -229,7 +228,7 @@ val uiModule = module {
     // which is gone.
     // D.4 step 27: LocationBottomSheetViewModel removed (Mullvad
     // location bottom-sheet from SelectLocationScreen).
-    viewModel { AppIconViewModel(get()) }
+    // D.4 step 61: AppIconViewModel dropped.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }
     }

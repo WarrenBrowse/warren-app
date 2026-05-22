@@ -9,7 +9,7 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.appearance.impl" }
 
 dependencies {
-    implementation(projects.lib.feature.appicon.api)
+    // D.4 step 61: feature.appicon.api dropped.
     implementation(projects.lib.feature.appearance.api)
     implementation(projects.lib.feature.language.api)
     implementation(projects.lib.repository)

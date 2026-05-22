@@ -40,8 +40,7 @@ include(
     // module instead).
     // D.4 step 34: anticensorship module deleted.
     // D.4 step 33: apiaccess module deleted.
-    ":lib:feature:appicon:impl",
-    ":lib:feature:appicon:api",
+    // D.4 step 61: feature.appicon module deleted (Mullvad obfuscation dead).
     ":lib:feature:appinfo:impl",
     ":lib:feature:appinfo:api",
     ":lib:feature:applisting:impl",

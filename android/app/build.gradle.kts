@@ -374,7 +374,7 @@ dependencies {
     // modules deleted (Mullvad-account features without Warren equivalent).
     // D.4 step 34: anticensorship module deleted.
     // D.4 step 33: apiaccess module deleted.
-    implementation(projects.lib.feature.appicon.impl)
+    // D.4 step 61: feature.appicon dropped (Mullvad obfuscation dead).
     implementation(projects.lib.feature.appinfo.impl)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.impl)
