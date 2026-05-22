@@ -61,7 +61,6 @@ import com.warrenbrowse.vpn.lib.model.QuantumResistantState
 import com.warrenbrowse.vpn.lib.model.Quic
 import com.warrenbrowse.vpn.lib.model.Recent
 import com.warrenbrowse.vpn.lib.model.Recents
-import com.warrenbrowse.vpn.lib.model.RedeemVoucherSuccess
 import com.warrenbrowse.vpn.lib.model.RelayConstraints
 import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
@@ -662,11 +661,7 @@ internal fun ManagementInterface.AccountData.toDomain(accountNumber: AccountNumb
         expiryDate = Instant.ofEpochSecond(expiry.seconds).atDefaultZone(),
     )
 
-internal fun ManagementInterface.VoucherSubmission.toDomain(): RedeemVoucherSuccess =
-    RedeemVoucherSuccess(
-        timeAdded = secondsAdded,
-        newExpiryDate = Instant.ofEpochSecond(newExpiry.seconds).atDefaultZone(),
-    )
+// D.4 step 50: VoucherSubmission.toDomain dropped (voucher feature dead).
 
 internal fun ManagementInterface.SplitTunnelSettings.toDomain(): SplitTunnelSettings =
     SplitTunnelSettings(

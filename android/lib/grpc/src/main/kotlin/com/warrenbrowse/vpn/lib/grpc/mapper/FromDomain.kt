@@ -20,8 +20,6 @@ import com.warrenbrowse.vpn.lib.model.LwoObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
 import com.warrenbrowse.vpn.lib.model.ObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Ownership
-import com.warrenbrowse.vpn.lib.model.PlayPurchase
-import com.warrenbrowse.vpn.lib.model.PlayPurchasePaymentToken
 import com.warrenbrowse.vpn.lib.model.Port
 import com.warrenbrowse.vpn.lib.model.Providers
 import com.warrenbrowse.vpn.lib.model.RelayItemId
@@ -182,14 +180,8 @@ internal fun Constraint<Ownership>.fromDomain(): ManagementInterface.Ownership =
         is Constraint.Only -> value.fromDomain()
     }
 
-internal fun PlayPurchasePaymentToken.fromDomain(): ManagementInterface.PlayPurchasePaymentToken =
-    ManagementInterface.PlayPurchasePaymentToken.newBuilder().setToken(value).build()
-
-internal fun PlayPurchase.fromDomain(): ManagementInterface.PlayPurchase =
-    ManagementInterface.PlayPurchase.newBuilder()
-        .setPurchaseToken(purchaseToken.fromDomain())
-        .setProductId(productId)
-        .build()
+// D.4 step 50: PlayPurchasePaymentToken.fromDomain + PlayPurchase.fromDomain
+// dropped (Play Store billing dead).
 
 // D.4 step 48: NewAccessMethodSetting.fromDomain dropped (apiaccess dead).
 

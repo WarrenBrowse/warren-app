@@ -78,13 +78,9 @@ import com.warrenbrowse.vpn.lib.model.ObfuscationMode
 import com.warrenbrowse.vpn.lib.model.ObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Ownership as ModelOwnership
 import com.warrenbrowse.vpn.lib.model.PackageName
-import com.warrenbrowse.vpn.lib.model.PlayPurchase
-import com.warrenbrowse.vpn.lib.model.PlayPurchaseVerifyError
 import com.warrenbrowse.vpn.lib.model.Port
 import com.warrenbrowse.vpn.lib.model.Providers
 import com.warrenbrowse.vpn.lib.model.QuantumResistantState as ModelQuantumResistantState
-import com.warrenbrowse.vpn.lib.model.RedeemVoucherError
-import com.warrenbrowse.vpn.lib.model.RedeemVoucherSuccess
 import com.warrenbrowse.vpn.lib.model.RelayConstraints
 import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId as ModelRelayItemId
@@ -105,7 +101,6 @@ import com.warrenbrowse.vpn.lib.model.Settings as ModelSettings
 import com.warrenbrowse.vpn.lib.model.TunnelState as ModelTunnelState
 import com.warrenbrowse.vpn.lib.model.UpdateCustomListError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
-import com.warrenbrowse.vpn.lib.model.VoucherCode
 import com.warrenbrowse.vpn.lib.model.WireguardConstraints
 import com.warrenbrowse.vpn.lib.model.WireguardEndpointData as ModelWireguardEndpointData
 import com.warrenbrowse.vpn.lib.model.addresses
@@ -618,37 +613,9 @@ class ManagementService(
             .mapLeft(SetWireguardConstraintsError::Unknown)
             .mapEmpty()
 
-    suspend fun submitVoucher(
-        voucher: VoucherCode
-    ): Either<RedeemVoucherError, RedeemVoucherSuccess> =
-        Either.catch { grpc.submitVoucher(StringValue.of(voucher.value)).toDomain() }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.INVALID_ARGUMENT,
-                    Status.Code.NOT_FOUND -> RedeemVoucherError.InvalidVoucher
-                    Status.Code.ALREADY_EXISTS,
-                    Status.Code.RESOURCE_EXHAUSTED -> RedeemVoucherError.VoucherAlreadyUsed
-                    Status.Code.UNAVAILABLE -> RedeemVoucherError.ApiUnreachable
-                    else -> {
-                        Logger.e("Unknown submit voucher error")
-                        RedeemVoucherError.Unknown(it)
-                    }
-                }
-            }
-
-    // D.4 step 47: initializePlayPurchase dropped (Play Store billing dead).
-
-    suspend fun verifyPlayPurchase(purchase: PlayPurchase): Either<PlayPurchaseVerifyError, Unit> =
-        Either.catch { grpc.verifyPlayPurchase(purchase.fromDomain()) }
-            .onLeft { Logger.e("Verify play purchase error") }
-            .mapLeft { error ->
-                if (error is StatusException && error.status.code == Status.Code.INVALID_ARGUMENT) {
-                    PlayPurchaseVerifyError.InvalidPurchase
-                } else {
-                    PlayPurchaseVerifyError.OtherError
-                }
-            }
-            .mapEmpty()
+    // D.4 step 50: submitVoucher + verifyPlayPurchase + initializePlayPurchase
+    // accessors all dropped (Mullvad voucher redeem + Play Store VPN billing
+    // both dead on Warren).
 
     suspend fun addSplitTunnelingApp(app: PackageName): Either<AddSplitTunnelingAppError, Unit> =
         Either.catch { grpc.addSplitTunnelApp(StringValue.of(app.value)) }
