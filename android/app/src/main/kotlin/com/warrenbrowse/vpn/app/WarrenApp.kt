@@ -56,9 +56,6 @@ import com.warrenbrowse.vpn.feature.filter.impl.navigation.filterEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
 import com.warrenbrowse.vpn.feature.location.impl.navigation.selectLocationEntry
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.deviceListEntry
-import com.warrenbrowse.vpn.feature.login.impl.devicelist.navigation.removeDeviceConfirmationDialogEntry
-import com.warrenbrowse.vpn.feature.login.impl.navigation.loginEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
@@ -131,13 +128,16 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         changelogEntry(nav3)
         customListEntry(nav3)
         daitaEntry(nav3)
-        deviceListEntry(nav3)
         filterEntry(nav3)
         homeEntry(nav3)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             languageEntry(nav3)
         }
-        loginEntry(nav3)
+        // D.4 step 24: loginEntry + deviceListEntry +
+        // removeDeviceConfirmationDialogEntry removed from the live
+        // navigation graph - on Warren, onboarding goes via
+        // WarrenWalletNavKey (D.5) and no path pushes Mullvad
+        // LoginNavKey / DeviceListNavKey anymore.
         walletEntry(nav3)
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
@@ -147,7 +147,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         notificationEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
-        removeDeviceConfirmationDialogEntry(nav3)
         selectLocationEntry(nav3)
         serverIpOverrideEntry(nav3)
         settingsEntry(nav3)
