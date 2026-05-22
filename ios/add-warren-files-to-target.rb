@@ -78,6 +78,8 @@ FILES_TO_ADD = {
     "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenDiagnosticInfoViewTests.swift" =>
     "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenAboutViewTests.swift" =>
+    "WarrenVPNTests",
   "PacketTunnelCoreTests/WarrenQuinnActorTests.swift" => "PacketTunnelCoreTests",
 
   # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.
