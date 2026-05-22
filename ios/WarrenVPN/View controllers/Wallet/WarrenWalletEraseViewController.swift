@@ -143,7 +143,18 @@ final class WarrenWalletEraseViewController: UIViewController {
         do {
             try WarrenWalletKeychain.delete()
             logger.info("Warren wallet wiped from Keychain")
-            delegate?.walletEraseControllerDidWipe(self)
+            if let delegate {
+                delegate.walletEraseControllerDidWipe(self)
+            } else if let nav = navigationController {
+                // Fallback when no coordinator delegate is wired :
+                // pop back to Settings. The Settings table reloads
+                // on `viewWillAppear`, dropping the now-irrelevant
+                // wallet rows (`WarrenWalletKeychain.exists()` returns
+                // false after this point).
+                nav.popViewController(animated: true)
+            } else {
+                dismiss(animated: true)
+            }
         } catch {
             logger.error("Failed to erase wallet: \(error)")
             let alert = UIAlertController(
