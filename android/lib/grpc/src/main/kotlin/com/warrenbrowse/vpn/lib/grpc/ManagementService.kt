@@ -41,7 +41,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mullvad_daemon.management_interface.ManagementInterface
 import mullvad_daemon.management_interface.ManagementServiceGrpcKt
-import mullvad_daemon.relay_selector.RelaySelectorServiceGrpcKt
 import com.warrenbrowse.vpn.lib.grpc.mapper.fromDomain
 import com.warrenbrowse.vpn.lib.grpc.mapper.toDomain
 import com.warrenbrowse.vpn.lib.grpc.util.AndroidLoggingHandler
@@ -49,25 +48,17 @@ import com.warrenbrowse.vpn.lib.grpc.util.LogInterceptor
 import com.warrenbrowse.vpn.lib.grpc.util.connectivityFlow
 import com.warrenbrowse.vpn.lib.model.AccountData
 import com.warrenbrowse.vpn.lib.model.AccountNumber
-import com.warrenbrowse.vpn.lib.model.AddApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.AddSplitTunnelingAppError
-import com.warrenbrowse.vpn.lib.model.ApiAccessMethod
-import com.warrenbrowse.vpn.lib.model.ApiAccessMethodId
-import com.warrenbrowse.vpn.lib.model.ApiAccessMethodSetting
 import com.warrenbrowse.vpn.lib.model.AppVersionInfo as ModelAppVersionInfo
 import com.warrenbrowse.vpn.lib.model.ClearAccountHistoryError
-import com.warrenbrowse.vpn.lib.model.ClearAllOverridesError
 import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.Constraint
 import com.warrenbrowse.vpn.lib.model.CreateAccountError
-import com.warrenbrowse.vpn.lib.model.CreateCustomListError
 import com.warrenbrowse.vpn.lib.model.CustomList as ModelCustomList
-import com.warrenbrowse.vpn.lib.model.CustomListAlreadyExists
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.CustomListName
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
 import com.warrenbrowse.vpn.lib.model.DeleteAccountError
-import com.warrenbrowse.vpn.lib.model.DeleteCustomListError
 import com.warrenbrowse.vpn.lib.model.DeleteDeviceError
 import com.warrenbrowse.vpn.lib.model.Device
 import com.warrenbrowse.vpn.lib.model.DeviceId
@@ -88,14 +79,11 @@ import com.warrenbrowse.vpn.lib.model.IpVersion
 import com.warrenbrowse.vpn.lib.model.LoginAccountError
 import com.warrenbrowse.vpn.lib.model.LogoutAccountError
 import com.warrenbrowse.vpn.lib.model.NameAlreadyExists
-import com.warrenbrowse.vpn.lib.model.NewAccessMethodSetting
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
 import com.warrenbrowse.vpn.lib.model.ObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Ownership as ModelOwnership
 import com.warrenbrowse.vpn.lib.model.PackageName
-import com.warrenbrowse.vpn.lib.model.PlayExternalObfuscatedAccountId
 import com.warrenbrowse.vpn.lib.model.PlayPurchase
-import com.warrenbrowse.vpn.lib.model.PlayPurchaseInitError
 import com.warrenbrowse.vpn.lib.model.PlayPurchaseVerifyError
 import com.warrenbrowse.vpn.lib.model.Port
 import com.warrenbrowse.vpn.lib.model.Providers
@@ -108,13 +96,9 @@ import com.warrenbrowse.vpn.lib.model.RelayItemId as ModelRelayItemId
 import com.warrenbrowse.vpn.lib.model.RelayItemId
 import com.warrenbrowse.vpn.lib.model.RelayList as ModelRelayList
 import com.warrenbrowse.vpn.lib.model.RelayList
-import com.warrenbrowse.vpn.lib.model.RelayPartitions
-import com.warrenbrowse.vpn.lib.model.RelaySelectorPredicate
 import com.warrenbrowse.vpn.lib.model.RelaySettings
-import com.warrenbrowse.vpn.lib.model.RemoveApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.RemoveSplitTunnelingAppError
 import com.warrenbrowse.vpn.lib.model.SetAllowLanError
-import com.warrenbrowse.vpn.lib.model.SetApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.SetDaitaSettingsError
 import com.warrenbrowse.vpn.lib.model.SetDnsOptionsError
 import com.warrenbrowse.vpn.lib.model.SetObfuscationOptionsError
@@ -123,12 +107,7 @@ import com.warrenbrowse.vpn.lib.model.SetWireguardConstraintsError
 import com.warrenbrowse.vpn.lib.model.SetWireguardMtuError
 import com.warrenbrowse.vpn.lib.model.SetWireguardQuantumResistantError
 import com.warrenbrowse.vpn.lib.model.Settings as ModelSettings
-import com.warrenbrowse.vpn.lib.model.SettingsPatchError
-import com.warrenbrowse.vpn.lib.model.TestApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.TunnelState as ModelTunnelState
-import com.warrenbrowse.vpn.lib.model.UnknownApiAccessMethodError
-import com.warrenbrowse.vpn.lib.model.UnknownCustomListError
-import com.warrenbrowse.vpn.lib.model.UpdateApiAccessMethodError
 import com.warrenbrowse.vpn.lib.model.UpdateCustomListError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
 import com.warrenbrowse.vpn.lib.model.VoucherCode
@@ -178,26 +157,8 @@ class ManagementService(
             .onEach { Logger.i("ManagementService connection state: $it") }
             .stateIn(scope, SharingStarted.Eagerly, channel.getState(false).toDomain())
 
-    private val service by lazy {
-        RelaySelectorServiceGrpcKt.RelaySelectorServiceCoroutineStub(channel)
-            .withExecutor(Dispatchers.IO.asExecutor())
-            .let {
-                if (extensiveLogging) {
-                    it.withInterceptors(LogInterceptor())
-                } else it
-            }
-            .withWaitForReady()
-    }
-
-    suspend fun partitionRelays(
-        predicate: RelaySelectorPredicate
-    ): Either<PartitionRelaysError, RelayPartitions> =
-        Either.catch {
-                service.partitionRelays(predicate.fromDomain()).toDomain().also {
-                    Logger.d("Partition relays matches: ${it.matches}")
-                }
-            }
-            .mapLeft(PartitionRelaysError::Unknown)
+    // D.4 step 47: partitionRelays + RelaySelectorService stub dropped — only
+    // consumer was the dead Mullvad relay selector tooling.
 
     private val grpc by lazy {
         ManagementServiceGrpcKt.ManagementServiceCoroutineStub(channel)
@@ -233,9 +194,7 @@ class ManagementService(
         it.wireguardEndpointData
     }
 
-    private val _mutableCurrentAccessMethod = MutableStateFlow<ApiAccessMethodSetting?>(null)
-    val currentAccessMethod: Flow<ApiAccessMethodSetting> =
-        _mutableCurrentAccessMethod.filterNotNull()
+    // D.4 step 47: currentAccessMethod Flow dropped (apiaccess feature dead).
 
     init {
         if (extensiveLogging && ENABLE_TRACE_LOGGING) {
@@ -281,9 +240,7 @@ class ManagementService(
                             _mutableVersionInfo.update { event.versionInfo.toDomain() }
                         ManagementInterface.DaemonEvent.EventCase.DEVICE ->
                             _mutableDeviceState.update { event.device.newState.toDomain() }
-                        ManagementInterface.DaemonEvent.EventCase.NEW_ACCESS_METHOD -> {
-                            _mutableCurrentAccessMethod.update { event.newAccessMethod.toDomain() }
-                        }
+                        ManagementInterface.DaemonEvent.EventCase.NEW_ACCESS_METHOD -> {}
                         ManagementInterface.DaemonEvent.EventCase.REMOVE_DEVICE -> {}
                         ManagementInterface.DaemonEvent.EventCase.LEAK_INFO -> {}
                         ManagementInterface.DaemonEvent.EventCase.EVENT_NOT_SET -> {}
@@ -361,8 +318,7 @@ class ManagementService(
             .onLeft { Logger.e("Get version info error") }
             .mapLeft { GetVersionInfoError.Unknown(it) }
 
-    private suspend fun getCurrentApiAccessMethod(): ApiAccessMethodSetting =
-        grpc.getCurrentApiAccessMethod(Empty.getDefaultInstance()).toDomain()
+    // D.4 step 47: getCurrentApiAccessMethod dropped (apiaccess feature dead).
 
     suspend fun logoutAccount(): Either<LogoutAccountError, Unit> =
         Either.catch { grpc.logoutAccount(StringValue.of("android-ui")) }
@@ -432,7 +388,6 @@ class ManagementService(
                 async { _mutableSettings.update { getSettings() } },
                 async { _mutableVersionInfo.update { getVersionInfo().getOrNull() } },
                 async { _mutableRelayList.update { getRelayList() } },
-                async { _mutableCurrentAccessMethod.update { getCurrentApiAccessMethod() } },
             )
         }
     }
@@ -672,28 +627,7 @@ class ManagementService(
             .mapLeft(SetRelayLocationError::Unknown)
             .mapEmpty()
 
-    suspend fun createCustomList(
-        name: CustomListName,
-        locations: List<GeoLocationId> = emptyList(),
-    ): Either<CreateCustomListError, CustomListId> =
-        Either.catch {
-                grpc.createCustomList(
-                    ManagementInterface.NewCustomList.newBuilder()
-                        .setName(name.value)
-                        .addAllLocations(locations.map(GeoLocationId::fromDomain))
-                        .build()
-                )
-            }
-            .map { CustomListId(it.value) }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    Status.Code.ALREADY_EXISTS -> CustomListAlreadyExists
-                    else -> {
-                        Logger.e("Unknown create custom list error")
-                        UnknownCustomListError(it)
-                    }
-                }
-            }
+    // D.4 step 47: createCustomList dropped (CustomList feature dead).
 
     suspend fun updateCustomList(customList: ModelCustomList): Either<UpdateCustomListError, Unit> =
         Either.catch { grpc.updateCustomList(customList.fromDomain()) }
@@ -708,31 +642,8 @@ class ManagementService(
             }
             .mapEmpty()
 
-    suspend fun deleteCustomList(id: CustomListId): Either<DeleteCustomListError, Unit> =
-        Either.catch { grpc.deleteCustomList(StringValue.of(id.value)) }
-            .onLeft { Logger.e("Delete custom list error") }
-            .mapLeft(::UnknownCustomListError)
-            .mapEmpty()
-
-    suspend fun clearAllRelayOverrides(): Either<ClearAllOverridesError, Unit> =
-        Either.catch { grpc.clearAllRelayOverrides(Empty.getDefaultInstance()) }
-            .onLeft { Logger.e("Clear all relay overrides error") }
-            .mapLeft(ClearAllOverridesError::Unknown)
-            .mapEmpty()
-
-    suspend fun applySettingsPatch(json: String): Either<SettingsPatchError, Unit> =
-        Either.catch { grpc.applyJsonSettings(StringValue.of(json)) }
-            .mapLeftStatus {
-                when (it.status.code) {
-                    // Currently we only get invalid argument errors from daemon via gRPC
-                    Status.Code.INVALID_ARGUMENT -> SettingsPatchError.ParsePatch
-                    else -> {
-                        Logger.e("Unknown apply settings patch error")
-                        SettingsPatchError.ApplyPatch
-                    }
-                }
-            }
-            .mapEmpty()
+    // D.4 step 47: deleteCustomList + clearAllRelayOverrides + applySettingsPatch
+    // dropped (CustomList / ServerIpOverride / SettingsPatch features dead).
 
     suspend fun setOwnershipAndProviders(
         ownershipConstraint: Constraint<ModelOwnership>,
@@ -795,11 +706,7 @@ class ManagementService(
                 }
             }
 
-    suspend fun initializePlayPurchase():
-        Either<PlayPurchaseInitError, PlayExternalObfuscatedAccountId> =
-        Either.catch { grpc.initPlayPurchase(Empty.getDefaultInstance()).toDomain() }
-            .onLeft { Logger.e("Initialize play purchase error") }
-            .mapLeft { PlayPurchaseInitError.OtherError }
+    // D.4 step 47: initializePlayPurchase dropped (Play Store billing dead).
 
     suspend fun verifyPlayPurchase(purchase: PlayPurchase): Either<PlayPurchaseVerifyError, Unit> =
         Either.catch { grpc.verifyPlayPurchase(purchase.fromDomain()) }
@@ -837,57 +744,10 @@ class ManagementService(
 
     // D.4 step 46: getWebsiteAuthToken removed (mullvad.net web-account flow dead).
 
-    suspend fun addApiAccessMethod(
-        newAccessMethodSetting: NewAccessMethodSetting
-    ): Either<AddApiAccessMethodError, ApiAccessMethodId> =
-        Either.catch { grpc.addApiAccessMethod(newAccessMethodSetting.fromDomain()) }
-            .onLeft { Logger.e("Add api access method error") }
-            .mapLeft(AddApiAccessMethodError::Unknown)
-            .map { ApiAccessMethodId.fromString(it.value) }
-
-    suspend fun removeApiAccessMethod(
-        apiAccessMethodId: ApiAccessMethodId
-    ): Either<RemoveApiAccessMethodError, Unit> =
-        Either.catch { grpc.removeApiAccessMethod(apiAccessMethodId.fromDomain()) }
-            .onLeft { Logger.e("Remove api access method error") }
-            .mapLeft(RemoveApiAccessMethodError::Unknown)
-            .mapEmpty()
-
-    suspend fun setApiAccessMethod(
-        apiAccessMethodId: ApiAccessMethodId
-    ): Either<SetApiAccessMethodError, Unit> =
-        Either.catch { grpc.setApiAccessMethod(apiAccessMethodId.fromDomain()) }
-            .onLeft { Logger.e("Set api access method error") }
-            .mapLeft(SetApiAccessMethodError::Unknown)
-            .mapEmpty()
-
-    suspend fun updateApiAccessMethod(
-        apiAccessMethodSetting: ApiAccessMethodSetting
-    ): Either<UpdateApiAccessMethodError, Unit> =
-        Either.catch { grpc.updateApiAccessMethod(apiAccessMethodSetting.fromDomain()) }
-            .onLeft { Logger.e("Update api access method error") }
-            .mapLeft(::UnknownApiAccessMethodError)
-            .mapEmpty()
-
-    suspend fun testCustomApiAccessMethod(
-        customProxy: ApiAccessMethod.CustomProxy
-    ): Either<TestApiAccessMethodError, Unit> =
-        Either.catch { grpc.testCustomApiAccessMethod(customProxy.fromDomain()) }
-            .onLeft { Logger.e("Test custom api access method error") }
-            .mapLeftStatus { TestApiAccessMethodError.Grpc }
-            .map { result ->
-                either { ensure(result.value) { TestApiAccessMethodError.CouldNotAccess } }
-            }
-
-    suspend fun testApiAccessMethodById(
-        apiAccessMethodId: ApiAccessMethodId
-    ): Either<TestApiAccessMethodError, Unit> =
-        Either.catch { grpc.testApiAccessMethodById(apiAccessMethodId.fromDomain()) }
-            .onLeft { Logger.e("Test api access method error") }
-            .mapLeftStatus { TestApiAccessMethodError.Grpc }
-            .map { result ->
-                either { ensure(result.value) { TestApiAccessMethodError.CouldNotAccess } }
-            }
+    // D.4 step 47: full apiaccess gRPC accessor block dropped — addApiAccessMethod,
+    // removeApiAccessMethod, setApiAccessMethod, updateApiAccessMethod,
+    // testCustomApiAccessMethod, testApiAccessMethodById (apiaccess feature
+    // dead in step 33 ; Warren API endpoint is fixed at build time).
 
     suspend fun setMultihop(enabled: Boolean): Either<SetWireguardConstraintsError, Unit> =
         Either.catch {
@@ -989,9 +849,7 @@ class ManagementService(
     }
 }
 
-sealed interface PartitionRelaysError {
-    data class Unknown(val error: Throwable) : PartitionRelaysError
-}
+// D.4 step 47: PartitionRelaysError dropped (partitionRelays method removed).
 
 sealed interface GrpcConnectivityState {
     data object Connecting : GrpcConnectivityState
