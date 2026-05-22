@@ -110,6 +110,14 @@ public final class WarrenWallet {
         mnemonic
     }
 
+    /// Returns the public key as a lower-case hex string (exactly 64
+    /// characters). Safe to share with support : the pubkey is
+    /// non-secret per Ed25519 cryptography. Used by
+    /// `WarrenWalletIdentityView`.
+    public var publicKeyHex: String {
+        publicKey.map { String(format: "%02x", $0) }.joined()
+    }
+
     /// Wipes the in-memory mnemonic string. Idempotent. Call after the
     /// consumer has persisted the mnemonic to the Keychain.
     public func forgetSecret() {

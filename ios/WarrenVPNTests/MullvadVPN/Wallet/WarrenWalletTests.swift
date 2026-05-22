@@ -109,4 +109,39 @@ final class WarrenWalletTests: XCTestCase {
         wallet.forgetSecret()
         XCTAssertEqual(wallet.revealMnemonic(), "")
     }
+
+    /// `publicKeyHex` is exactly 64 lower-case hex chars (32 bytes ×
+    /// 2 nibbles). Matches Ed25519 wire format consumed by Warren
+    /// exit allowlists + support tooling.
+    func test_publicKeyHex_isCanonical64CharLowerHex() throws {
+        let wallet = try WarrenWallet.generate()
+        let hex = wallet.publicKeyHex
+        XCTAssertEqual(hex.count, 64, "Expected exactly 64 hex characters for 32-byte Ed25519 pubkey")
+        // All chars must be 0-9 or a-f (lower-case only).
+        let allowed = CharacterSet(charactersIn: "0123456789abcdef")
+        XCTAssertTrue(
+            hex.unicodeScalars.allSatisfy { allowed.contains($0) },
+            "publicKeyHex must be lower-case hex only, got: \(hex)"
+        )
+    }
+
+    /// `publicKeyHex` matches the raw `publicKey` byte-by-byte when
+    /// re-decoded. Round-trip sanity check.
+    func test_publicKeyHex_roundTripMatchesRawBytes() throws {
+        let wallet = try WarrenWallet.generate()
+        let hex = wallet.publicKeyHex
+        // Re-decode the hex back to bytes.
+        var decoded = [UInt8]()
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let next = hex.index(index, offsetBy: 2)
+            guard let byte = UInt8(hex[index..<next], radix: 16) else {
+                XCTFail("Invalid hex byte at \(hex[index..<next])")
+                return
+            }
+            decoded.append(byte)
+            index = next
+        }
+        XCTAssertEqual(Data(decoded), wallet.publicKey)
+    }
 }

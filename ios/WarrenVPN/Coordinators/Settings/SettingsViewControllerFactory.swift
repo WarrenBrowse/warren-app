@@ -214,7 +214,7 @@ final class SettingsViewControllerFactory {
         do {
             let mnemonic = try WarrenWalletKeychain.load()
             let wallet = try WarrenWallet.fromMnemonic(mnemonic)
-            hex = wallet.publicKey.map { String(format: "%02x", $0) }.joined()
+            hex = wallet.publicKeyHex
             // Wipe the seed material immediately ; we only needed the
             // pubkey (non-secret per Ed25519).
             wallet.forgetSecret()
