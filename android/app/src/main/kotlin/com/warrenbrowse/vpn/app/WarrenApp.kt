@@ -55,7 +55,6 @@ import com.warrenbrowse.vpn.feature.daita.impl.navigation.daitaEntry
 import com.warrenbrowse.vpn.feature.filter.impl.navigation.filterEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
-import com.warrenbrowse.vpn.feature.location.impl.navigation.selectLocationEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
@@ -147,7 +146,8 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         notificationEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
-        selectLocationEntry(nav3)
+        // D.4 step 25: selectLocationEntry removed - Mullvad SelectLocation
+        // is unreachable (Switch button routes to WarrenLocationPicker).
         serverIpOverrideEntry(nav3)
         settingsEntry(nav3)
         splashEntry(nav3)
