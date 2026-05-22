@@ -10,7 +10,8 @@ android { namespace = "com.warrenbrowse.vpn.feature.vpnsettings.impl" }
 
 dependencies {
     implementation(projects.lib.feature.autoconnect.api)
-    implementation(projects.lib.feature.serveripoverride.api)
+    // D.4 step 35: serveripoverride.api dropped (NavKey no longer used,
+    // routing to WarrenTunnelSettings).
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.vpnsettings.api)
     implementation(projects.lib.navigation)

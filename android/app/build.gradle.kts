@@ -393,8 +393,8 @@ dependencies {
     // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.impl)
     implementation(projects.lib.feature.problemreport.impl)
-    implementation(projects.lib.feature.serveripoverride.impl)
-    implementation(projects.lib.feature.serveripoverride.api)
+    // D.4 step 35: serveripoverride module deleted (Warren exit fleet
+    // is sovereign, no per-relay IP overrides).
     implementation(projects.lib.feature.settings.impl)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.impl)

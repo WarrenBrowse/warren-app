@@ -17,7 +17,8 @@ dependencies {
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.login.api)
     // D.4 step 32: daita.api + multihop.api dropped.
-    implementation(projects.lib.feature.serveripoverride.api)
+    // D.4 step 35: serveripoverride.api dropped (SERVER_IP_OVERRIDE
+    // FeatureIndicator routes to WarrenTunnelSettings).
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
     implementation(projects.lib.feature.vpnsettings.api)

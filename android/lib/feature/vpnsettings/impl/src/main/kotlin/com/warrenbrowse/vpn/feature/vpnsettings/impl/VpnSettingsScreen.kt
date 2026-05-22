@@ -54,7 +54,6 @@ import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
 import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
-import com.warrenbrowse.vpn.feature.serveripoverride.api.ServerIpOverrideNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.ConnectOnStartupInfoNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.ContentBlockersInfoNavKey
 import com.warrenbrowse.vpn.feature.vpnsettings.api.CustomDnsInfoNavKey
@@ -98,7 +97,6 @@ import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_ANTI_CENSORSHIP_SETTINGS_TEST_T
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_LAST_ITEM_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_QUANTUM_ITEM_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_VPN_SETTINGS_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.SERVER_IP_OVERRIDE_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_AUTO_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG
@@ -141,7 +139,6 @@ private fun PreviewVpnSettings(
             navigateToCustomDnsInfo = {},
             navigateToQuantumResistanceInfo = {},
             navigateToLocalNetworkSharingInfo = {},
-            navigateToServerIpOverrides = {},
             onSelectDeviceIpVersion = {},
             onToggleIpv6 = {},
             onToggleContentBlockersExpanded = {},
@@ -222,8 +219,6 @@ fun SharedTransitionScope.VpnSettings(
             dropUnlessResumed { navigator.navigate(QuantumResistanceInfoNavKey) },
         navigateToLocalNetworkSharingInfo =
             dropUnlessResumed { navigator.navigate(LocalNetworkSharingInfoNavKey) },
-        navigateToServerIpOverrides =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ServerIpOverrideNavKey()) },
         onToggleContentBlockersExpanded = vm::onToggleContentBlockersExpand,
         onToggleAllBlockers = vm::onToggleAllBlockers,
         onToggleBlockTrackers = vm::onToggleBlockTrackers,
@@ -273,7 +268,6 @@ fun VpnSettingsScreen(
     navigateToAntiCensorship: () -> Unit,
     navigateToQuantumResistanceInfo: () -> Unit,
     navigateToLocalNetworkSharingInfo: () -> Unit,
-    navigateToServerIpOverrides: () -> Unit,
     onToggleContentBlockersExpanded: () -> Unit,
     onToggleAllBlockers: (Boolean) -> Unit,
     onToggleBlockTrackers: (Boolean) -> Unit,
@@ -330,7 +324,6 @@ fun VpnSettingsScreen(
                             navigateToMalwareInfo,
                             navigateToQuantumResistanceInfo,
                             navigateToLocalNetworkSharingInfo,
-                            navigateToServerIpOverrides,
                             navigateToAntiCensorship,
                             onToggleContentBlockersExpanded,
                             onToggleAllBlockers,
@@ -369,7 +362,6 @@ fun VpnSettingsContent(
     navigateToMalwareInfo: () -> Unit,
     navigateToQuantumResistanceInfo: () -> Unit,
     navigateToLocalNetworkSharingInfo: () -> Unit,
-    navigateToServerIpOverrides: () -> Unit,
     navigateToAntiCensorship: () -> Unit,
     onToggleContentBlockersExpanded: () -> Unit,
     onToggleAllBlockers: (Boolean) -> Unit,
@@ -803,11 +795,6 @@ fun VpnSettingsContent(
                         )
                     }
 
-                VpnSettingItem.ServerIpOverrides ->
-                    item(key = it::class.simpleName) {
-                        ServerIpOverrides(navigateToServerIpOverrides, Modifier.animateItem())
-                    }
-
                 VpnSettingItem.AntiCensorshipHeader ->
                     item(key = it::class.simpleName) {
                         NavigationListItem(
@@ -832,16 +819,6 @@ fun VpnSettingsContent(
             }
         }
     }
-}
-
-@Composable
-private fun ServerIpOverrides(onServerIpOverridesClick: () -> Unit, modifier: Modifier = Modifier) {
-    NavigationListItem(
-        title = stringResource(id = R.string.server_ip_override),
-        modifier = modifier,
-        onClick = onServerIpOverridesClick,
-        testTag = SERVER_IP_OVERRIDE_BUTTON_TEST_TAG,
-    )
 }
 
 private fun VpnSettingsSideEffect.ShowToast.message(resources: Resources) =

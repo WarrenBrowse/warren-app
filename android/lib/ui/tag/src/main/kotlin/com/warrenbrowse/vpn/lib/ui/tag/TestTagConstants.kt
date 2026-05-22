@@ -38,7 +38,6 @@ const val WIREGUARD_OBFUSCATION_UDP_OVER_TCP_CELL_TEST_TAG =
     "wireguard_obfuscation_udp_over_tcp_cell_test_tag"
 const val WIREGUARD_OBFUSCATION_QUIC_CELL_TEST_TAG = "wireguard_obfuscation_quic_cell_test_tag"
 const val WIREGUARD_OBFUSCATION_LWO_CELL_TEST_TAG = "wireguard_obfuscation_lwo_cell_test_tag"
-const val SERVER_IP_OVERRIDE_BUTTON_TEST_TAG = "server_ip_override_button_test_tag"
 const val WIREGUARD_DEVICE_IP_AUTO_CELL_TEST_TAG = "wireguard_device_ip_auto_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG = "wireguard_device_ip_ipv4_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG = "wireguard_device_ip_ipv6_cell_test_tag"
@@ -113,21 +112,8 @@ const val SELECT_LOCATION_CUSTOM_LIST_BOTTOM_SHEET_TEST_TAG =
 const val SELECT_LOCATION_LOCATION_BOTTOM_SHEET_TEST_TAG =
     "select_location_location_bottom_sheet_test_tag"
 
-// ServerIpOverridesScreen
-const val SERVER_IP_OVERRIDE_IMPORT_TEST_TAG = "server_ip_override_import_button_test_tag"
-const val SERVER_IP_OVERRIDE_INFO_TEST_TAG = "server_ip_override_info_button_test_tag"
-const val SERVER_IP_OVERRIDE_MORE_VERT_TEST_TAG = "server_ip_override_more_vert_button_test_tag"
-const val SERVER_IP_OVERRIDE_RESET_OVERRIDES_TEST_TAG = "server_ip_override_reset_button_test_tag"
-const val SERVER_IP_OVERRIDES_IMPORT_BY_FILE_TEST_TAG = "server_ip_override_import_by_file_test_tag"
-const val SERVER_IP_OVERRIDES_IMPORT_BY_TEXT_TEST_TAG = "server_ip_override_import_by_text_test_tag"
-const val SERVER_IP_OVERRIDES_TEXT_INPUT_TEST_TAG = "server_ip_overrides_text_input_test_tag"
-const val SERVER_IP_OVERRIDES_IMPORT_BY_TEXT_IMPORT_BUTTON_TEST_TAG =
-    "server_ip_overrides_import_by_text_import_button_test_tag"
-
-// ResetServerIpOverridesConfirmationDialog
-const val RESET_SERVER_IP_OVERRIDE_RESET_TEST_TAG = "reset_server_ip_override_reset_button_test_tag"
-const val RESET_SERVER_IP_OVERRIDE_CANCEL_TEST_TAG =
-    "reset_server_ip_override_cancel_button_test_tag"
+// D.4 step 35: ServerIpOverrides + ResetServerIpOverridesConfirmation
+// test tags removed (module deleted - Warren exit fleet is sovereign).
 
 // SaveApiAccessMethodDialog
 const val SAVE_API_ACCESS_METHOD_LOADING_SPINNER_TEST_TAG =

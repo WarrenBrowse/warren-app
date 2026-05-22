@@ -7,7 +7,6 @@ import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_ANTI_CENSORSHIP_SETTINGS_TEST_T
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_QUANTUM_ITEM_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_VPN_SETTINGS_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_WIREGUARD_CUSTOM_PORT_NUMBER_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.SERVER_IP_OVERRIDE_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.SWITCH_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG
@@ -80,10 +79,6 @@ class VpnSettingsPage internal constructor() : Page() {
         scrollUntilCell(LAZY_LIST_WIREGUARD_CUSTOM_PORT_NUMBER_TEST_TAG)
     }
 
-    fun scrollUntilServerIpOverride() {
-        scrollUntilCell(SERVER_IP_OVERRIDE_BUTTON_TEST_TAG)
-    }
-
     fun scrollUntilDeviceIpVersionCell() {
         scrollUntilCell(WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG)
     }
@@ -118,10 +113,6 @@ class VpnSettingsPage internal constructor() : Page() {
 
     fun clickAntiCensorshipCell() {
         uiDevice.findObjectWithTimeout(By.res(LAZY_LIST_ANTI_CENSORSHIP_SETTINGS_TEST_TAG)).click()
-    }
-
-    fun clickServerIpOverrideButton() {
-        uiDevice.findObjectWithTimeout(By.res(SERVER_IP_OVERRIDE_BUTTON_TEST_TAG)).click()
     }
 
     fun clickDeviceIpIpv4Cell() {
