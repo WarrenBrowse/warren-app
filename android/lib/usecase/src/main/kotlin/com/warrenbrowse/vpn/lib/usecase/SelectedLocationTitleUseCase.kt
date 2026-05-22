@@ -4,26 +4,27 @@ import arrow.core.raise.nullable
 import kotlinx.coroutines.flow.combine
 import com.warrenbrowse.vpn.lib.common.util.relaylist.findCity
 import com.warrenbrowse.vpn.lib.model.Constraint
-import com.warrenbrowse.vpn.lib.model.CustomList
 import com.warrenbrowse.vpn.lib.model.CustomListId
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
 import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
-import com.warrenbrowse.vpn.lib.repository.CustomListsRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 
+// D.4 step 45: CustomListsRepository dependency dropped — Mullvad custom-list
+// picker screens were deleted in step 27, so customLists is permanently empty
+// for new installs. A stale persisted CustomListId from a prior Mullvad install
+// returns null (no title rendered, ConnectViewModel falls back to the default
+// "Switch location" placeholder).
 class SelectedLocationTitleUseCase(
-    private val customListsRepository: CustomListsRepository,
     private val relayListRepository: RelayListRepository,
 ) {
     operator fun invoke() =
         combine(
-            customListsRepository.customLists,
             relayListRepository.relayList,
             relayListRepository.selectedLocation,
-        ) { customLists, relayList, selectedLocation ->
+        ) { relayList, selectedLocation ->
             if (selectedLocation is Constraint.Only) {
-                createRelayItemTitle(selectedLocation.value, relayList, customLists ?: emptyList())
+                createRelayItemTitle(selectedLocation.value, relayList)
             } else {
                 null
             }
@@ -32,10 +33,9 @@ class SelectedLocationTitleUseCase(
     private fun createRelayItemTitle(
         relayItemId: RelayItemId,
         relayCountries: List<RelayItem.Location.Country>,
-        customLists: List<CustomList>,
     ): String? =
         when (relayItemId) {
-            is CustomListId -> customLists.firstOrNull { it.id == relayItemId }?.name?.value
+            is CustomListId -> null
             is GeoLocationId.Hostname -> createRelayTitle(relayCountries, relayItemId)
             is GeoLocationId.City -> relayCountries.findCity(relayItemId)?.name
             is GeoLocationId.Country -> relayCountries.firstOrNull { it.id == relayItemId }?.name

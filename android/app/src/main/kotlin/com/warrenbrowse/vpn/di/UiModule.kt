@@ -37,9 +37,7 @@ import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
-import com.warrenbrowse.vpn.lib.repository.CustomListsRepository
 import com.warrenbrowse.vpn.lib.repository.ProblemReportRepository
-import com.warrenbrowse.vpn.lib.repository.RelayListFilterRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 import com.warrenbrowse.vpn.lib.repository.SettingsRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
@@ -99,9 +97,10 @@ val uiModule = module {
     }
     // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
     // sovereign, no per-relay IP overrides.
-    single { CustomListsRepository(get()) }
+    // D.4 step 45: CustomListsRepository + RelayListFilterRepository dropped
+    // (orphan singles — CustomList/Filter screens deleted in step 27,
+    // SelectedLocationTitleUseCase rewritten without CustomLists dependency).
     single { RelayListRepository(get(), get()) }
-    single { RelayListFilterRepository(get()) }
     // D.4 step 29: VoucherRepository removed - only consumer was the
     // deleted VoucherDialogViewModel.
     single { SplitTunnelingRepository(get()) }
@@ -146,7 +145,7 @@ val uiModule = module {
     // SelectLocation/CustomList screens. SelectedLocationTitleUseCase +
     // LastKnownLocationUseCase + ProviderToOwnershipsUseCase + their
     // dependents kept because ConnectViewModel still references them.
-    single { SelectedLocationTitleUseCase(get(), get()) }
+    single { SelectedLocationTitleUseCase(get()) }
     single { LastKnownLocationUseCase(get()) }
     single { DeleteCustomDnsUseCase(get()) }
 
