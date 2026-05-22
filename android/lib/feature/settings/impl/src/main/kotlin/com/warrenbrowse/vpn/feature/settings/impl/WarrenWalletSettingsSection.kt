@@ -18,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
@@ -52,9 +54,11 @@ fun WarrenWalletSettingsSection(
 ) {
     val state by walletRepository.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboardManager.current
     var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
     var confirmErase by remember { mutableStateOf(false) }
     var viewError by remember { mutableStateOf<String?>(null) }
+    var copyHint by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state) {
         if (state is WalletState.Absent) {
@@ -69,23 +73,24 @@ fun WarrenWalletSettingsSection(
             style = MaterialTheme.typography.titleMedium,
         )
 
-        // Wallet identity: pubkey + state hint. Tap the pubkey row to
-        // reveal the full 64-char hex (default view truncates for
-        // readability). Pubkey is not sensitive (it's the public key);
-        // we still avoid auto-displaying the full string because the
-        // truncated form keeps the Settings UI compact.
-        var pubkeyExpanded by remember { mutableStateOf(false) }
+        // Wallet identity: pubkey + state hint. Tap the row to copy the
+        // full 64-char hex to the clipboard (the pubkey is the user's
+        // shareable public identity - not a secret). The default
+        // display truncates for compactness.
         when (val s = state) {
             is WalletState.Ready -> {
                 val full = s.pubkey.value
-                val display = if (pubkeyExpanded) full else full.take(8) + "…" + full.takeLast(8)
+                val truncated = full.take(8) + "…" + full.takeLast(8)
                 Text(
-                    text = "Pubkey: $display",
+                    text = "Pubkey: $truncated  (tap to copy)",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp, bottom = 8.dp)
-                        .clickable { pubkeyExpanded = !pubkeyExpanded },
+                        .clickable {
+                            clipboard.setText(AnnotatedString(full))
+                            copyHint = "Pubkey copied to clipboard"
+                        },
                 )
             }
             WalletState.Locked -> {
@@ -102,6 +107,15 @@ fun WarrenWalletSettingsSection(
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                 )
             }
+        }
+
+        copyHint?.let { hint ->
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         }
 
         viewError?.let { msg ->
