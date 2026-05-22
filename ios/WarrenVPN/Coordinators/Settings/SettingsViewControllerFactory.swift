@@ -91,6 +91,8 @@ final class SettingsViewControllerFactory {
             makeWarrenWalletEraseViewController()
         case .warrenWalletIdentity:
             makeWarrenWalletIdentityViewController()
+        case .warrenTunnelStatistics:
+            makeWarrenTunnelStatisticsViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -227,6 +229,41 @@ final class SettingsViewControllerFactory {
         host.view.backgroundColor = .Warren.navy
         host.title = String(localized: "Wallet identity", table: "Wallet")
         return .viewController(host)
+    }
+
+    /// Tunnel statistics (Settings → Tunnel statistics, read-only).
+    /// Snapshot built from App Group `UserDefaults` written by the
+    /// PacketTunnel extension. Refreshes on each push (no continuous
+    /// poll).
+    private func makeWarrenTunnelStatisticsViewController() -> MakeChildResult {
+        let stats = Self.loadTunnelStatistics()
+        let view = WarrenTunnelStatisticsView(stats: stats)
+        let host = UIHostingController(rootView: view)
+        host.view.backgroundColor = .Warren.navy
+        host.title = String(localized: "Tunnel statistics", table: "Settings")
+        return .viewController(host)
+    }
+
+    /// Read tunnel session counters from App Group UserDefaults. The
+    /// counters are populated by `WarrenQuinnAdapter.status()` snapshots
+    /// broadcast from the PacketTunnel extension. Returns a
+    /// disconnected/zero snapshot when no live tunnel exists.
+    static func loadTunnelStatistics() -> WarrenTunnelStatistics {
+        let suite = Bundle.main.object(forInfoDictionaryKey: "ApplicationSecurityGroupIdentifier") as? String
+        let defaults = suite.flatMap { UserDefaults(suiteName: $0) }
+        let bytesIn = UInt64(defaults?.integer(forKey: WarrenAppGroupKey.bytesIn.rawValue) ?? 0)
+        let bytesOut = UInt64(defaults?.integer(forKey: WarrenAppGroupKey.bytesOut.rawValue) ?? 0)
+        let duration = UInt64(defaults?.integer(forKey: WarrenAppGroupKey.connectedDurationSeconds.rawValue) ?? 0)
+        let failover = UInt32(defaults?.integer(forKey: WarrenAppGroupKey.failoverCount.rawValue) ?? 0)
+        let stateLabel = defaults?.string(forKey: WarrenAppGroupKey.stateLabel.rawValue)
+            ?? String(localized: "Disconnected", table: "Settings", comment: "Default tunnel state when no live session")
+        return WarrenTunnelStatistics(
+            stateLabel: stateLabel,
+            bytesIn: bytesIn,
+            bytesOut: bytesOut,
+            connectedDurationSeconds: duration > 0 ? duration : nil,
+            failoverCount: failover
+        )
     }
 
     /// NAT-PMP port forwarding settings (Settings → Port forwarding).

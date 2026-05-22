@@ -190,6 +190,18 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenWalletIdentity }
 
+        case .warrenTunnelStatistics:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Tunnel statistics",
+                table: "Settings",
+                comment: "Settings row that opens the live tunnel counters view"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenTunnelStatistics }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 

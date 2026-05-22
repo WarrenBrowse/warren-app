@@ -65,6 +65,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case warrenWalletBackup
         case warrenWalletErase
         case warrenWalletIdentity
+        case warrenTunnelStatistics
         case warrenPortForwarding
 
         var accessibilityIdentifier: AccessibilityIdentifier {
@@ -95,6 +96,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .warrenWalletEraseCell
             case .warrenWalletIdentity:
                 .warrenWalletIdentityCell
+            case .warrenTunnelStatistics:
+                .warrenTunnelStatisticsCell
             case .warrenPortForwarding:
                 .warrenPortForwardingCell
             }
@@ -264,8 +267,12 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         snapshot.appendItems([.includeAllNetworks], toSection: .vpnSettings)
         if isLoggedIn {
             // Warren-specific tunnel features that depend on an active
-            // wallet session.
-            snapshot.appendItems([.warrenPortForwarding], toSection: .vpnSettings)
+            // wallet session. Statistics row stays visible even when
+            // disconnected (shows a zero snapshot).
+            snapshot.appendItems(
+                [.warrenTunnelStatistics, .warrenPortForwarding],
+                toSection: .vpnSettings
+            )
         }
 
         snapshot.appendSections([.apiAccess])

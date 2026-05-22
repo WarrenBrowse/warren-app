@@ -22,11 +22,18 @@ final class WarrenAppGroupKeyTests: XCTestCase {
     /// test fails fast so the omission is caught at build time.
     func test_allCases_includesAllExpectedKeys() {
         let cases = WarrenAppGroupKey.allCases
-        XCTAssertEqual(cases.count, 4, "Add the new key to consumers before expanding allCases")
+        XCTAssertEqual(cases.count, 9, "Add the new key to consumers before expanding allCases")
+        // Event surfaces (PacketTunnel extension → main app observer).
         XCTAssertTrue(cases.contains(.lastFailoverExit))
         XCTAssertTrue(cases.contains(.lastFailoverAt))
         XCTAssertTrue(cases.contains(.obfuscationActive))
         XCTAssertTrue(cases.contains(.natPmpExternalPort))
+        // Tunnel statistics snapshot (WarrenTunnelStatisticsView).
+        XCTAssertTrue(cases.contains(.bytesIn))
+        XCTAssertTrue(cases.contains(.bytesOut))
+        XCTAssertTrue(cases.contains(.connectedDurationSeconds))
+        XCTAssertTrue(cases.contains(.failoverCount))
+        XCTAssertTrue(cases.contains(.stateLabel))
     }
 
     /// Raw values follow the `WarrenTunnel.<field>` convention so they
@@ -49,6 +56,11 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         XCTAssertEqual(WarrenAppGroupKey.lastFailoverAt.rawValue, "WarrenTunnel.lastFailoverAt")
         XCTAssertEqual(WarrenAppGroupKey.obfuscationActive.rawValue, "WarrenTunnel.obfuscationActive")
         XCTAssertEqual(WarrenAppGroupKey.natPmpExternalPort.rawValue, "WarrenTunnel.natPmpExternalPort")
+        XCTAssertEqual(WarrenAppGroupKey.bytesIn.rawValue, "WarrenTunnel.bytesIn")
+        XCTAssertEqual(WarrenAppGroupKey.bytesOut.rawValue, "WarrenTunnel.bytesOut")
+        XCTAssertEqual(WarrenAppGroupKey.connectedDurationSeconds.rawValue, "WarrenTunnel.connectedDurationSeconds")
+        XCTAssertEqual(WarrenAppGroupKey.failoverCount.rawValue, "WarrenTunnel.failoverCount")
+        XCTAssertEqual(WarrenAppGroupKey.stateLabel.rawValue, "WarrenTunnel.stateLabel")
     }
 
     /// No two keys share a raw value (would silently overwrite each

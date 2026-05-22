@@ -50,6 +50,9 @@ enum SettingsNavigationRoute: Equatable {
     /// Warren wallet identity (read-only pubkey display for support).
     case warrenWalletIdentity
 
+    /// Warren tunnel statistics (status + bytes + duration + failover count).
+    case warrenTunnelStatistics
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

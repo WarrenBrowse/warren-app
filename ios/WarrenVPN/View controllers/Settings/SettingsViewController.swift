@@ -124,6 +124,8 @@ private extension SettingsDataSource.Item {
             .warrenWalletErase
         case .warrenWalletIdentity:
             .warrenWalletIdentity
+        case .warrenTunnelStatistics:
+            .warrenTunnelStatistics
         case .warrenPortForwarding:
             .warrenPortForwarding
         }

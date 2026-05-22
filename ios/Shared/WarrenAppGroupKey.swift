@@ -42,4 +42,25 @@ public enum WarrenAppGroupKey: String, CaseIterable {
     /// `Int`. External port mapped through NAT-PMP after a successful
     /// `MAP` request. Cf. `WarrenTunnelEvent.natPmpMapped/.natPmpRenewed`.
     case natPmpExternalPort = "WarrenTunnel.natPmpExternalPort"
+
+    /// `Int`. Cumulative bytes received over the tunnel since the
+    /// PacketTunnel extension started. Surfaced by
+    /// `WarrenTunnelStatisticsView`.
+    case bytesIn = "WarrenTunnel.bytesIn"
+
+    /// `Int`. Cumulative bytes sent over the tunnel since the
+    /// PacketTunnel extension started.
+    case bytesOut = "WarrenTunnel.bytesOut"
+
+    /// `Int`. Seconds since the active connection was established.
+    /// 0 when the tunnel is not currently connected.
+    case connectedDurationSeconds = "WarrenTunnel.connectedDurationSeconds"
+
+    /// `Int`. Number of multi-exit failover transitions this session.
+    case failoverCount = "WarrenTunnel.failoverCount"
+
+    /// `String`. Localized label for the current tunnel state
+    /// ("Connected" / "Reconnecting" / "Disconnected"). Populated by
+    /// `WarrenQuinnTunnelImplementation` on every state transition.
+    case stateLabel = "WarrenTunnel.stateLabel"
 }
