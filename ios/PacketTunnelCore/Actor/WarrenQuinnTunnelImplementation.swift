@@ -96,6 +96,19 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         )
         self.adapter = adapter
         _actor.bindAdapter(adapter)
+
+        // Push the wallet signing seed into the actor so
+        // `start(options:)` can marshal it into the FFI config. The
+        // Keychain entry uses `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+        // and lives in an App Group accessible from both the main app
+        // and this PacketTunnel extension. C.4.3.Z TODO : extract the
+        // Keychain read helper to `Shared/` so PacketTunnelCore can
+        // call it directly (currently in WarrenVPN target only) ; for
+        // now log the deferred state so the gap is observable.
+        logger.info(
+            "WarrenQuinnTunnelImplementation.setUp : adapter bound, wallet seed bridge deferred to C.4.3.Z (Shared/ Keychain helper extraction)"
+        )
+
         startStatsBroadcastTask(adapter: adapter)
     }
 

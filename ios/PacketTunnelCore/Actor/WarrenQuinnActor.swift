@@ -56,6 +56,14 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// no-op until then.
     private var adapter: WarrenQuinnAdapter?
 
+    /// 32-byte Ed25519 signing seed derived from the user wallet,
+    /// loaded via the cross-process Keychain bridge by the owning
+    /// `WarrenQuinnTunnelImplementation` and pushed in via
+    /// [`bindWalletSigningSeed(_:)`]. `nil` until the bridge fires ;
+    /// `start(options:)` falls back to a logged no-op until then.
+    /// Cleared by [`stop()`].
+    private var walletSigningSeed: Data?
+
     public var observedState: ObservedState {
         get async {
             stateLock.lock()
@@ -97,6 +105,18 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         stateLock.unlock()
     }
 
+    /// Push the wallet Ed25519 signing seed in from the main app
+    /// (Keychain bridge crosses the WarrenVPN → PacketTunnelCore
+    /// target boundary). Called by `WarrenQuinnTunnelImplementation`
+    /// after `bindAdapter(_:)` once the wallet has been resolved.
+    /// 32-byte seed is held by value ; the actor's `stop()` clears it
+    /// to keep the memory window narrow.
+    public func bindWalletSigningSeed(_ seed: Data) {
+        stateLock.lock()
+        self.walletSigningSeed = seed
+        stateLock.unlock()
+    }
+
     /// Apply a `WarrenTunnelEvent` produced by the Rust-side event
     /// callback. Maps the typed event into an `ObservedState` and
     /// pushes it onto the `observedStates` stream + the snapshot.
@@ -132,19 +152,67 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public func start(options: StartOptions) {
-        // C.4.3.Y TODO: marshal `options` (selected relays, source) +
-        // the persisted wallet identity (via WarrenWallet/Keychain) +
-        // a freshly-selected relay descriptor into
-        // `WarrenTunnelConfig` and call `adapter.start(config:)`.
-        // Today the adapter is bound but the config marshalling needs
-        // a settings reader handoff to thread the exit/relay/wallet
-        // through ; tracked separately.
-        logger.info("start called (adapter bound, config marshalling deferred to C.4.3.Y)")
+        stateLock.lock()
+        let adapter = self.adapter
+        let seed = self.walletSigningSeed
+        stateLock.unlock()
+
+        guard let adapter else {
+            logger.warning("start called before bindAdapter ; ignoring")
+            return
+        }
+        guard let seed, seed.count == 32 else {
+            logger.warning("start called before bindWalletSigningSeed ; cannot derive identity")
+            return
+        }
+        guard let selectedRelays = options.selectedRelays else {
+            logger.warning("start called without selectedRelays ; relay selection deferred to UI layer")
+            return
+        }
+
+        // Build the WarrenTunnelConfig from the selected exit relay's
+        // resolved socket address + 32-byte pubkey. Multi-hop entry
+        // relay is honored when present (Session R B.1.8 closed).
+        let exit = selectedRelays.exit
+        let exitEndpointStr = "\(exit.endpoint.socketAddress)"
+        let exitPubkey = exit.endpoint.publicKey
+
+        let multiHop: WarrenRelayConfig?
+        if let entry = selectedRelays.entry {
+            multiHop = WarrenRelayConfig(
+                pubkey: entry.endpoint.publicKey,
+                endpoint: "\(entry.endpoint.socketAddress)",
+                countryCode: entry.location.countryCode
+            )
+        } else {
+            multiHop = nil
+        }
+
+        let config = WarrenTunnelConfig(
+            exitPubkey: exitPubkey,
+            exitEndpoint: exitEndpointStr,
+            walletSigningKey: seed,
+            multiHopRelay: multiHop,
+            daitaSpec: nil,  // DAITA spec wiring lands in C.4.3.Z (needs DaitaPool integration)
+            natPmpEnabled: false,  // settings-driven, deferred
+            bypassCidrs: []  // settings-driven, deferred
+        )
+
+        do {
+            try adapter.start(config: config)
+            logger.info("Warren tunnel started via WarrenQuinnAdapter")
+        } catch {
+            logger.error("WarrenQuinnAdapter.start failed: \(error)")
+            applyEvent(.disconnected)
+        }
     }
 
     public func stop() {
         stateLock.lock()
         let adapter = self.adapter
+        // Clear the wallet seed so its memory window is narrow.
+        // bindWalletSigningSeed will re-push on next start.
+        self.walletSigningSeed = nil
         stateLock.unlock()
         adapter?.stop()
         // The adapter's `stop()` triggers a Disconnected event on the
