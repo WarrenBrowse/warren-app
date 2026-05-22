@@ -12,7 +12,6 @@ import mullvad_daemon.management_interface.ManagementInterface
 import mullvad_daemon.management_interface.entryLocationOrNull
 import mullvad_daemon.management_interface.locationOrNull
 import mullvad_daemon.management_interface.recentsOrNull
-import mullvad_daemon.relay_selector.RelaySelector
 import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
 import com.warrenbrowse.vpn.lib.grpc.RelayNameComparator
 import com.warrenbrowse.vpn.lib.model.AccountData
@@ -36,7 +35,6 @@ import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
 import com.warrenbrowse.vpn.lib.model.Device
 import com.warrenbrowse.vpn.lib.model.DeviceId
 import com.warrenbrowse.vpn.lib.model.DeviceState
-import com.warrenbrowse.vpn.lib.model.DiscardedRelay
 import com.warrenbrowse.vpn.lib.model.DnsOptions
 import com.warrenbrowse.vpn.lib.model.DnsState
 import com.warrenbrowse.vpn.lib.model.Endpoint
@@ -45,7 +43,6 @@ import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
-import com.warrenbrowse.vpn.lib.model.IncompatibleConstraints
 import com.warrenbrowse.vpn.lib.model.IpVersion
 import com.warrenbrowse.vpn.lib.model.LwoObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Mtu
@@ -56,7 +53,6 @@ import com.warrenbrowse.vpn.lib.model.ObfuscationType
 import com.warrenbrowse.vpn.lib.model.Ownership
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.ParameterGenerationError
-import com.warrenbrowse.vpn.lib.model.PlayExternalObfuscatedAccountId
 import com.warrenbrowse.vpn.lib.model.Port
 import com.warrenbrowse.vpn.lib.model.PortRange
 import com.warrenbrowse.vpn.lib.model.ProviderId
@@ -71,7 +67,6 @@ import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
 import com.warrenbrowse.vpn.lib.model.RelayList
 import com.warrenbrowse.vpn.lib.model.RelayOverride
-import com.warrenbrowse.vpn.lib.model.RelayPartitions
 import com.warrenbrowse.vpn.lib.model.RelaySettings
 import com.warrenbrowse.vpn.lib.model.Settings
 import com.warrenbrowse.vpn.lib.model.ShadowsocksObfuscationSettings
@@ -679,8 +674,7 @@ internal fun ManagementInterface.SplitTunnelSettings.toDomain(): SplitTunnelSett
         excludedApps = appsList.map { PackageName(it) }.toSet(),
     )
 
-internal fun ManagementInterface.PlayExternalObfuscatedAccountId.toDomain():
-    PlayExternalObfuscatedAccountId = PlayExternalObfuscatedAccountId(value = id)
+// D.4 step 48: PlayExternalObfuscatedAccountId.toDomain dropped (Play Store billing dead).
 
 internal fun ManagementInterface.ApiAccessMethodSettings.toDomain(): List<ApiAccessMethodSetting> =
     buildList {
@@ -795,24 +789,5 @@ internal fun ManagementInterface.Recent.toDomain(): Recent =
         ManagementInterface.Recent.TypeCase.TYPE_NOT_SET -> error("Recent type must be set")
     }
 
-internal fun RelaySelector.RelayPartitions.toDomain() =
-    RelayPartitions(
-        matches = matchesList.map { it.hostname },
-        discards = discardsList.map { it.toDomain() },
-    )
-
-internal fun RelaySelector.DiscardedRelay.toDomain() =
-    DiscardedRelay(relay.hostname, why = why.toDomain())
-
-internal fun RelaySelector.IncompatibleConstraints.toDomain() =
-    IncompatibleConstraints(
-        inactive = inactive,
-        location = location,
-        providers = providers,
-        ownership = ownership,
-        ipVersion = ipVersion,
-        daita = daita,
-        obfuscation = obfuscation,
-        port = port,
-        conflictWithOtherHop = conflictWithOtherHop,
-    )
+// D.4 step 48: RelaySelector RelayPartitions/DiscardedRelay/IncompatibleConstraints
+// mappers dropped (relay selector tooling dead).

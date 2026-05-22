@@ -3,7 +3,6 @@
 package com.warrenbrowse.vpn.lib.grpc.mapper
 
 import mullvad_daemon.management_interface.ManagementInterface
-import mullvad_daemon.relay_selector.RelaySelector
 import com.warrenbrowse.vpn.lib.model.ApiAccessMethod
 import com.warrenbrowse.vpn.lib.model.ApiAccessMethodId
 import com.warrenbrowse.vpn.lib.model.ApiAccessMethodSetting
@@ -15,13 +14,9 @@ import com.warrenbrowse.vpn.lib.model.DaitaSettings
 import com.warrenbrowse.vpn.lib.model.DefaultDnsOptions
 import com.warrenbrowse.vpn.lib.model.DnsOptions
 import com.warrenbrowse.vpn.lib.model.DnsState
-import com.warrenbrowse.vpn.lib.model.EntryConstraints
-import com.warrenbrowse.vpn.lib.model.ExitConstraints
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
 import com.warrenbrowse.vpn.lib.model.IpVersion
 import com.warrenbrowse.vpn.lib.model.LwoObfuscationSettings
-import com.warrenbrowse.vpn.lib.model.MultihopConstraints
-import com.warrenbrowse.vpn.lib.model.NewAccessMethodSetting
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
 import com.warrenbrowse.vpn.lib.model.ObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.Ownership
@@ -30,7 +25,6 @@ import com.warrenbrowse.vpn.lib.model.PlayPurchasePaymentToken
 import com.warrenbrowse.vpn.lib.model.Port
 import com.warrenbrowse.vpn.lib.model.Providers
 import com.warrenbrowse.vpn.lib.model.RelayItemId
-import com.warrenbrowse.vpn.lib.model.RelaySelectorPredicate
 import com.warrenbrowse.vpn.lib.model.RelaySettings
 import com.warrenbrowse.vpn.lib.model.ShadowsocksObfuscationSettings
 import com.warrenbrowse.vpn.lib.model.SocksAuth
@@ -197,14 +191,7 @@ internal fun PlayPurchase.fromDomain(): ManagementInterface.PlayPurchase =
         .setProductId(productId)
         .build()
 
-internal fun NewAccessMethodSetting.fromDomain(): ManagementInterface.NewAccessMethodSetting =
-    ManagementInterface.NewAccessMethodSetting.newBuilder()
-        .setName(name.value)
-        .setEnabled(enabled)
-        .setAccessMethod(
-            ManagementInterface.AccessMethod.newBuilder().setCustom(apiAccessMethod.fromDomain())
-        )
-        .build()
+// D.4 step 48: NewAccessMethodSetting.fromDomain dropped (apiaccess dead).
 
 internal fun ApiAccessMethod.fromDomain(): ManagementInterface.AccessMethod =
     ManagementInterface.AccessMethod.newBuilder()
@@ -293,65 +280,15 @@ internal fun IpVersion.fromDomain(): ManagementInterface.IpVersion =
         IpVersion.IPV6 -> ManagementInterface.IpVersion.V6
     }
 
-internal fun RelaySelectorPredicate.fromDomain(): RelaySelector.Predicate =
-    when (this) {
-        is RelaySelectorPredicate.Autohop -> fromDomain()
-        is RelaySelectorPredicate.Entry -> fromDomain()
-        is RelaySelectorPredicate.Exit -> fromDomain()
-        is RelaySelectorPredicate.SingleHop -> fromDomain()
-    }
-
-internal fun RelaySelectorPredicate.SingleHop.fromDomain() =
-    RelaySelector.Predicate.newBuilder().setSinglehop(entryConstraints.fromDomain()).build()
-
-internal fun RelaySelectorPredicate.Autohop.fromDomain() =
-    RelaySelector.Predicate.newBuilder().setAutohop(entryConstraints.fromDomain()).build()
-
-internal fun RelaySelectorPredicate.Entry.fromDomain() =
-    RelaySelector.Predicate.newBuilder().setEntry(multihopConstraints.fromDomain()).build()
-
-internal fun RelaySelectorPredicate.Exit.fromDomain() =
-    RelaySelector.Predicate.newBuilder().setExit(multihopConstraints.fromDomain()).build()
-
-internal fun MultihopConstraints.fromDomain(): RelaySelector.MultiHopConstraints =
-    RelaySelector.MultiHopConstraints.newBuilder()
-        .setEntry(entryConstraints.fromDomain())
-        .setExit(exitConstraints.fromDomain())
-        .build()
-
-internal fun EntryConstraints.fromDomain(): RelaySelector.EntryConstraints =
-    RelaySelector.EntryConstraints.newBuilder()
-        .setGeneralConstraints(generalConstraints.fromDomain())
-        .applyIfOnly(obfuscation) { setObfuscationSettings(it.fromDomain()) }
-        .applyIfOnly(daitaSettings) { setDaitaSettings(it.fromDomain()) }
-        .applyIfOnly(ipVersion) { setIpVersion(it.fromDomain()) }
-        .build()
-
-internal fun ExitConstraints.fromDomain(): RelaySelector.ExitConstraints =
-    RelaySelector.ExitConstraints.newBuilder()
-        .applyIfOnly(location) { setLocation(it.fromDomain()) }
-        .setOwnership(ownership.fromDomain())
-        .addAllProviders(providers.fromDomain1())
-        .build()
+// D.4 step 48: RelaySelectorPredicate + MultihopConstraints + EntryConstraints
+// + ExitConstraints + applyIfOnly + fromDomain1 mappers dropped (relay selector
+// tooling dead). DaitaSettings.fromDomain kept inline below.
 
 internal fun DaitaSettings.fromDomain(): ManagementInterface.DaitaSettings =
     ManagementInterface.DaitaSettings.newBuilder()
         .setEnabled(enabled)
         .setDirectOnly(directOnly)
         .build()
-
-internal fun Constraint<Providers>.fromDomain1(): List<RelaySelector.Provider> =
-    when (this) {
-        is Constraint.Any -> emptyList()
-        is Constraint.Only ->
-            value.map { RelaySelector.Provider.newBuilder().setName(it.value).build() }
-    }
-
-internal fun <L, T> L.applyIfOnly(constraint: Constraint<T>, transform: L.(T) -> L): L =
-    when (constraint) {
-        Constraint.Any -> this
-        is Constraint.Only<T> -> this.transform(constraint.value)
-    }
 
 internal fun RelayItemId.fromDomain(): ManagementInterface.LocationConstraint =
     ManagementInterface.LocationConstraint.newBuilder()
