@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Logging
 import WarrenTypes
 
 extension Logger {

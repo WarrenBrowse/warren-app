@@ -24,13 +24,13 @@ typedef uint8_t SwiftAccessMethodKind;
  * wired (C.4.1).
  */
 typedef enum WarrenTunnelEventTagC {
-  Connected = 0,
-  Disconnected = 1,
-  Reconnecting = 2,
-  Failover = 3,
-  NatPmpMapped = 4,
-  NatPmpRenewed = 5,
-  NatPmpFailed = 6,
+  EventConnected = 0,
+  EventDisconnected = 1,
+  EventReconnecting = 2,
+  EventFailover = 3,
+  EventNatPmpMapped = 4,
+  EventNatPmpRenewed = 5,
+  EventNatPmpFailed = 6,
 } WarrenTunnelEventTagC;
 
 /**

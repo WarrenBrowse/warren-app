@@ -555,21 +555,21 @@ private let eventCallbackBridge:
         let event = eventPtr.pointee
         let mapped: WarrenTunnelEvent
         switch event.tag {
-        case Connected: mapped = .connected
-        case Disconnected: mapped = .disconnected
-        case Reconnecting: mapped = .reconnecting
-        case Failover:
+        case EventConnected: mapped = .connected
+        case EventDisconnected: mapped = .disconnected
+        case EventReconnecting: mapped = .reconnecting
+        case EventFailover:
             let country = event.data_failover_country_code.flatMap { String(cString: $0) } ?? ""
             mapped = .failover(toExit: country)
-        case NatPmpMapped:
+        case EventNatPmpMapped:
             mapped = .natPmpMapped(
                 internalPort: event.data_nat_pmp_internal_port,
                 externalPort: event.data_nat_pmp_external_port,
                 lifetime: event.data_nat_pmp_lifetime_seconds
             )
-        case NatPmpRenewed:
+        case EventNatPmpRenewed:
             mapped = .natPmpRenewed(externalPort: event.data_nat_pmp_external_port)
-        case NatPmpFailed:
+        case EventNatPmpFailed:
             let reason = event.data_nat_pmp_failure_reason.flatMap { String(cString: $0) } ?? ""
             mapped = .natPmpFailed(reason: reason)
         default:

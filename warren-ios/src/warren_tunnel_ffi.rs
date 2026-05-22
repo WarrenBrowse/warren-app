@@ -119,15 +119,17 @@ pub struct WarrenTunnelStatusC {
 /// wired (C.4.1).
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[expect(dead_code, reason = "FFI surface ; variants constructed C.4.1")]
 pub enum WarrenTunnelEventTagC {
-    Connected = 0,
-    Disconnected = 1,
-    Reconnecting = 2,
-    Failover = 3,
-    NatPmpMapped = 4,
-    NatPmpRenewed = 5,
-    NatPmpFailed = 6,
+    // Prefix `Event` to disambiguate from `WarrenTunnelStateC`
+    // enumerators (C doesn't scope enum names — `Connected` would
+    // collide otherwise). Swift bridges via the imported C constants.
+    EventConnected = 0,
+    EventDisconnected = 1,
+    EventReconnecting = 2,
+    EventFailover = 3,
+    EventNatPmpMapped = 4,
+    EventNatPmpRenewed = 5,
+    EventNatPmpFailed = 6,
 }
 
 /// Tagged-union event payload.
@@ -435,14 +437,14 @@ pub unsafe extern "C" fn warren_tunnel_start(
         let arc_for_task = std::sync::Arc::clone(&arc);
         arc.runtime.spawn(async move {
             arc_for_task.set_state(WarrenTunnelStateC::Connecting);
-            arc_for_task.fire_event(WarrenTunnelEventTagC::Reconnecting);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::EventReconnecting);
 
             let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key);
             let session = match client.connect(exit_target).await {
                 Ok(session) => session,
                 Err(_e) => {
                     arc_for_task.set_state(WarrenTunnelStateC::Failed);
-                    arc_for_task.fire_event(WarrenTunnelEventTagC::Disconnected);
+                    arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
                     return;
                 }
             };
@@ -451,7 +453,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             arc_for_task
                 .connected_at_secs
                 .store(now_secs(), std::sync::atomic::Ordering::Relaxed);
-            arc_for_task.fire_event(WarrenTunnelEventTagC::Connected);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::EventConnected);
 
             // Drive the bidirectional pump. `pump_bidirectional` takes
             // the `PacketDevice` (our `IosTun` clone) + the Quinn
@@ -467,7 +469,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             let _ = pump_result; // pump logs errors via tracing
 
             arc_for_task.set_state(WarrenTunnelStateC::Disconnected);
-            arc_for_task.fire_event(WarrenTunnelEventTagC::Disconnected);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
         });
 
         // Box the Arc so the FFI sees a single owner ; clones live
@@ -533,7 +535,7 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
         // an mpsc oneshot). For now, just record the state transition
         // so Swift consumers see Reconnecting → Connected on resume.
         arc.set_state(WarrenTunnelStateC::Reconnecting);
-        arc.fire_event(WarrenTunnelEventTagC::Reconnecting);
+        arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
         RC_OK
     }
     #[cfg(not(feature = "tunnel"))]
@@ -562,7 +564,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
         // flag the pump consults.
         if arc.state_snapshot() == WarrenTunnelStateC::Reconnecting {
             arc.set_state(WarrenTunnelStateC::Connected);
-            arc.fire_event(WarrenTunnelEventTagC::Connected);
+            arc.fire_event(WarrenTunnelEventTagC::EventConnected);
         }
         RC_OK
     }

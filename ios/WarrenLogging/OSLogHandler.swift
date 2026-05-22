@@ -7,12 +7,11 @@
 //
 
 import Foundation
-import Logging
 import os
 
 public struct OSLogHandler: LogHandler {
-    public var metadata: Logging.Logger.Metadata = [:]
-    public var logLevel: Logging.Logger.Level = .debug
+    public var metadata: Logger.Metadata = [:]
+    public var logLevel: Logger.Level = .debug
 
     private let label: String
     private let osLog: OSLog
@@ -44,7 +43,7 @@ public struct OSLogHandler: LogHandler {
         osLog = OSLogHandler.getOSLog(subsystem: subsystem, category: category)
     }
 
-    public subscript(metadataKey metadataKey: String) -> Logging.Logger.Metadata.Value? {
+    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
             metadata[metadataKey]
         }
@@ -54,16 +53,16 @@ public struct OSLogHandler: LogHandler {
     }
 
     public func log(
-        level: Logging.Logger.Level,
-        message: Logging.Logger.Message,
-        metadata: Logging.Logger.Metadata?,
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
         source: String,
         file: String,
         function: String,
         line: UInt
     ) {
         let mergedMetadata = self.metadata
-            .merging(metadata ?? [:]) { _, rhs -> Logging.Logger.MetadataValue in
+            .merging(metadata ?? [:]) { _, rhs -> Logger.MetadataValue in
                 rhs
             }
         let prettyMetadata = Self.formatMetadata(mergedMetadata)
@@ -72,12 +71,12 @@ public struct OSLogHandler: LogHandler {
         os_log("%{public}s", log: osLog, type: level.osLogType, "\(logMessage)")
     }
 
-    private static func formatMetadata(_ metadata: Logging.Logger.Metadata) -> String {
+    private static func formatMetadata(_ metadata: Logger.Metadata) -> String {
         metadata.map { "\($0)=\($1)" }.joined(separator: " ")
     }
 }
 
-private extension Logging.Logger.Level {
+private extension Logger.Level {
     var osLogType: OSLogType {
         switch self {
         case .trace, .debug:

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-@_exported import Logging
 import WarrenTypes
 
 private enum LoggerOutput {
