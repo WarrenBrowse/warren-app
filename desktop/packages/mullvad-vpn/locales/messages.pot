@@ -3139,6 +3139,10 @@ msgid "Your Warren wallet"
 msgstr ""
 
 msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
 msgid "Exit ID"
 msgstr ""
 
@@ -3152,6 +3156,10 @@ msgstr ""
 
 msgctxt "warren-pubkey-warning"
 msgid "Previously pinned key"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
 msgstr ""
 
 msgctxt "warren-pubkey-warning"

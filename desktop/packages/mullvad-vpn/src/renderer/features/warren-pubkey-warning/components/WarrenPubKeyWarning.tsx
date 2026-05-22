@@ -120,6 +120,11 @@ export function WarrenPubKeyWarning() {
       close={handleReject}
     >
       {pending && <PubKeyWarningDetails pending={pending} />}
+      <BusyStatusRegion role="status" aria-live="polite">
+        {busy
+          ? messages.pgettext('warren-pubkey-warning', 'Processing your choice, please wait.')
+          : ''}
+      </BusyStatusRegion>
     </ModalAlert>
   );
 }
@@ -156,8 +161,12 @@ const DetailsLabel = styled.span({
 });
 
 function PubKeyWarningDetails({ pending }: DetailsProps) {
+  const detailsLabel = messages.pgettext(
+    'warren-pubkey-warning',
+    'Cryptographic mismatch details',
+  );
   return (
-    <DetailsContainer aria-label="pubkey mismatch details">
+    <DetailsContainer role="group" aria-label={detailsLabel}>
       <DetailsRow>
         <DetailsLabel>{messages.pgettext('warren-pubkey-warning', 'Exit ID')}</DetailsLabel>
         <span title={pending.exitIdHex}>{truncatePubkeyHex(pending.exitIdHex)}</span>
@@ -190,3 +199,17 @@ function PubKeyWarningDetails({ pending }: DetailsProps) {
     </DetailsContainer>
   );
 }
+
+// Polite ARIA live region that announces the busy state to assistive
+// tech while a CTA is in flight. The visible UI shows the disabled
+// buttons via the `busy` flag in the parent; screen readers benefit
+// from an explicit status update so the user knows the choice is
+// being processed.
+const BusyStatusRegion = styled.span({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+});
