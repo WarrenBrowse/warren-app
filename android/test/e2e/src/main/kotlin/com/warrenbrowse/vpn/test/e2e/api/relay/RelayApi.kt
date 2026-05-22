@@ -21,7 +21,7 @@ import com.warrenbrowse.vpn.test.e2e.BuildConfig
 import com.warrenbrowse.vpn.test.e2e.misc.KermitLogger
 
 class RelayApi {
-    private val relayProvider = RelayProvider(BuildConfig.FLAVOR_billing)
+    private val relayProvider = RelayProvider()
 
     private val client: HttpClient =
         HttpClient(CIO) {

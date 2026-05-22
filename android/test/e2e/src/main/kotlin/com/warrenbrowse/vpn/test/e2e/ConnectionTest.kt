@@ -50,7 +50,7 @@ class ConnectionTest : EndToEndTest() {
     private val connCheckClient = ConnectionCheckApi()
     private val relayClient = RelayApi()
     private val firewallClient by lazy { FirewallClient() }
-    private val relayProvider = RelayProvider(BuildConfig.FLAVOR_billing)
+    private val relayProvider = RelayProvider()
 
     @Test
     fun testConnect() {

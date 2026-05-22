@@ -2,13 +2,8 @@ package com.warrenbrowse.vpn.test.common.constant
 
 import com.warrenbrowse.vpn.test.common.misc.TestRelay
 
-object Stagemole {
-    val DEFAULT_RELAY = Relays.gotWg001
-    val DAITA_RELAY = Relays.gotWg002RelaySoftware
-    val NON_DAITA_RELAY = Relays.gotWg001
-    val QUIC_RELAY = Relays.stoWg001
-    val LWO_RELAY = Relays.stoWg001
-}
+// D.4 step 64: Stagemole (Mullvad play flavor staging env) dropped — single
+// Warren flavor uses Production fixtures only.
 
 object Production {
     val DEFAULT_RELAY = Relays.gotWg001
@@ -25,14 +20,6 @@ private object Relays {
     val saoWg201 = TestRelay(relay = "br-sao-wg-201", country = "Brazil", city = "Sao Paulo")
 
     val gotWg001 = TestRelay(relay = "se-got-wg-001", country = "Sweden", city = "Gothenburg")
-    val gotWg002 = TestRelay(relay = "se-got-wg-002", country = "Sweden", city = "Gothenburg")
 
-    val stoWg001 = TestRelay(relay = "se-sto-wg-001", country = "Sweden", city = "Stockholm")
     val stoWg204 = TestRelay(relay = "se-sto-wg-204", country = "Sweden", city = "Stockholm")
-    val gotWg002RelaySoftware =
-        TestRelay(
-            relay = "se-got-wg-002",
-            country = "Relay Software Country",
-            city = "Relay Software city",
-        )
 }

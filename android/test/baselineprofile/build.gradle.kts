@@ -46,12 +46,10 @@ android {
 
     targetProjectPath = ":app"
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // D.4 step 64: BILLING flavor dropped (Mullvad OSS/PLAY split dead).
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             buildConfigField(

@@ -41,7 +41,7 @@ class LeakTest : EndToEndTest() {
     @JvmField
     val forgetAllVpnAppsInSettingsTestRule = ForgetAllVpnAppsInSettingsTestRule()
 
-    val relayProvider = RelayProvider(BuildConfig.FLAVOR_billing)
+    val relayProvider = RelayProvider()
 
     @BeforeEach
     fun setupVPNSettings() {

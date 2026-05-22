@@ -27,7 +27,6 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
 import com.warrenbrowse.vpn.feature.splittunneling.impl.search.SearchSplitTunnelingViewModel
-import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
@@ -247,4 +246,7 @@ const val APP_PREFERENCES_NAME = "${BuildConfig.APPLICATION_ID}.app_preferences"
 const val KERMIT_FILE_LOG_DIR_NAME = "android_app_logs"
 
 private const val BOOT_COMPLETED_RECEIVER_COMPONENT_NAME = "BOOT_COMPLETED_RECEIVER_COMPONENT_NAME"
-private val IS_PLAY_BUILD = BuildConfig.FLAVOR_billing == BillingTypes.PLAY
+// D.4 step 64: BILLING flavor collapsed (Mullvad OSS/PLAY split for Play Store
+// in-app purchase billing is dead on Warren — single Warren build, no Play
+// VPN-time subscriptions). IS_PLAY_BUILD is permanently false.
+private const val IS_PLAY_BUILD = false

@@ -4,26 +4,14 @@ import utilities.BuildTypes.BENCHMARK
 import utilities.BuildTypes.DEBUG
 import utilities.BuildTypes.NON_MINIFIED
 import utilities.BuildTypes.RELEASE
-import utilities.Flavors.OSS
-import utilities.Flavors.PLAY
 import utilities.Flavors.PROD
 
-val ossProdAnyBuildType =
-    VariantFilter(
-        billingPredicate = { it == OSS },
-        infrastructurePredicate = { it == PROD },
-        buildTypePredicate = {
-            when (it) {
-                DEBUG,
-                RELEASE -> true
-                else -> false
-            }
-        },
-    )
+// D.4 step 64: BILLING flavor dropped — Mullvad's OSS/PLAY split is gone.
+// Filters now only constrain on INFRASTRUCTURE (PROD) + build type.
 
-val allPlayDebugReleaseVariants =
+val prodDebugReleaseVariants =
     VariantFilter(
-        billingPredicate = { it == PLAY },
+        infrastructurePredicate = { it == PROD },
         buildTypePredicate = { buildType: String? ->
             when (buildType) {
                 DEBUG,
@@ -35,28 +23,17 @@ val allPlayDebugReleaseVariants =
 
 val baselineFilter =
     VariantFilter(
-        billingPredicate = { it == PLAY },
         infrastructurePredicate = { it == PROD },
         buildTypePredicate = {
             if (it == null) return@VariantFilter false
-
             val isBaselineBuildType =
                 it.contains(NON_MINIFIED, true) || it.contains(BENCHMARK, true)
-
             isBaselineBuildType && it.contains(RELEASE, true)
         },
     )
 
-val ossProdDebug =
+val prodDebug =
     VariantFilter(
-        billingPredicate = { it == OSS },
-        infrastructurePredicate = { it == PROD },
-        buildTypePredicate = { it == DEBUG },
-    )
-
-val playProdDebug =
-    VariantFilter(
-        billingPredicate = { it == PLAY },
         infrastructurePredicate = { it == PROD },
         buildTypePredicate = { it == DEBUG },
     )

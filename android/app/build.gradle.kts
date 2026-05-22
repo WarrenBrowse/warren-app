@@ -6,7 +6,7 @@ import utilities.BuildTypes
 import utilities.FlavorDimensions
 import utilities.Flavors
 import utilities.Variant
-import utilities.allPlayDebugReleaseVariants
+import utilities.prodDebugReleaseVariants
 import utilities.appVersionProvider
 import utilities.baselineFilter
 import utilities.fullReleaseTasks
@@ -15,7 +15,6 @@ import utilities.getBooleanProperty
 import utilities.getStringListProperty
 import utilities.isReleaseBuild
 import utilities.matchesAny
-import utilities.ossProdAnyBuildType
 import utilities.registerReleaseTask
 
 plugins {
@@ -63,7 +62,8 @@ android {
     }
 
     playConfigs {
-        register("playProdRelease") {
+        // D.4 step 64: BILLING flavor collapsed - variant is now `prodRelease`.
+        register("prodRelease") {
             enabled = !appVersion.isDev
             releaseStatus.set(ReleaseStatus.DRAFT)
             track.set(
@@ -98,15 +98,13 @@ android {
         getByName(BuildTypes.DEBUG) { isPseudoLocalesEnabled = true }
     }
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // D.4 step 64: BILLING flavor dimension (OSS/PLAY) collapsed (Mullvad
+    // Play Store in-app purchase billing dead on Warren - single Warren
+    // build, no Play VPN-time subscriptions). INFRASTRUCTURE (PROD-only)
+    // kept for the API endpoint override slot used by debug/staging builds.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) {
-            dimension = FlavorDimensions.BILLING
-            isDefault = true
-        }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             isDefault = true
@@ -194,11 +192,7 @@ androidComponents {
         val buildType = it.buildType
 
         val artifactSuffix = buildString {
-            productFlavors[FlavorDimensions.BILLING]?.let { billingFlavorName ->
-                if (billingFlavorName != Flavors.OSS) {
-                    append(".$billingFlavorName")
-                }
-            }
+            // D.4 step 64: BILLING flavor dropped, single Warren build.
 
             productFlavors[FlavorDimensions.INFRASTRUCTURE]?.let { infrastructureFlavorName ->
                 if (infrastructureFlavorName != Flavors.PROD) {
@@ -325,7 +319,7 @@ androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
             Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matchesAny(allPlayDebugReleaseVariants, ossProdAnyBuildType, baselineFilter)
+                .matchesAny(prodDebugReleaseVariants, baselineFilter)
     }
 }
 

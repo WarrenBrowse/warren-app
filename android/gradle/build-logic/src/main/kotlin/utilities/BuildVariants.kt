@@ -13,15 +13,13 @@ object SigningConfigs {
     const val RELEASE = "release"
 }
 
+// D.4 step 64: BILLING flavor dimension dropped (Mullvad Play Store
+// in-app billing dead on Warren — single Warren build).
 object FlavorDimensions {
-    const val BILLING = "billing"
     const val INFRASTRUCTURE = "infrastructure"
 }
 
 object Flavors {
-    const val OSS = "oss"
-    const val PLAY = "play"
-
     const val PROD = "prod"
 }
 
@@ -33,7 +31,6 @@ data class Variant(val buildType: String?, val productFlavors: Map<String, Strin
 }
 
 data class VariantFilter(
-    val billingPredicate: (billing: String?) -> Boolean = { true },
     val infrastructurePredicate: (infrastructure: String?) -> Boolean = { true },
     val buildTypePredicate: (buildType: String?) -> Boolean = { true },
 )
@@ -42,15 +39,13 @@ fun Variant.matches(filter: VariantFilter): Boolean =
     with(filter) {
         val flavors = productFlavors.toMap()
         buildTypePredicate(buildType) &&
-            infrastructurePredicate(flavors[FlavorDimensions.INFRASTRUCTURE]) &&
-            billingPredicate(flavors[FlavorDimensions.BILLING])
+            infrastructurePredicate(flavors[FlavorDimensions.INFRASTRUCTURE])
     }
 
 fun Variant.matchesAny(vararg filters: VariantFilter): Boolean = filters.any { matches(it) }
 
-fun fullReleaseTasks(appVersion: AppVersion) =
+fun fullReleaseTasks(@Suppress("UNUSED_PARAMETER") appVersion: AppVersion) =
     buildList<String> {
-        add("createOssProdReleaseDistApk")
-        add("createPlayProdReleaseDistApk")
-        add("createPlayProdReleaseDistBundle")
+        add("createProdReleaseDistApk")
+        add("createProdReleaseDistBundle")
     }

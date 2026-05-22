@@ -35,14 +35,11 @@ android {
         }
     }
 
-    // We need to setup the dimensions and flavors in order for the baseline profile
-    // module to be able to to use :test:common.
-    flavorDimensions += FlavorDimensions.BILLING
+    // D.4 step 64: BILLING flavor dimension dropped (Mullvad OSS/PLAY split
+    // dead on Warren). Keep INFRASTRUCTURE.PROD for the baseline profile module.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) { dimension = FlavorDimensions.INFRASTRUCTURE }
     }
 }

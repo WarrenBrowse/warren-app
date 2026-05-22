@@ -1,57 +1,25 @@
 package com.warrenbrowse.vpn.test.common.misc
 
 import com.warrenbrowse.vpn.test.common.constant.Production
-import com.warrenbrowse.vpn.test.common.constant.Stagemole
 
-class RelayProvider(val currentFlavor: String) {
+// D.4 step 64: RelayProvider simplified — Mullvad's OSS-vs-PLAY-flavor relay
+// selection (Production vs Stagemole) collapsed since Warren has a single
+// flavor. The `currentFlavor` parameter is kept for back-compat with the
+// existing e2e test call sites (now passes empty string).
+@Suppress("UNUSED_PARAMETER")
+class RelayProvider(val currentFlavor: String = "") {
 
-    fun getDefaultRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.DEFAULT_RELAY
-            "oss" -> Production.DEFAULT_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getDefaultRelay(): TestRelay = Production.DEFAULT_RELAY
 
-    fun getDaitaRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.DAITA_RELAY
-            "oss" -> Production.DAITA_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getDaitaRelay(): TestRelay = Production.DAITA_RELAY
 
-    fun getNonDaitaRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.NON_DAITA_RELAY
-            "oss" -> Production.NON_DAITA_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getNonDaitaRelay(): TestRelay = Production.NON_DAITA_RELAY
 
-    fun getQuicRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.QUIC_RELAY
-            "oss" -> Production.QUIC_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getQuicRelay(): TestRelay = Production.QUIC_RELAY
 
-    fun getLwoRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.LWO_RELAY
-            "oss" -> Production.LWO_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getLwoRelay(): TestRelay = Production.LWO_RELAY
 
-    fun getOverrideRelay(): TestRelay {
-        return when (currentFlavor) {
-            "play" -> Stagemole.DEFAULT_RELAY
-            "oss" -> Production.OVERRIDE_RELAY
-            else -> error("Invalid flavor: $currentFlavor")
-        }
-    }
+    fun getOverrideRelay(): TestRelay = Production.OVERRIDE_RELAY
 }
 
 data class TestRelay(val country: String, val city: String, val relay: String)

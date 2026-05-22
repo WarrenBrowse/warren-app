@@ -36,12 +36,10 @@ android {
         }
     }
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // D.4 step 64: BILLING flavor dropped.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             buildConfigField(
