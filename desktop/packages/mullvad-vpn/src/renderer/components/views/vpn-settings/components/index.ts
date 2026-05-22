@@ -5,3 +5,4 @@ export * from './kill-switch-setting';
 export * from './anti-censorship-list-item';
 export * from './mtu-setting';
 export * from './ip-version-setting';
+export * from './reset-pinned-exit-keys';

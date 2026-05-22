@@ -27,6 +27,7 @@ import {
   IpVersionSetting,
   KillSwitchSetting,
   MtuSetting,
+  ResetPinnedExitKeys,
 } from './components';
 
 export function VpnSettingsView() {
@@ -78,6 +79,7 @@ export function VpnSettingsView() {
                   <IpVersionSetting />
                   <MtuSetting />
                   <IpOverrideSettings position="solo" />
+                  <ResetPinnedExitKeys position="solo" />
                 </FlexColumn>
               </View.Container>
             </View.Content>

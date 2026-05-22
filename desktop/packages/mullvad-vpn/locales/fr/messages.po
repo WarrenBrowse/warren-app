@@ -240,6 +240,9 @@ msgstr "Aucun"
 msgid "Off"
 msgstr "Désactivé"
 
+msgid "OK"
+msgstr ""
+
 msgid "On"
 msgstr "Activé"
 
@@ -2825,6 +2828,11 @@ msgctxt "vpn-settings-view"
 msgid "DNS content blockers"
 msgstr "Bloqueurs de contenu DNS"
 
+#. %(count)s = number of pin entries dropped.
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "%(count)s entrées d'épinglage de clés supprimées."
+
 msgctxt "vpn-settings-view"
 msgid "Enable to add at least one DNS server."
 msgstr "Activez pour ajouter au moins un serveur DNS."
@@ -2837,6 +2845,10 @@ msgstr "Activez ceci pour autoriser le trafic IPv6 par le tunnel."
 msgctxt "vpn-settings-view"
 msgid "Enter IP"
 msgstr "Saisir l'IP"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Chaque serveur de sortie Warren auquel vous vous êtes déjà connecté sera ré-épinglé lors de la prochaine connexion (Trust On First Use)."
 
 #. Label for settings that enables block of gamling related websites.
 msgctxt "vpn-settings-view"
@@ -2882,6 +2894,34 @@ msgstr "Mode verrouillage"
 msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "Malware"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Table d'épinglage vidée"
+
+#. CTA opening the confirmation modal that
+#. wipes the TOFU pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Réinitialiser"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Tout réinitialiser"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Échec de la réinitialisation"
+
+#. Label for the action that clears every entry
+#. from the Warren TOFU pubkey pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Réinitialiser les clés épinglées"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Réinitialiser les clés épinglées ?"
 
 msgctxt "vpn-settings-view"
 msgid "Restart the daemon for the change to take effect."
@@ -2934,6 +2974,10 @@ msgstr "Cela peut causer des problèmes sur certains sites Web, services et appl
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "Trackers"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Tant que les nouveaux épinglages ne sont pas établis, la détection de substitution est temporairement désactivée : un attaquant qui aurait remplacé un serveur entre deux réinitialisations ne serait pas signalé lors de la première reconnexion."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to Mullvad upstream). Restart the daemon for the change to take effect."

@@ -230,6 +230,9 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
+msgid "OK"
+msgstr ""
+
 msgid "On"
 msgstr ""
 
@@ -2815,6 +2818,11 @@ msgctxt "vpn-settings-view"
 msgid "DNS content blockers"
 msgstr ""
 
+#. %(count)s = number of pin entries dropped.
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Enable to add at least one DNS server."
 msgstr ""
@@ -2826,6 +2834,10 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Enter IP"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
 msgstr ""
 
 #. Label for settings that enables block of gamling related websites.
@@ -2871,6 +2883,34 @@ msgstr ""
 #. Label for settings that enables malware blocking.
 msgctxt "vpn-settings-view"
 msgid "Malware"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr ""
+
+#. CTA opening the confirmation modal that
+#. wipes the TOFU pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr ""
+
+#. Label for the action that clears every entry
+#. from the Warren TOFU pubkey pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2923,6 +2963,10 @@ msgstr ""
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr ""
 
 msgctxt "vpn-settings-view"
