@@ -76,7 +76,23 @@ public struct WarrenAboutView: View {
                 url: "https://github.com/WarrenBrowse/warren-app",
                 icon: "chevron.left.forwardslash.chevron.right"
             )
+            linkRow(
+                label: String(localized: "Send feedback", table: "Settings", comment: "Opens mail composer to support@"),
+                url: "mailto:support@warrenbrowse.com?subject=Warren%20iOS%20feedback",
+                icon: "envelope"
+            )
         }
+
+        Text(
+            String(
+                localized: "Warren is a fork of Mullvad VPN. Mullvad's upstream code is licensed under GPL-3.0 ; Warren's modifications are under AGPL-3.0.",
+                table: "Settings",
+                comment: "Bottom legal credit explaining the Mullvad fork relationship + license"
+            )
+        )
+        .font(.mullvadMicro)
+        .foregroundColor(.white.opacity(0.5))
+        .padding(.top, 12)
     }
 
     @ViewBuilder
