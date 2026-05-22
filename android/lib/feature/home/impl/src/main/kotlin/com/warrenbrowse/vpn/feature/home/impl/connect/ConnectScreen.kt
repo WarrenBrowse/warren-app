@@ -317,12 +317,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     }
 
     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides animatedVisibilityScope) {
-        ConnectScreen(
-            state = state,
-            snackbarHostState = snackbarHostState,
-            onDisconnectClick = { warrenDisconnect.disconnect() },
-            onReconnectClick = { warrenReconnect.reconnect() },
-            onConnectClick = onWarrenConnectClick,
+        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+            ConnectScreen(
+                state = state,
+                snackbarHostState = snackbarHostState,
+                onDisconnectClick = { warrenDisconnect.disconnect() },
+                onReconnectClick = { warrenReconnect.reconnect() },
+                onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick = dropUnlessResumed { navigator.navigate(SelectLocationNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
@@ -357,6 +358,48 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 connectViewModel::dismissAndroid16UpgradeWarning,
             onClickShowAndroid16UpgradeInfo =
                 dropUnlessResumed { navigator.navigate(Android16UpgradeInfoNavKey) },
+            )
+
+            // D.4 step 20: live Warren tunnel state banner overlaid on top
+            // of the legacy Mullvad-shape ConnectScreen. The existing card
+            // below still renders from the dead `connectionProxy.tunnelState`
+            // (always "Disconnected" today); this banner reads the real
+            // Warren state from the proxy so the user can see what the
+            // actual tunnel is doing. The banner only shows when the state
+            // is non-Disconnected so the home screen stays clean at rest.
+            if (warrenState != "Disconnected") {
+                WarrenTunnelStateBanner(
+                    state = warrenState,
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.TopCenter)
+                        .padding(top = 64.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarrenTunnelStateBanner(
+    state: String,
+    modifier: Modifier = Modifier,
+) {
+    val containerColor = when {
+        state.startsWith("Connected") -> Color(0xFF2E7D32)
+        state.startsWith("Connecting") -> Color(0xFFF9A825)
+        state.startsWith("Reconnecting") -> Color(0xFFF9A825)
+        state.startsWith("Failed") -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    androidx.compose.material3.Card(
+        modifier = modifier.padding(horizontal = 24.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = containerColor),
+    ) {
+        androidx.compose.material3.Text(
+            text = state,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }
