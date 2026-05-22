@@ -119,6 +119,7 @@ pub struct WarrenTunnelStatusC {
 /// wired (C.4.1).
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[expect(dead_code, reason = "FFI surface ; Failover + NatPmp* variants wired in C.4.1.X")]
 pub enum WarrenTunnelEventTagC {
     // Prefix `Event` to disambiguate from `WarrenTunnelStateC`
     // enumerators (C doesn't scope enum names — `Connected` would
