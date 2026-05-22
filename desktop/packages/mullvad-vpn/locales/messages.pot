@@ -1496,6 +1496,10 @@ msgctxt "in-app-notifications"
 msgid "DOWNLOADING UPDATE... %(appUpgradeDownloadProgressValue)s%%"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr ""
+
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
@@ -1605,6 +1609,10 @@ msgstr ""
 #. Notification title when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr ""
 
 msgctxt "keys-view"
@@ -2373,6 +2381,10 @@ msgctxt "settings-view"
 msgid "Multihop"
 msgstr ""
 
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr ""
+
 #. Title label in navigation bar
 msgctxt "settings-view"
 msgid "Settings"
@@ -3004,6 +3016,170 @@ msgstr ""
 
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
 msgstr ""
 
 msgctxt "warren-status-view"
