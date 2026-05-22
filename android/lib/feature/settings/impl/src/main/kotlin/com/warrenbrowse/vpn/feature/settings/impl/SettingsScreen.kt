@@ -24,20 +24,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.assureHasDetailPane
 import com.warrenbrowse.vpn.common.compose.createUriHook
-import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.common.compose.itemWithDivider
 import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
-import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
-import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
@@ -85,7 +82,6 @@ private fun PreviewSettingsScreen(
 fun Settings(navigator: Navigator) {
     val vm = koinViewModel<SettingsViewModel>()
     val state by vm.uiState.collectAsStateWithLifecycle()
-    val isTv = isTv()
 
     BackHandler(enabled = navigator.screenIsListDetailTargetWidth) {
         navigator.goBackUntil(SettingsNavKey, inclusive = true)
@@ -98,16 +94,11 @@ fun Settings(navigator: Navigator) {
     SettingsScreen(
         state = state,
         onVpnSettingCellClick =
+            // D.4 step 53: VpnSettings module deleted (Mullvad daemon settings
+            // sync dead). "VPN settings" entry routes to WarrenTunnelSettings
+            // for the Warren-native obfuscation/multihop/DAITA toggles.
             dropUnlessResumed {
-                if (navigator.screenIsListDetailTargetWidth) {
-                    // D.4 step 34: TV detail-pane default switched from
-                    // Mullvad AntiCensorship to Warren tunnel toggles.
-                    val detailKey =
-                        if (isTv) WarrenTunnelSettingsNavKey else AutoConnectNavKey
-                    navigator.navigate(VpnSettingsNavKey(), detailKey)
-                } else {
-                    navigator.navigate(VpnSettingsNavKey())
-                }
+                navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey)
             },
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },

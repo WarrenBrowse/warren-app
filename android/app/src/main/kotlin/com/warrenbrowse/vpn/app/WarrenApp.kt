@@ -58,7 +58,6 @@ import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEnt
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
-import com.warrenbrowse.vpn.feature.vpnsettings.impl.navigation.vpnSettingsEntry
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
@@ -152,7 +151,9 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         settingsEntry(nav3)
         splashEntry(nav3)
         splitTunnelingEntry(nav3)
-        vpnSettingsEntry(nav3)
+        // D.4 step 53: vpnSettingsEntry removed (VpnSettings module deleted —
+        // Mullvad daemon settings sync dead, Warren-native settings live in
+        // WarrenTunnelSettings).
     }
 
     SharedTransitionLayout {

@@ -21,7 +21,7 @@ dependencies {
     // FeatureIndicator routes to WarrenTunnelSettings).
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
-    implementation(projects.lib.feature.vpnsettings.api)
+    // D.4 step 53: feature.vpnsettings.api dropped (module deleted).
     implementation(projects.lib.map)
     // D.4 step 36: lib.payment dropped (Mullvad billing dead on Warren).
     implementation(projects.lib.pushNotification)

@@ -28,9 +28,6 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
 import com.warrenbrowse.vpn.feature.splittunneling.impl.search.SearchSplitTunnelingViewModel
-import com.warrenbrowse.vpn.feature.vpnsettings.impl.VpnSettingsViewModel
-import com.warrenbrowse.vpn.feature.vpnsettings.impl.dns.DnsDialogViewModel
-import com.warrenbrowse.vpn.feature.vpnsettings.impl.mtu.MtuDialogViewModel
 import com.warrenbrowse.vpn.lib.common.constant.BillingTypes
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
@@ -192,15 +189,15 @@ val uiModule = module {
     // (Mullvad multi-device + account-number flows, replaced by
     // WarrenWalletViewModel).
     viewModel { DeviceRevokedViewModel(get(), get()) }
-    viewModel { params -> MtuDialogViewModel(navArgs = params.get(), get()) }
-    viewModel { params -> DnsDialogViewModel(navArgs = params.get(), get(), get(), get()) }
+    // D.4 step 53: MtuDialogViewModel + DnsDialogViewModel dropped (VpnSettings
+    // module deleted — Mullvad daemon settings sync dead).
     viewModel { WarrenWalletViewModel(get()) }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
     // picker, replaced by WarrenLocationPicker).
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { SplashViewModel(get(), get(), get()) }
-    viewModel { params -> VpnSettingsViewModel(navArgs = params.get(), get(), get(), get(), get()) }
+    // D.4 step 53: VpnSettingsViewModel dropped (module deleted).
     viewModel {
         ReportProblemViewModel(
             warrenProblemReporter = get(),

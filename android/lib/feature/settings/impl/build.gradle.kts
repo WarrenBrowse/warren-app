@@ -21,7 +21,7 @@ dependencies {
     implementation(projects.lib.feature.problemreport.api)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
-    implementation(projects.lib.feature.vpnsettings.api)
+    // D.4 step 53: feature.vpnsettings.api dropped (module deleted).
     implementation(projects.lib.repository)
     // D.5 wallet UI: WarrenWalletSettingsSection consumes Mnemonic /
     // WalletState (lib/model) + MnemonicDisplay / BiometricPromptAuthorizer

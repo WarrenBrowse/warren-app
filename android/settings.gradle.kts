@@ -75,8 +75,8 @@ include(
     ":lib:feature:settings:api",
     ":lib:feature:splittunneling:impl",
     ":lib:feature:splittunneling:api",
-    ":lib:feature:vpnsettings:impl",
-    ":lib:feature:vpnsettings:api",
+    // D.4 step 53: feature.vpnsettings module deleted (Mullvad daemon
+    // MTU/DNS/QuantumResistant/etc. settings sync dead on Warren).
     ":lib:map",
     ":lib:model",
     ":lib:navigation",

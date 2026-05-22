@@ -93,7 +93,6 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
-import com.warrenbrowse.vpn.feature.vpnsettings.api.VpnSettingsNavKey
 import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
@@ -354,7 +353,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     navigator.navigate(feature.navKey())
                 },
             onClickShowWireguardPortSettings =
-                dropUnlessResumed { navigator.navigate(VpnSettingsNavKey()) },
+                // D.4 step 53: VpnSettings deleted → route to WarrenTunnelSettings.
+                dropUnlessResumed { navigator.navigate(WarrenTunnelSettingsNavKey) },
             onClickDismissAndroid16UpgradeWarning =
                 connectViewModel::dismissAndroid16UpgradeWarning,
             onClickShowAndroid16UpgradeInfo =
@@ -905,9 +905,13 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.SHADOWSOCKS,
         FeatureIndicator.LWO -> WarrenTunnelSettingsNavKey
 
+        // D.4 step 53: Mullvad VpnSettings deleted (QuantumResistance + LAN
+        // sharing + DNS content blockers + custom DNS + custom MTU were daemon-
+        // backed settings sync, dead on Warren). All FeatureIndicator chips
+        // route to WarrenTunnelSettings until Warren-native equivalents land.
         FeatureIndicator.QUANTUM_RESISTANCE,
         FeatureIndicator.LAN_SHARING,
         FeatureIndicator.DNS_CONTENT_BLOCKERS,
         FeatureIndicator.CUSTOM_DNS,
-        FeatureIndicator.CUSTOM_MTU -> VpnSettingsNavKey(scrollToFeature = this, isModal = true)
+        FeatureIndicator.CUSTOM_MTU -> WarrenTunnelSettingsNavKey
     }
