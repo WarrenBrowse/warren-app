@@ -94,10 +94,12 @@ val uiModule = module {
     // D.4 step 45: CustomListsRepository + RelayListFilterRepository dropped
     // (orphan singles — CustomList/Filter screens deleted in step 27,
     // SelectedLocationTitleUseCase rewritten without CustomLists dependency).
-    single { RelayListRepository(get(), get()) }
+    // D.4 step 58: RelayListRepository slimmed to Warren-native stub.
+    single { RelayListRepository() }
     // D.4 step 29: VoucherRepository removed - only consumer was the
     // deleted VoucherDialogViewModel.
-    single { SplitTunnelingRepository(get()) }
+    // D.4 step 58: SplitTunnelingRepository slimmed to Warren-native stub.
+    single { SplitTunnelingRepository() }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
     // D.4 step 33: ApiAccessRepository removed - Mullvad-only API
     // access method configuration (HTTPS proxies/Tor bridges to reach
@@ -151,7 +153,7 @@ val uiModule = module {
     // EmptyPaymentUseCase dropped (Mullvad Play Store billing dead on
     // Warren — BIP39 wallet identity replaces VPN subscriptions).
 
-    single { AppVersionInfoRepository(get(), get()) }
+    single { AppVersionInfoRepository(get()) }
 
     // D.4 step 27: RelayListScrollConnection (Mullvad relay-list scroll position
     // for SelectLocationScreen) removed - SelectLocation is dead.

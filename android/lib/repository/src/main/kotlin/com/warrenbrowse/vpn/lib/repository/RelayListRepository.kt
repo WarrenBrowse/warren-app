@@ -1,112 +1,63 @@
 package com.warrenbrowse.vpn.lib.repository
 
-import arrow.optics.Every
-import arrow.optics.copy
-import arrow.optics.dsl.every
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import arrow.core.Either
+import arrow.core.right
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import com.warrenbrowse.vpn.lib.common.util.relaylist.findByGeoLocationId
-import com.warrenbrowse.vpn.lib.common.util.relaylist.sortedByName
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
+import kotlinx.coroutines.flow.flowOf
 import com.warrenbrowse.vpn.lib.model.Constraint
 import com.warrenbrowse.vpn.lib.model.GeoLocationId
 import com.warrenbrowse.vpn.lib.model.PortRange
 import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
+import com.warrenbrowse.vpn.lib.model.SetRelayLocationError
+import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
 import com.warrenbrowse.vpn.lib.model.WireguardEndpointData
-import com.warrenbrowse.vpn.lib.model.cities
-import com.warrenbrowse.vpn.lib.model.cityName
-import com.warrenbrowse.vpn.lib.model.countryName
-import com.warrenbrowse.vpn.lib.model.name
-import com.warrenbrowse.vpn.lib.model.relays
 
+// D.4 step 58: RelayListRepository stripped of ManagementService +
+// RelayLocationTranslationRepository deps. The Mullvad daemon's relay channel
+// is dead on Warren — Warren reads the relay catalogue directly through
+// `WarrenRelayProvider` (warren-api-client / WarrenJni.listRelays) and stores
+// the user's selection in `WarrenLocalSettingsRepository.selectedExitId`.
+//
+// The shim here keeps consumers that still reference the Mullvad-shaped API
+// (RelayItem.Location.Country list, Constraint<RelayItemId>) compiling while
+// they are being migrated. All read flows emit empty / Any defaults ; all
+// mutators are no-ops returning Right(Unit). SelectedLocationTitleUseCase
+// (only production consumer that mattered) already returns null on empty
+// inputs.
+@Suppress("UNUSED_PARAMETER", "unused")
 class RelayListRepository(
-    private val managementService: ManagementService,
-    translationRepository: RelayLocationTranslationRepository,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    @Suppress("UnusedPrivateMember") managementService: Any? = null,
+    @Suppress("UnusedPrivateMember") translationRepository: Any? = null,
 ) {
-    val relayList: StateFlow<List<RelayItem.Location.Country>> =
-        combine(managementService.relayCountries, translationRepository.translations) {
-                countries,
-                translations ->
-                countries.translateRelays(translations)
-            }
-            .stateIn(CoroutineScope(dispatcher), SharingStarted.WhileSubscribed(), emptyList())
-
-    private fun List<RelayItem.Location.Country>.translateRelays(
-        translations: Translations
-    ): List<RelayItem.Location.Country> {
-        if (translations.isEmpty()) {
-            return this
-        }
-
-        return Every.list<RelayItem.Location.Country>()
-            .modify(this) { country ->
-                country.copy {
-                    RelayItem.Location.Country.name set translations.lookup(country.name)
-
-                    val cityTraversal = RelayItem.Location.Country.cities.every(Every.list())
-
-                    cityTraversal.name transform { translations.lookup(it) }
-                    cityTraversal.countryName transform { translations.lookup(it) }
-
-                    val relayTraversal = cityTraversal.relays.every(Every.list())
-
-                    relayTraversal.cityName transform { translations.lookup(it) }
-                    relayTraversal.countryName transform { translations.lookup(it) }
-
-                    RelayItem.Location.Country.cities transform { cities -> cities.sortedByName() }
-                }
-            }
-            .sortedByName()
-    }
+    val relayList: StateFlow<List<RelayItem.Location.Country>> = MutableStateFlow(emptyList())
 
     val wireguardEndpointData: StateFlow<WireguardEndpointData> =
-        managementService.wireguardEndpointData.stateIn(
-            CoroutineScope(dispatcher),
-            SharingStarted.WhileSubscribed(),
-            defaultWireguardEndpointData(),
-        )
+        MutableStateFlow(WireguardEndpointData(emptyList(), emptyList()))
 
-    val selectedLocation: StateFlow<Constraint<RelayItemId>> =
-        managementService.settings
-            .map { it.relaySettings.relayConstraints.location }
-            .stateIn(CoroutineScope(dispatcher), SharingStarted.WhileSubscribed(), Constraint.Any)
+    val selectedLocation: StateFlow<Constraint<RelayItemId>> = MutableStateFlow(Constraint.Any)
 
-    val portRanges: Flow<List<PortRange>> =
-        wireguardEndpointData.map { it.portRanges }.distinctUntilChanged()
+    val portRanges: Flow<List<PortRange>> = flowOf(emptyList())
 
-    val shadowsocksPortRanges: Flow<List<PortRange>> =
-        wireguardEndpointData.map { it.shadowsocksPortRanges }.distinctUntilChanged()
+    val shadowsocksPortRanges: Flow<List<PortRange>> = flowOf(emptyList())
 
-    suspend fun updateSelectedRelayLocation(value: RelayItemId) =
-        managementService.setRelayLocation(value)
+    suspend fun updateSelectedRelayLocation(value: RelayItemId): Either<SetRelayLocationError, Unit> =
+        Unit.right()
 
     suspend fun updateSelectedRelayLocationMultihop(
         isMultihopEnabled: Boolean,
         entry: RelayItemId,
         exit: RelayItemId,
-    ) = managementService.setRelayLocationMultihop(isMultihopEnabled, entry, exit)
+    ): Either<SetRelayLocationError, Unit> = Unit.right()
 
-    suspend fun updateExitRelayLocationMultihop(isMultihopEnabled: Boolean, exit: RelayItemId) =
-        managementService.setRelayLocationMultihop(
-            isMultihopEnabled = isMultihopEnabled,
-            entry = null,
-            exit = exit,
-        )
+    suspend fun updateExitRelayLocationMultihop(
+        isMultihopEnabled: Boolean,
+        exit: RelayItemId,
+    ): Either<SetRelayLocationError, Unit> = Unit.right()
 
-    suspend fun refreshRelayList() = managementService.updateRelayLocations()
+    suspend fun refreshRelayList(): Either<UpdateRelayLocationsError, Unit> = Unit.right()
 
-    fun find(geoLocationId: GeoLocationId): RelayItem.Location? =
-        relayList.value.findByGeoLocationId(geoLocationId)
-
-    private fun defaultWireguardEndpointData() = WireguardEndpointData(emptyList(), emptyList())
+    fun find(geoLocationId: GeoLocationId): RelayItem.Location? = null
 }

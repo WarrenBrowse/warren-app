@@ -12,7 +12,7 @@ android {
 
 dependencies {
     implementation(projects.lib.common)
-    implementation(projects.lib.grpc)
+    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.model)
     implementation(projects.lib.repository)
 

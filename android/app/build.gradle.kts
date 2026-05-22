@@ -368,7 +368,7 @@ play {
 dependencies {
     implementation(projects.lib.common)
     implementation(project(":lib:common-compose"))
-    implementation(projects.lib.grpc)
+    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.endpoint)
     // D.4 step 18: account/addtime/deleteaccount/managedevices/redeemvoucher
     // modules deleted (Mullvad-account features without Warren equivalent).

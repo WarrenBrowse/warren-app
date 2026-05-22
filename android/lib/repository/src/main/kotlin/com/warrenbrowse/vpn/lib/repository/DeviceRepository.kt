@@ -1,31 +1,20 @@
 package com.warrenbrowse.vpn.lib.repository
 
-import co.touchlab.kermit.Logger
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.DeviceState
 
-// D.4 step 51: DeviceRepository slimmed to {deviceState, updateDevice} — drop
-// `removeDevice` + `deviceList` (consumers were the deleted ManageDevices /
-// DeviceList screens).
-class DeviceRepository(
-    private val managementService: ManagementService,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
-) {
-    val deviceState: StateFlow<DeviceState?> =
-        managementService.deviceState.stateIn(
-            CoroutineScope(dispatcher),
-            SharingStarted.Eagerly,
-            null,
-        )
+// D.4 step 58: DeviceRepository stripped of ManagementService dependency. The
+// Mullvad daemon's `deviceState` channel is dead on Warren — `deviceState`
+// permanently emits null and `updateDevice()` is a no-op. ConnectViewModel +
+// DeviceRevokedViewModel still inject this for compile-shim ; the dead-daemon
+// path will be removed entirely once those VMs are rewired to
+// `WarrenTunnelStateProvider` (D.4 step 67+).
+@Suppress("UNUSED_PARAMETER", "unused")
+class DeviceRepository(@Suppress("UnusedPrivateMember") managementService: Any? = null) {
+    val deviceState: StateFlow<DeviceState?> = MutableStateFlow(null)
 
     suspend fun updateDevice() {
-        Logger.i("Update device")
-        managementService.updateDevice()
+        // no-op
     }
 }

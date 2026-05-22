@@ -8,21 +8,26 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 
+// D.4 step 58: Android16UpdateWarningUseCase rewired to ConnectionProxy (Warren
+// stub) instead of the dead Mullvad ManagementService. Since ConnectionProxy
+// emits a constant `Disconnected` tunnel state until the Warren-native tunnel
+// state plumbing replaces it (D.4 step 67+), the warning never fires in
+// practice — kept here as a code-path placeholder.
 class Android16UpdateWarningUseCase(
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val managementService: ManagementService,
+    private val connectionProxy: ConnectionProxy,
 ) : InAppNotificationUseCase {
     @OptIn(ExperimentalCoroutinesApi::class)
     override operator fun invoke(): Flow<InAppNotification?> =
         combine(
                 userPreferencesRepository.showAndroid16ConnectWarning().distinctUntilChanged(),
-                managementService.tunnelState.map { it.toTunState() }.distinctUntilChanged(),
+                connectionProxy.tunnelState.map { it.toTunState() }.distinctUntilChanged(),
             ) { showWarning, tunState ->
                 showWarning to tunState
             }

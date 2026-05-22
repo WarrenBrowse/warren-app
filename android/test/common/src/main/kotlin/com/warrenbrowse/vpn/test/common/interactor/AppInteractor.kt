@@ -3,19 +3,12 @@ package com.warrenbrowse.vpn.test.common.interactor
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import co.touchlab.kermit.Logger
-import java.io.File
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.endpoint.putApiEndpointConfigurationExtra
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.Constraint
 import com.warrenbrowse.vpn.lib.model.IpVersion
 import com.warrenbrowse.vpn.lib.model.ObfuscationMode
@@ -85,6 +78,12 @@ class AppInteractor(
         }
     }
 
+    // D.4 step 58: applySettings stub — the Mullvad daemon (and its
+    // ManagementService gRPC bridge) is gone, so e2e settings drives are
+    // no-ops. The e2e suite (LeakTest, ConnectionTest, etc.) targets the
+    // dead Mullvad backend and is slated for D.6 rewrite against the
+    // Warren-native config surface (WarrenLocalSettingsRepository).
+    @Suppress("UNUSED_PARAMETER")
     suspend fun applySettings(
         pq: QuantumResistantState? = null,
         obfuscationMode: ObfuscationMode? = null,
@@ -93,34 +92,8 @@ class AppInteractor(
         daita: DaitaOption? = null,
         multihop: Boolean? = null,
         deviceIpVersion: Constraint<IpVersion>? = null,
-    ) = coroutineScope {
-        try {
-            val job = launch {
-                val socket =
-                    File(
-                        InstrumentationRegistry.getInstrumentation().targetContext.noBackupFilesDir,
-                        "rpc-socket",
-                    )
-                val service = ManagementService(socket, false, this)
-
-                pq?.let { service.setWireguardQuantumResistant(it) }
-                obfuscationMode?.let { service.setObfuscation(it) }
-                wireguardPort?.let { service.setWireguardObfuscationPort(wireguardPort) }
-                localNetworkSharing?.let { service.setAllowLan(it) }
-                multihop?.let { service.setMultihop(it) }
-                deviceIpVersion?.let { service.setDeviceIpVersion(deviceIpVersion) }
-                daita?.let {
-                    when (it) {
-                        is DaitaOption.Auto -> service.setDaitaEnabled(it.enabled)
-                        is DaitaOption.DirectOnly -> service.setDaitaDirectOnly(it.enabled)
-                    }
-                }
-                cancel()
-            }
-            job.join()
-        } catch (_: CancellationException) {
-            // Ignore cancel, we have just stopped ManagementService
-        }
+    ) {
+        // no-op
     }
 }
 

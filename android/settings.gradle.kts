@@ -33,7 +33,7 @@ include(
     ":lib:common",
     ":lib:common-compose",
     ":lib:common-test",
-    ":lib:grpc",
+    // D.4 step 58: lib:grpc deleted (Mullvad daemon gRPC bridge dead).
     ":lib:endpoint",
     // D.4 step 18: account / addtime modules removed (Mullvad-account
     // identity model ; Warren uses BIP39 wallet via the login/wallet

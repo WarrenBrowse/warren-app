@@ -1,33 +1,18 @@
 package com.warrenbrowse.vpn.lib.repository
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.BuildVersion
 import com.warrenbrowse.vpn.lib.model.VersionInfo
 
-class AppVersionInfoRepository(
-    private val buildVersion: BuildVersion,
-    managementService: ManagementService,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
-) {
+// D.4 step 58: AppVersionInfoRepository stripped of ManagementService dep.
+// The Mullvad daemon's `versionInfo` channel reported whether the running
+// client was still supported by the Mullvad API — dead on Warren since the
+// upstream daemon is gone. The Warren-native equivalent (poll warren-api
+// `/v1/version`) will land in D.6 ; until then we emit a constant
+// `isSupported = true` so the "unsupported version" in-app banner never
+// fires.
+class AppVersionInfoRepository(private val buildVersion: BuildVersion) {
     val versionInfo: StateFlow<VersionInfo> =
-        managementService.versionInfo
-            .map { appVersionInfo ->
-                VersionInfo(
-                    currentVersion = buildVersion.name,
-                    isSupported = appVersionInfo.supported,
-                )
-            }
-            .stateIn(
-                CoroutineScope(dispatcher),
-                SharingStarted.WhileSubscribed(),
-                // By default we assume we are supported
-                VersionInfo(currentVersion = buildVersion.name, isSupported = true),
-            )
+        MutableStateFlow(VersionInfo(currentVersion = buildVersion.name, isSupported = true))
 }

@@ -56,7 +56,7 @@ androidComponents {
 dependencies {
     implementation(projects.lib.endpoint)
     implementation(projects.lib.ui.tag)
-    implementation(projects.lib.grpc)
+    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.model)
 
     implementation(libs.arrow)

@@ -27,7 +27,7 @@ protobuf {
 dependencies {
     implementation(projects.lib.ui.resource)
     implementation(projects.lib.common)
-    implementation(projects.lib.grpc)
+    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.model)
     // D.4 step 36: lib.payment dropped (Mullvad billing dead on Warren).
     implementation(projects.lib.endpoint)

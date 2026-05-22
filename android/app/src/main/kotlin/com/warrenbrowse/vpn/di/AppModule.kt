@@ -6,7 +6,6 @@ import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
@@ -23,11 +22,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
-import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAME
-import com.warrenbrowse.vpn.lib.common.constant.GRPC_SOCKET_FILE_NAMED_ARGUMENT
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.BuildVersion
 import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
@@ -39,7 +35,6 @@ import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
-import com.warrenbrowse.vpn.lib.repository.RelayLocationTranslationRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
@@ -49,31 +44,27 @@ import com.warrenbrowse.vpn.repository.UserPreferences
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
-    single(named(GRPC_SOCKET_FILE_NAMED_ARGUMENT)) {
-        File(androidContext().noBackupFilesDir, GRPC_SOCKET_FILE_NAME)
-    }
-    single {
-        ManagementService(
-            rpcSocketFile = get(named(GRPC_SOCKET_FILE_NAMED_ARGUMENT)),
-            extensiveLogging = BuildConfig.DEBUG,
-            scope = MainScope(),
-        )
-    }
+    // D.4 step 58: ManagementService koin single dropped (Mullvad daemon gRPC
+    // bridge dead on Warren — all repository consumers slimmed to Warren-
+    // native stubs).
     single { ApplicationScope.createDoNotCallUseDiInstead() }
 
     single { androidContext().resources }
     single { androidContext().userPreferencesStore }
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
     single { ApiEndpointFromIntentHolder() }
-    single { AccountRepository(get(), get(), MainScope()) }
-    single { DeviceRepository(get()) }
+    // D.4 step 58: AccountRepository slimmed to Warren-native stub.
+    single { AccountRepository() }
+    // D.4 step 58: DeviceRepository slimmed to Warren-native stub.
+    single { DeviceRepository() }
     single { UserPreferencesRepository(get(), get()) }
-    single { ConnectionProxy(androidContext(), get(), get()) }
+    // D.4 step 58: ConnectionProxy slimmed to Warren-native stub (no
+    // ManagementService / RelayLocationTranslationRepository deps).
+    single { ConnectionProxy() }
     single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
 
     // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
@@ -105,7 +96,7 @@ val appModule = module {
     single { WarrenReconnectUseCase(context = androidContext()) } bind
         WarrenQuinnReconnectInvoker::class
     single { LocaleRepository(get()) }
-    single { RelayLocationTranslationRepository(get(), get(), MainScope()) }
+    // D.4 step 58: RelayLocationTranslationRepository dropped (orphan now).
     // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
     // ActionUseCase dropped (Mullvad subscription expiry notifications dead).
     // TODO Move these back to UiModule when fixDisableBug is removed
