@@ -17,8 +17,6 @@ import arrow.core.merge
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.di.paymentModule
 import com.warrenbrowse.vpn.di.uiModule
@@ -27,8 +25,6 @@ import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.getApiEndpointConfigurationExtras
-import com.warrenbrowse.vpn.lib.grpc.GrpcConnectivityState
-import com.warrenbrowse.vpn.lib.grpc.ManagementService
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
@@ -57,7 +53,6 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
-    private val managementService by inject<ManagementService>()
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
 
     private fun dispatchWarrenConnect() {
@@ -119,16 +114,14 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        lifecycleScope.launch {
-            if (userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
-                // If service is to be started wait for it to be connected before dismissing Splash
-                // screen
-                managementService.connectionState
-                    .filter { it is GrpcConnectivityState.Ready }
-                    .first()
-            }
-            splashCompleteRepository.onSplashCompleted()
-        }
+        // D.4 step 19: the legacy "wait for managementService to be Ready"
+        // gate is gone (the gRPC management service does not exist on
+        // Warren mobile so the wait never completed, keeping the splash
+        // screen up indefinitely after a process recreation). Splash
+        // dismissal is now unconditional - the splash decision tree in
+        // `SplashViewModel` already routes the user to the right
+        // destination before the splash completes.
+        lifecycleScope.launch { splashCompleteRepository.onSplashCompleted() }
     }
 
     fun bindService() {
