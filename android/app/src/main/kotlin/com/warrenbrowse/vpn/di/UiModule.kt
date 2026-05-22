@@ -51,7 +51,6 @@ import com.warrenbrowse.vpn.lib.usecase.InternetAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.ModifyMultihopUseCase
-import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectAndEnableMultihopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectSinglehopUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -142,7 +141,8 @@ val uiModule = module {
         single { Android16UpdateWarningUseCase(get(), get()) } bind InAppNotificationUseCase::class
     }
 
-    single { OutOfTimeUseCase(get(), get(), MainScope()) }
+    // D.4 step 37: OutOfTimeUseCase dropped (Mullvad subscription expiry
+    // model dead on Warren).
     single { InternetAvailableUseCase(get()) }
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
     // D.4 step 29: CustomList* + FilterChip + Filtered/Selected relay use
@@ -216,7 +216,6 @@ val uiModule = module {
             newDeviceRepository = get(),
             userPreferencesRepository = get(),
             selectedLocationTitleUseCase = get(),
-            outOfTimeUseCase = get(),
             connectionProxy = get(),
             lastKnownLocationUseCase = get(),
             systemVpnSettingsUseCase = get(),

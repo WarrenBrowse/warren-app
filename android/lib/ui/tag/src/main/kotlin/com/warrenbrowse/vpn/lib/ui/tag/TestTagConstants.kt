@@ -87,8 +87,7 @@ const val LOGIN_BUTTON_TEST_TAG = "login_button_test_tag"
 // VoucherDialog
 const val VOUCHER_INPUT_TEST_TAG = "voucher_input_test_tag"
 
-// OutOfTimeScreen
-const val OUT_OF_TIME_SCREEN_TITLE_TEST_TAG = "out_of_time_screen_title_test_tag"
+// D.4 step 37: OUT_OF_TIME_SCREEN_TITLE_TEST_TAG removed (subscription dead).
 
 // CreateCustomListDialog
 const val CREATE_CUSTOM_LIST_DIALOG_INPUT_TEST_TAG = "create_custom_list_dialog_input_test_tag"
@@ -141,8 +140,7 @@ const val SELECT_PORT_ITEM_AUTOMATIC_TEST_TAG = "select_port_item_automatic_test
 const val SELECT_PORT_ITEM_X_TEST_TAG = "select_port_item_%d_test_tag"
 const val SELECT_PORT_CUSTOM_TEST_TAG = "select_port_custom_test_tag"
 
-// AddTimeBottomSheet
-const val ADD_TIME_BOTTOM_SHEET_TITLE_TEST_TAG = "add_time_bottom_sheet_title_test_tag"
+// D.4 step 37: ADD_TIME_BOTTOM_SHEET_TITLE_TEST_TAG removed.
 
 // LoginScreen
 const val LOGIN_SCREEN_DELETE_ACCOUNT_HISTORY_TEST_TAG =

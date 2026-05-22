@@ -234,13 +234,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 // ConnectViewModel still emitting it.
             }
 
-            is ConnectViewModel.UiSideEffect.OutOfTime ->
-                // D.4 step 18: OutOfTime route is gone (Mullvad account
-                // model). On Warren this side effect never fires because
-                // the ConnectViewModel state machine reads from a dead
-                // daemon; fallback to Connect to keep the navigation
-                // graph total in case of an upstream re-emission bug.
-                navigator.navigate(ConnectNavKey, clearBackStack = true)
+            // D.4 step 37: UiSideEffect.OutOfTime removed entirely (Mullvad
+            // subscription expiry model is dead on Warren - BIP39 wallet
+            // identity has no time-based subscription).
 
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)

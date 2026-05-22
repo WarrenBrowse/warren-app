@@ -34,7 +34,6 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import org.junit.jupiter.api.AfterEach
@@ -74,10 +73,6 @@ class ConnectViewModelTest {
     private val selectedRelayItemFlow = MutableStateFlow<String?>(null)
     private val lastKnownLocationFlow = MutableStateFlow<GeoIpLocation?>(null)
 
-    // Out Of Time Use Case
-    private val outOfTimeUseCase: OutOfTimeUseCase = mockk()
-    private val outOfTimeViewFlow = MutableStateFlow(false)
-
     // Last known location
     private val mockLastKnownLocationUseCase: LastKnownLocationUseCase = mockk()
 
@@ -104,7 +99,6 @@ class ConnectViewModelTest {
         // Flows
         every { mockSelectedLocationTitleUseCase() } returns selectedRelayItemFlow
 
-        every { outOfTimeUseCase.isOutOfTime } returns outOfTimeViewFlow
         viewModel =
             ConnectViewModel(
                 accountRepository = mockAccountRepository,
@@ -113,7 +107,6 @@ class ConnectViewModelTest {
                 inAppNotificationController = mockInAppNotificationController,
                 newDeviceRepository = mockk(),
                 userPreferencesRepository = mockk(),
-                outOfTimeUseCase = outOfTimeUseCase,
                 selectedLocationTitleUseCase = mockSelectedLocationTitleUseCase,
                 connectionProxy = mockConnectionProxy,
                 lastKnownLocationUseCase = mockLastKnownLocationUseCase,
@@ -296,20 +289,7 @@ class ConnectViewModelTest {
             }
         }
 
-    @Test
-    fun `given OutOfTimeUseCase returns true uiSideEffect should emit OutOfTime`() = runTest {
-        // Arrange
-        val deferred = async { viewModel.uiSideEffect.first() }
-
-        // Act
-        viewModel.uiState.test {
-            awaitItem()
-            outOfTimeViewFlow.value = true
-        }
-
-        // Assert
-        assertIs<ConnectViewModel.UiSideEffect.OutOfTime>(deferred.await())
-    }
+    // D.4 step 37: OutOfTime side effect test dropped (subscription model dead).
 
     @Test
     fun `given tunnel state error should emit last known disconnected location as location`() =

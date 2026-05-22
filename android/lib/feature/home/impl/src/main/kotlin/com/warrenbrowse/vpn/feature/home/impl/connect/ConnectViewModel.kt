@@ -9,7 +9,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -37,7 +36,6 @@ import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.NewDeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.OutOfTimeUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 
@@ -50,7 +48,6 @@ class ConnectViewModel(
     private val newDeviceRepository: NewDeviceRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     selectedLocationTitleUseCase: SelectedLocationTitleUseCase,
-    private val outOfTimeUseCase: OutOfTimeUseCase,
     private val connectionProxy: ConnectionProxy,
     lastKnownLocationUseCase: LastKnownLocationUseCase,
     private val systemVpnSettingsUseCase: SystemVpnSettingsAvailableUseCase,
@@ -60,7 +57,7 @@ class ConnectViewModel(
     private val _uiSideEffect = Channel<UiSideEffect>()
 
     val uiSideEffect =
-        merge(_uiSideEffect.receiveAsFlow(), outOfTimeEffect(), revokedDeviceEffect())
+        merge(_uiSideEffect.receiveAsFlow(), revokedDeviceEffect())
 
     @OptIn(FlowPreview::class)
     val uiState: StateFlow<ConnectUiState> =
@@ -209,9 +206,6 @@ class ConnectViewModel(
         changelogRepository.setDismissNewChangelogNotification()
     }
 
-    private fun outOfTimeEffect() =
-        outOfTimeUseCase.isOutOfTime.filter { it == true }.map { UiSideEffect.OutOfTime }
-
     private fun revokedDeviceEffect() =
         deviceRepository.deviceState.filterIsInstance<DeviceState.Revoked>().map {
             UiSideEffect.RevokedDevice
@@ -219,8 +213,6 @@ class ConnectViewModel(
 
     sealed interface UiSideEffect {
         data class OpenAccountManagementPageInBrowser(val token: WebsiteAuthToken?) : UiSideEffect
-
-        data object OutOfTime : UiSideEffect
 
         data class OpenUri(val uri: Uri, val errorMessage: String) : UiSideEffect
 
