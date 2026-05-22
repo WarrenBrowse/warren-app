@@ -22,7 +22,11 @@ FILES_TO_ADD = {
   "WarrenVPN/UI appearance/UIColor+Warren.swift" => "WarrenVPN",
 
   # Wallet flow (UIKit shells + SwiftUI hosted views + Interactor + Keychain).
-  "WarrenVPN/View controllers/Wallet/WarrenWalletKeychain.swift" => "WarrenVPN",
+  # WarrenWalletKeychain moved to Shared/ (C.4.3.Z) so PacketTunnel
+  # extension can read the wallet seed for actor.bindWalletSigningSeed.
+  # Kept the WarrenVPN entry plus added PacketTunnelCore + PacketTunnel
+  # via SHARED_MULTI_TARGET below.
+  "Shared/WarrenWalletKeychain.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Wallet/WarrenMnemonicInputView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Wallet/WarrenMnemonicDisplayView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Wallet/WarrenWalletInteractor.swift" => "WarrenVPN",
@@ -96,6 +100,7 @@ FILES_TO_ADD = {
 # declares.
 SHARED_MULTI_TARGET = {
   "Shared/WarrenAppGroupKey.swift" => %w[PacketTunnelCore PacketTunnel],
+  "Shared/WarrenWalletKeychain.swift" => %w[PacketTunnelCore PacketTunnel],
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree
