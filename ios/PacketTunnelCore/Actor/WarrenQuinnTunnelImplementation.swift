@@ -97,17 +97,25 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         self.adapter = adapter
         _actor.bindAdapter(adapter)
 
-        // Push the wallet signing seed into the actor so
-        // `start(options:)` can marshal it into the FFI config. The
-        // Keychain entry uses `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
-        // and lives in an App Group accessible from both the main app
-        // and this PacketTunnel extension. C.4.3.Z TODO : extract the
-        // Keychain read helper to `Shared/` so PacketTunnelCore can
-        // call it directly (currently in WarrenVPN target only) ; for
-        // now log the deferred state so the gap is observable.
-        logger.info(
-            "WarrenQuinnTunnelImplementation.setUp : adapter bound, wallet seed bridge deferred to C.4.3.Z (Shared/ Keychain helper extraction)"
-        )
+        // C.4.3.Z : push the wallet Ed25519 signing seed into the
+        // actor. The Keychain entry lives in `Shared/` (was extracted
+        // from WarrenVPN target) so PacketTunnel extension can read
+        // it via the same `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+        // attribute. WarrenWallet.fromMnemonic derives the seed in
+        // ~milliseconds (BIP39 → HKDF-SHA256 → Ed25519). Failure
+        // here means the wallet was never provisioned — the actor's
+        // `start(options:)` will log + bail out cleanly.
+        do {
+            let mnemonic = try WarrenWalletKeychain.load()
+            let wallet = try WarrenWallet.fromMnemonic(mnemonic)
+            _actor.bindWalletSigningSeed(wallet.seed)
+            wallet.forgetSecret()
+            logger.info("Wallet seed bound to WarrenQuinnActor")
+        } catch {
+            logger.warning(
+                "Wallet seed bind failed: \(error). start(options:) will be a no-op until OnboardingWizard provisions a wallet."
+            )
+        }
 
         startStatsBroadcastTask(adapter: adapter)
     }
