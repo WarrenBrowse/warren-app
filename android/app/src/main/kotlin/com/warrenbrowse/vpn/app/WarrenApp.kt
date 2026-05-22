@@ -50,9 +50,7 @@ import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appicon.impl.navigation.appIconEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
-import com.warrenbrowse.vpn.feature.customlist.impl.navigation.customListEntry
 import com.warrenbrowse.vpn.feature.daita.impl.navigation.daitaEntry
-import com.warrenbrowse.vpn.feature.filter.impl.navigation.filterEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
@@ -125,9 +123,11 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         appearanceEntry(nav3)
         autoConnectEntry(nav3)
         changelogEntry(nav3)
-        customListEntry(nav3)
+        // D.4 step 26: customListEntry removed - Mullvad custom relay lists
+        // were reached only from SelectLocationScreen (now unreachable).
         daitaEntry(nav3)
-        filterEntry(nav3)
+        // D.4 step 26: filterEntry removed - Mullvad relay filter was
+        // reached only from SelectLocationScreen (now unreachable).
         homeEntry(nav3)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             languageEntry(nav3)
