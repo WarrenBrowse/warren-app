@@ -13,19 +13,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.model.UserReport
 
 const val PROBLEM_REPORT_LOGS_FILE = "problem_report.txt"
 
+// D.6 step 65 + audit follow-up: only `Error.SendReport` is still
+// produced by the live path. `Success` is unused (the ViewModel
+// projects WarrenSupportReportOutcome.Success directly to its
+// SendingReportUiState.Success). `Error.CollectLog` is unreachable
+// from any live code path (the previous repository.sendReport
+// flow that emitted it was removed). Kept only for the
+// PreviewParameterProvider's dummy state until the screen previews
+// are reworked.
 sealed interface SendProblemReportResult {
     data object Success : SendProblemReportResult
 
     sealed interface Error : SendProblemReportResult {
         data object CollectLog : Error
-
-        // This is usually due to network error or bad email address
         data object SendReport : Error
     }
 }
@@ -36,24 +40,21 @@ sealed interface SendProblemReportResult {
 // to /v1/support. The repository keeps the StateFlow<UserReport> form
 // state + the log file lifecycle (UI continues to call setEmail /
 // setDescription / collectLogs / readLogs / deleteLogs).
+//
+// Audit follow-up: previous version carried three constructor params
+// (apiEndpointOverride / apiEndpointFromIntentHolder / kermitFileLogDirName)
+// that became dead after the send path moved. Dropped along with the
+// redundant `System.loadLibrary("warren_jni")` (WarrenJni's own static
+// init already loads the library; calling it again here only worked by
+// load-order coincidence).
 class ProblemReportRepository(
     context: Context,
-    @Suppress("UnusedPrivateProperty") private val apiEndpointOverride: ApiEndpointOverride?,
-    @Suppress("UnusedPrivateProperty")
-    private val apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder,
-    kermitFileLogDirName: String,
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    init {
-        System.loadLibrary("warren_jni")
-    }
-
     private val _problemReport = MutableStateFlow(UserReport("", ""))
     val problemReport: StateFlow<UserReport> = _problemReport.asStateFlow()
     private val logDirectory = File(context.filesDir.toURI())
     private val problemReportOutputPath = File(logDirectory, PROBLEM_REPORT_LOGS_FILE)
-    @Suppress("UnusedPrivateProperty", "unused")
-    private val kermitFileLogDirPath = File(logDirectory, kermitFileLogDirName)
     private val collectReportMutex = Mutex()
 
     fun setEmail(email: String) = _problemReport.update { it.copy(email = email) }

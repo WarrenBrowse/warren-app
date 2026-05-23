@@ -470,22 +470,32 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
 /// `api-override` Cargo feature for dev/staging builds only).
 const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 
-/// Production server signing pubkey hex (64 lowercase chars). The
-/// signed relay list MUST be signed by this key; any other pubkey is
-/// rejected.
-const PROD_SERVER_PUBKEY_HEX: &str =
-    "2921abad869e94064b56cf48c8da36312921abad869e94064b56cf48c8da3631";
+/// Production server signing pubkey hex (64 lowercase chars), or
+/// `None` until the real production key is pinned. While unset, the
+/// signed relay list is accepted on its *signature validity* alone
+/// (the embedded `server_pubkey_hex` field). This is a transition
+/// surface: as soon as the production server pubkey is decided, set
+/// this constant to the 64-char hex and `verify_signed_relay_list`
+/// will refuse any list whose embedded pubkey differs.
+///
+/// Audit follow-up: the previous value was a 32-char fragment
+/// duplicated to 64 chars (`2921...2921...`) -- structurally a
+/// placeholder, not a real Ed25519 pubkey. Pinning `None` until the
+/// real key is known is honest; pinning a bogus value would either
+/// silently fall back forever or accept a forged list under that
+/// phantom key.
+const PROD_SERVER_PUBKEY_HEX: Option<&str> = None;
 
 /// Hardcoded fallback used when the live fetch fails. Schema lined up
-/// with the Kotlin `RelayInfo` data class.
+/// with the Kotlin `RelayInfo` data class. `exit_id` + `exit_pubkey_hex`
+/// are 32-char (16-byte) operator-assigned identifiers, NOT Ed25519
+/// pubkeys (which would be 64-char).
 const FALLBACK_RELAYS_JSON: &str = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
 
 /// Fetch + verify the signed relay list, projecting the result to the
 /// Kotlin-side JSON shape. Returns the fallback on any error.
 #[cfg(target_os = "android")]
 fn fetch_relays_or_fallback() -> String {
-    use ed25519_dalek::SigningKey;
-
     let runtime = match RUNTIME.get() {
         Some(rt) => rt,
         None => {
@@ -494,28 +504,27 @@ fn fetch_relays_or_fallback() -> String {
         }
     };
 
-    // The `/v1/exits` endpoint is unsigned (response is server-signed)
-    // but `WarrenApiClient::new` requires a SigningKey for its signed
-    // helpers. Use an all-zero throwaway: the key never hits the wire
-    // for this call since `list_exits` issues a plain GET.
-    let throwaway_key = SigningKey::from_bytes(&[0u8; 32]);
-    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), throwaway_key);
+    // `/v1/exits` is unsigned (response is server-signed); use the
+    // unsigned-only client constructor so the API surface documents
+    // the no-sign contract and we never accidentally emit a request
+    // signed with a deterministic zero key.
+    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
 
     let raw = match runtime.block_on(client.list_exits()) {
         Ok(s) => s,
-        Err(e) => {
-            log::warn!("listRelays: GET /v1/exits failed: {e}; returning fallback");
+        Err(_) => {
+            log::warn!("listRelays: GET /v1/exits failed; returning fallback");
             return FALLBACK_RELAYS_JSON.to_owned();
         }
     };
 
     let signed = match warren_relay_selector::verify_signed_relay_list(
         &raw,
-        Some(PROD_SERVER_PUBKEY_HEX),
+        PROD_SERVER_PUBKEY_HEX,
     ) {
         Ok(s) => s,
-        Err(e) => {
-            log::warn!("listRelays: signature verify failed: {e}; returning fallback");
+        Err(_) => {
+            log::warn!("listRelays: signature verify failed; returning fallback");
             return FALLBACK_RELAYS_JSON.to_owned();
         }
     };
@@ -596,7 +605,14 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_sendProblemReport
             serde_json::json!({"ok": true, "reference_id": reference_id}).to_string()
         }
         Err(e) => {
-            log::warn!("sendProblemReport failed: {e}");
+            // Audit follow-up: do NOT embed the reqwest/hyper error
+            // chain in the logcat line. A 4xx response body from
+            // warren-api can carry a fragment of the user_message /
+            // redacted_logs back to the client; logging it would
+            // re-leak that content under the `WarrenJni` logcat tag,
+            // which any app holding READ_LOGS can read. The full
+            // string is still returned to Kotlin via JSON.
+            log::warn!("sendProblemReport failed");
             serde_json::json!({"ok": false, "error": e}).to_string()
         }
     };

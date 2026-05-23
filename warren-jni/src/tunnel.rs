@@ -247,12 +247,25 @@ pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> 
 }
 
 /// Guard returned by [`maybe_spawn_nat_pmp`]. Drops the NAT-PMP
-/// refresh loop on drop (via the `RefreshLoopHandle`'s drop impl).
-/// `None` means NAT-PMP was disabled in config or unsupported on the
-/// assigned interface (IPv6-only is not yet wired).
+/// refresh loop AND aborts the event-drain task on drop. Matches the
+/// daemon-side `NatPmpManager` pattern (which stores both handles).
+/// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
+/// config.
 struct NatPmpGuard {
-    #[expect(dead_code, reason = "handle dropped on session teardown; field is the lifetime owner")]
-    handle: warren_natpmp_client::RefreshLoopHandle,
+    refresh: warren_natpmp_client::RefreshLoopHandle,
+    drain: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for NatPmpGuard {
+    fn drop(&mut self) {
+        self.refresh.cancel();
+        // Abort eagerly: the refresh-loop cancel closes the sender
+        // and the drain would exit naturally on the next `recv`, but
+        // an explicit abort removes the window where Kotlin observes
+        // `disconnectTunnel` complete while the drain task is still
+        // alive on the runtime.
+        self.drain.abort();
+    }
 }
 
 fn maybe_spawn_nat_pmp(
@@ -266,7 +279,7 @@ fn maybe_spawn_nat_pmp(
     let bind_addr = std::net::IpAddr::V4(assigned_ipv4);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
-    let handle = warren_natpmp_client::spawn_refresh_loop_from_addr(
+    let refresh = warren_natpmp_client::spawn_refresh_loop_from_addr(
         server,
         warren_natpmp_client::MapProtocol::Udp,
         // D.6 placeholder: request external mapping for the QUIC
@@ -280,7 +293,7 @@ fn maybe_spawn_nat_pmp(
         tx,
         Some(bind_addr),
     );
-    tokio::spawn(async move {
+    let drain = tokio::spawn(async move {
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
         }
@@ -288,5 +301,5 @@ fn maybe_spawn_nat_pmp(
     log::info!(
         "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})"
     );
-    Some(NatPmpGuard { handle })
+    Some(NatPmpGuard { refresh, drain })
 }

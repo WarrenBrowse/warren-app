@@ -28,8 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(TestCoroutineRule::class)
 class ReportProblemViewModelTest {
 
-    @MockK private lateinit var mockMullvadProblemReport: ProblemReportRepository
-
     @MockK(relaxed = true) private lateinit var mockProblemReportRepository: ProblemReportRepository
 
     @MockK(relaxed = true) private lateinit var mockSupportReportInvoker: WarrenSupportReportInvoker
@@ -41,11 +39,10 @@ class ReportProblemViewModelTest {
     @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
-        coEvery { mockMullvadProblemReport.collectLogs() } returns true
+        coEvery { mockProblemReportRepository.collectLogs() } returns true
         coEvery { mockProblemReportRepository.problemReport } returns problemReportFlow
         viewModel =
             ReportProblemViewModel(
-                warrenProblemReporter = mockMullvadProblemReport,
                 problemReportRepository = mockProblemReportRepository,
                 isPlayBuild = false,
                 supportReportInvoker = mockSupportReportInvoker,

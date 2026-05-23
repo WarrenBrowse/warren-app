@@ -88,10 +88,24 @@ private fun PreviewReportProblemScreen(
 fun ReportProblem(navigator: Navigator) {
     val vm = koinViewModel<ReportProblemViewModel>()
     val state by vm.uiState.collectAsStateWithLifecycle()
-    // D.6: BiometricPrompt (raised by WarrenSendProblemReportUseCase to
-    // unlock the wallet mnemonic that signs /v1/support) needs a
-    // FragmentActivity host. Composables receive it via LocalContext.
-    val activity = androidx.compose.ui.platform.LocalContext.current as androidx.fragment.app.FragmentActivity
+    // D.6: BiometricPrompt (raised by WarrenSendProblemReportUseCase
+    // to unlock the wallet mnemonic that signs /v1/support) needs a
+    // FragmentActivity host. Resolved lazily inside each send-trigger
+    // lambda via a safe `as?` cast — if the host activity is somehow
+    // not a FragmentActivity (custom TV shell, instrumentation harness,
+    // ...) the click is a no-op rather than a runtime crash.
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    fun triggerSend(skipEmptyEmailCheck: Boolean = false) {
+        val activity = context as? androidx.fragment.app.FragmentActivity
+        if (activity == null) {
+            co.touchlab.kermit.Logger.w(
+                "ReportProblem: host context is not a FragmentActivity; ignoring send tap"
+            )
+            return
+        }
+        vm.sendReport(activity, state.email, state.description, skipEmptyEmailCheck)
+    }
 
     CollectSideEffectWithLifecycle(vm.uiSideEffect) {
         when (it) {
@@ -101,12 +115,12 @@ fun ReportProblem(navigator: Navigator) {
     }
 
     LocalResultStore.current.consumeResult<ProblemReportNoEmailConfirmedNavResult> {
-        vm.sendReport(activity, state.email, state.description, true)
+        triggerSend(skipEmptyEmailCheck = true)
     }
 
     ReportProblemScreen(
         state = state,
-        onSendReport = { vm.sendReport(activity, state.email, state.description) },
+        onSendReport = { triggerSend() },
         onClearSendResult = vm::clearSendResult,
         onNavigateToViewLogs = dropUnlessResumed { navigator.navigate(ViewLogsNavKey) },
         onEmailChanged = vm::updateEmail,

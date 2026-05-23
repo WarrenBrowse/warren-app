@@ -85,15 +85,30 @@ android {
         generateLocaleConfig = false
     }
 
-    // D.7 release signing: opt-in via env vars so unsigned dev builds
-    // keep working. Set WARREN_KEYSTORE_PATH (absolute), WARREN_KEYSTORE_PASSWORD,
-    // WARREN_KEY_ALIAS, and WARREN_KEY_PASSWORD to enable the
-    // `warrenRelease` signingConfig; otherwise the release build stays
-    // unsigned (suitable for local profiling, NOT for Play Store).
-    val warrenKeystorePath: String? = System.getenv("WARREN_KEYSTORE_PATH")
-    val warrenKeystorePassword: String? = System.getenv("WARREN_KEYSTORE_PASSWORD")
-    val warrenKeyAlias: String? = System.getenv("WARREN_KEY_ALIAS")
-    val warrenKeyPassword: String? = System.getenv("WARREN_KEY_PASSWORD")
+    // D.7 release signing: opt-in via Gradle properties OR env vars.
+    // The Gradle-property path is preferred (`-Pwarren.keystore.path=...`)
+    // because env-var reads happen at configure time and a long-lived
+    // Gradle daemon's environment is FROZEN at daemon start; a CI job
+    // that exports WARREN_KEYSTORE_* after the daemon is already warm
+    // will silently ship an UNSIGNED build. Gradle properties bypass
+    // the daemon-env trap because the property store is invalidated
+    // per-invocation. The env fallback is retained for local dev use.
+    //
+    // CI guidance: prefer
+    //   ./gradlew --no-daemon -Pwarren.keystore.path=$X ...
+    // or run `./gradlew --stop` before the signing build.
+    val warrenKeystorePath: String? =
+        (project.findProperty("warren.keystore.path") as String?)
+            ?: System.getenv("WARREN_KEYSTORE_PATH")
+    val warrenKeystorePassword: String? =
+        (project.findProperty("warren.keystore.password") as String?)
+            ?: System.getenv("WARREN_KEYSTORE_PASSWORD")
+    val warrenKeyAlias: String? =
+        (project.findProperty("warren.key.alias") as String?)
+            ?: System.getenv("WARREN_KEY_ALIAS")
+    val warrenKeyPassword: String? =
+        (project.findProperty("warren.key.password") as String?)
+            ?: System.getenv("WARREN_KEY_PASSWORD")
     val signingConfigured =
         warrenKeystorePath != null &&
             warrenKeystorePassword != null &&

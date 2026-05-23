@@ -57,8 +57,11 @@ sealed interface DescriptionError {
     data object Empty : DescriptionError
 }
 
+// Audit follow-up: the previous constructor took two ProblemReportRepository
+// parameters resolved from the same Koin singleton — a latent footgun for
+// any future split. Collapsed to a single parameter; all log-lifecycle calls
+// now go through `problemReportRepository`.
 class ReportProblemViewModel(
-    private val warrenProblemReporter: ProblemReportRepository,
     private val problemReportRepository: ProblemReportRepository,
     private val isPlayBuild: Boolean,
     private val supportReportInvoker: WarrenSupportReportInvoker,
@@ -113,7 +116,7 @@ class ReportProblemViewModel(
             } else {
                 sendingState.emit(SendingReportUiState.Sending)
 
-                val redactedLogs = warrenProblemReporter.readLogs().joinToString("\n")
+                val redactedLogs = problemReportRepository.readLogs().joinToString("\n")
                 val userMessage = composeUserMessage(nullableEmail, description)
 
                 val deferredResult = async {
@@ -125,7 +128,7 @@ class ReportProblemViewModel(
                 if (outcome is WarrenSupportReportOutcome.Success) {
                     problemReportRepository.setEmail("")
                     problemReportRepository.setDescription("")
-                    warrenProblemReporter.deleteLogs()
+                    problemReportRepository.deleteLogs()
                 }
                 sendingState.tryEmit(outcome.toUiResult(nullableEmail))
             }
@@ -170,7 +173,7 @@ class ReportProblemViewModel(
 
     init {
         viewModelScope.launch {
-            if (warrenProblemReporter.collectLogs()) {
+            if (problemReportRepository.collectLogs()) {
                 areLogsCollected.emit(LogCollectingState.Success)
             } else {
                 areLogsCollected.emit(LogCollectingState.Failed)
@@ -181,6 +184,6 @@ class ReportProblemViewModel(
     override fun onCleared() {
         super.onCleared()
         // Delete any logs if user leaves the screen
-        warrenProblemReporter.deleteLogs()
+        problemReportRepository.deleteLogs()
     }
 }

@@ -79,14 +79,7 @@ val uiModule = module {
     single { ChangelogRepository(get(), get(), get()) }
     // D.4 step 54: SettingsRepository dropped (Mullvad daemon settings sync
     // dead - VpnSettings module deleted in step 53).
-    single {
-        ProblemReportRepository(
-            context = androidContext(),
-            apiEndpointOverride = getOrNull(),
-            apiEndpointFromIntentHolder = get(),
-            kermitFileLogDirName = KERMIT_FILE_LOG_DIR_NAME,
-        )
-    }
+    single { ProblemReportRepository(context = androidContext()) }
     // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
     // sovereign, no per-relay IP overrides.
     // D.4 step 45: CustomListsRepository + RelayListFilterRepository dropped
@@ -199,7 +192,6 @@ val uiModule = module {
     // D.4 step 53: VpnSettingsViewModel dropped (module deleted).
     viewModel {
         ReportProblemViewModel(
-            warrenProblemReporter = get(),
             problemReportRepository = get(),
             isPlayBuild = IS_PLAY_BUILD,
             supportReportInvoker = get(),
