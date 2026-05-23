@@ -72,4 +72,34 @@ class MnemonicTest {
         assertNotEquals(twelveWords, mnemonic.toString())
         assertEquals(false, mnemonic.toString().contains("abandon"))
     }
+
+    @Test
+    fun `close throws on subsequent phrase read`() {
+        val mnemonic = Mnemonic(twelveWords)
+        mnemonic.close()
+        assertThrows<IllegalStateException> { mnemonic.phrase }
+    }
+
+    @Test
+    fun `close is idempotent`() {
+        val mnemonic = Mnemonic(twelveWords)
+        mnemonic.close()
+        // A second close MUST NOT throw - matches the AutoCloseable
+        // contract that callers can safely close-in-finally even when
+        // the body already closed the resource.
+        mnemonic.close()
+    }
+
+    @Test
+    fun `phrase round-trips through CharArray backing store`() {
+        val mnemonic = Mnemonic(twelveWords)
+        assertEquals(twelveWords, mnemonic.phrase)
+    }
+
+    @Test
+    fun `useAsString delivers the phrase to the block`() {
+        val mnemonic = Mnemonic(twelveWords)
+        val observed = mnemonic.useAsString { it }
+        assertEquals(twelveWords, observed)
+    }
 }

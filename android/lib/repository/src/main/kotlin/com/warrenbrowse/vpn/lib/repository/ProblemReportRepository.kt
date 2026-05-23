@@ -17,19 +17,17 @@ import com.warrenbrowse.vpn.lib.model.UserReport
 
 const val PROBLEM_REPORT_LOGS_FILE = "problem_report.txt"
 
-// D.6 step 65 + audit follow-up: only `Error.SendReport` is still
-// produced by the live path. `Success` is unused (the ViewModel
-// projects WarrenSupportReportOutcome.Success directly to its
-// SendingReportUiState.Success). `Error.CollectLog` is unreachable
-// from any live code path (the previous repository.sendReport
-// flow that emitted it was removed). Kept only for the
-// PreviewParameterProvider's dummy state until the screen previews
-// are reworked.
+// D.6 step 65 + audit follow-up: single-variant tag retained as a
+// `sealed interface` (instead of `data object`) so a future revival
+// of distinct send-failure causes (network / signature / payload-too-
+// large / ...) can re-extend it without rewriting the UI state shape.
+// The previous `Success` + `Error.CollectLog` variants were dead:
+// `Success` was never emitted (the ViewModel projects
+// `WarrenSupportReportOutcome.Success` directly to its UI state),
+// `CollectLog` was unreachable from the live flow (the legacy
+// repository.sendReport that emitted it was removed in step 65).
 sealed interface SendProblemReportResult {
-    data object Success : SendProblemReportResult
-
     sealed interface Error : SendProblemReportResult {
-        data object CollectLog : Error
         data object SendReport : Error
     }
 }
@@ -46,9 +44,12 @@ sealed interface SendProblemReportResult {
 // that became dead after the send path moved. Dropped along with the
 // redundant `System.loadLibrary("warren_jni")` (WarrenJni's own static
 // init already loads the library; calling it again here only worked by
-// load-order coincidence).
+// load-order coincidence). The JNI surface is now consumed through the
+// injected [WarrenJniBridge] instead of importing
+// `com.warrenbrowse.vpn.jni.WarrenJni` directly from the `:app` module.
 class ProblemReportRepository(
     context: Context,
+    private val jni: WarrenJniBridge,
     val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val _problemReport = MutableStateFlow(UserReport("", ""))
@@ -67,12 +68,12 @@ class ProblemReportRepository(
         withContext(dispatcher) {
             collectReportMutex.withLock {
                 deleteLogs()
-                // D.6: WarrenJni.collectReport returns the redacted bundle
-                // as a single string (empty until the file-appender lands).
-                // We mirror it into the legacy on-disk path so the existing
-                // ViewLogs screen + readLogs API continue to function.
-                val bundle = runCatching { com.warrenbrowse.vpn.jni.WarrenJni.collectReport() }
-                    .getOrElse { "" }
+                // D.6: WarrenJniBridge.collectReport returns the redacted
+                // bundle as a single string (empty until the file-appender
+                // lands). We mirror it into the legacy on-disk path so the
+                // existing ViewLogs screen + readLogs API continue to
+                // function.
+                val bundle = runCatching { jni.collectReport() }.getOrElse { "" }
                 try {
                     problemReportOutputPath.writeText(bundle)
                     true

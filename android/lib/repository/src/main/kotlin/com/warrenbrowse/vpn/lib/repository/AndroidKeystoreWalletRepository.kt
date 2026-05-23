@@ -6,7 +6,6 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import co.touchlab.kermit.Logger
-import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
@@ -54,7 +53,10 @@ import kotlinx.coroutines.withContext
  *   - `setUserAuthenticationRequired(true)` on the master key spec once
  *     BiometricPrompt is in place.
  */
-class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
+class AndroidKeystoreWalletRepository(
+    context: Context,
+    private val jni: WarrenJniBridge,
+) : WalletRepository {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -66,8 +68,8 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
 
     override suspend fun createWallet(): Mnemonic = lock.withLock {
         withContext(Dispatchers.IO) {
-            val phrase = WarrenJni.generateMnemonic()
-            check(phrase.isNotEmpty()) { "WarrenJni.generateMnemonic returned empty string" }
+            val phrase = jni.generateMnemonic()
+            check(phrase.isNotEmpty()) { "WarrenJniBridge.generateMnemonic returned empty string" }
             val mnemonic = Mnemonic(phrase)
             persist(mnemonic)
             mnemonic
@@ -76,7 +78,7 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
 
     override suspend fun importWallet(mnemonic: Mnemonic): WalletPubkeyHex = lock.withLock {
         withContext(Dispatchers.IO) {
-            val hex = WarrenJni.mnemonicPubkeyHex(mnemonic.phrase)
+            val hex = mnemonic.useAsString { jni.mnemonicPubkeyHex(it) }
             persist(mnemonic, hex)
             WalletPubkeyHex(hex)
         }
@@ -96,11 +98,14 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
             )
         }
         withContext(Dispatchers.IO) {
-            val phrase = decryptMnemonic()
+            val chars = decryptMnemonic()
                 ?: throw IllegalStateException(
                     "no wallet on disk - call createWallet/importWallet first"
                 )
-            Mnemonic(phrase)
+            // Ownership transfer: the new Mnemonic now owns `chars`
+            // and will zero it on close(). We MUST NOT mutate `chars`
+            // afterwards.
+            Mnemonic.fromCharArrayOwning(chars)
         }
     }
 
@@ -137,10 +142,17 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
         val cipher = Cipher.getInstance(TRANSFORMATION).apply {
             init(Cipher.ENCRYPT_MODE, getOrCreateMasterKey())
         }
-        val ciphertext = cipher.doFinal(mnemonic.phrase.toByteArray(Charsets.UTF_8))
+        // Use `useAsString` so the temporary cleartext-bytes
+        // intermediate dies at the lambda boundary. The CharArray
+        // backing the Mnemonic stays owned by the caller (we MUST
+        // NOT close it here - the caller may still need it for the
+        // immediate connect/signing path).
+        val ciphertext = mnemonic.useAsString { phrase ->
+            cipher.doFinal(phrase.toByteArray(Charsets.UTF_8))
+        }
         val iv = cipher.iv
 
-        val hex = pubkeyHex ?: WarrenJni.mnemonicPubkeyHex(mnemonic.phrase)
+        val hex = pubkeyHex ?: mnemonic.useAsString { jni.mnemonicPubkeyHex(it) }
 
         prefs.edit()
             .putString(KEY_CIPHERTEXT, Base64.encodeToString(ciphertext, Base64.NO_WRAP))
@@ -151,7 +163,17 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
         _state.value = WalletState.Ready(WalletPubkeyHex(hex))
     }
 
-    private fun decryptMnemonic(): String? {
+    /**
+     * Decrypt the persisted mnemonic into a freshly allocated
+     * [CharArray] and zero the intermediate plaintext byte buffer
+     * before returning. Returns `null` when no wallet is on disk.
+     *
+     * Returning a [CharArray] instead of a [String] avoids
+     * materialising a long-lived JVM String for the secret; the
+     * caller (`unlock`) wraps the array directly into a [Mnemonic]
+     * which owns its zero-on-close lifecycle.
+     */
+    private fun decryptMnemonic(): CharArray? {
         val ciphertextB64 = prefs.getString(KEY_CIPHERTEXT, null) ?: return null
         val ivB64 = prefs.getString(KEY_IV, null) ?: return null
         val ciphertext = Base64.decode(ciphertextB64, Base64.NO_WRAP)
@@ -160,7 +182,18 @@ class AndroidKeystoreWalletRepository(context: Context) : WalletRepository {
             init(Cipher.DECRYPT_MODE, getOrCreateMasterKey(), GCMParameterSpec(GCM_TAG_BITS, iv))
         }
         val plaintext = cipher.doFinal(ciphertext)
-        return String(plaintext, Charsets.UTF_8)
+        try {
+            val decoded = Charsets.UTF_8.decode(java.nio.ByteBuffer.wrap(plaintext))
+            // Copy CharBuffer -> CharArray with exact length (the
+            // buffer's underlying array may be larger).
+            val chars = CharArray(decoded.remaining())
+            decoded.get(chars)
+            return chars
+        } finally {
+            // Zero the byte intermediate eagerly so the plaintext
+            // does not linger as a raw byte array on the heap.
+            plaintext.fill(0)
+        }
     }
 
     private fun getOrCreateMasterKey(): SecretKey {

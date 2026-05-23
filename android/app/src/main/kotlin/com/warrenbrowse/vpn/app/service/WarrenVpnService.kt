@@ -198,8 +198,19 @@ class WarrenVpnService : LifecycleVpnService() {
                         }
                         if (config != null) {
                             lifecycleScope.launch {
-                                quinnAdapter.connect(config, mnemonic.phrase)
+                                // `use { }` zeros the underlying CharArray
+                                // after `connect` returns (whether it
+                                // succeeded or threw). The adapter is
+                                // responsible for any longer-lived
+                                // mnemonic storage on its own side.
+                                mnemonic.use { m ->
+                                    quinnAdapter.connect(config, m.phrase)
+                                }
                             }
+                        } else {
+                            // No connect launched -> close eagerly so
+                            // the CharArray isn't held past the dispatch.
+                            mnemonic.close()
                         }
                     }
                 }

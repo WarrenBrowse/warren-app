@@ -79,7 +79,7 @@ val uiModule = module {
     single { ChangelogRepository(get(), get(), get()) }
     // D.4 step 54: SettingsRepository dropped (Mullvad daemon settings sync
     // dead - VpnSettings module deleted in step 53).
-    single { ProblemReportRepository(context = androidContext()) }
+    single { ProblemReportRepository(context = androidContext(), jni = get()) }
     // D.4 step 35: RelayOverridesRepository removed - Warren exit fleet is
     // sovereign, no per-relay IP overrides.
     // D.4 step 45: CustomListsRepository + RelayListFilterRepository dropped

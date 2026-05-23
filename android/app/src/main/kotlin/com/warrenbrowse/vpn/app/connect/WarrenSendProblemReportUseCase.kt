@@ -61,21 +61,26 @@ class WarrenSendProblemReportUseCase(
         val platform = "android-${Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown"}"
 
         return withContext(Dispatchers.IO) {
-            val rawJson = try {
-                WarrenJni.sendProblemReport(
-                    mnemonic = mnemonic.phrase,
-                    userMessage = userMessage,
-                    redactedLogs = redactedLogs,
-                    appVersion = appVersion,
-                    platform = platform,
-                )
-            } catch (e: Exception) {
-                Logger.e(throwable = e) { "WarrenJni.sendProblemReport threw" }
-                return@withContext WarrenSupportReportOutcome.Failure(
-                    e.message ?: "JNI sendProblemReport threw",
-                )
+            // `use { }` zeros the underlying CharArray when the lambda
+            // exits (whether `sendProblemReport` succeeded or threw),
+            // bounding the mnemonic's heap residency to the JNI call.
+            mnemonic.use { m ->
+                val rawJson = try {
+                    WarrenJni.sendProblemReport(
+                        mnemonic = m.phrase,
+                        userMessage = userMessage,
+                        redactedLogs = redactedLogs,
+                        appVersion = appVersion,
+                        platform = platform,
+                    )
+                } catch (e: Exception) {
+                    Logger.e(throwable = e) { "WarrenJni.sendProblemReport threw" }
+                    return@use WarrenSupportReportOutcome.Failure(
+                        e.message ?: "JNI sendProblemReport threw",
+                    )
+                }
+                parseOutcome(rawJson)
             }
-            parseOutcome(rawJson)
         }
     }
 

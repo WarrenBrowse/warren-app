@@ -16,6 +16,8 @@ import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSendProblemReportUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
+import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
+import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
@@ -67,7 +69,16 @@ val appModule = module {
     // ManagementService / RelayLocationTranslationRepository deps).
     // D.4 step 59: rewired to WarrenTunnelStateProvider (real tunnel state).
     single { ConnectionProxy(tunnelStateProvider = get()) }
-    single<WalletRepository> { AndroidKeystoreWalletRepository(androidContext()) }
+
+    // D.6 audit follow-up: lib/repository consumes the JNI surface via
+    // this interface (lives in lib/repository). The concrete impl
+    // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/*` modules
+    // never reach into `:app`.
+    single<WarrenJniBridge> { WarrenJniBridgeImpl() }
+
+    single<WalletRepository> {
+        AndroidKeystoreWalletRepository(context = androidContext(), jni = get())
+    }
 
     // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
     // Kept separate from the proto-backed UserPreferencesRepository so we can
