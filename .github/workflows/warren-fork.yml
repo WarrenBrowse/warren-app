@@ -22,7 +22,14 @@ on:
       - 'mullvad-daemon/src/device/device_backend.rs'
       - 'mullvad-daemon/src/lib.rs'
       - 'mullvad-daemon/src/management_interface.rs'
+      - 'mullvad-daemon/src/tunnel.rs'
       - 'mullvad-types/src/settings/mod.rs'
+      - 'mullvad-types/src/relay_constraints.rs'
+      - 'talpid-warren-tunnel/**'
+      - 'warren-ios/**'
+      - 'warren-jni/**'
+      - 'talpid-core/src/tunnel_state_machine/**'
+      - 'talpid-core/src/firewall/linux.rs'
       - 'mullvad-api/src/warren_auth.rs'
       - 'mullvad-api/src/rest.rs'
       - 'mullvad-api/src/lib.rs'
@@ -68,22 +75,32 @@ jobs:
         # workflow which also gates fmt).
         run: cargo fmt --all -- --check
 
-      - name: cargo test mullvad-daemon
+      - name: cargo test Warren scope
         # Targets the crates touched by the fork. We avoid cargo test
         # --workspace so we do not run Android / iOS / Windows
         # specific tests on Linux (already covered by upstream daemon.yml).
+        # talpid-warren-tunnel + talpid-core + warren-jni added per
+        # AUDIT_COMPLET.md M-5 (warren-ios is cfg(target_os = "ios") so
+        # cargo check only on Linux).
         run: |
           cargo test --locked -p mullvad-daemon
           cargo test --locked -p mullvad-api
           cargo test --locked -p mullvad-types
           cargo test --locked -p mullvad-management-interface
           cargo test --locked -p mullvad-cli
+          cargo test --locked -p talpid-warren-tunnel
+          cargo test --locked -p talpid-core
+          cargo test --locked -p warren-jni
+          cargo check --locked -p warren-ios
 
-      - name: cargo clippy mullvad-daemon
+      - name: cargo clippy Warren scope
         run: |
           cargo clippy --locked -p mullvad-daemon -- -D warnings
           cargo clippy --locked -p mullvad-api -- -D warnings
           cargo clippy --locked -p mullvad-cli -- -D warnings
+          cargo clippy --locked -p talpid-warren-tunnel -- -D warnings
+          cargo clippy --locked -p talpid-core -- -D warnings
+          cargo clippy --locked -p warren-jni -- -D warnings
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
