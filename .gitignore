@@ -52,3 +52,8 @@ android/.idea
 *.pfx
 *.cer
 .notarytool-creds.json
+
+# Claude Code session-local artefacts. The .lock file was accidentally
+# committed in 583581d ("wip"); the directory is per-user / per-machine
+# and has no place in version control.
+.claude/
