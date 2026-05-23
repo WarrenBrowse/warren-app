@@ -22,6 +22,71 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [0.1.0-beta.1] - 2026-05-22
+First public beta of Warren VPN, the warrenBrowse fork of Mullvad VPN built on Quinn QUIC instead
+of WireGuard, with mainstream multi-hop HPKE encryption (pattern Apple Private Relay), DAITA
+traffic analysis defense, HTTP/3 obfuscation, NAT-PMP port-forwarding, and non-custodial wallet
+authentication.
+
+### Added
+- Multi-hop two-relayed QUIC + HPKE (X25519) — anonymity layer where no single server sees both
+  the user's IP and the destination, modeled after Apple iCloud Private Relay (RFC 9180).
+- DAITA padding via `maybenot` 2.2.2 framework with Tamaraw and Scrambler default machines —
+  obfuscates traffic timing patterns against passive ML-based fingerprinting.
+- HTTP/3 mimicry baseline obfuscation (ALPN `h3`, SNI `.exits.warrenbrowse.com`, port 443,
+  Initial datagram split >= 1500 B) — always on, no toggle.
+- NAT-PMP port-forwarding for inbound peer connections (qBittorrent, etc.) — restored after
+  Mullvad and IVPN removed the feature in 2023.
+- Multi-exit automatic failover — if the current exit becomes unreachable, the client transparently
+  switches to an alternative in the same country.
+- TOFU pubkey pinning per exit_id — the client refuses to connect if the exit identity changes
+  unexpectedly. UI modal lets the user trust the new key, reject, or report.
+- Wallet Ed25519 BIP39 mnemonic authentication — non-custodial, no email, no account number.
+  Generated or imported during first-launch onboarding wizard.
+- `--bypass-cidr` flag (Linux) — preserves SSH inbound when the tunnel is up by excluding CIDR
+  ranges from the default route.
+- Sticky multi-hop IPs — exit allocator best-effort keeps the same client IPv4 across reconnects,
+  keyed by Ed25519 client pubkey.
+- `DaitaMetrics` (padding fired, blocking begin/end) surfaced in session close logs for
+  observability.
+- Cross-platform desktop builds: Linux `.deb`/`.rpm`, macOS universal `.dmg`/`.pkg`, Windows
+  `.exe`/`.msi`.
+- Mobile builds: iOS `.ipa` (TestFlight), Android `.aab`/`.apk` (Play Store internal test).
+
+### Changed
+- Replace WireGuard with Quinn 0.11 (Rust-native QUIC) plus a local GSO patch. WireGuard go and
+  daita-go backends are removed.
+- Replace Mullvad account number with non-custodial wallet authentication. Account recovery is
+  the user's responsibility (the mnemonic is the only credential).
+- Update brand and bundle identifiers across all platforms: `net.mullvad.MullvadVPN` ->
+  `com.warrenbrowse.vpn` (Android), `net.mullvad.MullvadVPN` -> `com.warrenbrowse.vpn.ios` (iOS),
+  `net.mullvad.vpn` -> `com.warrenbrowse.vpn` (Linux/macOS/Windows daemon).
+- Reduce `Backoff::HANDSHAKE` ceiling from 30 s to 15 s — worst-case auto-reconnect under
+  M4.E.D mid-session loss is now under 15 s.
+- Default GUI now ships with the warrenBrowse logo (yellow `#ffd524` on navy `#0a1422`),
+  French + English locales prioritized.
+
+### Removed
+- WireGuard tunnel implementation (replaced by Quinn).
+- Mullvad-specific features that did not apply to the Warren product: PostQuantum WG tunnel,
+  Shadowsocks bridge, ephemeral WG peer exchange, account number tracker, voucher legacy
+  API, ManagementService gRPC accessors for unused legacy features (customlists, apiaccess,
+  relayoverride), app-icon obfuscation module (Android), `devmole`/`stagemole` flavors.
+
+### Security
+- Forensic country/city context surfaced through the verify-hook for pinned-key mismatch
+  reporting.
+- `/v1/incidents/pubkey-mismatch` endpoint records suspected MITM attempts.
+- Pre-prod audit (docs/AUDIT-2026-05-21.md) closed all P0 baseline + sec + prod + arch issues.
+  P1 hardening is tracked separately for the next release.
+
+## [Mullvad upstream history]
+Entries below this line are inherited from the Mullvad VPN project, the upstream this fork
+is based on. They are preserved verbatim for historical traceability of legacy code paths
+that Warren still inherits (and that future rebases will continue to surface). New Warren
+entries always go above the `## [Mullvad upstream history]` marker.
+
 ### Added
 - Add port setting for LWO obfuscation.
 - Add list of recent server selections in the select location view.

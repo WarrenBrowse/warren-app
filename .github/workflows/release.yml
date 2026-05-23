@@ -187,9 +187,204 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  build-ios:
+    name: Build iOS IPA + TestFlight upload
+    runs-on: macos-15
+    env:
+      IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
+      IOS_DISTRIBUTION_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_PASSWORD }}
+      IOS_PROVISIONING_PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      APPSTORECONNECT_API_KEY_B64: ${{ secrets.APPSTORECONNECT_API_KEY_BASE64 }}
+      APPSTORECONNECT_API_KEY_ID: ${{ secrets.APPSTORECONNECT_API_KEY_ID }}
+      APPSTORECONNECT_API_ISSUER_ID: ${{ secrets.APPSTORECONNECT_API_ISSUER_ID }}
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup iOS project toolchain
+        uses: ./.github/actions/ios/setup-project-toolchain
+
+      - name: Decode signing cert + provisioning profile
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        run: |
+          set -euo pipefail
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          tmp_cert=$(mktemp -t warren-ios-cert-XXXXXX.p12)
+          tmp_prov=$(mktemp -t warren-ios-prov-XXXXXX.mobileprovision)
+          printf '%s' "$IOS_DISTRIBUTION_CERT_B64" | base64 -d > "$tmp_cert"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_B64" | base64 -d > "$tmp_prov"
+          security create-keychain -p "" warren-ios.keychain
+          security default-keychain -s warren-ios.keychain
+          security unlock-keychain -p "" warren-ios.keychain
+          security import "$tmp_cert" -k warren-ios.keychain -P "$IOS_DISTRIBUTION_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" warren-ios.keychain
+          cp "$tmp_prov" ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "IOS_CERT_TMP=$tmp_cert" >> "$GITHUB_ENV"
+          echo "IOS_PROV_TMP=$tmp_prov" >> "$GITHUB_ENV"
+
+      - name: Archive WarrenVPN (signed)
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -configuration Release \
+            -archivePath build/WarrenVPN.xcarchive \
+            -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM="$APPLE_DEVELOPER_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual
+
+      - name: Export IPA (signed)
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        working-directory: ios
+        run: |
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${APPLE_DEVELOPER_TEAM_ID}</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath build/WarrenVPN.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Upload to TestFlight
+        if: env.APPSTORECONNECT_API_KEY_B64 != ''
+        run: |
+          set -euo pipefail
+          tmp_key=$(mktemp -t appstore-api-key-XXXXXX.p8)
+          printf '%s' "$APPSTORECONNECT_API_KEY_B64" | base64 -d > "$tmp_key"
+          mkdir -p ~/.appstoreconnect/private_keys
+          cp "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
+          ipa_path=$(ls ios/build/ipa/*.ipa | head -1)
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$ipa_path" \
+            --apiKey "$APPSTORECONNECT_API_KEY_ID" \
+            --apiIssuer "$APPSTORECONNECT_API_ISSUER_ID"
+          rm -f "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.IOS_DISTRIBUTION_CERT_B64 == ''
+        working-directory: ios
+        run: |
+          echo "::warning::IOS_DISTRIBUTION_CERT_BASE64 secret not set; producing unsigned dev archive."
+          xcodebuild archive \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -configuration Release \
+            -archivePath build/WarrenVPN.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Wipe signing material from runner
+        if: always() && env.IOS_DISTRIBUTION_CERT_B64 != ''
+        run: |
+          security delete-keychain warren-ios.keychain || true
+          [ -n "${IOS_CERT_TMP:-}" ] && rm -f "$IOS_CERT_TMP" || true
+          [ -n "${IOS_PROV_TMP:-}" ] && rm -f "$IOS_PROV_TMP" || true
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-installers
+          path: |
+            ios/build/ipa/*.ipa
+            ios/build/WarrenVPN.xcarchive
+          if-no-files-found: warn
+          retention-days: 14
+
+  build-android:
+    name: Build Android AAB + Play Store internal-test upload
+    runs-on: ubuntu-22.04
+    env:
+      ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_B64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Add Android Rust targets
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+
+      - name: Decode upload keystore
+        if: env.ANDROID_KEYSTORE_B64 != ''
+        run: |
+          tmp=$(mktemp -t warren-android-keystore-XXXXXX.jks)
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$tmp"
+          echo "WARREN_KEYSTORE_PATH=$tmp" >> "$GITHUB_ENV"
+          echo "WARREN_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "WARREN_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "WARREN_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Build signed AAB + APK
+        if: env.ANDROID_KEYSTORE_B64 != ''
+        working-directory: android
+        run: ./gradlew app:assembleRelease app:bundleRelease --parallel
+
+      - name: Build unsigned AAB + APK
+        if: env.ANDROID_KEYSTORE_B64 == ''
+        working-directory: android
+        run: |
+          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; producing unsigned dev build."
+          ./gradlew app:assembleDebug --parallel
+
+      - name: Upload to Google Play internal-test
+        if: env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_B64 != '' && env.ANDROID_KEYSTORE_B64 != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+          packageName: com.warrenbrowse.vpn
+          releaseFiles: android/app/build/outputs/bundle/prodRelease/app-prod-release.aab
+          track: internal
+          status: completed
+
+      - name: Wipe keystore from runner
+        if: always() && env.ANDROID_KEYSTORE_B64 != ''
+        run: |
+          [ -n "${WARREN_KEYSTORE_PATH:-}" ] && rm -f "$WARREN_KEYSTORE_PATH" || true
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-installers
+          path: |
+            android/app/build/outputs/apk/**/*.apk
+            android/app/build/outputs/bundle/**/*.aab
+          if-no-files-found: warn
+          retention-days: 14
+
   publish-release:
     name: Publish GitHub Release
-    needs: [build-macos, build-linux, build-windows]
+    needs: [build-macos, build-linux, build-windows, build-ios, build-android]
     runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags/')
     env:
@@ -214,7 +409,10 @@ jobs:
             -name 'WarrenVPN-*.exe' -o \
             -name 'WarrenVPN-*.msi' -o \
             -name 'warren-vpn-daemon_*.deb' -o \
-            -name 'warren-vpn-daemon_*.rpm' \
+            -name 'warren-vpn-daemon_*.rpm' -o \
+            -name '*.ipa' -o \
+            -name '*.aab' -o \
+            -name '*.apk' \
           \) -exec cp {} release-files/ \;
           ls -lh release-files/ || true
 
