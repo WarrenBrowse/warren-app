@@ -466,17 +466,23 @@ fn map_device_response(d: warren_api_client::Device) -> Result<Device, rest::Err
 }
 
 /// Stub `AssociatedAddresses` — warren-api does not provide IP
-/// allocation in MVP. Fixed Mullvad-style addresses so that
-/// `PrivateDevice::try_from_device` on the caller side can build
-/// a valid device. In warren-mode, the tunnel data plane goes
-/// through `talpid-warren-tunnel` (Quinn upstream, cf. warren-app
-/// quinn migration 2026-05-12) which does NOT use these WireGuard
-/// IPs — so the absence of real allocation is not a blocker for
-/// the MVP chain.
+/// allocation in MVP. The addresses below are RFC 5737 (TEST-NET-1)
+/// and RFC 3849 (documentation IPv6) blocks: they are reserved
+/// **specifically** for examples/documentation, never routable on
+/// the public Internet, and signal their placeholder nature on
+/// sight (any operator who sees `192.0.2.x` in a debug log knows
+/// it is a stub, not a real allocation). cf. AUDIT_COMPLET.md M-6.
+///
+/// In warren-mode, the tunnel data plane goes through
+/// `talpid-warren-tunnel` (Quinn upstream, cf. warren-app quinn
+/// migration 2026-05-12) which does NOT use these WireGuard IPs —
+/// so the absence of real allocation is not a blocker for the MVP
+/// chain. `PrivateDevice::try_from_device` on the caller side
+/// still needs *some* address pair to build a valid device.
 fn stub_associated_addresses() -> AssociatedAddresses {
     AssociatedAddresses {
-        ipv4_address: "10.66.0.1/32".parse().expect("valid v4 stub"),
-        ipv6_address: "fc00:bbbb::1/128".parse().expect("valid v6 stub"),
+        ipv4_address: "192.0.2.1/32".parse().expect("valid v4 stub"),
+        ipv6_address: "2001:db8::1/128".parse().expect("valid v6 stub"),
     }
 }
 
@@ -695,11 +701,11 @@ mod tests {
         let server_devices = state.devices.list_for_owner(&owner_pubkey_hex);
         assert_eq!(server_devices.len(), 1);
         assert_eq!(server_devices[0].id, device.id);
-        // Stub addresses (to be refined M5+).
+        // Stub addresses (RFC 5737 TEST-NET-1, to be refined M5+).
         assert_eq!(
             addresses.ipv4_address.to_string(),
-            "10.66.0.1/32",
-            "expected v4 stub in MVP"
+            "192.0.2.1/32",
+            "expected v4 stub in MVP (RFC 5737)"
         );
     }
 
@@ -853,8 +859,8 @@ mod tests {
             )
             .await
             .expect("rotate OK");
-        // Stub addresses (MVP).
-        assert_eq!(addresses.ipv4_address.to_string(), "10.66.0.1/32");
+        // Stub addresses (RFC 5737 TEST-NET-1, MVP).
+        assert_eq!(addresses.ipv4_address.to_string(), "192.0.2.1/32");
 
         // The server-side device has the new wg_pubkey, and the id
         // is preserved.
