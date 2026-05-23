@@ -1,10 +1,11 @@
-package com.warrenbrowse.vpn.app.service
+package com.warrenbrowse.vpn.lib.repository
 
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -65,5 +66,29 @@ class MnemonicCacheTest {
         MnemonicCache.put(null)
         assertNull(MnemonicCache.consume())
         assertFalse(MnemonicCache.isStaged())
+    }
+
+    @Test
+    fun `put overwrites and closes the previously staged mnemonic`() {
+        // Audit invariant: the previous stash must be zeroed when
+        // overwritten so its CharArray does not linger on the heap.
+        val orphan = Mnemonic(
+            "legal winner thank year wave sausage worth useful legal winner thank yellow"
+        )
+        MnemonicCache.put(orphan)
+        MnemonicCache.put(sample)
+        // After the overwrite, the orphan must be in the closed state:
+        // accessing `.phrase` throws IllegalStateException.
+        assertThrows(IllegalStateException::class.java) { orphan.phrase }
+    }
+
+    @Test
+    fun `put null closes the previously staged mnemonic`() {
+        val orphan = Mnemonic(
+            "legal winner thank year wave sausage worth useful legal winner thank yellow"
+        )
+        MnemonicCache.put(orphan)
+        MnemonicCache.put(null)
+        assertThrows(IllegalStateException::class.java) { orphan.phrase }
     }
 }

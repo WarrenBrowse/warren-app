@@ -26,6 +26,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
+import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.talpid.LifecycleVpnService
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules

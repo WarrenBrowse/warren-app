@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
-import com.warrenbrowse.vpn.app.service.MnemonicCache
+import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.app.service.WarrenVpnService
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION

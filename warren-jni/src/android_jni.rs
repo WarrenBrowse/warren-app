@@ -470,21 +470,24 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
 /// `api-override` Cargo feature for dev/staging builds only).
 const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 
-/// Production server signing pubkey hex (64 lowercase chars), or
-/// `None` until the real production key is pinned. While unset, the
-/// signed relay list is accepted on its *signature validity* alone
-/// (the embedded `server_pubkey_hex` field). This is a transition
-/// surface: as soon as the production server pubkey is decided, set
-/// this constant to the 64-char hex and `verify_signed_relay_list`
-/// will refuse any list whose embedded pubkey differs.
+/// Production server signing pubkey hex (64 lowercase chars). The
+/// signed relay list MUST be signed by this key; any other pubkey is
+/// rejected. The companion seed lives on the prod warren-api Docker
+/// volume at `/var/lib/docker/volumes/warren_warren-api-data/_data/api-signing.key`
+/// (read-only access requires hcloud `warren` context SSH to
+/// `warren-backend-api`).
 ///
-/// Audit follow-up: the previous value was a 32-char fragment
-/// duplicated to 64 chars (`2921...2921...`) -- structurally a
-/// placeholder, not a real Ed25519 pubkey. Pinning `None` until the
-/// real key is known is honest; pinning a bogus value would either
-/// silently fall back forever or accept a forged list under that
-/// phantom key.
-const PROD_SERVER_PUBKEY_HEX: Option<&str> = None;
+/// Verified against the live `GET /v1/exits` response on
+/// 2026-05-23 — the embedded `server_pubkey_hex` field matches this
+/// constant byte-for-byte, and deriving the verifying key from the
+/// on-disk seed via `ed25519_dalek::SigningKey::from_bytes` produces
+/// the same hex.
+///
+/// Rotation procedure: bump this constant, push a new app build,
+/// THEN swap the seed file on the server. Doing it in the reverse
+/// order locks existing clients out of `/v1/exits` until they update.
+const PROD_SERVER_PUBKEY_HEX: Option<&str> =
+    Some("4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e");
 
 /// Hardcoded fallback used when the live fetch fails. Schema lined up
 /// with the Kotlin `RelayInfo` data class. `exit_id` + `exit_pubkey_hex`

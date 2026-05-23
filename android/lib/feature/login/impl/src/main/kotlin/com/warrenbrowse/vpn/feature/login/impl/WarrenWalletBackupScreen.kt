@@ -9,10 +9,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
 
 /**
@@ -21,18 +25,41 @@ import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
  *
  * Renders the cleartext phrase via `MnemonicDisplay` (blur+reveal, no
  * copy CTA) plus a single confirmation button. The user is expected to
- * write the phrase down on paper before tapping `I have written it down`.
+ * write the phrase down on paper before tapping `I have written it
+ * down`.
  *
- * After the confirmation the navigation graph routes forward to the home
- * screen; this composable does not orchestrate that transition - it owns
- * the display + the confirm callback only.
+ * The mnemonic is consumed from [MnemonicCache] at first composition
+ * (the previous implementation received it via the NavKey parcelable
+ * which Compose Navigation persists in the saved-state Bundle — see
+ * the audit follow-up on
+ * `com.warrenbrowse.vpn.feature.login.api.WarrenWalletBackupNavKey`).
+ * On process kill the slot empties and the screen invokes
+ * [onProcessRestoreFailure] so the host can route back to the wallet
+ * login screen.
+ *
+ * The composable owns the [Mnemonic] lifetime: a [DisposableEffect]
+ * closes the mnemonic on dispose, zeroing its [CharArray].
  */
 @Composable
 fun WarrenWalletBackupScreen(
-    mnemonic: Mnemonic,
     onConfirmed: () -> Unit,
+    onProcessRestoreFailure: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val mnemonic = remember { MnemonicCache.consume() }
+
+    if (mnemonic == null) {
+        // Process restore path: the cache was empty. Bubble up so the
+        // host EntryProvider can route the user back to the login
+        // screen (where they can re-trigger create or restore).
+        LaunchedEffect(Unit) { onProcessRestoreFailure() }
+        return
+    }
+
+    DisposableEffect(mnemonic) {
+        onDispose { mnemonic.close() }
+    }
+
     Surface(
         color = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize(),

@@ -7,15 +7,18 @@ import kotlinx.parcelize.Parcelize
  * Navigation key for the freshly-generated-mnemonic backup screen
  * (`WarrenWalletBackupScreen` in `lib/feature/login/impl`).
  *
- * The mnemonic phrase is passed inline through the NavKey rather than
- * read from `WalletRepository.unlock()` on the destination because at
- * this point the wallet has *just* been generated and the user has not
- * yet confirmed the backup - we don't want a BiometricPrompt before
- * the user has even seen the phrase to back up.
- *
- * The phrase is held in process memory only for the lifetime of this
- * NavBackStack entry; once the user taps "I have written it down" the
- * entry pops and the reference goes away.
+ * Audit follow-up: the NavKey USED to carry the mnemonic phrase
+ * inline (`data class ... (val mnemonicPhrase: String)`). Compose
+ * Navigation persists NavKeys in the saved-state Bundle on
+ * process-kill — so the cleartext phrase would live in a system-
+ * managed bundle, completely outside the [com.warrenbrowse.vpn.lib.model.wallet.Mnemonic]
+ * zero-on-close lifecycle. The NavKey is now a sentinel: the
+ * mnemonic is handed off out-of-band through
+ * [com.warrenbrowse.vpn.lib.repository.MnemonicCache] so it never
+ * touches the Bundle. A process-kill empties the cache and the
+ * backup screen gracefully falls back to the login screen (which is
+ * the right behaviour — the user has to re-create or re-import
+ * after a process death anyway).
  */
 @Parcelize
-data class WarrenWalletBackupNavKey(val mnemonicPhrase: String) : NavKey2
+data object WarrenWalletBackupNavKey : NavKey2
