@@ -18,6 +18,7 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
+import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletBackupViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.problemreport.impl.ReportProblemViewModel
@@ -184,6 +185,10 @@ val uiModule = module {
     // D.4 step 53: MtuDialogViewModel + DnsDialogViewModel dropped (VpnSettings
     // module deleted — Mullvad daemon settings sync dead).
     viewModel { WarrenWalletViewModel(get()) }
+    // NavBackStackEntry-scoped: consumes MnemonicCache once at init,
+    // holds the Mnemonic for the entry's lifetime, zeros it in
+    // onCleared. Survives config changes; dies on process kill.
+    viewModel { WarrenWalletBackupViewModel() }
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
     // picker, replaced by WarrenLocationPicker).

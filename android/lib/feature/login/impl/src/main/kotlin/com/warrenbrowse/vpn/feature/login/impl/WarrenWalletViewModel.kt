@@ -59,12 +59,19 @@ class WarrenWalletViewModel(
                 _events.send(WarrenWalletEvent.Error("Invalid recovery phrase"))
                 return@launch
             }
-            try {
-                walletRepository.importWallet(mnemonic)
-                _events.send(WarrenWalletEvent.WalletReady)
-            } catch (e: Exception) {
-                Logger.w(throwable = e) { "wallet import failed" }
-                _events.send(WarrenWalletEvent.Error(e.message ?: "Wallet import failed"))
+            // `use { }` closes the Mnemonic at scope exit so the
+            // CharArray is zeroed once the persist + pubkey-derive
+            // round-trip completes (or fails). Audit follow-up:
+            // without this the Mnemonic constructed from the
+            // user-typed phrase lingered on the heap until GC.
+            mnemonic.use { m ->
+                try {
+                    walletRepository.importWallet(m)
+                    _events.send(WarrenWalletEvent.WalletReady)
+                } catch (e: Exception) {
+                    Logger.w(throwable = e) { "wallet import failed" }
+                    _events.send(WarrenWalletEvent.Error(e.message ?: "Wallet import failed"))
+                }
             }
         }
     }

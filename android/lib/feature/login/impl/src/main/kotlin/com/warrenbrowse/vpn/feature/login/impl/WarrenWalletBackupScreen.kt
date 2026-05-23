@@ -9,15 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
-import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * D.5 backup screen shown immediately after [WarrenWalletLoginScreen]
@@ -28,36 +25,32 @@ import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
  * write the phrase down on paper before tapping `I have written it
  * down`.
  *
- * The mnemonic is consumed from [MnemonicCache] at first composition
- * (the previous implementation received it via the NavKey parcelable
- * which Compose Navigation persists in the saved-state Bundle — see
- * the audit follow-up on
- * `com.warrenbrowse.vpn.feature.login.api.WarrenWalletBackupNavKey`).
- * On process kill the slot empties and the screen invokes
- * [onProcessRestoreFailure] so the host can route back to the wallet
- * login screen.
+ * The mnemonic is held by [WarrenWalletBackupViewModel], a
+ * NavBackStackEntry-scoped ViewModel that consumes the
+ * [com.warrenbrowse.vpn.lib.repository.MnemonicCache] slot once at
+ * construction and zeros its [CharArray] in `onCleared` when the
+ * back-stack entry is popped. The ViewModel survives configuration
+ * changes (rotation, dark-mode toggle) but is destroyed on process
+ * kill — which is exactly the lifecycle we need.
  *
- * The composable owns the [Mnemonic] lifetime: a [DisposableEffect]
- * closes the mnemonic on dispose, zeroing its [CharArray].
+ * On a process restore (cache slot empty), [onProcessRestoreFailure]
+ * is invoked so the host can route back to the login entry.
  */
 @Composable
 fun WarrenWalletBackupScreen(
     onConfirmed: () -> Unit,
     onProcessRestoreFailure: () -> Unit,
     modifier: Modifier = Modifier,
+    vm: WarrenWalletBackupViewModel = koinViewModel(),
 ) {
-    val mnemonic = remember { MnemonicCache.consume() }
+    val mnemonic = vm.mnemonic
 
     if (mnemonic == null) {
-        // Process restore path: the cache was empty. Bubble up so the
-        // host EntryProvider can route the user back to the login
-        // screen (where they can re-trigger create or restore).
+        // Process restore path: the cache was empty at ViewModel
+        // init. Bubble up so the host EntryProvider can route the
+        // user back to the login screen.
         LaunchedEffect(Unit) { onProcessRestoreFailure() }
         return
-    }
-
-    DisposableEffect(mnemonic) {
-        onDispose { mnemonic.close() }
     }
 
     Surface(
