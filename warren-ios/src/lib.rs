@@ -1,5 +1,9 @@
 #![cfg(target_os = "ios")]
-#![allow(clippy::undocumented_unsafe_blocks)]
+// AUDIT_COMPLET.md M-4: the blanket
+// `#![allow(clippy::undocumented_unsafe_blocks)]` was removed.
+// The single current `unsafe` site (`get_string` below) carries an
+// explicit `// Safety:` comment; any future `unsafe` block added in
+// this crate must do the same.
 use libc::c_char;
 use std::ffi::CStr;
 use std::sync::OnceLock;

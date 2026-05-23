@@ -92,9 +92,26 @@ impl PacketDevice for MullvadTunPacketDevice {
     fn try_recv(&self) -> std::io::Result<Option<Vec<u8>>> {
         // Fallback `Ok(None)`: the uplink pump then falls back to the
         // default `recv_batch` (single blocking `recv()`), losing the
-        // batched coalescing optimization but staying correct. A real
-        // non-blocking `try_recv` needs a sync `Device::recv` which
-        // tun08 does not re-export publicly.
+        // batched coalescing optimization but staying correct.
+        //
+        // AUDIT_COMPLET.md M-18 investigation: implementing this on
+        // top of the tun 0.8.7 public API requires going around the
+        // `tokio::AsyncFd` wrapper that backs `AsyncDevice`. The
+        // `Deref<Target = Device>` impl does expose the sync
+        // `Device::recv` (set to non-blocking by
+        // `AsyncDevice::new`), but calling it directly desyncs the
+        // `AsyncFd` readiness bookkeeping: a successful sync recv
+        // consumes the `readable` notification that tokio later
+        // re-yields, producing a phantom `WouldBlock` (`recv_batch`
+        // would loop on it) or, worse, a stuck `readable().await`
+        // when the kernel does not re-arm before the next packet.
+        // The safe pattern (`AsyncFd::try_io(Interest::READABLE, ...)`)
+        // needs access to the private `AsyncFd<Device>` field, which
+        // tun 0.8.7 does not expose. Until upstream tun adds either
+        // a `try_recv` method or a `as_fd` accessor, returning
+        // `Ok(None)` here is the correct conservative choice: it
+        // costs a small batch-coalescing optimisation on bursts but
+        // keeps the pump correctness contract intact.
         Ok(None)
     }
 }
