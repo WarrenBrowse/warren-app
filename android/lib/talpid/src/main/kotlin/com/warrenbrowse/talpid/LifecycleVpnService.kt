@@ -53,4 +53,16 @@ open class LifecycleVpnService : VpnService(), LifecycleOwner {
 
     override val lifecycle: Lifecycle
         get() = dispatcher.lifecycle
+
+    companion object {
+        /**
+         * RFC 5737 documentation IP used as a placeholder DNS server
+         * when the upstream network has no DNS to surface to the VPN
+         * client. Originally lived on the now-deleted Mullvad
+         * `TalpidVpnService` (D.4 step 56); restored here on its
+         * successor [LifecycleVpnService] so [ConnectivityListener]
+         * can still filter the fallback out of the resolver list.
+         */
+        const val FALLBACK_DUMMY_DNS_SERVER = "192.0.2.1"
+    }
 }

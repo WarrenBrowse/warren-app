@@ -54,6 +54,12 @@ fun WarrenWalletSettingsSection(
 ) {
     val state by walletRepository.state.collectAsState()
     val scope = rememberCoroutineScope()
+    // LocalClipboardManager is deprecated for LocalClipboard (suspend).
+    // The replacement requires plumbing a CoroutineScope around every
+    // clipboard.setText call, which would balloon the diff. The
+    // legacy API still works on every Android API the project targets;
+    // a focused migration is tracked as a future task.
+    @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
     var confirmErase by remember { mutableStateOf(false) }

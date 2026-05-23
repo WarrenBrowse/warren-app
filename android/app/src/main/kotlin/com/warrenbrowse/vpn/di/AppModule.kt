@@ -72,7 +72,7 @@ val appModule = module {
 
     // D.6 audit follow-up: lib/repository consumes the JNI surface via
     // this interface (lives in lib/repository). The concrete impl
-    // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/*` modules
+    // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/<x>` modules
     // never reach into `:app`.
     single<WarrenJniBridge> { WarrenJniBridgeImpl() }
 
@@ -144,7 +144,11 @@ val appModule = module {
             MainScope(),
         )
     } bind NotificationProvider::class
-    if (BuildConfig.FLAVOR_infrastructure != "prod") {
+    // D.4 step 64 collapsed BILLING dim, leaving only INFRASTRUCTURE.
+    // AGP no longer emits `FLAVOR_infrastructure` when there is a
+    // single dimension - the canonical flavor name surfaces via
+    // `BuildConfig.FLAVOR` directly.
+    if (BuildConfig.FLAVOR != "prod") {
         single<ApiEndpointOverride> {
             ApiEndpointOverride(BuildConfig.API_ENDPOINT, BuildConfig.API_IP)
         }

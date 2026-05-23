@@ -71,7 +71,7 @@ fun MnemonicInput(
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.None,
-                            autoCorrect = false,
+                            autoCorrectEnabled = false,
                             keyboardType = KeyboardType.Text,
                             imeAction = if (absoluteIdx == wordCount - 1) {
                                 ImeAction.Done

@@ -49,7 +49,7 @@ class WarrenConnectUseCase(
 
     /**
      * `WarrenQuinnConnectInvoker` impl: returns a human-readable status
-     * string so UI layers in `lib/feature/*` modules (which cannot import
+     * string so UI layers in `lib/feature/<x>` modules (which cannot import
      * the app-private [Outcome] sealed type) can render result inline.
      */
     override suspend fun connect(activity: FragmentActivity): String =
