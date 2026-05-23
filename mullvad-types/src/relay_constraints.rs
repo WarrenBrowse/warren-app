@@ -112,14 +112,17 @@ pub struct RelayConstraintsFormatter<'a> {
 
 impl fmt::Display for RelayConstraintsFormatter<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Hardcoded `warren-iroh` because the fork ONLY dispatches to
-        // talpid-warren-tunnel when `Settings::warren_mode = true`
-        // (default). `wireguard_constraints` is still used for
-        // selection (port, IP version, obfuscation) — hence the rename
-        // to "Tunnel constraints" so it does not suggest an actual WG tunnel.
+        // The fork ONLY dispatches to talpid-warren-tunnel when
+        // `Settings::warren_mode = true` (default). `wireguard_constraints`
+        // is still used for selection (port, IP version, obfuscation) —
+        // hence the rename to "Tunnel constraints" so it does not suggest
+        // an actual WG tunnel. Display label is "warren" (no transport
+        // qualifier) since Warren is currently on Quinn (post-Iroh
+        // migration 2026-05-12) but the display is meant to be
+        // transport-agnostic to the user.
         writeln!(
             f,
-            "Tunnel protocol: warren-iroh\nTunnel constraints: {}",
+            "Tunnel protocol: warren\nTunnel constraints: {}",
             WireguardConstraintsFormatter {
                 constraints: &self.constraints.wireguard_constraints,
                 custom_lists: self.custom_lists,

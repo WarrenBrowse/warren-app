@@ -17,10 +17,12 @@ thiserror = { workspace = true }
 hex = "0.4"
 # Explicit versions (rather than `{ workspace = true }`): warren-app's
 # workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
-# pinned to the same versions that warren-core uses so the resolved graph
-# stays single-version.
+# pinned with `=` to the same exact versions that warren-core uses so
+# the resolved graph stays single-version AND no silent minor bump of
+# a crypto crate that produces signed requests can sneak through.
+# cf. AUDIT_COMPLET.md M-3.
 bip39 = { version = "2", features = ["rand"] }
-ed25519-dalek = { version = "2", features = ["zeroize", "rand_core"] }
+ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
 
 # Android-only deps: the JNI surface + log + Tokio runtime for the (still

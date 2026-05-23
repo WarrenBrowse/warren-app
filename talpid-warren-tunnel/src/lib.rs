@@ -1460,22 +1460,6 @@ impl SessionKind {
     }
 }
 
-/// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
-/// addresses. Excludes:
-/// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16).
-/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
-///   multicast, unspecified.
-/// - IPv6 loopback (::1), unspecified, multicast, link-local
-///   (fe80::/10), unique-local (fc00::/7).
-///
-/// Preserves `id` and any future non-IP transport variants (Warren
-/// does not use relays today; the match stays open via `_` to track
-/// the upstream `#[non_exhaustive]` shape).
-///
-/// Defense in depth post-Quinn migration: the underlying iroh
-/// `n0_nat_traversal` bug class (path discovery probing the peer's
-/// TUN gateway IP) is structurally eliminated, but this filter still
-/// hardens against malformed exit metadata that would carry a
 /// Spawns a [`NatPmpManager`] if NAT-PMP is enabled in the supplied
 /// parameters AND an observer is wired. Returns `None` in every other
 /// case so the manager is never spawned with a no-op observer.
@@ -1508,7 +1492,24 @@ fn spawn_nat_pmp_manager_if_enabled(
     Some(NatPmpManager::start(runtime, server, cfg, observer))
 }
 
-/// `10.66.0.1` candidate or similar.
+/// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
+/// addresses. Excludes:
+/// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16).
+/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
+///   multicast, unspecified.
+/// - IPv6 loopback (::1), unspecified, multicast, link-local
+///   (fe80::/10), unique-local (fc00::/7).
+///
+/// Preserves `id` and any future non-IP transport variants (Warren
+/// does not use relays today; the match stays open via `_` to track
+/// the upstream `#[non_exhaustive]` shape).
+///
+/// Defense in depth post-Quinn migration: the underlying iroh
+/// `n0_nat_traversal` bug class (path discovery probing the peer's
+/// TUN gateway IP) is structurally eliminated, but this filter still
+/// hardens against malformed exit metadata that would carry a private
+/// address (e.g. a RFC1918 `10.66.0.1` candidate or similar tunnel
+/// gateway leak) as an exit candidate.
 #[must_use]
 fn filter_endpoint_addr_for_wan(addr: WarrenExitAddr) -> WarrenExitAddr {
     let mut filtered = WarrenExitAddr::new(addr.id);

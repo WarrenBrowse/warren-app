@@ -288,7 +288,6 @@ impl ParametersGenerator {
     /// Session H A.4: outcome of `trust_new_exit_key` consumed by the
     /// gRPC handler. The detailed variants let the UI surface a
     /// matching error message ("exit not found", "no pin to update").
-    #[allow(dead_code)]
     pub async fn trust_new_exit_key(
         &self,
         exit_id_hex: &str,
@@ -323,7 +322,6 @@ impl ParametersGenerator {
     /// Session H A.4: clear every entry from the in-memory pin table.
     /// Returns the number of entries that were dropped so the gRPC
     /// handler can surface "Cleared N pinned keys" to the UI.
-    #[allow(dead_code)]
     pub async fn reset_pinned_exit_keys(&self) -> u32 {
         let mut inner = self.0.lock().await;
         let count = inner.warren_pinned_exit_pubkeys.entries.len() as u32;

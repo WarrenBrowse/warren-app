@@ -469,7 +469,8 @@ fn map_device_response(d: warren_api_client::Device) -> Result<Device, rest::Err
 /// allocation in MVP. Fixed Mullvad-style addresses so that
 /// `PrivateDevice::try_from_device` on the caller side can build
 /// a valid device. In warren-mode, the tunnel data plane goes
-/// through `warren-iroh-tunnel` which does NOT use these WireGuard
+/// through `talpid-warren-tunnel` (Quinn upstream, cf. warren-app
+/// quinn migration 2026-05-12) which does NOT use these WireGuard
 /// IPs — so the absence of real allocation is not a blocker for
 /// the MVP chain.
 fn stub_associated_addresses() -> AssociatedAddresses {

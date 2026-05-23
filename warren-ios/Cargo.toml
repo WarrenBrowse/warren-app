@@ -18,7 +18,11 @@ crate-type = ["staticlib"]
 thiserror = { workspace = true }
 hex = "0.4"
 bip39 = { version = "2", features = ["rand"] }
-ed25519-dalek = { version = "2", features = ["zeroize", "rand_core"] }
+# Pinned (=2.2.0) to align with every other Warren crate that handles
+# signing keys. A silent minor bump of a crypto crate that produces
+# X-Warren-Sig headers must never be acceptable without an explicit
+# version bump + signature regression test. cf. AUDIT_COMPLET.md M-3.
+ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
