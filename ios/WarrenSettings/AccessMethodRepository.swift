@@ -217,7 +217,7 @@ extension AccessMethodRepository: MullvadAccessMethodChangeListening {
         }
 
         Task {
-            logger.debug("Mullvad API changed access method to \(method.name)")
+            logger.debug("Warren API changed access method to \(method.name)")
             currentAccessMethodSubject.send(method)
         }
     }

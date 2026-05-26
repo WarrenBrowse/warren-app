@@ -855,15 +855,12 @@ unsafe fn clone_arc_from_raw(
         return None;
     }
     // SAFETY: caller guarantees `handle` came from `warren_tunnel_start` and
-    // is still live.  We cast to `*const Arc<…>` (the exact type that
-    // `Box::into_raw` produced inside `warren_tunnel_start`) and perform the
-    // borrow-via-clone pattern described above.
-    let arc_ptr = handle as *const std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>;
-    let arc = unsafe { std::sync::Arc::from_raw(arc_ptr) };
-    let cloned = std::sync::Arc::clone(&arc);
-    // Relinquish ownership back to the raw pointer so the original ref-count
-    // is unchanged; the caller's cloned Arc holds the extra count.
-    std::sync::Arc::into_raw(arc);
+    // is still live. The handle is a `Box<Arc<T>>` raw pointer, so we read
+    // through it to reach the inner Arc and clone it (atomic ref-count bump).
+    // The Box allocation itself is untouched — only `warren_tunnel_stop`
+    // reconstitutes it via `Box::from_raw`.
+    let box_ptr = handle as *const std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>;
+    let cloned = unsafe { (*box_ptr).clone() };
     Some(cloned)
 }
 

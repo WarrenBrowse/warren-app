@@ -350,9 +350,8 @@ impl WarrenIdentityService {
         )
     }
 
-    /// Prend une `WarrenPubKey` au lieu d'un `AccountNumber` brut.
-    /// Route via [`WarrenAccountBackend`] pour permettre le mode local
-    /// POC.
+    /// Takes a `WarrenPubKey` instead of a raw `AccountNumber`.
+    /// Routes through [`WarrenAccountBackend`] to support local-mode POC.
     pub async fn get_data(&self, pubkey: WarrenPubKey) -> Result<AccountData, rest::Error> {
         let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();

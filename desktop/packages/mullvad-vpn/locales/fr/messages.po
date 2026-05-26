@@ -2980,7 +2980,7 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr "Tant que les nouveaux épinglages ne sont pas établis, la détection de substitution est temporairement désactivée : un attaquant qui aurait remplacé un serveur entre deux réinitialisations ne serait pas signalé lors de la première reconnexion."
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to Mullvad upstream). Restart the daemon for the change to take effect."
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
 msgstr ""
 
 msgctxt "vpn-settings-view"

@@ -217,6 +217,7 @@ impl State {
 /// (returning a placeholder "no update" response so the UI is satisfied)
 /// but it never spawns a `VersionUpdater` task pointing at Mullvad servers.
 #[cfg_attr(not(in_app_upgrade), expect(unused_variables))]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn spawn_version_router(
     api_handle: MullvadRestHandle,
     availability_handle: ApiAvailability,
