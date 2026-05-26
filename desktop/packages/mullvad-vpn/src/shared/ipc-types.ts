@@ -41,6 +41,8 @@ export type ScrollToAnchorId =
   // obfuscation indicator).
   | 'warren-status-reconnect'
   | 'warren-obfuscation-indicator'
+  // Anchor for the multi-exit auto-failover toggle (M5.B.2).
+  | 'warren-failover-setting'
   // Anchor for the port-forwarding toggle row.
   | 'port-forwarding-setting';
 
