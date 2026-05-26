@@ -54,7 +54,7 @@ export default class Settings implements Readonly<ISettings> {
     // persisted in gui_settings.json (no gRPC proto field). The daemon
     // implements failover unconditionally; this flag governs the UI
     // (notification toast visibility + settings panel toggle state).
-    IpcMainEventChannel.settings.handleSetWarrenFailover((settings) => {
+    IpcMainEventChannel.settings.handleSetWarrenFailover(async (settings) => {
       this.guiSettings.warrenFailoverEnabled = settings.enabled;
     });
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
