@@ -157,6 +157,7 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyRequ
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelEndpoint', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelType', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelMetadata', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelOptions', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelState', null, global);
@@ -5028,7 +5029,8 @@ proto.mullvad_daemon.management_interface.ErrorState.GenerationError = {
   NO_MATCHING_BRIDGE_RELAY: 3,
   CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR: 4,
   NETWORK_IPV4_UNAVAILABLE: 5,
-  NETWORK_IPV6_UNAVAILABLE: 6
+  NETWORK_IPV6_UNAVAILABLE: 6,
+  WARREN_PUBKEY_MISMATCH: 7
 };
 
 
@@ -7552,7 +7554,8 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.toObject = function(inc
     obfuscation: (f = msg.getObfuscation()) && proto.mullvad_daemon.management_interface.ObfuscationInfo.toObject(includeInstance, f),
     entryEndpoint: (f = msg.getEntryEndpoint()) && proto.mullvad_daemon.management_interface.Endpoint.toObject(includeInstance, f),
     tunnelMetadata: (f = msg.getTunnelMetadata()) && proto.mullvad_daemon.management_interface.TunnelMetadata.toObject(includeInstance, f),
-    daita: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
+    daita: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    tunnelType: jspb.Message.getFieldWithDefault(msg, 8, 0)
   };
 
   if (includeInstance) {
@@ -7619,6 +7622,10 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.deserializeBinaryFromRe
     case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setDaita(value);
+      break;
+    case 8:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.TunnelType} */ (reader.readEnum());
+      msg.setTunnelType(value);
       break;
     default:
       reader.skipField();
@@ -7698,6 +7705,13 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.serializeBinaryToWriter
   if (f) {
     writer.writeBool(
       7,
+      f
+    );
+  }
+  f = message.getTunnelType();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      8,
       f
     );
   }
@@ -7884,6 +7898,24 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getDaita = fu
  */
 proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setDaita = function(value) {
   return jspb.Message.setProto3BooleanField(this, 7, value);
+};
+
+
+/**
+ * optional TunnelType tunnel_type = 8;
+ * @return {!proto.mullvad_daemon.management_interface.TunnelType}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getTunnelType = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.TunnelType} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.TunnelType} value
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setTunnelType = function(value) {
+  return jspb.Message.setProto3EnumField(this, 8, value);
 };
 
 
@@ -28982,6 +29014,14 @@ proto.mullvad_daemon.management_interface.IpVersion = {
 proto.mullvad_daemon.management_interface.TransportProtocol = {
   UDP: 0,
   TCP: 1
+};
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.TunnelType = {
+  WIREGUARD: 0,
+  WARREN: 1
 };
 
 goog.object.extend(exports, proto.mullvad_daemon.management_interface);

@@ -22,7 +22,7 @@ public struct DefaultLocationService {
 
     public func fetchCurrentLocationIdentifier() async throws -> REST.LocationIdentifier? {
         // Safe to unwrap since it's a constant.
-        let url = URL(string: REST.amIMullvadHostname).unsafelyUnwrapped
+        let url = URL(string: REST.amIWarrenHostname).unsafelyUnwrapped
 
         let serverLocation: REST.ServerLocation
         do {

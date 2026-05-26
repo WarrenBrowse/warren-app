@@ -31,11 +31,7 @@ tokio-stream = { version = "0.1", features = ["io-util"] }
 tun08 = { package = "tun", version = "0.8.5", default-features = false, features = [
   "async",
 ] }
-# TODO(M-5): make tunnel-obfuscation optional behind an "obfuscation" feature.
-# Warren never enters the WireGuard obfuscation stack, so this is ~14 kSLOC
-# compiled unnecessarily. Gating it requires cfg-guarding obfuscation.rs,
-# gotatun/obfuscation/lwo.rs, and ~14 call sites in lib.rs.
-tunnel-obfuscation = { path = "../tunnel-obfuscation" }
+tunnel-obfuscation = { path = "../tunnel-obfuscation", optional = true }
 wireguard-go-rs = { path = "../wireguard-go-rs", optional = true }
 
 [dev-dependencies]
@@ -72,6 +68,11 @@ wireguard-go = [
   "talpid-tunnel/wireguard-go",
   "talpid-types/wireguard-go"
 ]
+# Enable WireGuard obfuscation support (SOCKS5/MASQUE/LWO/udp2tcp).
+# Warren's Quinn path never uses the WG obfuscation stack, so downstream
+# crates that only wire the Warren path can omit this feature to save
+# ~14 kSLOC of compile time.
+obfuscation = ["dep:tunnel-obfuscation"]
 
 [lints]
 workspace = true

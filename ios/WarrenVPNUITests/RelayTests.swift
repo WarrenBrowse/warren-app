@@ -73,7 +73,7 @@ class RelayTests: LoggedInWithTimeUITestCase {
             .waitForConnectedLabel()
 
         try Networking.verifyCanAccessInternet()
-        try Networking.verifyConnectedThroughMullvad()
+        try Networking.verifyConnectedThroughWarren()
     }
 
     func testConnectionRetryLogic() throws {
@@ -662,7 +662,7 @@ class RelayTests: LoggedInWithTimeUITestCase {
             .tapReconnectButton()
             .waitForConnectedLabel()
 
-        try Networking.verifyDNSServerProvider(dnsServerProviderName, isMullvad: false)
+        try Networking.verifyDNSServerProvider(dnsServerProviderName, isWarren: false)
     }
 
     func testQuantumResistanceSettings() throws {
@@ -876,7 +876,7 @@ extension RelayTests {
 
         // Verify connection works
         try Networking.verifyCanAccessInternet()
-        try Networking.verifyConnectedThroughMullvad()
+        try Networking.verifyConnectedThroughWarren()
 
         // Verify IPv6 feature indicator is shown
         TunnelControlPage(app)

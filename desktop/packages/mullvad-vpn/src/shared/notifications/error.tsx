@@ -265,6 +265,11 @@ export class ErrorNotificationProvider
           'notifications',
           'IPv6 is not available, please try changing Device IP version setting.',
         );
+      case TunnelParameterError.warrenPubkeyMismatch:
+        return messages.pgettext(
+          'notifications',
+          "Server identity mismatch detected. The exit node's public key has changed.",
+        );
     }
   }
 

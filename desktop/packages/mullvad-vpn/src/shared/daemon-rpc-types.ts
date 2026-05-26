@@ -84,6 +84,7 @@ export enum TunnelParameterError {
   customTunnelHostResolutionError,
   ipv4Unavailable,
   ipv6Unavailable,
+  warrenPubkeyMismatch,
 }
 
 export type ErrorStateDetails =
@@ -146,6 +147,8 @@ export enum Ownership {
   rented,
 }
 
+export type TunnelType = 'wireguard' | 'warren';
+
 export interface ITunnelEndpoint {
   address: string;
   protocol: RelayProtocol;
@@ -153,6 +156,7 @@ export interface ITunnelEndpoint {
   obfuscationEndpoint?: IObfuscationEndpoint;
   entryEndpoint?: IEndpoint;
   daita: boolean;
+  tunnelType: TunnelType;
 }
 
 export interface IEndpoint {

@@ -19,7 +19,7 @@ talpid-routing = { path = "../talpid-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 talpid-warren-tunnel = { path = "../talpid-warren-tunnel" }
-talpid-wireguard = { path = "../talpid-wireguard" }
+talpid-wireguard = { path = "../talpid-wireguard", features = ["obfuscation"] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
 

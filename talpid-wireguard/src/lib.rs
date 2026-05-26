@@ -6,6 +6,7 @@ use self::config::Config;
 #[cfg(windows)]
 use futures::channel::mpsc;
 use futures::future::Future;
+#[cfg(feature = "obfuscation")]
 use obfuscation::ObfuscatorHandle;
 #[cfg(windows)]
 use std::io;
@@ -42,6 +43,7 @@ pub mod config;
 mod connectivity;
 mod ephemeral;
 mod logging;
+#[cfg(feature = "obfuscation")]
 mod obfuscation;
 mod stats;
 #[cfg(target_os = "linux")]
@@ -76,6 +78,7 @@ pub enum Error {
     TunnelError(#[from] TunnelError),
 
     /// Failed to run tunnel obfuscation
+    #[cfg(feature = "obfuscation")]
     #[error("Tunnel obfuscation failed")]
     ObfuscationError(#[source] tunnel_obfuscation::Error),
 
@@ -102,6 +105,7 @@ impl Error {
     /// Return whether retrying the operation that caused this error is likely to succeed.
     pub fn is_recoverable(&self) -> bool {
         match self {
+            #[cfg(feature = "obfuscation")]
             Error::ObfuscationError(_) => true,
             Error::EphemeralPeerNegotiationError(_) => true,
             Error::TunnelError(TunnelError::RecoverableStartWireguardError(..)) => true,
@@ -139,6 +143,7 @@ pub struct WireguardMonitor {
     event_hook: EventHook,
     close_msg_receiver: sync_mpsc::Receiver<CloseMsg>,
     pinger_stop_sender: connectivity::CancelToken,
+    #[cfg(feature = "obfuscation")]
     obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
 }
 
@@ -158,10 +163,16 @@ impl WireguardMonitor {
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<WireguardMonitor> {
+        // LWO is a WireGuard-level obfuscation method. When the obfuscation feature is
+        // disabled, LWO is unavailable and the flag stays false.
+        #[cfg(feature = "obfuscation")]
         let is_single_lwo = params
             .obfuscation
             .as_ref()
             .is_some_and(obfuscation::is_single_lwo);
+        #[cfg(not(feature = "obfuscation"))]
+        let is_single_lwo = false;
+
         let userspace_wireguard = *FORCE_USERSPACE_WIREGUARD
             || params.use_userspace_wg()
             || (is_single_lwo && cfg!(not(feature = "wireguard-go")));
@@ -182,19 +193,23 @@ impl WireguardMonitor {
         // GotaTun is the userspace WireGuard implementation when the wireguard-go feature is off.
         let is_gotatun = userspace_wireguard && cfg!(not(feature = "wireguard-go"));
 
-        let (close_obfs_sender, close_obfs_listener) = sync_mpsc::channel();
+        let (close_msg_sender, close_msg_receiver) = sync_mpsc::channel();
+
         // Start obfuscation server and patch the WireGuard config to point the endpoint to it.
         // For GotaTun + LWO, apply_obfuscation_config returns None and obfuscation is inline.
+        // When the obfuscation feature is disabled, skip this entirely.
         let obfuscation_mtu = route_mtu;
+        #[cfg(feature = "obfuscation")]
         let obfuscator = args
             .runtime
             .block_on(obfuscation::apply_obfuscation_config(
                 &mut config,
                 obfuscation_mtu,
-                close_obfs_sender.clone(),
+                close_msg_sender.clone(),
                 is_gotatun,
             ))?;
-        // Adjust tunnel MTU again for obfuscation packet overhead
+        // Adjust tunnel MTU again for obfuscation packet overhead.
+        #[cfg(feature = "obfuscation")]
         if params.options.mtu.is_none()
             && let Some(obfuscator) = obfuscator.as_ref()
         {
@@ -222,6 +237,7 @@ impl WireguardMonitor {
         )?;
         let iface_name = tunnel.get_interface_name();
 
+        #[cfg(feature = "obfuscation")]
         let obfuscator = Arc::new(AsyncMutex::new(obfuscator));
 
         let gateway = config.ipv4_gateway;
@@ -239,19 +255,27 @@ impl WireguardMonitor {
             runtime: args.runtime.clone(),
             tunnel: Arc::new(AsyncMutex::new(Some(tunnel))),
             event_hook: args.event_hook.clone(),
-            close_msg_receiver: close_obfs_listener,
+            close_msg_receiver,
             pinger_stop_sender: cancel_token,
+            #[cfg(feature = "obfuscation")]
             obfuscator,
         };
 
         let mut event_hook = args.event_hook.clone();
         let moved_tunnel = monitor.tunnel.clone();
-        let moved_close_obfs_sender = close_obfs_sender.clone();
+        let moved_close_msg_sender = close_msg_sender.clone();
+        #[cfg(feature = "obfuscation")]
         let moved_obfuscator = monitor.obfuscator.clone();
         let detect_mtu = params.options.mtu.is_none();
         let tunnel_fut = async move {
             let tunnel = moved_tunnel;
-            let close_obfs_sender: sync_mpsc::Sender<CloseMsg> = moved_close_obfs_sender;
+            // The sender is only used to forward the close message from the ephemeral peer
+            // negotiation task when the obfuscation feature is active.
+            #[cfg(feature = "obfuscation")]
+            let close_msg_sender: sync_mpsc::Sender<CloseMsg> = moved_close_msg_sender;
+            #[cfg(not(feature = "obfuscation"))]
+            let _ = moved_close_msg_sender;
+            #[cfg(feature = "obfuscation")]
             let obfuscator = moved_obfuscator;
             #[cfg(windows)]
             // NOTE: For gotatun, we use the `tun` crate to create our tunnel interface.
@@ -284,20 +308,23 @@ impl WireguardMonitor {
                 .map_err(Error::SetupRoutingError)
                 .map_err(CloseMsg::SetupError)?;
 
-            let ephemeral_obfs_sender = close_obfs_sender.clone();
             if config.quantum_resistant || config.daita {
+                #[cfg(feature = "obfuscation")]
+                let ephemeral_obfs_sender = close_msg_sender.clone();
                 if let Err(e) = ephemeral::config_ephemeral_peers(
                     &tunnel,
                     &mut config,
                     args.retry_attempt,
                     obfuscation_mtu,
+                    #[cfg(feature = "obfuscation")]
                     obfuscator.clone(),
+                    #[cfg(feature = "obfuscation")]
                     ephemeral_obfs_sender,
                     is_gotatun,
                 )
                 .await
                 {
-                    // We have received a small amount of reports about ephemeral peer nogationation
+                    // We have received a small amount of reports about ephemeral peer negotiation
                     // timing out on Windows for 2024.9-beta1. These verbose data usage logs are
                     // a temporary measure to help us understand the issue. They can be removed
                     // if the issue is resolved.
@@ -391,7 +418,7 @@ impl WireguardMonitor {
             Err::<Infallible, CloseMsg>(CloseMsg::PingErr)
         };
 
-        let close_sender = close_obfs_sender.clone();
+        let close_sender = close_msg_sender.clone();
         let monitor_handle = tokio::spawn(async move {
             // This is safe to unwrap because the future resolves to `Result<Infallible, E>`.
             let close_msg = tunnel_fut.await.unwrap_err();
@@ -401,7 +428,7 @@ impl WireguardMonitor {
         tokio::spawn(async move {
             if args.tunnel_close_rx.await.is_ok() {
                 monitor_handle.abort();
-                let _ = close_obfs_sender.send(CloseMsg::Stop);
+                let _ = close_msg_sender.send(CloseMsg::Stop);
             }
         });
 
@@ -436,18 +463,23 @@ impl WireguardMonitor {
         let mut config = crate::config::Config::from_parameters(params, tunnel_mtu)
             .map_err(Error::WireguardConfigError)?;
 
-        let (close_obfs_sender, close_obfs_listener) = sync_mpsc::channel();
+        let (close_msg_sender, close_msg_receiver) = sync_mpsc::channel();
         let obfuscation_mtu = route_mtu;
+
+        // Start obfuscation server and patch the WireGuard config to point the endpoint to it.
+        // When the obfuscation feature is disabled, skip this entirely.
+        #[cfg(feature = "obfuscation")]
         let obfuscator = args
             .runtime
             .block_on(obfuscation::apply_obfuscation_config(
                 &mut config,
                 obfuscation_mtu,
-                close_obfs_sender.clone(),
-                true, // is_gotatun
+                close_msg_sender.clone(),
+                true, // is_gotatun: always true on Android
                 args.tun_provider.clone(),
             ))?;
-        // Adjust MTU again for obfuscation packet overhead
+        // Adjust MTU again for obfuscation packet overhead.
+        #[cfg(feature = "obfuscation")]
         if params.options.mtu.is_none()
             && let Some(obfuscator) = obfuscator.as_ref()
         {
@@ -498,19 +530,31 @@ impl WireguardMonitor {
         let iface_name = tunnel.get_interface_name();
         let tunnel = Arc::new(AsyncMutex::new(Some(tunnel)));
         let mut event_hook = args.event_hook;
+
+        #[cfg(feature = "obfuscation")]
+        let obfuscator = Arc::new(AsyncMutex::new(obfuscator));
+
         let monitor = WireguardMonitor {
             runtime: args.runtime.clone(),
             tunnel: Arc::clone(&tunnel),
             event_hook: event_hook.clone(),
-            close_msg_receiver: close_obfs_listener,
+            close_msg_receiver,
             pinger_stop_sender: cancel_token,
-            obfuscator: Arc::new(AsyncMutex::new(obfuscator)),
+            #[cfg(feature = "obfuscation")]
+            obfuscator,
         };
 
-        let moved_close_obfs_sender = close_obfs_sender.clone();
+        let moved_close_msg_sender = close_msg_sender.clone();
+        #[cfg(feature = "obfuscation")]
         let moved_obfuscator = monitor.obfuscator.clone();
         let tunnel_fut = async move {
-            let close_obfs_sender: sync_mpsc::Sender<CloseMsg> = moved_close_obfs_sender;
+            // The sender is only used to forward the close message from the ephemeral peer
+            // negotiation task when the obfuscation feature is active.
+            #[cfg(feature = "obfuscation")]
+            let close_msg_sender: sync_mpsc::Sender<CloseMsg> = moved_close_msg_sender;
+            #[cfg(not(feature = "obfuscation"))]
+            let _ = moved_close_msg_sender;
+            #[cfg(feature = "obfuscation")]
             let obfuscator = moved_obfuscator;
 
             let metadata = Self::tunnel_metadata(&iface_name, &config);
@@ -543,20 +587,23 @@ impl WireguardMonitor {
             }
 
             if should_negotiate_ephemeral_peer {
-                let ephemeral_obfs_sender = close_obfs_sender.clone();
+                #[cfg(feature = "obfuscation")]
+                let ephemeral_obfs_sender = close_msg_sender.clone();
 
                 if let Err(e) = ephemeral::config_ephemeral_peers(
                     &tunnel,
                     &mut config,
                     args.retry_attempt,
                     obfuscation_mtu,
+                    #[cfg(feature = "obfuscation")]
                     obfuscator.clone(),
+                    #[cfg(feature = "obfuscation")]
                     ephemeral_obfs_sender,
                     args.tun_provider,
                 )
                 .await
                 {
-                    // We have received a small amount of reports about ephemeral peer nogationation
+                    // We have received a small amount of reports about ephemeral peer negotiation
                     // timing out on Windows for 2024.9-beta1. These verbose data usage logs are
                     // a temporary measure to help us understand the issue. They can be removed
                     // if the issue is resolved.
@@ -589,7 +636,7 @@ impl WireguardMonitor {
             Err::<Infallible, CloseMsg>(CloseMsg::PingErr)
         };
 
-        let close_sender = close_obfs_sender.clone();
+        let close_sender = close_msg_sender.clone();
         let monitor_handle = tokio::spawn(async move {
             // This is safe to unwrap because the future resolves to `Result<Infallible, E>`.
             let close_msg = tunnel_fut.await.unwrap_err();
@@ -599,7 +646,7 @@ impl WireguardMonitor {
         tokio::spawn(async move {
             if args.tunnel_close_rx.await.is_ok() {
                 monitor_handle.abort();
-                let _ = close_obfs_sender.send(CloseMsg::Stop);
+                let _ = close_msg_sender.send(CloseMsg::Stop);
             }
         });
 
@@ -802,8 +849,11 @@ impl WireguardMonitor {
             Ok(CloseMsg::EphemeralPeerNegotiationTimeout) | Ok(CloseMsg::PingErr) => {
                 Err(Error::TimeoutError)
             }
-            Ok(CloseMsg::Stop) | Ok(CloseMsg::ObfuscatorExpired) => Ok(()),
+            Ok(CloseMsg::Stop) => Ok(()),
+            #[cfg(feature = "obfuscation")]
+            Ok(CloseMsg::ObfuscatorExpired) => Ok(()),
             Ok(CloseMsg::SetupError(error)) => Err(error),
+            #[cfg(feature = "obfuscation")]
             Ok(CloseMsg::ObfuscatorFailed(error)) => Err(error),
             Err(_) => Ok(()),
         };
@@ -1056,7 +1106,9 @@ enum CloseMsg {
     EphemeralPeerNegotiationTimeout,
     PingErr,
     SetupError(Error),
+    #[cfg(feature = "obfuscation")]
     ObfuscatorExpired,
+    #[cfg(feature = "obfuscation")]
     ObfuscatorFailed(Error),
 }
 

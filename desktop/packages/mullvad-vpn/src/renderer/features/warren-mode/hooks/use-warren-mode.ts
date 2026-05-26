@@ -46,6 +46,29 @@ export function useWarrenLocalAccount() {
   return { warrenLocalAccount, setWarrenLocalAccount };
 }
 
+// Hook for the multi-exit auto-failover toggle (M5.B.2). GUI-only:
+// the daemon handles failover unconditionally; this flag controls
+// whether the UI shows the toggle as ON and whether the failover
+// notification toast is displayed. No daemon restart needed.
+export function useWarrenFailover() {
+  const warrenFailover = useSelector((state) => state.settings.warrenFailover);
+  const { setWarrenFailover: contextSetWarrenFailover } = useAppContext();
+
+  const setWarrenFailover = React.useCallback(
+    async (value: boolean) => {
+      try {
+        await contextSetWarrenFailover({ enabled: value });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        log.error('Could not set Warren failover', message);
+      }
+    },
+    [contextSetWarrenFailover],
+  );
+
+  return { warrenFailover: warrenFailover.enabled, setWarrenFailover };
+}
+
 // Hook for the persistent warren-api URL. Empty string or undefined →
 // unset on the daemon side (= fallback to Mullvad upstream).
 export function useWarrenApiUrl() {

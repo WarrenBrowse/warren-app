@@ -1,15 +1,15 @@
 //! This module takes care of obtaining ephemeral peers, updating the WireGuard configuration and
 //! restarting obfuscation and WG tunnels when necessary.
 
-use super::{CloseMsg, Error, TunnelType, config::Config, obfuscation::ObfuscatorHandle};
+use super::{CloseMsg, Error, TunnelType, config::Config};
+#[cfg(feature = "obfuscation")]
+use super::obfuscation::ObfuscatorHandle;
 
 #[cfg(target_os = "android")]
 use std::sync::Mutex;
-use std::{
-    net::IpAddr,
-    sync::{Arc, mpsc as sync_mpsc},
-    time::Duration,
-};
+use std::{net::IpAddr, sync::Arc, time::Duration};
+#[cfg(feature = "obfuscation")]
+use std::sync::mpsc as sync_mpsc;
 #[cfg(target_os = "android")]
 use talpid_tunnel::tun_provider::TunProvider;
 
@@ -28,8 +28,8 @@ pub async fn config_ephemeral_peers(
     config: &mut Config,
     retry_attempt: u32,
     obfuscation_mtu: u16,
-    obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
-    close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
+    #[cfg(feature = "obfuscation")] obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
+    #[cfg(feature = "obfuscation")] close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
     is_gotatun: bool,
 ) -> std::result::Result<(), CloseMsg> {
     let iface_name = {
@@ -49,7 +49,9 @@ pub async fn config_ephemeral_peers(
         config,
         retry_attempt,
         obfuscation_mtu,
+        #[cfg(feature = "obfuscation")]
         obfuscator,
+        #[cfg(feature = "obfuscation")]
         close_obfs_sender,
         is_gotatun,
     )
@@ -81,8 +83,8 @@ pub async fn config_ephemeral_peers(
     config: &mut Config,
     retry_attempt: u32,
     obfuscation_mtu: u16,
-    obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
-    close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
+    #[cfg(feature = "obfuscation")] obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
+    #[cfg(feature = "obfuscation")] close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
     #[cfg(not(target_os = "android"))] is_gotatun: bool,
     #[cfg(target_os = "android")] tun_provider: Arc<Mutex<TunProvider>>,
 ) -> Result<(), CloseMsg> {
@@ -91,7 +93,9 @@ pub async fn config_ephemeral_peers(
         config,
         retry_attempt,
         obfuscation_mtu,
+        #[cfg(feature = "obfuscation")]
         obfuscator,
+        #[cfg(feature = "obfuscation")]
         close_obfs_sender,
         #[cfg(not(target_os = "android"))]
         is_gotatun,
@@ -106,12 +110,13 @@ async fn config_ephemeral_peers_inner(
     config: &mut Config,
     retry_attempt: u32,
     obfuscation_mtu: u16,
-    obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
-    close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
+    #[cfg(feature = "obfuscation")] obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
+    #[cfg(feature = "obfuscation")] close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
     #[cfg(not(target_os = "android"))] is_gotatun: bool,
     #[cfg(target_os = "android")] tun_provider: Arc<Mutex<TunProvider>>,
 ) -> Result<(), CloseMsg> {
     let ephemeral_private_key = PrivateKey::new_from_random();
+    #[cfg(feature = "obfuscation")]
     let close_obfs_sender = close_obfs_sender.clone();
 
     let exit_should_have_daita = config.daita && !config.is_multihop();
@@ -137,13 +142,16 @@ async fn config_ephemeral_peers_inner(
             .allowed_ips
             .push(IpNetwork::new(IpAddr::V4(config.ipv4_gateway), 32).unwrap());
 
+        #[cfg(feature = "obfuscation")]
         let close_obfs_sender = close_obfs_sender.clone();
         let entry_config = reconfigure_tunnel(
             tunnel,
             entry_tun_config,
             None,
             obfuscation_mtu,
+            #[cfg(feature = "obfuscation")]
             obfuscator.clone(),
+            #[cfg(feature = "obfuscation")]
             close_obfs_sender,
             #[cfg(not(target_os = "android"))]
             is_gotatun,
@@ -180,7 +188,9 @@ async fn config_ephemeral_peers_inner(
         config.clone(),
         daita,
         obfuscation_mtu,
+        #[cfg(feature = "obfuscation")]
         obfuscator,
+        #[cfg(feature = "obfuscation")]
         close_obfs_sender,
         #[cfg(not(target_os = "android"))]
         is_gotatun,
@@ -200,23 +210,30 @@ async fn reconfigure_tunnel(
     mut config: Config,
     daita: Option<DaitaSettings>,
     obfuscation_mtu: u16,
-    obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
-    close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
+    #[cfg(feature = "obfuscation")] obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
+    #[cfg(feature = "obfuscation")] close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
     tun_provider: &Arc<Mutex<TunProvider>>,
 ) -> Result<Config, CloseMsg> {
-    let mut obfs_guard = obfuscator.lock().await;
-    if let Some(obfuscator_handle) = obfs_guard.take() {
-        obfuscator_handle.abort();
-        *obfs_guard = super::obfuscation::apply_obfuscation_config(
-            &mut config,
-            obfuscation_mtu,
-            close_obfs_sender,
-            true, // is_gotatun: always true on Android
-            tun_provider.clone(),
-        )
-        .await
-        .map_err(CloseMsg::ObfuscatorFailed)?;
+    #[cfg(feature = "obfuscation")]
+    {
+        let mut obfs_guard = obfuscator.lock().await;
+        if let Some(obfuscator_handle) = obfs_guard.take() {
+            obfuscator_handle.abort();
+            *obfs_guard = super::obfuscation::apply_obfuscation_config(
+                &mut config,
+                obfuscation_mtu,
+                close_obfs_sender,
+                true, // is_gotatun: always true on Android
+                tun_provider.clone(),
+            )
+            .await
+            .map_err(CloseMsg::ObfuscatorFailed)?;
+        }
     }
+    // When the obfuscation feature is disabled, obfuscation_mtu is still passed in so that
+    // the signature stays consistent, but it is otherwise unused.
+    #[cfg(not(feature = "obfuscation"))]
+    let _ = obfuscation_mtu;
     {
         let mut shared_tunnel = tunnel.lock().await;
         let mut tunnel = shared_tunnel.take().expect("tunnel was None");
@@ -237,25 +254,34 @@ async fn reconfigure_tunnel(
 /// and restarting the obfuscation provider. Returns the new config used by the new tunnel.
 async fn reconfigure_tunnel(
     tunnel: &Arc<AsyncMutex<Option<TunnelType>>>,
-    mut config: Config,
+    // `config` is mutated by apply_obfuscation_config when the obfuscation feature is on.
+    #[cfg(feature = "obfuscation")] mut config: Config,
+    #[cfg(not(feature = "obfuscation"))] config: Config,
     daita: Option<DaitaSettings>,
     obfuscation_mtu: u16,
-    obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
-    close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
+    #[cfg(feature = "obfuscation")] obfuscator: Arc<AsyncMutex<Option<ObfuscatorHandle>>>,
+    #[cfg(feature = "obfuscation")] close_obfs_sender: sync_mpsc::Sender<CloseMsg>,
     is_gotatun: bool,
 ) -> Result<Config, CloseMsg> {
-    let mut obfs_guard = obfuscator.lock().await;
-    if let Some(obfuscator_handle) = obfs_guard.take() {
-        obfuscator_handle.abort();
-        *obfs_guard = super::obfuscation::apply_obfuscation_config(
-            &mut config,
-            obfuscation_mtu,
-            close_obfs_sender,
-            is_gotatun,
-        )
-        .await
-        .map_err(CloseMsg::ObfuscatorFailed)?;
+    #[cfg(feature = "obfuscation")]
+    {
+        let mut obfs_guard = obfuscator.lock().await;
+        if let Some(obfuscator_handle) = obfs_guard.take() {
+            obfuscator_handle.abort();
+            *obfs_guard = super::obfuscation::apply_obfuscation_config(
+                &mut config,
+                obfuscation_mtu,
+                close_obfs_sender,
+                is_gotatun,
+            )
+            .await
+            .map_err(CloseMsg::ObfuscatorFailed)?;
+        }
     }
+    // When the obfuscation feature is disabled, obfuscation_mtu and is_gotatun are still
+    // passed in for signature consistency but are otherwise unused.
+    #[cfg(not(feature = "obfuscation"))]
+    let _ = (obfuscation_mtu, is_gotatun);
 
     {
         let mut tunnel = tunnel.lock().await;

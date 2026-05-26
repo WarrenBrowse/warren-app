@@ -394,6 +394,7 @@ export namespace ErrorState {
         otherAlwaysOnAppError?: ErrorState.OtherAlwaysOnAppError.AsObject,
         invalidDnsServersError?: ErrorState.InvalidDnsServersError.AsObject,
         invalidIpv6ConfigError?: ErrorState.InvalidIpv6Config.AsObject,
+        warrenPubkeyMismatchDetail?: ErrorState.WarrenPubkeyMismatchDetail.AsObject,
     }
 
 
@@ -540,11 +541,39 @@ export namespace ErrorState {
     CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR = 4,
     NETWORK_IPV4_UNAVAILABLE = 5,
     NETWORK_IPV6_UNAVAILABLE = 6,
+    WARREN_PUBKEY_MISMATCH = 7,
+    }
+
+
+    export class WarrenPubkeyMismatchDetail extends jspb.Message {
+        getExitIdHex(): string;
+        setExitIdHex(value: string): WarrenPubkeyMismatchDetail;
+        getPinned(): string;
+        setPinned(value: string): WarrenPubkeyMismatchDetail;
+        getObserved(): string;
+        setObserved(value: string): WarrenPubkeyMismatchDetail;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): WarrenPubkeyMismatchDetail.AsObject;
+        static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatchDetail): WarrenPubkeyMismatchDetail.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: WarrenPubkeyMismatchDetail, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatchDetail;
+        static deserializeBinaryFromReader(message: WarrenPubkeyMismatchDetail, reader: jspb.BinaryReader): WarrenPubkeyMismatchDetail;
+    }
+
+    export namespace WarrenPubkeyMismatchDetail {
+        export type AsObject = {
+            exitIdHex: string,
+            pinned: string,
+            observed: string,
+        }
     }
 
 }
 
-export class TunnelState extends jspb.Message { 
+export class TunnelState extends jspb.Message {
 
     hasDisconnected(): boolean;
     clearDisconnected(): void;
@@ -785,6 +814,8 @@ export class TunnelEndpoint extends jspb.Message {
     setTunnelMetadata(value?: TunnelMetadata): TunnelEndpoint;
     getDaita(): boolean;
     setDaita(value: boolean): TunnelEndpoint;
+    getTunnelType(): TunnelType;
+    setTunnelType(value: TunnelType): TunnelEndpoint;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TunnelEndpoint.AsObject;
@@ -805,6 +836,7 @@ export namespace TunnelEndpoint {
         entryEndpoint?: Endpoint.AsObject,
         tunnelMetadata?: TunnelMetadata.AsObject,
         daita: boolean,
+        tunnelType: TunnelType,
     }
 }
 
@@ -3807,4 +3839,9 @@ export enum IpVersion {
 export enum TransportProtocol {
     UDP = 0,
     TCP = 1,
+}
+
+export enum TunnelType {
+    WIREGUARD = 0,
+    WARREN = 1,
 }

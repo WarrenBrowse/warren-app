@@ -170,13 +170,13 @@ class Networking {
         )
     }
 
-    /// Verify that the expected DNS server is used by verifying provider name and whether it is a Mullvad DNS server or not
-    public static func verifyDNSServerProvider(_ providerName: String, isMullvad: Bool) throws {
-        guard let mullvadDNSLeakURL = URL(string: "https://am.i.mullvad.net/dnsleak") else {
+    /// Verify that the expected DNS server is used by verifying provider name and whether it is a Warren DNS server or not
+    public static func verifyDNSServerProvider(_ providerName: String, isWarren: Bool) throws {
+        guard let warrenDNSLeakURL = URL(string: "https://am.i.warrenbrowse.com/dnsleak") else {
             throw NetworkingError.internalError(reason: "Failed to create URL object")
         }
 
-        var request = URLRequest(url: mullvadDNSLeakURL)
+        var request = URLRequest(url: warrenDNSLeakURL)
         request.setValue("application/json", forHTTPHeaderField: "accept")
 
         nonisolated(unsafe) var requestData: Data?
@@ -219,8 +219,8 @@ class Networking {
                         XCTAssertEqual(dnsServerEntry.organization, providerName, "Expected organization name")
                         XCTAssertEqual(
                             dnsServerEntry.mullvad_dns,
-                            isMullvad,
-                            "Verifying that it is or isn't a Mullvad DNS server"
+                            isWarren,
+                            "Verifying that it is or isn't a Warren DNS server"
                         )
                     }
                 }
@@ -230,13 +230,13 @@ class Networking {
         }
     }
 
-    public static func verifyConnectedThroughMullvad() throws {
-        let mullvadConnectionJsonEndpoint = try XCTUnwrap(
+    public static func verifyConnectedThroughWarren() throws {
+        let warrenConnectionJsonEndpoint = try XCTUnwrap(
             Bundle(for: Networking.self)
                 .infoDictionary?["AmIJSONUrl"] as? String,
             "Read am I JSON URL from Info"
         )
-        guard let url = URL(string: mullvadConnectionJsonEndpoint) else {
+        guard let url = URL(string: warrenConnectionJsonEndpoint) else {
             XCTFail("Failed to unwrap URL")
             return
         }
@@ -266,15 +266,15 @@ class Networking {
                 let jsonObject = try JSONSerialization.jsonObject(with: data)
 
                 if let dictionary = jsonObject as? [String: Any] {
-                    guard let isConnectedThroughMullvad = dictionary["mullvad_exit_ip"] as? Bool else {
+                    guard let isConnectedThroughWarren = dictionary["mullvad_exit_ip"] as? Bool else {
                         XCTFail("Unexpected JSON format")
                         return
                     }
 
-                    XCTAssertTrue(isConnectedThroughMullvad)
+                    XCTAssertTrue(isConnectedThroughWarren)
                 }
             } catch {
-                XCTFail("Failed to verify whether connected through Mullvad or not")
+                XCTFail("Failed to verify whether connected through Warren or not")
             }
 
             completionHandlerInvokedExpectation.fulfill()

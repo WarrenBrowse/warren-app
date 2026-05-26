@@ -33,5 +33,5 @@ extension REST {
     public static let defaultAPINetworkTimeout: Duration = .seconds(10)
 
     /// "Am I Warren?" connectivity probe hostname (am.i.warrenbrowse.com or staging equivalent).
-    public static let amIMullvadHostname = infoDictionary["AmIMullvad"] as! String
+    public static let amIWarrenHostname = infoDictionary["AmIWarren"] as! String
 }

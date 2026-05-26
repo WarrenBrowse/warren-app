@@ -36,9 +36,11 @@ use talpid_tunnel_config_client::DaitaSettings;
 use tun08::{AbstractDevice, AsyncDevice};
 
 mod conversions;
+#[cfg(feature = "obfuscation")]
 mod obfuscation;
 
 use conversions::to_gotatun_peer;
+#[cfg(feature = "obfuscation")]
 use obfuscation::MaybeObfuscatingTransportFactory;
 
 #[cfg(target_os = "android")]
@@ -47,7 +49,12 @@ type UdpFactory = AndroidUdpSocketFactory;
 #[cfg(not(target_os = "android"))]
 type UdpFactory = UdpSocketFactory;
 
+// When obfuscation is enabled, the transport factory can optionally apply LWO inline.
+// When obfuscation is disabled, it is always a plain UDP socket factory.
+#[cfg(feature = "obfuscation")]
 type TransportFactory = MaybeObfuscatingTransportFactory<UdpFactory>;
+#[cfg(not(feature = "obfuscation"))]
+type TransportFactory = UdpFactory;
 
 type SinglehopDevice = Device<(TransportFactory, GotaTunDevice, GotaTunDevice)>;
 type ExitDevice = Device<(UdpChannelFactory, GotaTunDevice, GotaTunDevice)>;
@@ -276,7 +283,12 @@ async fn create_devices(
     #[cfg(not(target_os = "android"))]
     let base_factory = UdpSocketFactory;
 
+    // When obfuscation is enabled, wrap the base factory so that LWO can be applied inline.
+    // When obfuscation is disabled, use the plain factory directly.
+    #[cfg(feature = "obfuscation")]
     let factory = MaybeObfuscatingTransportFactory::from_config(base_factory, config);
+    #[cfg(not(feature = "obfuscation"))]
+    let factory = base_factory;
 
     let mut devices = if let Some(exit_peer) = &config.exit_peer {
         // Multihop setup

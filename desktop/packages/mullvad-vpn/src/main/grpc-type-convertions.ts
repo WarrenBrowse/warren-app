@@ -59,6 +59,7 @@ import {
   SocksAuth,
   TunnelParameterError,
   TunnelState,
+  TunnelType,
   WarrenMultiHopSettings,
   WarrenStatus,
   wrapConstraint,
@@ -152,6 +153,13 @@ function convertFromTransportProtocol(protocol: grpcTypes.TransportProtocol): Re
     [grpcTypes.TransportProtocol.UDP]: 'udp',
   };
   return protocolMap[protocol];
+}
+
+// Map the proto TunnelType enum (field 8 on TunnelEndpoint) to the TS union.
+// The gRPC stubs may not yet expose the field, so accept undefined gracefully.
+function convertFromTunnelType(tunnelType: number | undefined): TunnelType {
+  // Proto enum: WIREGUARD = 0, WARREN = 1
+  return tunnelType === 1 ? 'warren' : 'wireguard';
 }
 
 export function convertFromTunnelState(
@@ -328,6 +336,9 @@ function convertFromParameterError(
       return TunnelParameterError.ipv4Unavailable;
     case grpcTypes.ErrorState.GenerationError.NETWORK_IPV6_UNAVAILABLE:
       return TunnelParameterError.ipv6Unavailable;
+    // WARREN_PUBKEY_MISMATCH = 7 in proto; stale stubs may not expose the constant yet.
+    case 7 as grpcTypes.ErrorState.GenerationError:
+      return TunnelParameterError.warrenPubkeyMismatch;
   }
 }
 
@@ -340,6 +351,9 @@ function convertFromTunnelStateRelayInfo(
       endpoint: {
         ...state.tunnelEndpoint,
         protocol: convertFromTransportProtocol(state.tunnelEndpoint.protocol),
+        tunnelType: convertFromTunnelType(
+          (state.tunnelEndpoint as Record<string, unknown>).tunnelType as number | undefined,
+        ),
         obfuscationEndpoint:
           state.tunnelEndpoint.obfuscation &&
           state.tunnelEndpoint.obfuscation.single &&

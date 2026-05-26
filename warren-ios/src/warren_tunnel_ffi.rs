@@ -131,6 +131,12 @@ pub enum WarrenTunnelEventTagC {
     EventNatPmpMapped = 4,
     EventNatPmpRenewed = 5,
     EventNatPmpFailed = 6,
+    /// Fired once, on the very first connection attempt of a tunnel
+    /// session (before any successful `Connected` event). Subsequent
+    /// attempts after a connection drop fire `EventReconnecting`
+    /// instead. Swift uses this to distinguish "tunnel starting" from
+    /// "tunnel recovering".
+    EventConnecting = 7,
 }
 
 /// Tagged-union event payload.
@@ -201,7 +207,7 @@ mod handle_impl {
         WarrenTunnelEventCallback, WarrenTunnelOutboundCallback, WarrenTunnelStateC,
     };
     use std::ffi::c_void;
-    use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime;
     use warren_tunnel::IosTun;
@@ -258,6 +264,11 @@ mod handle_impl {
         pub bytes_out: AtomicU64,
         pub connected_at_secs: AtomicU64, // 0 until first Connected event
         pub failover_count: AtomicU32,
+        /// Set to `true` after the first successful `Connected` event.
+        /// Used by the connection task to decide whether to fire
+        /// `EventConnecting` (first attempt) or `EventReconnecting`
+        /// (subsequent attempts after a drop).
+        pub has_connected_once: AtomicBool,
     }
 
     impl WarrenTunnelHandleImpl {
@@ -283,6 +294,7 @@ mod handle_impl {
                 bytes_out: AtomicU64::new(0),
                 connected_at_secs: AtomicU64::new(0),
                 failover_count: AtomicU32::new(0),
+                has_connected_once: AtomicBool::new(false),
             })
         }
 
@@ -442,7 +454,18 @@ pub unsafe extern "C" fn warren_tunnel_start(
         let arc_for_task = std::sync::Arc::clone(&arc);
         arc.runtime.spawn(async move {
             arc_for_task.set_state(WarrenTunnelStateC::Connecting);
-            arc_for_task.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+            // Fire `EventConnecting` only on the very first attempt; subsequent
+            // attempts after a connection drop fire `EventReconnecting` so the
+            // Swift side can distinguish "tunnel starting" from "tunnel recovering".
+            let connecting_event = if arc_for_task
+                .has_connected_once
+                .load(std::sync::atomic::Ordering::Acquire)
+            {
+                WarrenTunnelEventTagC::EventReconnecting
+            } else {
+                WarrenTunnelEventTagC::EventConnecting
+            };
+            arc_for_task.fire_event(connecting_event);
 
             let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key);
             let session = match client.connect(exit_target).await {
@@ -454,6 +477,11 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 }
             };
 
+            // Mark that at least one successful connection has been established so
+            // any future reconnect attempt fires `EventReconnecting`.
+            arc_for_task
+                .has_connected_once
+                .store(true, std::sync::atomic::Ordering::Release);
             arc_for_task.set_state(WarrenTunnelStateC::Connected);
             arc_for_task
                 .connected_at_secs
@@ -957,5 +985,101 @@ mod tests {
         // Outbound callback type.
         type OutboundCb = unsafe extern "C" fn(*const u8, usize, *mut std::ffi::c_void);
         assert_send_sync::<super::handle_impl::CallbackEntry<OutboundCb>>();
+    }
+
+    // ---- Fix: EventConnecting vs EventReconnecting distinction ----
+
+    /// The `EventConnecting` variant must have a distinct discriminant from all
+    /// other event tags, and must not alias `EventReconnecting`. This guards
+    /// against accidental renumbering that would silently mis-route Swift event
+    /// handlers.
+    #[test]
+    fn event_connecting_has_distinct_discriminant_from_reconnecting() {
+        use super::WarrenTunnelEventTagC;
+        assert_ne!(
+            WarrenTunnelEventTagC::EventConnecting as u32,
+            WarrenTunnelEventTagC::EventReconnecting as u32,
+            "EventConnecting and EventReconnecting must have different discriminants"
+        );
+        assert_eq!(
+            WarrenTunnelEventTagC::EventConnecting as u32,
+            7,
+            "EventConnecting discriminant must be 7 (C ABI stability)"
+        );
+        assert_eq!(
+            WarrenTunnelEventTagC::EventReconnecting as u32,
+            2,
+            "EventReconnecting discriminant must remain 2 (C ABI stability)"
+        );
+    }
+
+    /// The `has_connected_once` flag controls which connecting event is emitted.
+    /// Before any successful connection the flag is `false` → `EventConnecting`
+    /// should be selected. After a successful connection the flag is `true` →
+    /// `EventReconnecting` should be selected.
+    ///
+    /// This test mirrors the exact branching logic used in the spawned task
+    /// inside `warren_tunnel_start` without requiring an actual Quinn runtime.
+    #[test]
+    fn connecting_event_selection_matches_has_connected_once_flag() {
+        use super::WarrenTunnelEventTagC;
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        let has_connected_once = AtomicBool::new(false);
+
+        // Simulate first connection attempt (flag not yet set).
+        let first_event = if has_connected_once.load(Ordering::Acquire) {
+            WarrenTunnelEventTagC::EventReconnecting
+        } else {
+            WarrenTunnelEventTagC::EventConnecting
+        };
+        assert_eq!(
+            first_event,
+            WarrenTunnelEventTagC::EventConnecting,
+            "first attempt must fire EventConnecting, not EventReconnecting"
+        );
+
+        // Simulate the successful-connect store that the task performs.
+        has_connected_once.store(true, Ordering::Release);
+
+        // Simulate a second connection attempt (after a connection drop).
+        let second_event = if has_connected_once.load(Ordering::Acquire) {
+            WarrenTunnelEventTagC::EventReconnecting
+        } else {
+            WarrenTunnelEventTagC::EventConnecting
+        };
+        assert_eq!(
+            second_event,
+            WarrenTunnelEventTagC::EventReconnecting,
+            "subsequent attempt must fire EventReconnecting, not EventConnecting"
+        );
+    }
+
+    /// Compile-time guard: `has_connected_once` field exists on
+    /// `WarrenTunnelHandleImpl` and is of the expected `AtomicBool` type.
+    /// If the field is renamed or type-changed the compile error surfaces
+    /// immediately rather than silently regressing the runtime behaviour.
+    ///
+    /// Gated on `feature = "tunnel"` because the struct is feature-conditional.
+    #[cfg(feature = "tunnel")]
+    #[test]
+    fn handle_impl_has_connected_once_is_atomic_bool() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        // `WarrenTunnelHandleImpl::new()` allocates a Tokio runtime, which we
+        // cannot do cheaply inside a unit test. Instead we verify the field
+        // type via a function that accepts `&AtomicBool`. If the field type
+        // changes the trait resolution fails at compile time.
+        fn accepts_atomic_bool(_: &AtomicBool) {}
+
+        let impl_ = super::handle_impl::WarrenTunnelHandleImpl::new()
+            .expect("runtime allocation must succeed in test environment");
+        accepts_atomic_bool(&impl_.has_connected_once);
+
+        // Also verify the initial value: must be `false` so first attempt fires
+        // `EventConnecting`.
+        assert!(
+            !impl_.has_connected_once.load(Ordering::Acquire),
+            "has_connected_once must be false immediately after construction"
+        );
     }
 }

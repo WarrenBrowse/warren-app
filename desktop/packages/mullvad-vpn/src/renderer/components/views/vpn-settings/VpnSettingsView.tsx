@@ -8,6 +8,7 @@ import {
 } from '../../../features/tunnel/components';
 import {
   WarrenApiUrlSetting,
+  WarrenFailoverSetting,
   WarrenLocalAccountSetting,
   WarrenModeSetting,
 } from '../../../features/warren-mode/components';
@@ -59,7 +60,8 @@ export function VpnSettingsView() {
 
                   <FlexColumn gap="small">
                     <WarrenModeSetting position="first" />
-                    <WarrenLocalAccountSetting position="last" />
+                    <WarrenLocalAccountSetting position="middle" />
+                    <WarrenFailoverSetting position="last" />
                   </FlexColumn>
 
                   <WarrenApiUrlSetting />
