@@ -408,4 +408,100 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    // ------------------------------------------------------------------
+    // G-3: mnemonic import must invalidate device.json when pubkey changes
+    // ------------------------------------------------------------------
+
+    /// Two distinct valid BIP39 mnemonics MUST derive DIFFERENT Ed25519
+    /// signing keys. This is the foundational invariant that makes the
+    /// G-3 identity-changed detection correct: if it were false, a
+    /// mnemonic swap would be silently ignored and device.json would
+    /// never be invalidated.
+    #[test]
+    fn different_mnemonics_produce_different_signing_keys() {
+        let mnemonic_a = "abandon abandon abandon abandon abandon abandon \
+                          abandon abandon abandon abandon abandon about";
+        let mnemonic_b = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
+
+        let seed_a = warren_identity::seed_from_mnemonic(mnemonic_a)
+            .expect("mnemonic_a must be a valid BIP39");
+        let seed_b = warren_identity::seed_from_mnemonic(mnemonic_b)
+            .expect("mnemonic_b must be a valid BIP39");
+
+        let key_a = warren_identity::derive_node_key(&seed_a);
+        let key_b = warren_identity::derive_node_key(&seed_b);
+
+        let pubkey_a = key_a.verifying_key().as_bytes().to_vec();
+        let pubkey_b = key_b.verifying_key().as_bytes().to_vec();
+
+        assert_ne!(
+            pubkey_a, pubkey_b,
+            "distinct mnemonics MUST produce distinct Ed25519 signing keys; \
+             if equal the G-3 identity-changed detection would be a no-op"
+        );
+    }
+
+    /// After `set_warren_mnemonic` replaces the identity, loading the
+    /// signing key from the updated file MUST yield the pubkey that
+    /// corresponds to the NEW mnemonic — not the original one.
+    ///
+    /// This proves that the on-disk state is consistent with the new
+    /// identity before the daemon restarts, which is the post-condition
+    /// that the G-3 async logout relies on.
+    #[test]
+    fn set_warren_mnemonic_then_load_key_gives_new_pubkey() {
+        let dir = isolated_tempdir();
+
+        // Bootstrap an original identity.
+        let original_key = load_or_create_signing_key(&dir).expect("original identity");
+        let original_pubkey = original_key.verifying_key().as_bytes().to_vec();
+
+        // Replace the mnemonic.
+        let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
+                            abandon abandon abandon abandon abandon about";
+        set_warren_mnemonic(&dir, new_mnemonic).expect("set new mnemonic");
+
+        // The new signing key loaded from disk must differ from the original.
+        let new_key = load_or_create_signing_key(&dir).expect("new identity");
+        let new_pubkey = new_key.verifying_key().as_bytes().to_vec();
+
+        assert_ne!(
+            original_pubkey, new_pubkey,
+            "after mnemonic replacement, loading the key from disk MUST return \
+             the new pubkey so the G-3 identity-changed detection fires correctly"
+        );
+    }
+
+    /// The identity-changed detection logic used in
+    /// `on_set_warren_mnemonic` (G-3 fix) compares the pubkey derived
+    /// from the new mnemonic against the pubkey stored in device.json.
+    /// This test verifies that the derived pubkey matches what
+    /// `load_or_create_signing_key` would return — proving the two
+    /// derivation paths are consistent.
+    #[test]
+    fn mnemonic_derivation_is_consistent_with_load_or_create() {
+        let dir = isolated_tempdir();
+        let mnemonic = "abandon abandon abandon abandon abandon abandon \
+                        abandon abandon abandon abandon abandon about";
+
+        // Write the mnemonic to disk.
+        set_warren_mnemonic(&dir, mnemonic).expect("set mnemonic");
+
+        // Derive the key the same way on_set_warren_mnemonic does at runtime.
+        let inline_key = warren_identity::seed_from_mnemonic(mnemonic)
+            .map(|seed| warren_identity::derive_node_key(&seed))
+            .expect("derivation from known-valid mnemonic must not fail");
+        let inline_pubkey = inline_key.verifying_key().as_bytes().to_vec();
+
+        // Derive the key via the boot path.
+        let loaded_key = load_or_create_signing_key(&dir).expect("load key from disk");
+        let loaded_pubkey = loaded_key.verifying_key().as_bytes().to_vec();
+
+        assert_eq!(
+            inline_pubkey, loaded_pubkey,
+            "inline derivation (G-3 identity-changed detection) MUST produce \
+             the same pubkey as load_or_create_signing_key (boot path)"
+        );
+    }
 }

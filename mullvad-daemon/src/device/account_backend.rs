@@ -9,12 +9,11 @@
 //!   the network**. Replaces the env-var bypass `WARREN_LOCAL_ACCOUNT=1`
 //!   with a real pluggable backend.
 //!
-//! MVP scope (3 methods): `create_account`, `get_data`,
-//! `delete_account`. The other methods (`submit_voucher`,
-//! `get_www_auth_token`, `init_play_purchase`, `verify_play_purchase`,
-//! Android `delete_account`) stay in
-//! [`super::service::WarrenIdentityService`] directly on the `AccountsProxy`
-//! for this phase; to migrate in C.1+ if needed.
+//! Scope (4 methods): `create_account`, `get_data`,
+//! `delete_account`, `submit_voucher`. The remaining methods
+//! (`get_www_auth_token`, `init_play_purchase`, `verify_play_purchase`)
+//! stay in [`super::service::WarrenIdentityService`] directly on
+//! the `AccountsProxy` for this phase.
 
 use std::future::Future;
 use std::path::PathBuf;
@@ -24,7 +23,7 @@ use std::sync::Arc;
 use chrono::Utc;
 use mullvad_api::AccountsProxy;
 use mullvad_api::rest;
-use mullvad_types::account::{AccountData, AccountNumber};
+use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 use mullvad_types::warren_pubkey::WarrenPubKey;
 
 /// Type alias for the futures returned by the trait. `Pin<Box<dyn …>>`
@@ -65,6 +64,16 @@ pub trait WarrenAccountBackend: Send + Sync {
         )
     )]
     fn delete_account(&self, account: AccountNumber) -> BoxFut<Result<(), rest::Error>>;
+
+    /// Redeems a voucher to create or extend a subscription.
+    /// In warren remote mode: calls `POST /v1/register` (unsigned).
+    /// In local mode: returns a far-future expiry (no network).
+    /// In legacy Mullvad mode: delegates to `AccountsProxy::submit_voucher`.
+    fn submit_voucher(
+        &self,
+        account: AccountNumber,
+        voucher: String,
+    ) -> BoxFut<Result<VoucherSubmission, rest::Error>>;
 }
 
 /// Thin wrap of the legacy Mullvad `AccountsProxy`. Delegates each
@@ -101,11 +110,18 @@ impl WarrenAccountBackend for RemoteAccountBackend {
         }
         #[cfg(not(target_os = "android"))]
         {
-            // `AccountsProxy::delete_account` does not exist outside Android
-            // on the Mullvad upstream side; we return an explicit error.
             let _ = account;
             Box::pin(async move { Err(rest::Error::Aborted) })
         }
+    }
+
+    fn submit_voucher(
+        &self,
+        account: AccountNumber,
+        voucher: String,
+    ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
+        let proxy = self.proxy.clone();
+        Box::pin(async move { proxy.submit_voucher(account, voucher).await })
     }
 }
 
@@ -176,13 +192,25 @@ impl WarrenAccountBackend for LocalAccountBackend {
         Box::pin(async move { Ok(data) })
     }
 
+    fn submit_voucher(
+        &self,
+        _account: AccountNumber,
+        _voucher: String,
+    ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
+        // Local mode: no network, no voucher redemption needed.
+        // Return a far-future expiry consistent with get_data.
+        let expiry = Self::far_future_expiry();
+        Box::pin(async move {
+            Ok(VoucherSubmission {
+                new_expiry: expiry,
+                time_added: 36500 * 24 * 3600, // ~100 years in seconds
+            })
+        })
+    }
+
     fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
         let settings_dir = self.settings_dir.clone();
         Box::pin(async move {
-            // Removes device.json (= "logged out" state for the
-            // DeviceCacher on next boot) and the BIP39 mnemonic
-            // (= identity). Idempotent: an already-absent file
-            // does not produce an error.
             let device_path = settings_dir.join(super::DEVICE_CACHE_FILENAME);
             let mnemonic_path = settings_dir.join(crate::warren_signer::MNEMONIC_FILENAME);
             for path in [device_path, mnemonic_path] {
@@ -263,6 +291,35 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
     fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
         let client = self.client.clone();
         Box::pin(async move { client.delete_account().await.map_err(map_client_error) })
+    }
+
+    fn submit_voucher(
+        &self,
+        _account: AccountNumber,
+        voucher: String,
+    ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
+        let client = self.client.clone();
+        let pubkey_hex = client.pubkey_hex();
+        Box::pin(async move {
+            let req = warren_api_client::RegisterAccountRequest {
+                pubkey_hex: pubkey_hex
+                    .parse()
+                    .map_err(|_| rest::Error::Aborted)?,
+                voucher_secret: voucher,
+                referral_code: None,
+            };
+            let resp = client
+                .register_with_voucher(&req)
+                .await
+                .map_err(map_client_error)?;
+            let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
+            let now_secs = Utc::now().timestamp() as u64;
+            let time_added = resp.expires_at.saturating_sub(now_secs);
+            Ok(VoucherSubmission {
+                new_expiry,
+                time_added,
+            })
+        })
     }
 }
 

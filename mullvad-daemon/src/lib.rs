@@ -2561,16 +2561,81 @@ impl Daemon {
     }
 
     /// Restores the mnemonic via
-    /// `warren_signer::set_warren_mnemonic`. Daemon restart required
-    /// for the new identity to be picked up by the signer
-    /// (signing key derived at boot). **No-log policy**:
-    /// never the content of `mnemonic`, just the result (ok/err).
+    /// `warren_signer::set_warren_mnemonic`. If the new mnemonic produces a
+    /// different Ed25519 pubkey than the one stored in device.json, the
+    /// account manager is logged out synchronously (best-effort): this
+    /// invalidates device.json so that the next daemon boot bootstraps
+    /// cleanly with the new identity instead of returning `SkippedMismatch`.
+    ///
+    /// **No-log policy**: never the content of `mnemonic`, just the result
+    /// and whether identity changed.
     fn on_set_warren_mnemonic(&self, tx: oneshot::Sender<std::io::Result<()>>, mnemonic: String) {
         let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
             "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
             result.is_ok()
         );
+
+        if result.is_ok() {
+            // Derive the pubkey from the newly written mnemonic. This is safe
+            // because `set_warren_mnemonic` already validated the BIP39
+            // checksum before writing, so these two calls cannot fail on a
+            // valid mnemonic.
+            let identity_changed = warren_identity::seed_from_mnemonic(&mnemonic)
+                .ok()
+                .map(|seed| warren_identity::derive_node_key(&seed))
+                .map(|new_key| {
+                    let new_pubkey =
+                        mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(
+                            new_key.verifying_key().as_bytes(),
+                        );
+                    // Read the pubkey currently stored in device.json (if any).
+                    let device_path =
+                        self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
+                    let stored_pubkey = std::fs::read_to_string(&device_path)
+                        .ok()
+                        .and_then(|raw| {
+                            serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
+                        })
+                        .and_then(|state| state.into_device())
+                        .map(|d| d.pubkey);
+
+                    match stored_pubkey {
+                        Some(old) if old != new_pubkey => {
+                            log::warn!(
+                                "on_set_warren_mnemonic: signing identity changed \
+                                 — invalidating device state. \
+                                 Daemon restart required to activate new identity."
+                            );
+                            true
+                        }
+                        // No device.json (first boot) or same pubkey: no action needed.
+                        _ => false,
+                    }
+                })
+                .unwrap_or(false);
+
+            if identity_changed {
+                // Spawn the async logout so we can remain in a sync fn. The
+                // `account_manager` handle is `Clone` (cheap Arc clone) and
+                // `logout()` is cancel-safe (writes LoggedOut to disk then
+                // dispatches a background API call).
+                let manager = self.account_manager.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = manager.logout().await {
+                        log::error!(
+                            "on_set_warren_mnemonic: device state reset failed: {e}"
+                        );
+                    } else {
+                        log::info!(
+                            "on_set_warren_mnemonic: device state reset — \
+                             restart daemon to activate new identity"
+                        );
+                    }
+                });
+            }
+        }
+
         Self::oneshot_send(tx, result, "set_warren_mnemonic");
     }
 

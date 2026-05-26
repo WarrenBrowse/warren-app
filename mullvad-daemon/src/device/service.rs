@@ -377,11 +377,11 @@ impl WarrenIdentityService {
         pubkey: WarrenPubKey,
         voucher: String,
     ) -> Result<VoucherSubmission, Error> {
-        let proxy = self.proxy.clone();
+        let backend = self.backend.clone();
         let api_handle = self.api_availability.clone();
         let account_number: AccountNumber = pubkey.as_str().to_owned();
         let result = retry_future(
-            move || proxy.submit_voucher(account_number.clone(), voucher.clone()),
+            move || backend.submit_voucher(account_number.clone(), voucher.clone()),
             move |result| should_retry(result, &api_handle),
             RETRY_ACTION_STRATEGY,
         )
@@ -526,7 +526,20 @@ fn handle_account_data_result(
             api_availability.pause_background();
             true
         }
-        Err(mullvad_api::rest::Error::ApiError(_status, code)) => {
+        Err(mullvad_api::rest::Error::ApiError(status, code)) => {
+            // HTTP 404 from warren-api means "no subscription found for this pubkey".
+            // This is NOT a transient network error — retrying forever would produce
+            // an infinite loop before the user redeems a voucher.  Treat it the same
+            // way as INVALID_ACCOUNT: pause background activity and report "settled"
+            // (= stop the retry loop) so the caller can surface the state to the UI.
+            if *status == rest::StatusCode::NOT_FOUND {
+                log::info!(
+                    "handle_account_data_result: 404 from warren-api \
+                     (no subscription yet) — pausing background, stopping retry loop"
+                );
+                api_availability.pause_background();
+                return true;
+            }
             if code == mullvad_api::INVALID_ACCOUNT {
                 api_availability.pause_background();
                 return true;
@@ -575,5 +588,109 @@ fn map_rest_error(error: rest::Error) -> Error {
             _ => Error::OtherRestError(error),
         },
         error => Error::OtherRestError(error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mullvad_api::availability::{ApiAvailability, State};
+
+    /// Builds a fresh `ApiAvailability` whose background is initially
+    /// un-paused (= online, active). Spawning the inactivity timer
+    /// requires a tokio runtime, so all tests here use `#[tokio::test]`.
+    fn online_availability() -> ApiAvailability {
+        ApiAvailability::new(State::default())
+    }
+
+    // ------------------------------------------------------------------
+    // G-2: 404 from warren-api must stop the retry loop
+    // ------------------------------------------------------------------
+
+    /// A 404 ApiError must be treated as "settled" (return `true`) so
+    /// the `spawn_warren_identity_service` retry loop terminates
+    /// immediately. Without this fix the loop would continue forever
+    /// before the user redeems a voucher.
+    #[tokio::test]
+    async fn handle_account_data_result_404_stops_retry_loop() {
+        let api_availability = online_availability();
+
+        let result: Result<AccountData, rest::Error> = Err(rest::Error::ApiError(
+            rest::StatusCode::NOT_FOUND,
+            "warren-api 404".to_owned(),
+        ));
+
+        // Must return true (= settled, stop retrying).
+        let settled = handle_account_data_result(&result, &api_availability);
+        assert!(
+            settled,
+            "404 from warren-api must settle the retry loop (return true)"
+        );
+    }
+
+    /// After a 404, background API calls must be paused so the daemon
+    /// does not keep making requests while the user has no subscription.
+    /// We verify "paused" by asserting that `wait_background()` does NOT
+    /// resolve within 50 ms — if it did, background would be un-paused.
+    #[tokio::test]
+    async fn handle_account_data_result_404_pauses_background() {
+        let api_availability = online_availability();
+
+        let result: Result<AccountData, rest::Error> = Err(rest::Error::ApiError(
+            rest::StatusCode::NOT_FOUND,
+            "warren-api 404".to_owned(),
+        ));
+
+        handle_account_data_result(&result, &api_availability);
+
+        // If background is paused, wait_background blocks indefinitely.
+        // A 50 ms timeout expiring means it is indeed paused (correct).
+        // If wait_background resolves instantly the future returns Ok(()),
+        // meaning background is NOT paused (bug).
+        let paused = tokio::time::timeout(
+            std::time::Duration::from_millis(50),
+            api_availability.wait_background(),
+        )
+        .await
+        .is_err(); // Err(Elapsed) -> paused; Ok(_) -> NOT paused (wrong)
+
+        assert!(paused, "404 must pause background API activity");
+    }
+
+    /// A transient network error (= `rest::Error::Aborted`) must NOT
+    /// stop the retry loop — the daemon should keep retrying until the
+    /// network is back. This is the pre-existing contract; the G-2 fix
+    /// must not regress it.
+    #[tokio::test]
+    async fn handle_account_data_result_transient_error_keeps_retrying() {
+        let api_availability = online_availability();
+
+        let result: Result<AccountData, rest::Error> = Err(rest::Error::Aborted);
+
+        // Must return false (= not settled, keep retrying).
+        let settled = handle_account_data_result(&result, &api_availability);
+        assert!(
+            !settled,
+            "transient network error must NOT stop the retry loop"
+        );
+    }
+
+    /// INVALID_ACCOUNT (symbolic string code) must still stop the retry
+    /// loop as before — this is the pre-existing behavior and must not
+    /// be broken by the G-2 change.
+    #[tokio::test]
+    async fn handle_account_data_result_invalid_account_stops_retry_loop() {
+        let api_availability = online_availability();
+
+        let result: Result<AccountData, rest::Error> = Err(rest::Error::ApiError(
+            rest::StatusCode::UNAUTHORIZED,
+            mullvad_api::INVALID_ACCOUNT.to_owned(),
+        ));
+
+        let settled = handle_account_data_result(&result, &api_availability);
+        assert!(
+            settled,
+            "INVALID_ACCOUNT must settle the retry loop (pre-existing behavior)"
+        );
     }
 }

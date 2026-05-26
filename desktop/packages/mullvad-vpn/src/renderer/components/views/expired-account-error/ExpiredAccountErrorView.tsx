@@ -1,4 +1,13 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
@@ -8,7 +17,7 @@ import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { LockdownModeSwitch } from '../../../features/tunnel/components';
-import { Button, Flex } from '../../../lib/components';
+import { Button, Flex, Spinner } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { spacings } from '../../../lib/foundations';
@@ -101,6 +110,8 @@ function ExpiredAccountErrorViewComponent() {
 
               <ExternalPaymentButton />
 
+              <CheckSubscriptionButton />
+
               <Button variant="success" onClick={navigateToRedeemVoucher}>
                 <Button.Text>
                   {
@@ -189,7 +200,7 @@ function Content() {
 }
 
 function ExternalPaymentButton() {
-  const { setShowLockdownModeAlert } = useExpiredAccountContext();
+  const { setShowLockdownModeAlert, startPolling } = useExpiredAccountContext();
   const { recoveryAction } = useRecoveryAction();
   const { openUrlWithAuth } = useAppContext();
   const isNewAccount = useIsNewAccount();
@@ -203,6 +214,8 @@ function ExternalPaymentButton() {
       setShowLockdownModeAlert(true);
     } else {
       await openUrlWithAuth(urls.purchase);
+      // G-5: Start auto-polling after the user opens the payment page.
+      startPolling();
     }
   });
 
@@ -217,6 +230,50 @@ function ExternalPaymentButton() {
       }>
       <Button.Text>{buttonText}</Button.Text>
       <Button.Icon icon="external" />
+    </Button>
+  );
+}
+
+// G-5: Manual "Check subscription" button for users who completed
+// external payment and want to refresh immediately.
+function CheckSubscriptionButton() {
+  const { polling } = useExpiredAccountContext();
+  const { recoveryAction } = useRecoveryAction();
+  const { updateAccountData } = useAppContext();
+  const [checking, setChecking] = useState(false);
+
+  const handleCheck = useCallback(async () => {
+    setChecking(true);
+    try {
+      await updateAccountData();
+    } catch (e) {
+      const err = e as Error;
+      log.error(`Manual subscription check failed: ${err.message}`);
+    } finally {
+      setChecking(false);
+    }
+  }, [updateAccountData]);
+
+  // Only show after the user has opened the external payment page
+  // (polling started) or as a persistent manual refresh option.
+  if (recoveryAction === RecoveryAction.disconnect) {
+    return null;
+  }
+
+  return (
+    <Button
+      disabled={checking}
+      onClick={() => void handleCheck()}
+      data-testid="expired-account-check-subscription">
+      {checking ? (
+        <Spinner size="small" />
+      ) : (
+        <Button.Text>
+          {polling
+            ? messages.pgettext('connect-view', 'Checking... (click to refresh now)')
+            : messages.pgettext('connect-view', 'I\'ve completed payment')}
+        </Button.Text>
+      )}
     </Button>
   );
 }
@@ -269,19 +326,61 @@ function LockdownModeAlert() {
 type ExpiredAccountContextType = {
   setShowLockdownModeAlert: (val: boolean) => void;
   showLockdownModeAlert: boolean;
+  polling: boolean;
+  startPolling: () => void;
 };
 
 const ExpiredAccountContext = createContext<ExpiredAccountContextType | undefined>(undefined);
 
 const ExpiredAccountContextProvider = ({ children }: { children: ReactNode }) => {
   const [showLockdownModeAlert, setShowLockdownModeAlert] = useState(false);
+  const [polling, setPolling] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollDeadlineRef = useRef<number>(0);
+  const { updateAccountData } = useAppContext();
+
+  // Cleanup auto-poll on unmount.
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+      }
+    };
+  }, []);
+
+  const startPolling = useCallback(() => {
+    // Auto-poll every 10s for 2 minutes after the user opens the
+    // external payment page. If the daemon reports a valid expiry,
+    // the existing StateTriggeredNavigation will route to main.
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+    }
+    pollDeadlineRef.current = Date.now() + 2 * 60 * 1000;
+    setPolling(true);
+    pollTimerRef.current = setInterval(() => {
+      if (Date.now() > pollDeadlineRef.current) {
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+        setPolling(false);
+        return;
+      }
+      void updateAccountData().catch((e: unknown) => {
+        const err = e as Error;
+        log.error(`Auto-poll subscription check failed: ${err.message}`);
+      });
+    }, 10_000);
+  }, [updateAccountData]);
 
   const value: ExpiredAccountContextType = useMemo(
     () => ({
       setShowLockdownModeAlert,
       showLockdownModeAlert,
+      polling,
+      startPolling,
     }),
-    [setShowLockdownModeAlert, showLockdownModeAlert],
+    [setShowLockdownModeAlert, showLockdownModeAlert, polling, startPolling],
   );
   return <ExpiredAccountContext.Provider value={value}>{children}</ExpiredAccountContext.Provider>;
 };
