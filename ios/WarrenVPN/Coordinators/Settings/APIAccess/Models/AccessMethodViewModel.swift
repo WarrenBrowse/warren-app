@@ -132,7 +132,7 @@ extension AccessMethodViewModel {
                 ),
                 body: [
                     NSLocalizedString("With the “Warren bridges” method, the app communicates with a Warren API server via a "
-                            + "Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks.",
+                            + "Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks.",
                         comment: ""
                     ),
                     NSLocalizedString("This can be useful if the API is censored but Warren’s bridge servers are not.",
@@ -149,7 +149,7 @@ extension AccessMethodViewModel {
                 body: [
                     NSLocalizedString(
                         "With the “Encrypted DNS proxy” method, the app will communicate with our "
-                            + "Mullvad API through a proxy address. It does this by retrieving "
+                            + "Warren API through a proxy address. It does this by retrieving "
                             + "an address from a DNS over HTTPS (DoH) server and then using that "
                             + "to reach our API servers.",
                         comment: ""

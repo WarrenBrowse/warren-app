@@ -35,12 +35,6 @@ use talpid_tunnel::tun_provider::{self, Tun, TunProvider};
 use talpid_tunnel_config_client::DaitaSettings;
 use tun08::{AbstractDevice, AsyncDevice};
 
-#[cfg(all(feature = "multihop-pcap", target_os = "linux"))]
-use gotatun::tun::{
-    IpSend,
-    pcap::{PcapSniffer, PcapStream},
-};
-
 mod conversions;
 mod obfuscation;
 
@@ -58,14 +52,7 @@ type TransportFactory = MaybeObfuscatingTransportFactory<UdpFactory>;
 type SinglehopDevice = Device<(TransportFactory, GotaTunDevice, GotaTunDevice)>;
 type ExitDevice = Device<(UdpChannelFactory, GotaTunDevice, GotaTunDevice)>;
 
-#[cfg(not(all(feature = "multihop-pcap", target_os = "linux")))]
 type EntryDevice = Device<(TransportFactory, TunChannelTx, TunChannelRx)>;
-#[cfg(all(feature = "multihop-pcap", target_os = "linux"))]
-type EntryDevice = Device<(
-    TransportFactory,
-    PcapSniffer<TunChannelTx>,
-    PcapSniffer<TunChannelRx>,
-)>;
 
 const PACKET_CHANNEL_CAPACITY: usize = 100;
 
@@ -332,11 +319,6 @@ async fn create_devices(
             .build()
             .await
             .map_err(TunnelError::GotaTunDevice)?;
-
-        // Hacky way of dumping entry<->exit traffic to a unix socket which wireshark can read.
-        // See docs on wrap_in_pcap_sniffer for an explanation.
-        #[cfg(all(feature = "multihop-pcap", target_os = "linux"))]
-        let (tun_channel_tx, tun_channel_rx) = wrap_in_pcap_sniffer(tun_channel_tx, tun_channel_rx);
 
         let entry_device = DeviceBuilder::new()
             .with_udp(factory)
@@ -648,59 +630,4 @@ pub fn get_tunnel_for_userspace(
     Err(TunnelError::FdDuplicationError(
         last_error.expect("Should be collected in loop"),
     ))
-}
-
-/// Wrap `ip_send` and `ip_recv` in [PcapSniffer]s for use with Wireshark.
-///
-/// With userspace multihop, the [ExitDevice] communicates with the network through the
-/// [EntryDevice], without going through the kernel. That means there is no network interface
-/// for wireshark to sniff. By interposing [PcapSniffer]s, any packets that are sent to `ip_send`,
-/// or received from `ip_recv`, will _also_ be written to a unix socket, encoded using the pcap
-/// file format.
-///
-/// The unix socket can be opened in wireshark to inspect communication with the [ExitDevice]s peer.
-/// ```sh
-/// wireshark -k -i /tmp/mullvad-multihop.pcap
-/// ```
-#[cfg(all(feature = "multihop-pcap", target_os = "linux"))]
-fn wrap_in_pcap_sniffer<S, R>(ip_send: S, ip_recv: R) -> (PcapSniffer<S>, PcapSniffer<R>)
-where
-    S: IpSend,
-    R: IpRecv,
-{
-    use std::{
-        fs,
-        os::unix::{fs::PermissionsExt, net::UnixListener},
-        sync::LazyLock,
-        time::Instant,
-    };
-
-    const SOCKET_PATH: &str = "/tmp/mullvad-multihop.pcap";
-
-    /// The global pcap writer. We initialize it once so that we can re-use the same unix socket
-    /// for the entire lifetime of the application.
-    static WRITER: LazyLock<PcapStream> = LazyLock::new(|| {
-        log::warn!("Binding pcap socket to {SOCKET_PATH:?}");
-        let _ = fs::remove_file(SOCKET_PATH);
-        let listener = UnixListener::bind(SOCKET_PATH).unwrap();
-        let _ = fs::set_permissions(SOCKET_PATH, fs::Permissions::from_mode(0o777));
-
-        log::warn!("Waiting for connection to pcap socket");
-        log::warn!("    wireshark -k -i {SOCKET_PATH:?}");
-        let (stream, _) = listener
-            .accept()
-            .expect("Error while waiting for pcap listener");
-
-        PcapStream::new(Box::new(stream))
-    });
-
-    let start_time = Instant::now();
-
-    let w = WRITER.clone();
-    let ip_send = PcapSniffer::new(ip_send, w, start_time);
-
-    let w = WRITER.clone();
-    let ip_recv = PcapSniffer::new(ip_recv, w, start_time);
-
-    (ip_send, ip_recv)
 }

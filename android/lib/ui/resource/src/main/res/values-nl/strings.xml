@@ -4,7 +4,7 @@
     <string name="add">Toevoegen</string>
     <string name="agree_and_continue">Akkoord en doorgaan</string>
     <string name="all_applications">Alle toepassingen</string>
-    <string name="always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voor <b>%1$s</b> voordat u Mullvad VPN gebruikt.</string>
+    <string name="always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voor <b>%1$s</b> voordat u Warren VPN gebruikt.</string>
     <string name="always_on_vpn_error_notification_title">Altijd-aan VPN toegewezen aan %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Na het bijwerken van een VPN-app in Android 16 kan het apparaat in een toestand raken waarin de VPN-apps het internet niet meer kunnen bereiken.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Start uw apparaat opnieuw op en probeer het opnieuw. Als dat niet werkt, kun u een e-mail schrijven naar %1$s (in het Zweeds of in het Engels).</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Kan account niet verifiëren. Stuur een probleemrapport.</string>
     <string name="authentication">Authenticatie</string>
     <string name="auto_connect_and_lockdown_mode">Automatisch verbinden en lockdownmodus</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Klik, nadat u op de knop \"Naar VPN-instellingen\" hebt geklikt, op het tandwiel naast de naam \"Mullvad VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Klik, nadat u op de knop \"Naar VPN-instellingen\" hebt geklikt, op het tandwiel naast de naam \"Warren VPN\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">De instellingen Automatisch verbinden en Lockdownmodus zijn te vinden in de Android-systeeminstellingen, volg deze gids om een of beide in te schakelen.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Klik om Automatisch verbinden in te schakelen op de schakelaar naast \"Altijd-aan VPN\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automatisch verbinden heet Altijd-aan VPN in de Android-systeeminstellingen en zorgt ervoor dat u altijd verbonden bent met de VPN-tunnel en automatisch verbinding maakt na een herstart.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Verbindingsgegevens</string>
     <string name="connected">Verbonden</string>
     <string name="connecting">Verbinden ...</string>
-    <string name="connecting_to_daemon">Verbinden met Mullvad-systeemdienst...</string>
+    <string name="connecting_to_daemon">Verbinden met Warren-systeemdienst...</string>
     <string name="connection_details_in">In</string>
     <string name="connection_details_out">Uit</string>
     <string name="cont">Doorgaan</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">U hebt dit apparaat verwijderd. U moet zich opnieuw aanmelden om het opnieuw te verbinden.</string>
     <string name="device_inactive_title">Apparaat is niet actief</string>
     <string name="device_inactive_unblock_warning">Als u naar aanmelden gaat, wordt het blokkeren van internet op dit apparaat opgeheven.</string>
-    <string name="device_name_info_first_paragraph">Dit is de naam die aan het apparaat is toegewezen. Elk apparaat dat is aangemeld op een Mullvad-account, krijgt een unieke naam waarmee u het kunt identificeren wanneer u uw apparaten beheert in de app of op de website.</string>
-    <string name="device_name_info_second_paragraph">U kunt maximaal 5 apparaten aangemeld hebben op één Mullvad-account.</string>
+    <string name="device_name_info_first_paragraph">Dit is de naam die aan het apparaat is toegewezen. Elk apparaat dat is aangemeld op een Warren-account, krijgt een unieke naam waarmee u het kunt identificeren wanneer u uw apparaten beheert in de app of op de website.</string>
+    <string name="device_name_info_second_paragraph">U kunt maximaal 5 apparaten aangemeld hebben op één Warren-account.</string>
     <string name="device_name_info_third_paragraph">Als u zich afmeldt, worden het apparaat en de apparaatnaam verwijderd. Wanneer u zich weer aanmeldt, krijgt het apparaat een nieuwe naam.</string>
     <string name="disconnect">Verbinding verbreken</string>
     <string name="disconnected">Verbinding verbroken</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Kon IPv6 niet configureren. Schakel het uit in de app of schakel het in op uw apparaat.</string>
     <string name="is_offline">Uw apparaat is offline. De tunnel wordt automatisch verbonden wanneer uw apparaat weer online is.</string>
     <string name="language">Taal</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voordat u Mullvad VPN gebruikt.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voordat u Warren VPN gebruikt.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Altijd-aan VPN toegewezen aan andere VPN</string>
     <string name="local_network_sharing">Delen op lokaal netwerk</string>
     <string name="more_information">Meer informatie</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Voer een geldige poort op de externe server in</string>
     <string name="port">Poort</string>
     <string name="port_x">Poort: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Om zeker te zijn dat u de meest veilige versie hebt en om u te informeren over eventuele problemen met de huidige geactiveerde versie, voert de app automatisch versiecontroles uit. Hierbij worden de appversie en de Android-systeemversie naar de servers van Mullvad gestuurd. Mullvad houdt tellers bij voor gebruikte appversies en Android-versies. De gegevens worden nooit opgeslagen of gebruikt op een manier die u kan identificeren.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Om zeker te zijn dat u de meest veilige versie hebt en om u te informeren over eventuele problemen met de huidige geactiveerde versie, voert de app automatisch versiecontroles uit. Hierbij worden de appversie en de Android-systeemversie naar de servers van Warren gestuurd. Warren houdt tellers bij voor gebruikte appversies en Android-versies. De gegevens worden nooit opgeslagen of gebruikt op een manier die u kan identificeren.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Als de split-tunnelingfunctie wordt gebruikt, vraagt de app het systeem om een lijst van alle geïnstalleerde toepassingen. Deze lijst wordt alleen opgehaald in de split-tunnelingweergave. De lijst van geïnstalleerde toepassingen wordt nooit verzonden vanaf het apparaat.</string>
     <string name="privacy_disclaimer_title">Privacy</string>
     <string name="privacy_policy_label">Privacybeleid</string>

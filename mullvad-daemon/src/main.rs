@@ -221,7 +221,7 @@ async fn run_standalone(
     #[cfg(not(windows))]
     cleanup_old_rpc_socket(mullvad_paths::get_rpc_socket_path()).await;
 
-    log::info!("Mullvad daemon is quitting");
+    log::info!("Warren daemon is quitting");
     thread::sleep(Duration::from_millis(500));
     Ok(())
 }

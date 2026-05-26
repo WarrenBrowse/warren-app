@@ -4,7 +4,7 @@
     <string name="add">Lägg till</string>
     <string name="agree_and_continue">Godkänn och fortsätt</string>
     <string name="all_applications">Alla applikationer</string>
-    <string name="always_on_vpn_error_notification_content">Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%1$s</b> innan du använder Mullvad VPN.</string>
+    <string name="always_on_vpn_error_notification_content">Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%1$s</b> innan du använder Warren VPN.</string>
     <string name="always_on_vpn_error_notification_title">Alltid på-VPN har tilldelats %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">När en VPN-app har uppdaterats på Android 16 kan enheterna hamna i ett tillstånd där VPN-apparna inte längre har åtkomst till internet.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Starta om enheten och försök att ansluta igen. Om det inte fungerar kan du skicka ett e-postmeddelande till %1$s på svenska eller engelska.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Det går inte att autentisera kontot. Skicka en problemrapport.</string>
     <string name="authentication">Autentisering</string>
     <string name="auto_connect_and_lockdown_mode">Anslut automatiskt och Låsningsläge</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Mullvad VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Warren VPN\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">Inställningar för Anslut automatiskt och Låsningsläge finns i Androids systeminställningar. Följ guiden för att aktivera en av dem eller båda.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Om du vill aktivera Anslut automatiskt klickar du på växlingsknappen bredvid \"Alltid på-VPN\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Anslut automatiskt kallas Alltid på-VPN i Androids systeminställningar och ser till att du är ansluten till VPN-tunneln oavbrutet och ansluter automatiskt efter omstart.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Anslutningsinformation</string>
     <string name="connected">Ansluten</string>
     <string name="connecting">Ansluter ...</string>
-    <string name="connecting_to_daemon">Ansluter till Mullvads systemtjänst...</string>
+    <string name="connecting_to_daemon">Ansluter till Warrens systemtjänst...</string>
     <string name="connection_details_in">In</string>
     <string name="connection_details_out">Ut</string>
     <string name="cont">Fortsätt</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Du har tagit bort den här enheten. Du måste logga in igen för att återansluta.</string>
     <string name="device_inactive_title">Enheten är inaktiv</string>
     <string name="device_inactive_unblock_warning">Om du loggar in tas blockering av internet bort på den här enheten.</string>
-    <string name="device_name_info_first_paragraph">Det här är namnet som tilldelas enheten. Varje enhet som är inloggad på ett Mullvad-konto får ett unikt namn som hjälper dig att identifiera den när du hanterar dina enheter i appen eller på webbplatsen.</string>
-    <string name="device_name_info_second_paragraph">Upp till fem enheter kan vara inloggade på ett Mullvad-konto.</string>
+    <string name="device_name_info_first_paragraph">Det här är namnet som tilldelas enheten. Varje enhet som är inloggad på ett Warren-konto får ett unikt namn som hjälper dig att identifiera den när du hanterar dina enheter i appen eller på webbplatsen.</string>
+    <string name="device_name_info_second_paragraph">Upp till fem enheter kan vara inloggade på ett Warren-konto.</string>
     <string name="device_name_info_third_paragraph">Om du loggar ut tas enheten och enhetsnamnet bort. När du loggar in igen får enheten ett nytt namn.</string>
     <string name="disconnect">Koppla från</string>
     <string name="disconnected">Frånkopplad</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Det gick inte att konfigurera IPv6. Inaktivera det i appen eller aktivera det på din enhet.</string>
     <string name="is_offline">Din enhet är offline. Tunneln ansluts automatiskt när din enhet är online igen.</string>
     <string name="language">Språk</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN innan du använder Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN innan du använder Warren VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Alltid på-VPN har tilldelats en annan VPN</string>
     <string name="local_network_sharing">Lokal nätverksdelning</string>
     <string name="more_information">Mer information</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Ange en giltig fjärrserverport</string>
     <string name="port">Port</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Appen genomför automatiska versionskontroller för att se till att du har den säkraste versionen och för att informera dig om problem med den nuvarande versionen. Appversionen och Android-systemversionen skickas till Mullvad-servrarna. Mullvad registrerar antalet använda appversioner och Android-versioner. Dessa data lagras aldrig och används inte på något sätt som kan identifiera dig.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Appen genomför automatiska versionskontroller för att se till att du har den säkraste versionen och för att informera dig om problem med den nuvarande versionen. Appversionen och Android-systemversionen skickas till Warren-servrarna. Warren registrerar antalet använda appversioner och Android-versioner. Dessa data lagras aldrig och används inte på något sätt som kan identifiera dig.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Om delade tunnlar används, frågar appen ditt system om en lista med alla installerade applikationer. Listan hämtas bara i vyn för delade tunnlar. Listan med installerade applikationer skickas aldrig från enheten.</string>
     <string name="privacy_disclaimer_title">Sekretess</string>
     <string name="privacy_policy_label">Sekretesspolicy</string>

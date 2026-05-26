@@ -10,7 +10,7 @@ export function OwnershipFilter(props: OwnershipFilterProps) {
   const { selectedOwnership, setOwnership } = useFilterViewContext();
   const values = [
     {
-      label: messages.pgettext('filter-view', 'Mullvad owned only'),
+      label: messages.pgettext('filter-view', 'Warren owned only'),
       value: Ownership.mullvadOwned,
     },
     {

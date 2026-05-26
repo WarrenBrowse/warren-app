@@ -4,7 +4,7 @@
     <string name="add">Lisää</string>
     <string name="agree_and_continue">Hyväksy ja jatka</string>
     <string name="all_applications">Kaikki sovellukset</string>
-    <string name="always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä sovellukselle <b>%1$s</b> ennen Mullvad VPN:n käyttämistä.</string>
+    <string name="always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä sovellukselle <b>%1$s</b> ennen Warren VPN:n käyttämistä.</string>
     <string name="always_on_vpn_error_notification_title">%1$s on määritetty aina päällä olevan VPN:n asetukseksi</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Kun VPN-sovellus päivitetään Android 16:ssa, laitteen saattavat päätyä tilaan, jossa VPN-sovellukset eivät voi enää muodostaa yhteyttä internetiin.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Käynnistä laitteesi uudelleen ja yritä muodostaa yhteys uudelleen. Jos tämä ei toimi, lähetä sähköpostiviesti osoitteeseen %1$s ruotsiksi tai englanniksi.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Tilin todentaminen ei onnistu. Lähetä ongelmaraportti.</string>
     <string name="authentication">Todennus</string>
     <string name="auto_connect_and_lockdown_mode">Automaattinen yhdistäminen ja lukitustila</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Napsautettuasi alla olevaa \"Siirry VPN-asetuksiin\" -painiketta napsauta Mullvad VPN:n nimen vierestä löytyvää hammaspyöräkuvaketta.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Napsautettuasi alla olevaa \"Siirry VPN-asetuksiin\" -painiketta napsauta Warren VPN:n nimen vierestä löytyvää hammaspyöräkuvaketta.</string>
     <string name="auto_connect_carousel_first_slide_top_text">Automaattisen yhdistämisen ja lukitustilan asetukset löytyvät Androidin järjestelmäasetuksista. Voit ottaa jommankumman tai molemmat käyttöön tämän oppaan ohjeilla.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Ota automaattinen yhteyden muodostus käyttöön napsauttamalla \"Aina päällä oleva VPN\" -kohdan vieressä olevaa valintapainiketta.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automaattista yhdistämistä kutsutaan aina päällä olevaksi VPN-yhteydeksi Androidin järjestelmäasetuksissa. Se varmistaa, että olet jatkuvasti yhteydessä VPN-tunneliin, sekä muodostaa yhteyden automaattisesti aina uudelleenkäynnistyksen jälkeen.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Yhteyden tiedot</string>
     <string name="connected">Yhdistetty</string>
     <string name="connecting">Yhdistetään...</string>
-    <string name="connecting_to_daemon">Yhdistetään Mullvad-järjestelmäpalveluun...</string>
+    <string name="connecting_to_daemon">Yhdistetään Warren-järjestelmäpalveluun...</string>
     <string name="connection_details_in">Saapuva</string>
     <string name="connection_details_out">Lähtevä</string>
     <string name="cont">Jatka</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Olet poistanut tämän laitteen. Jos haluat muodostaa yhteyden uudelleen, sinun täytyy kirjautua takaisin sisään.</string>
     <string name="device_inactive_title">Laite ei ole aktiivinen</string>
     <string name="device_inactive_unblock_warning">Kirjautumiseen siirtyminen purkaa internetin käytön eston tältä laitteelta.</string>
-    <string name="device_name_info_first_paragraph">Tämä on laitteelle annettu nimi. Jokainen Mullvad-tilille kirjautunut laite saa yksilöllisen nimen, jonka avulla sen voi tunnistaa laitteiden hallinnassa sovelluksessa tai verkkosivustolla.</string>
-    <string name="device_name_info_second_paragraph">Yhdelle Mullvad-tilille voi olla kirjautuneena enintään viisi laitetta.</string>
+    <string name="device_name_info_first_paragraph">Tämä on laitteelle annettu nimi. Jokainen Warren-tilille kirjautunut laite saa yksilöllisen nimen, jonka avulla sen voi tunnistaa laitteiden hallinnassa sovelluksessa tai verkkosivustolla.</string>
+    <string name="device_name_info_second_paragraph">Yhdelle Warren-tilille voi olla kirjautuneena enintään viisi laitetta.</string>
     <string name="device_name_info_third_paragraph">Jos kirjaudut ulos, laite ja laitteen nimi poistetaan. Kun kirjaudut sisään uudelleen, laitteelle annetaan uusi nimi.</string>
     <string name="disconnect">Katkaise yhteys</string>
     <string name="disconnected">Yhteys katkaistu</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">IPv6:n määritys ei onnistunut. Poista se käytöstä sovelluksessa tai ota käyttöön laitteellasi.</string>
     <string name="is_offline">Laitteesi on offline-tilassa. Kun laitteesi on taas online-tilassa, tunneli muodostaa yhteyden automaattisesti.</string>
     <string name="language">Kieli</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä ennen Mullvad VPN:n käyttämistä.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä ennen Warren VPN:n käyttämistä.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Aina päällä oleva VPN on määritetty toiselle VPN:lle</string>
     <string name="local_network_sharing">Paikallisen verkon jakaminen</string>
     <string name="more_information">Lisätietoja</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Anna kelvollinen etäpalvelimen portti</string>
     <string name="port">Portti</string>
     <string name="port_x">Portti: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Sovellus suorittaa versiotarkistuksia automaattisesti varmistaakseen, että käytät kaikkein turvallisinta versiota, ja ilmoittaakseen sinulle kaikista parhaillaan käynnissä olevan version ongelmista. Se lähettää Mullvadin palvelimille tiedot sovellusversiosta ja Android-järjestelmäversiosta. Mullvad pitää lukua käytettyjen sovellusversioiden ja Android-versioiden määristä. Tietoja ei koskaan tallenneta tai käytetä tavalla, joka voisi mahdollistaa tunnistamisesi.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Sovellus suorittaa versiotarkistuksia automaattisesti varmistaakseen, että käytät kaikkein turvallisinta versiota, ja ilmoittaakseen sinulle kaikista parhaillaan käynnissä olevan version ongelmista. Se lähettää Warrenin palvelimille tiedot sovellusversiosta ja Android-järjestelmäversiosta. Warren pitää lukua käytettyjen sovellusversioiden ja Android-versioiden määristä. Tietoja ei koskaan tallenneta tai käytetä tavalla, joka voisi mahdollistaa tunnistamisesi.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Jos käytetään sovelluskohtaista yhdistämistä, sovellus pyytää järjestelmältäsi luettelon kaikista siihen asennetuista sovelluksista. Luettelo noudetaan vain sovelluskohtaisen yhdistämisen näkymässä. Asennettujen sovellusten luetteloa ei koskaan lähetetä laitteelta.</string>
     <string name="privacy_disclaimer_title">Tietosuoja</string>
     <string name="privacy_policy_label">Tietosuojakäytäntö</string>

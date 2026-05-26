@@ -4,7 +4,7 @@
     <string name="add">Ajouter</string>
     <string name="agree_and_continue">Accepter et continuer</string>
     <string name="all_applications">Toutes les applications</string>
-    <string name="always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver « Toujours exiger un VPN « pour <b>%1$s</b> avant d\'utiliser Mullvad VPN.</string>
+    <string name="always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver « Toujours exiger un VPN « pour <b>%1$s</b> avant d\'utiliser Warren VPN.</string>
     <string name="always_on_vpn_error_notification_title">« Toujours exiger un VPN » est assigné à %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Après la mise à jour d\'une application de VPN sur Android 16, les appareils peuvent se retrouver dans un état où ces applications de VPN ne sont plus en mesure d\'accéder à Internet.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Veuillez redémarrer votre appareil et réessayer de vous connecter. Si cela ne fonctionne pas, veuillez envoyer un e-mail à %1$s en suédois ou en anglais.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Impossible d\'authentifier le compte. Veuillez envoyer un rapport de problème.</string>
     <string name="authentication">Authentification</string>
     <string name="auto_connect_and_lockdown_mode">Connexion automatique et mode Verrouillage</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Après avoir cliqué sur le bouton « Aller aux paramètres VPN » ci-dessous, cliquez sur l\'engrenage à côté du nom « Mullvad VPN ».</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Après avoir cliqué sur le bouton « Aller aux paramètres VPN » ci-dessous, cliquez sur l\'engrenage à côté du nom « Warren VPN ».</string>
     <string name="auto_connect_carousel_first_slide_top_text">Les paramètres de la connexion automatique et du mode Verrouillage se trouvent dans les paramètres du système Android, suivez ce guide pour activer l\'un, l\'autre ou les deux.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Pour activer la connexion automatique, cliquez sur l\'interrupteur situé à côté de « Toujours exiger un VPN ».</string>
     <string name="auto_connect_carousel_second_slide_top_text">La connexion automatique est appelée VPN toujours actif dans les paramètres du système Android et elle s\'assure que vous êtes constamment connecté au tunnel VPN et se connecte automatiquement après le redémarrage.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Détails de la connexion</string>
     <string name="connected">Connecté</string>
     <string name="connecting">Connexion...</string>
-    <string name="connecting_to_daemon">Connexion au service système Mullvad...</string>
+    <string name="connecting_to_daemon">Connexion au service système Warren...</string>
     <string name="connection_details_in">Entrante</string>
     <string name="connection_details_out">Sortante</string>
     <string name="cont">Continuer</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Vous avez supprimé cet appareil. Vous devrez vous reconnecter pour connecter cet appareil à nouveau.</string>
     <string name="device_inactive_title">L\'appareil est inactif</string>
     <string name="device_inactive_unblock_warning">Aller à la connexion débloquera la connexion Internet sur cet appareil.</string>
-    <string name="device_name_info_first_paragraph">Il s\'agit du nom attribué à l\'appareil. Chaque appareil connecté à un compte Mullvad reçoit un nom unique qui vous aide à l\'identifier lorsque vous gérez vos appareils dans l\'application ou sur le site Web.</string>
-    <string name="device_name_info_second_paragraph">Vous pouvez connecter jusqu\'à 5 appareils au même compte Mullvad.</string>
+    <string name="device_name_info_first_paragraph">Il s\'agit du nom attribué à l\'appareil. Chaque appareil connecté à un compte Warren reçoit un nom unique qui vous aide à l\'identifier lorsque vous gérez vos appareils dans l\'application ou sur le site Web.</string>
+    <string name="device_name_info_second_paragraph">Vous pouvez connecter jusqu\'à 5 appareils au même compte Warren.</string>
     <string name="device_name_info_third_paragraph">Si vous vous déconnectez, l\'appareil et son nom sont supprimés. Lorsque vous vous reconnectez, l\'appareil reçoit un nouveau nom.</string>
     <string name="disconnect">Déconnexion</string>
     <string name="disconnected">Déconnecté</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Impossible de configurer IPv6. Désactivez le protocole dans l\'application ou activez-le dans votre appareil.</string>
     <string name="is_offline">Votre appareil est hors ligne. Le tunnel se connectera automatiquement une fois votre appareil à nouveau en ligne.</string>
     <string name="language">Langue</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver Toujours exiger un VPN avant d\'utiliser Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver Toujours exiger un VPN avant d\'utiliser Warren VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">« Toujours exiger un VPN » est assigné à un autre VPN</string>
     <string name="local_network_sharing">Partage réseau local</string>
     <string name="more_information">Plus d\'informations</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Merci de saisir un port de serveur distant valide</string>
     <string name="port">Port</string>
     <string name="port_x">Port : %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Pour vous assurer que vous disposez de la version la plus sécurisée et pour vous informer de tout problème lié à la version en cours d\'exécution, l\'application effectue automatiquement des vérifications de version. Elle envoie ainsi la version de l\'application et la version du système Android aux serveurs de Mullvad. Mullvad tient des compteurs sur le nombre de versions d\'applications et de versions d\'Android utilisées. Les données ne sont jamais stockées ou utilisées de manière à vous identifier.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Pour vous assurer que vous disposez de la version la plus sécurisée et pour vous informer de tout problème lié à la version en cours d\'exécution, l\'application effectue automatiquement des vérifications de version. Elle envoie ainsi la version de l\'application et la version du système Android aux serveurs de Warren. Warren tient des compteurs sur le nombre de versions d\'applications et de versions d\'Android utilisées. Les données ne sont jamais stockées ou utilisées de manière à vous identifier.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Si la fonctionnalité de split tunneling est utilisée, l\'application demande à votre système la liste de toutes les applications installées. Cette liste n\'est récupérée que dans la vue de split tunneling. La liste des applications installées n\'est jamais envoyée par l\'appareil.</string>
     <string name="privacy_disclaimer_title">Confidentialité</string>
     <string name="privacy_policy_label">Politique de confidentialité</string>

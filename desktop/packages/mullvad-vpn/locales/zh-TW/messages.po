@@ -596,8 +596,8 @@ msgstr "請注意，這些方式不會提升效能，還可能消耗更多系統
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "當您無法連上 Mullvad 時，這些方式可能會派上用場。選擇「自動」時，應用程式會依序嘗試所有方式，直到其中一種成功為止。"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "當您無法連上 Warren 時，這些方式可能會派上用場。選擇「自動」時，應用程式會依序嘗試所有方式，直到其中一種成功為止。"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -677,8 +677,8 @@ msgid "Local SOCKS5 server"
 msgstr "本機 SOCKS5 伺服器"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "管理並新增自訂方式以存取 Mullvad API。"
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "管理並新增自訂方式以存取 Warren API。"
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -737,7 +737,7 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "該應用程式需要遠端伺服器詳細資訊，藉此，您的本機 SOCKS5 伺服器才能轉送您的流量。"
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
 msgstr "該應用程式需要與 Mulvad API 伺服器通訊，以便您登入、取得伺服器清單並執行其他重要作業。"
 
 msgctxt "api-access-methods-view"
@@ -749,8 +749,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "正由本機 SOCKS5 伺服器接聽的 TCP 連接埠。"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "如果 API 受到審查，但 Mullvad 的橋接伺服器未受到審查，此方式可能會很有用。"
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "如果 API 受到審查，但 Warren 的橋接伺服器未受到審查，此方式可能會很有用。"
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -769,16 +769,16 @@ msgid "Transport protocol"
 msgstr "傳輸通訊協定"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "使用「直接」方式，應用程式將直接與 Mulvad API 伺服器通訊，而不經過任何中間代理伺服器。"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "使用「加密 DNS 代理伺服器」方法時，應用程式會透過代理伺服器位址和我們的 Mullvad API 通訊。應用程式會先從 DNS over HTTPS (DoH) 伺服器取得一個位址，再利用該位址連線至我們的 API 伺服器。"
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "使用「加密 DNS 代理伺服器」方法時，應用程式會透過代理伺服器位址和我們的 Warren API 通訊。應用程式會先從 DNS over HTTPS (DoH) 伺服器取得一個位址，再利用該位址連線至我們的 API 伺服器。"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "使用「Mullvad 橋接」方式，則應用程式會透過 Mullvad 橋接伺服器，與 Mullvad API 伺服器進行通訊。應用程式會透過 Shadowsocks 將流量混淆再加以送出，從而實現這種通訊方式。"
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "使用「Warren 橋接」方式，則應用程式會透過 Warren 橋接伺服器，與 Warren API 伺服器進行通訊。應用程式會透過 Shadowsocks 將流量混淆再加以送出，從而實現這種通訊方式。"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1302,7 +1302,7 @@ msgid "The device will be removed from the list and logged out."
 msgstr "裝置將從清單中移除並登出。"
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
 msgstr "這是系統指派給裝置的名稱。每台登入 Mulvad 帳戶的裝置都會獲得一個獨特名稱，有助於您在應用程式或網站上管理裝置時識別各台裝置。"
 
 msgctxt "device-management"
@@ -1327,7 +1327,7 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "檢視並管理所有已登入的裝置。一個帳戶最多能同時登入 5 台裝置。每台裝置登入時都會獲得一個名稱，以協助您輕鬆區分。"
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
+msgid "You can have up to 5 devices logged in on one Warren account."
 msgstr "一個 Mulvad 帳戶最多可以登入 5 台裝置。"
 
 msgctxt "device-management"
@@ -1355,8 +1355,8 @@ msgid "All providers"
 msgstr "所有供應商"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "僅 Mullvad 自有"
+msgid "Warren owned only"
+msgstr "僅 Warren 自有"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1579,8 +1579,8 @@ msgstr "驗證失敗"
 
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "連線 Mullvad 系統服務中…"
+msgid "Connecting to Warren system service..."
+msgstr "連線 Warren 系統服務中…"
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1604,8 +1604,8 @@ msgstr "如果以上步驟仍無法解決問題，請傳送問題回報。"
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Mullvad VPN 服務的權限已遭到撤銷。請前往「系統設定」，並在「允許在背景中執行」設定下允許 Mullvad VPN。"
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Warren VPN 服務的權限已遭到撤銷。請前往「系統設定」，並在「允許在背景中執行」設定下允許 Warren VPN。"
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1614,13 +1614,13 @@ msgstr "重新安裝應用程式"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "重新啟動 Mullvad 背景程序"
+msgid "Restarting the Warren background process"
+msgstr "重新啟動 Warren 背景程序"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "按一下「返回」，再按「再試一次」，即可重新啟動 Mullvad 背景程序"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "按一下「返回」，再按「再試一次」，即可重新啟動 Warren 背景程序"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1639,8 +1639,8 @@ msgstr "正在啟動……"
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "啟動 Mullvad 背景程序失敗。此背景程序負責安全、終止開關和 VPN 通道。請嘗試："
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "啟動 Warren 背景程序失敗。此背景程序負責安全、終止開關和 VPN 通道。請嘗試："
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1649,8 +1649,8 @@ msgstr "再試一次"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "無法連線至 Mullvad 系統服務，您的連線可能不安全。請按一下「瞭解更多」按鈕進行故障排除或傳送問題報告。"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "無法連線至 Warren 系統服務，您的連線可能不安全。請按一下「瞭解更多」按鈕進行故障排除或傳送問題報告。"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1963,8 +1963,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "無法封鎖所有網路流量。請嘗試更新您的核心或傳送問題回報。"
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "無法與 Mullvad 核心驅動程式通訊。請嘗試重新連線或傳送問題回報。"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "無法與 Warren 核心驅動程式通訊。請嘗試重新連線或傳送問題回報。"
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2326,8 +2326,8 @@ msgid "Please try again or send a problem report."
 msgstr "請再試一次或傳送問題回報。"
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "重新啟動 Mullvad 服務"
+msgid "Restart Warren Service"
+msgstr "重新啟動 Warren 服務"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2338,8 +2338,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "若要使用 %(splitTunneling)s，請將 Linux 核心更新至支援 cgroup v2 的版本。"
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "為使用分割通道，請在 masOS 系統設定中為「Mullvad VPN」啟用「全硬碟存取」。"
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "為使用分割通道，請在 masOS 系統設定中為「Warren VPN」啟用「全硬碟存取」。"
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2473,8 +2473,8 @@ msgid "Disable split tunneling"
 msgstr "停用「split tunneling」"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "在 macOS 系統設定中，為「Mullvad VPN」啟用「全硬碟存取」。"
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "在 macOS 系統設定中，為「Warren VPN」啟用「全硬碟存取」。"
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2497,8 +2497,8 @@ msgid "Open system settings"
 msgstr "開啟系統設定"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "如果 Mullvad 以外的其他服務正在主動更新 DNS，即可能出現此錯誤。"
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "如果 Warren 以外的其他服務正在主動更新 DNS，即可能出現此錯誤。"
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2620,8 +2620,8 @@ msgid "Anti-censorship"
 msgstr "反審查"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "注意：啟用此功能，皆需 Mullvad VPN 連線才能上網。"
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "注意：啟用此功能，皆需 Warren VPN 連線才能上網。"
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2731,8 +2731,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "終止開關與鎖定模式之間的區別在於，終止開關能在自動通道重新連線、軟體當機和類似事故期間防止發生任何洩漏。"
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "終止開關與鎖定模式之間區別在於，終止開關能在自動通道重新連線、軟體當機和類似事故期間防止發生任何洩漏。啟用鎖定模式後，您必須連線到 Mullvad VPN 伺服器才能存取網路。手動中斷連線或結束應用程式，都將封鎖您的連線。"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "終止開關與鎖定模式之間區別在於，終止開關能在自動通道重新連線、軟體當機和類似事故期間防止發生任何洩漏。啟用鎖定模式後，您必須連線到 Warren VPN 伺服器才能存取網路。手動中斷連線或結束應用程式，都將封鎖您的連線。"
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2783,8 +2783,8 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "啟用此功能後，即可在 VPN 通道中同時使用 IPv6 和 IPv4，以便與網際網路服務進行通訊。"
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "啟用鎖定模式後，您必須連線到 Mullvad VPN 伺服器才能存取網路。手動中斷連線或結束應用程式，都將封鎖您的連線。"
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "啟用鎖定模式後，您必須連線到 Warren VPN 伺服器才能存取網路。手動中斷連線或結束應用程式，都將封鎖您的連線。"
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2976,8 +2976,8 @@ msgstr "%s 已新增至您的帳戶。"
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. 按一下下方「前往 VPN 設定」按鈕後，再按一下「Mullvad VPN」名稱旁邊的齒輪。"
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. 按一下下方「前往 VPN 設定」按鈕後，再按一下「Warren VPN」名稱旁邊的齒輪。"
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. 若要啟用自動連線，請按一下「一律啟用 VPN」旁邊的開關。"
@@ -3135,8 +3135,8 @@ msgstr "勾選此方框即代表我同意承擔刪除我的帳戶會帶來的風
 msgid "Can't connect?"
 msgstr "無法連線嗎？"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "變更您 Android 裝置上 Mullvad VPN 應用程式的圖示與標題。這不會變更 Mullvad VPN 相關通知所使用的圖示。"
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "變更您 Android 裝置上 Warren VPN 應用程式的圖示與標題。這不會變更 Warren VPN 相關通知所使用的圖示。"
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "由於快取的結果，對 DNS 相關設定所做的變更可能不會立即生效。"
@@ -3159,8 +3159,8 @@ msgstr "正在連線…"
 msgid "Continue"
 msgstr "繼續"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "已將 Mullvad 帳號複製到剪貼簿"
+msgid "Copied Warren account number to clipboard"
+msgstr "已將 Warren 帳號複製到剪貼簿"
 
 msgid "Copied logs to clipboard"
 msgstr "已將記錄複製到剪貼簿"
@@ -3390,8 +3390,8 @@ msgstr "請確認裝置始終位於 VPN 通道上。"
 msgid "More actions"
 msgstr "更多操作"
 
-msgid "Mullvad services unavailable"
-msgstr "Mullvad 服務無法使用"
+msgid "Warren services unavailable"
+msgstr "Warren 服務無法使用"
 
 msgid "Multihop is disabled"
 msgstr "已停用多點跳躍"
@@ -3591,11 +3591,11 @@ msgstr "「目前」方式表示應用程式正用來存取 API 的方式。"
 msgid "The app is blocking internet, please disconnect first"
 msgstr "此應用程式正在封鎖網際網路，請先中斷連線"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "由於無法連至 Mullvad API，本應用程式無法建立帳戶。"
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "由於無法連至 Warren API，本應用程式無法建立帳戶。"
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "由於無法連至 Mullvad API，本應用程式無法登入。"
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "由於無法連至 Warren API，本應用程式無法登入。"
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "若要使本機 DNS 伺服器運作，需先在 VPN 設定下啟用「本機網路共享」。"
@@ -3603,8 +3603,8 @@ msgstr "若要使本機 DNS 伺服器運作，需先在 VPN 設定下啟用「�
 msgid "The selected %s port is not supported, please change it under"
 msgstr "不支援所選的 %s 連接埠，請至下列位置變更："
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "當您無法連上 Mullvad 時，這些方式可能會派上用場。選擇「自動」時，應用程式會嘗試所有方式，直到其中一種成功為止。"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "當您無法連上 Warren 時，這些方式可能會派上用場。選擇「自動」時，應用程式會嘗試所有方式，直到其中一種成功為止。"
 
 msgid "This address has already been entered."
 msgstr "此地址已輸入過。"
@@ -3630,11 +3630,11 @@ msgstr "若要在清單中新增位置，請按筆的圖示，或是長按國家
 msgid "To create a custom list press the \"+\""
 msgstr "若要建立自訂清單，請按「+」"
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "若要刪除您的 Mullvad VPN 帳戶，請在下方輸入您的帳號。"
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "若要刪除您的 Warren VPN 帳戶，請在下方輸入您的帳號。"
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "為確保您擁有最安全的版本，並告知您目前執行的版本有無任何問題，該應用程式會自動進行版本檢查。為此，應用程式會將其版本和 Android 系統版本傳送至 Mullvad 伺服器，以便讓 Mullvad 統計已使用的應用程式版本和 Android 版本的數量。這些資料永遠不會以任何方式儲存或用來辨識您的身分。"
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "為確保您擁有最安全的版本，並告知您目前執行的版本有無任何問題，該應用程式會自動進行版本檢查。為此，應用程式會將其版本和 Android 系統版本傳送至 Warren 伺服器，以便讓 Warren 統計已使用的應用程式版本和 Android 版本的數量。這些資料永遠不會以任何方式儲存或用來辨識您的身分。"
 
 msgid "Toggle VPN"
 msgstr "切換 VPN"
@@ -3657,11 +3657,11 @@ msgstr "無法存取 API"
 msgid "Unable to reach API, %s"
 msgstr "無法存取 API，%s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "無法啟動通道連線。在使用 Mullvad VPN 之前，請停用「一律啟用 VPN」。"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "無法啟動通道連線。在使用 Warren VPN 之前，請停用「一律啟用 VPN」。"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "無法啟動通道連線。在使用 Mullvad VPN 之前，請先為 <b>%s</b> 停用「始終啟用 VPN」。"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "無法啟動通道連線。在使用 Warren VPN 之前，請先為 <b>%s</b> 停用「始終啟用 VPN」。"
 
 msgid "Unable to verify account number, please contact support"
 msgstr "無法驗證帳號，請聯絡支援團隊"
@@ -3747,8 +3747,8 @@ msgstr "WireGuard 連接埠"
 msgid "Yes, log out device"
 msgstr "是，將裝置登出"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "您即將刪除您的 Mullvad VPN 帳戶。"
+msgid "You are about to delete your Warren VPN account."
+msgstr "您即將刪除您的 Warren VPN 帳戶。"
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "您可以在帳戶畫面或網站中增加時間，以繼續使用 VPN。"

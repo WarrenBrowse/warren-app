@@ -32,7 +32,7 @@ struct NotificationSettingsView<ViewModel>: View where ViewModel: NotificationSe
                     Spacer()
 
                     Text(
-                        "Notifications for Mullvad VPN are disabled on this device. Please change your system settings for Mullvad VPN if you wish to enable them again."
+                        "Notifications for Warren VPN are disabled on this device. Please change your system settings for Warren VPN if you wish to enable them again."
                     )
                     .font(.mullvadSmall)
                     .multilineTextAlignment(.center)

@@ -11,8 +11,8 @@ use tokio::{fs::File, process::Command};
 
 use crate::device::AccountManagerHandle;
 
-/// Mullvad app install path
-const APP_PATH: &str = "/Applications/Mullvad VPN.app";
+/// Warren app install path
+const APP_PATH: &str = "/Applications/Warren VPN.app";
 
 /// Bump filehandle limit
 pub fn bump_filehandle_limit() {

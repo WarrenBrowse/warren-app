@@ -166,7 +166,7 @@ extension IncludeAllNetworksSettingsView {
                 SettingsInfoViewModelPage(
                     body: [
                         NSLocalizedString(
-                            "Because of these iOS limitations, you will lose network connectivity if Mullvad VPN is "
+                            "Because of these iOS limitations, you will lose network connectivity if Warren VPN is "
                                 + "updated when this is enabled and you are connected to the VPN. Network connectivity "
                                 + "can only be restored by rebooting the device.",
                             comment: ""
@@ -181,7 +181,7 @@ extension IncludeAllNetworksSettingsView {
                 SettingsInfoViewModelPage(
                     body: NSLocalizedString(
                         "Currently there is no way to work around this behaviour, but you can avoid losing network "
-                            + "connectivity by disabling this feature or disconnecting before updating Mullvad VPN.",
+                            + "connectivity by disabling this feature or disconnecting before updating Warren VPN.",
                         comment: ""
                     ),
                     image: .ianSolutionIllustration,

@@ -17,6 +17,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
   onboardingCompletedUnix: 'number',
+  warrenFailoverEnabled: 'boolean',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -148,6 +149,16 @@ export default class GuiSettings {
 
   get onboardingCompletedUnix(): number | undefined {
     return this.stateValue.onboardingCompletedUnix;
+  }
+
+  // M5.B.2 multi-exit auto-failover. Default true (= ON) when the
+  // field has never been persisted (undefined in the JSON file).
+  set warrenFailoverEnabled(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, warrenFailoverEnabled: newValue });
+  }
+
+  get warrenFailoverEnabled(): boolean {
+    return this.stateValue.warrenFailoverEnabled ?? true;
   }
 
   public load() {

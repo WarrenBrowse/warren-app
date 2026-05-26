@@ -596,8 +596,8 @@ msgstr "ဤနည်းလမ်းများသည် စွမ်းဆေ�
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Mullvad သို့ ဆက်သွယ်၍ မရစေရန် ပိတ်ဆို့ထားသည့် အခြေအနေများတွင် ဤနည်းလမ်းများက အသုံးဝင်နိုင်ပါသည်။ \"အော်တိုမက်တစ်\" ကို ရွေးချယ်လိုက်သောအခါ အက်ပ်သည် နည်းလမ်းတစ်ခု အလုပ်လုပ်သည်အထိ နည်းလမ်းအားလုံးကို ကြိုးစားလုပ်ဆောင်ပါလိမ့်မည်။"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "Warren သို့ ဆက်သွယ်၍ မရစေရန် ပိတ်ဆို့ထားသည့် အခြေအနေများတွင် ဤနည်းလမ်းများက အသုံးဝင်နိုင်ပါသည်။ \"အော်တိုမက်တစ်\" ကို ရွေးချယ်လိုက်သောအခါ အက်ပ်သည် နည်းလမ်းတစ်ခု အလုပ်လုပ်သည်အထိ နည်းလမ်းအားလုံးကို ကြိုးစားလုပ်ဆောင်ပါလိမ့်မည်။"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -677,8 +677,8 @@ msgid "Local SOCKS5 server"
 msgstr "စက်တွင်း SOCKS5 ဆာဗာ"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "Mullvad API ကို ရယူသုံးစွဲရန် စိတ်ကြိုက် နည်းလမ်းများကို ပေါင်းထည့်၍ စီမံပါ။"
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Warren API ကို ရယူသုံးစွဲရန် စိတ်ကြိုက် နည်းလမ်းများကို ပေါင်းထည့်၍ စီမံပါ။"
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -737,8 +737,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "သင့်စက်တွင်း SOCKS5 ဆာဗာက သင့်၏ အချက်အလက် အပြန်အလှန်ကူးလူးမှုကို ရှေ့ဆက်၍ ပေးပို့လိုက်မည့် အဝေးဆာဗာ၏ အချက်အလက်အသေးစိတ်ကို ဤအက်ပ်က လိုအပ်ပါသည်။"
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "Mullvad API ဆာဗာသို့ သင်ဝင်ရောက်ရန်၊ ဆာဗာစာရင်းများ ရယူရန်နှင့် အလွန်အရေးပါသည့် အခြားလုပ်ဆောင်မှုများအတွက် ဤအက်ပ်သည် ၎င်းနှင့်ဆက်သွယ်ရန် လိုအပ်ပါသည်။"
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "Warren API ဆာဗာသို့ သင်ဝင်ရောက်ရန်၊ ဆာဗာစာရင်းများ ရယူရန်နှင့် အလွန်အရေးပါသည့် အခြားလုပ်ဆောင်မှုများအတွက် ဤအက်ပ်သည် ၎င်းနှင့်ဆက်သွယ်ရန် လိုအပ်ပါသည်။"
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -749,8 +749,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "သင့်စက်တွင်း SOCKS5 ဆာဗာသည် TCP ပေါ့တ် ချိတ်ဆက်ရန် စောင့်ဆိုင်းနေသည်။"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "API ကို စိစစ်ဖြတ်တောက်မှုများ ပြုလုပ်ထားသော်လည်း Mullvad ၏ ပေါင်းကူးဆာဗာများကို မပြုလုပ်ထားပါက ၎င်းသည် အသုံးဝင်နိုင်သည်။"
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "API ကို စိစစ်ဖြတ်တောက်မှုများ ပြုလုပ်ထားသော်လည်း Warren ၏ ပေါင်းကူးဆာဗာများကို မပြုလုပ်ထားပါက ၎င်းသည် အသုံးဝင်နိုင်သည်။"
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -769,16 +769,16 @@ msgid "Transport protocol"
 msgstr "ပို့ဆောင်ရေး ပရိုတိုကောလ်"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "\"တိုက်ရိုက်\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် ကြားခံ ပရောက်စီများ မပါဘဲ Mullvad API ဆာဗာနှင့် တိုက်ရိုက် ဆက်သွယ်ပါသည်။"
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "\"တိုက်ရိုက်\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် ကြားခံ ပရောက်စီများ မပါဘဲ Warren API ဆာဗာနှင့် တိုက်ရိုက် ဆက်သွယ်ပါသည်။"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "ထိုအက်ပ်သည် “ကုဒ်ဝှက်ထားသော DNS ပရောက်စီ” နည်းလမ်းအားဖြင့် ကျွန်ုပ်တို့၏ Mullvad API ထံသို့ ပရောက်စီလိပ်စာမှတစ်ဆင့် ဆက်သွယ်ပေးမည်ဖြစ်သည်။ HTTPS (DoH) ဆာဗာရှိ DNS မှ လိပ်စာတစ်ခုကို ပြန်လည်ရယူခြင်းအားဖြင့် ထိုသို့လုပ်ဆောင်ပြီးနောက် ကျွန်ုပ်တို့၏ API ဆာဗာများသို့ရောက်ရှိရန် ၎င်းကို အသုံးပြုသည်။"
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "ထိုအက်ပ်သည် “ကုဒ်ဝှက်ထားသော DNS ပရောက်စီ” နည်းလမ်းအားဖြင့် ကျွန်ုပ်တို့၏ Warren API ထံသို့ ပရောက်စီလိပ်စာမှတစ်ဆင့် ဆက်သွယ်ပေးမည်ဖြစ်သည်။ HTTPS (DoH) ဆာဗာရှိ DNS မှ လိပ်စာတစ်ခုကို ပြန်လည်ရယူခြင်းအားဖြင့် ထိုသို့လုပ်ဆောင်ပြီးနောက် ကျွန်ုပ်တို့၏ API ဆာဗာများသို့ရောက်ရှိရန် ၎င်းကို အသုံးပြုသည်။"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "\"Mullvad ပေါင်းကူးများ\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် Mullvad API ဆာဗာအား Mullvad ပေါင်းကူး ဆာဗာမှတစ်ဆင့် ဆက်သွယ်ပါသည်။ Shadowsock များဖြင့် ရှုပ်ထွေးအောင် ပြုလုပ်ထားသည့် ဒေတာကူးလူးမှုများကို ပေးပို့ခြင်းဖြင့် ၎င်းက အဆိုပါကိစ္စကို ဆောင်ရွက်ပါသည်။"
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "\"Warren ပေါင်းကူးများ\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် Warren API ဆာဗာအား Warren ပေါင်းကူး ဆာဗာမှတစ်ဆင့် ဆက်သွယ်ပါသည်။ Shadowsock များဖြင့် ရှုပ်ထွေးအောင် ပြုလုပ်ထားသည့် ဒေတာကူးလူးမှုများကို ပေးပို့ခြင်းဖြင့် ၎င်းက အဆိုပါကိစ္စကို ဆောင်ရွက်ပါသည်။"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1302,8 +1302,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "စက်ကို စာရင်းမှ ဖယ်ရှားပြီး စနစ်မှ ထွက်သွားလိမ့်မည်။"
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "ဤအမည်မှာ စက်အတွက် သတ်မှတ်ထားသော အမည် ဖြစ်ပါသည်။ Mullvad အကောင့်တစ်ခုတွင် ဝင်ရောက်ထားသည့် စက်တစ်ခုစီသည် တစ်မူထူးခြားသည့် အမည်တစ်ခု ရရှိမည်ဖြစ်ပြီး အက်ပ် သို့မဟုတ် ဝက်ဘ်ဆိုက်ပေါ်တွင် သင့်စက်များကို စီမံသည့်အခါ သင်အနေဖြင့် ကွဲကွဲပြားပြားသိရှိအောင် ကူညီပေးပါသည်။"
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "ဤအမည်မှာ စက်အတွက် သတ်မှတ်ထားသော အမည် ဖြစ်ပါသည်။ Warren အကောင့်တစ်ခုတွင် ဝင်ရောက်ထားသည့် စက်တစ်ခုစီသည် တစ်မူထူးခြားသည့် အမည်တစ်ခု ရရှိမည်ဖြစ်ပြီး အက်ပ် သို့မဟုတ် ဝက်ဘ်ဆိုက်ပေါ်တွင် သင့်စက်များကို စီမံသည့်အခါ သင်အနေဖြင့် ကွဲကွဲပြားပြားသိရှိအောင် ကူညီပေးပါသည်။"
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1327,8 +1327,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "သင်ဝင်ရောက်ထားသည့် စက်အားလုံးကို ကြည့်ရှုစီမံပါ။ အကောင့်တစ်ခုလျှင် စက် ၅ လုံးအထိ တစ်ပြိုင်နက်ဝင်ထားနိုင်သည်။ ဝင်ရောက်သည့်အခါတိုင်း ခွဲခြားရလွယ်ကူစေရန် စက်တစ်လုံးချင်းကို အမည်ပေးထားသည်။"
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "Mullvad အကောင့်တစ်ခုတွင် စက် 5 ခုအထိ ဝင်ရောက်ထားနိုင်ပါသည်။"
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "Warren အကောင့်တစ်ခုတွင် စက် 5 ခုအထိ ဝင်ရောက်ထားနိုင်ပါသည်။"
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1355,8 +1355,8 @@ msgid "All providers"
 msgstr "ပံ့ပိုးသူအားလုံး"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "Mullvad ပိုင်ဆိုင်သည်များသာ"
+msgid "Warren owned only"
+msgstr "Warren ပိုင်ဆိုင်သည်များသာ"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1579,8 +1579,8 @@ msgstr "စစ်ဆေးမှု မအောင်မြင်ပါ"
 
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "Mullvad စနစ် ဝန်ဆောင်မှုနှင့် ချိတ်ဆက်နေဆဲ..."
+msgid "Connecting to Warren system service..."
+msgstr "Warren စနစ် ဝန်ဆောင်မှုနှင့် ချိတ်ဆက်နေဆဲ..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1604,8 +1604,8 @@ msgstr "ဤအဆင့်များ အလုပ်မဖြစ်ပါက �
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Mullvad VPN ဝန်ဆောင်မှုအတွက် ခွင့်ပြုချက်ကို ရုပ်သိမ်းထားပါသည်။ System Settings သို့ သွားပြီး “Allow in the Background” ဆက်တင်အောက်တွင် Mullvad VPN ကို ခွင့်ပြုပါ။"
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Warren VPN ဝန်ဆောင်မှုအတွက် ခွင့်ပြုချက်ကို ရုပ်သိမ်းထားပါသည်။ System Settings သို့ သွားပြီး “Allow in the Background” ဆက်တင်အောက်တွင် Warren VPN ကို ခွင့်ပြုပါ။"
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1614,13 +1614,13 @@ msgstr "အက်ပ်ကို ပြန်လည် ထည့်သွင်�
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "Mullvad နောက်ခံလုပ်ငန်းစဉ်ကို ပြန်လည်စတင်ခြင်း"
+msgid "Restarting the Warren background process"
+msgstr "Warren နောက်ခံလုပ်ငန်းစဉ်ကို ပြန်လည်စတင်ခြင်း"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "\"နောက်သို့\"၊ ထို့နောက်\"ထပ်ကြိုးစားရန်\"ကို နှိပ်ခြင်းဖြင့် Mullvad နောက်ခံလုပ်ငန်းစဉ်ကို ပြန်လည်စတင်ခြင်း"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "\"နောက်သို့\"၊ ထို့နောက်\"ထပ်ကြိုးစားရန်\"ကို နှိပ်ခြင်းဖြင့် Warren နောက်ခံလုပ်ငန်းစဉ်ကို ပြန်လည်စတင်ခြင်း"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1639,8 +1639,8 @@ msgstr "စက် စတင်နေသည်...."
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Mullvad နောက်ခံလုပ်ငန်းစဉ်ကို စတင်၍ မရပါ။ နောက်ခံလုပ်ငန်းစဉ်က လုံခြုံရေး၊ kill switch နှင့် VPN tunnel ကို စီမံထိန်းချုပ်ပါသည်။ ဤသည်ကို လုပ်ကြည့်ပါ-"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Warren နောက်ခံလုပ်ငန်းစဉ်ကို စတင်၍ မရပါ။ နောက်ခံလုပ်ငန်းစဉ်က လုံခြုံရေး၊ kill switch နှင့် VPN tunnel ကို စီမံထိန်းချုပ်ပါသည်။ ဤသည်ကို လုပ်ကြည့်ပါ-"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1649,8 +1649,8 @@ msgstr "ထပ်ကြိုးစားရန်"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Mullvad စနစ် ဝန်ဆောင်မှုကို ဆက်သွယ်၍ မရနိုင်သဖြင့် သင့်ချိတ်ဆက်မှုသည် လုံခြုံမှု မရှိနိုင်ပါ။ ပြစ်ချက် ရှာဖွေ ဖယ်ရှားကြည့်ပါ သို့မဟုတ် \"နောက်ထပ် လေ့လာရန်\" ခလုတ်ကို နှိပ်ခြင်း၍ ပြဿနာ ရီပို့တ်ကို ပေးပို့ပါ။"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Warren စနစ် ဝန်ဆောင်မှုကို ဆက်သွယ်၍ မရနိုင်သဖြင့် သင့်ချိတ်ဆက်မှုသည် လုံခြုံမှု မရှိနိုင်ပါ။ ပြစ်ချက် ရှာဖွေ ဖယ်ရှားကြည့်ပါ သို့မဟုတ် \"နောက်ထပ် လေ့လာရန်\" ခလုတ်ကို နှိပ်ခြင်း၍ ပြဿနာ ရီပို့တ်ကို ပေးပို့ပါ။"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1963,8 +1963,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "ကွန်ရက် ကူးလူးမှု အားလုံးကို ပိတ်ဆို့၍ မရနိုင်ပါ။ သင့် Kernel ကို အပ်ဒိတ်လုပ်ကြည့်ပါ သို့မဟုတ် ပြဿနာ ရီပို့တ်တစ်ခု ပေးပို့ပါ။"
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "Mullvad Kernel Driver နှင့် ဆက်သွယ်၍ မရနိုင်ပါ။ ပြန်လည်ချိတ်ဆက်ကြည့်ပါ သို့မဟုတ် ပြဿနာ ရီပို့တ်တစ်ခု ပေးပို့ပါ။"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Warren Kernel Driver နှင့် ဆက်သွယ်၍ မရနိုင်ပါ။ ပြန်လည်ချိတ်ဆက်ကြည့်ပါ သို့မဟုတ် ပြဿနာ ရီပို့တ်တစ်ခု ပေးပို့ပါ။"
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2326,8 +2326,8 @@ msgid "Please try again or send a problem report."
 msgstr "ထပ်ကြိုးစားကြည့်ပါ သို့မဟုတ် ပြဿနာ ရီပို့တ်တစ်ခု ပေးပို့ပေးပါ။"
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "Mullvad ဝန်ဆောင်မှုကို ပြန်လည်စတင်ရန်"
+msgid "Restart Warren Service"
+msgstr "Warren ဝန်ဆောင်မှုကို ပြန်လည်စတင်ရန်"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2338,8 +2338,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "%(splitTunneling)s ကို သုံးရန် cgroup v2 ကို သုံးနိုင်စေသည့် Linux Kernel ဗာရှင်းသို့ အပ်ဒိတ်လုပ်ပေးပါ။"
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Split tunneling ကို အသုံးပြုရန်အတွက် macOS  စနစ်ဆက်တင်ထဲရှိ “Mullvad VPN” အတွက်  “Full disk access” ကို ဖွင့်ပေးပါ။"
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "Split tunneling ကို အသုံးပြုရန်အတွက် macOS  စနစ်ဆက်တင်ထဲရှိ “Warren VPN” အတွက်  “Full disk access” ကို ဖွင့်ပေးပါ။"
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2473,8 +2473,8 @@ msgid "Disable split tunneling"
 msgstr "Split Tunneling ကို ပိတ်ရန်"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "macOS စနစ်ဆက်တင်တွင် “Mullvad VPN” အတွက် “Full Disk Access” ကို ဖွင့်ပါ။"
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "macOS စနစ်ဆက်တင်တွင် “Warren VPN” အတွက် “Full Disk Access” ကို ဖွင့်ပါ။"
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2497,8 +2497,8 @@ msgid "Open system settings"
 msgstr "စနစ်ဆက်တင်ကို ဖွင့်ရန်"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "Mullvad အပြင် အခြားတစ်စုံတစ်ခုက DNS ကို ထိထိရောက်ရောက် အပ်ဒိတ်လုပ်နေသည့်အခါ ဤချို့ယွင်းချက် ဖြစ်ပေါ်နိုင်ပါသည်။"
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "Warren အပြင် အခြားတစ်စုံတစ်ခုက DNS ကို ထိထိရောက်ရောက် အပ်ဒိတ်လုပ်နေသည့်အခါ ဤချို့ယွင်းချက် ဖြစ်ပေါ်နိုင်ပါသည်။"
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2620,8 +2620,8 @@ msgid "Anti-censorship"
 msgstr "ဆင်ဆာဖြတ်တောက်မှု ကျော်လွှားရေး"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "သတိပြုရန်- ဤသည်ကို ဖွင့်ခြင်းဖြင့် အင်တာနက် သုံးရန်အတွက် Mullvad VPN ချိတ်ဆက်မှုကို အမြဲ လိုအပ်ပါမည်။"
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "သတိပြုရန်- ဤသည်ကို ဖွင့်ခြင်းဖြင့် အင်တာနက် သုံးရန်အတွက် Warren VPN ချိတ်ဆက်မှုကို အမြဲ လိုအပ်ပါမည်။"
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2731,8 +2731,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "Kill Switch နှင့် လော့ခ်ဒေါင်းစနစ်အကြား ကွာခြားချက်မှာ Kill Switch သည် Tunnel အော်တိုပြန်လည်ချိတ်ဆက်မှုအတွင်း ဖြစ်ပေါ်သည့် ဆော့ဖ်ဝဲ ပျက်ခြင်းများနှင့် အလားတူ ဖြစ်စဥ်များကြောင့် သတင်းပေါက်ကြားမှုများကို တားဆီးကာကွယ်ပေးပါသည်။"
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Kill Switch နှင့် လော့ခ်ဒေါင်းစနစ်အကြား ကွာခြားချက်မှာ Kill Switch သည် Tunnel အော်တိုပြန်လည်ချိတ်ဆက်မှုအတွင်း ဖြစ်ပေါ်သည့် ဆော့ဖ်ဝဲ ပျက်ခြင်းများနှင့် အလားတူ ဖြစ်စဥ်များကြောင့် သတင်းပေါက်ကြားမှုများကို တားဆီးကာကွယ်ပေးပါသည်။ လော့ခ်ဒေါင်းစနစ်ကို ဖွင့်ထားပါက အင်တာနက် ရရှိနိုင်ရန် Mullvad VPN ဆာဗာနှင့် ချိတ်ဆက်ရပါမည်။ ချိတ်ဆက်မှုဖြုတ်ခြင်း သို့မဟုတ် ဤအက်ပ်မှ ထွက်လိုက်ခြင်းဖြင့် သင့်ချိတ်ဆက်မှုကို ပိတ်ဆို့သွားပါမည်။"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Kill Switch နှင့် လော့ခ်ဒေါင်းစနစ်အကြား ကွာခြားချက်မှာ Kill Switch သည် Tunnel အော်တိုပြန်လည်ချိတ်ဆက်မှုအတွင်း ဖြစ်ပေါ်သည့် ဆော့ဖ်ဝဲ ပျက်ခြင်းများနှင့် အလားတူ ဖြစ်စဥ်များကြောင့် သတင်းပေါက်ကြားမှုများကို တားဆီးကာကွယ်ပေးပါသည်။ လော့ခ်ဒေါင်းစနစ်ကို ဖွင့်ထားပါက အင်တာနက် ရရှိနိုင်ရန် Warren VPN ဆာဗာနှင့် ချိတ်ဆက်ရပါမည်။ ချိတ်ဆက်မှုဖြုတ်ခြင်း သို့မဟုတ် ဤအက်ပ်မှ ထွက်လိုက်ခြင်းဖြင့် သင့်ချိတ်ဆက်မှုကို ပိတ်ဆို့သွားပါမည်။"
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2783,8 +2783,8 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "ဤလုပ်ဆောင်ချက်ကို ဖွင့်လိုက်သည့်အခါ အင်တာနက် ဝန်ဆောင်မှုများနှင့် ဆက်သွယ်ရန် IPv6 ကို IPv4 နှင့်အတူ VPN Tunnel တွင် အသုံးပြုနိုင်ပါသည်။"
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "လော့ခ်ဒေါင်းစနစ်ကို ဖွင့်ထားပါက အင်တာနက် ရရှိနိုင်ရန် Mullvad VPN ဆာဗာနှင့် ချိတ်ဆက်ရပါမည်။ ချိတ်ဆက်မှုဖြုတ်ခြင်း သို့မဟုတ် ဤအက်ပ်မှ ထွက်လိုက်ခြင်းဖြင့် သင့်ချိတ်ဆက်မှုကို ပိတ်ဆို့သွားပါမည်။"
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "လော့ခ်ဒေါင်းစနစ်ကို ဖွင့်ထားပါက အင်တာနက် ရရှိနိုင်ရန် Warren VPN ဆာဗာနှင့် ချိတ်ဆက်ရပါမည်။ ချိတ်ဆက်မှုဖြုတ်ခြင်း သို့မဟုတ် ဤအက်ပ်မှ ထွက်လိုက်ခြင်းဖြင့် သင့်ချိတ်ဆက်မှုကို ပိတ်ဆို့သွားပါမည်။"
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2976,8 +2976,8 @@ msgstr "%s ကို သင့်အကောင့်တွင် ထည့်�
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. အောက်ရှိ \"VPN ဆက်တင်များသို့ သွားရန်\" ခလုတ်ကိုနှိပ်ပြီးနောက် \"Mullvad VPN\" အမည်ဘေးရှိ ခွေးသွားစိတ်ပုံကို နှိပ်ပါ။"
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. အောက်ရှိ \"VPN ဆက်တင်များသို့ သွားရန်\" ခလုတ်ကိုနှိပ်ပြီးနောက် \"Warren VPN\" အမည်ဘေးရှိ ခွေးသွားစိတ်ပုံကို နှိပ်ပါ။"
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. အော်တို ချိတ်ဆက်မှုကို ဖွင့်ရန် \"အမြဲဖွင့် VPN\" ဘေးရှိ ဖွင့်/ပိတ် ခလုတ်ကို နှိပ်ပါ။"
@@ -3135,8 +3135,8 @@ msgstr "ဤအကွက်ကို အမှန်ခြစ်ခြင်း�
 msgid "Can't connect?"
 msgstr "ချိတ်မရဘူးလား။"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "Android စက်ရှိ Mullvad VPN အက်ပ်၏ ခေါင်းစဉ်နှင့် အိုင်ကွန်ကို ပြောင်းပါ။ ဤသို့ ပြောင်းခြင်းသည် Mullvad VPN ဆက်စပ်သော အသိပေးချက်မှန်သမျှအတွက် အိုင်ကွန်ကို မပြောင်းစေပါ။"
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "Android စက်ရှိ Warren VPN အက်ပ်၏ ခေါင်းစဉ်နှင့် အိုင်ကွန်ကို ပြောင်းပါ။ ဤသို့ ပြောင်းခြင်းသည် Warren VPN ဆက်စပ်သော အသိပေးချက်မှန်သမျှအတွက် အိုင်ကွန်ကို မပြောင်းစေပါ။"
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "DNS နှင့်ဆက်စပ်သော ဆက်တင်များ၌ ပြုလုပ်သည့် ပြောင်းလဲမှုများသည် ယာယီသိမ်းထားသော ရလဒ်များကြောင့် ချက်ချင်း အကျိုးမသက်ရောက်နိုင်ပါ။"
@@ -3159,8 +3159,8 @@ msgstr "ချိတ်ဆက်နေဆဲ..."
 msgid "Continue"
 msgstr "ဆက်လုပ်မည်"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Mullvad အကောင့်နံပါတ်ကို ကလစ်ဘုတ်တွင် ကူးထားပါသည်"
+msgid "Copied Warren account number to clipboard"
+msgstr "Warren အကောင့်နံပါတ်ကို ကလစ်ဘုတ်တွင် ကူးထားပါသည်"
 
 msgid "Copied logs to clipboard"
 msgstr "ကလစ်ဘုတ်တွင် မှတ်တမ်းများ ကူးယူပြီး"
@@ -3390,8 +3390,8 @@ msgstr "စက်သည် VPN Tunnel ကို အမြဲဖွင့်ထ�
 msgid "More actions"
 msgstr "နောက်ထပ်လုပ်ဆောင်ချက်များ"
 
-msgid "Mullvad services unavailable"
-msgstr "Mullvad ဝန်ဆောင်မှုများကို မရရှိနိုင်ပါ"
+msgid "Warren services unavailable"
+msgstr "Warren ဝန်ဆောင်မှုများကို မရရှိနိုင်ပါ"
 
 msgid "Multihop is disabled"
 msgstr "Multihop ကို ပိတ်ထားသည်"
@@ -3591,11 +3591,11 @@ msgstr "\"လက်ရှိ\" စနစ်သည် API နှင့်ချ�
 msgid "The app is blocking internet, please disconnect first"
 msgstr "အက်ပ်သည် အင်တာနက်ကို ပိတ်ပင်နေသည်၊ ဦးစွာ ချိတ်ဆက်မှုဖြုတ်ပေးပါ"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "Mullvad API သို့ ဆက်သွယ်၍မရနိုင်သောကြောင့် အက်ပ်သည် အကောင့်တစ်ခု ဖန်တီး၍မရပါ။"
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "Warren API သို့ ဆက်သွယ်၍မရနိုင်သောကြောင့် အက်ပ်သည် အကောင့်တစ်ခု ဖန်တီး၍မရပါ။"
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "Mullvad API သို့ ဆက်သွယ်၍ မရသောကြောင့် အက်ပ်သည် ဝင်ရောက်၍ မရခဲ့ပါ။"
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "Warren API သို့ ဆက်သွယ်၍ မရသောကြောင့် အက်ပ်သည် ဝင်ရောက်၍ မရခဲ့ပါ။"
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "လိုကယ် DNS ဆာဗာသည် VPN ဆက်တင်များအောက်ရှိ \"လိုကယ် ကွန်ရက် ဝေမျှမှု\"ကို မဖွင့်မချင်း အလုပ်လုပ်မည် မဟုတ်ပါ။"
@@ -3603,8 +3603,8 @@ msgstr "လိုကယ် DNS ဆာဗာသည် VPN ဆက်တင်မ�
 msgid "The selected %s port is not supported, please change it under"
 msgstr "ရွေးထားသည့် %s ပေါ့တ်ကို ပံ့ပိုးထားခြင်းမရှိပါသဖြင့် ၎င်းကို အောက်တွင် ပြောင်းပေးပါ "
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Mullvad နှင့် ချိတ်ဆက်၍ မရအောင် ပိတ်ပင်ခံရသည့် အခြေအနေများတွင် ဤနည်းလမ်းများက အသုံးဝင်နိုင်ပါသည်။ “အော်တိုမက်တစ်” ကို ရွေးချယ်ထားချိန်တွင် အက်ပ်က အလုပ်ဖြစ်သည့် နည်းလမ်းတစ်ခုခုကို မတွေ့မချင်း နည်းလမ်းအားလုံးကို ကြိုးပမ်းသွားပါမည်။"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "Warren နှင့် ချိတ်ဆက်၍ မရအောင် ပိတ်ပင်ခံရသည့် အခြေအနေများတွင် ဤနည်းလမ်းများက အသုံးဝင်နိုင်ပါသည်။ “အော်တိုမက်တစ်” ကို ရွေးချယ်ထားချိန်တွင် အက်ပ်က အလုပ်ဖြစ်သည့် နည်းလမ်းတစ်ခုခုကို မတွေ့မချင်း နည်းလမ်းအားလုံးကို ကြိုးပမ်းသွားပါမည်။"
 
 msgid "This address has already been entered."
 msgstr "ဤလိပ်စာကို ရိုက်ထည့်ထားပြီး ဖြစ်ပါသည်။"
@@ -3630,11 +3630,11 @@ msgstr "တည်နေရာများကို စာရင်းတစ်�
 msgid "To create a custom list press the \"+\""
 msgstr "စိတ်ကြိုက်စာရင်းတစ်ခု ဖန်တီးရန် \"+\" ကိုနှိပ်ပါ"
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "သင်၏ Mullvad VPN အကောင့်ကို ဖျက်ရန် သင့်အကောင့်နံပါတ်ကို အောက်တွင် ထည့်ပါ။"
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "သင်၏ Warren VPN အကောင့်ကို ဖျက်ရန် သင့်အကောင့်နံပါတ်ကို အောက်တွင် ထည့်ပါ။"
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "အလုံခြုံဆုံး ဗားရှင်းကို ရရှိကြောင်း သေချာစေရန်နှင့် လုပ်ဆောင်နေသည့် လက်ရှိဗားရှင်းနှင့်ပတ်သက်သော ပြဿနာများအကြောင်း သင့်အား အသိပေးရန် အက်ပ်သည် ဗားရှင်း စစ်ဆေးမှုများကို အော်တိုလုပ်ဆောင်ပါသည်။ ၎င်းသည် Mullvad ဆာဗာများသို့ အက်ပ် ဗားရှင်းနှင့် Android စနစ်ဗားရှင်းတို့ကို ပေးပို့ပါသည်။ အသုံးပြုထားသည့် အက်ပ် ဗားရှင်းများနှင့် Android ဗားရှင်းများ၏ အရေအတွက်ကို Mullvad က ရေတွက်ထားပါသည်။ ဒေတာကို မည်သည့်အခါမျှ မသိမ်းဆည်းထားပါ သို့မဟုတ် သင့်အား ခွဲခြားဖော်ထုတ်နိုင်သော မည်သည့်နည်းလမ်းတွင်မျှ အသုံးမပြုထားပါ။"
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "အလုံခြုံဆုံး ဗားရှင်းကို ရရှိကြောင်း သေချာစေရန်နှင့် လုပ်ဆောင်နေသည့် လက်ရှိဗားရှင်းနှင့်ပတ်သက်သော ပြဿနာများအကြောင်း သင့်အား အသိပေးရန် အက်ပ်သည် ဗားရှင်း စစ်ဆေးမှုများကို အော်တိုလုပ်ဆောင်ပါသည်။ ၎င်းသည် Warren ဆာဗာများသို့ အက်ပ် ဗားရှင်းနှင့် Android စနစ်ဗားရှင်းတို့ကို ပေးပို့ပါသည်။ အသုံးပြုထားသည့် အက်ပ် ဗားရှင်းများနှင့် Android ဗားရှင်းများ၏ အရေအတွက်ကို Warren က ရေတွက်ထားပါသည်။ ဒေတာကို မည်သည့်အခါမျှ မသိမ်းဆည်းထားပါ သို့မဟုတ် သင့်အား ခွဲခြားဖော်ထုတ်နိုင်သော မည်သည့်နည်းလမ်းတွင်မျှ အသုံးမပြုထားပါ။"
 
 msgid "Toggle VPN"
 msgstr "VPN ရွေးသုံးရန်"
@@ -3657,11 +3657,11 @@ msgstr "API ကို ချိတ်ဆက်၍ မရပါ"
 msgid "Unable to reach API, %s"
 msgstr "API %s ကို ချိတ်ဆက်၍ မရပါ"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Mullvad VPN ကို မသုံးမီ အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Warren VPN ကို မသုံးမီ အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Mullvad VPN ကို မသုံးမီ <b>%s</b> အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Warren VPN ကို မသုံးမီ <b>%s</b> အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။"
 
 msgid "Unable to verify account number, please contact support"
 msgstr "အကောင့်နံပါတ်ကို အတည်ပြု၍မရပါ၊ ပံ့ပိုးကူညီမှုအဖွဲ့ကို ဆက်သွယ်ပါ"
@@ -3747,8 +3747,8 @@ msgstr "WireGuard ပေါ့တ်"
 msgid "Yes, log out device"
 msgstr "စက်မှ ထွက်မည်"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "သင်သည် သင်၏ Mullvad VPN အကောင့်ကို ဖျက်တော့မည်။"
+msgid "You are about to delete your Warren VPN account."
+msgstr "သင်သည် သင်၏ Warren VPN အကောင့်ကို ဖျက်တော့မည်။"
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "VPN ကို ဆက်လက်အသုံးပြုရန် အကောင့် ပြသမှု သို့မဟုတ် ဝက်ဘ်ဆိုက်မှတစ်ဆင့် အချိန်ထပ်တိုးနိုင်ပါသည်။"

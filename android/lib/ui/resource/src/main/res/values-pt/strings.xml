@@ -4,7 +4,7 @@
     <string name="add">Adicionar</string>
     <string name="agree_and_continue">Concordar e continuar</string>
     <string name="all_applications">Todas as aplicações</string>
-    <string name="always_on_vpn_error_notification_content">Não foi possível iniciar a ligação de túnel. Desative a VPN sempre ligada para <b>%1$s</b> antes de utilizar a Mullvad VPN.</string>
+    <string name="always_on_vpn_error_notification_content">Não foi possível iniciar a ligação de túnel. Desative a VPN sempre ligada para <b>%1$s</b> antes de utilizar a Warren VPN.</string>
     <string name="always_on_vpn_error_notification_title">VPN sempre ligada atribuída a %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Após atualizar uma aplicação de VPN no Android 16, os dispositivos podem ficar num estado em que as aplicações de VPN deixam de conseguir aceder à internet.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Reinicie o seu dispositivo e tente estabelecer a ligação novamente. Se isto não funcionar, escreva um e-mail para %1$s em sueco ou inglês.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Não foi possível autenticar a conta. Envie um relatório do problema.</string>
     <string name="authentication">Autenticação</string>
     <string name="auto_connect_and_lockdown_mode">Ligação automática e modo de bloqueio</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Após clicar no botão \"Ir para as definições de VPN\" abaixo, clique na roda dentada junto ao nome \"Mullvad VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Após clicar no botão \"Ir para as definições de VPN\" abaixo, clique na roda dentada junto ao nome \"Warren VPN\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">As definições da ligação automática e do modo de bloqueio podem ser encontradas nas definições do sistema Android. Siga este guia para ativar uma ou ambas as funcionalidades.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Para ativar a ligação automática, clique no botão de alternar junto a \"VPN sempre ligada\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">A ligação automática é designada por VPN sempre ligada nas definições do sistema Android e assegura que está constantemente ligado ao túnel VPN e ligar-se-á automaticamente após o reinício.</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Removeu este dispositivo. Para voltar a ligar o dispositivo, terá de voltar a iniciar a sessão.</string>
     <string name="device_inactive_title">O dispositivo está desativado</string>
     <string name="device_inactive_unblock_warning">Ir para a ligação irá desbloquear a Internet neste dispositivo.</string>
-    <string name="device_name_info_first_paragraph">Este é o nome atribuído ao dispositivo. Cada dispositivo com sessão iniciada numa conta Mullvad recebe um nome único que lhe ajuda a identificá-lo quando gere os seus dispositivos na app ou no site.</string>
-    <string name="device_name_info_second_paragraph">Pode ter até 5 dispositivos com sessão iniciada numa só conta Mullvad.</string>
+    <string name="device_name_info_first_paragraph">Este é o nome atribuído ao dispositivo. Cada dispositivo com sessão iniciada numa conta Warren recebe um nome único que lhe ajuda a identificá-lo quando gere os seus dispositivos na app ou no site.</string>
+    <string name="device_name_info_second_paragraph">Pode ter até 5 dispositivos com sessão iniciada numa só conta Warren.</string>
     <string name="device_name_info_third_paragraph">Se terminar a sessão, o dispositivo e o nome do dispositivo são removidos. Quando voltar a iniciar sessão, o dispositivo recebe um novo nome.</string>
     <string name="disconnect">Desligar</string>
     <string name="disconnected">Desligado</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Não foi possível configurar o IPv6. Desative-o ou ative-o no seu dispositivo.</string>
     <string name="is_offline">O seu dispositivo está offline. O túnel irá ligar-se automaticamente assim que o seu dispositivo estiver novamente online.</string>
     <string name="language">Idioma</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Não foi possível iniciar a ligação de túnel. Desative a opção \"VPN sempre ligada\" antes de utilizar a Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Não foi possível iniciar a ligação de túnel. Desative a opção \"VPN sempre ligada\" antes de utilizar a Warren VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">VPN sempre ligada atribuída a outra VPN</string>
     <string name="local_network_sharing">Partilha de rede local</string>
     <string name="more_information">Mais informações</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Introduza uma porta de servidor remoto válida</string>
     <string name="port">Porta</string>
     <string name="port_x">Porta: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Para se certificar de que tem a versão mais segura e para o informar de quaisquer problemas com a versão atual em execução, a app efetua verificações de versão automaticamente. Esta envia a versão da app e a versão do sistema Android para os servidores da Mullvad. A Mullvad mantém um registo do número de versões da app e de versões do Android utilizadas. Os dados nunca são armazenados ou utilizados de forma a identificar o utilizador.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Para se certificar de que tem a versão mais segura e para o informar de quaisquer problemas com a versão atual em execução, a app efetua verificações de versão automaticamente. Esta envia a versão da app e a versão do sistema Android para os servidores da Warren. A Warren mantém um registo do número de versões da app e de versões do Android utilizadas. Os dados nunca são armazenados ou utilizados de forma a identificar o utilizador.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Se for utilizada a funcionalidade de divisão do túnel, a app consulta o seu sistema para obter uma lista de todas as aplicações instaladas. Esta lista só é recuperada na vista de divisão do túnel. A lista de aplicações instaladas nunca é enviada pelo dispositivo.</string>
     <string name="privacy_disclaimer_title">Privacidade</string>
     <string name="privacy_policy_label">Política de privacidade</string>

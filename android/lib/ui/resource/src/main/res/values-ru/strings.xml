@@ -4,7 +4,7 @@
     <string name="add">Добавить</string>
     <string name="agree_and_continue">Согласиться и продолжить</string>
     <string name="all_applications">Все приложения</string>
-    <string name="always_on_vpn_error_notification_content">Не удалось запустить туннельное подключение. Перед использованием Mullvad VPN отключите опцию «Постоянная VPN» для приложения <b>%1$s</b>.</string>
+    <string name="always_on_vpn_error_notification_content">Не удалось запустить туннельное подключение. Перед использованием Warren VPN отключите опцию «Постоянная VPN» для приложения <b>%1$s</b>.</string>
     <string name="always_on_vpn_error_notification_title">Опция «Постоянная VPN» назначена приложению «%1$s»</string>
     <string name="android_16_upgrade_warning_dialog_first_message">После обновления VPN-приложения на Android 16 VPN-приложения иногда теряют доступ к Интернету.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Перезагрузите устройство и снова попробуйте подключиться. Если это не поможет, отправьте письмо на %1$s на английском или шведском.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Не удается произвести аутентификацию учетной записи. Отправьте сообщение о проблеме.</string>
     <string name="authentication">Аутентификация</string>
     <string name="auto_connect_and_lockdown_mode">Автоподключение и режим блокировки</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. После нажатия кнопки «Перейти к настройкам VPN» ниже нажмите на шестеренку рядом с пунктом Mullvad VPN.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. После нажатия кнопки «Перейти к настройкам VPN» ниже нажмите на шестеренку рядом с пунктом Warren VPN.</string>
     <string name="auto_connect_carousel_first_slide_top_text">Настройки автоподключения и режима блокировки можно найти в системных настройках Android. Чтобы включить их, следуйте этой инструкции.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Чтобы включить автоподключение, нажмите на переключатель возле пункта «Постоянная VPN».</string>
     <string name="auto_connect_carousel_second_slide_top_text">В системных настройках Android автоподключение называется «Постоянная VPN». Эта опция обеспечивает постоянное подключение к туннелю VPN и автоподключение после перезапуска.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Сведения о подключении</string>
     <string name="connected">Подключено</string>
     <string name="connecting">Идет подключение...</string>
-    <string name="connecting_to_daemon">Подключение к системному сервису Mullvad...</string>
+    <string name="connecting_to_daemon">Подключение к системному сервису Warren...</string>
     <string name="connection_details_in">Вход</string>
     <string name="connection_details_out">Выход</string>
     <string name="cont">Продолжить</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Вы удалили это устройство. Чтобы снова подключиться, нужно будет выполнить вход.</string>
     <string name="device_inactive_title">Устройство неактивно</string>
     <string name="device_inactive_unblock_warning">Вход в профиль разблокирует Интернет на этом устройстве.</string>
-    <string name="device_name_info_first_paragraph">Это имя, присвоенное устройству. Каждое устройство, подключенное к учетной записи Mullvad, получает уникальное имя, которое помогает вам идентифицировать его при управлении устройствами в приложении или на сайте.</string>
-    <string name="device_name_info_second_paragraph">К одной учетной записи Mullvad можно подключить до 5 устройств.</string>
+    <string name="device_name_info_first_paragraph">Это имя, присвоенное устройству. Каждое устройство, подключенное к учетной записи Warren, получает уникальное имя, которое помогает вам идентифицировать его при управлении устройствами в приложении или на сайте.</string>
+    <string name="device_name_info_second_paragraph">К одной учетной записи Warren можно подключить до 5 устройств.</string>
     <string name="device_name_info_third_paragraph">Если вы выйдете, устройство и его имя удалятся. При повторном входе устройство получит новое имя.</string>
     <string name="disconnect">Отключить</string>
     <string name="disconnected">Разъединено</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Не удается сконфигурировать IPv6. Отключите этот протокол в приложении или включите на устройстве.</string>
     <string name="is_offline">Устройство отключено от Интернета. Туннельное подключение автоматически запустится, как только ваше устройство подключится к Интернету.</string>
     <string name="language">Язык</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Не удалось запустить туннельное соединение. Перед использованием Mullvad VPN отключите опцию «Постоянная VPN».</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Не удалось запустить туннельное соединение. Перед использованием Warren VPN отключите опцию «Постоянная VPN».</string>
     <string name="legacy_always_on_vpn_error_notification_title">Опция «Постоянная VPN» назначена другой VPN</string>
     <string name="local_network_sharing">Обмен данными в локальной сети</string>
     <string name="more_information">Подробнее</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Введите действительный порт удаленного сервера</string>
     <string name="port">Порт</string>
     <string name="port_x">Порт: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Чтобы удостовериться, что вы используете наиболее безопасную версию приложения, и сообщить вам о возможных проблемах в ней, приложение автоматически проверяет свою версию. При этом на серверы Mullvad передаются данные о версии приложения и системы Android. Mullvad ведет учет количества пользователей с определенными версиями приложения и ОС Android. Эти данные не хранятся и не используются каким бы то ни было образом, позволяющим вас идентифицировать.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Чтобы удостовериться, что вы используете наиболее безопасную версию приложения, и сообщить вам о возможных проблемах в ней, приложение автоматически проверяет свою версию. При этом на серверы Warren передаются данные о версии приложения и системы Android. Warren ведет учет количества пользователей с определенными версиями приложения и ОС Android. Эти данные не хранятся и не используются каким бы то ни было образом, позволяющим вас идентифицировать.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Если используется функция раздельного туннелирования, то приложение запрашивает в системе список всех установленных приложений. Этот список запрашивается только на  экране настройки раздельного туннелирования. Список установленных приложений никогда не передается за пределы устройства.</string>
     <string name="privacy_disclaimer_title">Конфиденциальность</string>
     <string name="privacy_policy_label">Политика конфиденциальности</string>

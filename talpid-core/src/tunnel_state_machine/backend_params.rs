@@ -11,8 +11,38 @@
 use std::net::SocketAddr;
 
 use talpid_types::net::wireguard::TunnelParameters as WireguardTunnelParameters;
+
 use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
 use talpid_warren_tunnel::WarrenTunnelParameters;
+
+/// Lightweight snapshot of Warren tunnel endpoint data needed by the
+/// state machine (firewall rules, GUI transitions, relay display).
+///
+/// Intentionally does NOT carry `SigningKey` or other secret material:
+/// `WarrenTunnelParameters` is moved into the tunnel thread; this
+/// clone-safe summary is what `BackendParams::Warren` stores.
+#[derive(Debug, Clone)]
+pub(crate) struct WarrenBackendInfo {
+    pub exit_candidates: Vec<SocketAddr>,
+    pub relay_endpoint: Option<SocketAddr>,
+    pub exit_endpoint: Option<SocketAddr>,
+    pub enable_daita: bool,
+}
+
+impl WarrenBackendInfo {
+    pub fn from_params(p: &WarrenTunnelParameters) -> Self {
+        let (relay_endpoint, exit_endpoint) = match &p.multi_hop {
+            Some(mh) => (Some(mh.relay.endpoint), Some(mh.exit.endpoint)),
+            None => (None, None),
+        };
+        Self {
+            exit_candidates: p.exit_addr.ip_addrs().collect(),
+            relay_endpoint,
+            exit_endpoint,
+            enable_daita: p.enable_daita,
+        }
+    }
+}
 
 /// Typed tunnel parameters, agnostic of the underlying backend.
 ///
@@ -23,7 +53,7 @@ use talpid_warren_tunnel::WarrenTunnelParameters;
 #[derive(Debug, Clone)]
 pub(crate) enum BackendParams {
     Wireguard(WireguardTunnelParameters),
-    Warren(WarrenTunnelParameters),
+    Warren(WarrenBackendInfo),
 }
 
 impl BackendParams {
@@ -50,15 +80,15 @@ impl BackendParams {
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
         match self {
             Self::Wireguard(p) => p.get_next_hop_endpoints(),
-            Self::Warren(p) => match &p.multi_hop {
-                Some(mh) => vec![Endpoint::from_socket_address(
-                    mh.relay.endpoint,
+            Self::Warren(info) => match info.relay_endpoint {
+                Some(relay) => vec![Endpoint::from_socket_address(
+                    relay,
                     TransportProtocol::Udp,
                 )],
-                None => p
-                    .exit_addr
-                    .ip_addrs()
-                    .map(|addr| Endpoint::from_socket_address(addr, TransportProtocol::Udp))
+                None => info
+                    .exit_candidates
+                    .iter()
+                    .map(|&addr| Endpoint::from_socket_address(addr, TransportProtocol::Udp))
                     .collect(),
             },
         }
@@ -87,22 +117,21 @@ impl BackendParams {
 ///   client actually dials). Mirrors the Wireguard multi-hop convention
 ///   so the GUI displays the entry/exit pair consistently across
 ///   backends.
-fn warren_tunnel_endpoint(params: &WarrenTunnelParameters) -> TunnelEndpoint {
+fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
     use std::net::{IpAddr, Ipv4Addr};
 
-    let (endpoint_addr, entry_endpoint) = match &params.multi_hop {
-        Some(mh) => (
-            mh.exit.endpoint,
+    let (endpoint_addr, entry_endpoint) = match (info.exit_endpoint, info.relay_endpoint) {
+        (Some(exit_ep), Some(relay_ep)) => (
+            exit_ep,
             Some(Endpoint::from_socket_address(
-                mh.relay.endpoint,
+                relay_ep,
                 TransportProtocol::Udp,
             )),
         ),
-        None => (
-            params
-                .exit_addr
-                .ip_addrs()
-                .next()
+        _ => (
+            info.exit_candidates
+                .first()
+                .copied()
                 .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0)),
             None,
         ),
@@ -114,7 +143,8 @@ fn warren_tunnel_endpoint(params: &WarrenTunnelParameters) -> TunnelEndpoint {
         obfuscation: None,
         entry_endpoint,
         tunnel_interface: None,
-        daita: false,
+        daita: info.enable_daita,
+        tunnel_type: talpid_types::net::TunnelType::Warren,
     }
 }
 
@@ -127,35 +157,15 @@ mod tests {
 
     use std::net::SocketAddr;
 
-    use ed25519_dalek::SigningKey;
     use talpid_types::net::TransportProtocol;
-    use talpid_warren_tunnel::{
-        ExitId, MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor, RelayExitId,
-        WarrenTunnelParameters,
-    };
-    use warren_protocol::{WarrenExitAddr, WarrenPubkey};
 
-    use super::BackendParams;
+    use super::{BackendParams, WarrenBackendInfo};
 
-    fn fixture_warren(addrs: &[&str]) -> WarrenTunnelParameters {
-        let exit_id = WarrenPubkey::from_bytes([7u8; 32]);
-        let mut addr = WarrenExitAddr::new(exit_id);
-        for s in addrs {
-            addr = addr.with_ip_addr(s.parse::<SocketAddr>().unwrap());
-        }
-        WarrenTunnelParameters {
-            exit_addr: addr,
-            exit_id: RelayExitId::from_bytes([7u8; 16]),
-            country_code: String::new(),
-            city: String::new(),
-            signing_key: SigningKey::from_bytes(&[9u8; 32]),
-            n_connections: 1,
-            features: 0,
-            multi_hop: None,
-            on_reconnect: None,
-            nat_pmp: None,
-            nat_pmp_observer: None,
-            bypass_cidrs: Vec::new(),
+    fn fixture_warren(addrs: &[&str]) -> WarrenBackendInfo {
+        WarrenBackendInfo {
+            exit_candidates: addrs.iter().map(|s| s.parse().unwrap()).collect(),
+            relay_endpoint: None,
+            exit_endpoint: None,
             enable_daita: false,
         }
     }
@@ -163,28 +173,11 @@ mod tests {
     fn fixture_warren_multi_hop(
         relay_endpoint: &str,
         exit_endpoint: &str,
-    ) -> WarrenTunnelParameters {
-        let mut p = fixture_warren(&["203.0.113.99:443"]);
-        p.multi_hop = Some(MultiHopConfig {
-            relay: MultiHopRelayDescriptor {
-                relay_id: [0xa1; 16],
-                relay_ed25519_pubkey: [0xa2; 32],
-                endpoint: relay_endpoint.parse().unwrap(),
-                signature: [0xa3; 64],
-            },
-            exit: MultiHopExitDescriptor {
-                exit_id: ExitId::from_bytes([0xb1; 16]),
-                exit_ed25519_pubkey: [0xb2; 32],
-                exit_x25519_multihop_pubkey: [0xb3; 32],
-                endpoint: exit_endpoint.parse().unwrap(),
-                signature: [0xb4; 64],
-                dns_disabled: false,
-            },
-            operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
-            enable_gso: true,
-            use_warren_obfuscation: true,
-        });
-        p
+    ) -> WarrenBackendInfo {
+        let mut info = fixture_warren(&["203.0.113.99:443"]);
+        info.relay_endpoint = Some(relay_endpoint.parse().unwrap());
+        info.exit_endpoint = Some(exit_endpoint.parse().unwrap());
+        info
     }
 
     #[test]

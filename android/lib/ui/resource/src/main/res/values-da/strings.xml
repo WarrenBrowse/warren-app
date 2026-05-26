@@ -16,7 +16,7 @@
     <string name="auth_failed">Kan ikke godkende konto. Indsend en problemrapport.</string>
     <string name="authentication">Godkendelse</string>
     <string name="auto_connect_and_lockdown_mode">Auto-tilslutning og Lockdown-tilstand</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Når du har klikket på knappen \"Gå til VPN-indstillinger \"nedenfor, skal du klikke på tandhjulet ved siden af navnet \"Mullvad VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Når du har klikket på knappen \"Gå til VPN-indstillinger \"nedenfor, skal du klikke på tandhjulet ved siden af navnet \"Warren VPN\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">Indstillingerne for automatisk forbindelse og Lockdown-tilstand kan findes i Android- systemindstillingerne. Følg denne vejledning for at aktivere en eller begge.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. For at aktivere automatisk forbindelse skal du klikke på knappen ved siden af \"Altid-til VPN\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Auto-tilslutning kaldes Altid-til VPN i Android-systemindstillingerne, og det sørger for, at du konstant er forbundet til VPN-tunnelen og automatisk forbinder efter genstart.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Forbindelsesoplysninger</string>
     <string name="connected">Tilsluttet</string>
     <string name="connecting">Tilslutter...</string>
-    <string name="connecting_to_daemon">Opretter forbindelse til Mullvad-systemtjeneste...</string>
+    <string name="connecting_to_daemon">Opretter forbindelse til Warren-systemtjeneste...</string>
     <string name="connection_details_in">Ind</string>
     <string name="connection_details_out">Ud</string>
     <string name="cont">Fortsæt</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Du har fjernet denne enhed. For at oprette forbindelse igen skal du logge ind igen.</string>
     <string name="device_inactive_title">Enheden er inaktiv</string>
     <string name="device_inactive_unblock_warning">Hvis du logger på, ophæves blokeringen af internettet på denne enhed.</string>
-    <string name="device_name_info_first_paragraph">Dette er det navn, der er tildelt enheden. Hver enhed, der er logget på en Mullvad-konto, får et unikt navn, der hjælper dig med at identificere den, når du administrerer dine enheder i appen eller på webstedet.</string>
-    <string name="device_name_info_second_paragraph">Du kan have op til 5 enheder logget ind på én Mullvad-konto.</string>
+    <string name="device_name_info_first_paragraph">Dette er det navn, der er tildelt enheden. Hver enhed, der er logget på en Warren-konto, får et unikt navn, der hjælper dig med at identificere den, når du administrerer dine enheder i appen eller på webstedet.</string>
+    <string name="device_name_info_second_paragraph">Du kan have op til 5 enheder logget ind på én Warren-konto.</string>
     <string name="device_name_info_third_paragraph">Hvis du logger ud, fjernes enheden og enhedsnavnet. Når du logger på igen, får enheden et nyt navn.</string>
     <string name="disconnect">Afbryd forbindelse</string>
     <string name="disconnected">Afbrudt</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Kunne ikke konfigurere IPv6. Deaktiver det i appen, eller aktiver det på din enhed.</string>
     <string name="is_offline">Din enhed er offline. Tunnelen vil oprette forbindelse automatisk, når din enhed er online igen.</string>
     <string name="language">Sprog</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Kunne ikke starte tunnelforbindelse. Deaktiver Altid-til VPN før brug af Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Kunne ikke starte tunnelforbindelse. Deaktiver Altid-til VPN før brug af Warren VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Altid-til VPN tildelt en anden VPN</string>
     <string name="local_network_sharing">Lokal netværksdeling</string>
     <string name="more_information">Mere information</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Indtast en gyldig fjernserverport</string>
     <string name="port">Port</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">For at sørge for, at du har den mest sikre version og for at informere dig om eventuelle problemer med den aktuelle version, der kører, udfører appen automatisk versionstjek. Dette sender app-versionen og Android-systemversionen til Mullvad-servere. Mullvad holder tal på antallet af brugte app-versioner og Android-versioner. Dataene bliver aldrig opbevaret eller brugt på nogen måde, der kan identificere dig.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">For at sørge for, at du har den mest sikre version og for at informere dig om eventuelle problemer med den aktuelle version, der kører, udfører appen automatisk versionstjek. Dette sender app-versionen og Android-systemversionen til Warren-servere. Warren holder tal på antallet af brugte app-versioner og Android-versioner. Dataene bliver aldrig opbevaret eller brugt på nogen måde, der kan identificere dig.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Hvis funktionen split tunneling bruges, beder appen dit system om en liste over alle installerede programmer. Denne liste hentes kun i split tunnel-visningen. Listen over installerede programmer sendes aldrig fra enheden.</string>
     <string name="privacy_disclaimer_title">Privatliv</string>
     <string name="privacy_policy_label">Fortrolighedspolitik</string>

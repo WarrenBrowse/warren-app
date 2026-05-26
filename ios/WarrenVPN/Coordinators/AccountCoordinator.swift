@@ -243,7 +243,7 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
             """
             You can use the "restore purchases" function to check for any in-app payments \
             made via Apple services. If there is a payment that has not been credited, it will \
-            add the time to the currently logged in Mullvad account.
+            add the time to the currently logged in Warren account.
             """,
             comment: ""
         )

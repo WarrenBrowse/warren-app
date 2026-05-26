@@ -4,7 +4,7 @@
     <string name="critical_error">Critical error (your attention is required)</string>
     <string name="foreground_notification_channel_name">VPN tunnel status</string>
     <string name="foreground_notification_channel_description">Shows current VPN tunnel status</string>
-    <string name="connecting_to_daemon">Connecting to Mullvad system service...</string>
+    <string name="connecting_to_daemon">Connecting to Warren system service...</string>
     <string name="error_occurred">An error occurred.</string>
     <string name="settings">Settings</string>
     <string name="settings_account">Account</string>
@@ -16,14 +16,14 @@
     <string name="apply">Apply</string>
     <string name="providers">Providers</string>
     <string name="any">Any</string>
-    <string name="device_name_info_first_paragraph">This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website.</string>
-    <string name="device_name_info_second_paragraph">You can have up to 5 devices logged in on one Mullvad account.</string>
+    <string name="device_name_info_first_paragraph">This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website.</string>
+    <string name="device_name_info_second_paragraph">You can have up to 5 devices logged in on one Warren account.</string>
     <string name="device_name_info_third_paragraph">If you log out, the device and the device name is removed. When you log back in again, the device will get a new name.</string>
     <string name="local_network_sharing">Local network sharing</string>
     <string name="auto_connect_and_lockdown_mode">Auto-connect &amp; Lockdown mode</string>
     <string name="go_to_vpn_settings">Go to VPN settings</string>
     <string name="auto_connect_carousel_first_slide_top_text">The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about</string>
@@ -93,10 +93,10 @@
     <string name="device_inactive_unblock_warning">Going to login will unblock the internet on this device.</string>
     <string name="always_on_vpn_error_notification_title">Always-on VPN assigned to %s</string>
     <string name="always_on_vpn_error_notification_content">
-        <![CDATA[Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN.]]>
+        <![CDATA[Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN.]]>
     </string>
     <string name="legacy_always_on_vpn_error_notification_title">Always-on VPN assigned to other VPN</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN.</string>
     <string name="vpn_permission_error_notification_title">VPN permission error</string>
     <string name="vpn_permission_error_notification_message">Please press connect to request VPN permission</string>
 
@@ -104,7 +104,7 @@
     <string name="new_changelog_notification_message">Click here to see what’s new.</string>
     <string name="agree_and_continue">Agree and continue</string>
     <string name="privacy_disclaimer_title">Privacy</string>
-    <string name="privacy_disclaimer_body_first_paragraph">To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you.</string>
     <string name="privacy_disclaimer_body_second_paragraph">If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device.</string>
     <string name="submit_button">Submit</string>
     <string name="remove_button">Remove</string>

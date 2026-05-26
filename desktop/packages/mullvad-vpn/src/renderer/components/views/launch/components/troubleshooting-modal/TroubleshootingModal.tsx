@@ -49,7 +49,7 @@ export function TroubleshootingModal({ isOpen, onClose }: TroubleshootingModalPr
           // TRANSLATORS: Message in troubleshooting modal when the background process failed to start.
           messages.pgettext(
             'launch-view',
-            'The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:',
+            'The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:',
           )
         }
       </ModalMessage>

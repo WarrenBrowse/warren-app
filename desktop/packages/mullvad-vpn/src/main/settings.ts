@@ -50,6 +50,13 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetNatPmpSettings((settings) =>
       this.daemonRpc.setNatPmpSettings(settings),
     );
+    // IPC handler for the Warren failover toggle (M5.B.2). GUI-only:
+    // persisted in gui_settings.json (no gRPC proto field). The daemon
+    // implements failover unconditionally; this flag governs the UI
+    // (notification toast visibility + settings panel toggle state).
+    IpcMainEventChannel.settings.handleSetWarrenFailover((settings) => {
+      this.guiSettings.warrenFailoverEnabled = settings.enabled;
+    });
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
       this.daemonRpc.setShowBetaReleases(showBetaReleases),
     );
@@ -231,10 +238,12 @@ export default class Settings implements Readonly<ISettings> {
   public get warrenNatPmp() {
     return this.settingsValue.warrenNatPmp;
   }
-  // Multi-exit auto-failover toggle (M5.B.2). Persistent at the
-  // daemon level; the renderer also caches it for the UI status pill.
+  // Multi-exit auto-failover toggle (M5.B.2). GUI-only (no proto
+  // field): the daemon implements failover unconditionally; this flag
+  // governs the UI toast + settings panel state. Reads from
+  // gui_settings.json rather than from the daemon Settings proto.
   public get warrenFailover() {
-    return this.settingsValue.warrenFailover;
+    return { enabled: this.guiSettings.warrenFailoverEnabled };
   }
 
   public get gui() {

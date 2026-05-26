@@ -414,7 +414,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: - Private
 
     private func configureLogging() {
-        let header = "MullvadVPN version \(Bundle.main.productVersion)"
+        let header = "WarrenVPN version \(Bundle.main.productVersion)"
         let loggerBuilder = LoggerBuilder.shared
 
         loggerBuilder.addFileOutput(

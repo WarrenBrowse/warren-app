@@ -883,7 +883,13 @@ class ApplicationMain
       this.version.setLatestVersion(this.version.upgradeVersion);
     }
 
-    IpcMainEventChannel.settings.notify?.(newSettings);
+    // Override warrenFailover from the GUI-persisted toggle (no proto
+    // field exists yet, so convertFromSettings defaults to ON).
+    const mergedSettings: ISettings = {
+      ...newSettings,
+      warrenFailover: { enabled: this.settings.gui.warrenFailoverEnabled },
+    };
+    IpcMainEventChannel.settings.notify?.(mergedSettings);
 
     void this.updateSplitTunnelingApplications(newSettings.splitTunnel.appsList);
   }
@@ -919,7 +925,10 @@ class ApplicationMain
       accountData: this.account.accountData,
       accountHistory: this.account.accountHistory,
       tunnelState: this.tunnelState.tunnelState,
-      settings: this.settings.all,
+      settings: {
+        ...this.settings.all,
+        warrenFailover: { enabled: this.settings.gui.warrenFailoverEnabled },
+      },
       isPerformingPostUpgrade: this.isPerformingPostUpgrade,
       daemonAllowed: this.daemonAllowed,
       deviceState: this.account.deviceState,

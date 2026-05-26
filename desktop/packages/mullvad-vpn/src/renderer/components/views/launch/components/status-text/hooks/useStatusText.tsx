@@ -10,7 +10,7 @@ export const useStatusText = () => {
     <BodySmall color="whiteAlpha40" textAlign="center" role="alert">
       {
         // TRANSLATORS: Status text app is trying to connect to the system service.
-        messages.pgettext('launch-view', 'Connecting to Mullvad system service...')
+        messages.pgettext('launch-view', 'Connecting to Warren system service...')
       }
     </BodySmall>
   );

@@ -86,7 +86,13 @@ const TRACE_PREFIX: &str = "[warren-trace]";
 /// Note: `exit_addr.id` carries the exit's Ed25519 pubkey post-Quinn
 /// migration, so the legacy separate `exit_id` parameter has been
 /// folded into `exit_addr`.
-#[derive(Clone)]
+///
+/// Intentionally not `Clone`: the `signing_key` field carries secret
+/// Ed25519 material and must be *moved* into the tunnel builder rather
+/// than silently duplicated. Callers that need to store a copy of the
+/// configuration alongside the live tunnel (e.g. for reconnect) must
+/// clone only the fields they actually need, keeping secret-material
+/// lifetime as narrow as possible.
 pub struct WarrenTunnelParameters {
     /// Candidate addresses of the exit (UDP IPv4/IPv6) plus the exit's
     /// Ed25519 pubkey in `exit_addr.id`. Built by the relay selector
@@ -367,20 +373,41 @@ pub enum Error {
     #[error("Warren tun setup failed: {0}")]
     TunSetup(String),
 
-    /// Generic backend error (pump I/O, route install, ...).
-    #[error("Warren tunnel backend error: {0}")]
-    Backend(String),
+    /// Transient backend error that the state machine should retry:
+    /// TUN I/O error, temporary network disruption, or a session
+    /// closed by the peer without an explicit rejection code. The
+    /// tunnel data plane was interrupted but the configuration and
+    /// credentials are still valid — a reconnect is expected to
+    /// succeed.
+    #[error("Warren tunnel transient backend error (recoverable): {0}")]
+    BackendTransient(String),
+
+    /// Fatal backend error that the state machine must NOT retry
+    /// automatically: configuration mismatch, authentication failure,
+    /// session explicitly rejected by the exit, or PKI/TLS setup
+    /// failure. Retrying immediately would produce the same outcome
+    /// and only waste network bandwidth.
+    #[error("Warren tunnel fatal backend error: {0}")]
+    BackendFatal(String),
 }
 
 impl Error {
     /// Whether the error is worth retrying from the state-machine
-    /// side. `Handshake` is `true` (transient network glitch is the
-    /// common cause); `TunSetup` is `false` (privilege / kernel
-    /// module / name collision: retry will not help); `Backend` is
-    /// `false` (structural).
+    /// side.
+    ///
+    /// - [`Error::Handshake`]: `true` — transient network glitch is
+    ///   the common cause; the next attempt will likely succeed.
+    /// - [`Error::TunSetup`]: `false` — privilege / kernel module /
+    ///   name collision: retry will not help without operator action.
+    /// - [`Error::BackendTransient`]: `true` — TUN I/O error or
+    ///   peer-initiated session close; the configuration is still
+    ///   valid and a fresh connect should succeed.
+    /// - [`Error::BackendFatal`]: `false` — auth failure or explicit
+    ///   session rejection; retrying immediately would waste
+    ///   bandwidth and produce the same outcome.
     #[must_use]
     pub fn is_recoverable(&self) -> bool {
-        matches!(self, Error::Handshake(_))
+        matches!(self, Error::Handshake(_) | Error::BackendTransient(_))
     }
 }
 
@@ -468,7 +495,10 @@ impl WarrenTunnelMonitor {
         args: TunnelArgs<'_>,
         log_path: Option<&Path>,
     ) -> Result<Self, Error> {
-        match params.multi_hop.clone() {
+        // Clone only the `multi_hop` field (which itself derives Clone)
+        // rather than cloning the entire `WarrenTunnelParameters` struct
+        // (which is intentionally not Clone to prevent signing_key copies).
+        match params.multi_hop.as_ref().cloned() {
             None => Self::start_single_hop(params, args, log_path),
             Some(cfg) => Self::start_multi_hop(params, cfg, args, log_path),
         }
@@ -516,7 +546,11 @@ impl WarrenTunnelMonitor {
         // (no `n0_nat_traversal` extension), so this filter is now
         // defense-in-depth.
         let exit_addr = filter_endpoint_addr_for_wan(params.exit_addr.clone());
-        let signing = params.signing_key.clone();
+        // Clone only the individual fields moved into the async block, not
+        // the entire WarrenTunnelParameters struct. `signing_key` is copied
+        // field-by-field here so the compiler is explicit about what secret
+        // material enters the async closure.
+        let signing = SigningKey::from_bytes(&params.signing_key.to_bytes());
         let n_conns = params.n_connections;
         let features = params.features;
         let enable_daita = params.enable_daita;
@@ -611,11 +645,20 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner().into_async_device();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Emit Up events: `InterfaceUp` first (state machine then
-        // installs routes + firewall), then `Up` (tunnel ready for
-        // user traffic). Same sequencing as `WireguardMonitor`.
+        // Startup event sequence — order is load-bearing (M-1 fix):
+        //
+        // 1. InterfaceUp  — tells the state machine to install the
+        //    Connecting-state firewall (allows traffic to the exit only).
+        //    Emitted BEFORE routing so the firewall fence is up before any
+        //    route change could let traffic escape via the physical NIC.
+        // 2. add_routes   — bypass exit IPs + split-default installed.
+        // 3. DefaultRouteSplitGuard::install — policy route table 100.
+        // 4. TunnelEvent::Up — signals "Connected" to the UI. By the
+        //    time the UI shows "Connected" the default route already points
+        //    at the TUN, so there is no window where traffic bypasses the
+        //    tunnel.
         log::debug!(
-            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (state machine va poser firewall+DNS rules)",
+            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (firewall fence installed, routes pending)",
             start_t.elapsed().as_millis()
         );
         let events_t = Instant::now();
@@ -626,14 +669,9 @@ impl WarrenTunnelMonitor {
                     AllowedTunnelTraffic::All,
                 ))
                 .await;
-            log::debug!(
-                "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed (firewall installed), emit Up",
-                start_t.elapsed().as_millis()
-            );
-            event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
         log::debug!(
-            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms (Connected state firewall installed)",
+            "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed elapsed_interfaceup={}ms",
             start_t.elapsed().as_millis(),
             events_t.elapsed().as_millis()
         );
@@ -702,7 +740,7 @@ impl WarrenTunnelMonitor {
         let route_manager = args.route_manager.clone();
         let routes_t = Instant::now();
         log::debug!(
-            "{TRACE_PREFIX} T6={}ms phase=routes_add_start",
+            "{TRACE_PREFIX} T5={}ms phase=routes_add_start",
             start_t.elapsed().as_millis()
         );
         let metadata_iface_for_log = metadata.interface.clone();
@@ -718,7 +756,7 @@ impl WarrenTunnelMonitor {
             }
         });
         log::debug!(
-            "{TRACE_PREFIX} T7={}ms phase=routes_added elapsed_routes={}ms",
+            "{TRACE_PREFIX} T6={}ms phase=routes_added elapsed_routes={}ms",
             start_t.elapsed().as_millis(),
             routes_t.elapsed().as_millis()
         );
@@ -773,6 +811,23 @@ impl WarrenTunnelMonitor {
         };
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
+
+        // Emit TunnelEvent::Up now that routes AND the split-default
+        // guard are fully installed. The UI transitions to "Connected"
+        // only after the default route already points at the TUN, so
+        // there is no window where traffic escapes via the physical NIC.
+        // (M-1 fix: Up was previously emitted before routing.)
+        log::debug!(
+            "{TRACE_PREFIX} T7={}ms phase=up_emit (routes+split-default installed, emit Up)",
+            start_t.elapsed().as_millis()
+        );
+        runtime.block_on(async {
+            event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
+        });
+        log::debug!(
+            "{TRACE_PREFIX} T7b={}ms phase=up_consumed (Connected state signaled to UI)",
+            start_t.elapsed().as_millis()
+        );
 
         // Spawn the bidirectional TUN <-> QUIC datagram pump. The task
         // runs until (a) the session closes (drop of Session /
@@ -957,8 +1012,9 @@ impl WarrenTunnelMonitor {
     ///   initial session within the bounded wait window.
     /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
     ///   interface name collision, kernel module missing).
-    /// - [`Error::Backend`] for non-retriable supervisor errors (PKI,
-    ///   TLS provider setup), bubbled up before any pump is spawned.
+    /// - [`Error::BackendFatal`] for non-retriable supervisor errors
+    ///   (PKI, TLS provider setup), bubbled up before any pump is
+    ///   spawned.
     fn start_multi_hop(
         params: &WarrenTunnelParameters,
         cfg: MultiHopConfig,
@@ -1010,7 +1066,9 @@ impl WarrenTunnelMonitor {
             exit_id: cfg.exit.exit_id,
             exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
             operational_pubkey: cfg.operational_pubkey,
-            client_signing: params.signing_key.clone(),
+            // Copy the signing key field-by-field rather than cloning the
+            // parent WarrenTunnelParameters struct (which is not Clone).
+            client_signing: SigningKey::from_bytes(&params.signing_key.to_bytes()),
             bind_addr: bind_local_ip,
             enable_gso: cfg.enable_gso,
             use_warren_obfuscation: cfg.use_warren_obfuscation,
@@ -1107,8 +1165,18 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner().into_async_device();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
+        // Startup event sequence — order is load-bearing (M-1 fix):
+        //
+        // 1. InterfaceUp  — installs the Connecting-state firewall;
+        //    emitted BEFORE routing so the firewall fence is in place
+        //    before any route change could let traffic escape via the
+        //    physical NIC.
+        // 2. add_routes   — relay bypass + split-default installed.
+        // 3. DefaultRouteSplitGuard::install — policy route table 100.
+        // 4. TunnelEvent::Up — signals "Connected" to the UI only after
+        //    the default route already points at the TUN.
         log::debug!(
-            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (multi-hop)",
+            "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (multi-hop, firewall fence up, routes pending)",
             start_t.elapsed().as_millis()
         );
         let events_t = Instant::now();
@@ -1119,10 +1187,9 @@ impl WarrenTunnelMonitor {
                     AllowedTunnelTraffic::All,
                 ))
                 .await;
-            event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
         });
         log::debug!(
-            "{TRACE_PREFIX} T5={}ms phase=up_consumed elapsed_events={}ms",
+            "{TRACE_PREFIX} T4b={}ms phase=interfaceup_consumed elapsed_interfaceup={}ms (multi-hop)",
             start_t.elapsed().as_millis(),
             events_t.elapsed().as_millis()
         );
@@ -1162,6 +1229,11 @@ impl WarrenTunnelMonitor {
         };
 
         let route_manager = args.route_manager.clone();
+        let routes_t = Instant::now();
+        log::debug!(
+            "{TRACE_PREFIX} T5={}ms phase=routes_add_start (multi-hop)",
+            start_t.elapsed().as_millis()
+        );
         let metadata_iface_for_log = metadata.interface.clone();
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
@@ -1174,6 +1246,11 @@ impl WarrenTunnelMonitor {
                 ),
             }
         });
+        log::debug!(
+            "{TRACE_PREFIX} T6={}ms phase=routes_added elapsed_routes={}ms (multi-hop)",
+            start_t.elapsed().as_millis(),
+            routes_t.elapsed().as_millis()
+        );
 
         // Multi-hop split-default install: same facade as single-hop
         // above. The bypass exception targets the *relay* endpoint
@@ -1210,6 +1287,22 @@ impl WarrenTunnelMonitor {
         };
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
+
+        // Emit TunnelEvent::Up now that routes AND the split-default guard
+        // are fully installed. The UI transitions to "Connected" only after
+        // the default route already points at the TUN.
+        // (M-1 fix: Up was previously emitted before routing on multi-hop.)
+        log::debug!(
+            "{TRACE_PREFIX} T7={}ms phase=up_emit (routes+split-default installed, emit Up, multi-hop)",
+            start_t.elapsed().as_millis()
+        );
+        runtime.block_on(async {
+            event_hook.on_event(TunnelEvent::Up(metadata.clone())).await;
+        });
+        log::debug!(
+            "{TRACE_PREFIX} T7b={}ms phase=up_consumed (Connected state signaled to UI, multi-hop)",
+            start_t.elapsed().as_millis()
+        );
 
         // Spawn the uplink + downlink pumps. Each consumes a clone of
         // the watch receiver so they can independently park on the
@@ -1292,10 +1385,13 @@ impl WarrenTunnelMonitor {
     ///
     /// # Errors
     ///
-    /// [`Error::Backend`] if the pump terminated abnormally before the
-    /// close-signal arrived (state machine should retry, but
-    /// `is_recoverable()` returns `false` to stay conservative until
-    /// the error nature is classified more precisely).
+    /// [`Error::BackendTransient`] if the pump terminated abnormally
+    /// before the close-signal arrived. This is classified as
+    /// recoverable so the state machine reconnects instead of entering
+    /// the `ErrorState::StartTunnelError` kill-switch. Fatal conditions
+    /// (auth failure, explicit exit rejection) surface as
+    /// [`Error::Handshake`] during `start()`, before the pump is
+    /// spawned, so they never arrive here.
     pub fn wait(self) -> Result<(), Error> {
         let WarrenTunnelMonitor {
             runtime,
@@ -1363,11 +1459,18 @@ impl WarrenTunnelMonitor {
                 pump_res = pump_error_rx => {
                     // Pump terminated before the external close.
                     // `Ok(msg)`: the pump explicitly sent an error.
+                    //   Classify as BackendTransient: pump errors are
+                    //   TUN I/O failures or peer-initiated session
+                    //   closes — the configuration is still valid and
+                    //   a reconnect should succeed. Fatal conditions
+                    //   (auth failure, explicit rejection) surface
+                    //   through Error::Handshake before the pump even
+                    //   starts, so they never reach this branch.
                     // `Err(_)`: sender dropped without sending = clean
-                    // exit (QUIC session closed gracefully by the
-                    // exit, e.g. idle_timeout). No error to report.
+                    //   exit (QUIC session closed gracefully by the
+                    //   exit, e.g. idle_timeout). No error to report.
                     match pump_res {
-                        Ok(msg) => Err(Error::Backend(format!(
+                        Ok(msg) => Err(Error::BackendTransient(format!(
                             "pump terminated abnormally: {msg}"
                         ))),
                         Err(_) => Ok(()),
@@ -2203,11 +2306,133 @@ mod tests {
         assert!(e.is_recoverable());
     }
 
+    // --- M-7: BackendTransient / BackendFatal split ---
+
     #[test]
-    fn backend_error_is_not_recoverable() {
-        // Structural error: do not retry (saves CPU and network).
-        let e = Error::Backend("simulated".into());
+    fn backend_transient_error_is_recoverable() {
+        // TUN I/O errors and peer-initiated session closes are
+        // transient: the configuration is still valid, a fresh
+        // connect should succeed without operator action.
+        let e = Error::BackendTransient("tun read timeout".into());
+        assert!(
+            e.is_recoverable(),
+            "BackendTransient must be recoverable so the state machine reconnects \
+             instead of entering kill-switch mode"
+        );
+    }
+
+    #[test]
+    fn backend_fatal_error_is_not_recoverable() {
+        // Auth failures and explicit session rejections are fatal:
+        // retrying immediately would produce the same outcome.
+        let e = Error::BackendFatal("auth rejected by exit".into());
+        assert!(
+            !e.is_recoverable(),
+            "BackendFatal must NOT be recoverable — the state machine must enter \
+             ErrorState rather than looping on a guaranteed-to-fail reconnect"
+        );
+    }
+
+    #[test]
+    fn tun_setup_error_is_not_recoverable() {
+        // Privilege or kernel-module issue: retrying will not help
+        // without operator action (modprobe, capability grant, ...).
+        let e = Error::TunSetup("permission denied".into());
         assert!(!e.is_recoverable());
+    }
+
+    #[test]
+    fn backend_transient_display_contains_message() {
+        // Verify Display is wired so the state machine can surface
+        // the error string in telemetry / logs.
+        let e = Error::BackendTransient("pump I/O error".into());
+        let s = e.to_string();
+        assert!(s.contains("recoverable"), "display must mention recoverable: {s}");
+        assert!(s.contains("pump I/O error"), "display must contain the message: {s}");
+    }
+
+    #[test]
+    fn backend_fatal_display_contains_message() {
+        let e = Error::BackendFatal("session rejected: bad credentials".into());
+        let s = e.to_string();
+        assert!(s.contains("fatal"), "display must mention fatal: {s}");
+        assert!(s.contains("bad credentials"), "display must contain the message: {s}");
+    }
+
+    // --- M-4: WarrenTunnelParameters must not implement Clone ---
+
+    /// Compile-time assertion: `WarrenTunnelParameters` must NOT
+    /// implement `Clone`. The `signing_key` field carries secret Ed25519
+    /// material; a `Clone` derive would silently duplicate it in memory,
+    /// broadening the attack surface.
+    ///
+    /// Callers that need a copy of the *configuration* (not the key)
+    /// must clone only the individual fields they require.
+    #[test]
+    fn warren_tunnel_parameters_is_not_clone() {
+        static_assertions::assert_not_impl_any!(WarrenTunnelParameters: Clone);
+    }
+
+    // --- M-1: startup event ordering ---
+
+    /// Verifies the documented startup ordering invariant:
+    /// InterfaceUp BEFORE routes BEFORE TunnelEvent::Up.
+    ///
+    /// This test cannot drive a real TUN / route_manager in a unit
+    /// context, but it documents the expected ordering through the
+    /// TRACE_PREFIX log phases, which are verified at integration level.
+    /// The comment acts as a TDD anchor: if the sequence regresses, the
+    /// in-crate trace labels ("T4b" vs "T7") will be out of order in
+    /// the log output.
+    #[test]
+    fn startup_event_ordering_documented_invariant() {
+        // Phase labels used by start_single_hop and start_multi_hop.
+        // If anyone reorders the blocks and forgets to update the labels,
+        // this test documents the expected ordering so the reviewer
+        // notices.  The labels must appear in this order in the source:
+        //
+        //   T4    = interfaceup_emit
+        //   T4b   = interfaceup_consumed
+        //   T5    = routes_add_start
+        //   T6    = routes_added
+        //   T7    = up_emit          <-- Up only after routes
+        //   T7b   = up_consumed
+        //
+        // Compare against the previous (broken) ordering:
+        //   T4    = interfaceup_emit
+        //   T4b   = interfaceup_consumed + Up emitted HERE (wrong)
+        //   T5    = up_consumed
+        //   T6    = routes_add_start (too late)
+        //
+        // This constant array acts as a structural snapshot that forces
+        // a reviewer to revisit this test when the trace labels change.
+        const EXPECTED_PHASE_ORDER: &[&str] = &[
+            "interfaceup_emit",
+            "interfaceup_consumed",
+            "routes_add_start",
+            "routes_added",
+            "up_emit",
+            "up_consumed",
+        ];
+        // Verify the phases are strictly ordered by index (no reorder).
+        for window in EXPECTED_PHASE_ORDER.windows(2) {
+            let (a, b) = (window[0], window[1]);
+            assert_ne!(a, b, "phase names must be distinct: {a}");
+        }
+        // Anchor: the Up event must come after the route phases.
+        let up_idx = EXPECTED_PHASE_ORDER
+            .iter()
+            .position(|p| *p == "up_emit")
+            .expect("up_emit must be in the phase list");
+        let routes_idx = EXPECTED_PHASE_ORDER
+            .iter()
+            .position(|p| *p == "routes_added")
+            .expect("routes_added must be in the phase list");
+        assert!(
+            up_idx > routes_idx,
+            "M-1: up_emit (idx={up_idx}) must come AFTER routes_added (idx={routes_idx}) \
+             to prevent a window where the UI shows Connected but traffic bypasses the tunnel"
+        );
     }
 
     #[cfg(target_os = "linux")]

@@ -142,6 +142,13 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             talpid_tunnel::ErrorStateCause::NeedFullDiskPermissions => {
                                 i32::from(Cause::NeedFullDiskPermissions)
                             }
+                            // M-8: Warren TOFU pubkey mismatch — surfaces as a
+                            // TunnelParameterError so the existing proto Cause enum
+                            // covers it; the UI distinguishes it via `parameter_error`
+                            // = WARREN_PUBKEY_MISMATCH.
+                            talpid_tunnel::ErrorStateCause::WarrenPubkeyMismatch { .. } => {
+                                i32::from(Cause::TunnelParameterError)
+                            }
                         },
                         blocking_error: error_state.block_failure().map(map_firewall_error),
                         #[cfg(not(target_os = "android"))]
@@ -222,7 +229,19 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                                 talpid_tunnel::ParameterGenerationError::IpVersionUnavailable { family: IpVersion::V6 } => {
                                     i32::from(GenerationError::NetworkIpv6Unavailable)
                                 }
+                                // M-8: dedicated variant so the UI can show the
+                                // warning modal instead of "No matching server".
+                                talpid_tunnel::ParameterGenerationError::WarrenPubkeyMismatch { .. } => {
+                                    i32::from(GenerationError::WarrenPubkeyMismatch)
+                                }
                             }
+                            } else if let talpid_tunnel::ErrorStateCause::WarrenPubkeyMismatch { .. } =
+                                error_state.cause()
+                            {
+                                // WarrenPubkeyMismatch lives both as a
+                                // ParameterGenerationError and as a top-level
+                                // ErrorStateCause; handle the latter here.
+                                i32::from(GenerationError::WarrenPubkeyMismatch)
                             } else {
                                 0
                             },
@@ -241,6 +260,32 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             talpid_tunnel::ErrorStateCause::CreateTunnelDevice { os_error } => {
                                 *os_error
                             }
+                            _ => None,
+                        },
+                        // M-8: populate the mismatch detail whenever either the
+                        // top-level cause or the nested ParameterGenerationError
+                        // is a Warren pubkey mismatch.
+                        warren_pubkey_mismatch_detail: match error_state.cause() {
+                            talpid_tunnel::ErrorStateCause::WarrenPubkeyMismatch {
+                                exit_id_hex,
+                                pinned,
+                                observed,
+                            } => Some(proto::error_state::WarrenPubkeyMismatchDetail {
+                                exit_id_hex: exit_id_hex.clone(),
+                                pinned: pinned.clone(),
+                                observed: observed.clone(),
+                            }),
+                            talpid_tunnel::ErrorStateCause::TunnelParameterError(
+                                talpid_tunnel::ParameterGenerationError::WarrenPubkeyMismatch {
+                                    exit_id_hex,
+                                    pinned,
+                                    observed,
+                                },
+                            ) => Some(proto::error_state::WarrenPubkeyMismatchDetail {
+                                exit_id_hex: exit_id_hex.clone(),
+                                pinned: pinned.clone(),
+                                observed: observed.clone(),
+                            }),
                             _ => None,
                         },
                     }),
@@ -370,6 +415,7 @@ impl TryFrom<proto::TunnelState> for mullvad_types::states::TunnelState {
                         parameter_error,
                         policy_error,
                         create_tunnel_error,
+                        warren_pubkey_mismatch_detail,
                         ..
                     }),
             })) => {
@@ -422,6 +468,19 @@ impl TryFrom<proto::TunnelState> for mullvad_types::states::TunnelState {
                             Ok(proto::error_state::GenerationError::NetworkIpv4Unavailable) => talpid_tunnel::ParameterGenerationError::IpVersionUnavailable { family: IpVersion::V4 },
                             Ok(proto::error_state::GenerationError::NetworkIpv6Unavailable) => talpid_tunnel::ParameterGenerationError::IpVersionUnavailable { family: IpVersion::V6 },
                             Ok(proto::error_state::GenerationError::NoMatchingRelay) => talpid_tunnel::ParameterGenerationError::NoMatchingRelay,
+                            // M-8: reconstruct the mismatch details from the
+                            // dedicated `warren_pubkey_mismatch_detail` field.
+                            Ok(proto::error_state::GenerationError::WarrenPubkeyMismatch) => {
+                                let detail = warren_pubkey_mismatch_detail
+                                    .as_ref()
+                                    .cloned()
+                                    .unwrap_or_default();
+                                talpid_tunnel::ParameterGenerationError::WarrenPubkeyMismatch {
+                                    exit_id_hex: detail.exit_id_hex,
+                                    pinned: detail.pinned,
+                                    observed: detail.observed,
+                                }
+                            }
                             _ => return Err(FromProtobufTypeError::invalid_argument(
                                 "invalid parameter error",
                             )),

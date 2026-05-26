@@ -261,7 +261,7 @@ class Login extends React.Component<IProps, IState> {
         // TRANSLATORS: to fetch the list of registered devices.
         return messages.gettext('Failed to fetch list of devices');
       case 'communication':
-        return 'api.mullvad.net is blocked, please check your firewall';
+        return 'api.warrenvpn.com is blocked, please check your firewall';
       default:
         return messages.pgettext('login-view', 'Unknown error');
     }

@@ -298,7 +298,7 @@ fn format_endpoint(hostname: Option<&str>, endpoint: &Endpoint, verbose: bool) -
 
 fn print_error_state(error_state: &ErrorState) {
     if error_state.block_failure().is_some() {
-        eprintln!("Mullvad daemon failed to setup firewall rules!");
+        eprintln!("Warren daemon failed to setup firewall rules!");
         eprintln!("Daemon cannot block traffic from flowing, non-local traffic will leak");
     }
 
@@ -313,13 +313,13 @@ fn print_error_state(error_state: &ErrorState) {
             println!("Blocked: {cause}");
             println!();
             println!(
-                r#"Enable "Full Disk Access" for "Mullvad VPN" in the macOS system settings:"#
+                r#"Enable "Full Disk Access" for "Warren VPN" in the macOS system settings:"#
             );
             println!(
                 r#"open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles""#
             );
             println!();
-            println!("Restart the Mullvad daemon for the change to take effect:");
+            println!("Restart the Warren daemon for the change to take effect:");
             println!("launchctl unload -w /Library/LaunchDaemons/net.mullvad.daemon.plist");
             println!("launchctl load -w /Library/LaunchDaemons/net.mullvad.daemon.plist");
         }

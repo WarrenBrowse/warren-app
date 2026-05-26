@@ -3,7 +3,7 @@ use anyhow::Result;
 use mullvad_management_interface::MullvadProxyClient;
 
 pub async fn handle_factory_reset(assume_yes: bool) -> Result<()> {
-    if !assume_yes && !receive_confirmation("Are you sure you want to disconnect, log out, delete all settings, logs and cache files for the Mullvad VPN system service?", false).await {
+    if !assume_yes && !receive_confirmation("Are you sure you want to disconnect, log out, delete all settings, logs and cache files for the Warren VPN system service?", false).await {
         return Ok(());
     }
     let mut rpc = MullvadProxyClient::new().await?;

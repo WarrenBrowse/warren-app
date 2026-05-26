@@ -99,7 +99,7 @@ async fn wait_for_tunnel_state(
 /// attention.
 ///
 /// When using the CLI, the user could potentially end up in a situation where
-/// they try to connect to a Mullvad relay without having successfully logged in
+/// they try to connect to a Warren relay without having successfully logged in
 /// to their account. In this case, we at least want to issue a warning to guide
 /// the user when they inevitably will go troubleshooting.
 fn print_account_loggedout(state: &DeviceState) {
@@ -110,10 +110,10 @@ fn print_account_loggedout(state: &DeviceState) {
     };
 
     println!(
-        "Mullvad is blocking all network traffic until you perform one of the following actions:
+        "Warren is blocking all network traffic until you perform one of the following actions:
 
-1. Login to a Mullvad account with available time/credits.
-2. Disconnect from Mullvad VPN. This can either be done from the CLI or the Mullvad App.
+1. Login to a Warren account with available time/credits.
+2. Disconnect from Warren VPN. This can either be done from the CLI or the Warren App.
 
 For more information, try 'mullvad account -h' or 'mullvad disconnect -h'"
     );

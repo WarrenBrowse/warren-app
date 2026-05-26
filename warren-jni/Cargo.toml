@@ -24,6 +24,14 @@ hex = "0.4"
 bip39 = { version = "2", features = ["rand"] }
 ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
+# Fix L-2: wrap the mnemonic string in Zeroizing<String> so it is wiped
+# from memory immediately after the signing key is derived.
+zeroize = { workspace = true }
+# Fix M-3: parking_lot::Mutex does not poison on panic, eliminating the
+# permanent ACTIVE_TUNNEL lock-up that std::sync::Mutex causes when a JNI
+# thread panics while holding the guard. Listed in [dependencies] (not
+# Android-only) so the behaviour can be exercised by host tests.
+parking_lot = "0.12.0"
 
 # Android-only deps: the JNI surface + log + Tokio runtime for the (still
 # stubbed) tunnel lifecycle exports.

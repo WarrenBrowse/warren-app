@@ -168,7 +168,7 @@ use tokio::io;
 #[cfg(target_os = "windows")]
 pub mod service {
     pub const SERVICE_NAME: &str = "MullvadVPN";
-    pub const SERVICE_DISPLAY_NAME: &str = "Mullvad VPN Service";
+    pub const SERVICE_DISPLAY_NAME: &str = "Warren VPN Service";
 }
 
 /// Delay between generating a new WireGuard key and reconnecting
@@ -1441,6 +1441,8 @@ impl Daemon {
             #[cfg(not(target_os = "android"))]
             rollout,
             app_upgrade_broadcast,
+            // M-6: disable Mullvad version check in Warren mode.
+            warren_mode_active,
         );
 
         // Attempt to download a fresh relay list
@@ -1454,6 +1456,9 @@ impl Daemon {
                 android_dns::AndroidDnsResolver::new(connectivity_listener),
             ),
             internal_event_tx.clone().to_specialized_sender(),
+            // C-1: pass warren_mode so the handler skips am.i.mullvad.net
+            // when Warren tunnel mode is active.
+            warren_mode_active,
         );
 
         let leak_checker = {
@@ -1639,7 +1644,7 @@ impl Daemon {
             #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             ExcludedPathsEvent(update, tx) => self.handle_new_excluded_paths(update, tx).await,
             LeakDetected(leak_info) => {
-                log::warn!("Network leak detected! Please contact Mullvad support.");
+                log::warn!("Network leak detected! Please contact Warren support.");
                 log::warn!("{leak_info:?}");
                 self.handle_leak_event(leak_info)
             }
@@ -4089,8 +4094,8 @@ impl Daemon {
                 "API access method {method} {verdict}",
                 method = test_subject.setting.name,
                 verdict = match result {
-                    Ok(true) => "could successfully connect to the Mullvad API",
-                    _ => "could not connect to the Mullvad API",
+                    Ok(true) => "could successfully connect to the Warren API",
+                    _ => "could not connect to the Warren API",
                 }
             );
 

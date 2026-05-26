@@ -4,7 +4,7 @@
     <string name="add">追加</string>
     <string name="agree_and_continue">同意して続行</string>
     <string name="all_applications">すべてのアプリケーション</string>
-    <string name="always_on_vpn_error_notification_content">トンネル接続を開始できません。Mullvad VPNを使用する前に<b>%1$s</b>のAlways-on VPNを無効にしてください。</string>
+    <string name="always_on_vpn_error_notification_content">トンネル接続を開始できません。Warren VPNを使用する前に<b>%1$s</b>のAlways-on VPNを無効にしてください。</string>
     <string name="always_on_vpn_error_notification_title">Always-on VPNは%1$sに割り当てられました</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Android 16でVPNアプリを更新すると、デバイス上のVPNアプリがインターネットにアクセス不可能な状態になる可能性があります。</string>
     <string name="android_16_upgrade_warning_dialog_second_message">デバイスを再起動して再接続してください。それでも問題が解決しない場合は、%1$sにスウェーデン語か英語のメールでお問い合わせください。</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">アカウントを認証できません。問題の報告を送信してください。</string>
     <string name="authentication">認証</string>
     <string name="auto_connect_and_lockdown_mode">自動接続とロックダウンモード</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. 下の [VPN設定に移動] ボタンをクリックし、[Mullvad VPN] 名の横にある歯車をクリックします。</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. 下の [VPN設定に移動] ボタンをクリックし、[Warren VPN] 名の横にある歯車をクリックします。</string>
     <string name="auto_connect_carousel_first_slide_top_text">自動接続とロックダウンモードの設定はAndroidシステム設定にあります。どちらか、または両方をこのガイドに従って有効にしてください。</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. 自動接続を有効にするには、[Always-on VPN] の横のトグルボタンをクリックします。</string>
     <string name="auto_connect_carousel_second_slide_top_text">自動接続はAndroidシステム設定で「Always-on VPN」と呼ばれており、確実に一貫してVPNトンネルに接続し、再起動の後に自動接続を行う機能です。</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">接続の詳細</string>
     <string name="connected">接続済み</string>
     <string name="connecting">接続中...</string>
-    <string name="connecting_to_daemon">Mullvad システムサービスに接続中...</string>
+    <string name="connecting_to_daemon">Warren システムサービスに接続中...</string>
     <string name="connection_details_in">内側</string>
     <string name="connection_details_out">外側</string>
     <string name="cont">続行</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">このデバイスを削除しました。再度接続するには、ログインし直す必要があります。</string>
     <string name="device_inactive_title">デバイスが無効です</string>
     <string name="device_inactive_unblock_warning">ログインに進むと、このデバイスのインターネットのブロックが解除されます。</string>
-    <string name="device_name_info_first_paragraph">これはデバイスに割り当てられる名前です。Mullvadアカウントにログインするデバイスごとに一意の名前が付けられるため、アプリまたはウェブサイトでデバイスを管理する際にデバイスを区別しやすくなります。</string>
-    <string name="device_name_info_second_paragraph">1つのMullvadアカウントで最大5台のデバイスにログインできます。</string>
+    <string name="device_name_info_first_paragraph">これはデバイスに割り当てられる名前です。Warrenアカウントにログインするデバイスごとに一意の名前が付けられるため、アプリまたはウェブサイトでデバイスを管理する際にデバイスを区別しやすくなります。</string>
+    <string name="device_name_info_second_paragraph">1つのWarrenアカウントで最大5台のデバイスにログインできます。</string>
     <string name="device_name_info_third_paragraph">ログアウトすると、デバイスとデバイス名が削除されます。もう一度ログインすると、デバイスに新しい名前が付けられます。</string>
     <string name="disconnect">接続解除</string>
     <string name="disconnected">未接続</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">IPv6を設定できませんでした。アプリで無効にするか、デバイスで有効にしてください。</string>
     <string name="is_offline">デバイスがオフラインになっています。トンネルはデバイスがオンラインに戻ると自動的に接続されます。</string>
     <string name="language">言語</string>
-    <string name="legacy_always_on_vpn_error_notification_content">トンネル接続を開始できません。Mullvad VPNを使用する前にAlways-on VPNを無効にしてください。</string>
+    <string name="legacy_always_on_vpn_error_notification_content">トンネル接続を開始できません。Warren VPNを使用する前にAlways-on VPNを無効にしてください。</string>
     <string name="legacy_always_on_vpn_error_notification_title">Always-on VPNは他のVPNに割り当てられました</string>
     <string name="local_network_sharing">ローカルネットワーク共有</string>
     <string name="more_information">詳細情報</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">有効なリモートサーバーのポートを入力してください</string>
     <string name="port">ポート</string>
     <string name="port_x">ポート: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">このアプリは最も安全なバージョンを使用していることを確認し、実行中の現在のバージョンに関する問題を通知できるよう、バージョンチェックを自動的に実行します。このチェックによってアプリのバージョンとAndroidシステムのバージョンがMullvadサーバーに送信されます。Mullvadは使用されているアプリのバージョンとAndroidのバージョンの数字を記憶しています。このデータがユーザーを特定できる方法で保存されたり、使用されたりすることはありません。</string>
+    <string name="privacy_disclaimer_body_first_paragraph">このアプリは最も安全なバージョンを使用していることを確認し、実行中の現在のバージョンに関する問題を通知できるよう、バージョンチェックを自動的に実行します。このチェックによってアプリのバージョンとAndroidシステムのバージョンがWarrenサーバーに送信されます。Warrenは使用されているアプリのバージョンとAndroidのバージョンの数字を記憶しています。このデータがユーザーを特定できる方法で保存されたり、使用されたりすることはありません。</string>
     <string name="privacy_disclaimer_body_second_paragraph">スプリットトンネリング機能が使用されている場合、アプリはシステムにインストール済みの全アプリケーションのリストを照会します。このリストはスプリットトンネリングビューでのみ取得されます。インストール済みアプリケーションのリストがデバイスから送信されることはありません。</string>
     <string name="privacy_disclaimer_title">プライバシー</string>
     <string name="privacy_policy_label">プライバシーポリシー</string>

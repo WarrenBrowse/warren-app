@@ -61,5 +61,10 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
 ] }
 anyhow = "1"
 
+[dev-dependencies]
+# Compile-time trait-implementation assertions used in the test module
+# (e.g. `assert_not_impl_any!(WarrenTunnelParameters: Clone)`).
+static_assertions = "1"
+
 [lints]
 workspace = true

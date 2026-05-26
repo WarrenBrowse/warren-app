@@ -46,6 +46,7 @@ impl TunnelParameters {
             tunnel_interface: None,
             #[cfg(daita)]
             daita: self.options.daita,
+            tunnel_type: crate::net::TunnelType::WireGuard,
         }
     }
 

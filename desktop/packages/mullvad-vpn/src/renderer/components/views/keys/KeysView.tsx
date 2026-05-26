@@ -15,8 +15,8 @@ import { BackAction } from '../../keyboard-navigation';
 import { HeaderTitle } from '../../SettingsHeader';
 
 /**
- * Affichage de la mnémonique BIP39 sur 12 mots, format grid 3×4.
- * Composant interne — pas réutilisé ailleurs.
+ * Displays the BIP39 mnemonic (12 words) in a 3x4 grid layout.
+ * Internal component — not reused elsewhere.
  */
 const StyledMnemonicGrid = styled.div`
   display: grid;

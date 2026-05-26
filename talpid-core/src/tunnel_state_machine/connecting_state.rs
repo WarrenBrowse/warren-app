@@ -226,7 +226,8 @@ impl ConnectingState {
         // `BackendParams::Warren` variant exposes the candidate Iroh IPs via
         // `get_next_hop_endpoints()`, and the firewall authorizes them just like
         // it does for WG peers (no no-leak regression).
-        let backend_params = BackendParams::Warren(warren_params.clone());
+        let backend_info = super::backend_params::WarrenBackendInfo::from_params(&warren_params);
+        let backend_params = BackendParams::Warren(backend_info);
         if let Err(error) = Self::set_firewall_policy(
             shared_values,
             &backend_params,
@@ -279,10 +280,12 @@ impl ConnectingState {
         let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
         let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
 
-        // Clone because the `spawn_blocking` task consumes `parameters` via
-        // `move`; we keep a copy to store it in the
-        // `ConnectingState`.
-        let stored_params = BackendParams::Warren(parameters.clone());
+        // Extract the lightweight display/firewall snapshot before
+        // moving the full parameters (including signing_key) into the
+        // blocking task. No secret material is cloned.
+        let stored_params = BackendParams::Warren(
+            super::backend_params::WarrenBackendInfo::from_params(&parameters),
+        );
 
         tokio::task::spawn_blocking(move || {
             let start = Instant::now();

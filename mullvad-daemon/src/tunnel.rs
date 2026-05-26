@@ -921,21 +921,24 @@ impl From<Error> for ParameterGenerationError {
             Error::NoAuthDetails | Error::SelectRelay(_) | Error::Device(_) => {
                 ParameterGenerationError::NoMatchingRelay
             }
-            // Warren errors mapped to `NoMatchingRelay` on the state
-            // machine side. A dedicated variant can be added if
-            // the UI needs to distinguish these cases.
-            //
-            // `WarrenPubkeyPinMismatch` is included here so that the
-            // pre-existing tunnel state machine sees an immediate
-            // hard-stop ("no relay can satisfy the user's
-            // constraints"). A.4 follow-up adds a dedicated event so
-            // the UI surfaces the warning modal instead of falling
-            // through to the generic disconnect reason. See
-            // `.planning/a4-pubkey-pinning-design.md` §2.3.
+            // Warren-generic errors map to `NoMatchingRelay`: they are
+            // configuration or transient failures that should cause the
+            // state machine to stop trying with the current constraints.
             Error::WarrenSelectorMissing
             | Error::WarrenSigningKeyMissing
-            | Error::WarrenAssemble(_)
-            | Error::WarrenPubkeyPinMismatch { .. } => ParameterGenerationError::NoMatchingRelay,
+            | Error::WarrenAssemble(_) => ParameterGenerationError::NoMatchingRelay,
+            // M-8: TOFU pubkey mismatch surfaces as a dedicated variant so
+            // the UI can show a meaningful modal rather than the generic
+            // "No matching server" message.
+            Error::WarrenPubkeyPinMismatch {
+                exit_id_hex,
+                pinned,
+                observed,
+            } => ParameterGenerationError::WarrenPubkeyMismatch {
+                exit_id_hex,
+                pinned,
+                observed,
+            },
         }
     }
 }
@@ -1252,5 +1255,52 @@ mod warren_pin_tests {
         assert_eq!(entry.country_code, "fr");
         assert_eq!(entry.city, "Paris");
         assert_eq!(entry.last_seen_unix, 80);
+    }
+}
+
+/// M-8: verify the `From<Error>` conversion maps `WarrenPubkeyPinMismatch`
+/// to the dedicated `ParameterGenerationError::WarrenPubkeyMismatch` variant
+/// rather than the generic `NoMatchingRelay`.
+#[cfg(test)]
+mod m8_pubkey_mismatch_tests {
+    use talpid_types::tunnel::ParameterGenerationError;
+
+    use super::Error;
+
+    #[test]
+    fn warren_pubkey_pin_mismatch_maps_to_dedicated_variant_not_no_matching_relay() {
+        let err = Error::WarrenPubkeyPinMismatch {
+            exit_id_hex: "deadbeef01234567".to_string(),
+            pinned: "aabbcc".to_string(),
+            observed: "ddeeff".to_string(),
+        };
+        let gen_err = ParameterGenerationError::from(err);
+        match &gen_err {
+            ParameterGenerationError::WarrenPubkeyMismatch {
+                exit_id_hex,
+                pinned,
+                observed,
+            } => {
+                assert_eq!(exit_id_hex, "deadbeef01234567");
+                assert_eq!(pinned, "aabbcc");
+                assert_eq!(observed, "ddeeff");
+            }
+            other => panic!(
+                "expected WarrenPubkeyMismatch, got {other:?} — \
+                 M-8 regression: pin mismatch must not map to NoMatchingRelay"
+            ),
+        }
+    }
+
+    /// Verify that the generic Warren errors still map to `NoMatchingRelay`
+    /// (regression guard: we must not break the other Warren error paths).
+    #[test]
+    fn warren_selector_missing_maps_to_no_matching_relay() {
+        let err = Error::WarrenSelectorMissing;
+        let gen_err = ParameterGenerationError::from(err);
+        assert!(
+            matches!(gen_err, ParameterGenerationError::NoMatchingRelay),
+            "WarrenSelectorMissing must still produce NoMatchingRelay, got {gen_err:?}"
+        );
     }
 }

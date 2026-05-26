@@ -103,12 +103,12 @@ extension WelcomeCoordinator: @preconcurrency WelcomeViewControllerDelegate {
         let message = [
             NSLocalizedString(
                 "This is the name assigned to the device. Each device logged in on a "
-                    + "Mullvad account gets a unique name that helps "
+                    + "Warren account gets a unique name that helps "
                     + "you identify it when you manage your devices in the app or on the website.",
                 comment: ""
             ),
             NSLocalizedString(
-                "You can have up to 5 devices logged in on one Mullvad account.",
+                "You can have up to 5 devices logged in on one Warren account.",
                 comment: ""
             ),
             NSLocalizedString(

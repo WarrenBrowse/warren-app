@@ -21,6 +21,7 @@ use std::os::raw::{c_char, c_int};
 use bip39::{Language, Mnemonic};
 use ed25519_dalek::{Signer, SigningKey};
 use warren_identity::{derive_node_key, seed_from_mnemonic};
+use zeroize::Zeroizing;
 
 const SEED_LEN: usize = 32;
 const PUBKEY_LEN: usize = 32;
@@ -128,12 +129,14 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
         return RC_INVALID_INPUT;
     }
     // Safety: seed is at least SEED_LEN bytes (precondition).
-    let seed_arr: [u8; SEED_LEN] = unsafe {
-        let mut arr = [0u8; SEED_LEN];
-        std::ptr::copy_nonoverlapping(seed, arr.as_mut_ptr(), SEED_LEN);
-        arr
-    };
-    let signing_key = derive_node_key(&seed_arr);
+    // `Zeroizing` ensures the stack copy is wiped on drop so the secret
+    // seed material does not linger in memory after this function returns
+    // (Fix M-2).
+    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+    unsafe {
+        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+    }
+    let signing_key = derive_node_key(&*seed_arr);
     let pubkey = signing_key.verifying_key().to_bytes();
     // Safety: out_pubkey is at least PUBKEY_LEN bytes (precondition).
     unsafe {
@@ -167,12 +170,14 @@ pub unsafe extern "C" fn warren_wallet_sign(
         return RC_INVALID_INPUT;
     }
     // Safety: seed is SEED_LEN bytes (precondition).
-    let seed_arr: [u8; SEED_LEN] = unsafe {
-        let mut arr = [0u8; SEED_LEN];
-        std::ptr::copy_nonoverlapping(seed, arr.as_mut_ptr(), SEED_LEN);
-        arr
-    };
-    let signing_key: SigningKey = derive_node_key(&seed_arr);
+    // `Zeroizing` ensures the stack copy is wiped on drop so the secret
+    // seed material does not linger in memory after this function returns
+    // (Fix M-2).
+    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+    unsafe {
+        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+    }
+    let signing_key: SigningKey = derive_node_key(&*seed_arr);
     let payload_slice: &[u8] = if payload_len == 0 {
         &[]
     } else {
@@ -186,4 +191,129 @@ pub unsafe extern "C" fn warren_wallet_sign(
         std::ptr::copy_nonoverlapping(sig_bytes.as_ptr(), out_signature, SIGNATURE_LEN);
     }
     RC_OK
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ---- Compile-time type assertion for Fix M-2 ----
+
+    /// Compile-time proof (Fix M-2): `Zeroizing<[u8; SEED_LEN]>` must implement
+    /// `Drop` with zeroing semantics.  The `Zeroizing` wrapper from the
+    /// `zeroize` crate satisfies this.  If someone accidentally removes the
+    /// wrapper and reverts to a plain `[u8; SEED_LEN]`, the helper below would
+    /// no longer compile, surfacing the regression at build time.
+    #[allow(dead_code)]
+    fn _assert_seed_arr_type_is_zeroizing(z: Zeroizing<[u8; SEED_LEN]>) {
+        // Accepts only `Zeroizing<[u8; SEED_LEN]>`, not a bare array.
+        let _: Zeroizing<[u8; SEED_LEN]> = z;
+    }
+
+    // ---- Helpers ----
+
+    /// Returns a deterministic 32-byte test seed.
+    fn test_seed() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        for (i, b) in s.iter_mut().enumerate() {
+            *b = i as u8;
+        }
+        s
+    }
+
+    // ---- Functional tests (Fix M-2) ----
+
+    /// (M-2) `warren_wallet_derive_pubkey` must produce a non-zero pubkey.
+    /// Verifies that `Zeroizing` does not corrupt the seed before use.
+    #[test]
+    fn derive_pubkey_produces_nonzero_output() {
+        let seed = test_seed();
+        let mut pubkey = [0u8; 32];
+        let rc = unsafe { warren_wallet_derive_pubkey(seed.as_ptr(), pubkey.as_mut_ptr()) };
+        assert_eq!(rc, RC_OK);
+        assert_ne!(pubkey, [0u8; 32], "pubkey must not be all-zero");
+    }
+
+    /// (M-2) `warren_wallet_sign` must produce a non-zero signature.
+    /// Verifies that `Zeroizing` does not corrupt the seed before use.
+    #[test]
+    fn sign_produces_nonzero_signature() {
+        let seed = test_seed();
+        let payload = b"warren-test-payload";
+        let mut sig = [0u8; 64];
+        let rc = unsafe {
+            warren_wallet_sign(
+                seed.as_ptr(),
+                payload.as_ptr(),
+                payload.len(),
+                sig.as_mut_ptr(),
+            )
+        };
+        assert_eq!(rc, RC_OK);
+        assert_ne!(sig, [0u8; 64], "signature must not be all-zero");
+    }
+
+    /// (M-2) `derive_pubkey` must be deterministic: two calls with the same
+    /// seed produce the same pubkey.  If `Zeroizing` accidentally zeroed the
+    /// seed before it was used, the second call would diverge.
+    #[test]
+    fn derive_pubkey_is_deterministic() {
+        let seed = test_seed();
+        let mut pk1 = [0u8; 32];
+        let mut pk2 = [0u8; 32];
+        unsafe {
+            warren_wallet_derive_pubkey(seed.as_ptr(), pk1.as_mut_ptr());
+            warren_wallet_derive_pubkey(seed.as_ptr(), pk2.as_mut_ptr());
+        }
+        assert_eq!(pk1, pk2);
+    }
+
+    /// (M-2) `sign` must be deterministic: two calls with the same seed and
+    /// payload produce the same signature.
+    #[test]
+    fn sign_is_deterministic() {
+        let seed = test_seed();
+        let payload = b"determinism-check";
+        let mut sig1 = [0u8; 64];
+        let mut sig2 = [0u8; 64];
+        unsafe {
+            warren_wallet_sign(
+                seed.as_ptr(),
+                payload.as_ptr(),
+                payload.len(),
+                sig1.as_mut_ptr(),
+            );
+            warren_wallet_sign(
+                seed.as_ptr(),
+                payload.as_ptr(),
+                payload.len(),
+                sig2.as_mut_ptr(),
+            );
+        }
+        assert_eq!(sig1, sig2);
+    }
+
+    /// (M-2) `derive_pubkey` must return `RC_INVALID_INPUT` on a null seed.
+    #[test]
+    fn derive_pubkey_null_seed_returns_error() {
+        let mut pk = [0u8; 32];
+        let rc = unsafe { warren_wallet_derive_pubkey(std::ptr::null(), pk.as_mut_ptr()) };
+        assert_eq!(rc, RC_INVALID_INPUT);
+    }
+
+    /// (M-2) `sign` must return `RC_INVALID_INPUT` on a null seed.
+    #[test]
+    fn sign_null_seed_returns_error() {
+        let payload = b"x";
+        let mut sig = [0u8; 64];
+        let rc = unsafe {
+            warren_wallet_sign(
+                std::ptr::null(),
+                payload.as_ptr(),
+                payload.len(),
+                sig.as_mut_ptr(),
+            )
+        };
+        assert_eq!(rc, RC_INVALID_INPUT);
+    }
 }

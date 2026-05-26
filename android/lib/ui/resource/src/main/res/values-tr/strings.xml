@@ -4,7 +4,7 @@
     <string name="add">Ekle</string>
     <string name="agree_and_continue">Kabul et ve devam et</string>
     <string name="all_applications">Tüm uygulamalar</string>
-    <string name="always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Mullvad VPN\'i kullanmadan önce lütfen Her zaman açık VPN\'i <b>%1$s</b> için devre dışı bırakın.</string>
+    <string name="always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Warren VPN\'i kullanmadan önce lütfen Her zaman açık VPN\'i <b>%1$s</b> için devre dışı bırakın.</string>
     <string name="always_on_vpn_error_notification_title">Her zaman açık VPN %1$s uygulamasına atandı</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Android 16\'da bir VPN uygulaması güncellendikten sonra, cihazlar VPN uygulamalarının artık internete erişemediği bir duruma geçebilir.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Lütfen cihazınızı yeniden başlatın ve tekrar bağlanmayı deneyin. Bu işe yaramazsa lütfen %1$s adresine İsveççe veya İngilizce bir e-posta yazın.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Hesap doğrulanamıyor. Lütfen bir hata raporu gönderin.</string>
     <string name="authentication">Yetkilendirme</string>
     <string name="auto_connect_and_lockdown_mode">Otomatik bağlantı ve Kilitleme modu</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Aşağıdaki \"VPN ayarlarına git\" düğmesine tıkladıktan sonra \"Mullvad VPN\" adının yanındaki dişli çarka tıklayın.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Aşağıdaki \"VPN ayarlarına git\" düğmesine tıkladıktan sonra \"Warren VPN\" adının yanındaki dişli çarka tıklayın.</string>
     <string name="auto_connect_carousel_first_slide_top_text">Otomatik Bağlantı ve Kilitleme modu ayarları Android sistem ayarlarında yer alır. Bu ayarlardan birini veya her ikisini de etkinleştirmek için bu kılavuza göz atın.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Otomatik bağlantıyı etkinleştirmek için \"VPN her zaman açık\" seçeneğinin yanındaki düğmeye tıklayın.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Otomatik bağlantı, Android sistem ayarlarında VPN her zaman açık olarak gösterilir ve VPN tüneline sürekli bağlı olmanızı ve yeniden başlatma sonrası otomatik olarak bağlanmanızı sağlar.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Bağlantı ayrıntıları</string>
     <string name="connected">Bağlandı</string>
     <string name="connecting">Bağlanılıyor...</string>
-    <string name="connecting_to_daemon">Mullvad sistem hizmetlerine bağlanılıyor...</string>
+    <string name="connecting_to_daemon">Warren sistem hizmetlerine bağlanılıyor...</string>
     <string name="connection_details_in">Giriş</string>
     <string name="connection_details_out">Çıkış</string>
     <string name="cont">İleri</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Bu cihazı kaldırdın. Tekrar bağlanmak için yeniden giriş yapmanız gerekecek.</string>
     <string name="device_inactive_title">Cihaz etkin değil</string>
     <string name="device_inactive_unblock_warning">Giriş yapmak bu cihazdaki internet engelini kaldıracaktır.</string>
-    <string name="device_name_info_first_paragraph">Bu, cihaza atanan addır. Mullvad hesabında oturum açan her cihaza, uygulamadaki veya web sitesindeki cihazlarınızı yönetirken tanımlamanıza yardımcı olacak benzersiz bir ad verilir.</string>
-    <string name="device_name_info_second_paragraph">Bir Mullvad hesabı ile en fazla 5 cihazda oturum açabilirsiniz.</string>
+    <string name="device_name_info_first_paragraph">Bu, cihaza atanan addır. Warren hesabında oturum açan her cihaza, uygulamadaki veya web sitesindeki cihazlarınızı yönetirken tanımlamanıza yardımcı olacak benzersiz bir ad verilir.</string>
+    <string name="device_name_info_second_paragraph">Bir Warren hesabı ile en fazla 5 cihazda oturum açabilirsiniz.</string>
     <string name="device_name_info_third_paragraph">Oturumu kapatırsanız cihaz ve cihaz adı kaldırılır. Tekrar oturum açtığınızda cihaza yeni bir ad verilir.</string>
     <string name="disconnect">Bağlantıyı Kes</string>
     <string name="disconnected">Bağlantı kesildi</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">IPv6 yapılandırılamadı. IPv6\'yı uygulamada devre dışı bırakın veya cihazınızda etkinleştirin.</string>
     <string name="is_offline">Cihazınız çevrimdışı. Cihazınız tekrar çevrimiçi olduğunda tünel otomatik olarak bağlanacak.</string>
     <string name="language">Dil</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Mullvad VPN\'i kullanmadan önce lütfen \"Her zaman açık VPN\"i devre dışı bırakın.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Warren VPN\'i kullanmadan önce lütfen \"Her zaman açık VPN\"i devre dışı bırakın.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Her zaman açık VPN diğer VPN\'e atandı</string>
     <string name="local_network_sharing">Yerel ağ paylaşımı</string>
     <string name="more_information">Daha fazla bilgi</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Lütfen geçerli bir uzak sunucu portu girin</string>
     <string name="port">Port</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Uygulama, en güvenli sürüme sahip olduğunuzdan emin olmak ve çalışan mevcut sürümle ilgili sorunları size bildirmek için sürüm kontrollerini otomatik olarak gerçekleştirir. Bu işlem, uygulama sürümünü ve Android sistem sürümünü Mullvad sunucularına gönderir. Mullvad, kullanılan uygulama sürümlerinin ve Android sürümlerinin numarasını kaydeder. Veriler asla sizi tanımlayacak şekilde saklanmaz veya kullanılmaz.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Uygulama, en güvenli sürüme sahip olduğunuzdan emin olmak ve çalışan mevcut sürümle ilgili sorunları size bildirmek için sürüm kontrollerini otomatik olarak gerçekleştirir. Bu işlem, uygulama sürümünü ve Android sistem sürümünü Warren sunucularına gönderir. Warren, kullanılan uygulama sürümlerinin ve Android sürümlerinin numarasını kaydeder. Veriler asla sizi tanımlayacak şekilde saklanmaz veya kullanılmaz.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Bölünmüş tünelleme özelliği kullanılıyorsa uygulama, yüklü tüm uygulamaların bir listesi için sisteminizi sorgular. Bu liste yalnızca bölünmüş tünelleme görünümünde alınır. Yüklü uygulamaların listesi hiçbir zaman cihazdan gönderilmez.</string>
     <string name="privacy_disclaimer_title">Gizlilik</string>
     <string name="privacy_policy_label">Gizlilik politikası</string>

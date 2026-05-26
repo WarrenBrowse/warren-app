@@ -4,7 +4,7 @@
     <string name="add">เพิ่ม</string>
     <string name="agree_and_continue">ยอมรับและดำเนินการต่อ</string>
     <string name="all_applications">แอปพลิเคชันทั้งหมด</string>
-    <string name="always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%1$s</b> ก่อนที่จะใช้งาน Mullvad VPN</string>
+    <string name="always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%1$s</b> ก่อนที่จะใช้งาน Warren VPN</string>
     <string name="always_on_vpn_error_notification_title">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง %1$s แล้ว</string>
     <string name="android_16_upgrade_warning_dialog_first_message">หลังจากอัปเดตแอป VPN บน Android 16 อุปกรณ์อาจอยู่ในสถานะที่แอป VPN ไม่สามารถเข้าถึงอินเทอร์เน็ตได้อีกต่อไป</string>
     <string name="android_16_upgrade_warning_dialog_second_message">โปรดรีสตาร์ทอุปกรณ์ของคุณและลองเชื่อมต่ออีกครั้ง หากวิธีนี้ไม่ได้ผล โปรดเขียนอีเมลถึง %1$s เป็นภาษาสวีเดนหรืออังกฤษ</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">ไม่สามารถตรวจสอบความถูกต้องของบัญชีได้ โปรดส่งรายงานปัญหา</string>
     <string name="authentication">การรับรองความถูกต้อง</string>
     <string name="auto_connect_and_lockdown_mode">เชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Mullvad VPN\"</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Warren VPN\"</string>
     <string name="auto_connect_carousel_first_slide_top_text">การตั้งค่าการเชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์ อยู่ในการตั้งค่าระบบ Android โปรดทำตามคำแนะนำนี้ เพื่อเปิดใช้งานโหมดใดโหมดหนึ่ง หรือทั้งสองโหมด</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. ในการเปิดใช้การเชื่อมต่ออัตโนมัติ ให้คลิกปุ่มเปิด/ปิดที่อยู่ถัดจาก \"VPN เปิดอยู่เสมอ\"</string>
     <string name="auto_connect_carousel_second_slide_top_text">การเชื่อมต่ออัตโนมัติเรียกว่า Always-on VPN ในการตั้งค่าระบบ Android ซึ่งจะช่วยให้คุณมั่นใจได้ว่า คุณเชื่อมต่อกับช่องทาง VPN อย่างต่อเนื่อง และมีการเชื่อมต่ออัตโนมัติหลังจากรีสตาร์ต</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">รายละเอียดการเชื่อมต่อ</string>
     <string name="connected">เชื่อมต่อแล้ว</string>
     <string name="connecting">กำลังเชื่อมต่อ...</string>
-    <string name="connecting_to_daemon">กำลังเชื่อมต่อบริการของระบบ Mullvad...</string>
+    <string name="connecting_to_daemon">กำลังเชื่อมต่อบริการของระบบ Warren...</string>
     <string name="connection_details_in">เข้า</string>
     <string name="connection_details_out">ออก</string>
     <string name="cont">ดำเนินการต่อ</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">คุณได้ลบอุปกรณ์เครื่องนี้แล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่อีกครั้ง</string>
     <string name="device_inactive_title">อุปกรณ์ไม่ได้ใช้งาน</string>
     <string name="device_inactive_unblock_warning">การไปที่ส่วนเข้าสู่ระบบจะปลดบล็อกอินเทอร์เน็ตบนอุปกรณ์เครื่องนี้</string>
-    <string name="device_name_info_first_paragraph">นี่เป็นชื่อที่มอบหมายให้กับอุปกรณ์ อุปกรณ์แต่ละเครื่องที่ลงชื่อเข้าใช้บนบัญชี Mullvad จะได้รับชื่อเฉพาะ ที่จะช่วยคุณระบุอุปกรณ์ ในขณะที่คุณจัดการอุปกรณ์ของคุณในแอปหรือบนเว็บไซต์</string>
-    <string name="device_name_info_second_paragraph">คุณสามารถลงชื่อเข้าใช้อุปกรณ์ได้สูงสุด 5 เครื่อง กับบัญชี Mullvad หนึ่งบัญชี</string>
+    <string name="device_name_info_first_paragraph">นี่เป็นชื่อที่มอบหมายให้กับอุปกรณ์ อุปกรณ์แต่ละเครื่องที่ลงชื่อเข้าใช้บนบัญชี Warren จะได้รับชื่อเฉพาะ ที่จะช่วยคุณระบุอุปกรณ์ ในขณะที่คุณจัดการอุปกรณ์ของคุณในแอปหรือบนเว็บไซต์</string>
+    <string name="device_name_info_second_paragraph">คุณสามารถลงชื่อเข้าใช้อุปกรณ์ได้สูงสุด 5 เครื่อง กับบัญชี Warren หนึ่งบัญชี</string>
     <string name="device_name_info_third_paragraph">หากคุณออกจากระบบ อุปกรณ์และชื่ออุปกรณ์จะถูกลบออก และเมื่อคุณลงชื่อเข้าใช้อีกครั้ง อุปกรณ์จะได้รับชื่อใหม่</string>
     <string name="disconnect">ตัดการเชื่อมต่อ</string>
     <string name="disconnected">ตัดการเชื่อมต่อแล้ว</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">ไม่สามารถกำหนดค่า IPv6 ได้ โปรดปิดใช้งานรายการนี้ในแอป หรือเปิดใช้งานบนอุปกรณ์ของคุณ</string>
     <string name="is_offline">อุปกรณ์ของคุณออฟไลน์อยู่ อุโมงค์จะเชื่อมต่อโดยอัตโนมัติ หลังจากที่อุปกรณ์ของคุณกลับมาออนไลน์</string>
     <string name="language">ภาษา</string>
-    <string name="legacy_always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Mullvad VPN</string>
+    <string name="legacy_always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Warren VPN</string>
     <string name="legacy_always_on_vpn_error_notification_title">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง VPN อื่นแล้ว</string>
     <string name="local_network_sharing">การแชร์ในเครือข่ายท้องถิ่น</string>
     <string name="more_information">ข้อมูลเพิ่มเติม</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">โปรดป้อนพอร์ตเซิร์ฟเวอร์ระยะไกลที่ถูกต้อง</string>
     <string name="port">พอร์ต</string>
     <string name="port_x">พอร์ต: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">แอปจะตรวจสอบเวอร์ชันโดยอัตโนมัติ เพื่อให้แน่ใจว่า คุณใช้งานเวอร์ชันที่ปลอดภัยที่สุด และเพื่อแจ้งปัญหาใดๆ ของเวอร์ชันปัจจุบันที่ใช้งานอยู่ให้คุณทราบ โดยระบบจะส่งเวอร์ชันแอปและเวอร์ชันระบบ Android ไปยังเซิร์ฟเวอร์ Mullavid ซึ่ง Mullvad จะติดตามจำนวนเวอร์ชันแอปที่ใช้และเวอร์ชัน Android ทั้งนี้ข้อมูลจะไม่ถูกจัดเก็บ หรือนำไปใช้ในลักษณะใดๆ ที่สามารถระบุตัวตนคุณได้</string>
+    <string name="privacy_disclaimer_body_first_paragraph">แอปจะตรวจสอบเวอร์ชันโดยอัตโนมัติ เพื่อให้แน่ใจว่า คุณใช้งานเวอร์ชันที่ปลอดภัยที่สุด และเพื่อแจ้งปัญหาใดๆ ของเวอร์ชันปัจจุบันที่ใช้งานอยู่ให้คุณทราบ โดยระบบจะส่งเวอร์ชันแอปและเวอร์ชันระบบ Android ไปยังเซิร์ฟเวอร์ Mullavid ซึ่ง Warren จะติดตามจำนวนเวอร์ชันแอปที่ใช้และเวอร์ชัน Android ทั้งนี้ข้อมูลจะไม่ถูกจัดเก็บ หรือนำไปใช้ในลักษณะใดๆ ที่สามารถระบุตัวตนคุณได้</string>
     <string name="privacy_disclaimer_body_second_paragraph">หากมีการใช้งานคุณลักษณะการแยกอุโมงค์ แอปจะขอให้ระบบของคุณระบุแอปพลิเคชันที่ติดตั้งไว้ทั้งหมด รายการนี้จะได้รับการเรียกใช้งานในมุมมองการแยกอุโมงค์เท่านั้น รายการแอปพลิเคชันที่ติดตั้งไว้ทั้งหมด จะไม่ถูกส่งออกจากอุปกรณ์</string>
     <string name="privacy_disclaimer_title">ความเป็นส่วนตัว</string>
     <string name="privacy_policy_label">นโยบายความเป็นส่วนตัว</string>

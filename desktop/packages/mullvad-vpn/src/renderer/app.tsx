@@ -33,6 +33,7 @@ import {
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
+  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -636,8 +637,8 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
-  // Toggle persistant warren_mode (tunnel Iroh). Le restart du daemon
-  // est requis pour appliquer (cf. resolve()).
+  // Persistent warren_mode toggle (Iroh tunnel). A daemon restart is
+  // required to apply (see resolve() on the Rust side).
   public setWarrenMode = async (warrenMode: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenMode(warrenMode);
@@ -666,6 +667,18 @@ export default class AppRenderer {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenMultiHop(settings);
     actions.settings.updateWarrenMultiHop(settings);
+  };
+
+  // Warren multi-exit auto-failover toggle (M5.B.2). GUI-only: the
+  // daemon implements failover unconditionally; this flag controls
+  // whether the failover notification toast is shown and whether the
+  // settings panel renders the toggle as ON. No daemon restart needed
+  // (the value is persisted in gui_settings.json and applied
+  // immediately to the redux store).
+  public setWarrenFailover = async (settings: WarrenFailoverSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenFailover(settings);
+    actions.settings.updateWarrenFailover(settings);
   };
 
   // Session H A.4: trust the new pubkey for the given `exitIdHex`,
@@ -947,6 +960,7 @@ export default class AppRenderer {
     reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
+    reduxSettings.updateWarrenFailover(newSettings.warrenFailover);
     reduxSettings.updateNatPmpSettings(newSettings.warrenNatPmp);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);

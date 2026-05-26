@@ -498,7 +498,7 @@ export interface ISettings {
   warrenApiUrl?: string;
   // Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
   // Default = OFF per doctrine `warren_multihop_doctrine_v1`.
-  // Restart daemon requis pour appliquer.
+  // Daemon restart required to apply.
   warrenMultiHop: WarrenMultiHopSettings;
   // Warren NAT-PMP port-forwarding settings. Default OFF. Pushed
   // live via `setNatPmpSettings` (no daemon restart required: the

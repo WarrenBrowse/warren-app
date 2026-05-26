@@ -193,7 +193,7 @@ impl ApiAccess {
                 println!("Success!");
                 Ok(())
             }
-            Ok(false) | Err(_) => Err(anyhow!("Could not reach the Mullvad API.")),
+            Ok(false) | Err(_) => Err(anyhow!("Could not reach the Warren API.")),
         }
     }
 
@@ -217,7 +217,7 @@ impl ApiAccess {
         rpc.test_api_access_method(new_access_method.get_id())
             .await
             .map_err(|_| {
-                anyhow!("Could not reach the Mullvad API using access method \"{}\". Rolling back to \"{}\"", new_access_method.get_name(), current_access_method.get_name())
+                anyhow!("Could not reach the Warren API using access method \"{}\". Rolling back to \"{}\"", new_access_method.get_name(), current_access_method.get_name())
             })?
 
             ;

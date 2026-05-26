@@ -48,7 +48,7 @@ export function AntiCensorshipView() {
                         // TRANSLATORS: First paragraph of description text in anti-censorship view
                         messages.pgettext(
                           'anti-censorship-view',
-                          'These methods may be useful in situations where you are blocked from reaching Mullvad. When "Automatic" is selected, the app will attempt all methods until one works.',
+                          'These methods may be useful in situations where you are blocked from reaching Warren. When "Automatic" is selected, the app will attempt all methods until one works.',
                         )
                       }
                     </Text>
@@ -105,7 +105,7 @@ function WarrenObfuscationIndicator() {
       <Text variant="labelTiny" color="whiteAlpha60">
         {messages.pgettext(
           'warren-status-view',
-          'Legacy Mullvad obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on.',
+          'Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on.',
         )}
       </Text>
     </>

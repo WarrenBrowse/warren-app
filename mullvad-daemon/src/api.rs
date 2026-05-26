@@ -54,7 +54,7 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                 AccessMethod::BuiltIn(BuiltInAccessMethod::Direct) => ApiConnectionMode::Direct,
                 AccessMethod::BuiltIn(BuiltInAccessMethod::Bridge) => {
                     let Some(bridge) = self.relay_selector.get_bridge_forced() else {
-                        log::warn!("Could not select a Mullvad bridge");
+                        log::warn!("Could not select a Warren bridge");
                         log::debug!("The relay list might be empty");
                         return None;
                     };

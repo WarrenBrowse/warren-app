@@ -369,7 +369,7 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setWarrenMode, enabled);
   }
 
-  // Persistent toggle for local account mode (= no api.mullvad.net).
+  // Persistent toggle for local account mode (= no remote API).
   // Daemon restart required.
   public async setWarrenLocalAccount(enabled: boolean): Promise<void> {
     await this.callBool(this.client.setWarrenLocalAccount, enabled);

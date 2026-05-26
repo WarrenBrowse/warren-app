@@ -602,8 +602,8 @@ msgstr "Vær oppmerksom på at disse metodene ikke forbedrer ytelsen og kan øke
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Disse metodene kan være nyttige i situasjoner der du er blokkert fra å nå Mullvad. Når «Automatisk» er valgt, vil appen prøve alle metodene helt til en av dem fungerer."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "Disse metodene kan være nyttige i situasjoner der du er blokkert fra å nå Warren. Når «Automatisk» er valgt, vil appen prøve alle metodene helt til en av dem fungerer."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -683,8 +683,8 @@ msgid "Local SOCKS5 server"
 msgstr "Lokal SOCKS5-server"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "Administrer og legg til tilpassede metoder for tilgang til Mullvad API."
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Administrer og legg til tilpassede metoder for tilgang til Warren API."
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -743,8 +743,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "Appen trenger informasjonen til den eksterne serveren, der den lokale SOCKS5-serveren videresender trafikken din."
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "Appen må kunne kommunisere med en Mullvad API-server for å logge deg inn, hente serverlister og utføre andre kritiske operasjoner."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "Appen må kunne kommunisere med en Warren API-server for å logge deg inn, hente serverlister og utføre andre kritiske operasjoner."
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -755,8 +755,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "TCP-porten der din lokale SOCKS5-server lytter."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "Dette kan være nyttig hvis API er sensurert, men Mullvads broservere ikke er det."
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "Dette kan være nyttig hvis API er sensurert, men Warrens broservere ikke er det."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -775,16 +775,16 @@ msgid "Transport protocol"
 msgstr "Transportprotokoll"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "Med «Direkte»-metoden kan appen kommunisere direkte med en Mullvad API-server uten proxyer mellom."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "Med «Direkte»-metoden kan appen kommunisere direkte med en Warren API-server uten proxyer mellom."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Med metoden «Kryptert DNS-proxy» vil appen kommunisere med Mullvad API gjennom en proxy-adresse. Dette gjøres ved å hente en adresse fra en DNS over HTTPS-server (DoH) og deretter bruke den til å nå API-serverne våre."
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "Med metoden «Kryptert DNS-proxy» vil appen kommunisere med Warren API gjennom en proxy-adresse. Dette gjøres ved å hente en adresse fra en DNS over HTTPS-server (DoH) og deretter bruke den til å nå API-serverne våre."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Med «Mullvad-broer»-metoden kan appen kommunisere med en Mullvad API-server via en Mullvad-broserver. Den gjør det ved å sende trafikken i tilslørt tilstand ved å bruke Shadowsocks."
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "Med «Warren-broer»-metoden kan appen kommunisere med en Warren API-server via en Warren-broserver. Den gjør det ved å sende trafikken i tilslørt tilstand ved å bruke Shadowsocks."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1308,8 +1308,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "Enheten blir fjernet fra listen og logget ut."
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Dette er navnet som er tildelt enheten. Enhver enhet som er logget inn på en Mullvad-konto, får et unikt navn som gjør det enklere for deg å identifisere den når du administrerer enheten i appen eller på nettsiden."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "Dette er navnet som er tildelt enheten. Enhver enhet som er logget inn på en Warren-konto, får et unikt navn som gjør det enklere for deg å identifisere den når du administrerer enheten i appen eller på nettsiden."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1333,8 +1333,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "Se og administrer alle innloggede enheter. Du kan ha opptil fem enheter på én konto om gangen. Hver enhet får et navn når du logger inn, slik at du enkelt kan skille dem fra hverandre."
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "Du kan ha opptil fem enheter logget inn på samme Mullvad-konto."
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "Du kan ha opptil fem enheter logget inn på samme Warren-konto."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1361,8 +1361,8 @@ msgid "All providers"
 msgstr "Alle leverandører"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "Kun eid av Mullvad"
+msgid "Warren owned only"
+msgstr "Kun eid av Warren"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1585,8 +1585,8 @@ msgstr "BEKREFTELSEN MISLYKTES"
 
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "Kobler til Mullvads systemtjeneste ..."
+msgid "Connecting to Warren system service..."
+msgstr "Kobler til Warrens systemtjeneste ..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1610,8 +1610,8 @@ msgstr "Hvis disse trinnene ikke løser noe, kan du sende inn en problemrapport.
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Tillatelsen til Mullvad VPN-tjenesten er trukket tilbake. Gå til Systeminnstillinger og gi tillatelse til Mullvad VPN under innstillingen «Tillat i bakgrunnen»."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Tillatelsen til Warren VPN-tjenesten er trukket tilbake. Gå til Systeminnstillinger og gi tillatelse til Warren VPN under innstillingen «Tillat i bakgrunnen»."
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1620,13 +1620,13 @@ msgstr "Installere appen på nytt"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "Starte Mullvad-bakgrunnsprosessen på nytt"
+msgid "Restarting the Warren background process"
+msgstr "Starte Warren-bakgrunnsprosessen på nytt"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "Starte Mullvad-bakgrunnsprosessen på nytt ved å klikke på «Tilbake» og deretter «Prøv igjen»"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "Starte Warren-bakgrunnsprosessen på nytt ved å klikke på «Tilbake» og deretter «Prøv igjen»"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1645,8 +1645,8 @@ msgstr "Starter …"
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Mullvad-bakgrunnsprosessen kunne ikke starte. Bakgrunnsprosessen er ansvarlig for sikkerheten, avbruddsbryteren og VPN-tunnelen. Prøv:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Warren-bakgrunnsprosessen kunne ikke starte. Bakgrunnsprosessen er ansvarlig for sikkerheten, avbruddsbryteren og VPN-tunnelen. Prøv:"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1655,8 +1655,8 @@ msgstr "Prøv igjen"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Kunne ikke kontakte Mullvad-systemtjenesten. Tilkoblingen din er kan være usikker. Feilsøk eller send en problemrapport ved å trykke på «Finn ut mer»."
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Kunne ikke kontakte Warren-systemtjenesten. Tilkoblingen din er kan være usikker. Feilsøk eller send en problemrapport ved å trykke på «Finn ut mer»."
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1969,8 +1969,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "Kunne ikke blokkere all nettverkstrafikk. Forsøk å oppdatere operativsystemet ditt eller send inn en problemrapport."
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "Kan ikke kommunisere med Mullvad-kjernedriveren. Prøv å koble til på nytt eller send inn en problemrapport."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Kan ikke kommunisere med Warren-kjernedriveren. Prøv å koble til på nytt eller send inn en problemrapport."
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2332,8 +2332,8 @@ msgid "Please try again or send a problem report."
 msgstr "Prøv igjen eller send inn en problemrapport."
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "Start Mullvad-tjenesten på nytt"
+msgid "Restart Warren Service"
+msgstr "Start Warren-tjenesten på nytt"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2344,8 +2344,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "For å bruke %(splitTunneling)s må du oppdatere til en Linux-kjerneversjon som støtter cgroup v1."
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "For å bruke delt tunnelering må du aktivere «Full disktilgang» for «Mullvad VPN» i systeminnstillingene for macOS."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "For å bruke delt tunnelering må du aktivere «Full disktilgang» for «Warren VPN» i systeminnstillingene for macOS."
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2479,8 +2479,8 @@ msgid "Disable split tunneling"
 msgstr "Deaktiver Split Tunneling"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Aktiver «Full disktilgang» for «Mullvad VPN» i systeminnstillingene for macOS."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "Aktiver «Full disktilgang» for «Warren VPN» i systeminnstillingene for macOS."
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2503,8 +2503,8 @@ msgid "Open system settings"
 msgstr "Åpne systeminnstillinger"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "Feilen kan skje når noe annet enn Mullvad holder på med oppdatering av DNS."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "Feilen kan skje når noe annet enn Warren holder på med oppdatering av DNS."
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2626,8 +2626,8 @@ msgid "Anti-censorship"
 msgstr "Antisensur"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "Advarsel: Hvis du aktiverer dette, må du alltid ha en Mullvad VPN-tilkobling for å være tilkoblet internett."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "Advarsel: Hvis du aktiverer dette, må du alltid ha en Warren VPN-tilkobling for å være tilkoblet internett."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2737,8 +2737,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "Forskjellen mellom avbruddsbryter og låsemodus er at avbruddsbryteren forhindrer lekkasjer under automatiske tilkoblinger til tunnel, programvarekrasj og lignende hendelser."
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Forskjellen mellom avbruddsbryter og låsemodus er at avbruddsbryteren forhindrer lekkasjer under automatiske tilkoblinger til tunnel, programvarekrasj og lignende hendelser. Med aktivert låsemodus må du være tilkoblet en Mullvad VPN-server for å kunne koble til internettet. Manuell frakobling eller å avslutte appen vil blokkere tilkoblingen."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Forskjellen mellom avbruddsbryter og låsemodus er at avbruddsbryteren forhindrer lekkasjer under automatiske tilkoblinger til tunnel, programvarekrasj og lignende hendelser. Med aktivert låsemodus må du være tilkoblet en Warren VPN-server for å kunne koble til internettet. Manuell frakobling eller å avslutte appen vil blokkere tilkoblingen."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2789,8 +2789,8 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "Når denne funksjonen er aktivert, kan IPv6 brukes sammen med IPv4 i VPN-tunnelen til å kommunisere med internettjenester."
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Med Låsemodus aktivert må du være tilkoblet en Mullvad VPN-server for å kunne koble deg til internettet. Manuell frakobling eller avslutning av appen vil blokkere tilkoblingen din."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Med Låsemodus aktivert må du være tilkoblet en Warren VPN-server for å kunne koble deg til internettet. Manuell frakobling eller avslutning av appen vil blokkere tilkoblingen din."
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2982,8 +2982,8 @@ msgstr "%s ble lagt til kontoen din."
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. Etter at du har klikket på «Gå til VPN-innstillinger»-knappen nedenfor, trykker du på tannhjulet ved siden av navnet «Mullvad VPN»."
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. Etter at du har klikket på «Gå til VPN-innstillinger»-knappen nedenfor, trykker du på tannhjulet ved siden av navnet «Warren VPN»."
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. For å aktivere «Automatisk tilkobling» klikker du på bryteren ved siden av «VPN alltid på»."
@@ -3141,8 +3141,8 @@ msgstr "Ved å merke av i denne boksen godtar jeg risikoene involvert med å sle
 msgid "Can't connect?"
 msgstr "Kan du ikke koble til?"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "Endre tittelen og ikonet for Mullvad VPN-appen på Android-enheten din. Dette vil ikke endre ikonet for varsler knyttet til Mullvad VPN."
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "Endre tittelen og ikonet for Warren VPN-appen på Android-enheten din. Dette vil ikke endre ikonet for varsler knyttet til Warren VPN."
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "Endringer til DNS-relaterte innstillinger vil kanskje ikke tre i kraft umiddelbart på grunn av bufrede resultater."
@@ -3165,8 +3165,8 @@ msgstr "Kobler til ..."
 msgid "Continue"
 msgstr "Fortsett"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Kopierte Mullvad-kontonummer til utklippstavlen"
+msgid "Copied Warren account number to clipboard"
+msgstr "Kopierte Warren-kontonummer til utklippstavlen"
 
 msgid "Copied logs to clipboard"
 msgstr "Logger kopiert til utklippstavlen"
@@ -3396,8 +3396,8 @@ msgstr "Sørger for at enheten alltid er på VPN-tunnelen."
 msgid "More actions"
 msgstr "Flere handlinger"
 
-msgid "Mullvad services unavailable"
-msgstr "Mullvad-tjenester utilgjengelig"
+msgid "Warren services unavailable"
+msgstr "Warren-tjenester utilgjengelig"
 
 msgid "Multihop is disabled"
 msgstr "Multihopp er deaktivert"
@@ -3597,11 +3597,11 @@ msgstr "«Gjeldende» metode betyr den metoden som appen bruker for å nå API."
 msgid "The app is blocking internet, please disconnect first"
 msgstr "Denne appen blokkerer internett. Koble fra først"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "Appen kunne ikke opprette en konto fordi den ikke fikk tilgang til Mullvad API."
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "Appen kunne ikke opprette en konto fordi den ikke fikk tilgang til Warren API."
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "Appen kunne ikke logge inn fordi den ikke fikk tilgang til Mullvad API."
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "Appen kunne ikke logge inn fordi den ikke fikk tilgang til Warren API."
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "Den lokale DNS-serveren fungerer ikke med mindre du aktiverer «Deling av lokalt nettverk» under VPN-innstillinger."
@@ -3609,8 +3609,8 @@ msgstr "Den lokale DNS-serveren fungerer ikke med mindre du aktiverer «Deling a
 msgid "The selected %s port is not supported, please change it under"
 msgstr "Valgt %s-port støttes ikke. Du kan endre i"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Disse metodene kan være nyttige i situasjoner der du er blokkert fra å nå Mullvad. Når «Automatisk» er valgt, vil appen prøve alle metodene helt til en av dem fungerer."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "Disse metodene kan være nyttige i situasjoner der du er blokkert fra å nå Warren. Når «Automatisk» er valgt, vil appen prøve alle metodene helt til en av dem fungerer."
 
 msgid "This address has already been entered."
 msgstr "Denne adressen er allerede skrevet inn."
@@ -3636,11 +3636,11 @@ msgstr "Hvis du vil legge til plasseringer i en liste, kan du trykke på pennen 
 msgid "To create a custom list press the \"+\""
 msgstr "For å opprette en egendefinert liste, kan du trykke på «+»"
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "For å slette Mullvad VPN-kontoen må du skrive inn kontonummeret nedenfor."
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "For å slette Warren VPN-kontoen må du skrive inn kontonummeret nedenfor."
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "For å sørge for at du har den sikreste appversjonen, og informere deg om eventuelle problemer med den versjonen som kjøres, vil appen automatisk sjekke appversjonen. Appversjonen og Android-systemversjonen blir da sendt til Mullvad-servere. Mullvad registrerer antallet brukte appversjoner og Android-versjoner. Dataen blir aldri lagret eller brukt på noen som helst måte som kan identifisere deg."
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "For å sørge for at du har den sikreste appversjonen, og informere deg om eventuelle problemer med den versjonen som kjøres, vil appen automatisk sjekke appversjonen. Appversjonen og Android-systemversjonen blir da sendt til Warren-servere. Warren registrerer antallet brukte appversjoner og Android-versjoner. Dataen blir aldri lagret eller brukt på noen som helst måte som kan identifisere deg."
 
 msgid "Toggle VPN"
 msgstr "Velg VPN"
@@ -3663,11 +3663,11 @@ msgstr "Kunne ikke nå API-en"
 msgid "Unable to reach API, %s"
 msgstr "Kunne ikke nå API-en, %s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "Kunne ikke starte tunneltilkobling. Deaktiver VPN som alltid er på, før du bruker Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "Kunne ikke starte tunneltilkobling. Deaktiver VPN som alltid er på, før du bruker Warren VPN."
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "Kunne ikke starte tunneltilkobling. Deaktiver VPN som alltid er på, for <b>%s</b> før du bruker Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "Kunne ikke starte tunneltilkobling. Deaktiver VPN som alltid er på, for <b>%s</b> før du bruker Warren VPN."
 
 msgid "Unable to verify account number, please contact support"
 msgstr "Kunne ikke verifisere kontonummeret. Kontakt kundestøtte"
@@ -3753,8 +3753,8 @@ msgstr "WireGuard-port"
 msgid "Yes, log out device"
 msgstr "Ja, logg ut av enheten"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "Du er i ferd med å slette Mullvad VPN-kontoen din."
+msgid "You are about to delete your Warren VPN account."
+msgstr "Du er i ferd med å slette Warren VPN-kontoen din."
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "Du kan legge til mer tid via kontooversikten eller nettstedet for å fortsette å bruke VPN."

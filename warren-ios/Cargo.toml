@@ -23,6 +23,11 @@ bip39 = { version = "2", features = ["rand"] }
 # X-Warren-Sig headers must never be acceptable without an explicit
 # version bump + signature regression test. cf. AUDIT_COMPLET.md M-3.
 ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
+# Explicit dep for `Zeroizing<[u8;32]>` wrappers in wallet FFI (M-2).
+# The `zeroize` crate is already a transitive dep via ed25519-dalek; this
+# direct dep makes the version coupling explicit and prevents it from being
+# silently removed if ed25519-dalek changes its dep tree.
+zeroize = { workspace = true }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }

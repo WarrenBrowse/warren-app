@@ -24,8 +24,13 @@
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Mutex, OnceLock},
+    sync::OnceLock,
 };
+
+// Fix M-3: parking_lot::Mutex never poisons on panic, unlike std::sync::Mutex.
+// If a JNI thread panics while holding ACTIVE_TUNNEL, subsequent calls can
+// still acquire the lock rather than crashing with "ACTIVE_TUNNEL poisoned".
+use parking_lot::Mutex;
 
 use jnix::{
     FromJava, JnixEnv,
@@ -334,20 +339,24 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     mnemonic: JString<'local>,
     config_json: JString<'local>,
 ) -> jint {
-    let mut slot = ACTIVE_TUNNEL.lock().expect("ACTIVE_TUNNEL poisoned");
+    // parking_lot::Mutex::lock() returns the guard directly — no poisoning,
+    // no Result to unwrap.
+    let mut slot = ACTIVE_TUNNEL.lock();
     if slot.is_some() {
         let _ = env.throw("Tunnel already running");
         return -1;
     }
 
     let jnix_env = JnixEnv::from(env);
-    let mnemonic_str = String::from_java(&jnix_env, mnemonic);
     let config_str = String::from_java(&jnix_env, config_json);
 
     #[cfg(feature = "tunnel")]
     {
         use std::os::fd::{FromRawFd, OwnedFd};
         use std::sync::atomic::Ordering;
+        // Fix L-2: wrap the raw mnemonic in Zeroizing so its heap allocation is
+        // wiped when it goes out of scope (guaranteed even on early-return paths).
+        use zeroize::Zeroizing;
 
         if tun_fd < 0 {
             let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
@@ -381,6 +390,21 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             }
         };
 
+        // Fix L-2: derive the signing key synchronously at the JNI boundary,
+        // before any async task is spawned.  The mnemonic is wrapped in
+        // Zeroizing so it is wiped immediately after key derivation — it never
+        // enters the async task nor persists for the session lifetime.
+        let mnemonic_zeroing = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+        let signing_key = match crate::wallet::signing_key_from_mnemonic(&mnemonic_zeroing) {
+            Ok(k) => k,
+            Err(e) => {
+                let _ = jnix_env.throw(format!("wallet key derive failed: {e}"));
+                return -1;
+            }
+        };
+        // mnemonic_zeroing is dropped (and zeroized) here.
+        drop(mnemonic_zeroing);
+
         let (cancel_tx, cancel_rx) = oneshot::channel();
         // Reset status to Connecting before spawning so the Kotlin side can
         // poll it deterministically right after this JNI returns.
@@ -388,7 +412,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
 
         let task = runtime.spawn(crate::tunnel::run_session(
             tun,
-            mnemonic_str,
+            signing_key,
             config,
             &SESSION_STATUS,
             cancel_rx,
@@ -402,7 +426,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     }
     #[cfg(not(feature = "tunnel"))]
     {
-        let _ = (tun_fd, mnemonic_str, config_str);
+        let _ = (tun_fd, mnemonic, config_str);
         let _ = jnix_env.throw("warren-jni built without the `tunnel` feature");
         -1
     }
@@ -414,11 +438,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) {
-    if let Some(_handle) = ACTIVE_TUNNEL
-        .lock()
-        .expect("ACTIVE_TUNNEL poisoned")
-        .take()
-    {
+    // parking_lot::Mutex::lock() returns the guard directly — no poisoning,
+    // no Result to unwrap.
+    if let Some(_handle) = ACTIVE_TUNNEL.lock().take() {
         // Dropping `_cancel_tx` notifies the Quinn task to wind down. The
         // task itself flips `SESSION_STATUS` back to Disconnected when its
         // `tokio::select!` falls through; we also do it here for symmetry

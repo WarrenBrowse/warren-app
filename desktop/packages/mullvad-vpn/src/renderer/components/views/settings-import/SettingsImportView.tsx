@@ -76,7 +76,7 @@ export function SettingsImportView() {
     const file = await showOpenDialog({
       properties: ['openFile'],
       buttonLabel: messages.gettext('Import'),
-      filters: [{ name: 'Mullvad settings file', extensions: ['json'] }],
+      filters: [{ name: 'Warren settings file', extensions: ['json'] }],
     });
     const path = file.filePaths[0];
     const name = await getPathBaseName(path);

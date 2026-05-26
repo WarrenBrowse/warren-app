@@ -460,12 +460,12 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   // means the daemon is a pre-M4.H.C build and we fall back to OFF.
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
-  // Multi-exit auto-failover (M5.B.2). The toggle is renderer-only:
-  // the daemon implements failover unconditionally; the UI flag just
-  // governs whether the failover toast is surfaced and whether the
-  // settings panel shows the toggle as ON. Default ON. A future proto
-  // field can supersede this default once exit-quality telemetry
-  // graduates from POC to first-class daemon state.
+  // Multi-exit auto-failover (M5.B.2). The proto does not carry this
+  // field yet (the daemon implements failover unconditionally). The
+  // GUI persists the toggle via GuiSettings and merges it in
+  // main/index.ts:setSettings() before notifying the renderer. The
+  // default here is a fallback for the initial snapshot before the
+  // merge runs.
   const warrenFailover = { enabled: true };
   return {
     ...settings.toObject(),

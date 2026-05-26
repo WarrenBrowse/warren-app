@@ -4,7 +4,7 @@
     <string name="add">添加</string>
     <string name="agree_and_continue">同意并继续</string>
     <string name="all_applications">所有应用程序</string>
-    <string name="always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Mullvad VPN 之前，请为 <b>%1$s</b> 停用“始终开启 VPN”。</string>
+    <string name="always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Warren VPN 之前，请为 <b>%1$s</b> 停用“始终开启 VPN”。</string>
     <string name="always_on_vpn_error_notification_title">“始终开启 VPN”已分配给 %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">在 Android 16 上更新 VPN 应用后，设备可能会出现 VPN 应用无法连接互联网的情况。</string>
     <string name="android_16_upgrade_warning_dialog_second_message">请重新启动您的设备，然后再次尝试连接。如果仍然无法连接，请用瑞典语或英语发送电子邮件至 %1$s。</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">无法验证帐户。请发送问题报告。</string>
     <string name="authentication">身份验证</string>
     <string name="auto_connect_and_lockdown_mode">自动连接和锁定模式</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. 点击下方的“前往 VPN 设置”按钮后，点击“Mullvad VPN”名称旁边的齿轮。</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. 点击下方的“前往 VPN 设置”按钮后，点击“Warren VPN”名称旁边的齿轮。</string>
     <string name="auto_connect_carousel_first_slide_top_text">自动连接和锁定模式设置可以在 Android 系统设置中找到，请按照本指南启用其中一项或两项。</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. 要启用自动连接，请点击“始终开启 VPN”旁边的开关。</string>
     <string name="auto_connect_carousel_second_slide_top_text">自动连接在 Android 系统设置中称为“始终开启 VPN”，此功能可确保您始终连接到 VPN 隧道并在重新启动后自动连接。</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">连接详细信息</string>
     <string name="connected">已连接</string>
     <string name="connecting">正在连接…</string>
-    <string name="connecting_to_daemon">正在连接到 Mullvad 系统服务…</string>
+    <string name="connecting_to_daemon">正在连接到 Warren 系统服务…</string>
     <string name="connection_details_in">内部</string>
     <string name="connection_details_out">外部</string>
     <string name="cont">继续</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">无法配置 IPv6。请在应用中将其停用或在您的设备上将其启用。</string>
     <string name="is_offline">您的设备已离线。在您的设备重新上线后，隧道将自动连接。</string>
     <string name="language">语言</string>
-    <string name="legacy_always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Mullvad VPN 之前，请停用“始终开启 VPN”。</string>
+    <string name="legacy_always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Warren VPN 之前，请停用“始终开启 VPN”。</string>
     <string name="legacy_always_on_vpn_error_notification_title">“始终开启 VPN”已分配给其他 VPN</string>
     <string name="local_network_sharing">本地网络共享</string>
     <string name="more_information">更多信息</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">请输入有效的远程服务器端口</string>
     <string name="port">端口</string>
     <string name="port_x">端口：%1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">为确保您使用的是最安全的版本并通知您当前运行的版本存在的任何问题，应用会自动执行版本检查。此操作会将应用版本和 Android 系统版本发送到 Mullvad 服务器。Mullvad 会统计使用的应用版本和 Android 版本。数据永远不会通过任何可以识别您身份的方式存储或使用。</string>
+    <string name="privacy_disclaimer_body_first_paragraph">为确保您使用的是最安全的版本并通知您当前运行的版本存在的任何问题，应用会自动执行版本检查。此操作会将应用版本和 Android 系统版本发送到 Warren 服务器。Warren 会统计使用的应用版本和 Android 版本。数据永远不会通过任何可以识别您身份的方式存储或使用。</string>
     <string name="privacy_disclaimer_body_second_paragraph">如果使用分割隧道功能，应用会向您的系统查询所有已安装应用程序的列表。此列表仅在分割隧道视图中检索。有关已安装应用程序的信息永远不会离开设备。</string>
     <string name="privacy_disclaimer_title">隐私</string>
     <string name="privacy_policy_label">隐私政策</string>

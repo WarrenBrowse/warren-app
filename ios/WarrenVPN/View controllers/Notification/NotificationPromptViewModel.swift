@@ -52,7 +52,7 @@ final class NotificationPromptViewModel: NotificationPromptViewModelProtocol {
             .emptyView,
             isNotificationsDisabled
                 ? NotificationPromptViewRowType.message(
-                    "Notifications for Mullvad VPN are disabled on this device. Please change your system settings for Mullvad VPN if you wish to enable them again. These settings can be changed at any time.",
+                    "Notifications for Warren VPN are disabled on this device. Please change your system settings for Warren VPN if you wish to enable them again. These settings can be changed at any time.",
                     font: .mullvadTiny)
                 : NotificationPromptViewRowType.message(
                     "These settings can be changed at any time", font: .mullvadTiny),

@@ -4,7 +4,7 @@
     <string name="add">افزودن</string>
     <string name="agree_and_continue">موافقت و ادامه</string>
     <string name="all_applications">تمام اپلیکیشن‌ها</string>
-    <string name="always_on_vpn_error_notification_content">نمی‌توان اتصال تونل را آغاز کرد. لطفاً پیش از استفاده از Mullvad VPN، گزینهٔ «VPN همیشه‌فعال» را برای <b>%1$s</b> غیرفعال کنید.</string>
+    <string name="always_on_vpn_error_notification_content">نمی‌توان اتصال تونل را آغاز کرد. لطفاً پیش از استفاده از Warren VPN، گزینهٔ «VPN همیشه‌فعال» را برای <b>%1$s</b> غیرفعال کنید.</string>
     <string name="always_on_vpn_error_notification_title">VPN همیشه‌فعال به %1$s اختصاص داده شد</string>
     <string name="android_16_upgrade_warning_dialog_first_message">پس از به‌روزرسانی یک اپلیکیشن VPN در اندروید 16، ممکن است دستگاه‌ها به حالتی برسند که اپلیکیشن‌های VPN دیگر نتوانند به اینترنت دسترسی پیدا کنند.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">لطفاً دستگاه‌تان را دوباره راه‌اندازی کنید و دوباره تلاش کنید وصل شوید. اگر مشکل برطرف نشد، لطفاً یک ایمیل به %1$s به زبان سوئدی یا انگلیسی بنویسید.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">نمی‌توان حساب را احراز هویت کرد. لطفاً یک گزارش مشکل ارسال کنید.</string>
     <string name="authentication">احراز هویت</string>
     <string name="auto_connect_and_lockdown_mode">اتصال خودکار و حالت قفل</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. پس از کلیک روی دکمهٔ «رفتن به تنظیمات VPN» در پایین، روی آیکون چرخ‌دندهٔ کنار نام «Mullvad VPN» کلیک کنید.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. پس از کلیک روی دکمهٔ «رفتن به تنظیمات VPN» در پایین، روی آیکون چرخ‌دندهٔ کنار نام «Warren VPN» کلیک کنید.</string>
     <string name="auto_connect_carousel_first_slide_top_text">تنظیمات اتصال خودکار و حالت قفل در تنظیمات سیستمی اندروید قرار دارند. برای فعال‌کردن یکی یا هر دو، این راهنما را دنبال کنید.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. برای فعال کردن «اتصال خودکار»، روی دکمهٔ تغییر وضعیت کنار «VPN همیشه‌فعال» کلیک کنید.</string>
     <string name="auto_connect_carousel_second_slide_top_text">در تنظیمات سیستم اندروید، «اتصال خودکار» با نام «VPN همیشه‌فعال» شناخته می‌شود و باعث می‌شود دستگاه شما همیشه به تونل VPN وصل بماند و پس از راه‌اندازی مجدد نیز به‌طور خودکار دوباره متصل شود.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">جزئیات اتصال</string>
     <string name="connected">متصل شد</string>
     <string name="connecting">در حال اتصال...</string>
-    <string name="connecting_to_daemon">در حال اتصال به سرویس سیستم Mullvad...</string>
+    <string name="connecting_to_daemon">در حال اتصال به سرویس سیستم Warren...</string>
     <string name="connection_details_in">ورودی</string>
     <string name="connection_details_out">خروجی</string>
     <string name="cont">ادامه</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">شما این دستگاه را حذف کرده‌اید. برای اتصال دوباره، باید مجدداً وارد شوید.</string>
     <string name="device_inactive_title">دستگاه غیرفعال است</string>
     <string name="device_inactive_unblock_warning">با رفتن به صفحهٔ ورود، اینترنت روی این دستگاه باز خواهد شد.</string>
-    <string name="device_name_info_first_paragraph">این نام به دستگاه اختصاص داده شده است. هر دستگاهی که وارد حساب Mullvad می‌شود، یک نام منحصر‌به‌فرد دریافت می‌کند تا هنگام مدیریت دستگاه‌ها در اپلیکیشن یا وب‌سایت، بتوانید آن را شناسایی کنید.</string>
-    <string name="device_name_info_second_paragraph">شما می‌توانید حداکثر 5 دستگاه را هم‌زمان در یک حساب Mullvad وارد کنید.</string>
+    <string name="device_name_info_first_paragraph">این نام به دستگاه اختصاص داده شده است. هر دستگاهی که وارد حساب Warren می‌شود، یک نام منحصر‌به‌فرد دریافت می‌کند تا هنگام مدیریت دستگاه‌ها در اپلیکیشن یا وب‌سایت، بتوانید آن را شناسایی کنید.</string>
+    <string name="device_name_info_second_paragraph">شما می‌توانید حداکثر 5 دستگاه را هم‌زمان در یک حساب Warren وارد کنید.</string>
     <string name="device_name_info_third_paragraph">اگر خارج شوید، دستگاه و نام آن حذف می‌شوند. وقتی دوباره وارد شوید، دستگاه نام جدیدی خواهد گرفت.</string>
     <string name="disconnect">قطع اتصال</string>
     <string name="disconnected">اتصال قطع شد</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">پیکربندی IPv6 ممکن نشد. آن را در اپلیکیشن غیرفعال کنید یا در دستگاه خود فعال نمایید.</string>
     <string name="is_offline">دستگاه شما آفلاین است. تونل به‌طور خودکار زمانی که دستگاه آنلاین شود، متصل خواهد شد.</string>
     <string name="language">زبان</string>
-    <string name="legacy_always_on_vpn_error_notification_content">نمی‌توان اتصال تونل را آغاز کرد. لطفاً قبل از استفاده از Mullvad VPN، گزینهٔ «VPN همیشه‌فعال» را غیرفعال کنید.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">نمی‌توان اتصال تونل را آغاز کرد. لطفاً قبل از استفاده از Warren VPN، گزینهٔ «VPN همیشه‌فعال» را غیرفعال کنید.</string>
     <string name="legacy_always_on_vpn_error_notification_title">VPN همیشه‌فعال به یک VPN دیگر اختصاص داده شده است</string>
     <string name="local_network_sharing">اشتراک‌گذاری شبکهٔ محلی</string>
     <string name="more_information">اطلاعات بیشتر</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">لطفاً یک پورت معتبرِ سرور راه‌دور وارد کنید</string>
     <string name="port">پورت</string>
     <string name="port_x">پورت: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">برای اطمینان از اینکه امن‌ترین نسخه را دارید و همچنین برای آگاه‌کردن شما از هرگونه مشکل در نسخهٔ فعلی، اپلیکیشن به‌صورت خودکار نسخه را بررسی می‌کند. در این فرایند، نسخهٔ اپلیکیشن و نسخهٔ سیستم اندروید به سرورهای Mullvad ارسال می‌شود. Mullvad فقط تعداد استفاده از نسخه‌های مختلف اپلیکیشن و نسخه‌های اندروید را شمارش می‌کند. این داده‌ها هرگز به شکلی ذخیره یا استفاده نمی‌شوند که بتوانند هویت شما را مشخص کنند.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">برای اطمینان از اینکه امن‌ترین نسخه را دارید و همچنین برای آگاه‌کردن شما از هرگونه مشکل در نسخهٔ فعلی، اپلیکیشن به‌صورت خودکار نسخه را بررسی می‌کند. در این فرایند، نسخهٔ اپلیکیشن و نسخهٔ سیستم اندروید به سرورهای Warren ارسال می‌شود. Warren فقط تعداد استفاده از نسخه‌های مختلف اپلیکیشن و نسخه‌های اندروید را شمارش می‌کند. این داده‌ها هرگز به شکلی ذخیره یا استفاده نمی‌شوند که بتوانند هویت شما را مشخص کنند.</string>
     <string name="privacy_disclaimer_body_second_paragraph">اگر ویژگی تونل‌گذاری تفکیک‌شده فعال باشد، اپلیکیشن از سیستم شما برای دریافت فهرستی از همهٔ اپلیکیشن‌های نصب‌شده پرس‌وجو می‌کند. این فهرست تنها در نمای تونل‌گذاری تفکیک‌شده دریافت می‌شود و هرگز از دستگاه ارسال نمی‌گردد.</string>
     <string name="privacy_disclaimer_title">حریم خصوصی</string>
     <string name="privacy_policy_label">سیاست حفظ حریم خصوصی</string>

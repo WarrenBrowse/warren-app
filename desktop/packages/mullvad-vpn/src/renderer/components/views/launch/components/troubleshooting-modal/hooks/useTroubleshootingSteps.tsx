@@ -9,7 +9,7 @@ export const useTroubleshootingSteps = () => {
           // TRANSLATORS: List item in troubleshooting modal instructing user how to restart the background process.
           messages.pgettext(
             'launch-view',
-            'Restarting the Mullvad background process by clicking "Back", then "Try again"',
+            'Restarting the Warren background process by clicking "Back", then "Try again"',
           )
         }
       </li>
@@ -19,7 +19,7 @@ export const useTroubleshootingSteps = () => {
       <li>
         {
           // TRANSLATORS: List item in troubleshooting modal advising user to restart background process.
-          messages.pgettext('launch-view', 'Restarting the Mullvad background process')
+          messages.pgettext('launch-view', 'Restarting the Warren background process')
         }
       </li>
     );

@@ -237,6 +237,7 @@ mod tests {
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),
+            tunnel_type: Default::default(),
         };
 
         let mut expected_indicators: FeatureIndicators = [].into_iter().collect();

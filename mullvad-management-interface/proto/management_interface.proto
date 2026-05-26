@@ -342,6 +342,17 @@ message ErrorState {
     CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR = 4;
     NETWORK_IPV4_UNAVAILABLE = 5;
     NETWORK_IPV6_UNAVAILABLE = 6;
+    // Warren TOFU pubkey mismatch: the exit served a different Ed25519 pubkey
+    // than the one previously pinned. The UI should surface a warning modal
+    // rather than the generic "No matching server" message.
+    WARREN_PUBKEY_MISMATCH = 7;
+  }
+
+  // Detail message sent alongside WARREN_PUBKEY_MISMATCH.
+  message WarrenPubkeyMismatchDetail {
+    string exit_id_hex = 1;
+    string pinned = 2;
+    string observed = 3;
   }
 
   message FirewallPolicyError {
@@ -384,6 +395,8 @@ message ErrorState {
   InvalidDnsServersError invalid_dns_servers_error = 9;
   // Android only
   InvalidIpv6Config invalid_ipv6_config_error = 10;
+  // TUNNEL_PARAMETER_ERROR + WARREN_PUBKEY_MISMATCH: detail for the UI modal.
+  optional WarrenPubkeyMismatchDetail warren_pubkey_mismatch_detail = 11;
 }
 
 message TunnelState {
@@ -416,6 +429,12 @@ message TunnelStateRelayInfo {
   GeoIpLocation location = 2;
 }
 
+// Which tunneling technology backs a TunnelEndpoint.
+enum TunnelType {
+  WIREGUARD = 0;
+  WARREN = 1;
+}
+
 message TunnelEndpoint {
   string address = 1;
   TransportProtocol protocol = 2;
@@ -424,6 +443,8 @@ message TunnelEndpoint {
   Endpoint entry_endpoint = 5;
   TunnelMetadata tunnel_metadata = 6;
   bool daita = 7;
+  // The tunneling technology used for this endpoint (default = WIREGUARD for backward compat).
+  TunnelType tunnel_type = 8;
 }
 
 message FeatureIndicators { repeated FeatureIndicator active_features = 1; }

@@ -1,11 +1,10 @@
-// This should only contain links to the mullvad website
-// No links to other websites should be added
+// Warren VPN website links. TODO: confirm final URLs with the team
+// once warrenvpn.com content pages are published.
 export const urls = {
-  purchase: 'https://mullvad.net/account/',
-  faq: 'https://mullvad.net/help/tag/mullvad-app/',
-  privacyGuide: 'https://mullvad.net/help/first-steps-towards-online-privacy/',
-  download: 'https://mullvad.net/download/vpn/',
-  removingOpenVpnBlog: 'https://mullvad.net/blog/removing-openvpn-15th-january-2026',
+  purchase: 'https://warrenvpn.com/account/',
+  faq: 'https://warrenvpn.com/help/',
+  privacyGuide: 'https://warrenvpn.com/privacy-guide/',
+  download: 'https://warrenvpn.com/download/',
 } as const;
 
 type BaseUrl = (typeof urls)[keyof typeof urls];

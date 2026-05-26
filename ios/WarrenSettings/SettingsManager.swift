@@ -10,7 +10,7 @@ import Foundation
 import WarrenLogging
 import WarrenTypes
 
-private let keychainServiceName = "Mullvad VPN"
+private let keychainServiceName = "Warren VPN"
 private let accountTokenKey = "accountToken"
 private let accountExpiryKey = "accountExpiry"
 

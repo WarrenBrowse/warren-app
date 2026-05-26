@@ -12,8 +12,8 @@ msgstr ""
 "Language: ru_RU\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "Mullvad VPN – a service, for a monthly fee, that helps keep your online activity, identity, and location private."
-msgstr "Mullvad VPN — сервис с ежемесячной оплатой, который помогает сохранить в секрете вашу личность, местоположение и действия в сети."
+msgid "Warren VPN – a service, for a monthly fee, that helps keep your online activity, identity, and location private."
+msgstr "Warren VPN — сервис с ежемесячной оплатой, который помогает сохранить в секрете вашу личность, местоположение и действия в сети."
 
 msgid "GET STARTED"
 msgstr "НАЧАЛО РАБОТЫ"
@@ -45,11 +45,11 @@ msgstr "Обходите региональные блокировки с пом
 msgid "Our app uses WireGuard, a superior VPN protocol that connects fast and doesn’t drain your battery."
 msgstr "Наше приложение использует WireGuard — быстрый и энергоэффективный VPN-протокол нового поколения."
 
-msgid "HOW DOES MULLVAD VPN WORK?"
+msgid "HOW DOES WARREN VPN WORK?"
 msgstr "ПРИНЦИП РАБОТЫ MULLVAD VPN"
 
-msgid "With Mullvad VPN, your traffic travels through an encrypted tunnel to one of our VPN servers and then onward to the website you are visiting. In this way, websites will only see our server’s identity instead of yours. Same goes for your ISP (internet service provider); they’ll see that you’re connected to Mullvad, but not your activity."
-msgstr "При использовании Mullvad VPN весь трафик с вашего устройства идет по зашифрованному туннелю на один из наших VPN-серверов, а оттуда — на сайты, которые вы посещаете. В результате сайты видят не ваш IP-адрес, а адрес нашего сервера. То же самое касается вашего интернет-провайдера: он видит, что вы подключены к Mullvad, но не видит ваши действия в сети."
+msgid "With Warren VPN, your traffic travels through an encrypted tunnel to one of our VPN servers and then onward to the website you are visiting. In this way, websites will only see our server’s identity instead of yours. Same goes for your ISP (internet service provider); they’ll see that you’re connected to Warren, but not your activity."
+msgstr "При использовании Warren VPN весь трафик с вашего устройства идет по зашифрованному туннелю на один из наших VPN-серверов, а оттуда — на сайты, которые вы посещаете. В результате сайты видят не ваш IP-адрес, а адрес нашего сервера. То же самое касается вашего интернет-провайдера: он видит, что вы подключены к Warren, но не видит ваши действия в сети."
 
 msgid "It also means that all the third-party actors with technology integrated into the various websites you visit can’t sniff out your IP address and use it to track you from one site to another."
 msgstr "Кроме того, сторонние сервисы, интегрированные в различные посещаемые вами сайты, также не смогут определить ваш IP-адрес и отслеживать ваши перемещения между сайтами с его помощью."
@@ -63,8 +63,8 @@ msgstr "ОСВОБОДИМ ИНТЕРНЕТ ОТ МАССОВОЙ СЛЕЖКИ �
 msgid "A free and open society is a society where people have the right to privacy. That’s why we fight for a free internet."
 msgstr "Свободное и открытое общество — это общество, где люди имеют право на частную жизнь. Вот почему мы боремся за свободный Интернет."
 
-msgid "Free from mass surveillance and censorship. Free from big data markets where your personal information is up for sale. Free from authorities mass monitoring every click you make. Free from an infrastructure mapping your whole life. Mullvad VPN and Mullvad Browser is our contribution to the fight."
-msgstr "Станьте невидимы для массовой слежки и цензуры. Станьте невидимы для рынков «больших данных», где ваши персональные данные выставлены на продажу. Станьте невидимы для массового контроля властей за каждым кликом пользователей. Станьте невидимы для инфраструктуры, отслеживающей всю вашу жизнь. Mullvad VPN и Mullvad Browser — наш вклад в защиту свободного Интернета."
+msgid "Free from mass surveillance and censorship. Free from big data markets where your personal information is up for sale. Free from authorities mass monitoring every click you make. Free from an infrastructure mapping your whole life. Warren VPN and Mullvad Browser is our contribution to the fight."
+msgstr "Станьте невидимы для массовой слежки и цензуры. Станьте невидимы для рынков «больших данных», где ваши персональные данные выставлены на продажу. Станьте невидимы для массового контроля властей за каждым кликом пользователей. Станьте невидимы для инфраструктуры, отслеживающей всю вашу жизнь. Warren VPN и Mullvad Browser — наш вклад в защиту свободного Интернета."
 
 msgid "TELEMETRY AND CRASH REPORTS"
 msgstr "ТЕЛЕМЕТРИЯ И ОТЧЕТЫ О СБОЯХ"

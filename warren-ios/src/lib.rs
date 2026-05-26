@@ -1,21 +1,28 @@
-#![cfg(target_os = "ios")]
+// The iOS-specific runtime + API-client code only compiles on `target_os =
+// "ios"`.  The FFI modules (`warren_tunnel_ffi`, `warren_wallet_ffi`) are
+// also included under `test` so that unit tests can run on the macOS host
+// without an iOS cross-compilation toolchain — their deps (bip39,
+// ed25519-dalek, warren-identity, zeroize, std) are all cross-platform.
+#![cfg(any(target_os = "ios", test))]
 // AUDIT_COMPLET.md M-4: the blanket
 // `#![allow(clippy::undocumented_unsafe_blocks)]` was removed.
 // The single current `unsafe` site (`get_string` below) carries an
 // explicit `// Safety:` comment; any future `unsafe` block added in
 // this crate must do the same.
-use libc::c_char;
-use std::ffi::CStr;
-use std::sync::OnceLock;
-use tokio::runtime::{Builder, Handle, Runtime};
 
-// Warren-side FFI modules (skeletons; implementations land in Session C.3.deep
-// follow-up once the warren-tunnel / warren-identity / warren-multihop /
-// warren-natpmp-client integration is wired through Swift wrappers).
-mod warren_multihop_ffi;
-mod warren_natpmp_ffi;
+// Warren-side FFI modules.  `warren_tunnel_ffi` and `warren_wallet_ffi`
+// compile on any platform; the others use iOS-only libc / tokio / mullvad
+// deps and stay iOS-gated.
+#[cfg(any(target_os = "ios", test))]
 mod warren_tunnel_ffi;
+#[cfg(any(target_os = "ios", test))]
 mod warren_wallet_ffi;
+
+// iOS-only modules that reference libc, tokio, mullvad-api, etc.
+#[cfg(target_os = "ios")]
+mod warren_multihop_ffi;
+#[cfg(target_os = "ios")]
+mod warren_natpmp_ffi;
 
 // Upstream Mullvad API client retained transitionally. Each call site here
 // still calls into `mullvad-api` (account number flows, device management,
@@ -24,17 +31,31 @@ mod warren_wallet_ffi;
 // `X-Warren-*` canonical-message signatures (see warren-core/crates/warren-
 // identity::auth), which is a separate flow from Mullvad's account-number
 // token model.
+#[cfg(target_os = "ios")]
 mod api_client;
+#[cfg(target_os = "ios")]
 mod logging;
 
+#[cfg(target_os = "ios")]
+use libc::c_char;
+#[cfg(target_os = "ios")]
+use std::ffi::CStr;
+#[cfg(target_os = "ios")]
+use std::sync::OnceLock;
+#[cfg(target_os = "ios")]
+use tokio::runtime::{Builder, Handle, Runtime};
+
+#[cfg(target_os = "ios")]
 #[repr(C)]
 pub struct ProxyHandle {
     pub context: *mut std::ffi::c_void,
     pub port: u16,
 }
 
+#[cfg(target_os = "ios")]
 static RUNTIME: OnceLock<Result<Runtime, String>> = OnceLock::new();
 
+#[cfg(target_os = "ios")]
 fn warren_ios_runtime() -> Result<Handle, String> {
     match RUNTIME.get_or_init(|| {
         Builder::new_multi_thread()
@@ -52,6 +73,7 @@ fn warren_ios_runtime() -> Result<Handle, String> {
 ///
 /// # Safety
 /// - `ptr` must uphold all safety invariants as required by [CStr::from_ptr].
+#[cfg(target_os = "ios")]
 unsafe fn get_string(ptr: *const c_char) -> String {
     if ptr.is_null() {
         return String::new();

@@ -4,7 +4,7 @@
     <string name="add">Dodaj</string>
     <string name="agree_and_continue">Zaakceptuj i kontynuuj</string>
     <string name="all_applications">Wszystkie aplikacje</string>
-    <string name="always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Mullvad VPN wyłącz opcję „Zawsze włączony VPN” w <b>%1$s</b>.</string>
+    <string name="always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Warren VPN wyłącz opcję „Zawsze włączony VPN” w <b>%1$s</b>.</string>
     <string name="always_on_vpn_error_notification_title">Opcja „Zawsze włączony VPN” przypisana jest do %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">Po zaktualizowaniu aplikacji VPN w systemie Android 16 urządzenia mogą znaleźć się w stanie, w którym aplikacje VPN nie będą już miały dostępu do Internetu.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">Ponownie uruchom urządzenie i ponów próbę połączenia. Jeśli to nie zadziała, wyślij wiadomość e-mail na adres %1$s w języku szwedzkim lub angielskim.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">Nie można uwierzytelnić konta. Wyślij zgłoszenie problemu.</string>
     <string name="authentication">Uwierzytelnianie</string>
     <string name="auto_connect_and_lockdown_mode">Automatyczne łączenie i tryb Lockdown</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Po kliknięciu poniższego przycisku Przejdź do ustawień VPN, kliknij ikonę koła zębatego obok nazwy Mullvad VPN.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Po kliknięciu poniższego przycisku Przejdź do ustawień VPN, kliknij ikonę koła zębatego obok nazwy Warren VPN.</string>
     <string name="auto_connect_carousel_first_slide_top_text">Ustawienia trybu automatycznego łączenia i trybu Lockdown można znaleźć w ustawieniach systemu Android. Aby włączyć jeden lub oba tryby, postępuj zgodnie z niniejszym poradnikiem.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Aby włączyć automatyczne łączenie, kliknij przełącznik obok opcji Zawsze włączony VPN.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automatyczne łączenie w ustawieniach systemu Android nazywa się „Zawsze włączony VPN” i zapewnia stałe połączenie z tunelem VPN oraz automatyczne łączenie po ponownym uruchomieniu.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">Szczegóły połączenia</string>
     <string name="connected">Połączono</string>
     <string name="connecting">Łączenie...</string>
-    <string name="connecting_to_daemon">Łączenie z usługą systemową Mullvad...</string>
+    <string name="connecting_to_daemon">Łączenie z usługą systemową Warren...</string>
     <string name="connection_details_in">Wejście</string>
     <string name="connection_details_out">Wyjście</string>
     <string name="cont">Kontynuuj</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">Urządzenie usunięto. Aby połączyć się ponownie, musisz się ponownie zalogować.</string>
     <string name="device_inactive_title">Urządzenie nieaktywne</string>
     <string name="device_inactive_unblock_warning">Przejście do logowania odblokuje Internet na tym urządzeniu.</string>
-    <string name="device_name_info_first_paragraph">Jest to nazwa przypisana do urządzenia. Każde urządzenie zalogowane na koncie Mullvad otrzymuje unikalną nazwę, która pozwala zidentyfikować je podczas zarządzania urządzeniami w aplikacji lub za pośrednictwem witryny internetowej.</string>
-    <string name="device_name_info_second_paragraph">Na jednym koncie Mullvad może być zalogowanych maksymalnie 5 urządzeń.</string>
+    <string name="device_name_info_first_paragraph">Jest to nazwa przypisana do urządzenia. Każde urządzenie zalogowane na koncie Warren otrzymuje unikalną nazwę, która pozwala zidentyfikować je podczas zarządzania urządzeniami w aplikacji lub za pośrednictwem witryny internetowej.</string>
+    <string name="device_name_info_second_paragraph">Na jednym koncie Warren może być zalogowanych maksymalnie 5 urządzeń.</string>
     <string name="device_name_info_third_paragraph">Przy wylogowaniu urządzenie i jego nazwa zostają usunięte. Po ponownym zalogowaniu urządzenie otrzymuje nową nazwę.</string>
     <string name="disconnect">Rozłącz</string>
     <string name="disconnected">Rozłączono</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">Nie można skonfigurować protokołu IPv6. Wyłącz go w aplikacji lub włącz na urządzeniu.</string>
     <string name="is_offline">Twoje urządzenie jest offline. Tunel zostanie automatycznie połączony, gdy urządzenie ponownie przejdzie w tryb online.</string>
     <string name="language">Język</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Mullvad VPN wyłącz opcję „Zawsze włączony VPN”.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Warren VPN wyłącz opcję „Zawsze włączony VPN”.</string>
     <string name="legacy_always_on_vpn_error_notification_title">Opcja „Zawsze włączony VPN” przypisana jest do innej aplikacji VPN</string>
     <string name="local_network_sharing">Udostępnianie sieci lokalnej</string>
     <string name="more_information">Więcej informacji</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">Wprowadź prawidłowy port serwera zdalnego</string>
     <string name="port">Port</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">Aby upewnić się, że masz najbezpieczniejszą wersję i poinformować Cię o wszelkich problemach z aktualnie uruchomioną wersją, aplikacja automatycznie sprawdza wersję. Powoduje to wysłanie wersji aplikacji i wersji systemu Android na serwery Mullvad. Mullvad prowadzi liczniki używanych wersji aplikacji i wersji systemu Android. Dane te nigdy nie są przechowywane ani wykorzystywane w żaden sposób, który umożliwiłby zidentyfikowanie Ciebie jako osoby.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">Aby upewnić się, że masz najbezpieczniejszą wersję i poinformować Cię o wszelkich problemach z aktualnie uruchomioną wersją, aplikacja automatycznie sprawdza wersję. Powoduje to wysłanie wersji aplikacji i wersji systemu Android na serwery Warren. Warren prowadzi liczniki używanych wersji aplikacji i wersji systemu Android. Dane te nigdy nie są przechowywane ani wykorzystywane w żaden sposób, który umożliwiłby zidentyfikowanie Ciebie jako osoby.</string>
     <string name="privacy_disclaimer_body_second_paragraph">Jeśli używana jest funkcja dzielonego tunelowania, aplikacja wysyła do systemu zapytanie o listę wszystkich zainstalowanych aplikacji. Lista ta jest pobierana wyłącznie w widoku dzielonego tunelowania. Lista zainstalowanych aplikacji nigdy nie jest wysyłana z urządzenia.</string>
     <string name="privacy_disclaimer_title">Prywatność</string>
     <string name="privacy_policy_label">Polityka prywatności</string>

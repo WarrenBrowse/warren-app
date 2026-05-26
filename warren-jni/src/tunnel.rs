@@ -23,6 +23,7 @@ use std::net::SocketAddr;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::Instant;
 
+use ed25519_dalek::SigningKey;
 use serde::Deserialize;
 use tokio::sync::oneshot;
 use warren_protocol::{WarrenExitAddr, WarrenPubkey};
@@ -115,23 +116,21 @@ pub enum TunnelStartError {
 /// `'static` reference because the JNI side parks the underlying atomic
 /// in a `static AtomicI32`; this keeps `run_session` `'static`-bounded
 /// for `runtime.spawn(...)` without an extra `Arc` allocation.
+///
+/// Fix L-2: the function now accepts a pre-derived `signing_key` instead of
+/// a raw mnemonic string.  Key derivation happens at the JNI boundary
+/// (synchronously, before this task is spawned) and the mnemonic is
+/// zeroized there — it never crosses into the async lifetime.
 pub async fn run_session(
     tun: AndroidTun,
-    mnemonic: String,
+    signing_key: SigningKey,
     config: WarrenTunnelConfig,
     status: &'static AtomicI32,
     cancel_rx: oneshot::Receiver<()>,
 ) {
     status.store(SessionStatus::Connecting as i32, Ordering::SeqCst);
 
-    let signing = match crate::wallet::signing_key_from_mnemonic(&mnemonic) {
-        Ok(k) => k,
-        Err(e) => {
-            log::error!("wallet key derive failed: {e}");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
-            return;
-        }
-    };
+    let signing = signing_key;
 
     let exit_pubkey = match WarrenPubkey::from_hex(&config.exit_pubkey_hex) {
         Ok(p) => p,

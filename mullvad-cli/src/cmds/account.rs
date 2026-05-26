@@ -90,13 +90,13 @@ impl Account {
 
     async fn login(rpc: &mut MullvadProxyClient, account_number: AccountNumber) -> Result<()> {
         rpc.login_account(account_number.clone()).await?;
-        println!("Mullvad account \"{account_number}\" set");
+        println!("Warren account \"{account_number}\" set");
         Ok(())
     }
 
     async fn logout(rpc: &mut MullvadProxyClient) -> Result<()> {
         rpc.logout_account(&format!("{BIN_NAME} logout")).await?;
-        println!("Removed device from Mullvad account");
+        println!("Removed device from Warren account");
         Ok(())
     }
 
@@ -108,11 +108,9 @@ impl Account {
         match state {
             DeviceState::LoggedIn(device) => {
                 // We display the Warren hex pubkey in place of the
-                // legacy `account_number`. The label keeps
-                // "Mullvad account:" for consistency with the
-                // user-facing `--help` during the transition.
+                // legacy `account_number`.
                 let pubkey = device.pubkey.as_str().to_owned();
-                println!("{:<20}{}", "Mullvad account:", pubkey);
+                println!("{:<20}{}", "Warren account:", pubkey);
 
                 let data = rpc.get_account_data(pubkey).await?;
                 println!(
@@ -137,7 +135,7 @@ impl Account {
             DeviceState::Revoked => {
                 println!("{REVOKED_MESSAGE}");
                 if let Some(account_number) = rpc.get_account_history().await? {
-                    println!("Mullvad account: {account_number}");
+                    println!("Warren account: {account_number}");
                 }
             }
         }

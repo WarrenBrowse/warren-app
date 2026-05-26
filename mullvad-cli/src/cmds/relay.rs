@@ -284,7 +284,7 @@ impl Relay {
                 );
                 for relay in &city.relays {
                     let ownership = if relay.owned {
-                        "Mullvad-owned"
+                        "Warren-owned"
                     } else {
                         "rented"
                     };

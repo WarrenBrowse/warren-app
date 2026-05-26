@@ -132,12 +132,12 @@ class ListAccessMethodCoordinator: Coordinator, Presenting, Presentable, Setting
     private func about() {
         let header = NSLocalizedString("API access", comment: "")
         let preamble = NSLocalizedString(
-            "Manage and add custom methods to access the Mullvad API.",
+            "Manage and add custom methods to access the Warren API.",
             comment: ""
         )
         let body = [
             NSLocalizedString(
-                "The app needs to communicate with a Mullvad API server to log you in, "
+                "The app needs to communicate with a Warren API server to log you in, "
                     + "fetch server lists, and other critical operations.",
                 comment: ""
             ),

@@ -4,7 +4,7 @@
     <string name="add">إضافة</string>
     <string name="agree_and_continue">الموافقة والمتابعة</string>
     <string name="all_applications">جميع التطبيقات</string>
-    <string name="always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%1$s</b> قبل استخدام Mullvad VPN.</string>
+    <string name="always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%1$s</b> قبل استخدام Warren VPN.</string>
     <string name="always_on_vpn_error_notification_title">تم تعيين \"تشغيل VPN دائمًا\" إلى %1$s</string>
     <string name="android_16_upgrade_warning_dialog_first_message">بعد تحديث تطبيق VPN على نظام التشغيل Android 16، قد تصل الأجهزة إلى حالة تفقد فيها تطبيقات VPN قدرتها على الوصول إلى الإنترنت.</string>
     <string name="android_16_upgrade_warning_dialog_second_message">يُرجى إعادة تشغيل جهازك ومحاولة الاتصال مرة أخرى. إذا لم ينجح ذلك، يُرجى إرسال رسالة بريد إلكتروني إلى %1$s باللغة السويدية أو الإنجليزية.</string>
@@ -16,7 +16,7 @@
     <string name="auth_failed">تتعذَّر مصادقة الحساب. يُرجى إرسال بلاغ بالمشكلة.</string>
     <string name="authentication">المصادقة</string>
     <string name="auto_connect_and_lockdown_mode">الاتصال التلقائي ووضع التأمين</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Mullvad VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Warren VPN\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">يمكن العثور على إعدادات \"الاتصال التلقائي\" و\"وضع التأمين\" في إعدادات نظام Android. اتَّبع هذا الدليل لتفعيل أحدهما أو كليهما.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. لتفعيل الاتصال التلقائي، انقر على زر التبديل بجوار \"تشغيل VPN دائمًا\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">يُطلق على الاتصال التلقائي اسم \"تشغيل VPN دائمًا\" في إعدادات نظام Android، ويتأكد من اتصالك الدائم بنفق VPN ويتصل تلقائيًا بعد إعادة التشغيل.</string>
@@ -45,7 +45,7 @@
     <string name="connect_panel_connection_details">تفاصيل الاتصال</string>
     <string name="connected">متصل</string>
     <string name="connecting">جارٍ الاتصال...</string>
-    <string name="connecting_to_daemon">جارٍ الاتصال بخدمة نظام Mullvad...</string>
+    <string name="connecting_to_daemon">جارٍ الاتصال بخدمة نظام Warren...</string>
     <string name="connection_details_in">داخل</string>
     <string name="connection_details_out">خارج</string>
     <string name="cont">استمرار</string>
@@ -62,8 +62,8 @@
     <string name="device_inactive_description">لقد أزلت هذا الجهاز. للاتصال مجددًا، ستحتاج إلى تسجيل الدخول مرة أخرى.</string>
     <string name="device_inactive_title">الجهاز غير نشط</string>
     <string name="device_inactive_unblock_warning">سيؤدي تسجيل الدخول إلى إلغاء حظر الإنترنت على هذا الجهاز.</string>
-    <string name="device_name_info_first_paragraph">هذا هو الاسم المُخصَّص للجهاز. يحصل كل جهاز مُسجَّل منه الدخول إلى حساب Mullvad على اسم فريد يساعدك على تمييزه عند إدارة أجهزتك في التطبيق أو على الموقع الإلكتروني.</string>
-    <string name="device_name_info_second_paragraph">يمكنك تسجيل الدخول إلى ما يصل إلى 5 أجهزة على حساب Mullvad واحد.</string>
+    <string name="device_name_info_first_paragraph">هذا هو الاسم المُخصَّص للجهاز. يحصل كل جهاز مُسجَّل منه الدخول إلى حساب Warren على اسم فريد يساعدك على تمييزه عند إدارة أجهزتك في التطبيق أو على الموقع الإلكتروني.</string>
+    <string name="device_name_info_second_paragraph">يمكنك تسجيل الدخول إلى ما يصل إلى 5 أجهزة على حساب Warren واحد.</string>
     <string name="device_name_info_third_paragraph">عند تسجيل الخروج، سيتم حذف الجهاز واسمه. وعند تسجيل الدخول مجددًا، سيحصل الجهاز على اسم جديد.</string>
     <string name="disconnect">قطع الاتصال</string>
     <string name="disconnected">تم قطع الاتصال</string>
@@ -102,7 +102,7 @@
     <string name="ipv6_unavailable">تعذَّرت تهيئة بروتوكول IPv6. أوقفه في التطبيق أو فعِّله على جهازك.</string>
     <string name="is_offline">جهازك غير متصل بالإنترنت. سيتصل النفق تلقائيًا بمجرد اتصال جهازك مرة أخرى بالإنترنت.</string>
     <string name="language">اللغة</string>
-    <string name="legacy_always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Warren VPN.</string>
     <string name="legacy_always_on_vpn_error_notification_title">تم تعيين \"تشغيل VPN دائمًا\" إلى شبكة VPN أخرى</string>
     <string name="local_network_sharing">مشاركة الشبكة المحلية</string>
     <string name="more_information">المزيد من المعلومات</string>
@@ -124,7 +124,7 @@
     <string name="please_enter_a_valid_remote_server_port">يُرجى إدخال منفذ خادم بعيد صالح</string>
     <string name="port">المنفذ</string>
     <string name="port_x">المنفذ: %1$s</string>
-    <string name="privacy_disclaimer_body_first_paragraph">للتأكد من استخدامك للإصدار الأكثر أمانًا وإبلاغك بأي مشكلات في الإصدار الحالي قيد التشغيل، يُجري التطبيق عمليات فحص للإصدار تلقائيًا يتم خلالها إرسال إصدار التطبيق وإصدار نظام Android إلى خوادم Mullvad. تحتفظ Mullvad بعدادات لعدد إصدارات التطبيق وإصدارات Android المُستخدَمة. لا يتم تخزين البيانات أو استخدامها بأي طريقة يمكن من خلالها تحديد هويتك.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">للتأكد من استخدامك للإصدار الأكثر أمانًا وإبلاغك بأي مشكلات في الإصدار الحالي قيد التشغيل، يُجري التطبيق عمليات فحص للإصدار تلقائيًا يتم خلالها إرسال إصدار التطبيق وإصدار نظام Android إلى خوادم Warren. تحتفظ Warren بعدادات لعدد إصدارات التطبيق وإصدارات Android المُستخدَمة. لا يتم تخزين البيانات أو استخدامها بأي طريقة يمكن من خلالها تحديد هويتك.</string>
     <string name="privacy_disclaimer_body_second_paragraph">في حال استخدام ميزة الانقسام النفقي، يستعلم التطبيق من نظامك للحصول على قائمة بجميع التطبيقات المُثبَّتة. يتم استدعاء هذه القائمة في شاشة الانقسام النفقي فقط. ولا يتم إرسال قائمة التطبيقات المُثبَّتة من الجهاز أبدًا.</string>
     <string name="privacy_disclaimer_title">الخصوصية</string>
     <string name="privacy_policy_label">سياسة الخصوصية</string>
