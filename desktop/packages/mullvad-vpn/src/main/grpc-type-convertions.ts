@@ -336,8 +336,7 @@ function convertFromParameterError(
       return TunnelParameterError.ipv4Unavailable;
     case grpcTypes.ErrorState.GenerationError.NETWORK_IPV6_UNAVAILABLE:
       return TunnelParameterError.ipv6Unavailable;
-    // WARREN_PUBKEY_MISMATCH = 7 in proto; stale stubs may not expose the constant yet.
-    case 7 as grpcTypes.ErrorState.GenerationError:
+    case grpcTypes.ErrorState.GenerationError.WARREN_PUBKEY_MISMATCH:
       return TunnelParameterError.warrenPubkeyMismatch;
   }
 }
