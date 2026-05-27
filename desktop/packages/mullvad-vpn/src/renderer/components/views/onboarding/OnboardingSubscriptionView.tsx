@@ -7,10 +7,9 @@ import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { Button, Spinner, Text } from '../../../lib/components';
-import { FlexColumn } from '../../../lib/components/flex-column';
-import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
 import { useSelector } from '../../../redux/store';
+import { OnboardingLayout } from './components';
 
 // M5.B.3 step 3: subscription pointer. Warren is paid (~7-10
 // EUR/mo). We do **not** embed an iframe to warrenvpn.com/pricing;
@@ -47,7 +46,6 @@ export function OnboardingSubscriptionView() {
   // active, navigate forward automatically.
   useEffect(() => {
     if (polling && accountExpiry && !hasExpired(accountExpiry)) {
-      // Subscription became active while we were polling.
       if (pollTimerRef.current) {
         clearInterval(pollTimerRef.current);
         pollTimerRef.current = null;
@@ -76,10 +74,6 @@ export function OnboardingSubscriptionView() {
       return;
     }
     setChecking(false);
-    // After updateAccountData(), the redux store will have the latest
-    // expiry. We read it via the selector on the next render, but we can
-    // also check the store synchronously via the current selector value
-    // which will be stale here. Instead we rely on a useEffect below.
   }, [updateAccountData]);
 
   // After a successful verification round-trip, check the (now-updated)
@@ -87,7 +81,6 @@ export function OnboardingSubscriptionView() {
   const prevCheckingRef = useRef(false);
   useEffect(() => {
     if (prevCheckingRef.current && !checking && !error) {
-      // Just finished checking without error — evaluate result.
       if (accountExpiry && !hasExpired(accountExpiry)) {
         push(RoutePath.onboardingPreferences);
       } else {
@@ -107,7 +100,7 @@ export function OnboardingSubscriptionView() {
   }, [verifySubscription]);
 
   const handleOpenPricing = useCallback(() => {
-    openUrl(urls.pricing);
+    void openUrl(urls.pricing);
 
     // Start auto-polling every 10s for 2 minutes after the user opens
     // the external payment page.
@@ -136,77 +129,63 @@ export function OnboardingSubscriptionView() {
     void verifySubscription();
   }, [verifySubscription]);
 
-  const skip = useCallback(() => push(RoutePath.main), [push]);
-
   return (
-    <View backgroundColor="darkBlue">
-      <View.Content>
-        <View.Container horizontalMargin="medium" flexDirection="column" gap="large">
-          <Text variant="titleBig" color="white">
-            {messages.pgettext('warren-onboarding', 'Your subscription')}
-          </Text>
-          <Text variant="bodySmall" color="whiteAlpha80">
-            {messages.pgettext(
-              'warren-onboarding',
-              "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go.",
-            )}
-          </Text>
+    <OnboardingLayout
+      title={messages.pgettext('warren-onboarding', 'Your subscription')}
+      description={messages.pgettext(
+        'warren-onboarding',
+        "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go.",
+      )}
+      actions={
+        <>
+          <Button
+            variant="success"
+            onClick={handleOpenPricing}
+            data-testid="onboarding-subscription-link">
+            <Button.Text>
+              {messages.pgettext('warren-onboarding', 'View plans (opens in your browser)')}
+            </Button.Text>
+            <Button.Icon icon="external" />
+          </Button>
 
-          {error && (
-            <Text variant="bodySmall" color="red">
-              {error}
-            </Text>
-          )}
-
-          <FlexColumn gap="medium">
-            <Button variant="success" onClick={handleOpenPricing} data-testid="onboarding-subscription-link">
+          <Button
+            variant="primary"
+            disabled={checking}
+            onClick={handleAlreadyHave}
+            data-testid="onboarding-subscription-already-have">
+            {checking ? (
+              <Spinner />
+            ) : (
               <Button.Text>
-                {messages.pgettext('warren-onboarding', 'View plans (opens in your browser)')}
+                {messages.pgettext('warren-onboarding', 'I already have a subscription')}
               </Button.Text>
-              <Button.Icon icon="external" />
-            </Button>
+            )}
+          </Button>
 
+          {(error || polling) && (
             <Button
               variant="primary"
               disabled={checking}
-              onClick={handleAlreadyHave}
-              data-testid="onboarding-subscription-already-have">
+              onClick={handleCheckAgain}
+              data-testid="onboarding-subscription-check-again">
               {checking ? (
                 <Spinner />
               ) : (
                 <Button.Text>
-                  {messages.pgettext('warren-onboarding', 'I already have a subscription')}
+                  {polling
+                    ? messages.pgettext('warren-onboarding', 'Checking... (click to refresh now)')
+                    : messages.pgettext('warren-onboarding', 'Check again')}
                 </Button.Text>
               )}
             </Button>
-
-            {(error || polling) && (
-              <Button
-                variant="primary"
-                disabled={checking}
-                onClick={handleCheckAgain}
-                data-testid="onboarding-subscription-check-again">
-                {checking ? (
-                  <Spinner />
-                ) : (
-                  <Button.Text>
-                    {polling
-                      ? messages.pgettext('warren-onboarding', 'Checking... (click to refresh now)')
-                      : messages.pgettext('warren-onboarding', 'Check again')}
-                  </Button.Text>
-                )}
-              </Button>
-            )}
-
-            <Button variant="primary" onClick={skip} data-testid="onboarding-subscription-skip">
-              <Button.Text>
-                {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
-              </Button.Text>
-            </Button>
-          </FlexColumn>
-        </View.Container>
-      </View.Content>
-    </View>
+          )}
+        </>
+      }>
+      {error && (
+        <Text variant="bodySmall" color="red">
+          {error}
+        </Text>
+      )}
+    </OnboardingLayout>
   );
 }
-

@@ -2,10 +2,9 @@ import React from 'react';
 
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
-import { Text } from '../../../lib/components';
-import { FlexColumn } from '../../../lib/components/flex-column';
-import { View } from '../../../lib/components/view';
+import { Button } from '../../../lib/components';
 import { useHistory } from '../../../lib/history';
+import { OnboardingLayout } from './components';
 
 // M5.B.3 step 1: welcome banner. Sets the tone "Warren VPN, no
 // compromise privacy" and routes the user into the wallet step.
@@ -15,30 +14,20 @@ import { useHistory } from '../../../lib/history';
 export function OnboardingWelcomeView() {
   const { push } = useHistory();
   const next = React.useCallback(() => push(RoutePath.onboardingWallet), [push]);
-  const skip = React.useCallback(() => push(RoutePath.main), [push]);
+
   return (
-    <View backgroundColor="darkBlue">
-      <View.Content>
-        <View.Container horizontalMargin="medium" flexDirection="column" gap="large">
-          <Text variant="titleBig" color="white">
-            {messages.pgettext('warren-onboarding', 'Welcome to Warren VPN')}
-          </Text>
-          <Text variant="bodySmall" color="whiteAlpha80">
-            {messages.pgettext(
-              'warren-onboarding',
-              'A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth.',
-            )}
-          </Text>
-          <FlexColumn gap="medium">
-            <button type="button" onClick={next} data-testid="onboarding-welcome-next">
-              {messages.pgettext('warren-onboarding', 'Get started')}
-            </button>
-            <button type="button" onClick={skip} data-testid="onboarding-welcome-skip">
-              {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
-            </button>
-          </FlexColumn>
-        </View.Container>
-      </View.Content>
-    </View>
+    <OnboardingLayout
+      title={messages.pgettext('warren-onboarding', 'Welcome to Warren VPN')}
+      description={messages.pgettext(
+        'warren-onboarding',
+        'A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth.',
+      )}
+      showBackAction={false}
+      actions={
+        <Button variant="success" onClick={next} data-testid="onboarding-welcome-next">
+          <Button.Text>{messages.pgettext('warren-onboarding', 'Get started')}</Button.Text>
+        </Button>
+      }
+    />
   );
 }

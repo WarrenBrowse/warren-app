@@ -4,10 +4,11 @@ import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Text } from '../../../lib/components';
+import { Button, Spinner, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
-import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
+import { countMnemonicWords, MnemonicGrid, MnemonicTextarea } from '../../warren-mnemonic';
+import { OnboardingLayout } from './components';
 
 // M5.B.3 step 2: wallet bootstrap. Two paths:
 // - Generate: read the daemon's auto-bootstrapped mnemonic via
@@ -24,10 +25,6 @@ import { useHistory } from '../../../lib/history';
 // This is non-negotiable per the doctrine; do not regress on a UX
 // review.
 
-function countWords(input: string): number {
-  return input.split(/\s+/).filter((w) => w.length > 0).length;
-}
-
 export function OnboardingWalletView() {
   const { push } = useHistory();
   const { getWarrenMnemonic, setWarrenMnemonic } = useAppContext();
@@ -39,7 +36,7 @@ export function OnboardingWalletView() {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const importWordCount = countWords(importInput);
+  const importWordCount = countMnemonicWords(importInput);
   const importWordCountValid = importWordCount === 12 || importWordCount === 24;
 
   // Drop the secret from React memory when the user leaves the view
@@ -81,13 +78,7 @@ export function OnboardingWalletView() {
 
   const reveal = React.useCallback(() => setRevealed(true), []);
 
-  const onImportChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setImportInput(e.target.value),
-    [],
-  );
-
   const next = React.useCallback(() => push(RoutePath.onboardingSubscription), [push]);
-  const skip = React.useCallback(() => push(RoutePath.main), [push]);
 
   const submitImport = React.useCallback(async () => {
     setError(null);
@@ -110,111 +101,93 @@ export function OnboardingWalletView() {
     }
   }, [importInput, setWarrenMnemonic, push]);
 
+  const description =
+    mode === 'pick'
+      ? messages.pgettext(
+          'warren-onboarding',
+          'Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them.',
+        )
+      : mode === 'generate'
+        ? messages.pgettext(
+            'warren-onboarding',
+            'Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware.',
+          )
+        : messages.pgettext(
+            'warren-onboarding',
+            'Paste your 12-word BIP39 mnemonic to restore your existing Warren identity.',
+          );
+
+  let actions: React.ReactNode;
+  if (mode === 'pick') {
+    actions = (
+      <>
+        <Button variant="success" onClick={pickGenerate} data-testid="onboarding-wallet-generate">
+          <Button.Text>
+            {messages.pgettext('warren-onboarding', 'Back up my new wallet (recommended)')}
+          </Button.Text>
+        </Button>
+        <Button variant="primary" onClick={pickImport} data-testid="onboarding-wallet-import">
+          <Button.Text>
+            {messages.pgettext('warren-onboarding', 'Import an existing mnemonic')}
+          </Button.Text>
+        </Button>
+      </>
+    );
+  } else if (mode === 'generate') {
+    actions = (
+      <Button
+        variant="success"
+        onClick={next}
+        disabled={!revealed || !mnemonic}
+        data-testid="onboarding-wallet-confirm">
+        <Button.Text>
+          {messages.pgettext('warren-onboarding', 'I have written down the words')}
+        </Button.Text>
+      </Button>
+    );
+  } else {
+    actions = (
+      <Button
+        variant="success"
+        onClick={submitImport}
+        disabled={!importWordCountValid || submitting}
+        data-testid="onboarding-wallet-import-confirm">
+        {submitting ? (
+          <Spinner />
+        ) : (
+          <Button.Text>{messages.pgettext('warren-onboarding', 'Restore wallet')}</Button.Text>
+        )}
+      </Button>
+    );
+  }
+
   return (
-    <View backgroundColor="darkBlue">
-      <View.Content>
-        <View.Container horizontalMargin="medium" flexDirection="column" gap="large">
-          <Text variant="titleBig" color="white">
-            {messages.pgettext('warren-onboarding', 'Your Warren wallet')}
+    <OnboardingLayout
+      title={messages.pgettext('warren-onboarding', 'Your Warren wallet')}
+      description={description}
+      actions={actions}>
+      <FlexColumn gap="medium">
+        {error && (
+          <Text variant="bodySmall" color="red">
+            {error}
           </Text>
-          {mode === 'pick' && (
-            <FlexColumn gap="medium">
-              <Text variant="bodySmall" color="whiteAlpha80">
-                {messages.pgettext(
-                  'warren-onboarding',
-                  'Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them.',
-                )}
-              </Text>
-              <button type="button" onClick={pickGenerate} data-testid="onboarding-wallet-generate">
-                {messages.pgettext('warren-onboarding', 'Back up my new wallet (recommended)')}
-              </button>
-              <button type="button" onClick={pickImport} data-testid="onboarding-wallet-import">
-                {messages.pgettext('warren-onboarding', 'Import an existing mnemonic')}
-              </button>
-            </FlexColumn>
-          )}
-          {mode === 'generate' && (
-            <FlexColumn gap="medium">
-              <Text variant="bodySmall" color="whiteAlpha80">
-                {messages.pgettext(
-                  'warren-onboarding',
-                  'Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware.',
-                )}
-              </Text>
-              {error && (
-                <Text variant="bodySmall" color="red">
-                  {error}
-                </Text>
-              )}
-              {mnemonic && (
-                <div
-                  role="textbox"
-                  aria-readonly="true"
-                  style={{
-                    filter: revealed ? 'none' : 'blur(8px)',
-                    cursor: 'pointer',
-                    padding: 12,
-                    border: '1px solid #888',
-                    fontFamily: "'Source Code Pro', Menlo, Consolas, monospace",
-                  }}
-                  onClick={reveal}
-                  data-testid="onboarding-mnemonic-blur">
-                  {mnemonic}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={next}
-                disabled={!revealed || !mnemonic}
-                data-testid="onboarding-wallet-confirm">
-                {messages.pgettext('warren-onboarding', 'I have written down the words')}
-              </button>
-            </FlexColumn>
-          )}
-          {mode === 'import' && (
-            <FlexColumn gap="medium">
-              <Text variant="bodySmall" color="whiteAlpha80">
-                {messages.pgettext(
-                  'warren-onboarding',
-                  'Paste your 12-word BIP39 mnemonic to restore your existing Warren identity.',
-                )}
-              </Text>
-              <textarea
-                rows={3}
-                placeholder="word1 word2 word3 ..."
-                value={importInput}
-                onChange={onImportChange}
-                spellCheck={false}
-                autoCapitalize="off"
-                autoCorrect="off"
-                data-testid="onboarding-mnemonic-input"
-              />
-              <Text variant="bodySmall" color="whiteAlpha60">
-                {importWordCount}
-                {' / 12 '}
-                {messages.pgettext('warren-onboarding', 'words')}
-              </Text>
-              {error && (
-                <Text variant="bodySmall" color="red">
-                  {error}
-                </Text>
-              )}
-              <button
-                type="button"
-                onClick={submitImport}
-                disabled={!importWordCountValid || submitting}
-                data-testid="onboarding-wallet-import-confirm">
-                {submitting
-                  ? messages.pgettext('warren-onboarding', 'Restoring...')
-                  : messages.pgettext('warren-onboarding', 'Restore wallet')}
-              </button>
-            </FlexColumn>
-          )}
-          <button type="button" onClick={skip}>
-            {messages.pgettext('warren-onboarding', 'Skip wizard (advanced)')}
-          </button>
-        </View.Container>
-      </View.Content>
-    </View>
+        )}
+        {mode === 'generate' && mnemonic && (
+          <MnemonicGrid
+            mnemonic={mnemonic}
+            revealed={revealed}
+            onClick={reveal}
+            data-testid="onboarding-mnemonic-blur"
+          />
+        )}
+        {mode === 'import' && (
+          <MnemonicTextarea
+            value={importInput}
+            onValueChange={setImportInput}
+            data-testid="onboarding-mnemonic-input"
+          />
+        )}
+      </FlexColumn>
+    </OnboardingLayout>
   );
 }

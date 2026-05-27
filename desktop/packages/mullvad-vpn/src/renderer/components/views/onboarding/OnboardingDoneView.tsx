@@ -3,10 +3,9 @@ import React from 'react';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Text } from '../../../lib/components';
-import { FlexColumn } from '../../../lib/components/flex-column';
-import { View } from '../../../lib/components/view';
+import { Button } from '../../../lib/components';
 import { useHistory } from '../../../lib/history';
+import { OnboardingLayout } from './components';
 
 // M5.B.3 step 5: done. Persists the `onboardingCompletedUnix`
 // timestamp in the GUI settings via `setOnboardingCompletedUnix` so
@@ -17,30 +16,27 @@ import { useHistory } from '../../../lib/history';
 export function OnboardingDoneView() {
   const { push } = useHistory();
   const { setOnboardingCompletedUnix } = useAppContext();
+
   const handleFinish = React.useCallback(() => {
     setOnboardingCompletedUnix(Math.floor(Date.now() / 1000));
     push(RoutePath.main);
   }, [setOnboardingCompletedUnix, push]);
+
   return (
-    <View backgroundColor="darkBlue">
-      <View.Content>
-        <View.Container horizontalMargin="medium" flexDirection="column" gap="large">
-          <Text variant="titleBig" color="white">
-            {messages.pgettext('warren-onboarding', 'All set')}
-          </Text>
-          <Text variant="bodySmall" color="whiteAlpha80">
-            {messages.pgettext(
-              'warren-onboarding',
-              'Configuration complete. Pick a country and connect to Warren.',
-            )}
-          </Text>
-          <FlexColumn gap="medium">
-            <button type="button" onClick={handleFinish} data-testid="onboarding-done-finish">
-              {messages.pgettext('warren-onboarding', 'Pick a country and connect')}
-            </button>
-          </FlexColumn>
-        </View.Container>
-      </View.Content>
-    </View>
+    <OnboardingLayout
+      title={messages.pgettext('warren-onboarding', 'All set')}
+      description={messages.pgettext(
+        'warren-onboarding',
+        'Configuration complete. Pick a country and connect to Warren.',
+      )}
+      allowSkip={false}
+      actions={
+        <Button variant="success" onClick={handleFinish} data-testid="onboarding-done-finish">
+          <Button.Text>
+            {messages.pgettext('warren-onboarding', 'Pick a country and connect')}
+          </Button.Text>
+        </Button>
+      }
+    />
   );
 }
