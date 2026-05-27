@@ -68,6 +68,12 @@ pub mod warren_relays_fetch;
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
+/// OS-native secret storage abstraction (macOS System Keychain,
+/// Windows DPAPI, plaintext file fallback). Consumed by
+/// `warren_signer` to persist the BIP39 mnemonic outside of the
+/// settings directory whenever the OS provides a daemon-friendly
+/// backend.
+pub mod os_secret_storage;
 /// Loads or generates the user's BIP39 mnemonic from
 /// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
@@ -2619,106 +2625,130 @@ impl Daemon {
         tx: oneshot::Sender<std::io::Result<()>>,
         mnemonic: zeroize::Zeroizing<String>,
     ) {
-        let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
+        let write_result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
             "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
-            result.is_ok()
+            write_result.is_ok()
         );
 
-        if result.is_ok() {
-            // Step 1 — hot-swap the in-memory signer so the new
-            // identity is active for every subsequent signed request.
-            let new_pubkey_bytes = match self.warren_signer.as_ref() {
-                Some(signer) => {
-                    warren_signer::reload_signer_from_disk(signer, &self.settings_dir)
-                }
-                None => {
-                    log::warn!(
-                        "on_set_warren_mnemonic: no in-memory signer to hot-swap \
-                         (legacy Bearer mode) — restart required to pick up new identity"
+        if let Err(e) = write_result {
+            Self::oneshot_send(tx, Err(e), "set_warren_mnemonic");
+            return;
+        }
+
+        // Step 1 — hot-swap the in-memory signer so the new identity
+        // is active for every subsequent signed request.
+        let new_pubkey_bytes = match self.warren_signer.as_ref() {
+            Some(signer) => {
+                warren_signer::reload_signer_from_disk(signer, &self.settings_dir)
+            }
+            None => {
+                log::warn!(
+                    "on_set_warren_mnemonic: no in-memory signer to hot-swap \
+                     (legacy Bearer mode) — restart required to pick up new identity"
+                );
+                None
+            }
+        };
+
+        // Step 2 — determine whether device-state migration is needed.
+        // If `device.json` already records the new pubkey (= no
+        // identity change) or is absent (= first-launch import),
+        // there is nothing to log into and we can ack the gRPC call
+        // immediately. Otherwise we must `login()` under the new
+        // pubkey before acknowledging, so the GUI does not observe
+        // a `set_mnemonic` Ok while the daemon is still mid-swap.
+        let needs_login = if let Some(new_pubkey_bytes) = new_pubkey_bytes {
+            let new_pubkey =
+                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes);
+            let device_path = self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
+            let stored_pubkey = std::fs::read_to_string(&device_path)
+                .ok()
+                .and_then(|raw| {
+                    serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
+                })
+                .and_then(|state| state.into_device())
+                .map(|d| d.pubkey);
+
+            match stored_pubkey {
+                Some(old) if old != new_pubkey => Some(new_pubkey),
+                Some(_) => {
+                    log::debug!(
+                        "on_set_warren_mnemonic: same pubkey as device.json, \
+                         signer swapped, no device action needed"
                     );
                     None
                 }
-            };
-
-            // Step 2 — auto-login under the new pubkey if it differs
-            // from the device.json record.
-            if let Some(new_pubkey_bytes) = new_pubkey_bytes {
-                let new_pubkey =
-                    mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes);
-                let device_path = self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
-                let stored_pubkey = std::fs::read_to_string(&device_path)
-                    .ok()
-                    .and_then(|raw| {
-                        serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
-                    })
-                    .and_then(|state| state.into_device())
-                    .map(|d| d.pubkey);
-
-                match stored_pubkey {
-                    Some(old) if old != new_pubkey => {
-                        log::info!(
-                            "on_set_warren_mnemonic: identity changed, \
-                             hot-swapping device state to new pubkey={new_pubkey}"
-                        );
-                        let manager = self.account_manager.clone();
-                        let new_pubkey_string = new_pubkey.to_string();
-                        tokio::spawn(async move {
-                            if let Err(login_err) = manager.login(new_pubkey_string).await {
-                                // Security-relevant failure mode: the
-                                // in-memory signer is now signing with
-                                // the new key, but `device.json` still
-                                // points at the old identity, leaving
-                                // the daemon in a hybrid state where
-                                // outgoing requests carry a pubkey
-                                // the local device record does not
-                                // claim. Force a `logout()` so the
-                                // user lands in a deterministic
-                                // `logged out` state and can re-login
-                                // manually from the GUI. We do not
-                                // revert the signer swap because the
-                                // previous mnemonic has already been
-                                // overwritten on disk by
-                                // `set_warren_mnemonic` and is no
-                                // longer recoverable.
-                                log::error!(
-                                    "on_set_warren_mnemonic: hot-swap login failed \
-                                     ({login_err}) — forcing logout to leave the \
-                                     daemon in a deterministic state"
-                                );
-                                if let Err(logout_err) = manager.logout().await {
-                                    log::error!(
-                                        "on_set_warren_mnemonic: subsequent logout \
-                                         also failed: {logout_err} — daemon is in \
-                                         an inconsistent state, user should re-login"
-                                    );
-                                }
-                            } else {
-                                log::info!(
-                                    "on_set_warren_mnemonic: device state \
-                                     successfully migrated to the new identity"
-                                );
-                            }
-                        });
-                    }
-                    Some(_) => {
-                        log::debug!(
-                            "on_set_warren_mnemonic: same pubkey as device.json, \
-                             signer swapped, no device action needed"
-                        );
-                    }
-                    None => {
-                        log::debug!(
-                            "on_set_warren_mnemonic: no device state on disk \
-                             (first-launch import), signer swapped — login will \
-                             be triggered by the GUI"
-                        );
-                    }
+                None => {
+                    log::debug!(
+                        "on_set_warren_mnemonic: no device state on disk \
+                         (first-launch import), signer swapped — login will \
+                         be triggered by the GUI"
+                    );
+                    None
                 }
             }
-        }
+        } else {
+            None
+        };
 
-        Self::oneshot_send(tx, result, "set_warren_mnemonic");
+        let Some(new_pubkey) = needs_login else {
+            Self::oneshot_send(tx, Ok(()), "set_warren_mnemonic");
+            return;
+        };
+
+        // Step 3 — async login under the new pubkey, then ack the
+        // gRPC caller. We DO NOT ack before login completion: the
+        // GUI relies on the Ok response to know the daemon is in
+        // its post-import steady state. Acking early would let the
+        // GUI navigate past the import screen while the daemon is
+        // still mid-login, causing the next screen to read a stale
+        // `loggedOut` deviceState and bounce back to the login
+        // view (= exactly the user-visible bug we want to avoid).
+        log::info!(
+            "on_set_warren_mnemonic: identity changed, hot-swapping device state \
+             to new pubkey={new_pubkey}"
+        );
+        let manager = self.account_manager.clone();
+        let new_pubkey_string = new_pubkey.to_string();
+        tokio::spawn(async move {
+            let ack: io::Result<()> = match manager.login(new_pubkey_string).await {
+                Ok(()) => {
+                    log::info!(
+                        "on_set_warren_mnemonic: device state successfully \
+                         migrated to the new identity"
+                    );
+                    Ok(())
+                }
+                Err(login_err) => {
+                    // Security-relevant failure mode: the in-memory
+                    // signer is now signing with the new key, but
+                    // `device.json` still points at the old identity,
+                    // leaving the daemon in a hybrid state where
+                    // outgoing requests carry a pubkey the local
+                    // device record does not claim. Force a
+                    // `logout()` so the user lands in a deterministic
+                    // `logged out` state and the gRPC caller (GUI)
+                    // sees the error rather than a misleading Ok.
+                    log::error!(
+                        "on_set_warren_mnemonic: hot-swap login failed \
+                         ({login_err}) — forcing logout to leave the \
+                         daemon in a deterministic state"
+                    );
+                    if let Err(logout_err) = manager.logout().await {
+                        log::error!(
+                            "on_set_warren_mnemonic: subsequent logout also failed: \
+                             {logout_err} — daemon is in an inconsistent state, \
+                             user should re-login"
+                        );
+                    }
+                    Err(io::Error::other(format!(
+                        "hot-swap login failed after mnemonic import: {login_err}"
+                    )))
+                }
+            };
+            Self::oneshot_send(tx, ack, "set_warren_mnemonic");
+        });
     }
 
     fn on_submit_voucher(&mut self, tx: ResponseTx<VoucherSubmission, Error>, voucher: String) {
@@ -2954,10 +2984,27 @@ impl Daemon {
                     .get_latest_version()
                     .await
                     .inspect_err(|error| {
-                        log::error!(
-                            "{}",
-                            error.display_chain_with_msg("Error running version check")
-                        )
+                        // In Warren mode the Mullvad version updater is
+                        // intentionally disabled at boot (Warren ships
+                        // its own GitHub Releases pipeline), so the
+                        // router is permanently in `VersionRouterClosed`
+                        // state. The GUI still calls `get_version_info`
+                        // periodically — logging that at ERROR drowns
+                        // the daemon log in expected noise. Demote the
+                        // "router closed" variant to DEBUG; any other
+                        // failure mode (API down, parse error, etc.)
+                        // still surfaces at ERROR as before.
+                        if matches!(error, version::Error::VersionRouterClosed) {
+                            log::debug!(
+                                "Version check skipped: router closed \
+                                 (expected in Warren mode)"
+                            );
+                        } else {
+                            log::error!(
+                                "{}",
+                                error.display_chain_with_msg("Error running version check")
+                            );
+                        }
                     })
                     .map_err(Error::VersionCheckError),
                 "get_version_info response",

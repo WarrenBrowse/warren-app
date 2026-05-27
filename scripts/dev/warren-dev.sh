@@ -178,7 +178,16 @@ start_daemon_foreground() {
   info "Ctrl+C to stop"
   echo ""
 
-  exec sudo "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}"
+  # WARREN_USE_PLAINTEXT_STORAGE=1 forces the daemon to skip the
+  # macOS System Keychain / Windows DPAPI backend and persist the
+  # mnemonic as a `0o600 root:root` plaintext file in `<settings_dir>/secrets/`.
+  # On unsigned dev builds, the System Keychain triggers a macOS
+  # Authorization Services prompt at every launch (because the binary
+  # hash changes on each `cargo build`). The env var keeps the dev
+  # loop friction-free. Release builds with a stable Developer ID
+  # signature should leave this unset.
+  exec sudo -E env WARREN_USE_PLAINTEXT_STORAGE=1 \
+    "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}"
 }
 
 # ─────────────────────────────────────────────────────────────────────
@@ -255,7 +264,10 @@ start_both() {
     warn "Daemon already running (PID $(read_pid_file)) — reusing"
   else
     : > "$DAEMON_LOG"
-    sudo "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}" >> "$DAEMON_LOG" 2>&1 &
+    # See `start_daemon_foreground` for the rationale behind
+    # `WARREN_USE_PLAINTEXT_STORAGE=1` in dev mode.
+    sudo -E env WARREN_USE_PLAINTEXT_STORAGE=1 \
+      "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}" >> "$DAEMON_LOG" 2>&1 &
     DAEMON_PID=$!
     echo "$DAEMON_PID" > "$PID_FILE"
 

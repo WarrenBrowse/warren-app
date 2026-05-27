@@ -31,7 +31,14 @@ pub struct AccountHistory {
     number: Option<AccountNumber>,
 }
 
-static ACCOUNT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9]+$").unwrap());
+/// Accepts both the legacy Mullvad numeric account number (digits
+/// only) and the Warren-fork pubkey format (64-character lowercase
+/// hex `WarrenPubKey::Display`). The latter is what `set_warren_mnemonic`
+/// + auto-login persist into `account-history.json` since Phase 2,
+/// and refusing to parse it would surface a spurious "Failed to parse
+/// account history" warning at every boot.
+static ACCOUNT_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^([0-9]+|[0-9a-fA-F]{64})$").unwrap());
 
 impl AccountHistory {
     pub async fn new(
@@ -62,10 +69,25 @@ impl AccountHistory {
         let mut buffer = String::new();
         let (number, should_save): (Option<AccountNumber>, bool) =
             match reader.read_to_string(&mut buffer).await {
-                Ok(_) if ACCOUNT_REGEX.is_match(&buffer) => (Some(buffer), false),
+                Ok(_) if ACCOUNT_REGEX.is_match(buffer.trim()) => {
+                    // Trim trailing newline/whitespace before storing.
+                    (Some(buffer.trim().to_string()), false)
+                }
                 Ok(0) => (current_number, true),
                 Ok(_) | Err(_) => {
-                    log::warn!("Failed to parse account history");
+                    // Not a fatal condition: we fall back to
+                    // `current_number` (= whatever device.json says is
+                    // active) and rewrite the file on save. The
+                    // pre-Phase-2 format (numeric `AccountNumber`) and
+                    // the Phase-2 format (64-char hex `WarrenPubKey`)
+                    // are both accepted by `ACCOUNT_REGEX`, so this
+                    // branch only fires on a genuinely garbled file —
+                    // worth logging at INFO rather than WARN since the
+                    // recovery is silent and automatic.
+                    log::info!(
+                        "account-history.json content does not match any known \
+                         format; resetting from device state"
+                    );
                     (current_number, true)
                 }
             };

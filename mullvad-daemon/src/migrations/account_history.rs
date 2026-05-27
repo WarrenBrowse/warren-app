@@ -16,7 +16,14 @@ use tokio::{
 
 const ACCOUNT_HISTORY_FILE: &str = "account-history.json";
 
-static ACCOUNT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9]+$").unwrap());
+/// Same recognition rule as `crate::account_history::ACCOUNT_REGEX`:
+/// accepts both the upstream Mullvad numeric account number and the
+/// Warren-fork 64-character hex pubkey (`WarrenPubKey::Display`).
+/// Pre-Warren `is_format_v3` would treat a pubkey-formatted file as
+/// "needs migration from v2/v1" and surface a spurious
+/// `Error::ParseHistory` at every boot.
+static ACCOUNT_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^([0-9]+|[0-9a-fA-F]{64})$").unwrap());
 
 pub async fn migrate_location(old_dir: &Path, new_dir: &Path) {
     let old_path = old_dir.join(ACCOUNT_HISTORY_FILE);

@@ -855,10 +855,27 @@ impl ManagementService for ManagementServiceImpl {
         result
             .map(|account_data| Response::new(types::AccountData::from(account_data)))
             .map_err(|error: RestError| {
-                log::error!(
-                    "Unable to get account data from API: {}",
-                    error.display_chain()
-                );
+                // A 404 from `warren-api` on `get_account_data` means
+                // "this pubkey has no active subscription yet" — an
+                // expected state for a newly bootstrapped Warren
+                // identity that has not purchased a plan. Demote the
+                // log to DEBUG so the daemon does not flood the
+                // operator with ERROR lines while the GUI polls
+                // `account-data-cache` in the background. Genuine
+                // API failures (5xx, network errors, malformed
+                // responses) still surface at ERROR.
+                if matches!(&error, RestError::ApiError(status, _) if *status == StatusCode::NOT_FOUND)
+                {
+                    log::debug!(
+                        "get_account_data: 404 (no subscription yet) — \
+                         GUI will keep polling until the user purchases a plan"
+                    );
+                } else {
+                    log::error!(
+                        "Unable to get account data from API: {}",
+                        error.display_chain()
+                    );
+                }
                 map_rest_error(&error)
             })
     }

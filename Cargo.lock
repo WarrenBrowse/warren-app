@@ -528,6 +528,7 @@ dependencies = [
  "rand_core 0.6.4",
  "serde",
  "unicode-normalization",
+ "zeroize",
 ]
 
 [[package]]
@@ -3918,6 +3919,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "bip39",
  "chrono",
  "clap",
  "ctrlc",
@@ -3950,6 +3952,7 @@ dependencies = [
  "rand 0.9.4",
  "regex",
  "reqwest",
+ "security-framework",
  "serde",
  "serde_json",
  "talpid-core",
@@ -3976,6 +3979,7 @@ dependencies = [
  "warren-multihop",
  "warren-relay-selector",
  "winapi",
+ "windows 0.62.2",
  "windows-service",
  "windows-sys 0.61.2",
  "winres",

@@ -109,6 +109,12 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std
 # the allocator can reclaim and recycle the memory. Pair with the
 # `zeroize` feature pinned on `ed25519-dalek` in `mullvad-api`.
 zeroize = { version = "1", default-features = false, features = ["alloc"] }
+# In-RAM BIP39 generation for `warren_signer::bootstrap_fresh_mnemonic`,
+# bypassing `warren_identity::load_or_create_mnemonic`'s mandatory disk
+# write (= avoid transient plaintext file on platforms with OS-native
+# secret storage). `zeroize` feature so `bip39::Mnemonic` is wiped on
+# drop.
+bip39 = { version = "2", features = ["rand", "zeroize"] }
 # Warren exit selector (equivalent to `mullvad-relay-selector` for the
 # Warren backend). Does not depend on `talpid-warren-tunnel` API: it
 # just returns `(WarrenPubkey, WarrenExitAddr)`; the caller assembles
@@ -193,6 +199,13 @@ objc2-service-management = { version = "0.3.1", features = [
   "SMAppService",
   "objc2"
 ] }
+# Backs the macOS branch of `os_secret_storage`. Targets the
+# File-Based System Keychain (`/Library/Keychains/System.keychain`)
+# via the legacy `SecKeychain` API path, which works for non-bundled
+# daemons running as root without code-signing entitlements (the
+# modern `SecItemAdd` Data Protection Keychain path requires
+# `keychain-access-groups` entitlements we cannot ship in a daemon).
+security-framework = "3.7"
 talpid-macos = { path = "../talpid-macos" }
 
 [target.'cfg(unix)'.dependencies]
@@ -202,6 +215,15 @@ nix = { workspace = true, features = ["signal", "user"] }
 ctrlc = { workspace = true }
 dirs = { workspace = true }
 talpid-windows = { path = "../talpid-windows" }
+# Backs the Windows branch of `os_secret_storage` via DPAPI
+# (`CryptProtectData` / `CryptUnprotectData`) with
+# `CRYPTPROTECT_LOCAL_MACHINE`. The warren daemon runs as
+# `LocalSystem` so the machine-scope DPAPI master key is the right
+# fit. No Authenticode signing required to call DPAPI.
+windows = { workspace = true, features = [
+  "Win32_Security_Cryptography",
+  "Win32_Foundation",
+] }
 winapi = { version = "0.3", features = ["excpt", "winerror", "winnt"] }
 windows-service = "0.6.0"
 

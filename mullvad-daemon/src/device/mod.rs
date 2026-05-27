@@ -961,7 +961,17 @@ impl AccountManager {
                 self.revoke_device(|| Error::InvalidDevice).await;
             }
             Err(err) => {
-                log::error!("Failed to validate device: {}", err);
+                // `Unexpected HTTP request error` here is the device
+                // service's catch-all for upstream REST failures —
+                // for a freshly created Warren account the most
+                // common one is a 404 from warren-api (= no
+                // subscription yet, device record not registered).
+                // Log at DEBUG to avoid flooding the daemon log
+                // with expected noise; the validation will be
+                // retried by `account-data-cache` until the user
+                // purchases a plan and the API starts returning a
+                // device record.
+                log::debug!("Device validation failed (expected without a subscription): {err}");
                 Self::drain_requests(&mut self.validation_requests, || Err(err.clone()));
             }
         }
