@@ -5,75 +5,26 @@ import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Button, Text } from '../../../lib/components';
+import { Button, Checkbox, Text } from '../../../lib/components';
+import { Flex } from '../../../lib/components/flex';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
+import { colors, Radius, spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { AppNavigationHeader } from '../..';
 import ClipboardLabel from '../../ClipboardLabel';
 import { BackAction } from '../../keyboard-navigation';
+import { NavigationContainer } from '../../NavigationContainer';
+import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
+import { MnemonicGrid } from '../../warren-mnemonic';
 
-/**
- * Displays the BIP39 mnemonic (12 words) in a 3x4 grid layout.
- * Internal component — not reused elsewhere.
- */
-const StyledMnemonicGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.18);
-  font-family: 'Source Code Pro', Menlo, Consolas, monospace;
-  font-size: 14px;
-`;
-
-const StyledWord = styled.div`
-  display: flex;
-  gap: 6px;
-  padding: 4px 6px;
-  align-items: baseline;
-
-  & > .index {
-    color: rgba(255, 255, 255, 0.55);
-    min-width: 18px;
-    text-align: right;
-    font-size: 11px;
-  }
-`;
-
-interface MnemonicGridProps {
-  mnemonic: string;
-}
-
-function MnemonicGrid({ mnemonic }: MnemonicGridProps) {
-  const words = mnemonic.split(/\s+/).filter((w) => w.length > 0);
-  return (
-    <StyledMnemonicGrid>
-      {words.map((word, idx) => (
-        <StyledWord key={idx}>
-          <span className="index">{idx + 1}.</span>
-          <span>{word}</span>
-        </StyledWord>
-      ))}
-    </StyledMnemonicGrid>
-  );
-}
-
-const StyledWarning = styled.div`
-  padding: 12px;
-  border-radius: 6px;
-  background-color: rgba(255, 200, 50, 0.15);
-  border: 1px solid rgba(255, 200, 50, 0.4);
-`;
-
-const StyledCheckbox = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px 0;
+const Callout = styled.div<{ $tone: 'warning' | 'danger' }>`
+  padding: ${spacings.small} ${spacings.medium};
+  border-radius: ${Radius.radius4};
+  background-color: ${({ $tone }) =>
+    $tone === 'danger' ? colors.redAlpha40 : colors.greenAlpha40};
+  border: 1px solid ${({ $tone }) => ($tone === 'danger' ? colors.red40 : colors.green40)};
 `;
 
 export function KeysView() {
@@ -90,9 +41,6 @@ export function KeysView() {
       const m = await getWarrenMnemonic();
       if (!m) {
         setError(
-          // TRANSLATORS: Shown when the daemon has no Warren BIP39 mnemonic
-          // TRANSLATORS: stored (= identity never bootstrapped). User must
-          // TRANSLATORS: log in or restore from mnemonic first.
           messages.pgettext(
             'keys-view',
             'No mnemonic available — log in or restore an identity first.',
@@ -105,11 +53,7 @@ export function KeysView() {
     } catch (e) {
       const err = e as Error;
       log.error(`getWarrenMnemonic failed: ${err.message}`);
-      setError(
-        // TRANSLATORS: Generic error when the daemon RPC fails. Shown
-        // TRANSLATORS: only on transient connection issues.
-        messages.pgettext('keys-view', 'Failed to retrieve mnemonic from daemon.'),
-      );
+      setError(messages.pgettext('keys-view', 'Failed to retrieve mnemonic from daemon.'));
     }
   }, [getWarrenMnemonic]);
 
@@ -122,87 +66,92 @@ export function KeysView() {
     };
   }, []);
 
+  const onDone = useCallback(() => history.pop(), [history]);
+  const onRestore = useCallback(() => history.push(RoutePath.restoreKeys), [history]);
+
   return (
     <View backgroundColor="darkBlue">
       <BackAction action={history.pop}>
-        <AppNavigationHeader
-          title={
-            // TRANSLATORS: Title label in navigation bar
-            messages.pgettext('keys-view', 'Keys')
-          }
-        />
+        <NavigationContainer>
+          <AppNavigationHeader title={messages.pgettext('keys-view', 'Keys')} />
 
-        <View.Content>
-          <View.Container flexDirection="column" horizontalMargin="medium" gap="medium">
-            <Text variant="titleBig">
-              <HeaderTitle>{messages.pgettext('keys-view', 'Backup keys')}</HeaderTitle>
-            </Text>
+          <NavigationScrollbars>
+            <View.Content>
+              <View.Container flexDirection="column" horizontalMargin="medium" gap="medium">
+                <HeaderTitle>{messages.pgettext('keys-view', 'Backup keys')}</HeaderTitle>
 
-            <FlexColumn gap="medium">
-              <Text variant="bodySmall">
-                {messages.pgettext(
-                  'keys-view',
-                  'Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable.',
-                )}
-              </Text>
-
-              <StyledWarning>
-                <Text variant="bodySmallSemibold">
-                  {messages.pgettext(
-                    'keys-view',
-                    'Write it down on paper. Never store it in a cloud, screenshot, or email.',
-                  )}
-                </Text>
-              </StyledWarning>
-
-              {error && (
-                <Text variant="bodySmall" color="red">
-                  {error}
-                </Text>
-              )}
-
-              {!revealed && !error && (
-                <Button variant="destructive" onClick={onReveal}>
-                  <Button.Text>{messages.pgettext('keys-view', 'Reveal mnemonic')}</Button.Text>
-                </Button>
-              )}
-
-              {revealed && mnemonic && (
                 <FlexColumn gap="medium">
-                  <MnemonicGrid mnemonic={mnemonic} />
+                  <Text variant="bodySmall" color="whiteAlpha80">
+                    {messages.pgettext(
+                      'keys-view',
+                      'Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable.',
+                    )}
+                  </Text>
 
-                  <ClipboardLabel
-                    value={mnemonic}
-                    obscureValue={false}
-                    displayValue={
-                      messages.pgettext('keys-view', 'Copy mnemonic to clipboard') as string
-                    }
-                    message={messages.pgettext('keys-view', 'Mnemonic copied') as string}
-                  />
-
-                  <StyledCheckbox>
-                    <input
-                      type="checkbox"
-                      checked={confirmed}
-                      onChange={(e) => setConfirmed(e.target.checked)}
-                    />
-                    <Text variant="bodySmall">
-                      {messages.pgettext('keys-view', 'I have written it down in a safe place.')}
+                  <Callout $tone="warning">
+                    <Text variant="bodySmallSemibold" color="white">
+                      {messages.pgettext(
+                        'keys-view',
+                        'Write it down on paper. Never store it in a cloud, screenshot, or email.',
+                      )}
                     </Text>
-                  </StyledCheckbox>
+                  </Callout>
 
-                  <Button variant="success" disabled={!confirmed} onClick={() => history.pop()}>
-                    <Button.Text>{messages.pgettext('keys-view', 'Done')}</Button.Text>
+                  {error && (
+                    <Text variant="bodySmall" color="red">
+                      {error}
+                    </Text>
+                  )}
+
+                  {!revealed && !error && (
+                    <Button variant="destructive" onClick={onReveal}>
+                      <Button.Text>{messages.pgettext('keys-view', 'Reveal mnemonic')}</Button.Text>
+                    </Button>
+                  )}
+
+                  {revealed && mnemonic && (
+                    <FlexColumn gap="medium">
+                      <MnemonicGrid mnemonic={mnemonic} revealed />
+
+                      <ClipboardLabel
+                        value={mnemonic}
+                        obscureValue={false}
+                        displayValue={
+                          messages.pgettext('keys-view', 'Copy mnemonic to clipboard') as string
+                        }
+                        message={messages.pgettext('keys-view', 'Mnemonic copied') as string}
+                      />
+
+                      <Checkbox checked={confirmed} onCheckedChange={setConfirmed}>
+                        <Flex gap="small" alignItems="center">
+                          <Checkbox.Trigger>
+                            <Checkbox.Input />
+                          </Checkbox.Trigger>
+                          <Checkbox.Label>
+                            {messages.pgettext(
+                              'keys-view',
+                              'I have written it down in a safe place.',
+                            )}
+                          </Checkbox.Label>
+                        </Flex>
+                      </Checkbox>
+
+                      <Button variant="success" disabled={!confirmed} onClick={onDone}>
+                        <Button.Text>{messages.pgettext('keys-view', 'Done')}</Button.Text>
+                      </Button>
+                    </FlexColumn>
+                  )}
+
+                  <Button onClick={onRestore}>
+                    <Button.Text>
+                      {messages.pgettext('keys-view', 'Restore from mnemonic')}
+                    </Button.Text>
                   </Button>
                 </FlexColumn>
-              )}
-
-              <Button onClick={() => history.push(RoutePath.restoreKeys)}>
-                <Button.Text>{messages.pgettext('keys-view', 'Restore from mnemonic')}</Button.Text>
-              </Button>
-            </FlexColumn>
-          </View.Container>
-        </View.Content>
+              </View.Container>
+            </View.Content>
+          </NavigationScrollbars>
+        </NavigationContainer>
       </BackAction>
     </View>
   );

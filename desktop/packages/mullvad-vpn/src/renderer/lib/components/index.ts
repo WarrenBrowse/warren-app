@@ -1,5 +1,6 @@
 export * from './box';
 export * from './button';
+export * from './checkbox';
 export * from './filter-chip';
 export * from './container';
 export * from './feature-indicator';
