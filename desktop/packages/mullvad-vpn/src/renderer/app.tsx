@@ -95,6 +95,7 @@ const SUPPORTED_LOCALE_LIST = [
   { name: 'Norsk', code: 'nb' },
   { name: 'Polski', code: 'pl' },
   { name: 'Português', code: 'pt' },
+  { name: 'Română', code: 'ro' },
   { name: 'Русский', code: 'ru' },
   { name: 'Svenska', code: 'sv' },
   { name: 'ภาษาไทย', code: 'th' },
