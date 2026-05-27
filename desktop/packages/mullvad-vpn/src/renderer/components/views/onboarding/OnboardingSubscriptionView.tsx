@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hasExpired } from '../../../../shared/account-expiry';
 import { urls } from '../../../../shared/constants';

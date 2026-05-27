@@ -3093,6 +3093,10 @@ msgid "All set"
 msgstr ""
 
 msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Vérification en cours... (cliquez pour rafraîchir maintenant)"
+
+msgctxt "warren-onboarding"
 msgid "Back up my new wallet (recommended)"
 msgstr ""
 
@@ -3131,6 +3135,10 @@ msgstr ""
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
 msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Aucun abonnement actif trouvé. Veuillez en acheter un d'abord."
 
 msgctxt "warren-onboarding"
 msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."

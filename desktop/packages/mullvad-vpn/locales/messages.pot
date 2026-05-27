@@ -3087,6 +3087,10 @@ msgid "Back up my new wallet (recommended)"
 msgstr ""
 
 msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr ""
+
+msgctxt "warren-onboarding"
 msgid "Configuration complete. Pick a country and connect to Warren."
 msgstr ""
 
@@ -3120,6 +3124,10 @@ msgstr ""
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
 msgstr ""
 
 msgctxt "warren-onboarding"
