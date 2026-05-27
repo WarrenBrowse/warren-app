@@ -109,10 +109,16 @@ export default class Account {
     return this.deviceState?.type === 'logged in';
   }
 
-  public updateAccountData = () => {
-    if (this.daemonRpc.isConnected && this.isLoggedIn()) {
-      this.accountDataCache.fetch(this.getWarrenPubKey()!);
+  public updateAccountData = (): Promise<void> => {
+    if (!this.daemonRpc.isConnected || !this.isLoggedIn()) {
+      return Promise.resolve();
     }
+    return new Promise<void>((resolve, reject) => {
+      this.accountDataCache.fetch(this.getWarrenPubKey()!, {
+        onFinish: () => resolve(),
+        onError: (error) => reject(new Error(`Account data fetch failed: ${error}`)),
+      });
+    });
   };
 
   public detectStaleAccountExpiry(tunnelState: TunnelState) {

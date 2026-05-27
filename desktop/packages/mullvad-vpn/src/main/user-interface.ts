@@ -27,7 +27,7 @@ const execAsync = promisify(exec);
 
 export interface UserInterfaceDelegate {
   dismissActiveNotifications(): void;
-  updateAccountData(): void;
+  updateAccountData(): Promise<void>;
   connectTunnel(): void;
   reconnectTunnel(): void;
   disconnectTunnel(source: DisconnectSource): void;
@@ -374,7 +374,7 @@ export default class UserInterface implements WindowControllerDelegate {
       // cancel notifications when window appears
       this.delegate.dismissActiveNotifications();
 
-      this.delegate.updateAccountData();
+      void this.delegate.updateAccountData();
 
       void this.delegate.getVersionInfo();
     });

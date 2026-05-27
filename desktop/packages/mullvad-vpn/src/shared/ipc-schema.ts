@@ -300,7 +300,7 @@ export const ipcSchema = {
     // activate.
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
-    updateData: send<void>(),
+    updateData: invoke<void, void>(),
     listDevices: invoke<WarrenPubKey, Array<IDevice>>(),
     removeDevice: invoke<IDeviceRemoval, void>(),
   },
