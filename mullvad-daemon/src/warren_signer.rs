@@ -19,6 +19,7 @@ use std::sync::Arc;
 
 use ed25519_dalek::SigningKey;
 use mullvad_api::warren_auth::WarrenAuthSigner;
+use zeroize::Zeroizing;
 
 /// Name of the file storing the user's BIP39 mnemonic in
 /// `settings_dir`. Fixed convention: if we move this name later,
@@ -49,8 +50,13 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
 #[must_use]
 pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     let mnemonic_path = settings_dir.join(MNEMONIC_FILENAME);
+    // `warren_identity::load_or_create_mnemonic` returns a raw `String`.
+    // Wrap it in `Zeroizing` immediately so the heap buffer is wiped
+    // when this scope ends, even if subsequent calls panic or return
+    // early. `seed_from_mnemonic` already returns `Zeroizing<[u8; 32]>`
+    // for the derived seed.
     let mnemonic = match warren_identity::load_or_create_mnemonic(&mnemonic_path) {
-        Ok(m) => m,
+        Ok(m) => Zeroizing::new(m),
         Err(e) => {
             log::warn!(
                 "Warren auth disabled: failed to load/create mnemonic at {}: {}",
@@ -88,9 +94,10 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
 /// **Use case**: identity restore from the GUI (= C.1.d ImportMnemonicView).
 /// The GUI caller MUST display a strong confirmation before calling,
 /// because the previous identity (and the subscription tied to it)
-/// is IRREVERSIBLY replaced. The daemon must be restarted so that
-/// the new identity is picked up by the signer (the signing key
-/// is derived at boot).
+/// is IRREVERSIBLY replaced. The caller in `mullvad-daemon::on_set_warren_mnemonic`
+/// pairs this disk-write with [`reload_signer_from_disk`] + an
+/// `account_manager.login(new_pubkey)` so the new identity is
+/// activated in the running daemon without requiring a restart.
 ///
 /// # Errors
 ///
@@ -164,6 +171,36 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
     }
 }
 
+/// Re-reads the persisted BIP39 mnemonic from `settings_dir`, derives
+/// the Ed25519 signing key, and swaps it into the shared
+/// [`WarrenAuthSigner`] held by `mullvad-api`'s `RequestFactory`.
+///
+/// **Use case**: the GUI just called [`set_warren_mnemonic`] and the
+/// daemon wants to activate the new identity without restarting the
+/// process. After this call, every subsequent API request signed by
+/// `signer` uses the freshly derived key.
+///
+/// Returns the new Ed25519 pubkey bytes on success (= the caller can
+/// log the post-swap pubkey for audit and invoke
+/// `account_manager.login(...)` against it), or `None` if the
+/// mnemonic file cannot be loaded or derived (the existing signing
+/// key in `signer` is left intact in that case).
+///
+/// # No-log policy
+///
+/// NEVER log the mnemonic content nor the signing key. The returned
+/// pubkey is public information and may be logged for audit.
+#[must_use]
+pub fn reload_signer_from_disk(
+    signer: &WarrenAuthSigner,
+    settings_dir: &Path,
+) -> Option<[u8; 32]> {
+    let signing_key = load_or_create_signing_key(settings_dir)?;
+    let pubkey_bytes = *signing_key.verifying_key().as_bytes();
+    signer.replace_signing_key(signing_key);
+    Some(pubkey_bytes)
+}
+
 /// Reads the **already persisted** user's BIP39 mnemonic in
 /// `<settings_dir>/warren_mnemonic.txt`. Read-only: never creates
 /// the file (contrast with [`load_or_create_signing_key`]).
@@ -185,11 +222,16 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> std::io::Resu
 /// occurred* may be logged (= GUI requests audit trail), but
 /// never the content.
 #[must_use]
-pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<String> {
+pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<Zeroizing<String>> {
     let path = settings_dir.join(MNEMONIC_FILENAME);
+    // `read_to_string` allocates a `String` that will be dropped at
+    // the end of this expression once we have built the trimmed
+    // `Zeroizing<String>`. To avoid the untrimmed copy lingering on
+    // the heap, we wrap it in `Zeroizing` immediately on success.
     std::fs::read_to_string(&path)
         .ok()
-        .map(|s| s.trim().to_string())
+        .map(Zeroizing::new)
+        .map(|raw| Zeroizing::new(raw.trim().to_string()))
 }
 
 #[cfg(test)]
@@ -358,7 +400,8 @@ mod tests {
         set_warren_mnemonic(&dir, valid).expect("valid BIP39 must succeed");
         let read_back = get_warren_mnemonic(&dir).expect("must be readable after set");
         assert_eq!(
-            read_back, valid,
+            read_back.as_str(),
+            valid,
             "round-trip set->get must preserve the mnemonic byte-exact"
         );
 
@@ -503,5 +546,39 @@ mod tests {
             "inline derivation (G-3 identity-changed detection) MUST produce \
              the same pubkey as load_or_create_signing_key (boot path)"
         );
+    }
+
+    /// Hot-swap contract: after `set_warren_mnemonic` + `reload_signer_from_disk`,
+    /// the existing `Arc<WarrenAuthSigner>` shared by `mullvad-api` must
+    /// sign new requests with the freshly derived key, without being
+    /// dropped or recreated. This is what removes the need for a
+    /// daemon restart on identity import.
+    #[test]
+    fn reload_signer_from_disk_swaps_identity_in_place() {
+        let dir = isolated_tempdir();
+
+        let signer = load_or_create_signer(&dir).expect("bootstrap signer");
+        let original_pubkey = signer.pubkey_hex();
+
+        let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
+                            abandon abandon abandon abandon abandon about";
+        set_warren_mnemonic(&dir, new_mnemonic).expect("set new mnemonic");
+
+        let new_pubkey_bytes =
+            reload_signer_from_disk(&signer, &dir).expect("reload must succeed after set");
+        let new_pubkey_hex = hex::encode(new_pubkey_bytes);
+
+        assert_eq!(
+            signer.pubkey_hex(),
+            new_pubkey_hex,
+            "the shared signer must now report the post-swap pubkey"
+        );
+        assert_ne!(
+            signer.pubkey_hex(),
+            original_pubkey,
+            "the swap must actually change the identity"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

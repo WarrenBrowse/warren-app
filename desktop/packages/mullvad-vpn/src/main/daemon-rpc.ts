@@ -266,9 +266,12 @@ export class DaemonRpc extends GrpcClient {
 
   /**
    * Replaces the identity with the provided BIP39 mnemonic. The daemon
-   * validates BIP39 and writes atomically. Throws `grpc.ServiceError`
-   * (status INVALID_ARGUMENT) if the BIP39 input is invalid. Daemon
-   * restart is required to activate.
+   * validates BIP39, writes atomically, then hot-swaps the in-memory
+   * `WarrenAuthSigner` and triggers an `account_manager.login(new_pubkey)`
+   * so the new identity is active without restarting the daemon. The
+   * GUI observes the resulting `deviceState: 'logged in'` change and
+   * proceeds normally. Throws `grpc.ServiceError`
+   * (status INVALID_ARGUMENT) if the BIP39 input is invalid.
    */
   public async setWarrenMnemonic(mnemonic: string): Promise<void> {
     await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);

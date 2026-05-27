@@ -29,9 +29,25 @@
 //! **Warren no-log**: the signing_key and pubkey are NEVER logged in
 //! the clear. The `Debug` impl explicitly masks them.
 
+use std::sync::RwLock;
+
 use ed25519_dalek::{Signer, SigningKey};
 use rand::RngCore;
 use sha2::{Digest, Sha256};
+
+// Compile-time guard: `WarrenAuthSigner` hot-swaps its `SigningKey`
+// at runtime via [`WarrenAuthSigner::replace_signing_key`]. The
+// previous key MUST be wiped from memory on drop, otherwise the
+// secret persists in the heap allocator until eventually
+// overwritten. We rely on `ed25519-dalek` being compiled with the
+// `zeroize` feature so that `SigningKey: ZeroizeOnDrop`. If a future
+// change to `mullvad-api/Cargo.toml` ever drops the `zeroize`
+// feature, this assertion fails at build time before any test runs.
+#[allow(dead_code)]
+const fn _assert_signing_key_zeroize_on_drop() {
+    const fn _require<T: zeroize::ZeroizeOnDrop>() {}
+    _require::<SigningKey>();
+}
 // Re-exported from warren-identity::auth via warren-api-client: the
 // canonical wire format constants and the canonical_message builder
 // MUST be identical on both sides (signer here, verifier server-side),
@@ -69,13 +85,23 @@ pub const NONCE_BYTES: usize = 16;
 /// [`Self::sign_request`], which produces the 4 HTTP headers to inject
 /// into a request.
 ///
-/// **Instance lifecycle**: one signer = one Warren identity = one
-/// unique pubkey. The signing key is derived once at daemon boot from
-/// the user's BIP39 mnemonic (see `warren_identity::derive_node_key`)
-/// and kept in RAM until shutdown or identity change (logout / import
-/// of a new mnemonic).
+/// **Instance lifecycle**: one signer = one Warren identity at any
+/// given time. The signing key is initially derived from the user's
+/// BIP39 mnemonic at daemon boot (see
+/// `warren_identity::derive_node_key`) and kept in RAM. When the user
+/// imports a new mnemonic via `set_warren_mnemonic`, the daemon swaps
+/// the signing key in place via [`Self::replace_signing_key`] without
+/// dropping the `Arc<WarrenAuthSigner>` shared by `mullvad-api`'s
+/// `RequestFactory`. This avoids requiring a daemon restart to
+/// activate the new identity.
+///
+/// **Concurrency**: the signing key is held behind a
+/// [`std::sync::RwLock`] so that `sign_request*` (read-mostly hot
+/// path) takes a read lock and `replace_signing_key` (rare) takes a
+/// write lock. The lock is uncontended in practice (signing is
+/// CPU-only, no I/O).
 pub struct WarrenAuthSigner {
-    signing_key: SigningKey,
+    signing_key: RwLock<SigningKey>,
 }
 
 impl std::fmt::Debug for WarrenAuthSigner {
@@ -95,14 +121,37 @@ impl WarrenAuthSigner {
     /// BIP39 mnemonic (see `warren_identity::derive_node_key`).
     #[must_use]
     pub fn new(signing_key: SigningKey) -> Self {
-        Self { signing_key }
+        Self {
+            signing_key: RwLock::new(signing_key),
+        }
+    }
+
+    /// Atomically swaps the current signing key for `new_key`. Used
+    /// by the daemon when the user imports a new BIP39 mnemonic, so
+    /// that subsequent API calls are signed with the freshly derived
+    /// identity without dropping the shared `Arc<WarrenAuthSigner>`
+    /// held by `mullvad-api`'s `RequestFactory`.
+    ///
+    /// **No-log policy**: NEVER log `new_key`. Callers may log the
+    /// new pubkey (which is public information) by reading
+    /// [`Self::pubkey_hex`] after the swap.
+    pub fn replace_signing_key(&self, new_key: SigningKey) {
+        let mut guard = self
+            .signing_key
+            .write()
+            .expect("WarrenAuthSigner RwLock poisoned");
+        *guard = new_key;
     }
 
     /// Signer hex pubkey (64 chars). Useful for external APIs that log
     /// the `client_id` (= pubkey) without touching the signing key.
     #[must_use]
     pub fn pubkey_hex(&self) -> String {
-        hex::encode(self.signing_key.verifying_key().as_bytes())
+        let guard = self
+            .signing_key
+            .read()
+            .expect("WarrenAuthSigner RwLock poisoned");
+        hex::encode(guard.verifying_key().as_bytes())
     }
 
     /// Signs a request with a `timestamp` and `nonce` provided by the
@@ -123,11 +172,25 @@ impl WarrenAuthSigner {
         let nonce_hex = hex::encode(nonce);
         let body_hash_hex = hex::encode(Sha256::digest(body));
         let canonical = canonical_message(method, path, timestamp, &nonce_hex, &body_hash_hex);
-        let signature = self.signing_key.sign(canonical.as_bytes());
+        // Single read-lock acquisition covers both signing and the
+        // pubkey lookup, so that a concurrent `replace_signing_key`
+        // cannot produce headers where the pubkey and the signature
+        // were computed against different keys.
+        let (pubkey_hex, signature_hex) = {
+            let guard = self
+                .signing_key
+                .read()
+                .expect("WarrenAuthSigner RwLock poisoned");
+            let signature = guard.sign(canonical.as_bytes());
+            (
+                hex::encode(guard.verifying_key().as_bytes()),
+                hex::encode(signature.to_bytes()),
+            )
+        };
 
         WarrenAuthHeaders {
-            pubkey_hex: self.pubkey_hex(),
-            signature_hex: hex::encode(signature.to_bytes()),
+            pubkey_hex,
+            signature_hex,
             timestamp,
             nonce_hex,
         }
@@ -544,5 +607,36 @@ mod tests {
         assert_eq!(HEADER_SIGNATURE, "X-Warren-Sig");
         assert_eq!(HEADER_TIMESTAMP, "X-Warren-Timestamp");
         assert_eq!(HEADER_NONCE, "X-Warren-Nonce");
+    }
+
+    /// Hot-swap regression: after `replace_signing_key`, both the
+    /// reported pubkey and the produced signatures must match the new
+    /// key. This is the contract relied upon by the daemon to skip
+    /// the restart on `set_warren_mnemonic`.
+    #[test]
+    fn replace_signing_key_swaps_identity_in_place() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
+        let old_pubkey = signer.pubkey_hex();
+        let old_sig =
+            signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
+
+        signer.replace_signing_key(SigningKey::from_bytes(&[42u8; 32]));
+
+        let new_pubkey = signer.pubkey_hex();
+        let new_sig =
+            signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
+
+        assert_ne!(
+            old_pubkey, new_pubkey,
+            "pubkey MUST change after replace_signing_key"
+        );
+        assert_ne!(
+            old_sig.signature_hex, new_sig.signature_hex,
+            "signature MUST be produced by the new key"
+        );
+        assert_eq!(
+            new_sig.pubkey_hex, new_pubkey,
+            "the pubkey reported in the headers must match the post-swap key"
+        );
     }
 }

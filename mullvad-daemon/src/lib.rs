@@ -308,12 +308,25 @@ pub enum DaemonCommand {
     /// backup via the Electron GUI. `None` if the
     /// `warren_mnemonic.txt` file does not exist (= identity never
     /// bootstrapped). See `warren_signer::get_warren_mnemonic`.
-    GetWarrenMnemonic(oneshot::Sender<Option<String>>),
+    ///
+    /// Wrapped in `Zeroizing` so the secret heap buffer is wiped
+    /// before the allocator recycles it once the GUI has serialized
+    /// it onto the gRPC response.
+    GetWarrenMnemonic(oneshot::Sender<Option<zeroize::Zeroizing<String>>>),
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
-    /// validation + atomic write. Daemon restart required for the
-    /// new identity to take effect. See
-    /// `warren_signer::set_warren_mnemonic`.
-    SetWarrenMnemonic(oneshot::Sender<std::io::Result<()>>, String),
+    /// validation + atomic write. The daemon hot-swaps the
+    /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
+    /// so no restart is needed. See `warren_signer::set_warren_mnemonic`
+    /// and `on_set_warren_mnemonic`.
+    ///
+    /// `Zeroizing<String>` ensures the mnemonic bytes are wiped from
+    /// the heap as soon as the command variant is dropped, in addition
+    /// to whatever `tonic`-internal buffers may have transiently held
+    /// the protobuf payload.
+    SetWarrenMnemonic(
+        oneshot::Sender<std::io::Result<()>>,
+        zeroize::Zeroizing<String>,
+    ),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
     /// Request account history
@@ -823,6 +836,14 @@ pub struct Daemon {
     /// to it on NAT-PMP toggle changes; the gRPC stream subscribers
     /// receive the resulting snapshots without polling.
     warren_status_cache: warren_status::WarrenStatusCache,
+    /// Second `Arc` clone of the `WarrenAuthSigner` also held by
+    /// `mullvad-api`'s `RequestFactory`. Kept here so that
+    /// `on_set_warren_mnemonic` can swap the signing key in-place
+    /// via `warren_signer::reload_signer_from_disk` and avoid the
+    /// daemon restart that the previous design required. `None` if
+    /// Warren auth could not be initialized at boot (= legacy Bearer
+    /// fallback path).
+    warren_signer: Option<Arc<mullvad_api::warren_auth::WarrenAuthSigner>>,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -966,7 +987,14 @@ impl Daemon {
         // shared `WarrenAuthSigner`. On failure, falls back to
         // `None` (legacy Bearer mode); the detail is logged by
         // `load_or_create_signer`.
+        //
+        // We keep a second `Arc` clone in the `Daemon` struct so that
+        // `on_set_warren_mnemonic` can hot-swap the signing key
+        // in-place (via `warren_signer::reload_signer_from_disk`)
+        // without requiring a daemon restart to activate the new
+        // identity.
         let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
+        let warren_signer_for_daemon = warren_signer.clone();
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
@@ -1510,6 +1538,7 @@ impl Daemon {
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
             warren_status_cache,
+            warren_signer: warren_signer_for_daemon,
         };
 
         api_availability.unsuspend();
@@ -2551,7 +2580,10 @@ impl Daemon {
     /// spawn needed — `read_to_string` < 1 ms on a 100-byte file).
     /// **No-log policy**: we only log the fact that a read occurred,
     /// never the content.
-    fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<String>>) {
+    fn on_get_warren_mnemonic(
+        &self,
+        tx: oneshot::Sender<Option<zeroize::Zeroizing<String>>>,
+    ) {
         let mnemonic = warren_signer::get_warren_mnemonic(&self.settings_dir);
         log::debug!(
             "on_get_warren_mnemonic: present={} (content NEVER logged)",
@@ -2561,15 +2593,32 @@ impl Daemon {
     }
 
     /// Restores the mnemonic via
-    /// `warren_signer::set_warren_mnemonic`. If the new mnemonic produces a
-    /// different Ed25519 pubkey than the one stored in device.json, the
-    /// account manager is logged out synchronously (best-effort): this
-    /// invalidates device.json so that the next daemon boot bootstraps
-    /// cleanly with the new identity instead of returning `SkippedMismatch`.
+    /// `warren_signer::set_warren_mnemonic`, then hot-swaps the new
+    /// identity into the running daemon so the user does not have to
+    /// restart Warren VPN to activate it.
     ///
-    /// **No-log policy**: never the content of `mnemonic`, just the result
-    /// and whether identity changed.
-    fn on_set_warren_mnemonic(&self, tx: oneshot::Sender<std::io::Result<()>>, mnemonic: String) {
+    /// Steps on success:
+    ///
+    /// 1. Reload the in-memory `WarrenAuthSigner` from disk via
+    ///    `warren_signer::reload_signer_from_disk` so every subsequent
+    ///    API request is signed with the freshly derived Ed25519 key.
+    /// 2. If `device.json` exists and the stored pubkey differs from
+    ///    the new pubkey, spawn an `account_manager.login(new_pubkey)`
+    ///    so the daemon re-registers a device under the new identity
+    ///    and emits a `DeviceEvent::LoggedIn(new_identity)`. The GUI
+    ///    observes the resulting `deviceState` change and continues
+    ///    the onboarding/restore flow naturally.
+    /// 3. If no `device.json` is present (first-launch boot) or the
+    ///    pubkey is unchanged (no-op import), no device action is
+    ///    needed — the signer reload alone is sufficient.
+    ///
+    /// **No-log policy**: never the content of `mnemonic`, just the
+    /// result, whether identity changed, and the public pubkey hex.
+    fn on_set_warren_mnemonic(
+        &self,
+        tx: oneshot::Sender<std::io::Result<()>>,
+        mnemonic: zeroize::Zeroizing<String>,
+    ) {
         let result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
             "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
@@ -2577,62 +2626,95 @@ impl Daemon {
         );
 
         if result.is_ok() {
-            // Derive the pubkey from the newly written mnemonic. This is safe
-            // because `set_warren_mnemonic` already validated the BIP39
-            // checksum before writing, so these two calls cannot fail on a
-            // valid mnemonic.
-            let identity_changed = warren_identity::seed_from_mnemonic(&mnemonic)
-                .ok()
-                .map(|seed| warren_identity::derive_node_key(&seed))
-                .map(|new_key| {
-                    let new_pubkey =
-                        mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(
-                            new_key.verifying_key().as_bytes(),
-                        );
-                    // Read the pubkey currently stored in device.json (if any).
-                    let device_path =
-                        self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
-                    let stored_pubkey = std::fs::read_to_string(&device_path)
-                        .ok()
-                        .and_then(|raw| {
-                            serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
-                        })
-                        .and_then(|state| state.into_device())
-                        .map(|d| d.pubkey);
+            // Step 1 — hot-swap the in-memory signer so the new
+            // identity is active for every subsequent signed request.
+            let new_pubkey_bytes = match self.warren_signer.as_ref() {
+                Some(signer) => {
+                    warren_signer::reload_signer_from_disk(signer, &self.settings_dir)
+                }
+                None => {
+                    log::warn!(
+                        "on_set_warren_mnemonic: no in-memory signer to hot-swap \
+                         (legacy Bearer mode) — restart required to pick up new identity"
+                    );
+                    None
+                }
+            };
 
-                    match stored_pubkey {
-                        Some(old) if old != new_pubkey => {
-                            log::warn!(
-                                "on_set_warren_mnemonic: signing identity changed \
-                                 — invalidating device state. \
-                                 Daemon restart required to activate new identity."
-                            );
-                            true
-                        }
-                        // No device.json (first boot) or same pubkey: no action needed.
-                        _ => false,
-                    }
-                })
-                .unwrap_or(false);
+            // Step 2 — auto-login under the new pubkey if it differs
+            // from the device.json record.
+            if let Some(new_pubkey_bytes) = new_pubkey_bytes {
+                let new_pubkey =
+                    mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes);
+                let device_path = self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
+                let stored_pubkey = std::fs::read_to_string(&device_path)
+                    .ok()
+                    .and_then(|raw| {
+                        serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
+                    })
+                    .and_then(|state| state.into_device())
+                    .map(|d| d.pubkey);
 
-            if identity_changed {
-                // Spawn the async logout so we can remain in a sync fn. The
-                // `account_manager` handle is `Clone` (cheap Arc clone) and
-                // `logout()` is cancel-safe (writes LoggedOut to disk then
-                // dispatches a background API call).
-                let manager = self.account_manager.clone();
-                tokio::spawn(async move {
-                    if let Err(e) = manager.logout().await {
-                        log::error!(
-                            "on_set_warren_mnemonic: device state reset failed: {e}"
-                        );
-                    } else {
+                match stored_pubkey {
+                    Some(old) if old != new_pubkey => {
                         log::info!(
-                            "on_set_warren_mnemonic: device state reset — \
-                             restart daemon to activate new identity"
+                            "on_set_warren_mnemonic: identity changed, \
+                             hot-swapping device state to new pubkey={new_pubkey}"
+                        );
+                        let manager = self.account_manager.clone();
+                        let new_pubkey_string = new_pubkey.to_string();
+                        tokio::spawn(async move {
+                            if let Err(login_err) = manager.login(new_pubkey_string).await {
+                                // Security-relevant failure mode: the
+                                // in-memory signer is now signing with
+                                // the new key, but `device.json` still
+                                // points at the old identity, leaving
+                                // the daemon in a hybrid state where
+                                // outgoing requests carry a pubkey
+                                // the local device record does not
+                                // claim. Force a `logout()` so the
+                                // user lands in a deterministic
+                                // `logged out` state and can re-login
+                                // manually from the GUI. We do not
+                                // revert the signer swap because the
+                                // previous mnemonic has already been
+                                // overwritten on disk by
+                                // `set_warren_mnemonic` and is no
+                                // longer recoverable.
+                                log::error!(
+                                    "on_set_warren_mnemonic: hot-swap login failed \
+                                     ({login_err}) — forcing logout to leave the \
+                                     daemon in a deterministic state"
+                                );
+                                if let Err(logout_err) = manager.logout().await {
+                                    log::error!(
+                                        "on_set_warren_mnemonic: subsequent logout \
+                                         also failed: {logout_err} — daemon is in \
+                                         an inconsistent state, user should re-login"
+                                    );
+                                }
+                            } else {
+                                log::info!(
+                                    "on_set_warren_mnemonic: device state \
+                                     successfully migrated to the new identity"
+                                );
+                            }
+                        });
+                    }
+                    Some(_) => {
+                        log::debug!(
+                            "on_set_warren_mnemonic: same pubkey as device.json, \
+                             signer swapped, no device action needed"
                         );
                     }
-                });
+                    None => {
+                        log::debug!(
+                            "on_set_warren_mnemonic: no device state on disk \
+                             (first-launch import), signer swapped — login will \
+                             be triggered by the GUI"
+                        );
+                    }
+                }
             }
         }
 

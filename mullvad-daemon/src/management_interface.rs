@@ -381,19 +381,37 @@ impl ManagementService for ManagementServiceImpl {
     /// Returns the user's BIP39 mnemonic. Empty string if
     /// the identity has never been bootstrapped. **No-log policy**:
     /// never log the content.
+    ///
+    /// The daemon side keeps the secret wrapped in `Zeroizing<String>`.
+    /// Once we hand it to `tonic` via `Response::new`, the bytes are
+    /// copied into the gRPC outbound buffer, which is out of our
+    /// control — but the daemon-side heap allocation is wiped as soon
+    /// as the `Zeroizing` wrapper goes out of scope here.
     async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
         log::debug!("get_warren_mnemonic (content NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
         let mnemonic = self.wait_for_result(rx).await?;
-        Ok(Response::new(mnemonic.unwrap_or_default()))
+        // Unwrap `Zeroizing<String>` only to send over gRPC. The clone
+        // into the response is unavoidable here (gRPC framework needs
+        // an owned `String`), but the original `Zeroizing` wrapper
+        // wipes its heap on drop at end of scope.
+        let payload = mnemonic
+            .map(|z| (*z).clone())
+            .unwrap_or_default();
+        Ok(Response::new(payload))
     }
 
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
-    /// validation + atomic write. Daemon restart required. **No-log
-    /// policy**.
+    /// validation + atomic write. The daemon hot-swaps the in-memory
+    /// signer and triggers an auto-login so no restart is needed.
+    /// **No-log policy**: only the byte length, never the content.
+    ///
+    /// The incoming `String` from `tonic` is wrapped in
+    /// `Zeroizing<String>` immediately so the secret heap buffer is
+    /// wiped after `on_set_warren_mnemonic` returns.
     async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
-        let mnemonic = request.into_inner();
+        let mnemonic = zeroize::Zeroizing::new(request.into_inner());
         log::info!(
             "set_warren_mnemonic request received (len={}, content NEVER logged)",
             mnemonic.len()
@@ -403,7 +421,7 @@ impl ManagementService for ManagementServiceImpl {
         let result = self.wait_for_result(rx).await?;
         result.map(Response::new).map_err(|e| {
             // Map io::ErrorKind::InvalidData → InvalidArgument (= BIP39 invalid).
-            // Autres erreurs → Internal.
+            // Other errors → Internal.
             if e.kind() == std::io::ErrorKind::InvalidData {
                 Status::invalid_argument(e.to_string())
             } else {

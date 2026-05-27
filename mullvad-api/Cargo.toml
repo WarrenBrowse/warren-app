@@ -17,9 +17,22 @@ chrono = { workspace = true }
 # Warren fork — Phase 2 auth wallet: Ed25519 signature on HTTP API
 # requests (see `mullvad-api/src/warren_auth.rs` and
 # `warren-core/docs/06-auth-wallet.md`).
+#
+# `zeroize` is REQUIRED — `WarrenAuthSigner` holds the signing key
+# behind an `RwLock<SigningKey>` and swaps it in-place on mnemonic
+# import via `replace_signing_key`. Without `zeroize`, the previous
+# secret would linger in the heap allocator until eventually
+# overwritten, defeating the no-log / no-residual-secret posture.
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
   "std",
+  "zeroize",
 ] }
+# Direct (non-transitive) dependency on `zeroize` so we can name the
+# `ZeroizeOnDrop` trait in `warren_auth.rs` for the compile-time guard
+# that pins the `zeroize` feature of `ed25519-dalek`. Without this dep
+# the guard would silently break if `ed25519-dalek` ever stopped
+# re-exporting `zeroize` as a transitive dep.
+zeroize = "1"
 hex = "0.4"
 rand = { workspace = true }
 sha2 = { workspace = true }

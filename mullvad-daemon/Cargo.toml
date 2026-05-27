@@ -104,6 +104,11 @@ warren-identity = { path = "../../warren-core/crates/warren-identity" }
 # assemble `WarrenTunnelParameters`. Version pin aligned with
 # `mullvad-api/Cargo.toml`.
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
+# The BIP39 mnemonic that travels through `on_set_warren_mnemonic` is
+# wrapped in `Zeroizing<String>` so its heap buffer is wiped before
+# the allocator can reclaim and recycle the memory. Pair with the
+# `zeroize` feature pinned on `ed25519-dalek` in `mullvad-api`.
+zeroize = { version = "1", default-features = false, features = ["alloc"] }
 # Warren exit selector (equivalent to `mullvad-relay-selector` for the
 # Warren backend). Does not depend on `talpid-warren-tunnel` API: it
 # just returns `(WarrenPubkey, WarrenExitAddr)`; the caller assembles
