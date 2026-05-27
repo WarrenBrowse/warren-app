@@ -3105,8 +3105,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "Impossible de vérifier l'état de l'abonnement. Veuillez réessayer."
 
 msgctxt "warren-onboarding"
-msgid "Back up my new wallet (recommended)"
-msgstr "Sauvegarder mon nouveau portefeuille (recommandé)"
+msgid "Create my new wallet (recommended)"
+msgstr "Créer mon nouveau portefeuille (recommandé)"
 
 msgctxt "warren-onboarding"
 msgid "Configuration complete. Pick a country and connect to Warren."

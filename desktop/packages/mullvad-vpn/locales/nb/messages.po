@@ -3883,8 +3883,8 @@ msgid "All set"
 msgstr "Alt klart"
 
 msgctxt "warren-onboarding"
-msgid "Back up my new wallet (recommended)"
-msgstr "Sikkerhetskopier min nye lommebok (anbefalt)"
+msgid "Create my new wallet (recommended)"
+msgstr "Opprett min nye lommebok (anbefalt)"
 
 msgctxt "warren-onboarding"
 msgid "Check again"

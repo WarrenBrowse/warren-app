@@ -3083,7 +3083,7 @@ msgid "All set"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Back up my new wallet (recommended)"
+msgid "Create my new wallet (recommended)"
 msgstr ""
 
 msgctxt "warren-onboarding"

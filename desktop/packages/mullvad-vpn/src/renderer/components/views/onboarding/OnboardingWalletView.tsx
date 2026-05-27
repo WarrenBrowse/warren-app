@@ -123,7 +123,7 @@ export function OnboardingWalletView() {
       <>
         <Button variant="success" onClick={pickGenerate} data-testid="onboarding-wallet-generate">
           <Button.Text>
-            {messages.pgettext('warren-onboarding', 'Back up my new wallet (recommended)')}
+            {messages.pgettext('warren-onboarding', 'Create my new wallet (recommended)')}
           </Button.Text>
         </Button>
         <Button variant="primary" onClick={pickImport} data-testid="onboarding-wallet-import">
