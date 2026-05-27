@@ -383,7 +383,20 @@ export default class AppRenderer {
       this.history = History.fromSavedHistory(initialState.navigationHistory);
     } else {
       const loginState = this.reduxStore.getState().account.status;
-      const navigationBase = getNavigationBase(this.connectedToDaemon, loginState);
+      // Pass `onboardingCompletedUnix` so the initial history points
+      // at `/main` for a user who has already gone through the wizard.
+      // Without it, `getNavigationBase` always treats the boot as a
+      // first launch and lands on `onboardingWelcome`. The subsequent
+      // `StateTriggeredNavigation` re-render computes `nextPath=/main`
+      // but skips the navigation because `prevPath === nextPath`
+      // (= no transition observed), so the user stays stuck on the
+      // welcome screen even though the redux store says otherwise.
+      const onboardingCompletedUnix = initialState.guiSettings.onboardingCompletedUnix;
+      const navigationBase = getNavigationBase(
+        this.connectedToDaemon,
+        loginState,
+        onboardingCompletedUnix,
+      );
       this.history = new History(navigationBase);
     }
 

@@ -143,15 +143,28 @@ export default class AccountDataCache {
   private handleFetchError(pubkey: WarrenPubKey, error: AccountDataError['error']) {
     this.notifyWatchers((w) => w.onError(error));
     if (error !== 'invalid-account') {
-      this.scheduleRetry(pubkey);
+      this.scheduleRetry(pubkey, error);
     }
   }
 
-  private scheduleRetry(pubkey: WarrenPubKey) {
+  private scheduleRetry(pubkey: WarrenPubKey, error: AccountDataError['error']) {
     this.waitStrategy.increase();
     const delay = this.waitStrategy.delay();
 
-    log.warn(`Failed to fetch account data. Retrying in ${delay} ms`);
+    // A `'communication'` error covers the 404 returned by warren-api
+    // when the current pubkey has no active subscription yet, which
+    // is the steady state for a newly bootstrapped Warren identity
+    // until the user buys a plan. The retry loop is essential
+    // (so the UI updates the moment a subscription is purchased)
+    // but logging at warn level for every retry floods the dev
+    // console. Demote to debug for the expected catch-all and keep
+    // warn for genuinely unusual failure modes (too-many-devices,
+    // list-devices).
+    if (error === 'communication') {
+      log.debug(`Account data fetch: retrying in ${delay} ms (no subscription yet?)`);
+    } else {
+      log.warn(`Failed to fetch account data (${error}). Retrying in ${delay} ms`);
+    }
 
     this.scheduleFetch(pubkey, delay);
   }

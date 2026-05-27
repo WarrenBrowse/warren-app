@@ -374,9 +374,18 @@ export default class UserInterface implements WindowControllerDelegate {
       // cancel notifications when window appears
       this.delegate.dismissActiveNotifications();
 
-      void this.delegate.updateAccountData();
+      // `updateAccountData` rejects when the API returns 404 (= no
+      // active subscription yet) or on transient network failures.
+      // The retry loop is owned by `account-data-cache` and we do not
+      // want each focus event to surface an `UnhandledPromiseRejectionWarning`
+      // in the daemon log — log at debug level and move on.
+      this.delegate.updateAccountData().catch((error) => {
+        log.debug(`updateAccountData on focus failed: ${error}`);
+      });
 
-      void this.delegate.getVersionInfo();
+      this.delegate.getVersionInfo().catch((error) => {
+        log.debug(`getVersionInfo on focus failed: ${error}`);
+      });
     });
 
     this.windowController.window?.on('blur', () => {

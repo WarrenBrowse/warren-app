@@ -2,6 +2,7 @@ import React from 'react';
 
 import { messages } from '../../../../../shared/gettext';
 import { RoutePath } from '../../../../../shared/routes';
+import { useAppContext } from '../../../../context';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
 import { Link } from '../../../../lib/components/link';
@@ -48,7 +49,18 @@ export function OnboardingLayout({
   showBackAction = true,
 }: OnboardingLayoutProps) {
   const { push, pop } = useHistory();
-  const skip = React.useCallback(() => push(RoutePath.main), [push]);
+  const { setOnboardingCompletedUnix } = useAppContext();
+  // Skipping the wizard marks the onboarding as completed in
+  // `IGuiSettingsState` so the next boot does NOT route the user
+  // back to the welcome step. Without this side effect, every
+  // restart re-opens the wizard because `getNavigationBase` only
+  // unblocks `RoutePath.main` when `onboardingCompletedUnix` is set.
+  // The user can replay the wizard manually via
+  // Settings → "Replay onboarding" (which clears the timestamp).
+  const skip = React.useCallback(() => {
+    setOnboardingCompletedUnix(Math.floor(Date.now() / 1000));
+    push(RoutePath.main);
+  }, [setOnboardingCompletedUnix, push]);
 
   const body = (
     <NavigationContainer>

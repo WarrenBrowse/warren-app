@@ -644,7 +644,19 @@ class ApplicationMain
       if (deviceState.type === 'logged in') {
         void this.daemonRpc
           .updateDevice()
-          .catch((error: Error) => log.warn(`Failed to update device info: ${error.message}`));
+          .catch((error: Error) => {
+            // A 404 here means the warren-api has no device record
+            // for the current pubkey yet — expected for a freshly
+            // imported / created identity that has not purchased a
+            // subscription. The retry path is handled by
+            // `account-data-cache`; demote the noise to debug to
+            // keep the production log focused on real failures.
+            if (error.message.includes('404 Not Found')) {
+              log.debug(`updateDevice: 404 (no device record yet, expected without subscription)`);
+            } else {
+              log.warn(`Failed to update device info: ${error.message}`);
+            }
+          });
       }
     } catch (e) {
       const error = e as Error;

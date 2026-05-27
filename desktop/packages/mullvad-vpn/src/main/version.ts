@@ -120,7 +120,18 @@ export default class Version {
       this.setLatestVersion(await this.daemonRpc.getVersionInfo());
     } catch (e) {
       const error = e as Error;
-      log.error(`Failed to request the version info: ${error.message}`);
+      // In Warren mode the Mullvad version router is permanently
+      // disabled (Warren ships its own GitHub Releases pipeline),
+      // so every call to `getVersionInfo` rejects with "Version
+      // router is down". Polling this from the GUI is intrinsic
+      // to the upstream design, so demote the expected case to
+      // debug; any other failure (transient API outage, malformed
+      // response) still logs at error.
+      if (error.message.includes('Version router is down')) {
+        log.debug(`Version check skipped (router closed in Warren mode)`);
+      } else {
+        log.error(`Failed to request the version info: ${error.message}`);
+      }
     }
   }
 }
