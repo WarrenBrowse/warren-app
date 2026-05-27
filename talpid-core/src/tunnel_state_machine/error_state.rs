@@ -77,6 +77,26 @@ impl ErrorState {
     fn set_firewall_policy(
         shared_values: &mut SharedTunnelStateValues,
     ) -> Result<(), FirewallPolicyError> {
+        // Only block all traffic if lockdown mode (kill switch) is active.
+        // When lockdown is OFF, the user opted out of leak protection — don't
+        // cut their internet on transient errors (missing relays, offline, etc.).
+        if !shared_values.lockdown_mode.bool() {
+            log::info!("Error state with lockdown OFF — resetting firewall (traffic allowed)");
+
+            #[cfg(target_os = "linux")]
+            shared_values.disable_connectivity_check();
+
+            return shared_values.firewall.reset_policy().map_err(|error| {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg(
+                        "Failed to reset firewall policy for error state (lockdown OFF)"
+                    )
+                );
+                FirewallPolicyError::Generic
+            });
+        }
+
         let policy = FirewallPolicy::Blocked {
             allow_lan: shared_values.allow_lan,
             allowed_endpoint: Some(shared_values.allowed_endpoint.clone()),
@@ -178,6 +198,7 @@ impl TunnelState for ErrorState {
             #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
                 shared_values.lockdown_mode = lockdown_mode;
+                let _ = Self::set_firewall_policy(shared_values);
                 let _ = complete_tx.send(());
                 SameState(self)
             }
