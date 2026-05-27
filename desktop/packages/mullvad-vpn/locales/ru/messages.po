@@ -3857,3 +3857,276 @@ msgstr[1] "Вы потеряете %d оставшихся дня."
 msgstr[2] "Вы потеряете %d оставшихся дней."
 msgstr[3] "Вы потеряете оставшиеся %d дня."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Страна входа"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Страна выхода"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Ожидайте примерно половину пропускной способности одиночного перехода в обмен на невозможность связать IP пользователя с IP назначения. По умолчанию отключено; включается опционально для конфиденциальности."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Необязательно: закрепите страны входного и выходного реле (коды ISO 3166 alpha-2, такие как fr, de, se). Оставьте пустым для автоматического выбора."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Перезапустите демон Warren после изменения этого параметра."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Маршрутизирует ваш трафик через два реле Warren с использованием сквозного шифрования HPKE. Входное реле видит только зашифрованный текст; выходное видит только расшифрованную полезную нагрузку, никогда ваш IP. Схема вдохновлена Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Активен single-hop Warren. Полная пропускная способность, идентичные гарантии конфиденциальности, как в стандартном режиме single-hop."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Компромисс: примерно половина пропускной способности single-hop. По умолчанию отключено; включается опционально для конфиденциальности. После изменения этого параметра требуется перезапуск демона."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "При включении трафик маршрутизируется через два реле Warren (вход, затем выход) с использованием сквозного шифрования HPKE между клиентом и выходом. Входное реле видит только зашифрованный текст; выходное видит только расшифрованную полезную нагрузку, никогда IP пользователя."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "авто"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "VPN без компромиссов в области конфиденциальности. Никаких логов. Никаких аккаунтов. Никакого отслеживания. Только пропускная способность."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Всё готово"
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr "Создать резервную копию моего нового кошелька (рекомендуется)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Проверить снова"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Проверка... (нажмите, чтобы обновить сейчас)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Настройка завершена. Выберите страну и подключитесь к Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Продолжить"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Не удалось проверить статус подписки. Попробуйте снова."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "У демона ещё нет мнемонической фразы — войдите или перезапустите приложение."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Демон отклонил мнемоническую фразу. Проверьте орфографию и количество слов и попробуйте снова."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не удалось получить мнемоническую фразу от демона."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Начать"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "У меня уже есть подписка"
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr "Я записал слова"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Импортировать существующую мнемоническую фразу"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Активная подписка не найдена. Сначала приобретите её."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Вставьте свою 12-словную мнемоническую фразу BIP39, чтобы восстановить существующую Warren-идентичность."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Выберите страну и подключитесь"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Выберите защиту, которая нужна вам с первого дня. Все эти параметры можно изменить позже в Настройках."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Настройки конфиденциальности"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Восстановить кошелёк"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "Восстановление…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Пропустить мастер (для опытных)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Посмотреть тарифы (откроется в браузере)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren использует некастодиальный кошелёк (Ed25519 + BIP39). Ключи принадлежат вам; мы никогда их не видим."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Добро пожаловать в Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr "Запишите эти 12 слов по порядку. Если вы их потеряете, вы потеряете доступ к подписке. Копирование в буфер обмена намеренно отключено, чтобы уберечь ваш секрет от вредоносного ПО."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц — никаких повторяющихся платежей, никакого создания аккаунта, оплата по факту использования."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Ваш кошелёк Warren"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Ваша подписка"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "слов"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Постоянная обфускация (по умолчанию ВКЛ): мимикрия под HTTP/3, чтобы трафик сливался с обычным."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (по умолчанию ВЫКЛ): добавляет паддинг для противодействия анализу трафика ML. ~5–15 % пропускной способности."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (по умолчанию ВЫКЛ): маршрутизация через два реле для невозможности связать вход и выход."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Подробности криптографического несоответствия"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "ID выхода"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Местоположение"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Новый наблюдаемый ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Ранее закреплённый ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Обработка вашего выбора, пожалуйста, подождите."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Отклонить (отключить)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Отклонить и остаться отключённым"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Сообщить Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Идентичность сервера изменилась"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Сервер выхода Warren, которому вы ранее доверяли, теперь предъявляет другую криптографическую идентичность."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Обычно это означает, что оператор ротировал ключ, но может также указывать на то, что сервер был заменён или скомпрометирован. Откажитесь, если не ожидали изменения."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Доверять новому ключу"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "Мимикрия HTTP/3 (активна)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "Обфускация мимикрией HTTP/3 всегда включена для туннелей Warren (/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "Обфускация мимикрией HTTP/3 в данный момент неактивна."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Последняя"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Устаревшие методы обфускации (Shadowsocks, UDP-over-TCP, QUIC, LWO) не применяются, когда warren_mode включён."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Обфускация"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Переподключения"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Туннели Warren маскируются под стандартный браузерный трафик HTTP/3: ALPN h3, SNI warrenbrowse.com, разделение пакета Initial, UDP/443. В /v1 это не переключается, иначе Warren-клиенты сразу же стали бы узнаваемы в сети."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "неактивна"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "никогда"
+

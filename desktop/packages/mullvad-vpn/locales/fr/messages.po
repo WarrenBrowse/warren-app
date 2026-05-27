@@ -241,7 +241,7 @@ msgid "Off"
 msgstr "Désactivé"
 
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 msgid "On"
 msgstr "Activé"
@@ -387,7 +387,7 @@ msgstr "Connecter à %(location)s"
 #. which copies the public key to the clipboard.
 msgctxt "accessibility"
 msgid "Copy public key"
-msgstr ""
+msgstr "Copier la clé publique"
 
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
@@ -415,7 +415,7 @@ msgstr "Maximiser %(location)s"
 #. %(pubkey)s - the public key to the left of the button
 msgctxt "accessibility"
 msgid "Forget public key %(pubkey)s"
-msgstr ""
+msgstr "Oublier la clé publique %(pubkey)s"
 
 #. Accessibility label for link to VPN settings where
 #. the user can change WireGuard port.
@@ -441,7 +441,7 @@ msgstr "Aller à la diapositive %(index)s"
 #. the button which obscures the public key.
 msgctxt "accessibility"
 msgid "Hide public key"
-msgstr ""
+msgstr "Masquer la clé publique"
 
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
@@ -463,7 +463,7 @@ msgstr "Connexion"
 #. %(pubkey)s - the saved public key
 msgctxt "accessibility"
 msgid "Login with public key %(pubkey)s"
-msgstr ""
+msgstr "Se connecter avec la clé publique %(pubkey)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -547,7 +547,7 @@ msgstr "Paramètres Shadowsocks"
 #. the button which unobscures the public key.
 msgctxt "accessibility"
 msgid "Show public key"
-msgstr ""
+msgstr "Afficher la clé publique"
 
 msgctxt "accessibility"
 msgid "UDP-over-TCP settings"
@@ -566,7 +566,7 @@ msgstr "Compte"
 #. backup view (= reveal/copy BIP39 mnemonic).
 msgctxt "account-view"
 msgid "Backup keys"
-msgstr ""
+msgstr "Sauvegarder les clés"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -592,7 +592,7 @@ msgstr "Payé jusqu'au"
 
 msgctxt "account-view"
 msgid "Public key"
-msgstr ""
+msgstr "Clé publique"
 
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
@@ -753,7 +753,7 @@ msgstr "L'API n'a pas pu être atteinte en utilisant le mode %(name)s."
 #. %(domainFronting)s - Will be replaced with: 'Domain fronting'
 msgctxt "api-access-methods-view"
 msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr ""
+msgstr "L'application communique avec un serveur API Warren via %(domainFronting)s."
 
 msgctxt "api-access-methods-view"
 msgid "The app needs the remote server details, where your local SOCKS5 server will forward your traffic."
@@ -767,7 +767,7 @@ msgstr "L'application doit communiquer avec un serveur d'API Warren pour vous co
 #. which the app uses to reach Warren's API servers
 msgctxt "api-access-methods-view"
 msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr ""
+msgstr "Le CDN utilisé est le CDN77 de Datapacket. Le CDN ne peut observer que le trafic TLS relayé, pas son contenu."
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -785,7 +785,7 @@ msgstr "Cela peut être utile si l'API est censurée, mais que les serveurs de p
 #. which the app uses to reach Warren's API servers
 msgctxt "api-access-methods-view"
 msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr ""
+msgstr "Cela peut être utile lorsque l'accès direct et les autres méthodes sont bloqués par la censure."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -821,7 +821,7 @@ msgstr "Dans la méthode « Ponts Warren », l'application communique avec un se
 #. %(domainFronting)s - Will be replaced with: 'Domain fronting'
 msgctxt "api-access-methods-view"
 msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr ""
+msgstr "Avec la méthode d'accès %(domainFronting)s, l'application atteint l'API Warren via un CDN, mêlant le trafic à beaucoup d'autres flux internet, ce qui rend la censure plus difficile."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1048,7 +1048,7 @@ msgstr "Impossible d'authentifier le compte. Veuillez envoyer un rapport de prob
 
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr ""
+msgstr "Vous êtes connecté(e) avec une clé publique non valide. Veuillez vous déconnecter et en essayer une autre."
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1109,7 +1109,7 @@ msgstr "Commencez à utiliser l'application pour reprendre votre confidentialit�
 
 msgctxt "connect-view"
 msgid "Here’s your public key. Save it!"
-msgstr ""
+msgstr "Voici votre clé publique. Conservez-la !"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1346,7 +1346,7 @@ msgstr "L'appareil sera supprimé de la liste et déconnecté."
 
 msgctxt "device-management"
 msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr ""
+msgstr "Il s'agit du nom attribué à l'appareil. Chaque appareil connecté à un compte Warren reçoit un nom unique qui vous aide à l'identifier lorsque vous gérez vos appareils dans l'application ou sur le site Web."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1371,7 +1371,7 @@ msgstr "Affichez et gérez tous vos appareils connectés. Vous pouvez avoir jusq
 
 msgctxt "device-management"
 msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr ""
+msgstr "Vous pouvez connecter jusqu'à 5 appareils au même compte Warren."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1511,7 +1511,7 @@ msgstr "TÉLÉCHARGEMENT DE LA MISE À JOUR… %(appUpgradeDownloadProgressValu
 
 msgctxt "in-app-notifications"
 msgid "EXIT SWITCHED"
-msgstr ""
+msgstr "SERVEUR DE SORTIE CHANGÉ"
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
@@ -1626,97 +1626,97 @@ msgstr "ÉCHEC DE LA VÉRIFICATION"
 
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
-msgstr ""
+msgstr "Votre serveur de sortie précédent est devenu inaccessible. Warren vous a routé(e) automatiquement via un serveur alternatif."
 
 msgctxt "keys-view"
 msgid "Backup keys"
-msgstr ""
+msgstr "Sauvegarder les clés"
 
 msgctxt "keys-view"
 msgid "Copy mnemonic to clipboard"
-msgstr ""
+msgstr "Copier la phrase mnémonique dans le presse-papiers"
 
 #. Shown when the daemon rejects the mnemonic
 #. (typically: invalid BIP39 word, bad checksum,
 #. wrong word count). User must check + retry.
 msgctxt "keys-view"
 msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr ""
+msgstr "Le service a rejeté la phrase mnémonique. Vérifiez l'orthographe, le nombre de mots, puis réessayez."
 
 msgctxt "keys-view"
 msgid "Done"
-msgstr ""
+msgstr "Terminé"
 
 msgctxt "keys-view"
 msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
-msgstr ""
+msgstr "Saisissez votre phrase mnémonique BIP39 de 12 mots (ou 24 mots), séparés par des espaces."
 
 #. Generic error when the daemon RPC fails. Shown
 #. only on transient connection issues.
 msgctxt "keys-view"
 msgid "Failed to retrieve mnemonic from daemon."
-msgstr ""
+msgstr "Impossible de récupérer la phrase mnémonique depuis le service."
 
 msgctxt "keys-view"
 msgid "I have written it down in a safe place."
-msgstr ""
+msgstr "Je l'ai notée dans un endroit sûr."
 
 msgctxt "keys-view"
 msgid "I understand this will permanently replace my current identity."
-msgstr ""
+msgstr "Je comprends que cela remplacera définitivement mon identité actuelle."
 
 msgctxt "keys-view"
 msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr ""
+msgstr "Identité restaurée. Redémarrez le service Warren VPN pour activer la nouvelle identité."
 
 #. Title label in navigation bar
 msgctxt "keys-view"
 msgid "Keys"
-msgstr ""
+msgstr "Clés"
 
 msgctxt "keys-view"
 msgid "Mnemonic copied"
-msgstr ""
+msgstr "Phrase mnémonique copiée"
 
 #. Shown when the daemon has no Warren BIP39 mnemonic
 #. stored (= identity never bootstrapped). User must
 #. log in or restore from mnemonic first.
 msgctxt "keys-view"
 msgid "No mnemonic available — log in or restore an identity first."
-msgstr ""
+msgstr "Aucune phrase mnémonique disponible — connectez-vous ou restaurez d'abord une identité."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
-msgstr ""
+msgstr "Restaurer depuis une phrase mnémonique"
 
 #. Title label in navigation bar
 msgctxt "keys-view"
 msgid "Restore identity"
-msgstr ""
+msgstr "Restaurer l'identité"
 
 msgctxt "keys-view"
 msgid "Restoring..."
-msgstr ""
+msgstr "Restauration en cours…"
 
 msgctxt "keys-view"
 msgid "Reveal mnemonic"
-msgstr ""
+msgstr "Révéler la phrase mnémonique"
 
 msgctxt "keys-view"
 msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr ""
+msgstr "AVERTISSEMENT — Ceci REMPLACERA votre identité actuelle. Tout abonnement lié à l'identité actuelle deviendra irrécupérable."
 
 msgctxt "keys-view"
 msgid "words"
-msgstr ""
+msgstr "mots"
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
-msgstr ""
+msgstr "Notez-la sur papier. Ne la stockez jamais dans un cloud, une capture d'écran ou un e-mail."
 
 msgctxt "keys-view"
 msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
-msgstr ""
+msgstr "Votre phrase mnémonique de 12 mots est le SEUL moyen de restaurer votre identité Warren sur un autre appareil. Si vous la perdez, votre abonnement est irrécupérable."
 
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
@@ -1746,7 +1746,7 @@ msgstr "Si ces étapes ne fonctionnent pas, veuillez envoyer un rapport de probl
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
 msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
-msgstr ""
+msgstr "L'autorisation du service Warren VPN a été révoquée. Merci de vous rendre dans les paramètres système et d'autoriser le service Warren VPN sous le paramètre « Autoriser en arrière-plan »."
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1828,7 +1828,7 @@ msgstr "Compte créé"
 
 msgctxt "login-view"
 msgid "Checking public key"
-msgstr ""
+msgstr "Vérification de la clé publique"
 
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
@@ -1852,11 +1852,11 @@ msgstr "Voulez-vous créer un nouveau compte ?"
 #. Text that asks the user if they really want to remove the saved public key.
 msgctxt "login-view"
 msgid "Do you want to remove the saved public key?"
-msgstr ""
+msgstr "Voulez-vous supprimer la clé publique enregistrée ?"
 
 msgctxt "login-view"
 msgid "Enter your public key"
-msgstr ""
+msgstr "Saisissez votre clé publique"
 
 msgctxt "login-view"
 msgid "Error"
@@ -1874,7 +1874,7 @@ msgstr "Finalisation de la mise à niveau."
 #. non-existent public key.
 msgctxt "login-view"
 msgid "Invalid public key"
-msgstr ""
+msgstr "Clé publique non valide"
 
 msgctxt "login-view"
 msgid "Logged in"
@@ -1914,7 +1914,7 @@ msgstr "Veuillez patienter"
 #. public key.
 msgctxt "login-view"
 msgid "Removing the saved public key from this device cannot be undone."
-msgstr ""
+msgstr "Supprimer la clé publique enregistrée de cet appareil est irréversible."
 
 #. Error message shown above login input when trying to login to an account
 #. with too many registered devices.
@@ -1932,12 +1932,12 @@ msgstr "Mise à niveau..."
 
 msgctxt "login-view"
 msgid "Valid public key"
-msgstr ""
+msgstr "Clé publique valide"
 
 #. Text that informs the users about consequences of creating a new account.
 msgctxt "login-view"
 msgid "You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone."
-msgstr ""
+msgstr "Vous avez déjà une clé publique enregistrée ; en créant un nouveau compte, la clé publique enregistrée sera supprimée de cet appareil. Cette action est irréversible."
 
 #. The title for the LWO port selector.
 msgctxt "lwo-settings-view"
@@ -2105,7 +2105,7 @@ msgstr "Impossible de bloquer tout le trafic réseau. Essayez de mettre votre no
 
 msgctxt "notifications"
 msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr ""
+msgstr "Impossible de communiquer avec le pilote du noyau Warren. Essayez de vous reconnecter ou envoyez un rapport de problème."
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2190,7 +2190,7 @@ msgstr "Une erreur est survenue."
 
 msgctxt "redeem-voucher-view"
 msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr ""
+msgstr "Vous semblez avoir saisi une clé publique plutôt qu'un code de bon. Si vous souhaitez modifier le compte actif, veuillez d'abord vous déconnecter."
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2396,7 +2396,7 @@ msgstr "Multihop"
 
 msgctxt "settings-view"
 msgid "Replay onboarding"
-msgstr ""
+msgstr "Rejouer l'assistant de démarrage"
 
 #. Title label in navigation bar
 msgctxt "settings-view"
@@ -2500,7 +2500,7 @@ msgstr "Veuillez réessayer ou envoyer un rapport de problème."
 
 msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
-msgstr ""
+msgstr "Redémarrer le service Warren"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2512,7 +2512,7 @@ msgstr "Pour utiliser le %(splitTunneling)s, veuillez passer à une version de n
 
 msgctxt "split-tunneling-view"
 msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr ""
+msgstr "Pour utiliser le Split tunneling, activez « Accès complet au disque » pour « Warren VPN » dans les paramètres système de macOS."
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2647,7 +2647,7 @@ msgstr "Désactiver le Split tunneling"
 
 msgctxt "troubleshoot"
 msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
-msgstr ""
+msgstr "Activez « Accès complet au disque » pour « Warren VPN » dans les paramètres système de macOS."
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2671,7 +2671,7 @@ msgstr "Ouvrir les paramètres système"
 
 msgctxt "troubleshoot"
 msgid "This error can happen when something other than Warren is actively updating the DNS."
-msgstr ""
+msgstr "Cette erreur peut survenir lorsque quelque chose d'autre que Warren met activement à jour le DNS."
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2794,7 +2794,7 @@ msgstr "Anti-censure"
 
 msgctxt "vpn-settings-view"
 msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
-msgstr ""
+msgstr "Attention : si vous activez cette option, les connexions à Internet nécessiteront toujours une connexion Warren VPN."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2925,7 +2925,7 @@ msgstr "Réinitialiser les clés épinglées ?"
 
 msgctxt "vpn-settings-view"
 msgid "Restart the daemon for the change to take effect."
-msgstr ""
+msgstr "Redémarrez le service pour que le changement prenne effet."
 
 msgctxt "vpn-settings-view"
 msgid "Server IP override"
@@ -2946,7 +2946,7 @@ msgstr "La différence entre le coupe-circuit d'arrêt et le mode verrouillage e
 
 msgctxt "vpn-settings-view"
 msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr ""
+msgstr "La différence entre le coupe-circuit d'arrêt et le mode verrouillage est que le coupe-circuit d'arrêt empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2981,7 +2981,7 @@ msgstr "Tant que les nouveaux épinglages ne sont pas établis, la détection de
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
-msgstr ""
+msgstr "URL du serveur warren-api. Format http(s)://hôte:port. Vide = non défini (repli sur la valeur par défaut). Redémarrez le service pour que le changement prenne effet."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -2998,23 +2998,23 @@ msgstr "Avertissement : le bloqueur de malware n'est pas un anti-virus et ne doi
 
 msgctxt "vpn-settings-view"
 msgid "Warren api URL"
-msgstr ""
+msgstr "URL de l'API Warren"
 
 msgctxt "vpn-settings-view"
 msgid "Warren local account"
-msgstr ""
+msgstr "Compte Warren local"
 
 msgctxt "vpn-settings-view"
 msgid "Warren tunnel mode"
-msgstr ""
+msgstr "Mode tunnel Warren"
 
 msgctxt "vpn-settings-view"
 msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
-msgstr ""
+msgstr "Lorsqu'activé, le service utilise un compte auto-hébergé dérivé de la phrase mnémonique Warren locale au lieu de contacter une API de compte distante."
 
 msgctxt "vpn-settings-view"
 msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of WireGuard / OpenVPN."
-msgstr ""
+msgstr "Lorsqu'activé, le trafic est routé via les serveurs de sortie Warren à travers un tunnel Iroh QUIC plutôt que via WireGuard / OpenVPN."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3026,7 +3026,7 @@ msgstr "Lorsque cette fonctionnalité est activée, IPv6 peut être utilisé par
 
 msgctxt "vpn-settings-view"
 msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr ""
+msgstr "Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
 
 msgctxt "warren-multi-hop-view"
 msgid "auto"
@@ -3042,7 +3042,7 @@ msgstr "Pays de sortie"
 
 msgctxt "warren-multi-hop-view"
 msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
-msgstr "Attendez-vous à environ la moitié du débit du single-hop, en échange d'une non-corrélation entre l'IP utilisateur et l'IP de destination. Désactivé par défaut ; activation opt-in pour la vie privée."
+msgstr "Attendez-vous à environ la moitié de la bande passante du single-hop, en échange d'une non-corrélation entre l'IP utilisateur et l'IP de destination. Désactivé par défaut ; à activer pour la vie privée."
 
 msgctxt "warren-multi-hop-view"
 msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
@@ -3050,7 +3050,7 @@ msgstr "Optionnel : fixer les pays des relais d'entrée et de sortie (codes ISO 
 
 msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
-msgstr "Redémarrez le daemon Warren après avoir modifié ce paramètre."
+msgstr "Redémarrez le service Warren après avoir modifié ce paramètre."
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
@@ -3058,11 +3058,11 @@ msgstr "Achemine votre trafic à travers deux relais Warren avec chiffrement HPK
 
 msgctxt "warren-multi-hop-view"
 msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
-msgstr "Warren single-hop actif. Débit maximal, mêmes garanties de vie privée que le mode single-hop par défaut."
+msgstr "Warren single-hop actif. Bande passante maximale, mêmes garanties de vie privée que le mode single-hop par défaut."
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
-msgstr "Compromis : environ la moitié du débit single-hop. Désactivé par défaut ; activation opt-in pour la vie privée. Redémarrage du daemon requis après modification."
+msgstr "Compromis : environ la moitié de la bande passante du single-hop. Désactivé par défaut ; à activer pour la vie privée. Redémarrage du service requis après modification."
 
 msgctxt "warren-multi-hop-view"
 msgid "Warren multi-hop"
@@ -3074,67 +3074,75 @@ msgstr "Lorsqu'activé, le trafic est routé à travers deux relais Warren (entr
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
-msgstr ""
+msgstr "• Obfuscation permanente (activée par défaut) : mimétisme HTTP/3 pour que le trafic se fonde dans la masse."
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr ""
+msgstr "• DAITA v2 (désactivée par défaut) : injection de padding pour déjouer l'analyse de trafic par ML. Coût ~5-15 % de bande passante."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
-msgstr ""
+msgstr "• Multi-hop (désactivé par défaut) : routage via deux relais pour rendre l'entrée et la sortie non corrélables."
 
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
-msgstr ""
+msgstr "Une expérience VPN sans compromis sur la vie privée. Aucune trace. Aucun compte. Aucun suivi. Juste de la bande passante."
 
 msgctxt "warren-onboarding"
 msgid "All set"
-msgstr ""
+msgstr "Tout est prêt"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Vérifier à nouveau"
 
 msgctxt "warren-onboarding"
 msgid "Checking... (click to refresh now)"
 msgstr "Vérification en cours... (cliquez pour rafraîchir maintenant)"
 
 msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Impossible de vérifier l'état de l'abonnement. Veuillez réessayer."
+
+msgctxt "warren-onboarding"
 msgid "Back up my new wallet (recommended)"
-msgstr ""
+msgstr "Sauvegarder mon nouveau portefeuille (recommandé)"
 
 msgctxt "warren-onboarding"
 msgid "Configuration complete. Pick a country and connect to Warren."
-msgstr ""
+msgstr "Configuration terminée. Choisissez un pays et connectez-vous à Warren."
 
 msgctxt "warren-onboarding"
 msgid "Continue"
-msgstr ""
+msgstr "Continuer"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr ""
+msgstr "Le service n'a pas encore de phrase mnémonique — connectez-vous ou redémarrez l'application."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr ""
+msgstr "Le service a rejeté la phrase mnémonique. Vérifiez l'orthographe et le nombre de mots, puis réessayez."
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
-msgstr ""
+msgstr "Impossible de récupérer la phrase mnémonique depuis le service."
 
 msgctxt "warren-onboarding"
 msgid "Get started"
-msgstr ""
+msgstr "Commencer"
 
 msgctxt "warren-onboarding"
 msgid "I already have a subscription"
-msgstr ""
+msgstr "J'ai déjà un abonnement"
 
 msgctxt "warren-onboarding"
 msgid "I have written down the words"
-msgstr ""
+msgstr "J'ai noté les mots"
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
-msgstr ""
+msgstr "Importer une phrase mnémonique existante"
 
 msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
@@ -3142,63 +3150,63 @@ msgstr "Aucun abonnement actif trouvé. Veuillez en acheter un d'abord."
 
 msgctxt "warren-onboarding"
 msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr ""
+msgstr "Collez votre phrase mnémonique BIP39 de 12 mots pour restaurer votre identité Warren existante."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
-msgstr ""
+msgstr "Choisir un pays et se connecter"
 
 msgctxt "warren-onboarding"
 msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
-msgstr ""
+msgstr "Choisissez dès le départ les défenses que vous souhaitez. Vous pourrez toutes les modifier plus tard depuis les Paramètres."
 
 msgctxt "warren-onboarding"
 msgid "Privacy preferences"
-msgstr ""
+msgstr "Préférences de confidentialité"
 
 msgctxt "warren-onboarding"
 msgid "Restore wallet"
-msgstr ""
+msgstr "Restaurer le portefeuille"
 
 msgctxt "warren-onboarding"
 msgid "Restoring..."
-msgstr ""
+msgstr "Restauration en cours…"
 
 msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
-msgstr ""
+msgstr "Ignorer l'assistant (avancé)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
-msgstr ""
+msgstr "Voir les offres (s'ouvre dans votre navigateur)"
 
 msgctxt "warren-onboarding"
 msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr ""
+msgstr "Warren utilise un portefeuille non-custodial (Ed25519 + BIP39). Vous possédez les clés ; nous ne les voyons jamais."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
-msgstr ""
+msgstr "Bienvenue sur Warren VPN"
 
 msgctxt "warren-onboarding"
 msgid "words"
-msgstr ""
+msgstr "mots"
 
 msgctxt "warren-onboarding"
 msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr ""
+msgstr "Notez ces 12 mots dans l'ordre. Si vous les perdez, vous perdez l'accès à votre abonnement. La copie dans le presse-papiers est volontairement désactivée pour tenir votre secret hors de portée des logiciels malveillants."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr ""
+msgstr "Vous n'avez pas encore d'abonnement actif. Les offres démarrent à quelques euros par mois — sans facturation récurrente, sans création de compte, à l'usage."
 
 msgctxt "warren-onboarding"
 msgid "Your subscription"
-msgstr ""
+msgstr "Votre abonnement"
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
-msgstr ""
+msgstr "Votre portefeuille Warren"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -3274,7 +3282,7 @@ msgstr "Dernier"
 
 msgctxt "warren-status-view"
 msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
-msgstr "Les méthodes d'obfuscation Warren classiques (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas lorsque warren_mode est actif."
+msgstr "Les méthodes d'obfuscation classiques (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas lorsque warren_mode est actif."
 
 msgctxt "warren-status-view"
 msgid "never"
@@ -3290,7 +3298,7 @@ msgstr "Reconnexions"
 
 msgctxt "warren-status-view"
 msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
-msgstr "Les tunnels Warren se font passer pour du trafic HTTP/3 navigateur standard : ALPN h3, SNI warrenbrowse.com, découpage du paquet Initial, UDP/443. Non désactivable en /v1 car le faire rendrait les clients Warren immédiatement identifiables sur le réseau."
+msgstr "Les tunnels Warren se font passer pour du trafic HTTP/3 d'un navigateur standard : ALPN h3, SNI warrenbrowse.com, découpage du paquet Initial, UDP/443. Non désactivable en /v1 car le faire rendrait les clients Warren immédiatement identifiables sur le réseau."
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -3439,1000 +3447,3 @@ msgstr "Plages valides : %(portRanges)s"
 msgctxt "wireguard-settings-view"
 msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
 msgstr "Le port TCP auquel le protocole de dissimulation UDP sur TCP doit se connecter sur le serveur VPN."
-
-#~ msgctxt "accessibility"
-#~ msgid "Copy account number"
-#~ msgstr "Copier le numéro de compte"
-
-#~ msgctxt "accessibility"
-#~ msgid "Forget account number %(accountNumber)s"
-#~ msgstr "Oublier le numéro de compte %(accountNumber)s"
-
-#~ msgctxt "accessibility"
-#~ msgid "Hide account number"
-#~ msgstr "Masquer le numéro de compte"
-
-#~ msgctxt "accessibility"
-#~ msgid "Login with account number %(accountNumber)s"
-#~ msgstr "Connectez-vous avec le numéro de compte %(accountNumber)s"
-
-#~ msgctxt "accessibility"
-#~ msgid "Show account number"
-#~ msgstr "Afficher le numéro de compte"
-
-#~ msgctxt "account-view"
-#~ msgid "Account number"
-#~ msgstr "Numéro de compte"
-
-#~ msgctxt "auth-failure"
-#~ msgid "You are logged in with an invalid account number. Please log out and try another one."
-#~ msgstr "Vous vous êtes connecté(e) avec un numéro de compte non valide. Veuillez vous déconnecter et en essayer un autre."
-
-#~ msgctxt "connect-view"
-#~ msgid "Here’s your account number. Save it!"
-#~ msgstr "Voici votre numéro de compte. Gardez-le !"
-
-#~ msgctxt "device-management"
-#~ msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-#~ msgstr "Il s'agit du nom attribué à l'appareil. Chaque appareil connecté à un compte Warren reçoit un nom unique qui vous aide à l'identifier lorsque vous gérez vos appareils dans l'application ou sur le site Web."
-
-#~ msgctxt "device-management"
-#~ msgid "You can have up to 5 devices logged in on one Warren account."
-#~ msgstr "Vous pouvez connecter jusqu'à 5 appareils au même compte Warren."
-
-#~ msgctxt "launch-view"
-#~ msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
-#~ msgstr "L'autorisation du service Warren VPN a été révoquée. Merci de vous rendre dans les paramètres système et d'autoriser le service Warren VPN sous le paramètre « Autoriser en arrière-plan »."
-
-#~ msgctxt "login-view"
-#~ msgid "Checking account number"
-#~ msgstr "Vérification du numéro de compte"
-
-#~ msgctxt "login-view"
-#~ msgid "Do you want to remove the saved account number?"
-#~ msgstr "Voulez-vous supprimer le numéro de compte enregistré ?"
-
-#~ msgctxt "login-view"
-#~ msgid "Enter your account number"
-#~ msgstr "Saisissez votre numéro de compte"
-
-#~ msgctxt "login-view"
-#~ msgid "Invalid account number"
-#~ msgstr "Numéro de compte non valide"
-
-#~ msgctxt "login-view"
-#~ msgid "Removing the saved account number from this device cannot be undone."
-#~ msgstr "Supprimer le numéro de compte enregistré de cet appareil est irréversible."
-
-#~ msgctxt "login-view"
-#~ msgid "Valid account number"
-#~ msgstr "Numéro de compte valide"
-
-#~ msgctxt "login-view"
-#~ msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-#~ msgstr "Vous avez déjà un numéro de compte enregistré. Si vous créez un nouveau compte, le numéro de compte enregistré sera supprimé de cet appareil. Cette action est irréversible."
-
-#~ msgctxt "notifications"
-#~ msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-#~ msgstr "Impossible de communiquer avec le pilote du noyau Warren. Essayez de vous reconnecter ou envoyez un rapport de problème."
-
-#~ msgctxt "redeem-voucher-view"
-#~ msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-#~ msgstr "Vous semblez avoir saisi un numéro de compte plutôt qu'un code de bon. Si vous souhaitez modifier le compte actif, veuillez d'abord vous déconnecter."
-
-#~ msgctxt "split-tunneling-view"
-#~ msgid "Restart Warren Service"
-#~ msgstr "Redémarrer le service Warren"
-
-#~ msgctxt "split-tunneling-view"
-#~ msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-#~ msgstr "Pour utiliser le Split tunneling, activez « Accès complet au disque » pour « Warren VPN » dans les paramètres système de macOS."
-
-#~ msgctxt "troubleshoot"
-#~ msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
-#~ msgstr "Activez « Accès complet au disque » pour « Warren VPN » dans les paramètres système de macOS."
-
-#~ msgctxt "troubleshoot"
-#~ msgid "This error can happen when something other than Warren is actively updating the DNS."
-#~ msgstr "Cette erreur peut survenir lorsque quelque chose d'autre que Warren met activement à jour le DNS."
-
-#~ msgctxt "vpn-settings-view"
-#~ msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
-#~ msgstr "Attention : si vous activez cette option, les connexions à Internet nécessiteront toujours une connexion Warren VPN."
-
-#~ msgctxt "vpn-settings-view"
-#~ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-#~ msgstr "La différence entre le coupe-circuit d'arrêt et le mode verrouillage est que le coupe-circuit d'arrêt empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
-
-#~ msgctxt "vpn-settings-view"
-#~ msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-#~ msgstr "Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
-
-#~ msgid "%1$s more..."
-#~ msgstr "%1$s de plus…"
-
-#~ msgid "%1$s was added to \"%2$s\""
-#~ msgstr "%1$s a été ajouté à « %2$s »"
-
-#~ msgid "%1$s was removed from \"%2$s\""
-#~ msgstr "%1$s a été retiré de « %2$s »"
-
-#~ msgid "%1$s, %2$s, %3$s"
-#~ msgstr "%1$s, %2$s, %3$s"
-
-#~ msgid "%s (Entry)"
-#~ msgstr "%s (Entrée)"
-
-#~ msgid "%s (Exit)"
-#~ msgstr "%s (Sortie)"
-
-#~ msgid "%s (added)"
-#~ msgstr "%s (ajouté)"
-
-#~ msgid "%s (removed)"
-#~ msgstr "%s (supprimé)"
-
-#~ msgid "%s is already selected as entry relay"
-#~ msgstr "%s est déjà sélectionné en tant que relai d'entrée"
-
-#~ msgid "%s is already selected as exit relay"
-#~ msgstr "%s est déjà sélectionné en tant que relai de sortie"
-
-#~ msgid "%s is unavailable"
-#~ msgstr "%s est indisponible"
-
-#~ msgid "%s settings."
-#~ msgstr "Paramètres de %s."
-
-#~ msgid "%s was added to your account."
-#~ msgstr "%s a été ajouté à votre compte."
-
-#~ msgid "(%d)"
-#~ msgstr "(%d)"
-
-#~ msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-#~ msgstr "1. Après avoir cliqué sur le bouton « Aller aux paramètres VPN » ci-dessous, cliquez sur l'engrenage à côté du nom « Warren VPN »."
-
-#~ msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-#~ msgstr "2. Pour activer la connexion automatique, cliquez sur l'interrupteur situé à côté de « Toujours exiger un VPN »."
-
-#~ msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-#~ msgstr "3. Pour activer le mode Verrouillage, cliquez sur l'interrupteur situé à côté de « Bloquer les connexions sans VPN ».<br /><br /><b>Avertissement : ce paramètre bloque les applications fractionnées et la fonctionnalité de partage du réseau local.</b>"
-
-#~ msgid "30 days was added to your account."
-#~ msgstr "30 jours ont été ajoutés à votre compte."
-
-#~ msgid "90 days was added to your account."
-#~ msgstr "90 jours ont été ajoutés à votre compte."
-
-#~ msgid "<b>Account recovery will not be possible.</b>"
-#~ msgstr "<b>La récupération du compte ne sera pas possible.</b>"
-
-#~ msgid "<b>Attention:</b> Only some servers support the full port range."
-#~ msgstr "<b>Attention :</b> seuls certains serveurs prennent en charge la plage de ports entière."
-
-#~ msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-#~ msgstr "<b>Attention :</b> l'application se fermera automatiquement et devra être rouverte manuellement après avoir sélectionné une nouvelle icône et un nouveau titre. Cela n'affectera pas votre connexion VPN."
-
-#~ msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-#~ msgstr "<b>Veuillez noter que ces méthodes n'améliorent pas les performances et pourraient augmenter l'utilisation du système et la consommation de batterie.</b>"
-
-#~ msgid "<b>This action cannot be undone.</b>"
-#~ msgstr "<b>Cette action est irréversible.</b>"
-
-#~ msgid "<b>Warning:</b>"
-#~ msgstr "<b>Attention :</b>"
-
-#~ msgid "<b>You will lose access to this account on all devices.</b>"
-#~ msgstr "<b>Vous perdrez l'accès à ce compte sur tous les appareils.</b>"
-
-#~ msgid "API reachable, adding method..."
-#~ msgstr "API joignable, ajout de la méthode..."
-
-#~ msgid "API unreachable, save method anyway?"
-#~ msgstr "API injoignable, enregistrer quand même la méthode ?"
-
-#~ msgid "Account credit expires in a few minutes"
-#~ msgstr "Les crédits du compte expirent dans quelques minutes"
-
-#~ msgid "Account deleted"
-#~ msgstr "Compte supprimé"
-
-#~ msgid "Account number is too long, please enter a valid number"
-#~ msgstr "Le numéro de compte est trop long, veuillez saisir un numéro valide"
-
-#~ msgid "Account number must match"
-#~ msgstr "Le numéro de compte doit correspondre"
-
-#~ msgid "Account recovery will not be possible."
-#~ msgstr "La récupération du compte ne sera pas possible."
-
-#~ msgid "Account time reminders"
-#~ msgstr "Rappels de temps pour le compte"
-
-#~ msgid "Add 30 days time (%s)"
-#~ msgstr "Ajouter 30 jours de temps (%s)"
-
-#~ msgid "Add 90 days time (%s)"
-#~ msgstr "Ajouter 90 jours de temps (%s)"
-
-#~ msgid "Add DNS server"
-#~ msgstr "Ajouter un serveur DNS"
-
-#~ msgid "Add locations"
-#~ msgstr "Ajouter des localisations"
-
-#~ msgid "Add time"
-#~ msgstr "Ajouter du temps"
-
-#~ msgid "Add to list"
-#~ msgstr "Ajouter à la liste"
-
-#~ msgid "Adding method..."
-#~ msgstr "Ajout de la méthode..."
-
-#~ msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-#~ msgstr "Après la mise à jour d'une application de VPN sur Android 16, les appareils peuvent se retrouver dans un état où ces applications de VPN ne sont plus en mesure d'accéder à Internet."
-
-#~ msgid "Agree and continue"
-#~ msgstr "Accepter et continuer"
-
-#~ msgid "All"
-#~ msgstr "Tous"
-
-#~ msgid "All applications"
-#~ msgstr "Toutes les applications"
-
-#~ msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-#~ msgstr "Toutes les substitutions seront réinitialisées et les adresses IP des serveurs, dans la vue Sélectionner une localisation, reviendront à leur valeur par défaut."
-
-#~ msgid "Always-on VPN assigned to %s"
-#~ msgstr "« Toujours exiger un VPN » est assigné à %s"
-
-#~ msgid "Always-on VPN assigned to other VPN"
-#~ msgstr "« Toujours exiger un VPN » est assigné à un autre VPN"
-
-#~ msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-#~ msgstr "Android 16 présente un problème connu. Veuillez redémarrer votre appareil et réessayer. Pour en savoir plus,"
-
-#~ msgid "Any remaining time will be null and void."
-#~ msgstr "Tout temps restant sera nul et non avenu."
-
-#~ msgid "App icon"
-#~ msgstr "Icône de l'application"
-
-#~ msgid "Appearance"
-#~ msgstr "Apparence"
-
-#~ msgid "Applying changes..."
-#~ msgstr "Application des modifications..."
-
-#~ msgid "Are you sure you want to log <b>%s</b> out?"
-#~ msgstr "Voulez-vous vraiment déconnecter <b>%s</b> ?"
-
-#~ msgid "At least one method needs to be enabled"
-#~ msgstr "Au moins une méthode doit être activée"
-
-#~ msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-#~ msgstr "Attention : si l'option « Bloquer les connexions sans VPN » est activée, l'option « Partage réseau local » ne fonctionne pas."
-
-#~ msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-#~ msgstr "Attention : si l'option « Bloquer les connexions sans VPN » est activée, les applications partagées n'auront pas accès à Internet. Gardez toujours à l'esprit que le split tunneling présente un risque pour la vie privée."
-
-#~ msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-#~ msgstr "Attention : ce paramètre ne peut pas être utilisé en combinaison avec « Utiliser un serveur DNS personnalisé »."
-
-#~ msgid "Auto-connect & Lockdown mode"
-#~ msgstr "Connexion automatique et mode Verrouillage"
-
-#~ msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-#~ msgstr "La connexion automatique est appelée VPN toujours actif dans les paramètres du système Android et elle s'assure que vous êtes constamment connecté au tunnel VPN et se connecte automatiquement après le redémarrage."
-
-#~ msgid "Automatically connect on device start-up."
-#~ msgstr "Se connecter automatiquement au démarrage de l'appareil."
-
-#~ msgid "Blocking internet (device offline)"
-#~ msgstr "Internet bloqué (appareil hors ligne)"
-
-#~ msgid "Blocking..."
-#~ msgstr "Blocage..."
-
-#~ msgid "Browser"
-#~ msgstr "Navigateur"
-
-#~ msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-#~ msgstr "Joindre votre jeton de compte rattachera ce rapport à votre compte, ce qui nous aidera à résoudre votre problème plus vite. Tous les rapports sont automatiquement supprimés après une certaine période."
-
-#~ msgid "By checking this box I agree to the risks involved with deleting my account"
-#~ msgstr "En cochant cette case, j'accepte les risques encourus par la suppression de mon compte"
-
-#~ msgid "Can't connect?"
-#~ msgstr "Connexion impossible ?"
-
-#~ msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-#~ msgstr "Modifiez le titre et l'icône de l'application Warren VPN sur votre appareil Android. Cela ne modifiera pas l'icône pour les notifications liées à Warren VPN."
-
-#~ msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-#~ msgstr "Les modifications apportées aux paramètres liés au DNS peuvent ne pas prendre effet immédiatement en raison de la mise en cache des résultats."
-
-#~ msgid "Clear input"
-#~ msgstr "Effacer la saisie"
-
-#~ msgid "Collapse"
-#~ msgstr "Réduire"
-
-#~ msgid "Connect on device start-up"
-#~ msgstr "Connexion au démarrage de l'appareil"
-
-#~ msgid "Connect to a different network"
-#~ msgstr "Connectez-vous à un réseau différent"
-
-#~ msgid "Connecting..."
-#~ msgstr "Connexion..."
-
-#~ msgid "Continue"
-#~ msgstr "Continuer"
-
-#~ msgid "Copied Warren account number to clipboard"
-#~ msgstr "Numéro de compte Warren copié dans le presse-papiers"
-
-#~ msgid "Copied logs to clipboard"
-#~ msgstr "Journaux copiés dans le presse-papiers"
-
-#~ msgid "Copy"
-#~ msgstr "Copier"
-
-#~ msgid "Could not display remaining days."
-#~ msgstr "Impossible d'afficher les jours restants."
-
-#~ msgid "Create new list"
-#~ msgstr "Créer une nouvelle liste"
-
-#~ msgid "Creating account failed"
-#~ msgstr "Échec de la création du compte"
-
-#~ msgid "Critical error (your attention is required)"
-#~ msgstr "Erreur critique (votre attention est requise)"
-
-#~ msgid "Current: %s"
-#~ msgstr "Actuel : %s"
-
-#~ msgid "Custom DNS server addresses %1$s are invalid"
-#~ msgstr "Les adresses de serveur DNS personnalisées %1$s ne sont pas valides"
-
-#~ msgid "DNS settings might not go into effect immediately"
-#~ msgstr "Les paramètres DNS peuvent ne pas être immédiatement pris en compte"
-
-#~ msgid "Delete \"%s\"?"
-#~ msgstr "Supprimer « %s » ?"
-
-#~ msgid "Delete account"
-#~ msgstr "Supprimer le compte"
-
-#~ msgid "Delete method"
-#~ msgstr "Supprimer la méthode"
-
-#~ msgid "Delete method?"
-#~ msgstr "Supprimer la méthode ?"
-
-#~ msgid "Deleting your account cannot be undone."
-#~ msgstr "La suppression de votre compte est irréversible."
-
-#~ msgid "Deleting your account:"
-#~ msgstr "En supprimant votre compte :"
-
-#~ msgid "Direct"
-#~ msgstr "Direct"
-
-#~ msgid "Disable all \"%s\" above to activate this setting."
-#~ msgstr "Désactivez tous les « %s » ci-dessus pour activer ce paramètre."
-
-#~ msgid "Disable multihop"
-#~ msgstr "Désactiver le multihop"
-
-#~ msgid "Discard"
-#~ msgstr "Annuler"
-
-#~ msgid "Discard changes?"
-#~ msgstr "Annuler les modifications ?"
-
-#~ msgid "Disconnected (No VPN permission)"
-#~ msgstr "Déconnecté (aucune autorisation VPN)"
-
-#~ msgid "Disconnecting..."
-#~ msgstr "Déconnexion en cours..."
-
-#~ msgid "Dismiss"
-#~ msgstr "Ignorer"
-
-#~ msgid "Don’t have an account number?"
-#~ msgstr "Vous n'avez pas de numéro de compte ?"
-
-#~ msgid "Edit custom lists"
-#~ msgstr "Modifier les listes personnalisées"
-
-#~ msgid "Edit list"
-#~ msgstr "Modifier la liste"
-
-#~ msgid "Edit lists"
-#~ msgstr "Modifier les listes"
-
-#~ msgid "Edit locations"
-#~ msgstr "Modifier les localisations"
-
-#~ msgid "Enable %1$s"
-#~ msgstr "Activer %1$s"
-
-#~ msgid "Enable all & retry"
-#~ msgstr "Tout activer et réessayer"
-
-#~ msgid "Enable all access methods in the app"
-#~ msgstr "Activer tous les modes d'accès dans l'application"
-
-#~ msgid "Enable method"
-#~ msgstr "Activer la méthode"
-
-#~ msgid "Enable multihop"
-#~ msgstr "Activer le multihop"
-
-#~ msgid "Enter MTU"
-#~ msgstr "Saisir le MTU"
-
-#~ msgid "Enter account number digits"
-#~ msgstr "Saisissez les chiffres du numéro de compte"
-
-#~ msgid "Entry relay is the same as exit relay"
-#~ msgstr "Le relai d'entrée est le même que le relai de sortie"
-
-#~ msgid "Excluded applications"
-#~ msgstr "Applications exclues"
-
-#~ msgid "Expand"
-#~ msgstr "Étendre"
-
-#~ msgid "External link"
-#~ msgstr "Lien externe"
-
-#~ msgid "FAILED TO CONNECT"
-#~ msgstr "ÉCHEC DE LA CONNEXION"
-
-#~ msgid "Failed to apply patch"
-#~ msgstr "Impossible d'appliquer le correctif"
-
-#~ msgid "Failed to delete account, please contact support"
-#~ msgstr "Suppression du compte impossible. Veuillez contacter l'assistance"
-
-#~ msgid "Failed to load products, please try again"
-#~ msgstr "Échec du chargement des produits. Veuillez réessayer"
-
-#~ msgid "Failed to set to current - API not reachable"
-#~ msgstr "Impossible de définir sur la méthode actuelle - API injoignable"
-
-#~ msgid "Failed to set to current - Unknown reason"
-#~ msgstr "Impossible de définir sur la méthode actuelle - Raison inconnue"
-
-#~ msgid "File"
-#~ msgstr "Fichier"
-
-#~ msgid "For details, please see our %s."
-#~ msgstr "Pour plus d'informations, veuillez consulter notre %s."
-
-#~ msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-#~ msgstr "Pour permettre au VPN de se connecter automatiquement au démarrage de l'appareil, l'application doit disposer des autorisations VPN. Vous pouvez les accorder en cliquant sur « Connecter » dans la vue de la carte et en sélectionnant « OK » si vous y êtes invité. De plus, assurez-vous que l'application est installée sur le stockage interne en en vérifiant les informations dans les détails de l'application dans les paramètres système."
-
-#~ msgid "Go to VPN settings"
-#~ msgstr "Aller aux paramètres VPN"
-
-#~ msgid "Going to login will unblock the internet on this device."
-#~ msgstr "Aller à la connexion débloquera la connexion Internet sur cet appareil."
-
-#~ msgid "Google Play payment pending"
-#~ msgstr "Paiement Google Play en attente"
-
-#~ msgid "Google Play payment pending, this might take some time"
-#~ msgstr "Paiement Google Play en attente. Cela peut prendre du temps"
-
-#~ msgid "Google Play unavailable"
-#~ msgstr "Google Play indisponible"
-
-#~ msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-#~ msgstr "L'IPv4 n'est pas disponible. Veuillez essayer de modifier le paramètre « Version de l'IP de l'appareil »."
-
-#~ msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-#~ msgstr "L'IPv6 n'est pas disponible. Veuillez essayer de modifier le paramètre « Version de l'IP de l'appareil »."
-
-#~ msgid "Icon and title"
-#~ msgstr "Icône et titre"
-
-#~ msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-#~ msgstr "Si l'icône et le titre ne changent toujours pas une fois l'application fermée, veuillez essayer de redémarrer l'appareil."
-
-#~ msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-#~ msgstr "Si la fonctionnalité de split tunneling est utilisée, l'application demande à votre système la liste de toutes les applications installées. Cette liste n'est récupérée que dans la vue de split tunneling. La liste des applications installées n'est jamais envoyée par l'appareil."
-
-#~ msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-#~ msgstr "Si ces étapes ne fonctionnent pas, veuillez envoyer un e-mail à l'assistance à l'aide du bouton ci-dessous. Les fichiers journaux anonymisés y seront automatiquement joints."
-
-#~ msgid "Import new overrides by"
-#~ msgstr "Importer les nouvelles substitutions depuis"
-
-#~ msgid "Import successful, overrides active"
-#~ msgstr "Importation réussie, les substitutions sont actives"
-
-#~ msgid "Importing new overrides might replace some previously imported overrides."
-#~ msgstr "L'importation de nouvelles substitutions peut remplacer certaines substitutions importées précédemment."
-
-#~ msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-#~ msgstr "Produits dans l'application indisponibles. Veuillez vous assurer que vous avez la dernière version de Google Play."
-
-#~ msgid "Include my account token for faster help with payment or account related issues"
-#~ msgstr "Inclure mon jeton de compte pour recevoir plus rapidement de l'aide avec les problèmes relatifs aux paiements ou à mon compte"
-
-#~ msgid "Invalid IPv6 config, please try to change the VPN settings."
-#~ msgstr "Configuration IPV6 non valide, veuillez essayer de modifier les paramètres du VPN."
-
-#~ msgid "Invalid or missing value \"%1$s\""
-#~ msgstr "Valeur « %1$s » non valide ou manquante"
-
-#~ msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-#~ msgstr "Pour ce faire, il effectue un échange de clés supplémentaire à l'aide d'un algorithme à sécurité quantique et mélange le résultat au chiffrement habituel de WireGuard. Cette étape supplémentaire utilise environ 500 kiB de trafic chaque fois qu'un nouveau tunnel est établi."
-
-#~ msgid "Less than a day left on this account"
-#~ msgstr "Moins d'un jour restant sur ce compte"
-
-#~ msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-#~ msgstr "Vous permet de sélectionner les applications qui doivent accéder directement à Internet sans passer par le tunnel VPN."
-
-#~ msgid "List name"
-#~ msgstr "Nom de la liste"
-
-#~ msgid "Loading products"
-#~ msgstr "Chargement des produits"
-
-#~ msgid "Locations"
-#~ msgstr "Localisations"
-
-#~ msgid "Locations were changed for \"%s\""
-#~ msgstr "Les localisations ont été modifiées pour « %s »"
-
-#~ msgid "Log in"
-#~ msgstr "Connexion"
-
-#~ msgid "Makes sure the device is always on the VPN tunnel."
-#~ msgstr "Permet de s'assurer que l'appareil est toujours sur le tunnel VPN."
-
-#~ msgid "More actions"
-#~ msgstr "Plus d'actions"
-
-#~ msgid "Warren services unavailable"
-#~ msgstr "Services Warren indisponibles"
-
-#~ msgid "Multihop is disabled"
-#~ msgstr "Le multihop est désactivé"
-
-#~ msgid "Multihop is enabled"
-#~ msgstr "Le multihop est activé"
-
-#~ msgid "Name is already taken."
-#~ msgstr "Le nom est déjà pris."
-
-#~ msgid "Name was changed to %s"
-#~ msgstr "Le nom a été changé en %s"
-
-#~ msgid "Navigate"
-#~ msgstr "Navigation"
-
-#~ msgid "No Android app store installed, could not open link"
-#~ msgstr "Aucune boutique d'applications Android n'est installée, le lien n'a pas pu être ouvert"
-
-#~ msgid "No browser app installed, could not open link"
-#~ msgstr "Aucune application de navigateur n'est installée, le lien ne peut pas être ouvert"
-
-#~ msgid "No changelog was added for this version"
-#~ msgstr "Aucun journal des modifications n'a été ajouté pour cette version"
-
-#~ msgid "No custom lists available"
-#~ msgstr "Aucune liste personnalisée disponible"
-
-#~ msgid "No email app available on the device"
-#~ msgstr "Aucune application d'e-mail disponible sur cet appareil"
-
-#~ msgid "No entry server match your settings, try changing server or other settings."
-#~ msgstr "Aucun serveur d'entrée ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d'autres paramètres."
-
-#~ msgid "No exit server match your settings, try changing server or other settings."
-#~ msgstr "Aucun serveur de sortie ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d'autres paramètres."
-
-#~ msgid "No internet connection"
-#~ msgstr "Aucune connexion à Internet"
-
-#~ msgid "No matching servers found."
-#~ msgstr "Aucun serveur correspondant trouvé."
-
-#~ msgid "No result for \"%s\", please try a different search"
-#~ msgstr "Aucun résultat pour « %s ». Veuillez essayer une autre recherche"
-
-#~ msgid "Not found"
-#~ msgstr "Introuvable"
-
-#~ msgid "Notes"
-#~ msgstr "Remarques"
-
-#~ msgid "Notification settings"
-#~ msgstr "Paramètres de notifications"
-
-#~ msgid "Open app details"
-#~ msgstr "Ouvrir les détails de l'application"
-
-#~ msgid "Overrides active"
-#~ msgstr "Substitutions actives"
-
-#~ msgid "Overrides cleared"
-#~ msgstr "Substitutions supprimées"
-
-#~ msgid "Overrides inactive"
-#~ msgstr "Substitutions inactives"
-
-#~ msgid "Password (optional)"
-#~ msgstr "Mot de passe (facultatif)"
-
-#~ msgid "Paste or write overrides to be imported"
-#~ msgstr "Collez ou saisissez les substitutions à importer"
-
-#~ msgid "Patch not matching specification"
-#~ msgstr "Le correctif ne correspond pas à la spécification"
-
-#~ msgid "Please enter a valid IPv4 or IPv6 address"
-#~ msgstr "Merci de saisir une adresse IPv4 ou IPv6 valide"
-
-#~ msgid "Please enter a valid remote server port"
-#~ msgstr "Merci de saisir un port de serveur distant valide"
-
-#~ msgid "Please press connect to request VPN permission"
-#~ msgstr "Veuillez appuyer sur connexion pour demander l'autorisation VPN"
-
-#~ msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-#~ msgstr "Veuillez redémarrer votre appareil et réessayer de vous connecter. Si cela ne fonctionne pas, veuillez envoyer un e-mail à %s en suédois ou en anglais."
-
-#~ msgid "Please try changing your filters."
-#~ msgstr "Veuillez essayer de changer vos filtres."
-
-#~ msgid "Privacy"
-#~ msgstr "Confidentialité"
-
-#~ msgid "Privacy policy"
-#~ msgstr "Politique de confidentialité"
-
-#~ msgid "Recents disabled and history cleared"
-#~ msgstr "Récents désactivés et historique effacé"
-
-#~ msgid "Recursion limit"
-#~ msgstr "Limite de récursion"
-
-#~ msgid "Refunds will not be possible."
-#~ msgstr "Les remboursements ne seront pas possibles."
-
-#~ msgid "Remove %s?"
-#~ msgstr "Supprimer %s ?"
-
-#~ msgid "Remove custom port"
-#~ msgstr "Supprimer le port personnalisé"
-
-#~ msgid "Reset"
-#~ msgstr "Réinitialiser"
-
-#~ msgid "Reset all overrides"
-#~ msgstr "Réinitialiser toutes les substitutions"
-
-#~ msgid "Reset overrides"
-#~ msgstr "Réinitialiser les substitutions"
-
-#~ msgid "Reset to default"
-#~ msgstr "Réinitialiser à la valeur par défaut"
-
-#~ msgid "Restart your device"
-#~ msgstr "Redémarrez votre appareil"
-
-#~ msgid "Search"
-#~ msgstr "Recherche"
-
-#~ msgid "Send email"
-#~ msgstr "Envoyer un e-mail"
-
-#~ msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-#~ msgstr "Définir la valeur MTU WireGuard. Plage valide : %1$d - %2$d."
-
-#~ msgid "Set as multihop entry"
-#~ msgstr "Définir comme entrée multihop"
-
-#~ msgid "Set as multihop entry (incompatible)"
-#~ msgstr "Définir comme entrée multihop (incompatible)"
-
-#~ msgid "Set as multihop exit"
-#~ msgstr "Définir comme sortie multihop"
-
-#~ msgid "Set as multihop exit (incompatible)"
-#~ msgstr "Définir comme sortie multihop (incompatible)"
-
-#~ msgid "Set port"
-#~ msgstr "Définir le port"
-
-#~ msgid "Share…"
-#~ msgstr "Partager…"
-
-#~ msgid "Show location in notification"
-#~ msgstr "Afficher la localisation dans les notifications"
-
-#~ msgid "Show system apps"
-#~ msgstr "Afficher les applications système"
-
-#~ msgid "Shows current VPN tunnel status"
-#~ msgstr "Affiche l'état actuel du tunnel VPN"
-
-#~ msgid "Shows reminders when the account time is about to expire"
-#~ msgstr "Affiche des rappels lorsque le temps du compte va expirer"
-
-#~ msgid "Submit"
-#~ msgstr "Envoyer"
-
-#~ msgid "TCP"
-#~ msgstr "TCP"
-
-#~ msgid "Test method"
-#~ msgstr "Tester la méthode"
-
-#~ msgid "Testing %s..."
-#~ msgstr "Test de %s..."
-
-#~ msgid "Text"
-#~ msgstr "Texte"
-
-#~ msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-#~ msgstr "Merci de faire partie de notre communauté.\\nLa confidentialité appartient au peuple !"
-
-#~ msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-#~ msgstr "Les paramètres de la connexion automatique et du mode Verrouillage se trouvent dans les paramètres du système Android, suivez ce guide pour activer l'un, l'autre ou les deux."
-
-#~ msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-#~ msgstr "Le serveur DNS IPv6 ne fonctionnera pas si vous n'activez pas « IPv6 » dans les paramètres VPN."
-
-#~ msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-#~ msgstr "Le mode Verrouillage est appelé « Bloquer les connexions sans VPN » dans les paramètres système d'Android. Il permet de minimiser les fuites, mais présente des limites connues sur lesquelles vous pouvez en savoir plus"
-
-#~ msgid "The \"Current\" method represent which method the app is using to reach the API."
-#~ msgstr "La méthode « Actuelle » représente la méthode utilisée par l'application pour atteindre l'API."
-
-#~ msgid "The app is blocking internet, please disconnect first"
-#~ msgstr "L'application bloque Internet. Veuillez d'abord vous déconnecter"
-
-#~ msgid "The app was unable to create an account due to not being able to reach the Warren API."
-#~ msgstr "L'application n'a pas pu créer un compte, car elle n'a pas réussi à accéder à l'API Warren."
-
-#~ msgid "The app was unable to login due to not being able to reach the Warren API."
-#~ msgstr "L'application n'a pas pu se connecter, car elle n'a pas réussi à accéder à l'API Warren."
-
-#~ msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-#~ msgstr "Le serveur DNS local ne fonctionnera pas si vous n'activez pas le « Partage du réseau local » dans les paramètres VPN."
-
-#~ msgid "The selected %s port is not supported, please change it under"
-#~ msgstr "Le port %s sélectionné n'est pas pris en charge. Veuillez le modifier sous"
-
-#~ msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-#~ msgstr "Ces méthodes peuvent servir dans les situations où il vous est empêché d'atteindre Warren. Quand « Automatique » est sélectionné, l'application essaiera toutes les méthodes jusqu'à ce que l'une d'entre elles fonctionne."
-
-#~ msgid "This address has already been entered."
-#~ msgstr "Cette adresse a déjà été saisie."
-
-#~ msgid "This field is required"
-#~ msgstr "Ce champ est requis"
-
-#~ msgid "This impacts your anonymity"
-#~ msgstr "Ceci affecte votre anonymat"
-
-#~ msgid "This is already set as current"
-#~ msgstr "Déjà définie comme méthode actuelle"
-
-#~ msgid "This might be due to censorship or network issues. Please try to:"
-#~ msgstr "Cela peut être dû à de la censure ou à des problèmes de réseau. Veuillez essayer :"
-
-#~ msgid "Time added"
-#~ msgstr "Temps ajouté"
-
-#~ msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-#~ msgstr "Pour ajouter des localisations à une liste, appuyez sur le stylo ou appuyez longuement sur un pays, une ville ou un serveur."
-
-#~ msgid "To create a custom list press the \"+\""
-#~ msgstr "Appuyez sur « + » pour créer une liste personnalisée"
-
-#~ msgid "To delete your Warren VPN account, please enter your account number below."
-#~ msgstr "Veuillez saisir votre numéro de compte ci-dessous pour supprimer votre compte Warren VPN."
-
-#~ msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-#~ msgstr "Pour vous assurer que vous disposez de la version la plus sécurisée et pour vous informer de tout problème lié à la version en cours d'exécution, l'application effectue automatiquement des vérifications de version. Elle envoie ainsi la version de l'application et la version du système Android aux serveurs de Warren. Warren tient des compteurs sur le nombre de versions d'applications et de versions d'Android utilisées. Les données ne sont jamais stockées ou utilisées de manière à vous identifier."
-
-#~ msgid "Toggle VPN"
-#~ msgstr "Activer/désactiver le VPN"
-
-#~ msgid "Too many attempts, please try again later"
-#~ msgstr "Trop de tentatives, veuillez réessayer plus tard"
-
-#~ msgid "UDP"
-#~ msgstr "UDP"
-
-#~ msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-#~ msgstr "Impossible d'appliquer les règles du pare-feu. Merci de résoudre le problème ou d'envoyer un rapport de problème."
-
-#~ msgid "Unable to parse patch"
-#~ msgstr "Impossible d'analyser le correctif"
-
-#~ msgid "Unable to reach API"
-#~ msgstr "Impossible de joindre l'API"
-
-#~ msgid "Unable to reach API, %s"
-#~ msgstr "Impossible de joindre l'API, %s"
-
-#~ msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-#~ msgstr "Impossible de démarrer la connexion au tunnel. Veuillez désactiver Toujours exiger un VPN avant d'utiliser Warren VPN."
-
-#~ msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-#~ msgstr "Impossible de démarrer la connexion au tunnel. Veuillez désactiver « Toujours exiger un VPN « pour <b>%s</b> avant d'utiliser Warren VPN."
-
-#~ msgid "Unable to verify account number, please contact support"
-#~ msgstr "Vérification du numéro de compte impossible. Veuillez contacter l'assistance"
-
-#~ msgid "Unavailable"
-#~ msgstr "Indisponible"
-
-#~ msgid "Undo"
-#~ msgstr "Annuler"
-
-#~ msgid "Unknown or prohibited key \"%1$s\""
-#~ msgstr "Clé « %1$s » inconnue ou interdite"
-
-#~ msgid "Update DNS server"
-#~ msgstr "Mettre à jour le serveur DNS"
-
-#~ msgid "Update list name"
-#~ msgstr "Mettre à jour le nom de la liste"
-
-#~ msgid "Update server list"
-#~ msgstr "Mettre à jour la liste des serveurs"
-
-#~ msgid "Updating server list in the background..."
-#~ msgstr "Mise à jour en arrière-plan de la liste des serveurs…"
-
-#~ msgid "Use method"
-#~ msgstr "Utiliser la méthode"
-
-#~ msgid "VPN Settings not available on device"
-#~ msgstr "Les paramètres VPN ne sont pas disponibles sur l'appareil"
-
-#~ msgid "VPN permission error"
-#~ msgstr "Erreur de permission VPN"
-
-#~ msgid "VPN permission was denied"
-#~ msgstr "L'autorisation VPN a été refusée"
-
-#~ msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-#~ msgstr "L'autorisation VPN a été refusée ou une autre application a activé « Toujours exiger un VPN »."
-
-#~ msgid "VPN tunnel status"
-#~ msgstr "État du tunnel VPN"
-
-#~ msgid "Valid range for all servers: %s"
-#~ msgstr "Plage valide pour tous les serveurs : %s"
-
-#~ msgid "Value: %s"
-#~ msgstr "Valeur : %s"
-
-#~ msgid "Verifying API method..."
-#~ msgstr "Vérification de la méthode API..."
-
-#~ msgid "Verifying purchase"
-#~ msgstr "Vérification de l'achat"
-
-#~ msgid "Verifying purchase..."
-#~ msgstr "Vérification de l'achat..."
-
-#~ msgid "Verifying voucher…"
-#~ msgstr "Vérification du bon…"
-
-#~ msgid "Warning"
-#~ msgstr "Avertissement"
-
-#~ msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-#~ msgstr "Nous vérifions encore votre achat, ce qui peut prendre un certain temps. Votre temps sera ajouté si la vérification réussit."
-
-#~ msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-#~ msgstr "Nous n'avons pas pu lancer le processus de paiement, merci de vérifier que vous disposez de la dernière version de Google Play."
-
-#~ msgid "We were unable to start the payment process, please try again later."
-#~ msgstr "Nous n'avons pas pu lancer le processus de paiement, merci de réessayer plus tard."
-
-#~ msgid "Weather"
-#~ msgstr "Météo"
-
-#~ msgid "Welcome, this device is now called <b>%s</b>."
-#~ msgstr "Bienvenue, cet appareil est maintenant appelé <b>%s</b>."
-
-#~ msgid "WireGuard port"
-#~ msgstr "Port WireGuard"
-
-#~ msgid "Yes, log out device"
-#~ msgstr "Oui, déconnecter l'appareil"
-
-#~ msgid "You are about to delete your Warren VPN account."
-#~ msgstr "Vous êtes sur le point de supprimer votre compte Warren VPN."
-
-#~ msgid "You can add more time via the account view or website to continue using the VPN."
-#~ msgstr "Vous pouvez ajouter plus de temps via la page de visualisation du compte ou le site Web pour continuer d'utiliser le VPN."
-
-#~ msgid "You can add more time via the account view to continue using the VPN."
-#~ msgstr "Vous pouvez ajouter plus de temps via la vue du compte pour continuer d'utiliser le VPN."
-
-#~ msgid "You will lose access to this account on all devices."
-#~ msgstr "Vous perdrez l'accès à ce compte sur tous les appareils."
-
-#~ msgid "You will lose your remaining"
-#~ msgstr "Vous perdrez"
-
-#~ msgid "\"%s\" was created"
-#~ msgstr "« %s » a été créé"
-
-#~ msgid "\"%s\" was deleted"
-#~ msgstr "« %s » a été supprimé"
-
-#~ msgid "click here"
-#~ msgstr "cliquez ici"
-
-#~ msgid "here"
-#~ msgstr "ici"
-
-#~ msgid "less than one day"
-#~ msgstr "moins d'un jour"
-
-#~ msgid "privacy policy"
-#~ msgstr "politique de confidentialité"
-
-#~ msgid "read more here"
-#~ msgstr "en savoir plus"
-
-#~ msgid "%d day"
-#~ msgid_plural "%d days"
-#~ msgstr[0] "%d jour"
-#~ msgstr[1] "%d jours"
-
-#~ msgid "%d location"
-#~ msgid_plural "%d locations"
-#~ msgstr[0] "%d localisation"
-#~ msgstr[1] "%d localisations"
-
-#~ msgid "%d month"
-#~ msgid_plural "%d months"
-#~ msgstr[0] "%d mois"
-#~ msgstr[1] "%d mois"
-
-#~ msgid "1 day left on this account"
-#~ msgid_plural "%d days left on this account"
-#~ msgstr[0] "1 jour restant sur ce compte"
-#~ msgstr[1] "%d jours restants sur ce compte"
-
-#~ msgid "1 year left on this account"
-#~ msgid_plural "%d years left on this account"
-#~ msgstr[0] "1 an restant sur ce compte"
-#~ msgstr[1] "%d ans restants sur ce compte"
-
-#~ msgid "Account credit expires in a day"
-#~ msgid_plural "Account credit expires in %d days"
-#~ msgstr[0] "Les crédits du compte expirent dans un jour"
-#~ msgstr[1] "Les crédits du compte expirent dans %d jours"
-
-#~ msgid "Account credit expires in an hour"
-#~ msgid_plural "Account credit expires in %d hours"
-#~ msgstr[0] "Les crédits du compte expirent dans une heure"
-#~ msgstr[1] "Les crédits du compte expirent dans %d heures"
-
-#~ msgid "You will lose your remaining day."
-#~ msgid_plural "You will lose your remaining %d days."
-#~ msgstr[0] "Vous perdrez votre jour restant."
-#~ msgstr[1] "Vous perdrez vous %d jours restants."

@@ -3857,3 +3857,276 @@ msgstr[1] "Ви втратите %d дні, що залишились."
 msgstr[2] "Ви втратите %d днів, що залишились."
 msgstr[3] "Ви втратите %d дня, що залишились."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Країна входу"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Країна виходу"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Очікуйте приблизно половину пропускної здатності одиночного переходу в обмін на неможливість пов'язати IP користувача з IP призначення. За замовчуванням вимкнено; вмикається опціонально для приватності."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Необов'язково: закріпіть країни вхідного та вихідного реле (коди ISO 3166 alpha-2, такі як fr, de, se). Залиште порожнім для автоматичного вибору."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Перезапустіть демон Warren після зміни цього параметра."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Маршрутизує ваш трафік через два реле Warren з використанням наскрізного шифрування HPKE. Вхідне реле бачить лише зашифрований текст; вихідне бачить лише розшифроване корисне навантаження, ніколи вашу IP. Схема натхненна Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Активний single-hop Warren. Повна пропускна здатність, ідентичні гарантії приватності, як у стандартному режимі single-hop."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Компроміс: приблизно половина пропускної здатності single-hop. За замовчуванням вимкнено; вмикається опціонально для приватності. Після зміни цього параметра потрібен перезапуск демона."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Коли увімкнено, трафік маршрутизується через два реле Warren (вхід, потім вихід) з використанням наскрізного шифрування HPKE між клієнтом та виходом. Вхідне реле бачить лише зашифрований текст; вихідне бачить лише розшифроване корисне навантаження, ніколи IP користувача."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "авто"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "VPN без компромісів щодо приватності. Без логів. Без облікових записів. Без відстеження. Лише пропускна здатність."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Усе готово"
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr "Створити резервну копію мого нового гаманця (рекомендовано)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Перевірити знову"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Перевірка... (натисніть, щоб оновити зараз)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Налаштування завершено. Виберіть країну та підключіться до Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Продовжити"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Не вдалося перевірити статус підписки. Спробуйте знову."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "У демона ще немає мнемонічної фрази — увійдіть або перезапустіть застосунок."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Демон відхилив мнемонічну фразу. Перевірте орфографію та кількість слів і спробуйте знову."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не вдалося отримати мнемонічну фразу від демона."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Почати"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "У мене вже є підписка"
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr "Я записав слова"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Імпортувати наявну мнемонічну фразу"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Активну підписку не знайдено. Спочатку придбайте її."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Вставте свою 12-слівну мнемонічну фразу BIP39, щоб відновити наявну Warren-ідентичність."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Виберіть країну та підключіться"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Виберіть захист, який потрібен вам з першого дня. Усі ці параметри можна змінити пізніше в Налаштуваннях."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Налаштування приватності"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Відновити гаманець"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "Відновлення…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Пропустити майстра (для досвідчених)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Переглянути тарифи (відкриється у браузері)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren використовує некастодіальний гаманець (Ed25519 + BIP39). Ключі належать вам; ми ніколи їх не бачимо."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Ласкаво просимо до Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr "Запишіть ці 12 слів по порядку. Якщо ви їх втратите, ви втратите доступ до підписки. Копіювання в буфер обміну навмисно вимкнено, щоб уберегти ваш секрет від шкідливого ПЗ."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "У вас ще немає активної підписки. Тарифи починаються від кількох євро на місяць — без повторюваних платежів, без створення облікового запису, оплата за використання."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Ваш гаманець Warren"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Ваша підписка"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "слів"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Постійна обфускація (за замовчуванням УВІМКНЕНО): мімікрія під HTTP/3, щоб трафік зливався зі звичайним."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (за замовчуванням ВИМКНЕНО): додає паддинг для протидії аналізу трафіку ML. ~5–15 % пропускної здатності."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (за замовчуванням ВИМКНЕНО): маршрутизація через два реле для неможливості пов'язати вхід і вихід."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Подробиці криптографічної невідповідності"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "ID виходу"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Розташування"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Новий спостережений ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Раніше закріплений ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Обробка вашого вибору, зачекайте."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Відхилити (від'єднати)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Відхилити та залишатись від'єднаним"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Повідомити Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Ідентичність сервера змінилася"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Сервер виходу Warren, якому ви раніше довіряли, тепер представляє іншу криптографічну ідентичність."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Зазвичай це означає, що оператор ротував ключ, але може також вказувати на те, що сервер було замінено або скомпрометовано. Відхиліть, якщо не очікували змін."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Довіряти новому ключу"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "Мімікрія HTTP/3 (активна)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "Обфускація мімікрією HTTP/3 завжди увімкнена для тунелів Warren (/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "Обфускація мімікрією HTTP/3 наразі неактивна."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Остання"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Застарілі методи обфускації (Shadowsocks, UDP-over-TCP, QUIC, LWO) не застосовуються, коли warren_mode увімкнено."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Обфускація"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Перепідключення"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Тунелі Warren маскуються під стандартний браузерний трафік HTTP/3: ALPN h3, SNI warrenbrowse.com, розділення пакета Initial, UDP/443. У /v1 це не перемикається, інакше Warren-клієнти одразу стали б розпізнаваними в мережі."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "неактивна"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ніколи"
+

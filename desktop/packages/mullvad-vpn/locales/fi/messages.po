@@ -3829,3 +3829,276 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "Menetät jäljellä olevan päivän."
 msgstr[1] "Menetät jäljellä olevat %d päivää."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Tulomaa"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Lähtömaa"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Odota suunnilleen puolet single-hop-kaistanleveydestä vastineeksi siitä, ettei käyttäjän IP:tä ja kohde-IP:tä voida yhdistää. Oletuksena pois päältä; valinnainen yksityisyyden vuoksi."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Valinnainen: kiinnitä tulo- ja lähtörelevien maat (ISO 3166 alpha-2 -koodit, kuten fr, de, se). Jätä tyhjäksi automaattista valintaa varten."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Käynnistä Warren-demoni uudelleen tämän asetuksen muuttamisen jälkeen."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Reitittää liikenteesi kahden Warren-releen kautta käyttäen HPKE-päästä-päähän-salausta. Tulorele näkee vain salatekstin; lähtörele näkee vain salauksen purkukuorman, ei koskaan IP:täsi. Malli innoittanut Apple Private Relay -palvelusta."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Single-hop Warren aktiivinen. Täysi kaistanleveys, samat yksityisyydensuojat kuin oletustilassa."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Kompromissi: noin puolet single-hop-kaistanleveydestä. Oletuksena pois päältä; valinnainen yksityisyyden vuoksi. Demonin uudelleenkäynnistys vaaditaan tämän asetuksen muuttamisen jälkeen."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Kun käytössä, liikenne reititetään kahden Warren-releen (tulo ja sitten lähtö) kautta käyttäen HPKE-päästä-päähän-salausta asiakkaan ja lähdön välillä. Tulorele näkee vain salatekstin; lähtörele näkee vain salauksen purkukuorman, ei koskaan käyttäjän IP:tä."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "VPN-kokemus ilman tinkimistä yksityisyydestä. Ei lokeja. Ei tilejä. Ei seurantaa. Vain kaistanleveyttä."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Kaikki valmista"
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr "Varmuuskopioi uusi lompakkoni (suositus)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Tarkista uudelleen"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Tarkistetaan... (napsauta päivittääksesi nyt)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Määritys valmis. Valitse maa ja yhdistä Warreniin."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Jatka"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Tilauksen tilaa ei voitu tarkistaa. Yritä uudelleen."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "Demonilla ei ole vielä mnemonista – kirjaudu sisään tai käynnistä sovellus uudelleen."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Demoni hylkäsi mnemonisen. Tarkista oikeinkirjoitus ja sanamäärä ja yritä uudelleen."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Mnemonisen hakeminen demonilta epäonnistui."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Aloita"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "Minulla on jo tilaus"
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr "Olen kirjoittanut sanat muistiin"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Tuo olemassa oleva mnemoninen"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Aktiivista tilausta ei löytynyt. Osta sellainen ensin."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Liitä 12-sanainen BIP39-mnemoninen palauttaaksesi olemassa olevan Warren-identiteettisi."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Valitse maa ja yhdistä"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Valitse haluamasi suojaukset alusta alkaen. Voit muuttaa kaikkia näitä myöhemmin Asetuksista."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Yksityisyysasetukset"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Palauta lompakko"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "Palautetaan…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Ohita ohjattu toiminto (lisäasetukset)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Näytä tilaukset (avautuu selaimessa)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren käyttää ei-säilytettävää lompakkoa (Ed25519 + BIP39). Sinä omistat avaimet; emme näe niitä koskaan."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Tervetuloa Warren VPN:ään"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr "Kirjoita nämä 12 sanaa muistiin järjestyksessä. Jos kadotat ne, menetät pääsyn tilaukseesi. Kopiointi leikepöydälle on tarkoituksellisesti poistettu käytöstä pitääksesi salaisuutesi haittaohjelmien ulottumattomissa."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "Sinulla ei ole vielä aktiivista tilausta. Tilaukset alkavat muutamasta eurosta kuukaudessa – ei toistuvaa laskutusta, ei tilin luomista, maksat käytön mukaan."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Warren-lompakkosi"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Tilauksesi"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "sanaa"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Aina päällä oleva hämärrys (oletuksena PÄÄLLÄ): HTTP/3-jäljittely, jotta liikenne sulautuu massaan."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (oletuksena POIS): lisää täytteen estääkseen ML-liikenneanalyysin. ~5–15 % kaistanleveydestä."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (oletuksena POIS): reititä kahden releen kautta, jotta tulo- ja lähtöä ei voi yhdistää."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Kryptografisen ristiriidan tiedot"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "Lähtötunnus"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Sijainti"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Vasta havaittu avain"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Aiemmin kiinnitetty avain"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Käsitellään valintaasi, odota."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Hylkää (katkaise yhteys)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Hylkää ja pysy yhteydetön"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Ilmoita Warrenille"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Palvelimen identiteetti muuttunut"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Aiemmin luottamasi Warren-lähtöpalvelin esittää nyt eri kryptografisen identiteetin."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avainta, mutta voi myös merkitä, että palvelin on vaihdettu tai vaarantunut. Hylkää, jos et odottanut muutosta."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Luota uuteen avaimeen"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3-jäljittely (aktiivinen)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3-jäljittelyn hämärrys on aina päällä Warren-tunneleille (/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3-jäljittelyn hämärrys ei ole tällä hetkellä käytössä."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Viimeisin"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Vanhat hämärrysmenetelmät (Shadowsocks, UDP-over-TCP, QUIC, LWO) eivät päde, kun warren_mode on käytössä."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Hämärrys"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Uudelleenyhdistämiset"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren-tunnelit naamioituvat tavalliseksi selaimen HTTP/3-liikenteeksi: ALPN h3, SNI warrenbrowse.com, Initial-paketin jako, UDP/443. Ei kytkettävissä /v1:ssä, koska poistaminen tekisi Warren-asiakkaista välittömästi tunnistettavia verkossa."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "ei aktiivinen"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ei koskaan"
+

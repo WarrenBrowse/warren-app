@@ -3829,3 +3829,276 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "U verliest uw resterende dag."
 msgstr[1] "U verliest uw %d resterende dagen."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Toegangsland"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Uitgangsland"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Verwacht ongeveer de helft van de single-hop bandbreedte in ruil voor onkoppelbaarheid tussen het gebruikers-IP en het bestemmings-IP. Standaard uitgeschakeld; opt-in voor privacy."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Optioneel: pin de landen van het ingangs- en uitgangsrelay vast (ISO 3166 alpha-2-codes zoals fr, de, se). Leeg laten voor automatische keuze."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Herstart de Warren-daemon na het wijzigen van deze instelling."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Routeert je verkeer via twee Warren-relays met HPKE end-to-end-versleuteling. Het ingangsrelay ziet alleen versleutelde tekst; het uitgangsrelay alleen de ontsleutelde inhoud, nooit je IP. Patroon geïnspireerd op Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Warren single-hop actief. Volledige bandbreedte, identieke privacygaranties als de standaard single-hop-modus."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Afweging: ongeveer de helft van de single-hop bandbreedte. Standaard uit; opt-in voor privacy. Na het wijzigen van deze instelling is een herstart van de daemon vereist."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Wanneer ingeschakeld wordt het verkeer via twee Warren-relays (ingang en uitgang) gerouteerd met HPKE end-to-end-versleuteling tussen client en uitgang. Het ingangsrelay ziet alleen versleutelde tekst; het uitgangsrelay alleen de ontsleutelde inhoud, nooit het gebruikers-IP."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "Een VPN-ervaring zonder compromissen op privacy. Geen logs. Geen accounts. Geen tracking. Alleen bandbreedte."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Helemaal klaar"
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr "Mijn nieuwe portemonnee back-uppen (aanbevolen)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Opnieuw controleren"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Bezig met controleren... (klik om nu te vernieuwen)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Configuratie voltooid. Kies een land en verbind met Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Doorgaan"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Kon abonnementsstatus niet controleren. Probeer het opnieuw."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "De daemon heeft nog geen mnemonic – log in of herstart de app."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "De daemon weigerde de mnemonic. Controleer spelling en aantal woorden en probeer het opnieuw."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Kon mnemonic niet ophalen van daemon."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Aan de slag"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "Ik heb al een abonnement"
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr "Ik heb de woorden opgeschreven"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Bestaande mnemonic importeren"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Geen actief abonnement gevonden. Schaf er eerst een aan."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Plak je 12-woorden BIP39 mnemonic om je bestaande Warren-identiteit te herstellen."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Kies een land en verbind"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Kies de verdedigingen die je vanaf dag één wilt. Je kunt deze later allemaal wijzigen in Instellingen."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Privacyvoorkeuren"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Portemonnee herstellen"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "Bezig met herstellen…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Wizard overslaan (geavanceerd)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Abonnementen bekijken (opent in browser)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren gebruikt een niet-custodial portemonnee (Ed25519 + BIP39). Jij bezit de sleutels; wij zien ze nooit."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Welkom bij Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr "Schrijf deze 12 woorden in volgorde op. Als je ze verliest, verlies je toegang tot je abonnement. Kopiëren naar klembord is bewust uitgeschakeld om je geheim buiten bereik van malware te houden."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "Je hebt nog geen actief abonnement. Abonnementen beginnen vanaf enkele euro's per maand – geen terugkerende facturatie, geen accountaanmaak, betalen naar gebruik."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Je Warren-portemonnee"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Je abonnement"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "woorden"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Altijd-aan obfuscatie (standaard AAN): HTTP/3-mimicry zodat het verkeer opgaat in de massa."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (standaard UIT): voegt padding toe om ML-trafficanalyse te dwarsbomen. ~5-15 % bandbreedte."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (standaard UIT): route via twee relays voor onkoppelbaarheid van in- en uitgang."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Details van cryptografische mismatch"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "Uitgangs-ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Locatie"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Nieuw waargenomen sleutel"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Eerder vastgepinde sleutel"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Je keuze wordt verwerkt, even geduld."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Afwijzen (verbinding verbreken)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Afwijzen en verbroken blijven"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Melden bij Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Serveridentiteit gewijzigd"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "De Warren-uitgangsserver die je eerder vertrouwde toont nu een andere cryptografische identiteit."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Dit betekent meestal dat de operator de sleutel heeft geroteerd, maar het kan ook duiden op een vervangen of gecompromitteerde server. Weiger als je geen wijziging verwachtte."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Nieuwe sleutel vertrouwen"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3-mimicry (actief)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3-mimicry-obfuscatie staat altijd aan voor Warren-tunnels (/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3-mimicry-obfuscatie is momenteel inactief."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Laatst"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Verouderde obfuscatiemethoden (Shadowsocks, UDP-over-TCP, QUIC, LWO) zijn niet van toepassing als warren_mode aanstaat."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Obfuscatie"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Herverbindingen"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren-tunnels doen zich voor als standaard HTTP/3-browserverkeer: ALPN h3, SNI warrenbrowse.com, Initial-pakketsplitsing, UDP/443. Niet aan/uit te zetten in /v1 omdat uitschakelen Warren-clients direct herkenbaar zou maken op het netwerk."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "inactief"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "nooit"
+

@@ -3829,3 +3829,276 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "Kalan günlerinizi kaybedeceksiniz."
 msgstr[1] "Kalan %d gününüzü kaybedeceksiniz."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Giriş ülkesi"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Çıkış ülkesi"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Tek atlamalı bant genişliğinin yaklaşık yarısını, kullanıcı IP'si ile hedef IP'si arasındaki bağlantısızlık karşılığında bekleyin. Varsayılan olarak kapalı; gizlilik için isteğe bağlı."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "İsteğe bağlı: giriş ve çıkış aktarım ülkelerini sabitleyin (fr, de, se gibi ISO 3166 alpha-2 kodları). Otomatik seçim için boş bırakın."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Bu ayarı değiştirdikten sonra Warren daemon'unu yeniden başlatın."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Trafiğinizi HPKE uçtan uca şifreleme kullanan iki Warren aktarımı üzerinden yönlendirir. Giriş aktarımı yalnızca şifreli metni görür; çıkış aktarımı yalnızca şifresi çözülmüş yükü görür, IP'nizi asla görmez. Apple Private Relay'den esinlenen desen."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Tek atlamalı Warren etkin. Tam bant genişliği, varsayılan tek atlama modu ile özdeş gizlilik garantileri."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Denge: tek atlamalı bant genişliğinin yaklaşık yarısı. Varsayılan olarak kapalı; gizlilik için isteğe bağlı. Bu ayarı değiştirdikten sonra daemon'un yeniden başlatılması gerekir."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren çoklu atlama"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Etkinleştirildiğinde, trafik istemci ile çıkış arasında HPKE uçtan uca şifreleme kullanılarak iki Warren aktarımı (giriş ve ardından çıkış) üzerinden yönlendirilir. Giriş aktarımı yalnızca şifreli metni görür; çıkış aktarımı yalnızca şifresi çözülmüş yükü görür, kullanıcının IP'sini asla görmez."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "oto"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "Gizlilikten ödün vermeyen bir VPN deneyimi. Günlük yok. Hesap yok. Takip yok. Sadece bant genişliği."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Her şey hazır"
+
+msgctxt "warren-onboarding"
+msgid "Back up my new wallet (recommended)"
+msgstr "Yeni cüzdanımı yedekle (önerilir)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Tekrar kontrol et"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrol ediliyor... (şimdi yenilemek için tıkla)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Yapılandırma tamamlandı. Bir ülke seç ve Warren'a bağlan."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Devam et"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Abonelik durumu kontrol edilemedi. Lütfen tekrar dene."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "Daemon'da henüz mnemonik ifade yok – oturum aç ya da uygulamayı yeniden başlat."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Daemon mnemonik ifadeyi reddetti. Yazımı ve kelime sayısını kontrol edip tekrar dene."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Mnemonik ifade daemon'dan alınamadı."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Başla"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "Zaten bir aboneliğim var"
+
+msgctxt "warren-onboarding"
+msgid "I have written down the words"
+msgstr "Kelimeleri yazdım"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Mevcut bir mnemonik ifadeyi içe aktar"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Etkin abonelik bulunamadı. Lütfen önce bir abonelik satın al."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Mevcut Warren kimliğini geri yüklemek için 12 kelimelik BIP39 mnemonik ifadeni yapıştır."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Bir ülke seç ve bağlan"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "İlk günden itibaren istediğin korumaları seç. Bunların hepsini daha sonra Ayarlar'dan değiştirebilirsin."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Gizlilik tercihleri"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Cüzdanı geri yükle"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "Geri yükleniyor…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Sihirbazı atla (gelişmiş)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Planları görüntüle (tarayıcında açılır)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren, saklamasız bir cüzdan (Ed25519 + BIP39) kullanır. Anahtarlar sana aittir; biz onları asla görmeyiz."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Warren VPN'e hoş geldin"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgstr "Bu 12 kelimeyi sırayla yaz. Kaybedersen aboneliğine erişimini kaybedersin. Sırrını kötü amaçlı yazılımlardan uzak tutmak için panoya kopyalama kasıtlı olarak devre dışı bırakılmıştır."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "Henüz etkin bir aboneliğin yok. Planlar ayda birkaç eurodan başlıyor – tekrarlayan faturalandırma yok, hesap oluşturma yok, kullandıkça öde."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Warren cüzdanın"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Aboneliğin"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "kelime"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Sürekli açık gizleme (varsayılan AÇIK): trafiğin göze çarpmaması için HTTP/3 taklidi."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (varsayılan KAPALI): ML trafik analizini boşa çıkarmak için dolgu enjekte eder. ~%5-15 bant genişliği."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Çoklu atlama (varsayılan KAPALI): giriş ile çıkışın eşleşmemesi için iki aktarım üzerinden yönlendir."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Kriptografik uyumsuzluk ayrıntıları"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "Çıkış kimliği"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Konum"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Yeni gözlemlenen anahtar"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Önceden sabitlenmiş anahtar"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Seçimin işleniyor, lütfen bekle."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Reddet (bağlantıyı kes)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Reddet ve bağlı kalma"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Warren'a bildir"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Sunucu kimliği değişti"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Daha önce güvendiğin Warren çıkış sunucusu artık farklı bir kriptografik kimlik sunuyor."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Bu genellikle operatörün anahtarı döndürdüğü anlamına gelir, ancak sunucunun değiştirilmiş veya tehlikeye girmiş olduğuna da işaret edebilir. Bir değişiklik beklemiyorsan reddet."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Yeni anahtara güven"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 taklidi (etkin)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3 taklit gizlemesi, Warren tünelleri (/v1) için her zaman açıktır."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3 taklit gizlemesi şu anda etkin değil."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Son"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Eski gizleme yöntemleri (Shadowsocks, UDP-over-TCP, QUIC, LWO) warren_mode açıkken geçerli değildir."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Gizleme"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Yeniden bağlanmalar"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren tünelleri standart tarayıcı HTTP/3 trafiği gibi davranır: ALPN h3, SNI warrenbrowse.com, Initial paket bölme, UDP/443. /v1'de açılıp kapatılamaz çünkü devre dışı bırakmak Warren istemcilerini ağda anında tanınır hale getirirdi."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "etkin değil"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "asla"
+
