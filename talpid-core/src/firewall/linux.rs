@@ -60,7 +60,7 @@ pub enum Error {
 
 /// TODO(linus): This crate is not supposed to be Mullvad-aware. So at some point this should be
 /// replaced by allowing the table name to be configured from the public API of this crate.
-const TABLE_NAME: &CStr = c"mullvad";
+const TABLE_NAME: &CStr = c"warren";
 const IN_CHAIN_NAME: &CStr = c"input";
 const OUT_CHAIN_NAME: &CStr = c"output";
 const FORWARD_CHAIN_NAME: &CStr = c"forward";
@@ -258,6 +258,14 @@ impl Firewall {
             }
         }
         Ok(())
+    }
+}
+
+impl Drop for Firewall {
+    fn drop(&mut self) {
+        if let Err(err) = self.reset_policy() {
+            log::error!("Failed to reset firewall policy on drop: {err}");
+        }
     }
 }
 

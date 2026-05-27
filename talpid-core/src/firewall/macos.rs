@@ -21,7 +21,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 /// TODO(linus): This crate is not supposed to be Mullvad-aware. So at some point this should be
 /// replaced by allowing the anchor name to be configured from the public API of this crate.
-const ANCHOR_NAME: &str = "mullvad";
+const ANCHOR_NAME: &str = "warren";
 
 /// If NAT firewall rules should be applied to force Apple services through the tunnel.
 ///
@@ -985,6 +985,14 @@ impl Firewall {
         self.pf
             .try_remove_anchor(ANCHOR_NAME, pfctl::AnchorKind::Filter)?;
         Ok(())
+    }
+}
+
+impl Drop for Firewall {
+    fn drop(&mut self) {
+        if let Err(err) = self.reset_policy() {
+            log::error!("Failed to reset firewall policy on drop: {err}");
+        }
     }
 }
 
