@@ -109,6 +109,12 @@ runs:
       shell: bash
       run: rustup target add i686-pc-windows-msvc
 
+    # Universal macOS builds (build.sh --universal) link both arch slices
+    - name: Install Rust x86_64 target (macOS universal builds)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: rustup target add x86_64-apple-darwin
+
     - name: Set CARGO_TARGET_DIR env
       shell: bash
       run: |
