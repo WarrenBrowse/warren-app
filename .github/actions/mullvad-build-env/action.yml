@@ -57,7 +57,7 @@ runs:
       run: |
         echo "::warning::warren-core was not checked out (no warren-core-token input)."
         echo "::warning::cargo commands relying on path-deps to ../warren-core/crates/* will fail."
-        echo "::warning::Pass warren-core-token: \${{ secrets.WARREN_CORE_RO_TOKEN }} from the calling workflow."
+        echo "::warning::Pass warren-core-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
 
     - name: Override Rust toolchain
       if: ${{ inputs.rust-toolchain != 'stable' }}
