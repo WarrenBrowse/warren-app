@@ -43,13 +43,22 @@ runs:
       run: echo "sha=$(cat .warren-core-version)" >> "$GITHUB_OUTPUT"
 
     - name: Checkout warren-core (sibling repo, path-dep target)
+      # Cloned manually instead of actions/checkout: the path-dep target lives at
+      # ../warren-core (sibling of the workspace), which actions/checkout refuses
+      # to write to ("not under $GITHUB_WORKSPACE"). git clone has no such limit.
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
-      uses: actions/checkout@v4
-      with:
-        repository: WarrenBrowse/warren-core
-        ref: ${{ steps.warren-core-pin.outputs.sha }}
-        path: ../warren-core
-        token: ${{ inputs.warren-core-token }}
+      shell: bash
+      env:
+        WARREN_CORE_TOKEN: ${{ inputs.warren-core-token }}
+        WARREN_CORE_SHA: ${{ steps.warren-core-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-core"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${WARREN_CORE_TOKEN}@github.com/WarrenBrowse/warren-core.git" "$dest"
+        git -C "$dest" checkout --detach "$WARREN_CORE_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-core.git"
 
     - name: Warn if warren-core checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
