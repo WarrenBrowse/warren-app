@@ -44,7 +44,7 @@ permissions:
 jobs:
   build-macos:
     name: Build macOS DMG/PKG
-    runs-on: macos-14
+    runs-on: [self-hosted, macOS, ARM64]
     env:
       WARREN_CSC_LINK_MACOS_B64: ${{ secrets.WARREN_CSC_LINK_MACOS }}
       WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
@@ -305,7 +305,7 @@ jobs:
 
   build-android:
     name: Build Android AAB + Play Store internal-test upload
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, macOS, ARM64]
     env:
       ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
