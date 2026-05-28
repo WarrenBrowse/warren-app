@@ -83,14 +83,14 @@ fn nat_pmp_state_to_proto(
         NatPmpStateSnapshot::Disabled => types::NatPmpStatus {
             state: State::Disabled as i32,
             external_port: None,
-            lifetime_remaining_secs: None,
+            lifetime_granted_secs: None,
             error_message: None,
             error_reason: None,
         },
         NatPmpStateSnapshot::Requesting => types::NatPmpStatus {
             state: State::Requesting as i32,
             external_port: None,
-            lifetime_remaining_secs: None,
+            lifetime_granted_secs: None,
             error_message: None,
             error_reason: None,
         },
@@ -100,7 +100,7 @@ fn nat_pmp_state_to_proto(
         } => types::NatPmpStatus {
             state: State::Mapped as i32,
             external_port: Some(u32::from(*external_port)),
-            lifetime_remaining_secs: Some(*lifetime_secs),
+            lifetime_granted_secs: Some(*lifetime_secs),
             error_message: None,
             error_reason: None,
         },
@@ -114,7 +114,7 @@ fn nat_pmp_state_to_proto(
             types::NatPmpStatus {
                 state: State::Failed as i32,
                 external_port: None,
-                lifetime_remaining_secs: None,
+                lifetime_granted_secs: None,
                 error_message: Some(error.clone()),
                 error_reason: Some(error_reason as i32),
             }

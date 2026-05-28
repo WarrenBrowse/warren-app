@@ -17140,7 +17140,7 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.toObject = function(inclu
   var f, obj = {
     state: jspb.Message.getFieldWithDefault(msg, 1, 0),
     externalPort: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    lifetimeRemainingSecs: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    lifetimeGrantedSecs: jspb.Message.getFieldWithDefault(msg, 3, 0),
     errorMessage: jspb.Message.getFieldWithDefault(msg, 4, ""),
     errorReason: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
@@ -17189,7 +17189,7 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinaryFromRead
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint32());
-      msg.setLifetimeRemainingSecs(value);
+      msg.setLifetimeGrantedSecs(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
@@ -17341,10 +17341,10 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasExternalPort
 
 
 /**
- * optional uint32 lifetime_remaining_secs = 3;
+ * optional uint32 lifetime_granted_secs = 3;
  * @return {number}
  */
-proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getLifetimeRemainingSecs = function() {
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getLifetimeGrantedSecs = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -17353,7 +17353,7 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getLifetimeRema
  * @param {number} value
  * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
  */
-proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setLifetimeRemainingSecs = function(value) {
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setLifetimeGrantedSecs = function(value) {
   return jspb.Message.setField(this, 3, value);
 };
 
@@ -17362,7 +17362,7 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setLifetimeRema
  * Clears the field making it undefined.
  * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
  */
-proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearLifetimeRemainingSecs = function() {
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearLifetimeGrantedSecs = function() {
   return jspb.Message.setField(this, 3, undefined);
 };
 
@@ -17371,7 +17371,7 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearLifetimeRe
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasLifetimeRemainingSecs = function() {
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasLifetimeGrantedSecs = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 

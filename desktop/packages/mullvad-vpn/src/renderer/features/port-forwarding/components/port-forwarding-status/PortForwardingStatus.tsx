@@ -23,7 +23,7 @@ import { usePortForwarding } from '../../hooks';
  *   start, so changes only take effect on the next reconnect.
  * - `Requesting`: "Status: requesting port mapping..." spinner-less
  *   placeholder.
- * - `Mapped { externalPort, lifetimeRemainingSecs }`: "Status: active"
+ * - `Mapped { externalPort, lifetimeGrantedSecs }`: "Status: active"
  *   + the granted public port + a live mm:ss countdown to renewal
  *   (lifetime / 2 of the granted lifetime). The exit picks the port
  *   from its pool; when the user left the preferred-port input empty
@@ -102,7 +102,10 @@ export function PortForwardingStatus() {
   }
 
   // status.state === 'mapped'
-  const renewAtMs = lastSnapshotAt.current + Math.floor((status.lifetimeRemainingSecs * 1000) / 2);
+  // Renewal fires at granted/2 (RFC 6886 §3.7), measured from when this
+  // snapshot's Mapped/Renewed event arrived. `lifetimeGrantedSecs` is
+  // the granted lifetime (static per event), not a decreasing remaining.
+  const renewAtMs = lastSnapshotAt.current + Math.floor((status.lifetimeGrantedSecs * 1000) / 2);
   const remainingMs = Math.max(0, renewAtMs - now);
   const remainingSecs = Math.floor(remainingMs / 1000);
   const mm = Math.floor(remainingSecs / 60)

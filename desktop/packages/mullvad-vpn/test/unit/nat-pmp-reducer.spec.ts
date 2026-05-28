@@ -61,13 +61,13 @@ describe('settings reducer - NAT-PMP slice', () => {
       settingsActions.updateNatPmpStatus({
         state: 'mapped',
         externalPort: 49152,
-        lifetimeRemainingSecs: 3600,
+        lifetimeGrantedSecs: 3600,
       }),
     );
     expect(next.natPmpStatus).toEqual({
       state: 'mapped',
       externalPort: 49152,
-      lifetimeRemainingSecs: 3600,
+      lifetimeGrantedSecs: 3600,
     });
   });
 
@@ -75,7 +75,7 @@ describe('settings reducer - NAT-PMP slice', () => {
     const initial = makeStateWithNatPmp(OFF_DEFAULTS, {
       state: 'mapped',
       externalPort: 49152,
-      lifetimeRemainingSecs: 3600,
+      lifetimeGrantedSecs: 3600,
     });
     const next = settingsReducer(
       initial,
@@ -96,7 +96,7 @@ describe('settings reducer - NAT-PMP slice', () => {
     const initial = makeStateWithNatPmp(OFF_DEFAULTS, {
       state: 'mapped',
       externalPort: 49152,
-      lifetimeRemainingSecs: 3600,
+      lifetimeGrantedSecs: 3600,
     });
     const next = settingsReducer(
       initial,
@@ -109,7 +109,7 @@ describe('settings reducer - NAT-PMP slice', () => {
     const liveStatus: NatPmpStatus = {
       state: 'mapped',
       externalPort: 60000,
-      lifetimeRemainingSecs: 1800,
+      lifetimeGrantedSecs: 1800,
     };
     const initial = makeStateWithNatPmp(OFF_DEFAULTS, liveStatus);
     const next = settingsReducer(

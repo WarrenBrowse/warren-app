@@ -1783,16 +1783,22 @@ async fn run_nat_pmp_controller(
             NatPmpManager::start_from_addr(&runtime, server, c, observer.clone(), bind_addr)
         });
 
-    // The config currently applied to `manager` (`Some` ⇔ enabled).
-    // Used to skip a redundant live-reconfigure when the daemon pushes a
-    // settings value that is byte-for-byte identical to what is already
-    // running. Without this guard, an unchanged push triggers a spurious
-    // release(old)+request(new) of the SAME port; the exit's per-client
-    // post-release cooldown then bounces the re-request to a random port
-    // until the next renewal — the "I pinned a port but got a different
-    // one" symptom. (The exit also tolerates this now, but not making
-    // the redundant round-trip at all is cleaner and avoids the churn.)
+    // The config currently applied to `manager` (`Some` ⇔ enabled) and
+    // WHEN it was applied. Used to swallow a *duplicate* push within a
+    // short window: the renderer can emit the same settings twice in
+    // quick succession (e.g. an input's change + blur), and each
+    // redundant reconfigure is a wasted release(old)+request(new)
+    // round-trip that also spends a per-client rate-limit slot on the
+    // exit. We therefore skip a push byte-for-byte identical to the
+    // running config ONLY if it arrives within `RECONFIGURE_DEBOUNCE`.
+    // Beyond that window an identical push IS honoured — that is a
+    // deliberate user action (e.g. re-applying the same port to RETRY
+    // after a failure); skipping it indefinitely would strand the user
+    // in `Failed` with no recovery path.
+    const RECONFIGURE_DEBOUNCE: std::time::Duration = std::time::Duration::from_secs(2);
     let mut applied: Option<NatPmpConfig> = initial_config.filter(|c| c.enabled);
+    let mut applied_at: Option<std::time::Instant> =
+        applied.as_ref().map(|_| std::time::Instant::now());
 
     while control_rx.changed().await.is_ok() {
         // Borrow then clone immediately so we hold the watch's
@@ -1813,17 +1819,19 @@ async fn run_nat_pmp_controller(
 
         match (manager.is_some(), new_wanted) {
             (true, Some(new_cfg)) => {
-                if applied.as_ref() == Some(&new_cfg) {
-                    // Idempotency guard: the pushed config is identical
-                    // to what is already running. Skip the redundant
-                    // release+reallocate, which would otherwise bounce
-                    // the pinned port to a random one via the exit's
-                    // post-release cooldown.
+                let recent_duplicate = applied.as_ref() == Some(&new_cfg)
+                    && applied_at.is_some_and(|t| t.elapsed() < RECONFIGURE_DEBOUNCE);
+                if recent_duplicate {
+                    // Identical config within the debounce window: a
+                    // duplicate push, not an intentional retry. Skip the
+                    // redundant release+reallocate.
                     log::debug!(
-                        "Warren NAT-PMP controller: config unchanged — skipping reconfigure"
+                        "Warren NAT-PMP controller: duplicate config within debounce — skipping reconfigure"
                     );
                 } else {
-                    // Live reconfigure (toggle still on, params changed).
+                    // Live reconfigure: params changed, OR an
+                    // intentional re-apply past the debounce window
+                    // (e.g. retrying the same port after a failure).
                     log::info!("Warren NAT-PMP controller: live reconfigure");
                     manager
                         .as_mut()
@@ -1831,6 +1839,7 @@ async fn run_nat_pmp_controller(
                         .reconfigure(&new_cfg)
                         .await;
                     applied = Some(new_cfg);
+                    applied_at = Some(std::time::Instant::now());
                 }
             }
             (true, None) => {
@@ -1842,6 +1851,7 @@ async fn run_nat_pmp_controller(
                     m.release().await;
                 }
                 applied = None;
+                applied_at = None;
             }
             (false, Some(new_cfg)) => {
                 // First enable (no manager yet, new cfg asks for one).
@@ -1856,11 +1866,13 @@ async fn run_nat_pmp_controller(
                     bind_addr,
                 ));
                 applied = Some(new_cfg);
+                applied_at = Some(std::time::Instant::now());
             }
             (false, None) => {
                 // No-op: the daemon may have written `None` while we
                 // were already in `None` state.
                 applied = None;
+                applied_at = None;
             }
         }
     }

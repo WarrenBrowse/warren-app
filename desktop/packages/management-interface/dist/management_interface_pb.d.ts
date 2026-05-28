@@ -2123,10 +2123,10 @@ export class NatPmpStatus extends jspb.Message {
     getExternalPort(): number | undefined;
     setExternalPort(value: number): NatPmpStatus;
 
-    hasLifetimeRemainingSecs(): boolean;
-    clearLifetimeRemainingSecs(): void;
-    getLifetimeRemainingSecs(): number | undefined;
-    setLifetimeRemainingSecs(value: number): NatPmpStatus;
+    hasLifetimeGrantedSecs(): boolean;
+    clearLifetimeGrantedSecs(): void;
+    getLifetimeGrantedSecs(): number | undefined;
+    setLifetimeGrantedSecs(value: number): NatPmpStatus;
 
     hasErrorMessage(): boolean;
     clearErrorMessage(): void;
@@ -2152,7 +2152,7 @@ export namespace NatPmpStatus {
     export type AsObject = {
         state: NatPmpStatus.State,
         externalPort?: number,
-        lifetimeRemainingSecs?: number,
+        lifetimeGrantedSecs?: number,
         errorMessage?: string,
         errorReason?: NatPmpStatus.ErrorReason,
     }

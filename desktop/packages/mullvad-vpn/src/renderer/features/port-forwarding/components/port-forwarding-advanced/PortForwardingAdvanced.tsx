@@ -71,12 +71,6 @@ const StyledSelect = styled.select<{ $disabled: boolean }>(({ $disabled }) => ({
 const MIN_PORT = 49152;
 const MAX_PORT = 65535;
 
-// Locked rows when the daemon already holds a mapping (state ===
-// 'mapped' or 'requesting'). Changing `protocol` or
-// `suggestedExternalPort` while the live mapping is established does
-// NOT renegotiate the mapping — the daemon's NAT-PMP manager is
-// spawned at tunnel start and reads its config once. Locking the
-// inputs in those states avoids the misleading UX where the user
 /**
  * Advanced port-forwarding controls: TCP/UDP protocol + suggested
  * port. Rendered below the toggle in `PortForwardingSettingsView`.

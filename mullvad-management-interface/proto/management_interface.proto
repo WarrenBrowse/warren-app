@@ -793,10 +793,12 @@ message NatPmpStatus {
   // Set when state == MAPPED. The public-facing port the user
   // advertises to incoming peers.
   optional uint32 external_port = 2;
-  // Set when state == MAPPED. Lifetime in seconds last granted by the
-  // exit; the UI displays a countdown relative to this value + the
-  // wall clock since the last event.
-  optional uint32 lifetime_remaining_secs = 3;
+  // Set when state == MAPPED. The lifetime (seconds) the exit GRANTED
+  // for this mapping (after its [60,3600] clamp), captured at the last
+  // Mapped/Renewed event — NOT a live-decreasing "remaining" value. The
+  // UI derives the renewal countdown as granted/2 from the wall clock
+  // since that event.
+  optional uint32 lifetime_granted_secs = 3;
   // Set when state == FAILED. Free-form error string (logs/diagnostics).
   optional string error_message = 4;
   // Stable, translatable failure category. Lets the renderer show a

@@ -583,7 +583,7 @@ export type NatPmpErrorReason =
 export type NatPmpStatus =
   | { state: 'disabled' }
   | { state: 'requesting' }
-  | { state: 'mapped'; externalPort: number; lifetimeRemainingSecs: number }
+  | { state: 'mapped'; externalPort: number; lifetimeGrantedSecs: number }
   | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason };
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
