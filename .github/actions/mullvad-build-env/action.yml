@@ -59,6 +59,10 @@ runs:
           "https://x-access-token:${WARREN_CORE_TOKEN}@github.com/WarrenBrowse/warren-core.git" "$dest"
         git -C "$dest" checkout --detach "$WARREN_CORE_SHA"
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-core.git"
+        # warren-core vendors a patched Quinn fork (gitignored) required by the
+        # workspace [patch.crates-io] quinn/quinn-proto/quinn-udp entries. Regenerate
+        # it (clones quinn 0.11.9 + applies Warren GSO/obfuscation patches) before cargo.
+        ( cd "$dest" && ./bench/scripts/setup-quinn-fork.sh )
 
     - name: Warn if warren-core checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
