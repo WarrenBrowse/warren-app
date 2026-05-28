@@ -82,6 +82,27 @@ runs:
       shell: bash
       run: rustup component add ${{ inputs.rustup-components }}
 
+    - name: Assert Cargo.lock <-> warren-core coherence (prevents silent quinn-patch drop)
+      # GUARD: the warren-app Cargo.lock and the pinned warren-core (.warren-core-version)
+      # must stay in lockstep. If they drift, cargo silently re-resolves on unsigned builds
+      # (build.sh only enforces --locked when signing) and DROPS the [patch.crates-io] quinn
+      # fork -> the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly here
+      # instead of building the wrong artifact. (Root-caused 2026-05-29.)
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! grep -Eq 'version = "[0-9.]+-warren\.[0-9]+"' Cargo.lock; then
+          echo "::error::Cargo.lock does not pin the Warren quinn fork (…-warren.N); the [patch.crates-io] is not locked. Regenerate Cargo.lock with the quinn-fork present and commit it."
+          exit 1
+        fi
+        if ! cargo metadata --locked --format-version=1 >/dev/null; then
+          echo "::error::Cargo.lock is out of sync with the pinned warren-core (.warren-core-version=$(cat .warren-core-version))."
+          echo "::error::Fix: bump .warren-core-version to the warren-core commit Cargo.lock was generated against, OR regenerate Cargo.lock with the quinn-fork present (cargo update -p quinn -p quinn-proto -p quinn-udp) and commit it."
+          exit 1
+        fi
+        echo "coherence OK: Cargo.lock pins the Warren quinn fork and matches the pinned warren-core."
+
     # Install 32-bit target for NSIS plugins
     - name: Install Rust 32-bit x86 target
       if: runner.os == 'Windows'
