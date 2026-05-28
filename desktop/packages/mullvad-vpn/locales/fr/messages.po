@@ -1083,6 +1083,10 @@ msgid "Active features"
 msgstr "Fonctionnalités activées"
 
 msgctxt "connect-view"
+msgid "Port forwarding: %(port)d %(protocol)s"
+msgstr "Redirection de port : %(port)d %(protocol)s"
+
+msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Félicitations !"
 
@@ -2168,6 +2172,22 @@ msgstr "Demande de mappage de port..."
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr "Ouvre un port public sur le serveur de sortie connecté et le redirige vers votre appareil. Utile pour les applications pair-à-pair, le partage de fichiers ou les services auto-hébergés."
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d is already in use. Choose another one."
+msgstr "Le port %(port)d est déjà utilisé. Choisissez-en un autre."
+
+msgctxt "port-forwarding-view"
+msgid "The requested port is already in use. Choose another one."
+msgstr "Le port demandé est déjà utilisé. Choisissez-en un autre."
+
+msgctxt "port-forwarding-view"
+msgid "No port is available right now. Try again in a moment."
+msgstr "Aucun port disponible pour le moment. Réessayez dans un instant."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding is not allowed on this server."
+msgstr "La redirection de port n'est pas autorisée sur ce serveur."
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"

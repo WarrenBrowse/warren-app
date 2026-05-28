@@ -1118,6 +1118,14 @@ msgctxt "connect-view"
 msgid "Out of time"
 msgstr ""
 
+#. Active-feature chip on the main screen, shown when
+#. port forwarding is active. Available placeholders:
+#. %(port)d - the granted public port (e.g. 53451)
+#. %(protocol)s - the transport protocol, "UDP" or "TCP"
+msgctxt "connect-view"
+msgid "Port forwarding: %(port)d %(protocol)s"
+msgstr ""
+
 #. Button label for navigating to the voucher redemption view.
 msgctxt "connect-view"
 msgid "Redeem voucher"
@@ -2152,11 +2160,23 @@ msgid "Mapping failed: %(error)s"
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "No port is available right now. Try again in a moment."
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "Port %(port)d is already in use. Choose another one."
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Port forwarding"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding is not allowed on this server."
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2189,6 +2209,10 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "The requested port is already in use. Choose another one."
 msgstr ""
 
 msgctxt "port-forwarding-view"
