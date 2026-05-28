@@ -100,10 +100,12 @@ jobs:
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
-      - name: Install Linux packaging deps
+      - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm fpm
+          # The self-hosted Linux runner is pre-provisioned (rpm, build toolchain).
+          # No `sudo apt-get` here: the runner user has no passwordless sudo, and
+          # `fpm` is not an apt package (the build packages .deb/.rpm itself).
+          rpm --version
 
       - name: Build
         run: ./build.sh --optimize
