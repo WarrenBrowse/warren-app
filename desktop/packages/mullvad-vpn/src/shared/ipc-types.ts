@@ -44,7 +44,12 @@ export type ScrollToAnchorId =
   // Anchor for the multi-exit auto-failover toggle (M5.B.2).
   | 'warren-failover-setting'
   // Anchor for the port-forwarding toggle row.
-  | 'port-forwarding-setting';
+  | 'port-forwarding-setting'
+  // Anchor for the port-forwarding advanced controls (protocol +
+  // preferred port). Used when an external link (e.g., a "Configure
+  // your port" CTA in a future onboarding step) wants to deep-link
+  // directly to the form rather than the toggle.
+  | 'port-forwarding-advanced';
 
 export type ScrollToAnchorOption = {
   type: 'scroll-to-anchor';

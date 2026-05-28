@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "aldri"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatisk"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Tilordning mislyktes: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Åpner en offentlig port på den tilkoblede utgangsserveren og videresender den til enheten din. Nyttig for node-til-node-applikasjoner, fildeling eller selvhostede tjenester."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Portvideresending"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Porten må være mellom 49152 og 65535, eller tom for automatisk."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Foretrukket port"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokoll"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Offentlig port: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Fornyes om %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Status: aktiv"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Status: ber om porttilordning…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Status: venter på en aktiv tunnelforbindelse for å sette opp porttilordningen."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Serveren kan tildele en annen port hvis den foretrukne allerede er opptatt. Endringer trer i kraft umiddelbart, uten ny tilkobling."

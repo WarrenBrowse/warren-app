@@ -1,8 +1,10 @@
 import { messages } from '../../../../shared/gettext';
 import {
+  PortForwardingAdvanced,
   PortForwardingSetting,
   PortForwardingStatus,
 } from '../../../features/port-forwarding/components';
+import { usePortForwarding } from '../../../features/port-forwarding/hooks';
 import { Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
@@ -27,6 +29,12 @@ import { HeaderTitle } from '../../SettingsHeader';
  */
 export function PortForwardingSettingsView() {
   const { pop } = useHistory();
+  // Advanced controls (protocol, preferred port) only matter when the
+  // feature is enabled — keeps the screen visually quiet when the
+  // user just landed and has the toggle off. Mirrors the
+  // WarrenMultiHopSettingsView pattern (country pickers only appear
+  // when multi-hop is enabled).
+  const { settings } = usePortForwarding();
 
   return (
     <View backgroundColor="darkBlue">
@@ -47,11 +55,12 @@ export function PortForwardingSettingsView() {
                     <Text variant="labelTiny" color="whiteAlpha60">
                       {messages.pgettext(
                         'port-forwarding-view',
-                        'Warren restores port-forwarding: a unique differentiator since Mullvad and IVPN removed this feature in 2023. Toggle below to ask the exit for a public port mapped to your device.',
+                        'Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services.',
                       )}
                     </Text>
                   </FlexColumn>
                   <PortForwardingSetting />
+                  {settings.enabled ? <PortForwardingAdvanced /> : null}
                   <PortForwardingStatus />
                 </FlexColumn>
               </View.Container>

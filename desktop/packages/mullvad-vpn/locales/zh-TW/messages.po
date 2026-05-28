@@ -3815,3 +3815,55 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "您將失去剩餘 %d 天。"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "對應失敗：%(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "在已連線的出口伺服器上開啟一個公開連接埠並將其轉發到您的裝置。適用於點對點應用程式、檔案分享或自架服務。"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "連接埠轉發"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "連接埠必須介於 49152 和 65535 之間，留空則為自動。"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "偏好連接埠"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "通訊協定"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "公開連接埠：%(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s 後續約"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "狀態：已啟用"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "狀態：正在請求連接埠對應…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "狀態：正在等待作用中的通道連線以設定連接埠對應。"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "如果偏好的連接埠已被占用，伺服器可能會指派其他連接埠。變更會立即生效，無需重新連線。"

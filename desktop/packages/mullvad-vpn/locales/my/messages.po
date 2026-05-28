@@ -3818,3 +3818,55 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "သင်သည် သင့်လက်ကျန်ရက်ကို ဆုံးရှုံးပါမည်။\n\n"
 "သင်သည် သင့်လက်ကျန် %d ရက်ကို ဆုံးရှုံးပါမည်။"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "အလိုအလျောက်"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "ပို့ဆောင်မှု မအောင်မြင်ပါ: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "ချိတ်ဆက်ထားသော ထွက်ပေါက်ဆာဗာတွင် အများသုံးပို့တ်တစ်ခုကို ဖွင့်ပြီး သင့်စက်ပစ္စည်းသို့ ပြန်လည်ပို့ဆောင်ပေးသည်။ peer-to-peer အက်ပ်များ၊ ဖိုင်မျှဝေခြင်း သို့မဟုတ် ကိုယ်တိုင်လက်ခံ ဝန်ဆောင်မှုများအတွက် အသုံးဝင်သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "ပို့တ်သည် 49152 နှင့် 65535 ကြားရှိရမည်၊ သို့မဟုတ် အလိုအလျောက်အတွက် အလွတ်ထားပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "နှစ်သက်ရာ ပို့တ်"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "ပရိုတိုကော"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "အများသုံးပို့တ်: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s အတွင်း သက်တမ်းတိုးမည်"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "အခြေအနေ: အသက်ဝင်နေသည်"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "အခြေအနေ: ပို့တ်ပြန်ညွှန်းမှု တောင်းဆိုနေသည်…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "အခြေအနေ: ပို့တ်ပြန်ညွှန်းမှု သတ်မှတ်ရန် အသက်ဝင်နေသော ဥမင်ချိတ်ဆက်မှုကို စောင့်ဆိုင်းနေသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "နှစ်သက်ရာ ပို့တ်ကို အသုံးပြုပြီးဖြစ်ပါက ဆာဗာသည် အခြားပို့တ်တစ်ခုကို သတ်မှတ်ပေးနိုင်သည်။ ပြောင်းလဲမှုများသည် ပြန်လည်ချိတ်ဆက်ရန် မလိုဘဲ ချက်ချင်း အကျိုးသက်ရောက်သည်။"

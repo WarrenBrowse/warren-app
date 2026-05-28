@@ -10,6 +10,14 @@ export const StyledLabel = styled.span(smallText, {
   marginBottom: '9px',
 });
 
+// `FormattableTextInput` provides the live grouping behaviour
+// (`XXXX-XXXX-XXXX-XXXX`) that mirrors the Crockford-32 display form
+// emitted by `warren_api::vouchers::generate_secret`. The renderer
+// configures the input in `RedeemVoucher.tsx` with the Warren
+// alphabet (`[0-9A-HJKM-NP-TV-Z]`), uppercase enforcement, and a
+// strict 16-char raw maxLength — pasting either the dashed display
+// form or the raw form normalises locally to the same canonical
+// string before submit.
 export const StyledInput = styled(FormattableTextInput)(normalText, {
   flex: 1,
   overflow: 'hidden',

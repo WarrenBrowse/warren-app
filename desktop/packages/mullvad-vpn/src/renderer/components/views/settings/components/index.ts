@@ -3,6 +3,7 @@ export * from './app-info-list-item';
 export * from './daita-list-item';
 export * from './debug-list-item';
 export * from './multihop-list-item';
+export * from './port-forwarding-list-item';
 export * from './warren-multi-hop-list-item';
 export * from './quit-button';
 export * from './split-tunneling-list-item';

@@ -29,6 +29,26 @@ export default function StateTriggeredNavigation() {
   const updatePath = useEffectEvent((nextPath: RoutePath) => {
     const currentPath = location.pathname as RoutePath;
 
+    // `voucherSuccess` is a parameterized child route of `timeAdded`
+    // (`/main/voucher/success/:newExpiry/:secondsAdded` vs
+    // `/main/time-added`) — both surface the "subscription credit was
+    // applied" UX, with `voucherSuccess` carrying a more specific
+    // title ("Voucher was successfully redeemed"). When a user
+    // redeems a voucher, `RedeemVoucher.tsx` imperatively pushes
+    // `voucherSuccess` AND the account-expiry refresh that follows
+    // transitions `expiredState` from `'expired'` to `'time_added'`,
+    // which makes `getNavigationBase` reactively return `timeAdded`.
+    // Without this guard the user is bounced from `voucherSuccess`
+    // to the generic `timeAdded` view a moment after seeing the
+    // voucher-specific one — observed as "the success screen appears
+    // twice in a row" (M5.C.x bug report 2026-05-28).
+    if (
+      nextPath === RoutePath.timeAdded &&
+      currentPath.startsWith('/main/voucher/success/')
+    ) {
+      return;
+    }
+
     if (currentPath !== nextPath) {
       delayScheduler.cancel();
 

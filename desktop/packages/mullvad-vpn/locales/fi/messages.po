@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "ei koskaan"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automaattinen"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Yhdistäminen epäonnistui: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Avaa julkisen portin yhdistetyssä poistumispalvelimessa ja välittää sen laitteellesi. Hyödyllinen vertaisverkkosovelluksille, tiedostojen jakamiseen tai itse isännöityihin palveluihin."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Porttiohjaus"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Portin on oltava välillä 49152–65535 tai tyhjä automaattista varten."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Ensisijainen portti"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokolla"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Julkinen portti: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Uusitaan %(countdown)s kuluttua"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Tila: aktiivinen"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Tila: pyydetään porttiohjausta…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Tila: odotetaan aktiivista tunneliyhteyttä porttiohjauksen määrittämiseksi."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Palvelin voi määrittää eri portin, jos ensisijainen on jo varattu. Muutokset tulevat voimaan heti, ilman uudelleenyhdistämistä."

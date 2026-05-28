@@ -22,6 +22,7 @@ use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationErr
 
 use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
+use crate::warren_relay_list_view::country_centroid_for;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 use crate::warren_status::WarrenStatusCache;
 use crate::warren_tunnel_params::{self, AssembleError};
@@ -166,6 +167,34 @@ struct InnerParametersGenerator {
     /// re-establishes a fresh TOFU pin, with no false-positive
     /// mismatch).
     warren_pin_update_tx: Option<tokio::sync::mpsc::UnboundedSender<WarrenPinUpdate>>,
+    /// Cached [`GeoIpLocation`] of the most-recently assembled Warren
+    /// exit relay. Populated by [`produce_warren_tunnel_params`] after
+    /// a successful selection so [`get_last_location`] can surface the
+    /// country / city / centroid of the active exit on the connecting
+    /// + connected tunnel states. Without this, the WireGuard-only
+    /// `last_generated_relays` returns `None` for Warren tunnels and
+    /// the renderer falls back to the previous map coordinates
+    /// (typically the Gothenburg default), leaving the marker stuck on
+    /// the wrong continent.
+    last_warren_location: Option<GeoIpLocation>,
+    /// Live-reconfig channel: every push fans out to the
+    /// [`talpid_warren_tunnel`] controller task spawned at tunnel
+    /// start, which calls [`NatPmpManager::reconfigure`] (or
+    /// `release` + drop, or fresh spawn) without a tunnel reconnect.
+    ///
+    /// The sender is held here so [`set_warren_nat_pmp`] can fan a
+    /// new value out to every active tunnel. The receiver is cloned
+    /// into [`WarrenTunnelParameters::nat_pmp_control_rx`] by
+    /// [`produce_warren_tunnel_params`]; each tunnel that opts in
+    /// (always, for Warren mode) holds its own clone and reacts
+    /// independently.
+    ///
+    /// Initial value: `None` (no mapping). The daemon overrides this
+    /// when applying the persisted user setting at boot, which makes
+    /// the value visible to the controller task as soon as it
+    /// `borrow()`s the channel.
+    nat_pmp_control_tx:
+        tokio::sync::watch::Sender<Option<talpid_warren_tunnel::NatPmpConfig>>,
 }
 
 /// Update message produced by the Session A.4 verify hook and
@@ -270,6 +299,14 @@ impl ParametersGenerator {
             warren_pinned_exit_pubkeys:
                 mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
+            last_warren_location: None,
+            // Initial watch value `None` = NAT-PMP disabled. The
+            // daemon overrides via [`set_warren_nat_pmp`] when
+            // applying the persisted user setting at boot, before
+            // the first tunnel starts. `Sender::new` returns a
+            // sender whose receivers see the initial value
+            // immediately on subscription via `borrow()`.
+            nat_pmp_control_tx: tokio::sync::watch::Sender::new(None),
         })))
     }
 
@@ -358,15 +395,34 @@ impl ParametersGenerator {
         self.0.lock().await.warren_bypass_cidrs.clone()
     }
 
-    /// Sets the user's NAT-PMP preference. The next call to
-    /// [`Self::produce_warren_tunnel_params`] picks up the new value;
-    /// in-flight tunnels keep their current setting until the daemon
-    /// reconnects.
+    /// Sets the user's NAT-PMP preference.
     ///
-    /// Wired from the gRPC `SetNatPmpSettings` handler (consumer added
-    /// alongside `management_interface.rs::set_nat_pmp_settings`).
+    /// **Live reconfig** (M5.D.x): the value is also pushed onto an
+    /// internal `tokio::sync::watch` channel. Every active tunnel
+    /// holds a receiver clone via
+    /// [`WarrenTunnelParameters::nat_pmp_control_rx`]; the
+    /// controller task in `talpid-warren-tunnel` reacts by calling
+    /// [`NatPmpManager::reconfigure`] (or releasing + dropping the
+    /// manager on disable, or spawning a fresh one on enable). The
+    /// tunnel stays up the whole time — the user never sees a
+    /// connectivity blip when changing the protocol / preferred port
+    /// / toggle.
+    ///
+    /// The stored value (`warren_nat_pmp`) is still updated for the
+    /// next reconnect — required so a fresh `produce_warren_tunnel_params`
+    /// call picks the same value the live channel currently holds
+    /// (the two sources of truth stay coherent).
+    ///
+    /// Wired from `management_interface.rs::on_set_nat_pmp_settings`
+    /// after persisting the setting to `settings.json`.
     pub async fn set_warren_nat_pmp(&self, cfg: Option<NatPmpConfig>) {
-        self.0.lock().await.warren_nat_pmp = cfg;
+        let mut inner = self.0.lock().await;
+        inner.warren_nat_pmp = cfg.clone();
+        // `send` returns Err iff no receivers exist; that's fine —
+        // it just means no tunnel is currently up. The next
+        // tunnel start will pick up the value via
+        // `produce_warren_tunnel_params` → `Receiver::borrow()`.
+        let _ = inner.nat_pmp_control_tx.send(cfg);
     }
 
     /// Sets the user's DAITA v2 preference (M5.B.1). Mirrors Mullvad
@@ -568,7 +624,11 @@ impl ParametersGenerator {
                     if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
                         let _ = tx.send(WarrenPinUpdate::PinNewExit {
                             exit_id_hex,
-                            pubkey_hex: observed_pubkey_hex,
+                            // Clone so the surrounding scope can still
+                            // use the original strings to populate
+                            // `inner.last_warren_location` after the
+                            // pin-update fan-out completes.
+                            pubkey_hex: observed_pubkey_hex.clone(),
                             // Session H.6 + caveat C1: forensic
                             // context resolved above
                             // (`country_code` / `city` locals).
@@ -577,8 +637,8 @@ impl ParametersGenerator {
                             // resolves the descriptor's `exit_id`
                             // against the signed relay list so the
                             // pair maps to the operator-curated geo.
-                            country_code,
-                            city,
+                            country_code: country_code.clone(),
+                            city: city.clone(),
                             now_unix,
                         });
                     }
@@ -672,18 +732,66 @@ impl ParametersGenerator {
         // updates drive the gRPC `NatPmpStatusUpdates` stream the UI
         // subscribes to. If `params.nat_pmp` is `None` or disabled,
         // `talpid-warren-tunnel` short-circuits the manager spawn and
-        // this observer is never called.
-        if params.nat_pmp.as_ref().is_some_and(|cfg| cfg.enabled) {
+        // ALWAYS wire the observer + control receiver, regardless of
+        // the initial `cfg.enabled`. The live-reconfig controller
+        // task ([`run_nat_pmp_controller`] in talpid-warren-tunnel)
+        // needs both to be present at tunnel start so it can react
+        // to a later `set_warren_nat_pmp(Some(cfg)) where cfg.enabled
+        // == true` push without requiring a tunnel reconnect.
+        //
+        // Before M5.D.x we gated this on `cfg.enabled` — which meant
+        // that a user starting the tunnel with NAT-PMP off and then
+        // toggling it on saw NO controller spawned (observer was
+        // None → `spawn_nat_pmp_runtime` short-circuited → no
+        // refresh loop ever fired → UI stuck on "inactive,
+        // disconnect and reconnect"). Always-wired closes that gap.
+        {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
             let observer: NatPmpEventObserver = Arc::new(move |event| {
                 cache_for_nat_pmp.record_nat_pmp_event(event);
             });
-            // Surface the in-flight state up-front so the UI shows
-            // "Requesting" the moment the user toggles the feature on,
-            // even before the first request_map completes.
-            inner.warren_status_cache.set_nat_pmp_requesting();
             params.nat_pmp_observer = Some(observer);
         }
+        // Surface the in-flight `requesting` state up-front so the
+        // UI shows the right pending feedback the moment the user
+        // toggles the feature on (the manager spawn + the first
+        // request_map happen asynchronously after the watch push,
+        // so without this pre-set the UI briefly shows the stale
+        // `disabled` cache value).
+        if params.nat_pmp.as_ref().is_some_and(|cfg| cfg.enabled) {
+            inner.warren_status_cache.set_nat_pmp_requesting();
+        }
+        // Cache the selected exit's geo so `get_last_location` can
+        // surface it on the connecting / connected tunnel state. The
+        // legacy `last_generated_relays` path is WireGuard-only — on
+        // the Warren path nothing else populates the map marker
+        // location and the renderer would otherwise show the previous
+        // / default coordinates (Gothenburg). Reuse the
+        // `country_code`/`city` already resolved earlier in this
+        // function (which accounts for the multi-hop forensic
+        // resolution caveat C1) and pair them with the static
+        // centroid table — when the country code is unknown to the
+        // table the fallback `(0.0, 0.0)` cues an operator the
+        // table needs a new entry. `mullvad_exit_ip` mirrors the
+        // WireGuard path semantics (`true` = the connected endpoint
+        // *is* the exit, not a relay in between).
+        let (lat, lng) = country_centroid_for(&country_code);
+        inner.last_warren_location = Some(GeoIpLocation {
+            ipv4: None,
+            ipv6: None,
+            country: crate::warren_relay_list_view::country_display_name_pub(&country_code),
+            city: Some(city.clone()),
+            latitude: lat,
+            longitude: lng,
+            mullvad_exit_ip: true,
+            hostname: Some(format!("warren-{}", &observed_pubkey_hex[..16])),
+            entry_hostname: None,
+            obfuscator_hostname: None,
+        });
+        // M5.D.x live-reconfig wiring: hand a receiver clone to the
+        // tunnel so its controller task can react to subsequent
+        // `set_warren_nat_pmp` pushes without requiring a reconnect.
+        params.nat_pmp_control_rx = Some(inner.nat_pmp_control_tx.subscribe());
         Ok(params)
     }
 
@@ -736,34 +844,47 @@ impl ParametersGenerator {
         relays.server_override
     }
 
-    /// Gets the location associated with the last generated tunnel parameters.
+    /// Gets the location associated with the last generated tunnel
+    /// parameters. Tries the legacy WireGuard path
+    /// (`last_generated_relays`) first; falls back to the Warren-Iroh
+    /// path's [`InnerParametersGenerator::last_warren_location`]
+    /// cache when the daemon is in Warren mode. Returns `None` only
+    /// when neither path has produced parameters yet (typically the
+    /// disconnected state right after boot).
     pub async fn get_last_location(&self) -> Option<GeoIpLocation> {
         let inner = self.0.lock().await;
 
-        let relays = inner.last_generated_relays.as_ref()?;
+        // WireGuard path (Mullvad upstream behaviour, unchanged).
+        if let Some(relays) = inner.last_generated_relays.as_ref() {
+            let (entry, exit, obfuscator) = match &relays.config {
+                WireguardConfig::Singlehop { exit } => {
+                    (None, exit, relays.has_obfuscator.then_some(exit))
+                }
+                WireguardConfig::Multihop { exit, entry } => {
+                    (Some(entry), exit, relays.has_obfuscator.then_some(entry))
+                }
+            };
+            let location = exit.location.clone();
 
-        let (entry, exit, obfuscator) = match &relays.config {
-            WireguardConfig::Singlehop { exit } => {
-                (None, exit, relays.has_obfuscator.then_some(exit))
-            }
-            WireguardConfig::Multihop { exit, entry } => {
-                (Some(entry), exit, relays.has_obfuscator.then_some(entry))
-            }
-        };
-        let location = exit.location.clone();
+            return Some(GeoIpLocation {
+                ipv4: None,
+                ipv6: None,
+                country: location.country,
+                city: Some(location.city),
+                latitude: location.latitude,
+                longitude: location.longitude,
+                mullvad_exit_ip: true,
+                hostname: Some(exit.hostname.clone()),
+                entry_hostname: entry.map(|relay| relay.hostname.clone()),
+                obfuscator_hostname: obfuscator.map(|relay| relay.hostname.clone()),
+            });
+        }
 
-        Some(GeoIpLocation {
-            ipv4: None,
-            ipv6: None,
-            country: location.country,
-            city: Some(location.city),
-            latitude: location.latitude,
-            longitude: location.longitude,
-            mullvad_exit_ip: true,
-            hostname: Some(exit.hostname.clone()),
-            entry_hostname: entry.map(|relay| relay.hostname.clone()),
-            obfuscator_hostname: obfuscator.map(|relay| relay.hostname.clone()),
-        })
+        // Warren path: `produce_warren_tunnel_params` snapshots the
+        // selected exit's country / city / centroid into
+        // `last_warren_location`. Clone so the mutex guard can drop
+        // before the caller awaits anything downstream.
+        inner.last_warren_location.clone()
     }
 }
 

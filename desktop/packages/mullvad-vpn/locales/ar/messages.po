@@ -3885,3 +3885,55 @@ msgstr[3] "ستفقد %d أيام متبقية لك."
 msgstr[4] "ستفقد %d يومًا متبقيًا لك."
 msgstr[5] "ستفقد %d يوم متبق لك."
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "تلقائي"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "فشل التعيين: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "يفتح منفذًا عامًا على خادم الخروج المتصل ويعيد توجيهه إلى جهازك. مفيد لتطبيقات الند للند أو مشاركة الملفات أو الخدمات المستضافة ذاتيًا."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "إعادة توجيه المنافذ"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "يجب أن يكون المنفذ بين 49152 و65535، أو فارغًا للوضع التلقائي."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "المنفذ المفضل"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "البروتوكول"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "المنفذ العام: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "التجديد خلال %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "الحالة: نشط"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "الحالة: جارٍ طلب تعيين المنفذ…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "الحالة: في انتظار اتصال نفق نشط لإعداد تعيين المنفذ."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "قد يعيّن الخادم منفذًا مختلفًا إذا كان المنفذ المفضل مستخدمًا بالفعل. تُطبَّق التغييرات فورًا دون إعادة الاتصال."

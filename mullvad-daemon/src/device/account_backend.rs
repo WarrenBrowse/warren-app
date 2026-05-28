@@ -311,7 +311,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             let resp = client
                 .register_with_voucher(&req)
                 .await
-                .map_err(map_client_error)?;
+                .map_err(map_voucher_register_error)?;
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
             let now_secs = Utc::now().timestamp() as u64;
             let time_added = resp.expires_at.saturating_sub(now_secs);
@@ -320,6 +320,80 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 time_added,
             })
         })
+    }
+}
+
+/// Maps a warren-api-client error specifically for the voucher
+/// redemption path (`POST /v1/register`).
+///
+/// The downstream Mullvad legacy pipeline (`device::service::map_rest_error`
+/// → `device::Error::{InvalidVoucher,UsedVoucher}` → `Code::{NotFound,
+/// ResourceExhausted}` → frontend `'invalid'` / `'already_used'`) only
+/// recognises a handful of well-known error-code strings carried in the
+/// `rest::Error::ApiError(_, code)` second field (constants
+/// `mullvad_api::INVALID_VOUCHER`, `mullvad_api::VOUCHER_USED`, …).
+///
+/// The Warren backend instead returns structured `{"error": "<human
+/// message>"}` JSON bodies (see `warren_api::handlers::subscription::
+/// register`). The generic [`map_client_error`] flattens those into
+/// opaque `"warren-api <status>: <body>"` strings, which match none of
+/// the legacy codes and fall through to `OtherRestError` →
+/// `Code::InvalidArgument` → the frontend's generic "An error occurred"
+/// toast. Translating each known Warren body into the matching legacy
+/// code keeps the existing downstream layers (and the i18n strings
+/// already shipped) intact.
+///
+/// Substring matching (not strict equality) is intentional: the human
+/// messages in `warren-api` are part of an internal contract but are
+/// not versioned, so a future edit (`"voucher unknown or invalid" →
+/// "Voucher is invalid."`) should still route correctly. Should a
+/// rewrite ever break the substring, the fallback preserves the raw
+/// body in the error log for diagnostics — and the user gets the
+/// generic toast rather than a silent failure.
+fn map_voucher_register_error(err: warren_api_client::ClientError) -> rest::Error {
+    use warren_api_client::ClientError;
+    match err {
+        ClientError::ServerStatus { status, ref body } => {
+            let code = rest::StatusCode::from_u16(status)
+                .unwrap_or(rest::StatusCode::INTERNAL_SERVER_ERROR);
+            // Map to the legacy Mullvad code constants so
+            // `device::service::map_rest_error` picks the right
+            // `Error::InvalidVoucher` / `Error::UsedVoucher` variant.
+            let mullvad_code: Option<&'static str> = if body.contains("voucher unknown or invalid")
+                || body.contains("voucher was cancelled")
+            {
+                // Cancelled vouchers are surfaced as invalid: the
+                // user cannot meaningfully distinguish "wrong code"
+                // from "code revoked by the admin" and the recovery
+                // action (contact the admin for a fresh voucher)
+                // is the same.
+                Some(mullvad_api::INVALID_VOUCHER)
+            } else if body.contains("voucher already redeemed") {
+                Some(mullvad_api::VOUCHER_USED)
+            } else {
+                None
+            };
+            if let Some(code_str) = mullvad_code {
+                return rest::Error::ApiError(code, code_str.to_owned());
+            }
+            // "pubkey already registered" and any other 4xx fall
+            // through to the generic path: the user sees a generic
+            // error, and the operator gets the raw body in the
+            // daemon log to triage. "pubkey already registered"
+            // specifically should not normally happen here — it
+            // would mean `get_account_data` returned 404 for a
+            // pubkey that the server side still has on file, which
+            // is a server-state inconsistency worth investigating.
+            let msg = if body.is_empty() {
+                format!("warren-api {status}")
+            } else {
+                format!("warren-api {status}: {body}")
+            };
+            rest::Error::ApiError(code, msg)
+        }
+        // Transport / serde / clock -> infra down. Same convention
+        // as the generic `map_client_error`.
+        _ => rest::Error::Aborted,
     }
 }
 
@@ -615,6 +689,108 @@ mod tests {
                 assert_eq!(code.as_u16(), 404);
             }
             other => panic!("expected ApiError(404, _), got {other:?}"),
+        }
+    }
+
+    // ===================================================================
+    // Voucher error mapping — locks down the substring matching against
+    // the human-readable bodies emitted by
+    // `warren_api::handlers::subscription::register`. Should the upstream
+    // strings be edited, these tests fail loudly and prompt a sync of
+    // the substrings in `map_voucher_register_error`.
+    // ===================================================================
+
+    fn server_status(status: u16, body: &str) -> warren_api_client::ClientError {
+        warren_api_client::ClientError::ServerStatus {
+            status,
+            body: body.to_owned(),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_unknown_voucher_400_maps_invalid_voucher() {
+        let err = super::map_voucher_register_error(server_status(
+            400,
+            r#"{"error":"voucher unknown or invalid"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 400);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(400, INVALID_VOUCHER), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_cancelled_410_maps_invalid_voucher() {
+        // Cancelled vouchers are surfaced as invalid for the user
+        // (admin-side action, no recovery distinct from "wrong code").
+        let err = super::map_voucher_register_error(server_status(
+            410,
+            r#"{"error":"voucher was cancelled by the admin"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 410);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(410, INVALID_VOUCHER), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_already_redeemed_409_maps_voucher_used() {
+        let err = super::map_voucher_register_error(server_status(
+            409,
+            r#"{"error":"voucher already redeemed"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409);
+                assert_eq!(msg, mullvad_api::VOUCHER_USED);
+            }
+            other => panic!("expected ApiError(409, VOUCHER_USED), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_pubkey_already_registered_falls_through() {
+        // "pubkey already registered" is a server-state inconsistency
+        // that should be diagnosable in the daemon log — fall through
+        // to the opaque body to preserve the raw context.
+        let err = super::map_voucher_register_error(server_status(
+            409,
+            r#"{"error":"pubkey already registered"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409);
+                assert!(
+                    msg.contains("pubkey already registered"),
+                    "raw body must be preserved for diagnostics, got: {msg}"
+                );
+                // Critically, NOT mapped to a Mullvad legacy code:
+                // the user gets the generic toast and the operator
+                // gets the precise body in the log.
+                assert_ne!(msg, mullvad_api::INVALID_VOUCHER);
+                assert_ne!(msg, mullvad_api::VOUCHER_USED);
+            }
+            other => panic!("expected ApiError(409, raw body), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_bad_clock_maps_aborted() {
+        // Any non-`ServerStatus` warren-api-client error (transport,
+        // serde, system clock pre-epoch, …) is infra down — must
+        // map to `Aborted` to align with the convention of
+        // [`map_client_error`]. `BadClock` is a convenient no-arg
+        // variant for unit testing the catch-all arm.
+        let err = super::map_voucher_register_error(warren_api_client::ClientError::BadClock);
+        match err {
+            rest::Error::Aborted => {}
+            other => panic!("expected Aborted, got {other:?}"),
         }
     }
 }

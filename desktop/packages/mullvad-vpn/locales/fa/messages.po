@@ -3829,3 +3829,55 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "روز باقی‌مانده خود را از دست خواهید داد."
 msgstr[1] "%d روز باقی‌مانده خود را از دست خواهید داد."
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "خودکار"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "نگاشت ناموفق بود: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "یک درگاه عمومی روی سرور خروجی متصل باز می‌کند و آن را به دستگاه شما هدایت می‌کند. برای برنامه‌های همتا به همتا، اشتراک‌گذاری فایل یا سرویس‌های خودمیزبان مفید است."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "هدایت درگاه"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "درگاه باید بین 49152 و 65535 باشد، یا برای حالت خودکار خالی بماند."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "درگاه ترجیحی"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "پروتکل"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "درگاه عمومی: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "تمدید در %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "وضعیت: فعال"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "وضعیت: در حال درخواست نگاشت درگاه…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "وضعیت: در انتظار یک اتصال تونل فعال برای تنظیم نگاشت درگاه."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "اگر درگاه ترجیحی قبلاً اشغال شده باشد، سرور ممکن است درگاه دیگری اختصاص دهد. تغییرات بلافاصله و بدون نیاز به اتصال مجدد اعمال می‌شوند."

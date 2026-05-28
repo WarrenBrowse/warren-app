@@ -23,6 +23,7 @@ import {
   IDeviceRemoval,
   IDnsOptions,
   ILocation,
+  IRelayListCity,
   IRelayListWithEndpointData,
   ISettings,
   liftConstraint,
@@ -180,6 +181,9 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.listen((newSettings: ISettings) => {
       this.setSettings(newSettings);
       this.updateBlockedState(this.tunnelState);
+      // The selected relay may have changed; refresh the map marker so it
+      // tracks the new location even while disconnected.
+      this.updateLocation();
     });
 
     IpcRendererEventChannel.settings.listenApiAccessMethodSettingChange((setting) => {
@@ -201,6 +205,9 @@ export default class AppRenderer {
 
     IpcRendererEventChannel.relays.listen((relayListPair: IRelayListWithEndpointData) => {
       this.setRelayListPair(relayListPair);
+      // Relay list (with city coordinates) may have arrived after settings,
+      // so recompute the marker location now that centroids are available.
+      this.updateLocation();
     });
 
     IpcRendererEventChannel.daemon.listenTryStartEvent((status: DaemonStatus) => {
@@ -1132,6 +1139,12 @@ export default class AppRenderer {
       case 'disconnected':
         if (this.tunnelState.location) {
           this.setLocation(this.tunnelState.location);
+        } else {
+          // Warren has no GeoIP service to report the user's real location
+          // while disconnected (unlike upstream Mullvad), so fall back to the
+          // selected relay location. This lets the map show a marker at the
+          // chosen country immediately, without waiting for a connection.
+          this.setLocation(this.getLocationFromConstraints());
         }
         break;
       case 'disconnecting':
@@ -1165,6 +1178,12 @@ export default class AppRenderer {
       latitude: state.connection.latitude,
     };
 
+    // Prefer the relay list city centroid (populated by the daemon) over
+    // the stale redux coordinates so the map can place a marker at the
+    // selected location even before any tunnel state reports one.
+    const cityCoordinates = (city?: IRelayListCity) =>
+      city ? { latitude: city.latitude, longitude: city.longitude } : coordinates;
+
     const relaySettings = this.settings.relaySettings;
     if ('normal' in relaySettings) {
       const location = relaySettings.normal.location;
@@ -1193,17 +1212,20 @@ export default class AppRenderer {
             city: city?.name,
             hostname: constraint.hostname,
             entryHostname,
-            ...coordinates,
+            ...cityCoordinates(city),
           };
         } else if ('city' in constraint) {
           const country = relayLocations.find(({ code }) => constraint.country === code);
           const city = country?.cities.find(({ code }) => constraint.city === code);
 
-          return { country: country?.name, city: city?.name, ...coordinates };
+          return { country: country?.name, city: city?.name, ...cityCoordinates(city) };
         } else if ('country' in constraint) {
           const country = relayLocations.find(({ code }) => constraint.country === code);
+          // Warren currently maps one city (the country centroid) per
+          // country, so the first city's coordinates locate the country.
+          const firstCity = country?.cities[0];
 
-          return { country: country?.name, ...coordinates };
+          return { country: country?.name, ...cityCoordinates(firstCity) };
         }
       }
     }

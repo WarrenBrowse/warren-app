@@ -183,6 +183,29 @@ pub struct WarrenTunnelParameters {
     /// `NatPmpStatusUpdates` gRPC stream the Electron UI subscribes to.
     pub nat_pmp_observer: Option<NatPmpEventObserver>,
 
+    /// Live-reconfig watch channel: every time the user toggles or
+    /// edits a NAT-PMP setting in the Electron UI, the daemon pushes
+    /// the new `Option<NatPmpConfig>` onto this watch. The tunnel
+    /// monitor task listens on the receiver and applies the change
+    /// without requiring the tunnel to reconnect:
+    ///
+    /// - `Some(cfg)` when previously `None` → spawn a fresh
+    ///   `NatPmpManager`.
+    /// - `Some(cfg)` when previously `Some(other)` → call
+    ///   [`NatPmpManager::reconfigure`] to release the old mapping
+    ///   and allocate a new one with `cfg`.
+    /// - `None` when previously `Some(_)` → release the mapping and
+    ///   drop the manager.
+    ///
+    /// `None` here = the daemon did not wire live reconfig (typical
+    /// in tests or in builds that pre-date the feature); the monitor
+    /// task falls back to the original "params at tunnel start"
+    /// behaviour. New code SHOULD always wire this channel — otherwise
+    /// the user has to reconnect the tunnel to apply changes, which
+    /// is the bug we're fixing.
+    pub nat_pmp_control_rx:
+        Option<tokio::sync::watch::Receiver<Option<NatPmpConfig>>>,
+
     /// IPv4 CIDRs that should bypass the tunnel and remain reachable
     /// via the host's main routing table (LAN, private ranges, inbound
     /// SSH on a management interface, ...). Each entry becomes an
@@ -229,6 +252,10 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             .field(
                 "nat_pmp_observer",
                 &self.nat_pmp_observer.as_ref().map(|_| "<observer>"),
+            )
+            .field(
+                "nat_pmp_control_rx",
+                &self.nat_pmp_control_rx.as_ref().map(|_| "<watch-rx>"),
             )
             .field("bypass_cidrs", &self.bypass_cidrs)
             .field("enable_daita", &self.enable_daita)
@@ -443,9 +470,26 @@ pub struct WarrenTunnelMonitor {
     /// Lifecycle owner of the NAT-PMP refresh loop + event forwarder
     /// spawned after the tunnel is up. `None` when port-forwarding is
     /// disabled in the user settings (`params.nat_pmp.is_none()` OR
-    /// `params.nat_pmp_observer.is_none()`). Dropping the field
-    /// cancels the loop and aborts the forwarder.
+    /// `params.nat_pmp_observer.is_none()`) AND no live-reconfig
+    /// control channel was provided. Dropping the field cancels the
+    /// loop and aborts the forwarder.
+    ///
+    /// Mutually exclusive with [`nat_pmp_controller`]: the legacy path
+    /// owns the manager directly here; the live-reconfig path moves
+    /// ownership into a controller task.
     nat_pmp_manager: Option<NatPmpManager>,
+
+    /// Live-reconfig controller task. Owns its own `NatPmpManager`
+    /// internally and reacts to settings changes pushed via the
+    /// daemon-side watch channel by calling
+    /// [`NatPmpManager::reconfigure`] (live-swap, no tunnel
+    /// reconnect). `Some` iff [`WarrenTunnelParameters::nat_pmp_control_rx`]
+    /// was wired at tunnel start.
+    ///
+    /// Cancelling the task aborts the watch loop; the controller
+    /// drops its owned manager on exit, which calls `cancel()` via
+    /// the manager's `Drop` impl.
+    nat_pmp_controller: Option<tokio::task::JoinHandle<()>>,
 }
 
 /// Backend-specific task ownership.
@@ -974,11 +1018,14 @@ impl WarrenTunnelMonitor {
 
         let _ = metadata; // kept for future MTU-change re-emission
 
-        // Spawn the NAT-PMP refresh loop once the data plane is up.
-        // The exit's NAT-PMP server lives on the tunnel gateway
-        // (10.66.0.1:5351); routing was installed at T7 so the UDP
-        // datagrams now flow through the TUN.
-        let nat_pmp_manager = spawn_nat_pmp_manager_if_enabled(&runtime, params);
+        // Spawn the NAT-PMP runtime once the data plane is up. Picks
+        // the legacy "manager owned by monitor" path or the
+        // live-reconfig "manager owned by controller task" path based
+        // on whether `params.nat_pmp_control_rx` was wired.
+        let NatPmpRuntimeArtifacts {
+            manager: nat_pmp_manager,
+            controller: nat_pmp_controller,
+        } = spawn_nat_pmp_runtime(&runtime, params);
 
         Ok(Self {
             runtime,
@@ -990,6 +1037,7 @@ impl WarrenTunnelMonitor {
             close_rx: args.tunnel_close_rx,
             default_route_guard,
             nat_pmp_manager,
+            nat_pmp_controller,
         })
     }
 
@@ -1356,11 +1404,14 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
 
-        // Spawn the NAT-PMP refresh loop once the data plane is up.
-        // The exit-side NAT-PMP server is reachable via the tunnel
+        // Spawn the NAT-PMP runtime once the data plane is up. The
+        // exit-side NAT-PMP server is reachable via the tunnel
         // gateway (10.66.0.1:5351). On multi-hop the routing identity
         // of the gateway is the exit's TUN IP, same as single-hop.
-        let nat_pmp_manager = spawn_nat_pmp_manager_if_enabled(&runtime, params);
+        let NatPmpRuntimeArtifacts {
+            manager: nat_pmp_manager,
+            controller: nat_pmp_controller,
+        } = spawn_nat_pmp_runtime(&runtime, params);
 
         Ok(Self {
             runtime,
@@ -1374,6 +1425,7 @@ impl WarrenTunnelMonitor {
             close_rx: args.tunnel_close_rx,
             default_route_guard,
             nat_pmp_manager,
+            nat_pmp_controller,
         })
     }
 
@@ -1400,15 +1452,26 @@ impl WarrenTunnelMonitor {
             close_rx,
             default_route_guard,
             nat_pmp_manager,
+            nat_pmp_controller,
         } = self;
 
-        // Drop the NAT-PMP manager first so its refresh loop stops
-        // emitting events while the rest of the tunnel teardown
-        // proceeds. The forwarder task is aborted via the manager's
-        // Drop impl; pending events still in flight are discarded
-        // (the observer side gets at most one extra Cancelled event,
-        // which the daemon-side WarrenStatusCache handles gracefully).
-        drop(nat_pmp_manager);
+        // IMPORTANT: do NOT tear down the NAT-PMP runtime here. `wait()`
+        // is called immediately after `start()` and BLOCKS for the
+        // ENTIRE tunnel lifetime on the `block_on` below; this prologue
+        // runs at the START of the tunnel's life, not the end.
+        //
+        // An earlier version dropped `nat_pmp_manager` + aborted
+        // `nat_pmp_controller` right here, which killed the refresh
+        // loop / controller microseconds after they were spawned —
+        // the controller's body never even got polled (M5.D.x bug:
+        // "Status: requesting forever"; the legacy manager had the
+        // same latent issue, surviving only the transient window
+        // between `start()` and `wait()`, which is why the exit
+        // sometimes showed a short-lived orphan allocation).
+        //
+        // We instead keep both bound in this stack frame and tear
+        // them down AFTER the `block_on` returns (tunnel actually
+        // closing) — see the teardown block further down.
 
         // Split the backend into its oneshot receiver (raced against
         // `close_rx` below) and its owned task handles (aborted after
@@ -1480,6 +1543,25 @@ impl WarrenTunnelMonitor {
             event_hook.on_event(TunnelEvent::Down).await;
             outcome
         });
+
+        // ── NAT-PMP teardown (the tunnel is now closing) ──────────
+        // Now that the `block_on` returned (external close or pump
+        // exit), tear down the NAT-PMP runtime before the routes so
+        // its refresh loop stops emitting while the rest of teardown
+        // proceeds.
+        //
+        // - Legacy (`nat_pmp_manager`): drop → its `Drop` impl
+        //   cancels the refresh loop + aborts the forwarder.
+        // - Live-reconfig (`nat_pmp_controller`): abort the
+        //   controller task; it drops its owned manager on the way
+        //   out (manager `Drop` fires). The daemon's watch sender
+        //   will then see its receiver gone on the next push, which
+        //   `on_set_nat_pmp_settings` treats as a no-op (tunnel
+        //   dying — nothing to apply).
+        drop(nat_pmp_manager);
+        if let Some(h) = nat_pmp_controller {
+            h.abort();
+        }
 
         // Uninstall the split-default policy routing before aborting
         // the pump, mirroring the install order. Best-effort: log a
@@ -1563,14 +1645,220 @@ impl SessionKind {
     }
 }
 
-/// Spawns a [`NatPmpManager`] if NAT-PMP is enabled in the supplied
-/// parameters AND an observer is wired. Returns `None` in every other
-/// case so the manager is never spawned with a no-op observer.
+/// Result type for [`spawn_nat_pmp_runtime`]: either the legacy
+/// owned-manager path (when no live-reconfig control channel was
+/// wired) or the controller-task path (when the daemon plugged in a
+/// watch channel for live reconfig). The two are mutually exclusive
+/// and the monitor stores them in distinct fields so the wait/drop
+/// teardown can disambiguate.
+struct NatPmpRuntimeArtifacts {
+    manager: Option<NatPmpManager>,
+    controller: Option<tokio::task::JoinHandle<()>>,
+}
+
+/// Dispatcher between the legacy "manager owned by monitor" path and
+/// the live-reconfig "manager owned by controller task" path. Picks
+/// the right one based on whether [`WarrenTunnelParameters::nat_pmp_control_rx`]
+/// was wired:
 ///
-/// The server address defaults to the tunnel gateway:5351
-/// (`warren_natpmp_client::default_server_addr()`); routing for the
-/// gateway is set up by the time this helper is called (just after
-/// the bidirectional pump is spawned).
+/// - `nat_pmp_control_rx == None` → spawn the manager directly,
+///   return it owned by the monitor. Settings changes will NOT
+///   propagate until the tunnel reconnects (legacy behaviour).
+/// - `nat_pmp_control_rx == Some(rx)` → spawn a controller task
+///   that owns the manager and listens on `rx`. Each push on `rx`
+///   triggers a live `reconfigure` (or `cancel` + drop on `None`,
+///   or a fresh spawn on `Some(_)` when starting from a disabled
+///   state).
+fn spawn_nat_pmp_runtime(
+    runtime: &tokio::runtime::Handle,
+    params: &WarrenTunnelParameters,
+) -> NatPmpRuntimeArtifacts {
+    // Diagnostic (M5.D.x): trace which of the three NAT-PMP inputs is
+    // present at tunnel start so a "nothing happens on toggle" report
+    // can be triaged from the logs alone.
+    log::info!(
+        "Warren NAT-PMP: spawn_nat_pmp_runtime observer={} control_rx={} nat_pmp_enabled={}",
+        params.nat_pmp_observer.is_some(),
+        params.nat_pmp_control_rx.is_some(),
+        params.nat_pmp.as_ref().is_some_and(|c| c.enabled),
+    );
+    // The observer must be present in both paths — the daemon-side
+    // wiring guarantees this whenever NAT-PMP is opted-in. Without an
+    // observer the manager would emit events into a void, which is
+    // never useful.
+    let observer = match params.nat_pmp_observer.clone() {
+        Some(o) => o,
+        None => {
+            // Mirror the original short-circuit log so the operator
+            // can correlate config issues without grepping for two
+            // distinct messages.
+            if params.nat_pmp.as_ref().is_some_and(|c| c.enabled) {
+                log::warn!(
+                    "Warren NAT-PMP: config enabled but no observer wired; manager spawn suppressed"
+                );
+            }
+            return NatPmpRuntimeArtifacts {
+                manager: None,
+                controller: None,
+            };
+        }
+    };
+    let server = warren_natpmp_client::default_server_addr();
+    let bind_addr = None;
+
+    // Legacy path: no live-reconfig control channel. Spawn the manager
+    // directly and let the monitor own it.
+    let Some(control_rx) = params.nat_pmp_control_rx.clone() else {
+        let cfg = params.nat_pmp.as_ref().filter(|c| c.enabled);
+        let manager = cfg.map(|c| {
+            log::info!("Warren NAT-PMP: starting refresh loop against {server}");
+            NatPmpManager::start_from_addr(runtime, server, c, observer.clone(), bind_addr)
+        });
+        return NatPmpRuntimeArtifacts {
+            manager,
+            controller: None,
+        };
+    };
+
+    // Live-reconfig path: spawn a controller task that owns the
+    // manager. The controller reads the initial config from the
+    // watch channel's current value, then loops on `changed()` to
+    // apply subsequent edits via `reconfigure`.
+    let initial = params.nat_pmp.clone();
+    let runtime_clone = runtime.clone();
+    log::info!("Warren NAT-PMP: spawning controller task (live-reconfig path)");
+    let controller = runtime.spawn(async move {
+        log::info!("Warren NAT-PMP: controller task body entered");
+        run_nat_pmp_controller(
+            runtime_clone,
+            server,
+            bind_addr,
+            observer,
+            initial,
+            control_rx,
+        )
+        .await;
+        log::info!("Warren NAT-PMP: controller task body exited");
+    });
+    log::info!("Warren NAT-PMP: controller spawn returned a handle");
+    NatPmpRuntimeArtifacts {
+        manager: None,
+        controller: Some(controller),
+    }
+}
+
+/// Controller task body: owns the [`NatPmpManager`] across its
+/// lifetime and applies live-reconfig commands streaming in on the
+/// watch channel.
+///
+/// The watch channel semantics matter here. tokio's `watch::Receiver`
+/// has a "current value" that's always present; `changed().await`
+/// fires on the FIRST mutation after subscription. The daemon writes
+/// the initial config to the watch BEFORE spawning the tunnel, so
+/// when we land here we synthesize the initial state from
+/// `initial_config` (= `params.nat_pmp.clone()` at spawn time) — we
+/// don't re-read the watch's current value to avoid a TOCTOU with
+/// the daemon's pre-tunnel push.
+///
+/// On loop exit (watch sender dropped) we drop the manager: its
+/// `Drop` impl handles the refresh-loop cancel + forwarder abort.
+async fn run_nat_pmp_controller(
+    runtime: tokio::runtime::Handle,
+    server: std::net::SocketAddr,
+    bind_addr: Option<std::net::IpAddr>,
+    observer: NatPmpEventObserver,
+    initial_config: Option<NatPmpConfig>,
+    mut control_rx: tokio::sync::watch::Receiver<Option<NatPmpConfig>>,
+) {
+    log::info!(
+        "Warren NAT-PMP controller: task started (initial_enabled={})",
+        initial_config.as_ref().is_some_and(|c| c.enabled)
+    );
+    // Spawn initial manager if config asks for it.
+    let mut manager: Option<NatPmpManager> = initial_config
+        .as_ref()
+        .filter(|c| c.enabled)
+        .map(|c| {
+            log::info!("Warren NAT-PMP controller: initial refresh loop against {server}");
+            NatPmpManager::start_from_addr(&runtime, server, c, observer.clone(), bind_addr)
+        });
+
+    while control_rx.changed().await.is_ok() {
+        // Borrow then clone immediately so we hold the watch's
+        // internal read lock for the minimal possible duration.
+        let new_cfg_opt: Option<NatPmpConfig> = control_rx.borrow().clone();
+        log::info!(
+            "Warren NAT-PMP controller: change observed (wanted_enabled={})",
+            new_cfg_opt.as_ref().is_some_and(|c| c.enabled)
+        );
+
+        // Normalise the "new wanted state" into a single
+        // `Option<NatPmpConfig>` where `Some` ⇔ enabled. The wire
+        // representation carries an explicit `enabled: false` value
+        // (the daemon may push `Some(cfg) { enabled: false }`) and a
+        // plain `None`; we treat them identically here.
+        let new_wanted: Option<NatPmpConfig> =
+            new_cfg_opt.filter(|c| c.enabled);
+
+        match (manager.is_some(), new_wanted) {
+            (true, Some(new_cfg)) => {
+                // Live reconfigure (toggle still on, params changed).
+                log::info!("Warren NAT-PMP controller: live reconfigure");
+                manager
+                    .as_mut()
+                    .expect("matched true above")
+                    .reconfigure(&new_cfg)
+                    .await;
+            }
+            (true, None) => {
+                // Disable (toggle off, or new cfg is None).
+                log::info!(
+                    "Warren NAT-PMP controller: disabling — releasing mapping"
+                );
+                if let Some(mut m) = manager.take() {
+                    m.release().await;
+                }
+            }
+            (false, Some(new_cfg)) => {
+                // First enable (no manager yet, new cfg asks for one).
+                log::info!(
+                    "Warren NAT-PMP controller: enabling — spawning fresh refresh loop against {server}"
+                );
+                manager = Some(NatPmpManager::start_from_addr(
+                    &runtime,
+                    server,
+                    &new_cfg,
+                    observer.clone(),
+                    bind_addr,
+                ));
+            }
+            (false, None) => {
+                // No-op: the daemon may have written `None` while we
+                // were already in `None` state.
+            }
+        }
+    }
+
+    // Watch sender dropped → daemon teardown. The manager (if any)
+    // drops here, which fires its `Drop` impl. The Drop cancels the
+    // refresh loop but does NOT send a lifetime=0 release — that's
+    // fine because the exit will GC the mapping at its lease expiry
+    // (~1 h) and the tunnel is dying anyway.
+    if manager.is_some() {
+        log::info!("Warren NAT-PMP controller: shutdown — dropping manager");
+    }
+    drop(manager);
+}
+
+/// Legacy "spawn manager only, no controller" helper. Both monitor
+/// construction sites now call [`spawn_nat_pmp_runtime`] (which
+/// dispatches between the legacy and live-reconfig paths), so this
+/// remains in-tree only as a reference implementation + diff anchor
+/// for upstream rebase reviewers — the original Mullvad NAT-PMP
+/// wiring was a single function returning `Option<NatPmpManager>`,
+/// and keeping that shape callable here helps a maintainer compare
+/// the two paths side-by-side.
+#[allow(dead_code)]
 fn spawn_nat_pmp_manager_if_enabled(
     runtime: &tokio::runtime::Handle,
     params: &WarrenTunnelParameters,
@@ -2030,6 +2318,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            nat_pmp_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
         };
@@ -2063,6 +2352,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            nat_pmp_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
         };
@@ -2119,6 +2409,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
+            nat_pmp_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
         };
@@ -2164,6 +2455,7 @@ mod tests {
             on_reconnect: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
+            nat_pmp_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
         };
@@ -2783,5 +3075,187 @@ mod tests {
             ),
             Err(e) => eprintln!("skip detect_default_local_ip (no-network CI?): {e}"),
         }
+    }
+
+    // ===================================================================
+    // M5.D.x live-reconfig controller tests. Reproduces the exact user
+    // scenario: tunnel connected with NAT-PMP OFF, then the user
+    // toggles it ON via the watch channel. The controller must spawn a
+    // manager and the observer must see a Mapped event — all without a
+    // tunnel reconnect.
+    // ===================================================================
+    use std::sync::Arc;
+    use std::sync::Mutex as StdMutex;
+    use std::time::Duration;
+    use tokio::net::UdpSocket;
+    use warren_natpmp_protocol::{
+        MapProto, Response as NatPmpResponse, ResultCode, parse_request, serialize_response,
+    };
+
+    /// UDP stub that echoes a Success Map response with the requested
+    /// lifetime baked into the external port (`49000 + lifetime`), so a
+    /// test can correlate which config produced which mapping. A
+    /// `lifetime == 0` (release) gets a Success(0) reply so the
+    /// client's release future completes promptly.
+    async fn spawn_lifetime_echo_stub() -> std::net::SocketAddr {
+        let sock = UdpSocket::bind("127.0.0.1:0").await.expect("bind");
+        let addr = sock.local_addr().expect("addr");
+        tokio::spawn(async move {
+            let mut buf = [0u8; 64];
+            loop {
+                let (n, peer) = match sock.recv_from(&mut buf).await {
+                    Ok(v) => v,
+                    Err(_) => return,
+                };
+                let lifetime = match parse_request(&buf[..n]) {
+                    Ok(warren_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
+                    _ => continue,
+                };
+                let external_port = if lifetime == 0 {
+                    0
+                } else {
+                    49000u16.saturating_add(lifetime as u16)
+                };
+                let resp = serialize_response(&NatPmpResponse::Map {
+                    proto: MapProto::Udp,
+                    result_code: ResultCode::Success,
+                    epoch_secs: 0,
+                    internal_port: 22,
+                    external_port,
+                    lifetime_secs: lifetime,
+                });
+                let _ = sock.send_to(&resp, peer).await;
+            }
+        });
+        addr
+    }
+
+    fn collector_observer() -> (NatPmpEventObserver, Arc<StdMutex<Vec<NatPmpEvent>>>) {
+        let log: Arc<StdMutex<Vec<NatPmpEvent>>> = Arc::new(StdMutex::new(Vec::new()));
+        let log_for_obs = log.clone();
+        let observer: NatPmpEventObserver = Arc::new(move |evt| {
+            log_for_obs.lock().expect("observer lock").push(evt);
+        });
+        (observer, log)
+    }
+
+    fn natpmp_cfg(lifetime_secs: u32) -> NatPmpConfig {
+        NatPmpConfig {
+            enabled: true,
+            lifetime_secs,
+            protocol: MapProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 22,
+        }
+    }
+
+    #[tokio::test]
+    async fn controller_enables_mapping_on_watch_push_from_disabled_start() {
+        // THE bug reproduction: controller starts with initial=None
+        // (tunnel connected, NAT-PMP off), then a `Some(enabled)` push
+        // arrives on the watch (user toggles on). The controller MUST
+        // spawn a manager → observer sees a Mapped event. No reconnect.
+        let server = spawn_lifetime_echo_stub().await;
+        let (observer, log) = collector_observer();
+        let (tx, rx) = tokio::sync::watch::channel::<Option<NatPmpConfig>>(None);
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            None, // initial: NAT-PMP off at tunnel start
+            rx,
+        ));
+
+        // Give the controller a moment to reach `changed().await`.
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        // No mapping yet (toggle still off).
+        assert!(
+            log.lock().unwrap().is_empty(),
+            "no events expected before the toggle"
+        );
+
+        // User toggles ON.
+        tx.send(Some(natpmp_cfg(60))).expect("watch send");
+
+        // Controller should spawn the manager → Mapped(port 49060).
+        for _ in 0..100 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        let snapshot = log.lock().unwrap().clone();
+        assert!(
+            snapshot
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. })),
+            "controller must spawn a mapping on the enable push; events: {snapshot:?}"
+        );
+
+        handle.abort();
+    }
+
+    #[tokio::test]
+    async fn controller_live_reconfigures_on_second_push() {
+        // After an initial enable, a second push with different params
+        // must live-reconfigure (new port observed), no reconnect.
+        let server = spawn_lifetime_echo_stub().await;
+        let (observer, log) = collector_observer();
+        // Start already-enabled (lifetime 60 → port 49060).
+        let (tx, rx) = tokio::sync::watch::channel::<Option<NatPmpConfig>>(Some(natpmp_cfg(60)));
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(natpmp_cfg(60)),
+            rx,
+        ));
+
+        // Wait for the initial Mapped(49060).
+        for _ in 0..100 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+
+        // Reconfigure to lifetime 90 → expect Mapped(49090).
+        tx.send(Some(natpmp_cfg(90))).expect("watch send");
+        for _ in 0..100 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        let snapshot = log.lock().unwrap().clone();
+        assert!(
+            snapshot
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. })),
+            "controller must live-reconfigure on the second push; events: {snapshot:?}"
+        );
+
+        handle.abort();
     }
 }

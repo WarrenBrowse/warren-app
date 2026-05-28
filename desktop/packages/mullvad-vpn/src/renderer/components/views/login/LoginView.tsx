@@ -262,6 +262,17 @@ class Login extends React.Component<IProps, IState> {
         return messages.gettext('Failed to fetch list of devices');
       case 'communication':
         return 'api.warrenvpn.com is blocked, please check your firewall';
+      case 'no-subscription':
+        // The login flow itself does not surface this variant
+        // today (it originates from `get_account_data` 404, which
+        // is handled by the account-data cache as an expired
+        // state). Kept here for exhaustiveness in case a future
+        // login path starts to differentiate it; the navigation
+        // logic will route the user to the "buy plan" screen
+        // before this string is rendered in practice.
+        // TRANSLATORS: Error message shown when the account exists but has
+        // TRANSLATORS: no active subscription yet.
+        return messages.pgettext('login-view', 'No active subscription');
       default:
         return messages.pgettext('login-view', 'Unknown error');
     }

@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "mai"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatico"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Mappatura non riuscita: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Apre una porta pubblica sul server di uscita connesso e la inoltra al tuo dispositivo. Utile per applicazioni peer-to-peer, condivisione di file o servizi self-hosted."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Inoltro delle porte"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "La porta deve essere compresa tra 49152 e 65535, oppure vuota per automatica."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Porta preferita"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protocollo"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Porta pubblica: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Rinnovo tra %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Stato: attivo"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Stato: richiesta della mappatura della porta in corso…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Stato: in attesa di una connessione tunnel attiva per configurare la mappatura della porta."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Il server può assegnare una porta diversa se quella preferita è già occupata. Le modifiche vengono applicate immediatamente, senza riconnessione."

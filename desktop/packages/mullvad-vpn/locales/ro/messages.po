@@ -2173,8 +2173,8 @@ msgid "Requesting port mapping..."
 msgstr "Se solicită redirecționarea porturilor..."
 
 msgctxt "port-forwarding-view"
-msgid "Warren restores port-forwarding: a unique differentiator since Mullvad and IVPN removed this feature in 2023. Toggle below to ask the exit for a public port mapped to your device."
-msgstr "Warren reintroduce redirecționarea porturilor: un element distinctiv unic, având în vedere că Mullvad și IVPN au eliminat această funcție în 2023. Activați opțiunea de mai jos pentru a solicita serverului de ieșire un port public asociat dispozitivului dvs."
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Deschide un port public pe serverul de ieșire conectat și îl redirecționează către dispozitivul dvs. Util pentru aplicații peer-to-peer, partajare de fișiere sau servicii găzduite local."
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -3454,3 +3454,35 @@ msgstr "Intervale valide: %(portRanges)s"
 msgctxt "wireguard-settings-view"
 msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
 msgstr "La ce port TCP trebuie să se conecteze protocolul de ofuscare UDP-over-TCP pe serverul VPN."
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automat"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Portul trebuie să fie între 49152 și 65535 sau gol pentru automat."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Port preferat"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protocol"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Stare: activ"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Stare: se solicită maparea portului…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Stare: se așteaptă o conexiune de tunel activă pentru a configura maparea portului."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Serverul poate atribui un alt port dacă cel preferat este deja ocupat. Modificările se aplică imediat, fără reconectare."

@@ -3497,17 +3497,25 @@ impl Daemon {
         if let Err(ref e) = result {
             log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
         } else {
-            // Push the live value to the parameters generator so the
-            // next tunnel reconnect spawns (or stops) the NAT-PMP
-            // manager according to the new setting.
+            // Push the live value to the parameters generator. M5.D.x:
+            // the generator now fans the value to every active tunnel
+            // via a watch channel, and the in-tunnel controller task
+            // calls `NatPmpManager::reconfigure` (or release+drop, or
+            // fresh spawn) — no tunnel reconnect required to apply
+            // the change.
             let nat_pmp_cfg = nat_pmp_settings_to_runtime_cfg(&new_value_for_gen);
             self.parameters_generator
                 .set_warren_nat_pmp(nat_pmp_cfg)
                 .await;
-            if !new_value_for_gen.enabled {
-                // Disable -> snap the live status to Disabled so the UI
-                // hides the port-forwarding row immediately, without
-                // waiting for a tunnel reconnect.
+            // Pre-set the live cache so the UI reflects the pending
+            // transition the moment the user clicks: `Requesting` on
+            // toggle-on (the manager spawn + first request_map fire
+            // async after the watch push), `Disabled` on toggle-off.
+            // The eventual `Mapped` / `Failed` event from the manager
+            // (when on) overrides this pre-set value.
+            if new_value_for_gen.enabled {
+                self.warren_status_cache.set_nat_pmp_requesting();
+            } else {
                 self.warren_status_cache.set_nat_pmp_disabled();
             }
             log::info!("Warren NAT-PMP persisted + pushed live: {display_value}");

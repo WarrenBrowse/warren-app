@@ -3815,3 +3815,55 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "残りの%d日分が失われます。"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "マッピングに失敗しました: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "接続中の出口サーバーで公開ポートを開き、お使いのデバイスに転送します。ピアツーピアアプリ、ファイル共有、セルフホストサービスに便利です。"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "ポート転送"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "ポートは 49152～65535 の範囲で指定するか、自動の場合は空にしてください。"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "優先ポート"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "プロトコル"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "公開ポート: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s 後に更新"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "ステータス: 有効"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "ステータス: ポートマッピングを要求中…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "ステータス: ポートマッピングを設定するためにアクティブなトンネル接続を待機中。"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "優先ポートがすでに使用されている場合、サーバーは別のポートを割り当てることがあります。変更は再接続なしで直ちに適用されます。"

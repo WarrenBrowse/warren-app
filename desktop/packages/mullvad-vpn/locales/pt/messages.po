@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "nunca"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automático"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Falha no mapeamento: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Abre uma porta pública no servidor de saída conectado e a encaminha para o seu dispositivo. Útil para aplicações ponto a ponto, partilha de ficheiros ou serviços auto-hospedados."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Encaminhamento de portas"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "A porta deve estar entre 49152 e 65535, ou vazia para automático."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Porta preferida"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protocolo"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Porta pública: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Renovação em %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Estado: ativo"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Estado: a solicitar o mapeamento da porta…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Estado: a aguardar uma ligação de túnel ativa para configurar o mapeamento da porta."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "O servidor pode atribuir uma porta diferente se a preferida já estiver ocupada. As alterações aplicam-se imediatamente, sem necessidade de reconexão."

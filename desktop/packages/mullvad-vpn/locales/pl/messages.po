@@ -4130,3 +4130,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "nigdy"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatyczny"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Mapowanie nie powiodło się: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Otwiera publiczny port na połączonym serwerze wyjściowym i przekierowuje go do Twojego urządzenia. Przydatne w aplikacjach peer-to-peer, udostępnianiu plików lub usługach hostowanych samodzielnie."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Przekierowanie portów"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Port musi mieścić się w zakresie od 49152 do 65535 lub być pusty dla trybu automatycznego."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Preferowany port"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokół"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Port publiczny: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Odnowienie za %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Stan: aktywny"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Stan: żądanie mapowania portu…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Stan: oczekiwanie na aktywne połączenie tunelowe w celu skonfigurowania mapowania portu."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Serwer może przypisać inny port, jeśli preferowany jest już zajęty. Zmiany są stosowane natychmiast, bez ponownego łączenia."

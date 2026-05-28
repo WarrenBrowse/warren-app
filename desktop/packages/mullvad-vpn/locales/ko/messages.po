@@ -3815,3 +3815,55 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "남은 %d일이 상실됩니다."
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "자동"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "매핑 실패: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "연결된 출구 서버에서 공용 포트를 열고 사용자 기기로 전달합니다. P2P 애플리케이션, 파일 공유 또는 자체 호스팅 서비스에 유용합니다."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "포트 포워딩"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "포트는 49152에서 65535 사이여야 하며, 자동을 사용하려면 비워 두세요."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "선호 포트"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "프로토콜"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "공용 포트: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s 후 갱신"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "상태: 활성"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "상태: 포트 매핑 요청 중…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "상태: 포트 매핑을 설정하기 위해 활성 터널 연결을 기다리는 중."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "선호하는 포트가 이미 사용 중인 경우 서버가 다른 포트를 할당할 수 있습니다. 변경 사항은 재연결 없이 즉시 적용됩니다."

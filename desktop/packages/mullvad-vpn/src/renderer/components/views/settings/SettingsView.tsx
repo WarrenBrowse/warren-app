@@ -11,7 +11,7 @@ import {
   AppInfoListItem,
   DaitaListItem,
   DebugListItem,
-  MultihopListItem,
+  PortForwardingListItem,
   QuitButton,
   ReplayOnboardingListItem,
   SplitTunnelingListItem,
@@ -20,6 +20,15 @@ import {
   VpnSettingsListItem,
   WarrenMultiHopListItem,
 } from './components';
+
+// Upstream `MultihopListItem` is intentionally **not** rendered:
+// it surfaces the WireGuard multi-hop constraint, which is dead
+// weight in Warren mode (Warren tunnels run over Quinn/Iroh, not
+// WireGuard). `WarrenMultiHopListItem` is the only multi-hop entry
+// users see — its label is rendered as plain "Multihop" since the
+// Warren context is implicit (the host app *is* Warren VPN). The
+// upstream component is kept around in the `components` barrel so a
+// future rebase against Mullvad doesn't dirty-diff the import.
 import { useShowDebug, useShowSplitTunneling, useShowSubSettings } from './hooks';
 
 export function SettingsView() {
@@ -49,8 +58,8 @@ export function SettingsView() {
                     <>
                       <FlexColumn>
                         <DaitaListItem />
-                        <MultihopListItem />
                         <WarrenMultiHopListItem />
+                        <PortForwardingListItem />
                         <VpnSettingsListItem />
                         <UserInterfaceSettingsListItem />
                       </FlexColumn>

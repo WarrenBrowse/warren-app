@@ -4130,3 +4130,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "ніколи"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "авто"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Не вдалося зіставити: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Відкриває публічний порт на підключеному вихідному сервері та перенаправляє його на ваш пристрій. Корисно для однорангових застосунків, обміну файлами або власних сервісів."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Переадресація портів"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Порт має бути в діапазоні від 49152 до 65535 або порожнім для автоматичного вибору."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Бажаний порт"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Протокол"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Публічний порт: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Оновлення через %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Статус: активно"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Статус: запит зіставлення порту…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Статус: очікування активного тунельного з'єднання для налаштування переадресації порту."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Сервер може призначити інший порт, якщо бажаний вже зайнятий. Зміни застосовуються негайно, без повторного підключення."

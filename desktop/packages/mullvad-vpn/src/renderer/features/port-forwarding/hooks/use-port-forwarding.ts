@@ -62,11 +62,24 @@ export function usePortForwarding() {
     [pushUpdate],
   );
 
+  // Suggested external port (0 = let the exit pick from its pool;
+  // any other value 1024-65535 is a hint, which the exit honours
+  // when the port is free and otherwise allocates a random one
+  // - the user sees the actually-granted port in `status.externalPort`
+  // when the state reaches `'mapped'`).
+  const setSuggestedExternalPort = React.useCallback(
+    async (suggestedExternalPort: number) => {
+      await pushUpdate({ suggestedExternalPort });
+    },
+    [pushUpdate],
+  );
+
   return {
     settings,
     status,
     setEnabled,
     setLifetimeSecs,
     setProtocol,
+    setSuggestedExternalPort,
   };
 }

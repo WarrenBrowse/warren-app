@@ -82,6 +82,12 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         nat_pmp_observer: None,
+        // Live-reconfig channel: same logic — wired by the caller
+        // after assembly so the assembler stays oblivious to runtime
+        // signalling concerns. `None` here keeps the legacy
+        // "params at start" behaviour for callers that don't opt
+        // into live reconfig (tests, future non-daemon embedders).
+        nat_pmp_control_rx: None,
         // User-supplied bypass CIDRs (M4.H.G --bypass-cidr). The
         // daemon-side runtime in `talpid-warren-tunnel` consumes this
         // list to install extra `ip rule add to <cidr> lookup main`
@@ -151,6 +157,7 @@ pub fn assemble_failover_for_attempt(
         on_reconnect: None,
         nat_pmp,
         nat_pmp_observer: None,
+        nat_pmp_control_rx: None,
         bypass_cidrs,
         enable_daita: false,
     })

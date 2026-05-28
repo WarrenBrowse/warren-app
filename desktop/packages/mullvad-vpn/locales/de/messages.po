@@ -4103,3 +4103,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "nie"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatisch"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Zuordnung fehlgeschlagen: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Öffnet einen öffentlichen Port auf dem verbundenen Exit-Server und leitet ihn an Ihr Gerät weiter. Nützlich für Peer-to-Peer-Anwendungen, Dateifreigabe oder selbst gehostete Dienste."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Portweiterleitung"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Der Port muss zwischen 49152 und 65535 liegen oder für automatisch leer sein."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Bevorzugter Port"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokoll"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Öffentlicher Port: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Erneuerung in %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Status: aktiv"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Status: Port-Zuordnung wird angefordert…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Status: Warten auf eine aktive Tunnelverbindung, um die Portweiterleitung einzurichten."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Der Server kann einen anderen Port zuweisen, wenn der bevorzugte bereits belegt ist. Änderungen werden sofort wirksam, ohne erneute Verbindung."

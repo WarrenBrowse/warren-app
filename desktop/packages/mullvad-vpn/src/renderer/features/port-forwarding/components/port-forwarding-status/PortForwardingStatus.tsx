@@ -9,17 +9,29 @@ import { usePortForwarding } from '../../hooks';
 /**
  * Live readout of the NAT-PMP refresh-loop status.
  *
- * Renders one of:
- * - `Disabled`: the row is hidden entirely (nothing to show).
- * - `Requesting`: "Requesting port mapping..." placeholder.
- * - `Mapped { externalPort, lifetimeRemainingSecs }`: the
- *   user-facing public port + a live mm:ss countdown to the next
- *   renewal (lifetime / 2 of the granted lifetime).
+ * Renders one block in every state — the previous design returned
+ * `null` when the live cache said `disabled`, which left users
+ * staring at a toggle they had just flipped on with no feedback that
+ * anything was happening (or that anything was expected of them). Now:
+ *
+ * - `Disabled` AND toggle OFF: still null (the user opted out, no
+ *   need to show anything).
+ * - `Disabled` AND toggle ON: "Inactive — disconnect and reconnect to
+ *   activate". The daemon does NOT live-renegotiate the mapping when
+ *   the toggle flips; the `NatPmpManager` is spawned once at tunnel
+ *   start, so changes only take effect on the next reconnect.
+ * - `Requesting`: "Status: requesting port mapping..." spinner-less
+ *   placeholder.
+ * - `Mapped { externalPort, lifetimeRemainingSecs }`: "Status: active"
+ *   + the granted public port + a live mm:ss countdown to renewal
+ *   (lifetime / 2 of the granted lifetime). The exit picks the port
+ *   from its pool; when the user left the preferred-port input empty
+ *   ("auto"), this is where they discover what was assigned.
  * - `Failed { errorMessage }`: red error block with the underlying
  *   `request_map` failure string.
  */
 export function PortForwardingStatus() {
-  const { status } = usePortForwarding();
+  const { settings, status } = usePortForwarding();
 
   // Bookkeeping for the live countdown: store the wall-clock instant
   // at which the last status snapshot arrived so we can derive
@@ -40,14 +52,35 @@ export function PortForwardingStatus() {
   }, [status]);
 
   if (status.state === 'disabled') {
-    return null;
+    // The user has the toggle OFF — nothing to surface.
+    if (!settings.enabled) {
+      return null;
+    }
+    // Toggle ON but no mapping reported yet. With live reconfig
+    // (M5.D.x) the daemon pre-sets the cache to `requesting` the
+    // moment the toggle flips, so this transient `disabled` window
+    // is brief. It can still appear when the tunnel is DOWN (the
+    // controller task hasn't spawned because there's no tunnel to
+    // map through) — in that case the honest message is "waiting
+    // for the tunnel", NOT "reconnect" (reconnecting an already-up
+    // tunnel is no longer required).
+    return (
+      <FlexColumn gap="small">
+        <Text variant="labelTiny" color="whiteAlpha60">
+          {messages.pgettext(
+            'port-forwarding-view',
+            'Status: waiting for an active tunnel connection to set up the port mapping.',
+          )}
+        </Text>
+      </FlexColumn>
+    );
   }
 
   if (status.state === 'requesting') {
     return (
       <FlexColumn gap="small">
         <Text variant="labelTiny" color="whiteAlpha60">
-          {messages.pgettext('port-forwarding-view', 'Requesting port mapping...')}
+          {messages.pgettext('port-forwarding-view', 'Status: requesting port mapping...')}
         </Text>
       </FlexColumn>
     );
@@ -74,8 +107,19 @@ export function PortForwardingStatus() {
     .padStart(2, '0');
   const ss = (remainingSecs % 60).toString().padStart(2, '0');
 
+  // When the user picked "auto" (suggested == 0) and the exit
+  // granted a port, surface the assignment explicitly so the user
+  // can copy the value into whichever app needs it (torrent,
+  // Minecraft, …). When the user pinned a specific port and the
+  // exit honoured it, the granted port and the suggestion match;
+  // when the exit reassigned (suggestion was taken), the live
+  // `externalPort` is the source of truth and the suggestion the
+  // user typed is irrelevant.
   return (
     <FlexColumn gap="small">
+      <Text variant="labelTiny" color="green">
+        {messages.pgettext('port-forwarding-view', 'Status: active')}
+      </Text>
       <Text variant="labelTiny" color="whiteAlpha60">
         {sprintf(messages.pgettext('port-forwarding-view', 'Public port: %(port)s'), {
           port: status.externalPort,

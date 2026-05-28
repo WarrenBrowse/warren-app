@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "asla"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "otomatik"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Eşleme başarısız: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Bağlı çıkış sunucusunda genel bir bağlantı noktası açar ve onu cihazınıza yönlendirir. Eşler arası uygulamalar, dosya paylaşımı veya kendi barındırdığınız hizmetler için kullanışlıdır."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Bağlantı noktası yönlendirme"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Bağlantı noktası 49152 ile 65535 arasında olmalı veya otomatik için boş bırakılmalıdır."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Tercih edilen bağlantı noktası"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokol"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Genel bağlantı noktası: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s içinde yenileniyor"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Durum: etkin"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Durum: bağlantı noktası eşlemesi isteniyor…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Durum: bağlantı noktası eşlemesini ayarlamak için etkin bir tünel bağlantısı bekleniyor."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Tercih edilen bağlantı noktası zaten kullanılıyorsa sunucu farklı bir bağlantı noktası atayabilir. Değişiklikler yeniden bağlanmadan anında uygulanır."

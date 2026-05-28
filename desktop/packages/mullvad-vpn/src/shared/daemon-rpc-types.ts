@@ -15,9 +15,23 @@ export interface IAccountData {
   expiry: string;
 }
 
+// `'no-subscription'` is Warren-specific: warren-api returns 404 on
+// `get_account_data` when the current Warren identity has no active
+// subscription yet (steady state for a freshly bootstrapped account
+// until the user purchases a plan). The daemon maps that 404 to gRPC
+// `Code::NotFound`, daemon-rpc.ts maps `NotFound` to this variant,
+// and the account-data cache treats it as an expired account so
+// `expiredState === 'expired'` in Redux and StateTriggeredNavigation
+// routes the user to the "buy plan" screen rather than the main view
+// (where a Connect click would otherwise trigger a doomed handshake).
 export type AccountDataError = {
   type: 'error';
-  error: 'invalid-account' | 'too-many-devices' | 'list-devices' | 'communication';
+  error:
+    | 'invalid-account'
+    | 'too-many-devices'
+    | 'list-devices'
+    | 'communication'
+    | 'no-subscription';
 };
 
 export type AccountDataResponse = ({ type: 'success' } & IAccountData) | AccountDataError;

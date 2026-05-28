@@ -1,10 +1,12 @@
+import styled from 'styled-components';
+
 import { messages } from '../../../../shared/gettext';
 import {
   WarrenMultiHopCountryPickers,
   WarrenMultiHopSetting,
 } from '../../../features/warren-multi-hop';
 import { useWarrenMultiHop } from '../../../features/warren-multi-hop/hooks';
-import { Text } from '../../../lib/components';
+import { Image, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
@@ -13,6 +15,15 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
+
+// Reused from the upstream Mullvad `MultihopSettingsView`: the two-
+// server hop diagram is concept-accurate for the Warren two-relay
+// HPKE pattern (entry → exit, traffic encrypted end-to-end). Keeping
+// the same asset means one less SVG to maintain and a familiar
+// visual for users coming from upstream Mullvad.
+const StyledIllustration = styled(Image)({
+  width: '100%',
+});
 
 // Dedicated Warren two-relayed QUIC multi-hop settings view (M4.E.D).
 // Doctrine `warren_multihop_doctrine_v1`: opt-in privacy with the
@@ -29,17 +40,18 @@ export function WarrenMultiHopSettingsView() {
       <BackAction action={pop}>
         <NavigationContainer>
           <AppNavigationHeader
-            title={messages.pgettext('warren-multi-hop-view', 'Warren multi-hop')}
+            title={messages.pgettext('warren-multi-hop-view', 'Multihop')}
           />
 
           <NavigationScrollbars>
             <View.Content>
               <View.Container horizontalMargin="medium" flexDirection="column" gap="medium">
                 <HeaderTitle>
-                  {messages.pgettext('warren-multi-hop-view', 'Warren multi-hop')}
+                  {messages.pgettext('warren-multi-hop-view', 'Multihop')}
                 </HeaderTitle>
                 <FlexColumn gap="large">
                   <FlexColumn gap="small">
+                    <StyledIllustration source="multihop-illustration" />
                     <Text variant="labelTiny" color="whiteAlpha60">
                       {messages.pgettext(
                         'warren-multi-hop-view',

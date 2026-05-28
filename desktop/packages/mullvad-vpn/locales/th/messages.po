@@ -3815,3 +3815,55 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "คุณจะสูญเสียจำนวนวันที่เหลืออีก %d วัน"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "อัตโนมัติ"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "การแมปล้มเหลว: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "เปิดพอร์ตสาธารณะบนเซิร์ฟเวอร์ทางออกที่เชื่อมต่ออยู่และส่งต่อไปยังอุปกรณ์ของคุณ มีประโยชน์สำหรับแอปพลิเคชันแบบเพียร์ทูเพียร์ การแชร์ไฟล์ หรือบริการที่โฮสต์เอง"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "การส่งต่อพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "พอร์ตต้องอยู่ระหว่าง 49152 ถึง 65535 หรือเว้นว่างไว้สำหรับอัตโนมัติ"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "พอร์ตที่ต้องการ"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "โปรโตคอล"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "พอร์ตสาธารณะ: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "ต่ออายุใน %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "สถานะ: ใช้งานอยู่"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "สถานะ: กำลังขอการแมปพอร์ต…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการแมปพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "เซิร์ฟเวอร์อาจกำหนดพอร์ตอื่นหากพอร์ตที่ต้องการถูกใช้งานอยู่แล้ว การเปลี่ยนแปลงจะมีผลทันทีโดยไม่ต้องเชื่อมต่อใหม่"

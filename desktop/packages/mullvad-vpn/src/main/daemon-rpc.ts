@@ -240,6 +240,13 @@ export class DaemonRpc extends GrpcClient {
         switch (error.code) {
           case grpc.status.UNAUTHENTICATED:
             return { type: 'error', error: 'invalid-account' };
+          // The daemon maps a 404 from warren-api (no active
+          // subscription for the current pubkey) to gRPC NOT_FOUND.
+          // The cache translates this into an expired-account
+          // Redux state so the UI redirects to the "buy plan"
+          // screen instead of letting the user click Connect.
+          case grpc.status.NOT_FOUND:
+            return { type: 'error', error: 'no-subscription' };
           default:
             return { type: 'error', error: 'communication' };
         }

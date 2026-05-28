@@ -141,6 +141,29 @@ export default class AccountDataCache {
   }
 
   private handleFetchError(pubkey: WarrenPubKey, error: AccountDataError['error']) {
+    // Warren-specific: a 404 from warren-api (mapped here as
+    // 'no-subscription') is not a transient failure — it is a
+    // semantic "the current pubkey has no active subscription yet"
+    // state. Synthesize an epoch-past expiry so the renderer sees
+    // the account as expired (Redux `expiredState: 'expired'`),
+    // which makes `StateTriggeredNavigation` redirect the user to
+    // `ExpiredAccountErrorView` with the "buy plan" CTA. Without
+    // this redirect the user stays on the main view and a Connect
+    // click triggers a doomed handshake that locks down the
+    // firewall via the tunnel state machine's error branch.
+    //
+    // We still kick off the retry loop so the UI flips to "active"
+    // the moment the user purchases a plan. `setValue` resolves any
+    // pending watchers as `onFinish` (the data IS available — just
+    // expired) and sets a 10 s cache validity window for `fetch()`
+    // callers; the retry loop drives background polling beyond
+    // that.
+    if (error === 'no-subscription') {
+      this.setValue({ expiry: new Date(0).toISOString() });
+      this.scheduleRetry(pubkey, error);
+      return;
+    }
+
     this.notifyWatchers((w) => w.onError(error));
     if (error !== 'invalid-account') {
       this.scheduleRetry(pubkey, error);
@@ -151,17 +174,22 @@ export default class AccountDataCache {
     this.waitStrategy.increase();
     const delay = this.waitStrategy.delay();
 
-    // A `'communication'` error covers the 404 returned by warren-api
-    // when the current pubkey has no active subscription yet, which
-    // is the steady state for a newly bootstrapped Warren identity
-    // until the user buys a plan. The retry loop is essential
-    // (so the UI updates the moment a subscription is purchased)
-    // but logging at warn level for every retry floods the dev
-    // console. Demote to debug for the expected catch-all and keep
-    // warn for genuinely unusual failure modes (too-many-devices,
-    // list-devices).
+    // Both `'communication'` (gRPC Unknown — could be the 404
+    // pre-fix, transient network, or an undecoded API error) and
+    // `'no-subscription'` (gRPC NOT_FOUND — the explicit 404 path
+    // post-fix) are expected steady states for a freshly
+    // bootstrapped Warren identity until the user purchases a plan.
+    // The retry loop is essential (so the UI updates the moment a
+    // subscription is purchased) but logging at warn level for
+    // every retry floods the dev console. Demote to debug for both
+    // expected variants and keep warn for genuinely unusual failure
+    // modes (too-many-devices, list-devices).
     if (error === 'communication') {
       log.debug(`Account data fetch: retrying in ${delay} ms (no subscription yet?)`);
+    } else if (error === 'no-subscription') {
+      log.debug(
+        `Account data fetch: 404 — no active subscription, retrying in ${delay} ms`,
+      );
     } else {
       log.warn(`Failed to fetch account data (${error}). Retrying in ${delay} ms`);
     }

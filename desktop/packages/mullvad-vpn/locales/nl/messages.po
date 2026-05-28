@@ -4102,3 +4102,55 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "nooit"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatisch"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Toewijzing mislukt: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Opent een openbare poort op de verbonden exitserver en stuurt deze door naar je apparaat. Handig voor peer-to-peer-toepassingen, bestandsdeling of zelf-gehoste diensten."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Poortdoorschakeling"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "De poort moet tussen 49152 en 65535 liggen, of leeg voor automatisch."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Voorkeurspoort"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protocol"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Openbare poort: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Vernieuwing over %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Status: actief"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Status: poorttoewijzing aanvragen…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Status: wachten op een actieve tunnelverbinding om de poortdoorschakeling in te stellen."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "De server kan een andere poort toewijzen als de voorkeurspoort al in gebruik is. Wijzigingen worden direct toegepast, zonder opnieuw verbinding te maken."

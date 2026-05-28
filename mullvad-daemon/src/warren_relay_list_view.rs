@@ -54,6 +54,7 @@ pub fn to_mullvad_relay_list(warren: &WarrenRelayList) -> RelayList {
 
     let mut countries: Vec<RelayListCountry> = Vec::with_capacity(by_country.len());
     for (country_code, cities_map) in by_country {
+        let (lat, lng) = country_centroid(&country_code);
         let mut cities: Vec<RelayListCity> = Vec::with_capacity(cities_map.len());
         for (city_name, relays) in cities_map {
             let city_code = slugify(&city_name);
@@ -64,13 +65,21 @@ pub fn to_mullvad_relay_list(warren: &WarrenRelayList) -> RelayList {
                     &country_code,
                     &city_name,
                     &city_code,
+                    lat,
+                    lng,
                 ));
             }
+            // City-level coordinates: at this POC stage every Warren
+            // country hosts at most one relay, so the country centroid
+            // doubles as the city centroid. When a country grows
+            // multiple cities we can move to a city-level table (or
+            // ship the coordinates from the signed `warren-relays.json`
+            // directly — preferable long-term, drops the static table).
             cities.push(RelayListCity {
                 name: city_name,
                 code: city_code,
-                latitude: 0.0,
-                longitude: 0.0,
+                latitude: lat,
+                longitude: lng,
                 relays: wg_relays,
             });
         }
@@ -92,6 +101,8 @@ fn make_wireguard_relay(
     country_code: &str,
     city_name: &str,
     city_code: &str,
+    latitude: f64,
+    longitude: f64,
 ) -> WireguardRelay {
     // Warren pubkey = 32 bytes Ed25519, re-interpreted as a
     // `wireguard::PublicKey` to satisfy the GUI type. This key is
@@ -131,8 +142,8 @@ fn make_wireguard_relay(
             country_code: country_code.to_string(),
             city: city_name.to_string(),
             city_code: city_code.to_string(),
-            latitude: 0.0,
-            longitude: 0.0,
+            latitude,
+            longitude,
         },
     };
 
@@ -186,6 +197,73 @@ fn country_display_name(code: &str) -> String {
         _ => return code.to_ascii_uppercase(),
     }
     .to_string()
+}
+
+/// Geographic centroid (latitude, longitude) of a country from its
+/// ISO-3166 alpha-2 code. Values are approximate population/area
+/// centers (CIA World Factbook style — accurate to a few degrees,
+/// which is the right resolution for a globe-scale VPN map marker).
+///
+/// Fallback `(0.0, 0.0)` lands at Null Island (Gulf of Guinea); the
+/// caller is free to keep the previous coordinate when this is hit,
+/// but the renderer side currently overwrites unconditionally, so the
+/// fallback IS visible as a marker dot off the West African coast.
+/// That visible failure mode is intentional: it cues the operator
+/// that a relay's country code is missing from the table here. To
+/// fix, either add the entry below or bump the signed
+/// `warren-relays.json` schema to carry lat/lng on every relay
+/// (preferred long-term; this table is a Warren-POC stopgap).
+///
+/// MUST keep ISO-3166 alpha-2 codes in sync with
+/// [`country_display_name`] — any country listed there should also
+/// appear here so the relay list view never silently degrades to
+/// Null Island for a supported country.
+fn country_centroid(code: &str) -> (f64, f64) {
+    // Approximate population centroids (degrees), good enough at
+    // the resolution of a 320 × 493 globe canvas. Sources:
+    // CIA World Factbook, OECD country profiles.
+    match code.to_ascii_lowercase().as_str() {
+        "fr" => (46.2, 2.2),
+        "de" => (51.2, 10.5),
+        "se" => (60.1, 18.6),
+        "us" => (39.8, -98.6),
+        "uk" | "gb" => (54.8, -2.7),
+        "ca" => (56.1, -106.3),
+        "nl" => (52.1, 5.3),
+        "ch" => (46.8, 8.2),
+        "no" => (64.6, 17.6),
+        "fi" => (64.0, 26.0),
+        "es" => (40.2, -3.7),
+        "it" => (41.9, 12.6),
+        "pl" => (51.9, 19.1),
+        "ro" => (45.9, 24.9),
+        "jp" => (36.2, 138.3),
+        "sg" => (1.4, 103.8),
+        "au" => (-25.3, 133.8),
+        _ => (0.0, 0.0),
+    }
+}
+
+/// Exposes [`country_centroid`] to other modules in the daemon
+/// (specifically `tunnel.rs`, which uses the same lookup to populate
+/// `GeoIpLocation` on the connecting path). Pub(crate) keeps the API
+/// surface internal to the daemon — the table is not a stable
+/// downstream contract.
+#[must_use]
+pub(crate) fn country_centroid_for(code: &str) -> (f64, f64) {
+    country_centroid(code)
+}
+
+/// Exposes [`country_display_name`] to other modules so the
+/// `GeoIpLocation` constructed at relay-selection time in
+/// `tunnel.rs::produce_warren_tunnel_params` carries the same
+/// human-readable country string the relay-list view ships to the
+/// renderer (otherwise the map marker and the connection panel show
+/// inconsistent labels — e.g. "Germany" in the panel vs "DE" in the
+/// hover popup).
+#[must_use]
+pub(crate) fn country_display_name_pub(code: &str) -> String {
+    country_display_name(code)
 }
 
 #[cfg(test)]

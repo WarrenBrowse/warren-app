@@ -2013,6 +2013,21 @@ fn map_rest_error(error: &RestError) -> Status {
         RestError::ApiError(status, message) if *status == StatusCode::BAD_REQUEST => {
             Status::new(Code::InvalidArgument, message)
         }
+        // A 404 on `get_account_data` means "this pubkey has no
+        // active subscription yet" — an expected steady state for a
+        // freshly bootstrapped Warren identity. The renderer
+        // translates `Code::NotFound` here into the
+        // `'no-subscription'` AccountDataError variant, which the
+        // account-data cache uses to mark the Redux account state
+        // as expired so the UI redirects to the "buy plan" screen
+        // instead of letting the user click the now-broken Connect
+        // button (which would otherwise trigger a doomed handshake
+        // and lock down the firewall — see the M5.D.x no-sub UX
+        // fix). Other 404-bearing REST surfaces (none today) would
+        // need their own renderer-side mapping.
+        RestError::ApiError(status, message) if *status == StatusCode::NOT_FOUND => {
+            Status::new(Code::NotFound, message)
+        }
         // FIXME: do not use Code for this
         RestError::ApiError(status, _) if *status == StatusCode::TOO_MANY_REQUESTS => Status::new(
             Code::ResourceExhausted,

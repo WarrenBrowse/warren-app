@@ -1073,6 +1073,10 @@ msgid "Active features"
 msgstr ""
 
 msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr ""
+
+msgctxt "connect-view"
 msgid "Congrats!"
 msgstr ""
 
@@ -1099,6 +1103,10 @@ msgstr ""
 
 msgctxt "connect-view"
 msgid "Here’s your public key. Save it!"
+msgstr ""
+
+msgctxt "connect-view"
+msgid "I've completed payment"
 msgstr ""
 
 #. Button label for opening privacy information link.
@@ -1388,10 +1396,6 @@ msgid "All providers"
 msgstr ""
 
 msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr ""
-
-msgctxt "filter-view"
 msgid "Owned"
 msgstr ""
 
@@ -1409,6 +1413,10 @@ msgstr ""
 
 msgctxt "filter-view"
 msgid "Rented only"
+msgstr ""
+
+msgctxt "filter-view"
+msgid "Warren owned only"
 msgstr ""
 
 msgctxt "in-app-notifications"
@@ -1626,9 +1634,6 @@ msgctxt "keys-view"
 msgid "Copy mnemonic to clipboard"
 msgstr ""
 
-#. Shown when the daemon rejects the mnemonic
-#. (typically: invalid BIP39 word, bad checksum,
-#. wrong word count). User must check + retry.
 msgctxt "keys-view"
 msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
 msgstr ""
@@ -1641,8 +1646,6 @@ msgctxt "keys-view"
 msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
 msgstr ""
 
-#. Generic error when the daemon RPC fails. Shown
-#. only on transient connection issues.
 msgctxt "keys-view"
 msgid "Failed to retrieve mnemonic from daemon."
 msgstr ""
@@ -1656,10 +1659,9 @@ msgid "I understand this will permanently replace my current identity."
 msgstr ""
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgid "Identity restored. Your new Warren wallet is now active."
 msgstr ""
 
-#. Title label in navigation bar
 msgctxt "keys-view"
 msgid "Keys"
 msgstr ""
@@ -1668,9 +1670,6 @@ msgctxt "keys-view"
 msgid "Mnemonic copied"
 msgstr ""
 
-#. Shown when the daemon has no Warren BIP39 mnemonic
-#. stored (= identity never bootstrapped). User must
-#. log in or restore from mnemonic first.
 msgctxt "keys-view"
 msgid "No mnemonic available — log in or restore an identity first."
 msgstr ""
@@ -1679,7 +1678,6 @@ msgctxt "keys-view"
 msgid "Restore from mnemonic"
 msgstr ""
 
-#. Title label in navigation bar
 msgctxt "keys-view"
 msgid "Restore identity"
 msgstr ""
@@ -1883,6 +1881,12 @@ msgctxt "login-view"
 msgid "Login failed"
 msgstr ""
 
+#. Error message shown when the account exists but has
+#. no active subscription yet.
+msgctxt "login-view"
+msgid "No active subscription"
+msgstr ""
+
 #. Text shown between two horizontal lines above the "create account" button.
 #. In this context it is used to separate the users alternative of logging in
 #. or creating a new account, "Login or Create a new account".
@@ -2066,6 +2070,10 @@ msgid "Reconnecting"
 msgstr ""
 
 msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr ""
+
+msgctxt "notifications"
 msgid "The apps excluded with %(splitTunneling)s might not work properly right now."
 msgstr ""
 
@@ -2136,11 +2144,31 @@ msgid "Your privacy might be at risk with this unsupported app version. Please u
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Port forwarding"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2152,11 +2180,19 @@ msgid "Renewing in %(countdown)s"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Requesting port mapping..."
+msgid "Status: active"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Warren restores port-forwarding: a unique differentiator since Mullvad and IVPN removed this feature in 2023. Toggle below to ask the exit for a public port mapped to your device."
+msgid "Status: requesting port mapping..."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr ""
 
 #. Cancel button label for voucher redemption.
@@ -2385,6 +2421,10 @@ msgid "Multihop"
 msgstr ""
 
 msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr ""
+
+msgctxt "settings-view"
 msgid "Replay onboarding"
 msgstr ""
 
@@ -2411,10 +2451,6 @@ msgstr ""
 #. Navigation button to the 'VPN settings' view
 msgctxt "settings-view"
 msgid "VPN settings"
-msgstr ""
-
-msgctxt "settings-view"
-msgid "Warren multi-hop"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -2795,7 +2831,15 @@ msgid "Auto-connect"
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Automatically connect to a server when the app launches."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
 msgstr ""
 
 #. This is displayed when the custom DNS setting is turned on which makes the block
@@ -2960,6 +3004,10 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr ""
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
@@ -2970,7 +3018,7 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to Mullvad upstream). Restart the daemon for the change to take effect."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -3035,6 +3083,10 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
 msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
 msgstr ""
 
@@ -3083,7 +3135,7 @@ msgid "All set"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
+msgid "Check again"
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -3096,6 +3148,14 @@ msgstr ""
 
 msgctxt "warren-onboarding"
 msgid "Continue"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -3151,10 +3211,6 @@ msgid "Restore wallet"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr ""
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr ""
 
@@ -3168,10 +3224,6 @@ msgstr ""
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
-msgstr ""
-
-msgctxt "warren-onboarding"
-msgid "words"
 msgstr ""
 
 msgctxt "warren-onboarding"
