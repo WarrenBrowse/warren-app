@@ -564,6 +564,19 @@ export interface NatPmpSettings {
   internalPort: number;
 }
 
+// Stable, translatable category for a NAT-PMP mapping failure. Mirrors
+// the daemon's `NatPmpStatus.ErrorReason` proto enum so the UI can show
+// a localised message instead of the raw `errorMessage` string.
+export type NatPmpErrorReason =
+  | 'unknown'
+  // The exit refused the explicitly requested external port because it
+  // is already in use / reserved for another client (strict policy).
+  | 'suggested-port-in-use'
+  // Pool exhausted, per-client quota, or rate limit.
+  | 'out-of-resources'
+  // Port forwarding disabled exit-side, or source not allowed.
+  | 'not-authorized';
+
 // Live NAT-PMP refresh-loop status. Pushed by the daemon via the
 // `natPmpStatusUpdates` IPC channel and read on demand via
 // `getNatPmpSettings`.
@@ -571,7 +584,7 @@ export type NatPmpStatus =
   | { state: 'disabled' }
   | { state: 'requesting' }
   | { state: 'mapped'; externalPort: number; lifetimeRemainingSecs: number }
-  | { state: 'failed'; errorMessage: string };
+  | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason };
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
 // surfaced via the Warren multi-hop view. `entryCountry` and

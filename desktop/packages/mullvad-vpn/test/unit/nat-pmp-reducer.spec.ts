@@ -10,11 +10,9 @@ vi.hoisted(() => {
   };
 });
 
-import { NatPmpProto, NatPmpSettings, NatPmpStatus } from '../../src/shared/daemon-rpc-types';
 import settingsActions from '../../src/renderer/redux/settings/actions';
-import settingsReducer, {
-  ISettingsReduxState,
-} from '../../src/renderer/redux/settings/reducers';
+import settingsReducer, { ISettingsReduxState } from '../../src/renderer/redux/settings/reducers';
+import { NatPmpProto, NatPmpSettings, NatPmpStatus } from '../../src/shared/daemon-rpc-types';
 
 // Minimal redux state focused on the NAT-PMP slice; the reducer treats
 // the other fields as pass-through so we can fill them with arbitrary
@@ -84,11 +82,13 @@ describe('settings reducer - NAT-PMP slice', () => {
       settingsActions.updateNatPmpStatus({
         state: 'failed',
         errorMessage: 'server returned error: OutOfResources',
+        errorReason: 'out-of-resources',
       }),
     );
     expect(next.natPmpStatus).toEqual({
       state: 'failed',
       errorMessage: 'server returned error: OutOfResources',
+      errorReason: 'out-of-resources',
     });
   });
 

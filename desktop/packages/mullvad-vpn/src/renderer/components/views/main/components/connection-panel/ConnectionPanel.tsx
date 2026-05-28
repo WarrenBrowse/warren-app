@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 
+import { PortForwardingIndicator } from '../../../../../features/port-forwarding/components';
 import { IconButton } from '../../../../../lib/components';
 import { colors } from '../../../../../lib/foundations';
 import { useBoolean } from '../../../../../lib/utility-hooks';
@@ -115,6 +116,7 @@ export function ConnectionPanel() {
         </StyledConnectionStatusContainer>
         <StyledCustomScrollbars>
           <FeatureIndicators expanded={expanded} expandIsland={expand} />
+          <PortForwardingIndicator />
           <StyledAccordion expanded={expanded}>
             <ConnectionDetails />
           </StyledAccordion>

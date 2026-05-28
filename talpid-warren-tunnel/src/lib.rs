@@ -61,7 +61,7 @@ use adapter::MullvadTunPacketDevice;
 /// when `WarrenTunnelParameters::nat_pmp` carries `Some(cfg)` with
 /// `cfg.enabled == true`.
 pub mod nat_pmp_manager;
-pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpManager};
+pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpFailureReason, NatPmpManager};
 
 /// Split-default policy routing helper that routes Internet traffic via
 /// the tunnel without overriding the kernel main routing table.
@@ -1783,6 +1783,17 @@ async fn run_nat_pmp_controller(
             NatPmpManager::start_from_addr(&runtime, server, c, observer.clone(), bind_addr)
         });
 
+    // The config currently applied to `manager` (`Some` ⇔ enabled).
+    // Used to skip a redundant live-reconfigure when the daemon pushes a
+    // settings value that is byte-for-byte identical to what is already
+    // running. Without this guard, an unchanged push triggers a spurious
+    // release(old)+request(new) of the SAME port; the exit's per-client
+    // post-release cooldown then bounces the re-request to a random port
+    // until the next renewal — the "I pinned a port but got a different
+    // one" symptom. (The exit also tolerates this now, but not making
+    // the redundant round-trip at all is cleaner and avoids the churn.)
+    let mut applied: Option<NatPmpConfig> = initial_config.filter(|c| c.enabled);
+
     while control_rx.changed().await.is_ok() {
         // Borrow then clone immediately so we hold the watch's
         // internal read lock for the minimal possible duration.
@@ -1802,13 +1813,25 @@ async fn run_nat_pmp_controller(
 
         match (manager.is_some(), new_wanted) {
             (true, Some(new_cfg)) => {
-                // Live reconfigure (toggle still on, params changed).
-                log::info!("Warren NAT-PMP controller: live reconfigure");
-                manager
-                    .as_mut()
-                    .expect("matched true above")
-                    .reconfigure(&new_cfg)
-                    .await;
+                if applied.as_ref() == Some(&new_cfg) {
+                    // Idempotency guard: the pushed config is identical
+                    // to what is already running. Skip the redundant
+                    // release+reallocate, which would otherwise bounce
+                    // the pinned port to a random one via the exit's
+                    // post-release cooldown.
+                    log::debug!(
+                        "Warren NAT-PMP controller: config unchanged — skipping reconfigure"
+                    );
+                } else {
+                    // Live reconfigure (toggle still on, params changed).
+                    log::info!("Warren NAT-PMP controller: live reconfigure");
+                    manager
+                        .as_mut()
+                        .expect("matched true above")
+                        .reconfigure(&new_cfg)
+                        .await;
+                    applied = Some(new_cfg);
+                }
             }
             (true, None) => {
                 // Disable (toggle off, or new cfg is None).
@@ -1818,6 +1841,7 @@ async fn run_nat_pmp_controller(
                 if let Some(mut m) = manager.take() {
                     m.release().await;
                 }
+                applied = None;
             }
             (false, Some(new_cfg)) => {
                 // First enable (no manager yet, new cfg asks for one).
@@ -1831,10 +1855,12 @@ async fn run_nat_pmp_controller(
                     observer.clone(),
                     bind_addr,
                 ));
+                applied = Some(new_cfg);
             }
             (false, None) => {
                 // No-op: the daemon may have written `None` while we
                 // were already in `None` state.
+                applied = None;
             }
         }
     }

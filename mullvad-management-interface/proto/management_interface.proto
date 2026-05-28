@@ -797,8 +797,25 @@ message NatPmpStatus {
   // exit; the UI displays a countdown relative to this value + the
   // wall clock since the last event.
   optional uint32 lifetime_remaining_secs = 3;
-  // Set when state == FAILED. Free-form error string.
+  // Set when state == FAILED. Free-form error string (logs/diagnostics).
   optional string error_message = 4;
+  // Stable, translatable failure category. Lets the renderer show a
+  // localised message keyed on this enum rather than surfacing the raw
+  // `error_message`. Set when state == FAILED.
+  enum ErrorReason {
+    // Unknown / uncategorised failure (timeout, I/O, protocol, ...).
+    UNKNOWN = 0;
+    // The exit refused the explicitly requested external port because
+    // it is already in use / reserved for another client (Warren's
+    // strict honour-or-error policy).
+    SUGGESTED_PORT_IN_USE = 1;
+    // Out of resources: pool exhausted, per-client quota, or rate limit.
+    OUT_OF_RESOURCES = 2;
+    // Port forwarding not authorised (disabled exit-side / source not
+    // allowed).
+    NOT_AUTHORIZED = 3;
+  }
+  optional ErrorReason error_reason = 5;
 }
 
 message RelayOverride {

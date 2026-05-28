@@ -31,7 +31,7 @@ use crate::NatPmpConfig;
 // `warren-natpmp-client` directly. The forwarding observer signature is
 // `Fn(NatPmpEvent)`; the daemon wraps a `WarrenStatusCache` and pushes
 // each event into the cache for the Electron UI status stream.
-pub use warren_natpmp_client::NatPmpEvent;
+pub use warren_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
 
 /// Observer invoked from the forwarding task for every event emitted by
 /// the inner refresh loop. The daemon-side wiring sets this to a

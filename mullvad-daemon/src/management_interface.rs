@@ -77,19 +77,22 @@ fn nat_pmp_state_to_proto(
     state: &crate::warren_status::NatPmpStateSnapshot,
 ) -> types::NatPmpStatus {
     use crate::warren_status::NatPmpStateSnapshot;
-    use types::nat_pmp_status::State;
+    use talpid_warren_tunnel::NatPmpFailureReason;
+    use types::nat_pmp_status::{ErrorReason, State};
     match state {
         NatPmpStateSnapshot::Disabled => types::NatPmpStatus {
             state: State::Disabled as i32,
             external_port: None,
             lifetime_remaining_secs: None,
             error_message: None,
+            error_reason: None,
         },
         NatPmpStateSnapshot::Requesting => types::NatPmpStatus {
             state: State::Requesting as i32,
             external_port: None,
             lifetime_remaining_secs: None,
             error_message: None,
+            error_reason: None,
         },
         NatPmpStateSnapshot::Mapped {
             external_port,
@@ -99,13 +102,23 @@ fn nat_pmp_state_to_proto(
             external_port: Some(u32::from(*external_port)),
             lifetime_remaining_secs: Some(*lifetime_secs),
             error_message: None,
+            error_reason: None,
         },
-        NatPmpStateSnapshot::Failed { error } => types::NatPmpStatus {
-            state: State::Failed as i32,
-            external_port: None,
-            lifetime_remaining_secs: None,
-            error_message: Some(error.clone()),
-        },
+        NatPmpStateSnapshot::Failed { error, reason } => {
+            let error_reason = match reason {
+                NatPmpFailureReason::SuggestedPortInUse => ErrorReason::SuggestedPortInUse,
+                NatPmpFailureReason::OutOfResources => ErrorReason::OutOfResources,
+                NatPmpFailureReason::NotAuthorized => ErrorReason::NotAuthorized,
+                NatPmpFailureReason::Other => ErrorReason::Unknown,
+            };
+            types::NatPmpStatus {
+                state: State::Failed as i32,
+                external_port: None,
+                lifetime_remaining_secs: None,
+                error_message: Some(error.clone()),
+                error_reason: Some(error_reason as i32),
+            }
+        }
     }
 }
 

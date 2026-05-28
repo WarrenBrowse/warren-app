@@ -373,6 +373,11 @@ export class ErrorState extends jspb.Message {
     getInvalidIpv6ConfigError(): ErrorState.InvalidIpv6Config | undefined;
     setInvalidIpv6ConfigError(value?: ErrorState.InvalidIpv6Config): ErrorState;
 
+    hasWarrenPubkeyMismatchDetail(): boolean;
+    clearWarrenPubkeyMismatchDetail(): void;
+    getWarrenPubkeyMismatchDetail(): ErrorState.WarrenPubkeyMismatchDetail | undefined;
+    setWarrenPubkeyMismatchDetail(value?: ErrorState.WarrenPubkeyMismatchDetail): ErrorState;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ErrorState.AsObject;
     static toObject(includeInstance: boolean, msg: ErrorState): ErrorState.AsObject;
@@ -397,6 +402,32 @@ export namespace ErrorState {
         warrenPubkeyMismatchDetail?: ErrorState.WarrenPubkeyMismatchDetail.AsObject,
     }
 
+
+    export class WarrenPubkeyMismatchDetail extends jspb.Message { 
+        getExitIdHex(): string;
+        setExitIdHex(value: string): WarrenPubkeyMismatchDetail;
+        getPinned(): string;
+        setPinned(value: string): WarrenPubkeyMismatchDetail;
+        getObserved(): string;
+        setObserved(value: string): WarrenPubkeyMismatchDetail;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): WarrenPubkeyMismatchDetail.AsObject;
+        static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatchDetail): WarrenPubkeyMismatchDetail.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: WarrenPubkeyMismatchDetail, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatchDetail;
+        static deserializeBinaryFromReader(message: WarrenPubkeyMismatchDetail, reader: jspb.BinaryReader): WarrenPubkeyMismatchDetail;
+    }
+
+    export namespace WarrenPubkeyMismatchDetail {
+        export type AsObject = {
+            exitIdHex: string,
+            pinned: string,
+            observed: string,
+        }
+    }
 
     export class FirewallPolicyError extends jspb.Message { 
         getType(): ErrorState.FirewallPolicyError.ErrorType;
@@ -544,36 +575,9 @@ export namespace ErrorState {
     WARREN_PUBKEY_MISMATCH = 7,
     }
 
-
-    export class WarrenPubkeyMismatchDetail extends jspb.Message {
-        getExitIdHex(): string;
-        setExitIdHex(value: string): WarrenPubkeyMismatchDetail;
-        getPinned(): string;
-        setPinned(value: string): WarrenPubkeyMismatchDetail;
-        getObserved(): string;
-        setObserved(value: string): WarrenPubkeyMismatchDetail;
-
-        serializeBinary(): Uint8Array;
-        toObject(includeInstance?: boolean): WarrenPubkeyMismatchDetail.AsObject;
-        static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatchDetail): WarrenPubkeyMismatchDetail.AsObject;
-        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-        static serializeBinaryToWriter(message: WarrenPubkeyMismatchDetail, writer: jspb.BinaryWriter): void;
-        static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatchDetail;
-        static deserializeBinaryFromReader(message: WarrenPubkeyMismatchDetail, reader: jspb.BinaryReader): WarrenPubkeyMismatchDetail;
-    }
-
-    export namespace WarrenPubkeyMismatchDetail {
-        export type AsObject = {
-            exitIdHex: string,
-            pinned: string,
-            observed: string,
-        }
-    }
-
 }
 
-export class TunnelState extends jspb.Message {
+export class TunnelState extends jspb.Message { 
 
     hasDisconnected(): boolean;
     clearDisconnected(): void;
@@ -2129,6 +2133,11 @@ export class NatPmpStatus extends jspb.Message {
     getErrorMessage(): string | undefined;
     setErrorMessage(value: string): NatPmpStatus;
 
+    hasErrorReason(): boolean;
+    clearErrorReason(): void;
+    getErrorReason(): NatPmpStatus.ErrorReason | undefined;
+    setErrorReason(value: NatPmpStatus.ErrorReason): NatPmpStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
     static toObject(includeInstance: boolean, msg: NatPmpStatus): NatPmpStatus.AsObject;
@@ -2145,6 +2154,7 @@ export namespace NatPmpStatus {
         externalPort?: number,
         lifetimeRemainingSecs?: number,
         errorMessage?: string,
+        errorReason?: NatPmpStatus.ErrorReason,
     }
 
     export enum State {
@@ -2152,6 +2162,13 @@ export namespace NatPmpStatus {
     REQUESTING = 1,
     MAPPED = 2,
     FAILED = 3,
+    }
+
+    export enum ErrorReason {
+    UNKNOWN = 0,
+    SUGGESTED_PORT_IN_USE = 1,
+    OUT_OF_RESOURCES = 2,
+    NOT_AUTHORIZED = 3,
     }
 
 }
@@ -3806,6 +3823,11 @@ export enum AfterDisconnect {
     RECONNECT = 2,
 }
 
+export enum TunnelType {
+    WIREGUARD = 0,
+    WARREN = 1,
+}
+
 export enum FeatureIndicator {
     QUANTUM_RESISTANCE = 0,
     MULTIHOP = 1,
@@ -3839,9 +3861,4 @@ export enum IpVersion {
 export enum TransportProtocol {
     UDP = 0,
     TCP = 1,
-}
-
-export enum TunnelType {
-    WIREGUARD = 0,
-    WARREN = 1,
 }

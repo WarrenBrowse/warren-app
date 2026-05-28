@@ -1,6 +1,7 @@
 import React from 'react';
 import { sprintf } from 'sprintf-js';
 
+import { NatPmpErrorReason } from '../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../shared/gettext';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
@@ -90,9 +91,11 @@ export function PortForwardingStatus() {
     return (
       <FlexColumn gap="small">
         <Text variant="labelTiny" color="red">
-          {sprintf(messages.pgettext('port-forwarding-view', 'Mapping failed: %(error)s'), {
-            error: status.errorMessage,
-          })}
+          {natPmpFailureMessage(
+            status.errorReason,
+            settings.suggestedExternalPort,
+            status.errorMessage,
+          )}
         </Text>
       </FlexColumn>
     );
@@ -132,4 +135,48 @@ export function PortForwardingStatus() {
       </Text>
     </FlexColumn>
   );
+}
+
+/**
+ * Localised, reason-specific failure message. Keyed on the structured
+ * `errorReason` from the daemon so the user sees an actionable sentence
+ * (e.g. "port already in use, pick another") rather than the raw
+ * English `errorMessage`. The raw string is only used as a last-resort
+ * fallback for the uncategorised `unknown` case.
+ */
+function natPmpFailureMessage(
+  reason: NatPmpErrorReason,
+  suggestedPort: number,
+  rawError: string,
+): string {
+  switch (reason) {
+    case 'suggested-port-in-use':
+      return suggestedPort > 0
+        ? sprintf(
+            messages.pgettext(
+              'port-forwarding-view',
+              'Port %(port)d is already in use. Choose another one.',
+            ),
+            { port: suggestedPort },
+          )
+        : messages.pgettext(
+            'port-forwarding-view',
+            'The requested port is already in use. Choose another one.',
+          );
+    case 'out-of-resources':
+      return messages.pgettext(
+        'port-forwarding-view',
+        'No port is available right now. Try again in a moment.',
+      );
+    case 'not-authorized':
+      return messages.pgettext(
+        'port-forwarding-view',
+        'Port forwarding is not allowed on this server.',
+      );
+    case 'unknown':
+    default:
+      return sprintf(messages.pgettext('port-forwarding-view', 'Mapping failed: %(error)s'), {
+        error: rawError,
+      });
+  }
 }

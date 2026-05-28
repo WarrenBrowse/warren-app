@@ -12,7 +12,7 @@
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use talpid_warren_tunnel::NatPmpEvent;
+use talpid_warren_tunnel::{NatPmpEvent, NatPmpFailureReason};
 use tokio::sync::watch;
 
 /// Snapshot of the NAT-PMP refresh loop, surfaced to the UI alongside
@@ -43,10 +43,15 @@ pub enum NatPmpStateSnapshot {
         lifetime_secs: u32,
     },
     /// The last `request_map` failed and the loop has terminated. The
-    /// UI surfaces `error` so the user knows whether to retry.
+    /// UI surfaces a localised message keyed on `reason`; `error` is the
+    /// raw string kept for logs / diagnostics.
     Failed {
         /// Free-form error string from `NatPmpEvent::Failed`.
         error: String,
+        /// Stable, translatable failure category. Lets the renderer
+        /// show e.g. "this port is already in use" for a strict
+        /// suggested-port rejection instead of a raw English string.
+        reason: NatPmpFailureReason,
     },
 }
 
@@ -272,7 +277,9 @@ impl WarrenStatusCache {
                     external_port,
                     lifetime_secs,
                 },
-                NatPmpEvent::Failed { error } => NatPmpStateSnapshot::Failed { error },
+                NatPmpEvent::Failed { error, reason } => {
+                    NatPmpStateSnapshot::Failed { error, reason }
+                }
                 NatPmpEvent::Cancelled => NatPmpStateSnapshot::Disabled,
             };
             Self::snapshot_of(&inner)
@@ -520,13 +527,15 @@ mod tests {
         let cache = WarrenStatusCache::new();
         cache.record_nat_pmp_event(NatPmpEvent::Failed {
             error: "server returned error: OutOfResources".to_owned(),
+            reason: NatPmpFailureReason::OutOfResources,
         });
         match cache.snapshot().nat_pmp {
-            NatPmpStateSnapshot::Failed { error } => {
+            NatPmpStateSnapshot::Failed { error, reason } => {
                 assert!(
                     error.contains("OutOfResources"),
                     "error must propagate: {error}"
                 );
+                assert_eq!(reason, NatPmpFailureReason::OutOfResources);
             }
             other => panic!("expected Failed, got {other:?}"),
         }

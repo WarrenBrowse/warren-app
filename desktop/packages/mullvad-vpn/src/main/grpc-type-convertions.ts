@@ -42,6 +42,7 @@ import {
   IWireguardEndpointData,
   LoggedInDeviceState,
   LoggedOutDeviceState,
+  NatPmpErrorReason,
   NatPmpProto,
   NatPmpSettings,
   NatPmpStatus,
@@ -615,10 +616,30 @@ export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpS
     case grpcTypes.NatPmpStatus.State.REQUESTING:
       return { state: 'requesting' };
     case grpcTypes.NatPmpStatus.State.FAILED:
-      return { state: 'failed', errorMessage: status.getErrorMessage() ?? '' };
+      return {
+        state: 'failed',
+        errorMessage: status.getErrorMessage() ?? '',
+        errorReason: convertFromNatPmpErrorReason(status.getErrorReason()),
+      };
     case grpcTypes.NatPmpStatus.State.DISABLED:
     default:
       return { state: 'disabled' };
+  }
+}
+
+function convertFromNatPmpErrorReason(
+  reason: grpcTypes.NatPmpStatus.ErrorReason | undefined,
+): NatPmpErrorReason {
+  switch (reason) {
+    case grpcTypes.NatPmpStatus.ErrorReason.SUGGESTED_PORT_IN_USE:
+      return 'suggested-port-in-use';
+    case grpcTypes.NatPmpStatus.ErrorReason.OUT_OF_RESOURCES:
+      return 'out-of-resources';
+    case grpcTypes.NatPmpStatus.ErrorReason.NOT_AUTHORIZED:
+      return 'not-authorized';
+    case grpcTypes.NatPmpStatus.ErrorReason.UNKNOWN:
+    default:
+      return 'unknown';
   }
 }
 
