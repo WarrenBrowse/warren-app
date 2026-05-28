@@ -386,7 +386,16 @@ jobs:
     name: Publish GitHub Release
     needs: [build-macos, build-linux, build-windows, build-ios, build-android]
     runs-on: ubuntu-22.04
-    if: startsWith(github.ref, 'refs/tags/')
+    # iOS is non-blocking: publish as long as it's a tag and the 4 non-iOS builds
+    # succeeded. build-ios stays in `needs` so we still wait for it and include the
+    # IPA when it succeeds, but its failure does not block the release.
+    if: >-
+      !cancelled() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build-macos.result == 'success' &&
+      needs.build-linux.result == 'success' &&
+      needs.build-windows.result == 'success' &&
+      needs.build-android.result == 'success'
     env:
       TAG_NAME: ${{ github.ref_name }}
     steps:
