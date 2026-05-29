@@ -19,8 +19,11 @@ use std::path::Path;
 use std::time::Instant;
 
 use ed25519_dalek::{SigningKey, VerifyingKey};
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 use ipnetwork::IpNetwork;
-use talpid_routing::{Node, RequiredRoute};
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+use talpid_routing::Node;
+use talpid_routing::RequiredRoute;
 use talpid_tunnel::tun_provider::{Tun, TunConfig};
 use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::net::AllowedTunnelTraffic;
@@ -1255,6 +1258,7 @@ impl WarrenTunnelMonitor {
         // Routing install: bypass the relay endpoint IP (the only UDP
         // peer the daemon reaches on the data plane), then split-default
         // on the TUN.
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
         let next_hop_ips: Vec<IpAddr> = vec![relay_endpoint.ip()];
         #[cfg(target_os = "linux")]
         let routes = {
