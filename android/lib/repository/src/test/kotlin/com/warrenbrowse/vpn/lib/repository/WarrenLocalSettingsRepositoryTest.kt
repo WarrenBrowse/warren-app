@@ -26,6 +26,7 @@ class WarrenLocalSettingsRepositoryTest {
         every { mockPrefs.edit() } returns mockEditor
         every { mockEditor.putBoolean(any(), any()) } returns mockEditor
         every { mockEditor.putString(any(), any()) } returns mockEditor
+        every { mockEditor.putInt(any(), any()) } returns mockEditor
         every { mockEditor.remove(any()) } returns mockEditor
         // Default seed for the selected-exit-id read on construction;
         // individual tests can override.
@@ -169,6 +170,51 @@ class WarrenLocalSettingsRepositoryTest {
         assertFalse(repo.blockTrackers.value)
         verify { mockEditor.putBoolean("dns_block_ads", true) }
         verify { mockEditor.putBoolean("dns_block_malware", true) }
+    }
+
+    @Test
+    fun `nat-pmp protocol normalizes and writes through`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals("udp", repo.natPmpProtocol.value)
+        repo.setNatPmpProtocol("tcp")
+        assertEquals("tcp", repo.natPmpProtocol.value)
+        verify { mockEditor.putString("nat_pmp_protocol", "tcp") }
+
+        repo.setNatPmpProtocol("garbage")
+        assertEquals("udp", repo.natPmpProtocol.value)
+    }
+
+    @Test
+    fun `nat-pmp external port clamps to the dynamic range or zero`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setNatPmpExternalPort(51820)
+        assertEquals(51820, repo.natPmpExternalPort.value)
+        verify { mockEditor.putInt("nat_pmp_external_port", 51820) }
+
+        repo.setNatPmpExternalPort(80) // below dynamic range -> auto (0)
+        assertEquals(0, repo.natPmpExternalPort.value)
+
+        repo.setNatPmpExternalPort(-1)
+        assertEquals(0, repo.natPmpExternalPort.value)
+    }
+
+    @Test
+    fun `nat-pmp lifetime clamps to bounds`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setNatPmpLifetimeSecs(21_600)
+        assertEquals(21_600, repo.natPmpLifetimeSecs.value)
+
+        repo.setNatPmpLifetimeSecs(10) // below min
+        assertEquals(WarrenLocalSettingsRepository.NAT_PMP_MIN_LIFETIME_SECS, repo.natPmpLifetimeSecs.value)
+
+        repo.setNatPmpLifetimeSecs(999_999) // above max
+        assertEquals(WarrenLocalSettingsRepository.NAT_PMP_MAX_LIFETIME_SECS, repo.natPmpLifetimeSecs.value)
     }
 
     @Test

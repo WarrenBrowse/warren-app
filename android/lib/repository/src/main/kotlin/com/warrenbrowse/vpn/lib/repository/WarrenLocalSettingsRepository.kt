@@ -34,6 +34,18 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _natPmpEnabled = MutableStateFlow(prefs.getBoolean(KEY_NAT_PMP_ENABLED, false))
     val natPmpEnabled: StateFlow<Boolean> = _natPmpEnabled.asStateFlow()
 
+    /** "udp" or "tcp". */
+    private val _natPmpProtocol = MutableStateFlow(prefs.getString(KEY_NAT_PMP_PROTOCOL, NAT_PMP_PROTOCOL_UDP) ?: NAT_PMP_PROTOCOL_UDP)
+    val natPmpProtocol: StateFlow<String> = _natPmpProtocol.asStateFlow()
+
+    /** Requested external port; 0 = let the gateway pick. */
+    private val _natPmpExternalPort = MutableStateFlow(prefs.getInt(KEY_NAT_PMP_EXTERNAL_PORT, 0))
+    val natPmpExternalPort: StateFlow<Int> = _natPmpExternalPort.asStateFlow()
+
+    /** Requested mapping lifetime in seconds. */
+    private val _natPmpLifetimeSecs = MutableStateFlow(prefs.getInt(KEY_NAT_PMP_LIFETIME_SECS, NAT_PMP_DEFAULT_LIFETIME_SECS))
+    val natPmpLifetimeSecs: StateFlow<Int> = _natPmpLifetimeSecs.asStateFlow()
+
     private val _multiHopEnabled = MutableStateFlow(prefs.getBoolean(KEY_MULTI_HOP_ENABLED, false))
     val multiHopEnabled: StateFlow<Boolean> = _multiHopEnabled.asStateFlow()
 
@@ -93,6 +105,29 @@ class WarrenLocalSettingsRepository(context: Context) {
     fun setNatPmpEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_NAT_PMP_ENABLED, enabled).apply()
         _natPmpEnabled.value = enabled
+    }
+
+    fun setNatPmpProtocol(protocol: String) {
+        val normalized = if (protocol == NAT_PMP_PROTOCOL_TCP) NAT_PMP_PROTOCOL_TCP else NAT_PMP_PROTOCOL_UDP
+        prefs.edit().putString(KEY_NAT_PMP_PROTOCOL, normalized).apply()
+        _natPmpProtocol.value = normalized
+    }
+
+    /** Clamp to the dynamic/private port range, or 0 for "auto". */
+    fun setNatPmpExternalPort(port: Int) {
+        val clamped = when {
+            port <= 0 -> 0
+            port in 49152..65535 -> port
+            else -> 0
+        }
+        prefs.edit().putInt(KEY_NAT_PMP_EXTERNAL_PORT, clamped).apply()
+        _natPmpExternalPort.value = clamped
+    }
+
+    fun setNatPmpLifetimeSecs(seconds: Int) {
+        val clamped = seconds.coerceIn(NAT_PMP_MIN_LIFETIME_SECS, NAT_PMP_MAX_LIFETIME_SECS)
+        prefs.edit().putInt(KEY_NAT_PMP_LIFETIME_SECS, clamped).apply()
+        _natPmpLifetimeSecs.value = clamped
     }
 
     fun setMultiHopEnabled(enabled: Boolean) {
@@ -184,10 +219,18 @@ class WarrenLocalSettingsRepository(context: Context) {
     companion object {
         const val DNS_STATE_DEFAULT = "default"
         const val DNS_STATE_CUSTOM = "custom"
+        const val NAT_PMP_PROTOCOL_UDP = "udp"
+        const val NAT_PMP_PROTOCOL_TCP = "tcp"
+        const val NAT_PMP_DEFAULT_LIFETIME_SECS = 3600
+        const val NAT_PMP_MIN_LIFETIME_SECS = 60
+        const val NAT_PMP_MAX_LIFETIME_SECS = 86_400
 
         private const val PREFS_NAME = "warren_local_settings"
         private const val KEY_DAITA_ENABLED = "daita_enabled"
         private const val KEY_NAT_PMP_ENABLED = "nat_pmp_enabled"
+        private const val KEY_NAT_PMP_PROTOCOL = "nat_pmp_protocol"
+        private const val KEY_NAT_PMP_EXTERNAL_PORT = "nat_pmp_external_port"
+        private const val KEY_NAT_PMP_LIFETIME_SECS = "nat_pmp_lifetime_secs"
         private const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
         private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"

@@ -8,13 +8,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +61,9 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val daita by repo.daitaEnabled.collectAsStateWithLifecycle()
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
+    val natPmpProtocol by repo.natPmpProtocol.collectAsStateWithLifecycle()
+    val natPmpExternalPort by repo.natPmpExternalPort.collectAsStateWithLifecycle()
+    val natPmpLifetime by repo.natPmpLifetimeSecs.collectAsStateWithLifecycle()
     val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
     val obfuscation by repo.obfuscationM40.collectAsStateWithLifecycle()
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
@@ -181,6 +187,17 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 onValueChange = repo::setNatPmpEnabled,
             )
 
+            if (natPmp) {
+                PortForwardingAdvanced(
+                    protocol = natPmpProtocol,
+                    onProtocolChange = repo::setNatPmpProtocol,
+                    externalPort = natPmpExternalPort,
+                    onExternalPortChange = repo::setNatPmpExternalPort,
+                    lifetimeSecs = natPmpLifetime,
+                    onLifetimeChange = repo::setNatPmpLifetimeSecs,
+                )
+            }
+
             ToggleRow(
                 title = "Multi-hop entry",
                 subtitle = "Route via a separate entry relay before the exit (slower, more private).",
@@ -228,6 +245,67 @@ private fun CustomDnsField(initial: String, onCommit: (String) -> Unit) {
         label = { Text("Resolver addresses (comma-separated)") },
         placeholder = { Text("e.g. 9.9.9.9, 149.112.112.112") },
         singleLine = false,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PortForwardingAdvanced(
+    protocol: String,
+    onProtocolChange: (String) -> Unit,
+    externalPort: Int,
+    onExternalPortChange: (Int) -> Unit,
+    lifetimeSecs: Int,
+    onLifetimeChange: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Protocol", style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = protocol == "udp",
+                onClick = { onProtocolChange("udp") },
+                label = { Text("UDP") },
+            )
+            FilterChip(
+                selected = protocol == "tcp",
+                onClick = { onProtocolChange("tcp") },
+                label = { Text("TCP") },
+            )
+        }
+
+        var portText by remember { mutableStateOf(if (externalPort == 0) "" else externalPort.toString()) }
+        OutlinedTextField(
+            value = portText,
+            onValueChange = {
+                portText = it.filter(Char::isDigit).take(5)
+                onExternalPortChange(portText.toIntOrNull() ?: 0)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Preferred external port (blank = automatic)") },
+            placeholder = { Text("49152-65535") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
+
+        Text("Mapping lifetime", style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LifetimeChip("1 h", 3_600, lifetimeSecs, onLifetimeChange)
+            LifetimeChip("6 h", 21_600, lifetimeSecs, onLifetimeChange)
+            LifetimeChip("24 h", 86_400, lifetimeSecs, onLifetimeChange)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LifetimeChip(label: String, seconds: Int, selected: Int, onSelect: (Int) -> Unit) {
+    FilterChip(
+        selected = selected == seconds,
+        onClick = { onSelect(seconds) },
+        label = { Text(label) },
     )
 }
 

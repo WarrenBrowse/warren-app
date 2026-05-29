@@ -32,6 +32,9 @@ class WarrenTunnelConfigBuilderTest {
         multiHop: Boolean = false,
         obfuscation: Boolean = false,
         selectedExitId: String? = null,
+        natPmpProtocol: String = "udp",
+        natPmpExternalPort: Int = 0,
+        natPmpLifetimeSecs: Int = 3600,
         ipv6: Boolean = false,
         lockdown: Boolean = false,
         dnsState: String = WarrenLocalSettingsRepository.DNS_STATE_DEFAULT,
@@ -46,6 +49,9 @@ class WarrenTunnelConfigBuilderTest {
         val repo: WarrenLocalSettingsRepository = mockk()
         every { repo.daitaEnabled } returns MutableStateFlow(daita)
         every { repo.natPmpEnabled } returns MutableStateFlow(natPmp)
+        every { repo.natPmpProtocol } returns MutableStateFlow(natPmpProtocol)
+        every { repo.natPmpExternalPort } returns MutableStateFlow(natPmpExternalPort)
+        every { repo.natPmpLifetimeSecs } returns MutableStateFlow(natPmpLifetimeSecs)
         every { repo.multiHopEnabled } returns MutableStateFlow(multiHop)
         every { repo.obfuscationM40 } returns MutableStateFlow(obfuscation)
         every { repo.selectedExitId } returns MutableStateFlow(selectedExitId)
@@ -146,6 +152,26 @@ class WarrenTunnelConfigBuilderTest {
         // Inactive selection falls back to the first active relay (sample).
         val config = builder.build(pubkey)!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `nat-pmp parameters flow through to the config`() {
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(natPmp = true, natPmpProtocol = "tcp", natPmpExternalPort = 51820, natPmpLifetimeSecs = 21600),
+            mockCatalog(),
+        ).build(pubkey)!!
+        assertTrue(config.natPmpEnabled)
+        assertEquals("tcp", config.natPmpProtocol)
+        assertEquals(51820, config.natPmpExternalPort)
+        assertEquals(21600, config.natPmpLifetimeSecs)
+    }
+
+    @Test
+    fun `nat-pmp defaults are udp auto-port one-hour`() {
+        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        assertEquals("udp", config.natPmpProtocol)
+        assertEquals(0, config.natPmpExternalPort)
+        assertEquals(3600, config.natPmpLifetimeSecs)
     }
 
     @Test

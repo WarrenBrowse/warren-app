@@ -20,6 +20,13 @@ data class WarrenTunnelConfig(
     @SerialName("daita") val daita: DaitaSpec? = null,
     @SerialName("bypass_cidrs") val bypassCidrs: List<String> = emptyList(),
     @SerialName("nat_pmp_enabled") val natPmpEnabled: Boolean = false,
+    // NAT-PMP / port-forwarding parameters. Honoured by the refresh loop in
+    // warren-natpmp-client. `protocol` is "udp" or "tcp"; `externalPort` 0
+    // means "let the gateway pick"; `lifetimeSecs` is the requested mapping
+    // lifetime (the gateway may cap it).
+    @SerialName("nat_pmp_protocol") val natPmpProtocol: String = "udp",
+    @SerialName("nat_pmp_external_port") val natPmpExternalPort: Int = 0,
+    @SerialName("nat_pmp_lifetime_secs") val natPmpLifetimeSecs: Int = 3600,
     @SerialName("obfuscation_m40") val obfuscationM40: Boolean = false,
     // Privacy-leak controls (P0). All default to the leak-safe value so an
     // older builder that omits them stays protected.

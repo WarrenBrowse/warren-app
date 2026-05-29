@@ -60,6 +60,15 @@ pub struct WarrenTunnelConfig {
     /// Assigned external port surfacing to Kotlin is a follow-up; for
     /// now we log it at INFO.
     pub nat_pmp_enabled: Option<bool>,
+    /// NAT-PMP mapping protocol: "udp" (default) or "tcp".
+    #[serde(default)]
+    pub nat_pmp_protocol: Option<String>,
+    /// Requested external port; `0`/absent means the gateway picks one.
+    #[serde(default)]
+    pub nat_pmp_external_port: Option<u16>,
+    /// Requested mapping lifetime in seconds (gateway may cap it).
+    #[serde(default)]
+    pub nat_pmp_lifetime_secs: Option<u32>,
     #[expect(
         dead_code,
         reason = "M4.0 obfuscation lives at the QUIC transport layer (warren-tunnel transport_config); \
@@ -295,19 +304,24 @@ fn maybe_spawn_nat_pmp(
     }
     let server = warren_natpmp_client::default_server_addr();
     let bind_addr = std::net::IpAddr::V4(assigned_ipv4);
+    // Map the client-selected protocol; default to UDP for unknown values.
+    let proto = match config.nat_pmp_protocol.as_deref() {
+        Some("tcp") | Some("TCP") => warren_natpmp_client::MapProtocol::Tcp,
+        _ => warren_natpmp_client::MapProtocol::Udp,
+    };
+    // The internal port is informative only on the PCP/NAT-PMP wire; the
+    // client does not own a specific local port, so request 0. The
+    // suggested external port comes from the user (0 = gateway picks).
+    let suggested_external_port = config.nat_pmp_external_port.unwrap_or(0);
+    let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
     let refresh = warren_natpmp_client::spawn_refresh_loop_from_addr(
         server,
-        warren_natpmp_client::MapProtocol::Udp,
-        // D.6 placeholder: request external mapping for the QUIC
-        // datagram port. The internal port is informative only on the
-        // PCP/NAT-PMP wire (the exit allocates an arbitrary external
-        // port). Use 0 as "client does not own a specific local port"
-        // and let the exit pick.
+        proto,
         0,
-        0,
-        3600,
+        suggested_external_port,
+        lifetime_secs,
         tx,
         Some(bind_addr),
     );
