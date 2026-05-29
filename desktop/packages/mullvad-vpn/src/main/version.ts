@@ -13,7 +13,14 @@ import { DaemonRpc } from './daemon-rpc';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { NotificationSender } from './notification-controller';
 
-export const GUI_VERSION = app.getVersion().replace('.0', '');
+// Warren uses full semver (e.g. `1.0.0`) and the daemon reports the same string,
+// so the GUI version must match it verbatim. Upstream Mullvad stripped a trailing
+// `.0` here because its date-based versions (`2024.5.0`) are reported as `2024.5`
+// by the daemon. Applying that strip to semver breaks the consistency check:
+// `String.replace('.0', '')` only replaces the FIRST match, turning `1.0.0` into
+// `1.0`, which never equals the daemon's `1.0.0` and triggers a permanent
+// "APP IS OUT OF SYNC" notification.
+export const GUI_VERSION = app.getVersion();
 /// Mirrors the beta check regex in the daemon. Matches only well formed beta versions
 const IS_BETA = /^(\d{4})\.(\d+)-beta(\d+)$/;
 
