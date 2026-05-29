@@ -5,14 +5,18 @@ use std::sync::LazyLock;
 
 use regex_lite::Regex;
 
-/// The Mullvad VPN app product version
+/// The Warren VPN app product version
 #[cfg(has_version)]
 pub const VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/product-version.txt"));
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Version {
-    pub year: u32,
-    pub incremental: u32,
+    pub major: u32,
+    pub minor: u32,
+    /// Optional semver patch component. `None` for legacy two-component
+    /// `major.minor` versions (e.g. `2025.2`), `Some` for full semver
+    /// `major.minor.patch` versions (e.g. `1.0.0`).
+    pub patch: Option<u32>,
     /// A version can have an optional pre-stable type, e.g. alpha or beta.
     pub pre_stable: Option<PreStableType>,
     /// All versions may have an optional -dev-[commit hash] suffix.
@@ -62,7 +66,7 @@ impl Version {
         matches!(self.pre_stable, Some(PreStableType::Beta(_)))
     }
 
-    /// Returns true if this version has a -dev suffix, e.g. 2025.2-beta1-dev-123abc
+    /// Returns true if this version has a -dev suffix, e.g. 1.0.0-beta1-dev-123abc
     pub const fn is_dev(&self) -> bool {
         self.dev.is_some()
     }
@@ -92,8 +96,10 @@ impl PartialOrd for Version {
             (None, None) => Some(Ordering::Equal),
         };
 
-        let release_ordering = (self.year.cmp(&other.year))
-            .then(self.incremental.cmp(&other.incremental))
+        // A missing patch component is treated as 0, so `1.0` == `1.0.0`.
+        let release_ordering = (self.major.cmp(&other.major))
+            .then(self.minor.cmp(&other.minor))
+            .then(self.patch.unwrap_or(0).cmp(&other.patch.unwrap_or(0)))
             .then(type_ordering);
 
         match release_ordering {
@@ -104,16 +110,21 @@ impl PartialOrd for Version {
 }
 
 impl Display for Version {
-    /// Format Version as a string: year.incremental-{alpha|beta}-{dev}
+    /// Format Version as a string: major.minor[.patch]-{alpha|beta}-{dev}
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Version {
-            year,
-            incremental,
+            major,
+            minor,
+            patch,
             pre_stable,
             dev,
         } = &self;
 
-        write!(f, "{year}.{incremental}")?;
+        write!(f, "{major}.{minor}")?;
+
+        if let Some(patch) = patch {
+            write!(f, ".{patch}")?;
+        }
 
         match pre_stable {
             Some(PreStableType::Alpha(version)) => write!(f, "-alpha{version}")?,
@@ -132,13 +143,14 @@ impl Display for Version {
 static VERSION_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"(?x)                                     # enable insignificant whitespace mode
-                (?<year>\d{4})\.                   # the year
-                (?<incremental>[1-9]\d?)           # the incrementing version number
-                (?:                                # (optional) alpha or beta or dev
+                (?<major>[1-9]\d{0,3})\.           # major component (1-9999; semver major or legacy year)
+                (?<minor>0|[1-9]\d?)               # minor component (0-99)
+                (?:\.(?<patch>0|[1-9]\d?))?        # (optional) semver patch component (0-99)
+                (?:                                # (optional) alpha or beta
                   -alpha(?<alpha>[1-9]\d?\d?)|
                   -beta(?<beta>[1-9]\d?\d?)
                 )?
-                (?:
+                (?:                                # (optional) dev suffix
                   -dev-(?<dev>[0-9a-f]+)
                 )?$
                 ",
@@ -154,14 +166,11 @@ impl FromStr for Version {
             .captures(version)
             .ok_or_else(|| format!("Version does not match expected format: {version}"))?;
 
-        let year = captures.name("year").unwrap().as_str().parse().unwrap();
+        let major = captures.name("major").unwrap().as_str().parse().unwrap();
 
-        let incremental = captures
-            .name("incremental")
-            .unwrap()
-            .as_str()
-            .parse()
-            .unwrap();
+        let minor = captures.name("minor").unwrap().as_str().parse().unwrap();
+
+        let patch = captures.name("patch").map(|m| m.as_str().parse().unwrap());
 
         let alpha = captures.name("alpha").map(|m| m.as_str().parse().unwrap());
         let beta = captures.name("beta").map(|m| m.as_str().parse().unwrap());
@@ -178,8 +187,9 @@ impl FromStr for Version {
         };
 
         Ok(Version {
-            year,
-            incremental,
+            major,
+            minor,
+            patch,
             pre_stable,
             dev,
         })
@@ -218,23 +228,28 @@ pub mod arbitrary {
     prop_compose! {
         /// Generate an arbitrary [Version].
         pub fn arb_version()
-            (year in arb_year(), incremental in arb_incremental(), pre_stable in option::of(arb_pre_stable()), dev in option::of(arb_hash()))
+            (major in arb_major(), minor in arb_minor(), patch in option::of(arb_patch()), pre_stable in option::of(arb_pre_stable()), dev in option::of(arb_hash()))
             -> Version {
-                Version { year, incremental, pre_stable, dev }
+                Version { major, minor, patch, pre_stable, dev }
         }
     }
 
-    /// Generate an arbitrary Mullvad App version year.
-    fn arb_year() -> impl Strategy<Value = u32> {
-        1000u32..=9999
+    /// Generate an arbitrary Warren App version major component.
+    fn arb_major() -> impl Strategy<Value = u32> {
+        1u32..=9999
     }
 
-    /// Generate an arbitrary Mullvad App version incremental number.
-    fn arb_incremental() -> impl Strategy<Value = u32> {
-        1u32..=99
+    /// Generate an arbitrary Warren App version minor component.
+    fn arb_minor() -> impl Strategy<Value = u32> {
+        0u32..=99
     }
 
-    /// Generate an arbitrary Mullvad App version pre-stable type.
+    /// Generate an arbitrary Warren App version patch component.
+    fn arb_patch() -> impl Strategy<Value = u32> {
+        0u32..=99
+    }
+
+    /// Generate an arbitrary Warren App version pre-stable type.
     fn arb_pre_stable() -> impl Strategy<Value = PreStableType> {
         let alpha = |number| Just(PreStableType::Alpha(number));
         let beta = |number| Just(PreStableType::Beta(number));
@@ -305,6 +320,25 @@ mod tests {
     }
 
     #[test]
+    fn test_semver_ordering() {
+        // Semver patch / minor / major ordering
+        assert!(parse("1.0.1") > parse("1.0.0"));
+        assert!(parse("1.1.0") > parse("1.0.9"));
+        assert!(parse("2.0.0") > parse("1.9.9"));
+
+        // Stable beats its own pre-releases and dev builds
+        assert!(parse("1.0.0") > parse("1.0.0-beta1"));
+        assert!(parse("1.0.0") > parse("1.0.0-alpha1"));
+        assert!(parse("1.0.0-dev-abc") > parse("1.0.0"));
+
+        // A missing patch is treated as 0 in ordering (1.0 ranks equal to 1.0.0)
+        assert_eq!(
+            parse("1.0").partial_cmp(&parse("1.0.0")),
+            Some(Ordering::Equal)
+        );
+    }
+
+    #[test]
     fn test_version_ordering_and_equality() {
         let v = parse("2021.3");
 
@@ -332,10 +366,36 @@ mod tests {
         assert_eq!(
             parse("2021.34"),
             Version {
-                year: 2021,
-                incremental: 34,
+                major: 2021,
+                minor: 34,
+                patch: None,
                 pre_stable: None,
                 dev: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_semver() {
+        assert_eq!(
+            parse("1.0.0"),
+            Version {
+                major: 1,
+                minor: 0,
+                patch: Some(0),
+                pre_stable: None,
+                dev: None,
+            }
+        );
+
+        assert_eq!(
+            parse("1.2.3-beta4-dev-e5483d"),
+            Version {
+                major: 1,
+                minor: 2,
+                patch: Some(3),
+                pre_stable: Some(PreStableType::Beta(4)),
+                dev: Some(Hash("e5483d".to_string())),
             }
         );
     }
@@ -345,8 +405,9 @@ mod tests {
         assert_eq!(
             parse("2023.1-alpha77"),
             Version {
-                year: 2023,
-                incremental: 1,
+                major: 2023,
+                minor: 1,
+                patch: None,
                 pre_stable: Some(PreStableType::Alpha(77)),
                 dev: None,
             }
@@ -355,8 +416,9 @@ mod tests {
         assert_eq!(
             parse("2021.34-alpha777"),
             Version {
-                year: 2021,
-                incremental: 34,
+                major: 2021,
+                minor: 34,
+                patch: None,
                 pre_stable: Some(PreStableType::Alpha(777)),
                 dev: None,
             }
@@ -368,8 +430,9 @@ mod tests {
         assert_eq!(
             parse("2021.34-beta5"),
             Version {
-                year: 2021,
-                incremental: 34,
+                major: 2021,
+                minor: 34,
+                patch: None,
                 pre_stable: Some(PreStableType::Beta(5)),
                 dev: None,
             }
@@ -378,8 +441,9 @@ mod tests {
         assert_eq!(
             parse("2021.34-beta453"),
             Version {
-                year: 2021,
-                incremental: 34,
+                major: 2021,
+                minor: 34,
+                patch: None,
                 pre_stable: Some(PreStableType::Beta(453)),
                 dev: None,
             }
@@ -391,8 +455,9 @@ mod tests {
         assert_eq!(
             parse("2021.34-dev-0b60e4d87"),
             Version {
-                year: 2021,
-                incremental: 34,
+                major: 2021,
+                minor: 34,
+                patch: None,
                 pre_stable: None,
                 dev: Some(Hash("0b60e4d87".to_string())),
             }
@@ -404,8 +469,9 @@ mod tests {
         assert_eq!(
             parse("2024.8-beta1-dev-e5483d"),
             Version {
-                year: 2024,
-                incremental: 8,
+                major: 2024,
+                minor: 8,
+                patch: None,
                 pre_stable: Some(PreStableType::Beta(1)),
                 dev: Some(Hash("e5483d".to_string())),
             }
@@ -456,6 +522,12 @@ mod tests {
         assert_same_display("2024.8-alpha77-dev-85483d");
         assert_same_display("2024.12");
         assert_same_display("2045.2-dev-123");
+
+        // Full semver forms round-trip too.
+        assert_same_display("1.0.0");
+        assert_same_display("1.2.3");
+        assert_same_display("1.0.0-beta1");
+        assert_same_display("1.2.3-alpha4-dev-abcdef");
     }
 
     proptest! {

@@ -834,8 +834,9 @@ mod test {
     impl DownloadedInstaller for FailingAppVerifier {
         fn version(&self) -> &mullvad_version::Version {
             &mullvad_version::Version {
-                year: 2042,
-                incremental: 1337,
+                major: 2042,
+                minor: 1337,
+                patch: None,
                 pre_stable: None,
                 dev: None,
             }
@@ -905,7 +906,7 @@ mod test {
     /// Create a version cache with a stable version that is newer than the current version
     fn get_new_stable_version_cache() -> VersionCache {
         let mut version: mullvad_version::Version = mullvad_version::VERSION.parse().unwrap();
-        version.incremental += 1;
+        version.minor += 1;
         VersionCache {
             cache_version: version.clone(),
             current_version_supported: true,
@@ -936,7 +937,7 @@ mod test {
         };
         let mut beta = stable.clone();
         beta.version.pre_stable = Some(mullvad_version::PreStableType::Beta(1));
-        beta.version.incremental += 1;
+        beta.version.minor += 1;
         VersionCache {
             cache_version: stable.version.clone(),
             current_version_supported: true,
@@ -1189,7 +1190,7 @@ mod test {
             .version_info
             .stable
             .version
-            .incremental += 1;
+            .minor += 1;
 
         version_router.on_new_version(upgrade_version.clone());
 
@@ -1271,7 +1272,7 @@ mod test {
         );
 
         // Unless the version is different
-        version_cache_test.version_info.stable.version.incremental += 1;
+        version_cache_test.version_info.stable.version.minor += 1;
         version_router.on_new_version(version_cache_test.clone());
         assert!(
             matches!(version_router.state, State::HasVersion { .. }),
@@ -1299,7 +1300,7 @@ mod test {
         );
 
         // Unless the version is different
-        version_cache_test.version_info.stable.version.incremental += 1;
+        version_cache_test.version_info.stable.version.minor += 1;
         version_router.on_new_version(version_cache_test.clone());
         assert!(
             matches!(version_router.state, State::HasVersion { .. }),
