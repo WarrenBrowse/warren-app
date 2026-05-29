@@ -31,6 +31,14 @@ typedef enum WarrenTunnelEventTagC {
   EventNatPmpMapped = 4,
   EventNatPmpRenewed = 5,
   EventNatPmpFailed = 6,
+  /**
+   * Fired once, on the very first connection attempt of a tunnel
+   * session (before any successful `Connected` event). Subsequent
+   * attempts after a connection drop fire `EventReconnecting`
+   * instead. Swift uses this to distinguish "tunnel starting" from
+   * "tunnel recovering".
+   */
+  EventConnecting = 7,
 } WarrenTunnelEventTagC;
 
 /**
