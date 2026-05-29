@@ -651,7 +651,11 @@ class ApplicationMain
             // subscription. The retry path is handled by
             // `account-data-cache`; demote the noise to debug to
             // keep the production log focused on real failures.
-            if (error.message.includes('404 Not Found')) {
+            // The daemon maps a warren-api 404 to a gRPC NOT_FOUND status,
+            // which surfaces here as `5 NOT_FOUND: warren-api 404` (not the
+            // HTTP "404 Not Found" phrasing). Match the actual payload so the
+            // expected no-subscription case stays at debug level.
+            if (error.message.includes('warren-api 404')) {
               log.debug(`updateDevice: 404 (no device record yet, expected without subscription)`);
             } else {
               log.warn(`Failed to update device info: ${error.message}`);
