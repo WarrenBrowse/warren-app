@@ -40,6 +40,42 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _obfuscationM40 = MutableStateFlow(prefs.getBoolean(KEY_OBFUSCATION_M40, false))
     val obfuscationM40: StateFlow<Boolean> = _obfuscationM40.asStateFlow()
 
+    // --- Privacy-leak controls (P0) ---
+
+    /** Route IPv6 through the tunnel. `false` (default) blackholes IPv6. */
+    private val _ipv6Enabled = MutableStateFlow(prefs.getBoolean(KEY_IPV6_ENABLED, false))
+    val ipv6Enabled: StateFlow<Boolean> = _ipv6Enabled.asStateFlow()
+
+    /** Kill switch: keep traffic blocked when the tunnel drops. */
+    private val _lockdownMode = MutableStateFlow(prefs.getBoolean(KEY_LOCKDOWN_MODE, false))
+    val lockdownMode: StateFlow<Boolean> = _lockdownMode.asStateFlow()
+
+    /** DNS mode: [DNS_STATE_DEFAULT] or [DNS_STATE_CUSTOM]. */
+    private val _dnsState = MutableStateFlow(prefs.getString(KEY_DNS_STATE, DNS_STATE_DEFAULT) ?: DNS_STATE_DEFAULT)
+    val dnsState: StateFlow<String> = _dnsState.asStateFlow()
+
+    /** Custom DNS resolver addresses (only used in [DNS_STATE_CUSTOM]). */
+    private val _customDnsServers = MutableStateFlow(readCustomDnsServers())
+    val customDnsServers: StateFlow<List<String>> = _customDnsServers.asStateFlow()
+
+    private val _blockAds = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_ADS, false))
+    val blockAds: StateFlow<Boolean> = _blockAds.asStateFlow()
+
+    private val _blockTrackers = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_TRACKERS, false))
+    val blockTrackers: StateFlow<Boolean> = _blockTrackers.asStateFlow()
+
+    private val _blockMalware = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_MALWARE, false))
+    val blockMalware: StateFlow<Boolean> = _blockMalware.asStateFlow()
+
+    private val _blockAdultContent = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_ADULT, false))
+    val blockAdultContent: StateFlow<Boolean> = _blockAdultContent.asStateFlow()
+
+    private val _blockGambling = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_GAMBLING, false))
+    val blockGambling: StateFlow<Boolean> = _blockGambling.asStateFlow()
+
+    private val _blockSocialMedia = MutableStateFlow(prefs.getBoolean(KEY_DNS_BLOCK_SOCIAL, false))
+    val blockSocialMedia: StateFlow<Boolean> = _blockSocialMedia.asStateFlow()
+
     /**
      * User-selected exit relay identifier (16-byte stable exit_id hex).
      * `null` = picker has not been used yet; the builder falls back to
@@ -85,12 +121,86 @@ class WarrenLocalSettingsRepository(context: Context) {
         _selectedExitId.value = exitId
     }
 
-    private companion object {
-        const val PREFS_NAME = "warren_local_settings"
-        const val KEY_DAITA_ENABLED = "daita_enabled"
-        const val KEY_NAT_PMP_ENABLED = "nat_pmp_enabled"
-        const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
-        const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
-        const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
+    fun setIpv6Enabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_IPV6_ENABLED, enabled).apply()
+        _ipv6Enabled.value = enabled
+    }
+
+    fun setLockdownMode(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LOCKDOWN_MODE, enabled).apply()
+        _lockdownMode.value = enabled
+    }
+
+    fun setDnsState(state: String) {
+        val normalized = if (state == DNS_STATE_CUSTOM) DNS_STATE_CUSTOM else DNS_STATE_DEFAULT
+        prefs.edit().putString(KEY_DNS_STATE, normalized).apply()
+        _dnsState.value = normalized
+    }
+
+    /** Replace the custom DNS resolver list. Blank entries are dropped. */
+    fun setCustomDnsServers(servers: List<String>) {
+        val cleaned = servers.map { it.trim() }.filter { it.isNotEmpty() }
+        prefs.edit().putString(KEY_DNS_CUSTOM_SERVERS, cleaned.joinToString(DNS_SERVER_DELIMITER)).apply()
+        _customDnsServers.value = cleaned
+    }
+
+    fun setBlockAds(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_ADS, enabled).apply()
+        _blockAds.value = enabled
+    }
+
+    fun setBlockTrackers(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_TRACKERS, enabled).apply()
+        _blockTrackers.value = enabled
+    }
+
+    fun setBlockMalware(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_MALWARE, enabled).apply()
+        _blockMalware.value = enabled
+    }
+
+    fun setBlockAdultContent(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_ADULT, enabled).apply()
+        _blockAdultContent.value = enabled
+    }
+
+    fun setBlockGambling(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_GAMBLING, enabled).apply()
+        _blockGambling.value = enabled
+    }
+
+    fun setBlockSocialMedia(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DNS_BLOCK_SOCIAL, enabled).apply()
+        _blockSocialMedia.value = enabled
+    }
+
+    private fun readCustomDnsServers(): List<String> =
+        prefs.getString(KEY_DNS_CUSTOM_SERVERS, null)
+            ?.split(DNS_SERVER_DELIMITER)
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?: emptyList()
+
+    companion object {
+        const val DNS_STATE_DEFAULT = "default"
+        const val DNS_STATE_CUSTOM = "custom"
+
+        private const val PREFS_NAME = "warren_local_settings"
+        private const val KEY_DAITA_ENABLED = "daita_enabled"
+        private const val KEY_NAT_PMP_ENABLED = "nat_pmp_enabled"
+        private const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
+        private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
+        private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
+        private const val KEY_IPV6_ENABLED = "ipv6_enabled"
+        private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
+        private const val KEY_DNS_STATE = "dns_state"
+        private const val KEY_DNS_CUSTOM_SERVERS = "dns_custom_servers"
+        private const val KEY_DNS_BLOCK_ADS = "dns_block_ads"
+        private const val KEY_DNS_BLOCK_TRACKERS = "dns_block_trackers"
+        private const val KEY_DNS_BLOCK_MALWARE = "dns_block_malware"
+        private const val KEY_DNS_BLOCK_ADULT = "dns_block_adult"
+        private const val KEY_DNS_BLOCK_GAMBLING = "dns_block_gambling"
+        private const val KEY_DNS_BLOCK_SOCIAL = "dns_block_social"
+        private const val DNS_SERVER_DELIMITER = ","
     }
 }

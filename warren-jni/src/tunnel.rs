@@ -66,6 +66,25 @@ pub struct WarrenTunnelConfig {
                   the client-side toggle is currently configured at warren-exit deploy time, not per-session"
     )]
     pub obfuscation_m40: Option<bool>,
+    /// Whether IPv6 is carried through the tunnel. Enforced Android-side at
+    /// the `VpnService.Builder` layer (route + address selection); accepted
+    /// here so the schema stays in sync and future client-side IPv6
+    /// filtering can read it. `#[serde(default)]` keeps older payloads valid.
+    #[serde(default)]
+    #[expect(dead_code, reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up")]
+    pub enable_ipv6: Option<bool>,
+    /// App-level kill switch. Enforced Android-side (the adapter keeps a
+    /// blackhole interface up when the tunnel drops). Accepted here for
+    /// schema parity.
+    #[serde(default)]
+    #[expect(dead_code, reason = "lockdown enforced Android-side via blackhole interface")]
+    pub lockdown_mode: Option<bool>,
+    /// DNS options. DNS routing into the tunnel is enforced Android-side via
+    /// `VpnService.Builder.addDnsServer`; content-blocking flags are honoured
+    /// by the exit DNS forwarder. Accepted here for schema parity.
+    #[serde(default)]
+    #[expect(dead_code, reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up")]
+    pub dns: Option<serde_json::Value>,
 }
 
 /// Tunnel session status reported back to Kotlin via

@@ -112,6 +112,66 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `ipv6 and lockdown default to false and write through`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertFalse(repo.ipv6Enabled.value)
+        assertFalse(repo.lockdownMode.value)
+
+        repo.setIpv6Enabled(true)
+        repo.setLockdownMode(true)
+
+        assertTrue(repo.ipv6Enabled.value)
+        assertTrue(repo.lockdownMode.value)
+        verify { mockEditor.putBoolean("ipv6_enabled", true) }
+        verify { mockEditor.putBoolean("lockdown_mode", true) }
+    }
+
+    @Test
+    fun `dns state defaults to default and normalizes unknown values`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(WarrenLocalSettingsRepository.DNS_STATE_DEFAULT, repo.dnsState.value)
+
+        repo.setDnsState(WarrenLocalSettingsRepository.DNS_STATE_CUSTOM)
+        assertEquals(WarrenLocalSettingsRepository.DNS_STATE_CUSTOM, repo.dnsState.value)
+        verify { mockEditor.putString("dns_state", "custom") }
+
+        repo.setDnsState("garbage")
+        assertEquals(WarrenLocalSettingsRepository.DNS_STATE_DEFAULT, repo.dnsState.value)
+    }
+
+    @Test
+    fun `custom dns servers round-trip and drop blanks`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getString("dns_custom_servers", null) } returns "9.9.9.9,149.112.112.112"
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(listOf("9.9.9.9", "149.112.112.112"), repo.customDnsServers.value)
+
+        repo.setCustomDnsServers(listOf("1.1.1.1", "  ", "", "8.8.8.8"))
+        assertEquals(listOf("1.1.1.1", "8.8.8.8"), repo.customDnsServers.value)
+        verify { mockEditor.putString("dns_custom_servers", "1.1.1.1,8.8.8.8") }
+    }
+
+    @Test
+    fun `content blocking toggles write through`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setBlockAds(true)
+        repo.setBlockMalware(true)
+
+        assertTrue(repo.blockAds.value)
+        assertTrue(repo.blockMalware.value)
+        assertFalse(repo.blockTrackers.value)
+        verify { mockEditor.putBoolean("dns_block_ads", true) }
+        verify { mockEditor.putBoolean("dns_block_malware", true) }
+    }
+
+    @Test
     fun `flows emit current value to new collectors`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)

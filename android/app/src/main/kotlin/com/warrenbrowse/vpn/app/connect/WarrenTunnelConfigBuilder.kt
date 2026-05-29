@@ -31,6 +31,8 @@ class WarrenTunnelConfigBuilder(
         val natPmpEnabled = localSettings.natPmpEnabled.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
         val obfuscationM40 = localSettings.obfuscationM40.value
+        val ipv6Enabled = localSettings.ipv6Enabled.value
+        val lockdownMode = localSettings.lockdownMode.value
 
         val relays = relayCatalog.listRelays()
         val selectedExitId = localSettings.selectedExitId.value
@@ -71,6 +73,46 @@ class WarrenTunnelConfigBuilder(
             bypassCidrs = emptyList(),
             natPmpEnabled = natPmpEnabled,
             obfuscationM40 = obfuscationM40,
+            enableIpv6 = ipv6Enabled,
+            lockdownMode = lockdownMode,
+            dns = buildDnsConfig(),
+        )
+    }
+
+    /**
+     * Compose the [WarrenTunnelConfig.DnsConfig] from the persisted DNS
+     * settings. Returns `null` when DNS is in default mode with no content
+     * blocking, so the tunnel uses the exit forwarder with no extra payload.
+     */
+    private fun buildDnsConfig(): WarrenTunnelConfig.DnsConfig? {
+        val state = localSettings.dnsState.value
+        val custom = localSettings.customDnsServers.value
+        val blockAds = localSettings.blockAds.value
+        val blockTrackers = localSettings.blockTrackers.value
+        val blockMalware = localSettings.blockMalware.value
+        val blockAdult = localSettings.blockAdultContent.value
+        val blockGambling = localSettings.blockGambling.value
+        val blockSocial = localSettings.blockSocialMedia.value
+
+        val isCustom = state == WarrenLocalSettingsRepository.DNS_STATE_CUSTOM
+        val anyBlocking =
+            blockAds || blockTrackers || blockMalware || blockAdult || blockGambling || blockSocial
+
+        if (!isCustom && !anyBlocking) return null
+
+        return WarrenTunnelConfig.DnsConfig(
+            state = if (isCustom) {
+                WarrenTunnelConfig.DnsConfig.STATE_CUSTOM
+            } else {
+                WarrenTunnelConfig.DnsConfig.STATE_DEFAULT
+            },
+            customServers = if (isCustom) custom else emptyList(),
+            blockAds = blockAds,
+            blockTrackers = blockTrackers,
+            blockMalware = blockMalware,
+            blockAdultContent = blockAdult,
+            blockGambling = blockGambling,
+            blockSocialMedia = blockSocial,
         )
     }
 

@@ -32,6 +32,16 @@ class WarrenTunnelConfigBuilderTest {
         multiHop: Boolean = false,
         obfuscation: Boolean = false,
         selectedExitId: String? = null,
+        ipv6: Boolean = false,
+        lockdown: Boolean = false,
+        dnsState: String = WarrenLocalSettingsRepository.DNS_STATE_DEFAULT,
+        customDns: List<String> = emptyList(),
+        blockAds: Boolean = false,
+        blockTrackers: Boolean = false,
+        blockMalware: Boolean = false,
+        blockAdult: Boolean = false,
+        blockGambling: Boolean = false,
+        blockSocial: Boolean = false,
     ): WarrenLocalSettingsRepository {
         val repo: WarrenLocalSettingsRepository = mockk()
         every { repo.daitaEnabled } returns MutableStateFlow(daita)
@@ -39,6 +49,16 @@ class WarrenTunnelConfigBuilderTest {
         every { repo.multiHopEnabled } returns MutableStateFlow(multiHop)
         every { repo.obfuscationM40 } returns MutableStateFlow(obfuscation)
         every { repo.selectedExitId } returns MutableStateFlow(selectedExitId)
+        every { repo.ipv6Enabled } returns MutableStateFlow(ipv6)
+        every { repo.lockdownMode } returns MutableStateFlow(lockdown)
+        every { repo.dnsState } returns MutableStateFlow(dnsState)
+        every { repo.customDnsServers } returns MutableStateFlow(customDns)
+        every { repo.blockAds } returns MutableStateFlow(blockAds)
+        every { repo.blockTrackers } returns MutableStateFlow(blockTrackers)
+        every { repo.blockMalware } returns MutableStateFlow(blockMalware)
+        every { repo.blockAdultContent } returns MutableStateFlow(blockAdult)
+        every { repo.blockGambling } returns MutableStateFlow(blockGambling)
+        every { repo.blockSocialMedia } returns MutableStateFlow(blockSocial)
         return repo
     }
 
@@ -126,6 +146,57 @@ class WarrenTunnelConfigBuilderTest {
         // Inactive selection falls back to the first active relay (sample).
         val config = builder.build(pubkey)!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `ipv6 and lockdown default to the leak-safe values`() {
+        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        assertFalse(config.enableIpv6)
+        assertFalse(config.lockdownMode)
+    }
+
+    @Test
+    fun `ipv6 and lockdown toggles flow through`() {
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(ipv6 = true, lockdown = true),
+            mockCatalog(),
+        ).build(pubkey)!!
+        assertTrue(config.enableIpv6)
+        assertTrue(config.lockdownMode)
+    }
+
+    @Test
+    fun `dns is null in default mode with no content blocking`() {
+        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        assertNull(config.dns)
+    }
+
+    @Test
+    fun `custom dns servers flow into the config`() {
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(
+                dnsState = WarrenLocalSettingsRepository.DNS_STATE_CUSTOM,
+                customDns = listOf("9.9.9.9", "149.112.112.112"),
+            ),
+            mockCatalog(),
+        ).build(pubkey)!!
+        assertNotNull(config.dns)
+        assertEquals("custom", config.dns?.state)
+        assertEquals(listOf("9.9.9.9", "149.112.112.112"), config.dns?.customServers)
+    }
+
+    @Test
+    fun `content blocking flags produce a default-mode dns config`() {
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(blockAds = true, blockMalware = true),
+            mockCatalog(),
+        ).build(pubkey)!!
+        assertNotNull(config.dns)
+        assertEquals("default", config.dns?.state)
+        assertTrue(config.dns?.blockAds == true)
+        assertTrue(config.dns?.blockMalware == true)
+        assertFalse(config.dns?.blockTrackers == true)
+        assertTrue(config.dns?.customServers?.isEmpty() == true)
     }
 
     @Test
