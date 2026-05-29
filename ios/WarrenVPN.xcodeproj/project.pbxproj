@@ -1271,13 +1271,6 @@
 			remoteGlobalIDString = 58CE5E5F224146200008646E;
 			remoteInfo = WarrenVPN;
 		};
-		06D9844928F99056003AABE9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 58CE5E58224146200008646E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 58FBDA9722A519BC00EB69A3;
-			remoteInfo = WireGuardGoBridge;
-		};
 		0EF2DA368E1D4ED72D89AD9A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
@@ -1453,13 +1446,6 @@
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
 			remoteInfo = WarrenTypes;
 		};
-		58FBDAA122A52A6800EB69A3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 58CE5E58224146200008646E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 58FBDA9722A519BC00EB69A3;
-			remoteInfo = WireGuardGoBridge;
-		};
 		58FBFBEB291622580020E046 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 58CE5E58224146200008646E /* Project object */;
@@ -1564,13 +1550,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 58D223D4294C8E5E0029F5F8;
 			remoteInfo = WarrenTypes;
-		};
-		A9609B6D2D004D1F0065A3D3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 58CE5E58224146200008646E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 58FBDA9722A519BC00EB69A3;
-			remoteInfo = WireGuardGoBridge;
 		};
 		A992DA212C24709F00DE7CE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2037,7 +2016,6 @@
 		587EB669270EFACB00123C75 /* CharacterSet+IPAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CharacterSet+IPAddress.swift"; sourceTree = "<group>"; };
 		587EB671271451E300123C75 /* VPNSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNSettingsViewModel.swift; sourceTree = "<group>"; };
 		587EB6732714520600123C75 /* VPNSettingsDataSourceDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNSettingsDataSourceDelegate.swift; sourceTree = "<group>"; };
-		5883955F2A9DEEA1008B63F6 /* WgAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WgAdapter.swift; sourceTree = "<group>"; };
 		588527B1276B3F0700BAA373 /* LoadTunnelConfigurationOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadTunnelConfigurationOperation.swift; sourceTree = "<group>"; };
 		588527B3276B4F2F00BAA373 /* SetAccountOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetAccountOperation.swift; sourceTree = "<group>"; };
 		5888AD82227B11080051EB06 /* LocationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCell.swift; sourceTree = "<group>"; };
@@ -2148,8 +2126,6 @@
 		58DFF7D12B0256A300F864E0 /* MarkdownStylingOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkdownStylingOptions.swift; sourceTree = "<group>"; };
 		58DFF7D72B02774C00F864E0 /* ListItemPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListItemPickerViewController.swift; sourceTree = "<group>"; };
 		58DFF7D92B02862E00F864E0 /* ShadowsocksCipherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShadowsocksCipherService.swift; sourceTree = "<group>"; };
-		58E07298288031D5008902F8 /* WireGuardAdapterError+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireGuardAdapterError+Localization.swift"; sourceTree = "<group>"; };
-		58E0729E28814ACC008902F8 /* WireGuardLogLevel+Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireGuardLogLevel+Logging.swift"; sourceTree = "<group>"; };
 		58E0A98727C8F46300FE6BDD /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		58E11187292FA11F009FCA84 /* SettingsMigrationUIHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMigrationUIHandler.swift; sourceTree = "<group>"; };
 		58E20770274672CA00DE5D77 /* LaunchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchViewController.swift; sourceTree = "<group>"; };
@@ -2158,7 +2134,6 @@
 		58E511E528DDDEAC00B0BCDE /* CodingErrors+CustomErrorDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodingErrors+CustomErrorDescription.swift"; sourceTree = "<group>"; };
 		58E511EA28DDE18400B0BCDE /* Error+Chain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+Chain.swift"; sourceTree = "<group>"; };
 		58E973DD24850EB600096F90 /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
-		58E9C3832A4EF15300CFDEAC /* WireGuardAdapter+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireGuardAdapter+Async.swift"; sourceTree = "<group>"; };
 		58E9C3852A4EF1CB00CFDEAC /* PacketTunnelActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelActor.swift; sourceTree = "<group>"; };
 		58EC06792A8D208D00BEB973 /* TunnelDeviceInfoStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelDeviceInfoStub.swift; sourceTree = "<group>"; };
 		58EC067B2A8D2A0B00BEB973 /* NetworkCounters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCounters.swift; sourceTree = "<group>"; };
@@ -2583,7 +2558,6 @@
 		C22157641BAA2EE822C65A14 /* WarrenAppGroupEvents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenAppGroupEvents.swift; sourceTree = "<group>"; };
 		CF58C66213C70276492438AD /* WarrenObfuscationIndicatorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenObfuscationIndicatorView.swift; sourceTree = "<group>"; };
 		DA9D2414206900ECD6A78CA9 /* WarrenDiagnosticInfoViewTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenDiagnosticInfoViewTests.swift; sourceTree = "<group>"; };
-		DD68970B0A1DEEA01FB25D9E /* WireGuardGoTunnelImplementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuardGoTunnelImplementation.swift; sourceTree = "<group>"; };
 		E10A0001000000000000AA01 /* GotaTunActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GotaTunActor.swift; sourceTree = "<group>"; };
 		E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelDebugSettings.swift; sourceTree = "<group>"; };
 		E1187ABA289BBB850024E748 /* OutOfTimeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutOfTimeViewController.swift; sourceTree = "<group>"; };
@@ -3954,17 +3928,6 @@
 			path = "Notification Providers";
 			sourceTree = "<group>";
 		};
-		588395612A9DF497008B63F6 /* WireGuardAdapter */ = {
-			isa = PBXGroup;
-			children = (
-				5883955F2A9DEEA1008B63F6 /* WgAdapter.swift */,
-				58E9C3832A4EF15300CFDEAC /* WireGuardAdapter+Async.swift */,
-				58E07298288031D5008902F8 /* WireGuardAdapterError+Localization.swift */,
-				58E0729E28814ACC008902F8 /* WireGuardLogLevel+Logging.swift */,
-			);
-			path = WireGuardAdapter;
-			sourceTree = "<group>";
-		};
 		58915D662A25F9F20066445B /* DeviceCheck */ = {
 			isa = PBXGroup;
 			children = (
@@ -4299,7 +4262,6 @@
 				7A9ED2A82F3CC057005BC0D9 /* Notifications */,
 				58F3F3682AA08E2200D3B0A4 /* PacketTunnelProvider */,
 				F059197A2C45404500C301F3 /* PostQuantum */,
-				588395612A9DF497008B63F6 /* WireGuardAdapter */,
 				58CE5E7D224146470008646E /* Info.plist */,
 				58CE5E7E224146470008646E /* PacketTunnel.entitlements */,
 			);
@@ -4512,7 +4474,6 @@
 				58225D272A84F23B0083D7F1 /* PacketTunnelPathObserver.swift */,
 				58F3F3692AA08E3C00D3B0A4 /* PacketTunnelProvider.swift */,
 				5864AF7C2A9F4DC9008BC928 /* SettingsReader.swift */,
-				DD68970B0A1DEEA01FB25D9E /* WireGuardGoTunnelImplementation.swift */,
 			);
 			path = PacketTunnelProvider;
 			sourceTree = "<group>";
@@ -5450,23 +5411,6 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
-/* Begin PBXLegacyTarget section */
-		58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "build-wireguard-go.sh $(ACTION)";
-			buildConfigurationList = 58FBDA9A22A519BC00EB69A3 /* Build configuration list for PBXLegacyTarget "WireGuardGoBridge" */;
-			buildPhases = (
-			);
-			buildToolPath = /bin/sh;
-			buildWorkingDirectory = "$(SOURCE_ROOT)";
-			dependencies = (
-			);
-			name = WireGuardGoBridge;
-			passBuildSettingsInEnvironment = 1;
-			productName = WireGuardGoBridge;
-		};
-/* End PBXLegacyTarget section */
-
 /* Begin PBXNativeTarget section */
 		06799ABB28F98E1D00ACD94E /* WarrenREST */ = {
 			isa = PBXNativeTarget;
@@ -5482,7 +5426,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				06D9844A28F99056003AABE9 /* PBXTargetDependency */,
 				58D223C2294C8AE90029F5F8 /* PBXTargetDependency */,
 				58D223E4294C8EE70029F5F8 /* PBXTargetDependency */,
 				58D22420294C91D20029F5F8 /* PBXTargetDependency */,
@@ -5607,7 +5550,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				A9609B6E2D004D1F0065A3D3 /* PBXTargetDependency */,
 				58D223E9294C8F120029F5F8 /* PBXTargetDependency */,
 				58D223F8294C8FF00029F5F8 /* PBXTargetDependency */,
 				06799AD028F98E1D00ACD94E /* PBXTargetDependency */,
@@ -5640,7 +5582,6 @@
 				58D22425294C921B0029F5F8 /* PBXTargetDependency */,
 				062B45A628FD4FD500746E77 /* PBXTargetDependency */,
 				58D223C9294C8B970029F5F8 /* PBXTargetDependency */,
-				58FBDAA222A52A6800EB69A3 /* PBXTargetDependency */,
 				58153074294CBE8B00D1702E /* PBXTargetDependency */,
 				58FE25C92AA72779003D1918 /* PBXTargetDependency */,
 				58FE25D12AA72802003D1918 /* PBXTargetDependency */,
@@ -5979,15 +5920,11 @@
 				pt,
 			);
 			mainGroup = 58CE5E57224146200008646E;
-			packageReferences = (
-				24D916931745E46E6EBBC879 /* XCLocalSwiftPackageReference "wireguard-apple" */,
-			);
 			productRefGroup = 58CE5E61224146200008646E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				58CE5E5F224146200008646E /* WarrenVPN */,
-				58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */,
 				58CE5E78224146470008646E /* PacketTunnel */,
 				58B0A29F238EE67E00BC001D /* WarrenVPNTests */,
 				852969242B4D9C1F007EAD4C /* WarrenVPNUITests */,
@@ -7540,11 +7477,6 @@
 			target = 06799ABB28F98E1D00ACD94E /* WarrenREST */;
 			targetProxy = 58D2239D294C89B50029F5F8 /* PBXContainerItemProxy */;
 		};
-		06D9844A28F99056003AABE9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */;
-			targetProxy = 06D9844928F99056003AABE9 /* PBXContainerItemProxy */;
-		};
 		44A2623E2D5CF9FD00085380 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 		};
@@ -7653,11 +7585,6 @@
 			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = 58EED36D29FBEF040000CBAF /* PBXContainerItemProxy */;
 		};
-		58FBDAA222A52A6800EB69A3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */;
-			targetProxy = 58FBDAA122A52A6800EB69A3 /* PBXContainerItemProxy */;
-		};
 		58FBFBEC291622580020E046 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 06799ABB28F98E1D00ACD94E /* WarrenREST */;
@@ -7750,11 +7677,6 @@
 			isa = PBXTargetDependency;
 			target = 58D223D4294C8E5E0029F5F8 /* WarrenTypes */;
 			targetProxy = A959E23F2D75F37600F95DDB /* PBXContainerItemProxy */;
-		};
-		A9609B6E2D004D1F0065A3D3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 58FBDA9722A519BC00EB69A3 /* WireGuardGoBridge */;
-			targetProxy = A9609B6D2D004D1F0065A3D3 /* PBXContainerItemProxy */;
 		};
 		A992DA222C24709F00DE7CE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -10674,17 +10596,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58FBDA9A22A519BC00EB69A3 /* Build configuration list for PBXLegacyTarget "WireGuardGoBridge" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				58FBDA9822A519BC00EB69A3 /* Debug */,
-				A93559502B4EADD600D5D524 /* Staging */,
-				58FBDA9922A519BC00EB69A3 /* Release */,
-				A9E99CE32B5195E600869AF2 /* MockRelease */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		58FBFBEF291622580020E046 /* Build configuration list for PBXNativeTarget "WarrenRESTTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -10763,13 +10674,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		24D916931745E46E6EBBC879 /* XCLocalSwiftPackageReference "wireguard-apple" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "wireguard-apple";
-		};
-/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		585834F624D2BC1F00A8AF56 /* XCRemoteSwiftPackageReference "swift-log" */ = {
