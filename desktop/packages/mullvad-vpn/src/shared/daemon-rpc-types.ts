@@ -255,7 +255,6 @@ export enum FeatureIndicator {
   shadowsocks,
   quic,
   lwo,
-  wireGuardPort,
   lanSharing,
   dnsContentBlockers,
   customDns,
@@ -671,10 +670,6 @@ export type SplitTunnelSettings = {
   appsList: string[];
 };
 
-export type WireGuardPortObfuscationSettings = {
-  port: Constraint<number>;
-};
-
 export type LwoSettings = {
   port: Constraint<number>;
 };
@@ -694,14 +689,12 @@ export enum ObfuscationType {
   shadowsocks,
   quic,
   lwo,
-  wireGuardPort,
 }
 
 export type ObfuscationSettings = {
   selectedObfuscation: ObfuscationType;
   udp2tcpSettings: Udp2TcpObfuscationSettings;
   shadowsocksSettings: ShadowsocksSettings;
-  wireGuardPortSettings: WireGuardPortObfuscationSettings;
   lwoSettings: LwoSettings;
 };
 

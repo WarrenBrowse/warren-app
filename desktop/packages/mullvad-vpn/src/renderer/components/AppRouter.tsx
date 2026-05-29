@@ -52,7 +52,6 @@ import {
   UserInterfaceSettingsView,
   VpnSettingsView,
   WarrenMultiHopSettingsView,
-  WireguardPortView,
 } from './views';
 
 export default function AppRouter() {
@@ -118,7 +117,6 @@ export default function AppRouter() {
           <Route exact path={RoutePath.appUpgrade} component={AppUpgradeView} />
           <Route exact path={RoutePath.manageDevices} component={ManageDevicesView} />
           <Route exact path={RoutePath.antiCensorship} component={AntiCensorshipView} />
-          <Route exact path={RoutePath.wireguardPort} component={WireguardPortView} />
           <Route exact path={RoutePath.lwo} component={LwoSettingsView} />
           <Route exact path={RoutePath.onboardingWelcome} component={OnboardingWelcomeView} />
           <Route exact path={RoutePath.onboardingWallet} component={OnboardingWalletView} />

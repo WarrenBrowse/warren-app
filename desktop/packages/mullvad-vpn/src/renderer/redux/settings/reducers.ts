@@ -206,9 +206,6 @@ const initialState: ISettingsReduxState = {
     shadowsocksSettings: {
       port: 'any',
     },
-    wireGuardPortSettings: {
-      port: 'any',
-    },
     lwoSettings: {
       port: 'any',
     },

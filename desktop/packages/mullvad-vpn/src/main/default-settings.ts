@@ -64,9 +64,6 @@ export function getDefaultSettings(): ISettings {
       shadowsocksSettings: {
         port: 'any',
       },
-      wireGuardPortSettings: {
-        port: 'any',
-      },
       lwoSettings: {
         port: 'any',
       },

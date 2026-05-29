@@ -412,8 +412,6 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.quic;
     case grpcTypes.FeatureIndicator.LWO:
       return FeatureIndicator.lwo;
-    case grpcTypes.FeatureIndicator.WIREGUARD_PORT:
-      return FeatureIndicator.wireGuardPort;
   }
 }
 
@@ -824,9 +822,6 @@ function convertFromObfuscationSettings(
     case grpcTypes.ObfuscationSettings.SelectedObfuscation.LWO:
       selectedObfuscationType = ObfuscationType.lwo;
       break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.WIREGUARD_PORT:
-      selectedObfuscationType = ObfuscationType.wireGuardPort;
-      break;
   }
 
   return {
@@ -836,9 +831,6 @@ function convertFromObfuscationSettings(
       : { port: 'any' },
     shadowsocksSettings: obfuscationSettings?.shadowsocks
       ? { port: convertFromConstraint(obfuscationSettings.shadowsocks.port) }
-      : { port: 'any' },
-    wireGuardPortSettings: obfuscationSettings?.wireguardPort
-      ? { port: convertFromConstraint(obfuscationSettings.wireguardPort.port) }
       : { port: 'any' },
     lwoSettings: obfuscationSettings?.lwo
       ? { port: convertFromConstraint(obfuscationSettings.lwo.port) }

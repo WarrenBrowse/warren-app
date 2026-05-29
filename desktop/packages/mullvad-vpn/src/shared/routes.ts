@@ -39,7 +39,6 @@ export enum RoutePath {
   appUpgrade = '/settings/app-upgrade',
   manageDevices = '/settings/manage-devices',
   antiCensorship = '/settings/advanced/anti-censorship',
-  wireguardPort = '/settings/advanced/wireguard-port',
   lwo = '/settings/advanced/lwo',
   // M5.B.3 onboarding wizard (first-launch welcome + wallet
   // generate/import + subscription pointer + privacy preferences +

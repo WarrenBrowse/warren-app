@@ -26,7 +26,6 @@ import { UdpOverTcpSettingsRouteObjectModel } from './udp-over-tcp-settings';
 import { UserInterfaceSettingsRouteObjectModel } from './user-interface-settings';
 import { VoucherSuccessRouteObjectModel } from './voucher-success';
 import { VpnSettingsRouteObjectModel } from './vpn-settings';
-import { WireGuardPortRouteObjectModel } from './wireguard-port';
 
 export class RoutesObjectModel {
   readonly main: MainRouteObjectModel;
@@ -53,7 +52,6 @@ export class RoutesObjectModel {
   readonly shadowsocksSettings: ShadowsocksSettingsRouteObjectModel;
   readonly account: AccountRouteObjectModel;
   readonly manageDevices: ManageDevicesRouteObjectModel;
-  readonly wireguardPort: WireGuardPortRouteObjectModel;
   readonly lwoSettings: LwoSettingsRouteObjectModel;
 
   constructor(page: Page, utils: TestUtils) {
@@ -81,7 +79,6 @@ export class RoutesObjectModel {
     this.shadowsocksSettings = new ShadowsocksSettingsRouteObjectModel(page, utils);
     this.account = new AccountRouteObjectModel(page, utils);
     this.manageDevices = new ManageDevicesRouteObjectModel(page, utils);
-    this.wireguardPort = new WireGuardPortRouteObjectModel(page, utils);
     this.lwoSettings = new LwoSettingsRouteObjectModel(page, utils);
   }
 }

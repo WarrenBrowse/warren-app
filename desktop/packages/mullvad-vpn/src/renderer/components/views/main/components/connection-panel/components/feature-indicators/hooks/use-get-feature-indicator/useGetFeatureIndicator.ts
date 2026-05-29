@@ -170,10 +170,6 @@ export const useGetFeatureIndicator = () => {
       label: strings.lwo,
       onClick: gotoAntiCensorship,
     },
-    [FeatureIndicator.wireGuardPort]: {
-      label: sprintf(messages.gettext('%(wireguard)s port'), { wireguard: strings.wireguard }),
-      onClick: gotoAntiCensorship,
-    },
     [FeatureIndicator.multihop]: {
       label:
         // TRANSLATORS: This refers to the multihop setting in the VPN settings view. This is

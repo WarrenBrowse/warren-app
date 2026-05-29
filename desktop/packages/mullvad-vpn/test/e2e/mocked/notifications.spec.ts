@@ -3,7 +3,7 @@ import { Page } from 'playwright';
 
 import { getDefaultSettings } from '../../../src/main/default-settings';
 import { colorTokens } from '../../../src/renderer/lib/foundations';
-import { Constraint, ErrorStateCause, TunnelState } from '../../../src/shared/daemon-rpc-types';
+import { ErrorStateCause } from '../../../src/shared/daemon-rpc-types';
 import { RoutesObjectModel } from '../route-object-models';
 import { getBackgroundColor } from '../utils';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
@@ -93,128 +93,6 @@ test.describe('Error notifications', () => {
         cause: ErrorStateCause.startTunnelError,
       },
     });
-  });
-});
-
-test.describe('Unsupported wireguard port', () => {
-  test.beforeAll(async () => {
-    await startup();
-  });
-
-  test.afterAll(async () => {
-    await util?.closePage();
-  });
-
-  const portRanges: [number, number][] = [
-    [1, 50],
-    [51, 100],
-  ];
-  const portInRange = portRanges[0][0];
-  const portOutOfRange = portRanges[1][1] + 1;
-
-  const updatePort = async (port: Constraint<number>) => {
-    const settings = getDefaultSettings();
-    settings.obfuscationSettings.wireGuardPortSettings.port = port;
-    await util.ipc.settings[''].notify(settings);
-  };
-
-  const updatePortRanges = async (portRanges: [number, number][]) => {
-    await util.ipc.relays[''].notify({
-      relayList: {
-        countries: [],
-      },
-      wireguardEndpointData: {
-        portRanges,
-        udp2tcpPorts: [],
-      },
-    });
-  };
-
-  const updateTunnelState = async (tunnelState: TunnelState) => {
-    await util.ipc.tunnel[''].notify(tunnelState);
-  };
-
-  test.beforeAll(async () => {
-    await updatePortRanges(portRanges);
-  });
-
-  const cases: {
-    name: string;
-    port: Constraint<number>;
-    tunnelState: TunnelState;
-  }[] = [
-    {
-      name: 'Should not show notification when any port is allowed',
-      port: 'any',
-      tunnelState: {
-        state: 'error',
-        details: { cause: ErrorStateCause.startTunnelError },
-      },
-    },
-    {
-      name: 'Should not show notification when port is in range',
-      port: { only: portInRange },
-      tunnelState: {
-        state: 'error',
-        details: { cause: ErrorStateCause.startTunnelError },
-      },
-    },
-    {
-      name: 'Should not show notification when tunnel is not in error state',
-      port: { only: portOutOfRange },
-      tunnelState: {
-        state: 'connected',
-        details: {
-          endpoint: {
-            address: '',
-            daita: false,
-            protocol: 'tcp',
-            quantumResistant: false,
-            tunnelType: 'wireguard',
-          },
-        },
-      },
-    },
-  ];
-
-  cases.forEach(({ name, port, tunnelState }) => {
-    test(name, async () => {
-      await updatePort(port);
-      await updateTunnelState(tunnelState);
-
-      const subTitle = page.getByTestId('notificationSubTitle');
-
-      // TODO: Remove these test cases which test for the absence of a specific
-      // notification. We prefer to have tests which test for something, rather
-      // than the absence of something.
-      await expect(async () => {
-        const visible = await subTitle.isVisible();
-        if (visible) {
-          // EITHER: A notification is displayed, but not for unsupported WireGuard port
-          expect(await subTitle.innerText()).not.toMatch(
-            /The selected WireGuard port is not supported/i,
-          );
-        } else {
-          // OR: no notification is displayed at all
-          // NO OP
-        }
-      }).toPass({
-        timeout: 5000,
-      });
-    });
-  });
-
-  test('Should show notification when port is out of range', async () => {
-    await updatePort({ only: portOutOfRange });
-    await updateTunnelState({
-      state: 'error',
-      details: { cause: ErrorStateCause.startTunnelError },
-    });
-
-    const title = page.getByTestId('notificationTitle');
-    const subTitle = page.getByTestId('notificationSubTitle');
-    await expect(title).toHaveText('BLOCKING INTERNET');
-    await expect(subTitle).toContainText(/The selected WireGuard port is not supported/i);
   });
 });
 

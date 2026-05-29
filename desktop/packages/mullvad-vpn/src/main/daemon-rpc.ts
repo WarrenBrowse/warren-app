@@ -568,11 +568,6 @@ export class DaemonRpc extends GrpcClient {
           grpcTypes.ObfuscationSettings.SelectedObfuscation.LWO,
         );
         break;
-      case ObfuscationType.wireGuardPort:
-        grpcObfuscationSettings.setSelectedObfuscation(
-          grpcTypes.ObfuscationSettings.SelectedObfuscation.WIREGUARD_PORT,
-        );
-        break;
     }
 
     if (obfuscationSettings.udp2tcpSettings) {
@@ -589,14 +584,6 @@ export class DaemonRpc extends GrpcClient {
         shadowsocksSettings.setPort(obfuscationSettings.shadowsocksSettings.port.only);
       }
       grpcObfuscationSettings.setShadowsocks(shadowsocksSettings);
-    }
-
-    if (obfuscationSettings.wireGuardPortSettings) {
-      const wireGuardPortSettings = new grpcTypes.ObfuscationSettings.WireguardPort();
-      if (obfuscationSettings.wireGuardPortSettings.port !== 'any') {
-        wireGuardPortSettings.setPort(obfuscationSettings.wireGuardPortSettings.port.only);
-      }
-      grpcObfuscationSettings.setWireguardPort(wireGuardPortSettings);
     }
 
     if (obfuscationSettings.lwoSettings) {

@@ -51,13 +51,6 @@ test.describe('Anti censorship settings', () => {
     await expect(option).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('Should select WireGuard port obfuscation', async () => {
-    const option = routes.antiCensorship.selectors.wireguardPortOption();
-    await Promise.all([util.ipc.settings.setObfuscationSettings.expect(), option.click()]);
-
-    await setObfuscation(ObfuscationType.wireGuardPort);
-    await expect(option).toHaveAttribute('aria-selected', 'true');
-  });
 
   test('Should select LWO obfuscation', async () => {
     const option = routes.antiCensorship.selectors.lwoOption();

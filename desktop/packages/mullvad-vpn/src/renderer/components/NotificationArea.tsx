@@ -31,7 +31,6 @@ import {
   AppUpgradeReadyNotificationProvider,
   NewDeviceNotificationProvider,
   NewVersionNotificationProvider,
-  UnsupportedWireGuardPortNotificationProvider,
   WarrenFailoverNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
@@ -63,10 +62,7 @@ export default function NotificationArea(props: IProps) {
   const account = useSelector((state: IReduxState) => state.account);
   const locale = useSelector((state: IReduxState) => state.userInterface.locale);
   const tunnelState = useSelector((state: IReduxState) => state.connection.status);
-  const connection = useSelector((state: IReduxState) => state.connection);
   const version = useSelector((state: IReduxState) => state.version);
-  const allowedPortRanges = useSelector((state) => state.settings.wireguardEndpointData.portRanges);
-  const obfuscationSettings = useSelector((state) => state.settings.obfuscationSettings);
 
   const lockdownModeSetting = useSelector((state: IReduxState) => state.settings.lockdownMode);
   const hasExcludedApps = useSelector(
@@ -151,11 +147,6 @@ export default function NotificationArea(props: IProps) {
       appUpgradeStep,
       appUpgradeEventType,
       appUpgradeDownloadProgressValue,
-    }),
-    new UnsupportedWireGuardPortNotificationProvider({
-      connection,
-      obfuscationSettings,
-      allowedPortRanges,
     }),
     new ErrorNotificationProvider({
       tunnelState,

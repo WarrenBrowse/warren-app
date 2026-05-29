@@ -14,5 +14,4 @@ export const createSelectors = (page: Page) => ({
   lwoOption: () => page.getByRole('option', { name: 'LWO' }),
   quicOption: () => page.getByRole('option', { name: 'QUIC' }),
   portObfuscationOption: () => page.getByRole('option', { name: 'Port', exact: true }),
-  wireguardPortOption: () => page.getByRole('option', { name: 'WireGuard Port' }),
 });
