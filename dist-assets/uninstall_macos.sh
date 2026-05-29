@@ -32,8 +32,8 @@ sudo launchctl unload -w "$DAEMON_PLIST_PATH"
 sudo rm -f "$DAEMON_PLIST_PATH"
 
 echo "Resetting firewall"
-sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup reset-firewall || echo "Failed to reset firewall"
-sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup remove-device || echo "Failed to remove device from account"
+sudo /Applications/Warren\ VPN.app/Contents/Resources/mullvad-setup reset-firewall || echo "Failed to reset firewall"
+sudo /Applications/Warren\ VPN.app/Contents/Resources/mullvad-setup remove-device || echo "Failed to remove device from account"
 
 echo "Removing zsh shell completion symlink ..."
 sudo rm -f /usr/local/share/zsh/site-functions/_warren
