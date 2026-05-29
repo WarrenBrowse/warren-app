@@ -91,7 +91,10 @@ jobs:
 
   build-linux:
     name: Build Linux .deb/.rpm
-    runs-on: [self-hosted, Linux, X64]
+    # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
+    # The Debian LXC runner stays registered but lacks this label, so it is no
+    # longer selected for this job.
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
