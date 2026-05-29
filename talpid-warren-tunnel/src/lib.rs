@@ -1,11 +1,10 @@
 //! Warren adapter for the talpid tunnel state machine.
 //!
-//! This crate exposes [`WarrenTunnelMonitor`], a drop-in alternative to
-//! [`talpid_wireguard::WireguardMonitor`] consumed by
-//! `talpid_core::tunnel_state_machine::tunnel_monitor::TunnelMonitor`
-//! through an enum dispatch. The API mirrors
-//! [`WireguardMonitor::start`] / `wait` so `connecting_state.rs` can
-//! treat both backends uniformly.
+//! This crate exposes [`WarrenTunnelMonitor`], the QUIC tunnel backend
+//! consumed by
+//! `talpid_core::tunnel_state_machine::tunnel_monitor::TunnelMonitor`.
+//! It exposes a `start` / `wait` API so `connecting_state.rs` can drive
+//! the tunnel lifecycle.
 //!
 //! Underneath, [`WarrenTunnelMonitor::start`] performs the QUIC
 //! handshake through [`warren_tunnel::ClientTunnel`], opens a TUN via
@@ -443,7 +442,7 @@ impl Error {
 
 /// Active Warren tunnel monitor.
 ///
-/// API mirrors [`talpid_wireguard::WireguardMonitor`]:
+/// API:
 /// - [`Self::start`]: blocking factory (QUIC handshake + TUN setup +
 ///   pump spawn).
 /// - [`Self::wait`]: blocks until the daemon close-signal fires.
@@ -2199,9 +2198,8 @@ fn build_warren_tunnel_routes(
 }
 
 /// Build `RequiredRoute`s to redirect user traffic through the TUN on
-/// macOS, while bypassing daemon-side packets to the exit IPs. Mirror
-/// of Mullvad WireGuard's pattern (`talpid-wireguard/src/lib.rs:843-859`,
-/// plus `get_post_tunnel_routes`), adapted to Warren's needs (single
+/// macOS, while bypassing daemon-side packets to the exit IPs. Adapted
+/// from the upstream Mullvad routing pattern to Warren's needs (single
 /// exit, Quinn QUIC transport).
 ///
 /// macOS strategy — do NOT reproduce the Linux `/1 + /1` recipe:
