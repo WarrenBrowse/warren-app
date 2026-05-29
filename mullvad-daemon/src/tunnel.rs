@@ -127,8 +127,8 @@ struct InnerParametersGenerator {
     /// `wireguard.daita.enabled`. Forwarded verbatim onto
     /// [`talpid_warren_tunnel::WarrenTunnelParameters::enable_daita`].
     /// Mutated at runtime when the Settings handler observes a change
-    /// on the `wireguard.daita` slice (single UI surface for both
-    /// WireGuard + Warren backends).
+    /// on the `wireguard.daita` settings slice (the DAITA toggle reuses
+    /// the upstream-named settings field for the Warren backend).
     warren_enable_daita: bool,
     /// M5.B.2 multi-exit auto-failover: pubkey of the most recently
     /// assembled Warren exit. The state machine increments
@@ -259,13 +259,13 @@ pub enum TrustNewExitKeyOutcome {
 }
 
 impl ParametersGenerator {
-    /// Builds a tunnel parameters generator accepting optional
-    /// Warren-Iroh artifacts in addition to the WireGuard path.
+    /// Builds the tunnel parameters generator.
     ///
     /// If `warren_relay_selector` or `warren_signing_key` are `None`,
-    /// `generate_warren_tunnel_params` will return the corresponding
-    /// typed error. The WireGuard path remains usable in parallel
-    /// regardless of the state of the Warren artifacts.
+    /// `generate_warren_tunnel_params` returns the corresponding typed
+    /// error. The upstream WireGuard parameter-generation code is
+    /// retained for upstream-rebase compatibility but is inert: the
+    /// Warren tunnel is the only backend the state machine drives.
     #[expect(
         clippy::too_many_arguments,
         reason = "Constructor for the daemon-side params generator: the nine inputs are all required (4 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
@@ -1064,9 +1064,9 @@ impl From<Error> for ParameterGenerationError {
     }
 }
 
-/// Contains all relays that were selected last time when tunnel parameters were generated.
-///
-/// Represents all relays generated for a WireGuard tunnel.
+/// Relays selected by the legacy (inert) upstream WireGuard parameter
+/// generation. Retained for upstream-rebase compatibility; the Warren
+/// tunnel is the only backend the state machine drives.
 /// The traffic flow can look like this:
 ///     client -> obfuscator -> entry -> exit -> internet
 /// But for most users, it will look like this:

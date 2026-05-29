@@ -530,11 +530,12 @@ impl TunnelStateMachine {
     }
 }
 
-/// Trait for any type that can provide a stream of `TunnelParameters` to the `TunnelStateMachine`.
+/// Trait for any type that can provide tunnel parameters to the `TunnelStateMachine`.
 pub trait TunnelParametersGenerator: Send + 'static {
-    /// Given the number of consecutive failed retry attempts, it should yield a `TunnelParameters`
-    /// to establish a tunnel with.
-    /// If this returns `None` then the state machine goes into the `Error` state.
+    /// Legacy upstream WireGuard parameter generation. The Warren state
+    /// machine no longer calls this (it drives the QUIC backend via
+    /// [`Self::generate_warren_tunnel_params`]); it is retained for
+    /// upstream-rebase compatibility.
     fn generate(
         &mut self,
         retry_attempt: u32,
