@@ -69,7 +69,7 @@ export default class UserInterface implements WindowControllerDelegate {
       IpcMainEventChannel.daemon.notifyTryStartEvent?.('start-requested');
 
       try {
-        const SETUP_PATH = `"\\"${resolveBin('mullvad-setup')}\\""`;
+        const SETUP_PATH = `"\\"${resolveBin('warren-setup')}\\""`;
         const SYSTEM_ROOT_PATH = process.env.SYSTEMROOT || process.env.windir || 'C:\\Windows';
         const PWSH_PATH = `${SYSTEM_ROOT_PATH}\\System32\\WindowsPowershell\\v1.0\\powershell.exe`;
 
@@ -93,24 +93,24 @@ export default class UserInterface implements WindowControllerDelegate {
           },
         );
         child.once('error', (error) => {
-          log.error(`"mullvad-setup.exe start-service" failed: ${error.message}`);
+          log.error(`"warren-setup.exe start-service" failed: ${error.message}`);
           IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
         });
 
         child.once('exit', (code) => {
           if (code !== 0) {
             log.error(
-              `"mullvad-setup.exe start-service" exited unexpectedly with exit code: ${code}`,
+              `"warren-setup.exe start-service" exited unexpectedly with exit code: ${code}`,
             );
             IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
           } else {
-            log.info('"mullvad-setup.exe start-service" succeeded');
+            log.info('"warren-setup.exe start-service" succeeded');
             // 'running' is set from onDaemonConnected event handler
           }
         });
       } catch (e) {
         const error = e as Error;
-        log.error(`Failed to run "mullvad-setup.exe start-service". Error: ${error.message}`);
+        log.error(`Failed to run "warren-setup.exe start-service". Error: ${error.message}`);
         IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
       }
     });

@@ -77,7 +77,7 @@ body:
         If the graphical part of the app does not work, you can get the logs via the terminal/console
         by running this command:
         ```
-        mullvad-problem-report collect --output mullvad-report.log
+        warren-problem-report collect --output mullvad-report.log
         ```
         And then copy the text from the file `mullvad-report.log` that was just created.
       render: shell

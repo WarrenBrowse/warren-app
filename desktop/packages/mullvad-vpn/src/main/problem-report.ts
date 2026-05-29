@@ -41,7 +41,7 @@ export function registerIpcListeners() {
 function collectLogs(toRedact?: string): Promise<string> {
   const id = randomUUID();
   const reportPath = getProblemReportPath(id);
-  const executable = resolveBin('mullvad-problem-report');
+  const executable = resolveBin('warren-problem-report');
   const args = ['collect', '--output', reportPath];
   if (toRedact) {
     args.push('--redact', toRedact);
@@ -65,7 +65,7 @@ function collectLogs(toRedact?: string): Promise<string> {
 }
 
 function send(email: string, message: string, savedReportId: string): Promise<void> {
-  const executable = resolveBin('mullvad-problem-report');
+  const executable = resolveBin('warren-problem-report');
   const reportPath = getProblemReportPath(savedReportId);
   const args = ['send', '--email', email, '--message', message, '--report', reportPath];
 

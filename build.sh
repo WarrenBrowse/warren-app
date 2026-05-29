@@ -164,9 +164,19 @@ if [[ "$SIGN" == "true" ]]; then
         # macOS: This needs to be set to 'true' to activate signing, even when CSC_LINK is set.
         export CSC_IDENTITY_AUTO_DISCOVERY=true
     elif [[ "$(uname -s)" == "MINGW"* ]]; then
-        if [[ -z ${CERT_HASH-} ]]; then
+        # Windows supports two signing backends, selected by
+        # WARREN_WIN_SIGN_BACKEND (consumed by the sign_win function):
+        #   - "trusted-signing": Azure Trusted Signing (cloud HSM). No local
+        #     certificate or thumbprint; auth comes from the AZURE_* env vars.
+        #   - "thumbprint" (default): legacy signtool -sha1 against a cert
+        #     already imported into the Windows cert store (CERT_HASH).
+        if [[ "${WARREN_WIN_SIGN_BACKEND:-thumbprint}" == "trusted-signing" ]]; then
+            : "${WARREN_TS_DLIB:?WARREN_TS_DLIB must point to Azure.CodeSigning.Dlib.dll}"
+            : "${WARREN_TS_METADATA:?WARREN_TS_METADATA must point to the Trusted Signing metadata JSON}"
+        elif [[ -z ${CERT_HASH-} ]]; then
             log_error "Neither CERT_HASH nor WARREN_CERT_HASH is set. One must be set to the"
-            log_error "thumbprint of the signing certificate."
+            log_error "thumbprint of the signing certificate (or set"
+            log_error "WARREN_WIN_SIGN_BACKEND=trusted-signing to use Azure Trusted Signing)."
             exit 1
         fi
 
@@ -204,20 +214,58 @@ fi
 # Compile and build
 ################################################################################
 
-# Sign all binaries passed as arguments to this function
+# Sign all binaries passed as arguments to this function.
+#
+# The signing backend is selected by WARREN_WIN_SIGN_BACKEND:
+#   - "trusted-signing": Azure Trusted Signing (cloud HSM, no local .pfx or
+#     hardware token). signtool loads the Azure dlib (WARREN_TS_DLIB) and reads
+#     the account/profile from the metadata file (WARREN_TS_METADATA); Azure
+#     authentication is taken from the standard AZURE_* env vars by the SDK.
+#   - "thumbprint" (default): legacy signtool -sha1 against a certificate that
+#     is already present in the Windows cert store (CERT_HASH). Only valid for
+#     pre-June-2023 certs, internal/self-signed certs, or a self-hosted runner
+#     physically holding a hardware token. Public OV/EV certs issued today can
+#     no longer be exported as a .pfx, so new setups should use trusted-signing.
 function sign_win {
     local NUM_RETRIES=3
+    local backend="${WARREN_WIN_SIGN_BACKEND:-thumbprint}"
+    local -a sign_args
+
+    case "$backend" in
+        trusted-signing)
+            : "${WARREN_TS_DLIB:?WARREN_TS_DLIB must point to Azure.CodeSigning.Dlib.dll}"
+            : "${WARREN_TS_METADATA:?WARREN_TS_METADATA must point to the Trusted Signing metadata JSON}"
+            sign_args=(
+                -v -debug
+                -fd SHA256
+                -tr "${WARREN_TS_TIMESTAMP_URL:-http://timestamp.acs.microsoft.com}" -td SHA256
+                -d "Warren VPN"
+                -du "https://github.com/WarrenBrowse/warren-app"
+                -dlib "$WARREN_TS_DLIB"
+                -dmdf "$WARREN_TS_METADATA"
+            )
+            ;;
+        thumbprint)
+            : "${CERT_HASH:?The CERT_HASH environment variable must be set to the thumbprint of the signing key}"
+            sign_args=(
+                -tr http://timestamp.digicert.com -td sha256
+                -fd sha256 -d "Warren VPN"
+                -du "https://github.com/WarrenBrowse/warren-app"
+                -sha1 "$CERT_HASH"
+            )
+            ;;
+        *)
+            log_error "Unknown WARREN_WIN_SIGN_BACKEND='$backend' (expected 'trusted-signing' or 'thumbprint')"
+            return 1
+            ;;
+    esac
 
     for binary in "$@"; do
         # Try multiple times in case the timestamp server cannot
         # be contacted.
         for i in $(seq 0 ${NUM_RETRIES}); do
             log_info "Signing $binary..."
-            if signtool sign \
-                -tr http://timestamp.digicert.com -td sha256 \
-                -fd sha256 -d "Warren VPN" \
-                -du "https://github.com/WarrenBrowse/warren-app" \
-                -sha1 "$CERT_HASH" "$binary"
+            if signtool sign "${sign_args[@]}" "$binary"
             then
                 break
             fi
@@ -263,11 +311,11 @@ function build {
     local cargo_crates_to_build=(
         -p mullvad-daemon --bin warren-daemon
         -p mullvad-cli --bin warren
-        -p mullvad-setup --bin mullvad-setup
-        -p mullvad-problem-report --bin mullvad-problem-report
+        -p mullvad-setup --bin warren-setup
+        -p mullvad-problem-report --bin warren-problem-report
     )
     if [[ ("$(uname -s)" == "Linux") ]]; then
-        cargo_crates_to_build+=(-p mullvad-exclude --bin mullvad-exclude)
+        cargo_crates_to_build+=(-p mullvad-exclude --bin warren-exclude)
     fi
 
     if [[ ("$(uname -s)" == "Linux") ]]; then
@@ -292,23 +340,23 @@ function build {
         BINARIES=(
             warren-daemon
             warren
-            mullvad-problem-report
-            mullvad-setup
+            warren-problem-report
+            warren-setup
         )
     elif [[ ("$(uname -s)" == "Linux") ]]; then
         BINARIES=(
             warren-daemon
             warren
-            mullvad-problem-report
-            mullvad-setup
-            mullvad-exclude
+            warren-problem-report
+            warren-setup
+            warren-exclude
         )
     elif [[ ("$(uname -s)" == "MINGW"*) ]]; then
         BINARIES=(
             warren-daemon.exe
             warren.exe
-            mullvad-problem-report.exe
-            mullvad-setup.exe
+            warren-problem-report.exe
+            warren-setup.exe
         )
         if [[ "$GOTATUN" == "false" ]]; then
             BINARIES+=(

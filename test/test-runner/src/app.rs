@@ -72,8 +72,8 @@ pub fn find_traces() -> Result<Vec<AppTrace>, Error> {
         Path::new(r"/usr/lib/systemd/system/mullvad-early-boot-blocking.service"),
         Path::new(r"/usr/bin/mullvad"),
         Path::new(r"/usr/bin/mullvad-daemon"),
-        Path::new(r"/usr/bin/mullvad-exclude"),
-        Path::new(r"/usr/bin/mullvad-problem-report"),
+        Path::new(r"/usr/bin/warren-exclude"),
+        Path::new(r"/usr/bin/warren-problem-report"),
         Path::new(r"/usr/share/bash-completion/completions/mullvad"),
         Path::new(r"/usr/local/share/zsh/site-functions/_mullvad"),
         Path::new(r"/usr/share/fish/vendor_completions.d/mullvad.fish"),
@@ -101,7 +101,7 @@ pub fn find_traces() -> Result<Vec<AppTrace>, Error> {
         // launch daemon
         Path::new(r"/Library/LaunchDaemons/net.mullvad.daemon.plist"),
         Path::new(r"/usr/local/bin/mullvad"),
-        Path::new(r"/usr/local/bin/mullvad-problem-report"),
+        Path::new(r"/usr/local/bin/warren-problem-report"),
         // completions
         Path::new(r"/usr/local/share/zsh/site-functions/_mullvad"),
         Path::new(r"/opt/homebrew/share/fish/vendor_completions.d/mullvad.fish"),

@@ -25,7 +25,7 @@ if the user/a developer would like to investigate the crash.
 Reporting issues with the app to Mullvad's support is opt-in and manual. The app
 never sends any logs or crash dumps to Mullvad by itself. A user needs to do this
 explicitly by going to Settings -> Report a problem or by using the
-`mullvad-problem-report` CLI tool (desktop only).
+`warren-problem-report` CLI tool (desktop only).
 
 The logs collected for problem reports are redacted before sent, and the user
 always has the option to see exactly what information is going to be submitted.

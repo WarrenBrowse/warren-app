@@ -7,7 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [[bin]]
-name = "mullvad-setup"
+name = "warren-setup"
 path = "src/main.rs"
 
 [dependencies]

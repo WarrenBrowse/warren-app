@@ -239,7 +239,7 @@ fork POC.
 
 ## Variables d'environnement utilisées par le frontend desktop
 
-* `MULLVAD_PATH` — Path du dossier contenant les outils annexes (`mullvad-problem-report`) en dev.
+* `MULLVAD_PATH` — Path du dossier contenant les outils annexes (`warren-problem-report`) en dev.
   Défaut : `<repo>/target/debug/`.
 * `MULLVAD_DISABLE_UPDATE_NOTIFICATION` — À `1` pour désactiver la notification de mise à jour.
 

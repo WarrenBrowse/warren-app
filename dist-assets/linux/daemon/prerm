@@ -19,5 +19,5 @@ systemctl disable warren-daemon.service || true
 systemctl stop warren-early-boot-blocking.service || true
 systemctl disable warren-early-boot-blocking.service || true
 
-/opt/Warren\ VPN/resources/mullvad-setup reset-firewall || echo "Failed to reset firewall"
-/opt/Warren\ VPN/resources/mullvad-setup remove-device || echo "Failed to remove device from account"
+/opt/Warren\ VPN/resources/warren-setup reset-firewall || echo "Failed to reset firewall"
+/opt/Warren\ VPN/resources/warren-setup remove-device || echo "Failed to remove device from account"

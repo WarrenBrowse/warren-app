@@ -100,9 +100,9 @@ function newConfig() {
       },
       extraResources: [
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren')), to: '.' },
-        { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad-problem-report')), to: '.' },
+        { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-problem-report')), to: '.' },
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-daemon')), to: '.' },
-        { from: distAssets(path.join('${env.BINARIES_PATH}', 'mullvad-setup')), to: '.' },
+        { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-setup')), to: '.' },
         { from: distAssets('uninstall_macos.sh'), to: './uninstall.sh' },
         { from: buildAssets('shell-completions/_warren'), to: '.' },
         { from: buildAssets('shell-completions/warren.fish'), to: '.' },
@@ -132,12 +132,12 @@ function newConfig() {
       extraResources: [
         { from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren.exe')), to: '.' },
         {
-          from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad-problem-report.exe')),
+          from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren-problem-report.exe')),
           to: '.',
         },
         { from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren-daemon.exe')), to: '.' },
         {
-          from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad-setup.exe')),
+          from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren-setup.exe')),
           to: '.',
         },
         {
@@ -194,8 +194,8 @@ function newConfig() {
       icon: distAssets('icon.icns'),
       extraFiles: [{ from: distAssets('linux/warren-gui-launcher.sh'), to: '.' }],
       extraResources: [
-        { from: distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-problem-report')), to: '.' },
-        { from: distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-setup')), to: '.' },
+        { from: distAssets(path.join(getLinuxTargetSubdir(), 'warren-problem-report')), to: '.' },
+        { from: distAssets(path.join(getLinuxTargetSubdir(), 'warren-setup')), to: '.' },
         { from: distAssets(path.join('linux', 'apparmor_warren')), to: '.' },
       ],
     },
@@ -215,8 +215,8 @@ function newConfig() {
           '=/usr/lib/systemd/system/warren-early-boot-blocking.service',
         distAssets(path.join(getLinuxTargetSubdir(), 'warren')) + '=/usr/bin/',
         distAssets(path.join(getLinuxTargetSubdir(), 'warren-daemon')) + '=/usr/bin/',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-exclude')) + '=/usr/bin/',
-        distAssets('linux/problem-report-link') + '=/usr/bin/mullvad-problem-report',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) + '=/usr/bin/',
+        distAssets('linux/problem-report-link') + '=/usr/bin/warren-problem-report',
         buildAssets('shell-completions/warren.bash') +
           '=/usr/share/bash-completion/completions/warren',
         buildAssets('shell-completions/_warren') + '=/usr/local/share/zsh/site-functions/_warren',
@@ -248,8 +248,8 @@ function newConfig() {
           '=/usr/lib/systemd/system/warren-early-boot-blocking.service',
         distAssets(path.join(getLinuxTargetSubdir(), 'warren')) + '=/usr/bin/',
         distAssets(path.join(getLinuxTargetSubdir(), 'warren-daemon')) + '=/usr/bin/',
-        distAssets(path.join(getLinuxTargetSubdir(), 'mullvad-exclude')) + '=/usr/bin/',
-        distAssets('linux/problem-report-link') + '=/usr/bin/mullvad-problem-report',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) + '=/usr/bin/',
+        distAssets('linux/problem-report-link') + '=/usr/bin/warren-problem-report',
         buildAssets('shell-completions/warren.bash') +
           '=/usr/share/bash-completion/completions/warren',
         buildAssets('shell-completions/_warren') + '=/usr/share/zsh/site-functions/_warren',

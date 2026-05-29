@@ -128,7 +128,7 @@ pub fn allowed_clients(connection_mode: &ApiConnectionMode) -> AllowedClients {
                 daemon_exe
                     .parent()
                     .expect("missing executable parent directory")
-                    .join("mullvad-problem-report.exe"),
+                    .join("warren-problem-report.exe"),
                 daemon_exe,
             ]
             .into()

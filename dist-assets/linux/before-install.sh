@@ -3,7 +3,7 @@ set -eu
 
 if which systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
     if systemctl status warren-daemon &> /dev/null; then
-        /opt/Warren\ VPN/resources/mullvad-setup prepare-restart || true
+        /opt/Warren\ VPN/resources/warren-setup prepare-restart || true
         systemctl stop warren-daemon.service
         systemctl disable warren-daemon.service
         systemctl disable warren-early-boot-blocking.service || true

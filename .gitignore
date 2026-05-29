@@ -9,11 +9,11 @@
 /dist-assets/mullvad.exe
 /dist-assets/mullvad-daemon
 /dist-assets/mullvad-daemon.exe
-/dist-assets/mullvad-exclude
-/dist-assets/mullvad-setup
-/dist-assets/mullvad-setup.exe
-/dist-assets/mullvad-problem-report
-/dist-assets/mullvad-problem-report.exe
+/dist-assets/warren-exclude
+/dist-assets/warren-setup
+/dist-assets/warren-setup.exe
+/dist-assets/warren-problem-report
+/dist-assets/warren-problem-report.exe
 /dist-assets/warren
 /dist-assets/warren.exe
 /dist-assets/warren-daemon

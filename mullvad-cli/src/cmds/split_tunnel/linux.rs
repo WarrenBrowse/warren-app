@@ -3,7 +3,7 @@ use clap::Subcommand;
 use mullvad_management_interface::MullvadProxyClient;
 
 /// Manage split tunneling. To launch applications outside the tunnel, use the program
-/// 'mullvad-exclude' instead of this command
+/// 'warren-exclude' instead of this command
 #[derive(Subcommand, Debug)]
 pub enum SplitTunnel {
     /// List all processes that are excluded from the tunnel

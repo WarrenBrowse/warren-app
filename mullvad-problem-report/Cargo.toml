@@ -6,6 +6,10 @@ description = "Collect Mullvad VPN logs into a report and send it to support"
 repository.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "warren-problem-report"
+path = "src/main.rs"
+
 [package.metadata.winres]
 ProductName = "Warren VPN"
 CompanyName = "Warren contributors"

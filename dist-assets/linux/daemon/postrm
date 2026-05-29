@@ -14,8 +14,8 @@ function remove_config {
 }
 
 function remove_symlinks {
-  rm /usr/bin/mullvad-problem-report || \
-    echo "Failed to remove mullvad-problem-report"
+  rm /usr/bin/warren-problem-report || \
+    echo "Failed to remove warren-problem-report"
 }
 
 # checking what kind of an action is taking place
