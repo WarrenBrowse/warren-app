@@ -103,11 +103,11 @@ runs:
         fi
         echo "coherence OK: Cargo.lock pins the Warren quinn fork and matches the pinned warren-core."
 
-    # Install 32-bit target for NSIS plugins
-    - name: Install Rust 32-bit x86 target
+    # x86 for NSIS plugins; aarch64 for the --universal (x64+ARM64) Windows build
+    - name: Install Rust Windows targets
       if: runner.os == 'Windows'
       shell: bash
-      run: rustup target add i686-pc-windows-msvc
+      run: rustup target add i686-pc-windows-msvc aarch64-pc-windows-msvc
 
     # Universal macOS builds (build.sh --universal) link both arch slices
     - name: Install Rust x86_64 target (macOS universal builds)
