@@ -1,10 +1,14 @@
 ---
 # Warren VPN - Release pipeline
 #
-# Builds signed Warren VPN installers for macOS (DMG, notarized), Linux
-# (.deb + .rpm), and Windows (MSI) and uploads them to a GitHub Release.
+# Builds Warren VPN installers for macOS (DMG/PKG), Linux (.deb + .rpm),
+# Windows (MSI/NSIS) and Android (AAB/APK), and uploads them to a GitHub
+# Release. Code signing is opt-in per platform: when the signing secrets are
+# absent the jobs produce UNSIGNED builds (the current default, since Warren
+# has no company/store accounts yet). iOS is disabled until an Apple Developer
+# account exists (re-enable by setting the repo variable WARREN_ENABLE_IOS=true).
 #
-# Trigger: tag push matching v*.*.* (e.g., v2026.5.0, v0.1.0-beta1).
+# Trigger: tag push matching v*.*.* (e.g., v1.0.0, v1.0.0-beta1).
 #
 # Required GitHub Secrets (configured at WarrenBrowse/warren-app repo Settings
 # > Secrets and variables > Actions):
@@ -213,6 +217,12 @@ jobs:
 
   build-ios:
     name: Build iOS IPA + TestFlight upload
+    # iOS is DISABLED for now: Warren has no Apple Developer account yet (it
+    # requires a registered company + D-U-N-S number to open App Store Connect).
+    # To RE-ENABLE iOS later, set the repository variable WARREN_ENABLE_IOS to
+    # 'true' (Settings -> Secrets and variables -> Actions -> Variables tab).
+    # No code change needed; publish-release already treats iOS as non-blocking.
+    if: ${{ vars.WARREN_ENABLE_IOS == 'true' }}
     runs-on: macos-15
     env:
       IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
