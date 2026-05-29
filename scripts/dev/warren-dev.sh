@@ -102,6 +102,74 @@ ensure_sudo() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
+# DNS safety net (macOS)
+#
+# While (re)connecting, the daemon points the system DNS at a local resolver
+# in the 127/8 range. If it is killed before restoring the DNS (SIGKILL,
+# crash), the system is left pointing at a dead resolver and name resolution
+# breaks until a tunnel takes over again. We snapshot the DNS before launching
+# the daemon and restore it if a loopback leak is detected after it exits.
+# (The daemon itself also self-heals on its next startup; this covers the dev
+# loop where the daemon is killed and not immediately restarted.)
+# ─────────────────────────────────────────────────────────────────────
+readonly OS_NAME="$(uname -s)"
+readonly DNS_SNAPSHOT_FILE="/tmp/warren-dns-snapshot.txt"
+
+is_macos() { [[ "$OS_NAME" == "Darwin" ]]; }
+
+# True if the active system DNS points at a loopback (127.x / ::1) resolver.
+dns_is_loopback() {
+  is_macos || return 1
+  scutil --dns 2>/dev/null \
+    | grep -qE 'nameserver\[[0-9]+\][[:space:]]*:[[:space:]]*(127\.|::1)'
+}
+
+# Save each network service's current DNS, unless DNS is already poisoned.
+snapshot_dns() {
+  is_macos || return 0
+  if dns_is_loopback; then
+    warn "System DNS already points at a loopback resolver — skipping snapshot"
+    return 0
+  fi
+  : > "$DNS_SNAPSHOT_FILE"
+  local svc dns
+  while IFS= read -r svc; do
+    [[ "$svc" == \** ]] && continue   # skip disabled services (prefixed with '*')
+    dns="$(networksetup -getdnsservers "$svc" 2>/dev/null | tr '\n' ' ')"
+    printf '%s\t%s\n' "$svc" "$dns" >> "$DNS_SNAPSHOT_FILE"
+  done < <(networksetup -listallnetworkservices 2>/dev/null | tail -n +2)
+  info "DNS snapshot saved → $DNS_SNAPSHOT_FILE"
+}
+
+# Re-apply the snapshot taken by snapshot_dns (needs root for networksetup).
+restore_dns_snapshot() {
+  is_macos || return 0
+  [[ -f "$DNS_SNAPSHOT_FILE" ]] || { warn "No DNS snapshot to restore"; return 1; }
+  local svc dns
+  while IFS=$'\t' read -r svc dns; do
+    [[ -z "$svc" ]] && continue
+    if [[ -z "${dns// /}" || "$dns" == *"any DNS Servers"* ]]; then
+      sudo networksetup -setdnsservers "$svc" empty 2>/dev/null || true
+    else
+      # shellcheck disable=SC2086
+      sudo networksetup -setdnsservers "$svc" $dns 2>/dev/null || true
+    fi
+  done < "$DNS_SNAPSHOT_FILE"
+  sudo dscacheutil -flushcache 2>/dev/null || true
+  sudo killall -HUP mDNSResponder 2>/dev/null || true
+  ok "DNS restored from snapshot"
+}
+
+# Restore DNS only if the daemon left it pointing at a dead loopback resolver.
+restore_dns_if_leaked() {
+  is_macos || return 0
+  if dns_is_loopback; then
+    warn "Stale loopback DNS detected (daemon exited without restoring it) — repairing"
+    restore_dns_snapshot
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────
 # Parse daemon flags (shared between foreground / background / both)
 # ─────────────────────────────────────────────────────────────────────
 DAEMON_BUILD_MODE="debug"
@@ -162,6 +230,10 @@ stop_daemon() {
   fi
 
   rm -f "$PID_FILE"
+
+  # If the daemon died before restoring the system DNS, repair it now.
+  restore_dns_if_leaked
+
   ok "Daemon stopped"
 }
 
@@ -186,8 +258,14 @@ start_daemon_foreground() {
   # hash changes on each `cargo build`). The env var keeps the dev
   # loop friction-free. Release builds with a stable Developer ID
   # signature should leave this unset.
-  exec sudo -E env WARREN_USE_PLAINTEXT_STORAGE=1 \
-    "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}"
+  # Snapshot DNS and arm a restore-on-exit guard. We run the daemon as a
+  # foreground child (NOT `exec`) so the EXIT trap can fire after it stops and
+  # repair the DNS if the daemon was killed before it could restore it itself.
+  snapshot_dns
+  trap restore_dns_if_leaked EXIT
+
+  sudo -E env WARREN_USE_PLAINTEXT_STORAGE=1 \
+    "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}" || true
 }
 
 # ─────────────────────────────────────────────────────────────────────
@@ -258,6 +336,10 @@ start_both() {
   ensure_sudo
 
   trap cleanup_both EXIT INT TERM HUP
+
+  # Snapshot DNS before the daemon touches it; cleanup_both → stop_daemon
+  # restores it if the daemon is killed before it can do so itself.
+  snapshot_dns
 
   # ── Start daemon in background, log to file ──
   if pid_alive "$(read_pid_file)"; then
