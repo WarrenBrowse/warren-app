@@ -37,14 +37,10 @@ members = [
   "talpid-routing",
   "talpid-time",
   "talpid-tunnel",
-  "talpid-tunnel-config-client",
   "talpid-warren-tunnel",
   "talpid-windows",
-  "talpid-wireguard",
-  "tunnel-obfuscation",
   "warren-jni",
   "windows-installer",
-  "wireguard-go-rs",
 ]
 exclude = ["ci/ios/test-router/raas"]
 # Default members dictate what is built when running `cargo build` in the root directory.

@@ -142,9 +142,6 @@ pub async fn spawn(
     state_change_listener: impl Sender<TunnelStateTransition> + Send + 'static,
     offline_state_listener: mpsc::UnboundedSender<Connectivity>,
     route_manager: RouteManagerHandle,
-    // Warren fork: if `true`, dispatches tunnel starts
-    // to the Warren-Iroh path.
-    warren_mode: bool,
     #[cfg(target_os = "windows")] volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")] android_context: AndroidContext,
     #[cfg(target_os = "android")] connectivity_listener: ConnectivityListener,
@@ -176,7 +173,6 @@ pub async fn spawn(
         resource_dir,
         commands_rx: command_rx,
         route_manager,
-        warren_mode,
         #[cfg(target_os = "windows")]
         volume_update_rx,
         #[cfg(target_os = "android")]
@@ -351,12 +347,6 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     resource_dir: PathBuf,
     commands_rx: mpsc::UnboundedReceiver<TunnelCommand>,
     route_manager: RouteManagerHandle,
-    /// Warren fork: if `true`, the state machine dispatches tunnel
-    /// starts via `TunnelMonitor::start_warren_tunnel`
-    /// instead of the upstream WireGuard path. Settable via env var
-    /// `WARREN_TUNNEL=1` at daemon boot (see
-    /// `mullvad-daemon::warren_mode`).
-    warren_mode: bool,
     #[cfg(target_os = "windows")]
     volume_update_rx: mpsc::UnboundedReceiver<()>,
     #[cfg(target_os = "android")]
@@ -485,7 +475,6 @@ impl TunnelStateMachine {
             tun_provider: Arc::new(Mutex::new(args.tun_provider)),
             log_dir: args.log_dir,
             resource_dir: args.resource_dir,
-            warren_mode: args.warren_mode,
             #[cfg(target_os = "linux")]
             connectivity_check_was_enabled: None,
             #[cfg(target_os = "macos")]
@@ -612,11 +601,6 @@ struct SharedTunnelStateValues {
     log_dir: Option<PathBuf>,
     /// Resource directory path.
     resource_dir: PathBuf,
-
-    /// Warren fork: if `true`, dispatches tunnel startup via
-    /// `TunnelMonitor::start_warren_tunnel` (Iroh path). Otherwise, the
-    /// upstream WireGuard path is unchanged.
-    warren_mode: bool,
 
     /// NetworkManager's connecitivity check state.
     #[cfg(target_os = "linux")]

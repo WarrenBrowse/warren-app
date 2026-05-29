@@ -1,16 +1,12 @@
-//! Union enum of tunnel parameters for the two backends (WireGuard
-//! upstream + Warren) - the abstraction stored by `ConnectingState`
-//! and `ConnectedState`.
+//! Tunnel parameters for the Warren backend — the abstraction stored
+//! by `ConnectingState` and `ConnectedState`.
 //!
 //! The accessor methods (`get_tunnel_endpoint`, `get_next_hop_endpoints`,
 //! `get_exit_hop_endpoint`) are the only way the state machine reads
-//! params: no WG-specific field (`private_key`, `addresses`, `daita`,
-//! ...) is consumed outside of `WireguardMonitor::start` which gets the
-//! concrete WG variant.
+//! params: no secret material (`signing_key`, ...) is consumed outside
+//! of `WarrenTunnelMonitor::start`, which gets the full parameters.
 
 use std::net::SocketAddr;
-
-use talpid_types::net::wireguard::TunnelParameters as WireguardTunnelParameters;
 
 use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
 use talpid_warren_tunnel::WarrenTunnelParameters;
@@ -44,15 +40,14 @@ impl WarrenBackendInfo {
     }
 }
 
-/// Typed tunnel parameters, agnostic of the underlying backend.
+/// Typed tunnel parameters for the Warren backend.
 ///
-/// Stored in `ConnectingState` and `ConnectedState`. The variants
-/// expose only what the state machine needs (firewall, transitions,
-/// GUI display); backend-specific consumption lives downstream in
-/// `TunnelMonitor::start{,_warren_tunnel}`.
+/// Stored in `ConnectingState` and `ConnectedState`. Exposes only what
+/// the state machine needs (firewall, transitions, GUI display);
+/// backend-specific consumption lives downstream in
+/// `TunnelMonitor::start_warren_tunnel`.
 #[derive(Debug, Clone)]
 pub(crate) enum BackendParams {
-    Wireguard(WireguardTunnelParameters),
     Warren(WarrenBackendInfo),
 }
 
@@ -62,7 +57,6 @@ impl BackendParams {
     /// display the current exit).
     pub fn get_tunnel_endpoint(&self) -> TunnelEndpoint {
         match self {
-            Self::Wireguard(p) => p.get_tunnel_endpoint(),
             Self::Warren(p) => warren_tunnel_endpoint(p),
         }
     }
@@ -70,8 +64,6 @@ impl BackendParams {
     /// UDP endpoints to allow through the firewall pre-handshake (the
     /// client -> next-hop outbound UDP path).
     ///
-    /// - Wireguard: the peer endpoint (or the obfuscator endpoints if
-    ///   active).
     /// - Warren single-hop: every candidate IP of the exit (client
     ///   dials the exit directly).
     /// - Warren multi-hop: only the relay endpoint (the client never
@@ -79,7 +71,6 @@ impl BackendParams {
     ///   datagrams on a separate C2 connection).
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
         match self {
-            Self::Wireguard(p) => p.get_next_hop_endpoints(),
             Self::Warren(info) => match info.relay_endpoint {
                 Some(relay) => vec![Endpoint::from_socket_address(
                     relay,
@@ -94,13 +85,11 @@ impl BackendParams {
         }
     }
 
-    /// Secondary exit endpoint for the WireGuard multihop path
-    /// (Windows split-tunnel only). Warren does not support multihop:
-    /// returns `None`.
+    /// Secondary exit endpoint (Windows split-tunnel only). Warren does
+    /// not expose a separate exit hop to the firewall: returns `None`.
     #[cfg(target_os = "windows")]
     pub fn get_exit_hop_endpoint(&self) -> Option<Endpoint> {
         match self {
-            Self::Wireguard(p) => p.get_exit_hop_endpoint(),
             Self::Warren(_) => None,
         }
     }

@@ -256,7 +256,6 @@ cgroup2 = ["talpid-core/cgroup2"]
 # Use jemalloc as the global allocator. Only takes effect on Linux.
 default-allocator = ["dep:tikv-jemallocator"]
 staggered-obfuscation = ["mullvad-relay-selector/staggered-obfuscation"]
-wireguard-go = ["talpid-core/wireguard-go"]
 
 # Warren rebrand Level A: installed binary `warren-daemon` instead of
 # `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept

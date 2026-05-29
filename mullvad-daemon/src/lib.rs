@@ -1369,9 +1369,6 @@ impl Daemon {
             internal_event_tx.to_specialized_sender(),
             offline_state_tx,
             route_manager.clone(),
-            // Warren fork: pass-through of the flag resolved at boot
-            // (env override + Settings::warren_mode).
-            warren_mode_active,
             #[cfg(target_os = "windows")]
             volume_update_rx,
             #[cfg(target_os = "android")]

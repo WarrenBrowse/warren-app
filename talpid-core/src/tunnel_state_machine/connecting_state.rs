@@ -10,7 +10,6 @@ use talpid_routing::RouteManagerHandle;
 use talpid_tunnel::tun_provider::TunProvider;
 use talpid_tunnel::{EventHook, TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::ErrorExt;
-use talpid_types::net::wireguard::TunnelParameters;
 use talpid_types::net::{AllowedClients, AllowedEndpoint, AllowedTunnelTraffic};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_warren_tunnel::WarrenTunnelParameters;
@@ -33,8 +32,6 @@ use talpid_dns::DnsConfig;
 
 pub(crate) type TunnelCloseEvent = Fuse<oneshot::Receiver<Option<ErrorStateCause>>>;
 
-#[cfg(target_os = "android")]
-const MAX_ATTEMPTS_WITH_SAME_TUN: u32 = 5;
 const MIN_TUNNEL_ALIVE_TIME: Duration = Duration::from_millis(1000);
 #[cfg(target_os = "windows")]
 const MAX_ATTEMPT_CREATE_TUN: u32 = 4;
@@ -77,133 +74,22 @@ impl ConnectingState {
                 });
         }
 
-        // Warren fork: dispatch backend based on the flag set at boot.
-        // `warren_mode` comes from `warren_mode::is_enabled` on the daemon
-        // side (env var `WARREN_TUNNEL=1`) and flows through
-        // `TunnelStateMachineInitArgs`.
-        if shared_values.warren_mode {
-            return Self::enter_warren(shared_values, retry_attempt);
-        }
-
-        Self::enter_wireguard(shared_values, retry_attempt)
+        Self::enter_warren(shared_values, retry_attempt)
     }
 
-    fn enter_wireguard(
-        shared_values: &mut SharedTunnelStateValues,
-        retry_attempt: u32,
-    ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
-        let ip_availability = match shared_values.connectivity.availability() {
-            Some(ip_availability) => ip_availability,
-            // If we're offline, enter the offline state
-            None => {
-                // FIXME: Temporary: Nudge route manager to update the default interface
-                #[cfg(target_os = "macos")]
-                {
-                    log::debug!("Poking route manager to update default routes");
-                    let _ = shared_values.route_manager.refresh_routes();
-                }
-                return ErrorState::enter(shared_values, ErrorStateCause::IsOffline);
-            }
-        };
-
-        match shared_values.runtime.block_on(
-            shared_values
-                .tunnel_parameters_generator
-                .generate(retry_attempt, ip_availability),
-        ) {
-            Err(err) => {
-                ErrorState::enter(shared_values, ErrorStateCause::TunnelParameterError(err))
-            }
-            Ok(tunnel_parameters) => {
-                #[cfg(windows)]
-                if let Err(error) = shared_values.split_tunnel.set_tunnel_addresses(None) {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg(
-                            "Failed to reset addresses in split tunnel driver"
-                        )
-                    );
-
-                    return ErrorState::enter(shared_values, ErrorStateCause::SplitTunnelError);
-                }
-
-                let backend_params = BackendParams::Wireguard(tunnel_parameters);
-
-                if let Err(error) = Self::set_firewall_policy(
-                    shared_values,
-                    &backend_params,
-                    &None,
-                    AllowedTunnelTraffic::None,
-                ) {
-                    ErrorState::enter(
-                        shared_values,
-                        ErrorStateCause::SetFirewallPolicyError(error),
-                    )
-                } else {
-                    // HACK: On Android, DNS is part of creating the VPN interface, this call
-                    // ensures that the vpn_config is prepared with correct DNS servers in case they
-                    // previously set to something else, e.g. in the case of blocking. This call
-                    // should probably be part of start_tunnel call.
-                    #[cfg(target_os = "android")]
-                    {
-                        shared_values.prepare_tun_config(false);
-                        if retry_attempt > 0
-                            && retry_attempt.is_multiple_of(MAX_ATTEMPTS_WITH_SAME_TUN)
-                            && let Err(error) =
-                                shared_values.tun_provider.lock().unwrap().open_tun_forced()
-                        {
-                            log::error!(
-                                "{}",
-                                error.display_chain_with_msg("Failed to recreate tun device")
-                            );
-                        }
-                    }
-
-                    // Re-extract the concrete `wireguard::TunnelParameters`
-                    // for `start_tunnel`, which passes it to `TunnelMonitor::start`.
-                    // Avoids a clone vs. wrapping post-call.
-                    let wg_params = match backend_params {
-                        BackendParams::Wireguard(p) => p,
-                        BackendParams::Warren(_) => {
-                            unreachable!("enter_wireguard never receives Warren params")
-                        }
-                    };
-
-                    let connecting_state = Self::start_tunnel(
-                        shared_values.runtime.clone(),
-                        wg_params,
-                        &shared_values.log_dir,
-                        &shared_values.resource_dir,
-                        shared_values.tun_provider.clone(),
-                        &shared_values.route_manager,
-                        retry_attempt,
-                    );
-
-                    let transition_endpoint =
-                        connecting_state.tunnel_parameters.get_tunnel_endpoint();
-                    (
-                        Box::new(connecting_state),
-                        TunnelStateTransition::Connecting(transition_endpoint),
-                    )
-                }
-            }
-        }
-    }
-
-    /// Warren-Iroh path.
+    /// Warren (QUIC) connecting path.
     ///
-    /// Differences from [`Self::enter_wireguard`]:
-    /// - No `ip_availability` check on the state machine side — Iroh
-    ///   handles its own multi-path resolution (v4/v6) at handshake time.
-    /// - No Android `prepare_tun_config` — Warren-Iroh opens its
+    /// - No `ip_availability` check on the state machine side — the
+    ///   backend handles its own multi-path resolution (v4/v6) at
+    ///   handshake time.
+    /// - No Android `prepare_tun_config` — the Warren backend opens its
     ///   own TUN via `args.tun_provider` on the `WarrenTunnelMonitor::start` side.
     ///
     /// The pre-handshake firewall is applied via
-    /// [`Self::set_firewall_policy`] just like for WG:
+    /// [`Self::set_firewall_policy`]:
     /// [`BackendParams::get_next_hop_endpoints`] exposes the candidate
-    /// Iroh IPs (from `endpoint_addr.ip_addrs()`), which
-    /// authorizes outgoing traffic to the exit without regressing
-    /// no-leak.
+    /// exit IPs (from `endpoint_addr.ip_addrs()`), which authorizes
+    /// outgoing traffic to the exit without regressing no-leak.
     fn enter_warren(
         shared_values: &mut SharedTunnelStateValues,
         retry_attempt: u32,
@@ -414,137 +300,26 @@ impl ConnectingState {
             })
     }
 
-    fn start_tunnel(
-        runtime: tokio::runtime::Handle,
-        parameters: TunnelParameters,
-        log_dir: &Option<PathBuf>,
-        resource_dir: &Path,
-        tun_provider: Arc<Mutex<TunProvider>>,
-        route_manager: &RouteManagerHandle,
-        retry_attempt: u32,
-    ) -> Self {
-        let (event_tx, event_rx) = mpsc::unbounded();
-        let event_hook = EventHook::new(event_tx);
-
-        let route_manager = route_manager.clone();
-        let log_dir = log_dir.clone();
-        let resource_dir = resource_dir.to_path_buf();
-
-        let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
-        let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
-
-        let tunnel_parameters = parameters.clone();
-
-        tokio::task::spawn_blocking(move || {
-            let start = Instant::now();
-
-            #[cfg(target_os = "windows")]
-            let runtime2 = runtime.clone();
-
-            let args = TunnelArgs {
-                runtime,
-                resource_dir: &resource_dir,
-                event_hook,
-                tunnel_close_rx,
-                tun_provider,
-                retry_attempt,
-                route_manager,
-            };
-
-            #[cfg(target_os = "windows")]
-            async fn maybe_dump_device_logs(log_dir: Option<&Path>, error: &tunnel_monitor::Error) {
-                if error.get_tunnel_device_error().is_some()
-                    && let Some(log_dir) = log_dir
-                {
-                    log::debug!("Logging device info");
-                    if let Err(err) = crate::logging::diag::windows::log_device_info(log_dir).await
-                    {
-                        log::error!("Failed to dump device logs: {err}");
-                    }
-                }
-            }
-
-            let block_reason = match TunnelMonitor::start(&tunnel_parameters, &log_dir, args) {
-                Ok(monitor) => {
-                    let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
-                    log::debug!("Tunnel monitor exited with block reason: {:?}", reason);
-                    reason
-                }
-                Err(error) if should_retry(&error, retry_attempt) => {
-                    log::warn!(
-                        "{}",
-                        error.display_chain_with_msg(
-                            "Retrying to connect after failing to start tunnel"
-                        )
-                    );
-                    #[cfg(target_os = "windows")]
-                    runtime2.block_on(async {
-                        maybe_dump_device_logs(log_dir.as_deref(), &error).await;
-                    });
-                    None
-                }
-                Err(error) => {
-                    log::error!("{}", error.display_chain_with_msg("Failed to start tunnel"));
-                    #[cfg(target_os = "windows")]
-                    runtime2.block_on(async {
-                        maybe_dump_device_logs(log_dir.as_deref(), &error).await;
-                    });
-                    Some(error.into())
-                }
-            };
-
-            if block_reason.is_none()
-                && let Some(remaining_time) = MIN_TUNNEL_ALIVE_TIME.checked_sub(start.elapsed())
-            {
-                thread::sleep(remaining_time);
-            }
-
-            if tunnel_close_event_tx.send(block_reason).is_err() {
-                log::warn!("Tunnel state machine stopped before receiving tunnel closed event");
-            }
-
-            log::trace!("Tunnel monitor thread exit");
-        });
-
-        ConnectingState {
-            tunnel_events: event_rx.fuse(),
-            tunnel_parameters: BackendParams::Wireguard(parameters),
-            tunnel_metadata: None,
-            allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
-            tunnel_close_event: tunnel_close_event_rx.fuse(),
-            tunnel_close_tx,
-            retry_attempt,
-        }
-    }
-
     fn wait_for_tunnel_monitor(
         tunnel_monitor: TunnelMonitor,
         retry_attempt: u32,
     ) -> Option<ErrorStateCause> {
         match tunnel_monitor.wait() {
             Ok(_) => None,
-            Err(error) => match error {
-                tunnel_monitor::Error::TunnelMonitoring(talpid_wireguard::Error::TimeoutError) => {
-                    log::debug!("WireGuard tunnel timed out");
-                    None
-                }
-                error @ tunnel_monitor::Error::TunnelMonitoring(..)
-                    if !should_retry(&error, retry_attempt) =>
-                {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg("Tunnel has stopped unexpectedly")
-                    );
-                    Some(ErrorStateCause::StartTunnelError)
-                }
-                error => {
-                    log::warn!(
-                        "{}",
-                        error.display_chain_with_msg("Tunnel has stopped unexpectedly")
-                    );
-                    None
-                }
-            },
+            Err(error) if !should_retry(&error, retry_attempt) => {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Tunnel has stopped unexpectedly")
+                );
+                Some(ErrorStateCause::StartTunnelError)
+            }
+            Err(error) => {
+                log::warn!(
+                    "{}",
+                    error.display_chain_with_msg("Tunnel has stopped unexpectedly")
+                );
+                None
+            }
         }
     }
 
