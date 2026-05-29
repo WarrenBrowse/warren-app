@@ -105,9 +105,18 @@ class WarrenVpnService : LifecycleVpnService() {
         lifecycleScope.launch {
             quinnAdapter.state.collect { state ->
                 quinnStateProxy.update(state)
-                if (state is WarrenTunnelState.Failed) {
-                    Logger.w("Quinn tunnel failed: ${state.reason}")
-                    foregroundNotificationHandler.stopForeground()
+                when (state) {
+                    is WarrenTunnelState.Failed -> {
+                        Logger.w("Quinn tunnel failed: ${state.reason}")
+                        foregroundNotificationHandler.stopForeground()
+                    }
+                    is WarrenTunnelState.Blocking -> {
+                        // Kill switch engaged: keep the service in the
+                        // foreground so the blackhole interface stays up
+                        // and traffic cannot leak.
+                        Logger.w("Quinn tunnel blocking (lockdown): ${state.reason}")
+                    }
+                    else -> Unit
                 }
             }
         }

@@ -58,5 +58,6 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider {
             ).let { features -> if (features.isEmpty()) "" else " (${features.joinToString()})" }
         is WarrenTunnelState.Reconnecting -> "Reconnecting..."
         is WarrenTunnelState.Failed -> "Failed: $reason"
+        is WarrenTunnelState.Blocking -> "Blocking internet (kill switch)"
     }
 }

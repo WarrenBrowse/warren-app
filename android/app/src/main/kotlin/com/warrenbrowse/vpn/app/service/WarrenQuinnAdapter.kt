@@ -61,12 +61,21 @@ class WarrenQuinnAdapter(
     private var lastNetwork: Network? = null
     private var pendingHandover: Job? = null
 
+    // Kill-switch (lockdown) state. When the tunnel drops while lockdown is
+    // enabled we keep `blockingFd` established as a blackhole interface so
+    // traffic stays captured instead of leaking to the physical network.
+    private var blockingFd: ParcelFileDescriptor? = null
+    // Distinguishes a user-requested teardown (release traffic) from an
+    // unexpected drop (engage the kill switch).
+    private var userInitiatedDisconnect = false
+
     suspend fun connect(config: WarrenTunnelConfig, mnemonic: String) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
             Logger.w("WarrenQuinnAdapter: connect() called while not disconnected")
             return@withLock
         }
         _state.value = WarrenTunnelState.Connecting
+        userInitiatedDisconnect = false
         activeConfig = config
         // Hold the mnemonic in memory only for the duration of the active
         // session, so the reconnect-on-handover path can re-derive the
@@ -75,16 +84,20 @@ class WarrenQuinnAdapter(
         activeMnemonic = mnemonic
 
         val fd = buildTunInterface(config) ?: run {
-            _state.value = WarrenTunnelState.Failed("VpnService.Builder.establish() returned null")
+            onSessionDown(config, "VpnService.Builder.establish() returned null")
             return@withLock
         }
         activeFd = fd
 
         val rc = WarrenJni.connectTunnel(fd.detachFd(), mnemonic, Json.encodeToString(config))
         if (rc != 0) {
-            _state.value = WarrenTunnelState.Failed("connectTunnel returned $rc")
+            onSessionDown(config, "connectTunnel returned $rc")
             return@withLock
         }
+
+        // The real tunnel is being (re)established: drop any blackhole
+        // interface left over from a previous lockdown drop.
+        exitBlockingMode()
 
         // Poll the Rust-side session status atomic and translate transitions
         // back to `WarrenTunnelState`. A JNI callback channel would be more
@@ -100,13 +113,22 @@ class WarrenQuinnAdapter(
                 val code = WarrenJni.getTunnelStatus()
                 if (code != lastSeen) {
                     lastSeen = code
-                    _state.value = statusFromCode(code, sessionConfig)
                     if (code == STATUS_DISCONNECTED || code < 0) {
-                        // Rust task ended (clean exit or error). Stop
-                        // polling; the next `connect()` will start a fresh
-                        // session.
+                        // Rust task ended (clean exit or error). Engage the
+                        // kill switch on an unexpected drop under lockdown;
+                        // otherwise release and stop polling.
+                        val reason =
+                            if (code < 0) "native status code $code" else "tunnel disconnected"
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else {
+                                onSessionDown(sessionConfig, reason)
+                            }
+                        }
                         break
                     }
+                    _state.value = statusFromCode(code, sessionConfig)
                 }
                 delay(STATUS_POLL_INTERVAL_MS)
             }
@@ -141,6 +163,9 @@ class WarrenQuinnAdapter(
     }
 
     suspend fun disconnect() = lock.withLock {
+        // User-requested teardown: release traffic instead of engaging the
+        // kill switch.
+        userInitiatedDisconnect = true
         unregisterNetworkCallback()
         pendingHandover?.cancel()
         pendingHandover = null
@@ -149,6 +174,7 @@ class WarrenQuinnAdapter(
         statusPollJob = null
         activeFd?.close()
         activeFd = null
+        exitBlockingMode()
         activeConfig = null
         activeMnemonic = null
         lastNetwork = null
@@ -156,21 +182,107 @@ class WarrenQuinnAdapter(
     }
 
     private fun buildTunInterface(config: WarrenTunnelConfig): ParcelFileDescriptor? {
-        val builder = vpnService.Builder()
-            .setSession("Warren VPN")
-            .addAddress("10.64.0.1", 32)
-            .addAddress("fd00:0:0:0:0:0:0:1", 128)
-            .addRoute("0.0.0.0", 0)
-            .addRoute("::", 0)
-            .setMtu(1280)
-
         config.bypassCidrs.forEach { cidr ->
-            // TODO (D.4): translate CIDR -> addDisallowedApplication or
+            // TODO: translate CIDR -> addDisallowedApplication or
             //   excludeRoute depending on payload shape.
             Logger.d("WarrenQuinnAdapter: bypass CIDR pending $cidr")
         }
+        return applyPlan(planTunInterface(config))
+    }
 
+    /**
+     * Apply a [WarrenTunInterfacePlan] to a fresh `VpnService.Builder` and
+     * establish the interface. Invalid routes / DNS servers are skipped
+     * rather than aborting the whole tunnel.
+     */
+    private fun applyPlan(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
+        val builder = vpnService.Builder()
+            .setSession(plan.session)
+            .setMtu(plan.mtu)
+        plan.addresses.forEach { builder.addAddress(it.address, it.prefixLength) }
+        plan.routes.forEach {
+            try {
+                builder.addRoute(it.address, it.prefixLength)
+            } catch (e: IllegalArgumentException) {
+                Logger.w(throwable = e) { "skipping invalid route ${it.address}/${it.prefixLength}" }
+            }
+        }
+        plan.dnsServers.forEach {
+            try {
+                builder.addDnsServer(it)
+            } catch (e: IllegalArgumentException) {
+                Logger.w(throwable = e) { "skipping invalid DNS server $it" }
+            }
+        }
         return builder.establish()
+    }
+
+    /**
+     * Handle the active tunnel going down. Must be called holding [lock].
+     *
+     * When [WarrenTunnelConfig.lockdownMode] is on and the drop was not
+     * user-initiated, establish a blackhole interface (kill switch) so
+     * traffic stays blocked, then schedule a reconnect. Otherwise surface a
+     * [WarrenTunnelState.Failed] and release traffic.
+     */
+    private fun onSessionDown(config: WarrenTunnelConfig, reason: String) {
+        activeFd?.close()
+        activeFd = null
+        if (config.lockdownMode && !userInitiatedDisconnect) {
+            enterBlockingMode(config, reason)
+            scheduleLockdownReconnect(config)
+        } else {
+            unregisterNetworkCallback()
+            _state.value = WarrenTunnelState.Failed(reason)
+        }
+    }
+
+    /**
+     * Establish (or keep) a kill-switch blackhole interface that captures
+     * all traffic but pumps nothing, so it is dropped instead of leaking to
+     * the physical network. Must be called holding [lock].
+     */
+    private fun enterBlockingMode(config: WarrenTunnelConfig, reason: String) {
+        if (blockingFd == null) {
+            val fd = applyPlan(planTunInterface(config, blocking = true))
+            if (fd == null) {
+                Logger.e("WarrenQuinnAdapter: failed to establish blocking interface; traffic may leak")
+                _state.value = WarrenTunnelState.Failed(reason)
+                return
+            }
+            blockingFd = fd
+            Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
+        }
+        _state.value = WarrenTunnelState.Blocking(reason)
+    }
+
+    /** Tear down the kill-switch blackhole interface, if any. */
+    private fun exitBlockingMode() {
+        blockingFd?.close()
+        blockingFd = null
+    }
+
+    /**
+     * After a lockdown drop, retry the real tunnel once the grace period
+     * elapses. The blackhole interface stays up until [connect] confirms a
+     * new tunnel (it calls [exitBlockingMode] on success), so there is no
+     * leak window between attempts. Repeated failures re-enter blocking via
+     * [onSessionDown], forming a bounded retry loop.
+     */
+    private fun scheduleLockdownReconnect(config: WarrenTunnelConfig) {
+        val mnemonic = activeMnemonic ?: return
+        pendingHandover?.cancel()
+        pendingHandover = scope.launch {
+            delay(HANDOVER_GRACE_MS)
+            lock.withLock {
+                if (userInitiatedDisconnect) return@withLock
+                statusPollJob?.cancel()
+                statusPollJob = null
+                // Reset so connect()'s guard passes; the blackhole stays up.
+                _state.value = WarrenTunnelState.Disconnected
+            }
+            if (!userInitiatedDisconnect) connect(config, mnemonic)
+        }
     }
 
     private fun registerNetworkCallback() {
@@ -242,6 +354,11 @@ class WarrenQuinnAdapter(
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
             _state.value = WarrenTunnelState.Reconnecting
+            // Stop polling BEFORE the intentional teardown so the status
+            // loop does not observe the DISCONNECTED transition and trip
+            // the kill switch (this is an expected handover, not a drop).
+            statusPollJob?.cancel()
+            statusPollJob = null
             WarrenJni.disconnectTunnel()
             // Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G).
             delay(HANDOVER_GRACE_MS)
@@ -249,8 +366,6 @@ class WarrenQuinnAdapter(
             // local state so it re-initialises cleanly.
             activeFd?.close()
             activeFd = null
-            statusPollJob?.cancel()
-            statusPollJob = null
             _state.value = WarrenTunnelState.Disconnected
             connect(config, mnemonic)
         }

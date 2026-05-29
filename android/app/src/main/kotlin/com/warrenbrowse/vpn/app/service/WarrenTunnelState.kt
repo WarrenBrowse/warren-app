@@ -20,6 +20,14 @@ sealed class WarrenTunnelState {
     data object Reconnecting : WarrenTunnelState()
     data class Failed(val reason: String) : WarrenTunnelState()
 
+    /**
+     * The tunnel is down but the kill switch (lockdown mode) is keeping a
+     * blocking interface in place, so traffic is blocked rather than
+     * leaking to the physical network. Mirrors the desktop `lockedDown`
+     * state / "BLOCKING INTERNET" notification.
+     */
+    data class Blocking(val reason: String) : WarrenTunnelState()
+
     companion object {
         fun fromStatusCode(code: Int): WarrenTunnelState = when (code) {
             0 -> Disconnected

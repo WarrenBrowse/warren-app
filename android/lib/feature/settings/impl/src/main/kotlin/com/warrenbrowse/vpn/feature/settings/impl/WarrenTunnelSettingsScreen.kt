@@ -6,13 +6,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,8 +35,9 @@ import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import org.koin.compose.koinInject
 
 /**
- * Warren-specific tunnel settings host screen. Surfaces the four
- * Warren toggles read by [WarrenTunnelConfigBuilder] at connect time:
+ * Warren-specific tunnel settings host screen. Surfaces the Warren toggles
+ * read by [WarrenTunnelConfigBuilder] at connect time:
+ *   - Privacy: kill switch (lockdown), IPv6, DNS
  *   - DAITA padding (Tamaraw)
  *   - NAT-PMP port forwarding
  *   - Multi-hop entry relay
@@ -40,11 +48,8 @@ import org.koin.compose.koinInject
  * write through [WarrenLocalSettingsRepository] so the change is
  * persisted and picked up on the next connect.
  *
- * A `WarrenTunnelConfigBuilder.build()` is invoked at connect time
- * (not eagerly here), so changes here only take effect on the next
- * connect attempt; the running session is not torn down. D.4 step 9
- * will add a "Reconnect now" affordance when the user mutates a flag
- * while connected.
+ * Changes here only take effect on the next connect attempt; the running
+ * session is not torn down.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +60,19 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
     val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
     val obfuscation by repo.obfuscationM40.collectAsStateWithLifecycle()
+    val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
+    val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
+    val dnsState by repo.dnsState.collectAsStateWithLifecycle()
+    val customDns by repo.customDnsServers.collectAsStateWithLifecycle()
+    val blockAds by repo.blockAds.collectAsStateWithLifecycle()
+    val blockTrackers by repo.blockTrackers.collectAsStateWithLifecycle()
+    val blockMalware by repo.blockMalware.collectAsStateWithLifecycle()
+    val blockAdult by repo.blockAdultContent.collectAsStateWithLifecycle()
+    val blockGambling by repo.blockGambling.collectAsStateWithLifecycle()
+    val blockSocial by repo.blockSocialMedia.collectAsStateWithLifecycle()
     val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
+
+    val customDnsEnabled = dnsState == WarrenLocalSettingsRepository.DNS_STATE_CUSTOM
 
     ScaffoldWithSmallTopBar(
         appBarTitle = "Warren tunnel",
@@ -66,22 +83,89 @@ fun WarrenTunnelSettings(navigator: Navigator) {
         },
     ) { modifier ->
         Column(
-            modifier = Modifier.fillMaxSize().then(modifier).padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(modifier)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Live tunnel state, sourced from WarrenQuinnStateProxy.
             Text(
                 text = "Tunnel: $tunnelState",
                 style = MaterialTheme.typography.titleSmall,
-                color = if (tunnelState.startsWith("Connected")) {
-                    Color(0xFF2E7D32)
-                } else MaterialTheme.colorScheme.onSurface,
+                color = when {
+                    tunnelState.startsWith("Connected") -> Color(0xFF2E7D32)
+                    tunnelState.startsWith("Blocking") -> Color(0xFFC62828)
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
             )
 
             Text(
                 text = "Changes apply on next connect.",
                 style = MaterialTheme.typography.bodySmall,
             )
+
+            SectionLabel("Privacy")
+
+            ToggleRow(
+                title = "Kill switch (lockdown)",
+                subtitle = "Block all traffic if the tunnel drops, instead of " +
+                    "falling back to the unprotected network.",
+                value = lockdown,
+                onValueChange = repo::setLockdownMode,
+            )
+
+            ToggleRow(
+                title = "Enable IPv6",
+                subtitle = "Route IPv6 through the tunnel. When off, IPv6 is " +
+                    "blocked to prevent leaks.",
+                value = ipv6,
+                onValueChange = repo::setIpv6Enabled,
+            )
+
+            HorizontalDivider()
+            SectionLabel("DNS")
+
+            ToggleRow(
+                title = "Use custom DNS",
+                subtitle = "Send DNS queries to your own resolvers instead of " +
+                    "the Warren exit resolver. DNS always stays inside the tunnel.",
+                value = customDnsEnabled,
+                onValueChange = { useCustom ->
+                    repo.setDnsState(
+                        if (useCustom) {
+                            WarrenLocalSettingsRepository.DNS_STATE_CUSTOM
+                        } else {
+                            WarrenLocalSettingsRepository.DNS_STATE_DEFAULT
+                        },
+                    )
+                },
+            )
+
+            if (customDnsEnabled) {
+                CustomDnsField(
+                    initial = customDns.joinToString(", "),
+                    onCommit = { raw ->
+                        repo.setCustomDnsServers(raw.split(',', '\n'))
+                    },
+                )
+            }
+
+            Text(
+                text = "Content blocking (applied by the Warren exit resolver):",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ToggleRow("Block ads", "", blockAds, repo::setBlockAds)
+            ToggleRow("Block trackers", "", blockTrackers, repo::setBlockTrackers)
+            ToggleRow("Block malware", "", blockMalware, repo::setBlockMalware)
+            ToggleRow("Block adult content", "", blockAdult, repo::setBlockAdultContent)
+            ToggleRow("Block gambling", "", blockGambling, repo::setBlockGambling)
+            ToggleRow("Block social media", "", blockSocial, repo::setBlockSocialMedia)
+
+            HorizontalDivider()
+            SectionLabel("Tunnel")
 
             ToggleRow(
                 title = "DAITA padding",
@@ -120,6 +204,34 @@ fun WarrenTunnelSettings(navigator: Navigator) {
 }
 
 @Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+    )
+}
+
+@Composable
+private fun CustomDnsField(initial: String, onCommit: (String) -> Unit) {
+    // Local edit buffer so typing commas is not fought by re-derivation from
+    // the persisted list. The repository is updated on every change (it
+    // drops blanks and trims itself).
+    var text by remember { mutableStateOf(initial) }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it
+            onCommit(it)
+        },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text("Resolver addresses (comma-separated)") },
+        placeholder = { Text("e.g. 9.9.9.9, 149.112.112.112") },
+        singleLine = false,
+    )
+}
+
+@Composable
 private fun ToggleRow(
     title: String,
     subtitle: String,
@@ -133,11 +245,13 @@ private fun ToggleRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.titleSmall)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (subtitle.isNotEmpty()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Switch(checked = value, onCheckedChange = onValueChange)
     }
