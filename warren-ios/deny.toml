@@ -36,8 +36,6 @@ exceptions = [
   { crate = "talpid-routing", allow = ["GPL-3.0-or-later"] },
   { crate = "talpid-time", allow = ["GPL-3.0-or-later"] },
   { crate = "talpid-tunnel", allow = ["GPL-3.0-or-later"] },
-  { crate = "talpid-tunnel-config-client", allow = ["GPL-3.0-or-later"] },
   { crate = "talpid-types", allow = ["GPL-3.0-or-later"] },
   { crate = "talpid-windows", allow = ["GPL-3.0-or-later"] },
-  { crate = "tunnel-obfuscation", allow = ["GPL-3.0-or-later"] },
 ]
