@@ -339,6 +339,12 @@ jobs:
 
   build-android:
     name: Build Android AAB + Play Store internal-test upload
+    # Android is DISABLED for now: the Android app is not yet at feature parity
+    # with the desktop app (missing kill switch / custom DNS / IPv6 leak protection,
+    # reduced UI) and has no production signing. To RE-ENABLE, set the repository
+    # variable WARREN_ENABLE_ANDROID to 'true' (Settings -> Secrets and variables
+    # -> Actions -> Variables tab). publish-release gates on it conditionally below.
+    if: ${{ vars.WARREN_ENABLE_ANDROID == 'true' }}
     runs-on: [self-hosted, macOS, ARM64]
     env:
       ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -422,16 +428,18 @@ jobs:
     name: Publish GitHub Release
     needs: [build-macos, build-linux, build-windows, build-ios, build-android]
     runs-on: ubuntu-22.04
-    # iOS is non-blocking: publish as long as it's a tag and the 4 non-iOS builds
-    # succeeded. build-ios stays in `needs` so we still wait for it and include the
-    # IPA when it succeeds, but its failure does not block the release.
+    # iOS and Android are non-blocking while disabled. Publish as long as it's a tag
+    # and the three desktop builds (macOS/Linux/Windows) succeed. build-ios/build-android
+    # stay in `needs` so we wait for them and include their artifacts when enabled+green.
+    # Android is gated conditionally: it only blocks the release when WARREN_ENABLE_ANDROID
+    # is 'true'. iOS is always non-blocking. Re-enable each via its repo variable.
     if: >-
       !cancelled() &&
       startsWith(github.ref, 'refs/tags/') &&
       needs.build-macos.result == 'success' &&
       needs.build-linux.result == 'success' &&
       needs.build-windows.result == 'success' &&
-      needs.build-android.result == 'success'
+      (vars.WARREN_ENABLE_ANDROID != 'true' || needs.build-android.result == 'success')
     env:
       TAG_NAME: ${{ github.ref_name }}
     steps:
