@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::{
     collections::{BTreeSet, HashMap},
     fmt, mem,
-    net::{IpAddr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     sync::{Arc, RwLock, mpsc as sync_mpsc},
     thread,
     time::Duration,
@@ -388,10 +388,14 @@ impl super::DnsMonitorT for DnsMonitor {
     fn new() -> Result<Self> {
         let state = Arc::new(Mutex::new(State::new()));
         Self::spawn(state.clone())?;
-        Ok(DnsMonitor {
+        let monitor = DnsMonitor {
             store: SCDynamicStoreBuilder::new("mullvad-dns").build(),
             state,
-        })
+        };
+        // Repair any DNS the daemon left pointing at a now-dead local resolver
+        // after a previous unclean exit, before we start managing DNS ourselves.
+        remove_stale_loopback_dns(&monitor.store);
+        Ok(monitor)
     }
 
     /// Update the system config to use the DNS `config`.
@@ -534,6 +538,50 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+/// Remove any DNS override left behind by a previous, unclean daemon exit
+/// (SIGKILL, crash, or a `reset` that never completed).
+///
+/// While (re)establishing a tunnel we point the system DNS at our local
+/// resolver, which binds to a random address in the `127/8` range (see
+/// `talpid_core::resolver`). If the daemon dies before restoring the DNS, the
+/// system is left pointing at a loopback resolver that no longer exists and
+/// all name resolution breaks until a tunnel takes over again.
+///
+/// This runs once, when the [`DnsMonitor`] is created at startup — before we
+/// have pointed the system DNS at our own resolver — so any service whose
+/// servers are *all* loopback addresses must be such a leftover. We spare the
+/// canonical `127.0.0.1`/`::1` (which a user-run resolver such as
+/// dnscrypt-proxy would use; our resolver never binds those) and remove the
+/// rest, letting the OS fall back to its DHCP/manually-configured DNS.
+fn remove_stale_loopback_dns(store: &SCDynamicStore) {
+    for (path, settings) in read_all_dns(store) {
+        let Some(settings) = settings else { continue };
+        let addresses = settings.server_addresses();
+        let is_stale_loopback = !addresses.is_empty()
+            && addresses
+                .iter()
+                .map(SocketAddr::ip)
+                .all(is_reclaimable_loopback);
+        if is_stale_loopback {
+            log::warn!(
+                "Removing stale loopback DNS override at {path} \
+                 (leftover from a previous unclean daemon exit)"
+            );
+            if !store.remove(CFString::new(&path)) {
+                log::error!("Failed to remove stale DNS override at {path}");
+            }
+        }
+    }
+}
+
+/// Whether `ip` is a loopback address our local resolver may have bound,
+/// excluding the canonical localhost addresses a user-run resolver would use.
+fn is_reclaimable_loopback(ip: IpAddr) -> bool {
+    ip.is_loopback()
+        && ip != IpAddr::V4(Ipv4Addr::LOCALHOST)
+        && ip != IpAddr::V6(Ipv6Addr::LOCALHOST)
 }
 
 #[cfg(test)]
