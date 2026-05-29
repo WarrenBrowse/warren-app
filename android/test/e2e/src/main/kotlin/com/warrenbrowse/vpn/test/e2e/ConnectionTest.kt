@@ -21,7 +21,6 @@ import com.warrenbrowse.vpn.test.common.page.disablePostQuantumStory
 import com.warrenbrowse.vpn.test.common.page.enableDeviceIpv6Story
 import com.warrenbrowse.vpn.test.common.page.enableLocalNetworkSharingStory
 import com.warrenbrowse.vpn.test.common.page.enableMultihopStory
-import com.warrenbrowse.vpn.test.common.page.enableWireGuardCustomPortStory
 import com.warrenbrowse.vpn.test.common.page.on
 import com.warrenbrowse.vpn.test.common.page.setObfuscationStory
 import com.warrenbrowse.vpn.test.common.page.toggleInTunnelIpv6Story
@@ -411,30 +410,6 @@ class ConnectionTest : EndToEndTest() {
             clickDisconnect()
             waitForDisconnectedLabel()
         }
-    }
-
-    @Test
-    fun testConnectUsingWireguardCustomPort() = runTest {
-        // Given
-        app.launchAndLogIn(accountTestRule.validAccountNumber)
-
-        // Set wireguard custom port
-        on<ConnectPage> { enableWireGuardCustomPortStory(53) }
-
-        // Connect
-        on<ConnectPage> { clickConnect() }
-
-        device.acceptVpnPermissionDialog()
-
-        var inIpv4Port = ""
-
-        on<ConnectPage> {
-            waitForConnectedLabel()
-            inIpv4Port = extractInIpPort()
-        }
-
-        // Verify correct port used
-        assertEquals("53", inIpv4Port)
     }
 
     @Test

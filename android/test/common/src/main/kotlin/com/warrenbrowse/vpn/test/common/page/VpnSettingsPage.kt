@@ -6,7 +6,6 @@ import androidx.test.uiautomator.Until
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_ANTI_CENSORSHIP_SETTINGS_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_QUANTUM_ITEM_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_VPN_SETTINGS_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_WIREGUARD_CUSTOM_PORT_NUMBER_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.SWITCH_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG
@@ -73,10 +72,6 @@ class VpnSettingsPage internal constructor() : Page() {
 
     fun scrollUntilWireGuardObfuscationShadowsocksCell() {
         scrollUntilCell(WIREGUARD_OBFUSCATION_SHADOWSOCKS_CELL_TEST_TAG)
-    }
-
-    fun scrollUntilWireGuardCustomPort() {
-        scrollUntilCell(LAZY_LIST_WIREGUARD_CUSTOM_PORT_NUMBER_TEST_TAG)
     }
 
     fun scrollUntilDeviceIpVersionCell() {

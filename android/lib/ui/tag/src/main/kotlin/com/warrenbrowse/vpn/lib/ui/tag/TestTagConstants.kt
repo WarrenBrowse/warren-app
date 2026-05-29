@@ -21,14 +21,6 @@ const val LAZY_LIST_VPN_SETTINGS_TEST_TAG = "lazy_list_vpn_settings_test_tag"
 const val LAZY_LIST_TEST_TAG = "lazy_list_test_tag"
 const val LAZY_LIST_LAST_ITEM_TEST_TAG = "lazy_list_last_item_test_tag"
 const val LAZY_LIST_QUANTUM_ITEM_TEST_TAG = "lazy_list_quantum_item_test_tag"
-const val LAZY_LIST_WIREGUARD_PORT_ITEM_X_TEST_TAG = "lazy_list_wireguard_item_%d_test_tag"
-const val LAZY_LIST_WIREGUARD_CUSTOM_PORT_TEXT_TEST_TAG =
-    "lazy_list_wireguard_custom_port_text_test_tag"
-const val LAZY_LIST_WIREGUARD_CUSTOM_PORT_NUMBER_TEST_TAG =
-    "lazy_list_wireguard_custom_port_number_test_tag"
-const val CUSTOM_PORT_DIALOG_INPUT_TEST_TAG = "custom_port_dialog_input_test_tag"
-const val LAZY_LIST_WIREGUARD_OBFUSCATION_TITLE_TEST_TAG =
-    "lazy_list_wireguard_obfuscation_title_test_tag"
 const val SWITCH_TEST_TAG = "switch_test_tag"
 const val BUTTON_ARROW_RIGHT_TEST_TAG = "button_arrow_right_test_tag"
 const val WIREGUARD_OBFUSCATION_OFF_CELL_TEST_TAG = "wireguard_obfuscation_off_cell_test_tag"
@@ -41,7 +33,6 @@ const val WIREGUARD_OBFUSCATION_LWO_CELL_TEST_TAG = "wireguard_obfuscation_lwo_c
 const val WIREGUARD_DEVICE_IP_AUTO_CELL_TEST_TAG = "wireguard_device_ip_auto_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG = "wireguard_device_ip_ipv4_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG = "wireguard_device_ip_ipv6_cell_test_tag"
-const val WIREGUARD_OBFUSCATION_WG_PORT_TEST_TAG = "wireguard_obfuscation_wg_port_test_tag"
 // Account screen
 const val MANAGE_DEVICES_BUTTON_TEST_TAG = "manage_devices_button_test_tag"
 
@@ -134,10 +125,6 @@ const val API_ACCESS_TEST_METHOD_BUTTON_TEST_TAG = "api_access_details_test_meth
 
 // EditApiAccessMethodScreen
 const val EDIT_API_ACCESS_NAME_INPUT_TEST_TAG = "edit_api_access_name_input_test_tag"
-
-// SelectPortScreen
-const val SELECT_PORT_ITEM_AUTOMATIC_TEST_TAG = "select_port_item_automatic_test_tag"
-const val SELECT_PORT_ITEM_X_TEST_TAG = "select_port_item_%d_test_tag"
 const val SELECT_PORT_CUSTOM_TEST_TAG = "select_port_custom_test_tag"
 
 // D.4 step 37: ADD_TIME_BOTTOM_SHEET_TITLE_TEST_TAG removed.

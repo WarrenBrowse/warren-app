@@ -18,7 +18,6 @@ fun ConnectPage.disablePostQuantumStory() {
 }
 
 enum class ObfuscationOption {
-    WireguardPort,
     Udp2Tcp,
     Shadowsocks,
     Quic,
@@ -35,7 +34,6 @@ fun ConnectPage.setObfuscationStory(obfuscation: ObfuscationOption) {
     }
     on<AntiCensorshipSettingsPage> {
         when (obfuscation) {
-            ObfuscationOption.WireguardPort -> clickWireguardPortCell()
             ObfuscationOption.Udp2Tcp -> clickUdp2TcpCell()
             ObfuscationOption.Shadowsocks -> clickShadowsocksCell()
             ObfuscationOption.Quic -> clickQuicCell()
@@ -82,23 +80,6 @@ fun ConnectPage.enableDeviceIpv6Story() {
         clickDeviceIpIpv6Cell()
     }
     uiDevice.pressBackTwice()
-}
-
-fun ConnectPage.enableWireGuardCustomPortStory(port: Int) {
-    if (port != 51820 && port != 53) {
-        error("Port needs to be one of the predefined ports")
-    }
-    clickSettings()
-    on<SettingsPage> { clickVpnSettings() }
-    on<VpnSettingsPage> {
-        scrollUntilAntiCensorshipCell()
-        clickAntiCensorshipCell()
-    }
-    on<AntiCensorshipSettingsPage> { clickWireguardSelectPortButton() }
-    on<SelectPortPage> { clickPresetPort(port) }
-    uiDevice.pressBack()
-    on<AntiCensorshipSettingsPage> { clickWireguardPortCell() }
-    repeat(3) { uiDevice.pressBack() }
 }
 
 fun ConnectPage.disableIPv6Story() {

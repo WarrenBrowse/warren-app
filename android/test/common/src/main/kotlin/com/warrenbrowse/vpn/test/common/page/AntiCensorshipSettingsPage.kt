@@ -1,7 +1,6 @@
 package com.warrenbrowse.vpn.test.common.page
 
 import androidx.test.uiautomator.By
-import com.warrenbrowse.vpn.lib.ui.tag.BUTTON_ARROW_RIGHT_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.DAITA_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.VPN_SETTINGS_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_LWO_CELL_TEST_TAG
@@ -9,7 +8,6 @@ import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_OFF_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_QUIC_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_SHADOWSOCKS_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_UDP_OVER_TCP_CELL_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.WIREGUARD_OBFUSCATION_WG_PORT_TEST_TAG
 import com.warrenbrowse.vpn.test.common.extension.clickObjectAwaitIsChecked
 import com.warrenbrowse.vpn.test.common.extension.findObjectWithTimeout
 
@@ -31,18 +29,6 @@ class AntiCensorshipSettingsPage internal constructor() : Page() {
 
     fun clickDaita() {
         uiDevice.findObjectWithTimeout(By.res(DAITA_CELL_TEST_TAG)).click()
-    }
-
-    fun clickWireguardSelectPortButton() {
-        uiDevice
-            .findObjectWithTimeout(By.res(WIREGUARD_OBFUSCATION_WG_PORT_TEST_TAG))
-            .parent
-            .findObject(By.res(BUTTON_ARROW_RIGHT_TEST_TAG))
-            .click()
-    }
-
-    fun clickWireguardPortCell() {
-        uiDevice.clickObjectAwaitIsChecked(By.res(WIREGUARD_OBFUSCATION_WG_PORT_TEST_TAG))
     }
 
     fun clickShadowsocksCell() {
