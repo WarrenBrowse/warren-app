@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">Cihazda VPN Ayarları mevcut değil</string>
     <string name="warning">Uyarı</string>
     <string name="we_will_look_into_this">Bunu araştıracağız.</string>
-    <string name="wireguard_port_is_not_supported">Seçilen %1$s portu desteklenmiyor, lütfen portu değiştirin:</string>
-    <string name="wireguard_port_title">WireGuard portu</string>
-    <string name="wireguard_settings">%1$s ayarları.</string>
     <string name="x_entry">%1$s (Giriş)</string>
     <string name="x_exit">%1$s (Çıkış)</string>
     <string name="x_via_x">%2$s aracılığıyla %1$s</string>

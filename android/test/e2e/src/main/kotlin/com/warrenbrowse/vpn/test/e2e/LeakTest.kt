@@ -50,8 +50,7 @@ class LeakTest : EndToEndTest() {
         runBlocking {
             app.applySettings(
                 localNetworkSharing = true,
-                obfuscationMode = ObfuscationMode.WireguardPort,
-                wireguardPort = Constraint.Only(Port(51820)),
+                obfuscationMode = ObfuscationMode.Quic,
             )
         }
 

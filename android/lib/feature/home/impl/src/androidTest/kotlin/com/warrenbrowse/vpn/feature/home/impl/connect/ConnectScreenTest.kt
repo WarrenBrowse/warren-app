@@ -67,7 +67,6 @@ class ConnectScreenTest {
         onChangelogClick: () -> Unit = {},
         onDismissChangelogClick: () -> Unit = {},
         onNavigateToFeature: (FeatureIndicator) -> Unit = {},
-        onClickShowWireguardPortSettings: () -> Unit = {},
         onClickShowAndroid16UpgradeInfo: () -> Unit = {},
         onClickDismissAndroid16UpgradeWarning: () -> Unit = {},
     ) {
@@ -86,7 +85,6 @@ class ConnectScreenTest {
                 onChangelogClick = onChangelogClick,
                 onDismissChangelogClick = onDismissChangelogClick,
                 onNavigateToFeature = onNavigateToFeature,
-                onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
                 onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
                 onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
             )

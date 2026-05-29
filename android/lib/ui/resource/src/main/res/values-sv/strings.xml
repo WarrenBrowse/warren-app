@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">VPN-inställningarna är inte tillgängliga på enheten</string>
     <string name="warning">Varning</string>
     <string name="we_will_look_into_this">Vi kommer att undersöka detta.</string>
-    <string name="wireguard_port_is_not_supported">Den valda %1$s-porten stöds inte, ändra den i</string>
-    <string name="wireguard_port_title">WireGuard-port</string>
-    <string name="wireguard_settings">%1$s-inställningar.</string>
     <string name="x_entry">%1$s (start)</string>
     <string name="x_exit">%1$s (slut)</string>
     <string name="x_via_x">%1$s via %2$s</string>

@@ -81,7 +81,6 @@ fun InAppNotification.toNotificationData(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) =
     when (this) {
@@ -93,7 +92,7 @@ fun InAppNotification.toNotificationData(
                 statusLevel = StatusLevel.None,
             )
         is InAppNotification.TunnelStateError ->
-            errorMessageBannerData(statusLevel, error, onClickShowWireguardPortSettings)
+            errorMessageBannerData(statusLevel, error)
         is InAppNotification.UnsupportedVersion ->
             NotificationData(
                 title = stringResource(id = R.string.unsupported_version),
@@ -170,14 +169,10 @@ fun InAppNotification.toNotificationData(
     }
 
 @Composable
-private fun errorMessageBannerData(
-    statusLevel: StatusLevel,
-    error: ErrorState,
-    onClickShowWireguardPortSettings: () -> Unit,
-) =
+private fun errorMessageBannerData(statusLevel: StatusLevel, error: ErrorState) =
     NotificationData(
         title = error.title().formatWithHtml(),
-        message = NotificationMessage.Text(error.message(onClickShowWireguardPortSettings)),
+        message = NotificationMessage.Text(error.message()),
         statusLevel = statusLevel,
     )
 
@@ -209,11 +204,9 @@ private fun ErrorState.title(): String {
 }
 
 @Composable
-private fun ErrorState.message(onClickShowWireguardPortSettings: () -> Unit): AnnotatedString {
+private fun ErrorState.message(): AnnotatedString {
     val cause = this.cause
     return when {
-        cause is ErrorStateCause.NoRelaysMatchSelectedPort ->
-            cause.message(onClickShowWireguardPortSettings)
         isBlocking -> cause.errorMessageId().formatWithHtml()
         else -> stringResource(R.string.failed_to_block_internet).formatWithHtml()
     }
@@ -241,7 +234,7 @@ private fun ErrorStateCause.errorMessageId(): String =
                 addresses.joinToString { address -> address.addressString() },
             )
         is ErrorStateCause.NoRelaysMatchSelectedPort ->
-            stringResource(R.string.wireguard_port_is_not_supported)
+            stringResource(R.string.no_matching_relay)
         is ErrorStateCause.InvalidIpv6Config -> stringResource(R.string.invalid_ipv6_config)
     }
 
@@ -278,32 +271,3 @@ private fun InetAddress.addressString(): String {
     return address
 }
 
-@Composable
-private fun ErrorStateCause.NoRelaysMatchSelectedPort.message(
-    onClickShowWireguardPortSettings: () -> Unit
-) = buildAnnotatedString {
-    append(
-        stringResource(R.string.wireguard_port_is_not_supported, stringResource(R.string.wireguard))
-    )
-    append(" ")
-    withStyle(
-        SpanStyle(
-            color = MaterialTheme.colorScheme.onSurface,
-            textDecoration = TextDecoration.Underline,
-        )
-    ) {
-        withLink(
-            LinkAnnotation.Clickable(
-                tag = stringResource(R.string.wireguard),
-                linkInteractionListener =
-                    object : LinkInteractionListener {
-                        override fun onClick(link: LinkAnnotation) {
-                            onClickShowWireguardPortSettings()
-                        }
-                    },
-            )
-        ) {
-            append(stringResource(R.string.wireguard_settings, stringResource(R.string.wireguard)))
-        }
-    }
-}

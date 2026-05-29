@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">Ustawienia VPN są niedostępne na urządzeniu</string>
     <string name="warning">Ostrzeżenie</string>
     <string name="we_will_look_into_this">Sprawdzimy to.</string>
-    <string name="wireguard_port_is_not_supported">Wybrany port %1$s nie jest obsługiwany, zmień go w obszarze</string>
-    <string name="wireguard_port_title">Port WireGuard</string>
-    <string name="wireguard_settings">Ustawienia %1$s.</string>
     <string name="x_entry">%1$s (wejście)</string>
     <string name="x_exit">%1$s (wyjście)</string>
     <string name="x_via_x">%1$s przez %2$s</string>

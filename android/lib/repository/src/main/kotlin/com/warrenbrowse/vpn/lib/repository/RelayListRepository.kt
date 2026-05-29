@@ -13,7 +13,6 @@ import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
 import com.warrenbrowse.vpn.lib.model.SetRelayLocationError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
-import com.warrenbrowse.vpn.lib.model.WireguardEndpointData
 
 // D.4 step 58: RelayListRepository stripped of ManagementService +
 // RelayLocationTranslationRepository deps. The Mullvad daemon's relay channel
@@ -33,9 +32,6 @@ class RelayListRepository(
     @Suppress("UnusedPrivateMember") translationRepository: Any? = null,
 ) {
     val relayList: StateFlow<List<RelayItem.Location.Country>> = MutableStateFlow(emptyList())
-
-    val wireguardEndpointData: StateFlow<WireguardEndpointData> =
-        MutableStateFlow(WireguardEndpointData(emptyList(), emptyList()))
 
     val selectedLocation: StateFlow<Constraint<RelayItemId>> = MutableStateFlow(Constraint.Any)
 

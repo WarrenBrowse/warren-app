@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">장치에서 VPN 설정을 사용할 수 없습니다</string>
     <string name="warning">경고</string>
     <string name="we_will_look_into_this">조사해보겠습니다.</string>
-    <string name="wireguard_port_is_not_supported">선택한 %1$s 포트는 지원되지 않습니다. 다음에서 변경하세요:</string>
-    <string name="wireguard_port_title">WireGuard 포트</string>
-    <string name="wireguard_settings">%1$s 설정.</string>
     <string name="x_entry">%1$s(진입)</string>
     <string name="x_exit">%1$s(종료)</string>
     <string name="x_via_x">%2$s을(를) 통한 %1$s</string>

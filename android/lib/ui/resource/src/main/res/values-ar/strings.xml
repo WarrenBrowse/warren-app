@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">إعدادات شبكة VPN غير متاحة على الجهاز</string>
     <string name="warning">تحذير</string>
     <string name="we_will_look_into_this">سوف ننظر في هذا الأمر.</string>
-    <string name="wireguard_port_is_not_supported">المنفذ المُحدَّد %1$s غير مدعوم، يُرجى تغييره ضمن</string>
-    <string name="wireguard_port_title">منفذ WireGuard</string>
-    <string name="wireguard_settings">إعدادات %1$s.</string>
     <string name="x_entry">%1$s (دخول)</string>
     <string name="x_exit">%1$s (خروج)</string>
     <string name="x_via_x">%1$s عبر %2$s</string>

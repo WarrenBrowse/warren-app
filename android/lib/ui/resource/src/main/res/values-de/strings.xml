@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">VPN-Einstellungen auf dem Gerät nicht verfügbar</string>
     <string name="warning">Warnung</string>
     <string name="we_will_look_into_this">Wir werden uns das anschauen.</string>
-    <string name="wireguard_port_is_not_supported">Der ausgewählte %1$s-Port wird nicht unterstützt, bitte ändern Sie ihn unter</string>
-    <string name="wireguard_port_title">WireGuard-Port</string>
-    <string name="wireguard_settings">%1$s-Einstellungen.</string>
     <string name="x_entry">%1$s (Eingang)</string>
     <string name="x_exit">%1$s (Ausgang)</string>
     <string name="x_via_x">%1$s über %2$s</string>

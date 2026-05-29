@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">تنظیمات VPN روی این دستگاه در دسترس نیست</string>
     <string name="warning">هشدار</string>
     <string name="we_will_look_into_this">ما این موضوع را بررسی خواهیم کرد.</string>
-    <string name="wireguard_port_is_not_supported">پورتِ %1$s انتخاب‌شده پشتیبانی نمی‌شود؛ لطفاً آن را در بخش مربوطه تغییر دهید</string>
-    <string name="wireguard_port_title">پورت ‏WireGuard</string>
-    <string name="wireguard_settings">تنظیمات %1$s.</string>
     <string name="x_entry">%1$s (ورود)</string>
     <string name="x_exit">%1$s (خروج)</string>
     <string name="x_via_x">%1$s از طریق %2$s</string>

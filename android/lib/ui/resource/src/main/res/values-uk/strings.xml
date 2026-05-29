@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">Налаштування VPN недоступні на пристрої</string>
     <string name="warning">Попередження</string>
     <string name="we_will_look_into_this">Ми розглянемо цю проблему.</string>
-    <string name="wireguard_port_is_not_supported">Вибраний порт %1$s не підтримується, змініть його в</string>
-    <string name="wireguard_port_title">Порт WireGuard</string>
-    <string name="wireguard_settings">Налаштування %1$s.</string>
     <string name="x_entry">%1$s (вхід)</string>
     <string name="x_exit">%1$s (вихід)</string>
     <string name="x_via_x">%1$s через %2$s</string>

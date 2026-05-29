@@ -26,7 +26,6 @@ fun PreviewNotificationBannerTv() {
             onClickShowChangelog = {},
             onClickShowAndroid16UpgradeInfo = {},
             onClickDismissChangelog = {},
-            onClickShowWireguardPortSettings = {},
             onClickDismissAndroid16UpgradeWarning = {},
         )
     }
@@ -43,7 +42,6 @@ fun NotificationBannerTv(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
     AnimatedNotificationBanner(
@@ -67,7 +65,6 @@ fun NotificationBannerTv(
         onClickShowChangelog = onClickShowChangelog,
         onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
         onClickDismissChangelog = onClickDismissChangelog,
-        onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
         onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
     )
 }

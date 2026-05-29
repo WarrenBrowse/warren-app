@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">Definições de VPN não disponíveis no dispositivo</string>
     <string name="warning">Aviso</string>
     <string name="we_will_look_into_this">Vamos analisar esta situação.</string>
-    <string name="wireguard_port_is_not_supported">A porta %1$s selecionada não é suportada. Altere-a em</string>
-    <string name="wireguard_port_title">Porta WireGuard</string>
-    <string name="wireguard_settings">Definições do %1$s.</string>
     <string name="x_entry">%1$s (Entrada)</string>
     <string name="x_exit">%1$s (Saída)</string>
     <string name="x_via_x">%1$s via %2$s</string>

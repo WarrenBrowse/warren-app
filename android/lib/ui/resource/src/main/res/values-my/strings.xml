@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">VPN ဆက်တင်များကို စက်တွင် မရရှိနိုင်ပါ</string>
     <string name="warning">သတိပေးချက်</string>
     <string name="we_will_look_into_this">ဤသည်ကို စစ်ဆေးလိုက်ပါမည်။</string>
-    <string name="wireguard_port_is_not_supported">ရွေးထားသည့် %1$s ပေါ့တ်ကို ပံ့ပိုးထားခြင်းမရှိပါသဖြင့် ၎င်းကို အောက်တွင် ပြောင်းပေးပါ </string>
-    <string name="wireguard_port_title">WireGuard ပေါ့တ်</string>
-    <string name="wireguard_settings">%1$s ဆက်တင်များ</string>
     <string name="x_entry">%1$s (အဝင်)</string>
     <string name="x_exit">%1$s (အထွက်)</string>
     <string name="x_via_x">%2$s မှတစ်ဆင့် %1$s</string>

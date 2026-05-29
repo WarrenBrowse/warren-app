@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">设备上 VPN 设置不可用</string>
     <string name="warning">警告</string>
     <string name="we_will_look_into_this">我们将对此进行调查。</string>
-    <string name="wireguard_port_is_not_supported">所选 %1$s 端口不受支持，请在以下位置更改：</string>
-    <string name="wireguard_port_title">WireGuard 端口</string>
-    <string name="wireguard_settings">%1$s 设置.</string>
     <string name="x_entry">%1$s（入口）</string>
     <string name="x_exit">%1$s（出口）</string>
     <string name="x_via_x">%1$s，经由 %2$s</string>

@@ -114,7 +114,6 @@
     <string name="none">None</string>
     <string name="created_x">Created: %s</string>
     <string name="on">On</string>
-    <string name="wireguard_port_title">WireGuard port</string>
     <string name="search_placeholder">Search for...</string>
     <string name="search_no_matches_for_text">No result for \"%s\", please try a different search</string>
     <string name="port">Port</string>
@@ -182,8 +181,6 @@
     <string name="daita_multihop">%s: Multihop</string>
     <string name="vpn_permission_denied_error_no_vpn_settings">VPN permission was denied</string>
     <string name="vpn_settings_not_available">VPN Settings not available on device</string>
-    <string name="wireguard_port_is_not_supported">The selected %s port is not supported, please change it under</string>
-    <string name="wireguard_settings">%s settings.</string>
     <string name="retry">Retry</string>
     <string name="android_16_upgrade_warning_title">Can’t connect?</string>
     <string name="android_16_upgrade_warning_message">Android 16 has a known issue. Please restart your device and try again. To learn more, </string>

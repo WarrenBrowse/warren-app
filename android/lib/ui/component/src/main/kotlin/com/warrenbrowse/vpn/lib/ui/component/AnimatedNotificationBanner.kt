@@ -52,7 +52,6 @@ fun AnimatedNotificationBanner(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
     // Fix for animating to invisible state
@@ -85,7 +84,6 @@ fun AnimatedNotificationBanner(
                     onClickShowChangelog = onClickShowChangelog,
                     onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
                     onClickDismissChangelog = onClickDismissChangelog,
-                    onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
                     onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
                 ),
             )

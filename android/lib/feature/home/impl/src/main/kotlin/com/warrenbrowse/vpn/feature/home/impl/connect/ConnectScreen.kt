@@ -161,7 +161,6 @@ private fun PreviewAccountScreen(
             onSettingsClick = {},
             onAccountClick = {},
             onNavigateToFeature = {},
-            onClickShowWireguardPortSettings = {},
             onClickDismissAndroid16UpgradeWarning = {},
             onClickShowAndroid16UpgradeInfo = {},
         )
@@ -358,9 +357,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 dropUnlessResumed { feature: FeatureIndicator ->
                     navigator.navigate(feature.navKey())
                 },
-            onClickShowWireguardPortSettings =
-                // D.4 step 53: VpnSettings deleted → route to WarrenTunnelSettings.
-                dropUnlessResumed { navigator.navigate(WarrenTunnelSettingsNavKey) },
             onClickDismissAndroid16UpgradeWarning =
                 connectViewModel::dismissAndroid16UpgradeWarning,
             onClickShowAndroid16UpgradeInfo =
@@ -429,7 +425,6 @@ fun ConnectScreen(
     onSettingsClick: () -> Unit,
     onAccountClick: () -> Unit,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
 ) {
@@ -451,7 +446,6 @@ fun ConnectScreen(
                 onChangelogClick,
                 onDismissChangelogClick,
                 onNavigateToFeature,
-                onClickShowWireguardPortSettings,
                 onClickDismissAndroid16UpgradeWarning,
                 onClickShowAndroid16UpgradeInfo,
             )
@@ -505,7 +499,6 @@ private fun Content(
     onChangelogClick: () -> Unit,
     onDismissChangelogClick: () -> Unit,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
 ) {
@@ -558,7 +551,6 @@ private fun Content(
                 onClickShowChangelog = onChangelogClick,
                 onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
                 onClickDismissChangelog = onDismissChangelogClick,
-                onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
                 onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
             )
             ConnectionCard(
@@ -907,7 +899,6 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         // family is gone).
         FeatureIndicator.UDP_2_TCP,
         FeatureIndicator.QUIC,
-        FeatureIndicator.WIREGUARD_PORT,
         FeatureIndicator.SHADOWSOCKS,
         FeatureIndicator.LWO -> WarrenTunnelSettingsNavKey
 

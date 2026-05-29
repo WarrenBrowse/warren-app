@@ -189,9 +189,6 @@
     <string name="vpn_settings_not_available">VPN-instellingen niet beschikbaar op apparaat</string>
     <string name="warning">Waarschuwing</string>
     <string name="we_will_look_into_this">We gaan het bekijken.</string>
-    <string name="wireguard_port_is_not_supported">De geselecteerde %1$s-poort wordt niet ondersteund. Wijzig de poort in de</string>
-    <string name="wireguard_port_title">WireGuard-poort</string>
-    <string name="wireguard_settings">%1$s-instellingen.</string>
     <string name="x_entry">%1$s (ingang)</string>
     <string name="x_exit">%1$s (uitgang)</string>
     <string name="x_via_x">%1$s via %2$s</string>

@@ -53,7 +53,6 @@ private fun PreviewNotificationBanner() {
                     onClickShowChangelog = {},
                     onClickShowAndroid16UpgradeInfo = {},
                     onClickDismissChangelog = {},
-                    onClickShowWireguardPortSettings = {},
                     onClickDismissAndroid16UpgradeWarning = {},
                 )
                 Spacer(modifier = Modifier.size(16.dp))
@@ -73,7 +72,6 @@ fun NotificationBanner(
     onClickShowChangelog: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissChangelog: () -> Unit,
-    onClickShowWireguardPortSettings: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) {
     if (isTv()) {
@@ -87,7 +85,6 @@ fun NotificationBanner(
             onClickShowChangelog = onClickShowChangelog,
             onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
             onClickDismissChangelog = onClickDismissChangelog,
-            onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
         )
     } else {
@@ -102,7 +99,6 @@ fun NotificationBanner(
             onClickShowChangelog = onClickShowChangelog,
             onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
             onClickDismissChangelog = onClickDismissChangelog,
-            onClickShowWireguardPortSettings = onClickShowWireguardPortSettings,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
         )
     }
