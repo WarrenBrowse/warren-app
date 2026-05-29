@@ -57,3 +57,6 @@ android/.idea
 # committed in 583581d ("wip"); the directory is per-user / per-machine
 # and has no place in version control.
 .claude/
+
+# some docs
+/docs/sign*

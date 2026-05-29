@@ -128,9 +128,20 @@ jobs:
   build-windows:
     name: Build Windows MSI
     runs-on: [self-hosted, Windows, X64]
+    # Windows binaries are signed with Azure Trusted Signing (cloud HSM).
+    # Since 1 June 2023 (CA/Browser Forum Code Signing Baseline Requirements),
+    # OV/EV code-signing private keys must live on FIPS 140-2 hardware, so the
+    # legacy "import a downloadable .pfx and sign by thumbprint" model no longer
+    # works for newly issued public certificates. Trusted Signing keeps the key
+    # in Azure and signs via signtool's dlib, so no key material ever touches
+    # the runner. build.sh selects this path via WARREN_WIN_SIGN_BACKEND.
     env:
-      WARREN_CSC_LINK_WIN_B64: ${{ secrets.WARREN_CSC_LINK_WIN }}
-      WARREN_CSC_KEY_PASSWORD_WIN: ${{ secrets.WARREN_CSC_KEY_PASSWORD_WIN }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      TRUSTED_SIGNING_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+      TRUSTED_SIGNING_ACCOUNT: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+      TRUSTED_SIGNING_PROFILE: ${{ secrets.TRUSTED_SIGNING_PROFILE }}
     steps:
       - name: Set git config for long paths
         run: git config --system core.longpaths true
@@ -143,44 +154,52 @@ jobs:
           rust-cache-targets: "true"
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
-      - name: Decode and import signing certificate
-        if: env.WARREN_CSC_LINK_WIN_B64 != ''
+      - name: Install Trusted Signing client (resolve signtool dlib)
+        if: env.AZURE_CLIENT_ID != ''
         shell: pwsh
-        env:
-          PFX_PASSWORD: ${{ env.WARREN_CSC_KEY_PASSWORD_WIN }}
-          PFX_B64: ${{ env.WARREN_CSC_LINK_WIN_B64 }}
         run: |
-          $bytes = [Convert]::FromBase64String($env:PFX_B64)
-          $pfxPath = Join-Path $env:RUNNER_TEMP "warren-codesign.pfx"
-          [IO.File]::WriteAllBytes($pfxPath, $bytes)
-          $securePwd = ConvertTo-SecureString -String $env:PFX_PASSWORD -AsPlainText -Force
-          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation 'Cert:\CurrentUser\My' -Password $securePwd
-          "CERT_HASH=$($cert.Thumbprint)" >> $env:GITHUB_ENV
-          "WARREN_CERT_HASH=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+          $ErrorActionPreference = 'Stop'
+          $pkgRoot = Join-Path $env:RUNNER_TEMP "trusted-signing"
+          New-Item -ItemType Directory -Force -Path $pkgRoot | Out-Null
+          # Ensure nuget.exe is available (self-hosted runners may not ship it).
+          $nuget = 'nuget'
+          if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) {
+            $nuget = Join-Path $env:RUNNER_TEMP 'nuget.exe'
+            Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $nuget
+          }
+          # Azure.CodeSigning.Dlib.dll ships in the Microsoft.Trusted.Signing.Client package.
+          & $nuget install Microsoft.Trusted.Signing.Client -OutputDirectory $pkgRoot -Source https://api.nuget.org/v3/index.json
+          $dlib = Get-ChildItem -Path $pkgRoot -Recurse -Filter Azure.CodeSigning.Dlib.dll |
+            Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if (-not $dlib) { throw "Azure.CodeSigning.Dlib.dll not found under $pkgRoot" }
+          "WARREN_TS_DLIB=$($dlib.FullName)" >> $env:GITHUB_ENV
 
-      - name: Build (signed)
-        if: env.CERT_HASH != ''
+      - name: Write Trusted Signing metadata
+        if: env.AZURE_CLIENT_ID != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $meta = @{
+            Endpoint               = $env:TRUSTED_SIGNING_ENDPOINT
+            CodeSigningAccountName = $env:TRUSTED_SIGNING_ACCOUNT
+            CertificateProfileName = $env:TRUSTED_SIGNING_PROFILE
+          } | ConvertTo-Json
+          $metaPath = Join-Path $env:RUNNER_TEMP "trusted-signing-metadata.json"
+          $meta | Out-File -FilePath $metaPath -Encoding ascii
+          "WARREN_TS_METADATA=$metaPath" >> $env:GITHUB_ENV
+          "WARREN_WIN_SIGN_BACKEND=trusted-signing" >> $env:GITHUB_ENV
+
+      - name: Build (signed via Trusted Signing)
+        if: env.AZURE_CLIENT_ID != ''
         shell: bash
         run: ./build.sh --optimize --sign --universal
 
       - name: Build (unsigned, signing assets missing)
-        if: env.CERT_HASH == ''
+        if: env.AZURE_CLIENT_ID == ''
         shell: bash
         run: |
-          echo "::warning::WARREN_CSC_LINK_WIN secret not set; producing unsigned dev build."
+          echo "::warning::AZURE_CLIENT_ID secret not set; producing unsigned dev build."
           ./build.sh --optimize --universal
-
-      - name: Wipe signing certificate from runner
-        if: always() && env.CERT_HASH != ''
-        shell: pwsh
-        env:
-          HASH: ${{ env.CERT_HASH }}
-        run: |
-          if ($env:HASH) {
-            Get-ChildItem -Path "Cert:\CurrentUser\My\$env:HASH" -ErrorAction SilentlyContinue | Remove-Item -Force
-          }
-          $pfxPath = Join-Path $env:RUNNER_TEMP "warren-codesign.pfx"
-          if (Test-Path $pfxPath) { Remove-Item -Force $pfxPath }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -316,7 +335,9 @@ jobs:
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_B64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+      # Raw service-account JSON (NOT base64): r0adkll/upload-google-play
+      # expects the plain JSON via serviceAccountJsonPlainText.
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -363,10 +384,10 @@ jobs:
           ./gradlew app:assembleDebug --parallel
 
       - name: Upload to Google Play internal-test
-        if: env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_B64 != '' && env.ANDROID_KEYSTORE_B64 != ''
+        if: env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && env.ANDROID_KEYSTORE_B64 != ''
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.warrenbrowse.vpn
           releaseFiles: android/app/build/outputs/bundle/prodRelease/app-prod-release.aab
           track: internal
