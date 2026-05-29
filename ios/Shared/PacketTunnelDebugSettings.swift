@@ -19,7 +19,7 @@ import Foundation
             UserDefaults(suiteName: ApplicationConfiguration.securityGroupIdentifier)
         }
 
-        /// Whether the GotaTun adapter should be used instead of WireGuard.
+        /// Whether the GotaTun adapter should be used instead of the Warren Quinn tunnel.
         /// Defaults to `false` if the shared container is unavailable.
         static var useGotaTun: Bool {
             get {

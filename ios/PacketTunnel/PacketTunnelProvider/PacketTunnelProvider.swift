@@ -19,7 +19,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     private let internalQueue = DispatchQueue(label: "PacketTunnel-internalQueue")
     private let providerLogger: Logger
 
-    /// The selected tunnel implementation (WireGuardGo or GotaTun).
+    /// The selected tunnel implementation (Warren Quinn, or GotaTun in debug builds).
     private var implementation: TunnelImplementation!
     private var appMessageHandler: AppMessageHandler!
     private var deviceChecker: DeviceChecker!
