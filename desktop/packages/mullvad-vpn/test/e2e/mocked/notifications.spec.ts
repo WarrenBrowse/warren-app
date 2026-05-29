@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { Page } from 'playwright';
 
-import { getDefaultSettings } from '../../../src/main/default-settings';
 import { colorTokens } from '../../../src/renderer/lib/foundations';
 import { ErrorStateCause } from '../../../src/shared/daemon-rpc-types';
 import { RoutesObjectModel } from '../route-object-models';

@@ -68,27 +68,6 @@ test.describe('Tunnel state and settings', () => {
     await expect(outIp).toHaveText(ip.trim());
   });
 
-  test('App should show correct WireGuard port', async () => {
-    const inIp = routes.main.getInIp();
-    await expect(inIp).toHaveText(new RegExp(':[0-9]+'));
-
-    await exec('mullvad anti-censorship set mode wireguard-port');
-    await exec('mullvad anti-censorship set wireguard-port --port 53');
-    await expectConnected(page);
-    await routes.main.expandConnectionPanel();
-
-    await expect(inIp).toHaveText(new RegExp(':53'));
-
-    await exec('mullvad anti-censorship set wireguard-port --port 51820');
-    await expectConnected(page);
-    await routes.main.expandConnectionPanel();
-
-    await expect(inIp).toHaveText(new RegExp(':51820'));
-
-    await exec('mullvad anti-censorship set wireguard-port --port any');
-    await exec('mullvad anti-censorship set mode auto');
-  });
-
   test.describe('Wireguard UDP-over-TCP', () => {
     async function gotoWireguardSettings() {
       await routes.main.gotoSettings();

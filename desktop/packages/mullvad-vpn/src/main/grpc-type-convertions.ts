@@ -375,12 +375,14 @@ function convertFromTunnelStateRelayInfo(
 function convertFromFeatureIndicators(
   featureIndicators?: Array<grpcTypes.FeatureIndicator>,
 ): Array<FeatureIndicator> | undefined {
-  return featureIndicators?.map(convertFromFeatureIndicator);
+  return featureIndicators
+    ?.map(convertFromFeatureIndicator)
+    .filter((indicator): indicator is FeatureIndicator => indicator !== undefined);
 }
 
 function convertFromFeatureIndicator(
   featureIndicator: grpcTypes.FeatureIndicator,
-): FeatureIndicator {
+): FeatureIndicator | undefined {
   switch (featureIndicator) {
     case grpcTypes.FeatureIndicator.QUANTUM_RESISTANCE:
       return FeatureIndicator.quantumResistance;
@@ -412,6 +414,9 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.quic;
     case grpcTypes.FeatureIndicator.LWO:
       return FeatureIndicator.lwo;
+    default:
+      // Unknown / removed indicators (e.g. the legacy WireGuard port) are dropped.
+      return undefined;
   }
 }
 

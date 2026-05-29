@@ -14,11 +14,6 @@ export class AntiCensorshipRouteObjectModel extends NavigationObjectModel {
     this.selectors = createSelectors(page);
   }
 
-  async gotoWireguardPort() {
-    await this.selectors.wireguardPortButton().click();
-    await this.utils.expectRoute(RoutePath.wireguardPort);
-  }
-
   async gotoLwoSettings() {
     await this.selectors.lwoSettingsButton().click();
     await this.utils.expectRoute(RoutePath.lwo);
