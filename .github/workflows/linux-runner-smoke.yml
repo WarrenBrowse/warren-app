@@ -1,0 +1,41 @@
+---
+# TEMPORARY: validates the Mac Studio x86_64 Rosetta container runner.
+# Builds only the Linux .deb/.rpm on the macstudio-rosetta runner.
+# Delete once the runner is confirmed green.
+name: Linux runner smoke test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Build Linux .deb/.rpm (smoke, macstudio-rosetta)
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Verify Linux packaging deps
+        run: rpm --version
+
+      - name: Build
+        run: ./build.sh --optimize
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installers-smoke
+          path: |
+            dist/WarrenVPN-*.deb
+            dist/WarrenVPN-*.rpm
+            dist/warren-vpn-daemon_*.deb
+            dist/warren-vpn-daemon_*.rpm
+          if-no-files-found: warn
+          retention-days: 3
