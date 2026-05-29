@@ -686,7 +686,12 @@ impl WarrenTunnelMonitor {
         // `MullvadTunPacketDevice` then wraps the `AsyncDevice` in an
         // `Arc` so it can be cloned between the uplink and downlink
         // tasks of the pump.
+        #[cfg(not(target_os = "windows"))]
         let async_device = tun.into_inner().into_async_device();
+        // On Windows, WindowsTun::into_inner() already yields a tun08::AsyncDevice
+        // (cf. talpid-tunnel/src/tun_provider/windows.rs); no into_async_device() hop.
+        #[cfg(target_os = "windows")]
+        let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
         // Startup event sequence — order is load-bearing (M-1 fix):
@@ -1210,7 +1215,12 @@ impl WarrenTunnelMonitor {
         );
 
         let metadata = build_tunnel_metadata(&tun, &tun_config);
+        #[cfg(not(target_os = "windows"))]
         let async_device = tun.into_inner().into_async_device();
+        // On Windows, WindowsTun::into_inner() already yields a tun08::AsyncDevice
+        // (cf. talpid-tunnel/src/tun_provider/windows.rs); no into_async_device() hop.
+        #[cfg(target_os = "windows")]
+        let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
         // Startup event sequence — order is load-bearing (M-1 fix):
