@@ -117,7 +117,7 @@ function newConfig() {
     },
 
     nsis: {
-      guid: '15528187-40A4-4A0D-B38A-F8E3442EC456',
+      guid: '124153A3-C986-44A5-B478-9B263AD94CAD',
       oneClick: false,
       perMachine: true,
       allowElevation: true,

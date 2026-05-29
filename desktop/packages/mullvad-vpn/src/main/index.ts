@@ -198,7 +198,7 @@ class ApplicationMain
     log.info(`Running version ${this.version.currentVersion.gui}`);
 
     if (process.platform === 'win32') {
-      app.setAppUserModelId('net.mullvad.vpn');
+      app.setAppUserModelId('com.warrenbrowse.vpn');
     }
 
     // While running in development the watch script triggers a reload of the renderer by sending
