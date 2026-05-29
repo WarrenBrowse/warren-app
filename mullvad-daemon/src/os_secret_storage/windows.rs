@@ -43,7 +43,7 @@ use windows::Win32::Foundation::LocalFree;
 use windows::Win32::Security::Cryptography::{
     CryptProtectData, CryptUnprotectData, CRYPTPROTECT_LOCAL_MACHINE, CRYPT_INTEGER_BLOB,
 };
-use windows::core::HLOCAL;
+use windows::Win32::Foundation::HLOCAL;
 use zeroize::Zeroizing;
 
 use super::SecretStorage;
