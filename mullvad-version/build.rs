@@ -72,10 +72,13 @@ fn get_product_version(target: Target) -> String {
         .trim()
         .to_owned();
 
-    // Compute the expected tag name for the release named `product_version`
+    // Compute the expected tag name for the release named `product_version`.
+    // Warren tags desktop releases as `v{version}` (the release workflow triggers
+    // on `v*.*.*`), so the clean (suffix-less) build is the one whose HEAD is the
+    // `v{version}` tag. If that tag is absent, get_suffix falls back to `-dev-<hash>`.
     let release_tag = match target {
         Target::Android => format!("android/{release_version}"),
-        Target::Desktop => release_version.clone(),
+        Target::Desktop => format!("v{release_version}"),
     };
 
     format!("{release_version}{}", get_suffix(&release_tag))
