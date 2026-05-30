@@ -69,6 +69,10 @@ Commit : `3d0ee334cf`.
 - **Icône launcher / splash / banner TV** (commit `9234297d7c`) : remplacement du logo Mullvad (marmotte) par la marque Warren (« W » blanc sur fond darkBlue), miroir du desktop `logo-icon.svg`. Dessiné en path stroké (Android Vector ne rasterise pas `<text>`). Audit ressources : 0 string « Mullvad » résiduelle user-facing. Validé via aapt2 (`:lib:ui:resource:assembleDebug`).
 - **Affordance « Reconnect now »** (commit `5e29f84ba4`) : bouton affiché dans les réglages tunnel quand le tunnel est connecté, déclenchant `WarrenQuinnReconnectInvoker` (réutilise le mnémonique caché, pas de re-prompt biométrique) pour appliquer un changement de réglage sans déconnexion manuelle.
 
+#### Recents (exits récemment utilisés) — ✅ FAIT
+
+Commit : `90a929024a`. Item du cluster relay-lists, Kotlin-only. Repository : `recentExitIds` (5 max, most-recent-first, dédupliqué, persisté ; auto-enregistré à chaque sélection d'exit). UI : section « Recents » en tête du location picker, résolue contre le catalogue courant. Tests repository (dedup/cap/auto-record).
+
 ### Faisabilité dé-risquée (suite P1)
 
 `warren-api-client` expose **déjà** : `get_subscription()`, `list_devices()`, `get_device()`, `delete_device()`, `register_device()`, `delete_account()`. Le pont JNI a le pattern d'appel API authentifié (`sendProblemReport` : dérive la clé du mnémonique → `WarrenApiClient::new(url, key)` → `RUNTIME.block_on`). Donc **compte/devices + statut d'abonnement sont prêts à câbler** : il reste à ajouter les exports JNI (`getSubscription`, `listDevices`, `removeDevice`), le déclencheur biométrique (réutiliser `BiometricPromptAuthorizer`), un repository et l'UI. Le **voucher** (`/v1/register`) reste à confirmer côté warren-api-client (non vu dans la surface publique). Le **failover** reste bloqué par le schéma single-endpoint côté JNI (`listRelays` projette un seul endpoint « until multi-endpoint failover lands »).
@@ -84,7 +88,7 @@ Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 | 3 | **Voucher in-app (Crockford-32)** | P1 | L | Confirmer/ajouter l'endpoint voucher dans `warren-api-client` (`/v1/register`), puis JNI + UI. |
 | 4 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #1/#3 ; flag de complétion persisté. ⚠️ zone en développement concurrent. |
 | 5 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. |
-| 6 | **Relay lists custom / recents / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer. À fractionner. |
+| 6 | **Relay lists custom / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | *Recents = fait* (`90a929024a`). Reste : support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer (sinon toggles non-fonctionnels). À fractionner. |
 
 > ⚠️ **Développement concurrent** : les zones compte / abonnement / voucher / mnémonique sont activement modifiées sur `main` par un autre flux de travail (commits `redeem vouchers for real`, `default to real warren-api backend`, `mnemonic export/import`). Les items #1–#3 sont à coordonner pour éviter les collisions.
 
