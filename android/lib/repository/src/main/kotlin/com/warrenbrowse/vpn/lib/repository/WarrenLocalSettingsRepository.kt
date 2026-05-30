@@ -49,6 +49,14 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _multiHopEnabled = MutableStateFlow(prefs.getBoolean(KEY_MULTI_HOP_ENABLED, false))
     val multiHopEnabled: StateFlow<Boolean> = _multiHopEnabled.asStateFlow()
 
+    /** Preferred entry-relay country (ISO alpha-2), null/empty = automatic. */
+    private val _entryCountry = MutableStateFlow(prefs.getString(KEY_ENTRY_COUNTRY, null))
+    val entryCountry: StateFlow<String?> = _entryCountry.asStateFlow()
+
+    /** Preferred exit-relay country (ISO alpha-2), null/empty = automatic. */
+    private val _exitCountry = MutableStateFlow(prefs.getString(KEY_EXIT_COUNTRY, null))
+    val exitCountry: StateFlow<String?> = _exitCountry.asStateFlow()
+
     private val _obfuscationM40 = MutableStateFlow(prefs.getBoolean(KEY_OBFUSCATION_M40, false))
     val obfuscationM40: StateFlow<Boolean> = _obfuscationM40.asStateFlow()
 
@@ -133,6 +141,19 @@ class WarrenLocalSettingsRepository(context: Context) {
     fun setMultiHopEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_MULTI_HOP_ENABLED, enabled).apply()
         _multiHopEnabled.value = enabled
+    }
+
+    fun setEntryCountry(country: String?) = setCountry(KEY_ENTRY_COUNTRY, country, _entryCountry)
+
+    fun setExitCountry(country: String?) = setCountry(KEY_EXIT_COUNTRY, country, _exitCountry)
+
+    /** Normalize an ISO alpha-2 code (uppercase, 2 letters) or clear it. */
+    private fun setCountry(key: String, country: String?, flow: MutableStateFlow<String?>) {
+        val normalized = country?.trim()?.uppercase()?.takeIf { it.length == 2 && it.all(Char::isLetter) }
+        val editor = prefs.edit()
+        if (normalized == null) editor.remove(key) else editor.putString(key, normalized)
+        editor.apply()
+        flow.value = normalized
     }
 
     fun setObfuscationM40(enabled: Boolean) {
@@ -232,6 +253,8 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_NAT_PMP_EXTERNAL_PORT = "nat_pmp_external_port"
         private const val KEY_NAT_PMP_LIFETIME_SECS = "nat_pmp_lifetime_secs"
         private const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
+        private const val KEY_ENTRY_COUNTRY = "entry_country"
+        private const val KEY_EXIT_COUNTRY = "exit_country"
         private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"

@@ -36,8 +36,13 @@ class WarrenTunnelConfigBuilder(
 
         val relays = relayCatalog.listRelays()
         val selectedExitId = localSettings.selectedExitId.value
+        val exitCountry = localSettings.exitCountry.value
+        val entryCountry = localSettings.entryCountry.value
+
+        // Exit precedence: explicit picker > preferred country > first active.
         val exit = relays
             .firstOrNull { it.active && it.exitId == selectedExitId }
+            ?: exitCountry?.let { c -> relays.firstOrNull { it.active && it.country.equals(c, ignoreCase = true) } }
             ?: relays.firstOrNull { it.active }
             ?: run {
                 Logger.e("WarrenTunnelConfigBuilder: no active relay in catalogue")
@@ -51,7 +56,10 @@ class WarrenTunnelConfigBuilder(
         // entry - the exit still negotiates the multi-hop hop the same
         // way; the picker UI will replace this fall-back.
         val entryRelay = if (multiHopEnabled) {
-            relays.firstOrNull { it.active && it.exitId != exit.exitId } ?: exit
+            val distinct = relays.filter { it.active && it.exitId != exit.exitId }
+            entryCountry?.let { c -> distinct.firstOrNull { it.country.equals(c, ignoreCase = true) } }
+                ?: distinct.firstOrNull()
+                ?: exit
         } else null
 
         return WarrenTunnelConfig(

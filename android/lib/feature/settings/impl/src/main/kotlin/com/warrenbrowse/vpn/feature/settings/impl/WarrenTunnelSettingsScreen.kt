@@ -67,6 +67,8 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val natPmpExternalPort by repo.natPmpExternalPort.collectAsStateWithLifecycle()
     val natPmpLifetime by repo.natPmpLifetimeSecs.collectAsStateWithLifecycle()
     val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
+    val entryCountry by repo.entryCountry.collectAsStateWithLifecycle()
+    val exitCountry by repo.exitCountry.collectAsStateWithLifecycle()
     val obfuscation by repo.obfuscationM40.collectAsStateWithLifecycle()
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
     val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
@@ -229,6 +231,24 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 onValueChange = repo::setMultiHopEnabled,
             )
 
+            if (multiHop) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    CountryField(
+                        label = "Entry country (ISO code, blank = automatic)",
+                        initial = entryCountry.orEmpty(),
+                        onCommit = repo::setEntryCountry,
+                    )
+                    CountryField(
+                        label = "Exit country (ISO code, blank = automatic)",
+                        initial = exitCountry.orEmpty(),
+                        onCommit = repo::setExitCountry,
+                    )
+                }
+            }
+
             ToggleRow(
                 title = "M4.0 obfuscation",
                 subtitle = "Disguise QUIC traffic as plain HTTPS (anti-censorship).",
@@ -330,6 +350,22 @@ private fun LifetimeChip(label: String, seconds: Int, selected: Int, onSelect: (
         selected = selected == seconds,
         onClick = { onSelect(seconds) },
         label = { Text(label) },
+    )
+}
+
+@Composable
+private fun CountryField(label: String, initial: String, onCommit: (String?) -> Unit) {
+    var text by remember { mutableStateOf(initial) }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it.filter(Char::isLetter).take(2).uppercase()
+            onCommit(text.ifBlank { null })
+        },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = { Text("e.g. DE, FR, US") },
+        singleLine = true,
     )
 }
 

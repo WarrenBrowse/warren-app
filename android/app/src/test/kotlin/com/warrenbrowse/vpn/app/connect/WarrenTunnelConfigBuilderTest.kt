@@ -32,6 +32,8 @@ class WarrenTunnelConfigBuilderTest {
         multiHop: Boolean = false,
         obfuscation: Boolean = false,
         selectedExitId: String? = null,
+        entryCountry: String? = null,
+        exitCountry: String? = null,
         natPmpProtocol: String = "udp",
         natPmpExternalPort: Int = 0,
         natPmpLifetimeSecs: Int = 3600,
@@ -55,6 +57,8 @@ class WarrenTunnelConfigBuilderTest {
         every { repo.multiHopEnabled } returns MutableStateFlow(multiHop)
         every { repo.obfuscationM40 } returns MutableStateFlow(obfuscation)
         every { repo.selectedExitId } returns MutableStateFlow(selectedExitId)
+        every { repo.entryCountry } returns MutableStateFlow(entryCountry)
+        every { repo.exitCountry } returns MutableStateFlow(exitCountry)
         every { repo.ipv6Enabled } returns MutableStateFlow(ipv6)
         every { repo.lockdownMode } returns MutableStateFlow(lockdown)
         every { repo.dnsState } returns MutableStateFlow(dnsState)
@@ -152,6 +156,47 @@ class WarrenTunnelConfigBuilderTest {
         // Inactive selection falls back to the first active relay (sample).
         val config = builder.build(pubkey)!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `exit country selects a matching relay`() {
+        val fr = sampleRelay.copy(
+            exitId = "ffffffffffffffffffffffffffffffff",
+            exitPubkeyHex = "f".repeat(64),
+            endpoint = "warren-exit-fr.warren.brown:443",
+            country = "FR",
+        )
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(exitCountry = "FR"),
+            mockCatalog(listOf(sampleRelay, fr)),
+        ).build(pubkey)!!
+        assertEquals(fr.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `exit country falls back to first active when no relay matches`() {
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(exitCountry = "JP"),
+            mockCatalog(listOf(sampleRelay)),
+        ).build(pubkey)!!
+        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `multi-hop entry country picks a distinct entry relay in that country`() {
+        val fr = sampleRelay.copy(
+            exitId = "ffffffffffffffffffffffffffffffff",
+            exitPubkeyHex = "f".repeat(64),
+            endpoint = "warren-exit-fr.warren.brown:443",
+            country = "FR",
+        )
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(multiHop = true, entryCountry = "FR"),
+            mockCatalog(listOf(sampleRelay, fr)),
+        ).build(pubkey)!!
+        // Exit defaults to first active (DE sample); entry is the FR relay.
+        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+        assertEquals(fr.exitPubkeyHex, config.entryHop?.relayPubkeyHex)
     }
 
     @Test

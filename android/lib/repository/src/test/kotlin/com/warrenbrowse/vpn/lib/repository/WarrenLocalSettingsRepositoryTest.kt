@@ -173,6 +173,23 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `entry and exit country normalize to uppercase ISO-2 or clear`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setExitCountry("fr")
+        assertEquals("FR", repo.exitCountry.value)
+        verify { mockEditor.putString("exit_country", "FR") }
+
+        repo.setEntryCountry("Deu") // not 2 letters -> cleared
+        assertEquals(null, repo.entryCountry.value)
+
+        repo.setExitCountry(null)
+        assertEquals(null, repo.exitCountry.value)
+        verify { mockEditor.remove("exit_country") }
+    }
+
+    @Test
     fun `nat-pmp protocol normalizes and writes through`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)
