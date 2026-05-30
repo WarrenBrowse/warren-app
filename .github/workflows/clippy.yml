@@ -1,13 +1,8 @@
 ---
 name: Rust - Run Clippy to check lints
 on:
-  pull_request:
-    paths:
-      - .github/workflows/clippy.yml
-      - 'ci/cargo-ci.sh'
-      - clippy.toml
-      - '**/Cargo.toml'  # Lint rules defined in toml files
-      - '**/*.rs'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

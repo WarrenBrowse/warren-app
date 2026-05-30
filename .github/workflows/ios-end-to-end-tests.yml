@@ -7,25 +7,10 @@ permissions:
   issues: write
   pull-requests: write
 on:
-  workflow_call:
-    inputs:
-      arg_tests_json_key:
-        type: string
-        required: false
-      commit_hash:
-        type: string
-        required: false
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-    inputs:
-      # Optionally specify a test case or suite to run.
-      # Must be in the format WarrenVPNUITest/<test-suite-name>/<test-case-name> where test case name is optional.
-      user_supplied_test_name:
-        description: 'Only run test case/suite'
-        required: false
-      commit_hash:
-        description: >
-         Specifies the repository commit to use; defaults to the current event's commit if not provided.
-        required: false
+
 jobs:
   set-up-outputs-directory:
     name: Set up outputs directory

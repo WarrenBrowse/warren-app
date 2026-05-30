@@ -1,42 +1,9 @@
 ---
 name: Verify git signatures on important files
 on:
-  pull_request:
-    paths:
-      - .github/workflows/android-audit.yml
-      - .github/workflows/code-owner-approval.yml
-      - .github/workflows/code-owner-ownerless.yml
-      - .github/workflows/unicop.yml
-      - .github/workflows/verify-locked-down-signatures.yml
-      - .github/CODEOWNERS
-      - Cargo.toml
-      - test/Cargo.toml
-      - Cargo.lock
-      - test/Cargo.lock
-      - code-owners.json
-      - deny.toml
-      - test/deny.toml
-      - warren-ios/deny.toml
-      - rust-toolchain.toml
-      - desktop/package-lock.json
-      - ci/keys/**
-      - ci/verify-locked-down-signatures.sh
-      - ios/WarrenVPN.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-      - android/gradlew
-      - android/gradlew.bat
-      - android/gradle/verification-metadata.xml
-      - android/gradle/verification-metadata.keys.xml
-      - android/gradle/verification-keyring.keys
-      - android/gradle/wrapper/gradle-wrapper.jar
-      - android/gradle/wrapper/gradle-wrapper.properties
-      - android/scripts/lockfile
-      - flake.lock
-      - building/build-and-publish-container-image.sh
-      - building/mullvad-app-container-signing.asc
-      - building/linux-container-image.txt
-      - building/android-container-image.txt
-      - building/sigstore/**
-      - mullvad-update/trusted-metadata-signing-pubkeys
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions: {}
 

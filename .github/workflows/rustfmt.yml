@@ -1,11 +1,8 @@
 ---
 name: Rust - Check formatting
 on:
-  pull_request:
-    paths:
-      - .github/workflows/rustfmt.yml
-      - rustfmt.toml
-      - '**/*.rs'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

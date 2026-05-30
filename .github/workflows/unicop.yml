@@ -1,22 +1,8 @@
 ---
 name: Unicop - find evil unicode
 on:
-  pull_request:
-    paths:
-      - .github/workflows/unicop.yml
-      - '**/*.rs'
-      - '**/*.swift'
-      - '**/*.go'
-      - '**/*.py'
-      # Javascript/Typescript
-      - '**/*.ts'
-      - '**/*.js'
-      # Kotlin
-      - '**/*.kt'
-      - '**/*.kts'
-      # C/C++
-      - '**/*.cpp'
-      - '**/*.h'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

@@ -1,30 +1,9 @@
 ---
 name: Installer downloader - Size test
 on:
-  pull_request:
-    paths:
-      - '**'
-      - '!**/**.md'
-      - '!.github/workflows/**'
-      - '.github/workflows/downloader.yml'
-      - '!.github/CODEOWNERS'
-      - '!android/**'
-      - '!audits/**'
-      - '!build.sh'
-      - '!ci/**'
-      - '!clippy.toml'
-      - "!code-owners.json"
-      - '!deny.toml'
-      - '!rustfmt.toml'
-      - '!.yamllint'
-      - '!docs/**'
-      - '!graphics/**'
-      - '!desktop/**'
-      - '!ios/**'
-      - '!scripts/**'
-      - '!.*ignore'
-      - '!prepare-release.sh'
-      - '!**/osv-scanner.toml'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions: {}
 

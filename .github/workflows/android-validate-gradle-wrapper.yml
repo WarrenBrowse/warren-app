@@ -1,11 +1,9 @@
 name: "Android - Validate gradle wrapper"
 
 on:
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-  push:
-    paths:
-      - .github/workflows/android-validate-gradle-wrapper.yml
-      - '**/gradle-wrapper.jar'
 
 permissions: {}
 

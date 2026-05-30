@@ -1,31 +1,9 @@
 ---
 name: Android - Verify F-Droid and reproducible builds
 on:
-  schedule:
-    # At 04:20 UTC every monday.
-    # Notifications for scheduled workflows are sent to the user who last modified the cron
-    # syntax in the workflow file. If you update this you must have notifications for
-    # Github Actions enabled, so these don't go unnoticed.
-    # https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/notifications-for-workflow-runs
-    - cron: '20 6 * * 1'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-    inputs:
-      commit_hash:
-        type: string
-        required: false
-  pull_request:
-    paths:
-      - '.github/workflows/android-reproducible-builds.yml'
-      - 'building/android-container-image.txt'
-      - 'dist-assets/android-version*'
-      - 'android/src/main/play/release-notes/en-US/default.txt'
-      - 'android/gradle/**'
-      - 'flake*'
-      - 'nix/android-*.nix'
-      - 'nix/common-toolchain.nix'
-  push:
-    tags:
-      - 'android/**'
 
 permissions: {}
 

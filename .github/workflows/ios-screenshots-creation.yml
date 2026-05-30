@@ -1,13 +1,8 @@
 ---
 name: iOS create screenshots
 on:
-  push:
-    tags:
-      - ios/*
-  pull_request:
-    paths:
-      - ios/Gemfile
-      - ios/Gemfile.lock
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

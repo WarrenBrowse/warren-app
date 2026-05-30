@@ -1,16 +1,8 @@
 ---
 name: Translation check
 on:
-  pull_request:
-    paths:
-      - .github/workflows/translations.yml
-      - android/translations-converter/**
-      - android/lib/resource/src/**/plurals.xml
-      - android/lib/resource/src/**/strings.xml
-      - desktop/packages/mullvad-vpn/**
-      - ios/Assets/Localizable.xcstrings
-      - scripts/check-apostrophe-style
-      - '!**/osv-scanner.toml'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

@@ -1,12 +1,8 @@
 ---
 name: Desktop check gRPC bindings
 on:
-  pull_request:
-    paths:
-      - .github/workflows/desktop-grpc-bindings.yml
-      - desktop/packages/management-interface/dist/**
-      - desktop/packages/management-interface/scripts/container-run-generate-bindings.sh
-      - mullvad-management-interface/proto/**
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

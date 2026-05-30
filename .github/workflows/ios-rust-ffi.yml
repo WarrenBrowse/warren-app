@@ -1,15 +1,8 @@
 ---
 name: iOS - Build and test Rust FFI (warren-ios and mullvad-api)
 on:
-  pull_request:
-    paths:
-      - .github/workflows/ios-rust-ffi.yml
-      - clippy.toml
-      - 'ci/cargo-ci.sh'
-      - Cargo.lock
-      - Cargo.toml
-      - '**/*.rs'
-      - 'warren-ios/**'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

@@ -2,10 +2,9 @@
 name: Code Owner Approval
 description: Ensure that someone from each team that owns code changed in the PR has approved the PR
 on:
-  # Trigger on both changes to the PR content and new/changed reviews. Both of these can affect
-  # whether the PR has the required approvals.
-  pull_request:
-  pull_request_review:
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}

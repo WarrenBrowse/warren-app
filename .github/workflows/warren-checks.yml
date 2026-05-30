@@ -13,45 +13,9 @@
 name: Warren checks
 
 on:
-  push:
-    branches: [main, warren-base]
-    paths:
-      - 'mullvad-daemon/src/warren_*.rs'
-      - 'mullvad-daemon/src/device/account_backend.rs'
-      - 'mullvad-daemon/src/device/device_backend.rs'
-      - 'mullvad-daemon/src/lib.rs'
-      - 'mullvad-daemon/src/management_interface.rs'
-      - 'mullvad-daemon/src/tunnel.rs'
-      - 'mullvad-types/src/settings/mod.rs'
-      - 'mullvad-types/src/relay_constraints.rs'
-      - 'talpid-warren-tunnel/**'
-      - 'warren-ios/**'
-      - 'warren-jni/**'
-      - 'talpid-core/src/tunnel_state_machine/**'
-      - 'talpid-core/src/firewall/linux.rs'
-      - 'mullvad-api/src/warren_auth.rs'
-      - 'mullvad-api/src/rest.rs'
-      - 'mullvad-api/src/lib.rs'
-      - 'mullvad-cli/src/cmds/warren.rs'
-      - 'mullvad-management-interface/proto/management_interface.proto'
-      - 'mullvad-management-interface/src/client.rs'
-      - 'desktop/packages/mullvad-vpn/src/renderer/features/warren-mode/**'
-      - 'desktop/packages/mullvad-vpn/src/renderer/components/views/vpn-settings/VpnSettingsView.tsx'
-      - 'desktop/packages/mullvad-vpn/src/main/daemon-rpc.ts'
-      - 'desktop/packages/mullvad-vpn/src/main/settings.ts'
-      - 'desktop/packages/mullvad-vpn/src/main/default-settings.ts'
-      - 'desktop/packages/mullvad-vpn/src/main/grpc-type-convertions.ts'
-      - 'desktop/packages/mullvad-vpn/src/shared/daemon-rpc-types.ts'
-      - 'desktop/packages/mullvad-vpn/src/shared/ipc-schema.ts'
-      - 'desktop/packages/mullvad-vpn/src/shared/ipc-types.ts'
-      - 'desktop/packages/mullvad-vpn/src/renderer/redux/settings/**'
-      - 'desktop/packages/mullvad-vpn/src/renderer/app.tsx'
-      - 'desktop/packages/management-interface/dist/**'
-      - 'desktop/packages/mullvad-vpn/locales/messages.pot'
-      - 'docs/warren-architecture.md'
-      - '.github/workflows/warren-checks.yml'
-  pull_request:
-    branches: [main, warren-base]
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions:
   contents: read

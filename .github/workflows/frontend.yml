@@ -1,11 +1,8 @@
 ---
 name: Desktop frontend
 on:
-  pull_request:
-    paths:
-      - .github/workflows/frontend.yml
-      - desktop/**
-      - mullvad-management-interface/proto/**
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}
