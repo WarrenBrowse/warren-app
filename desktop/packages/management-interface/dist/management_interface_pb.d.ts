@@ -2138,6 +2138,21 @@ export class NatPmpStatus extends jspb.Message {
     getErrorReason(): NatPmpStatus.ErrorReason | undefined;
     setErrorReason(value: NatPmpStatus.ErrorReason): NatPmpStatus;
 
+    hasRetryAfterSecs(): boolean;
+    clearRetryAfterSecs(): void;
+    getRetryAfterSecs(): number | undefined;
+    setRetryAfterSecs(value: number): NatPmpStatus;
+
+    hasAttemptsRemaining(): boolean;
+    clearAttemptsRemaining(): void;
+    getAttemptsRemaining(): number | undefined;
+    setAttemptsRemaining(value: number): NatPmpStatus;
+
+    hasWindowResetSecs(): boolean;
+    clearWindowResetSecs(): void;
+    getWindowResetSecs(): number | undefined;
+    setWindowResetSecs(value: number): NatPmpStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
     static toObject(includeInstance: boolean, msg: NatPmpStatus): NatPmpStatus.AsObject;
@@ -2155,6 +2170,9 @@ export namespace NatPmpStatus {
         lifetimeGrantedSecs?: number,
         errorMessage?: string,
         errorReason?: NatPmpStatus.ErrorReason,
+        retryAfterSecs?: number,
+        attemptsRemaining?: number,
+        windowResetSecs?: number,
     }
 
     export enum State {
@@ -2162,6 +2180,7 @@ export namespace NatPmpStatus {
     REQUESTING = 1,
     MAPPED = 2,
     FAILED = 3,
+    RATE_LIMITED = 4,
     }
 
     export enum ErrorReason {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { NatPmpProto } from '../../../../../shared/daemon-rpc-types';
@@ -7,7 +8,7 @@ import { SettingsListItem } from '../../../../components/settings-list-item';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
 import { spacings } from '../../../../lib/foundations';
-import { usePortForwarding } from '../../hooks';
+import { formatCountdown, useNatPmpPortBlock, usePortForwarding } from '../../hooks';
 
 // Plain styled inputs (no design-system `TextField` shell here) match
 // the pattern used by `WarrenMultiHopCountryPickers`: a SettingsListItem
@@ -92,6 +93,12 @@ const MAX_PORT = 65535;
  */
 export function PortForwardingAdvanced() {
   const { settings, setProtocol, setSuggestedExternalPort } = usePortForwarding();
+  // While the exit rate-limits this source (or the budget is spent), a
+  // new port change would just bounce off the limit / extend the ban —
+  // disable the controls and let `PortForwardingStatus` show why and a
+  // countdown. Clears automatically when the countdown elapses.
+  const block = useNatPmpPortBlock();
+  const controlsDisabled = block.blocked;
 
   // Local state for the port input so the user can clear / retype
   // without the redux value clobbering keystrokes mid-edit. We push
@@ -178,7 +185,8 @@ export function PortForwardingAdvanced() {
                 {messages.pgettext('port-forwarding-view', 'Protocol')}
               </Text>
               <StyledSelect
-                $disabled={false}
+                $disabled={controlsDisabled}
+                disabled={controlsDisabled}
                 value={settings.protocol}
                 onChange={handleProtocolChange}
                 aria-label={messages.pgettext('port-forwarding-view', 'Protocol')}>
@@ -191,7 +199,8 @@ export function PortForwardingAdvanced() {
                 {messages.pgettext('port-forwarding-view', 'Preferred port')}
               </Text>
               <StyledInput
-                $disabled={false}
+                $disabled={controlsDisabled}
+                disabled={controlsDisabled}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -212,6 +221,17 @@ export function PortForwardingAdvanced() {
           {messages.pgettext(
             'port-forwarding-view',
             'Port must be between 49152 and 65535, or empty for auto.',
+          )}
+        </Text>
+      ) : null}
+      {controlsDisabled ? (
+        <Text variant="labelTiny" color="yellow">
+          {sprintf(
+            messages.pgettext(
+              'port-forwarding-view',
+              'Too many port changes. You can change the port again in %(countdown)s.',
+            ),
+            { countdown: formatCountdown(block.remainingSecs) },
           )}
         </Text>
       ) : null}

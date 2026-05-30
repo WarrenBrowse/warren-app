@@ -2189,6 +2189,26 @@ msgctxt "port-forwarding-view"
 msgid "Port forwarding is not allowed on this server."
 msgstr "La redirection de port n'est pas autorisée sur ce serveur."
 
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. Wait %(countdown)s before changing the port again."
+msgstr "Trop de changements de port. Attendez %(countdown)s avant de changer de port à nouveau."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. Retrying the port mapping now…"
+msgstr "Trop de changements de port. Nouvelle tentative de mappage en cours…"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Dernier changement de port avant un blocage temporaire. Patientez un instant avant d'en changer à nouveau."
+
+msgctxt "port-forwarding-view"
+msgid "Too many recent changes. You can change the port again in %(countdown)s."
+msgstr "Trop de changements récents. Vous pourrez changer de port à nouveau dans %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change the port again in %(countdown)s."
+msgstr "Trop de changements de port. Vous pourrez en changer à nouveau dans %(countdown)s."
+
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
 msgid "Cancel"

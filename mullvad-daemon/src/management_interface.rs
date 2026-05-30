@@ -79,30 +79,45 @@ fn nat_pmp_state_to_proto(
     use crate::warren_status::NatPmpStateSnapshot;
     use talpid_warren_tunnel::NatPmpFailureReason;
     use types::nat_pmp_status::{ErrorReason, State};
+    // Base "all-unset" message; each arm overrides the fields it sets.
+    // Keeps the rate-limit / budget fields defaulted to None on the
+    // states that do not carry them.
+    let base = types::NatPmpStatus {
+        state: State::Disabled as i32,
+        external_port: None,
+        lifetime_granted_secs: None,
+        error_message: None,
+        error_reason: None,
+        retry_after_secs: None,
+        attempts_remaining: None,
+        window_reset_secs: None,
+    };
     match state {
         NatPmpStateSnapshot::Disabled => types::NatPmpStatus {
             state: State::Disabled as i32,
-            external_port: None,
-            lifetime_granted_secs: None,
-            error_message: None,
-            error_reason: None,
+            ..base
         },
         NatPmpStateSnapshot::Requesting => types::NatPmpStatus {
             state: State::Requesting as i32,
-            external_port: None,
-            lifetime_granted_secs: None,
-            error_message: None,
-            error_reason: None,
+            ..base
         },
         NatPmpStateSnapshot::Mapped {
             external_port,
             lifetime_secs,
+            attempts_remaining,
+            window_reset_secs,
         } => types::NatPmpStatus {
             state: State::Mapped as i32,
             external_port: Some(u32::from(*external_port)),
             lifetime_granted_secs: Some(*lifetime_secs),
-            error_message: None,
-            error_reason: None,
+            attempts_remaining: attempts_remaining.map(u32::from),
+            window_reset_secs: Some(u32::from(*window_reset_secs)),
+            ..base
+        },
+        NatPmpStateSnapshot::RateLimited { retry_after_secs } => types::NatPmpStatus {
+            state: State::RateLimited as i32,
+            retry_after_secs: Some(u32::from(*retry_after_secs)),
+            ..base
         },
         NatPmpStateSnapshot::Failed { error, reason } => {
             let error_reason = match reason {
@@ -113,10 +128,9 @@ fn nat_pmp_state_to_proto(
             };
             types::NatPmpStatus {
                 state: State::Failed as i32,
-                external_port: None,
-                lifetime_granted_secs: None,
                 error_message: Some(error.clone()),
                 error_reason: Some(error_reason as i32),
+                ..base
             }
         }
     }

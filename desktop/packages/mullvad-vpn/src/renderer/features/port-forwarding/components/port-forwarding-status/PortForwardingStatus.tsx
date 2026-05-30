@@ -5,7 +5,7 @@ import { NatPmpErrorReason } from '../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../shared/gettext';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
-import { usePortForwarding } from '../../hooks';
+import { formatCountdown, useNatPmpPortBlock, usePortForwarding } from '../../hooks';
 
 /**
  * Live readout of the NAT-PMP refresh-loop status.
@@ -33,6 +33,9 @@ import { usePortForwarding } from '../../hooks';
  */
 export function PortForwardingStatus() {
   const { settings, status } = usePortForwarding();
+  // Shared rate-limit countdown / warning state (also drives the port
+  // input's disabled state in `PortForwardingAdvanced`).
+  const block = useNatPmpPortBlock();
 
   // Bookkeeping for the live countdown: store the wall-clock instant
   // at which the last status snapshot arrived so we can derive
@@ -87,6 +90,31 @@ export function PortForwardingStatus() {
     );
   }
 
+  if (status.state === 'rate-limited') {
+    // The exit banned further port changes for a short window. The
+    // daemon retries automatically; surface a countdown so the user
+    // knows exactly how long to wait (the port input is disabled in
+    // tandem by `PortForwardingAdvanced`).
+    return (
+      <FlexColumn gap="small">
+        <Text variant="labelTiny" color="red">
+          {block.remainingSecs > 0
+            ? sprintf(
+                messages.pgettext(
+                  'port-forwarding-view',
+                  'Too many port changes. Wait %(countdown)s before changing the port again.',
+                ),
+                { countdown: formatCountdown(block.remainingSecs) },
+              )
+            : messages.pgettext(
+                'port-forwarding-view',
+                'Too many port changes. Retrying the port mapping now…',
+              )}
+        </Text>
+      </FlexColumn>
+    );
+  }
+
   if (status.state === 'failed') {
     return (
       <FlexColumn gap="small">
@@ -136,6 +164,25 @@ export function PortForwardingStatus() {
           countdown: `${mm}:${ss}`,
         })}
       </Text>
+      {block.reason === 'last-chance' ? (
+        <Text variant="labelTiny" color="yellow">
+          {messages.pgettext(
+            'port-forwarding-view',
+            'Last port change before a temporary block. Wait a moment before changing it again.',
+          )}
+        </Text>
+      ) : null}
+      {block.reason === 'budget-exhausted' ? (
+        <Text variant="labelTiny" color="yellow">
+          {sprintf(
+            messages.pgettext(
+              'port-forwarding-view',
+              'Too many recent changes. You can change the port again in %(countdown)s.',
+            ),
+            { countdown: formatCountdown(block.remainingSecs) },
+          )}
+        </Text>
+      ) : null}
     </FlexColumn>
   );
 }

@@ -788,6 +788,11 @@ message NatPmpStatus {
     REQUESTING = 1;
     MAPPED = 2;
     FAILED = 3;
+    // The exit rate-limited the last (re)mapping request (too many port
+    // changes in a row). Recoverable: the daemon retries automatically
+    // after `retry_after_secs`. The UI blocks the port control and shows
+    // a countdown.
+    RATE_LIMITED = 4;
   }
   State state = 1;
   // Set when state == MAPPED. The public-facing port the user
@@ -818,6 +823,18 @@ message NatPmpStatus {
     NOT_AUTHORIZED = 3;
   }
   optional ErrorReason error_reason = 5;
+  // Set when state == RATE_LIMITED. Seconds the user must wait before a
+  // rate-limit slot frees and a new port change is accepted. Drives the
+  // UI deban countdown.
+  optional uint32 retry_after_secs = 6;
+  // Set when state == MAPPED. Per-source rate-limit slots still
+  // available, as reported by the exit. The UI warns at <= 1 and blocks
+  // the port control at 0. Absent if the exit sent no budget trailer.
+  optional uint32 attempts_remaining = 7;
+  // Set when state == MAPPED. Seconds until the rate-limit budget grows
+  // by one (i.e. until the oldest in-window allocation expires). Drives
+  // the "wait before next change" countdown when attempts_remaining == 0.
+  optional uint32 window_reset_secs = 8;
 }
 
 message RelayOverride {

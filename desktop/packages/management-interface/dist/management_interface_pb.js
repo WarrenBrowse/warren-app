@@ -17142,7 +17142,10 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.toObject = function(inclu
     externalPort: jspb.Message.getFieldWithDefault(msg, 2, 0),
     lifetimeGrantedSecs: jspb.Message.getFieldWithDefault(msg, 3, 0),
     errorMessage: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    errorReason: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    errorReason: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    retryAfterSecs: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    attemptsRemaining: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    windowResetSecs: jspb.Message.getFieldWithDefault(msg, 8, 0)
   };
 
   if (includeInstance) {
@@ -17198,6 +17201,18 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinaryFromRead
     case 5:
       var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (reader.readEnum());
       msg.setErrorReason(value);
+      break;
+    case 6:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setRetryAfterSecs(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setAttemptsRemaining(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setWindowResetSecs(value);
       break;
     default:
       reader.skipField();
@@ -17263,6 +17278,27 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.serializeBinaryToWriter =
       f
     );
   }
+  f = /** @type {number} */ (jspb.Message.getField(message, 6));
+  if (f != null) {
+    writer.writeUint32(
+      6,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 7));
+  if (f != null) {
+    writer.writeUint32(
+      7,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 8));
+  if (f != null) {
+    writer.writeUint32(
+      8,
+      f
+    );
+  }
 };
 
 
@@ -17273,7 +17309,8 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.State = {
   DISABLED: 0,
   REQUESTING: 1,
   MAPPED: 2,
-  FAILED: 3
+  FAILED: 3,
+  RATE_LIMITED: 4
 };
 
 /**
@@ -17445,6 +17482,114 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearErrorReaso
  */
 proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasErrorReason = function() {
   return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional uint32 retry_after_secs = 6;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getRetryAfterSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setRetryAfterSecs = function(value) {
+  return jspb.Message.setField(this, 6, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearRetryAfterSecs = function() {
+  return jspb.Message.setField(this, 6, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasRetryAfterSecs = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional uint32 attempts_remaining = 7;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getAttemptsRemaining = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setAttemptsRemaining = function(value) {
+  return jspb.Message.setField(this, 7, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearAttemptsRemaining = function() {
+  return jspb.Message.setField(this, 7, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasAttemptsRemaining = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional uint32 window_reset_secs = 8;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getWindowResetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setWindowResetSecs = function(value) {
+  return jspb.Message.setField(this, 8, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearWindowResetSecs = function() {
+  return jspb.Message.setField(this, 8, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasWindowResetSecs = function() {
+  return jspb.Message.getField(this, 8) != null;
 };
 
 

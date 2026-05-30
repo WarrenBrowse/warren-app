@@ -62,13 +62,26 @@ describe('settings reducer - NAT-PMP slice', () => {
         state: 'mapped',
         externalPort: 49152,
         lifetimeGrantedSecs: 3600,
+        attemptsRemaining: 4,
+        windowResetSecs: 0,
       }),
     );
     expect(next.natPmpStatus).toEqual({
       state: 'mapped',
       externalPort: 49152,
       lifetimeGrantedSecs: 3600,
+      attemptsRemaining: 4,
+      windowResetSecs: 0,
     });
+  });
+
+  it('UPDATE_NAT_PMP_STATUS sets a RateLimited snapshot with retry-after', () => {
+    const initial = makeStateWithNatPmp(OFF_DEFAULTS, undefined);
+    const next = settingsReducer(
+      initial,
+      settingsActions.updateNatPmpStatus({ state: 'rate-limited', retryAfterSecs: 47 }),
+    );
+    expect(next.natPmpStatus).toEqual({ state: 'rate-limited', retryAfterSecs: 47 });
   });
 
   it('UPDATE_NAT_PMP_STATUS overwrites a previous Mapped with Failed', () => {
@@ -76,6 +89,8 @@ describe('settings reducer - NAT-PMP slice', () => {
       state: 'mapped',
       externalPort: 49152,
       lifetimeGrantedSecs: 3600,
+      attemptsRemaining: 4,
+      windowResetSecs: 0,
     });
     const next = settingsReducer(
       initial,
@@ -97,6 +112,8 @@ describe('settings reducer - NAT-PMP slice', () => {
       state: 'mapped',
       externalPort: 49152,
       lifetimeGrantedSecs: 3600,
+      attemptsRemaining: 4,
+      windowResetSecs: 0,
     });
     const next = settingsReducer(
       initial,
@@ -110,6 +127,8 @@ describe('settings reducer - NAT-PMP slice', () => {
       state: 'mapped',
       externalPort: 60000,
       lifetimeGrantedSecs: 1800,
+      attemptsRemaining: 5,
+      windowResetSecs: 0,
     };
     const initial = makeStateWithNatPmp(OFF_DEFAULTS, liveStatus);
     const next = settingsReducer(

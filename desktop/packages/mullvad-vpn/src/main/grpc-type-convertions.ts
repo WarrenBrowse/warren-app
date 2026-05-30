@@ -615,6 +615,18 @@ export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpS
         state: 'mapped',
         externalPort: status.getExternalPort() ?? 0,
         lifetimeGrantedSecs: status.getLifetimeGrantedSecs() ?? 0,
+        // `hasAttemptsRemaining()` distinguishes "0 slots left" from "no
+        // budget trailer sent" (older exit) — only the former blocks the
+        // port control in the UI.
+        attemptsRemaining: status.hasAttemptsRemaining()
+          ? status.getAttemptsRemaining()
+          : undefined,
+        windowResetSecs: status.getWindowResetSecs() ?? 0,
+      };
+    case grpcTypes.NatPmpStatus.State.RATE_LIMITED:
+      return {
+        state: 'rate-limited',
+        retryAfterSecs: status.getRetryAfterSecs() ?? 0,
       };
     case grpcTypes.NatPmpStatus.State.REQUESTING:
       return { state: 'requesting' };

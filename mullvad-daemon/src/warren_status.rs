@@ -41,6 +41,22 @@ pub enum NatPmpStateSnapshot {
         external_port: u16,
         /// Granted lifetime in seconds (renewals at `secs / 2`).
         lifetime_secs: u32,
+        /// Per-source rate-limit slots still available (reported by the
+        /// exit). `None` when the exit sent no budget trailer. The UI
+        /// warns when this is 0 or 1 and blocks the port control at 0.
+        attempts_remaining: Option<u8>,
+        /// Seconds until the rate-limit budget grows by one. `0` when
+        /// unknown / full. Drives the "wait before next change"
+        /// countdown when `attempts_remaining == 0`.
+        window_reset_secs: u16,
+    },
+    /// The exit rate-limited the last (re)mapping request (too many port
+    /// changes in a row). Recoverable: the daemon's refresh loop retries
+    /// automatically after `retry_after_secs`. The UI blocks the port
+    /// control and shows a countdown until then.
+    RateLimited {
+        /// Seconds to wait before a rate-limit slot frees.
+        retry_after_secs: u16,
     },
     /// The last `request_map` failed and the loop has terminated. The
     /// UI surfaces a localised message keyed on `reason`; `error` is the
@@ -253,10 +269,13 @@ impl WarrenStatusCache {
     /// watch channel so the Electron UI updates.
     ///
     /// Event -> state mapping:
-    /// - `Mapped { external_port, lifetime_secs }` -> `Mapped { .. }`
-    /// - `Renewed { external_port, lifetime_secs }` -> `Mapped { .. }`
-    ///   (UI reuses the same row; the lifetime countdown resets).
-    /// - `Failed { error }` -> `Failed { error }`.
+    /// - `Mapped { .. }` / `Renewed { .. }` -> `Mapped { .. }`
+    ///   (UI reuses the same row; the lifetime countdown resets). The
+    ///   rate-limit budget is carried through so the UI can warn before
+    ///   the next ban.
+    /// - `RateLimited { retry_after_secs }` -> `RateLimited { .. }`
+    ///   (UI blocks the port control and counts down; the loop retries).
+    /// - `Failed { error, reason }` -> `Failed { .. }`.
     /// - `Cancelled` -> `Disabled` (the user disabled the toggle, or
     ///   the tunnel went down).
     pub fn record_nat_pmp_event(&self, event: NatPmpEvent) {
@@ -269,14 +288,23 @@ impl WarrenStatusCache {
                 NatPmpEvent::Mapped {
                     external_port,
                     lifetime_secs,
+                    attempts_remaining,
+                    window_reset_secs,
                 }
                 | NatPmpEvent::Renewed {
                     external_port,
                     lifetime_secs,
+                    attempts_remaining,
+                    window_reset_secs,
                 } => NatPmpStateSnapshot::Mapped {
                     external_port,
                     lifetime_secs,
+                    attempts_remaining,
+                    window_reset_secs,
                 },
+                NatPmpEvent::RateLimited { retry_after_secs } => {
+                    NatPmpStateSnapshot::RateLimited { retry_after_secs }
+                }
                 NatPmpEvent::Failed { error, reason } => {
                     NatPmpStateSnapshot::Failed { error, reason }
                 }
@@ -486,16 +514,36 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 49152,
             lifetime_secs: 3600,
+            attempts_remaining: Some(4),
+            window_reset_secs: 0,
         });
         match cache.snapshot().nat_pmp {
             NatPmpStateSnapshot::Mapped {
                 external_port,
                 lifetime_secs,
+                attempts_remaining,
+                window_reset_secs,
             } => {
                 assert_eq!(external_port, 49152);
                 assert_eq!(lifetime_secs, 3600);
+                assert_eq!(attempts_remaining, Some(4));
+                assert_eq!(window_reset_secs, 0);
             }
             other => panic!("expected Mapped, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn record_nat_pmp_rate_limited_event_updates_state_with_retry_after() {
+        let cache = WarrenStatusCache::new();
+        cache.record_nat_pmp_event(NatPmpEvent::RateLimited {
+            retry_after_secs: 47,
+        });
+        match cache.snapshot().nat_pmp {
+            NatPmpStateSnapshot::RateLimited { retry_after_secs } => {
+                assert_eq!(retry_after_secs, 47);
+            }
+            other => panic!("expected RateLimited, got {other:?}"),
         }
     }
 
@@ -505,15 +553,20 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 49152,
             lifetime_secs: 3600,
+            attempts_remaining: Some(4),
+            window_reset_secs: 0,
         });
         cache.record_nat_pmp_event(NatPmpEvent::Renewed {
             external_port: 49152,
             lifetime_secs: 3600,
+            attempts_remaining: Some(3),
+            window_reset_secs: 12,
         });
         match cache.snapshot().nat_pmp {
             NatPmpStateSnapshot::Mapped {
                 external_port,
                 lifetime_secs,
+                ..
             } => {
                 assert_eq!(external_port, 49152);
                 assert_eq!(lifetime_secs, 3600);
@@ -547,6 +600,8 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 49152,
             lifetime_secs: 3600,
+            attempts_remaining: Some(4),
+            window_reset_secs: 0,
         });
         cache.record_nat_pmp_event(NatPmpEvent::Cancelled);
         assert_eq!(cache.snapshot().nat_pmp, NatPmpStateSnapshot::Disabled);
@@ -560,12 +615,15 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 60000,
             lifetime_secs: 60,
+            attempts_remaining: Some(5),
+            window_reset_secs: 0,
         });
         assert!(matches!(
             cache.snapshot().nat_pmp,
             NatPmpStateSnapshot::Mapped {
                 external_port: 60000,
-                lifetime_secs: 60
+                lifetime_secs: 60,
+                ..
             }
         ));
     }
@@ -694,6 +752,8 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 60123,
             lifetime_secs: 3600,
+            attempts_remaining: Some(4),
+            window_reset_secs: 0,
         });
         cache.record_failover();
         let s = cache.snapshot();
@@ -713,6 +773,8 @@ mod tests {
         cache.record_nat_pmp_event(NatPmpEvent::Mapped {
             external_port: 51234,
             lifetime_secs: 60,
+            attempts_remaining: Some(5),
+            window_reset_secs: 0,
         });
         assert!(rx.has_changed().unwrap_or(false));
         let s = rx.borrow_and_update();

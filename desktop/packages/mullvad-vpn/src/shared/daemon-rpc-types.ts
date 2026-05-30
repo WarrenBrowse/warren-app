@@ -582,7 +582,22 @@ export type NatPmpErrorReason =
 export type NatPmpStatus =
   | { state: 'disabled' }
   | { state: 'requesting' }
-  | { state: 'mapped'; externalPort: number; lifetimeGrantedSecs: number }
+  | {
+      state: 'mapped';
+      externalPort: number;
+      lifetimeGrantedSecs: number;
+      // Per-source rate-limit slots still available, as reported by the
+      // exit. `undefined` when the exit sent no budget trailer. The UI
+      // warns at <= 1 and blocks the port control at 0.
+      attemptsRemaining?: number;
+      // Seconds until the rate-limit budget grows by one. Drives the
+      // "wait before next change" countdown when attemptsRemaining === 0.
+      windowResetSecs: number;
+    }
+  // The exit rate-limited the last port change (too many in a row). The
+  // daemon retries automatically after `retryAfterSecs`; the UI blocks
+  // the port control and shows a deban countdown until then.
+  | { state: 'rate-limited'; retryAfterSecs: number }
   | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason };
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
