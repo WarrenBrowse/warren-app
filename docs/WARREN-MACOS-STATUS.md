@@ -86,18 +86,38 @@ réconcilier). Conséquences observées par l'utilisateur :
    génère une **nouvelle** pubkey non enrôlée, et l'ancien abonnement reste
    orphelin sur une clé morte. À corriger : sauvegarder/exporter l'identité
    hors du dossier wipé, ou proposer export/import de mnemonic.
-4. 🟡 **PARTIELLEMENT corrigé** - Message d'erreur trompeur. Le **cas
-   courant** (pas d'abonnement) est résolu par B2 : en remote, le 404
-   warren-api remonte comme un état compte honnête, plus comme
-   `NoMatchingRelay`. **Reste** le cas du rejet au **handshake** (clé qui
-   *semble* valide côté client mais que l'exit refuse) : `Error::Handshake`
-   est classé `is_recoverable = true` → retry → `NoMatchingRelay`. Le vrai
-   correctif = code de close explicite côté exit (`WARREN_AUTH_FAILED`) +
-   mapping client `BackendFatal` + état GUI « abonnement requis ». **Touche
-   le handshake QUIC = zone load-bearing → exige un bench Hetzner (CLAUDE.md
-   §1) → chantier dédié, non fait ici.**
+4. ✅ **CORRIGÉ** - Message d'erreur trompeur, sur deux fronts :
+   - Le **cas courant** (pas d'abonnement) est résolu par B2 : en remote,
+     le 404 warren-api remonte comme un état compte honnête, plus comme
+     `NoMatchingRelay`.
+   - Le **rejet au handshake** : l'exit fermait déjà la connexion avec le
+     code applicatif `WARREN_AUTH_FAILED` (0x57415252). Le **client** le
+     reconnaît maintenant via `Connection::close_reason()` et renvoie
+     `TunnelError::AuthRejected` (warren-core `client.rs`), que
+     `talpid-warren-tunnel` mappe en `Error::BackendFatal`
+     (**non-retryable**) au lieu de `Error::Handshake` (retry →
+     `NoMatchingRelay`). Le state machine entre donc en ErrorState clair
+     au lieu de boucler sur un message trompeur. Tests RED→GREEN :
+     `d2_allowlist::non_allowlisted_client_handshake_returns_auth_rejected`
+     (warren-core) + `auth_rejected_maps_to_fatal_non_recoverable_error`
+     (warren-app).
+   - **Pas de bench Hetzner requis** : changement purement client sur le
+     chemin de handshake *échoué* (aucun tunnel monté), zéro impact wire
+     format / pump / data-plane. Le code de close existait déjà côté exit.
 
-### Chantiers restants (gros, régis par les règles bench)
+#### Effets de bord traités dans la même passe
+
+- **Dérive natpmp `rate_limit`** : le bump `.warren-core-version` → f36a814
+  (fait pour le city-case) avait tiré l'ajout du champ
+  `Response::Map.rate_limit` dans warren-core **sans** mettre à jour les 5
+  call-sites de `talpid-warren-tunnel` → warren-app ne compilait plus (le
+  build v1.0.4 annulé aurait échoué ici). Corrigé : `rate_limit: None` sur
+  les 5 réponses Map.
+- **Cohérence warren-core** : `.warren-core-version` bumpé à `a8c2fde`
+  (inclut `AuthRejected`), warren-core poussé, garde-fous Cargo.lock
+  (pin quinn-fork + `cargo metadata --locked`) vérifiés OK.
+
+### Chantiers restants
 
 - **#3 - Persistance d'identité** : 🟡 largement adressé.
   - Le **flow GUI existe déjà** et est routé (`AppRouter.tsx`) :
