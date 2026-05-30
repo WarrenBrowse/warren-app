@@ -1,6 +1,6 @@
 # Warren macOS — état, diagnostic, et chantiers prod
 
-> Mis à jour : 2026-05-30 (v1.0.3). Document de référence sur l'état réel
+> Mis à jour : 2026-05-31 (v1.0.4). Document de référence sur l'état réel
 > du client Warren sur macOS, la cascade de bugs diagnostiquée pendant la
 > mise au point des releases v1.0.x, et ce qu'il reste à faire avant
 > qu'un utilisateur lambda puisse l'utiliser.
@@ -53,6 +53,38 @@ up → internet via l'exit.
 
 Le fix city-case arrive dans le build via `.warren-core-version` (déjà à
 `f36a814`, qui inclut `936c208`).
+
+### v1.0.4 - le champ « bon » de la GUI ne ment plus
+
+| Fix | Repo / fichier | Effet |
+|---|---|---|
+| **Redemption de voucher réelle en mode local** | warren-app `mullvad-daemon/src/device/account_backend.rs` | En mode local-account, `LocalAccountBackend::submit_voucher` faisait un **stub bidon** : il ignorait le code (`_voucher`), ne contactait aucun backend, et renvoyait toujours « OK +100 ans » pour n'importe quelle saisie, à l'infini. La GUI affichait donc « compte approvisionné » alors que **rien n'était enrôlé** → l'exit refusait le handshake → internet bloqué. Désormais `submit_voucher` fait le **vrai** `POST /v1/register` (non-signé, pubkey en clair) comme le backend remote, et **fail-closed** : un bon invalide / déjà utilisé remonte une vraie erreur au lieu d'un mensonge. Test de non-régression `local_submit_voucher_fails_closed_instead_of_fabricating_success`. |
+
+#### Les 4 incohérences révélées (même cause racine)
+
+Le mode local-account est un raccourci POC qui **simule trop de choses**. Il
+est en plus **actif par défaut** sur toute install fraîche
+(`mullvad-types/src/settings/mod.rs` : `warren_local_account: true` dans le
+`Default`, alors que le doc-comment du champ dit « Default false » - à
+réconcilier). Conséquences observées par l'utilisateur :
+
+1. ✅ **CORRIGÉ v1.0.4** - Champ « bon » = stub bidon (n'enrôlait rien,
+   « validé » pour tout code). Cf. tableau ci-dessus.
+2. ⚠️ **« 99 ans » affiché** - `get_data` renvoie `Utc::now() + 100 ans` en
+   local mode (stub d'expiration, sans rapport avec le vrai abonnement).
+   Cosmétique mais trompeur. Disparaît en mode remote (affiche la vraie
+   expiration). Vrai correctif = ne pas livrer local-account par défaut.
+3. ⚠️ **La désinstallation détruit l'identité** - `uninstall_macos.sh` fait
+   `rm -rf /etc/warren-vpn` → la pubkey enrôlée est perdue → chaque réinstall
+   génère une **nouvelle** pubkey non enrôlée, et l'ancien abonnement reste
+   orphelin sur une clé morte. À corriger : sauvegarder/exporter l'identité
+   hors du dossier wipé, ou proposer export/import de mnemonic.
+4. ⚠️ **Message d'erreur trompeur** - une clé non enrôlée → l'exit ferme la
+   connexion (`read SetupAck: connection lost`) → le retry exclut le relay →
+   `NoMatchingRelay` → la GUI affiche « Aucun serveur ne correspond » au lieu
+   de « compte non approvisionné ». À corriger : code de rejet explicite côté
+   exit + ne pas masquer l'échec d'auth par `NoMatchingRelay` + état GUI
+   distinct « abonnement requis ».
 
 ## Chantiers PROD restants (un utilisateur lambda ne peut pas encore connecter)
 

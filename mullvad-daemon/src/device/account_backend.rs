@@ -146,16 +146,57 @@ pub struct LocalAccountBackend {
     /// the field is necessary for the cross-platform test and for
     /// a future desktop migration).
     settings_dir: Arc<PathBuf>,
+    /// warren-api base URL used **only** by `submit_voucher` to
+    /// perform the real, unsigned `POST /v1/register` redemption.
+    /// Local mode bypasses the *subscription expiry check* (it serves
+    /// a far-future stub from `get_data`), but voucher redemption is a
+    /// genuine backend operation: it binds the daemon's pubkey to a
+    /// subscription so the exit accepts the handshake. Faking it here
+    /// (the historical behaviour) made the GUI "add voucher" field
+    /// silently enroll nothing, so any code "succeeded" forever while
+    /// the tunnel stayed blocked. Resolved from `WARREN_API_URL` when
+    /// set, else the production default.
+    warren_api_url: String,
+}
+
+/// Production warren-api base URL used as the voucher-redemption
+/// endpoint default when no `WARREN_API_URL` override is present.
+const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
+
+/// Resolves the warren-api URL for local-mode voucher redemption:
+/// `WARREN_API_URL` (non-empty) wins, otherwise the production default.
+/// Mirrors the env override honoured elsewhere for the warren-api URL
+/// so a developer pointing at a local backend redeems against it too.
+fn default_voucher_api_url() -> String {
+    std::env::var("WARREN_API_URL")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| DEFAULT_WARREN_API_URL.to_owned())
 }
 
 impl LocalAccountBackend {
     /// Builds a local backend from the current Warren pubkey and
-    /// the `settings_dir` to use for `delete_account`.
+    /// the `settings_dir` to use for `delete_account`. The voucher
+    /// redemption URL is resolved from `WARREN_API_URL` or the
+    /// production default.
     #[must_use]
     pub fn new(pubkey: WarrenPubKey, settings_dir: PathBuf) -> Self {
+        Self::new_with_api_url(pubkey, settings_dir, default_voucher_api_url())
+    }
+
+    /// Same as [`new`](Self::new) but with an explicit warren-api URL.
+    /// Used by tests to point voucher redemption at a controlled
+    /// endpoint.
+    #[must_use]
+    pub fn new_with_api_url(
+        pubkey: WarrenPubKey,
+        settings_dir: PathBuf,
+        warren_api_url: String,
+    ) -> Self {
         Self {
             pubkey,
             settings_dir: Arc::new(settings_dir),
+            warren_api_url,
         }
     }
 
@@ -195,15 +236,41 @@ impl WarrenAccountBackend for LocalAccountBackend {
     fn submit_voucher(
         &self,
         _account: AccountNumber,
-        _voucher: String,
+        voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
-        // Local mode: no network, no voucher redemption needed.
-        // Return a far-future expiry consistent with get_data.
-        let expiry = Self::far_future_expiry();
+        // Voucher redemption is a REAL backend operation, even in
+        // local mode: `POST /v1/register` (unsigned) binds this
+        // daemon's pubkey to a subscription so the exit accepts the
+        // handshake. The previous stub fabricated a far-future success
+        // for any input and contacted nothing — the GUI's "add
+        // voucher" field then reported success for every code while
+        // the pubkey stayed unenrolled and the tunnel blocked. We now
+        // mirror `WarrenRemoteAccountBackend::submit_voucher` and fail
+        // closed on any backend error so an invalid / used voucher
+        // surfaces honestly instead of a lie.
+        let url = self.warren_api_url.clone();
+        let pubkey = self.pubkey.clone();
         Box::pin(async move {
+            // The register endpoint is unsigned and carries the pubkey
+            // explicitly in the body, so a no-key client is correct
+            // here (the daemon's real signing identity is unrelated to
+            // this call).
+            let client = warren_api_client::WarrenApiClient::new_unsigned(url);
+            let req = warren_api_client::RegisterAccountRequest {
+                pubkey_hex: pubkey.as_str().parse().map_err(|_| rest::Error::Aborted)?,
+                voucher_secret: voucher,
+                referral_code: None,
+            };
+            let resp = client
+                .register_with_voucher(&req)
+                .await
+                .map_err(map_voucher_register_error)?;
+            let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
+            let now_secs = Utc::now().timestamp() as u64;
+            let time_added = resp.expires_at.saturating_sub(now_secs);
             Ok(VoucherSubmission {
-                new_expiry: expiry,
-                time_added: 36500 * 24 * 3600, // ~100 years in seconds
+                new_expiry,
+                time_added,
             })
         })
     }
@@ -474,6 +541,34 @@ mod tests {
             data.expiry > lower_bound,
             "expiry {} must be > now + 50 years to activate resume_background",
             data.expiry
+        );
+    }
+
+    #[tokio::test]
+    async fn local_submit_voucher_fails_closed_instead_of_fabricating_success() {
+        // Regression: the local backend used to IGNORE the voucher and
+        // return a fabricated ~100-year success for ANY input,
+        // contacting no backend and enrolling nothing — so the GUI
+        // "add voucher" field reported success for every code (even the
+        // same one repeatedly) while the pubkey stayed unenrolled and
+        // the exit kept refusing the handshake, blocking internet.
+        // Voucher redemption must hit warren-api for real; when the
+        // backend is unreachable the call MUST fail, never fabricate a
+        // far-future subscription.
+        let backend = LocalAccountBackend::new_with_api_url(
+            fixed_pubkey(),
+            isolated_tempdir(),
+            // Refused port: an immediate connection error, so the unit
+            // test carries no real network dependency.
+            "http://127.0.0.1:1".to_owned(),
+        );
+        let result = backend
+            .submit_voucher("ignored".to_owned(), "ANY-CODE-1234".to_owned())
+            .await;
+        assert!(
+            result.is_err(),
+            "local submit_voucher must fail closed when warren-api is unreachable, \
+             not fabricate a success (the historical lying-stub regression)"
         );
     }
 
