@@ -431,8 +431,30 @@ else
     mkdir -p "build"
 fi
 
-log_info "Updating relays.json..."
-cargo run -p mullvad-api --bin relay_list "${CARGO_ARGS[@]}" > build/relays.json
+log_info "Writing placeholder relays.json..."
+# Warren never uses this Mullvad-format relay list to set up the tunnel: at
+# runtime the daemon fetches the live Warren exit list from GET {api_url}/v1/exits
+# (see mullvad-daemon/src/warren_relays_fetch.rs) into warren-relays.json, and the
+# GUI relay selector is built from that. The upstream Mullvad relay subsystem
+# still parses this file at boot, so it must exist and be a valid relay list.
+# We therefore write an empty list rather than querying the legacy Mullvad
+# `/app/v1/relays` endpoint, which the Warren backend does not serve (404).
+cat > build/relays.json <<'RELAYS_JSON'
+{
+  "locations": {},
+  "wireguard": {
+    "port_ranges": [],
+    "ipv4_gateway": "10.64.0.1",
+    "ipv6_gateway": "fd00::1",
+    "shadowsocks_port_ranges": [],
+    "relays": []
+  },
+  "bridge": {
+    "shadowsocks": [],
+    "relays": []
+  }
+}
+RELAYS_JSON
 
 function build_daemon_packages {
     local pkg_success=0
