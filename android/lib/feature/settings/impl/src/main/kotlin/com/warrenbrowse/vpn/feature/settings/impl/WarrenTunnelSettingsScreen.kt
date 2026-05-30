@@ -32,6 +32,7 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -59,6 +60,7 @@ import org.koin.compose.koinInject
 fun WarrenTunnelSettings(navigator: Navigator) {
     val repo = koinInject<WarrenLocalSettingsRepository>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
+    val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
     val daita by repo.daitaEnabled.collectAsStateWithLifecycle()
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
     val natPmpProtocol by repo.natPmpProtocol.collectAsStateWithLifecycle()
@@ -107,10 +109,32 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 },
             )
 
-            Text(
-                text = "Changes apply on next connect.",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            // While connected, changing a flag only takes effect on the next
+            // connect, so offer an explicit "Reconnect now" affordance that
+            // tears down and re-establishes the tunnel with the new config
+            // (reusing the cached mnemonic - no biometric re-prompt).
+            val isConnected = tunnelState.startsWith("Connected")
+            if (isConnected) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = "Changes apply on next connect.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(onClick = { reconnectInvoker.reconnect() }) {
+                        Text("Reconnect now")
+                    }
+                }
+            } else {
+                Text(
+                    text = "Changes apply on next connect.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
 
             SectionLabel("Privacy")
 
