@@ -29,6 +29,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "postcss": "8.4.49",
     "prettier": "^3.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.15.0"
@@ -42,9 +43,6 @@
     "npm": "11.12.1"
   },
   "overrides": {
-    "styled-components": {
-      "postcss": "8.5.13"
-    },
     "grpc_tools_node_protoc_ts": {
       "handlebars": "^4.7.9"
     }
