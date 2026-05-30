@@ -105,6 +105,14 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _selectedExitId = MutableStateFlow(prefs.getString(KEY_SELECTED_EXIT_ID, null))
     val selectedExitId: StateFlow<String?> = _selectedExitId.asStateFlow()
 
+    /**
+     * Recently selected exit identifiers, most-recent-first, capped at
+     * [MAX_RECENT_EXITS]. Surfaced at the top of the location picker so
+     * frequently-used exits are one tap away (desktop "recents" parity).
+     */
+    private val _recentExitIds = MutableStateFlow(readRecentExitIds())
+    val recentExitIds: StateFlow<List<String>> = _recentExitIds.asStateFlow()
+
     fun setDaitaEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DAITA_ENABLED, enabled).apply()
         _daitaEnabled.value = enabled
@@ -175,7 +183,24 @@ class WarrenLocalSettingsRepository(context: Context) {
         }
         editor.apply()
         _selectedExitId.value = exitId
+        // Selecting (not clearing) an exit records it as recently used.
+        if (exitId != null) recordRecentExit(exitId)
     }
+
+    /** Push [exitId] to the front of the recents list (deduped, capped). */
+    fun recordRecentExit(exitId: String) {
+        val updated = (listOf(exitId) + _recentExitIds.value.filter { it != exitId })
+            .take(MAX_RECENT_EXITS)
+        prefs.edit().putString(KEY_RECENT_EXIT_IDS, updated.joinToString(RECENT_DELIMITER)).apply()
+        _recentExitIds.value = updated
+    }
+
+    private fun readRecentExitIds(): List<String> =
+        prefs.getString(KEY_RECENT_EXIT_IDS, null)
+            ?.split(RECENT_DELIMITER)
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?: emptyList()
 
     fun setIpv6Enabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_IPV6_ENABLED, enabled).apply()
@@ -257,6 +282,9 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_EXIT_COUNTRY = "exit_country"
         private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
+        private const val KEY_RECENT_EXIT_IDS = "recent_exit_ids"
+        private const val RECENT_DELIMITER = ","
+        private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
         private const val KEY_DNS_STATE = "dns_state"

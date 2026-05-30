@@ -47,6 +47,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
     val relayProvider = koinInject<WarrenRelayProvider>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val selectedExitId by settings.selectedExitId.collectAsStateWithLifecycle()
+    val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
 
     // RelayProvider.list() is synchronous (in-memory today); produceState
     // resolves a fresh list on every recomposition so a future async
@@ -77,22 +78,49 @@ fun WarrenLocationPicker(navigator: Navigator) {
                     text = "Tap to select. Tap again to clear (auto-pick the first active exit).",
                     style = MaterialTheme.typography.bodySmall,
                 )
+                // Resolve recents (most-recent-first) against the current
+                // catalogue, dropping any that no longer exist.
+                val recentRelays = recentExitIds.mapNotNull { id ->
+                    relays.firstOrNull { it.exitId == id }
+                }
+                val onSelect: (WarrenRelaySummary) -> Unit = { relay ->
+                    settings.setSelectedExitId(
+                        if (relay.exitId == selectedExitId) null else relay.exitId
+                    )
+                }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(relays) { relay ->
+                    if (recentRelays.isNotEmpty()) {
+                        item { SectionHeader("Recents") }
+                        items(recentRelays, key = { "recent-${it.exitId}" }) { relay ->
+                            RelayRow(
+                                relay = relay,
+                                selected = relay.exitId == selectedExitId,
+                                onClick = { onSelect(relay) },
+                            )
+                        }
+                        item { SectionHeader("All exits") }
+                    }
+                    items(relays, key = { it.exitId }) { relay ->
                         RelayRow(
                             relay = relay,
                             selected = relay.exitId == selectedExitId,
-                            onClick = {
-                                settings.setSelectedExitId(
-                                    if (relay.exitId == selectedExitId) null else relay.exitId
-                                )
-                            },
+                            onClick = { onSelect(relay) },
                         )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 4.dp),
+    )
 }
 
 @Composable

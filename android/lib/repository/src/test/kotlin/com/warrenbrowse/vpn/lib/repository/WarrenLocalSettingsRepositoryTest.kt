@@ -173,6 +173,36 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `recents are most-recent-first, deduped and capped at five`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        listOf("a", "b", "c", "a").forEach { repo.recordRecentExit(it) }
+        // "a" deduped to front, order reflects last-touched.
+        assertEquals(listOf("a", "c", "b"), repo.recentExitIds.value)
+
+        repo.recordRecentExit("d")
+        repo.recordRecentExit("e")
+        repo.recordRecentExit("f")
+        // Capped at five, oldest ("b") evicted.
+        assertEquals(listOf("f", "e", "d", "a", "c"), repo.recentExitIds.value)
+    }
+
+    @Test
+    fun `selecting an exit records it as recent, clearing does not`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getString("selected_exit_id", null) } returns null
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setSelectedExitId("exit-1")
+        assertEquals(listOf("exit-1"), repo.recentExitIds.value)
+
+        repo.setSelectedExitId(null)
+        // Clearing the selection leaves recents untouched.
+        assertEquals(listOf("exit-1"), repo.recentExitIds.value)
+    }
+
+    @Test
     fun `entry and exit country normalize to uppercase ISO-2 or clear`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)
