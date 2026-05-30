@@ -50,9 +50,9 @@ runs:
           TEST_NAME_ARGUMENT=""
         fi
         set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-          -project MullvadVPN.xcodeproj \
-          -scheme MullvadVPNUITests \
-          -testPlan MullvadVPNUITestsAll $TEST_NAME_ARGUMENT \
+          -project WarrenVPN.xcodeproj \
+          -scheme WarrenVPNUITests \
+          -testPlan WarrenVPNUITestsAll $TEST_NAME_ARGUMENT \
           -resultBundlePath ${{ env.TEST_OUTPUT_DIRECTORY }}/xcode-test-report \
           -derivedDataPath derived-data \
           -allowProvisioningUpdates \

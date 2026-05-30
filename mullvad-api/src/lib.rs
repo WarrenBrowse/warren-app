@@ -257,11 +257,20 @@ impl ApiEndpoint {
         self.host.as_deref().unwrap_or(API_HOST_DEFAULT)
     }
 
-    /// Read the [`Self::address`] value, falling back to
-    /// [`API_IP_DEFAULT`] as default value if it does not exist.
+    /// Read the [`Self::address`] value. When no explicit address is set,
+    /// Warren resolves [`API_HOST_DEFAULT`] via DNS (unlike upstream Mullvad,
+    /// which pinned a hardcoded IP). Resolution happens once here at
+    /// construction; the address cache is later refreshed from the API. Falls
+    /// back to [`API_IP_DEFAULT`] (an unspecified sentinel) if DNS fails.
     pub fn address(&self) -> SocketAddr {
-        self.address
-            .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
+        self.address.unwrap_or_else(|| {
+            use std::net::ToSocketAddrs;
+            (API_HOST_DEFAULT, API_PORT_DEFAULT)
+                .to_socket_addrs()
+                .ok()
+                .and_then(|mut addrs| addrs.next())
+                .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
+        })
     }
 
     /// Try to read the value of an environment variable. Returns `None` if the

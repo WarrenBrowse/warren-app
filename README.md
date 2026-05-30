@@ -11,7 +11,7 @@ Le fork conserve l'architecture daemon / frontend de l'upstream — système de 
 ([`mullvad-daemon`](mullvad-daemon/), renommé en binaire `warren-daemon`), GUI Electron
 ([`desktop/`](desktop/)) et CLI ([`mullvad-cli`](mullvad-cli/), renommé en binaire `warren`) — et
 toutes les garanties de sécurité réseau (firewall lockdown, killswitch, split-tunneling) sont
-préservées. Voir [`docs/warren-fork.md`](docs/warren-fork.md) pour le guide d'usage et
+préservées. Voir [`docs/warren-architecture.md`](docs/warren-architecture.md) pour le guide d'usage et
 [`UPSTREAM_BASELINE.md`](UPSTREAM_BASELINE.md) pour le suivi de la baseline upstream.
 
 ## État du fork
@@ -69,7 +69,7 @@ autorise, et comment.
 stockée dans `<settings_dir>/warren_mnemonic.txt`. Aucun numéro de compte, aucun token bearer.
 Cette même clé authentifie le handshake TLS QUIC vers l'exit *et* signe les requêtes API Warren
 (headers `X-Warren-{PubKey,Signature,Timestamp,Nonce}`). Voir
-[`docs/warren-fork.md`](docs/warren-fork.md) § « Crypto handshake ».
+[`docs/warren-architecture.md`](docs/warren-architecture.md) § « Crypto handshake ».
 
 ## Développement sécurisé
 
@@ -124,7 +124,7 @@ talpid et ces crates POC.
 ## Builder l'app
 
 Voir les [instructions de build](BuildInstructions.md). Notes spécifiques fork dans
-[`docs/warren-fork.md`](docs/warren-fork.md) et dans le commit `f6a850ba58` (deps natives Linux +
+[`docs/warren-architecture.md`](docs/warren-architecture.md) et dans le commit `f6a850ba58` (deps natives Linux +
 workaround cross-compile).
 
 ## Releaser l'app
@@ -305,7 +305,7 @@ Comme upstream, le code se sépare en deux familles :
   talpid.
 - Crates `mullvad-*` — code spécifique à l'app (settings, management interface, GUI integration).
   Le fork ajoute les modules `warren_*` dans `mullvad-daemon/src/` (cf. liste dans
-  [`docs/warren-fork.md`](docs/warren-fork.md)).
+  [`docs/warren-architecture.md`](docs/warren-architecture.md)).
 
 Fichiers à connaître :
 
@@ -390,7 +390,7 @@ machine. Cf. `mullvad-paths/tests/warren_collision_safety.rs`.
 
 | Fichier | Rôle |
 |---|---|
-| `warren-relays.json` | Liste des exits Warren signée Ed25519 (format v2). Format détaillé dans [`docs/warren-fork.md`](docs/warren-fork.md) |
+| `warren-relays.json` | Liste des exits Warren signée Ed25519 (format v2). Format détaillé dans [`docs/warren-architecture.md`](docs/warren-architecture.md) |
 
 ### App Electron desktop
 

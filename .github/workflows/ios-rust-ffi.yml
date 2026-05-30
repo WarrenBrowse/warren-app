@@ -1,5 +1,5 @@
 ---
-name: iOS - Build and test Rust FFI (mullvad-ios and mullvad-api)
+name: iOS - Build and test Rust FFI (warren-ios and mullvad-api)
 on:
   pull_request:
     paths:
@@ -9,7 +9,7 @@ on:
       - Cargo.lock
       - Cargo.toml
       - '**/*.rs'
-      - 'mullvad-ios/**'
+      - 'warren-ios/**'
   workflow_dispatch:
 
 permissions: {}
@@ -27,7 +27,6 @@ jobs:
       - name: Checkout submodules
         run: |
           git config --global --add safe.directory '*'
-          git submodule update --init --recursive ios/wireguard-apple
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -42,8 +41,8 @@ jobs:
         # NOTE: Tests actually target macOS here. This is because we do not have an iOS runner
         #       handy.
         run: |
-          time ci/cargo-ci.sh build --verbose --lib -p mullvad-ios -p mullvad-api --target ${{ matrix.target }}
-          time ci/cargo-ci.sh test --verbose --lib -p mullvad-ios -p mullvad-api
+          time ci/cargo-ci.sh build --verbose --lib -p warren-ios -p mullvad-api --target ${{ matrix.target }}
+          time ci/cargo-ci.sh test --verbose --lib -p warren-ios -p mullvad-api
 
   clippy-check-ios:
     runs-on: macos-latest
@@ -67,7 +66,7 @@ jobs:
       - name: Clippy check
         shell: bash
         run: |
-          time ci/cargo-ci.sh clippy --all-targets --no-default-features -p mullvad-ios -p mullvad-api \
+          time ci/cargo-ci.sh clippy --all-targets --no-default-features -p warren-ios -p mullvad-api \
             --target ${{ matrix.target }}
-          time ci/cargo-ci.sh clippy --all-targets --all-features -p mullvad-ios -p mullvad-api \
+          time ci/cargo-ci.sh clippy --all-targets --all-features -p warren-ios -p mullvad-api \
             --target ${{ matrix.target }}

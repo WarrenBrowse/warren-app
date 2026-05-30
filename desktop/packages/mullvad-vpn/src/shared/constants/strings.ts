@@ -5,7 +5,7 @@ export const strings = {
   splitTunneling: 'Split tunneling',
   daita: 'DAITA',
   daitaFull: 'Defence against AI-guided Traffic Analysis',
-  supportEmail: 'support@mullvadvpn.net',
+  supportEmail: 'support@warrenbrowse.com',
   lwo: 'LWO',
   quic: 'QUIC',
   domainFronting: 'Domain fronting',

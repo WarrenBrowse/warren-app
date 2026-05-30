@@ -254,7 +254,7 @@ pub async fn test_detect_app_removal(
         .device
         .id;
 
-    rpc.exec("/bin/rm", ["-rf", "/Applications/Mullvad VPN.app"])
+    rpc.exec("/bin/rm", ["-rf", "/Applications/Warren VPN.app"])
         .await
         .context("Failed to delete Mullvad app")?;
 

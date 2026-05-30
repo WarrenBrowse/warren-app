@@ -32,9 +32,9 @@ pub struct AccountHistory {
 }
 
 /// Accepts both the legacy Mullvad numeric account number (digits
-/// only) and the Warren-fork pubkey format (64-character lowercase
+/// only) and the Warren pubkey format (64-character lowercase
 /// hex `WarrenPubKey::Display`). The latter is what `set_warren_mnemonic`
-/// + auto-login persist into `account-history.json` since Phase 2,
+/// and auto-login persist into `account-history.json` since Phase 2,
 /// and refusing to parse it would surface a spurious "Failed to parse
 /// account history" warning at every boot.
 static ACCOUNT_REGEX: LazyLock<Regex> =

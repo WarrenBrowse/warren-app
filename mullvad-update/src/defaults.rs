@@ -1,42 +1,13 @@
 //! Default keys and certificates that may be used for verifying data
 //!
-//! Warren-fork note: the URL constants below resolve at runtime through
-//! [`releases_url`] / [`metadata_url`] which honour `WARREN_UPDATE_URL`
-//! / `WARREN_METADATA_URL` env vars. The compile-time `const`s remain
-//! pointing at the upstream Mullvad endpoints so an upstream rebase
-//! stays a no-op on this file's body; Warren ships its own defaults at
-//! the LazyLock layer below.
+//! The releases/metadata URLs resolve at runtime through
+//! [`releases_url`] / [`metadata_url`], which honour the
+//! `WARREN_UPDATE_URL` / `WARREN_METADATA_URL` env vars and otherwise
+//! fall back to the Warren GitHub Releases defaults below.
 
 use crate::format::key::VerifyingKey;
 use std::sync::LazyLock;
 use vec1::Vec1;
-
-/// Default URL for the `releases`-API (upstream Mullvad value).
-///
-/// Note that this is just a proxy to _some_ of the files in [METADATA_URL].
-///
-/// Prefer [`releases_url`] at runtime - it picks up the
-/// `WARREN_UPDATE_URL` env var override before falling back to the
-/// Warren-branded GitHub Releases default and only then to this
-/// constant. Direct readers of `RELEASES_URL` keep working but they
-/// see Mullvad's value, which is **not** what Warren ships.
-#[cfg(feature = "client")]
-#[expect(
-    dead_code,
-    reason = "Kept for upstream rebase parity. Warren reads `releases_url()`."
-)]
-pub const RELEASES_URL: &str = "https://api.mullvad.net/app/releases/";
-
-/// Default URL for version metadata repository (upstream Mullvad value).
-///
-/// Prefer [`metadata_url`] at runtime for the same reason as
-/// [`RELEASES_URL`] above.
-#[cfg(feature = "client")]
-#[expect(
-    dead_code,
-    reason = "Kept for upstream rebase parity. Warren reads `metadata_url()`."
-)]
-pub const METADATA_URL: &str = "https://releases.mullvad.net/desktop/metadata/";
 
 /// Warren-branded default for the releases API. Points at the GitHub
 /// Releases API surface of the Warren binary repo. The CI release
@@ -62,10 +33,7 @@ pub const WARREN_METADATA_URL: &str =
 
 /// Returns the effective releases-API URL: env var override
 /// (`WARREN_UPDATE_URL`) when set + non-empty, else
-/// [`WARREN_RELEASES_URL`] (Warren default). Mullvad's
-/// [`RELEASES_URL`] is left as upstream-rebase ballast and is **not**
-/// the fallback - Warren builds never want to silently fall back to
-/// the upstream endpoint.
+/// [`WARREN_RELEASES_URL`] (Warren default).
 #[cfg(feature = "client")]
 pub fn releases_url() -> String {
     std::env::var("WARREN_UPDATE_URL")
@@ -76,8 +44,7 @@ pub fn releases_url() -> String {
 
 /// Returns the effective metadata repository URL: env var override
 /// (`WARREN_METADATA_URL`) when set + non-empty, else
-/// [`WARREN_METADATA_URL`]. See [`releases_url`] for the upstream-rebase
-/// rationale.
+/// [`WARREN_METADATA_URL`].
 #[cfg(feature = "client")]
 pub fn metadata_url() -> String {
     std::env::var("WARREN_METADATA_URL")
@@ -95,17 +62,6 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
     reqwest::Certificate::from_pem(CERT_BYTES).expect("invalid cert")
 });
 
-/// Pubkeys used to verify metadata from the upstream Mullvad API
-/// (= upstream value, kept for rebase). Warren consumes
-/// [`TRUSTED_METADATA_SIGNING_PUBKEYS`] which points at the Warren-owned
-/// pubkey file - see the LazyLock initializer.
-#[cfg(feature = "client")]
-#[expect(
-    dead_code,
-    reason = "Kept for upstream rebase parity. Warren reads `TRUSTED_METADATA_SIGNING_PUBKEYS`."
-)]
-pub static MULLVAD_TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
-    LazyLock::new(|| parse_keys(include_str!("../trusted-metadata-signing-pubkeys")));
 
 /// Pubkeys used to verify metadata from the Warren update channel
 /// (production target).

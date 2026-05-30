@@ -7,7 +7,6 @@
     "ci/buildserver-build.sh",
     "ci/buildserver-config.sh",
     "ci/cargo-ci.sh",
-    "ci/linux-repository-builder/**",
     "ci/publish-app-to-repositories.sh",
     "desktop/**",
     "installer-downloader/**",

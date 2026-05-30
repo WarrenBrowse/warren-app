@@ -85,9 +85,9 @@ impl Platform {
         let artifacts_dir = get_data_dir().join("artifacts");
         match self {
             Platform::Windows => Artifacts {
-                x86_artifacts: vec![artifacts_dir.join(format!("MullvadVPN-{version}_x64.exe"))],
+                x86_artifacts: vec![artifacts_dir.join(format!("WarrenVPN-{version}_x64.exe"))],
                 arm64_artifacts: vec![
-                    artifacts_dir.join(format!("MullvadVPN-{version}_arm64.exe")),
+                    artifacts_dir.join(format!("WarrenVPN-{version}_arm64.exe")),
                 ],
             },
             Platform::Linux => Artifacts {
@@ -95,8 +95,8 @@ impl Platform {
                 arm64_artifacts: vec![],
             },
             Platform::Macos => Artifacts {
-                x86_artifacts: vec![artifacts_dir.join(format!("MullvadVPN-{version}.pkg"))],
-                arm64_artifacts: vec![artifacts_dir.join(format!("MullvadVPN-{version}.pkg"))],
+                x86_artifacts: vec![artifacts_dir.join(format!("WarrenVPN-{version}.pkg"))],
+                arm64_artifacts: vec![artifacts_dir.join(format!("WarrenVPN-{version}.pkg"))],
             },
         }
     }

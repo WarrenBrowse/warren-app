@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use clap::Parser;
 
 /// CLI tool that queries <https://am.i.mullvad.net> to check if the machine is connected to
-/// Mullvad VPN.
+/// Warren VPN.
 #[derive(Parser)]
 pub struct Opt {
     /// Interactive mode, press enter to check if you are Mullvad.

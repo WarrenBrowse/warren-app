@@ -286,17 +286,16 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
     // Step 3 — clean up any leftover legacy file so we never have
     // two persistent copies after a successful overwrite.
     let legacy_path = settings_dir.join(MNEMONIC_FILENAME);
-    if legacy_path.exists() {
-        if let Err(e) = std::fs::remove_file(&legacy_path) {
-            if e.kind() != io::ErrorKind::NotFound {
-                log::warn!(
-                    "set_warren_mnemonic stored via {} but failed to remove legacy \
-                     file at {}: {e}",
-                    storage.backend_name(),
-                    legacy_path.display()
-                );
-            }
-        }
+    if legacy_path.exists()
+        && let Err(e) = std::fs::remove_file(&legacy_path)
+        && e.kind() != io::ErrorKind::NotFound
+    {
+        log::warn!(
+            "set_warren_mnemonic stored via {} but failed to remove legacy \
+             file at {}: {e}",
+            storage.backend_name(),
+            legacy_path.display()
+        );
     }
 
     log::info!(

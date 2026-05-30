@@ -11,9 +11,9 @@
   "defaultOptions" : {
     "defaultTestExecutionTimeAllowance" : 60,
     "targetForVariableExpansion" : {
-      "containerPath" : "container:MullvadVPN.xcodeproj",
+      "containerPath" : "container:WarrenVPN.xcodeproj",
       "identifier" : "58CE5E5F224146200008646E",
-      "name" : "MullvadVPN"
+      "name" : "WarrenVPN"
     },
     "testTimeoutsEnabled" : true
   },
@@ -21,9 +21,9 @@
     {
       "parallelizable" : true,
       "target" : {
-        "containerPath" : "container:MullvadVPN.xcodeproj",
+        "containerPath" : "container:WarrenVPN.xcodeproj",
         "identifier" : "58FBFBE5291622580020E046",
-        "name" : "MullvadRESTTests"
+        "name" : "WarrenRESTTests"
       }
     },
     {
@@ -36,15 +36,15 @@
         ]
       },
       "target" : {
-        "containerPath" : "container:MullvadVPN.xcodeproj",
+        "containerPath" : "container:WarrenVPN.xcodeproj",
         "identifier" : "58B0A29F238EE67E00BC001D",
-        "name" : "MullvadVPNTests"
+        "name" : "WarrenVPNTests"
       }
     },
     {
       "parallelizable" : true,
       "target" : {
-        "containerPath" : "container:MullvadVPN.xcodeproj",
+        "containerPath" : "container:WarrenVPN.xcodeproj",
         "identifier" : "589A455128E094B300565204",
         "name" : "OperationsTests"
       }
@@ -52,7 +52,7 @@
     {
       "parallelizable" : true,
       "target" : {
-        "containerPath" : "container:MullvadVPN.xcodeproj",
+        "containerPath" : "container:WarrenVPN.xcodeproj",
         "identifier" : "58C7A43C2A863F450060C66F",
         "name" : "PacketTunnelCoreTests"
       }
@@ -60,7 +60,7 @@
     {
       "parallelizable" : true,
       "target" : {
-        "containerPath" : "container:MullvadVPN.xcodeproj",
+        "containerPath" : "container:WarrenVPN.xcodeproj",
         "identifier" : "7A88DCD62A8FABBE00D2FF0E",
         "name" : "RoutingTests"
       }

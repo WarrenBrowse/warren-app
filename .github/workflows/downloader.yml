@@ -61,7 +61,7 @@ jobs:
       - name: Check file size
         uses: ./.github/actions/check-file-size
         with:
-          artifact: "./dist/Install Mullvad VPN.exe"
+          artifact: "./dist/Install Warren VPN.exe"
           max_size: ${{ env.MAX_BINARY_SIZE }}
 
   build-macos:
@@ -83,5 +83,5 @@ jobs:
       - name: Check file size
         uses: ./.github/actions/check-file-size
         with:
-          artifact: "./dist/Install Mullvad VPN.dmg"
+          artifact: "./dist/Install Warren VPN.dmg"
           max_size: ${{ env.MAX_BINARY_SIZE }}

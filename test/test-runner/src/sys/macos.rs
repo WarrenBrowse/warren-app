@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use test_rpc::{meta::OsVersion, mullvad_daemon::Verbosity};
 
-const PLIST_OVERRIDE_FILE: &str = "/Library/LaunchDaemons/net.mullvad.daemon.plist";
+const PLIST_OVERRIDE_FILE: &str = "/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist";
 
-/// Restart the Mullvad VPN application.
+/// Restart the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn restart_app() -> Result<(), test_rpc::Error> {
@@ -12,7 +12,7 @@ pub async fn restart_app() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Stop the Mullvad VPN application.
+/// Stop the Warren VPN application.
 ///
 /// This function waits for the app to successfully shut down.
 pub async fn stop_app() -> Result<(), test_rpc::Error> {
@@ -21,7 +21,7 @@ pub async fn stop_app() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Start the Mullvad VPN application.
+/// Start the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn start_app() -> Result<(), test_rpc::Error> {

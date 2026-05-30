@@ -221,19 +221,19 @@ mod tests {
 
     #[test]
     fn test_version_regex() {
-        let path = Path::new("../some/path/MullvadVPN-2024.4-beta1-dev-f7df8e_amd64.deb");
+        let path = Path::new("../some/path/WarrenVPN-2024.4-beta1-dev-f7df8e_amd64.deb");
         let capture = get_version_from_path(path).unwrap();
         assert_eq!(capture, "2024.4-beta1-dev-f7df8e");
 
-        let path = Path::new("../some/path/MullvadVPN-2024.4-beta1-f7df8e_amd64.deb");
+        let path = Path::new("../some/path/WarrenVPN-2024.4-beta1-f7df8e_amd64.deb");
         let capture = get_version_from_path(path).unwrap();
         assert_eq!(capture, "2024.4-beta1-f7df8e");
 
-        let path = Path::new("../some/path/MullvadVPN-2024.4-dev-f7df8e_amd64.deb");
+        let path = Path::new("../some/path/WarrenVPN-2024.4-dev-f7df8e_amd64.deb");
         let capture = get_version_from_path(path).unwrap();
         assert_eq!(capture, "2024.4-dev-f7df8e");
 
-        let path = Path::new("../some/path/MullvadVPN-2024.3_amd64.deb");
+        let path = Path::new("../some/path/WarrenVPN-2024.3_amd64.deb");
         let capture = get_version_from_path(path).unwrap();
         assert_eq!(capture, "2024.3");
     }

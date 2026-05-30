@@ -1,8 +1,8 @@
-#[cfg(feature = "wireguard-go")]
-pub use tun05_imp::{Error, UnixTun, UnixTunProvider};
-#[cfg(not(feature = "wireguard-go"))]
 pub use tun08_imp::{Error, UnixTun, UnixTunProvider};
-#[cfg(feature = "wireguard-go")]
+
+// Legacy WireGuard-Go tun 0.5 backend removed: Warren tunnels via QUIC,
+// `tun08_imp` is the only Unix backend.
+#[cfg(any())]
 mod tun05_imp {
     use std::{
         net::IpAddr,
@@ -215,7 +215,6 @@ mod tun05_imp {
     }
 }
 
-#[cfg(not(feature = "wireguard-go"))]
 mod tun08_imp {
     use std::net::IpAddr;
     use std::os::fd::{AsRawFd, RawFd};

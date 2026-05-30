@@ -8,9 +8,9 @@ pub async fn version() -> Result<String, Error> {
     // The `mullvad` binary is seemingly not in PATH on Windows after upgrading the app..
     // So, as a workaround we use the absolute path instead.
     const MULLVAD_CLI_BIN: &str = if cfg!(target_os = "windows") {
-        r"C:\Program Files\Mullvad VPN\resources\mullvad.exe"
+        r"C:\Program Files\Warren VPN\resources\warren.exe"
     } else {
-        "mullvad"
+        "warren"
     };
     let version = tokio::process::Command::new(MULLVAD_CLI_BIN)
         .arg("--version")
@@ -42,10 +42,10 @@ pub fn find_traces() -> Result<Vec<AppTrace>, Error> {
 
     let caches = find_cache_traces()?;
     let traces = vec![
-        Path::new(r"C:\Program Files\Mullvad VPN"),
+        Path::new(r"C:\Program Files\Warren VPN"),
         // NOTE: This only works as of `499c06decda37dc639e5f` in the Mullvad app.
         // Older builds have no way of silently fully uninstalling the app.
-        Path::new(r"C:\ProgramData\Mullvad VPN"),
+        Path::new(r"C:\ProgramData\Warren VPN"),
         // NOTE: Works as of `4116ebc` (Mullvad app).
         &settings_dir,
         &caches,
@@ -61,22 +61,22 @@ pub fn find_traces() -> Result<Vec<AppTrace>, Error> {
 
     let caches = find_cache_traces()?;
     let traces = vec![
-        Path::new(r"/etc/mullvad-vpn/"),
-        Path::new(r"/var/log/mullvad-vpn/"),
+        Path::new(r"/etc/warren-vpn/"),
+        Path::new(r"/var/log/warren-vpn/"),
         &caches,
-        Path::new(r"/opt/Mullvad VPN/"),
+        Path::new(r"/opt/Warren VPN/"),
         // management interface socket
-        Path::new(r"/var/run/mullvad-vpn"),
+        Path::new(r"/var/run/warren-vpn"),
         // service unit config files
-        Path::new(r"/usr/lib/systemd/system/mullvad-daemon.service"),
-        Path::new(r"/usr/lib/systemd/system/mullvad-early-boot-blocking.service"),
-        Path::new(r"/usr/bin/mullvad"),
-        Path::new(r"/usr/bin/mullvad-daemon"),
+        Path::new(r"/usr/lib/systemd/system/warren-daemon.service"),
+        Path::new(r"/usr/lib/systemd/system/warren-early-boot-blocking.service"),
+        Path::new(r"/usr/bin/warren"),
+        Path::new(r"/usr/bin/warren-daemon"),
         Path::new(r"/usr/bin/warren-exclude"),
         Path::new(r"/usr/bin/warren-problem-report"),
-        Path::new(r"/usr/share/bash-completion/completions/mullvad"),
-        Path::new(r"/usr/local/share/zsh/site-functions/_mullvad"),
-        Path::new(r"/usr/share/fish/vendor_completions.d/mullvad.fish"),
+        Path::new(r"/usr/share/bash-completion/completions/warren"),
+        Path::new(r"/usr/local/share/zsh/site-functions/_warren"),
+        Path::new(r"/usr/share/fish/vendor_completions.d/warren.fish"),
     ];
 
     Ok(existing_paths(&traces))
@@ -93,19 +93,19 @@ pub fn find_traces() -> Result<Vec<AppTrace>, Error> {
 
     let caches = find_cache_traces()?;
     let traces = vec![
-        Path::new(r"/Applications/Mullvad VPN.app/"),
-        Path::new(r"/var/log/mullvad-vpn/"),
+        Path::new(r"/Applications/Warren VPN.app/"),
+        Path::new(r"/var/log/warren-vpn/"),
         &caches,
         // management interface socket
-        Path::new(r"/var/run/mullvad-vpn"),
+        Path::new(r"/var/run/warren-vpn"),
         // launch daemon
-        Path::new(r"/Library/LaunchDaemons/net.mullvad.daemon.plist"),
-        Path::new(r"/usr/local/bin/mullvad"),
+        Path::new(r"/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"),
+        Path::new(r"/usr/local/bin/warren"),
         Path::new(r"/usr/local/bin/warren-problem-report"),
         // completions
-        Path::new(r"/usr/local/share/zsh/site-functions/_mullvad"),
-        Path::new(r"/opt/homebrew/share/fish/vendor_completions.d/mullvad.fish"),
-        Path::new(r"/usr/local/share/fish/vendor_completions.d/mullvad.fish"),
+        Path::new(r"/usr/local/share/zsh/site-functions/_warren"),
+        Path::new(r"/opt/homebrew/share/fish/vendor_completions.d/warren.fish"),
+        Path::new(r"/usr/local/share/fish/vendor_completions.d/warren.fish"),
     ];
 
     Ok(existing_paths(&traces))
@@ -122,10 +122,10 @@ fn existing_paths(paths: &[&Path]) -> Vec<AppTrace> {
 
 pub async fn make_device_json_old() -> Result<(), Error> {
     #[cfg(any(target_os = "linux", target_os = "macos"))]
-    const DEVICE_JSON_PATH: &str = "/etc/mullvad-vpn/device.json";
+    const DEVICE_JSON_PATH: &str = "/etc/warren-vpn/device.json";
     #[cfg(target_os = "windows")]
     const DEVICE_JSON_PATH: &str =
-        "C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Mullvad VPN\\device.json";
+        "C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Warren VPN\\device.json";
     let device_json = tokio::fs::read_to_string(DEVICE_JSON_PATH)
         .await
         .map_err(|e| Error::FileSystem(e.to_string()))?;

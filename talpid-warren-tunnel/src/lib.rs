@@ -1901,39 +1901,6 @@ async fn run_nat_pmp_controller(
     drop(manager);
 }
 
-/// Legacy "spawn manager only, no controller" helper. Both monitor
-/// construction sites now call [`spawn_nat_pmp_runtime`] (which
-/// dispatches between the legacy and live-reconfig paths), so this
-/// remains in-tree only as a reference implementation + diff anchor
-/// for upstream rebase reviewers — the original Mullvad NAT-PMP
-/// wiring was a single function returning `Option<NatPmpManager>`,
-/// and keeping that shape callable here helps a maintainer compare
-/// the two paths side-by-side.
-#[allow(dead_code)]
-fn spawn_nat_pmp_manager_if_enabled(
-    runtime: &tokio::runtime::Handle,
-    params: &WarrenTunnelParameters,
-) -> Option<NatPmpManager> {
-    let cfg = params.nat_pmp.as_ref()?;
-    if !cfg.enabled {
-        log::debug!("Warren NAT-PMP: config present but disabled, skipping manager spawn");
-        return None;
-    }
-    let Some(observer) = params.nat_pmp_observer.clone() else {
-        // Disabled defensively: spawning the loop without an observer
-        // would silently leak events; the daemon-side wiring is
-        // expected to plug an observer whenever `nat_pmp.enabled =
-        // true`.
-        log::warn!(
-            "Warren NAT-PMP: config enabled but no observer wired; manager spawn suppressed"
-        );
-        return None;
-    };
-    let server = warren_natpmp_client::default_server_addr();
-    log::info!("Warren NAT-PMP: starting refresh loop against {server}");
-    Some(NatPmpManager::start(runtime, server, cfg, observer))
-}
-
 /// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
 /// addresses. Excludes:
 /// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16).

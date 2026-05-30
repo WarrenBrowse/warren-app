@@ -19,7 +19,7 @@ on:
       - '!ios/**'
       - '!mullvad-cli/**'
       - '!mullvad-exclude/**'
-      - '!mullvad-ios/**'
+      - '!warren-ios/**'
       - '!mullvad-nsis/**'
       - '!mullvad-setup/**'
       - '!mullvad-update/**'

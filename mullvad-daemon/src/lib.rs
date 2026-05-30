@@ -173,7 +173,7 @@ use tokio::io;
 
 #[cfg(target_os = "windows")]
 pub mod service {
-    pub const SERVICE_NAME: &str = "MullvadVPN";
+    pub const SERVICE_NAME: &str = "WarrenVPN";
     pub const SERVICE_DISPLAY_NAME: &str = "Warren VPN Service";
 }
 

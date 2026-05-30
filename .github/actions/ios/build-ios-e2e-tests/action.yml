@@ -86,9 +86,9 @@ runs:
           TEST_NAME_ARGUMENT=""
         fi
         set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-          -project MullvadVPN.xcodeproj \
-          -scheme MullvadVPNUITests \
-          -testPlan MullvadVPNUITestsAll $TEST_NAME_ARGUMENT \
+          -project WarrenVPN.xcodeproj \
+          -scheme WarrenVPNUITests \
+          -testPlan WarrenVPNUITestsAll $TEST_NAME_ARGUMENT \
           -destination "platform=iOS,id=$TEST_DEVICE_UDID" \
           -derivedDataPath derived-data \
           -allowProvisioningUpdates \

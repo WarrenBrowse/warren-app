@@ -133,7 +133,14 @@ pub struct LinuxNetworkingIdentifiers {
 }
 
 /// Spawn the tunnel state machine thread, returning a channel for sending tunnel commands.
-#[expect(clippy::too_many_arguments)]
+// The argument count crosses clippy's threshold only on platforms that add
+// `#[cfg]`-gated parameters (Windows: volume_update_rx; Linux: linux_ids;
+// Android: android_context + connectivity_listener). On macOS/iOS the count
+// stays at the limit, so the expectation would be unfulfilled there.
+#[cfg_attr(
+    any(target_os = "windows", target_os = "linux", target_os = "android"),
+    expect(clippy::too_many_arguments)
+)]
 pub async fn spawn(
     initial_settings: InitialTunnelState,
     tunnel_parameters_generator: impl TunnelParametersGenerator,
@@ -532,10 +539,9 @@ impl TunnelStateMachine {
 
 /// Trait for any type that can provide tunnel parameters to the `TunnelStateMachine`.
 pub trait TunnelParametersGenerator: Send + 'static {
-    /// Legacy upstream WireGuard parameter generation. The Warren state
-    /// machine no longer calls this (it drives the QUIC backend via
-    /// [`Self::generate_warren_tunnel_params`]); it is retained for
-    /// upstream-rebase compatibility.
+    /// Legacy WireGuard parameter generation. The Warren state machine
+    /// no longer calls this (it drives the QUIC backend via
+    /// [`Self::generate_warren_tunnel_params`]); it is inert.
     fn generate(
         &mut self,
         retry_attempt: u32,

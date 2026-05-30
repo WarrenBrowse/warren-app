@@ -162,8 +162,6 @@ enum DriverCommand {
 enum DriverRemoveCommand {
     /// Reset split tunnel driver, uninstall the ST device, stop and delete the service
     SplitTunnel,
-    /// Remove the WireGuard-NT driver (loads mullvad-wireguard.dll from the same directory)
-    WgNt,
     /// Remove the Wintun driver (loads wintun.dll from the same directory)
     Wintun,
     /// Uninstall an abandoned Wintun network adapter with the legacy GUID
@@ -192,7 +190,6 @@ async fn main() {
         #[cfg(target_os = "windows")]
         Cli::Driver(DriverCommand::Remove(cmd)) => match cmd {
             DriverRemoveCommand::SplitTunnel => driver_setup::remove_split_tunnel(),
-            DriverRemoveCommand::WgNt => driver_setup::remove_wg_nt(),
             DriverRemoveCommand::Wintun => driver_setup::remove_wintun(),
             DriverRemoveCommand::WintunAbandonedDevice => {
                 driver_setup::remove_wintun_abandoned_device()

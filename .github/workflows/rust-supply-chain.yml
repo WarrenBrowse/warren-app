@@ -32,7 +32,7 @@ jobs:
       - name: Run cargo deny for iOS (GPL3 check)
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          manifest-path: mullvad-ios/Cargo.toml
+          manifest-path: warren-ios/Cargo.toml
           log-level: error
           rust-version: stable
           command: check licenses

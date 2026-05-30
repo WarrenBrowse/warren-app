@@ -56,16 +56,6 @@ pub fn remove_wintun_abandoned_device() -> Result<(), Error> {
     Ok(())
 }
 
-/// Dynamically load `mullvad-wireguard.dll` (from the same directory as this
-/// executable) and call `WireGuardDeleteDriver`.
-pub fn remove_wg_nt() -> Result<(), Error> {
-    // SAFETY: `WireGuardDeleteDriver` exported by `mullvad-wireguard.dll` has
-    // the signature `BOOL WireGuardDeleteDriver(void)`.
-    unsafe { call_delete_driver_fn("mullvad-wireguard.dll", "WireGuardDeleteDriver") }?;
-    tracing::info!("Removed WireGuardNT driver");
-    Ok(())
-}
-
 struct Dll {
     handle: HMODULE,
 }

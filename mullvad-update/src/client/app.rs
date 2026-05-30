@@ -195,10 +195,10 @@ impl VerifiedInstaller for InstallerFile<true> {
 
 pub fn bin_path(app_version: &mullvad_version::Version, cache_dir: &Path) -> PathBuf {
     #[cfg(windows)]
-    let bin_filename = format!("mullvad-{app_version}.exe");
+    let bin_filename = format!("warren-{app_version}.exe");
 
     #[cfg(target_os = "macos")]
-    let bin_filename = format!("mullvad-{app_version}.pkg");
+    let bin_filename = format!("warren-{app_version}.pkg");
 
     cache_dir.join(bin_filename)
 }

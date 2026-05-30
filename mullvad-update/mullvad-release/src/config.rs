@@ -10,7 +10,7 @@ const CONFIG_FILENAME: &str = "mullvad-release.toml";
 #[derive(Default, Deserialize, Serialize)]
 pub struct Config {
     /// URLs to use as bases for installers.
-    /// Files are expected at (example): `<base>/<version>/MullvadVPN-<version>.exe`.
+    /// Files are expected at (example): `<base>/<version>/WarrenVPN-<version>.exe`.
     pub base_urls: Vec<String>,
 }
 

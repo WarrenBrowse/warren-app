@@ -11,11 +11,11 @@ use tokio::process::Command;
 pub async fn uninstall_app(env: HashMap<String, String>) -> Result<()> {
     match get_distribution()? {
         Distribution::Debian | Distribution::Ubuntu => {
-            uninstall_apt("mullvad-vpn", env, true).await
+            uninstall_apt("warren-vpn", env, true).await
         }
-        Distribution::Fedora => uninstall_rpm("mullvad-vpn", env).await,
+        Distribution::Fedora => uninstall_rpm("warren-vpn", env).await,
         // FIXME: Do not assume that it is Debian/Ubuntu-based.
-        Distribution::Unofficial { name: _ } => uninstall_apt("mullvad-vpn", env, true).await,
+        Distribution::Unofficial { name: _ } => uninstall_apt("warren-vpn", env, true).await,
     }
 }
 
@@ -42,7 +42,7 @@ pub async fn uninstall_app(env: HashMap<String, String>) -> Result<()> {
     let mut cmd = Command::new("zsh");
     cmd.arg("-c");
     cmd.arg(
-        "\"/Applications/Mullvad VPN.app/Contents/Resources/uninstall.sh\" << EOF
+        "\"/Applications/Warren VPN.app/Contents/Resources/uninstall.sh\" << EOF
 y
 y
 y
@@ -65,8 +65,8 @@ pub async fn uninstall_app(env: HashMap<String, String>) -> Result<()> {
     // TODO: obtain from registry
     // TODO: can this mimic an actual uninstall more closely?
 
-    let program_dir = Path::new(r"C:\Program Files\Mullvad VPN");
-    let uninstall_path = program_dir.join("Uninstall Mullvad VPN.exe");
+    let program_dir = Path::new(r"C:\Program Files\Warren VPN");
+    let uninstall_path = program_dir.join("Uninstall Warren VPN.exe");
 
     // To wait for the uninstaller, we must copy it to a temporary directory and
     // supply it with the install path.

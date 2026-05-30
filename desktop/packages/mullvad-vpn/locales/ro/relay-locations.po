@@ -4,7 +4,7 @@
 # tu/dumneavoastră register consistency, and gender agreements.
 msgid ""
 msgstr ""
-"Project-Id-Version: warren-vpn\n"
+"Project-Id-Version: warren-app\n"
 "Report-Msgid-Bugs-To: \n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"

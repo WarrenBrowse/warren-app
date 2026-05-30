@@ -490,7 +490,7 @@ class ApplicationMain
     // needed for the tests this block has been disabled when running e2e tests.
     if (process.platform === 'linux' && process.env.CI !== 'e2e') {
       try {
-        const icon = await findIconPath('mullvad-vpn', ['png']);
+        const icon = await findIconPath('warren-vpn', ['png']);
         if (icon) {
           this.userInterface.setWindowIcon(icon);
         }

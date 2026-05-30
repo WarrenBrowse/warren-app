@@ -1,9 +1,8 @@
 ---
-# Warren fork — lightweight CI workflow specific to the `warren-base` branch.
+# Warren — lightweight CI workflow specific to the `warren-base` branch.
 #
-# Why a workflow distinct from the existing Mullvad `daemon.yml` /
-# `clippy.yml`: those trigger on `pull_request` (upstream Mullvad
-# sync) and take ~30-60 min (cross-OS Android + desktop + iOS build).
+# Why a workflow distinct from the broader `daemon.yml` / `clippy.yml`:
+# those take ~30-60 min (cross-OS Android + desktop + iOS build).
 # For daily dev on `warren-base` (direct push), we want a fast signal
 # (~5 min) on Warren-specific regressions (toggles, BIP39 identity,
 # Local/Remote backends, Settings UI).
@@ -11,7 +10,7 @@
 # Trigger: direct push on `warren-base` or PR targeting that branch.
 # Filtered by paths to only run when Warren code changes.
 
-name: Warren fork CI
+name: Warren checks
 
 on:
   push:
@@ -49,8 +48,8 @@ on:
       - 'desktop/packages/mullvad-vpn/src/renderer/app.tsx'
       - 'desktop/packages/management-interface/dist/**'
       - 'desktop/packages/mullvad-vpn/locales/messages.pot'
-      - 'docs/warren-fork.md'
-      - '.github/workflows/warren-fork.yml'
+      - 'docs/warren-architecture.md'
+      - '.github/workflows/warren-checks.yml'
   pull_request:
     branches: [main, warren-base]
 
@@ -76,7 +75,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: cargo test Warren scope
-        # Targets the crates touched by the fork. We avoid cargo test
+        # Targets the Warren-specific crates. We avoid cargo test
         # --workspace so we do not run Android / iOS / Windows
         # specific tests on Linux (already covered by upstream daemon.yml).
         # talpid-warren-tunnel + talpid-core + warren-jni added per
@@ -126,7 +125,7 @@ jobs:
       - name: TypeScript type-check
         # Includes the manual TS Phase H patches for the gRPC bindings.
         # Will regen automatically once we have executed the
-        # mullvadvpn-app-build-node-grpc-bindings container (see warren-fork.md).
+        # mullvadvpn-app-build-node-grpc-bindings container (see warren-architecture.md).
         run: npm run type-check
 
       - name: ESLint (zero warnings)

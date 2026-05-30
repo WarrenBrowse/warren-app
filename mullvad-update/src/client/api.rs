@@ -14,8 +14,6 @@ use crate::version::{VersionInfo, VersionParameters};
 
 use super::version_provider::VersionInfoProvider;
 
-use mullvad_api_constants::*;
-
 /// Available platforms in the default metadata repository
 #[derive(Debug, Clone, Copy)]
 pub enum MetaRepositoryPlatform {
@@ -83,7 +81,9 @@ impl From<MetaRepositoryPlatform> for HttpVersionInfoProvider {
     fn from(platform: MetaRepositoryPlatform) -> Self {
         HttpVersionInfoProvider {
             url: platform.url(),
-            resolve: Some((API_HOST_DEFAULT, API_IP_DEFAULT)),
+            // Warren resolves the update host via DNS (the Warren default URL
+            // is GitHub Releases, not the pinned Mullvad API host).
+            resolve: None,
             pinned_certificate: Some(defaults::PINNED_CERTIFICATE.clone()),
             dump_to_path: None,
         }

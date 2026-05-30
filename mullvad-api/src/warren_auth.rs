@@ -43,7 +43,6 @@ use sha2::{Digest, Sha256};
 // `zeroize` feature so that `SigningKey: ZeroizeOnDrop`. If a future
 // change to `mullvad-api/Cargo.toml` ever drops the `zeroize`
 // feature, this assertion fails at build time before any test runs.
-#[allow(dead_code)]
 const fn _assert_signing_key_zeroize_on_drop() {
     const fn _require<T: zeroize::ZeroizeOnDrop>() {}
     _require::<SigningKey>();

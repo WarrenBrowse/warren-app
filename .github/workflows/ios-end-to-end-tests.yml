@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       # Optionally specify a test case or suite to run.
-      # Must be in the format MullvadVPNUITest/<test-suite-name>/<test-case-name> where test case name is optional.
+      # Must be in the format WarrenVPNUITest/<test-suite-name>/<test-case-name> where test case name is optional.
       user_supplied_test_name:
         description: 'Only run test case/suite'
         required: false
@@ -71,7 +71,7 @@ jobs:
           fi
 
           echo "Test suites/cases to run: $test_suites_json"
-        working-directory: ios/MullvadVPNUITests
+        working-directory: ios/WarrenVPNUITests
     outputs:
       test_suites_json: ${{ env.test_suites_json }}
 
@@ -101,7 +101,6 @@ jobs:
       - name: Checkout submodules
         run: |
           git config --global --add safe.directory '*'
-          git submodule update --init --recursive ios/wireguard-apple
 
       - name: Configure Rust
         run: rustup target add aarch64-apple-ios
@@ -153,7 +152,7 @@ jobs:
       - name: Run iOS end to end tests action
         uses: ./.github/actions/ios/run-ios-e2e-tests
         with:
-          test_name: "MullvadVPNUITests/${{ matrix.test_suite }}"
+          test_name: "WarrenVPNUITests/${{ matrix.test_suite }}"
           test_device_udid: ${{ env.TEST_DEVICE_UDID }}
           outputs_path: ${{ needs.set-up-outputs-directory.outputs.job_outputs_directory }}
 

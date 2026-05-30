@@ -16,7 +16,6 @@ runs:
     - name: Checkout submodules
       run: |
         git config --global --add safe.directory '*'
-        git submodule update --init --recursive ios/wireguard-apple
       shell: bash
 
     - name: Configure cache

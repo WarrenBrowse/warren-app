@@ -17,7 +17,7 @@ msgstr ""
 msgid "3. Add time to your account via in-app purchases or vouchers."
 msgstr ""
     
-msgid "If you are not pleased with our service we have a refund policy and offer support via support@mullvadvpn.net."
+msgid "If you are not pleased with our service we have a refund policy and offer support via support@warrenbrowse.com."
 msgstr ""
 
 msgid "ANONYMOUS ACCOUNTS – NO ACTIVITY LOGS"
@@ -44,7 +44,7 @@ msgstr ""
 msgid "It also means that all the third-party actors with technology integrated into the various websites you visit can’t sniff out your IP address and use it to track you from one site to another."
 msgstr ""
 
-msgid "Using a trustworthy VPN is a great first step to reclaim your privacy online. In combination with Mullvad Browser you make sure to block third-party cookies and other tracking technologies."
+msgid "Using a trustworthy VPN is a great first step to reclaim your privacy online. In combination with a privacy-focused browser you make sure to block third-party cookies and other tracking technologies."
 msgstr ""
 
 msgid "FREE THE INTERNET FROM MASS SURVEILLANCE AND DATA COLLECTION"
@@ -53,7 +53,7 @@ msgstr ""
 msgid "A free and open society is a society where people have the right to privacy. That’s why we fight for a free internet."
 msgstr ""
 
-msgid "Free from mass surveillance and censorship. Free from big data markets where your personal information is up for sale. Free from authorities mass monitoring every click you make. Free from an infrastructure mapping your whole life. Warren VPN and Mullvad Browser is our contribution to the fight."
+msgid "Free from mass surveillance and censorship. Free from big data markets where your personal information is up for sale. Free from authorities mass monitoring every click you make. Free from an infrastructure mapping your whole life. Warren VPN is our contribution to the fight."
 msgstr ""
 
 msgid "TELEMETRY AND CRASH REPORTS"

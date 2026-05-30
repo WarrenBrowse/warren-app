@@ -70,6 +70,7 @@ pub unsafe extern "C" fn warren_wallet_free_mnemonic(ptr: *mut c_char) {
         return;
     }
     // Reconstitute the CString to drop it (frees the heap allocation).
+    // SAFETY: `ptr` came from `CString::into_raw` and is not yet freed (fn precondition).
     drop(unsafe { CString::from_raw(ptr) });
 }
 
@@ -92,6 +93,7 @@ pub unsafe extern "C" fn warren_wallet_seed_from_mnemonic(
     if mnemonic.is_null() || out_seed.is_null() {
         return RC_INVALID_INPUT;
     }
+    // SAFETY: `mnemonic` is a valid null-terminated C string (fn precondition).
     let cstr = unsafe { CStr::from_ptr(mnemonic) };
     let s = match cstr.to_str() {
         Ok(s) => s,
@@ -133,10 +135,11 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
     // seed material does not linger in memory after this function returns
     // (Fix M-2).
     let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
     unsafe {
         std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
     }
-    let signing_key = derive_node_key(&*seed_arr);
+    let signing_key = derive_node_key(&seed_arr);
     let pubkey = signing_key.verifying_key().to_bytes();
     // Safety: out_pubkey is at least PUBKEY_LEN bytes (precondition).
     unsafe {
@@ -174,10 +177,11 @@ pub unsafe extern "C" fn warren_wallet_sign(
     // seed material does not linger in memory after this function returns
     // (Fix M-2).
     let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
     unsafe {
         std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
     }
-    let signing_key: SigningKey = derive_node_key(&*seed_arr);
+    let signing_key: SigningKey = derive_node_key(&seed_arr);
     let payload_slice: &[u8] = if payload_len == 0 {
         &[]
     } else {
@@ -204,11 +208,12 @@ mod tests {
     /// `zeroize` crate satisfies this.  If someone accidentally removes the
     /// wrapper and reverts to a plain `[u8; SEED_LEN]`, the helper below would
     /// no longer compile, surfacing the regression at build time.
-    #[allow(dead_code)]
-    fn _assert_seed_arr_type_is_zeroizing(z: Zeroizing<[u8; SEED_LEN]>) {
+    /// A `const _` item is never considered dead code, so no lint
+    /// suppression attribute is needed.
+    const _: fn(Zeroizing<[u8; SEED_LEN]>) = |z| {
         // Accepts only `Zeroizing<[u8; SEED_LEN]>`, not a bare array.
         let _: Zeroizing<[u8; SEED_LEN]> = z;
-    }
+    };
 
     // ---- Helpers ----
 
@@ -229,6 +234,7 @@ mod tests {
     fn derive_pubkey_produces_nonzero_output() {
         let seed = test_seed();
         let mut pubkey = [0u8; 32];
+        // SAFETY: `seed`/`pubkey` are valid 32-byte stack buffers.
         let rc = unsafe { warren_wallet_derive_pubkey(seed.as_ptr(), pubkey.as_mut_ptr()) };
         assert_eq!(rc, RC_OK);
         assert_ne!(pubkey, [0u8; 32], "pubkey must not be all-zero");
@@ -241,6 +247,7 @@ mod tests {
         let seed = test_seed();
         let payload = b"warren-test-payload";
         let mut sig = [0u8; 64];
+        // SAFETY: all pointers are valid stack buffers of the documented sizes.
         let rc = unsafe {
             warren_wallet_sign(
                 seed.as_ptr(),
@@ -261,6 +268,7 @@ mod tests {
         let seed = test_seed();
         let mut pk1 = [0u8; 32];
         let mut pk2 = [0u8; 32];
+        // SAFETY: `seed` is a valid 32-byte stack buffer; out buffer is 32 bytes.
         unsafe {
             warren_wallet_derive_pubkey(seed.as_ptr(), pk1.as_mut_ptr());
             warren_wallet_derive_pubkey(seed.as_ptr(), pk2.as_mut_ptr());
@@ -276,6 +284,7 @@ mod tests {
         let payload = b"determinism-check";
         let mut sig1 = [0u8; 64];
         let mut sig2 = [0u8; 64];
+        // SAFETY: `seed` is a valid 32-byte stack buffer; out buffer is 32 bytes.
         unsafe {
             warren_wallet_sign(
                 seed.as_ptr(),
@@ -297,6 +306,7 @@ mod tests {
     #[test]
     fn derive_pubkey_null_seed_returns_error() {
         let mut pk = [0u8; 32];
+        // SAFETY: null seed pointer is the tested precondition; the FFI rejects it.
         let rc = unsafe { warren_wallet_derive_pubkey(std::ptr::null(), pk.as_mut_ptr()) };
         assert_eq!(rc, RC_INVALID_INPUT);
     }
@@ -306,6 +316,7 @@ mod tests {
     fn sign_null_seed_returns_error() {
         let payload = b"x";
         let mut sig = [0u8; 64];
+        // SAFETY: null seed pointer is the tested precondition; the FFI rejects it.
         let rc = unsafe {
             warren_wallet_sign(
                 std::ptr::null(),

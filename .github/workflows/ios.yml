@@ -6,7 +6,6 @@ on:
       - .github/workflows/ios.yml
       - ios/build-rust-library.sh
       - ios/.swift-format
-      - ios/wireguard-apple
       - ios/**/*.swift
       - ios/**/*.xctestplan
       # Rust code is generally checked in the ios-rust-ffi.yml workflow,
@@ -14,7 +13,7 @@ on:
       # by that workflow, so we trigger the full iOS build on it.
       - rust-toolchain.toml
       # Changes to the FFI can affect the linking but not be detected `ios-rust-ffi.yml`.
-      - 'mullvad-ios/**'
+      - 'warren-ios/**'
   workflow_dispatch:
 
 permissions: {}
@@ -46,9 +45,9 @@ jobs:
       - name: Build for ui tests
         run: |
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-          -project MullvadVPN.xcodeproj \
-          -scheme MullvadVPNUITests \
-          -testPlan MullvadVPNUITestsAll \
+          -project WarrenVPN.xcodeproj \
+          -scheme WarrenVPNUITests \
+          -testPlan WarrenVPNUITestsAll \
           -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
           -disableAutomaticPackageResolution \
           -allowProvisioningUpdates \
@@ -71,9 +70,9 @@ jobs:
       - name: Run unit tests
         run: |
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-            -project MullvadVPN.xcodeproj \
-            -scheme MullvadVPN \
-            -testPlan MullvadVPNCI \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -testPlan WarrenVPNCI \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \

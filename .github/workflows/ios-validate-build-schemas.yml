@@ -33,30 +33,30 @@ jobs:
         uses: ./.github/actions/ios/setup-project-toolchain
 
       - name: Copy relay list
-        run: cp MullvadREST/Assets/relays-test-data.json MullvadREST/Assets/relays.json
+        run: cp WarrenREST/Assets/relays-test-data.json WarrenREST/Assets/relays.json
         working-directory: ios
 
-      - name: Run build validation for Staging and MockRelease configurations as well as the MullvadVPNUITests target
+      - name: Run build validation for Staging and MockRelease configurations as well as the WarrenVPNUITests target
         run: |
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-            -project MullvadVPN.xcodeproj \
-            -scheme MullvadVPN \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
             -configuration MockRelease \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \
             build
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-            -project MullvadVPN.xcodeproj \
-            -scheme MullvadVPN \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
             -configuration Staging \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \
             build
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-            -project MullvadVPN.xcodeproj \
-            -scheme MullvadVPNUITests \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPNUITests \
             -configuration Debug \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \

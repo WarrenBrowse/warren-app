@@ -32,10 +32,10 @@ BUILD_DIR="$SCRIPT_DIR/build"
 # Successfully built (and signed) artifacts
 DIST_DIR="$SCRIPT_DIR/../dist"
 
-BUNDLE_NAME="MullvadVPNLoader"
-BUNDLE_ID="net.mullvad.$BUNDLE_NAME"
+BUNDLE_NAME="WarrenVPNLoader"
+BUNDLE_ID="com.warrenbrowse.$BUNDLE_NAME"
 
-FILENAME="Install Mullvad VPN"
+FILENAME="Install Warren VPN"
 
 # When --upload is passed, git verify-tag looks for a signed tag with the prefix below.
 # The signed tag must be named $TAG_PREFIX/<version>.
@@ -296,8 +296,8 @@ function sign_win {
         log_info "Signing $binary..."
         if signtool sign \
             -tr http://timestamp.digicert.com -td sha256 \
-            -fd sha256 -d "Mullvad VPN loader" \
-            -du "https://github.com/mullvad/mullvadvpn-app#readme" \
+            -fd sha256 -d "Warren VPN loader" \
+            -du "https://github.com/WarrenBrowse/warren-app#readme" \
             -sha1 "$CERT_HASH" "$binary"
         then
             break

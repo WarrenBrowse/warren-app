@@ -67,7 +67,7 @@ validation cargo workspace + 1 h pour le rapport.**
 - Garder le path-dep `../../warren-core/crates/warren-tunnel`.
 - Ajouter un fichier `.warren-core-version` à la racine warren-app contenant la
   SHA git de warren-core compatible.
-- Documenter dans `docs/warren-fork.md` le check-out attendu :
+- Documenter dans `docs/warren-architecture.md` le check-out attendu :
   `git clone warren-core ../warren-core && cd ../warren-core && git checkout <sha>`.
 - CI : script `scripts/setup-warren-core.sh` qui clone à la bonne SHA si absent.
 

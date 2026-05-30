@@ -171,7 +171,7 @@ struct InnerParametersGenerator {
     /// exit relay. Populated by [`produce_warren_tunnel_params`] after
     /// a successful selection so [`get_last_location`] can surface the
     /// country / city / centroid of the active exit on the connecting
-    /// + connected tunnel states. Without this, the WireGuard-only
+    /// and connected tunnel states. Without this, the WireGuard-only
     /// `last_generated_relays` returns `None` for Warren tunnels and
     /// the renderer falls back to the previous map coordinates
     /// (typically the Gothenburg default), leaving the marker stuck on
@@ -263,9 +263,8 @@ impl ParametersGenerator {
     ///
     /// If `warren_relay_selector` or `warren_signing_key` are `None`,
     /// `generate_warren_tunnel_params` returns the corresponding typed
-    /// error. The upstream WireGuard parameter-generation code is
-    /// retained for upstream-rebase compatibility but is inert: the
-    /// Warren tunnel is the only backend the state machine drives.
+    /// error. The legacy WireGuard parameter-generation code is inert:
+    /// the Warren tunnel is the only backend the state machine drives.
     #[expect(
         clippy::too_many_arguments,
         reason = "Constructor for the daemon-side params generator: the nine inputs are all required (4 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
@@ -1064,9 +1063,9 @@ impl From<Error> for ParameterGenerationError {
     }
 }
 
-/// Relays selected by the legacy (inert) upstream WireGuard parameter
-/// generation. Retained for upstream-rebase compatibility; the Warren
-/// tunnel is the only backend the state machine drives.
+/// Relays selected by the legacy (inert) WireGuard parameter
+/// generation; the Warren tunnel is the only backend the state
+/// machine drives.
 /// The traffic flow can look like this:
 ///     client -> obfuscator -> entry -> exit -> internet
 /// But for most users, it will look like this:

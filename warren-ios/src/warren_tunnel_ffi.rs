@@ -21,7 +21,7 @@
 //!   without taking ownership.
 
 use std::ffi::c_void;
-#[cfg(feature = "tunnel")]
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 
@@ -120,6 +120,10 @@ pub struct WarrenTunnelStatusC {
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[expect(dead_code, reason = "FFI surface ; Failover + NatPmp* variants wired in C.4.1.X")]
+#[expect(
+    clippy::enum_variant_names,
+    reason = "The `Event` prefix is required: C does not scope enum names, so unprefixed variants would collide with WarrenTunnelStateC across the FFI boundary."
+)]
 pub enum WarrenTunnelEventTagC {
     // Prefix `Event` to disambiguate from `WarrenTunnelStateC`
     // enumerators (C doesn't scope enum names — `Connected` would
@@ -186,16 +190,16 @@ const RC_INVALID_INPUT: c_int = -1;
 // sentinel instead). `cfg_attr(...expect(dead_code))` triggers the
 // expectation exactly on the path where the lint fires, leaving the
 // `tunnel` path free of suppression noise.
-#[cfg_attr(not(feature = "tunnel"), expect(dead_code, reason = "feature-conditional"))]
+#[cfg_attr(not(all(target_os = "ios", feature = "tunnel")), expect(dead_code, reason = "feature-conditional"))]
 const RC_NOT_CONNECTED: c_int = -3;
 // RC_TUNNEL_FEATURE_DISABLED is the mirror of RC_NOT_CONNECTED for the
 // `not(tunnel)` path ; on the `tunnel` path it is dead code.
-#[cfg_attr(feature = "tunnel", expect(dead_code, reason = "feature-conditional"))]
+#[cfg_attr(all(target_os = "ios", feature = "tunnel"), expect(dead_code, reason = "feature-conditional"))]
 const RC_TUNNEL_FEATURE_DISABLED: c_int = -10;
 
 // ---- Handle implementation (feature-gated) ----
 
-#[cfg(feature = "tunnel")]
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
 mod handle_impl {
     //! Real handle implementation when the `tunnel` feature is on.
     //!
@@ -397,7 +401,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
     if parameters.is_null() {
         return std::ptr::null_mut();
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the precondition that `parameters`
         // points to a valid `WarrenTunnelParametersC` for the duration
@@ -510,7 +514,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
         let boxed = Box::new(arc);
         Box::into_raw(boxed) as *mut WarrenTunnelHandle
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = parameters;
         std::ptr::null_mut()
@@ -528,7 +532,7 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
     if handle.is_null() {
         return;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the precondition that `handle` came
         // from `warren_tunnel_start` and has not been stopped yet. We
@@ -539,7 +543,7 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
         };
         drop(boxed);
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = handle;
     }
@@ -559,7 +563,7 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
     if handle.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live).
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
@@ -573,7 +577,7 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
         arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = handle;
         RC_TUNNEL_FEATURE_DISABLED
@@ -591,7 +595,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
     if handle.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live).
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
@@ -605,7 +609,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
         }
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = handle;
         RC_TUNNEL_FEATURE_DISABLED
@@ -624,7 +628,7 @@ pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle
     if handle.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live).
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
@@ -636,7 +640,7 @@ pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle
         // TODO C.4.1 signal the warren-tunnel reconnect future.
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = handle;
         RC_TUNNEL_FEATURE_DISABLED
@@ -659,7 +663,7 @@ pub unsafe extern "C" fn warren_tunnel_status(
     if out_status.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     let status = if handle.is_null() {
         WarrenTunnelStatusC {
             state: WarrenTunnelStateC::Disconnected,
@@ -692,7 +696,7 @@ pub unsafe extern "C" fn warren_tunnel_status(
             failover_count: arc.failover_count.load(std::sync::atomic::Ordering::Relaxed),
         }
     };
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     let status = {
         let _ = handle;
         WarrenTunnelStatusC {
@@ -732,7 +736,7 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
     if handle.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live).
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
@@ -747,7 +751,7 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
         });
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = (handle, callback, context);
         RC_TUNNEL_FEATURE_DISABLED
@@ -771,7 +775,7 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
     if handle.is_null() {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live).
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
@@ -786,7 +790,7 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
         });
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = (handle, callback, context);
         RC_TUNNEL_FEATURE_DISABLED
@@ -814,7 +818,7 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
     if handle.is_null() || data.is_null() || len == 0 {
         return RC_INVALID_INPUT;
     }
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     {
         // SAFETY: caller upholds the handle invariant (non-null, live)
         // and the data buffer invariant (non-null, `len` bytes readable).
@@ -827,7 +831,7 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
         arc.tun.inject_inbound(packet);
         RC_OK
     }
-    #[cfg(not(feature = "tunnel"))]
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = (handle, data, len);
         RC_TUNNEL_FEATURE_DISABLED
@@ -842,7 +846,7 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
 /// # Safety
 /// `ptr` must be null or point to a valid null-terminated C string for
 /// the duration of the returned reference's lifetime.
-#[cfg(feature = "tunnel")]
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
 unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
     if ptr.is_null() {
         return None;
@@ -875,7 +879,7 @@ unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
 /// was produced by [`warren_tunnel_start`].  The pointer itself must be valid
 /// for a non-atomic read at the time of this call (i.e. the `Box` has not yet
 /// been freed — `warren_tunnel_stop` has not been called).
-#[cfg(feature = "tunnel")]
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
 unsafe fn clone_arc_from_raw(
     handle: *mut WarrenTunnelHandle,
 ) -> Option<std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>> {
@@ -893,7 +897,7 @@ unsafe fn clone_arc_from_raw(
 }
 
 /// Seconds since Unix epoch, monotonic-ish.
-#[cfg(feature = "tunnel")]
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn now_secs() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -927,11 +931,12 @@ mod tests {
         // Replicate the production `clone_arc_from_raw` logic.
         let cloned: Arc<u32> = {
             // Step 1: reconstitute without decrementing ref-count.
+            // SAFETY: `raw` came from `Arc::into_raw` above; reconstituting without dropping.
             let arc = unsafe { Arc::from_raw(raw) };
             // Step 2: bump ref-count.
             let c = Arc::clone(&arc);
             // Step 3: return ownership back to raw pointer.
-            Arc::into_raw(arc);
+            let _ = Arc::into_raw(arc);
             c
         };
 
@@ -942,6 +947,7 @@ mod tests {
         drop(cloned);
 
         // The original raw pointer is still valid (ref-count 1).
+        // SAFETY: `raw` came from `Arc::into_raw` above and is still live (ref-count 1).
         let recovered = unsafe { Arc::from_raw(raw) };
         assert_eq!(*recovered, 42, "original arc must still be valid after clone drops");
         // `recovered` drops here, freeing the allocation exactly once.
@@ -970,7 +976,7 @@ mod tests {
     ///
     /// Gated on `feature = "tunnel"` because `CallbackEntry` lives in
     /// `handle_impl` which is feature-conditional.
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     #[test]
     fn callback_entry_extern_fn_is_send_and_sync() {
         fn assert_send_sync<T: Send + Sync>() {}
@@ -1061,7 +1067,7 @@ mod tests {
     /// immediately rather than silently regressing the runtime behaviour.
     ///
     /// Gated on `feature = "tunnel"` because the struct is feature-conditional.
-    #[cfg(feature = "tunnel")]
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     #[test]
     fn handle_impl_has_connected_once_is_atomic_bool() {
         use std::sync::atomic::{AtomicBool, Ordering};

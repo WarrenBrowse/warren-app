@@ -40,7 +40,7 @@ function newConfig() {
     },
 
     extraMetadata: {
-      name: 'mullvad-vpn',
+      name: 'warren-vpn',
       // We have to stick to semver on Windows for now due to:
       // https://github.com/electron-userland/electron-builder/issues/7173
       version: productVersion(process.platform === 'win32' ? ['semver'] : []),
@@ -156,12 +156,6 @@ function newConfig() {
         {
           from: distAssets(
             path.join('binaries', '${env.TARGET_SUBDIR}', 'split-tunnel/mullvad-split-tunnel.sys'),
-          ),
-          to: '.',
-        },
-        {
-          from: distAssets(
-            path.join('binaries', '${env.TARGET_SUBDIR}', 'wireguard-nt/mullvad-wireguard.dll'),
           ),
           to: '.',
         },

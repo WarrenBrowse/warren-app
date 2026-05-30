@@ -32,7 +32,7 @@ jobs:
         uses: ./.github/actions/ios/setup-project-toolchain
 
       - name: Copy relay list
-        run: cp MullvadREST/Assets/relays-test-data.json MullvadREST/Assets/relays.json
+        run: cp WarrenREST/Assets/relays-test-data.json WarrenREST/Assets/relays.json
         working-directory: ios
 
       - name: Add test account to config
@@ -50,9 +50,9 @@ jobs:
       - name: Run screenshot tests
         run: |
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
-            -project MullvadVPN.xcodeproj \
-            -scheme MullvadVPNScreenshotTests \
-            -testPlan MullvadVPNScreenshots \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPNScreenshotTests \
+            -testPlan WarrenVPNScreenshots \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \

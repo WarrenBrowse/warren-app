@@ -16,12 +16,12 @@ on:
       - code-owners.json
       - deny.toml
       - test/deny.toml
-      - mullvad-ios/deny.toml
+      - warren-ios/deny.toml
       - rust-toolchain.toml
       - desktop/package-lock.json
       - ci/keys/**
       - ci/verify-locked-down-signatures.sh
-      - ios/MullvadVPN.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+      - ios/WarrenVPN.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
       - android/gradlew
       - android/gradlew.bat
       - android/gradle/verification-metadata.xml

@@ -32,7 +32,7 @@ use talpid_types::ErrorExt;
 
 pub use hyper::StatusCode;
 
-const USER_AGENT: &str = "mullvad-app";
+const USER_AGENT: &str = "warren-app";
 
 pub type Result<T> = std::result::Result<T, Error>;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);

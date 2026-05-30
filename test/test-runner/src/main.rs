@@ -304,17 +304,17 @@ impl Service for TestServer {
         sys::restart_app().await
     }
 
-    /// Stop the Mullvad VPN application.
+    /// Stop the Warren VPN application.
     async fn stop_mullvad_daemon(self, _: context::Context) -> Result<(), test_rpc::Error> {
         sys::stop_app().await
     }
 
-    /// Start the Mullvad VPN application.
+    /// Start the Warren VPN application.
     async fn start_mullvad_daemon(self, _: context::Context) -> Result<(), test_rpc::Error> {
         sys::start_app().await
     }
 
-    /// Disable the Mullvad VPN system service.
+    /// Disable the Warren VPN system service.
     async fn disable_mullvad_daemon(self, _: context::Context) -> Result<(), test_rpc::Error> {
         #[cfg(not(target_os = "windows"))]
         {
