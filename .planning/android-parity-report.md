@@ -1,7 +1,7 @@
 # Rapport de parité Android — Warren VPN
 
 **Date** : 2026-05-29
-**Statut** : en cours — Phase A (audit) + Phase B (P0 privacy) livrées et vérifiées ; Phase C (P1) entamée ; Phase D (P2) à venir.
+**Statut** : en cours — Phase A (audit) + Phase B (P0 privacy) livrées et vérifiées ; Phase C (P1) partielle (port forwarding, multi-hop pays) ; Phase D (P2) livrée (icône, Reconnect now).
 
 Ce rapport accompagne l'audit [`android-parity-audit.md`](android-parity-audit.md) et suit l'avancement de la mise à parité.
 
@@ -47,21 +47,37 @@ Commit : `db93d2edd9`.
 - Tests : builder + repository (protocole/port/lifetime).
 - **Reste (status live)** : remonter `NatPmpStatus` live (requesting / mapped(port,countdown) / failed(reason)) nécessite un canal de callback JNI Rust→Kotlin (nouveaux exports + état) — non livré, voir « Restant ».
 
+#### Multi-hop — sélection de pays entrée/sortie — ✅ FAIT
+
+Commit : `3d0ee334cf`.
+
+- Repository : `entryCountry`/`exitCountry` (ISO alpha-2 normalisé, persisté ; null = auto).
+- Builder : la sélection de relais filtre par pays (Option B audit, Kotlin-side, sans changement de schéma Rust) — précédence sortie : picker explicite > pays préféré > premier actif ; entrée : pays préféré distinct > tout actif distinct > repli. Repli auto gracieux si le catalogue ne contient pas le pays.
+- UI : deux champs ISO sous le toggle multi-hop (miroir `WarrenMultiHopCountryPickers` desktop).
+- Tests : builder (sélection/filtre/repli par pays) + repository (normalisation ISO-2).
+
+### Phase D — P2 — ✅ FAIT
+
+- **Icône launcher / splash / banner TV** (commit `9234297d7c`) : remplacement du logo Mullvad (marmotte) par la marque Warren (« W » blanc sur fond darkBlue), miroir du desktop `logo-icon.svg`. Dessiné en path stroké (Android Vector ne rasterise pas `<text>`). Audit ressources : 0 string « Mullvad » résiduelle user-facing. Validé via aapt2 (`:lib:ui:resource:assembleDebug`).
+- **Affordance « Reconnect now »** (commit `5e29f84ba4`) : bouton affiché dans les réglages tunnel quand le tunnel est connecté, déclenchant `WarrenQuinnReconnectInvoker` (réutilise le mnémonique caché, pas de re-prompt biométrique) pour appliquer un changement de réglage sans déconnexion manuelle.
+
+### Faisabilité dé-risquée (suite P1)
+
+`warren-api-client` expose **déjà** : `get_subscription()`, `list_devices()`, `get_device()`, `delete_device()`, `register_device()`, `delete_account()`. Le pont JNI a le pattern d'appel API authentifié (`sendProblemReport` : dérive la clé du mnémonique → `WarrenApiClient::new(url, key)` → `RUNTIME.block_on`). Donc **compte/devices + statut d'abonnement sont prêts à câbler** : il reste à ajouter les exports JNI (`getSubscription`, `listDevices`, `removeDevice`), le déclencheur biométrique (réutiliser `BiometricPromptAuthorizer`), un repository et l'UI. Le **voucher** (`/v1/register`) reste à confirmer côté warren-api-client (non vu dans la surface publique). Le **failover** reste bloqué par le schéma single-endpoint côté JNI (`listRelays` projette un seul endpoint « until multi-endpoint failover lands »).
+
 ## Restant (feuille de route P1 → P2)
 
 Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 
 | # | Item | Prio | Est. | Dépendances / risques |
 |---|------|------|------|------------------------|
-| 1 | **Port forwarding — status live** | P1 | M | Canal callback JNI Rust→Kotlin (cycle de vie au teardown). |
-| 2 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | Vérifier que `ClientConfig` (warren-tunnel) accepte `failover_enabled` ; surface JNI du compteur d'événements. Logique relay-selector déjà présente. |
-| 3 | **Compte / keys / devices** | P1 | L | Nouveaux exports JNI `listDevices`/`removeDevice`/`getWalletPubkey` (warren-api-client + tokio) ; gate biométrique. |
-| 4 | **Abonnement (voucher + statut)** | P1 | L→XL | JNI `/v1/register` (voucher Crockford-32) + `/v1/subscription` (expiry). Pas de Play Billing (décidé). Partage la surface compte avec #3. |
-| 5 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #4 ; flag de complétion persisté. |
-| 6 | **Multi-hop — country pickers entrée/sortie** | P1 | XL | Spike `warren-relay-selector` (filtrage par pays). Option Kotlin-side d'abord. |
+| 1 | **Statut d'abonnement (expiry)** | P1 | M | `warren-api-client.get_subscription()` existe → JNI `getSubscription` + biométrie + affichage compte. Le plus borné. |
+| 2 | **Compte / keys / devices (list + remove)** | P1 | L | `list_devices()`/`delete_device()` existent → JNI + biométrie + écran `ManageDevices` + nav. |
+| 3 | **Voucher in-app (Crockford-32)** | P1 | L | Confirmer/ajouter l'endpoint voucher dans `warren-api-client` (`/v1/register`), puis JNI + UI. |
+| 4 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #1/#3 ; flag de complétion persisté. |
+| 5 | **Port forwarding — status live** | P1 | M | Canal callback JNI Rust→Kotlin (cycle de vie au teardown). |
+| 6 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. |
 | 7 | **Relay lists custom / recents / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only. À fractionner. |
-| 8 | **Icône launcher Warren** (remplacer le placeholder Mullvad) | P2 | M | Assets `mipmap/ic_launcher*` — nécessite l'asset graphique Warren. |
-| 9 | **Affordance « Reconnect now »** au changement de flag pendant connexion | P2 | M | `WarrenReconnectUseCase` existe ; détecter le changement pendant `Connected`. |
 
 ### Risques transverses (rappel)
 
