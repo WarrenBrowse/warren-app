@@ -53,6 +53,11 @@ class WarrenQuinnAdapter(
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
     val state: StateFlow<WarrenTunnelState> = _state.asStateFlow()
 
+    // Live NAT-PMP port-forwarding status (raw JSON from the Rust side),
+    // polled alongside the tunnel status. `idle` when no mapping is active.
+    private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
+    val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
+
     private var activeConfig: WarrenTunnelConfig? = null
     private var activeMnemonic: String? = null
     private var activeFd: ParcelFileDescriptor? = null
@@ -130,6 +135,9 @@ class WarrenQuinnAdapter(
                     }
                     _state.value = statusFromCode(code, sessionConfig)
                 }
+                // Mirror the live NAT-PMP status (cheap static read).
+                val np = WarrenJni.getNatPmpStatus()
+                if (np != _natPmpStatus.value) _natPmpStatus.value = np
                 delay(STATUS_POLL_INTERVAL_MS)
             }
         }
@@ -178,6 +186,7 @@ class WarrenQuinnAdapter(
         activeConfig = null
         activeMnemonic = null
         lastNetwork = null
+        _natPmpStatus.value = NATPMP_IDLE
         _state.value = WarrenTunnelState.Disconnected
     }
 
@@ -228,6 +237,7 @@ class WarrenQuinnAdapter(
     private fun onSessionDown(config: WarrenTunnelConfig, reason: String) {
         activeFd?.close()
         activeFd = null
+        _natPmpStatus.value = NATPMP_IDLE
         if (config.lockdownMode && !userInitiatedDisconnect) {
             enterBlockingMode(config, reason)
             scheduleLockdownReconnect(config)
@@ -393,6 +403,7 @@ class WarrenQuinnAdapter(
         const val STATUS_CONNECTED = 2
         const val STATUS_RECONNECTING = 3
         const val STATUS_POLL_INTERVAL_MS = 250L
+        const val NATPMP_IDLE = "{\"state\":\"idle\"}"
 
         /** Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G). */
         const val HANDOVER_GRACE_MS = 15_000L

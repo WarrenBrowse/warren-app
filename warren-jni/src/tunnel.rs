@@ -285,6 +285,9 @@ struct NatPmpGuard {
 
 impl Drop for NatPmpGuard {
     fn drop(&mut self) {
+        // Clear the published status so a stale "mapped" port does not
+        // linger in the UI after the mapping is torn down.
+        crate::android_jni::reset_natpmp_status();
         self.refresh.cancel();
         // Abort eagerly: the refresh-loop cancel closes the sender
         // and the drain would exit naturally on the next `recv`, but
@@ -325,13 +328,55 @@ fn maybe_spawn_nat_pmp(
         tx,
         Some(bind_addr),
     );
+    // Publish the initial "requesting" state so Kotlin shows progress
+    // immediately after the toggle takes effect.
+    crate::android_jni::set_natpmp_status(r#"{"state":"requesting"}"#.to_owned());
     let drain = tokio::spawn(async move {
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
+            if let Some(json) = natpmp_event_json(&event) {
+                crate::android_jni::set_natpmp_status(json);
+            }
         }
     });
     log::info!(
         "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})"
     );
     Some(NatPmpGuard { refresh, drain })
+}
+
+/// Project a [`warren_natpmp_client::NatPmpEvent`] to the JSON status
+/// shape polled by Kotlin's `getNatPmpStatus()`. Returns `None` for
+/// events that do not change the user-visible state (e.g. `Cancelled`,
+/// where teardown already resets the status). The `Failed` variant only
+/// surfaces the stable `reason` category, never the raw error string, so
+/// no diagnostic detail leaks across the JNI boundary.
+fn natpmp_event_json(event: &warren_natpmp_client::NatPmpEvent) -> Option<String> {
+    use warren_natpmp_client::NatPmpEvent;
+    let json = match event {
+        NatPmpEvent::Mapped {
+            external_port,
+            lifetime_secs,
+            ..
+        }
+        | NatPmpEvent::Renewed {
+            external_port,
+            lifetime_secs,
+            ..
+        } => serde_json::json!({
+            "state": "mapped",
+            "external_port": external_port,
+            "lifetime_secs": lifetime_secs,
+        }),
+        NatPmpEvent::RateLimited { retry_after_secs } => serde_json::json!({
+            "state": "rate_limited",
+            "retry_after_secs": retry_after_secs,
+        }),
+        NatPmpEvent::Failed { reason, .. } => serde_json::json!({
+            "state": "failed",
+            "reason": format!("{reason:?}"),
+        }),
+        _ => return None,
+    };
+    Some(json.to_string())
 }

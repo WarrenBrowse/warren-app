@@ -103,6 +103,11 @@ class WarrenVpnService : LifecycleVpnService() {
         //      collector below, which targets a daemon that does not
         //      exist on Warren mobile).
         lifecycleScope.launch {
+            quinnAdapter.natPmpStatus.collect { status ->
+                quinnStateProxy.updateNatPmpStatus(status)
+            }
+        }
+        lifecycleScope.launch {
             quinnAdapter.state.collect { state ->
                 quinnStateProxy.update(state)
                 when (state) {

@@ -23,6 +23,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
@@ -48,6 +49,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
@@ -91,7 +93,8 @@ val appModule = module {
 
     // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
     // Composables can read tunnel transitions without binding the service.
-    single { WarrenQuinnStateProxy() } bind WarrenTunnelStateProvider::class
+    single { WarrenQuinnStateProxy() } binds
+        arrayOf(WarrenTunnelStateProvider::class, WarrenNatPmpStatusProvider::class)
 
     // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
     // service dispatch for Warren Quinn connect.

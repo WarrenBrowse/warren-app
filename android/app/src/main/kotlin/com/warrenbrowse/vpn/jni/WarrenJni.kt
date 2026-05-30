@@ -109,6 +109,17 @@ object WarrenJni {
     external fun getTunnelStatus(): Int
 
     /**
+     * Returns the live NAT-PMP port-forwarding status as a JSON object:
+     *   `{"state": "idle"|"requesting"|"mapped"|"rate_limited"|"failed",
+     *     "external_port": Int?, "lifetime_secs": Int?,
+     *     "retry_after_secs": Int?, "reason": String?}`
+     *
+     * Polled alongside [getTunnelStatus]. `idle` when port forwarding is
+     * off or no mapping is active.
+     */
+    external fun getNatPmpStatus(): String
+
+    /**
      * Returns a JSON-encoded array of relay descriptors. Each entry is a
      * `RelayInfo`-shaped object with fields:
      *   - `exit_id`        : 16-byte stable identifier, lowercase hex

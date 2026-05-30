@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.stateIn
  * subscribe to the state without having to import the app-private
  * [WarrenTunnelState] type (they observe a `String` projection).
  */
-class WarrenQuinnStateProxy : WarrenTunnelStateProvider {
+class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvider {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -41,9 +42,21 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider {
             initialValue = WarrenTunnelState.Disconnected.describe(),
         )
 
+    private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
+    override val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
+
     /** Called by [WarrenVpnService] on every adapter-side transition. */
     fun update(next: WarrenTunnelState) {
         _state.value = next
+    }
+
+    /** Called by [WarrenVpnService] on every NAT-PMP status change. */
+    fun updateNatPmpStatus(json: String) {
+        _natPmpStatus.value = json
+    }
+
+    private companion object {
+        const val NATPMP_IDLE = "{\"state\":\"idle\"}"
     }
 
     private fun WarrenTunnelState.describe(): String = when (this) {

@@ -32,6 +32,7 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
@@ -61,6 +62,8 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val repo = koinInject<WarrenLocalSettingsRepository>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
+    val natPmpStatusProvider = koinInject<WarrenNatPmpStatusProvider>()
+    val natPmpStatusJson by natPmpStatusProvider.natPmpStatus.collectAsStateWithLifecycle()
     val daita by repo.daitaEnabled.collectAsStateWithLifecycle()
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
     val natPmpProtocol by repo.natPmpProtocol.collectAsStateWithLifecycle()
@@ -221,6 +224,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     onExternalPortChange = repo::setNatPmpExternalPort,
                     lifetimeSecs = natPmpLifetime,
                     onLifetimeChange = repo::setNatPmpLifetimeSecs,
+                    statusLabel = natPmpStatusLabel(natPmpStatusJson),
                 )
             }
 
@@ -301,11 +305,18 @@ private fun PortForwardingAdvanced(
     onExternalPortChange: (Int) -> Unit,
     lifetimeSecs: Int,
     onLifetimeChange: (Int) -> Unit,
+    statusLabel: String,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Text(
+            text = statusLabel,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
         Text("Protocol", style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
@@ -351,6 +362,34 @@ private fun LifetimeChip(label: String, seconds: Int, selected: Int, onSelect: (
         onClick = { onSelect(seconds) },
         label = { Text(label) },
     )
+}
+
+/**
+ * Render the live NAT-PMP status JSON (from `WarrenJni.getNatPmpStatus`)
+ * as a human-readable line. Parsed without a JSON dependency since the
+ * payload is a small flat object.
+ */
+internal fun natPmpStatusLabel(json: String): String =
+    when (jsonField(json, "state") ?: "idle") {
+        "mapped" -> buildString {
+            append("Status: mapped")
+            jsonField(json, "external_port")?.let { append(" — external port $it") }
+            jsonField(json, "lifetime_secs")?.let { append(" (lifetime ${it}s)") }
+        }
+        "requesting" -> "Status: requesting a port…"
+        "rate_limited" ->
+            "Status: rate-limited" +
+                (jsonField(json, "retry_after_secs")?.let { " — retry in ${it}s" } ?: "")
+        "failed" ->
+            "Status: failed" + (jsonField(json, "reason")?.let { " — $it" } ?: "")
+        else -> "Status: idle (no active mapping)"
+    }
+
+/** Extract a flat JSON string/number value by key, unquoted, or null. */
+internal fun jsonField(json: String, key: String): String? {
+    val regex = Regex("\"" + Regex.escape(key) + "\"\\s*:\\s*(?:\"([^\"]*)\"|([^,}\\s]+))")
+    val match = regex.find(json) ?: return null
+    return match.groupValues[1].ifEmpty { match.groupValues[2] }.ifEmpty { null }
 }
 
 @Composable

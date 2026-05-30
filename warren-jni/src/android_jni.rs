@@ -86,6 +86,26 @@ static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 /// taking the `ACTIVE_TUNNEL` mutex, so polling from Kotlin is cheap.
 static SESSION_STATUS: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
+/// Latest NAT-PMP port-forwarding status as a JSON string, polled by
+/// Kotlin via `getNatPmpStatus()`. Empty = idle (no active mapping). The
+/// session-side NAT-PMP refresh loop writes transitions here via
+/// [`set_natpmp_status`]; teardown clears it via [`reset_natpmp_status`].
+/// `parking_lot::Mutex::new` is const, so no lazy init is needed.
+static NATPMP_STATUS: Mutex<String> = Mutex::new(String::new());
+
+/// Store the latest NAT-PMP status JSON. Called from the session refresh
+/// loop. `pub(crate)` so [`crate::tunnel`] can reach it.
+#[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
+pub(crate) fn set_natpmp_status(json: String) {
+    *NATPMP_STATUS.lock() = json;
+}
+
+/// Reset the NAT-PMP status to idle (empty). Called on teardown.
+#[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
+pub(crate) fn reset_natpmp_status() {
+    NATPMP_STATUS.lock().clear();
+}
+
 /// Opaque handle stored while a tunnel is alive. The cancel sender lets
 /// `disconnectTunnel` tear down the Quinn task gracefully. With the
 /// `tunnel` feature on, we additionally pin the spawned task handle so
@@ -446,6 +466,30 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         // `tokio::select!` falls through; we also do it here for symmetry
         // so the status flip is observable even before the task wakes.
         SESSION_STATUS.store(0, std::sync::atomic::Ordering::SeqCst);
+        reset_natpmp_status();
+    }
+}
+
+/// Returns the latest NAT-PMP port-forwarding status as a JSON string.
+/// Shape: `{"state":"idle"|"requesting"|"mapped"|"rate_limited"|"failed",
+/// "external_port":u16?, "lifetime_secs":u32?, "retry_after_secs":u16?,
+/// "reason":"..."?}`. Polled by Kotlin alongside `getTunnelStatus()`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getNatPmpStatus(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    let json = {
+        let guard = NATPMP_STATUS.lock();
+        if guard.is_empty() {
+            "{\"state\":\"idle\"}".to_owned()
+        } else {
+            guard.clone()
+        }
+    };
+    match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
     }
 }
 

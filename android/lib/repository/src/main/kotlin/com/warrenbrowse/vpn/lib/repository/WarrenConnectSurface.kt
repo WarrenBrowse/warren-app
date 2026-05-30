@@ -34,6 +34,17 @@ interface WarrenTunnelStateProvider {
 }
 
 /**
+ * Lib-side surface for the live NAT-PMP port-forwarding status. The
+ * concrete impl is `app/service/WarrenQuinnStateProxy`, fed by the
+ * adapter which polls `WarrenJni.getNatPmpStatus()`. Consumers receive a
+ * raw JSON `String` projection (parsed UI-side). `{"state":"idle"}` when
+ * port forwarding is off or no mapping is active.
+ */
+interface WarrenNatPmpStatusProvider {
+    val natPmpStatus: StateFlow<String>
+}
+
+/**
  * Lib-side surface for the Warren disconnect path. The concrete impl
  * lives in `app/connect/WarrenDisconnectUseCase` and is bound to this
  * interface in `di/AppModule`. The disconnect path does not need
