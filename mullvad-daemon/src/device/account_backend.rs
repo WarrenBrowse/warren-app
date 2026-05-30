@@ -159,19 +159,16 @@ pub struct LocalAccountBackend {
     warren_api_url: String,
 }
 
-/// Production warren-api base URL used as the voucher-redemption
-/// endpoint default when no `WARREN_API_URL` override is present.
-const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
-
 /// Resolves the warren-api URL for local-mode voucher redemption:
-/// `WARREN_API_URL` (non-empty) wins, otherwise the production default.
+/// `WARREN_API_URL` (non-empty) wins, otherwise the shared production
+/// default ([`crate::warren_remote_config::DEFAULT_WARREN_API_URL`]).
 /// Mirrors the env override honoured elsewhere for the warren-api URL
 /// so a developer pointing at a local backend redeems against it too.
 fn default_voucher_api_url() -> String {
     std::env::var("WARREN_API_URL")
         .ok()
         .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| DEFAULT_WARREN_API_URL.to_owned())
+        .unwrap_or_else(|| crate::warren_remote_config::DEFAULT_WARREN_API_URL.to_owned())
 }
 
 impl LocalAccountBackend {

@@ -60,6 +60,13 @@ Le fix city-case arrive dans le build via `.warren-core-version` (déjà à
 |---|---|---|
 | **Redemption de voucher réelle en mode local** | warren-app `mullvad-daemon/src/device/account_backend.rs` | En mode local-account, `LocalAccountBackend::submit_voucher` faisait un **stub bidon** : il ignorait le code (`_voucher`), ne contactait aucun backend, et renvoyait toujours « OK +100 ans » pour n'importe quelle saisie, à l'infini. La GUI affichait donc « compte approvisionné » alors que **rien n'était enrôlé** → l'exit refusait le handshake → internet bloqué. Désormais `submit_voucher` fait le **vrai** `POST /v1/register` (non-signé, pubkey en clair) comme le backend remote, et **fail-closed** : un bon invalide / déjà utilisé remonte une vraie erreur au lieu d'un mensonge. Test de non-régression `local_submit_voucher_fails_closed_instead_of_fabricating_success`. |
 
+### v1.0.4 - défaut en mode remote (fin des stubs trompeurs)
+
+| Fix | Repo / fichier | Effet |
+|---|---|---|
+| **B1 - URL warren-api par défaut** | warren-app `mullvad-daemon/src/warren_remote_config.rs` | `resolve()` utilise désormais `https://api.warrenbrowse.com` (const `DEFAULT_WARREN_API_URL`) quand ni l'env `WARREN_API_URL` ni `Settings::warren_api_url` ne fournit de valeur non-vide. Avant : pas d'URL → fallback silencieux vers `api.mullvad.net` (qu'on n'opère pas). Plus besoin de `warren warren api-url set …` à la main. Tests réécrits (`no_url_anywhere_uses_compiled_default`, `empty_url_uses_compiled_default`, `empty_env_url_falls_through_to_settings_url`). |
+| **B2 - défaut local-account = false** | warren-app `mullvad-types/src/settings/mod.rs` | Toute install fraîche démarre désormais sur le **vrai** backend warren-api (abonnement + voucher + enrôlement device réels), plus sur le stub POC. Élimine le « 99 ans » trompeur (#2) et route « pas d'abonnement » vers l'état compte honnête (404 → arrêt de la boucle, pas « no relay »), ce qui adresse le **cas courant de #4**. Test `default_is_remote_backend_not_local_account_stub`. ⚠️ À valider E2E (connexion fresh-install en remote) avant release. |
+
 #### Les 4 incohérences révélées (même cause racine)
 
 Le mode local-account est un raccourci POC qui **simule trop de choses**. Il
@@ -69,22 +76,36 @@ est en plus **actif par défaut** sur toute install fraîche
 réconcilier). Conséquences observées par l'utilisateur :
 
 1. ✅ **CORRIGÉ v1.0.4** - Champ « bon » = stub bidon (n'enrôlait rien,
-   « validé » pour tout code). Cf. tableau ci-dessus.
-2. ⚠️ **« 99 ans » affiché** - `get_data` renvoie `Utc::now() + 100 ans` en
-   local mode (stub d'expiration, sans rapport avec le vrai abonnement).
-   Cosmétique mais trompeur. Disparaît en mode remote (affiche la vraie
-   expiration). Vrai correctif = ne pas livrer local-account par défaut.
+   « validé » pour tout code). `submit_voucher` fait le vrai `/v1/register`.
+2. ✅ **CORRIGÉ v1.0.4 (B2)** - « 99 ans » affiché. Le défaut passe en mode
+   remote → `get_data` renvoie la vraie expiration. Le stub local
+   (`Utc::now() + 100 ans`) n'est plus actif que si on l'active
+   explicitement (`local-account set on` / `WARREN_LOCAL_ACCOUNT=1`).
 3. ⚠️ **La désinstallation détruit l'identité** - `uninstall_macos.sh` fait
    `rm -rf /etc/warren-vpn` → la pubkey enrôlée est perdue → chaque réinstall
    génère une **nouvelle** pubkey non enrôlée, et l'ancien abonnement reste
    orphelin sur une clé morte. À corriger : sauvegarder/exporter l'identité
    hors du dossier wipé, ou proposer export/import de mnemonic.
-4. ⚠️ **Message d'erreur trompeur** - une clé non enrôlée → l'exit ferme la
-   connexion (`read SetupAck: connection lost`) → le retry exclut le relay →
-   `NoMatchingRelay` → la GUI affiche « Aucun serveur ne correspond » au lieu
-   de « compte non approvisionné ». À corriger : code de rejet explicite côté
-   exit + ne pas masquer l'échec d'auth par `NoMatchingRelay` + état GUI
-   distinct « abonnement requis ».
+4. 🟡 **PARTIELLEMENT corrigé** - Message d'erreur trompeur. Le **cas
+   courant** (pas d'abonnement) est résolu par B2 : en remote, le 404
+   warren-api remonte comme un état compte honnête, plus comme
+   `NoMatchingRelay`. **Reste** le cas du rejet au **handshake** (clé qui
+   *semble* valide côté client mais que l'exit refuse) : `Error::Handshake`
+   est classé `is_recoverable = true` → retry → `NoMatchingRelay`. Le vrai
+   correctif = code de close explicite côté exit (`WARREN_AUTH_FAILED`) +
+   mapping client `BackendFatal` + état GUI « abonnement requis ». **Touche
+   le handshake QUIC = zone load-bearing → exige un bench Hetzner (CLAUDE.md
+   §1) → chantier dédié, non fait ici.**
+
+### Chantiers restants (gros, régis par les règles bench)
+
+- **#3 - Persistance d'identité** : l'uninstaller fait `rm -rf /etc/warren-vpn`
+  → nouvelle pubkey à chaque réinstall + abonnement orphelin. Vrai correctif =
+  flow GUI d'export/import de la mnemonic (chantier onboarding), pas un hack
+  d'installer. Non fait ici.
+- **#4 (protocole)** : code de close `WARREN_AUTH_FAILED` côté exit
+  (warren-core `warren-tunnel`) + mapping client + état GUI. Exige bench
+  Hetzner avant commit (CLAUDE.md §1). Non fait ici.
 
 ## Chantiers PROD restants (un utilisateur lambda ne peut pas encore connecter)
 

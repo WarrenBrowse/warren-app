@@ -461,14 +461,26 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // `true` by default on the Warren fork. The release binary
-            // NEVER contacts api.mullvad.net — the tunnel + account
-            // chain goes through warren-api. The user can
-            // explicitly set these flags to `false` to re-enable
-            // the upstream Mullvad path (= dev/POC only, never
-            // documented in prod).
+            // `warren_mode = true` by default on the Warren fork: the
+            // release binary NEVER contacts api.mullvad.net — the
+            // tunnel + account chain goes through warren-api. Setting
+            // it to `false` re-enables the upstream Mullvad path
+            // (= dev/POC only, never documented in prod).
             warren_mode: true,
-            warren_local_account: true,
+            // `warren_local_account = false` by default: fresh installs
+            // use the REAL warren-api backend (subscription + voucher +
+            // device enrollment), not the stateless POC stub. The stub
+            // fabricated a far-future "99 years" account and silently
+            // ignored voucher redemption, which misled users into
+            // thinking they were provisioned while the exit kept
+            // refusing the unenrolled key. Opt into the POC stub
+            // explicitly with `warren warren local-account set on` (or
+            // `WARREN_LOCAL_ACCOUNT=1`) for offline bench/dev only.
+            warren_local_account: false,
+            // `None` here resolves to the compiled production default
+            // (`warren_remote_config::DEFAULT_WARREN_API_URL`) at boot,
+            // so the remote backend works without any manual `api-url
+            // set`.
             warren_api_url: None,
             warren_multi_hop: WarrenMultiHopSettings::default(),
             warren_nat_pmp: WarrenNatPmpSettings::default(),
@@ -650,5 +662,31 @@ mod warren_pinned_exit_pubkeys_tests {
     fn settings_default_has_empty_pin_table() {
         let s = Settings::default();
         assert!(s.warren_pinned_exit_pubkeys.entries.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod warren_account_mode_default_tests {
+    use super::*;
+
+    /// Fresh installs MUST default to the REAL warren-api backend, not
+    /// the local-account POC stub. The stub fabricated a far-future
+    /// "99 years" account and silently no-op'd voucher redemption,
+    /// misleading users into believing they were provisioned while the
+    /// exit kept refusing their unenrolled key (internet blocked, no
+    /// clear reason). Defaulting `warren_local_account` to `false`
+    /// routes account/device/voucher operations through warren-api so
+    /// the displayed state is truthful.
+    #[test]
+    fn default_is_remote_backend_not_local_account_stub() {
+        let s = Settings::default();
+        assert!(
+            !s.warren_local_account,
+            "fresh installs MUST NOT default to the local-account POC stub"
+        );
+        assert!(
+            s.warren_mode,
+            "warren_mode MUST stay enabled by default (never api.mullvad.net)"
+        );
     }
 }
