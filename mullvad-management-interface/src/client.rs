@@ -297,6 +297,24 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Reads the persisted Warren BIP39 recovery phrase so the user can
+    /// back it up (export). Returns an empty string when no identity
+    /// has been bootstrapped yet. The caller MUST NOT log the returned
+    /// value (no-log Warren): it is the secret that controls the
+    /// identity and its subscription.
+    pub async fn get_warren_mnemonic(&mut self) -> Result<String> {
+        Ok(self.0.get_warren_mnemonic(()).await?.into_inner())
+    }
+
+    /// Restores/imports a Warren identity from a BIP39 recovery phrase.
+    /// The daemon validates BIP39 before persisting and hot-swaps the
+    /// in-memory signer (no restart needed); an invalid phrase maps to
+    /// `InvalidArgument`. The caller MUST NOT log `mnemonic`.
+    pub async fn set_warren_mnemonic(&mut self, mnemonic: String) -> Result<()> {
+        self.0.set_warren_mnemonic(mnemonic).await?;
+        Ok(())
+    }
+
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
         self.0
             .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))

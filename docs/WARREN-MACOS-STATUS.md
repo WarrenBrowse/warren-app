@@ -99,10 +99,19 @@ réconcilier). Conséquences observées par l'utilisateur :
 
 ### Chantiers restants (gros, régis par les règles bench)
 
-- **#3 - Persistance d'identité** : l'uninstaller fait `rm -rf /etc/warren-vpn`
-  → nouvelle pubkey à chaque réinstall + abonnement orphelin. Vrai correctif =
-  flow GUI d'export/import de la mnemonic (chantier onboarding), pas un hack
-  d'installer. Non fait ici.
+- **#3 - Persistance d'identité** : 🟡 largement adressé.
+  - Le **flow GUI existe déjà** et est routé (`AppRouter.tsx`) :
+    `KeysView` (révéler/sauvegarder la phrase), `RestoreMnemonicView`
+    (importer/restaurer), `OnboardingWalletView` (générer/importer). Le user
+    ne le voyait pas car le local-mode (faux compte) ne déclenchait pas
+    l'onboarding ; **B2 corrige ça** (fresh install → remote → onboarding).
+  - **CLI ajouté** (`warren warren mnemonic export` / `import <mots…>`,
+    `mullvad-cli/src/cmds/warren.rs` + wrappers `client.rs`) : permet de
+    sauvegarder la phrase AVANT une désinstallation et de la réimporter
+    après, sans dépendre de la GUI. Normalisation testée en TDD.
+  - **Reste** : l'uninstaller (`rm -rf /etc/warren-vpn`) n'oblige/rappelle
+    pas la sauvegarde. Amélioration UX possible (prompt de backup au
+    désinstall), mais l'identité est désormais récupérable via export/import.
 - **#4 (protocole)** : code de close `WARREN_AUTH_FAILED` côté exit
   (warren-core `warren-tunnel`) + mapping client + état GUI. Exige bench
   Hetzner avant commit (CLAUDE.md §1). Non fait ici.
