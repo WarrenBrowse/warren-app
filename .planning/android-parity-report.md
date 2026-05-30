@@ -45,7 +45,15 @@ Commit : `db93d2edd9`.
 - Repository : persistance + clamps (port ∈ [49152,65535] ou 0 ; lifetime ∈ [60s, 24h]).
 - UI : panneau avancé sous le toggle NAT-PMP (chips protocole UDP/TCP, champ port, presets lifetime 1h/6h/24h).
 - Tests : builder + repository (protocole/port/lifetime).
-- **Reste (status live)** : remonter `NatPmpStatus` live (requesting / mapped(port,countdown) / failed(reason)) nécessite un canal de callback JNI Rust→Kotlin (nouveaux exports + état) — non livré, voir « Restant ».
+
+#### Port forwarding — status live — ✅ FAIT
+
+Commit : `1c0801276b`.
+
+- Rust (`warren-jni`) : la boucle NAT-PMP publie son état dans un `static NATPMP_STATUS` (architecture polée, comme `getTunnelStatus` — pas de callback JVM), mappant `NatPmpEvent` → JSON (`requesting`/`mapped{external_port,lifetime}`/`rate_limited{retry}`/`failed{reason}`). `Failed` ne surface que la *catégorie* `reason`, jamais l'erreur brute (anti-fuite). Reset à la fin du mapping et au `disconnectTunnel`.
+- JNI : nouvel export `getNatPmpStatus(): String`.
+- Kotlin : nouveau provider `WarrenNatPmpStatusProvider` (lib/repository) implémenté par `WarrenQuinnStateProxy` ; l'adapter poll `getNatPmpStatus()` dans sa boucle de status ; le service forwarde ; l'UI parse (sans dépendance JSON) et affiche une ligne de statut live dans le panneau port-forwarding.
+- Vérifié : `cargo check` android (Rust) + app/repository/settings compile + test `NatPmpStatusLabelTest` (parseur).
 
 #### Multi-hop — sélection de pays entrée/sortie — ✅ FAIT
 
@@ -74,10 +82,11 @@ Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 | 1 | **Statut d'abonnement (expiry)** | P1 | M | `warren-api-client.get_subscription()` existe → JNI `getSubscription` + biométrie + affichage compte. Le plus borné. |
 | 2 | **Compte / keys / devices (list + remove)** | P1 | L | `list_devices()`/`delete_device()` existent → JNI + biométrie + écran `ManageDevices` + nav. |
 | 3 | **Voucher in-app (Crockford-32)** | P1 | L | Confirmer/ajouter l'endpoint voucher dans `warren-api-client` (`/v1/register`), puis JNI + UI. |
-| 4 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #1/#3 ; flag de complétion persisté. |
-| 5 | **Port forwarding — status live** | P1 | M | Canal callback JNI Rust→Kotlin (cycle de vie au teardown). |
-| 6 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. |
-| 7 | **Relay lists custom / recents / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only. À fractionner. |
+| 4 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #1/#3 ; flag de complétion persisté. ⚠️ zone en développement concurrent. |
+| 5 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. |
+| 6 | **Relay lists custom / recents / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer. À fractionner. |
+
+> ⚠️ **Développement concurrent** : les zones compte / abonnement / voucher / mnémonique sont activement modifiées sur `main` par un autre flux de travail (commits `redeem vouchers for real`, `default to real warren-api backend`, `mnemonic export/import`). Les items #1–#3 sont à coordonner pour éviter les collisions.
 
 ### Risques transverses (rappel)
 
