@@ -288,6 +288,7 @@ mod tests {
                     internal_port: 22,
                     external_port,
                     lifetime_secs,
+                    rate_limit: None,
                 });
                 let _ = sock.send_to(&resp, peer).await;
             }
@@ -407,6 +408,7 @@ mod tests {
                     internal_port: 22,
                     external_port: 0,
                     lifetime_secs: 0,
+                    rate_limit: None,
                 });
                 let _ = sock.send_to(&resp, peer).await;
             }
@@ -473,6 +475,7 @@ mod tests {
                         internal_port: 22,
                         external_port: 0,
                         lifetime_secs: 0,
+                        rate_limit: None,
                     });
                     let _ = sock.send_to(&resp, peer).await;
                     continue;
@@ -485,6 +488,7 @@ mod tests {
                     // 49000 + lifetime → 49060 for lifetime=60, 49120 for lifetime=120 ...
                     external_port: 49000_u16.saturating_add(lifetime as u16),
                     lifetime_secs: lifetime,
+                    rate_limit: None,
                 });
                 let _ = sock.send_to(&resp, peer).await;
             }

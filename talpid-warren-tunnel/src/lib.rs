@@ -440,6 +440,27 @@ impl Error {
     }
 }
 
+/// Maps a `warren_tunnel` handshake error to the talpid backend [`Error`].
+///
+/// An explicit auth rejection from the exit
+/// ([`warren_tunnel::TunnelError::AuthRejected`] — the client's identity
+/// is not authorized: no active subscription / not enrolled) is FATAL
+/// and non-retryable: retrying re-derives the same outcome, and the
+/// state machine would otherwise loop and surface a misleading "no
+/// matching relay" instead of the real "subscription required" cause.
+/// Every other handshake failure is treated as a (recoverable)
+/// [`Error::Handshake`] — a transient network glitch is the common case
+/// and the next attempt usually succeeds.
+fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
+    match e {
+        warren_tunnel::TunnelError::AuthRejected => Error::BackendFatal(
+            "exit rejected the handshake: identity not authorized (no active subscription)"
+                .to_owned(),
+        ),
+        other => Error::Handshake(format!("{other:#}")),
+    }
+}
+
 /// Active Warren tunnel monitor.
 ///
 /// API:
@@ -641,12 +662,12 @@ impl WarrenTunnelMonitor {
                     .connect(exit_addr)
                     .await
                     .map(SessionKind::Mono)
-                    .map_err(|e| Error::Handshake(format!("{e:#}"))),
+                    .map_err(map_handshake_error),
                 SessionRequest::Multi(n) => client
                     .connect_multi(exit_addr, n)
                     .await
                     .map(SessionKind::Multi)
-                    .map_err(|e| Error::Handshake(format!("{e:#}"))),
+                    .map_err(map_handshake_error),
             }
         })?;
         log::debug!(
@@ -2643,6 +2664,37 @@ mod tests {
     }
 
     #[test]
+    fn auth_rejected_maps_to_fatal_non_recoverable_error() {
+        // Misleading-error regression: an explicit auth rejection from
+        // the exit (identity not authorized / no active subscription)
+        // must become a FATAL, non-recoverable error so the state
+        // machine stops retrying. Retrying re-derives the same outcome
+        // and surfaces a misleading "no matching relay" instead of the
+        // real "subscription required" cause.
+        let mapped = map_handshake_error(warren_tunnel::TunnelError::AuthRejected);
+        assert!(
+            matches!(mapped, Error::BackendFatal(_)),
+            "AuthRejected must map to BackendFatal, got: {mapped:?}"
+        );
+        assert!(
+            !mapped.is_recoverable(),
+            "an auth rejection must NOT be retried by the state machine"
+        );
+    }
+
+    #[test]
+    fn generic_handshake_failure_stays_recoverable() {
+        // A non-auth handshake failure (e.g. a transient connection
+        // loss) must remain a recoverable `Error::Handshake` so a single
+        // glitch does not enter the kill-switch error state.
+        let mapped = map_handshake_error(warren_tunnel::TunnelError::NoExitAddr);
+        assert!(
+            matches!(mapped, Error::Handshake(_)) && mapped.is_recoverable(),
+            "non-auth handshake errors must stay recoverable, got: {mapped:?}"
+        );
+    }
+
+    #[test]
     fn tun_setup_error_is_not_recoverable() {
         // Privilege or kernel-module issue: retrying will not help
         // without operator action (modprobe, capability grant, ...).
@@ -3140,6 +3192,7 @@ mod tests {
                     internal_port: 22,
                     external_port,
                     lifetime_secs: lifetime,
+                    rate_limit: None,
                 });
                 let _ = sock.send_to(&resp, peer).await;
             }
