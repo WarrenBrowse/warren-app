@@ -78,6 +78,15 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _tunnelMtu = MutableStateFlow(prefs.getInt(KEY_TUNNEL_MTU, MTU_MAX))
     val tunnelMtu: StateFlow<Int> = _tunnelMtu.asStateFlow()
 
+    /**
+     * Last-known subscription expiry (Unix epoch seconds; 0 = unknown).
+     * Cached from the on-demand `/v1/subscription` fetch + voucher redeem so
+     * the UI can surface the subscription status (and a near-expiry warning)
+     * without a fresh biometric-gated request on every screen open.
+     */
+    private val _cachedSubscriptionExpiry = MutableStateFlow(prefs.getLong(KEY_SUBSCRIPTION_EXPIRY, 0L))
+    val cachedSubscriptionExpiry: StateFlow<Long> = _cachedSubscriptionExpiry.asStateFlow()
+
     /** DNS mode: [DNS_STATE_DEFAULT] or [DNS_STATE_CUSTOM]. */
     private val _dnsState = MutableStateFlow(prefs.getString(KEY_DNS_STATE, DNS_STATE_DEFAULT) ?: DNS_STATE_DEFAULT)
     val dnsState: StateFlow<String> = _dnsState.asStateFlow()
@@ -257,6 +266,12 @@ class WarrenLocalSettingsRepository(context: Context) {
         _tunnelMtu.value = clamped
     }
 
+    /** Cache the last-known subscription expiry (Unix epoch seconds). */
+    fun setCachedSubscriptionExpiry(expiryUnixSecs: Long) {
+        prefs.edit().putLong(KEY_SUBSCRIPTION_EXPIRY, expiryUnixSecs).apply()
+        _cachedSubscriptionExpiry.value = expiryUnixSecs
+    }
+
     fun setDnsState(state: String) {
         val normalized = if (state == DNS_STATE_CUSTOM) DNS_STATE_CUSTOM else DNS_STATE_DEFAULT
         prefs.edit().putString(KEY_DNS_STATE, normalized).apply()
@@ -337,6 +352,7 @@ class WarrenLocalSettingsRepository(context: Context) {
     private const val KEY_TUNNEL_MTU = "tunnel_mtu"
     const val MTU_MIN = 576
     const val MTU_MAX = 1280
+    private const val KEY_SUBSCRIPTION_EXPIRY = "subscription_expiry_unix_secs"
         private const val KEY_DNS_STATE = "dns_state"
         private const val KEY_DNS_CUSTOM_SERVERS = "dns_custom_servers"
         private const val KEY_DNS_BLOCK_ADS = "dns_block_ads"

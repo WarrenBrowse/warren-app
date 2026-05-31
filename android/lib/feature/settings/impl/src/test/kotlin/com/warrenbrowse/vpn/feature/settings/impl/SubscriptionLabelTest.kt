@@ -42,6 +42,31 @@ class SubscriptionLabelTest {
     }
 
     @Test
+    fun `cached subscription label is null when expiry unknown`() {
+        assertEquals(null, cachedSubscriptionLabel(0L, nowSecs = 1_000))
+    }
+
+    @Test
+    fun `cached subscription label warns within the expiry window and reports days`() {
+        val now = 1_000_000L
+        val label = cachedSubscriptionLabel(now + 3 * 86_400, nowSecs = now)
+        assertTrue(label != null && label.startsWith("Subscription expires in 3 days"), "$label")
+    }
+
+    @Test
+    fun `cached subscription label is active when far from expiry, expired when past`() {
+        val now = 1_000_000L
+        assertTrue(
+            cachedSubscriptionLabel(now + 60 * 86_400, nowSecs = now)!!
+                .startsWith("Subscription active"),
+        )
+        assertTrue(
+            cachedSubscriptionLabel(now - 86_400, nowSecs = now)!!
+                .startsWith("Subscription expired on"),
+        )
+    }
+
+    @Test
     fun `non-success outcomes map to fixed messages`() {
         assertEquals(
             "Authorization cancelled.",

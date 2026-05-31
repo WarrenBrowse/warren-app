@@ -28,6 +28,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenDeviceInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenDeviceListOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenDeviceRemoveOutcome
@@ -65,6 +66,8 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val walletRepository = koinInject<WalletRepository>()
     val quinnConnect = koinInject<WarrenQuinnConnectInvoker>()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
+    val settings = koinInject<WarrenLocalSettingsRepository>()
+    val cachedExpiry by settings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
     val deviceInvoker = koinInject<WarrenDeviceInvoker>()
@@ -92,13 +95,32 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 walletRepository = walletRepository,
             )
 
+            // Proactive status from the last-known cached expiry — shown
+            // immediately, without a fresh biometric-gated request.
+            cachedSubscriptionLabel(cachedExpiry)?.let { msg ->
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (cachedExpiry <= System.currentTimeMillis() / 1000) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
             // Subscription status: biometric-gated signed GET /v1/subscription.
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onClick = {
                     scope.launch {
                         subscriptionStatus = "Checking subscription…"
-                        subscriptionStatus = subscriptionLabel(subscriptionInvoker.fetch(activity))
+                        val outcome = subscriptionInvoker.fetch(activity)
+                        if (outcome is WarrenSubscriptionOutcome.Success) {
+                            settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                        }
+                        subscriptionStatus = subscriptionLabel(outcome)
                     }
                 },
             ) { Text("Check subscription") }
@@ -129,7 +151,10 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     scope.launch {
                         subscriptionStatus = "Redeeming voucher…"
                         val outcome = subscriptionInvoker.redeemVoucher(activity, code)
-                        if (outcome is WarrenVoucherOutcome.Success) voucherInput = ""
+                        if (outcome is WarrenVoucherOutcome.Success) {
+                            voucherInput = ""
+                            settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                        }
                         subscriptionStatus = voucherLabel(outcome)
                     }
                 },
@@ -268,6 +293,33 @@ internal fun voucherLabel(outcome: WarrenVoucherOutcome): String = when (outcome
     WarrenVoucherOutcome.WalletNotReady -> "Set up your wallet first."
     is WarrenVoucherOutcome.Failure -> "Couldn't redeem voucher. Check the code and try again."
 }
+
+/**
+ * Render the cached subscription expiry as a proactive status line, or null
+ * when the expiry is unknown (never fetched). Surfaces a near-expiry warning
+ * within [WARN_WINDOW_SECS] of expiry so the user is nudged to renew before
+ * the tunnel stops working.
+ */
+internal fun cachedSubscriptionLabel(
+    expiryUnixSecs: Long,
+    nowSecs: Long = System.currentTimeMillis() / 1000,
+): String? {
+    if (expiryUnixSecs <= 0L) return null
+    val date = java.time.Instant.ofEpochSecond(expiryUnixSecs)
+        .atZone(java.time.ZoneId.systemDefault())
+        .toLocalDate()
+        .toString()
+    return when {
+        expiryUnixSecs <= nowSecs -> "Subscription expired on $date"
+        expiryUnixSecs - nowSecs <= WARN_WINDOW_SECS -> {
+            val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400 // ceil to whole days
+            "Subscription expires in $days day${if (days == 1L) "" else "s"} ($date)"
+        }
+        else -> "Subscription active — expires $date"
+    }
+}
+
+private const val WARN_WINDOW_SECS = 7L * 86_400
 
 /** Format a device creation timestamp as a local date, or a fallback. */
 internal fun deviceCreatedLabel(unixSecs: Long): String =
