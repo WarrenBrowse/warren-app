@@ -214,12 +214,12 @@ final class SettingsViewControllerFactory {
     /// required since the pubkey is non-secret — sharing it cannot
     /// grant wallet access).
     private func makeWarrenWalletIdentityViewController() -> MakeChildResult {
-        // `publicKeyHex()` returns nil when no wallet is present ; the
-        // row is hidden in that case (see `SettingsDataSource`), so
-        // this is defensive only — fall back to an empty hex string
-        // which the view renders as a blank field.
-        let hex = WarrenWalletInteractor().publicKeyHex() ?? ""
-        let view = WarrenWalletIdentityView(pubkeyHex: hex)
+        // `publicKeyAddress()` returns nil when no wallet is present ;
+        // the row is hidden in that case (see `SettingsDataSource`), so
+        // this is defensive only — fall back to an empty string which
+        // the view renders as a blank field.
+        let address = WarrenWalletInteractor().publicKeyAddress() ?? ""
+        let view = WarrenWalletIdentityView(address: address)
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
         host.title = String(localized: "Wallet identity", table: "Wallet")
@@ -279,7 +279,7 @@ final class SettingsViewControllerFactory {
         let info = WarrenDiagnosticInfo(
             appVersion: appVersion,
             buildNumber: build,
-            walletPubkeyShortHex: walletShort,
+            walletAddressShort: walletShort,
             tunnelStats: Self.loadTunnelStatistics()
         )
         let view = WarrenDiagnosticInfoView(info: info)

@@ -15,7 +15,7 @@
 //!
 //! **Injected HTTP headers**:
 //!
-//! - `X-Warren-PubKey`    : 64-char hex (32-byte pubkey)
+//! - `X-Warren-PubKey`    : Warren SS58 address (`wb…`, prefix 13295)
 //! - `X-Warren-Sig`       : 128-char hex (64-byte signature)
 //! - `X-Warren-Timestamp` : decimal epoch seconds
 //! - `X-Warren-Nonce`     : 32-char hex (16-byte random nonce)
@@ -53,7 +53,7 @@ const fn _assert_signing_key_zeroize_on_drop() {
 // otherwise no signature ever verifies. Consuming the single source of
 // truth prevents silent /v1 wire divergence.
 pub use warren_api_client::{
-    HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, canonical_message,
+    HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, canonical_message, ss58,
 };
 
 /// HTTP headers produced by [`WarrenAuthSigner::sign_request`].
@@ -64,8 +64,9 @@ pub use warren_api_client::{
 /// [`HEADER_NONCE`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WarrenAuthHeaders {
-    /// Signer Ed25519 pubkey, 64-char hex (32 bytes).
-    pub pubkey_hex: String,
+    /// Signer Ed25519 pubkey as a Warren SS58 address (`wb…`, prefix
+    /// 13295). Decoded back to the 32 raw bytes by the server verifier.
+    pub pubkey_ss58: String,
     /// Ed25519 signature over the `canonical_message`, 128-char hex (64 bytes).
     pub signature_hex: String,
     /// Unix epoch-seconds timestamp (= maximum request age on the
@@ -133,7 +134,7 @@ impl WarrenAuthSigner {
     ///
     /// **No-log policy**: NEVER log `new_key`. Callers may log the
     /// new pubkey (which is public information) by reading
-    /// [`Self::pubkey_hex`] after the swap.
+    /// [`Self::pubkey_ss58`] after the swap.
     pub fn replace_signing_key(&self, new_key: SigningKey) {
         let mut guard = self
             .signing_key
@@ -142,15 +143,16 @@ impl WarrenAuthSigner {
         *guard = new_key;
     }
 
-    /// Signer hex pubkey (64 chars). Useful for external APIs that log
-    /// the `client_id` (= pubkey) without touching the signing key.
+    /// Signer pubkey as a Warren SS58 address (`wb…`). Useful for
+    /// external APIs that log the `client_id` (= pubkey) without
+    /// touching the signing key.
     #[must_use]
-    pub fn pubkey_hex(&self) -> String {
+    pub fn pubkey_ss58(&self) -> String {
         let guard = self
             .signing_key
             .read()
             .expect("WarrenAuthSigner RwLock poisoned");
-        hex::encode(guard.verifying_key().as_bytes())
+        ss58::encode(&guard.verifying_key().to_bytes())
     }
 
     /// Signs a request with a `timestamp` and `nonce` provided by the
@@ -175,20 +177,20 @@ impl WarrenAuthSigner {
         // pubkey lookup, so that a concurrent `replace_signing_key`
         // cannot produce headers where the pubkey and the signature
         // were computed against different keys.
-        let (pubkey_hex, signature_hex) = {
+        let (pubkey_ss58, signature_hex) = {
             let guard = self
                 .signing_key
                 .read()
                 .expect("WarrenAuthSigner RwLock poisoned");
             let signature = guard.sign(canonical.as_bytes());
             (
-                hex::encode(guard.verifying_key().as_bytes()),
+                ss58::encode(&guard.verifying_key().to_bytes()),
                 hex::encode(signature.to_bytes()),
             )
         };
 
         WarrenAuthHeaders {
-            pubkey_hex,
+            pubkey_ss58,
             signature_hex,
             timestamp,
             nonce_hex,
@@ -259,7 +261,7 @@ impl WarrenAuthSigner {
 
         map.insert(
             HEADER_PUBKEY,
-            http::HeaderValue::from_str(&headers.pubkey_hex).map_err(|_| invalid(HEADER_PUBKEY))?,
+            http::HeaderValue::from_str(&headers.pubkey_ss58).map_err(|_| invalid(HEADER_PUBKEY))?,
         );
         map.insert(
             HEADER_SIGNATURE,
@@ -291,11 +293,17 @@ mod tests {
     }
 
     #[test]
-    fn pubkey_hex_is_64_chars() {
-        // Format audit: Ed25519 pubkey = 32 bytes = 64 hex chars.
+    fn pubkey_ss58_is_a_warren_address() {
+        // Format audit: the signer pubkey is a Warren SS58 address
+        // (`wb…`, prefix 13295) that decodes back to the 32 raw bytes.
         let signer = fixed_signer();
-        assert_eq!(signer.pubkey_hex().len(), 64);
-        assert!(signer.pubkey_hex().chars().all(|c| c.is_ascii_hexdigit()));
+        let addr = signer.pubkey_ss58();
+        assert!(addr.starts_with("wb"), "expected a wb… address, got {addr}");
+        let decoded = ss58::decode(&addr).expect("signer pubkey must be valid SS58");
+        assert_eq!(
+            decoded,
+            SigningKey::from_bytes(&[7u8; 32]).verifying_key().to_bytes()
+        );
     }
 
     #[test]
@@ -334,7 +342,7 @@ mod tests {
             [1u8; 16],
         );
         assert_eq!(h1.signature_hex, h2.signature_hex);
-        assert_eq!(h1.pubkey_hex, h2.pubkey_hex);
+        assert_eq!(h1.pubkey_ss58, h2.pubkey_ss58);
     }
 
     #[test]
@@ -412,10 +420,7 @@ mod tests {
             &body_hash_hex,
         );
 
-        let pubkey_bytes: [u8; 32] = hex::decode(&h.pubkey_hex)
-            .expect("pubkey hex valid")
-            .try_into()
-            .expect("32 bytes");
+        let pubkey_bytes = ss58::decode(&h.pubkey_ss58).expect("pubkey SS58 valid");
         let verifying_key =
             ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes).expect("valid pubkey on curve");
 
@@ -442,7 +447,7 @@ mod tests {
         let body_hash_hex = hex::encode(Sha256::digest(b""));
         let tampered = canonical_message("POST", "/v1/admin", 1, &h.nonce_hex, &body_hash_hex);
 
-        let pubkey_bytes: [u8; 32] = hex::decode(&h.pubkey_hex).unwrap().try_into().unwrap();
+        let pubkey_bytes = ss58::decode(&h.pubkey_ss58).unwrap();
         let vk = ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes).unwrap();
         let sig_bytes: [u8; 64] = hex::decode(&h.signature_hex).unwrap().try_into().unwrap();
         let sig = Signature::from_bytes(&sig_bytes);
@@ -471,7 +476,7 @@ mod tests {
         let signer = fixed_signer();
         let s = format!("{signer:?}");
         assert!(s.contains("<redacted>"));
-        assert!(!s.contains(&signer.pubkey_hex()[..10])); // do not reveal the first 10 chars of the pubkey
+        assert!(!s.contains(&signer.pubkey_ss58()[..10])); // do not reveal the first 10 chars of the pubkey
     }
 
     #[test]
@@ -497,7 +502,11 @@ mod tests {
         let ts = h.get(HEADER_TIMESTAMP).expect("ts present");
         let nonce = h.get(HEADER_NONCE).expect("nonce present");
 
-        assert_eq!(pk.to_str().unwrap().len(), 64);
+        // Pubkey header is now a Warren SS58 address (`wb…`), variable
+        // length (47–49 chars), not a fixed 64-hex string.
+        let pk_str = pk.to_str().unwrap();
+        assert!(pk_str.starts_with("wb"), "pubkey header must be a wb… address");
+        assert!(ss58::decode(pk_str).is_ok(), "pubkey header must decode as SS58");
         assert_eq!(sig.to_str().unwrap().len(), 128);
         assert_eq!(nonce.to_str().unwrap().len(), 32);
         // Timestamp must be a valid decimal u64.
@@ -552,7 +561,7 @@ mod tests {
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         let canonical = canonical_message("GET", "/v1/x", 0, &h.nonce_hex, expected_body_hash_hex);
 
-        let pubkey_bytes: [u8; 32] = hex::decode(&h.pubkey_hex).unwrap().try_into().unwrap();
+        let pubkey_bytes = ss58::decode(&h.pubkey_ss58).unwrap();
         let vk = ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes).unwrap();
         let sig_bytes: [u8; 64] = hex::decode(&h.signature_hex).unwrap().try_into().unwrap();
         let sig = Signature::from_bytes(&sig_bytes);
@@ -615,13 +624,13 @@ mod tests {
     #[test]
     fn replace_signing_key_swaps_identity_in_place() {
         let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
-        let old_pubkey = signer.pubkey_hex();
+        let old_pubkey = signer.pubkey_ss58();
         let old_sig =
             signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
 
         signer.replace_signing_key(SigningKey::from_bytes(&[42u8; 32]));
 
-        let new_pubkey = signer.pubkey_hex();
+        let new_pubkey = signer.pubkey_ss58();
         let new_sig =
             signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
 
@@ -634,7 +643,7 @@ mod tests {
             "signature MUST be produced by the new key"
         );
         assert_eq!(
-            new_sig.pubkey_hex, new_pubkey,
+            new_sig.pubkey_ss58, new_pubkey,
             "the pubkey reported in the headers must match the post-swap key"
         );
     }

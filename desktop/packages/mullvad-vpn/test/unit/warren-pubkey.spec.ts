@@ -1,83 +1,101 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatWarrenPubKey } from '../../src/renderer/lib/pubkey';
+import {
+  formatWarrenPubKey,
+  isWarrenAddress,
+  shortenWarrenPubKey,
+  WARREN_SS58_PREFIX,
+} from '../../src/renderer/lib/pubkey';
 import { isWarrenPubKey } from '../../src/shared/utils';
 
+// Ground-truth vectors from @polkadot/util-crypto v14, prefix 13295.
+// pubkey hex 0000…0000 and abcdef…0123456789 -> SS58 addresses below.
+const ZERO_ADDRESS = 'wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB';
+const VEC2_ADDRESS = 'wbBdxLCYEJVa8tMAFTJVYn5tvHX8SUf8SZmSQRqs9ro3EXEkh';
+// A valid SS58 address on a different network (Polkadot, prefix 0).
+const POLKADOT_ADDRESS = '15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5';
+
+describe('Warren SS58 prefix', () => {
+  it('is 13295', () => {
+    expect(WARREN_SS58_PREFIX).toBe(13295);
+  });
+});
+
 describe('Warren pubkey validation (isWarrenPubKey)', () => {
-  it('accepts a 64-char lowercase hex string', () => {
-    const pk = 'a'.repeat(64);
-    expect(isWarrenPubKey(pk)).to.be.true;
+  it('accepts a valid Warren SS58 address (prefix 13295)', () => {
+    expect(isWarrenPubKey(ZERO_ADDRESS)).to.be.true;
+    expect(isWarrenPubKey(VEC2_ADDRESS)).to.be.true;
   });
 
-  it('accepts a 64-char uppercase hex string', () => {
-    const pk = 'A'.repeat(64);
-    expect(isWarrenPubKey(pk)).to.be.true;
+  it('rejects an SS58 address from another network (Polkadot, prefix 0)', () => {
+    expect(isWarrenPubKey(POLKADOT_ADDRESS)).to.be.false;
   });
 
-  it('accepts a 64-char mixed-case hex string', () => {
-    const pk = '0123456789abcdef0123456789ABCDEF0123456789abcdef0123456789ABCDEF';
-    expect(isWarrenPubKey(pk)).to.be.true;
+  it('rejects a legacy 64-char hex pubkey', () => {
+    expect(isWarrenPubKey('a'.repeat(64))).to.be.false;
+    expect(isWarrenPubKey('0123456789abcdef'.repeat(4))).to.be.false;
   });
 
-  it('rejects strings shorter than 64 chars', () => {
-    expect(isWarrenPubKey('a'.repeat(63))).to.be.false;
+  it('rejects an address whose checksum has been tampered with', () => {
+    // Flip the last char of a valid address -> checksum mismatch.
+    const tampered = ZERO_ADDRESS.slice(0, -1) + (ZERO_ADDRESS.endsWith('B') ? 'C' : 'B');
+    expect(isWarrenPubKey(tampered)).to.be.false;
+  });
+
+  it('rejects empty and obviously invalid strings', () => {
     expect(isWarrenPubKey('')).to.be.false;
     expect(isWarrenPubKey('deadbeef')).to.be.false;
-  });
-
-  it('rejects strings longer than 64 chars', () => {
-    expect(isWarrenPubKey('a'.repeat(65))).to.be.false;
-    expect(isWarrenPubKey('a'.repeat(128))).to.be.false;
-  });
-
-  it('rejects strings with non-hex characters', () => {
-    expect(isWarrenPubKey('g'.repeat(64))).to.be.false;
-    expect(isWarrenPubKey('z'.repeat(64))).to.be.false;
-    expect(isWarrenPubKey('!'.repeat(64))).to.be.false;
-    // 63 hex chars + 1 non-hex
-    expect(isWarrenPubKey('a'.repeat(63) + 'g')).to.be.false;
-  });
-
-  it('rejects strings with whitespace', () => {
-    // 64 hex chars but with embedded space → reject (caller should sanitize first)
-    const withSpace = 'a'.repeat(31) + ' ' + 'a'.repeat(32);
-    expect(isWarrenPubKey(withSpace)).to.be.false;
+    expect(isWarrenPubKey('not-an-address')).to.be.false;
   });
 
   it('rejects a Mullvad-style 16-digit account number', () => {
     expect(isWarrenPubKey('1234567890123456')).to.be.false;
   });
+
+  it('rejects strings with embedded whitespace', () => {
+    const withSpace = ZERO_ADDRESS.slice(0, 10) + ' ' + ZERO_ADDRESS.slice(10);
+    expect(isWarrenPubKey(withSpace)).to.be.false;
+  });
 });
 
-describe('Warren pubkey formatting (formatWarrenPubKey)', () => {
-  it('groups 64 hex chars into 8 blocks of 8 separated by spaces', () => {
-    const pk = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-    expect(formatWarrenPubKey(pk)).toBe(
-      '01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef',
-    );
+describe('isWarrenAddress (renderer alias)', () => {
+  it('mirrors isWarrenPubKey', () => {
+    expect(isWarrenAddress(ZERO_ADDRESS)).to.be.true;
+    expect(isWarrenAddress(POLKADOT_ADDRESS)).to.be.false;
+    expect(isWarrenAddress('')).to.be.false;
+  });
+});
+
+describe('Warren pubkey formatting (shortenWarrenPubKey / formatWarrenPubKey)', () => {
+  it('shortens an SS58 address to head…tail (6 + … + 6)', () => {
+    expect(shortenWarrenPubKey(ZERO_ADDRESS)).toBe('wb7kgy…hP9DnB');
+    expect(formatWarrenPubKey(ZERO_ADDRESS)).toBe('wb7kgy…hP9DnB');
   });
 
-  it('strips embedded whitespace before grouping', () => {
-    const pk = '0123 4567 89ab cdef ' + '0123456789abcdef'.repeat(3);
-    expect(formatWarrenPubKey(pk)).toBe(
-      '01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef',
-    );
+  it('shortens the second vector correctly', () => {
+    expect(shortenWarrenPubKey(VEC2_ADDRESS)).toBe('wbBdxL…3EXEkh');
   });
 
-  it('truncates input longer than 64 chars to the first 64', () => {
-    const pk = 'a'.repeat(64) + 'EXTRA';
-    expect(formatWarrenPubKey(pk)).toBe(
-      'aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa',
-    );
+  it('uses the U+2026 horizontal ellipsis character', () => {
+    expect(formatWarrenPubKey(ZERO_ADDRESS)).toContain('…');
+    expect(formatWarrenPubKey(ZERO_ADDRESS)).not.toContain('...');
   });
 
-  it('handles partial input gracefully (groups what is there)', () => {
-    expect(formatWarrenPubKey('abcd')).toBe('abcd');
-    expect(formatWarrenPubKey('abcdef01')).toBe('abcdef01');
-    expect(formatWarrenPubKey('abcdef0123456789')).toBe('abcdef01 23456789');
+  it('returns strings of length <= 13 unchanged', () => {
+    expect(formatWarrenPubKey('wb1234567890')).toBe('wb1234567890');
+    expect(formatWarrenPubKey('1234567890123')).toBe('1234567890123');
+    expect(formatWarrenPubKey('short')).toBe('short');
+  });
+
+  it('shortens strings longer than 13 chars', () => {
+    expect(formatWarrenPubKey('12345678901234')).toBe('123456…901234');
   });
 
   it('handles empty input', () => {
     expect(formatWarrenPubKey('')).toBe('');
+  });
+
+  it('does NOT chunk the address into space-separated groups', () => {
+    expect(formatWarrenPubKey(ZERO_ADDRESS)).not.toContain(' ');
   });
 });

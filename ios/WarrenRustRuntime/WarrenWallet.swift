@@ -111,11 +111,32 @@ public final class WarrenWallet {
     }
 
     /// Returns the public key as a lower-case hex string (exactly 64
-    /// characters). Safe to share with support : the pubkey is
-    /// non-secret per Ed25519 cryptography. Used by
-    /// `WarrenWalletIdentityView`.
+    /// characters). Retained for low-level diagnostics and byte-level
+    /// round-trip checks ; the user-facing identity is the SS58
+    /// `publicKeyAddress` below. The pubkey is non-secret per Ed25519
+    /// cryptography.
     public var publicKeyHex: String {
         publicKey.map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Returns the canonical **Warren SS58 address** (`wb…`, network
+    /// prefix 13295) derived from the wallet pubkey. This is the
+    /// identity shown in the UI, copied to the clipboard, and carried in
+    /// the `X-Warren-PubKey` header. Computed authoritatively by the
+    /// Rust layer (`warren_wallet_pubkey_ss58` → `warren_identity::ss58`)
+    /// so it round-trips byte-for-byte with the daemon and the backend.
+    /// Safe to share with support : the address cannot be used to access
+    /// the wallet or sign on its behalf.
+    public var publicKeyAddress: String {
+        seed.withUnsafeBytes { seedRaw -> String in
+            guard let base = seedRaw.bindMemory(to: UInt8.self).baseAddress,
+                let cstr = warren_wallet_pubkey_ss58(base)
+            else {
+                return ""
+            }
+            defer { warren_wallet_free_mnemonic(cstr) }
+            return String(cString: cstr)
+        }
     }
 
     /// Wipes the in-memory mnemonic string. Idempotent. Call after the

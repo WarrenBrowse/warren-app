@@ -3,7 +3,7 @@
 //  WarrenVPNTests
 //
 //  Created by Warren on 2026-05-22.
-//  Copyright © 2026 Warren Browse. All rights reserved.
+//  Copyright Â© 2026 Warren Browse. All rights reserved.
 //
 //  Tests for the support-ticket plain-text rendering. UI is not
 //  tested ; the `plainTextSummary` is the user-visible payload pasted
@@ -35,7 +35,7 @@ final class WarrenDiagnosticInfoViewTests: XCTestCase {
         let info = WarrenDiagnosticInfo(
             appVersion: "0.5.2",
             buildNumber: "1042",
-            walletPubkeyShortHex: "ab12...ef34",
+            walletAddressShort: "wb7kgy…hP9DnB",
             tunnelStats: makeStats(
                 state: "Connected",
                 bytesIn: 100,
@@ -46,7 +46,7 @@ final class WarrenDiagnosticInfoViewTests: XCTestCase {
         )
         let text = WarrenDiagnosticInfoView.plainTextSummary(info)
         XCTAssertTrue(text.contains("Warren VPN v0.5.2 (build 1042)"))
-        XCTAssertTrue(text.contains("Wallet ID: ab12...ef34"))
+        XCTAssertTrue(text.contains("Wallet ID: wb7kgy…hP9DnB"))
         XCTAssertTrue(text.contains("Status: Connected"))
         XCTAssertTrue(text.contains("Connected for: 01:05"))
         XCTAssertTrue(text.contains("Failovers: 1"))
@@ -56,7 +56,7 @@ final class WarrenDiagnosticInfoViewTests: XCTestCase {
         let info = WarrenDiagnosticInfo(
             appVersion: "1.0.0",
             buildNumber: "1",
-            walletPubkeyShortHex: nil,
+            walletAddressShort: nil,
             tunnelStats: makeStats()
         )
         let text = WarrenDiagnosticInfoView.plainTextSummary(info)
@@ -69,7 +69,7 @@ final class WarrenDiagnosticInfoViewTests: XCTestCase {
         let info = WarrenDiagnosticInfo(
             appVersion: "1.0.0",
             buildNumber: "1",
-            walletPubkeyShortHex: nil,
+            walletAddressShort: nil,
             tunnelStats: makeStats(state: "Disconnected", duration: nil)
         )
         let text = WarrenDiagnosticInfoView.plainTextSummary(info)
@@ -80,7 +80,7 @@ final class WarrenDiagnosticInfoViewTests: XCTestCase {
         let info = WarrenDiagnosticInfo(
             appVersion: "1.0.0",
             buildNumber: "1",
-            walletPubkeyShortHex: "feed...beef",
+            walletAddressShort: "wbAbcd…Xyz789",
             tunnelStats: makeStats(state: "Connected", duration: 30)
         )
         let text = WarrenDiagnosticInfoView.plainTextSummary(info)

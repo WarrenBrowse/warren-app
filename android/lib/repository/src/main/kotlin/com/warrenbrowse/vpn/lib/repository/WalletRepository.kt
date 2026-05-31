@@ -2,7 +2,7 @@ package com.warrenbrowse.vpn.lib.repository
 
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -37,7 +37,7 @@ interface WalletRepository {
      * transition `state` to [WalletState.Ready]. Returns the derived pubkey
      * for the caller to confirm against (e.g. server-side wallet binding).
      */
-    suspend fun importWallet(mnemonic: Mnemonic): WalletPubkeyHex
+    suspend fun importWallet(mnemonic: Mnemonic): WalletAddress
 
     /**
      * Decrypt the persisted mnemonic just-in-time. The repository invokes

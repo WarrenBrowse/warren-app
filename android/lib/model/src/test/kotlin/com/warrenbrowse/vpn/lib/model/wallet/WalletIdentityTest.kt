@@ -6,25 +6,62 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 
-class WalletPubkeyHexTest {
+class WalletAddressTest {
+    // Real Warren SS58 vector (49 chars, prefix 13295).
+    private val validAddress = "wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB"
+
     @Test
-    fun `accepts 64-char hex value`() {
-        assertDoesNotThrow { WalletPubkeyHex("a".repeat(64)) }
+    fun `accepts a real Warren SS58 address`() {
+        assertDoesNotThrow { WalletAddress(validAddress) }
     }
 
     @Test
-    fun `rejects shorter value`() {
-        assertThrows<IllegalArgumentException> { WalletPubkeyHex("a".repeat(63)) }
+    fun `accepts boundary lengths 47 and 49`() {
+        // Pad / trim the real vector to the inclusive length bounds while
+        // keeping the wb prefix and a base58 charset.
+        val body = validAddress.drop(2)
+        assertDoesNotThrow { WalletAddress("wb" + body.take(45)) } // 47 chars
+        assertDoesNotThrow { WalletAddress("wb" + body.take(45) + "ab") } // 49 chars
     }
 
     @Test
-    fun `rejects longer value`() {
-        assertThrows<IllegalArgumentException> { WalletPubkeyHex("a".repeat(65)) }
+    fun `rejects address not starting with wb`() {
+        assertThrows<IllegalArgumentException> {
+            WalletAddress("xy7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
+        }
+    }
+
+    @Test
+    fun `rejects too short`() {
+        assertThrows<IllegalArgumentException> { WalletAddress("wb" + "a".repeat(44)) } // 46
+    }
+
+    @Test
+    fun `rejects too long`() {
+        assertThrows<IllegalArgumentException> { WalletAddress("wb" + "a".repeat(48)) } // 50
+    }
+
+    @Test
+    fun `rejects non-base58 characters`() {
+        // `0`, `O`, `I`, `l` are excluded from the base58 alphabet.
+        assertThrows<IllegalArgumentException> {
+            WalletAddress("wb0OIl" + "a".repeat(42)) // 48 chars but illegal glyphs
+        }
     }
 
     @Test
     fun `rejects empty string`() {
-        assertThrows<IllegalArgumentException> { WalletPubkeyHex("") }
+        assertThrows<IllegalArgumentException> { WalletAddress("") }
+    }
+
+    @Test
+    fun `short form is first 6 then ellipsis then last 6`() {
+        assertEquals("wb7kgy…hP9DnB", validAddress.shortWarrenAddress())
+    }
+
+    @Test
+    fun `short form returns short strings unchanged`() {
+        assertEquals("wb7kgy", "wb7kgy".shortWarrenAddress())
     }
 }
 

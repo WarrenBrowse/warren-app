@@ -475,6 +475,32 @@ int warren_wallet_seed_from_mnemonic(const char *mnemonic, uint8_t *out_seed);
 int warren_wallet_derive_pubkey(const uint8_t *seed, uint8_t *out_pubkey);
 
 /**
+ * Derives the **Warren SS58 address** (`wb…`, network prefix 13295)
+ * from a 32-byte seed.
+ *
+ * This is the canonical string form of the Warren wallet identity — the
+ * value shown in the UI, copied to the clipboard, and carried in the
+ * `X-Warren-PubKey` request header. The same algorithm
+ * (`warren_identity::ss58`) is used by the daemon and the backend
+ * verifier, so the address round-trips byte-for-byte. It is the iOS
+ * analog of Android's `pubkey_ss58_from_mnemonic`
+ * (`warren-jni/src/wallet.rs`).
+ *
+ * `seed` : caller-provided buffer of 32 bytes.
+ *
+ * Returns a heap-allocated C string holding the SS58 address. Caller
+ * MUST free it via `warren_wallet_free_mnemonic` (the free routine is
+ * type-agnostic: it reclaims any `CString` produced by this crate).
+ * Returns null on invalid input (null seed) or internal error.
+ *
+ * # Safety
+ * `seed` must point to a readable buffer of at least 32 bytes. The
+ * returned pointer must be passed back to `warren_wallet_free_mnemonic`
+ * exactly once.
+ */
+char *warren_wallet_pubkey_ss58(const uint8_t *seed);
+
+/**
  * Signs an arbitrary payload with the Ed25519 signing key derived
  * from `seed`.
  *

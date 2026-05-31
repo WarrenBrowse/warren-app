@@ -6,9 +6,10 @@
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  Single-screen support ticket payload : app version + build number +
-//  wallet pubkey (short hex) + tunnel session counters. Designed to
-//  fit in a single screenshot for fast support diagnostics. No secrets
-//  (mnemonic / seed) are surfaced ; pubkey is non-secret per Ed25519.
+//  wallet SS58 address (short form) + tunnel session counters. Designed
+//  to fit in a single screenshot for fast support diagnostics. No
+//  secrets (mnemonic / seed) are surfaced ; the address is non-secret
+//  per Ed25519.
 //
 
 import SwiftUI
@@ -16,18 +17,19 @@ import SwiftUI
 public struct WarrenDiagnosticInfo: Equatable {
     public let appVersion: String
     public let buildNumber: String
-    public let walletPubkeyShortHex: String?
+    /// Short form of the Warren SS58 wallet address (`wb7kgy…hP9DnB`).
+    public let walletAddressShort: String?
     public let tunnelStats: WarrenTunnelStatistics
 
     public init(
         appVersion: String,
         buildNumber: String,
-        walletPubkeyShortHex: String?,
+        walletAddressShort: String?,
         tunnelStats: WarrenTunnelStatistics
     ) {
         self.appVersion = appVersion
         self.buildNumber = buildNumber
-        self.walletPubkeyShortHex = walletPubkeyShortHex
+        self.walletAddressShort = walletAddressShort
         self.tunnelStats = tunnelStats
     }
 }
@@ -64,7 +66,7 @@ public struct WarrenDiagnosticInfoView: View {
 
             VStack(spacing: 8) {
                 row(label: "Warren VPN", value: "v\(info.appVersion) (build \(info.buildNumber))")
-                if let pubkey = info.walletPubkeyShortHex {
+                if let pubkey = info.walletAddressShort {
                     row(label: "Wallet ID", value: pubkey)
                 }
                 row(label: "Status", value: info.tunnelStats.stateLabel)
@@ -140,7 +142,7 @@ public struct WarrenDiagnosticInfoView: View {
     public static func plainTextSummary(_ info: WarrenDiagnosticInfo) -> String {
         var lines: [String] = []
         lines.append("Warren VPN v\(info.appVersion) (build \(info.buildNumber))")
-        if let pubkey = info.walletPubkeyShortHex {
+        if let pubkey = info.walletAddressShort {
             lines.append("Wallet ID: \(pubkey)")
         }
         lines.append("Status: \(info.tunnelStats.stateLabel)")

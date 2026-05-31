@@ -59,22 +59,39 @@ final class WarrenWalletInteractorTests: XCTestCase {
         XCTAssertEqual(second, third)
     }
 
+    func test_publicKeyAddress_returnsNil_whenNoWalletPersisted() {
+        let interactor = WarrenWalletInteractor()
+        XCTAssertNil(interactor.publicKeyAddress(), "Expected nil when no wallet is in Keychain")
+    }
+
+    func test_publicKeyAddress_returnsWarrenSS58Address_whenWalletExists() throws {
+        let wallet = try WarrenWallet.generate()
+        try WarrenWalletKeychain.save(mnemonic: wallet.revealMnemonic())
+        let expected = wallet.publicKeyAddress
+        wallet.forgetSecret()
+
+        let interactor = WarrenWalletInteractor()
+        let address = interactor.publicKeyAddress()
+        XCTAssertEqual(address, expected, "publicKeyAddress should match the wallet's SS58 address")
+        XCTAssertEqual(address?.isWarrenAddress, true)
+    }
+
     func test_publicKeyShort_returnsNil_whenNoWallet() {
         let interactor = WarrenWalletInteractor()
         XCTAssertNil(interactor.publicKeyShort())
     }
 
-    func test_publicKeyShort_formatsAsFirst4DotsLast4_whenWalletExists() throws {
+    func test_publicKeyShort_formatsAsFirst6EllipsisLast6_whenWalletExists() throws {
         let wallet = try WarrenWallet.generate()
         try WarrenWalletKeychain.save(mnemonic: wallet.revealMnemonic())
-        let fullHex = wallet.publicKeyHex
+        let fullAddress = wallet.publicKeyAddress
         wallet.forgetSecret()
 
         let interactor = WarrenWalletInteractor()
         let short = interactor.publicKeyShort()
         XCTAssertNotNil(short)
-        XCTAssertEqual(short, "\(fullHex.prefix(4))...\(fullHex.suffix(4))")
-        // Total length : 4 + 3 + 4 = 11
-        XCTAssertEqual(short?.count, 11)
+        XCTAssertEqual(short, "\(fullAddress.prefix(6))\u{2026}\(fullAddress.suffix(6))")
+        // Total length : 6 + 1 (ellipsis) + 6 = 13
+        XCTAssertEqual(short?.count, 13)
     }
 }

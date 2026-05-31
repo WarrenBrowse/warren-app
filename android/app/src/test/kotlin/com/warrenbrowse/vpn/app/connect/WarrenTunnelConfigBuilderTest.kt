@@ -1,6 +1,6 @@
 package com.warrenbrowse.vpn.app.connect
 
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 class WarrenTunnelConfigBuilderTest {
 
-    private val pubkey = WalletPubkeyHex("a".repeat(64))
+    private val pubkey = WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
 
     private val sampleRelay = RelayInfo(
         exitId = "2921abad869e94064b56cf48c8da3631",
@@ -39,6 +39,7 @@ class WarrenTunnelConfigBuilderTest {
         natPmpLifetimeSecs: Int = 3600,
         ipv6: Boolean = false,
         lockdown: Boolean = false,
+        allowLan: Boolean = false,
         dnsState: String = WarrenLocalSettingsRepository.DNS_STATE_DEFAULT,
         customDns: List<String> = emptyList(),
         blockAds: Boolean = false,
@@ -61,6 +62,7 @@ class WarrenTunnelConfigBuilderTest {
         every { repo.exitCountry } returns MutableStateFlow(exitCountry)
         every { repo.ipv6Enabled } returns MutableStateFlow(ipv6)
         every { repo.lockdownMode } returns MutableStateFlow(lockdown)
+        every { repo.allowLan } returns MutableStateFlow(allowLan)
         every { repo.dnsState } returns MutableStateFlow(dnsState)
         every { repo.customDnsServers } returns MutableStateFlow(customDns)
         every { repo.blockAds } returns MutableStateFlow(blockAds)
@@ -234,6 +236,16 @@ class WarrenTunnelConfigBuilderTest {
         ).build(pubkey)!!
         assertTrue(config.enableIpv6)
         assertTrue(config.lockdownMode)
+    }
+
+    @Test
+    fun `allow lan defaults off and flows through when enabled`() {
+        assertFalse(WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!.allowLan)
+        val config = WarrenTunnelConfigBuilder(
+            mockRepo(allowLan = true),
+            mockCatalog(),
+        ).build(pubkey)!!
+        assertTrue(config.allowLan)
     }
 
     @Test

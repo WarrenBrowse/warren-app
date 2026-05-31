@@ -23,5 +23,5 @@ sealed interface WalletState {
      * view). Once the operation completes the repository transitions back
      * to [Locked] and the `Mnemonic` reference is released.
      */
-    data class Ready(val pubkey: WalletPubkeyHex) : WalletState
+    data class Ready(val pubkey: WalletAddress) : WalletState
 }

@@ -25,6 +25,7 @@ import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
@@ -79,14 +80,15 @@ fun WarrenWalletSettingsSection(
             style = MaterialTheme.typography.titleMedium,
         )
 
-        // Wallet identity: pubkey + state hint. Tap the row to copy the
-        // full 64-char hex to the clipboard (the pubkey is the user's
-        // shareable public identity - not a secret). The default
-        // display truncates for compactness.
+        // Wallet identity: address + state hint. Tap the row to copy the
+        // full Warren SS58 address to the clipboard (the address is the
+        // user's shareable public identity - not a secret). The default
+        // display shows the Polkadot short form (first 6 + … + last 6)
+        // for compactness.
         when (val s = state) {
             is WalletState.Ready -> {
                 val full = s.pubkey.value
-                val truncated = full.take(8) + "…" + full.takeLast(8)
+                val truncated = full.shortWarrenAddress()
                 Text(
                     text = "Pubkey: $truncated  (tap to copy)",
                     style = MaterialTheme.typography.bodySmall,

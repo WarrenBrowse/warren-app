@@ -12,6 +12,22 @@ const val ACCOUNT_NUMBER_SEPARATOR = " "
 const val ACCOUNT_NUMBER_CHUNK_SIZE = 4
 const val PASSWORD_UNICODE = '●'
 
+/**
+ * Identity transformation for single-token fields such as the Warren
+ * wallet SS58 address. Unlike [accountNumberVisualTransformation], it
+ * does NOT chunk the input into groups of [ACCOUNT_NUMBER_CHUNK_SIZE]:
+ * a Warren address (`wb…`) is a single base58 token and must render
+ * verbatim, with a 1:1 offset mapping so cursor positions stay correct.
+ *
+ * The chunking [accountNumberVisualTransformation] /
+ * [accountNumberOutputTransformation] below remain for the legacy
+ * Mullvad account-number login field (16-digit, grouped in 4s).
+ */
+fun walletAddressVisualTransformation() =
+    VisualTransformation { text ->
+        TransformedText(AnnotatedString(text.text), OffsetMapping.Identity)
+    }
+
 fun accountNumberVisualTransformation(showAccount: Boolean = true, showLastX: Int = 0) =
     VisualTransformation {
         val replacementLength = max(0, it.length - showLastX)

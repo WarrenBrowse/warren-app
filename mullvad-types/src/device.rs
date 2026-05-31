@@ -46,8 +46,8 @@ impl Device {
 /// pubkey + device). The legacy `AccountAndDevice`
 /// (account_number String + device) has been removed; the gRPC
 /// proto still keeps its `proto::AccountAndDevice` with field
-/// `account_number: String` which receives the hex pubkey (= compat
-/// with gRPC clients without renaming .proto).
+/// `account_number: String` which receives the SS58 pubkey address
+/// (= compat with gRPC clients without renaming .proto).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceState {
@@ -97,9 +97,9 @@ pub struct DeviceEvent {
 /// This is not sent by a normal logout or when it is revoked remotely.
 ///
 /// The `account_number` field (alias `String`) is replaced by
-/// `pubkey` ([`WarrenPubKey`], validated 64-char hex). The gRPC proto
-/// keeps `account_number` as the name for client compat (see
-/// mullvad-management-interface conversions).
+/// `pubkey` ([`WarrenPubKey`], a validated Warren SS58 address `wb…`).
+/// The gRPC proto keeps `account_number` as the name for client compat
+/// (see mullvad-management-interface conversions).
 #[derive(Clone, Debug, Serialize)]
 pub struct RemoveDeviceEvent {
     pub pubkey: crate::warren_pubkey::WarrenPubKey,
@@ -124,8 +124,9 @@ mod tests {
     }
 
     fn fixture_pubkey() -> WarrenPubKey {
-        WarrenPubKey::from_str("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
-            .expect("fixture hex valid")
+        // Warren SS58 address of the all-zero 32-byte pubkey (prefix 13295).
+        WarrenPubKey::from_str("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
+            .expect("fixture SS58 valid")
     }
 
     #[test]

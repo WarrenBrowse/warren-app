@@ -2,7 +2,7 @@ package com.warrenbrowse.vpn.app.connect
 
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 
 /**
@@ -26,13 +26,14 @@ class WarrenTunnelConfigBuilder(
      * available exit). Callers should surface a "no exit reachable"
      * message to the user when this happens.
      */
-    fun build(walletPubkey: WalletPubkeyHex): WarrenTunnelConfig? {
+    fun build(walletPubkey: WalletAddress): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
         val obfuscationM40 = localSettings.obfuscationM40.value
         val ipv6Enabled = localSettings.ipv6Enabled.value
         val lockdownMode = localSettings.lockdownMode.value
+        val allowLan = localSettings.allowLan.value
 
         val relays = relayCatalog.listRelays()
         val selectedExitId = localSettings.selectedExitId.value
@@ -87,6 +88,7 @@ class WarrenTunnelConfigBuilder(
             enableIpv6 = ipv6Enabled,
             lockdownMode = lockdownMode,
             dns = buildDnsConfig(),
+            allowLan = allowLan,
         )
     }
 

@@ -63,20 +63,16 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                 // The proto wire format keeps the `account_number`
                 // field (= string) for gRPC client compat. On
                 // conversion to the domain type, we parse this string
-                // into a `WarrenPubKey` (64-char hex); a client pushing
-                // a non-Warren format receives `invalid_argument`.
+                // into a `WarrenPubKey` (Warren SS58 address, `wb…`); a
+                // client pushing a non-Warren format receives
+                // `invalid_argument`.
                 let pubkey =
                     mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account.account_number)
-                        .map_err(|e| {
-                        FromProtobufTypeError::invalid_argument(match e {
-                            mullvad_types::warren_pubkey::ParseError::InvalidLength { .. } => {
-                                "account_number must be a 64-char hex Warren pubkey"
-                            }
-                            mullvad_types::warren_pubkey::ParseError::NonHex => {
-                                "account_number contains non-hex characters"
-                            }
-                        })
-                    })?;
+                        .map_err(|_| {
+                            FromProtobufTypeError::invalid_argument(
+                                "account_number must be a valid Warren SS58 address (wb…)",
+                            )
+                        })?;
                 Ok(mullvad_types::device::DeviceState::LoggedIn(
                     mullvad_types::warren_identity::WarrenIdentity {
                         pubkey,
@@ -198,15 +194,10 @@ impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEv
         // reject if the format is non-Warren (= gRPC client pushing
         // an old wrong format).
         let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&event.account_number)
-            .map_err(|e| {
-                FromProtobufTypeError::invalid_argument(match e {
-                    mullvad_types::warren_pubkey::ParseError::InvalidLength { .. } => {
-                        "RemoveDeviceEvent.account_number must be a 64-char hex Warren pubkey"
-                    }
-                    mullvad_types::warren_pubkey::ParseError::NonHex => {
-                        "RemoveDeviceEvent.account_number contains non-hex characters"
-                    }
-                })
+            .map_err(|_| {
+                FromProtobufTypeError::invalid_argument(
+                    "RemoveDeviceEvent.account_number must be a valid Warren SS58 address (wb…)",
+                )
             })?;
         Ok(mullvad_types::device::RemoveDeviceEvent {
             pubkey,

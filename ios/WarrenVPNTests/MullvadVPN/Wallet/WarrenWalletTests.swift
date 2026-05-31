@@ -144,4 +144,39 @@ final class WarrenWalletTests: XCTestCase {
         }
         XCTAssertEqual(Data(decoded), wallet.publicKey)
     }
+
+    /// `publicKeyAddress` is a Warren SS58 address: `wb`-prefixed,
+    /// 47–49 chars, base58 charset. Computed by the Rust SS58 codec
+    /// (`warren_wallet_pubkey_ss58`).
+    func test_publicKeyAddress_isWarrenSS58Address() throws {
+        let wallet = try WarrenWallet.generate()
+        let address = wallet.publicKeyAddress
+        XCTAssertTrue(address.hasPrefix("wb"), "address must start with `wb`, got \(address)")
+        XCTAssertTrue(
+            (47...49).contains(address.count),
+            "Warren SS58 address must be 47-49 chars, got \(address.count) (\(address))"
+        )
+        XCTAssertTrue(address.isWarrenAddress, "address must pass isWarrenAddress: \(address)")
+    }
+
+    /// `publicKeyAddress` is deterministic for a given mnemonic
+    /// (warren-identity HKDF + SS58 codec determinism).
+    func test_publicKeyAddress_isDeterministic() throws {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        let a = try WarrenWallet.fromMnemonic(mnemonic)
+        let b = try WarrenWallet.fromMnemonic(mnemonic)
+        XCTAssertEqual(a.publicKeyAddress, b.publicKeyAddress)
+        XCTAssertFalse(a.publicKeyAddress.isEmpty)
+    }
+
+    /// Different mnemonics produce different SS58 addresses.
+    func test_publicKeyAddress_differsAcrossWallets() throws {
+        let a = try WarrenWallet.fromMnemonic(
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        )
+        let b = try WarrenWallet.fromMnemonic(
+            "legal winner thank year wave sausage worth useful legal winner thank yellow"
+        )
+        XCTAssertNotEqual(a.publicKeyAddress, b.publicKeyAddress)
+    }
 }

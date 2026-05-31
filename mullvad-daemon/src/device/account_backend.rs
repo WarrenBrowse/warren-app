@@ -254,7 +254,8 @@ impl WarrenAccountBackend for LocalAccountBackend {
             // this call).
             let client = warren_api_client::WarrenApiClient::new_unsigned(url);
             let req = warren_api_client::RegisterAccountRequest {
-                pubkey_hex: pubkey.as_str().parse().map_err(|_| rest::Error::Aborted)?,
+                pubkey_ss58: warren_api_client::PubkeySs58::try_from(pubkey.as_str())
+                    .map_err(|_| rest::Error::Aborted)?,
                 voucher_secret: voucher,
                 referral_code: None,
             };
@@ -301,8 +302,8 @@ impl WarrenAccountBackend for LocalAccountBackend {
 /// client that talks to the warren-api server (= alternative to the
 /// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
 ///
-/// Enabled in `warren_mode = true && warren_local_account = false` mode
-/// (= 3rd branch of the dispatch in `device/mod.rs`, see Phase G.4).
+/// Enabled in `warren_local_account = false` mode
+/// (= the warren-remote branch of the dispatch in `device/mod.rs`, see Phase G.4).
 ///
 /// Mapping semantics:
 /// - `create_account()`: returns the `WarrenApiClient` pubkey hex
@@ -336,8 +337,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         // mnemonic loaded at boot. The actual subscription creation on
         // the warren-api side goes through the voucher flow (`POST /v1/register`
         // non-auth) outside this trait.
-        let pubkey_hex = self.client.pubkey_hex();
-        Box::pin(async move { Ok(pubkey_hex) })
+        let pubkey_ss58 = self.client.pubkey_ss58();
+        Box::pin(async move { Ok(pubkey_ss58) })
     }
 
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
@@ -363,11 +364,10 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
         let client = self.client.clone();
-        let pubkey_hex = client.pubkey_hex();
+        let pubkey_ss58 = client.pubkey_ss58();
         Box::pin(async move {
             let req = warren_api_client::RegisterAccountRequest {
-                pubkey_hex: pubkey_hex
-                    .parse()
+                pubkey_ss58: warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
                     .map_err(|_| rest::Error::Aborted)?,
                 voucher_secret: voucher,
                 referral_code: None,
@@ -503,7 +503,9 @@ mod tests {
     use std::str::FromStr;
 
     fn fixed_pubkey() -> WarrenPubKey {
-        WarrenPubKey::from_str(&"a".repeat(64)).expect("valid hex 64ch")
+        // Warren SS58 address of the all-zero 32-byte pubkey (prefix 13295).
+        WarrenPubKey::from_str("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
+            .expect("valid Warren SS58 address")
     }
 
     fn isolated_tempdir() -> std::path::PathBuf {
@@ -570,7 +572,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_create_account_returns_pubkey_hex_deterministic() {
+    async fn local_create_account_returns_pubkey_ss58_deterministic() {
         // Critical regression: if `create_account` returned a
         // random or call-varying String, the
         // `device.json` bootstrapped from the mnemonic would become
@@ -683,12 +685,12 @@ mod tests {
         // server call — purely local.
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[60u8; 32]);
-        let expected_pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let expected_pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let acc = backend.create_account().await.expect("create OK");
-        assert_eq!(acc, expected_pubkey_hex);
+        assert_eq!(acc, expected_pubkey_ss58);
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -697,18 +699,18 @@ mod tests {
         // returns AccountData with expiry reconstructed from expires_at.
         let (api_url, state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[61u8; 32]);
-        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
         // Pre-populate server-side (= equivalent to a prior /v1/register).
-        state.subscriptions.insert(&pubkey_hex, 1_700_000_000);
+        state.subscriptions.insert(&pubkey_ss58, 1_700_000_000);
 
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteAccountBackend::new(client);
         let data = backend
-            .get_data(pubkey_hex.clone())
+            .get_data(pubkey_ss58.clone())
             .await
             .expect("get_data OK");
 
-        assert_eq!(data.id, pubkey_hex, "id == account passed as arg");
+        assert_eq!(data.id, pubkey_ss58, "id == account passed as arg");
         assert_eq!(
             data.expiry.timestamp(),
             1_700_000_000_i64,
@@ -724,12 +726,12 @@ mod tests {
         // -> degraded UX + inconsistent device.json state.
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[62u8; 32]);
-        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
-            .get_data(pubkey_hex)
+            .get_data(pubkey_ss58)
             .await
             .expect_err("must fail with 404 mapping");
         match err {
@@ -745,18 +747,18 @@ mod tests {
         // Nominal case: delete_account removes the sub on the server side.
         let (api_url, state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[63u8; 32]);
-        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
-        state.subscriptions.insert(&pubkey_hex, 9_999_999_999);
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        state.subscriptions.insert(&pubkey_ss58, 9_999_999_999);
 
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteAccountBackend::new(client);
         backend
-            .delete_account(pubkey_hex.clone())
+            .delete_account(pubkey_ss58.clone())
             .await
             .expect("delete OK");
 
         assert!(
-            state.subscriptions.get_expiry(&pubkey_hex).is_none(),
+            state.subscriptions.get_expiry(&pubkey_ss58).is_none(),
             "sub must have disappeared server-side after delete_account"
         );
     }
@@ -768,12 +770,12 @@ mod tests {
         // or log it cleanly (vs generic error).
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[64u8; 32]);
-        let pubkey_hex = hex::encode(key.verifying_key().as_bytes());
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
         let client = WarrenApiClient::new(api_url, key);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
-            .delete_account(pubkey_hex)
+            .delete_account(pubkey_ss58)
             .await
             .expect_err("must fail 404");
         match err {

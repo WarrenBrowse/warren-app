@@ -65,8 +65,9 @@ mod tests {
     }
 
     fn fixture_pubkey() -> WarrenPubKey {
-        WarrenPubKey::from_str("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
-            .expect("fixture hex must be valid")
+        // Warren SS58 address of the all-zero 32-byte pubkey (prefix 13295).
+        WarrenPubKey::from_str("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
+            .expect("fixture SS58 must be valid")
     }
 
     #[test]

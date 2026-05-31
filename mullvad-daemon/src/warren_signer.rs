@@ -42,7 +42,7 @@ use ed25519_dalek::SigningKey;
 use mullvad_api::warren_auth::WarrenAuthSigner;
 use zeroize::Zeroizing;
 
-use crate::os_secret_storage::{get_storage, SecretStorage};
+use crate::os_secret_storage::{SecretStorage, get_storage};
 
 /// Legacy file name for the BIP39 mnemonic, used by versions of
 /// Warren prior to the introduction of [`crate::os_secret_storage`].
@@ -147,9 +147,7 @@ fn migrate_legacy_mnemonic(storage: &dyn SecretStorage, settings_dir: &Path) {
         storage.backend_name()
     );
     if let Err(e) = std::fs::remove_file(&legacy_path) {
-        log::warn!(
-            "secret storage migration succeeded but legacy file removal failed: {e}"
-        );
+        log::warn!("secret storage migration succeeded but legacy file removal failed: {e}");
     }
 }
 
@@ -220,9 +218,7 @@ fn bootstrap_fresh_mnemonic(
     let mnemonic = match bip39::Mnemonic::generate(12) {
         Ok(m) => m,
         Err(e) => {
-            log::warn!(
-                "Warren auth disabled: BIP39 mnemonic generation failed: {e}"
-            );
+            log::warn!("Warren auth disabled: BIP39 mnemonic generation failed: {e}");
             return None;
         }
     };
@@ -325,10 +321,7 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
 /// NEVER log the mnemonic content nor the signing key. The returned
 /// pubkey is public information and may be logged for audit.
 #[must_use]
-pub fn reload_signer_from_disk(
-    signer: &WarrenAuthSigner,
-    settings_dir: &Path,
-) -> Option<[u8; 32]> {
+pub fn reload_signer_from_disk(signer: &WarrenAuthSigner, settings_dir: &Path) -> Option<[u8; 32]> {
     let signing_key = load_or_create_signing_key(settings_dir)?;
     let pubkey_bytes = *signing_key.verifying_key().as_bytes();
     signer.replace_signing_key(signing_key);
@@ -395,8 +388,10 @@ mod tests {
             get_warren_mnemonic(&dir).is_some(),
             "bootstrap must leave a retrievable mnemonic"
         );
-        // The signer must produce a valid pubkey (= 64 hex chars):
-        assert_eq!(signer.pubkey_hex().len(), 64);
+        // The signer must produce a valid Warren SS58 address (`wb…`):
+        let pk = signer.pubkey_ss58();
+        assert!(pk.starts_with("wb"), "expected a wb… address, got {pk}");
+        assert!((47..=49).contains(&pk.len()), "unexpected SS58 length: {pk}");
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -408,8 +403,8 @@ mod tests {
         let s1 = load_or_create_signer(&dir).expect("first call");
         let s2 = load_or_create_signer(&dir).expect("second call");
         assert_eq!(
-            s1.pubkey_hex(),
-            s2.pubkey_hex(),
+            s1.pubkey_ss58(),
+            s2.pubkey_ss58(),
             "same settings_dir = same pubkey across boots"
         );
 
@@ -503,7 +498,7 @@ mod tests {
     fn set_warren_mnemonic_overwrites_existing_identity() {
         let dir = isolated_tempdir();
         let original_signer = load_or_create_signer(&dir).expect("bootstrap original");
-        let original_pubkey = original_signer.pubkey_hex();
+        let original_pubkey = original_signer.pubkey_ss58();
 
         let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
                             abandon abandon abandon abandon abandon about";
@@ -551,7 +546,7 @@ mod tests {
         let dir = isolated_tempdir();
 
         let signer = load_or_create_signer(&dir).expect("bootstrap signer");
-        let original_pubkey = signer.pubkey_hex();
+        let original_pubkey = signer.pubkey_ss58();
 
         let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
                             abandon abandon abandon abandon abandon about";
@@ -559,15 +554,15 @@ mod tests {
 
         let new_pubkey_bytes =
             reload_signer_from_disk(&signer, &dir).expect("reload must succeed after set");
-        let new_pubkey_hex = hex::encode(new_pubkey_bytes);
+        let new_pubkey_ss58 = mullvad_api::warren_auth::ss58::encode(&new_pubkey_bytes);
 
         assert_eq!(
-            signer.pubkey_hex(),
-            new_pubkey_hex,
+            signer.pubkey_ss58(),
+            new_pubkey_ss58,
             "the shared signer must now report the post-swap pubkey"
         );
         assert_ne!(
-            signer.pubkey_hex(),
+            signer.pubkey_ss58(),
             original_pubkey,
             "the swap must actually change the identity"
         );
@@ -587,7 +582,7 @@ mod tests {
 
         // First call triggers migration.
         let signer = load_or_create_signer(&dir).expect("loaded with migrated mnemonic");
-        let pubkey = signer.pubkey_hex();
+        let pubkey = signer.pubkey_ss58();
 
         // Legacy file should be gone after migration (and we ignore
         // failure on platforms where it cannot be removed for some
@@ -602,7 +597,7 @@ mod tests {
         let signer2 = load_or_create_signer(&dir).expect("second load");
         assert_eq!(
             pubkey,
-            signer2.pubkey_hex(),
+            signer2.pubkey_ss58(),
             "migrated mnemonic must yield a stable identity across loads"
         );
 

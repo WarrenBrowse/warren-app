@@ -1,3 +1,5 @@
+import { checkAddress } from '@polkadot/util-crypto';
+
 export type NonEmptyArray<T> = [T, ...T[]];
 
 export function hasValue<T>(value: T): value is NonNullable<T> {
@@ -12,8 +14,22 @@ export function isNumber(number: unknown): number is number {
   return !Number.isNaN(number);
 }
 
+// Substrate/SS58 network prefix for Warren wallet addresses. An
+// address encoded with this prefix is 47-49 chars and starts with
+// `wb` (e.g. `wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB`).
+export const WARREN_SS58_PREFIX = 13295;
+
+// Validates a Warren wallet pubkey: a valid SS58 address on the
+// `WARREN_SS58_PREFIX` network. `checkAddress` verifies the base58
+// encoding, the embedded checksum and the network prefix, throwing on
+// malformed input — hence the try/catch normalising to `false`.
 export function isWarrenPubKey(value: string): boolean {
-  return /^[0-9a-f]{64}$/i.test(value);
+  try {
+    const [ok] = checkAddress(value, WARREN_SS58_PREFIX);
+    return ok;
+  } catch {
+    return false;
+  }
 }
 
 // Warren voucher format emitted by the admin panel (Crockford-32):

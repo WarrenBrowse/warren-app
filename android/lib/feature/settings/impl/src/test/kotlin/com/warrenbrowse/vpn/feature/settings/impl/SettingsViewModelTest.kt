@@ -13,7 +13,7 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.VersionInfo
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
@@ -71,7 +71,9 @@ class SettingsViewModelTest {
 
     @Test
     fun `wallet Ready maps to isLoggedIn true`() = runTest {
-        walletStateFlow.value = WalletState.Ready(WalletPubkeyHex("a".repeat(64)))
+        walletStateFlow.value = WalletState.Ready(
+            WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB"),
+        )
 
         viewModel.uiState.test {
             val item = awaitItem()

@@ -14,8 +14,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 class WarrenJniBridgeImpl : WarrenJniBridge {
     override fun generateMnemonic(): String = WarrenJni.generateMnemonic()
 
-    override fun mnemonicPubkeyHex(mnemonic: String): String =
-        WarrenJni.mnemonicPubkeyHex(mnemonic)
+    override fun mnemonicPubkeySs58(mnemonic: String): String =
+        WarrenJni.mnemonicPubkeySs58(mnemonic)
 
     override fun collectReport(): String = WarrenJni.collectReport()
 }

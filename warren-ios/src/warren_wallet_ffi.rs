@@ -148,6 +148,48 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
     RC_OK
 }
 
+/// Derives the **Warren SS58 address** (`wb…`, network prefix 13295)
+/// from a 32-byte seed.
+///
+/// This is the canonical string form of the Warren wallet identity — the
+/// value shown in the UI, copied to the clipboard, and carried in the
+/// `X-Warren-PubKey` request header. The same algorithm
+/// (`warren_identity::ss58`) is used by the daemon and the backend
+/// verifier, so the address round-trips byte-for-byte. It is the iOS
+/// analog of Android's `pubkey_ss58_from_mnemonic`
+/// (`warren-jni/src/wallet.rs`).
+///
+/// `seed` : caller-provided buffer of 32 bytes.
+///
+/// Returns a heap-allocated C string holding the SS58 address. Caller
+/// MUST free it via `warren_wallet_free_mnemonic` (the free routine is
+/// type-agnostic: it reclaims any `CString` produced by this crate).
+/// Returns null on invalid input (null seed) or internal error.
+///
+/// # Safety
+/// `seed` must point to a readable buffer of at least 32 bytes. The
+/// returned pointer must be passed back to `warren_wallet_free_mnemonic`
+/// exactly once.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_wallet_pubkey_ss58(seed: *const u8) -> *mut c_char {
+    if seed.is_null() {
+        return std::ptr::null_mut();
+    }
+    // `Zeroizing` wipes the stack copy of the secret seed on drop (Fix M-2).
+    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
+    unsafe {
+        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+    }
+    let signing_key = derive_node_key(&seed_arr);
+    let pubkey = signing_key.verifying_key().to_bytes();
+    let address = warren_identity::ss58::encode(&pubkey);
+    match CString::new(address) {
+        Ok(s) => s.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// Signs an arbitrary payload with the Ed25519 signing key derived
 /// from `seed`.
 ///
@@ -309,6 +351,59 @@ mod tests {
         // SAFETY: null seed pointer is the tested precondition; the FFI rejects it.
         let rc = unsafe { warren_wallet_derive_pubkey(std::ptr::null(), pk.as_mut_ptr()) };
         assert_eq!(rc, RC_INVALID_INPUT);
+    }
+
+    /// `warren_wallet_pubkey_ss58` must return a Warren SS58 address:
+    /// a `wb`-prefixed base58 string of 47–49 characters.
+    #[test]
+    fn pubkey_ss58_returns_wb_prefixed_address() {
+        let seed = test_seed();
+        // SAFETY: `seed` is a valid 32-byte stack buffer.
+        let ptr = unsafe { warren_wallet_pubkey_ss58(seed.as_ptr()) };
+        assert!(!ptr.is_null(), "ss58 derivation must not return null");
+        // SAFETY: `ptr` is a valid C string returned just above.
+        let address = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap().to_owned();
+        // SAFETY: `ptr` came from `CString::into_raw`, freed exactly once here.
+        unsafe { warren_wallet_free_mnemonic(ptr) };
+        assert!(
+            address.starts_with("wb"),
+            "address must start with `wb`, got {address}"
+        );
+        assert!(
+            (47..=49).contains(&address.chars().count()),
+            "Warren SS58 address must be 47-49 chars, got {} ({address})",
+            address.chars().count()
+        );
+        // Round-trips through the authoritative codec back to the pubkey.
+        let decoded = warren_identity::ss58::decode(&address).unwrap();
+        let signing_key = derive_node_key(&seed);
+        assert_eq!(decoded, signing_key.verifying_key().to_bytes());
+    }
+
+    /// `warren_wallet_pubkey_ss58` must be deterministic for a given seed.
+    #[test]
+    fn pubkey_ss58_is_deterministic() {
+        let seed = test_seed();
+        // SAFETY: `seed` is a valid 32-byte stack buffer.
+        let p1 = unsafe { warren_wallet_pubkey_ss58(seed.as_ptr()) };
+        let p2 = unsafe { warren_wallet_pubkey_ss58(seed.as_ptr()) };
+        // SAFETY: both pointers are valid C strings returned above.
+        let a1 = unsafe { CStr::from_ptr(p1) }.to_str().unwrap().to_owned();
+        let a2 = unsafe { CStr::from_ptr(p2) }.to_str().unwrap().to_owned();
+        // SAFETY: each pointer freed exactly once.
+        unsafe {
+            warren_wallet_free_mnemonic(p1);
+            warren_wallet_free_mnemonic(p2);
+        }
+        assert_eq!(a1, a2);
+    }
+
+    /// `warren_wallet_pubkey_ss58` must return null on a null seed.
+    #[test]
+    fn pubkey_ss58_null_seed_returns_null() {
+        // SAFETY: null seed pointer is the tested precondition; the FFI rejects it.
+        let ptr = unsafe { warren_wallet_pubkey_ss58(std::ptr::null()) };
+        assert!(ptr.is_null());
     }
 
     /// (M-2) `sign` must return `RC_INVALID_INPUT` on a null seed.

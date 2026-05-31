@@ -8,7 +8,7 @@ import android.util.Base64
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import java.security.KeyStore
 import javax.crypto.Cipher
@@ -34,9 +34,9 @@ import kotlinx.coroutines.withContext
  *    time. GCM requires a fresh IV per encrypt; we store it alongside
  *    the ciphertext rather than re-deriving it (deterministic IVs in GCM
  *    are a foot-gun).
- *  - `pubkey_hex` (string): the 64-char lowercase hex pubkey, cached so
- *    the UI can display the wallet identifier without decrypting the
- *    mnemonic at every cold start.
+ *  - `pubkey_ss58` (string): the Warren SS58 address (`wb…`, 47-49
+ *    chars), cached so the UI can display the wallet identifier without
+ *    decrypting the mnemonic at every cold start.
  *
  * The Keystore master key is named "warren_wallet_master_v1"; it is
  * generated once on first use with `purposes = ENCRYPT | DECRYPT`,
@@ -48,7 +48,7 @@ import kotlinx.coroutines.withContext
  *   - `BiometricPrompt` gating around [unlock] + [createWallet] backup
  *     view (currently no biometric gate - any caller in the same
  *     process can decrypt the mnemonic).
- *   - Tamper-evidence: a MAC over `(pubkey_hex, ciphertext, iv)` so a
+ *   - Tamper-evidence: a MAC over `(pubkey_ss58, ciphertext, iv)` so a
  *     swapped-out wallet file is detected at boot.
  *   - `setUserAuthenticationRequired(true)` on the master key spec once
  *     BiometricPrompt is in place.
@@ -76,11 +76,11 @@ class AndroidKeystoreWalletRepository(
         }
     }
 
-    override suspend fun importWallet(mnemonic: Mnemonic): WalletPubkeyHex = lock.withLock {
+    override suspend fun importWallet(mnemonic: Mnemonic): WalletAddress = lock.withLock {
         withContext(Dispatchers.IO) {
-            val hex = mnemonic.useAsString { jni.mnemonicPubkeyHex(it) }
-            persist(mnemonic, hex)
-            WalletPubkeyHex(hex)
+            val address = mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
+            persist(mnemonic, address)
+            WalletAddress(address)
         }
     }
 
@@ -125,20 +125,20 @@ class AndroidKeystoreWalletRepository(
     // ----------------------------------------------------------------------
 
     private fun loadInitialState(): WalletState {
-        val hex = prefs.getString(KEY_PUBKEY_HEX, null) ?: return WalletState.Absent
+        val address = prefs.getString(KEY_PUBKEY_SS58, null) ?: return WalletState.Absent
         return try {
             WalletState.Locked.also {
                 // We don't decrypt at boot - UI must call `unlock()` to
                 // get the cleartext mnemonic for a signing operation.
-                @Suppress("UNUSED_EXPRESSION") WalletPubkeyHex(hex)
+                @Suppress("UNUSED_EXPRESSION") WalletAddress(address)
             }
         } catch (e: IllegalArgumentException) {
-            Logger.w(throwable = e) { "persisted pubkey is malformed; treating wallet as absent" }
+            Logger.w(throwable = e) { "persisted address is malformed; treating wallet as absent" }
             WalletState.Absent
         }
     }
 
-    private fun persist(mnemonic: Mnemonic, pubkeyHex: String? = null) {
+    private fun persist(mnemonic: Mnemonic, pubkeySs58: String? = null) {
         val cipher = Cipher.getInstance(TRANSFORMATION).apply {
             init(Cipher.ENCRYPT_MODE, getOrCreateMasterKey())
         }
@@ -152,15 +152,15 @@ class AndroidKeystoreWalletRepository(
         }
         val iv = cipher.iv
 
-        val hex = pubkeyHex ?: mnemonic.useAsString { jni.mnemonicPubkeyHex(it) }
+        val address = pubkeySs58 ?: mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
 
         prefs.edit()
             .putString(KEY_CIPHERTEXT, Base64.encodeToString(ciphertext, Base64.NO_WRAP))
             .putString(KEY_IV, Base64.encodeToString(iv, Base64.NO_WRAP))
-            .putString(KEY_PUBKEY_HEX, hex)
+            .putString(KEY_PUBKEY_SS58, address)
             .apply()
 
-        _state.value = WalletState.Ready(WalletPubkeyHex(hex))
+        _state.value = WalletState.Ready(WalletAddress(address))
     }
 
     /**
@@ -220,7 +220,7 @@ class AndroidKeystoreWalletRepository(
         const val PREFS_NAME = "warren_wallet"
         const val KEY_CIPHERTEXT = "mnemonic_ciphertext"
         const val KEY_IV = "mnemonic_iv"
-        const val KEY_PUBKEY_HEX = "pubkey_hex"
+        const val KEY_PUBKEY_SS58 = "pubkey_ss58"
 
         const val KEYSTORE_PROVIDER = "AndroidKeyStore"
         const val KEY_ALIAS = "warren_wallet_master_v1"

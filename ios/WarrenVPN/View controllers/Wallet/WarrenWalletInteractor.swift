@@ -55,18 +55,33 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
 
     public init() {}
 
-    /// Returns true if a wallet entry exists in the Keychain. Safe to
-    /// call from the main actor (does not trigger biometric prompt).
-    /// Synchronously loads the wallet pubkey as a hex string from the
-    /// Keychain. Returns `nil` if no wallet is present or the Keychain
-    /// entry is unreadable.
+    /// Synchronously loads the wallet's canonical **Warren SS58
+    /// address** (`wb…`) from the Keychain. Returns `nil` if no wallet
+    /// is present or the Keychain entry is unreadable. This is the
+    /// user-facing identity (display, copy, support) ; for the raw hex
+    /// form use `publicKeyHex()`.
     ///
-    /// Public key is non-secret per Ed25519 cryptography ; no
+    /// The public key is non-secret per Ed25519 cryptography ; no
     /// biometric prompt is required (in contrast to
     /// `loadMnemonicWithAuth(reason:completion:)` which gates on
     /// Face ID / Touch ID because the mnemonic IS secret). The seed
     /// material is zeroed via `forgetSecret()` immediately after
     /// derivation.
+    public func publicKeyAddress() -> String? {
+        guard let mnemonic = try? WarrenWalletKeychain.load(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        let address = wallet.publicKeyAddress
+        wallet.forgetSecret()
+        return address.isEmpty ? nil : address
+    }
+
+    /// Synchronously loads the wallet pubkey as a lower-case hex string
+    /// from the Keychain. Returns `nil` if no wallet is present or the
+    /// Keychain entry is unreadable. Retained for low-level diagnostics ;
+    /// prefer `publicKeyAddress()` for anything user-facing.
     public func publicKeyHex() -> String? {
         guard let mnemonic = try? WarrenWalletKeychain.load(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
@@ -78,15 +93,18 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         return hex
     }
 
-    /// Convenience : `<first 4 hex>...<last 4 hex>` short form of
-    /// the wallet pubkey. Used in compact UI surfaces (Diagnostic
-    /// info row, App Group status) where the full 64-char hex would
-    /// wrap to multiple lines. Returns `nil` when no wallet exists.
+    /// Convenience : `wb7kgy…hP9DnB` short form of the wallet SS58
+    /// address (first 6 + `…` + last 6). Used in compact UI surfaces
+    /// (Diagnostic info row, App Group status) where the full address
+    /// would wrap. Returns `nil` when no wallet exists. The full
+    /// address — not this short form — must be used for copy / share.
     public func publicKeyShort() -> String? {
-        guard let hex = publicKeyHex(), hex.count >= 8 else { return nil }
-        return "\(hex.prefix(4))...\(hex.suffix(4))"
+        guard let address = publicKeyAddress() else { return nil }
+        return address.shortWarrenAddress
     }
 
+    /// Returns true if a wallet entry exists in the Keychain. Safe to
+    /// call from the main actor (does not trigger a biometric prompt).
     public func walletExists() -> Bool {
         WarrenWalletKeychain.exists()
     }

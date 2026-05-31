@@ -10,10 +10,11 @@ license.workspace = true
 chrono = { workspace = true, features = ["clock", "serde"] }
 clap = { workspace = true, optional = true }
 either = "1.11"
-# Warren fork — Phase 2.B: `WarrenPubKey` newtype validates a 64-char
-# hex string representing an Ed25519 pubkey (32 bytes). Aligned with
-# the version used by `mullvad-api/src/warren_auth.rs`.
-hex = "0.4"
+# Warren fork: `WarrenPubKey` validates an SS58 address (prefix 13295,
+# `wb…`). Uses the shared `warren-ss58` leaf crate from warren-core — the
+# single source of truth for the codec, also re-exported as
+# `warren_identity::ss58` on the backend. No duplicated checksum logic.
+warren-ss58 = { path = "../../warren-core/crates/warren-ss58" }
 intersection-derive = { path = "intersection-derive" }
 ipnetwork = { workspace = true }
 log = { workspace = true }

@@ -1,6 +1,6 @@
 package com.warrenbrowse.vpn.screen.splash
 
-import com.warrenbrowse.vpn.lib.model.wallet.WalletPubkeyHex
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
@@ -56,7 +56,9 @@ class SplashViewModelTest {
     fun `wallet Ready routes to Connect`() = runTest {
         val vm = makeVm(
             privacyAccepted = true,
-            walletState = WalletState.Ready(WalletPubkeyHex("a".repeat(64))),
+            walletState = WalletState.Ready(
+                WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB"),
+            ),
         )
         val side = vm.uiSideEffect.first()
         assertEquals(SplashUiSideEffect.NavigateToConnect, side)

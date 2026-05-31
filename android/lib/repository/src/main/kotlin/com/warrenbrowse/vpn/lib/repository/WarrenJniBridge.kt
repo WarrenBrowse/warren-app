@@ -29,10 +29,10 @@ interface WarrenJniBridge {
     fun generateMnemonic(): String
 
     /**
-     * Derive the wallet pubkey hex (lowercase, 64 chars, no `0x`
-     * prefix) from a BIP39 mnemonic phrase.
+     * Derive the wallet identity as a Warren SS58 address (a `wb…`
+     * string, 47-49 chars) from a BIP39 mnemonic phrase.
      */
-    fun mnemonicPubkeyHex(mnemonic: String): String
+    fun mnemonicPubkeySs58(mnemonic: String): String
 
     /**
      * Collect a redacted log bundle from the Rust ring buffer. Returns
