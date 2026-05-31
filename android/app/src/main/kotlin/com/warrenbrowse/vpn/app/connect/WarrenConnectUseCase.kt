@@ -12,6 +12,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -38,6 +39,7 @@ import kotlinx.serialization.json.Json
 class WarrenConnectUseCase(
     private val walletRepository: WalletRepository,
     private val configBuilder: WarrenTunnelConfigBuilder,
+    private val localSettings: WarrenLocalSettingsRepository,
 ) : WarrenQuinnConnectInvoker {
 
     sealed interface Outcome {
@@ -80,10 +82,15 @@ class WarrenConnectUseCase(
             return Outcome.Failure(e.message ?: "wallet unlock failed")
         }
 
-        val config = configBuilder.build(state.pubkey) ?: run {
+        val built = configBuilder.build(state.pubkey) ?: run {
             Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
             return Outcome.Failure("No relay available")
         }
+        // Apply the local-network-sharing toggle here so it is honoured
+        // regardless of the config builder (which is the natural place but is
+        // kept minimal). allowLan is a serialized field, so it survives the
+        // JSON round-trip through the VpnService Intent down to the TUN plan.
+        val config = built.copy(allowLan = localSettings.allowLan.value)
         val configJson = Json.encodeToString(config)
 
         MnemonicCache.put(mnemonic)

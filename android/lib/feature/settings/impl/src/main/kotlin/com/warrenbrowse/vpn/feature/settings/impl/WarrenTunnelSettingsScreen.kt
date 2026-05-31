@@ -74,6 +74,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val exitCountry by repo.exitCountry.collectAsStateWithLifecycle()
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
     val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
+    val allowLan by repo.allowLan.collectAsStateWithLifecycle()
     val dnsState by repo.dnsState.collectAsStateWithLifecycle()
     val customDns by repo.customDnsServers.collectAsStateWithLifecycle()
     val blockAds by repo.blockAds.collectAsStateWithLifecycle()
@@ -156,6 +157,15 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     "blocked to prevent leaks.",
                 value = ipv6,
                 onValueChange = repo::setIpv6Enabled,
+            )
+
+            ToggleRow(
+                title = "Local network sharing",
+                subtitle = "Reach devices on your local network (printers, NAS, " +
+                    "casting) directly while everything else stays tunnelled. " +
+                    "Disabled while the kill switch is blocking.",
+                value = allowLan,
+                onValueChange = repo::setAllowLan,
             )
 
             HorizontalDivider()
@@ -272,7 +282,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
  * immediately recognisable on the network. The legacy Mullvad obfuscation
  * methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do
  * not apply to Warren tunnels, so no picker is shown — this mirrors the
- * desktop anti-censorship view when warren_mode is on.
+ * desktop anti-censorship view.
  */
 @Composable
 private fun ObfuscationIndicator() {

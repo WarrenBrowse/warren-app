@@ -104,7 +104,11 @@ val appModule = module {
     // service dispatch for Warren Quinn connect.
     single { WarrenTunnelConfigBuilder(localSettings = get(), relayCatalog = get()) }
     single {
-        WarrenConnectUseCase(walletRepository = get(), configBuilder = get())
+        WarrenConnectUseCase(
+            walletRepository = get(),
+            configBuilder = get(),
+            localSettings = get(),
+        )
     } bind WarrenQuinnConnectInvoker::class
 
     // D.4 step 12: disconnect path bound to the same lib-side surface
