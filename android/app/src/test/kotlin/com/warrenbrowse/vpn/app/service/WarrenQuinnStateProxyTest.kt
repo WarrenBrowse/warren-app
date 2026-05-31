@@ -1,11 +1,33 @@
 package com.warrenbrowse.vpn.app.service
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class WarrenQuinnStateProxyTest {
+
+    // The proxy binds its state projection to Dispatchers.Main.immediate at
+    // construction, so the Main dispatcher must be installed before any test
+    // builds a proxy. UnconfinedTestDispatcher runs the eager stateIn
+    // collection synchronously, so `.value` reflects updates immediately.
+    @BeforeEach
+    fun setUp() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
     fun `default state is Disconnected`() = runTest {
@@ -23,7 +45,7 @@ class WarrenQuinnStateProxyTest {
     }
 
     @Test
-    fun `Connected without feature flags renders plain Connected label`() = runTest {
+    fun `Connected always advertises always-on HTTP3 mimicry`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(
             WarrenTunnelState.Connected(
@@ -34,7 +56,9 @@ class WarrenQuinnStateProxyTest {
                 obfuscationM40 = false,
             )
         )
-        assertEquals("Connected", proxy.state.value)
+        // M4.0 HTTP/3 mimicry is always-on for Warren tunnels, so the
+        // connection summary surfaces it even with every other flag off.
+        assertEquals("Connected (mimicry)", proxy.state.value)
     }
 
     @Test
@@ -53,7 +77,7 @@ class WarrenQuinnStateProxyTest {
         assertTrue(label.startsWith("Connected ("), "got: $label")
         assertTrue(label.contains("multi-hop"), "got: $label")
         assertTrue(label.contains("DAITA"), "got: $label")
-        assertTrue(label.contains("M4.0"), "got: $label")
+        assertTrue(label.contains("mimicry"), "got: $label")
         assertTrue(label.contains("port 51234"), "got: $label")
     }
 

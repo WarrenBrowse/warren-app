@@ -46,7 +46,7 @@ import org.koin.compose.koinInject
  *   - DAITA padding (Tamaraw)
  *   - NAT-PMP port forwarding
  *   - Multi-hop entry relay
- *   - M4.0 obfuscation
+ *   - Anti-censorship (read-only: M4.0 HTTP/3 mimicry is always-on)
  *
  * Reached via [com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey]
  * from the main Settings screen ("Warren tunnel" entry). The switches
@@ -72,7 +72,6 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
     val entryCountry by repo.entryCountry.collectAsStateWithLifecycle()
     val exitCountry by repo.exitCountry.collectAsStateWithLifecycle()
-    val obfuscation by repo.obfuscationM40.collectAsStateWithLifecycle()
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
     val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
     val dnsState by repo.dnsState.collectAsStateWithLifecycle()
@@ -253,12 +252,9 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 }
             }
 
-            ToggleRow(
-                title = "M4.0 obfuscation",
-                subtitle = "Disguise QUIC traffic as plain HTTPS (anti-censorship).",
-                value = obfuscation,
-                onValueChange = repo::setObfuscationM40,
-            )
+            HorizontalDivider()
+            SectionLabel("Anti-censorship")
+            ObfuscationIndicator()
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -266,6 +262,38 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             ) { Text("Exit relay…") }
         }
     }
+}
+
+/**
+ * Read-only anti-censorship status. Warren tunnels run warren-core's QUIC
+ * transport, which masquerades as standard browser HTTP/3 traffic (ALPN h3,
+ * SNI warrenbrowse.com, Initial-packet split, UDP/443). This M4.0 mimicry is
+ * always-on and not togglable: disabling it would make Warren clients
+ * immediately recognisable on the network. The legacy Mullvad obfuscation
+ * methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do
+ * not apply to Warren tunnels, so no picker is shown — this mirrors the
+ * desktop anti-censorship view when warren_mode is on.
+ */
+@Composable
+private fun ObfuscationIndicator() {
+    Text(
+        text = "HTTP/3 mimicry obfuscation is always-on for Warren tunnels.",
+        style = MaterialTheme.typography.titleSmall,
+    )
+    Text(
+        text = "Warren tunnels masquerade as standard browser HTTP/3 traffic: " +
+            "ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This " +
+            "is not togglable because disabling it would make Warren clients " +
+            "immediately recognisable on the network.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Text(
+        text = "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) " +
+            "do not apply to Warren tunnels.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

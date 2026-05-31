@@ -66,7 +66,9 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
             "Connected" + listOfNotNull(
                 if (multiHop) "multi-hop" else null,
                 if (daita) "DAITA" else null,
-                if (obfuscationM40) "M4.0" else null,
+                // HTTP/3 mimicry is always-on for Warren tunnels (not togglable);
+                // surface it unconditionally rather than gating on a setting.
+                "mimicry",
                 if (assignedNatPmpPort != null) "port $assignedNatPmpPort" else null,
             ).let { features -> if (features.isEmpty()) "" else " (${features.joinToString()})" }
         is WarrenTunnelState.Reconnecting -> "Reconnecting..."
