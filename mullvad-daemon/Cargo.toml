@@ -256,6 +256,13 @@ cgroup2 = ["talpid-core/cgroup2"]
 # Use jemalloc as the global allocator. Only takes effect on Linux.
 default-allocator = ["dep:tikv-jemallocator"]
 staggered-obfuscation = ["mullvad-relay-selector/staggered-obfuscation"]
+# Enables macOS split tunneling. OFF by default: macOS ST relies on
+# Endpoint Security, which only works on a signed build (Developer ID +
+# endpoint-security entitlement) with Full Disk Access. Set this ONLY on
+# signed release builds; on unsigned builds ST half-initialises and
+# breaks connectivity, so the daemon refuses to enable it unless this is
+# set (see `macos_split_tunnel_supported`).
+macos-split-tunnel = []
 
 # Warren rebrand Level A: installed binary `warren-daemon` instead of
 # `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept

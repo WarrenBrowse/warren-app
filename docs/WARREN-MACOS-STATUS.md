@@ -117,6 +117,34 @@ réconcilier). Conséquences observées par l'utilisateur :
   (inclut `AuthRejected`), warren-core poussé, garde-fous Cargo.lock
   (pin quinn-fork + `cargo metadata --locked`) vérifiés OK.
 
+### Connectivité macOS : « connecte mais pas d'internet » + crash split-tunnel (déclenché par le split tunneling)
+
+Signalé par **2 utilisateurs**, exactement à l'**activation du split tunneling** macOS
+(donc pas un hasard). Diagnostic (sur vrai Mac) :
+
+- Symptôme : tunnel `Connected`, routes posées, mais `pump_metrics` montre
+  `uplink>0 / downlink=0` → le trafic sort, rien ne revient → pas d'internet.
+- Cause routing : la route /32 de l'exit était pinnée sur **utun4 (le tunnel)**
+  au lieu de l'interface physique → l'exit était routé *dans* le tunnel →
+  boucle → downlink=0. `route -n get default` renvoie le tun une fois le
+  split-default posé, donc la détection `default_iface` prenait `utun4`.
+- Déclencheur : le **split tunneling macOS** (Endpoint Security + BPF + utun
+  dédié) ne peut pas fonctionner sur un **build non signé** (ES exige
+  Developer ID + entitlement + Full Disk Access). Il s'initialise à moitié
+  → routage corrompu + crash de la GUI au quit.
+
+**Corrigés :**
+
+| Fix | Repo / fichier | Effet |
+|---|---|---|
+| **Détection d'interface résistante au tunnel** | warren-core `crates/warren-client/src/default_route_split_macos.rs` (`1d9d950`) | `discover_default_iface` pinne la route de l'exit sur la NIC **physique** via `scutil` PrimaryInterface quand `route get default` renvoie un tun. Refuse de pinner sur un tunnel (erreur claire plutôt que tunnel-sur-lui-même). 6 tests TDD (`resolve_falls_back_to_scutil_when_route_is_a_tunnel`, …). |
+| **Gating du split tunneling macOS sur build non signé** | warren-app `mullvad-daemon` (`lib.rs` + `Cargo.toml`) | Le daemon **refuse** d'activer le ST (`MacosSplitTunnelUnsupported`) AVANT tout init ES/BPF, sauf si build signé (feature `macos-split-tunnel`, OFF par défaut). Désactiver/clear restent permis. Élimine crash + breakage à la source. Tests `unsigned_macos_build_reports_split_tunnel_unsupported`, `enabling_split_tunnel_is_refused_on_unsigned_macos`. |
+
+Workaround manuel sur un build non corrigé (v1.0.3) : après connexion,
+`sudo route -n add -host <exit_ip> <gateway_physique>` (auto-détectable via
+`scutil` + le log daemon). À relancer à chaque repaire reconnexion ; le fix
+`1d9d950` le rend automatique.
+
 ### Chantiers restants
 
 - **#3 - Persistance d'identité** : 🟡 largement adressé.

@@ -182,6 +182,41 @@ const WG_RECONNECT_DELAY: Duration = Duration::from_mins(4);
 
 pub type ResponseTx<T, E> = oneshot::Sender<Result<T, E>>;
 
+/// Whether macOS split tunneling is usable in THIS build.
+///
+/// macOS split tunneling relies on Endpoint Security, which requires a
+/// signed build carrying the `com.apple.developer.endpoint-security.client`
+/// entitlement plus Full Disk Access. Unsigned / ad-hoc builds cannot
+/// obtain an ES client, so enabling ST half-initialises (the TUN + BPF
+/// are created but ES is denied), which corrupts routing (the exit route
+/// loops into a tunnel -> no downlink -> "connects but no internet") and
+/// crashes the GUI on quit. The capability is therefore gated behind the
+/// `macos-split-tunnel` cargo feature, set ONLY on signed release builds.
+#[cfg(target_os = "macos")]
+#[must_use]
+pub(crate) const fn macos_split_tunnel_supported() -> bool {
+    cfg!(feature = "macos-split-tunnel")
+}
+
+/// Gate for the macOS split-tunnel **enable** path. `Ok` on every
+/// non-macOS desktop platform; on macOS, `Err`
+/// ([`Error::MacosSplitTunnelUnsupported`]) unless this is a signed
+/// build (feature `macos-split-tunnel`). Returning the error BEFORE any
+/// TUN/BPF/ES setup is what prevents the half-initialised broken state.
+#[cfg(target_os = "macos")]
+fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
+    if macos_split_tunnel_supported() {
+        Ok(())
+    } else {
+        Err(Error::MacosSplitTunnelUnsupported)
+    }
+}
+
+#[cfg(any(target_os = "windows", target_os = "android"))]
+fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
+    Ok(())
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Failed to send command to daemon because it is not running")]
@@ -242,6 +277,15 @@ pub enum Error {
     #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     #[error("Split tunneling error")]
     SplitTunnelError(#[source] split_tunnel::Error),
+
+    #[cfg(target_os = "macos")]
+    #[error(
+        "Split tunneling is unavailable in this build: macOS split tunneling needs Endpoint \
+         Security, which requires a signed build (Developer ID + endpoint-security entitlement) \
+         and Full Disk Access. Enabling it on an unsigned build half-initialises and breaks \
+         connectivity. It will become available in signed releases."
+    )]
+    MacosSplitTunnelUnsupported,
 
     #[error("An account is already set")]
     AlreadyLoggedIn,
@@ -3235,6 +3279,14 @@ impl Daemon {
 
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "android"))]
     fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: SplitApp) {
+        // Refuse to add an excluded app on a build where split tunneling
+        // cannot actually run (unsigned macOS): doing so would
+        // half-initialise the ES/BPF stack and corrupt routing. No-op on
+        // platforms where ST is supported.
+        if let Err(e) = macos_split_tunnel_enable_allowed() {
+            Self::oneshot_send(tx, Err(e), "add_split_tunnel_app response");
+            return;
+        }
         let settings = self.settings.to_settings();
 
         let excluded_apps = {
@@ -3283,6 +3335,17 @@ impl Daemon {
 
     #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     fn on_set_split_tunnel_state(&mut self, tx: ResponseTx<(), Error>, state: bool) {
+        // Only ENABLING is gated: turning split tunneling OFF (or leaving
+        // it off) must always be allowed so a user can recover. On an
+        // unsigned macOS build, enabling is refused before any ES/BPF
+        // setup, preventing the half-initialised state that breaks
+        // connectivity and crashes on quit.
+        if state
+            && let Err(e) = macos_split_tunnel_enable_allowed()
+        {
+            Self::oneshot_send(tx, Err(e), "set_split_tunnel_state response");
+            return;
+        }
         let settings = self.settings.to_settings();
         self.set_split_tunnel_paths(
             tx,
@@ -4752,5 +4815,38 @@ pub async fn cleanup_old_rpc_socket(rpc_socket_path: impl AsRef<std::path::Path>
         && err.kind() != std::io::ErrorKind::NotFound
     {
         log::error!("Failed to remove old RPC socket: {}", err);
+    }
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod macos_split_tunnel_gate_tests {
+    use super::{Error, macos_split_tunnel_enable_allowed, macos_split_tunnel_supported};
+
+    #[test]
+    fn unsigned_macos_build_reports_split_tunnel_unsupported() {
+        // The `macos-split-tunnel` feature is OFF in the default (=
+        // unsigned) build, so split tunneling must report unsupported.
+        // Guards against accidentally shipping it enabled before the app
+        // is signed (which would reintroduce the connects-but-no-internet
+        // + quit-crash regression two users hit at ST activation).
+        assert!(
+            !macos_split_tunnel_supported(),
+            "macOS split tunneling must be unsupported unless built with the \
+             `macos-split-tunnel` (signed-release) feature"
+        );
+    }
+
+    #[test]
+    fn enabling_split_tunnel_is_refused_on_unsigned_macos() {
+        // The enable gate must return the explicit, non-destructive error
+        // BEFORE any ES/BPF/TUN setup, so a user cannot reach the
+        // half-initialised state that loops the exit route into a tunnel
+        // (downlink=0) and crashes the GUI on quit.
+        let err = macos_split_tunnel_enable_allowed()
+            .expect_err("enabling ST on an unsigned macOS build must be refused");
+        assert!(
+            matches!(err, Error::MacosSplitTunnelUnsupported),
+            "must be the explicit MacosSplitTunnelUnsupported error, got: {err:?}"
+        );
     }
 }
