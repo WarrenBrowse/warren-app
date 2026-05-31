@@ -8,6 +8,7 @@ import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
+import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -62,6 +63,53 @@ class WarrenSubscriptionUseCase(
                     )
                 }
                 parseOutcome(rawJson)
+            }
+        }
+    }
+
+    override suspend fun redeemVoucher(
+        activity: FragmentActivity,
+        voucher: String,
+    ): WarrenVoucherOutcome {
+        val state = walletRepository.state.value
+        if (state !is WalletState.Ready) {
+            Logger.w("WarrenSubscriptionUseCase.redeem: wallet not Ready (state=$state)")
+            return WarrenVoucherOutcome.WalletNotReady
+        }
+        val mnemonic = try {
+            walletRepository.unlock(
+                authorizer = BiometricPromptAuthorizer(activity),
+                reason = "Redeem your voucher",
+            )
+        } catch (e: WalletAuthorizationDeniedException) {
+            return WarrenVoucherOutcome.AuthorizationDenied
+        } catch (e: Exception) {
+            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.redeem: unlock failed" }
+            return WarrenVoucherOutcome.Failure(e.message ?: "wallet unlock failed")
+        }
+
+        return withContext(Dispatchers.IO) {
+            mnemonic.use { m ->
+                val rawJson = try {
+                    WarrenJni.redeemVoucher(m.phrase, voucher)
+                } catch (e: Exception) {
+                    Logger.e(throwable = e) { "WarrenJni.redeemVoucher threw" }
+                    return@use WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
+                }
+                try {
+                    val root = Json.parseToJsonElement(rawJson).jsonObject
+                    if (root["ok"]?.jsonPrimitive?.boolean == true) {
+                        val expiresAt = root["expires_at"]?.jsonPrimitive?.long
+                            ?: return@use WarrenVoucherOutcome.Failure("missing expires_at")
+                        WarrenVoucherOutcome.Success(expiresAt)
+                    } else {
+                        WarrenVoucherOutcome.Failure(
+                            root["error"]?.jsonPrimitive?.content ?: "redeem failed",
+                        )
+                    }
+                } catch (e: Exception) {
+                    WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
+                }
             }
         }
     }

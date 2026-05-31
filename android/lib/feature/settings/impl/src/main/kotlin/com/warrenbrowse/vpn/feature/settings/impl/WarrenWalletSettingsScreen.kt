@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +36,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import kotlinx.coroutines.launch
@@ -69,6 +71,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val scope = rememberCoroutineScope()
     var connectStatus by remember { mutableStateOf<String?>(null) }
     var subscriptionStatus by remember { mutableStateOf<String?>(null) }
+    var voucherInput by remember { mutableStateOf("") }
     var devices by remember { mutableStateOf<List<WarrenDeviceSummary>?>(null) }
     var deviceStatus by remember { mutableStateOf<String?>(null) }
 
@@ -107,6 +110,30 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
+
+            // Voucher redemption (Crockford-32). The server normalizes the
+            // dashed / raw form, so the input is sent verbatim.
+            OutlinedTextField(
+                value = voucherInput,
+                onValueChange = { voucherInput = it.uppercase() },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                label = { Text("Voucher code") },
+                placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
+                singleLine = true,
+            )
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                enabled = voucherInput.isNotBlank(),
+                onClick = {
+                    val code = voucherInput.trim()
+                    scope.launch {
+                        subscriptionStatus = "Redeeming voucher…"
+                        val outcome = subscriptionInvoker.redeemVoucher(activity, code)
+                        if (outcome is WarrenVoucherOutcome.Success) voucherInput = ""
+                        subscriptionStatus = voucherLabel(outcome)
+                    }
+                },
+            ) { Text("Redeem voucher") }
 
             // Device management: list + remove, each biometric-gated.
             OutlinedButton(
@@ -226,6 +253,20 @@ internal fun subscriptionLabel(
     WarrenSubscriptionOutcome.AuthorizationDenied -> "Authorization cancelled."
     WarrenSubscriptionOutcome.WalletNotReady -> "Set up your wallet first."
     is WarrenSubscriptionOutcome.Failure -> "Couldn't fetch subscription status."
+}
+
+/** Render a [WarrenVoucherOutcome] as a user-facing line. */
+internal fun voucherLabel(outcome: WarrenVoucherOutcome): String = when (outcome) {
+    is WarrenVoucherOutcome.Success -> {
+        val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+            .toString()
+        "Voucher redeemed — subscription expires $date"
+    }
+    WarrenVoucherOutcome.AuthorizationDenied -> "Authorization cancelled."
+    WarrenVoucherOutcome.WalletNotReady -> "Set up your wallet first."
+    is WarrenVoucherOutcome.Failure -> "Couldn't redeem voucher. Check the code and try again."
 }
 
 /** Format a device creation timestamp as a local date, or a fallback. */

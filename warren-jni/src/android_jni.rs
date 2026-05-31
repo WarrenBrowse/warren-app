@@ -869,6 +869,61 @@ fn remove_device_inner(_mnemonic: &str, _device_id: &str) -> Result<(), String> 
     Err("removeDevice is Android-only".to_owned())
 }
 
+/// Redeem a subscription voucher (`POST /v1/register`). Binds the wallet
+/// pubkey to a new subscription. The request is unsigned (the pubkey is
+/// carried in the body), so only the wallet pubkey is derived from the
+/// mnemonic. Returns `{"ok": true, "expires_at": <unix secs>}` or
+/// `{"ok": false, "error": "..."}`. The voucher secret is never logged.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    voucher: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let voucher_secret = String::from_java(&jnix_env, voucher);
+    let json = match redeem_voucher_inner(&phrase, &voucher_secret) {
+        Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
+        Err(e) => {
+            log::warn!("redeemVoucher failed");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn redeem_voucher_inner(mnemonic: &str, voucher_secret: &str) -> Result<u64, String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
+    let pubkey_hex = crate::wallet::pubkey_hex_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let pubkey = warren_api_client::PubkeyHex::try_from(pubkey_hex.as_str())
+        .map_err(|e| format!("invalid pubkey: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
+    let req = warren_api_client::RegisterAccountRequest {
+        pubkey_hex: pubkey,
+        voucher_secret: voucher_secret.to_owned(),
+        referral_code: None,
+    };
+    let resp = runtime
+        .block_on(client.register_with_voucher(&req))
+        .map_err(|e| format!("register failed: {e}"))?;
+    Ok(resp.expires_at)
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn redeem_voucher_inner(_mnemonic: &str, _voucher_secret: &str) -> Result<u64, String> {
+    Err("redeemVoucher is Android-only".to_owned())
+}
+
 /// Collect a redacted log bundle from the in-process logger ring
 /// buffer. D.6: the current implementation returns an empty string
 /// because Android `init_log_file` only bridges `log` -> logcat; a

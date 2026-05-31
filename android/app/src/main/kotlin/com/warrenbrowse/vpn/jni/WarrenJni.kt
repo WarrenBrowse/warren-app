@@ -149,6 +149,15 @@ object WarrenJni {
     external fun getSubscription(mnemonic: String): String
 
     /**
+     * Redeem a subscription voucher (`POST /v1/register`), binding the
+     * wallet pubkey to a new subscription. Returns
+     * `{"ok": true, "expires_at": <unix seconds>}` or
+     * `{"ok": false, "error": "..."}`. The voucher and mnemonic are not
+     * retained.
+     */
+    external fun redeemVoucher(mnemonic: String, voucher: String): String
+
+    /**
      * List the wallet's registered devices (signed `GET /v1/devices`).
      * Returns `{"ok": true, "devices": [{"id","name","created_at"}, ...]}`
      * or `{"ok": false, "error": "..."}`. The [mnemonic] is not retained.

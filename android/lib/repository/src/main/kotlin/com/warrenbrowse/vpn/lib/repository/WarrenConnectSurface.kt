@@ -138,8 +138,22 @@ sealed interface WarrenSubscriptionOutcome {
  * bound to this interface in `di/AppModule`. Activity-coupled because it
  * raises a biometric prompt to unlock the mnemonic that signs the request.
  */
+/**
+ * Outcome of redeeming a voucher. [Success.expiresAtUnixSecs] is the new
+ * subscription expiry returned by the server.
+ */
+sealed interface WarrenVoucherOutcome {
+    data class Success(val expiresAtUnixSecs: Long) : WarrenVoucherOutcome
+    data object AuthorizationDenied : WarrenVoucherOutcome
+    data object WalletNotReady : WarrenVoucherOutcome
+    data class Failure(val message: String) : WarrenVoucherOutcome
+}
+
 interface WarrenSubscriptionInvoker {
     suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome
+
+    /** Redeem a Crockford-32 voucher and bind it to the wallet. */
+    suspend fun redeemVoucher(activity: FragmentActivity, voucher: String): WarrenVoucherOutcome
 }
 
 /** A registered device, projected for the UI (no WireGuard key surfaced). */
