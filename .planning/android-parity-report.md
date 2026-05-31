@@ -73,6 +73,16 @@ Commit : `3d0ee334cf`.
 
 Commit : `90a929024a`. Item du cluster relay-lists, Kotlin-only. Repository : `recentExitIds` (5 max, most-recent-first, dédupliqué, persisté ; auto-enregistré à chaque sélection d'exit). UI : section « Recents » en tête du location picker, résolue contre le catalogue courant. Tests repository (dedup/cap/auto-record).
 
+#### Compte / abonnement / devices / voucher — ✅ FAIT
+
+Découverte clé : les commits concurrents sur `main` touchent **uniquement desktop/daemon/CLI** (`mullvad-cli`, `mullvad-daemon`, `mullvad-types`), **pas `android/` ni `warren-jni/`** → pas de collision sur la zone compte Android. `warren-api-client` expose déjà tout le nécessaire. Pattern JNI authentifié = `sendProblemReport` (dérive la clé du mnémonique → `WarrenApiClient::new(PROD_API_URL, key)` → `RUNTIME.block_on`).
+
+- **Statut d'abonnement** (commit `dbe362546b`) : JNI `getSubscription(mnemonic)` → `GET /v1/subscription` signé → `{expires_at}`. Surface `WarrenSubscriptionInvoker` + use case biométrique + bouton « Check subscription » (actif/expiré + date). Test `SubscriptionLabelTest`.
+- **Gestion devices** (commit `75730ae7ae`) : JNI `listDevices`/`removeDevice` → `GET`/`DELETE /v1/devices` signés (projette id/name/created_at, pas la wg key). Surface `WarrenDeviceInvoker` + use case + UI « Manage devices » (liste + remove biométrique par device). Test `DeviceLabelTest`.
+- **Voucher in-app** (commit `dedd6155c3`) : JNI `redeemVoucher(mnemonic, voucher)` → `POST /v1/register` (non-signé, pubkey dérivée du mnémonique) → `{expires_at}`. Champ Crockford-32 + bouton « Redeem voucher ». Décision produit respectée (pas de Play Billing). Test voucher.
+
+Tout vérifié : `cargo check` android (chaque JNI) + app/repo/settings compile + tests label verts.
+
 ### Faisabilité dé-risquée (suite P1)
 
 `warren-api-client` expose **déjà** : `get_subscription()`, `list_devices()`, `get_device()`, `delete_device()`, `register_device()`, `delete_account()`. Le pont JNI a le pattern d'appel API authentifié (`sendProblemReport` : dérive la clé du mnémonique → `WarrenApiClient::new(url, key)` → `RUNTIME.block_on`). Donc **compte/devices + statut d'abonnement sont prêts à câbler** : il reste à ajouter les exports JNI (`getSubscription`, `listDevices`, `removeDevice`), le déclencheur biométrique (réutiliser `BiometricPromptAuthorizer`), un repository et l'UI. Le **voucher** (`/v1/register`) reste à confirmer côté warren-api-client (non vu dans la surface publique). Le **failover** reste bloqué par le schéma single-endpoint côté JNI (`listRelays` projette un seul endpoint « until multi-endpoint failover lands »).
@@ -83,14 +93,11 @@ Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 
 | # | Item | Prio | Est. | Dépendances / risques |
 |---|------|------|------|------------------------|
-| 1 | **Statut d'abonnement (expiry)** | P1 | M | `warren-api-client.get_subscription()` existe → JNI `getSubscription` + biométrie + affichage compte. Le plus borné. |
-| 2 | **Compte / keys / devices (list + remove)** | P1 | L | `list_devices()`/`delete_device()` existent → JNI + biométrie + écran `ManageDevices` + nav. |
-| 3 | **Voucher in-app (Crockford-32)** | P1 | L | Confirmer/ajouter l'endpoint voucher dans `warren-api-client` (`/v1/register`), puis JNI + UI. |
-| 4 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android ; l'étape Subscription dépend de #1/#3 ; flag de complétion persisté. ⚠️ zone en développement concurrent. |
-| 5 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. |
-| 6 | **Relay lists custom / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | *Recents = fait* (`90a929024a`). Reste : support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer (sinon toggles non-fonctionnels). À fractionner. |
+| 1 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android, mais **touche le splash + la navigation** (5 NavKeys/EntryProviders + gating + flag de complétion persisté). Sensible (flux de lancement). L'étape Subscription peut réutiliser `WarrenSubscriptionInvoker` (déjà livré). |
+| 2 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. Nécessite warren-core/JNI multi-endpoint. |
+| 3 | **Relay lists custom / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer (sinon toggles non-fonctionnels). À fractionner. |
 
-> ⚠️ **Développement concurrent** : les zones compte / abonnement / voucher / mnémonique sont activement modifiées sur `main` par un autre flux de travail (commits `redeem vouchers for real`, `default to real warren-api backend`, `mnemonic export/import`). Les items #1–#3 sont à coordonner pour éviter les collisions.
+> **Note** : le cluster compte / abonnement / voucher / devices est désormais **livré côté Android** (commits ci-dessus). Les commits concurrents sur cette thématique ne touchent que desktop/daemon/CLI — aucune collision Android constatée.
 
 ### Risques transverses (rappel)
 
