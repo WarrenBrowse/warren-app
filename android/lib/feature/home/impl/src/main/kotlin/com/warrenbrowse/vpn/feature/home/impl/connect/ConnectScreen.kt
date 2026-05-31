@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -96,6 +97,7 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
@@ -173,6 +175,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
     val warrenDisconnect = koinInject<WarrenQuinnDisconnectInvoker>()
     val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
+    val localSettings = koinInject<WarrenLocalSettingsRepository>()
+    val cachedExpiry by localSettings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
+    val subscriptionWarning = remember(cachedExpiry) { connectExpiryWarning(cachedExpiry) }
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -298,6 +303,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             ConnectScreen(
                 state = state,
                 snackbarHostState = snackbarHostState,
+                subscriptionWarning = subscriptionWarning,
                 onDisconnectClick = { warrenDisconnect.disconnect() },
                 onReconnectClick = { warrenReconnect.reconnect() },
                 onConnectClick = onWarrenConnectClick,
@@ -355,6 +361,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
 fun ConnectScreen(
     state: ConnectUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    subscriptionWarning: String? = null,
     onDisconnectClick: () -> Unit,
     onReconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
@@ -378,6 +385,7 @@ fun ConnectScreen(
                 contentFocusRequester,
                 padding,
                 state,
+                subscriptionWarning,
                 onDisconnectClick,
                 onReconnectClick,
                 onConnectClick,
@@ -431,6 +439,7 @@ private fun Content(
     focusRequester: FocusRequester,
     paddingValues: PaddingValues,
     state: ConnectUiState,
+    subscriptionWarning: String?,
     onDisconnectClick: () -> Unit,
     onReconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
@@ -483,18 +492,28 @@ private fun Content(
             modifier =
                 Modifier.fillMaxSize().padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            NotificationBanner(
+            androidx.compose.foundation.layout.Column(
                 modifier = Modifier.align(Alignment.TopCenter),
-                notification = state.inAppNotification,
-                isPlayBuild = state.isPlayBuild,
-                contentFocusRequester = focusRequester,
-                openAppListing = onOpenAppListing,
-                onClickShowAccount = onManageAccountClick,
-                onClickShowChangelog = onChangelogClick,
-                onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
-                onClickDismissChangelog = onDismissChangelogClick,
-                onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
-            )
+            ) {
+                subscriptionWarning?.let { warning ->
+                    SubscriptionWarningBar(
+                        text = warning,
+                        onClick = onManageAccountClick,
+                    )
+                }
+                NotificationBanner(
+                    modifier = Modifier.fillMaxWidth(),
+                    notification = state.inAppNotification,
+                    isPlayBuild = state.isPlayBuild,
+                    contentFocusRequester = focusRequester,
+                    openAppListing = onOpenAppListing,
+                    onClickShowAccount = onManageAccountClick,
+                    onClickShowChangelog = onChangelogClick,
+                    onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
+                    onClickDismissChangelog = onDismissChangelogClick,
+                    onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
+                )
+            }
             ConnectionCard(
                 state = state,
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -508,6 +527,48 @@ private fun Content(
             )
         }
     }
+}
+
+/**
+ * A tappable warning bar shown at the top of the connect screen when the
+ * cached subscription is expired or close to expiring. Tapping opens the
+ * wallet/account surface to renew. Null-safe: only rendered when
+ * [connectExpiryWarning] returns a message.
+ */
+@Composable
+private fun SubscriptionWarningBar(text: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+    }
+}
+
+/**
+ * Compute the connect-screen subscription warning from the cached expiry, or
+ * null when there is nothing to warn about (unknown, or comfortably active).
+ * Only nags within a week of expiry so the bar doesn't show all the time.
+ */
+internal fun connectExpiryWarning(
+    expiryUnixSecs: Long,
+    nowSecs: Long = System.currentTimeMillis() / 1000,
+): String? = when {
+    expiryUnixSecs <= 0L -> null
+    expiryUnixSecs <= nowSecs -> "Your subscription has expired. Tap to renew."
+    expiryUnixSecs - nowSecs <= 7L * 86_400 -> {
+        val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400
+        "Your subscription expires in $days day${if (days == 1L) "" else "s"}. Tap to renew."
+    }
+    else -> null
 }
 
 @Composable
