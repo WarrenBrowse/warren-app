@@ -2,8 +2,35 @@ use futures::{FutureExt, select};
 pub use mullvad_leak_checker::LeakInfo;
 use std::time::Duration;
 use talpid_routing::RouteManagerHandle;
-use talpid_types::{net::Endpoint, tunnel::TunnelStateTransition};
+use talpid_types::{
+    net::{Endpoint, TunnelType},
+    tunnel::TunnelStateTransition,
+};
 use tokio::sync::mpsc;
+
+/// Whether the traceroute leak test is meaningful for a given tunnel type.
+///
+/// The test probes the tunnel's *own* transport endpoint on the physical
+/// interface and treats any reply (even from the local gateway) as a
+/// leak. That fits the WireGuard kernel tunnel, where the relay is
+/// reachable only via the exact UDP transport tuple, so a TTL-limited
+/// ICMP/other probe to it should be dropped by the firewall.
+///
+/// It is a STRUCTURAL false positive for the Warren tunnel: Warren's
+/// transport is a userspace QUIC socket that legitimately egresses the
+/// physical interface to reach the exit, so the probe always reaches the
+/// local gateway (the mandatory next hop to the exit endpoint) and the
+/// test "detects a leak" on every single connect. That fired a
+/// `Network leak detected! Please contact Warren support` warning + UI
+/// notification with no real user-traffic leak behind it (alarm
+/// fatigue). The actual leak protection for Warren is the firewall
+/// kill-switch, which is verified to block all non-tunnel IPv4/IPv6/DNS
+/// traffic to arbitrary destinations on macOS/Linux/Windows; this
+/// runtime probe of the transport endpoint adds no real signal for it.
+#[must_use]
+fn leak_test_applies_to(tunnel_type: TunnelType) -> bool {
+    !matches!(tunnel_type, TunnelType::Warren)
+}
 
 /// An actor that tries to leak traffic outside the tunnel while we are connected.
 pub struct LeakChecker {
@@ -91,6 +118,21 @@ impl Task {
             let TunnelStateTransition::Connected(tunnel) = &tunnel_state else {
                 break 'leak_test;
             };
+
+            if !leak_test_applies_to(tunnel.tunnel_type) {
+                // Warren (userspace QUIC): the probe would target the
+                // transport endpoint, which is legitimately reachable on
+                // the physical interface. Skip — leak protection is the
+                // firewall kill-switch, not this probe. See
+                // `leak_test_applies_to`.
+                log::debug!(
+                    "Skipping traceroute leak test for the {} tunnel (transport endpoint is \
+                     legitimately reachable over the physical interface; leak protection is \
+                     enforced by the firewall kill-switch).",
+                    tunnel.tunnel_type
+                );
+                break 'leak_test;
+            }
 
             let ping_destination = tunnel.endpoint;
             let route_manager = self.route_manager.clone();
@@ -256,5 +298,35 @@ where
         } else {
             CallbackResult::Drop
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The traceroute probe targets the tunnel's own transport endpoint,
+    /// which a userspace-QUIC tunnel (Warren) must reach over the
+    /// physical interface. Running it there yields a guaranteed false
+    /// "leak detected" on every connect, so it MUST be skipped. The
+    /// firewall kill-switch is the real protection.
+    #[test]
+    fn leak_test_skipped_for_warren_userspace_quic_tunnel() {
+        assert!(
+            !leak_test_applies_to(TunnelType::Warren),
+            "Warren's transport endpoint is legitimately reachable on the physical \
+             interface; the traceroute leak test must NOT run for it (structural false positive)"
+        );
+    }
+
+    /// The test stays active for the WireGuard kernel tunnel, where the
+    /// relay is reachable only via the exact transport tuple and an
+    /// out-of-tunnel probe genuinely indicates a kill-switch hole.
+    #[test]
+    fn leak_test_runs_for_wireguard_kernel_tunnel() {
+        assert!(
+            leak_test_applies_to(TunnelType::WireGuard),
+            "the leak test must remain active for WireGuard kernel tunnels"
+        );
     }
 }

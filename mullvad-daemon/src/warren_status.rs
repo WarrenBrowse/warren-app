@@ -705,7 +705,11 @@ mod tests {
 
     #[test]
     fn default_snapshot_has_no_pubkey_mismatch_pending() {
-        assert!(WarrenStatusSnapshot::default().pubkey_mismatch_pending.is_none());
+        assert!(
+            WarrenStatusSnapshot::default()
+                .pubkey_mismatch_pending
+                .is_none()
+        );
     }
 
     #[test]
@@ -758,9 +762,18 @@ mod tests {
         cache.record_failover();
         let s = cache.snapshot();
         assert_eq!(s.failover_count, 1);
-        assert_eq!(s.reconnect_count, 1, "failover must not touch reconnect counter");
+        assert_eq!(
+            s.reconnect_count, 1,
+            "failover must not touch reconnect counter"
+        );
         assert!(
-            matches!(s.nat_pmp, NatPmpStateSnapshot::Mapped { external_port: 60123, .. }),
+            matches!(
+                s.nat_pmp,
+                NatPmpStateSnapshot::Mapped {
+                    external_port: 60123,
+                    ..
+                }
+            ),
             "failover must not touch nat_pmp state"
         );
     }

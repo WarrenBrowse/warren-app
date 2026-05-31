@@ -85,7 +85,10 @@ mod test {
         assert_eq!(methods["mullvad_bridges"]["name"], json!("Warren Bridges"));
         assert_eq!(methods["encrypted_dns_proxy"]["enabled"], json!(false));
         assert_eq!(methods["domain_fronting"]["enabled"], json!(false));
-        assert_eq!(old_settings["settings_version"], json!(SettingsVersion::V16));
+        assert_eq!(
+            old_settings["settings_version"],
+            json!(SettingsVersion::V16)
+        );
     }
 
     #[test]

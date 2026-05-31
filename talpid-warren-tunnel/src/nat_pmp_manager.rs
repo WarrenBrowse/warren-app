@@ -506,26 +506,36 @@ mod tests {
         let server = spawn_port_per_lifetime_stub().await;
         let (observer, log) = collector();
 
-        let mut manager =
-            NatPmpManager::start(&tokio::runtime::Handle::current(), server, &cfg(22), observer);
+        let mut manager = NatPmpManager::start(
+            &tokio::runtime::Handle::current(),
+            server,
+            &cfg(22),
+            observer,
+        );
 
         // Wait for the initial Mapped with lifetime=60 → port 49060.
         for _ in 0..50 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49060,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         assert!(
-            log.lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. })),
+            log.lock().unwrap().iter().any(|e| matches!(
+                e,
+                NatPmpEvent::Mapped {
+                    external_port: 49060,
+                    ..
+                }
+            )),
             "old mapping not observed before reconfigure"
         );
 
@@ -543,21 +553,28 @@ mod tests {
         // The new forwarder should emit a Mapped event with the new
         // port within a short window.
         for _ in 0..100 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49120, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49120,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         let snapshot = log.lock().unwrap().clone();
         assert!(
-            snapshot
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49120, .. })),
+            snapshot.iter().any(|e| matches!(
+                e,
+                NatPmpEvent::Mapped {
+                    external_port: 49120,
+                    ..
+                }
+            )),
             "expected a Mapped event for the new lifetime=120 mapping; events: {snapshot:?}"
         );
 
@@ -575,8 +592,12 @@ mod tests {
         let server = spawn_port_per_lifetime_stub().await;
         let (observer, log) = collector();
 
-        let mut manager =
-            NatPmpManager::start(&tokio::runtime::Handle::current(), server, &cfg(22), observer);
+        let mut manager = NatPmpManager::start(
+            &tokio::runtime::Handle::current(),
+            server,
+            &cfg(22),
+            observer,
+        );
 
         // Wait for the initial Mapped.
         for _ in 0..50 {
@@ -615,8 +636,12 @@ mod tests {
         let server = spawn_port_per_lifetime_stub().await;
         let (observer, log) = collector();
 
-        let mut manager =
-            NatPmpManager::start(&tokio::runtime::Handle::current(), server, &cfg(22), observer);
+        let mut manager = NatPmpManager::start(
+            &tokio::runtime::Handle::current(),
+            server,
+            &cfg(22),
+            observer,
+        );
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         for lifetime in [120u32, 60, 90] {
@@ -633,21 +658,27 @@ mod tests {
         // Wait for the LAST mapping (lifetime=90 → port 49090) to
         // surface.
         for _ in 0..100 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49090,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         assert!(
-            log.lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. })),
+            log.lock().unwrap().iter().any(|e| matches!(
+                e,
+                NatPmpEvent::Mapped {
+                    external_port: 49090,
+                    ..
+                }
+            )),
             "final reconfigure must land its own Mapped event"
         );
 

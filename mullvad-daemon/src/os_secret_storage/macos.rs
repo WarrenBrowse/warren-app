@@ -85,8 +85,7 @@ impl MacOsKeychainStorage {
     /// back to the plaintext backend with a loud warning. The probe
     /// value is wiped from memory via `Zeroizing` on drop.
     pub fn open() -> io::Result<Self> {
-        let keychain = SecKeychain::open(Path::new(SYSTEM_KEYCHAIN_PATH))
-            .map_err(map_sec_error)?;
+        let keychain = SecKeychain::open(Path::new(SYSTEM_KEYCHAIN_PATH)).map_err(map_sec_error)?;
         let storage = Self { keychain };
 
         // Best-effort cleanup of a leftover probe from a previous
@@ -182,7 +181,10 @@ fn map_sec_error(e: SecError) -> io::Error {
         -61 => io::ErrorKind::PermissionDenied, // errSecWrPerm
         _ => io::ErrorKind::Other,
     };
-    io::Error::new(kind, format!("System Keychain error (OSStatus={}): {e}", e.code()))
+    io::Error::new(
+        kind,
+        format!("System Keychain error (OSStatus={}): {e}", e.code()),
+    )
 }
 
 #[cfg(test)]

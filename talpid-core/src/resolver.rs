@@ -52,21 +52,46 @@ use tokio::{
     task::JoinHandle,
 };
 
+/// Decide whether the macOS local (filtering) DNS resolver should run,
+/// from the `TALPID_DISABLE_LOCAL_DNS_RESOLVER` environment value.
+///
+/// Warren defaults this **off**. The exit runs the authoritative DNS
+/// forwarder on the tunnel gateway (`10.66.0.1`), so the system resolver
+/// is pointed straight at it (cf. `connected_state::set_dns`). The
+/// upstream Mullvad local resolver cannot be reused as-is on the Warren
+/// tunnel: the macOS port-53 anti-leak redirect bounces the resolver's
+/// *own* upstream queries back to its loopback listener (`127.x`), and
+/// hickory then rejects every response ("ignoring response from
+/// 127.x:53 because it does not match name_server: 10.66.0.1:53"), so
+/// all name resolution fails and the tunnel looks like "connected but no
+/// internet" even though packet forwarding works.
+///
+/// - unset           => `false` (Warren default: no local resolver)
+/// - `"0"`           => `true`  (opt back in, e.g. future DNS content blocking)
+/// - any other value => `false` (explicitly disabled)
+#[must_use]
+fn local_dns_resolver_enabled(env_value: Option<&str>) -> bool {
+    matches!(env_value, Some("0"))
+}
+
 /// If a local DNS resolver should be used at all times.
 ///
 /// This setting does not affect the error or blocked state. In those states, we will want to use
 /// the local DNS resoler to work around Apple's captive portals check. Exactly how this is done is
 /// documented elsewhere.
 pub static LOCAL_DNS_RESOLVER: LazyLock<bool> = LazyLock::new(|| {
-    let disable_local_dns_resolver = std::env::var("TALPID_DISABLE_LOCAL_DNS_RESOLVER")
-        .map(|v| v != "0")
-        // Use the local DNS resolver by default.
-        .unwrap_or(false);
+    let enabled = local_dns_resolver_enabled(
+        std::env::var("TALPID_DISABLE_LOCAL_DNS_RESOLVER")
+            .ok()
+            .as_deref(),
+    );
 
-    if !disable_local_dns_resolver {
+    if enabled {
         log::debug!("Using local DNS resolver");
+    } else {
+        log::debug!("Local DNS resolver disabled (Warren: DNS handled by exit forwarder)");
     }
-    !disable_local_dns_resolver
+    enabled
 });
 
 /// Override the `filter_out_aaaa` flag, which prevents getaddrinfo from returning IPv6 addresses.
@@ -805,6 +830,40 @@ mod test {
     /// Can't have multiple local resolvers running at the same time, as they will try to bind to
     /// the same address and port. The tests below use this lock to run sequentially.
     static LOCK: Mutex<()> = Mutex::new(());
+
+    /// Warren default: with the env unset, the macOS local filtering
+    /// resolver must stay OFF so the system resolver is pointed straight
+    /// at the exit forwarder (`10.66.0.1`). Leaving it ON (the upstream
+    /// Mullvad default) is exactly what produced the port-53 redirect
+    /// loop that broke all DNS resolution ("connected but no internet").
+    #[test]
+    fn local_dns_resolver_disabled_by_default() {
+        assert!(
+            !local_dns_resolver_enabled(None),
+            "Warren must NOT run the macOS local DNS resolver by default; \
+             the exit forwarder (10.66.0.1) is the authoritative resolver"
+        );
+    }
+
+    /// `TALPID_DISABLE_LOCAL_DNS_RESOLVER=0` is the documented opt-in to
+    /// bring the local resolver back (e.g. for future DNS content
+    /// blocking work / debugging).
+    #[test]
+    fn local_dns_resolver_opt_in_with_zero() {
+        assert!(
+            local_dns_resolver_enabled(Some("0")),
+            "explicit `=0` must re-enable the local resolver"
+        );
+    }
+
+    /// Any explicit non-`0` value keeps it disabled, matching the
+    /// `*_DISABLE_*` naming intent.
+    #[test]
+    fn local_dns_resolver_stays_disabled_for_other_values() {
+        assert!(!local_dns_resolver_enabled(Some("1")));
+        assert!(!local_dns_resolver_enabled(Some("")));
+        assert!(!local_dns_resolver_enabled(Some("true")));
+    }
 
     async fn start_resolver() -> ResolverHandle {
         // NOTE: We're disabling lo0 aliases

@@ -235,7 +235,9 @@ mod tests {
 
         storage.store("k", b"v").expect("write");
         storage.delete("k").expect("delete first time");
-        storage.delete("k").expect("delete is idempotent on missing");
+        storage
+            .delete("k")
+            .expect("delete is idempotent on missing");
 
         assert!(storage.load("k").expect("load ok").is_none());
 
@@ -257,14 +259,7 @@ mod tests {
         let dir = isolated_tempdir();
         let storage = PlaintextStorage::new(&dir);
 
-        for malicious in &[
-            "../escape",
-            "../../etc/passwd",
-            "..",
-            ".",
-            "",
-            "subdir/key",
-        ] {
+        for malicious in &["../escape", "../../etc/passwd", "..", ".", "", "subdir/key"] {
             let err = storage
                 .store(malicious, b"x")
                 .expect_err(&format!("must reject key {malicious:?}"));

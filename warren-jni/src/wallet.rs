@@ -47,9 +47,10 @@ pub fn generate_mnemonic() -> String {
 
 /// Derive the Ed25519 verifying key (public key) from a BIP39 mnemonic.
 ///
-/// Returns the raw 32-byte public key, suitable for the
-/// `X-Warren-Pubkey-Hex` header (after hex encoding) and for storing in the
-/// Kotlin wallet repository as the canonical wallet identifier.
+/// Returns the raw 32-byte public key. Encode it with
+/// [`pubkey_ss58_from_mnemonic`] for the canonical string form (the
+/// `X-Warren-PubKey` header, the Kotlin wallet repository identifier),
+/// or sign with the matching [`signing_key_from_mnemonic`].
 pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
     let seed = seed_from_mnemonic(mnemonic)?;
     let key = derive_node_key(&seed);
@@ -57,11 +58,16 @@ pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
 }
 
 /// Convenience wrapper: derive the Ed25519 verifying key from `mnemonic`
-/// and return its lowercase hex encoding (64 characters). This is the form
-/// the `X-Warren-Pubkey-Hex` request header expects.
-pub fn pubkey_hex_from_mnemonic(mnemonic: &str) -> Result<String, WalletError> {
+/// and return its **Warren SS58 address** (`wb…`, network prefix 13295).
+///
+/// This is the canonical string form of the Warren wallet identity — the
+/// value carried in the `X-Warren-PubKey` request header, copied to the
+/// clipboard, and stored by the Kotlin wallet repository. The same
+/// algorithm (`warren_identity::ss58`) is used by the daemon and the
+/// backend verifier, so the address round-trips byte-for-byte.
+pub fn pubkey_ss58_from_mnemonic(mnemonic: &str) -> Result<String, WalletError> {
     let pubkey = pubkey_from_mnemonic(mnemonic)?;
-    Ok(hex::encode(pubkey))
+    Ok(warren_identity::ss58::encode(&pubkey))
 }
 
 /// Derive the Ed25519 [`SigningKey`] from a BIP39 mnemonic.
@@ -145,23 +151,22 @@ mod tests {
     }
 
     #[test]
-    fn pubkey_hex_is_64_lowercase_chars() {
+    fn pubkey_ss58_is_a_warren_address() {
         let phrase = generate_mnemonic();
-        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
-        assert_eq!(hex.len(), 64, "Ed25519 pubkey hex must be 64 chars");
-        assert!(
-            hex.chars()
-                .all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())),
-            "expected lowercase hex digits only, got {hex}"
-        );
+        let addr = pubkey_ss58_from_mnemonic(&phrase).unwrap();
+        assert!(addr.starts_with("wb"), "expected a wb… address, got {addr}");
+        // 47–49 base58 chars for a 32-byte account with a 2-byte prefix.
+        assert!((47..=49).contains(&addr.len()), "unexpected length: {addr}");
     }
 
     #[test]
-    fn pubkey_hex_matches_byte_form() {
+    fn pubkey_ss58_matches_byte_form() {
         let phrase = generate_mnemonic();
         let bytes = pubkey_from_mnemonic(&phrase).unwrap();
-        let hex = pubkey_hex_from_mnemonic(&phrase).unwrap();
-        assert_eq!(hex, hex::encode(bytes));
+        let addr = pubkey_ss58_from_mnemonic(&phrase).unwrap();
+        assert_eq!(addr, warren_identity::ss58::encode(&bytes));
+        // And it decodes back to exactly those bytes.
+        assert_eq!(warren_identity::ss58::decode(&addr).unwrap(), bytes);
     }
 
     #[test]

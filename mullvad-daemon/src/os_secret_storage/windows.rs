@@ -39,11 +39,11 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use windows::Win32::Foundation::HLOCAL;
 use windows::Win32::Foundation::LocalFree;
 use windows::Win32::Security::Cryptography::{
-    CryptProtectData, CryptUnprotectData, CRYPTPROTECT_LOCAL_MACHINE, CRYPT_INTEGER_BLOB,
+    CRYPT_INTEGER_BLOB, CRYPTPROTECT_LOCAL_MACHINE, CryptProtectData, CryptUnprotectData,
 };
-use windows::Win32::Foundation::HLOCAL;
 use zeroize::Zeroizing;
 
 use super::SecretStorage;
@@ -224,9 +224,8 @@ fn dpapi_protect(plaintext: &[u8]) -> io::Result<Vec<u8>> {
     // SAFETY: on Ok, `output.pbData` points to a `LocalAlloc`'d
     // buffer of `output.cbData` bytes that the caller MUST free
     // with `LocalFree`.
-    let bytes = unsafe {
-        std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec()
-    };
+    let bytes =
+        unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec() };
     unsafe {
         let _ = LocalFree(Some(HLOCAL(output.pbData as *mut _)));
     }
@@ -261,9 +260,8 @@ fn dpapi_unprotect(ciphertext: &[u8]) -> io::Result<Zeroizing<Vec<u8>>> {
     }
     .map_err(|e| io::Error::other(format!("CryptUnprotectData failed: {e}")))?;
 
-    let bytes = unsafe {
-        std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec()
-    };
+    let bytes =
+        unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec() };
     // Wipe the LocalAlloc buffer ourselves before freeing, since
     // it transiently held the plaintext secret. `LocalFree` itself
     // does not zeroize.

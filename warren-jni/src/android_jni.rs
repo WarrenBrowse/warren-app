@@ -216,25 +216,26 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'l
 }
 
 /// Convenience wrapper: derive the wallet pubkey and return it as a
-/// 64-character lowercase hex string. This is the form the
-/// `X-Warren-Pubkey-Hex` request header expects, so the Kotlin caller can
-/// pass the result straight through without bytes-to-hex round-tripping.
+/// Warren **SS58 address** (`wb…`, network prefix 13295). This is the
+/// canonical string form of the Warren wallet identity — the value the
+/// `X-Warren-PubKey` request header carries and the Kotlin wallet
+/// repository stores, so the caller can pass the result straight through.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_mnemonicPubkeyHex<'local>(
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_mnemonicPubkeySs58<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     mnemonic: JString<'local>,
 ) -> jstring {
     let env = JnixEnv::from(env);
     let phrase = String::from_java(&env, mnemonic);
-    let hex_str = match crate::wallet::pubkey_hex_from_mnemonic(&phrase) {
+    let ss58_str = match crate::wallet::pubkey_ss58_from_mnemonic(&phrase) {
         Ok(s) => s,
         Err(e) => {
             let _ = env.throw(e.to_string());
             return std::ptr::null_mut();
         }
     };
-    match env.new_string(hex_str) {
+    match env.new_string(ss58_str) {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
     }
@@ -902,13 +903,13 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_secret: &str) -> Result<u64, Str
     let runtime = RUNTIME
         .get()
         .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
-    let pubkey_hex = crate::wallet::pubkey_hex_from_mnemonic(mnemonic)
+    let pubkey_ss58 = crate::wallet::pubkey_ss58_from_mnemonic(mnemonic)
         .map_err(|e| format!("invalid mnemonic: {e}"))?;
-    let pubkey = warren_api_client::PubkeyHex::try_from(pubkey_hex.as_str())
+    let pubkey = warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
     let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
     let req = warren_api_client::RegisterAccountRequest {
-        pubkey_hex: pubkey,
+        pubkey_ss58: pubkey,
         voucher_secret: voucher_secret.to_owned(),
         referral_code: None,
     };

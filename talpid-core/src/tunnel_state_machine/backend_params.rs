@@ -72,10 +72,7 @@ impl BackendParams {
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
         match self {
             Self::Warren(info) => match info.relay_endpoint {
-                Some(relay) => vec![Endpoint::from_socket_address(
-                    relay,
-                    TransportProtocol::Udp,
-                )],
+                Some(relay) => vec![Endpoint::from_socket_address(relay, TransportProtocol::Udp)],
                 None => info
                     .exit_candidates
                     .iter()
@@ -159,10 +156,7 @@ mod tests {
         }
     }
 
-    fn fixture_warren_multi_hop(
-        relay_endpoint: &str,
-        exit_endpoint: &str,
-    ) -> WarrenBackendInfo {
+    fn fixture_warren_multi_hop(relay_endpoint: &str, exit_endpoint: &str) -> WarrenBackendInfo {
         let mut info = fixture_warren(&["203.0.113.99:443"]);
         info.relay_endpoint = Some(relay_endpoint.parse().unwrap());
         info.exit_endpoint = Some(exit_endpoint.parse().unwrap());
