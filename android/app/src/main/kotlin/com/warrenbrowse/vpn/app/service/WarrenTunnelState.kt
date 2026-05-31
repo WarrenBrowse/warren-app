@@ -16,6 +16,12 @@ sealed class WarrenTunnelState {
         val multiHop: Boolean,
         val daita: Boolean,
         val obfuscationM40: Boolean,
+        // "host:port" literals from the active WarrenTunnelConfig, surfaced
+        // to the main connection card via WarrenConnectedInfo. Default to
+        // empty/null so callers that don't have the config (e.g. the
+        // fromStatusCode bootstrap) still compile.
+        val exitEndpointHost: String = "",
+        val entryEndpointHost: String? = null,
     ) : WarrenTunnelState()
     data object Reconnecting : WarrenTunnelState()
     data class Failed(val reason: String) : WarrenTunnelState()

@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +43,17 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
             initialValue = WarrenTunnelState.Disconnected.describe(),
         )
 
+    // Lossless typed projection consumed by ConnectionProxy → the main
+    // connection card. Carries the real endpoint hosts + feature flags +
+    // the distinct Failed/Blocking states (the String projection above
+    // flattens these and is kept only for legacy banner display).
+    override val connectedInfo: StateFlow<WarrenConnectedInfo> =
+        tunnelState.map { it.toConnectedInfo() }.stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = WarrenConnectedInfo.Disconnected,
+        )
+
     private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
     override val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
 
@@ -57,6 +69,21 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
 
     private companion object {
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
+    }
+
+    private fun WarrenTunnelState.toConnectedInfo(): WarrenConnectedInfo = when (this) {
+        is WarrenTunnelState.Disconnected -> WarrenConnectedInfo.Disconnected
+        is WarrenTunnelState.Connecting -> WarrenConnectedInfo.Connecting
+        is WarrenTunnelState.Reconnecting -> WarrenConnectedInfo.Reconnecting
+        is WarrenTunnelState.Connected -> WarrenConnectedInfo.Connected(
+            exitEndpointHost = exitEndpointHost,
+            entryEndpointHost = entryEndpointHost,
+            multiHop = multiHop,
+            daita = daita,
+            assignedNatPmpPort = assignedNatPmpPort,
+        )
+        is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason)
+        is WarrenTunnelState.Blocking -> WarrenConnectedInfo.Blocking(reason)
     }
 
     private fun WarrenTunnelState.describe(): String = when (this) {

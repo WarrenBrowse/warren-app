@@ -8,55 +8,120 @@ import kotlinx.coroutines.flow.map
 import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.Endpoint
+import com.warrenbrowse.vpn.lib.model.ErrorState
+import com.warrenbrowse.vpn.lib.model.ErrorStateCause
+import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.TransportProtocol
 import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
 import com.warrenbrowse.vpn.lib.model.TunnelState
 
-// D.4 step 59 + audit follow-up: ConnectionProxy pipes real tunnel state
-// through from WarrenTunnelStateProvider. The proxy still exposes the
-// legacy Flow<TunnelState> (Mullvad model) for back-compat with the
-// existing in-app-notification + UI plumbing ; the state string from
-// WarrenQuinnStateProxy is mapped to the closest matching TunnelState
-// enum value.
+// ConnectionProxy adapts the Warren-native tunnel state into the legacy
+// Mullvad-shaped Flow<TunnelState> consumed by the connection card, the
+// in-app notification plumbing, and the rest of the upstream UI.
 //
-// TunnelState.Connected requires a non-nullable TunnelEndpoint. Warren
-// does not surface the live endpoint through this back-compat path
-// (richer endpoint info flows via WarrenLocalSettingsRepository +
-// WarrenRelayProvider). We construct a sentinel TunnelEndpoint here so
-// the type system is satisfied; consumers that actually need endpoint
-// details should read them from the Warren-native repositories
-// directly.
+// It reads the lossless WarrenConnectedInfo projection (not the flattened
+// String label) so the card can show the true state:
+//   - Failed            -> Error(isBlocking = false)  ("ERROR STATE")
+//   - Blocking (kill sw) -> Error(isBlocking = true)  ("BLOCKED CONNECTION")
+//   - Connected         -> real exit/entry endpoint + DAITA/multihop/QUIC chips
 //
-// connect/disconnect/reconnect remain stubs (returning Right(true)) -
-// the actual Warren tunnel commands flow through
-// WarrenQuinnConnectInvoker / WarrenQuinnDisconnectInvoker /
-// WarrenQuinnReconnectInvoker invoked directly by ConnectViewModel +
-// DeviceRevokedViewModel (step 60).
+// connect/disconnect/reconnect remain stubs (returning Right(true)) - the
+// actual Warren tunnel commands flow through WarrenQuinnConnectInvoker /
+// WarrenQuinnDisconnectInvoker / WarrenQuinnReconnectInvoker invoked
+// directly by ConnectViewModel + DeviceRevokedViewModel.
 class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider) {
 
-    private val sentinelEndpoint: TunnelEndpoint = TunnelEndpoint(
-        entryEndpoint = null,
-        endpoint = Endpoint(
-            address = InetSocketAddress("0.0.0.0", 0),
-            protocol = TransportProtocol.Udp,
-        ),
-        quantumResistant = false,
-        obfuscation = null,
-        daita = false,
+    // Fallback when an endpoint host cannot be parsed as an IP literal, so
+    // TunnelState.Connected always has a non-null endpoint.
+    private val sentinelEndpoint: Endpoint = Endpoint(
+        address = InetSocketAddress("0.0.0.0", 0),
+        protocol = TransportProtocol.Udp,
     )
 
     val tunnelState: Flow<TunnelState> =
-        tunnelStateProvider.state.map { stateLabel ->
-            when {
-                stateLabel.startsWith("Connecting") -> TunnelState.Connecting(null, null, emptyList())
-                stateLabel.startsWith("Reconnecting") ->
+        tunnelStateProvider.connectedInfo.map { info ->
+            when (info) {
+                is WarrenConnectedInfo.Disconnected -> TunnelState.Disconnected(location = null)
+                is WarrenConnectedInfo.Connecting -> TunnelState.Connecting(null, null, emptyList())
+                is WarrenConnectedInfo.Reconnecting ->
                     TunnelState.Connecting(null, null, emptyList())
-                stateLabel.startsWith("Connected") ->
-                    TunnelState.Connected(sentinelEndpoint, null, emptyList())
-                stateLabel.startsWith("Failed") -> TunnelState.Disconnected(location = null)
-                else -> TunnelState.Disconnected(location = null)
+                is WarrenConnectedInfo.Connected ->
+                    TunnelState.Connected(
+                        endpoint = buildTunnelEndpoint(info),
+                        location = null,
+                        featureIndicators = buildFeatureIndicators(info),
+                    )
+                is WarrenConnectedInfo.Failed ->
+                    TunnelState.Error(
+                        ErrorState(cause = ErrorStateCause.StartTunnelError, isBlocking = false),
+                    )
+                is WarrenConnectedInfo.Blocking ->
+                    TunnelState.Error(
+                        ErrorState(
+                            cause = ErrorStateCause.FirewallPolicyError.Generic,
+                            isBlocking = true,
+                        ),
+                    )
             }
         }
+
+    private fun buildTunnelEndpoint(info: WarrenConnectedInfo.Connected): TunnelEndpoint =
+        TunnelEndpoint(
+            entryEndpoint = info.entryEndpointHost?.let(::parseEndpoint),
+            endpoint = parseEndpoint(info.exitEndpointHost) ?: sentinelEndpoint,
+            quantumResistant = false,
+            obfuscation = null,
+            daita = info.daita,
+        )
+
+    private fun buildFeatureIndicators(info: WarrenConnectedInfo.Connected): List<FeatureIndicator> =
+        buildList {
+            if (info.daita && info.multiHop) {
+                add(FeatureIndicator.DAITA_MULTIHOP)
+            } else {
+                if (info.daita) add(FeatureIndicator.DAITA)
+                if (info.multiHop) add(FeatureIndicator.MULTIHOP)
+            }
+            // Warren tunnels are always QUIC with always-on HTTP/3 mimicry.
+            add(FeatureIndicator.QUIC)
+        }
+
+    // Parse a "host:port" literal into a resolved Endpoint. Only IP literals
+    // are accepted (no hostname DNS, which would block the collecting
+    // thread); anything else returns null and falls back to the sentinel.
+    private fun parseEndpoint(hostPort: String): Endpoint? {
+        val (host, port) = splitHostPort(hostPort) ?: return null
+        if (!looksLikeIpLiteral(host)) return null
+        return try {
+            Endpoint(
+                address = InetSocketAddress(host, port),
+                protocol = TransportProtocol.Udp,
+            )
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+    }
+
+    private fun splitHostPort(hostPort: String): Pair<String, Int>? {
+        val trimmed = hostPort.trim()
+        if (trimmed.isEmpty()) return null
+        // Bracketed IPv6, e.g. "[2001:db8::1]:443".
+        if (trimmed.startsWith("[")) {
+            val close = trimmed.indexOf(']')
+            if (close <= 1) return null
+            val host = trimmed.substring(1, close)
+            val port = trimmed.substringAfter("]:", "").toIntOrNull() ?: return null
+            return host to port
+        }
+        val host = trimmed.substringBeforeLast(":", "")
+        val port = trimmed.substringAfterLast(":", "").toIntOrNull() ?: return null
+        if (host.isEmpty()) return null
+        return host to port
+    }
+
+    private fun looksLikeIpLiteral(host: String): Boolean =
+        host.contains(":") || // bare IPv6
+            host.matches(Regex("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"""))
 
     suspend fun connect(): Either<ConnectError, Boolean> = true.right()
 

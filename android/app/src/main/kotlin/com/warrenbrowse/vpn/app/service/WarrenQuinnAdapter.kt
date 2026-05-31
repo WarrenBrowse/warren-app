@@ -392,6 +392,8 @@ class WarrenQuinnAdapter(
                     multiHop = config.entryHop != null,
                     daita = config.daita != null,
                     obfuscationM40 = config.obfuscationM40,
+                    exitEndpointHost = config.exitEndpoint,
+                    entryEndpointHost = config.entryHop?.relayEndpoint,
                 )
             STATUS_RECONNECTING -> WarrenTunnelState.Reconnecting
             else -> WarrenTunnelState.Failed("native status code $code")

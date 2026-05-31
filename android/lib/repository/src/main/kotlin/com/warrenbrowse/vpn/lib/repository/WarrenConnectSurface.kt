@@ -22,15 +22,57 @@ interface WarrenQuinnConnectInvoker {
 }
 
 /**
+ * Lossless, typed projection of the live Warren tunnel state, exposed to
+ * lib modules without importing the app-private `WarrenTunnelState` type.
+ *
+ * Unlike the `String` projection on [WarrenTunnelStateProvider.state] (kept
+ * for legacy banner display), this carries the structured fields the main
+ * connection card needs — the real endpoint hosts, the feature flags, and a
+ * distinct [Failed] vs [Blocking] (kill-switch) status — so the card can show
+ * the true state instead of collapsing everything to "Disconnected".
+ */
+sealed interface WarrenConnectedInfo {
+    data object Disconnected : WarrenConnectedInfo
+    data object Connecting : WarrenConnectedInfo
+    data object Reconnecting : WarrenConnectedInfo
+
+    /**
+     * Tunnel up. [exitEndpointHost] / [entryEndpointHost] are "host:port"
+     * literals from the active `WarrenTunnelConfig` ([entryEndpointHost] is
+     * null for single-hop).
+     */
+    data class Connected(
+        val exitEndpointHost: String,
+        val entryEndpointHost: String?,
+        val multiHop: Boolean,
+        val daita: Boolean,
+        val assignedNatPmpPort: Int?,
+    ) : WarrenConnectedInfo
+
+    /** Tunnel failed (no kill switch). Surfaced as a non-blocking error. */
+    data class Failed(val reason: String) : WarrenConnectedInfo
+
+    /**
+     * Tunnel down but the kill switch (lockdown) is keeping a blocking
+     * interface in place, so traffic is blocked rather than leaking.
+     * Surfaced as a blocking error ("BLOCKED CONNECTION").
+     */
+    data class Blocking(val reason: String) : WarrenConnectedInfo
+}
+
+/**
  * Lib-side surface for the live Warren tunnel state. The concrete
  * impl is `app/service/WarrenQuinnStateProxy` which mirrors the
  * service-owned [com.warrenbrowse.vpn.app.service.WarrenQuinnAdapter.state]
- * into a process-wide StateFlow. Consumers in feature modules subscribe
- * here (with a `String` projection so they don't need to import the
- * app-private `WarrenTunnelState` sealed type).
+ * into a process-wide StateFlow.
+ *
+ * [state] is a legacy `String` projection (used by notification/banner
+ * plumbing that only needs a label). [connectedInfo] is the lossless typed
+ * projection that drives the main connection card.
  */
 interface WarrenTunnelStateProvider {
     val state: StateFlow<String>
+    val connectedInfo: StateFlow<WarrenConnectedInfo>
 }
 
 /**
