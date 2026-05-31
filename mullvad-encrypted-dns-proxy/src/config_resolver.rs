@@ -42,21 +42,17 @@ impl std::error::Error for Error {
     }
 }
 
-/// Returns a set of well known public DoH resolvers. A sane default in many cases.
+/// Returns the public DoH resolvers used to bootstrap the Encrypted DNS
+/// proxy. Warren keeps only Quad9: Cloudflare (1.1.1.1 / 1.0.0.1) was dropped
+/// so the daemon never contacts Cloudflare-operated resolvers.
 pub fn default_resolvers() -> Vec<Nameserver> {
-    vec![
-        Nameserver {
-            name: "one.one.one.one".to_owned(),
-            addr: vec!["1.1.1.1".parse().unwrap(), "1.0.0.1".parse().unwrap()],
-        },
-        Nameserver {
-            name: "dns.quad9.net".to_owned(),
-            addr: vec![
-                "9.9.9.9".parse().unwrap(),
-                "149.112.112.112".parse().unwrap(),
-            ],
-        },
-    ]
+    vec![Nameserver {
+        name: "dns.quad9.net".to_owned(),
+        addr: vec![
+            "9.9.9.9".parse().unwrap(),
+            "149.112.112.112".parse().unwrap(),
+        ],
+    }]
 }
 
 /// Calls [resolve_configs] with a given `domain` using known DoH resolvers provided by [default_resolvers]

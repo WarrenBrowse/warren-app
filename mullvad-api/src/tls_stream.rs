@@ -1,5 +1,8 @@
 //! Provides a TLS 1.3 stream, accepting only LE for root cert.
-//! SNI is disabled.
+//! SNI is enabled: the Warren API (api.warrenbrowse.com) is served behind a
+//! reverse proxy that requires the SNI extension to select the correct
+//! certificate. Without it the server aborts the handshake with an
+//! `InternalError` alert.
 use std::{
     io::{self, ErrorKind},
     pin::Pin,
@@ -30,8 +33,11 @@ static TLS_CONFIG: LazyLock<Arc<ClientConfig>> = LazyLock::new(|| {
                 .expect("ring crypt-prover should support TLS 1.3")
                 .with_root_certificates(read_cert_store().expect("Failed to parse pem file"))
                 .with_no_client_auth();
-        // This assumes that the server hello/certificates will include certificate for the domain.
-        config.enable_sni = false;
+        // SNI must be enabled: the Warren API endpoint sits behind a reverse
+        // proxy that relies on the SNI hostname to present the matching
+        // certificate. Mullvad disabled SNI because it dialed the API by a
+        // hardcoded IP; Warren resolves api.warrenbrowse.com normally.
+        config.enable_sni = true;
         config
     };
     Arc::new(config)

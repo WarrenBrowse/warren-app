@@ -22,6 +22,16 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Fixed
+- Enable TLS SNI when connecting to the Warren API. The endpoint sits behind a reverse proxy that
+  needs the SNI hostname to present its certificate; without it the handshake failed with a TLS
+  `InternalError` alert.
+
+### Changed
+- Disable the Mullvad-operated built-in API access methods (Mullvad Bridges, Encrypted DNS proxy,
+  Domain fronting). Warren reaches its own API directly and does not run that circumvention
+  infrastructure. Settings format updated to `v16` (migration disables the methods on existing
+  installs).
 
 ## [0.1.0-beta.1] - 2026-05-22
 First public beta of Warren VPN, the warrenBrowse fork of Mullvad VPN built on Quinn QUIC instead

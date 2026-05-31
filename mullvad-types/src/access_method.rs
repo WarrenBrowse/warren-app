@@ -202,19 +202,26 @@ impl Settings {
         AccessMethodSetting::new(method.canonical_name(), true, AccessMethod::from(method))
     }
 
+    // The Bridge, EncryptedDnsProxy and DomainFronting access methods all rely
+    // on Mullvad-operated infrastructure (relay-list bridges, frakta.eu encrypted
+    // DNS proxies, the CDN77 domain-fronting endpoint with the X-Mullvad-Session
+    // header). Warren does not operate any of that, so these built-in methods are
+    // created disabled: only the Direct connection to api.warrenbrowse.com is
+    // ever used. They remain in the settings model for upstream-rebase
+    // compatibility but never enter the access-method rotation.
     fn create_mullvad_bridges() -> AccessMethodSetting {
         let method = BuiltInAccessMethod::Bridge;
-        AccessMethodSetting::new(method.canonical_name(), true, AccessMethod::from(method))
+        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
     }
 
     fn create_encrypted_dns_proxy() -> AccessMethodSetting {
         let method = BuiltInAccessMethod::EncryptedDnsProxy;
-        AccessMethodSetting::new(method.canonical_name(), true, AccessMethod::from(method))
+        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
     }
 
     fn create_domain_fronting() -> AccessMethodSetting {
         let method = BuiltInAccessMethod::DomainFronting;
-        AccessMethodSetting::new(method.canonical_name(), true, AccessMethod::from(method))
+        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
     }
 }
 
