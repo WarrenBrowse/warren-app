@@ -8750,6 +8750,7 @@ version = "0.3.0"
 dependencies = [
  "bytes",
  "ed25519-dalek",
+ "hex",
  "maybenot",
  "maybenot-machines",
  "nix 0.31.2",

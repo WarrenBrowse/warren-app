@@ -60,8 +60,9 @@ impl TunnelParameters {
         cfg!(target_os = "macos")
             || self.options.userspace
             || self.options.daita
-            // Always prefer GotaTun for multihop on Windows
-            || (cfg!(target_os = "windows") && cfg!(not(feature = "wireguard-go")) && self.connection.exit_peer.is_some())
+            // Always prefer GotaTun for multihop on Windows (the legacy
+            // userspace wireguard-go bridge has been removed).
+            || (cfg!(target_os = "windows") && self.connection.exit_peer.is_some())
     }
 }
 
