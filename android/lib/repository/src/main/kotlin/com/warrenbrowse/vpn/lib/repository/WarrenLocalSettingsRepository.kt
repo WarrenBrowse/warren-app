@@ -74,6 +74,14 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _allowLan = MutableStateFlow(prefs.getBoolean(KEY_ALLOW_LAN, false))
     val allowLan: StateFlow<Boolean> = _allowLan.asStateFlow()
 
+    /**
+     * Whether the first-launch onboarding wizard has been completed. Gates
+     * the welcome flow so it is shown once (to new users, before wallet
+     * creation). Defaults to false.
+     */
+    private val _onboardingCompleted = MutableStateFlow(prefs.getBoolean(KEY_ONBOARDING_DONE, false))
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
+
     /** TUN interface MTU (clamped to [MTU_MIN]..[MTU_MAX]). */
     private val _tunnelMtu = MutableStateFlow(prefs.getInt(KEY_TUNNEL_MTU, MTU_MAX))
     val tunnelMtu: StateFlow<Int> = _tunnelMtu.asStateFlow()
@@ -259,6 +267,12 @@ class WarrenLocalSettingsRepository(context: Context) {
         _allowLan.value = enabled
     }
 
+    /** Mark the first-launch onboarding wizard as completed (shown once). */
+    fun setOnboardingCompleted(done: Boolean) {
+        prefs.edit().putBoolean(KEY_ONBOARDING_DONE, done).apply()
+        _onboardingCompleted.value = done
+    }
+
     /** Set the TUN MTU, clamped to [MTU_MIN]..[MTU_MAX]. */
     fun setTunnelMtu(mtu: Int) {
         val clamped = mtu.coerceIn(MTU_MIN, MTU_MAX)
@@ -349,6 +363,7 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
     private const val KEY_ALLOW_LAN = "allow_lan"
+    private const val KEY_ONBOARDING_DONE = "onboarding_completed"
     private const val KEY_TUNNEL_MTU = "tunnel_mtu"
     const val MTU_MIN = 576
     const val MTU_MAX = 1280

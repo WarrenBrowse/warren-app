@@ -60,6 +60,7 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelin
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
+import com.warrenbrowse.vpn.screen.navigation.onboardingEntry
 import com.warrenbrowse.vpn.screen.navigation.privacyDisclaimerEntry
 import com.warrenbrowse.vpn.screen.navigation.splashEntry
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
@@ -141,6 +142,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         // via the unified WarrenTunnelSettings toggles.
         noDaemonEntry(nav3)
         notificationEntry(nav3)
+        onboardingEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
         // D.4 step 25: selectLocationEntry removed - Mullvad SelectLocation

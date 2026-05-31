@@ -8,6 +8,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 
 data class SplashScreenState(val splashComplete: Boolean = false)
 
@@ -20,8 +21,12 @@ data class SplashScreenState(val splashComplete: Boolean = false)
  * Warren mobile). The tree is now exhaustive:
  *
  *   1. Privacy disclosure not accepted → [PrivacyDisclaimer]
- *   2. Wallet absent                   → [Wallet]
- *   3. Wallet ready or locked          → [Connect]
+ *   2. Wallet absent & onboarding not done → [Onboarding] (welcome, once)
+ *   3. Wallet absent                   → [Wallet]
+ *   4. Wallet ready or locked          → [Connect]
+ *
+ * The onboarding welcome is gated on a wallet still being absent, so
+ * existing users (who already have a wallet) never see it on update.
  *
  * There is no "out of time" or "revoked device" branch on Warren - the
  * subscription model + multi-device accounting are Mullvad-only and
@@ -31,6 +36,7 @@ class SplashViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val splashCompleteRepository: SplashCompleteRepository,
     private val walletRepository: WalletRepository,
+    private val localSettings: WarrenLocalSettingsRepository,
 ) : ViewModel() {
 
     val uiSideEffect = flow {
@@ -45,10 +51,12 @@ class SplashViewModel(
         if (!userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
             return SplashUiSideEffect.NavigateToPrivacyDisclaimer
         }
-        return if (walletRepository.state.value is WalletState.Absent) {
-            SplashUiSideEffect.NavigateToWallet
-        } else {
-            SplashUiSideEffect.NavigateToConnect
+        val walletAbsent = walletRepository.state.value is WalletState.Absent
+        return when {
+            walletAbsent && !localSettings.onboardingCompleted.value ->
+                SplashUiSideEffect.NavigateToOnboarding
+            walletAbsent -> SplashUiSideEffect.NavigateToWallet
+            else -> SplashUiSideEffect.NavigateToConnect
         }
     }
 }
@@ -59,4 +67,6 @@ sealed interface SplashUiSideEffect {
     data object NavigateToConnect : SplashUiSideEffect
 
     data object NavigateToWallet : SplashUiSideEffect
+
+    data object NavigateToOnboarding : SplashUiSideEffect
 }

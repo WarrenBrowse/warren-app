@@ -193,7 +193,7 @@ val uiModule = module {
     // D.4 step 27: SelectLocationViewModel removed (Mullvad relay-list
     // picker, replaced by WarrenLocationPicker).
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
-    viewModel { SplashViewModel(get(), get(), get()) }
+    viewModel { SplashViewModel(get(), get(), get(), get()) }
     // D.4 step 53: VpnSettingsViewModel dropped (module deleted).
     viewModel {
         ReportProblemViewModel(

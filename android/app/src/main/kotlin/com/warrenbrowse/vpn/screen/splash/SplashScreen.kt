@@ -25,6 +25,7 @@ import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.screen.navigation.OnboardingNavKey
 import com.warrenbrowse.vpn.screen.navigation.PrivacyDisclaimerNavKey
 import org.koin.androidx.compose.koinViewModel
 
@@ -49,6 +50,8 @@ fun Splash(navigator: Navigator) {
                 navigator.navigate(PrivacyDisclaimerNavKey, clearBackStack = true)
             SplashUiSideEffect.NavigateToWallet ->
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+            SplashUiSideEffect.NavigateToOnboarding ->
+                navigator.navigate(OnboardingNavKey, clearBackStack = true)
         }
     }
 

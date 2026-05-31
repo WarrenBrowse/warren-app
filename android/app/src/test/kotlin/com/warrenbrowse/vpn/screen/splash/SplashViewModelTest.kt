@@ -5,6 +5,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.repository.UserPreferences
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,20 +22,24 @@ class SplashViewModelTest {
     private val mockPrefs: UserPreferencesRepository = mockk()
     private val mockSplashComplete: SplashCompleteRepository = mockk(relaxed = true)
     private val mockWalletRepository: WalletRepository = mockk()
+    private val mockLocalSettings: WarrenLocalSettingsRepository = mockk()
 
     private fun makeVm(
         privacyAccepted: Boolean = true,
         walletState: WalletState = WalletState.Absent,
+        onboardingCompleted: Boolean = true,
     ): SplashViewModel {
         val prefs: UserPreferences = mockk {
             every { isPrivacyDisclosureAccepted } returns privacyAccepted
         }
         coEvery { mockPrefs.preferences() } returns prefs
         every { mockWalletRepository.state } returns MutableStateFlow(walletState)
+        every { mockLocalSettings.onboardingCompleted } returns MutableStateFlow(onboardingCompleted)
         return SplashViewModel(
             userPreferencesRepository = mockPrefs,
             splashCompleteRepository = mockSplashComplete,
             walletRepository = mockWalletRepository,
+            localSettings = mockLocalSettings,
         )
     }
 
@@ -46,10 +51,38 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `wallet Absent routes to Wallet`() = runTest {
-        val vm = makeVm(privacyAccepted = true, walletState = WalletState.Absent)
+    fun `wallet Absent with onboarding done routes to Wallet`() = runTest {
+        val vm = makeVm(
+            privacyAccepted = true,
+            walletState = WalletState.Absent,
+            onboardingCompleted = true,
+        )
         val side = vm.uiSideEffect.first()
         assertEquals(SplashUiSideEffect.NavigateToWallet, side)
+    }
+
+    @Test
+    fun `wallet Absent with onboarding not done routes to Onboarding`() = runTest {
+        val vm = makeVm(
+            privacyAccepted = true,
+            walletState = WalletState.Absent,
+            onboardingCompleted = false,
+        )
+        val side = vm.uiSideEffect.first()
+        assertEquals(SplashUiSideEffect.NavigateToOnboarding, side)
+    }
+
+    @Test
+    fun `existing user (wallet Ready) never sees onboarding even if flag is false`() = runTest {
+        val vm = makeVm(
+            privacyAccepted = true,
+            walletState = WalletState.Ready(
+                WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB"),
+            ),
+            onboardingCompleted = false,
+        )
+        val side = vm.uiSideEffect.first()
+        assertEquals(SplashUiSideEffect.NavigateToConnect, side)
     }
 
     @Test
