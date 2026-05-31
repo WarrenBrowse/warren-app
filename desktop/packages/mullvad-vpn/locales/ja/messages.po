@@ -3867,3 +3867,219 @@ msgstr "ステータス: ポートマッピングを設定するためにアク�
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "優先ポートがすでに使用されている場合、サーバーは別のポートを割り当てることがあります。変更は再接続なしで直ちに適用されます。"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "キーをバックアップ"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "完了"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "12単語（または24単語）のBIP39ニーモニックをスペースで区切って入力してください。"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "デーモンからニーモニックを取得できませんでした。"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "安全な場所に書き留めました。"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "現在のIDが完全に置き換えられることを理解しています。"
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "IDを復元しました。新しいIDを有効にするには、Warren VPNデーモンを再起動してください。"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "キー"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "利用可能なニーモニックがありません — まずログインするか、IDを復元してください。"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "ニーモニックから復元"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "IDを復元"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "復元中…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "ニーモニックを表示"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告 — 現在のIDが置き換えられます。現在のIDに紐づくサブスクリプションは復元できなくなります。"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "紙に書き留めてください。クラウド、スクリーンショット、メールには絶対に保存しないでください。"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "12単語のニーモニックは、別のデバイスでWarren IDを復元する唯一の手段です。紛失すると、サブスクリプションは復元できなくなります。"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "単語"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "クリップボードにコピーしました"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "クリップボードにコピー"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "プライバシーに一切妥協しないVPN体験。ログなし。アカウントなし。追跡なし。あるのは帯域だけ。"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "準備完了"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "再確認"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "確認中…（クリックで今すぐ更新）"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "設定が完了しました。国を選んでWarrenに接続してください。"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "続行"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "サブスクリプションの状態を確認できませんでした。もう一度お試しください。"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "新しいウォレットを作成（推奨）"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "デーモンにまだニーモニックがありません。ログインするか、アプリを再起動してください。"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "デーモンからニーモニックを取得できませんでした。"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "はじめる"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "すでにサブスクリプションを持っている"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "安全な場所に書き留めました。"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "既存のニーモニックをインポート"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "有効なサブスクリプションが見つかりません。まずご購入ください。"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "既存のWarren IDを復元するには、12単語のBIP39ニーモニックを貼り付けてください。"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "国を選んで接続"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "最初から有効にしたい防御機能を選んでください。これらはすべて、後から設定で変更できます。"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "プライバシー設定"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "ウォレットを復元"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "復元中…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "ウィザードをスキップ（上級者向け）"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "プランを見る（ブラウザで開きます）"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warrenはノンカストディアル型ウォレット（Ed25519 + BIP39）を使用します。キーはお客様自身が保有し、当社が見ることは一切ありません。"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Warren VPNへようこそ"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "この12単語を順番どおりに書き留めて、安全な場所に保管してください。このデバイスにアクセスできなくなった場合、サブスクリプションを復元する唯一の手段となります。"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "まだ有効なサブスクリプションがありません。プランは月額数ユーロから。継続課金なし、アカウント作成なし、使った分だけのお支払いです。"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "あなたのWarrenウォレット"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "あなたのサブスクリプション"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "単語"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• 常時難読化（デフォルトでオン）：HTTP/3を模倣し、通信を周囲に紛れ込ませます。"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2（デフォルトでオフ）：パディングを挿入し、機械学習によるトラフィック分析を無効化します。帯域コストは約5〜15%。"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• マルチホップ（デフォルトでオフ）：2つのリレーを経由し、入口と出口を関連付けられないようにします。"

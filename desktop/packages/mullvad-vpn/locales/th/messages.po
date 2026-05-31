@@ -3867,3 +3867,219 @@ msgstr "สถานะ: กำลังรอการเชื่อมต่�
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "เซิร์ฟเวอร์อาจกำหนดพอร์ตอื่นหากพอร์ตที่ต้องการถูกใช้งานอยู่แล้ว การเปลี่ยนแปลงจะมีผลทันทีโดยไม่ต้องเชื่อมต่อใหม่"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "สำรองคีย์"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "เสร็จสิ้น"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "ป้อนวลีกู้คืน BIP39 ขนาด 12 คำ (หรือ 24 คำ) โดยคั่นแต่ละคำด้วยช่องว่าง"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "ไม่สามารถเรียกวลีกู้คืนจากบริการได้"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "ฉันได้จดบันทึกไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "ฉันเข้าใจว่าการกระทำนี้จะแทนที่ตัวตนปัจจุบันของฉันอย่างถาวร"
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "กู้คืนตัวตนแล้ว รีสตาร์ตบริการ Warren VPN เพื่อเปิดใช้งานตัวตนใหม่"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "คีย์"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "ไม่มีวลีกู้คืน — กรุณาเข้าสู่ระบบหรือกู้คืนตัวตนก่อน"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "กู้คืนจากวลีกู้คืน"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "กู้คืนตัวตน"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "กำลังกู้คืน..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "แสดงวลีกู้คืน"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "คำเตือน — การกระทำนี้จะ แทนที่ ตัวตนปัจจุบันของคุณ การสมัครสมาชิกใดๆ ที่ผูกกับตัวตนปัจจุบันจะไม่สามารถกู้คืนได้"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "จดลงบนกระดาษ อย่าเก็บไว้ในคลาวด์ ภาพหน้าจอ หรืออีเมลเด็ดขาด"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "วลีกู้คืน 12 คำของคุณคือวิธี เดียว ที่จะกู้คืนตัวตน Warren บนอุปกรณ์อื่น หากสูญหาย จะไม่สามารถกู้คืนการสมัครสมาชิกของคุณได้"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "คำ"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "คัดลอกไปยังคลิปบอร์ดแล้ว"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "คัดลอกไปยังคลิปบอร์ด"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "ประสบการณ์ VPN ที่ไม่ประนีประนอมเรื่องความเป็นส่วนตัว ไม่มีการเก็บประวัติ ไม่ต้องมีบัญชี ไม่มีการติดตาม มีแค่แบนด์วิดท์"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "พร้อมแล้ว"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "ตรวจสอบอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "กำลังตรวจสอบ... (คลิกเพื่อรีเฟรชทันที)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "ตั้งค่าเสร็จสมบูรณ์ เลือกประเทศแล้วเชื่อมต่อกับ Warren"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "ดำเนินการต่อ"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "ไม่สามารถตรวจสอบสถานะการสมัครสมาชิกได้ กรุณาลองอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "สร้างกระเป๋าเงินใหม่ของฉัน (แนะนำ)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "บริการยังไม่มีวลีกู้คืน — กรุณาเข้าสู่ระบบหรือรีสตาร์ตแอป"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "ไม่สามารถเรียกวลีกู้คืนจากบริการได้"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "เริ่มต้นใช้งาน"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "ฉันมีการสมัครสมาชิกอยู่แล้ว"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "ฉันได้จดบันทึกไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "นำเข้าวลีกู้คืนที่มีอยู่"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "ไม่พบการสมัครสมาชิกที่ใช้งานอยู่ กรุณาซื้อก่อน"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "วางวลีกู้คืน BIP39 ขนาด 12 คำของคุณ เพื่อกู้คืนตัวตน Warren ที่มีอยู่"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "เลือกประเทศแล้วเชื่อมต่อ"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "เลือกระบบป้องกันที่คุณต้องการตั้งแต่วันแรก คุณสามารถเปลี่ยนทั้งหมดนี้ได้ภายหลังจากการตั้งค่า"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "การตั้งค่าความเป็นส่วนตัว"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "กู้คืนกระเป๋าเงิน"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "กำลังกู้คืน..."
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "ข้ามตัวช่วยตั้งค่า (ขั้นสูง)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "ดูแพ็กเกจ (เปิดในเบราว์เซอร์ของคุณ)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren ใช้กระเป๋าเงินแบบ non-custodial (Ed25519 + BIP39) คุณเป็นเจ้าของคีย์เอง เราไม่มีวันเห็นมัน"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "ยินดีต้อนรับสู่ Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "จด 12 คำนี้ตามลำดับและเก็บไว้ในที่ปลอดภัย นี่คือวิธีเดียวที่จะกู้คืนการสมัครสมาชิกของคุณ หากคุณสูญเสียการเข้าถึงอุปกรณ์นี้"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน — ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "กระเป๋าเงิน Warren ของคุณ"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "การสมัครสมาชิกของคุณ"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "คำ"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• การพรางการรับส่งข้อมูลแบบเปิดตลอด (เปิดเป็นค่าเริ่มต้น): เลียนแบบ HTTP/3 เพื่อให้ทราฟฟิกกลมกลืนไปกับการใช้งานทั่วไป"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (ปิดเป็นค่าเริ่มต้น): เพิ่ม padding เพื่อต้านการวิเคราะห์ทราฟฟิกด้วย ML ใช้แบนด์วิดท์ประมาณ 5-15%"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (ปิดเป็นค่าเริ่มต้น): กำหนดเส้นทางผ่านรีเลย์สองจุด เพื่อไม่ให้เชื่อมโยงจุดเข้าและจุดออกเข้าด้วยกันได้"

@@ -3867,3 +3867,219 @@ msgstr "狀態：正在等待作用中的通道連線以設定連接埠對應。
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "如果偏好的連接埠已被占用，伺服器可能會指派其他連接埠。變更會立即生效，無需重新連線。"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "備份金鑰"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "服務拒絕了此助記詞。請檢查拼字與字數後再試一次。"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "完成"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "輸入您的 12 字（或 24 字）BIP39 助記詞，並以空格分隔。"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "無法從服務取得助記詞。"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "我已將其抄寫在安全的地方。"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "我了解這將永久取代我目前的身分。"
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "身分已還原。請重新啟動 Warren VPN 服務以啟用新身分。"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "金鑰"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "沒有可用的助記詞 — 請先登入或還原身分。"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "以助記詞還原"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "還原身分"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "還原中…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "顯示助記詞"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告 — 此操作將「取代」您目前的身分。任何與目前身分綁定的訂閱都將無法復原。"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "請抄寫在紙上。切勿儲存於雲端、螢幕截圖或電子郵件中。"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "您的 12 字助記詞是在其他裝置上還原 Warren 身分的「唯一」方式。一旦遺失，您的訂閱將無法復原。"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "字"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "已複製到剪貼簿"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "複製到剪貼簿"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "毫不妥協於隱私的 VPN 體驗。無紀錄。無帳號。無追蹤。只有純粹的頻寬。"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "設定完成"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "重新檢查"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "檢查中…（點按以立即重新整理）"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "設定完成。請選擇國家並連線至 Warren。"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "繼續"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "無法檢查訂閱狀態。請再試一次。"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "建立我的新錢包（建議）"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "服務尚無助記詞 — 請登入或重新啟動應用程式。"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "服務拒絕了此助記詞。請檢查拼字與字數後再試一次。"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "無法從服務取得助記詞。"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "開始使用"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "我已經有訂閱"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "我已將其抄寫在安全的地方。"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "匯入現有的助記詞"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "找不到有效的訂閱。請先購買訂閱。"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "貼上您的 12 字 BIP39 助記詞，以還原您現有的 Warren 身分。"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "選擇國家並連線"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "從第一天起就選擇您想要的防護。日後皆可在「設定」中變更這些選項。"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "隱私偏好設定"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "還原錢包"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "還原中…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "略過精靈（進階）"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "查看方案（將在您的瀏覽器中開啟）"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren 採用非託管錢包（Ed25519 + BIP39）。金鑰由您持有，我們絕不會看到。"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "歡迎使用 Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "請依序抄下這 12 個字並妥善保管於安全之處。若您失去對此裝置的存取權，這是還原訂閱的唯一方式。"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "您目前尚無有效的訂閱。方案每月僅需數歐元起 — 不自動續費、不需建立帳號，用多少付多少。"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "您的 Warren 錢包"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "您的訂閱"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "字"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• 永久啟用的混淆（預設開啟）：模擬 HTTP/3，讓傳輸流量融入一般流量之中。"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2（預設關閉）：注入填充資料以對抗機器學習流量分析。約耗用 5-15% 頻寬。"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• 多重跳躍（預設關閉）：透過兩個中繼節點轉送，使入口與出口無法被關聯。"

@@ -3937,3 +3937,219 @@ msgstr "الحالة: في انتظار اتصال نفق نشط لإعداد ت
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "قد يعيّن الخادم منفذًا مختلفًا إذا كان المنفذ المفضل مستخدمًا بالفعل. تُطبَّق التغييرات فورًا دون إعادة الاتصال."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "النسخ الاحتياطي للمفاتيح"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "رفضت الخدمة العبارة الاسترجاعية. تحقق من الإملاء وعدد الكلمات، ثم حاول مرة أخرى."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "تم"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "أدخل عبارتك الاسترجاعية BIP39 المكوّنة من 12 كلمة (أو 24 كلمة)، مفصولة بمسافات."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "تعذّر استرجاع العبارة الاسترجاعية من الخدمة."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "لقد دوّنتها في مكان آمن."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "أُدرك أن هذا سيستبدل هويتي الحالية نهائياً."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "تمت استعادة الهوية. أعد تشغيل خدمة Warren VPN لتفعيل الهوية الجديدة."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "المفاتيح"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "لا توجد عبارة استرجاعية متاحة — سجّل الدخول أو استعد هوية أولاً."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "الاستعادة من العبارة الاسترجاعية"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "استعادة الهوية"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "جارٍ الاستعادة..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "إظهار العبارة الاسترجاعية"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "تحذير — سيؤدي هذا إلى استبدال هويتك الحالية. أي اشتراك مرتبط بالهوية الحالية سيصبح غير قابل للاسترجاع."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "دوّنها على ورق. لا تحفظها أبداً في السحابة أو لقطة شاشة أو بريد إلكتروني."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "عبارتك الاسترجاعية المكوّنة من 12 كلمة هي الطريقة الوحيدة لاستعادة هوية Warren على جهاز آخر. في حال فقدانها، يصبح اشتراكك غير قابل للاسترجاع."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "كلمات"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "تم النسخ إلى الحافظة"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "نسخ إلى الحافظة"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "تجربة VPN دون أي تنازل عن الخصوصية. بلا سجلّات. بلا حسابات. بلا تتبّع. مجرد عرض نطاق."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "كل شيء جاهز"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "تحقق مرة أخرى"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "جارٍ التحقق... (انقر للتحديث الآن)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "اكتمل الإعداد. اختر دولة واتصل بـ Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "متابعة"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "تعذّر التحقق من حالة الاشتراك. يرجى المحاولة مرة أخرى."
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "إنشاء محفظتي الجديدة (مُوصى به)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "لا تحتوي الخدمة على عبارة استرجاعية بعد — سجّل الدخول أو أعد تشغيل التطبيق."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "رفضت الخدمة العبارة الاسترجاعية. تحقق من الإملاء وعدد الكلمات، ثم حاول مرة أخرى."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "تعذّر استرجاع العبارة الاسترجاعية من الخدمة."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "ابدأ الآن"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "لديّ اشتراك بالفعل"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "لقد دوّنتها في مكان آمن."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "استيراد عبارة استرجاعية موجودة"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "لم يُعثر على اشتراك نشط. يرجى شراء اشتراك أولاً."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "الصق عبارتك الاسترجاعية BIP39 المكوّنة من 12 كلمة لاستعادة هوية Warren الموجودة لديك."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "اختر دولة واتصل"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "اختر وسائل الحماية التي تريدها منذ اليوم الأول. يمكنك تغييرها جميعاً لاحقاً من الإعدادات."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "تفضيلات الخصوصية"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "استعادة المحفظة"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "جارٍ الاستعادة..."
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "تخطّي المعالج (متقدّم)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "عرض الباقات (يُفتح في متصفحك)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "يستخدم Warren محفظة غير وصائية (Ed25519 + BIP39). أنت تملك المفاتيح؛ ولا نراها أبداً."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "مرحباً بك في Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "دوّن هذه الكلمات الـ12 بالترتيب واحتفظ بها في مكان آمن. فهي الطريقة الوحيدة لاستعادة اشتراكك إذا فقدت الوصول إلى هذا الجهاز."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً — بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "محفظتك في Warren"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "اشتراكك"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "كلمات"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• التمويه الدائم (مُفعّل افتراضياً): محاكاة HTTP/3 لكي تندمج حركة المرور مع الحركة العادية."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (مُعطّل افتراضياً): إضافة حشو لإحباط تحليل حركة المرور بالتعلّم الآلي. بتكلفة ~5-15% من عرض النطاق."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• تعدّد القفزات (مُعطّل افتراضياً): التوجيه عبر مُرحّلين لمنع الربط بين نقطتي الدخول والخروج."

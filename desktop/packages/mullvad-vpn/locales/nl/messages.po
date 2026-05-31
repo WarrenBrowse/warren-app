@@ -4162,3 +4162,75 @@ msgstr "Status: wachten op een actieve tunnelverbinding om de poortdoorschakelin
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "De server kan een andere poort toewijzen als de voorkeurspoort al in gebruik is. Wijzigingen worden direct toegepast, zonder opnieuw verbinding te maken."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Sleutels back-uppen"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "De daemon heeft de herstelzin geweigerd. Controleer de spelling en het aantal woorden en probeer het opnieuw."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Klaar"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Voer je BIP39-herstelzin van 12 woorden (of 24 woorden) in, gescheiden door spaties."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Kan de herstelzin niet ophalen uit de daemon."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Ik heb deze op een veilige plek opgeschreven."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Ik begrijp dat hiermee mijn huidige identiteit definitief wordt vervangen."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Identiteit hersteld. Start de Warren VPN-daemon opnieuw op om de nieuwe identiteit te activeren."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Sleutels"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Geen herstelzin beschikbaar — log eerst in of herstel een identiteit."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Herstellen met herstelzin"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Identiteit herstellen"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Bezig met herstellen..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Herstelzin tonen"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "WAARSCHUWING — Hiermee VERVANG je je huidige identiteit. Elk abonnement dat aan de huidige identiteit is gekoppeld, wordt onherstelbaar."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Schrijf deze op papier. Bewaar deze nooit in de cloud, op een screenshot of in een e-mail."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Je herstelzin van 12 woorden is de ENIGE manier om je Warren-identiteit op een ander apparaat te herstellen. Raak je deze kwijt, dan is je abonnement onherstelbaar."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "woorden"

@@ -4162,3 +4162,75 @@ msgstr "Durum: bağlantı noktası eşlemesini ayarlamak için etkin bir tünel 
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Tercih edilen bağlantı noktası zaten kullanılıyorsa sunucu farklı bir bağlantı noktası atayabilir. Değişiklikler yeniden bağlanmadan anında uygulanır."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Anahtarları yedekle"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Servis kurtarma ifadesini reddetti. Yazımı ve kelime sayısını kontrol edip tekrar deneyin."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Bitti"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "12 kelimelik (veya 24 kelimelik) BIP39 kurtarma ifadenizi boşluklarla ayırarak girin."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Kurtarma ifadesi servisten alınamadı."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Güvenli bir yere not aldım."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Bunun mevcut kimliğimi kalıcı olarak değiştireceğini anlıyorum."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Kimlik geri yüklendi. Yeni kimliği etkinleştirmek için Warren VPN servisini yeniden başlatın."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Anahtarlar"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Kullanılabilir kurtarma ifadesi yok — önce oturum açın veya bir kimlik geri yükleyin."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Kurtarma ifadesinden geri yükle"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Kimliği geri yükle"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Geri yükleniyor..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Kurtarma ifadesini göster"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "UYARI — Bu işlem mevcut kimliğinizin YERİNE GEÇECEK. Mevcut kimliğe bağlı tüm abonelikler kurtarılamaz hale gelecek."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Kâğıda yazın. Asla bulutta, ekran görüntüsünde veya e-postada saklamayın."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "12 kelimelik kurtarma ifadeniz, Warren kimliğinizi başka bir cihazda geri yüklemenin TEK yoludur. Kaybedilirse aboneliğiniz kurtarılamaz."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "kelime"

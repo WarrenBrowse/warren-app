@@ -3870,3 +3870,219 @@ msgstr "အခြေအနေ: ပို့တ်ပြန်ညွှန်း�
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "နှစ်သက်ရာ ပို့တ်ကို အသုံးပြုပြီးဖြစ်ပါက ဆာဗာသည် အခြားပို့တ်တစ်ခုကို သတ်မှတ်ပေးနိုင်သည်။ ပြောင်းလဲမှုများသည် ပြန်လည်ချိတ်ဆက်ရန် မလိုဘဲ ချက်ချင်း အကျိုးသက်ရောက်သည်။"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "သော့များ မိတ္တူကူးယူပါ"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "ပြန်လည်ရယူရေး စကားစုကို daemon က ငြင်းပယ်လိုက်သည်။ စာလုံးပေါင်းနှင့် စကားလုံးအရေအတွက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "ပြီးပါပြီ"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "သင်၏ စကားလုံး ၁၂ လုံး (သို့မဟုတ် ၂၄ လုံး) BIP39 ပြန်လည်ရယူရေး စကားစုကို နေရာလွတ်ဖြင့် ပိုင်းခြားကာ ထည့်သွင်းပါ။"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "daemon မှ ပြန်လည်ရယူရေး စကားစုကို ရယူ၍ မရပါ။"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "၎င်းကို လုံခြုံသော နေရာတွင် ရေးမှတ်ထားပြီးပါပြီ။"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "ဤလုပ်ဆောင်ချက်သည် ကျွန်ုပ်၏ လက်ရှိ အထောက်အထားကို အပြီးအပိုင် အစားထိုးမည်ကို နားလည်ပါသည်။"
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "အထောက်အထား ပြန်လည်ရယူပြီးပါပြီ။ အထောက်အထားအသစ်ကို အသက်သွင်းရန် Warren VPN daemon ကို ပြန်လည်စတင်ပါ။"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "သော့များ"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "ပြန်လည်ရယူရေး စကားစု မရှိပါ — ဦးစွာ အကောင့်ဝင်ပါ သို့မဟုတ် အထောက်အထားကို ပြန်လည်ရယူပါ။"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "ပြန်လည်ရယူရေး စကားစုဖြင့် ပြန်လည်ရယူပါ"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "အထောက်အထား ပြန်လည်ရယူပါ"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "ပြန်လည်ရယူနေသည်..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "ပြန်လည်ရယူရေး စကားစုကို ဖော်ပြပါ"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "သတိပေးချက် — ဤလုပ်ဆောင်ချက်သည် သင်၏ လက်ရှိ အထောက်အထားကို အစားထိုးပစ်မည်။ လက်ရှိ အထောက်အထားနှင့် ချိတ်ဆက်ထားသော မည်သည့် စာရင်းသွင်းမှုမဆို ပြန်လည်ရယူ၍ ရတော့မည်မဟုတ်ပါ။"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "စက္ကူပေါ်တွင် ရေးမှတ်ထားပါ။ cloud, ဖန်သားပြင်ဓာတ်ပုံ သို့မဟုတ် အီးမေးလ်တွင် လုံးဝ မသိမ်းဆည်းပါနှင့်။"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "သင်၏ စကားလုံး ၁၂ လုံး ပြန်လည်ရယူရေး စကားစုသည် အခြားစက်ပစ္စည်းတွင် သင်၏ Warren အထောက်အထားကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။ ပျောက်ဆုံးပါက သင်၏ စာရင်းသွင်းမှုကို ပြန်လည်ရယူ၍ ရတော့မည်မဟုတ်ပါ။"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "စကားလုံးများ"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "clipboard သို့ ကူးယူပြီးပါပြီ"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "clipboard သို့ ကူးယူပါ"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "ကိုယ်ရေးကိုယ်တာကို အလျှော့မပေးသော VPN အတွေ့အကြုံ။ မှတ်တမ်းမရှိ။ အကောင့်မရှိ။ ခြေရာခံမှု မရှိ။ bandwidth သက်သက်သာ။"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "အားလုံး အဆင်သင့်ဖြစ်ပါပြီ"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "ထပ်စစ်ဆေးပါ"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "စစ်ဆေးနေသည်... (ယခု ပြန်လည်ဆန်းသစ်ရန် နှိပ်ပါ)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "စီစဉ်သတ်မှတ်မှု ပြီးပါပြီ။ နိုင်ငံတစ်ခုကို ရွေးချယ်ပြီး Warren သို့ ချိတ်ဆက်ပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "ဆက်လုပ်ပါ"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "စာရင်းသွင်းမှု အခြေအနေကို စစ်ဆေး၍ မရပါ။ ထပ်ကြိုးစားပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "ကျွန်ုပ်၏ ပိုက်ဆံအိတ်အသစ် ဖန်တီးပါ (အကြံပြုထားသည်)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "daemon တွင် ပြန်လည်ရယူရေး စကားစု မရှိသေးပါ - အကောင့်ဝင်ပါ သို့မဟုတ် အက်ပ်ကို ပြန်လည်စတင်ပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "ပြန်လည်ရယူရေး စကားစုကို daemon က ငြင်းပယ်လိုက်သည်။ စာလုံးပေါင်းနှင့် စကားလုံးအရေအတွက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "daemon မှ ပြန်လည်ရယူရေး စကားစုကို ရယူ၍ မရပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "စတင်ပါ"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "ကျွန်ုပ်တွင် စာရင်းသွင်းမှု ရှိပြီးသားဖြစ်သည်"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "၎င်းကို လုံခြုံသော နေရာတွင် ရေးမှတ်ထားပြီးပါပြီ။"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "ရှိပြီးသား ပြန်လည်ရယူရေး စကားစုကို တင်သွင်းပါ"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "အသက်ဝင်နေသော စာရင်းသွင်းမှု မတွေ့ပါ။ ဦးစွာ တစ်ခု ဝယ်ယူပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "သင်၏ ရှိပြီးသား Warren အထောက်အထားကို ပြန်လည်ရယူရန် သင်၏ စကားလုံး ၁၂ လုံး BIP39 ပြန်လည်ရယူရေး စကားစုကို ကူးထည့်ပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "နိုင်ငံတစ်ခုကို ရွေးပြီး ချိတ်ဆက်ပါ"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "ပထမနေ့မှစ၍ သင်လိုချင်သော ကာကွယ်မှုများကို ရွေးချယ်ပါ။ ၎င်းအားလုံးကို နောက်ပိုင်းတွင် ဆက်တင်များမှ ပြောင်းလဲနိုင်သည်။"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "ကိုယ်ရေးကိုယ်တာ ဦးစားပေးချက်များ"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "ပိုက်ဆံအိတ် ပြန်လည်ရယူပါ"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "ပြန်လည်ရယူနေသည်..."
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "လမ်းညွှန်ကို ကျော်ပါ (အဆင့်မြင့်)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "အစီအစဉ်များကို ကြည့်ရှုပါ (သင်၏ browser တွင် ပွင့်လာမည်)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren သည် non-custodial ပိုက်ဆံအိတ် (Ed25519 + BIP39) ကို အသုံးပြုသည်။ သော့များကို သင်ပိုင်ဆိုင်သည်၊ ကျွန်ုပ်တို့ ၎င်းတို့ကို ဘယ်တော့မှ မမြင်ပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Warren VPN မှ ကြိုဆိုပါသည်"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "ဤစကားလုံး ၁၂ လုံးကို အစီအစဉ်အတိုင်း ရေးမှတ်ပြီး လုံခြုံသော နေရာတွင် သိမ်းထားပါ။ ဤစက်ပစ္စည်းကို အသုံးပြုခွင့် ဆုံးရှုံးသွားပါက သင်၏ စာရင်းသွင်းမှုကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "သင်တွင် အသက်ဝင်နေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အစီအစဉ်များသည် တစ်လလျှင် ယူရို အနည်းငယ်မှ စတင်သည် - ထပ်ခါတလဲလဲ ငွေတောင်းခံမှု မရှိ၊ အကောင့်ဖွင့်ရန် မလို၊ သုံးသလောက် ပေးဆောင်ပါ။"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "သင်၏ Warren ပိုက်ဆံအိတ်"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "သင်၏ စာရင်းသွင်းမှု"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "စကားလုံးများ"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• အမြဲဖွင့်ထားသော ဖုံးကွယ်မှု (ပုံသေအားဖြင့် ဖွင့်ထား): အသွားအလာ ပေါင်းစည်းသွားစေရန် HTTP/3 အတုယူမှု။"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (ပုံသေအားဖြင့် ပိတ်ထား): ML အသွားအလာ ခွဲခြမ်းစိတ်ဖြာမှုကို ချေဖျက်ရန် padding ထည့်သွင်းသည်။ bandwidth ~၅-၁၅%။"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (ပုံသေအားဖြင့် ပိတ်ထား): ဝင်ပေါက်/ထွက်ပေါက်ကို ချိတ်ဆက်၍ မရစေရန် relay နှစ်ခုကို ဖြတ်သန်း ပို့ဆောင်သည်။"

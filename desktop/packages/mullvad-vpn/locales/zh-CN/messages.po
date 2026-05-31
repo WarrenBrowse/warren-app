@@ -3867,3 +3867,219 @@ msgstr "状态：正在等待活动的隧道连接以设置端口映射。"
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "如果首选端口已被占用，服务器可能会分配其他端口。更改立即生效，无需重新连接。"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "备份密钥"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "守护进程拒绝了该助记词。请检查拼写和单词数量后重试。"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "完成"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "请输入您的 12 个（或 24 个）单词的 BIP39 助记词，单词之间以空格分隔。"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "无法从守护进程获取助记词。"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "我已将其抄写下来并妥善保管。"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "我了解此操作将永久替换我当前的身份。"
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "身份已恢复。请重启 Warren VPN 守护进程以启用新身份。"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "密钥"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "暂无可用助记词——请先登录或恢复身份。"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "通过助记词恢复"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "恢复身份"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "正在恢复…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "显示助记词"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告——此操作将替换您当前的身份。与当前身份绑定的任何订阅都将无法恢复。"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "请抄写在纸上。切勿将其存储在云端、截图或电子邮件中。"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "您的 12 个单词助记词是在其他设备上恢复 Warren 身份的唯一途径。一旦丢失，您的订阅将无法恢复。"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "个单词"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "已复制到剪贴板"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "复制到剪贴板"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "在隐私上绝不妥协的 VPN 体验。无日志。无账户。无追踪。只有带宽。"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "全部就绪"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "重新检查"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "正在检查…（点击立即刷新）"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "配置完成。请选择一个国家/地区并连接到 Warren。"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "继续"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "无法检查订阅状态。请重试。"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "创建我的新钱包（推荐）"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "守护进程尚无助记词——请登录或重启应用。"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "守护进程拒绝了该助记词。请检查拼写和单词数量后重试。"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "无法从守护进程获取助记词。"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "开始使用"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "我已有订阅"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "我已将其抄写下来并妥善保管。"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "导入现有助记词"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "未找到有效订阅。请先购买订阅。"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "粘贴您的 12 个单词的 BIP39 助记词，以恢复您现有的 Warren 身份。"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "选择国家/地区并连接"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "从第一天起就选择您想要的防护措施。这些设置之后都可以在“设置”中更改。"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "隐私偏好设置"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "恢复钱包"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "正在恢复…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "跳过向导（高级）"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "查看套餐（在浏览器中打开）"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren 使用非托管钱包（Ed25519 + BIP39）。密钥归您所有，我们永远无法查看。"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "欢迎使用 Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "请按顺序抄下这 12 个单词并妥善保管。如果您失去对此设备的访问权限，它们将是恢复您订阅的唯一途径。"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "您还没有有效的订阅。套餐每月仅需几欧元起——无自动续费、无需创建账户、用多少付多少。"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "您的 Warren 钱包"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "您的订阅"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "个单词"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• 始终开启的混淆（默认开启）：模仿 HTTP/3，让流量融入正常网络。"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2（默认关闭）：注入填充流量以挫败机器学习流量分析。约消耗 5-15% 带宽。"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• 多跳（默认关闭）：经由两个中继路由，使入口与出口无法被关联。"

@@ -3867,3 +3867,219 @@ msgstr "상태: 포트 매핑을 설정하기 위해 활성 터널 연결을 기
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "선호하는 포트가 이미 사용 중인 경우 서버가 다른 포트를 할당할 수 있습니다. 변경 사항은 재연결 없이 즉시 적용됩니다."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "키 백업"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "데몬이 니모닉을 거부했습니다. 철자와 단어 수를 확인한 후 다시 시도하세요."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "완료"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "12단어(또는 24단어) BIP39 니모닉을 공백으로 구분하여 입력하세요."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "데몬에서 니모닉을 가져오지 못했습니다."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "안전한 곳에 적어 두었습니다."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "이 작업으로 현재 신원이 영구적으로 대체된다는 점을 이해합니다."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "신원이 복구되었습니다. 새 신원을 적용하려면 Warren VPN 데몬을 재시작하세요."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "키"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "사용 가능한 니모닉이 없습니다 — 먼저 로그인하거나 신원을 복구하세요."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "니모닉으로 복구"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "신원 복구"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "복구 중..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "니모닉 표시"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "경고 — 현재 신원이 대체됩니다. 현재 신원에 연결된 구독은 복구할 수 없게 됩니다."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "종이에 적어 두세요. 클라우드, 스크린샷, 이메일에는 절대 저장하지 마세요."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "12단어 니모닉은 다른 기기에서 Warren 신원을 복구할 수 있는 유일한 방법입니다. 분실하면 구독을 복구할 수 없습니다."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "단어"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "클립보드에 복사됨"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "클립보드에 복사"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "개인정보 보호를 타협하지 않는 VPN 경험. 로그 없음. 계정 없음. 추적 없음. 오직 대역폭만."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "준비 완료"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "다시 확인"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "확인 중... (클릭하여 지금 새로고침)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "설정이 완료되었습니다. 국가를 선택하고 Warren에 연결하세요."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "계속"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "구독 상태를 확인할 수 없습니다. 다시 시도해 주세요."
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "새 지갑 만들기 (권장)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "데몬에 아직 니모닉이 없습니다 - 로그인하거나 앱을 재시작하세요."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "데몬이 니모닉을 거부했습니다. 철자와 단어 수를 확인한 후 다시 시도하세요."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "데몬에서 니모닉을 가져오지 못했습니다."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "시작하기"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "이미 구독이 있습니다"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "안전한 곳에 적어 두었습니다."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "기존 니모닉 가져오기"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "활성 구독을 찾을 수 없습니다. 먼저 구독을 구매해 주세요."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "기존 Warren 신원을 복구하려면 12단어 BIP39 니모닉을 붙여넣으세요."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "국가를 선택하고 연결"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "처음부터 원하는 방어 기능을 선택하세요. 이 모든 항목은 나중에 설정에서 변경할 수 있습니다."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "개인정보 보호 설정"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "지갑 복구"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "복구 중..."
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "마법사 건너뛰기 (고급)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "요금제 보기 (브라우저에서 열림)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren은 비수탁형 지갑(Ed25519 + BIP39)을 사용합니다. 키는 사용자가 소유하며, 저희는 절대 볼 수 없습니다."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Warren VPN에 오신 것을 환영합니다"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "이 12단어를 순서대로 적어 안전한 곳에 보관하세요. 이 기기에 접근할 수 없게 될 경우 구독을 복구할 수 있는 유일한 방법입니다."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "아직 활성 구독이 없습니다. 요금제는 월 몇 유로부터 시작하며, 정기 결제도 계정 생성도 없이 사용한 만큼만 지불합니다."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "내 Warren 지갑"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "내 구독"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "단어"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• 상시 난독화 (기본값 켜짐): HTTP/3 모방으로 트래픽이 일반 통신에 섞여 들도록 합니다."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (기본값 꺼짐): 패딩을 주입해 머신러닝 기반 트래픽 분석을 무력화합니다. 대역폭 약 5~15% 소모."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• 멀티홉 (기본값 꺼짐): 두 개의 릴레이를 경유해 입구와 출구를 연결할 수 없게 만듭니다."

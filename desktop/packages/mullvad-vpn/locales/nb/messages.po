@@ -4162,3 +4162,75 @@ msgstr "Status: venter på en aktiv tunnelforbindelse for å sette opp porttilor
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Serveren kan tildele en annen port hvis den foretrukne allerede er opptatt. Endringer trer i kraft umiddelbart, uten ny tilkobling."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Sikkerhetskopier nøkler"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Tjenesten avviste gjenopprettingsfrasen. Sjekk stavemåten og antall ord, og prøv igjen."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Ferdig"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Skriv inn BIP39-gjenopprettingsfrasen din på 12 (eller 24) ord, atskilt med mellomrom."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Kunne ikke hente gjenopprettingsfrasen fra tjenesten."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Jeg har skrevet den ned på et trygt sted."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Jeg forstår at dette permanent erstatter min nåværende identitet."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Identiteten er gjenopprettet. Start Warren VPN-tjenesten på nytt for å aktivere den nye identiteten."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Nøkler"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Ingen gjenopprettingsfrase tilgjengelig – logg inn eller gjenopprett en identitet først."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Gjenopprett fra gjenopprettingsfrase"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Gjenopprett identitet"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Gjenoppretter …"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Vis gjenopprettingsfrase"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ADVARSEL – Dette vil ERSTATTE din nåværende identitet. Ethvert abonnement knyttet til den nåværende identiteten kan ikke gjenopprettes."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Skriv den ned på papir. Lagre den aldri i en sky, et skjermbilde eller en e-post."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Gjenopprettingsfrasen din på 12 ord er den ENESTE måten å gjenopprette Warren-identiteten din på en annen enhet. Mister du den, kan abonnementet ditt ikke gjenopprettes."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "ord"

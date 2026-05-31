@@ -4162,3 +4162,75 @@ msgstr "Status: venter på en aktiv tunnelforbindelse for at konfigurere porttil
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Serveren kan tildele en anden port, hvis den foretrukne allerede er optaget. Ændringer træder i kraft med det samme, uden genforbindelse."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Sikkerhedskopiér nøgler"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Daemonen afviste gendannelsessætningen. Tjek stavning og antal ord, og prøv igen."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Udført"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Indtast din BIP39-gendannelsessætning på 12 ord (eller 24 ord), adskilt af mellemrum."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Kunne ikke hente gendannelsessætningen fra daemonen."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Jeg har skrevet den ned et sikkert sted."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Jeg forstår, at dette permanent erstatter min nuværende identitet."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Identitet gendannet. Genstart Warren VPN-daemonen for at aktivere den nye identitet."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Nøgler"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Ingen gendannelsessætning tilgængelig — log ind eller gendan en identitet først."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Gendan fra gendannelsessætning"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Gendan identitet"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Gendanner..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Vis gendannelsessætning"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ADVARSEL — Dette ERSTATTER din nuværende identitet. Ethvert abonnement knyttet til den nuværende identitet kan ikke gendannes."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Skriv den ned på papir. Gem den aldrig i en sky, et skærmbillede eller en e-mail."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Din gendannelsessætning på 12 ord er den ENESTE måde at gendanne din Warren-identitet på en anden enhed. Mister du den, kan dit abonnement ikke gendannes."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "ord"

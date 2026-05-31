@@ -3881,3 +3881,219 @@ msgstr "وضعیت: در انتظار یک اتصال تونل فعال برای
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "اگر درگاه ترجیحی قبلاً اشغال شده باشد، سرور ممکن است درگاه دیگری اختصاص دهد. تغییرات بلافاصله و بدون نیاز به اتصال مجدد اعمال می‌شوند."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "پشتیبان‌گیری از کلیدها"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "سرویس عبارت بازیابی را رد کرد. املا و تعداد کلمات را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "انجام شد"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "عبارت بازیابی BIP39 خود (۱۲ یا ۲۴ کلمه) را با فاصله بین کلمات وارد کنید."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "دریافت عبارت بازیابی از سرویس ناموفق بود."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "آن را در جای امنی یادداشت کرده‌ام."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "می‌دانم که این کار هویت فعلی من را برای همیشه جایگزین می‌کند."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "هویت بازیابی شد. برای فعال‌سازی هویت جدید، سرویس Warren VPN را دوباره راه‌اندازی کنید."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "کلیدها"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "عبارت بازیابی در دسترس نیست — ابتدا وارد شوید یا یک هویت را بازیابی کنید."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "بازیابی از عبارت بازیابی"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "بازیابی هویت"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "در حال بازیابی…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "نمایش عبارت بازیابی"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "هشدار — این کار هویت فعلی شما را جایگزین می‌کند. هر اشتراکی که به هویت فعلی متصل باشد غیرقابل بازیابی خواهد شد."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "آن را روی کاغذ یادداشت کنید. هرگز آن را در فضای ابری، اسکرین‌شات یا ایمیل ذخیره نکنید."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "عبارت بازیابی ۱۲ کلمه‌ای شما تنها و تنها راه بازیابی هویت Warren روی دستگاهی دیگر است. در صورت گم شدن، اشتراک شما غیرقابل بازیابی خواهد بود."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "کلمه"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "در کلیپ‌بورد کپی شد"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "کپی در کلیپ‌بورد"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "تجربه‌ای از VPN بدون هیچ سازشی بر سر حریم خصوصی. بدون ثبت فعالیت. بدون حساب کاربری. بدون ردیابی. فقط پهنای باند."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "همه‌چیز آماده است"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "بررسی دوباره"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "در حال بررسی… (برای به‌روزرسانی فوری کلیک کنید)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "پیکربندی کامل شد. یک کشور انتخاب کنید و به Warren متصل شوید."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "ادامه"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "بررسی وضعیت اشتراک امکان‌پذیر نبود. لطفاً دوباره تلاش کنید."
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "ایجاد کیف پول جدید (توصیه‌شده)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "سرویس هنوز عبارت بازیابی‌ای ندارد — وارد شوید یا برنامه را دوباره راه‌اندازی کنید."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "سرویس عبارت بازیابی را رد کرد. املا و تعداد کلمات را بررسی کنید و سپس دوباره تلاش کنید."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "دریافت عبارت بازیابی از سرویس ناموفق بود."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "شروع کنید"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "من از قبل اشتراک دارم"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "آن را در جای امنی یادداشت کرده‌ام."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "وارد کردن یک عبارت بازیابی موجود"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "هیچ اشتراک فعالی یافت نشد. لطفاً ابتدا یک اشتراک تهیه کنید."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "عبارت بازیابی BIP39 ۱۲ کلمه‌ای خود را برای بازیابی هویت موجود Warren جای‌گذاری کنید."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "یک کشور انتخاب کنید و متصل شوید"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "از همان روز اول دفاع‌های دلخواه خود را انتخاب کنید. می‌توانید همه این موارد را بعداً از بخش تنظیمات تغییر دهید."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "ترجیحات حریم خصوصی"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "بازیابی کیف پول"
+
+msgctxt "warren-onboarding"
+msgid "Restoring..."
+msgstr "در حال بازیابی…"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "رد کردن دستیار راه‌اندازی (پیشرفته)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "مشاهده اشتراک‌ها (در مرورگر شما باز می‌شود)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren از کیف پول غیرامانی (Ed25519 + BIP39) استفاده می‌کند. کلیدها متعلق به شماست؛ ما هرگز آن‌ها را نمی‌بینیم."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "به Warren VPN خوش آمدید"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "این ۱۲ کلمه را به ترتیب یادداشت کنید و در جای امنی نگه دارید. این کلمات تنها راه بازیابی اشتراک شما در صورت از دست دادن دسترسی به این دستگاه هستند."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "هنوز اشتراک فعالی ندارید. اشتراک‌ها از چند یورو در ماه شروع می‌شوند — بدون پرداخت دوره‌ای، بدون ساخت حساب کاربری، پرداخت به اندازه مصرف."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "کیف پول Warren شما"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "اشتراک شما"
+
+msgctxt "warren-onboarding"
+msgid "words"
+msgstr "کلمه"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• مبهم‌سازی همیشه‌فعال (به‌طور پیش‌فرض روشن): تقلید از HTTP/3 تا ترافیک در میان داده‌های عادی پنهان شود."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (به‌طور پیش‌فرض خاموش): تزریق داده پرکننده برای خنثی کردن تحلیل ترافیک مبتنی بر یادگیری ماشین (ML). حدود ۵ تا ۱۵٪ پهنای باند."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• چندپرشی (به‌طور پیش‌فرض خاموش): مسیریابی از طریق دو رله تا ورود و خروج قابل ارتباط‌دهی به یکدیگر نباشند."

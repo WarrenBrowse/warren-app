@@ -4162,3 +4162,75 @@ msgstr "Tila: odotetaan aktiivista tunneliyhteyttä porttiohjauksen määrittäm
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Palvelin voi määrittää eri portin, jos ensisijainen on jo varattu. Muutokset tulevat voimaan heti, ilman uudelleenyhdistämistä."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Varmuuskopioi avaimet"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Taustapalvelu hylkäsi palautuslauseen. Tarkista kirjoitusasu ja sanojen määrä ja yritä uudelleen."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Valmis"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Syötä 12 sanan (tai 24 sanan) BIP39-palautuslauseesi välilyönnein eroteltuna."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Palautuslauseen haku taustapalvelusta epäonnistui."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Olen kirjoittanut sen muistiin turvalliseen paikkaan."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Ymmärrän, että tämä korvaa nykyisen identiteettini pysyvästi."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Identiteetti palautettu. Käynnistä Warren VPN -taustapalvelu uudelleen ottaaksesi uuden identiteetin käyttöön."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Avaimet"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Palautuslausetta ei ole saatavilla — kirjaudu sisään tai palauta ensin identiteetti."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Palauta palautuslauseesta"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Palauta identiteetti"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Palautetaan…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Näytä palautuslause"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "VAROITUS — Tämä KORVAA nykyisen identiteettisi. Mitään nykyiseen identiteettiin sidottua tilausta ei voi enää palauttaa."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Kirjoita se paperille. Älä koskaan tallenna sitä pilveen, kuvakaappaukseen tai sähköpostiin."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "12 sanan palautuslauseesi on AINOA tapa palauttaa Warren-identiteettisi toiseen laitteeseen. Jos kadotat sen, tilaustasi ei voi enää palauttaa."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "sanaa"

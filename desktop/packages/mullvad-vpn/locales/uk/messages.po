@@ -4190,3 +4190,75 @@ msgstr "Статус: очікування активного тунельног
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Сервер може призначити інший порт, якщо бажаний вже зайнятий. Зміни застосовуються негайно, без повторного підключення."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Резервне копіювання ключів"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Служба відхилила мнемонічну фразу. Перевірте правопис і кількість слів, потім спробуйте ще раз."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Готово"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Введіть свою мнемонічну фразу BIP39 із 12 слів (або 24 слів), розділених пробілами."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не вдалося отримати мнемонічну фразу від служби."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Я записав(-ла) її в надійному місці."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Я розумію, що це назавжди замінить мій поточний профіль."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Профіль відновлено. Перезапустіть службу Warren VPN, щоб активувати новий профіль."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Ключі"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Мнемонічна фраза недоступна — спершу увійдіть або відновіть профіль."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Відновити з мнемонічної фрази"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Відновити профіль"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Відновлення…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Показати мнемонічну фразу"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "УВАГА — Це ЗАМІНИТЬ ваш поточний профіль. Будь-яку підписку, прив’язану до поточного профілю, буде неможливо відновити."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Запишіть її на папері. Ніколи не зберігайте її в хмарі, на скриншоті чи в електронній пошті."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Ваша мнемонічна фраза з 12 слів — ЄДИНИЙ спосіб відновити ваш профіль Warren на іншому пристрої. Якщо її втратити, підписку буде неможливо відновити."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "слів"

@@ -4190,3 +4190,75 @@ msgstr "Статус: ожидание активного туннельного
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Сервер может назначить другой порт, если предпочитаемый уже занят. Изменения применяются немедленно, без переподключения."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Резервное копирование ключей"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Служба отклонила сид-фразу. Проверьте написание и количество слов, затем повторите попытку."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Готово"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Введите свою сид-фразу BIP39 из 12 (или 24) слов через пробел."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не удалось получить сид-фразу от службы."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Я записал её в надёжном месте."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Я понимаю, что это безвозвратно заменит мой текущий профиль."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Профиль восстановлен. Перезапустите службу Warren VPN, чтобы активировать новый профиль."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Ключи"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "Сид-фраза недоступна — сначала войдите или восстановите профиль."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Восстановить из сид-фразы"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Восстановить профиль"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Восстановление…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Показать сид-фразу"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ВНИМАНИЕ — Это ЗАМЕНИТ ваш текущий профиль. Любая подписка, привязанная к текущему профилю, будет утеряна безвозвратно."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Запишите её на бумаге. Никогда не храните её в облаке, на скриншоте или в электронной почте."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Ваша сид-фраза из 12 слов — ЕДИНСТВЕННЫЙ способ восстановить профиль Warren на другом устройстве. При её утере подписка будет утеряна безвозвратно."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "слов"

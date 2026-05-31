@@ -4162,3 +4162,75 @@ msgstr "Estado: esperando una conexión de túnel activa para configurar la asig
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "El servidor puede asignar un puerto diferente si el preferido ya está ocupado. Los cambios se aplican de inmediato, sin necesidad de reconexión."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Copia de seguridad de las claves"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "El servicio rechazó la frase de recuperación. Revisa la ortografía y el número de palabras, e inténtalo de nuevo."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Listo"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Introduce tu frase de recuperación BIP39 de 12 palabras (o 24 palabras), separadas por espacios."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "No se pudo obtener la frase de recuperación del servicio."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "La he anotado en un lugar seguro."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Entiendo que esto reemplazará permanentemente mi identidad actual."
+
+msgctxt "keys-view"
+msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
+msgstr "Identidad restaurada. Reinicia el servicio de Warren VPN para activar la nueva identidad."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Claves"
+
+msgctxt "keys-view"
+msgid "No mnemonic available — log in or restore an identity first."
+msgstr "No hay frase de recuperación disponible — inicia sesión o restaura una identidad primero."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Restaurar desde una frase de recuperación"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Restaurar identidad"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Restaurando..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Mostrar frase de recuperación"
+
+msgctxt "keys-view"
+msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ADVERTENCIA — Esto REEMPLAZARÁ tu identidad actual. Cualquier suscripción vinculada a la identidad actual será irrecuperable."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Anótala en papel. Nunca la guardes en la nube, en una captura de pantalla ni en un correo electrónico."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Tu frase de recuperación de 12 palabras es la ÚNICA forma de restaurar tu identidad Warren en otro dispositivo. Si la pierdes, tu suscripción será irrecuperable."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "palabras"
