@@ -3874,6 +3874,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "auto"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Kopierat till urklipp"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Kopiera till urklipp"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "En VPN-upplevelse utan kompromisser kring integritet. Inga loggar. Inga konton. Ingen spårning. Bara bandbredd."
@@ -3927,8 +3935,8 @@ msgid "I already have a subscription"
 msgstr "Jag har redan en prenumeration"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Jag har skrivit ner orden"
+msgid "I have written it down in a safe place."
+msgstr "Jag har skrivit ner den på ett säkert ställe."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3979,8 +3987,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Välkommen till Warren VPN"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Skriv ner dessa 12 ord i ordning. Om du tappar dem förlorar du tillgång till din prenumeration. Kopiera till urklipp är medvetet inaktiverat för att hålla din hemlighet borta från skadlig programvara."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Skriv ner dessa 12 ord i ordning och förvara dem på ett säkert ställe. De är det enda sättet att återställa din prenumeration om du förlorar åtkomsten till den här enheten."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

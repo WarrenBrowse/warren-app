@@ -4,26 +4,30 @@ import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Button, Spinner, Text } from '../../../lib/components';
+import { Button, Checkbox, Spinner, Text } from '../../../lib/components';
+import { Flex } from '../../../lib/components/flex';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { useHistory } from '../../../lib/history';
-import { countMnemonicWords, MnemonicGrid, MnemonicTextarea } from '../../warren-mnemonic';
+import {
+  CopyMnemonicButton,
+  countMnemonicWords,
+  MnemonicGrid,
+  MnemonicTextarea,
+} from '../../warren-mnemonic';
 import { OnboardingLayout } from './components';
 
 // M5.B.3 step 2: wallet bootstrap. Two paths:
 // - Generate: read the daemon's auto-bootstrapped mnemonic via
-//   `getWarrenMnemonic` and display the 12 words behind a
-//   click-to-reveal blur overlay (anti-shoulder-surf). The daemon
-//   generates the identity on first run; this step lets the user
-//   capture the backup before they ever connect.
+//   `getWarrenMnemonic` and display the 12 words directly, with a
+//   "Copy to clipboard" button. The daemon generates the identity on
+//   first run; this step lets the user capture the backup before they
+//   ever connect. A confirmation checkbox gates the "Continue" button so
+//   the user explicitly acknowledges they have saved the words. This
+//   mirrors the settings backup view (`KeysView`) so both mnemonic
+//   screens share the same layout and affordances.
 // - Import: 12-word textarea, validated daemon-side via
 //   `setWarrenMnemonic` (BIP39 wordlist + checksum lives in Rust to
 //   keep the renderer surface small).
-//
-// **No "Copy to clipboard" CTA**: the user must write the mnemonic
-// down by hand, mitigating the malware-clipboard exfiltration risk.
-// This is non-negotiable per the doctrine; do not regress on a UX
-// review.
 
 export function OnboardingWalletView() {
   const { push } = useHistory();
@@ -31,7 +35,7 @@ export function OnboardingWalletView() {
 
   const [mode, setMode] = React.useState<'pick' | 'generate' | 'import'>('pick');
   const [mnemonic, setMnemonic] = React.useState<string | null>(null);
-  const [revealed, setRevealed] = React.useState(false);
+  const [confirmed, setConfirmed] = React.useState(false);
   const [importInput, setImportInput] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -44,7 +48,7 @@ export function OnboardingWalletView() {
   React.useEffect(() => {
     return () => {
       setMnemonic(null);
-      setRevealed(false);
+      setConfirmed(false);
       setImportInput('');
     };
   }, []);
@@ -75,8 +79,6 @@ export function OnboardingWalletView() {
     setError(null);
     setMode('import');
   }, []);
-
-  const reveal = React.useCallback(() => setRevealed(true), []);
 
   const next = React.useCallback(() => push(RoutePath.onboardingSubscription), [push]);
 
@@ -110,7 +112,7 @@ export function OnboardingWalletView() {
       : mode === 'generate'
         ? messages.pgettext(
             'warren-onboarding',
-            'Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware.',
+            'Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device.',
           )
         : messages.pgettext(
             'warren-onboarding',
@@ -138,11 +140,9 @@ export function OnboardingWalletView() {
       <Button
         variant="success"
         onClick={next}
-        disabled={!revealed || !mnemonic}
+        disabled={!confirmed || !mnemonic}
         data-testid="onboarding-wallet-confirm">
-        <Button.Text>
-          {messages.pgettext('warren-onboarding', 'I have written down the words')}
-        </Button.Text>
+        <Button.Text>{messages.pgettext('warren-onboarding', 'Continue')}</Button.Text>
       </Button>
     );
   } else {
@@ -173,12 +173,25 @@ export function OnboardingWalletView() {
           </Text>
         )}
         {mode === 'generate' && mnemonic && (
-          <MnemonicGrid
-            mnemonic={mnemonic}
-            revealed={revealed}
-            onClick={reveal}
-            data-testid="onboarding-mnemonic-blur"
-          />
+          <FlexColumn gap="medium">
+            <MnemonicGrid mnemonic={mnemonic} revealed data-testid="onboarding-mnemonic-grid" />
+
+            <CopyMnemonicButton mnemonic={mnemonic} data-testid="onboarding-mnemonic-copy" />
+
+            <Checkbox checked={confirmed} onCheckedChange={setConfirmed}>
+              <Flex gap="small" alignItems="center">
+                <Checkbox.Trigger>
+                  <Checkbox.Input />
+                </Checkbox.Trigger>
+                <Checkbox.Label>
+                  {messages.pgettext(
+                    'warren-onboarding',
+                    'I have written it down in a safe place.',
+                  )}
+                </Checkbox.Label>
+              </Flex>
+            </Checkbox>
+          </FlexColumn>
         )}
         {mode === 'import' && (
           <MnemonicTextarea

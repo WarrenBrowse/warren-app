@@ -1636,10 +1636,6 @@ msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "Sauvegarder les clés"
 
-msgctxt "keys-view"
-msgid "Copy mnemonic to clipboard"
-msgstr "Copier la phrase mnémonique dans le presse-papiers"
-
 #. Shown when the daemon rejects the mnemonic
 #. (typically: invalid BIP39 word, bad checksum,
 #. wrong word count). User must check + retry.
@@ -1677,10 +1673,6 @@ msgstr "Identité restaurée. Redémarrez le service Warren VPN pour activer la 
 msgctxt "keys-view"
 msgid "Keys"
 msgstr "Clés"
-
-msgctxt "keys-view"
-msgid "Mnemonic copied"
-msgstr "Phrase mnémonique copiée"
 
 #. Shown when the daemon has no Warren BIP39 mnemonic
 #. stored (= identity never bootstrapped). User must
@@ -3112,6 +3104,14 @@ msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "Lorsqu'activé, le trafic est routé à travers deux relais Warren (entrée puis sortie) avec chiffrement HPKE de bout en bout entre le client et la sortie. Le relais d'entrée ne voit que du chiffré ; le relais de sortie ne voit que la charge déchiffrée, jamais l'IP utilisateur."
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Copié dans le presse-papiers"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Copier dans le presse-papiers"
+
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
 msgstr "• Obfuscation permanente (activée par défaut) : mimétisme HTTP/3 pour que le trafic se fonde dans la masse."
@@ -3177,8 +3177,8 @@ msgid "I already have a subscription"
 msgstr "J'ai déjà un abonnement"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "J'ai noté les mots"
+msgid "I have written it down in a safe place."
+msgstr "Je l'ai notée dans un endroit sûr."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3233,8 +3233,8 @@ msgid "words"
 msgstr "mots"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Notez ces 12 mots dans l'ordre. Si vous les perdez, vous perdez l'accès à votre abonnement. La copie dans le presse-papiers est volontairement désactivée pour tenir votre secret hors de portée des logiciels malveillants."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Notez ces 12 mots dans l'ordre et conservez-les en lieu sûr. C'est le seul moyen de restaurer votre abonnement si vous perdez l'accès à cet appareil."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

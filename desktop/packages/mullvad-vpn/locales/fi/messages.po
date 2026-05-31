@@ -3874,6 +3874,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "auto"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Kopioitu leikepöydälle"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Kopioi leikepöydälle"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "VPN-kokemus ilman tinkimistä yksityisyydestä. Ei lokeja. Ei tilejä. Ei seurantaa. Vain kaistanleveyttä."
@@ -3927,8 +3935,8 @@ msgid "I already have a subscription"
 msgstr "Minulla on jo tilaus"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Olen kirjoittanut sanat muistiin"
+msgid "I have written it down in a safe place."
+msgstr "Olen kirjoittanut sen muistiin turvalliseen paikkaan."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3979,8 +3987,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Tervetuloa Warren VPN:ään"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Kirjoita nämä 12 sanaa muistiin järjestyksessä. Jos kadotat ne, menetät pääsyn tilaukseesi. Kopiointi leikepöydälle on tarkoituksellisesti poistettu käytöstä pitääksesi salaisuutesi haittaohjelmien ulottumattomissa."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Kirjoita nämä 12 sanaa muistiin järjestyksessä ja säilytä ne turvallisessa paikassa. Ne ovat ainoa tapa palauttaa tilauksesi, jos menetät pääsyn tähän laitteeseen."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

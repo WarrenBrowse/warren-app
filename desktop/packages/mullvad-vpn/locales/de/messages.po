@@ -3875,6 +3875,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "automatisch"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "In Zwischenablage kopiert"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "In Zwischenablage kopieren"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "Eine VPN-Erfahrung ohne Kompromisse beim Datenschutz. Keine Protokolle. Keine Konten. Kein Tracking. Nur Bandbreite."
@@ -3928,8 +3936,8 @@ msgid "I already have a subscription"
 msgstr "Ich habe bereits ein Abonnement"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Ich habe die Wörter aufgeschrieben"
+msgid "I have written it down in a safe place."
+msgstr "Ich habe sie an einem sicheren Ort notiert."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3980,8 +3988,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Willkommen bei Warren VPN"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Schreiben Sie diese 12 Wörter in der Reihenfolge auf. Wenn Sie sie verlieren, verlieren Sie den Zugang zu Ihrem Abonnement. „In Zwischenablage kopieren“ ist absichtlich deaktiviert, um Ihr Geheimnis vor Malware zu schützen."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Notieren Sie diese 12 Wörter in der richtigen Reihenfolge und bewahren Sie sie an einem sicheren Ort auf. Sie sind die einzige Möglichkeit, Ihr Abonnement wiederherzustellen, wenn Sie den Zugriff auf dieses Gerät verlieren."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

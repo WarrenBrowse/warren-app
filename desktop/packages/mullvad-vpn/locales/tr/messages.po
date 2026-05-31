@@ -3874,6 +3874,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "oto"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Panoya kopyalandı"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Panoya kopyala"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "Gizlilikten ödün vermeyen bir VPN deneyimi. Günlük yok. Hesap yok. Takip yok. Sadece bant genişliği."
@@ -3927,8 +3935,8 @@ msgid "I already have a subscription"
 msgstr "Zaten bir aboneliğim var"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Kelimeleri yazdım"
+msgid "I have written it down in a safe place."
+msgstr "Güvenli bir yere not ettim."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3979,8 +3987,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Warren VPN'e hoş geldin"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Bu 12 kelimeyi sırayla yaz. Kaybedersen aboneliğine erişimini kaybedersin. Sırrını kötü amaçlı yazılımlardan uzak tutmak için panoya kopyalama kasıtlı olarak devre dışı bırakılmıştır."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Bu 12 kelimeyi sırayla not edin ve güvenli bir yerde saklayın. Bu cihaza erişiminizi kaybederseniz aboneliğinizi geri yüklemenin tek yoludur."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

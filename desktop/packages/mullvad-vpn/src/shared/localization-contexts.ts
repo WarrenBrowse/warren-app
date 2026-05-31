@@ -46,5 +46,6 @@ export type LocalizationContexts =
   | 'warren-pubkey-warning'
   | 'port-forwarding-view'
   | 'warren-onboarding'
+  | 'warren-mnemonic'
   | 'custom-list-feature'
   | 'locations-feature';

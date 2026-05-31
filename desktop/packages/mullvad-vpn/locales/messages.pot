@@ -1639,10 +1639,6 @@ msgid "Backup keys"
 msgstr ""
 
 msgctxt "keys-view"
-msgid "Copy mnemonic to clipboard"
-msgstr ""
-
-msgctxt "keys-view"
 msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
 msgstr ""
 
@@ -1672,10 +1668,6 @@ msgstr ""
 
 msgctxt "keys-view"
 msgid "Keys"
-msgstr ""
-
-msgctxt "keys-view"
-msgid "Mnemonic copied"
 msgstr ""
 
 msgctxt "keys-view"
@@ -3138,6 +3130,14 @@ msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr ""
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr ""
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr ""
+
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
 msgstr ""
@@ -3203,7 +3203,7 @@ msgid "I already have a subscription"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
+msgid "I have written it down in a safe place."
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -3251,7 +3251,7 @@ msgid "Welcome to Warren VPN"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
 msgstr ""
 
 msgctxt "warren-onboarding"

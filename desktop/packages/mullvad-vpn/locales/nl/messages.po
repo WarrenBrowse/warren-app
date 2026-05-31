@@ -3874,6 +3874,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "auto"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Gekopieerd naar klembord"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Kopiëren naar klembord"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "Een VPN-ervaring zonder compromissen op privacy. Geen logs. Geen accounts. Geen tracking. Alleen bandbreedte."
@@ -3927,8 +3935,8 @@ msgid "I already have a subscription"
 msgstr "Ik heb al een abonnement"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Ik heb de woorden opgeschreven"
+msgid "I have written it down in a safe place."
+msgstr "Ik heb het op een veilige plek opgeschreven."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -3979,8 +3987,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Welkom bij Warren VPN"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Schrijf deze 12 woorden in volgorde op. Als je ze verliest, verlies je toegang tot je abonnement. Kopiëren naar klembord is bewust uitgeschakeld om je geheim buiten bereik van malware te houden."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Schrijf deze 12 woorden in volgorde op en bewaar ze op een veilige plek. Ze zijn de enige manier om je abonnement te herstellen als je de toegang tot dit apparaat verliest."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."

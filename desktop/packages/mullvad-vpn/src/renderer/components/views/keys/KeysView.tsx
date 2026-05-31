@@ -12,12 +12,11 @@ import { View } from '../../../lib/components/view';
 import { colors, Radius, spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { AppNavigationHeader } from '../..';
-import ClipboardLabel from '../../ClipboardLabel';
 import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { MnemonicGrid } from '../../warren-mnemonic';
+import { CopyMnemonicButton, MnemonicGrid } from '../../warren-mnemonic';
 
 const Callout = styled.div<{ $tone: 'warning' | 'danger' }>`
   padding: ${spacings.small} ${spacings.medium};
@@ -113,14 +112,7 @@ export function KeysView() {
                     <FlexColumn gap="medium">
                       <MnemonicGrid mnemonic={mnemonic} revealed />
 
-                      <ClipboardLabel
-                        value={mnemonic}
-                        obscureValue={false}
-                        displayValue={
-                          messages.pgettext('keys-view', 'Copy mnemonic to clipboard') as string
-                        }
-                        message={messages.pgettext('keys-view', 'Mnemonic copied') as string}
-                      />
+                      <CopyMnemonicButton mnemonic={mnemonic} data-testid="keys-mnemonic-copy" />
 
                       <Checkbox checked={confirmed} onCheckedChange={setConfirmed}>
                         <Flex gap="small" alignItems="center">

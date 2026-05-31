@@ -3902,6 +3902,14 @@ msgctxt "warren-multi-hop-view"
 msgid "auto"
 msgstr "авто"
 
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Скопировано в буфер обмена"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Копировать в буфер обмена"
+
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
 msgstr "VPN без компромиссов в области конфиденциальности. Никаких логов. Никаких аккаунтов. Никакого отслеживания. Только пропускная способность."
@@ -3955,8 +3963,8 @@ msgid "I already have a subscription"
 msgstr "У меня уже есть подписка"
 
 msgctxt "warren-onboarding"
-msgid "I have written down the words"
-msgstr "Я записал слова"
+msgid "I have written it down in a safe place."
+msgstr "Я записал её в надёжном месте."
 
 msgctxt "warren-onboarding"
 msgid "Import an existing mnemonic"
@@ -4007,8 +4015,8 @@ msgid "Welcome to Warren VPN"
 msgstr "Добро пожаловать в Warren VPN"
 
 msgctxt "warren-onboarding"
-msgid "Write down these 12 words in order. If you lose them, you lose access to your subscription. Copy to clipboard is intentionally disabled to keep your secret away from malware."
-msgstr "Запишите эти 12 слов по порядку. Если вы их потеряете, вы потеряете доступ к подписке. Копирование в буфер обмена намеренно отключено, чтобы уберечь ваш секрет от вредоносного ПО."
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Запишите эти 12 слов по порядку и храните их в надёжном месте. Это единственный способ восстановить вашу подписку, если вы потеряете доступ к этому устройству."
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
