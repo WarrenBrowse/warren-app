@@ -113,7 +113,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -139,7 +138,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -162,7 +160,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Nothing),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -186,7 +183,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = mockSelectedRelayTitle,
                         tunnelState = TunnelState.Disconnected(),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -210,7 +206,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState =
                             TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, true)),
-                        deviceName = "",
                         inAppNotification =
                             InAppNotification.TunnelStateError(
                                 ErrorState(ErrorStateCause.StartTunnelError, true)
@@ -238,7 +233,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState =
                             TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, false)),
-                        deviceName = "",
                         inAppNotification =
                             InAppNotification.TunnelStateError(
                                 ErrorState(ErrorStateCause.StartTunnelError, false)
@@ -266,7 +260,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Reconnect),
-                        deviceName = "",
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -291,7 +284,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Block),
-                        deviceName = "",
                         inAppNotification = InAppNotification.TunnelStateBlocked,
                         isPlayBuild = false,
                     )
@@ -317,7 +309,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = mockSelectedRelayItemTitle,
                         tunnelState = TunnelState.Disconnected(),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -344,7 +335,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -371,7 +361,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -397,7 +386,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Disconnected(),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -423,7 +411,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),
@@ -473,7 +460,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -506,7 +492,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
                         isPlayBuild = false,
                     )
@@ -536,7 +521,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
                         isPlayBuild = false,
                     ),
@@ -564,7 +548,6 @@ class ConnectScreenTest {
                         location = null,
                         selectedRelayItemTitle = null,
                         tunnelState = TunnelState.Connecting(null, null, emptyList()),
-                        deviceName = "",
                         inAppNotification = InAppNotification.NewVersionChangelog,
                         isPlayBuild = false,
                     ),
@@ -627,7 +610,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -683,7 +665,6 @@ class ConnectScreenTest {
                         selectedRelayItemTitle = null,
                         tunnelState =
                             TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     )
@@ -731,7 +712,6 @@ class ConnectScreenTest {
                                 mockLocation,
                                 listOf(FeatureIndicator.MULTIHOP),
                             ),
-                        deviceName = "",
                         inAppNotification = null,
                         isPlayBuild = false,
                     ),

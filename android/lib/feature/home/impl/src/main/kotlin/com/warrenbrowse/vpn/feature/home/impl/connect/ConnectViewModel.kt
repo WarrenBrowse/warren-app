@@ -61,13 +61,11 @@ class ConnectViewModel(
                 inAppNotificationController.notifications,
                 connectionProxy.tunnelState.withPrev(),
                 lastKnownLocationUseCase.lastKnownDisconnectedLocation,
-                deviceRepository.deviceState.map { it?.displayName() },
             ) {
                 selectedRelayItemTitle,
                 notifications,
                 (tunnelState, prevTunnelState),
-                lastKnownDisconnectedLocation,
-                deviceName ->
+                lastKnownDisconnectedLocation ->
                 ConnectUiState(
                     location =
                         when (tunnelState) {
@@ -96,7 +94,6 @@ class ConnectViewModel(
                         },
                     tunnelState = tunnelState,
                     inAppNotification = notifications.firstOrNull(),
-                    deviceName = deviceName,
                     isPlayBuild = isPlayBuild,
                 )
             }

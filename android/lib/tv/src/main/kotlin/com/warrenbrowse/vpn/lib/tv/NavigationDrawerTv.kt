@@ -60,7 +60,6 @@ fun PreviewNavigationDrawerTvClosed(
 ) {
     AppTheme {
         NavigationDrawerTv(
-            deviceName = "Cool Cat",
             initialDrawerValue = drawerValue,
             onSettingsClick = {},
             onAccountClick = {},
@@ -72,7 +71,6 @@ fun PreviewNavigationDrawerTvClosed(
 @Composable
 @Suppress("LongMethod")
 fun NavigationDrawerTv(
-    deviceName: String?,
     initialDrawerValue: DrawerValue = DrawerValue.Closed,
     onSettingsClick: (() -> Unit),
     onAccountClick: (() -> Unit),
@@ -118,7 +116,6 @@ fun NavigationDrawerTv(
                     modifier =
                         Modifier.align(Alignment.TopStart).padding(start = animatedPadding.value),
                     isExpanded = hasFocus,
-                    deviceName = deviceName,
                 )
                 DrawerItemTv(
                     modifier = Modifier.align(Alignment.CenterStart),
@@ -171,7 +168,6 @@ private fun NavigationDrawerScope.DrawerItemTv(
 private fun NavigationDrawerTvHeader(
     modifier: Modifier = Modifier,
     isExpanded: Boolean,
-    deviceName: String?,
 ) {
     Column(
         modifier =
@@ -200,17 +196,5 @@ private fun NavigationDrawerTvHeader(
             }
         }
         Spacer(Modifier.height(8.dp))
-
-        if (isExpanded) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.top_bar_device_name, deviceName ?: ""),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Clip,
-            )
-            // D.4 step 42: days-left display removed (subscription dead).
-        }
     }
 }

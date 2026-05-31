@@ -7,7 +7,6 @@ import arrow.core.right
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
@@ -17,8 +16,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.AccountNumber
-import com.warrenbrowse.vpn.lib.model.Device
-import com.warrenbrowse.vpn.lib.model.DeviceId
 import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.Notification
@@ -53,14 +50,6 @@ class TunnelStateNotificationProviderTest {
     private lateinit var provider: TunnelStateNotificationProvider
 
     private val testAccountNumber = AccountNumber("1234567890123456")
-    private val testDeviceId1 = DeviceId.fromString("12345678-1234-5678-1234-567812345678")
-
-    private val testDevice =
-        Device(
-            id = testDeviceId1,
-            name = "Device 1",
-            creationDate = ZonedDateTime.now().minusSeconds(100),
-        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeEach
@@ -77,7 +66,7 @@ class TunnelStateNotificationProviderTest {
 
         // Setup controllable StateFlows
         tunnelStateFlow = MutableStateFlow(TunnelState.Disconnected(null))
-        deviceStateFlow = MutableStateFlow(DeviceState.LoggedIn(testAccountNumber, testDevice))
+        deviceStateFlow = MutableStateFlow(DeviceState.LoggedIn(testAccountNumber))
         preferencesFlow = MutableStateFlow(userPreferences)
 
         // Link flows to repository mocks

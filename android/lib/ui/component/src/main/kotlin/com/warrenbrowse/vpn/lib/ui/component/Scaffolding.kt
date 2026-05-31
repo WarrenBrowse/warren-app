@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,45 +40,6 @@ fun ScaffoldWithTopBar(
                 isIconAndLogoVisible = isIconAndLogoVisible,
                 enabled = enabled,
             )
-        },
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                snackbar = { snackbarData -> WarrenSnackbar(snackbarData = snackbarData) },
-            )
-        },
-        content = content,
-    )
-}
-
-@Composable
-fun ScaffoldWithTopBarAndDeviceName(
-    topBarColor: Color,
-    modifier: Modifier = Modifier,
-    iconTintColor: Color = MaterialTheme.colorScheme.onPrimary,
-    onSettingsClicked: (() -> Unit)?,
-    onAccountClicked: (() -> Unit)?,
-    isIconAndLogoVisible: Boolean = true,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    deviceName: String?,
-    // D.4 step 42: timeLeft param kept for binary compat at the call sites but
-    // no longer rendered (Mullvad subscription expiry dead on Warren).
-    @Suppress("UNUSED_PARAMETER") timeLeft: Long? = null,
-    content: @Composable (PaddingValues) -> Unit,
-) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            Column {
-                WarrenTopBarWithDeviceName(
-                    containerColor = topBarColor,
-                    iconTintColor = iconTintColor,
-                    onSettingsClicked = onSettingsClicked,
-                    onAccountClicked = onAccountClicked,
-                    isIconAndLogoVisible = isIconAndLogoVisible,
-                    deviceName = deviceName,
-                )
-            }
         },
         snackbarHost = {
             SnackbarHost(

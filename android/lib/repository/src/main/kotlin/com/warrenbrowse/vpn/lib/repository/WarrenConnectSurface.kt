@@ -198,40 +198,6 @@ interface WarrenSubscriptionInvoker {
     suspend fun redeemVoucher(activity: FragmentActivity, voucher: String): WarrenVoucherOutcome
 }
 
-/** A registered device, projected for the UI (no WireGuard key surfaced). */
-data class WarrenDeviceSummary(
-    val id: String,
-    val name: String,
-    val createdAtUnixSecs: Long,
-)
-
-/** Outcome of listing the wallet's devices. */
-sealed interface WarrenDeviceListOutcome {
-    data class Success(val devices: List<WarrenDeviceSummary>) : WarrenDeviceListOutcome
-    data object AuthorizationDenied : WarrenDeviceListOutcome
-    data object WalletNotReady : WarrenDeviceListOutcome
-    data class Failure(val message: String) : WarrenDeviceListOutcome
-}
-
-/** Outcome of removing a device. */
-sealed interface WarrenDeviceRemoveOutcome {
-    data object Success : WarrenDeviceRemoveOutcome
-    data object AuthorizationDenied : WarrenDeviceRemoveOutcome
-    data object WalletNotReady : WarrenDeviceRemoveOutcome
-    data class Failure(val message: String) : WarrenDeviceRemoveOutcome
-}
-
-/**
- * Lib-side surface for managing the wallet's devices. Concrete impl in
- * `app/connect/WarrenDeviceUseCase`, bound in `di/AppModule`. Both calls
- * are activity-coupled because they raise a biometric prompt to unlock
- * the mnemonic that signs the request.
- */
-interface WarrenDeviceInvoker {
-    suspend fun list(activity: FragmentActivity): WarrenDeviceListOutcome
-    suspend fun remove(activity: FragmentActivity, deviceId: String): WarrenDeviceRemoveOutcome
-}
-
 interface WarrenSupportReportInvoker {
     /**
      * Sign + ship a support report.

@@ -33,9 +33,6 @@ const val WIREGUARD_OBFUSCATION_LWO_CELL_TEST_TAG = "wireguard_obfuscation_lwo_c
 const val WIREGUARD_DEVICE_IP_AUTO_CELL_TEST_TAG = "wireguard_device_ip_auto_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV4_CELL_TEST_TAG = "wireguard_device_ip_ipv4_cell_test_tag"
 const val WIREGUARD_DEVICE_IP_IPV6_CELL_TEST_TAG = "wireguard_device_ip_ipv6_cell_test_tag"
-// Account screen
-const val MANAGE_DEVICES_BUTTON_TEST_TAG = "manage_devices_button_test_tag"
-
 // AntiCensorshipSettingsScreen
 const val LAZY_LIST_ANTI_CENSORSHIP_SETTINGS_TEST_TAG =
     "lazy_list_anti_censorship_settings_test_tag"

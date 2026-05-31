@@ -49,7 +49,6 @@ private val otherStates =
                 // (NewDevice notification dropped with Mullvad multi-device model).
                 inAppNotification =
                     if (index == 0) InAppNotification.NewVersionChangelog else null,
-                deviceName = "Cool Beans",
                 isPlayBuild = true,
             )
         }

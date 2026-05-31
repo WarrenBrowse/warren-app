@@ -116,7 +116,7 @@ import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
-import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBarAndDeviceName
+import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenSnackbar
@@ -411,7 +411,6 @@ fun ConnectScreen(
             }
         ) {
             NavigationDrawerTv(
-                deviceName = state.deviceName,
                 onSettingsClick = onSettingsClick,
                 onAccountClick = onAccountClick,
             ) {
@@ -420,12 +419,11 @@ fun ConnectScreen(
         }
         LaunchedEffect(Unit) { contentFocusRequester.requestFocus() }
     } else {
-        ScaffoldWithTopBarAndDeviceName(
+        ScaffoldWithTopBar(
             topBarColor = state.tunnelState.topBarColor(),
             iconTintColor = state.tunnelState.iconTintColor(),
             onSettingsClicked = onSettingsClick,
             onAccountClicked = onAccountClick,
-            deviceName = state.deviceName,
             snackbarHostState = snackbarHostState,
         ) {
             content(it)
