@@ -53,27 +53,44 @@ Lancer `.planning/warren-net-diagnostic.sh` (lecture seule) connecté :
 
 ---
 
-## F2 — Content-blocking DNS casse toute résolution → **partiellement pris en charge ailleurs**
+## F2 — Content-blocking DNS casse toute résolution → **CORRIGÉ côté exit (warren-core), à valider on-device**
 
+### Diagnostic (comparaison upstream)
+
+- **warren-app est byte-identique à l'upstream Mullvad** : `mullvad-daemon/src/dns.rs`
+  diff vide vs `upstream-baseline-2026-05-06` (composition `100.64.0.1` = pur
+  Mullvad) ; `connected_state::set_dns` sur Linux pousse les adresses directement
+  comme l'upstream (resolver local = macOS-only chez Mullvad aussi). **Rien à
+  corriger dans warren-app.**
 - **macOS** : déjà traité par l'agent parallèle dans `talpid-core/src/resolver.rs`
-  (`LOCAL_DNS_RESOLVER` off par défaut, résolution déléguée à l'exit forwarder
-  `10.66.0.1`). **NE PAS retoucher `resolver.rs`.**
-- **Linux (cas du rapport)** : activer un filtre (`block_ads`, …) fait composer
-  `100.64.0.1` dans `mullvad-daemon/src/dns.rs::addresses_from_options`, adresse
-  injoignable sur ce setup (aucun resolver de filtrage en face) → toute
-  résolution casse.
+  (`LOCAL_DNS_RESOLVER` off, résolution déléguée à l'exit `10.66.0.1`). **NE PAS retoucher.**
+- **Vraie divergence** : chez Mullvad c'est le **relais** qui répond sur
+  `100.64.0.0/10` in-tunnel. L'exit Warren ne servait que `10.66.0.1:53` → activer
+  un filtre pointait le resolver système sur une adresse sans réponse → casse totale.
 
-### Décision requise (non codé ici — produit/infra, et chevauche le domaine DNS de l'agent parallèle)
+### Fix appliqué (repo `warren-core`, stratégie « joignabilité d'abord »)
 
-Au choix :
-1. faire tourner un resolver de filtrage côté exit Warren joignable in-tunnel à
-   `100.64.0.1` (+ route `100.64.0.0/10` via tun) ;
-2. ou, quand le content-blocking est activé sans resolver de filtrage
-   disponible, forwarder vers le resolver in-tunnel réel (`10.66.0.1`) au lieu
-   de `100.64.0.1` (dans `dns.rs`) ;
-3. ou masquer l'option content-blocking tant que (1) n'existe pas.
+`crates/warren-exit/src/dns_redirect.rs` (nouveau) + câblage dans
+`spawn_dns_forwarder` (main.rs) + déclaration module (lib.rs) :
 
-`warren-net-diagnostic.sh` signale si un resolver `100.64.0.x` est configuré.
+- Règle **nftables DNAT** isolée dans `inet warren_dns` :
+  `ip daddr 100.64.0.0/10 udp/tcp dport 53 dnat ip to 10.66.0.1:53`.
+- conntrack réécrit la source de la réponse vers `100.64.0.x` → le stub resolver
+  du client accepte la réponse (pas de mismatch de source).
+- Le forwarder existant relaie vers Quad9 → la résolution remarche quand un filtre
+  est activé (malware bloqué via Quad9). **Best-effort** (un échec nft ne fait pas
+  tomber l'exit). Linux only, déployable en livrant le nouveau binaire exit.
+- Builder de script **pur + tests** (6/6 OK hôte) ; exécution `nft -f -` Linux-only.
+
+**Caveat** : le filtrage **par catégorie** (ads vs trackers vs …) n'est pas
+implémenté — toutes les adresses `100.64.0.x` résolvent identiquement pour
+l'instant. Vraie parité = blocklists curées côté exit (travail futur).
+
+### Validation on-device restante
+
+Connecté à l'exit patché, avec un filtre activé côté client :
+- `dig example.com` doit résoudre ; `nft list table inet warren_dns` doit montrer la règle DNAT.
+- `warren-net-diagnostic.sh` (warren-app) signale toujours si un resolver `100.64.0.x` est configuré.
 
 ---
 
