@@ -92,7 +92,15 @@ interface IState {
   createAccountDialogVisible: boolean;
 }
 
-const WARREN_PUBKEY_HEX_LEN = 64;
+// Max length of a Warren SS58 address (prefix 13295 yields 47-49
+// chars). Used to cap the login input — an SS58 address is a single
+// token, so there is no chunking/grouping.
+const WARREN_ADDRESS_MAX_LEN = 49;
+
+// base58 alphabet used by SS58 addresses (Bitcoin/Flickr variant:
+// no `0`, `O`, `I`, `l`). Restricts what the input accepts so a
+// pasted `wb…` address round-trips without stray characters.
+const WARREN_ADDRESS_ALLOWED_CHARS = '[1-9A-HJ-NP-Za-km-z]';
 
 class Login extends React.Component<IProps, IState> {
   public state: IState = {
@@ -261,7 +269,7 @@ class Login extends React.Component<IProps, IState> {
         // TRANSLATORS: to fetch the list of registered devices.
         return messages.gettext('Failed to fetch list of devices');
       case 'communication':
-        return 'api.warrenvpn.com is blocked, please check your firewall';
+        return 'api.warrenbrowse.com is blocked, please check your firewall';
       case 'no-subscription':
         // The login flow itself does not surface this variant
         // today (it originates from `get_account_data` 404, which
@@ -394,11 +402,11 @@ class Login extends React.Component<IProps, IState> {
                 <StyledAccountInputBackdrop>
                   <StyledInput
                     id={inputId}
-                    allowedCharacters="[0-9a-fA-F]"
-                    separator=" "
-                    groupLength={8}
-                    maxLength={WARREN_PUBKEY_HEX_LEN}
-                    placeholder="00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000"
+                    allowedCharacters={WARREN_ADDRESS_ALLOWED_CHARS}
+                    separator=""
+                    groupLength={WARREN_ADDRESS_MAX_LEN}
+                    maxLength={WARREN_ADDRESS_MAX_LEN}
+                    placeholder="wb…"
                     value={this.props.pubkey || ''}
                     disabled={!allowInteraction}
                     onFocus={this.onFocus}
