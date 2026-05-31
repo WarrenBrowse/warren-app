@@ -385,7 +385,7 @@ impl BuiltInAccessMethod {
     pub fn canonical_name(&self) -> String {
         match self {
             BuiltInAccessMethod::Direct => "Direct".to_string(),
-            BuiltInAccessMethod::Bridge => "Mullvad Bridges".to_string(),
+            BuiltInAccessMethod::Bridge => "Warren Bridges".to_string(),
             BuiltInAccessMethod::EncryptedDnsProxy => "Encrypted DNS proxy".to_string(),
             BuiltInAccessMethod::DomainFronting => "Domain fronting".to_string(),
         }

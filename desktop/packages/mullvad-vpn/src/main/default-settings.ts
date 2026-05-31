@@ -116,7 +116,7 @@ export function getDefaultApiAccessMethods(): ApiAccessMethodSettings {
     },
     mullvadBridges: {
       id: '',
-      name: 'Mullvad Bridges',
+      name: 'Warren Bridges',
       enabled: false,
       type: 'bridges',
     },

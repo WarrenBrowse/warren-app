@@ -9,6 +9,8 @@ use mullvad_types::settings::SettingsVersion;
 ///   encrypted DNS proxies, the CDN77 domain-fronting endpoint) that Warren
 ///   does not operate. Leaving them enabled made the daemon rotate through
 ///   dead Mullvad endpoints and surface TLS/certificate errors.
+/// - Rebranding the persisted display name "Mullvad Bridges" to "Warren
+///   Bridges" so existing installs match the new built-in name.
 pub fn migrate(settings: &mut serde_json::Value) -> Result<()> {
     if !version_matches(settings) {
         return Ok(());
@@ -37,6 +39,16 @@ fn disable_mullvad_access_methods(settings: &mut serde_json::Value) -> Option<()
         }
     }
 
+    // Rebrand the persisted display name of the bridges method.
+    if let Some(bridges) = access_methods
+        .get_mut("mullvad_bridges")
+        .and_then(|method| method.as_object_mut())
+    {
+        if bridges.get("name").and_then(|name| name.as_str()) == Some("Mullvad Bridges") {
+            bridges.insert("name".to_string(), serde_json::json!("Warren Bridges"));
+        }
+    }
+
     Some(())
 }
 
@@ -56,8 +68,8 @@ mod test {
     fn test_v15_to_v16_disables_mullvad_access_methods() {
         let mut old_settings = json!({
             "api_access_methods": {
-                "direct": { "enabled": true },
-                "mullvad_bridges": { "enabled": true },
+                "direct": { "enabled": true, "name": "Direct" },
+                "mullvad_bridges": { "enabled": true, "name": "Mullvad Bridges" },
                 "encrypted_dns_proxy": { "enabled": true },
                 "domain_fronting": { "enabled": true },
                 "custom": []
@@ -70,6 +82,7 @@ mod test {
         let methods = &old_settings["api_access_methods"];
         assert_eq!(methods["direct"]["enabled"], json!(true));
         assert_eq!(methods["mullvad_bridges"]["enabled"], json!(false));
+        assert_eq!(methods["mullvad_bridges"]["name"], json!("Warren Bridges"));
         assert_eq!(methods["encrypted_dns_proxy"]["enabled"], json!(false));
         assert_eq!(methods["domain_fronting"]["enabled"], json!(false));
         assert_eq!(old_settings["settings_version"], json!(SettingsVersion::V16));
