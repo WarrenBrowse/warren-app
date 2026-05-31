@@ -729,6 +729,53 @@ fn send_problem_report_inner(
     Err("sendProblemReport is Android-only".to_owned())
 }
 
+/// Fetch the wallet's subscription status (signed `GET /v1/subscription`).
+/// Returns a JSON object `{"ok": true, "expires_at": <unix secs>}` on
+/// success or `{"ok": false, "error": "..."}` on failure. The mnemonic
+/// derives the signing key at the boundary; it is not retained.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getSubscription<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let json = match get_subscription_inner(&phrase) {
+        Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
+        Err(e) => {
+            // Do not log the error chain: a 4xx body could echo request
+            // context. The full string still returns to Kotlin via JSON.
+            log::warn!("getSubscription failed");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn get_subscription_inner(mnemonic: &str) -> Result<u64, String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before getSubscription".to_owned())?;
+    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    let resp = runtime
+        .block_on(client.get_subscription())
+        .map_err(|e| format!("get_subscription failed: {e}"))?;
+    Ok(resp.expires_at)
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn get_subscription_inner(_mnemonic: &str) -> Result<u64, String> {
+    Err("getSubscription is Android-only".to_owned())
+}
+
 /// Collect a redacted log bundle from the in-process logger ring
 /// buffer. D.6: the current implementation returns an empty string
 /// because Android `init_log_file` only bridges `log` -> logcat; a

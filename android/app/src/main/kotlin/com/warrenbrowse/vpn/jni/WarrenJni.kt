@@ -137,6 +137,17 @@ object WarrenJni {
      */
     external fun listRelays(): String
 
+    /**
+     * Fetch the wallet's subscription status via a signed
+     * `GET /v1/subscription`. The [mnemonic] derives the signing key at
+     * the JNI boundary and is not retained.
+     *
+     * Returns a JSON object:
+     *   - `{"ok": true, "expires_at": <unix seconds>}` on success
+     *   - `{"ok": false, "error": "..."}` on failure
+     */
+    external fun getSubscription(mnemonic: String): String
+
     // -- Problem report (D.6) ----------------------------------------------
 
     /**

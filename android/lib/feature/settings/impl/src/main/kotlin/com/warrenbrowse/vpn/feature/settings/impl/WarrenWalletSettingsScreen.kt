@@ -26,6 +26,8 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -54,10 +56,12 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val activity = LocalContext.current as FragmentActivity
     val walletRepository = koinInject<WalletRepository>()
     val quinnConnect = koinInject<WarrenQuinnConnectInvoker>()
+    val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var connectStatus by remember { mutableStateOf<String?>(null) }
+    var subscriptionStatus by remember { mutableStateOf<String?>(null) }
 
     ScaffoldWithSmallTopBar(
         appBarTitle = "Wallet",
@@ -75,6 +79,25 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 activity = activity,
                 walletRepository = walletRepository,
             )
+
+            // Subscription status: biometric-gated signed GET /v1/subscription.
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                onClick = {
+                    scope.launch {
+                        subscriptionStatus = "Checking subscription…"
+                        subscriptionStatus = subscriptionLabel(subscriptionInvoker.fetch(activity))
+                    }
+                },
+            ) { Text("Check subscription") }
+
+            subscriptionStatus?.let { msg ->
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
 
             // Test button: dispatch end-to-end Quinn connect via the
             // app-side use-case. Surfaces the result as inline text;
@@ -114,5 +137,29 @@ fun WarrenWalletSettings(navigator: Navigator) {
             )
         }
     }
+}
+
+/**
+ * Render a [WarrenSubscriptionOutcome] as a user-facing line. The raw
+ * failure message is intentionally not surfaced (it is loggable only).
+ */
+internal fun subscriptionLabel(
+    outcome: WarrenSubscriptionOutcome,
+    nowSecs: Long = System.currentTimeMillis() / 1000,
+): String = when (outcome) {
+    is WarrenSubscriptionOutcome.Success -> {
+        val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+            .toString()
+        if (outcome.expiresAtUnixSecs > nowSecs) {
+            "Subscription active — expires $date"
+        } else {
+            "Subscription expired ($date)"
+        }
+    }
+    WarrenSubscriptionOutcome.AuthorizationDenied -> "Authorization cancelled."
+    WarrenSubscriptionOutcome.WalletNotReady -> "Set up your wallet first."
+    is WarrenSubscriptionOutcome.Failure -> "Couldn't fetch subscription status."
 }
 

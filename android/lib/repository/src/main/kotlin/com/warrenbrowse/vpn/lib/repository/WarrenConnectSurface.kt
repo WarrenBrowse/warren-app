@@ -117,6 +117,31 @@ sealed interface WarrenSupportReportOutcome {
  * needs to raise a biometric prompt to unlock the BIP39 mnemonic
  * that signs the request.
  */
+/**
+ * Outcome of a subscription-status fetch. Returned to the feature-module
+ * UI so it can render expiry without depending on the app-private use case.
+ */
+sealed interface WarrenSubscriptionOutcome {
+    /** Server returned an expiry. [expiresAtUnixSecs] is Unix epoch seconds. */
+    data class Success(val expiresAtUnixSecs: Long) : WarrenSubscriptionOutcome
+    /** Wallet not unlocked or the user cancelled the biometric prompt. */
+    data object AuthorizationDenied : WarrenSubscriptionOutcome
+    /** Wallet has no mnemonic yet (onboarding hasn't run). */
+    data object WalletNotReady : WarrenSubscriptionOutcome
+    /** Network / server / signature error — `message` is loggable, not user-facing. */
+    data class Failure(val message: String) : WarrenSubscriptionOutcome
+}
+
+/**
+ * Lib-side surface for fetching the wallet's subscription status. The
+ * concrete impl lives in `app/connect/WarrenSubscriptionUseCase` and is
+ * bound to this interface in `di/AppModule`. Activity-coupled because it
+ * raises a biometric prompt to unlock the mnemonic that signs the request.
+ */
+interface WarrenSubscriptionInvoker {
+    suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome
+}
+
 interface WarrenSupportReportInvoker {
     /**
      * Sign + ship a support report.
