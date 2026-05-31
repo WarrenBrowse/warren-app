@@ -21,6 +21,24 @@ Conséquence stratégique : **Android a besoin d'UI/UX par-dessus son backend ; 
 
 ---
 
+## État final (mise à jour après implémentation)
+
+### Android — parité **essentiellement complète** (tout le périmètre vérifiable livré)
+Livré + vérifié (tests unitaires verts, compile vérifié) : P0-1 état carte connexion · P0-6 logo W · fuites privacy (IPv6/DNS/killswitch) · allow-LAN (split-route CIDR anti-fuite) · MTU configurable · picker (recherche/groupement pays/recents toggle) · port-forwarding (config+status) · multi-hop pays · **compte complet** (SS58/mnémonique/subscription+expiry/voucher/devices — l'audit le qualifiait à tort de « scaffold ») · **cache expiry + statut proactif** · **bannière expiry sur écran Connect** · **onboarding welcome wizard** · obfuscation read-only · reconnect · consolidation surfaces d'état.
+⚠️ À smoke-tester sur device : rendu nav onboarding (logique vérifiée par test).
+
+### iOS — partiellement livré ; le reste nécessite **Xcode**
+- **Livré + vérifié** : obfuscation read-only (parité desktop) ; **DAITA fonctionnel** (un-stub FFI warren-ios `with_daita`+`pump_bidirectional_with_daita`, **vérifié `cargo check --target aarch64-apple-ios`** + lecture du réglage persisté côté actor) ; **app-icon déjà complet** (set Warren light/dark/tinted — corrige P1-9).
+- **Bloqué Xcode (gros refactors aveugles, non-vérifiables sans build)** :
+  - **Compte/voucher/subscription (P0-2/P0-3)** : tout est encore sur le modèle Mullvad mort (numéro de compte, StoreKit IAP, `MullvadAPIProxy.submitVoucher` **stubbé**, expiry depuis `deviceState` pas `/v1/subscription`). **Aucun FFI subscription iOS n'existe** (contrairement à Android). Re-pointer = nouveau FFI signé warren-ios (vérifiable Rust) **+ gros refactor Swift des écrans compte** (invérifiable sans Xcode). Exposer le voucher seul = toggle non-fonctionnel (backend stubbé).
+  - **NAT-PMP (P0-5)** : FFI `warren_natpmp_ffi` squelette ; nécessite impl Rust **+ acteur Swift d'orchestration** (request/renew/release sur cycle de vie tunnel + App Group + timers) — invérifiable sans device.
+  - **Content-blockers (P1-6)** : nécessite un nouveau struct DNS dans le FFI tunnel + marshalling Swift + support warren-tunnel (incertain) → dépendance warren-core possible.
+- **Note** : les autres `let _ = params.X` du FFI (multi_hop_relay, nat_pmp_enabled, bypass_cidrs) ne sont **pas des mirrors propres** — warren-jni (Android) les ignore AUSSI (dead-code des deux côtés). Seul DAITA était un vrai mirror (fait).
+
+**Conclusion** : la parité Android est faite à hauteur du livrable+vérifiable. Le reliquat substantiel est **iOS** et requiert un environnement **Xcode buildable** pour être complété sans casser l'app (refactor compte/subscription, orchestration NAT-PMP, marshalling Swift des nouveaux FFI). Plan d'exécution précis disponible dans l'historique de cette mission.
+
+---
+
 ## Backlog priorisé
 
 ### 🔴 P0 — bloquants (sécurité, données fausses, ou cœur cassé)
