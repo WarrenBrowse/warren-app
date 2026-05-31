@@ -3042,7 +3042,7 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to Mullvad upstream). Restart the daemon for the change to take effect."
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -3075,7 +3075,7 @@ msgid "When enabled, the daemon uses a self-hosted account derived from the loca
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of WireGuard / OpenVPN."
+msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of a standard VPN tunnel."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -3411,7 +3411,7 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
 msgstr ""
 
 #. The title for the WireGuard MTU setting. MTU stands for Maximum
@@ -3430,7 +3430,7 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
 msgstr ""
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
@@ -3483,7 +3483,7 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
 msgstr ""
 
 msgctxt "wireguard-settings-view"

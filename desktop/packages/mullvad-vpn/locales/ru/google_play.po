@@ -42,8 +42,8 @@ msgstr "Мы не ведем журналов активности."
 msgid "Bypass geographical restrictions with our global network of VPN servers."
 msgstr "Обходите региональные блокировки с помощью нашей глобальной сети VPN-серверов."
 
-msgid "Our app uses WireGuard, a superior VPN protocol that connects fast and doesn’t drain your battery."
-msgstr "Наше приложение использует WireGuard — быстрый и энергоэффективный VPN-протокол нового поколения."
+msgid "Our app uses QUIC, a superior VPN protocol that connects fast and doesn’t drain your battery."
+msgstr "Наше приложение использует QUIC — быстрый и энергоэффективный VPN-протокол нового поколения."
 
 msgid "HOW DOES WARREN VPN WORK?"
 msgstr "ПРИНЦИП РАБОТЫ WARREN VPN"

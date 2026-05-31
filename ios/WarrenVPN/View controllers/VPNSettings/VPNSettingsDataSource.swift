@@ -543,7 +543,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
     }
 
     private func configureWireguardPortsHeader(_ header: SettingsHeaderView) {
-        let title = NSLocalizedString("WireGuard port", comment: "")
+        let title = NSLocalizedString("QUIC port", comment: "")
 
         header.setAccessibilityIdentifier(.wireGuardPortsCell)
         header.titleLabel.text = title
@@ -582,7 +582,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
     }
 
     private func configureObfuscationHeader(_ header: SettingsHeaderView) {
-        let title = NSLocalizedString("WireGuard obfuscation", comment: "")
+        let title = NSLocalizedString("QUIC obfuscation", comment: "")
 
         header.setAccessibilityIdentifier(.wireGuardObfuscationCell)
         header.titleLabel.text = title

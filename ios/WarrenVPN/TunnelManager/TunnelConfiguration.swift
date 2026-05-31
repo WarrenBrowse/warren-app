@@ -27,7 +27,7 @@ struct TunnelConfiguration {
         alwaysOnRule.interfaceTypeMatch = .any
 
         isEnabled = true
-        localizedDescription = "WireGuard"
+        localizedDescription = "QUIC"
         protocolConfiguration = protocolConfig
         onDemandRules = [alwaysOnRule]
         self.isOnDemandEnabled = isOnDemandEnabled

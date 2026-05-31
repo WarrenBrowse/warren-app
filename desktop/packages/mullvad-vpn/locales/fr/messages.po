@@ -18,9 +18,9 @@ msgstr "%(amount)d de plus..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s ont été ajouté(es), compte payé jusqu’au %(expiry)s."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "Port %(wireguard)s"
 
@@ -258,7 +258,7 @@ msgstr "Mot de passe"
 msgid "Port"
 msgstr "Port"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "Résistance quantique"
@@ -337,9 +337,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, vue chargée"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "Paramètres du port %(wireguard)s"
@@ -418,9 +418,9 @@ msgid "Forget public key %(pubkey)s"
 msgstr "Oublier la clé publique %(pubkey)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "Accédez aux paramètres anti-censure pour modifier le port %(wireGuard)s"
@@ -1578,9 +1578,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "L'installateur n'a pas pu démarrer."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "Le port %(wireGuard)s sélectionné n'est pas pris en charge. Veuillez <a>le modifier sous Paramètres VPN.</a>"
@@ -3053,8 +3053,8 @@ msgid "When enabled, the daemon uses a self-hosted account derived from the loca
 msgstr "Lorsqu'activé, le service utilise un compte auto-hébergé dérivé de la phrase mnémonique Warren locale au lieu de contacter une API de compte distante."
 
 msgctxt "vpn-settings-view"
-msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of WireGuard / OpenVPN."
-msgstr "Lorsqu'activé, le trafic est routé via les serveurs de sortie Warren à travers un tunnel Iroh QUIC plutôt que via WireGuard / OpenVPN."
+msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of QUIC / OpenVPN."
+msgstr "Lorsqu'activé, le trafic est routé via les serveurs de sortie Warren à travers un tunnel Iroh QUIC plutôt que via QUIC / OpenVPN."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3362,7 +3362,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "Port %(wireguard)s"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "Port %(wireGuard)s"
@@ -3393,10 +3393,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "Si un observateur surveille ces paquets de données, %(daita)s rend beaucoup plus difficile l'identification des sites web que vous visitez ou des personnes avec lesquelles vous communiquez."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "Cela est réalisé via un échange de clés supplémentaire à l'aide d'un algorithme quantique sécurisé et en intégrant le résultat au chiffrement standard de WireGuard."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Cela est réalisé via un échange de clés supplémentaire à l'aide d'un algorithme quantique sécurisé et en intégrant le résultat au chiffrement standard de QUIC."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -3412,8 +3412,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Le multihop est utilisé pour activer DAITA pour la localisation que vous avez sélectionnée"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Le multihop fait passer votre trafic par un serveur WireGuard et le fait sortir par un autre, ce qui le rend plus difficile à tracer. Cela se traduit par une latence accrue, mais plus d'anonymat en ligne."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Le multihop fait passer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui le rend plus difficile à tracer. Cela se traduit par une latence accrue, mais plus d'anonymat en ligne."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -3424,7 +3424,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "Tous nos serveurs ne sont pas compatibles %(daita)s. C'est pourquoi nous utilisons automatiquement le multihop pour activer %(daita)s avec n'importe quel serveur."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "Port"
@@ -3436,16 +3436,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "Port : %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Tunnel résistant aux attaques quantiques"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -3465,8 +3465,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "Le port personnalisé peut prendre n'importe quelle valeur dans les plages valides : %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "Cette fonctionnalité rend le tunnel WireGuard résistant aux attaques potentielles des ordinateurs quantiques."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Cette fonctionnalité rend le tunnel QUIC résistant aux attaques potentielles des ordinateurs quantiques."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"

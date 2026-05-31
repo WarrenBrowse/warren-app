@@ -38,7 +38,7 @@ extension BlockedStateReason {
             NSLocalizedString("No servers match your settings, try changing server or other settings.", comment: "")
         case .noRelaysSatisfyingPortConstraints:
             NSLocalizedString(
-                "The selected WireGuard port is not supported, please change it under **VPN settings**.",
+                "The selected QUIC port is not supported, please change it under **VPN settings**.",
                 comment: ""
             )
         case .noRelaysSatisfyingObfuscationPortConstraints:

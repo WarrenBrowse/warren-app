@@ -77,9 +77,9 @@ enum VPNSettingsInfoButtonItem: CustomStringConvertible {
             ].joinedParagraphs(lineBreaks: 1)
         case .wireGuardObfuscation:
             NSLocalizedString(
-                "Obfuscation hides the WireGuard traffic inside another protocol. "
+                "Obfuscation hides the QUIC traffic inside another protocol. "
                     + "It can be used to help circumvent censorship and other types of "
-                    + "filtering, where a plain WireGuard connection would be blocked.",
+                    + "filtering, where a plain QUIC connection would be blocked.",
                 comment: ""
             )
         case .wireGuardObfuscationPort:
@@ -90,12 +90,12 @@ enum VPNSettingsInfoButtonItem: CustomStringConvertible {
         case .quantumResistance:
             [
                 NSLocalizedString(
-                    "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers.",
+                    "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers.",
                     comment: ""
                 ),
                 NSLocalizedString(
                     "It does this by performing an extra key exchange using a quantum safe algorithm and mixing "
-                        + "the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB "
+                        + "the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB "
                         + "of traffic every time a new tunnel is established.",
                     comment: ""
                 ),
@@ -110,7 +110,7 @@ enum VPNSettingsInfoButtonItem: CustomStringConvertible {
 
         case .multihop:
             NSLocalizedString(
-                "Multihop routes your traffic into one WireGuard server and out another, "
+                "Multihop routes your traffic into one QUIC server and out another, "
                     + "making it harder to trace. This results in increased latency but "
                     + "increases anonymity online.",
                 comment: ""

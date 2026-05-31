@@ -18,9 +18,9 @@ msgstr "其他 %(amount)d 個…"
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "已新增 %(duration)s，帳戶到期時間為 %(expiry)s。"
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s 連接埠"
 
@@ -249,7 +249,7 @@ msgstr "密碼"
 msgid "Port"
 msgstr "連接埠"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "抗量子"
@@ -328,9 +328,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s，已載入視圖"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "%(wireguard)s 連接埠設定"
@@ -409,9 +409,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "忘記帳號 %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "前往反審查設定變更 %(wireGuard)s 連接埠"
@@ -1527,9 +1527,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "安裝程式未能順利啟動。"
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "不支援所選的 %(wireGuard)s 連接埠，請<a>在 VPN 設定中變更</a>。"
@@ -2808,7 +2808,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s 連接埠"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "%(wireGuard)s 連接埠"
@@ -2839,10 +2839,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "如果有觀察者正在監控這些資料封包，%(daita)s 會大大增加他們的難度，讓他們很難辨識您正在瀏覽哪些網站或者在和誰通訊。"
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "此功能會額外使用抗量子演算法進行一次金鑰交換，並將結果混入 WireGuard 的一般加密機制中。"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "此功能會額外使用抗量子演算法進行一次金鑰交換，並將結果混入 QUIC 的一般加密機制中。"
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2858,8 +2858,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "正在使用多點跳躍為您所選位置啟用 DAITA"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "多點跳躍可將您的流量傳入一個 WireGuard 伺服器，再傳出至另一個伺服器，使其更難以追蹤。雖然這會導致延遲時間增加，卻能提高線上的匿名程度。"
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "多點跳躍可將您的流量傳入一個 QUIC 伺服器，再傳出至另一個伺服器，使其更難以追蹤。雖然這會導致延遲時間增加，卻能提高線上的匿名程度。"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2870,7 +2870,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "我們有些伺服器並未啟用 %(daita)s。因此，我們使用多點跳躍自動來為任意伺服器啟用 %(daita)s 。"
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "連接埠"
@@ -2882,16 +2882,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "連接埠：%(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "抗量子通道"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2911,8 +2911,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "自訂連接埠可以是有效範圍內的任何值：%(portRanges)s。"
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "借助此功能，WireGuard 通道便能夠抵抗可能從量子電腦發起的攻擊。"
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "借助此功能，QUIC 通道便能夠抵抗可能從量子電腦發起的攻擊。"
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -3360,8 +3360,8 @@ msgstr "IPv6 組態無效，請嘗試變更 VPN 設定。"
 msgid "Invalid or missing value \"%1$s\""
 msgstr "值「%1$s」無效或遺失"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 WireGuard 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 QUIC 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
 
 msgid "Less than a day left on this account"
 msgstr "此帳戶剩餘不到一天"
@@ -3525,8 +3525,8 @@ msgstr "搜尋"
 msgid "Send email"
 msgstr "傳送電子郵件"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "設定 WireGuard MTU 值。有效範圍：%1$d - %2$d。"
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "設定 QUIC MTU 值。有效範圍：%1$d - %2$d。"
 
 msgid "Set as multihop entry"
 msgstr "設為多點跳躍進站點"
@@ -3741,8 +3741,8 @@ msgstr "天氣"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "歡迎，此裝置現在名為 <b>%s</b>。"
 
-msgid "WireGuard port"
-msgstr "WireGuard 連接埠"
+msgid "QUIC port"
+msgstr "QUIC 連接埠"
 
 msgid "Yes, log out device"
 msgstr "是，將裝置登出"

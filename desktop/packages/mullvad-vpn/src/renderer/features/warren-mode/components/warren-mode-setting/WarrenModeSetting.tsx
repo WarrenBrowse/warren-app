@@ -24,7 +24,7 @@ export function WarrenModeSetting(props: WarrenModeSettingProps) {
               <ModalMessage>
                 {messages.pgettext(
                   'vpn-settings-view',
-                  'When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of WireGuard / OpenVPN.',
+                  'When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of a standard VPN tunnel.',
                 )}
               </ModalMessage>
               <ModalMessage>

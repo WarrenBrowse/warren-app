@@ -18,9 +18,9 @@ msgstr "%(amount)d lisää..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s lisättiin: tilin käyttö maksettu %(expiry)s asti."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-portti"
 
@@ -255,7 +255,7 @@ msgstr "Salasana"
 msgid "Port"
 msgstr "Portti"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "Kvanttihyökkäysten esto"
@@ -334,9 +334,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, Näkymä ladattu"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "%(wireguard)s-porttiasetukset"
@@ -415,9 +415,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "Pyyhi tilin numero %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "Siirry sensuurinestoasetuksiin vaihtamaan %(wireGuard)s-portti"
@@ -1533,9 +1533,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Asennusohjelman käynnistys ei onnistunut."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "Valittua %(wireGuard)s-porttia ei tueta. <a>Vaihda se VPN-asetuksissa</a>."
@@ -2814,7 +2814,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-portti"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "%(wireGuard)s-portti"
@@ -2845,10 +2845,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "Jos havaitsija valvoo näitä datapaketteja, %(daita)s tekee hänelle huomattavasti hankalammaksi tunnistaa, millä verkkosivuilla käyt tai kenen kanssa viestit."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "Se tekee tämän tekemällä ylimääräisen avaimen vaihdon käyttämällä kvanttisuojattua algoritmia ja sekoittamalla tuloksen WireGuardin tavalliseen salaukseen."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Se tekee tämän tekemällä ylimääräisen avaimen vaihdon käyttämällä kvanttisuojattua algoritmia ja sekoittamalla tuloksen QUICin tavalliseen salaukseen."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2864,8 +2864,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihopia käytetään, jotta DAITA on käytettävissä valitsemassasi sijainnissa"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Multihop reitittää liikenteesi yhteen WireGuard-palvelimeen ja ulos toisesta palvelimesta, mikä tekee siitä hankalampaa jäljittää. Tuloksena on suurempi viive, mutta se parantaa nimettömyyttä verkossa."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Multihop reitittää liikenteesi yhteen QUIC-palvelimeen ja ulos toisesta palvelimesta, mikä tekee siitä hankalampaa jäljittää. Tuloksena on suurempi viive, mutta se parantaa nimettömyyttä verkossa."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2876,7 +2876,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "Kaikissa palvelimissamme ei ole %(daita)s-tukea. Siksi käytämme multihopia automaattisesti mahdollistaaksemme %(daita)s:n millä tahansa palvelimella."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "Portti"
@@ -2888,16 +2888,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "Portti: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Kvanttihyökkäyksiä kestävä tunneli"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2917,8 +2917,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "Mukautettu portti voi olla mikä tahansa sallittu arvo: %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "Tämä ominaisuus tekee WireGuard-tunnelista kestävän kvanttitietokoneiden mahdollisia hyökkäyksiä vastaan."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Tämä ominaisuus tekee QUIC-tunnelista kestävän kvanttitietokoneiden mahdollisia hyökkäyksiä vastaan."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -3366,8 +3366,8 @@ msgstr "Virheellinen IPv6-määritys, kokeile muuttaa VPN-asetuksia."
 msgid "Invalid or missing value \"%1$s\""
 msgstr "Arvo \"%1$s\" puuttuu tai on virheellinen"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Tunneli torjuu hyökkäykset suorittamalla ylimääräisen avaimenvaihdon käyttämällä ensin kvanttiturvallista algoritmia, jonka tuloksen se sekoittaa WireGuardin tavalliseen salaukseen. Tämä ylimääräinen vaihe käyttää noin 500 kiB liikennettä joka kerta, kun uusi tunneli luodaan."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "Tunneli torjuu hyökkäykset suorittamalla ylimääräisen avaimenvaihdon käyttämällä ensin kvanttiturvallista algoritmia, jonka tuloksen se sekoittaa QUICin tavalliseen salaukseen. Tämä ylimääräinen vaihe käyttää noin 500 kiB liikennettä joka kerta, kun uusi tunneli luodaan."
 
 msgid "Less than a day left on this account"
 msgstr "Tilin käyttöaikaa on jäljellä alle päivä"
@@ -3531,8 +3531,8 @@ msgstr "Haku"
 msgid "Send email"
 msgstr "Lähetä sähköpostia"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "Aseta WireGuardin MTU-arvo väliltä %1$d–%2$d."
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "Aseta QUICin MTU-arvo väliltä %1$d–%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Aseta multihopin tulopaikaksi"
@@ -3747,8 +3747,8 @@ msgstr "Sää"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "Tervetuloa! Tämän laitteen nimi on nyt <b>%s</b>."
 
-msgid "WireGuard port"
-msgstr "WireGuard-portti"
+msgid "QUIC port"
+msgstr "QUIC-portti"
 
 msgid "Yes, log out device"
 msgstr "Kyllä, kirjaa laite ulos"

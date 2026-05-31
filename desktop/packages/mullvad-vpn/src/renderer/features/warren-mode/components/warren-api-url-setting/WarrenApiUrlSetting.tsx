@@ -115,7 +115,7 @@ export function WarrenApiUrlSetting(props: WarrenApiUrlSettingProps) {
         <SettingsListItem.Footer.Text id={descriptionId}>
           {messages.pgettext(
             'vpn-settings-view',
-            'URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to Mullvad upstream). Restart the daemon for the change to take effect.',
+            'URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect.',
           )}
         </SettingsListItem.Footer.Text>
       </SettingsListItem.Footer>

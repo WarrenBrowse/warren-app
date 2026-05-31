@@ -33652,126 +33652,126 @@
         }
       }
     },
-    "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established.": {
+    "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established.": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Det gør den ved at udføre en ekstra nøgleudveksling ved hjælp af en kvantesikker algoritme og blande resultatet med WireGuards almindelige kryptering. Dette ekstra trin bruger cirka 500 kB trafik, hver gang en ny tunnel etableres."
+            "value": "Det gør den ved at udføre en ekstra nøgleudveksling ved hjælp af en kvantesikker algoritme og blande resultatet med QUICs almindelige kryptering. Dette ekstra trin bruger cirka 500 kB trafik, hver gang en ny tunnel etableres."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dazu wird ein zusätzlicher Schlüsselaustausch mit einem quantensicheren Algorithmus durchgeführt und das Ergebnis mit der regulären Verschlüsselung von WireGuard vermischt. Dieser zusätzliche Schritt verbraucht jedes Mal, wenn ein neuer Tunnel aufgebaut wird, etwa 500 KiB an Datenverkehr."
+            "value": "Dazu wird ein zusätzlicher Schlüsselaustausch mit einem quantensicheren Algorithmus durchgeführt und das Ergebnis mit der regulären Verschlüsselung von QUIC vermischt. Dieser zusätzliche Schritt verbraucht jedes Mal, wenn ein neuer Tunnel aufgebaut wird, etwa 500 KiB an Datenverkehr."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lo hace al realizar un intercambio de claves adicional usando un algoritmo cuántico seguro y combinando el resultado en el cifrado normal de WireGuard. Este paso extra utiliza aproximadamente 500 kiB de tráfico cada vez que se establece un nuevo túnel."
+            "value": "Lo hace al realizar un intercambio de claves adicional usando un algoritmo cuántico seguro y combinando el resultado en el cifrado normal de QUIC. Este paso extra utiliza aproximadamente 500 kiB de tráfico cada vez que se establece un nuevo túnel."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tunneli torjuu hyökkäykset suorittamalla ylimääräisen avaimenvaihdon käyttämällä ensin kvanttiturvallista algoritmia, jonka tuloksen se sekoittaa WireGuardin tavalliseen salaukseen. Tämä ylimääräinen vaihe käyttää noin 500 kiB liikennettä joka kerta, kun uusi tunneli luodaan."
+            "value": "Tunneli torjuu hyökkäykset suorittamalla ylimääräisen avaimenvaihdon käyttämällä ensin kvanttiturvallista algoritmia, jonka tuloksen se sekoittaa QUICin tavalliseen salaukseen. Tämä ylimääräinen vaihe käyttää noin 500 kiB liikennettä joka kerta, kun uusi tunneli luodaan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour ce faire, il effectue un échange de clés supplémentaire à l'aide d'un algorithme à sécurité quantique et mélange le résultat au chiffrement habituel de WireGuard. Cette étape supplémentaire utilise environ 500 kiB de trafic chaque fois qu'un nouveau tunnel est établi."
+            "value": "Pour ce faire, il effectue un échange de clés supplémentaire à l'aide d'un algorithme à sécurité quantique et mélange le résultat au chiffrement habituel de QUIC. Cette étape supplémentaire utilise environ 500 kiB de trafic chaque fois qu'un nouveau tunnel est établi."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'operazione viene effettuata eseguendo uno scambio di chiavi aggiuntivo con un algoritmo di sicurezza quantistica e mescolando il risultato nella normale crittografia di WireGuard. Questo passaggio aggiuntivo utilizza circa 500 kiB di traffico ogni volta che viene stabilito un nuovo tunnel."
+            "value": "L'operazione viene effettuata eseguendo uno scambio di chiavi aggiuntivo con un algoritmo di sicurezza quantistica e mescolando il risultato nella normale crittografia di QUIC. Questo passaggio aggiuntivo utilizza circa 500 kiB di traffico ogni volta che viene stabilito un nuovo tunnel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をWireGuardの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
+            "value": "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をQUICの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이를 위해 양자 안전 알고리즘을 사용하여 추가 키 교환을 수행하고 결과를 WireGuard의 일반 암호화에 혼합하는 방법이 이용됩니다. 이 추가 단계는 새 터널이 설정될 때마다 약 500kiB의 트래픽을 사용합니다."
+            "value": "이를 위해 양자 안전 알고리즘을 사용하여 추가 키 교환을 수행하고 결과를 QUIC의 일반 암호화에 혼합하는 방법이 이용됩니다. 이 추가 단계는 새 터널이 설정될 때마다 약 500kiB의 트래픽을 사용합니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quantum Safe အယ်လဂိုရီသမ်တစ်ခုကို သုံး၍ ထပ်ဆောင်း ကီးဖလှယ်မှုတစ်ခုကို ဆောင်ရွက်ပြီး WireGuard ၏ ပုံမှန် ကုဒ်ပြောင်းဝှက်မှုအတွင်း ရလဒ်ကို ရောနှောခြင်းအားဖြင့် ဤသည်ကို လုပ်ဆောင်ပါသည်။ ဤထပ်ဆောင်းအဆင့်သည် Tunnel အသစ်တစ်ခု တည်ဆောက်တိုင်း ဒေတာ 500 kiB ခန့်ကို သုံးပါသည်။"
+            "value": "Quantum Safe အယ်လဂိုရီသမ်တစ်ခုကို သုံး၍ ထပ်ဆောင်း ကီးဖလှယ်မှုတစ်ခုကို ဆောင်ရွက်ပြီး QUIC ၏ ပုံမှန် ကုဒ်ပြောင်းဝှက်မှုအတွင်း ရလဒ်ကို ရောနှောခြင်းအားဖြင့် ဤသည်ကို လုပ်ဆောင်ပါသည်။ ဤထပ်ဆောင်းအဆင့်သည် Tunnel အသစ်တစ်ခု တည်ဆောက်တိုင်း ဒေတာ 500 kiB ခန့်ကို သုံးပါသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Det gjøres ved at å utføre en ekstra nøkkelutveksling med en kvantesikker algoritme og kombinere resultatet med WireGuard sin vanlige kryptering. Dette ekstratrinnet bruker omtrent 500 kiB trafikk hver gang det opprettes en ny tunnel."
+            "value": "Det gjøres ved at å utføre en ekstra nøkkelutveksling med en kvantesikker algoritme og kombinere resultatet med QUIC sin vanlige kryptering. Dette ekstratrinnet bruker omtrent 500 kiB trafikk hver gang det opprettes en ny tunnel."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het doet dit door een extra sleuteluitwisseling uit te voeren met een kwantumveilig algoritme en het resultaat te mengen met de reguliere versleuteling van WireGuard. Deze extra stap gebruikt ongeveer 500 kiB aan verkeer elke keer dat een nieuwe tunnel wordt opgezet."
+            "value": "Het doet dit door een extra sleuteluitwisseling uit te voeren met een kwantumveilig algoritme en het resultaat te mengen met de reguliere versleuteling van QUIC. Deze extra stap gebruikt ongeveer 500 kiB aan verkeer elke keer dat een nieuwe tunnel wordt opgezet."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jest to wykonywane poprzez dodatkową wymianę kluczy przy użyciu algorytmu odpornego na ataki z użyciem komputerów kwantowych i zmieszanie wyniku ze zwykłym szyfrowaniem WireGuard. Ten dodatkowy krok zużywa około 500 kB ruchu za każdym razem, gdy ustanawiany jest nowy tunel."
+            "value": "Jest to wykonywane poprzez dodatkową wymianę kluczy przy użyciu algorytmu odpornego na ataki z użyciem komputerów kwantowych i zmieszanie wyniku ze zwykłym szyfrowaniem QUIC. Ten dodatkowy krok zużywa około 500 kB ruchu za każdym razem, gdy ustanawiany jest nowy tunel."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para isso, realiza uma troca de chaves adicional utilizando um algoritmo resistente à computação quântica, e misturando o resultado na encriptação regular do WireGuard. Este passo adicional utiliza aproximadamente 500 kiB de tráfego sempre que um novo túnel é estabelecido."
+            "value": "Para isso, realiza uma troca de chaves adicional utilizando um algoritmo resistente à computação quântica, e misturando o resultado na encriptação regular do QUIC. Este passo adicional utiliza aproximadamente 500 kiB de tráfego sempre que um novo túnel é estabelecido."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для этого функция выполняет дополнительный обмен ключами с использованием квантово-устойчивого алгоритма и добавляет результат к обычному шифрованию WireGuard. Эта дополнительная мера использует примерно 500 КиБ трафика при каждом создании нового туннеля."
+            "value": "Для этого функция выполняет дополнительный обмен ключами с использованием квантово-устойчивого алгоритма и добавляет результат к обычному шифрованию QUIC. Эта дополнительная мера использует примерно 500 КиБ трафика при каждом создании нового туннеля."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med WireGuards vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
+            "value": "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ WireGuard และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
+            "value": "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ QUIC และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu işlemi, bir kuantum güvenlik algoritmasıyla ekstra bir anahtar değişimi gerçekleştirdikten sonra sonucu WireGuard'ın normal şifrelemesiyle karıştırarak yapar. Bu ekstra adım, her yeni tünel kurulduğunda yaklaşık 500 kiB trafik kullanır."
+            "value": "Bu işlemi, bir kuantum güvenlik algoritmasıyla ekstra bir anahtar değişimi gerçekleştirdikten sonra sonucu QUIC'ın normal şifrelemesiyle karıştırarak yapar. Bu ekstra adım, her yeni tünel kurulduğunda yaklaşık 500 kiB trafik kullanır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму й інтеграції його результату в стандартне шифрування WireGuard. Цей додатковий крок використовує приблизно 500 КіБ трафіку щоразу, коли створюється новий тунель."
+            "value": "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму й інтеграції його результату в стандартне шифрування QUIC. Цей додатковий крок використовує приблизно 500 КіБ трафіку щоразу, коли створюється новий тунель."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "实现方法是使用量子安全算法执行额外的密钥交换，并将结果混合到 WireGuard 的常规加密中。每次建立新隧道时，这一额外步骤都会使用约 500 kiB 的流量。"
+            "value": "实现方法是使用量子安全算法执行额外的密钥交换，并将结果混合到 QUIC 的常规加密中。每次建立新隧道时，这一额外步骤都会使用约 500 kiB 的流量。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 WireGuard 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
+            "value": "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 QUIC 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
           }
         }
       }
@@ -39985,131 +39985,131 @@
       }
     },
     "Multihop mode": {},
-    "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online.": {
+    "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online.": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop dirigerer din trafik ind på en WireGuard-server og ud på en anden, hvilket gør det sværere at spore den. Dette resulterer i øget ventetid, men øger anonymiteten online."
+            "value": "Multihop dirigerer din trafik ind på en QUIC-server og ud på en anden, hvilket gør det sværere at spore den. Dette resulterer i øget ventetid, men øger anonymiteten online."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leitet Ihren Traffic in einen WireGuard-Server hinein und aus einem anderen heraus, so dass er schwerer zu verfolgen ist. Dies führt zu einer erhöhten Latenzzeit, erhöht aber die Anonymität im Internet."
+            "value": "Multihop leitet Ihren Traffic in einen QUIC-Server hinein und aus einem anderen heraus, so dass er schwerer zu verfolgen ist. Dies führt zu einer erhöhten Latenzzeit, erhöht aber die Anonymität im Internet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El salto múltiple dirige su tráfico a través de un servidor WireGuard y lo envía a otro, lo que dificulta su rastreo. Esto genera una mayor latencia, pero aumenta el anonimato en Internet."
+            "value": "El salto múltiple dirige su tráfico a través de un servidor QUIC y lo envía a otro, lo que dificulta su rastreo. Esto genera una mayor latencia, pero aumenta el anonimato en Internet."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop reitittää liikenteesi yhteen WireGuard-palvelimeen ja ulos toisesta palvelimesta, mikä tekee siitä hankalampaa jäljittää. Tuloksena on suurempi viive, mutta se parantaa nimettömyyttä verkossa."
+            "value": "Multihop reitittää liikenteesi yhteen QUIC-palvelimeen ja ulos toisesta palvelimesta, mikä tekee siitä hankalampaa jäljittää. Tuloksena on suurempi viive, mutta se parantaa nimettömyyttä verkossa."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le multihop fait passer votre trafic par un serveur WireGuard et le fait sortir par un autre, ce qui le rend plus difficile à tracer. Cela se traduit par une latence accrue, mais plus d'anonymat en ligne."
+            "value": "Le multihop fait passer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui le rend plus difficile à tracer. Cela se traduit par une latence accrue, mais plus d'anonymat en ligne."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il multihop instrada il tuo traffico in un server WireGuard in entrata e in un altro in uscita, rendendo più difficile il tracciamento. Questo aumenta la latenza ma aumenta anche l'anonimato online."
+            "value": "Il multihop instrada il tuo traffico in un server QUIC in entrata e in un altro in uscita, rendendo più difficile il tracciamento. Questo aumenta la latenza ma aumenta anche l'anonimato online."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "マルチホップはトラフィックをあるWireGuardサーバーにルーティングし、別サーバーに送出することで追跡を困難にします。これによって遅延が増加しますが、オンラインの匿名性は高まります。"
+            "value": "マルチホップはトラフィックをあるQUICサーバーにルーティングし、別サーバーに送出することで追跡を困難にします。これによって遅延が増加しますが、オンラインの匿名性は高まります。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "멀티홉은 사용자의 트래픽을 하나의 WireGuard 서버로 라우팅하고 다른 서버로 전달하여 추적을 더 어렵게 만듭니다. 그로 인해 대기 시간은 증가하지만 온라인 익명성은 증대됩니다."
+            "value": "멀티홉은 사용자의 트래픽을 하나의 QUIC 서버로 라우팅하고 다른 서버로 전달하여 추적을 더 어렵게 만듭니다. 그로 인해 대기 시간은 증가하지만 온라인 익명성은 증대됩니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "မာလ်တီဟော့ပ်သည် သင်၏အသွားအလာကို WireGuard ဆာဗာတစ်ခုသို့ လမ်းကြောင်းပေးပြီး အခြားတစ်နေရာမှ ထွက်စေသောကြောင့် ခြေရာခံရန် ပိုမိုခက်ခဲစေသည်။ ၎င်းသည် အချိန်ကို ပိုမိုကြန့်ကြာစေသော်လည်း အွန်လိုင်းတွင် ပို၍ သိုသိုသိပ်သိပ်ဖြစ်စေသည်။"
+            "value": "မာလ်တီဟော့ပ်သည် သင်၏အသွားအလာကို QUIC ဆာဗာတစ်ခုသို့ လမ်းကြောင်းပေးပြီး အခြားတစ်နေရာမှ ထွက်စေသောကြောင့် ခြေရာခံရန် ပိုမိုခက်ခဲစေသည်။ ၎င်းသည် အချိန်ကို ပိုမိုကြန့်ကြာစေသော်လည်း အွန်လိုင်းတွင် ပို၍ သိုသိုသိပ်သိပ်ဖြစ်စေသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihopp dirigerer trafikken din inn på én WireGuard-server og ut på en annen, noe som gjør det vanskeligere å spore den. Dette resulterer i økt ventetid, men øker anonymiteten på nettet."
+            "value": "Multihopp dirigerer trafikken din inn på én QUIC-server og ut på en annen, noe som gjør det vanskeligere å spore den. Dette resulterer i økt ventetid, men øker anonymiteten på nettet."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leidt uw verkeer de ene WireGuard-server in en de andere uit, waardoor het moeilijker te traceren is. Dit leidt tot een hogere latentie, maar verhoogt de online anonimiteit."
+            "value": "Multihop leidt uw verkeer de ene QUIC-server in en de andere uit, waardoor het moeilijker te traceren is. Dit leidt tot een hogere latentie, maar verhoogt de online anonimiteit."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funkcja wielokrotnego przeskoku kieruje Twój ruch przychodzący do jednego serwera WireGuard, a wychodzący wysyła z innego, co utrudnia jego śledzenie. Skutkuje to zwiększoną latencją, ale zwiększa anonimowość online."
+            "value": "Funkcja wielokrotnego przeskoku kieruje Twój ruch przychodzący do jednego serwera QUIC, a wychodzący wysyła z innego, co utrudnia jego śledzenie. Skutkuje to zwiększoną latencją, ale zwiększa anonimowość online."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop encaminha o tráfego para entrar num servidor WireGuard e sair por outro, dificultando o seguimento. Isto resulta em maior latência, mas aumenta o anonimato online."
+            "value": "Multihop encaminha o tráfego para entrar num servidor QUIC e sair por outro, dificultando o seguimento. Isto resulta em maior latência, mas aumenta o anonimato online."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Функция «Многократный переход» перенаправляет трафик с одного сервера WireGuard на другой, что затрудняет отслеживание. Это увеличивает задержку, но зато повышает анонимность в сети."
+            "value": "Функция «Многократный переход» перенаправляет трафик с одного сервера QUIC на другой, что затрудняет отслеживание. Это увеличивает задержку, но зато повышает анонимность в сети."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihopp dirigerar din trafik till en WireGuard-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
+            "value": "Multihopp dirigerar din trafik till en QUIC-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "มัลติฮอปจะกำหนดเส้นทางการรับส่งข้อมูลของคุณ ไปยังหนึ่งในเซิร์ฟเวอร์ WireGuard และออกไปยังอีกเซิร์ฟเวอร์หนึ่ง ซึ่งทำให้ติดตามได้ยากขึ้น นี่จะส่งผลให้มีเวลาแฝงเพิ่มขึ้น แต่ก็จะช่วยปกปิดตัวตนออนไลน์ได้มากขึ้น"
+            "value": "มัลติฮอปจะกำหนดเส้นทางการรับส่งข้อมูลของคุณ ไปยังหนึ่งในเซิร์ฟเวอร์ QUIC และออกไปยังอีกเซิร์ฟเวอร์หนึ่ง ซึ่งทำให้ติดตามได้ยากขึ้น นี่จะส่งผลให้มีเวลาแฝงเพิ่มขึ้น แต่ก็จะช่วยปกปิดตัวตนออนไลน์ได้มากขึ้น"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çoklu geçiş, trafiğinizi bir WireGuard sunucusundan diğerine yönlendirerek izlemeyi zorlaştırır. Bu, gecikmenin artmasına neden olur ancak çevrimiçi gizliliği artırır."
+            "value": "Çoklu geçiş, trafiğinizi bir QUIC sunucusundan diğerine yönlendirerek izlemeyi zorlaştırır. Bu, gecikmenin artmasına neden olur ancak çevrimiçi gizliliği artırır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Подвійний VPN спрямовує ваш трафік з одного сервера WireGuard на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
+            "value": "Подвійний VPN спрямовує ваш трафік з одного сервера QUIC на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "多跳技术会将您的流量传输到一个 WireGuard 服务器并从另一个服务器传出，从而提高追踪的难度。这会导致延迟增加，但会提高在线匿名性。"
+            "value": "多跳技术会将您的流量传输到一个 QUIC 服务器并从另一个服务器传出，从而提高追踪的难度。这会导致延迟增加，但会提高在线匿名性。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "多點跳躍可將您的流量傳入一個 WireGuard 伺服器，再傳出至另一個伺服器，使其更難以追蹤。雖然這會導致延遲時間增加，卻能提高線上的匿名程度。"
+            "value": "多點跳躍可將您的流量傳入一個 QUIC 伺服器，再傳出至另一個伺服器，使其更難以追蹤。雖然這會導致延遲時間增加，卻能提高線上的匿名程度。"
           }
         }
       }
     },
-    "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online. Multihop has three different modes to choose between: When needed, Always, and Never.": {
+    "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online. Multihop has three different modes to choose between: When needed, Always, and Never.": {
       "comment": "Description of the Multihop feature, including its benefits and modes of operation.",
       "isCommentAutoGenerated": true
     },
@@ -43730,126 +43730,126 @@
         }
       }
     },
-    "Obfuscation hides the WireGuard traffic inside another protocol. It can be used to help circumvent censorship and other types of filtering, where a plain WireGuard connection would be blocked.": {
+    "Obfuscation hides the QUIC traffic inside another protocol. It can be used to help circumvent censorship and other types of filtering, where a plain QUIC connection would be blocked.": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilsløring skjuler WireGuard-trafikken inden i en anden protokol. Det kan bruges til at hjælpe med at omgå censur og andre typer filtrering, hvor en almindelig WireGuard-forbindelse ville blive blokeret."
+            "value": "Tilsløring skjuler QUIC-trafikken inden i en anden protokol. Det kan bruges til at hjælpe med at omgå censur og andre typer filtrering, hvor en almindelig QUIC-forbindelse ville blive blokeret."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei der Verschleierung wird der WireGuard-Datenverkehr in einem anderen Protokoll versteckt. Sie kann dazu verwendet werden, Zensur und andere Arten von Filtern zu umgehen, bei denen eine reine WireGuard-Verbindung blockiert würde."
+            "value": "Bei der Verschleierung wird der QUIC-Datenverkehr in einem anderen Protokoll versteckt. Sie kann dazu verwendet werden, Zensur und andere Arten von Filtern zu umgehen, bei denen eine reine QUIC-Verbindung blockiert würde."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La ofuscación oculta el tráfico de WireGuard dentro de otro protocolo. Puede usarse para sortear la censura y otros tipos de filtrado donde podría bloquearse una conexión de WireGuard normal."
+            "value": "La ofuscación oculta el tráfico de QUIC dentro de otro protocolo. Puede usarse para sortear la censura y otros tipos de filtrado donde podría bloquearse una conexión de QUIC normal."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hämäysteknologian käyttäminen piilottaa WireGuard-liikenteen toisen protokollan sisään. Sitä voidaan käyttää kiertämään sensuuria ja muita suodatuksia niissä tapauksissa, kun tavallinen WireGuard-yhteys muutoin estettäisi."
+            "value": "Hämäysteknologian käyttäminen piilottaa QUIC-liikenteen toisen protokollan sisään. Sitä voidaan käyttää kiertämään sensuuria ja muita suodatuksia niissä tapauksissa, kun tavallinen QUIC-yhteys muutoin estettäisi."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La dissimulation cache le trafic WireGuard à l'intérieur d'un autre protocole. Elle peut être utilisée pour aider à contourner la censure et d'autres types de filtrage, où une connexion WireGuard simple serait bloquée."
+            "value": "La dissimulation cache le trafic QUIC à l'intérieur d'un autre protocole. Elle peut être utilisée pour aider à contourner la censure et d'autres types de filtrage, où une connexion QUIC simple serait bloquée."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'offuscamento nasconde il traffico WireGuard all'interno di un altro protocollo. Può essere utilizzato per aggirare la censura e altri tipi di filtraggio, in cui una semplice connessione WireGuard verrebbe bloccata."
+            "value": "L'offuscamento nasconde il traffico QUIC all'interno di un altro protocollo. Può essere utilizzato per aggirare la censura e altri tipi di filtraggio, in cui una semplice connessione QUIC verrebbe bloccata."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "難読化は、WireGuardトラフィックを別のプロトコル内に隠します。プレーンなWireGuard接続がブロックされる検閲やその他のフィルタリングを回避するために使用できます。"
+            "value": "難読化は、QUICトラフィックを別のプロトコル内に隠します。プレーンなQUIC接続がブロックされる検閲やその他のフィルタリングを回避するために使用できます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "난독 처리는 다른 프로토콜 내에서 WireGuard 트래픽을 숨깁니다. 일반 WireGuard 연결이 차단되는 상황에서 검열 및 기타 유형의 필터링을 우회하는 데 사용할 수 있습니다."
+            "value": "난독 처리는 다른 프로토콜 내에서 QUIC 트래픽을 숨깁니다. 일반 QUIC 연결이 차단되는 상황에서 검열 및 기타 유형의 필터링을 우회하는 데 사용할 수 있습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obfuscation သည် အခြားပရိုတိုကောလ်အတွင်းရှိ WireGuard ကူးလူးမှုကို ဝှက်ထားပေးပါသည်။ သာမန် WireGuard ချိတ်ဆက်မှုကို ပိတ်ဆို့မည့် အခြားသော စစ်ထုတ်မှု အမျိုးအစားများနှင့် ဆင်ဆာဖြတ်တောက်ခြင်းကို ရှောင်လွှဲနိုင်စေရာတွင် ကူညီနိုင်စေရန် ၎င်းကို သုံးနိုင်ပါသည်။"
+            "value": "Obfuscation သည် အခြားပရိုတိုကောလ်အတွင်းရှိ QUIC ကူးလူးမှုကို ဝှက်ထားပေးပါသည်။ သာမန် QUIC ချိတ်ဆက်မှုကို ပိတ်ဆို့မည့် အခြားသော စစ်ထုတ်မှု အမျိုးအစားများနှင့် ဆင်ဆာဖြတ်တောက်ခြင်းကို ရှောင်လွှဲနိုင်စေရာတွင် ကူညီနိုင်စေရန် ၎င်းကို သုံးနိုင်ပါသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilsløring skjuler WireGuard-trafikken i en annen protokoll. Man kan på den måten omgå sensur og andre typer filter der en vanlig WireGuard-tilkobling ville blitt blokkert."
+            "value": "Tilsløring skjuler QUIC-trafikken i en annen protokoll. Man kan på den måten omgå sensur og andre typer filter der en vanlig QUIC-tilkobling ville blitt blokkert."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obfuscatie verbergt het WireGuard-verkeer in een ander protocol. Het kan worden gebruikt om censuur en andere soorten filtering te omzeilen, waar een gewone WireGuard-verbinding zou worden geblokkeerd."
+            "value": "Obfuscatie verbergt het QUIC-verkeer in een ander protocol. Het kan worden gebruikt om censuur en andere soorten filtering te omzeilen, waar een gewone QUIC-verbinding zou worden geblokkeerd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaciemnianie ukrywa ruch WireGuard w innym protokole. Można go użyć do obchodzenia cenzury i innych typów filtrowania, w których zwykłe połączenie WireGuard byłoby blokowane."
+            "value": "Zaciemnianie ukrywa ruch QUIC w innym protokole. Można go użyć do obchodzenia cenzury i innych typów filtrowania, w których zwykłe połączenie QUIC byłoby blokowane."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ofuscação oculta o tráfego do WireGuard dentro de outro protocolo. Pode ser utilizado para ajudar a contornar a censura e outros tipos de filtragem, onde uma simples ligação WireGuard seria bloqueada."
+            "value": "A ofuscação oculta o tráfego do QUIC dentro de outro protocolo. Pode ser utilizado para ajudar a contornar a censura e outros tipos de filtragem, onde uma simples ligação QUIC seria bloqueada."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Обфускация скрывает трафик WireGuard внутри другого протокола. Это может использоваться для обхода цензуры и других видов фильтрации, когда обычные соединения WireGuard блокируются."
+            "value": "Обфускация скрывает трафик QUIC внутри другого протокола. Это может использоваться для обхода цензуры и других видов фильтрации, когда обычные соединения QUIC блокируются."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obfuskering döljer WireGuard-trafik inne i ett annat protokoll. Det kan användas för att kringgå censur och andra filtertyper där en vanlig WireGuard-anslutning skulle blockeras."
+            "value": "Obfuskering döljer QUIC-trafik inne i ett annat protokoll. Det kan användas för att kringgå censur och andra filtertyper där en vanlig QUIC-anslutning skulle blockeras."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การทำให้ข้อมูลยุ่งเหยิงจะซ่อนการรับส่งข้อมูล WireGuard ภายในอีกโพรโทคอลหนึ่ง ซึ่งใช้เพื่อช่วยหลบเลี่ยงการเซ็นเซอร์ และการกรองประเภทอื่นๆ ที่การเชื่อมต่อ WireGuard แบบธรรมดาจะถูกบล็อกได้"
+            "value": "การทำให้ข้อมูลยุ่งเหยิงจะซ่อนการรับส่งข้อมูล QUIC ภายในอีกโพรโทคอลหนึ่ง ซึ่งใช้เพื่อช่วยหลบเลี่ยงการเซ็นเซอร์ และการกรองประเภทอื่นๆ ที่การเชื่อมต่อ QUIC แบบธรรมดาจะถูกบล็อกได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gizleme, WireGuard trafiğini başka bir protokolün içinde gizler. Normal bir WireGuard bağlantısının engelleneceği sansürü ve diğer filtreleme türlerini aşmaya yardımcı olmak için kullanılabilir."
+            "value": "Gizleme, QUIC trafiğini başka bir protokolün içinde gizler. Normal bir QUIC bağlantısının engelleneceği sansürü ve diğer filtreleme türlerini aşmaya yardımcı olmak için kullanılabilir."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Обфускація приховує трафік WireGuard в іншому протоколі. Вона може використовуватися для обходу цензури й інших типів фільтрування, коли звичайне з’єднання WireGuard заблоковано."
+            "value": "Обфускація приховує трафік QUIC в іншому протоколі. Вона може використовуватися для обходу цензури й інших типів фільтрування, коли звичайне з’єднання QUIC заблоковано."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "混淆会将 WireGuard 流量隐藏在其他协议中。这有助于规避审查和其他类型的过滤，在这些过滤中，普通 WireGuard 连接将被阻止。"
+            "value": "混淆会将 QUIC 流量隐藏在其他协议中。这有助于规避审查和其他类型的过滤，在这些过滤中，普通 QUIC 连接将被阻止。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "藉由混淆，WireGuard 的流量能隱藏在另一個通訊協定中。這有助於規避審查或其他類型的篩選。在這類篩選中，普通 WireGuard 連線將遭到封鎖。"
+            "value": "藉由混淆，QUIC 的流量能隱藏在另一個通訊協定中。這有助於規避審查或其他類型的篩選。在這類篩選中，普通 QUIC 連線將遭到封鎖。"
           }
         }
       }
@@ -60048,24 +60048,24 @@
         }
       }
     },
-    "The selected WireGuard port is not supported, please change it under **VPN settings**.": {
+    "The selected QUIC port is not supported, please change it under **VPN settings**.": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den valgte WireGuard-port understøttes ikke, skift den under **VPN-indstillinger**."
+            "value": "Den valgte QUIC-port understøttes ikke, skift den under **VPN-indstillinger**."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der ausgewählte WireGuard-Port wird nicht unterstützt, bitte ändern Sie ihn unter **VPN-Einstellungen**."
+            "value": "Der ausgewählte QUIC-Port wird nicht unterstützt, bitte ändern Sie ihn unter **VPN-Einstellungen**."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se admite el puerto WireGuard seleccionado. Cámbielo bajo la **configuración de VPN**."
+            "value": "No se admite el puerto QUIC seleccionado. Cámbielo bajo la **configuración de VPN**."
           }
         },
         "fi": {
@@ -60077,55 +60077,55 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le port WireGuard sélectionné n'est pas pris en charge. Veuillez le modifier sous **Paramètres VPN**."
+            "value": "Le port QUIC sélectionné n'est pas pris en charge. Veuillez le modifier sous **Paramètres VPN**."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La porta WireGuard selezionata non è supportata, cambiala in **Impostazioni VPN**."
+            "value": "La porta QUIC selezionata non è supportata, cambiala in **Impostazioni VPN**."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "選択したWireGuardポートはサポートされていません。**VPN設定**で変更してください。"
+            "value": "選択したQUICポートはサポートされていません。**VPN設定**で変更してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택한 WireGuard 포트는 지원되지 않습니다. **VPN 설정**에서 변경하세요."
+            "value": "선택한 QUIC 포트는 지원되지 않습니다. **VPN 설정**에서 변경하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ရွေးချယ်ထားသော WireGuard ပေါ့တ်ကို တွဲဖက်လုပ်ဆောင်နိုင်ခြင်း မရှိသဖြင့် ** VPN ဆက်တင် များ ** တွင်ပြောင်းပေးပါ။"
+            "value": "ရွေးချယ်ထားသော QUIC ပေါ့တ်ကို တွဲဖက်လုပ်ဆောင်နိုင်ခြင်း မရှိသဖြင့် ** VPN ဆက်တင် များ ** တွင်ပြောင်းပေးပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Valgt WireGuard-port støttes ikke. Du kan endre den i **VPN-innstillingene**."
+            "value": "Valgt QUIC-port støttes ikke. Du kan endre den i **VPN-innstillingene**."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De geselecteerde WireGuard-port wordt niet ondersteund. Wijzig de poort bij de **VPN-instellingen**."
+            "value": "De geselecteerde QUIC-port wordt niet ondersteund. Wijzig de poort bij de **VPN-instellingen**."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wybrany port WireGuard nie jest obsługiwany. Zmień go w obszarze **Ustawienia VPN**."
+            "value": "Wybrany port QUIC nie jest obsługiwany. Zmień go w obszarze **Ustawienia VPN**."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A porta WireGuard selecionada não é suportada. Altere-a em **Definições de VPN**."
+            "value": "A porta QUIC selecionada não é suportada. Altere-a em **Definições de VPN**."
           }
         },
         "ru": {
@@ -60137,37 +60137,37 @@
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den valda WireGuard-porten stöds inte, ändra den i **VPN-inställningar**."
+            "value": "Den valda QUIC-porten stöds inte, ändra den i **VPN-inställningar**."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "พอร์ต WireGuard ที่เลือกไม่ได้รับการรองรับ โปรดเปลี่ยนแปลงภายใต้ **การตั้งค่า VPN**"
+            "value": "พอร์ต QUIC ที่เลือกไม่ได้รับการรองรับ โปรดเปลี่ยนแปลงภายใต้ **การตั้งค่า VPN**"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seçilen WireGuard portu desteklenmiyor, **VPN ayarları\" altından portu değiştirin."
+            "value": "Seçilen QUIC portu desteklenmiyor, **VPN ayarları\" altından portu değiştirin."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вибраний порт WireGuard не підтримується, змініть його в налаштуваннях **VPN**."
+            "value": "Вибраний порт QUIC не підтримується, змініть його в налаштуваннях **VPN**."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "所选 WireGuard 端口不受支持，请在 **VPN 设置**下更改。"
+            "value": "所选 QUIC 端口不受支持，请在 **VPN 设置**下更改。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "不支援所選的 WireGuard 連接埠，請至**VPN 設定**下變更。"
+            "value": "不支援所選的 QUIC 連接埠，請至**VPN 設定**下變更。"
           }
         }
       }
@@ -61046,126 +61046,126 @@
         }
       }
     },
-    "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers.": {
+    "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers.": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denne funktion gør WireGuard-tunnelen modstandsdygtig over for potentielle angreb fra kvantecomputere."
+            "value": "Denne funktion gør QUIC-tunnelen modstandsdygtig over for potentielle angreb fra kvantecomputere."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Funktion macht den WireGuard-Tunnel resistent gegen mögliche Angriffe von Quantencomputern."
+            "value": "Diese Funktion macht den QUIC-Tunnel resistent gegen mögliche Angriffe von Quantencomputern."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta característica permite que el túnel de WireGuard resista posibles ataques de ordenadores cuánticos."
+            "value": "Esta característica permite que el túnel de QUIC resista posibles ataques de ordenadores cuánticos."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tämä ominaisuus tekee WireGuard-tunnelista kestävän kvanttitietokoneiden mahdollisia hyökkäyksiä vastaan."
+            "value": "Tämä ominaisuus tekee QUIC-tunnelista kestävän kvanttitietokoneiden mahdollisia hyökkäyksiä vastaan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette fonctionnalité rend le tunnel WireGuard résistant aux attaques potentielles des ordinateurs quantiques."
+            "value": "Cette fonctionnalité rend le tunnel QUIC résistant aux attaques potentielles des ordinateurs quantiques."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa funzionalità rende il tunnel WireGuard resistente ai potenziali attacchi dei computer quantistici."
+            "value": "Questa funzionalità rende il tunnel QUIC resistente ai potenziali attacchi dei computer quantistici."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この機能は、WireGuardトンネルに量子コンピューターからの潜在的な攻撃に対する耐性を与えます。"
+            "value": "この機能は、QUICトンネルに量子コンピューターからの潜在的な攻撃に対する耐性を与えます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 기능은 WireGuard 터널이 양자 컴퓨터의 잠재적인 공격에 맞서도록 합니다."
+            "value": "이 기능은 QUIC 터널이 양자 컴퓨터의 잠재적인 공격에 맞서도록 합니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ဤလုပ်ဆောင်ချက်သည် Quantum ကွန်ပျူတာများမှ ဖြစ်လာနိုင်ခြေရှိသော တိုက်ခိုက်မှုများကို ခုခံနိုင်သည့် WireGuard Tunnel ကို ပြုလုပ်သည်။"
+            "value": "ဤလုပ်ဆောင်ချက်သည် Quantum ကွန်ပျူတာများမှ ဖြစ်လာနိုင်ခြေရှိသော တိုက်ခိုက်မှုများကို ခုခံနိုင်သည့် QUIC Tunnel ကို ပြုလုပ်သည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denne funksjonen gjør WireGuard-tunnelen motstandsdyktig mot potensielle angrep fra kvantemaskiner."
+            "value": "Denne funksjonen gjør QUIC-tunnelen motstandsdyktig mot potensielle angrep fra kvantemaskiner."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze eigenschap maakt de WireGuard-tunnel bestand tegen mogelijke aanvallen met kwantumcomputers."
+            "value": "Deze eigenschap maakt de QUIC-tunnel bestand tegen mogelijke aanvallen met kwantumcomputers."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ta funkcja sprawia, że tunel WireGuard jest odporny na potencjalne ataki ze strony komputerów kwantowych."
+            "value": "Ta funkcja sprawia, że tunel QUIC jest odporny na potencjalne ataki ze strony komputerów kwantowych."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta funcionalidade torna o túnel do WireGuard resistente a potenciais ataques de computadores quânticos."
+            "value": "Esta funcionalidade torna o túnel do QUIC resistente a potenciais ataques de computadores quânticos."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта функция делает туннель WireGuard устойчивым к потенциальным атакам с использованием квантовых компьютеров."
+            "value": "Эта функция делает туннель QUIC устойчивым к потенциальным атакам с использованием квантовых компьютеров."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den här funktionen gör WireGuard-tunneln resistent mot potentiella attacker från kvantdatorer."
+            "value": "Den här funktionen gör QUIC-tunneln resistent mot potentiella attacker från kvantdatorer."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คุณลักษณะนี้จะช่วยให้ช่องทาง WireGuard สามารถสกัดกั้นการโจมตีที่อาจมาจากคอมพิวเตอร์ควอนตัมได้"
+            "value": "คุณลักษณะนี้จะช่วยให้ช่องทาง QUIC สามารถสกัดกั้นการโจมตีที่อาจมาจากคอมพิวเตอร์ควอนตัมได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu özellik, WireGuard tünelini kuantum bilgisayarlardan gelebilecek potansiyel saldırılara karşı dayanıklı hale getirir."
+            "value": "Bu özellik, QUIC tünelini kuantum bilgisayarlardan gelebilecek potansiyel saldırılara karşı dayanıklı hale getirir."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ця функція робить тунель WireGuard стійким до потенційних атак із використанням квантових комп’ютерів."
+            "value": "Ця функція робить тунель QUIC стійким до потенційних атак із використанням квантових комп’ютерів."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "借助此功能，WireGuard 隧道能够抵抗可能通过量子计算机发起的攻击。"
+            "value": "借助此功能，QUIC 隧道能够抵抗可能通过量子计算机发起的攻击。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "借助此功能，WireGuard 通道便能夠抵抗可能從量子電腦發起的攻擊。"
+            "value": "借助此功能，QUIC 通道便能夠抵抗可能從量子電腦發起的攻擊。"
           }
         }
       }
@@ -70339,250 +70339,250 @@
         }
       }
     },
-    "WireGuard obfuscation": {
+    "QUIC obfuscation": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-tilsløring"
+            "value": "QUIC-tilsløring"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-Verschleierung"
+            "value": "QUIC-Verschleierung"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ofuscación de WireGuard"
+            "value": "Ofuscación de QUIC"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-obfuskointi"
+            "value": "QUIC-obfuskointi"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obfuscation WireGuard"
+            "value": "Obfuscation QUIC"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Offuscamento WireGuard"
+            "value": "Offuscamento QUIC"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuardの難読化"
+            "value": "QUICの難読化"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 난독화"
+            "value": "QUIC 난독화"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard Obfuscation\n"
+            "value": "QUIC Obfuscation\n"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilsløring av WireGuard"
+            "value": "Tilsløring av QUIC"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-obfuscatie"
+            "value": "QUIC-obfuscatie"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaciemnianie WireGuard"
+            "value": "Zaciemnianie QUIC"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ofuscação WireGuard"
+            "value": "Ofuscação QUIC"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Обфускация WireGuard"
+            "value": "Обфускация QUIC"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-obfuskering"
+            "value": "QUIC-obfuskering"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การทำให้ข้อมูลยุ่งเหยิงของ WireGuard"
+            "value": "การทำให้ข้อมูลยุ่งเหยิงของ QUIC"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard gizlemesi"
+            "value": "QUIC gizlemesi"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Обфускація WireGuard"
+            "value": "Обфускація QUIC"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 混淆"
+            "value": "QUIC 混淆"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 混淆"
+            "value": "QUIC 混淆"
           }
         }
       }
     },
-    "WireGuard port": {
+    "QUIC port": {
       "localizations": {
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-port"
+            "value": "QUIC-port"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-Port"
+            "value": "QUIC-Port"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Puerto de WireGuard"
+            "value": "Puerto de QUIC"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-portti"
+            "value": "QUIC-portti"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port WireGuard"
+            "value": "Port QUIC"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Porta WireGuard"
+            "value": "Porta QUIC"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuardポート"
+            "value": "QUICポート"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 포트"
+            "value": "QUIC 포트"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard ပေါ့တ်"
+            "value": "QUIC ပေါ့တ်"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-port"
+            "value": "QUIC-port"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-poort"
+            "value": "QUIC-poort"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port WireGuard"
+            "value": "Port QUIC"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Porta WireGuard"
+            "value": "Porta QUIC"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Порт WireGuard"
+            "value": "Порт QUIC"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard-port"
+            "value": "QUIC-port"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "พอร์ต WireGuard"
+            "value": "พอร์ต QUIC"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard portu"
+            "value": "QUIC portu"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Порт WireGuard"
+            "value": "Порт QUIC"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 端口"
+            "value": "QUIC 端口"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "WireGuard 連接埠"
+            "value": "QUIC 連接埠"
           }
         }
       }

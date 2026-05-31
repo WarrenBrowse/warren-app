@@ -128,7 +128,7 @@ extension SettingsMultihopView {
             pages: [
                 SettingsInfoViewModelPage(
                     body: NSLocalizedString(
-                        "Multihop routes your traffic into one WireGuard server and out another, "
+                        "Multihop routes your traffic into one QUIC server and out another, "
                             + "making it harder to trace. This results in increased latency but increases "
                             + "anonymity online. Multihop has three different modes to choose between: "
                             + "When needed, Always, and Never.",

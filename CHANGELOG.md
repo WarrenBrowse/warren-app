@@ -32,6 +32,11 @@ Line wrap the file at 100 chars.                                              Th
   Domain fronting). Warren reaches its own API directly and does not run that circumvention
   infrastructure. Settings format updated to `v16` (migration disables the methods on existing
   installs).
+- Rename the built-in "Mullvad Bridges" access method to "Warren Bridges". The `v16` migration
+  also rebrands the persisted name on existing installs.
+- Rebrand user-facing protocol references from "WireGuard" to "QUIC" across the desktop, Android
+  and iOS apps (settings labels, info popups, translations). The required GPL/AGPL attribution to
+  Mullvad in the iOS About screen is preserved.
 
 ## [0.1.0-beta.1] - 2026-05-22
 First public beta of Warren VPN, the warrenBrowse fork of Mullvad VPN built on Quinn QUIC instead

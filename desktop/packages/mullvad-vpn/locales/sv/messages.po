@@ -18,9 +18,9 @@ msgstr "%(amount)d till ..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s har lagts till. Kontot är betalt till och med %(expiry)s."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-port"
 
@@ -255,7 +255,7 @@ msgstr "Lösenord"
 msgid "Port"
 msgstr "Port"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "Kvantresistens"
@@ -334,9 +334,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, visa laddad"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "%(wireguard)s-portinställningar"
@@ -415,9 +415,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "Glöm kontonumret %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "Gå till inställningar för anti-censur för att ändra %(wireGuard)s-port"
@@ -1533,9 +1533,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Det gick inte att starta installationsprogrammet."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "Den valda %(wireGuard)s-porten stöds inte. <a>Ändra den i VPN-inställningarna.</a>"
@@ -2814,7 +2814,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-port"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "%(wireGuard)s-port"
@@ -2845,10 +2845,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "Om dessa datapaket övervakas av en observatör, gör %(daita)s det svårare för dem att identifiera vilka webbplatser du besöker eller vem du kommunicerar med."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med WireGuards vanliga kryptering."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2864,8 +2864,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihopp används för att aktivera DAITA för din valda plats"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Multihopp dirigerar din trafik till en WireGuard-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Multihopp dirigerar din trafik till en QUIC-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2876,7 +2876,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "Det är inte alla våra servrar som är %(daita)s-aktiverade. Därför använder vi multihopp automatiskt för att aktivera %(daita)s med alla servrar."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "Port"
@@ -2888,16 +2888,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "Port: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Kvantresistent tunnel"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2917,8 +2917,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "Den anpassade porten kan vara ett värde inom de giltiga intervallen: %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "Den här funktionen gör WireGuard-tunneln resistent mot potentiella attacker från kvantdatorer."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Den här funktionen gör QUIC-tunneln resistent mot potentiella attacker från kvantdatorer."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -3366,8 +3366,8 @@ msgstr "Ogiltig IPv6-konfiguration. Prova att ändra VPN-inställningarna."
 msgid "Invalid or missing value \"%1$s\""
 msgstr "Värdet \"%1$s\" är ogiltigt eller saknas"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med WireGuards vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
 
 msgid "Less than a day left on this account"
 msgstr "Mindre än en dag kvar på kontot"
@@ -3531,8 +3531,8 @@ msgstr "Sök"
 msgid "Send email"
 msgstr "Skicka e-post"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "Ange WireGuard MTU-värde. Giltigt intervall: %1$d–%2$d."
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "Ange QUIC MTU-värde. Giltigt intervall: %1$d–%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Ange som första multihopp"
@@ -3747,8 +3747,8 @@ msgstr "Väder"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "Välkommen. Den här enheten har fått namnet <b>%s</b>."
 
-msgid "WireGuard port"
-msgstr "WireGuard-port"
+msgid "QUIC port"
+msgstr "QUIC-port"
 
 msgid "Yes, log out device"
 msgstr "Ja, logga ut enheten"

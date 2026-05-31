@@ -32,7 +32,7 @@ msgstr ""
 msgid "Bypass geographical restrictions with our global network of VPN servers."
 msgstr ""
     
-msgid "Our app uses WireGuard, a superior VPN protocol that connects fast and doesn’t drain your battery."
+msgid "Our app uses QUIC, a superior VPN protocol that connects fast and doesn’t drain your battery."
 msgstr ""
 
 msgid "HOW DOES WARREN VPN WORK?"

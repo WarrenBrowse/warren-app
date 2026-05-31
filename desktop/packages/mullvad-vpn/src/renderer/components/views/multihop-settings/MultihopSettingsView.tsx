@@ -37,7 +37,7 @@ export function MultihopSettingsView() {
                     <Text variant="labelTiny" color="whiteAlpha60">
                       {messages.pgettext(
                         'wireguard-settings-view',
-                        'Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online.',
+                        'Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online.',
                       )}
                     </Text>
                   </FlexColumn>
