@@ -14,6 +14,7 @@ import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSendProblemReportUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenDeviceUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
@@ -23,6 +24,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
@@ -124,6 +126,10 @@ val appModule = module {
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
     single { WarrenSubscriptionUseCase(walletRepository = get()) } bind
         WarrenSubscriptionInvoker::class
+
+    // Device management: biometric unlock + signed GET/DELETE /v1/devices.
+    single { WarrenDeviceUseCase(walletRepository = get()) } bind
+        WarrenDeviceInvoker::class
     single { LocaleRepository(get()) }
     // D.4 step 58: RelayLocationTranslationRepository dropped (orphan now).
     // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-

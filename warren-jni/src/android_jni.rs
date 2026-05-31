@@ -776,6 +776,99 @@ fn get_subscription_inner(_mnemonic: &str) -> Result<u64, String> {
     Err("getSubscription is Android-only".to_owned())
 }
 
+/// List the wallet's registered devices (signed `GET /v1/devices`).
+/// Returns `{"ok": true, "devices": [{"id","name","created_at"}, ...]}`
+/// or `{"ok": false, "error": "..."}`. The WireGuard key and DNS flags
+/// are intentionally not surfaced to Kotlin.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listDevices<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let json = match list_devices_inner(&phrase) {
+        Ok(devices) => serde_json::json!({"ok": true, "devices": devices}).to_string(),
+        Err(e) => {
+            log::warn!("listDevices failed");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn list_devices_inner(mnemonic: &str) -> Result<Vec<serde_json::Value>, String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before listDevices".to_owned())?;
+    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    let devices = runtime
+        .block_on(client.list_devices())
+        .map_err(|e| format!("list_devices failed: {e}"))?;
+    Ok(devices
+        .into_iter()
+        .map(|d| serde_json::json!({"id": d.id, "name": d.name, "created_at": d.created_at}))
+        .collect())
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn list_devices_inner(_mnemonic: &str) -> Result<Vec<serde_json::Value>, String> {
+    Err("listDevices is Android-only".to_owned())
+}
+
+/// Remove a device the wallet owns (signed `DELETE /v1/devices/{id}`).
+/// Returns `{"ok": true}` or `{"ok": false, "error": "..."}`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_removeDevice<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    device_id: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let id = String::from_java(&jnix_env, device_id);
+    let json = match remove_device_inner(&phrase, &id) {
+        Ok(()) => serde_json::json!({"ok": true}).to_string(),
+        Err(e) => {
+            log::warn!("removeDevice failed");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn remove_device_inner(mnemonic: &str, device_id: &str) -> Result<(), String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before removeDevice".to_owned())?;
+    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    runtime
+        .block_on(client.delete_device(device_id))
+        .map_err(|e| format!("delete_device failed: {e}"))?;
+    Ok(())
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn remove_device_inner(_mnemonic: &str, _device_id: &str) -> Result<(), String> {
+    Err("removeDevice is Android-only".to_owned())
+}
+
 /// Collect a redacted log bundle from the in-process logger ring
 /// buffer. D.6: the current implementation returns an empty string
 /// because Android `init_log_file` only bridges `log` -> logcat; a

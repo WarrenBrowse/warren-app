@@ -148,6 +148,19 @@ object WarrenJni {
      */
     external fun getSubscription(mnemonic: String): String
 
+    /**
+     * List the wallet's registered devices (signed `GET /v1/devices`).
+     * Returns `{"ok": true, "devices": [{"id","name","created_at"}, ...]}`
+     * or `{"ok": false, "error": "..."}`. The [mnemonic] is not retained.
+     */
+    external fun listDevices(mnemonic: String): String
+
+    /**
+     * Remove a device the wallet owns (signed `DELETE /v1/devices/{id}`).
+     * Returns `{"ok": true}` or `{"ok": false, "error": "..."}`.
+     */
+    external fun removeDevice(mnemonic: String, deviceId: String): String
+
     // -- Problem report (D.6) ----------------------------------------------
 
     /**

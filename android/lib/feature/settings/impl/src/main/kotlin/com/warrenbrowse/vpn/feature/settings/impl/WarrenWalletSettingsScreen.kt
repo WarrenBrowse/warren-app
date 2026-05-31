@@ -2,9 +2,11 @@ package com.warrenbrowse.vpn.feature.settings.impl
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -25,6 +27,10 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceListOutcome
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceRemoveOutcome
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceSummary
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
@@ -59,9 +65,12 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
+    val deviceInvoker = koinInject<WarrenDeviceInvoker>()
     val scope = rememberCoroutineScope()
     var connectStatus by remember { mutableStateOf<String?>(null) }
     var subscriptionStatus by remember { mutableStateOf<String?>(null) }
+    var devices by remember { mutableStateOf<List<WarrenDeviceSummary>?>(null) }
+    var deviceStatus by remember { mutableStateOf<String?>(null) }
 
     ScaffoldWithSmallTopBar(
         appBarTitle = "Wallet",
@@ -96,6 +105,62 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     text = msg,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            // Device management: list + remove, each biometric-gated.
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                onClick = {
+                    scope.launch {
+                        deviceStatus = "Loading devices…"
+                        when (val outcome = deviceInvoker.list(activity)) {
+                            is WarrenDeviceListOutcome.Success -> {
+                                devices = outcome.devices
+                                deviceStatus = if (outcome.devices.isEmpty()) "No devices registered." else null
+                            }
+                            WarrenDeviceListOutcome.AuthorizationDenied -> {
+                                deviceStatus = "Authorization cancelled."; devices = null
+                            }
+                            WarrenDeviceListOutcome.WalletNotReady -> {
+                                deviceStatus = "Set up your wallet first."; devices = null
+                            }
+                            is WarrenDeviceListOutcome.Failure -> {
+                                deviceStatus = "Couldn't load devices."; devices = null
+                            }
+                        }
+                    }
+                },
+            ) { Text("Manage devices") }
+
+            deviceStatus?.let { msg ->
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            devices?.forEach { device ->
+                DeviceRow(
+                    device = device,
+                    onRemove = {
+                        scope.launch {
+                            deviceStatus = "Removing ${device.name}…"
+                            when (deviceInvoker.remove(activity, device.id)) {
+                                WarrenDeviceRemoveOutcome.Success -> {
+                                    devices = devices?.filterNot { it.id == device.id }
+                                    deviceStatus = "Removed ${device.name}."
+                                }
+                                WarrenDeviceRemoveOutcome.AuthorizationDenied ->
+                                    deviceStatus = "Authorization cancelled."
+                                WarrenDeviceRemoveOutcome.WalletNotReady ->
+                                    deviceStatus = "Set up your wallet first."
+                                is WarrenDeviceRemoveOutcome.Failure ->
+                                    deviceStatus = "Couldn't remove ${device.name}."
+                            }
+                        }
+                    },
                 )
             }
 
@@ -161,5 +226,38 @@ internal fun subscriptionLabel(
     WarrenSubscriptionOutcome.AuthorizationDenied -> "Authorization cancelled."
     WarrenSubscriptionOutcome.WalletNotReady -> "Set up your wallet first."
     is WarrenSubscriptionOutcome.Failure -> "Couldn't fetch subscription status."
+}
+
+/** Format a device creation timestamp as a local date, or a fallback. */
+internal fun deviceCreatedLabel(unixSecs: Long): String =
+    if (unixSecs <= 0L) {
+        "unknown date"
+    } else {
+        java.time.Instant.ofEpochSecond(unixSecs)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+            .toString()
+    }
+
+@Composable
+private fun DeviceRow(device: WarrenDeviceSummary, onRemove: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = device.name.ifBlank { device.id.take(8) },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                text = "Added ${deviceCreatedLabel(device.createdAtUnixSecs)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        OutlinedButton(onClick = onRemove) { Text("Remove") }
+    }
 }
 
