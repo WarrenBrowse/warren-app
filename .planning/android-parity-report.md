@@ -87,6 +87,20 @@ Tout vérifié : `cargo check` android (chaque JNI) + app/repo/settings compile 
 
 `warren-api-client` expose **déjà** : `get_subscription()`, `list_devices()`, `get_device()`, `delete_device()`, `register_device()`, `delete_account()`. Le pont JNI a le pattern d'appel API authentifié (`sendProblemReport` : dérive la clé du mnémonique → `WarrenApiClient::new(url, key)` → `RUNTIME.block_on`). Donc **compte/devices + statut d'abonnement sont prêts à câbler** : il reste à ajouter les exports JNI (`getSubscription`, `listDevices`, `removeDevice`), le déclencheur biométrique (réutiliser `BiometricPromptAuthorizer`), un repository et l'UI. Le **voucher** (`/v1/register`) reste à confirmer côté warren-api-client (non vu dans la surface publique). Le **failover** reste bloqué par le schéma single-endpoint côté JNI (`listRelays` projette un seul endpoint « until multi-endpoint failover lands »).
 
+### Obfuscation fine (6 méthodes) — ✅ FAIT (décision révisée : parité réelle)
+
+Commits : `d468d62a21` (Android), `eb930cc9fd` (iOS).
+
+**Finding vérifié** (preuves file:line, traçage daemon desktop + warren-core) : les 6 méthodes d'obfuscation desktop (`SelectedObfuscation` : Auto/Off/Udp2Tcp/Shadowsocks/Quic/Lwo) sont du **legacy WireGuard/Mullvad** et **ne s'appliquent PAS au tunnel Warren** :
+- L'Electron **masque** le picker 6-méthodes en mode Warren et affiche un bandeau **read-only « M4.0 HTTP/3 mimicry always-on »** (`AntiCensorshipView.tsx` L15-22, L42-67).
+- Le daemon Warren (`produce_warren_tunnel_params`) ne lit **jamais** `SelectedObfuscation` ; `talpid-warren-tunnel` n'accepte qu'un `bool use_warren_obfuscation` (issu d'un JSON opérateur, pas des réglages utilisateur).
+- **warren-core n'implémente aucune** des 6 méthodes (grep : Shadowsocks/UDP2TCP/LWO = 0 ligne). Le tunnel QUIC a uniquement le mimicry M4.0 **hardcodé always-on** (single-hop) + DAITA.
+
+**Conséquence** : Android/iOS tournant sur warren-core, un picker 6-méthodes serait composé de **toggles no-op trompeurs**. La **parité réelle** = reproduire l'indicateur read-only « mimicry M4.0 always-on » (ce que l'Electron montre réellement). Décision utilisateur validée : **parité réelle, indicateur read-only**.
+
+- **Android** : le toggle « M4.0 obfuscation » (qui écrivait le champ JNI mort `obfuscation_m40`) est remplacé par une section read-only « Anti-censorship » expliquant le mimicry always-on. `WarrenQuinnStateProxy.describe()` surface désormais `mimicry` **inconditionnellement** (always-on) au lieu de le gater sur le flag mort. Tests `WarrenQuinnStateProxyTest` mis à jour + **correction de l'échec env `Dispatchers.Main`** (setMain/UnconfinedTestDispatcher) → **6/6 verts**. `:lib:feature:settings:impl` + `:app` compilent.
+- **iOS** : le picker interactif (`wireGuardObfuscation` dans `VPNSettingsDataSource`) est neutralisé **sans toucher aux enums** (zéro cascade) : section exclue du tableau principal, et l'écran obfuscation dédié (route + filter pill + connection chip) affiche `WarrenObfuscationSettingsReadOnlyView` (réutilise l'indicateur existant). **Non buildé** (env Xcode indisponible ici) — relu, additif (3 fichiers), les tests UI compilent encore (échec runtime attendu, accepté). **À smoke-tester sur simulateur.** Reliquat cosmétique mineur : le « filter pill » obfuscation peut encore apparaître dans le sélecteur de localisation et mène désormais à l'indicateur read-only.
+
 ## Restant (feuille de route P1 → P2)
 
 Ordre recommandé, dépendances notées. Estimations issues de l'audit.
@@ -95,7 +109,7 @@ Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 |---|------|------|------|------------------------|
 | 1 | **Onboarding wizard (5 étapes)** | P1 | L | Pur UI Android, mais **touche le splash + la navigation** (5 NavKeys/EntryProviders + gating + flag de complétion persisté). Sensible (flux de lancement). L'étape Subscription peut réutiliser `WarrenSubscriptionInvoker` (déjà livré). |
 | 2 | **Failover (toggle + bannière « EXIT SWITCHED »)** | P1 | L | **Bloqué** : schéma single-endpoint JNI (`listRelays`) « until multi-endpoint failover lands ». Logique relay-selector présente mais non exposée. Nécessite warren-core/JNI multi-endpoint. |
-| 3 | **Relay lists custom / obfuscation fine / DAITA direct-only / overrides** | P1 | XL | Support Rust des 6+ méthodes d'obfuscation + filtre DAITA direct-only à confirmer (sinon toggles non-fonctionnels). À fractionner. |
+| 3 | **Relay lists custom / DAITA direct-only / overrides** | P1 | XL | Support Rust à confirmer (sinon toggles non-fonctionnels). À fractionner. **L'obfuscation fine est résolue** (voir ci-dessus : parité réelle read-only, les 6 méthodes ne s'appliquent pas au tunnel Warren). |
 
 > **Note** : le cluster compte / abonnement / voucher / devices est désormais **livré côté Android** (commits ci-dessus). Les commits concurrents sur cette thématique ne touchent que desktop/daemon/CLI — aucune collision Android constatée.
 
@@ -103,7 +117,8 @@ Ordre recommandé, dépendances notées. Estimations issues de l'audit.
 
 - **Schéma Kotlin ↔ Rust** : tout nouveau champ `WarrenTunnelConfig` doit matcher le struct serde de `warren-jni/src/tunnel.rs`. Mitigation appliquée : `#[serde(default)]` systématique côté Rust + tests de roundtrip côté Kotlin.
 - **Ne pas casser desktop / warren-core** : crates partagées (`warren-killswitch`, `warren-relay-selector`, `warren-natpmp-client`, `warren-api`) — garder les changements additifs et rétro-compatibles.
-- **Vérification de build** : les tests unitaires JVM tournent en local (`./gradlew :app:testProdDebugUnitTest`, `:lib:repository:testDebugUnitTest`). Le pont `warren-jni` (Rust) ne compile que pour la cible android → vérification via CI `build-android`. 10 échecs de tests préexistants et **environnementaux** (`Intent.setAction not mocked` dans `WarrenDisconnect/ReconnectUseCaseTest` ; `Dispatchers.Main` non initialisé dans `WarrenQuinnStateProxyTest`) — fichiers non modifiés, sans rapport avec ces changements.
+- **Vérification de build** : les tests unitaires JVM tournent en local (`./gradlew :app:testProdDebugUnitTest`, `:lib:repository:testDebugUnitTest`). Le pont `warren-jni` (Rust) ne compile que pour la cible android → vérification via CI `build-android`. Échecs de tests préexistants et **environnementaux** : `Intent.setAction not mocked` dans `WarrenDisconnect/ReconnectUseCaseTest` (non modifiés). **`WarrenQuinnStateProxyTest` (`Dispatchers.Main`) est désormais corrigé** (setMain/UnconfinedTestDispatcher) → 6/6 verts.
+- **iOS non buildable ici** : le target Xcode (`WarrenVPN.xcodeproj`) ne se compile/lance pas dans cet environnement (pas de `swift build` rapide, signing/SPM lourds). Les changements iOS sont relus + additifs mais **non vérifiés au build/runtime** → smoke-test simulateur requis. SourceKit/LSP local ne résout pas les modules cross-target (faux positifs sur `import WarrenSettings`, `Color.Warren`, `.mullvadSmall`).
 
 ## Points produit encore en attente
 
