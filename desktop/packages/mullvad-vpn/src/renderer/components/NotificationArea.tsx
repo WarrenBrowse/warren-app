@@ -22,20 +22,17 @@ import {
   useAppUpgradeEventType,
   useHasAppUpgradeError,
 } from '../hooks';
-import useActions from '../lib/actionsHook';
 import { Button } from '../lib/components';
 import { TransitionType, useHistory } from '../lib/history';
 import {
   AppUpgradeErrorNotificationProvider,
   AppUpgradeProgressNotificationProvider,
   AppUpgradeReadyNotificationProvider,
-  NewDeviceNotificationProvider,
   NewVersionNotificationProvider,
   WarrenFailoverNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
 import { useMounted } from '../lib/utility-hooks';
-import accountActions from '../redux/account/actions';
 import { convertEventTypeToStep } from '../redux/app-upgrade/helpers';
 import { useAppUpgradeError, useVersionSuggestedUpgrade } from '../redux/hooks';
 import { IReduxState, useSelector } from '../redux/store';
@@ -69,8 +66,6 @@ export default function NotificationArea(props: IProps) {
     (state: IReduxState) =>
       state.settings.splitTunneling && state.settings.splitTunnelingApplications.length > 0,
   );
-
-  const { hideNewDeviceBanner } = useActions(accountActions);
 
   const { setDisplayedChangelog, setDismissedUpgrade, appUpgrade, appUpgradeInstallerStart } =
     useAppContext();
@@ -171,11 +166,6 @@ export default function NotificationArea(props: IProps) {
   }
 
   notificationProviders.push(
-    new NewDeviceNotificationProvider({
-      shouldDisplay: account.status.type === 'ok' && account.status.newDeviceBanner,
-      deviceName: account.deviceName ?? '',
-      close: hideNewDeviceBanner,
-    }),
     new NewVersionNotificationProvider({
       currentVersion,
       displayedForVersion,

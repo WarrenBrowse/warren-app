@@ -24,13 +24,10 @@ import { spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { useExclusiveTask } from '../../../lib/hooks/use-exclusive-task';
 import { IconBadge } from '../../../lib/icon-badge';
-import { formatDeviceName } from '../../../lib/utils';
 import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
-import DeviceInfoButton from '../../DeviceInfoButton';
 import {
   StyledCustomScrollbars,
-  StyledDeviceLabel,
   StyledMessage,
   StyledTitle,
   StyledWarrenPubKeyContainer,
@@ -146,22 +143,6 @@ function WelcomeView() {
         </StyledWarrenPubKeyContainer>
       </StyledWarrenPubKeyMessage>
 
-      <Flex alignItems="center" gap="tiny" margin={{ bottom: 'medium' }}>
-        <StyledDeviceLabel>
-          {sprintf(
-            // TRANSLATORS: A label that will display the newly created device name to inform the user
-            // TRANSLATORS: about it.
-            // TRANSLATORS: Available placeholders:
-            // TRANSLATORS: %(deviceName)s - The name of the current device
-            messages.pgettext('device-management', 'Device name: %(deviceName)s'),
-            {
-              deviceName: formatDeviceName(account.deviceName ?? ''),
-            },
-          )}
-        </StyledDeviceLabel>
-        <DeviceInfoButton />
-      </Flex>
-
       <StyledMessage>
         {sprintf('%(introduction)s %(recoveryMessage)s', {
           introduction: messages.pgettext(
@@ -254,6 +235,10 @@ function CheckSubscriptionButton() {
     }
   }, [updateAccountData]);
 
+  const onClickCheck = useCallback(() => {
+    void handleCheck();
+  }, [handleCheck]);
+
   // Only show after the user has opened the external payment page
   // (polling started) or as a persistent manual refresh option.
   if (recoveryAction === RecoveryAction.disconnect) {
@@ -263,7 +248,7 @@ function CheckSubscriptionButton() {
   return (
     <Button
       disabled={checking}
-      onClick={() => void handleCheck()}
+      onClick={onClickCheck}
       data-testid="expired-account-check-subscription">
       {checking ? (
         <Spinner size="small" />
@@ -271,7 +256,7 @@ function CheckSubscriptionButton() {
         <Button.Text>
           {polling
             ? messages.pgettext('connect-view', 'Checking... (click to refresh now)')
-            : messages.pgettext('connect-view', 'I\'ve completed payment')}
+            : messages.pgettext('connect-view', "I've completed payment")}
         </Button.Text>
       )}
     </Button>

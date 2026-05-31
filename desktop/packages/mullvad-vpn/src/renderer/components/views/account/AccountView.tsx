@@ -16,7 +16,7 @@ import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
-import { AccountExpiryRow, DeviceNameRow, LabelledRow, WarrenPubKeyRow } from './components';
+import { AccountExpiryRow, LabelledRow, WarrenPubKeyRow } from './components';
 
 const StyledViewContainer = styled(View.Container)`
   height: 100%;
@@ -60,6 +60,10 @@ export function AccountView() {
     await logout('gui-logout-button');
   }, [logout]);
 
+  const goToKeys = useCallback(() => {
+    history.push(RoutePath.keys);
+  }, [history]);
+
   return (
     <View backgroundColor="darkBlue">
       <BackAction action={history.pop}>
@@ -78,10 +82,6 @@ export function AccountView() {
               </Text>
 
               <FlexColumn gap="large">
-                <LabelledRow label={messages.pgettext('device-management', 'Device name')}>
-                  <DeviceNameRow />
-                </LabelledRow>
-
                 <LabelledRow label={messages.pgettext('account-view', 'Public key')}>
                   <WarrenPubKeyRow />
                 </LabelledRow>
@@ -104,7 +104,7 @@ export function AccountView() {
 
               <RedeemVoucherButton />
 
-              <Button onClick={() => history.push(RoutePath.keys)}>
+              <Button onClick={goToKeys}>
                 <Button.Text>
                   {
                     // TRANSLATORS: Button label that opens the Keys

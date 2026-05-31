@@ -51,7 +51,6 @@ test.describe('Anti censorship settings', () => {
     await expect(option).toHaveAttribute('aria-selected', 'true');
   });
 
-
   test('Should select LWO obfuscation', async () => {
     const option = routes.antiCensorship.selectors.lwoOption();
     await Promise.all([util.ipc.settings.setObfuscationSettings.expect(), option.click()]);

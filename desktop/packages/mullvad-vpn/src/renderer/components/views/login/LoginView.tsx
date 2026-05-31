@@ -212,7 +212,6 @@ class Login extends React.Component<IProps, IState> {
 
     switch (this.props.loginState.type) {
       case 'logging in':
-      case 'too many devices':
         return this.props.loginState.method === 'existing_account'
           ? messages.pgettext('login-view', 'Logging in...')
           : messages.pgettext('login-view', 'Creating account...');
@@ -239,8 +238,6 @@ class Login extends React.Component<IProps, IState> {
         return this.props.loginState.method === 'existing_account'
           ? this.errorString(this.props.loginState.error)
           : messages.pgettext('login-view', 'Failed to create account');
-      case 'too many devices':
-        return messages.pgettext('login-view', 'Too many devices');
       case 'logging in':
         return this.props.loginState.method === 'existing_account'
           ? messages.pgettext('login-view', 'Checking public key')
@@ -311,8 +308,7 @@ class Login extends React.Component<IProps, IState> {
     return (
       !this.props.isPerformingPostUpgrade &&
       this.props.loginState.type !== 'logging in' &&
-      this.props.loginState.type !== 'ok' &&
-      this.props.loginState.type !== 'too many devices'
+      this.props.loginState.type !== 'ok'
     );
   }
 

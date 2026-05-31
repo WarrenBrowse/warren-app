@@ -11,16 +11,14 @@ vi.hoisted(() => {
 });
 
 import { truncatePubkeyHex } from '../../src/renderer/features/warren-pubkey-warning/lib/truncate-pubkey';
+import settingsActions from '../../src/renderer/redux/settings/actions';
+import settingsReducer, { ISettingsReduxState } from '../../src/renderer/redux/settings/reducers';
 import {
   NatPmpProto,
   NatPmpSettings,
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../../src/shared/daemon-rpc-types';
-import settingsActions from '../../src/renderer/redux/settings/actions';
-import settingsReducer, {
-  ISettingsReduxState,
-} from '../../src/renderer/redux/settings/reducers';
 
 const OFF_NAT_PMP: NatPmpSettings = {
   enabled: false,

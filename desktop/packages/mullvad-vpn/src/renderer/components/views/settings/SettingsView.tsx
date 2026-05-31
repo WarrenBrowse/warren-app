@@ -20,7 +20,6 @@ import {
   VpnSettingsListItem,
   WarrenMultiHopListItem,
 } from './components';
-
 // Upstream `MultihopListItem` is intentionally **not** rendered:
 // it surfaces the WireGuard multi-hop constraint, which is dead
 // weight for Warren (Warren tunnels run over QUIC, not

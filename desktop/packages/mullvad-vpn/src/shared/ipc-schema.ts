@@ -15,8 +15,6 @@ import {
   IAccountData,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
@@ -283,7 +281,6 @@ export const ipcSchema = {
   account: {
     '': notifyRenderer<IAccountData | undefined>(),
     device: notifyRenderer<DeviceEvent>(),
-    devices: notifyRenderer<Array<IDevice>>(),
     create: invoke<void, string>(),
     login: invoke<WarrenPubKey, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
@@ -300,8 +297,6 @@ export const ipcSchema = {
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: invoke<void, void>(),
-    listDevices: invoke<WarrenPubKey, Array<IDevice>>(),
-    removeDevice: invoke<IDeviceRemoval, void>(),
   },
   accountHistory: {
     '': notifyRenderer<WarrenPubKey | undefined>(),

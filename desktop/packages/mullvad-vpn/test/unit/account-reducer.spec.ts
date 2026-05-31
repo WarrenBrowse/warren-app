@@ -14,19 +14,19 @@ describe('account reducer — Warren pubkey state shape', () => {
   });
 
   it('LOGGED_IN action stores the pubkey in state', () => {
-    const action = accountActions.loggedIn(validPubKey, undefined);
+    const action = accountActions.loggedIn(validPubKey);
     const state = accountReducer(undefined, action);
     expect(state.pubkey).toBe(validPubKey);
   });
 
   it('updatePubKey replaces the current pubkey', () => {
-    const initial = accountReducer(undefined, accountActions.loggedIn(validPubKey, undefined));
+    const initial = accountReducer(undefined, accountActions.loggedIn(validPubKey));
     const next = accountReducer(initial, accountActions.updatePubKey(otherPubKey));
     expect(next.pubkey).toBe(otherPubKey);
   });
 
   it('LOGGED_OUT clears the pubkey', () => {
-    const initial = accountReducer(undefined, accountActions.loggedIn(validPubKey, undefined));
+    const initial = accountReducer(undefined, accountActions.loggedIn(validPubKey));
     const next = accountReducer(initial, accountActions.loggedOut());
     expect(next.pubkey).toBeUndefined();
   });
@@ -44,7 +44,7 @@ describe('account reducer — Warren pubkey state shape', () => {
 
   it('ACCOUNT_CREATED stores pubkey and expiry', () => {
     const expiry = '2030-01-01T00:00:00.000Z';
-    const action = accountActions.accountCreated(validPubKey, undefined, expiry);
+    const action = accountActions.accountCreated(validPubKey, expiry);
     const state = accountReducer(undefined, action);
     expect(state.pubkey).toBe(validPubKey);
     expect(state.expiry).toBe(expiry);

@@ -4,7 +4,6 @@ import {
   DeviceEvent,
   DeviceState,
   IAccountData,
-  IDeviceRemoval,
   LogoutSource,
   TunnelState,
   WarrenPubKey,
@@ -95,13 +94,6 @@ export default class Account {
     IpcMainEventChannel.accountHistory.handleClear(async () => {
       await this.daemonRpc.clearAccountHistory();
       void this.updateAccountHistory();
-    });
-
-    IpcMainEventChannel.account.handleListDevices((pubkey: WarrenPubKey) => {
-      return this.daemonRpc.listDevices(pubkey);
-    });
-    IpcMainEventChannel.account.handleRemoveDevice((deviceRemoval: IDeviceRemoval) => {
-      return this.daemonRpc.removeDevice(deviceRemoval);
     });
   }
 

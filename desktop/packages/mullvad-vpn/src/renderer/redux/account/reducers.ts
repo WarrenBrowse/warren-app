@@ -1,4 +1,4 @@
-import { AccountDataError, IDevice, WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { AccountDataError, WarrenPubKey } from '../../../shared/daemon-rpc-types';
 import { ReduxAction } from '../store';
 
 type LoginMethod = 'existing_account' | 'new_account';
@@ -7,14 +7,11 @@ type ExpiredState = 'expired' | 'time_added';
 export type LoginState =
   | { type: 'none'; deviceRevoked: boolean }
   | { type: 'logging in'; method: LoginMethod }
-  | { type: 'ok'; method: LoginMethod; newDeviceBanner: boolean; expiredState?: ExpiredState }
-  | { type: 'too many devices'; method: LoginMethod }
+  | { type: 'ok'; method: LoginMethod; expiredState?: ExpiredState }
   | { type: 'failed'; method: 'existing_account'; error: AccountDataError['error'] }
   | { type: 'failed'; method: 'new_account'; error: Error };
 export interface IAccountReduxState {
   pubkey?: WarrenPubKey;
-  deviceName?: string;
-  devices: Array<IDevice>;
   pubkeyHistory?: WarrenPubKey;
   expiry?: string; // ISO8601
   status: LoginState;
@@ -22,8 +19,6 @@ export interface IAccountReduxState {
 
 const initialState: IAccountReduxState = {
   pubkey: undefined,
-  deviceName: undefined,
-  devices: [],
   pubkeyHistory: undefined,
   expiry: undefined,
   status: { type: 'none', deviceRevoked: false },
@@ -46,20 +41,13 @@ export default function (
         status: {
           type: 'ok',
           method: 'existing_account',
-          newDeviceBanner: state.status.type === 'logging in',
         },
         pubkey: action.pubkey,
-        deviceName: action.deviceName,
       };
     case 'LOGIN_FAILED':
       return {
         ...state,
         status: { type: 'failed', method: 'existing_account', error: action.error },
-      };
-    case 'TOO_MANY_DEVICES':
-      return {
-        ...state,
-        status: { type: 'too many devices', method: 'existing_account' },
       };
     case 'LOGGED_OUT':
       return {
@@ -94,26 +82,15 @@ export default function (
         status: {
           type: 'ok',
           method: 'new_account',
-          newDeviceBanner: true,
           expiredState: 'expired',
         },
         pubkey: action.pubkey,
-        deviceName: action.deviceName,
         expiry: action.expiry,
       };
     case 'ACCOUNT_SETUP_FINISHED':
       return {
         ...state,
-        status: { type: 'ok', method: 'existing_account', newDeviceBanner: true },
-      };
-    case 'HIDE_NEW_DEVICE_BANNER':
-      if (state.status.type !== 'ok') {
-        return state;
-      }
-
-      return {
-        ...state,
-        status: { ...state.status, newDeviceBanner: false },
+        status: { type: 'ok', method: 'existing_account' },
       };
     case 'UPDATE_PUBKEY':
       return {
@@ -150,11 +127,6 @@ export default function (
         status,
       };
     }
-    case 'UPDATE_DEVICES':
-      return {
-        ...state,
-        devices: action.devices,
-      };
   }
 
   return state;

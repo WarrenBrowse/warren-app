@@ -16,8 +16,6 @@ import {
   DisconnectSource,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
@@ -43,7 +41,6 @@ import {
   convertFromAppUpgradeEvent,
   convertFromAppVersionInfo,
   convertFromDaemonEvent,
-  convertFromDevice,
   convertFromDeviceState,
   convertFromNatPmpSettings,
   convertFromNatPmpStatus,
@@ -729,10 +726,6 @@ export class DaemonRpc extends GrpcClient {
     return convertFromDeviceState(response);
   }
 
-  public async updateDevice(): Promise<void> {
-    await this.callEmpty(this.client.updateDevice);
-  }
-
   public async prepareRestart(quit: boolean) {
     await this.callBool(this.client.prepareRestartV2, quit);
   }
@@ -743,26 +736,6 @@ export class DaemonRpc extends GrpcClient {
 
   public async setDaitaDirectOnly(value: boolean): Promise<void> {
     await this.callBool(this.client.setDaitaDirectOnly, value);
-  }
-
-  public async listDevices(pubkey: WarrenPubKey): Promise<Array<IDevice>> {
-    try {
-      const response = await this.callString<grpcTypes.DeviceList>(this.client.listDevices, pubkey);
-
-      return response.getDevicesList().map(convertFromDevice);
-    } catch {
-      throw new Error('Failed to list devices');
-    }
-  }
-
-  public async removeDevice(deviceRemoval: IDeviceRemoval): Promise<void> {
-    const grpcDeviceRemoval = new grpcTypes.DeviceRemoval();
-    // The gRPC field is named `account_number` for wire-format
-    // compat but its content is the 64-char hex Warren pubkey.
-    grpcDeviceRemoval.setAccountNumber(deviceRemoval.pubkey);
-    grpcDeviceRemoval.setDeviceId(deviceRemoval.deviceId);
-
-    await this.call<grpcTypes.DeviceRemoval, Empty>(this.client.removeDevice, grpcDeviceRemoval);
   }
 
   public async createCustomList(newCustomList: NewCustomList): Promise<void | CustomListError> {

@@ -201,7 +201,6 @@ export type DaemonEvent =
   | { relayList: IRelayListWithEndpointData }
   | { appVersionInfo: IAppVersionInfo }
   | { device: DeviceEvent }
-  | { deviceRemoval: Array<IDevice> }
   | { accessMethodSetting: AccessMethodSetting };
 
 export type DaemonAppUpgradeEventStatusDownloadStarted = {
@@ -448,7 +447,6 @@ export interface IAppVersionInfo {
 
 export interface IWarrenIdentity {
   pubkey: WarrenPubKey;
-  device?: IDevice;
 }
 
 export type LoggedInDeviceState = { type: 'logged in'; warrenIdentity: IWarrenIdentity };
@@ -459,17 +457,6 @@ export type DeviceState = LoggedInDeviceState | LoggedOutDeviceState;
 export type DeviceEvent =
   | { type: 'logged in' | 'updated' | 'rotated_key'; deviceState: LoggedInDeviceState }
   | { type: 'logged out' | 'revoked'; deviceState: LoggedOutDeviceState };
-
-export interface IDevice {
-  id: string;
-  name: string;
-  created: Date;
-}
-
-export interface IDeviceRemoval {
-  pubkey: WarrenPubKey;
-  deviceId: string;
-}
 
 export type CustomLists = Array<ICustomList>;
 

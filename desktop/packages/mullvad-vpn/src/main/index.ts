@@ -650,27 +650,6 @@ class ApplicationMain
     try {
       const deviceState = await this.daemonRpc.getDevice();
       this.account.handleDeviceEvent({ type: deviceState.type, deviceState } as DeviceEvent);
-      if (deviceState.type === 'logged in') {
-        void this.daemonRpc
-          .updateDevice()
-          .catch((error: Error) => {
-            // A 404 here means the warren-api has no device record
-            // for the current pubkey yet — expected for a freshly
-            // imported / created identity that has not purchased a
-            // subscription. The retry path is handled by
-            // `account-data-cache`; demote the noise to debug to
-            // keep the production log focused on real failures.
-            // The daemon maps a warren-api 404 to a gRPC NOT_FOUND status,
-            // which surfaces here as `5 NOT_FOUND: warren-api 404` (not the
-            // HTTP "404 Not Found" phrasing). Match the actual payload so the
-            // expected no-subscription case stays at debug level.
-            if (error.message.includes('warren-api 404')) {
-              log.debug(`updateDevice: 404 (no device record yet, expected without subscription)`);
-            } else {
-              log.warn(`Failed to update device info: ${error.message}`);
-            }
-          });
-      }
     } catch (e) {
       const error = e as Error;
       log.error(`Failed to fetch device: ${error.message}`);
@@ -847,8 +826,6 @@ class ApplicationMain
           this.version.setLatestVersion(daemonEvent.appVersionInfo);
         } else if ('device' in daemonEvent) {
           this.account.handleDeviceEvent(daemonEvent.device);
-        } else if ('deviceRemoval' in daemonEvent) {
-          IpcMainEventChannel.account.notifyDevices?.(daemonEvent.deviceRemoval);
         } else if ('accessMethodSetting' in daemonEvent) {
           IpcMainEventChannel.settings.notifyApiAccessMethodSettingChange?.(
             daemonEvent.accessMethodSetting,

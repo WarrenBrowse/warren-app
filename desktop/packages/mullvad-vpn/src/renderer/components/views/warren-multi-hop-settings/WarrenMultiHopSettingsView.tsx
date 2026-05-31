@@ -39,16 +39,12 @@ export function WarrenMultiHopSettingsView() {
     <View backgroundColor="darkBlue">
       <BackAction action={pop}>
         <NavigationContainer>
-          <AppNavigationHeader
-            title={messages.pgettext('warren-multi-hop-view', 'Multihop')}
-          />
+          <AppNavigationHeader title={messages.pgettext('warren-multi-hop-view', 'Multihop')} />
 
           <NavigationScrollbars>
             <View.Content>
               <View.Container horizontalMargin="medium" flexDirection="column" gap="medium">
-                <HeaderTitle>
-                  {messages.pgettext('warren-multi-hop-view', 'Multihop')}
-                </HeaderTitle>
+                <HeaderTitle>{messages.pgettext('warren-multi-hop-view', 'Multihop')}</HeaderTitle>
                 <FlexColumn gap="large">
                   <FlexColumn gap="small">
                     <StyledIllustration source="multihop-illustration" />

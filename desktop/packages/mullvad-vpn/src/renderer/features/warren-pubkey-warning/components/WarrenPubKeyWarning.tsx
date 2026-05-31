@@ -3,10 +3,10 @@ import styled from 'styled-components';
 
 import { WarrenPubkeyMismatch } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
+import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { useAppContext } from '../../../context';
 import { Button } from '../../../lib/components';
 import { colors } from '../../../lib/foundations';
-import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { useSelector } from '../../../redux/store';
 import { truncatePubkeyHex } from '../lib/truncate-pubkey';
 
@@ -88,19 +88,15 @@ export function WarrenPubKeyWarning() {
           variant="success"
           disabled={busy}
           onClick={handleTrust}
-          aria-label={messages.pgettext('warren-pubkey-warning', 'Trust new key')}
-        >
-          <Button.Text>
-            {messages.pgettext('warren-pubkey-warning', 'Trust new key')}
-          </Button.Text>
+          aria-label={messages.pgettext('warren-pubkey-warning', 'Trust new key')}>
+          <Button.Text>{messages.pgettext('warren-pubkey-warning', 'Trust new key')}</Button.Text>
         </Button>,
         <Button
           key="report"
           variant="primary"
           disabled={busy}
           onClick={handleReport}
-          aria-label={messages.pgettext('warren-pubkey-warning', 'Report to Warren')}
-        >
+          aria-label={messages.pgettext('warren-pubkey-warning', 'Report to Warren')}>
           <Button.Text>
             {messages.pgettext('warren-pubkey-warning', 'Report to Warren')}
           </Button.Text>
@@ -110,15 +106,13 @@ export function WarrenPubKeyWarning() {
           variant="destructive"
           disabled={busy}
           onClick={handleReject}
-          aria-label={messages.pgettext('warren-pubkey-warning', 'Reject and stay disconnected')}
-        >
+          aria-label={messages.pgettext('warren-pubkey-warning', 'Reject and stay disconnected')}>
           <Button.Text>
             {messages.pgettext('warren-pubkey-warning', 'Reject (disconnect)')}
           </Button.Text>
         </Button>,
       ]}
-      close={handleReject}
-    >
+      close={handleReject}>
       {pending && <PubKeyWarningDetails pending={pending} />}
       <BusyStatusRegion role="status" aria-live="polite">
         {busy
@@ -161,10 +155,7 @@ const DetailsLabel = styled.span({
 });
 
 function PubKeyWarningDetails({ pending }: DetailsProps) {
-  const detailsLabel = messages.pgettext(
-    'warren-pubkey-warning',
-    'Cryptographic mismatch details',
-  );
+  const detailsLabel = messages.pgettext('warren-pubkey-warning', 'Cryptographic mismatch details');
   return (
     <DetailsContainer role="group" aria-label={detailsLabel}>
       <DetailsRow>
@@ -175,9 +166,7 @@ function PubKeyWarningDetails({ pending }: DetailsProps) {
         <DetailsLabel>
           {messages.pgettext('warren-pubkey-warning', 'Previously pinned key')}
         </DetailsLabel>
-        <span title={pending.pinnedPubkeyHex}>
-          {truncatePubkeyHex(pending.pinnedPubkeyHex)}
-        </span>
+        <span title={pending.pinnedPubkeyHex}>{truncatePubkeyHex(pending.pinnedPubkeyHex)}</span>
       </DetailsRow>
       <DetailsRow>
         <DetailsLabel>

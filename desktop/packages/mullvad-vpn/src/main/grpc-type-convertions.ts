@@ -28,7 +28,6 @@ import {
   FirewallPolicyErrorType,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
   IObfuscationEndpoint,
   IRelayListCity,
   IRelayListCountry,
@@ -952,11 +951,6 @@ export function convertFromDaemonEvent(data: grpcTypes.DaemonEvent): DaemonEvent
     return { device: convertFromDeviceEvent(deviceConfig) };
   }
 
-  const deviceRemoval = data.getRemoveDevice();
-  if (deviceRemoval !== undefined) {
-    return { deviceRemoval: convertFromDeviceRemoval(deviceRemoval) };
-  }
-
   const versionInfo = data.getVersionInfo();
   if (versionInfo !== undefined) {
     return { appVersionInfo: convertFromAppVersionInfo(versionInfo) };
@@ -1138,7 +1132,6 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
   switch (deviceState.getState()) {
     case grpcTypes.DeviceState.State.LOGGED_IN: {
       const accountAndDevice = deviceState.getDevice()!;
-      const device = accountAndDevice.getDevice();
       // The gRPC field is still named `account_number` for
       // wire-format compatibility, but its content is the 64-char hex
       // Warren pubkey.
@@ -1146,7 +1139,6 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
         type: 'logged in',
         warrenIdentity: {
           pubkey: accountAndDevice.getAccountNumber(),
-          device: device && convertFromDevice(device),
         },
       };
     }
@@ -1155,20 +1147,6 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
     case grpcTypes.DeviceState.State.REVOKED:
       return { type: 'revoked' };
   }
-}
-
-function convertFromDeviceRemoval(deviceRemoval: grpcTypes.RemoveDeviceEvent): Array<IDevice> {
-  return deviceRemoval.getNewDeviceListList().map(convertFromDevice);
-}
-
-export function convertFromDevice(device: grpcTypes.Device): IDevice {
-  const created = ensureExists(device.getCreated(), "no 'created' field for device").toDate();
-  const asObject = device.toObject();
-
-  return {
-    ...asObject,
-    created: created,
-  };
 }
 
 function convertFromCustomListSettings(

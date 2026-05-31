@@ -48,11 +48,6 @@ test.describe('Device revoked', () => {
           type: 'logged in',
           warrenIdentity: {
             pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
-            device: {
-              id: '1',
-              name: 'Test',
-              created: new Date(),
-            },
           },
         },
       });

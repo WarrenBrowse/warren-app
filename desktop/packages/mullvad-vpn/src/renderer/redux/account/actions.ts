@@ -1,5 +1,5 @@
 import { hasExpired } from '../../../shared/account-expiry';
-import { AccountDataError, IDevice, WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { AccountDataError, WarrenPubKey } from '../../../shared/daemon-rpc-types';
 
 interface IStartLoginAction {
   type: 'START_LOGIN';
@@ -9,16 +9,11 @@ interface IStartLoginAction {
 interface ILoggedInAction {
   type: 'LOGGED_IN';
   pubkey: WarrenPubKey;
-  deviceName?: string;
 }
 
 interface ILoginFailedAction {
   type: 'LOGIN_FAILED';
   error: AccountDataError['error'];
-}
-
-interface ILoginTooManyDevicesAction {
-  type: 'TOO_MANY_DEVICES';
 }
 
 interface ILoggedOutAction {
@@ -45,16 +40,11 @@ interface ICreateAccountFailed {
 interface IAccountCreated {
   type: 'ACCOUNT_CREATED';
   pubkey: WarrenPubKey;
-  deviceName?: string;
   expiry: string;
 }
 
 interface IAccountSetupFinished {
   type: 'ACCOUNT_SETUP_FINISHED';
-}
-
-interface IHideNewDeviceBanner {
-  type: 'HIDE_NEW_DEVICE_BANNER';
 }
 
 interface IUpdatePubKeyAction {
@@ -73,16 +63,10 @@ interface IUpdateAccountExpiryAction {
   expired?: boolean;
 }
 
-interface IUpdateDevicesAction {
-  type: 'UPDATE_DEVICES';
-  devices: Array<IDevice>;
-}
-
 export type AccountAction =
   | IStartLoginAction
   | ILoggedInAction
   | ILoginFailedAction
-  | ILoginTooManyDevicesAction
   | ILoggedOutAction
   | IResetLoginErrorAction
   | IDeviceRevokedAction
@@ -90,11 +74,9 @@ export type AccountAction =
   | ICreateAccountFailed
   | IAccountCreated
   | IAccountSetupFinished
-  | IHideNewDeviceBanner
   | IUpdatePubKeyAction
   | IUpdatePubKeyHistoryAction
-  | IUpdateAccountExpiryAction
-  | IUpdateDevicesAction;
+  | IUpdateAccountExpiryAction;
 
 function startLogin(pubkey: WarrenPubKey): IStartLoginAction {
   return {
@@ -103,11 +85,10 @@ function startLogin(pubkey: WarrenPubKey): IStartLoginAction {
   };
 }
 
-function loggedIn(pubkey: WarrenPubKey, device?: IDevice): ILoggedInAction {
+function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
     type: 'LOGGED_IN',
     pubkey,
-    deviceName: device?.name,
   };
 }
 
@@ -115,12 +96,6 @@ function loginFailed(error: AccountDataError['error']): ILoginFailedAction {
   return {
     type: 'LOGIN_FAILED',
     error,
-  };
-}
-
-function loginTooManyDevices(): ILoginTooManyDevicesAction {
-  return {
-    type: 'TOO_MANY_DEVICES',
   };
 }
 
@@ -155,25 +130,16 @@ function createAccountFailed(error: Error): ICreateAccountFailed {
   };
 }
 
-function accountCreated(
-  pubkey: WarrenPubKey,
-  device: IDevice | undefined,
-  expiry: string,
-): IAccountCreated {
+function accountCreated(pubkey: WarrenPubKey, expiry: string): IAccountCreated {
   return {
     type: 'ACCOUNT_CREATED',
     pubkey,
-    deviceName: device?.name,
     expiry,
   };
 }
 
 function accountSetupFinished(): IAccountSetupFinished {
   return { type: 'ACCOUNT_SETUP_FINISHED' };
-}
-
-function hideNewDeviceBanner(): IHideNewDeviceBanner {
-  return { type: 'HIDE_NEW_DEVICE_BANNER' };
 }
 
 function updatePubKey(pubkey: WarrenPubKey): IUpdatePubKeyAction {
@@ -198,18 +164,10 @@ function updateAccountExpiry(expiry?: string): IUpdateAccountExpiryAction {
   };
 }
 
-function updateDevices(devices: Array<IDevice>): IUpdateDevicesAction {
-  return {
-    type: 'UPDATE_DEVICES',
-    devices: devices.sort((a, b) => a.created.getTime() - b.created.getTime()),
-  };
-}
-
 export default {
   startLogin,
   loggedIn,
   loginFailed,
-  loginTooManyDevices,
   loggedOut,
   resetLoginError,
   deviceRevoked,
@@ -217,9 +175,7 @@ export default {
   createAccountFailed,
   accountCreated,
   accountSetupFinished,
-  hideNewDeviceBanner,
   updatePubKey,
   updatePubKeyHistory,
   updateAccountExpiry,
-  updateDevices,
 };

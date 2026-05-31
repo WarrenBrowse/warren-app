@@ -42,10 +42,7 @@ export default function StateTriggeredNavigation() {
     // to the generic `timeAdded` view a moment after seeing the
     // voucher-specific one — observed as "the success screen appears
     // twice in a row" (M5.C.x bug report 2026-05-28).
-    if (
-      nextPath === RoutePath.timeAdded &&
-      currentPath.startsWith('/main/voucher/success/')
-    ) {
+    if (nextPath === RoutePath.timeAdded && currentPath.startsWith('/main/voucher/success/')) {
       return;
     }
 
@@ -103,19 +100,16 @@ function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.main]: TransitionType.pop,
       [RoutePath.deviceRevoked]: TransitionType.pop,
-      [RoutePath.tooManyDevices]: TransitionType.pop,
       '*': TransitionType.dismiss,
     },
     [RoutePath.main]: {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.login]: TransitionType.push,
-      [RoutePath.tooManyDevices]: TransitionType.push,
       '*': TransitionType.dismiss,
     },
     [RoutePath.expired]: {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.login]: TransitionType.push,
-      [RoutePath.tooManyDevices]: TransitionType.push,
       '*': TransitionType.dismiss,
     },
     [RoutePath.timeAdded]: {
@@ -125,9 +119,6 @@ function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {
     },
     [RoutePath.deviceRevoked]: {
       '*': TransitionType.pop,
-    },
-    [RoutePath.tooManyDevices]: {
-      [RoutePath.login]: TransitionType.push,
     },
   };
 

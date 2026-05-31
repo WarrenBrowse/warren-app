@@ -187,9 +187,7 @@ export default class AccountDataCache {
     if (error === 'communication') {
       log.debug(`Account data fetch: retrying in ${delay} ms (no subscription yet?)`);
     } else if (error === 'no-subscription') {
-      log.debug(
-        `Account data fetch: 404 — no active subscription, retrying in ${delay} ms`,
-      );
+      log.debug(`Account data fetch: 404 — no active subscription, retrying in ${delay} ms`);
     } else {
       log.warn(`Failed to fetch account data (${error}). Retrying in ${delay} ms`);
     }

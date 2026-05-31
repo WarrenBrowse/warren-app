@@ -19,8 +19,6 @@ import {
   IAccountData,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   ILocation,
   IRelayListCity,
@@ -79,7 +77,7 @@ interface IPreferredLocaleDescriptor {
   code: string;
 }
 
-type LoginState = 'none' | 'logging in' | 'creating account' | 'too many devices';
+type LoginState = 'none' | 'logging in' | 'creating account';
 
 const SUPPORTED_LOCALE_LIST = [
   { name: 'Dansk', code: 'da' },
@@ -163,10 +161,6 @@ export default class AppRenderer {
 
     IpcRendererEventChannel.account.listenDevice((deviceEvent) => {
       this.handleDeviceEvent(deviceEvent);
-    });
-
-    IpcRendererEventChannel.account.listenDevices((devices) => {
-      this.reduxActions.account.updateDevices(devices);
     });
 
     IpcRendererEventChannel.accountHistory.listen((newPubKeyHistory?: WarrenPubKey) => {
@@ -448,8 +442,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
   public updateAccountData = () => IpcRendererEventChannel.account.updateData();
-  public removeDevice = (device: IDeviceRemoval) =>
-    IpcRendererEventChannel.account.removeDevice(device);
   public connectTunnel = () => IpcRendererEventChannel.tunnel.connect();
   public disconnectTunnel = (source: DisconnectSource) =>
     IpcRendererEventChannel.tunnel.disconnect(source);
@@ -584,19 +576,7 @@ export default class AppRenderer {
 
     const response = await IpcRendererEventChannel.account.login(pubkey);
     if (response?.type === 'error') {
-      if (response.error === 'too-many-devices') {
-        try {
-          await this.fetchDevices(pubkey);
-
-          actions.account.loginTooManyDevices();
-          this.loginState = 'too many devices';
-        } catch {
-          log.error('Failed to fetch device list');
-          actions.account.loginFailed('list-devices');
-        }
-      } else {
-        actions.account.loginFailed(response.error);
-      }
+      actions.account.loginFailed(response.error);
     }
   };
 
@@ -633,12 +613,6 @@ export default class AppRenderer {
       const error = e as Error;
       actions.account.createAccountFailed(error);
     }
-  };
-
-  public fetchDevices = async (pubkey: WarrenPubKey): Promise<Array<IDevice>> => {
-    const devices = await IpcRendererEventChannel.account.listDevices(pubkey);
-    this.reduxActions.account.updateDevices(devices);
-    return devices;
   };
 
   public openUrlWithAuth = async (url: Url): Promise<void> => {
@@ -1026,17 +1000,16 @@ export default class AppRenderer {
     switch (deviceEvent.type) {
       case 'logged in': {
         const pubkey = deviceEvent.deviceState.warrenIdentity.pubkey;
-        const device = deviceEvent.deviceState.warrenIdentity.device;
 
         switch (this.loginState) {
           case 'none':
-            reduxAccount.loggedIn(pubkey, device);
+            reduxAccount.loggedIn(pubkey);
             break;
           case 'logging in':
-            reduxAccount.loggedIn(pubkey, device);
+            reduxAccount.loggedIn(pubkey);
             break;
           case 'creating account':
-            reduxAccount.accountCreated(pubkey, device, new Date().toISOString());
+            reduxAccount.accountCreated(pubkey, new Date().toISOString());
             break;
         }
         break;

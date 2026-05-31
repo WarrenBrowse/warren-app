@@ -1,7 +1,6 @@
 export enum RoutePath {
   launch = '/',
   login = '/login',
-  tooManyDevices = '/login/too-many-devices',
   deviceRevoked = '/login/device-revoked',
   main = '/main',
   redeemVoucher = '/main/voucher/redeem',
@@ -37,7 +36,6 @@ export enum RoutePath {
   appInfo = '/settings/app-info',
   changelog = '/settings/changelog',
   appUpgrade = '/settings/app-upgrade',
-  manageDevices = '/settings/manage-devices',
   antiCensorship = '/settings/advanced/anti-censorship',
   lwo = '/settings/advanced/lwo',
   // M5.B.3 onboarding wizard (first-launch welcome + wallet

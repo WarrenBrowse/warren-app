@@ -7,7 +7,6 @@ import { RoutePath } from '../../src/shared/routes';
 const okLogin: LoginState = {
   type: 'ok',
   method: 'existing_account',
-  newDeviceBanner: false,
 };
 
 describe('getNavigationBase Warren onboarding redirect (M5.B.3)', () => {
@@ -39,7 +38,6 @@ describe('getNavigationBase Warren onboarding redirect (M5.B.3)', () => {
     const expiredLogin: LoginState = {
       type: 'ok',
       method: 'existing_account',
-      newDeviceBanner: false,
       expiredState: 'expired',
     };
     const path = getNavigationBase(true, expiredLogin, undefined);

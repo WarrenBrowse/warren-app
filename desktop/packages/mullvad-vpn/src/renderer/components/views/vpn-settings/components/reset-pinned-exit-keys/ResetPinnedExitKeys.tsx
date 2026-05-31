@@ -105,9 +105,7 @@ export function ResetPinnedExitKeys(props: ResetPinnedExitKeysProps) {
             <Button.Text>{messages.gettext('Cancel')}</Button.Text>
           </Button>,
           <Button key="confirm" variant="destructive" onClick={handleConfirm} disabled={busy}>
-            <Button.Text>
-              {messages.pgettext('vpn-settings-view', 'Reset all')}
-            </Button.Text>
+            <Button.Text>{messages.pgettext('vpn-settings-view', 'Reset all')}</Button.Text>
           </Button>,
         ]}
         close={closeConfirm}
@@ -115,9 +113,7 @@ export function ResetPinnedExitKeys(props: ResetPinnedExitKeysProps) {
 
       <ModalAlert
         isOpen={resultModalOpen}
-        type={
-          errorMessage !== undefined ? ModalAlertType.failure : ModalAlertType.success
-        }
+        type={errorMessage !== undefined ? ModalAlertType.failure : ModalAlertType.success}
         title={
           errorMessage !== undefined
             ? messages.pgettext('vpn-settings-view', 'Reset failed')
