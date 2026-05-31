@@ -215,3 +215,157 @@ Daemon = LaunchDaemon root `com.warrenbrowse.vpn.daemon`, logs dans
   / les routes → conflits. Le couper pour tester Warren.
 - Le « **99 ans** » de forfait = stub du mode local-account, pas un vrai
   abonnement.
+
+---
+
+## Audit 2026-05-31 — DNS loop fix + leak-tightness review
+
+### Root cause "connecté mais pas d'internet" (macOS)
+
+Le tunnel **forwarde bien l'IPv4** (capture exit : trafic bidirectionnel
+réel, NAT OK, source 10.66.0.4 correcte). Le blocage était **DNS** :
+
+```
+WARN hickory: ignoring response from 127.245.179.107:53
+     because it does not match name_server: 10.66.0.1:53
+```
+
+Le resolver DNS local (dans le daemon, `127.x`) forwarde vers `10.66.0.1`,
+mais la règle pf anti-leak qui redirige tout le port 53 **renvoie ses
+propres requêtes upstream vers lui-même** → hickory rejette toutes les
+réponses → aucune résolution → "pas d'internet" (et `api.warrenbrowse.com
+unreachable` en cascade).
+
+### Fixes livrés (TDD, fmt+clippy+tests verts)
+
+| Fix | Fichier | Test |
+|---|---|---|
+| Resolver DNS local OFF par défaut (Warren) → DNS système direct sur 10.66.0.1 | `talpid-core/src/resolver.rs` | 3 tests |
+| `enable_ipv6` défaut `true`→`false` (Warren IPv4-only ; sinon fuite IPv6) | `mullvad-types/src/settings/mod.rs` | 1 test |
+| `_metrics_task` détaché immortel → handle aborté au teardown | `talpid-warren-tunnel/src/lib.rs` | compile |
+| Leak-checker faux positif gaté pour `TunnelType::Warren` (cf. Findings #1) | `mullvad-daemon/src/leak_checker/mod.rs` | 2 tests |
+
+`TALPID_DISABLE_LOCAL_DNS_RESOLVER=0` ré-active le resolver local (opt-in).
+
+### Audit leak (3 plateformes, vérifié par lecture de code)
+
+En état **Connected**, le pare-feu bloque par défaut tout trafic
+non-tunnel (IPv4, IPv6, DNS) sauf : endpoint exit, tun, et LAN si
+`allow_lan` :
+
+- **macOS** (pf) : règles catch-all `Drop` sans filtre `af`
+  (`firewall/macos.rs:234-245`) → IPv4+IPv6 droppés ; DNS bloqué sauf
+  10.66.0.1 scopé tun (`get_block_dns_rules` + `get_allow_tunnel_dns_rules_when_connected`).
+- **Linux** (nftables) : table `Inet`, `out_chain` policy `Drop` +
+  reject terminal (`firewall/linux.rs:300,730-737`). `enable_ipv6` ne
+  touche pas le pare-feu (no-op Linux).
+- **Windows** (WFP) : `baseline::BlockAll` (v4+v6) + sublayer DNS
+  `BlockAll` → "smart multi-homed resolution" neutralisé structurellement.
+
+Verdict : **leak-tight IPv4/IPv6/DNS sur les 3 plateformes en config par
+défaut.** Mes changements n'introduisent aucune régression (captive-portal
+préservé : le resolver est démarré inconditionnellement, le flag ne change
+que l'état Connected).
+
+### Findings
+
+1. **Leak-checker faux positif — CORRIGÉ (fix #4)** : `mullvad_leak_checker`
+   faisait un traceroute vers l'endpoint exit sur l'interface physique
+   (`leak_checker/mod.rs`). Le transport QUIC userspace de Warren sort
+   légitimement sur en0 pour joindre l'exit → le traceroute atteint le
+   routeur LAN (1er hop) → `Network leak detected! Please contact Warren
+   support` à **chaque** connexion. **Jamais une fuite de trafic user** (le
+   pare-feu bloque tout le reste — c'est l'enforcement réel). Fix :
+   `leak_test_applies_to(tunnel_type)` skippe le test pour
+   `TunnelType::Warren` (le test reste actif pour WireGuard). Le pare-feu
+   kill-switch n'est PAS touché. 2 tests TDD.
+2. **Custom DNS : PAS de fuite (finding initial de l'agent erroné)** : la
+   partition `mullvad-daemon/src/dns.rs:55-62` envoie le DNS custom
+   **public** vers `tunnel_config` (routé in-tunnel) et le DNS custom
+   **privé** vers `non_tunnel_config` (résolveur LAN explicite, LAN
+   seulement). Confirmé par le test `test_custom_dns` + `is_local_address`
+   (`firewall/mod.rs:70`). Aucune fuite DNS, ni en défaut ni en custom
+   public. RAS.
+3. **`enable_ipv6` stocké** : le défaut corrigé ne s'applique qu'aux
+   nouvelles installs. Les installs existantes gardent leur valeur — l'user
+   doit toggler "Enable IPv6" OFF (ou réinstaller) pour fermer la fuite.
+
+### À valider en live (1 test propre, auto-disconnect 30s)
+
+Un `curl -6 → 200` observé pendant une session de tests chaotique
+(reconnexions rapides) suggère une fuite IPv6 transitoire ; le code dit
+l'IPv6 bloqué en steady-state. Un connect propre unique confirmera.
+
+---
+
+## Root cause data-plane macOS PROUVÉE (2026-05-31, session root)
+
+### Symptôme
+Tunnel "Connected", routes installées, DNS OK (fix #1), mais **0 octet
+d'internet** : `ping`/`dig`/`curl` 100% perte. Le pump client compte
+`uplink` qui grimpe (ex. 536) mais `downlink=0` en permanence.
+
+### Diagnostic empirique (captures double-bout)
+- Mac en0 : ~0 paquet QUIC sortant vers l'exit APRES le handshake.
+- Exit eth0 : ne reçoit que ~7 paquets (le handshake), puis plus rien.
+- Exit warren0 (TUN) : **0** paquet décrypté pour notre IP tunnel.
+- Un AUTRE client (10.66.0.5) passe du trafic normalement au même moment
+  par le même exit → exit sain, data-path exit OK.
+
+### Cause
+Table de routage macOS en session connectée :
+```
+204.168.207.130     utun4          UHS     ← route hôte via le TUNNEL (gagne)
+204.168.207.130/32  192.168.1.254  UGdSc   en0   ← route hôte via en0 (perd)
+route get 204.168.207.130 → utun4
+```
+La route hôte vers l'IP exit pointe sur **utun4** au lieu de **en0**.
+Conséquence : après le handshake (qui part AVANT l'install des routes,
+donc via en0 → atteint l'exit), tous les datagrammes QUIC vers l'exit
+sont **routés DANS le tunnel (utun4)** → boucle : le pump relit ses
+propres paquets (uplink grimpe), rien n'atteint le vrai exit, downlink=0.
+
+### Preuve du fix
+En session connectée, forcer la route exit via le gateway physique :
+```
+route delete -host 204.168.207.130
+route add    -host 204.168.207.130 192.168.1.254   # gateway form
+```
+→ `route get` = en0, **ping 1.1.1.1 = 0% perte, curl → 204.168.207.130
+(IP exit) = internet réel par le tunnel.** Diagnostic confirmé à 100%.
+
+### Localisation + fix
+`crates/warren-client/src/default_route_split_macos.rs`,
+`build_install_commands()` installe l'exception via
+`route add -host <exit_ip> -interface <default_iface>` (forme
+**interface**). Pour une IP exit **off-link** (joignable seulement via
+le gateway par défaut), cette forme se fait masquer par la route
+clonée utun4. Fix : forme **gateway** `route add -host <exit_ip>
+<default_gateway>` (nécessite de requêter aussi le gateway via
+`route -n get default`), et/ou ré-asserter l'exception APRES les /1.
+
+### Indépendant des fixes précédents
+Reproduit sur le **1.0.3 shipping (v3)** ET le dev (v4) → ce n'est NI le
+fix DNS, NI le changement protocole v4 (device_id) de l'agent. C'est un
+bug de routing macOS dans le code COMMITTÉ/release. Probable cause
+dominante du "connecté mais pas d'internet" original sur macOS (le DNS
+n'était qu'une partie).
+
+### Note environnement
+Pendant les tests, `relay set location` a été mis à `any` (le réglage
+stocké `se` ne matche pas le pool d'exits qui ne contient que `DE` →
+empêchait toute connexion : bug de config secondaire à traiter).
+
+### FIX IMPLÉMENTÉ (TDD, 2026-05-31)
+`build_install_commands` accepte désormais `default_gateway: Option<&str>`
+et émet l'exception exit en **forme gateway** `route add -host <exit>
+<gw>` (fallback forme interface si pas de gateway). `install()` découvre
+le gateway physique (`route get default` → `gateway:`, fallback scutil
+`Router :`, tunnel-resistant) et **supprime toute route exit périmée**
+avant l'ajout. Self-contained dans `default_route_split_macos.rs` :
+signature publique `DefaultRouteSplitGuard::install(exit_ip, tun_name)`
+inchangée → zéro ripple warren-app, zéro conflit agent. 6 tests TDD
+(RED→GREEN) + clippy/fmt clean + 98/98 lib tests warren-client.
+Validation live e2e bloquée tant que l'exit reste v3 (un rebuild client
+= v4), mais le mécanisme est prouvé empiriquement (route gateway-form
+manuelle → ping/curl OK).
