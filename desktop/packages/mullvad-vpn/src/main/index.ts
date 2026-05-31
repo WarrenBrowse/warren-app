@@ -615,8 +615,17 @@ class ApplicationMain
     try {
       if (process.platform === 'linux' || process.platform === 'win32') {
         this.splitTunnelingSupported = await this.daemonRpc.splitTunnelIsSupported();
+      } else if (process.platform === 'darwin') {
+        // macOS split tunneling relies on Endpoint Security, which only
+        // works on a SIGNED build (Developer ID + endpoint-security
+        // entitlement + Full Disk Access). On unsigned builds the daemon
+        // refuses to enable it (Error::MacosSplitTunnelUnsupported, gated
+        // by the `macos-split-tunnel` cargo feature), so report it
+        // unsupported here to hide the feature rather than let the user
+        // toggle it for nothing. Flip to `true` (or wire the daemon
+        // feature through an RPC) once the app ships signed.
+        this.splitTunnelingSupported = false;
       } else {
-        // split tunneling is supported on other platforms (macOS)
         this.splitTunnelingSupported = true;
       }
       IpcMainEventChannel.splitTunneling.notifyIsSupported?.(this.splitTunnelingSupported);
