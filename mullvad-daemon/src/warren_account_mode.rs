@@ -1,10 +1,8 @@
 //! Detection of Warren local account mode via env var at daemon boot.
 //!
-//! When `WARREN_LOCAL_ACCOUNT=1`, the daemon no longer calls `api.mullvad.net`
-//! for the initial `get_data()` retry-loop nor for the device validation
-//! triggered by the state machine after 3 WG retries. The locally-present
-//! `device.json` (created by `warren_device_bootstrap` from the
-//! mnemonic) is considered valid as-is.
+//! When `WARREN_LOCAL_ACCOUNT=1`, the daemon does not call `api.mullvad.net`
+//! for the initial `get_data()` retry-loop; the wallet identity derived
+//! from the local mnemonic is used as-is.
 //!
 //! Same truthy parsing convention as the other Warren boot env vars
 //! (`1`, `true`, `yes`, `on`, case-insensitive). To be replaced by

@@ -16,7 +16,7 @@ use talpid_core::tunnel_state_machine::TunnelParametersGenerator;
 
 use talpid_types::{ErrorExt, tunnel::ParameterGenerationError};
 
-use crate::device::{AccountManagerHandle, Error as DeviceError};
+use crate::device::Error as DeviceError;
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_list_view::country_centroid_for;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -84,7 +84,6 @@ struct InnerParametersGenerator {
     relay_selector: RelaySelector,
     relay_settings: RelaySettings,
     tunnel_options: TunnelOptions,
-    account_manager: AccountManagerHandle,
 
     /// Artifacts for the Warren tunnel path. Always populated at boot
     /// (Warren is the only mode); kept as `Option` for the type plumbing.
@@ -254,10 +253,9 @@ impl ParametersGenerator {
     /// drives.
     #[expect(
         clippy::too_many_arguments,
-        reason = "Constructor for the daemon-side params generator: the nine inputs are all required (4 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
+        reason = "Constructor for the daemon-side params generator: the inputs are all required (3 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
     )]
     pub fn new_with_optional_warren(
-        account_manager: AccountManagerHandle,
         relay_selector: RelaySelector,
         relay_settings: RelaySettings,
         tunnel_options: TunnelOptions,
@@ -271,7 +269,6 @@ impl ParametersGenerator {
             tunnel_options,
             relay_selector,
             relay_settings,
-            account_manager,
             warren_relay_selector,
             warren_signing_key,
             warren_multi_hop,
@@ -815,6 +812,10 @@ impl ParametersGenerator {
             .retain(|k, _| settings.warren_pinned_exit_pubkeys.entries.contains_key(k));
     }
 
+    #[allow(
+        clippy::unused_async,
+        reason = "kept async to match the `.await` call site in lib.rs and the upstream signature; the Warren tunnel has no server-override concept so the body is trivial"
+    )]
     pub async fn last_relay_was_overridden(&self) -> bool {
         // The Warren tunnel has no Mullvad server-override concept.
         false

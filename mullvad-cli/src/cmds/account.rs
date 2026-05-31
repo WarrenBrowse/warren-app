@@ -1,5 +1,5 @@
 use crate::BIN_NAME;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::Subcommand;
 use itertools::Itertools;
 use mullvad_management_interface::MullvadProxyClient;
@@ -30,27 +30,6 @@ pub enum Account {
         verbose: bool,
     },
 
-    /// List devices associated with an account
-    ListDevices {
-        /// Mullvad account number (current account if not specified)
-        #[arg(long, short = 'a')]
-        account: Option<String>,
-
-        /// Enable verbose output
-        #[arg(long, short = 'v')]
-        verbose: bool,
-    },
-
-    /// Revoke a device associated with an account
-    RevokeDevice {
-        /// Name or UID of the device to revoke
-        device: String,
-
-        /// Mullvad account number (current account if not specified)
-        #[arg(long, short = 'a')]
-        account: Option<String>,
-    },
-
     /// Redeem a voucher
     Redeem {
         /// Voucher code to submit
@@ -72,12 +51,6 @@ impl Account {
             }
             Account::Logout => Self::logout(&mut rpc).await,
             Account::Get { verbose } => Self::get(&mut rpc, verbose).await,
-            Account::ListDevices { account, verbose } => {
-                Self::list_devices(&mut rpc, account, verbose).await
-            }
-            Account::RevokeDevice { device, account } => {
-                Self::revoke_device(&mut rpc, device, account).await
-            }
             Account::Redeem { voucher } => Self::redeem_voucher(&mut rpc, voucher).await,
         }
     }
@@ -101,15 +74,11 @@ impl Account {
     }
 
     async fn get(rpc: &mut MullvadProxyClient, verbose: bool) -> Result<()> {
-        let _ = rpc.update_device().await;
-
         let state = rpc.get_device().await?;
 
         match state {
-            DeviceState::LoggedIn(device) => {
-                // We display the Warren hex pubkey in place of the
-                // legacy `account_number`.
-                let pubkey = device.pubkey.as_str().to_owned();
+            DeviceState::LoggedIn(identity) => {
+                let pubkey = identity.pubkey.as_str().to_owned();
                 println!("{:<20}{}", "Warren account:", pubkey);
 
                 let data = rpc.get_account_data(pubkey).await?;
@@ -120,13 +89,6 @@ impl Account {
                 );
                 if verbose {
                     println!("{:<20}{}", "Account id:", data.id);
-                }
-
-                println!("{:<20}{}", "Device name:", device.device.pretty_name());
-                if verbose {
-                    println!("{:<20}{}", "Device id:", device.device.id);
-                    println!("{:<20}{}", "Device pubkey:", device.device.pubkey);
-                    println!("{:<20}{}", "Device created:", device.device.created);
                 }
             }
             DeviceState::LoggedOut => {
@@ -143,55 +105,6 @@ impl Account {
         Ok(())
     }
 
-    async fn list_devices(
-        rpc: &mut MullvadProxyClient,
-        account: Option<String>,
-        verbose: bool,
-    ) -> Result<()> {
-        let account_number = account_else_current(rpc, account).await?;
-        let mut device_list = rpc.list_devices(account_number).await?;
-
-        println!("Devices on the account:");
-        device_list.sort_unstable_by_key(|dev| dev.created.timestamp());
-        for device in device_list {
-            if verbose {
-                println!();
-                println!("Name      : {}", device.pretty_name());
-                println!("Id        : {}", device.id);
-                println!("Public key: {}", device.pubkey);
-                println!(
-                    "Created   : {}",
-                    device.created.with_timezone(&chrono::Local)
-                );
-            } else {
-                println!("{}", device.pretty_name());
-            }
-        }
-
-        Ok(())
-    }
-
-    async fn revoke_device(
-        rpc: &mut MullvadProxyClient,
-        device: String,
-        account: Option<String>,
-    ) -> Result<()> {
-        let account_number = account_else_current(rpc, account).await?;
-
-        let device_list = rpc.list_devices(account_number.clone()).await?;
-        let device_id = device_list
-            .into_iter()
-            .find(|dev| {
-                dev.name.eq_ignore_ascii_case(&device) || dev.id.eq_ignore_ascii_case(&device)
-            })
-            .map(|dev| dev.id)
-            .ok_or(mullvad_management_interface::Error::DeviceNotFound)?;
-
-        rpc.remove_device(account_number, device_id).await?;
-        println!("Removed device");
-        Ok(())
-    }
-
     async fn redeem_voucher(rpc: &mut MullvadProxyClient, mut voucher: String) -> Result<()> {
         voucher.retain(|c| c.is_alphanumeric());
 
@@ -205,22 +118,6 @@ impl Account {
             submission.new_expiry.with_timezone(&chrono::Local),
         );
         Ok(())
-    }
-}
-
-async fn account_else_current(
-    rpc: &mut MullvadProxyClient,
-    account_number: Option<String>,
-) -> Result<String> {
-    match account_number {
-        Some(account) => Ok(account),
-        None => {
-            let state = rpc.get_device().await?;
-            match state {
-                DeviceState::LoggedIn(account) => Ok(account.pubkey.as_str().to_owned()),
-                _ => Err(anyhow!("Log in or specify an account")),
-            }
-        }
     }
 }
 

@@ -1,10 +1,11 @@
 use clap::Parser;
-use mullvad_api::{ApiEndpoint, DEVICE_NOT_FOUND, proxy::ApiConnectionMode};
+// Device/WireGuard removed (Option A): the `remove-device` setup step
+// no longer calls the Mullvad device API, so the `DevicesProxy`-related
+// imports (DEVICE_NOT_FOUND, ApiConnectionMode, retry strategy) are gone.
 use mullvad_management_interface::MullvadProxyClient;
 use mullvad_version::Version;
-use std::{path::PathBuf, process, str::FromStr, sync::LazyLock, time::Duration};
+use std::{path::PathBuf, process, str::FromStr, sync::LazyLock};
 use talpid_core::firewall::{self, Firewall};
-use talpid_future::retry::{ConstantInterval, retry_future};
 use talpid_types::ErrorExt;
 use tracing_subscriber::EnvFilter;
 
@@ -15,8 +16,6 @@ mod service;
 
 static APP_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::from_str(mullvad_version::VERSION).unwrap());
-
-const DEVICE_REMOVAL_STRATEGY: ConstantInterval = ConstantInterval::new(Duration::ZERO, Some(5));
 
 #[repr(i32)]
 enum ExitStatus {
@@ -49,11 +48,9 @@ pub enum Error {
     #[error("Firewall error")]
     FirewallError(#[source] firewall::Error),
 
-    #[error("Failed to initialize mullvad RPC runtime")]
-    RpcInitializationError(#[source] mullvad_api::Error),
-
-    #[error("Failed to remove device from account")]
-    RemoveDeviceError(#[source] mullvad_api::rest::Error),
+    // Device/WireGuard removed (Option A): the `RpcInitializationError`
+    // and `RemoveDeviceError` variants were only produced by the old
+    // remote device-removal path, which no longer exists.
 
     #[error("Failed to obtain settings directory path")]
     SettingsPathError(#[source] mullvad_paths::Error),
@@ -243,42 +240,16 @@ async fn reset_firewall() -> Result<(), Error> {
 }
 
 async fn remove_device() -> Result<(), Error> {
-    let (cache_path, settings_path) = get_paths()?;
+    // Device/WireGuard removed (Option A): there is no remote WireGuard
+    // device to remove anymore. The `remove-device` setup step now just
+    // clears the local login-state cache (`device.json`) if a login
+    // state is present. The function name is kept for the existing
+    // setup CLI surface (stripped/renamed in a later phase).
+    let (_cache_path, settings_path) = get_paths()?;
     let (cacher, state) = mullvad_daemon::device::DeviceCacher::new(&settings_path)
         .await
         .map_err(Error::ReadDeviceCacheError)?;
-    if let Some(device) = state.into_device() {
-        let api_runtime =
-            mullvad_api::Runtime::with_cache(&ApiEndpoint::from_env_vars(), &cache_path, false)
-                .await
-                .map_err(Error::RpcInitializationError)?;
-
-        let connection_mode = ApiConnectionMode::try_from_cache(&cache_path).await;
-        let proxy = mullvad_api::DevicesProxy::new(
-            api_runtime.mullvad_rest_handle(connection_mode.into_provider()),
-        );
-
-        let device_removal = retry_future(
-            // DevicesProxy::remove prend AccountNumber (= String) ;
-            // cast depuis WarrenPubkey.
-            move || proxy.remove(device.pubkey.as_str().to_owned(), device.device.id.clone()),
-            move |result| match result {
-                Err(error) => error.is_network_error(),
-                _ => false,
-            },
-            DEVICE_REMOVAL_STRATEGY,
-        )
-        .await;
-
-        // `DEVICE_NOT_FOUND` is not considered to be an error in this context.
-        match device_removal {
-            Ok(_) => Ok(()),
-            Err(mullvad_api::rest::Error::ApiError(_status, code)) if code == DEVICE_NOT_FOUND => {
-                Ok(())
-            }
-            Err(e) => Err(Error::RemoveDeviceError(e)),
-        }?;
-
+    if state.pubkey().is_some() {
         cacher
             .remove()
             .await

@@ -1,46 +1,5 @@
-use crate::types::{FromProtobufTypeError, conversions::bytes_to_pubkey, proto};
-use chrono::DateTime;
-use prost_types::Timestamp;
+use crate::types::{FromProtobufTypeError, proto};
 use std::str::FromStr;
-
-impl TryFrom<proto::Device> for mullvad_types::device::Device {
-    type Error = FromProtobufTypeError;
-
-    fn try_from(device: proto::Device) -> Result<Self, Self::Error> {
-        let created_seconds = device
-            .created
-            .ok_or(FromProtobufTypeError::invalid_argument(
-                "missing 'created' field",
-            ))?
-            .seconds;
-
-        let created = DateTime::from_timestamp(created_seconds, 0)
-            .ok_or(FromProtobufTypeError::invalid_argument("invalid timestamp"))?;
-
-        Ok(mullvad_types::device::Device {
-            id: device.id,
-            name: device.name,
-            pubkey: bytes_to_pubkey(&device.pubkey)?,
-            hijack_dns: device.hijack_dns,
-            created,
-        })
-    }
-}
-
-impl From<mullvad_types::device::Device> for proto::Device {
-    fn from(device: mullvad_types::device::Device) -> Self {
-        proto::Device {
-            id: device.id,
-            name: device.name,
-            pubkey: device.pubkey.as_bytes().to_vec(),
-            hijack_dns: device.hijack_dns,
-            created: Some(Timestamp {
-                seconds: device.created.timestamp(),
-                nanos: 0,
-            }),
-        }
-    }
-}
 
 impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
     type Error = FromProtobufTypeError;
@@ -54,17 +13,10 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                 let account = state.device.ok_or(FromProtobufTypeError::invalid_argument(
                     "missing account data",
                 ))?;
-                let device = account
-                    .device
-                    .ok_or(FromProtobufTypeError::invalid_argument(
-                        "missing device data",
-                    ))?;
 
-                // The proto wire format keeps the `account_number`
-                // field (= string) for gRPC client compat. On
-                // conversion to the domain type, we parse this string
-                // into a `WarrenPubKey` (Warren SS58 address, `wb…`); a
-                // client pushing a non-Warren format receives
+                // The proto `account_number` field carries the Warren
+                // SS58 address (`wb…`); parse it into a `WarrenPubKey`.
+                // A client pushing a non-Warren format receives
                 // `invalid_argument`.
                 let pubkey =
                     mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account.account_number)
@@ -74,10 +26,7 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                             )
                         })?;
                 Ok(mullvad_types::device::DeviceState::LoggedIn(
-                    mullvad_types::warren_identity::WarrenIdentity {
-                        pubkey,
-                        device: mullvad_types::device::Device::try_from(device)?,
-                    },
+                    mullvad_types::warren_identity::WarrenIdentity { pubkey },
                 ))
             }
             proto::device_state::State::Revoked => Ok(mullvad_types::device::DeviceState::Revoked),
@@ -92,12 +41,10 @@ impl From<mullvad_types::device::DeviceState> for proto::DeviceState {
     fn from(state: mullvad_types::device::DeviceState) -> Self {
         proto::DeviceState {
             state: proto::device_state::State::from(&state) as i32,
-            // We emit the hex `pubkey` in the legacy proto field
-            // `account_number` (= string) to stay compat with the
-            // gRPC clients that have not migrated.
+            // Emit the SS58 pubkey in the proto `account_number` field.
             device: state.logged_in().map(|client| proto::AccountAndDevice {
                 account_number: client.pubkey.as_str().to_owned(),
-                device: Some(proto::Device::from(client.device)),
+                device: None,
             }),
         }
     }
@@ -146,8 +93,6 @@ impl From<mullvad_types::device::DeviceEventCause> for proto::device_event::Caus
             MullvadEvent::LoggedIn => proto::device_event::Cause::LoggedIn,
             MullvadEvent::LoggedOut => proto::device_event::Cause::LoggedOut,
             MullvadEvent::Revoked => proto::device_event::Cause::Revoked,
-            MullvadEvent::Updated => proto::device_event::Cause::Updated,
-            MullvadEvent::RotatedKey => proto::device_event::Cause::RotatedKey,
         }
     }
 }
@@ -159,24 +104,20 @@ impl From<proto::device_event::Cause> for mullvad_types::device::DeviceEventCaus
             proto::device_event::Cause::LoggedIn => MullvadEvent::LoggedIn,
             proto::device_event::Cause::LoggedOut => MullvadEvent::LoggedOut,
             proto::device_event::Cause::Revoked => MullvadEvent::Revoked,
-            proto::device_event::Cause::Updated => MullvadEvent::Updated,
-            proto::device_event::Cause::RotatedKey => MullvadEvent::RotatedKey,
+            // The `Updated` and `RotatedKey` proto causes have no domain
+            // equivalent; treat them as a login-state refresh.
+            proto::device_event::Cause::Updated
+            | proto::device_event::Cause::RotatedKey => MullvadEvent::LoggedIn,
         }
     }
 }
 
 impl From<mullvad_types::device::RemoveDeviceEvent> for proto::RemoveDeviceEvent {
     fn from(event: mullvad_types::device::RemoveDeviceEvent) -> Self {
-        // We emit the hex `pubkey` in the legacy proto field
-        // `account_number` to stay compat with the gRPC clients that
-        // have not migrated.
+        // Emit the SS58 pubkey in the proto `account_number` field.
         proto::RemoveDeviceEvent {
             account_number: event.pubkey.as_str().to_owned(),
-            new_device_list: event
-                .new_devices
-                .into_iter()
-                .map(proto::Device::from)
-                .collect(),
+            new_device_list: Vec::new(),
         }
     }
 }
@@ -185,31 +126,14 @@ impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEv
     type Error = FromProtobufTypeError;
 
     fn try_from(event: proto::RemoveDeviceEvent) -> Result<Self, Self::Error> {
-        let new_devices = event
-            .new_device_list
-            .into_iter()
-            .map(mullvad_types::device::Device::try_from)
-            .collect::<Result<Vec<_>, FromProtobufTypeError>>()?;
         // Parse the `account_number` proto field into a `WarrenPubKey`;
-        // reject if the format is non-Warren (= gRPC client pushing
-        // an old wrong format).
+        // reject a non-Warren format.
         let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&event.account_number)
             .map_err(|_| {
                 FromProtobufTypeError::invalid_argument(
                     "RemoveDeviceEvent.account_number must be a valid Warren SS58 address (wb…)",
                 )
             })?;
-        Ok(mullvad_types::device::RemoveDeviceEvent {
-            pubkey,
-            new_devices,
-        })
-    }
-}
-
-impl From<Vec<mullvad_types::device::Device>> for proto::DeviceList {
-    fn from(devices: Vec<mullvad_types::device::Device>) -> Self {
-        proto::DeviceList {
-            devices: devices.into_iter().map(proto::Device::from).collect(),
-        }
+        Ok(mullvad_types::device::RemoveDeviceEvent { pubkey })
     }
 }

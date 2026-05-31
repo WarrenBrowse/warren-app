@@ -17,12 +17,12 @@ use mullvad_types::{
     access_method::{self, AccessMethod},
     account::{AccountData, AccountNumber, VoucherSubmission},
     custom_list::{CustomList, Id},
-    device::{Device, DeviceId, DeviceState},
+    device::DeviceState,
     features::FeatureIndicators,
     relay_constraints::{AllowedIps, ObfuscationSettings, RelayOverride, RelaySettings},
     relay_list::BridgeList,
     settings::DnsOptions,
-    wireguard::{PublicKey, QuantumResistantState, RotationInterval},
+    wireguard::QuantumResistantState,
 };
 use std::net::IpAddr;
 #[cfg(not(target_os = "android"))]
@@ -435,59 +435,6 @@ impl MullvadProxyClient {
     pub async fn update_device(&mut self) -> Result<()> {
         self.0.update_device(()).await.map_err(map_device_error)?;
         Ok(())
-    }
-
-    pub async fn list_devices(&mut self, account: AccountNumber) -> Result<Vec<Device>> {
-        let list = self
-            .0
-            .list_devices(account)
-            .await
-            .map_err(map_device_error)?
-            .into_inner();
-        list.devices
-            .into_iter()
-            .map(|d| Device::try_from(d).map_err(Error::InvalidResponse))
-            .collect::<Result<_>>()
-    }
-
-    pub async fn remove_device(
-        &mut self,
-        account: AccountNumber,
-        device_id: DeviceId,
-    ) -> Result<()> {
-        self.0
-            .remove_device(types::DeviceRemoval {
-                account_number: account,
-                device_id,
-            })
-            .await
-            .map_err(map_device_error)?;
-        Ok(())
-    }
-
-    pub async fn set_wireguard_rotation_interval(
-        &mut self,
-        interval: RotationInterval,
-    ) -> Result<()> {
-        let duration = types::Duration::try_from(*interval.as_duration())
-            .map_err(|_| Error::DurationTooLarge)?;
-        self.0.set_wireguard_rotation_interval(duration).await?;
-        Ok(())
-    }
-
-    pub async fn reset_wireguard_rotation_interval(&mut self) -> Result<()> {
-        self.0.reset_wireguard_rotation_interval(()).await?;
-        Ok(())
-    }
-
-    pub async fn rotate_wireguard_key(&mut self) -> Result<()> {
-        self.0.rotate_wireguard_key(()).await?;
-        Ok(())
-    }
-
-    pub async fn get_wireguard_key(&mut self) -> Result<PublicKey> {
-        let key = self.0.get_wireguard_key(()).await?.into_inner();
-        PublicKey::try_from(key).map_err(Error::InvalidResponse)
     }
 
     pub async fn create_custom_list(&mut self, name: String) -> Result<Id> {

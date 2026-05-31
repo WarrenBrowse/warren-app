@@ -37,11 +37,8 @@ mod tunnel;
 pub mod version;
 /// Detection of Warren local account mode via env var
 /// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net for the
-/// initial `get_data` retry-loop and device validation).
+/// initial `get_data` retry-loop).
 pub mod warren_account_mode;
-/// Bootstrap of a `device.json` consistent with the Warren mnemonic —
-/// invoked at boot in `WARREN_LOCAL_ACCOUNT=1` mode.
-pub mod warren_device_bootstrap;
 /// Loader for `<settings_dir>/warren-multihop.json` that materializes
 /// a `MultiHopConfig` from signed descriptors minted
 /// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
@@ -87,7 +84,7 @@ use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,
 };
 use api::DaemonAccessMethodResolver;
-use device::{AccountEvent, PrivateAccountAndDevice, PrivateDeviceEvent};
+use device::{AccountEvent, PrivateDeviceEvent};
 use futures::{
     StreamExt,
     channel::{mpsc, oneshot},
@@ -113,7 +110,7 @@ use mullvad_types::{
     auth_failed::AuthFailed,
     constraints::Constraint,
     custom_list::CustomList,
-    device::{Device, DeviceEvent, DeviceEventCause, DeviceId, DeviceState, RemoveDeviceEvent},
+    device::{DeviceEvent, DeviceState},
     features::{FeatureIndicator, FeatureIndicators, compute_feature_indicators},
     location::{GeoIpLocation, LocationEventData},
     relay_constraints::{
@@ -123,7 +120,7 @@ use mullvad_types::{
     settings::{DnsOptions, Settings},
     states::{Secured, TargetState, TargetStateStrict, TunnelState},
     version::AppVersionInfo,
-    wireguard::{PublicKey, QuantumResistantState, RotationInterval},
+    wireguard::QuantumResistantState,
 };
 use mullvad_types::{
     relay_constraints::{
@@ -173,9 +170,6 @@ pub mod service {
     pub const SERVICE_NAME: &str = "WarrenVPN";
     pub const SERVICE_DISPLAY_NAME: &str = "Warren VPN Service";
 }
-
-/// Delay between generating a new WireGuard key and reconnecting
-const WG_RECONNECT_DELAY: Duration = Duration::from_mins(4);
 
 pub type ResponseTx<T, E> = oneshot::Sender<Result<T, E>>;
 
@@ -251,18 +245,6 @@ pub enum Error {
 
     #[error("Failed to delete account")]
     DeleteAccountError(#[source] device::Error),
-
-    #[error("Failed to rotate WireGuard key")]
-    KeyRotationError(#[source] device::Error),
-
-    #[error("Failed to list devices")]
-    ListDevicesError(#[source] device::Error),
-
-    #[error("Failed to remove device")]
-    RemoveDeviceError(#[source] device::Error),
-
-    #[error("Failed to update device")]
-    UpdateDeviceError(#[source] device::Error),
 
     #[error("Failed to submit voucher")]
     VoucherSubmission(#[source] device::Error),
@@ -394,14 +376,10 @@ pub enum DaemonCommand {
     LoginAccount(ResponseTx<(), Error>, AccountNumber),
     /// Log out of the current account and remove the device, if they exist.
     LogoutAccount(ResponseTx<(), Error>),
-    /// Return the current device configuration.
+    /// Return the current account login state.
     GetDevice(ResponseTx<DeviceState, Error>),
-    /// Update/check the current device, if there is one.
+    /// Update/check the current login state.
     UpdateDevice(ResponseTx<(), Error>),
-    /// Return all the devices for a given account number.
-    ListDevices(ResponseTx<Vec<Device>, Error>, AccountNumber),
-    /// Remove device from a given account.
-    RemoveDevice(ResponseTx<(), Error>, AccountNumber, DeviceId),
     /// Place constraints on the type of tunnel and relay
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
@@ -487,16 +465,10 @@ pub enum DaemonCommand {
     SetWireguardMtu(ResponseTx<(), settings::Error>, Option<u16>),
     /// Set allowed IPs for wireguard tunnels
     SetWireguardAllowedIps(ResponseTx<(), settings::Error>, Constraint<AllowedIps>),
-    /// Set automatic key rotation interval for wireguard tunnels
-    SetWireguardRotationInterval(ResponseTx<(), settings::Error>, Option<RotationInterval>),
     /// Get the daemon settings
     GetSettings(oneshot::Sender<Settings>),
     /// Reset all daemon settings to the defaults
     ResetSettings(ResponseTx<(), settings::Error>),
-    /// Generate new wireguard key
-    RotateWireguardKey(ResponseTx<(), Error>),
-    /// Return a public key of the currently set wireguard private key, if there is one
-    GetWireguardKey(ResponseTx<Option<PublicKey>, Error>),
     /// Create custom list
     CreateCustomList(
         ResponseTx<mullvad_types::custom_list::Id, Error>,
@@ -645,15 +617,13 @@ pub(crate) enum InternalDaemonEvent {
     TriggerShutdown(bool),
     /// The background job fetching new `AppVersionInfo`s got a new info object.
     NewAppVersionInfo(AppVersionInfo),
-    /// Sent when a device is updated in any way (key rotation, login, logout, etc.).
+    /// Sent when the account login state changes (login, logout, revoke).
     DeviceEvent(AccountEvent),
     /// Sent when access methods are changed in any way (new active access method).
     AccessMethodEvent {
         event: AccessMethodEvent,
         endpoint_active_tx: oneshot::Sender<()>,
     },
-    /// Handles updates from versions without devices.
-    DeviceMigrationEvent(Result<PrivateAccountAndDevice, device::Error>),
     /// A geographical location has has been received from am.i.mullvad.net
     LocationEvent(LocationEventData),
     /// A generic event for when any settings change.
@@ -851,7 +821,6 @@ pub struct Daemon {
     migration_complete: migrations::MigrationComplete,
     settings: SettingsPersister,
     account_history: account_history::AccountHistory,
-    device_checker: device::TunnelStateChangeHandler,
     account_manager: device::AccountManagerHandle,
     access_mode_handler: mullvad_api::access_mode::AccessModeSelectorHandle,
     api_runtime: mullvad_api::Runtime,
@@ -1056,21 +1025,14 @@ impl Daemon {
             });
         });
 
-        let migration_complete = if let Some(migration_data) = migration_data {
-            migrations::migrate_device(
-                migration_data,
-                api_handle.clone(),
-                internal_event_tx.clone(),
-            )
-        } else {
-            migrations::MigrationComplete::new(true)
-        };
+        let _ = migration_data;
+        let migration_complete = migrations::MigrationComplete::new(true);
 
         // If the env var `WARREN_LOCAL_ACCOUNT=1` is set, bootstrap
-        // a `device.json` consistent with the mnemonic before
-        // `AccountManager::spawn` reads the `DeviceCacher`. Allows
-        // the daemon to reach `Connecting` without a `create_device`
-        // call to api.mullvad.net.
+        // a pubkey-only login-state `device.json` consistent with the
+        // mnemonic before `AccountManager::spawn` reads the cache.
+        // Allows the daemon to reach `Connecting` without any remote
+        // account/device call in local POC mode.
         // Combines the POC env var `WARREN_LOCAL_ACCOUNT` with the
         // persistent flag `Settings::warren_local_account`. The env
         // var, if set, takes precedence (see `warren_account_mode::resolve`).
@@ -1086,19 +1048,21 @@ impl Daemon {
             std::env::var(warren_account_mode::ENV_VAR_NAME).is_ok(),
             settings.warren_local_account,
         );
+        // Bootstrap a pubkey-only login-state cache: if a mnemonic
+        // exists and no login state is cached yet, mark the daemon as
+        // logged in with the wallet pubkey derived from the mnemonic.
         if local_account_mode {
             match warren_signer::load_or_create_signing_key(&config.settings_dir) {
-                Some(signing_key) => match warren_device_bootstrap::ensure_local_device(
-                    &config.settings_dir,
-                    &signing_key,
-                ) {
-                    Ok(outcome) => {
-                        log::info!("Warren local account bootstrap: {outcome:?}")
+                Some(signing_key) => {
+                    if let Err(e) = device::bootstrap_local_login_state(
+                        &config.settings_dir,
+                        &signing_key,
+                    )
+                    .await
+                    {
+                        log::error!("Warren local login-state bootstrap failed: {e}");
                     }
-                    Err(e) => {
-                        log::error!("Warren local account bootstrap failed: {e}")
-                    }
-                },
+                }
                 None => {
                     log::warn!("Warren local account: no mnemonic available, bootstrap skipped");
                 }
@@ -1130,11 +1094,6 @@ impl Daemon {
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
-            settings
-                .tunnel_options
-                .wireguard
-                .rotation_interval
-                .unwrap_or_default(),
             internal_event_tx.to_specialized_sender(),
             local_account_mode,
             warren_api_config,
@@ -1144,9 +1103,8 @@ impl Daemon {
 
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
-            // AccountHistory.set/get prennent AccountNumber (= String).
-            data.device()
-                .map(|device| device.pubkey.as_str().to_owned()),
+            // AccountHistory.set/get take an AccountNumber (= String).
+            data.pubkey().map(|pubkey| pubkey.as_str().to_owned()),
         )
         .await
         .map_err(Error::LoadAccountHistory)?;
@@ -1276,7 +1234,6 @@ impl Daemon {
                 .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned()),
         );
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
-            account_manager.clone(),
             relay_selector.clone(),
             settings.relay_settings.clone(),
             settings.tunnel_options.clone(),
@@ -1510,10 +1467,6 @@ impl Daemon {
             migration_complete,
             settings,
             account_history,
-            device_checker: device::TunnelStateChangeHandler::new(
-                account_manager.clone(),
-                local_account_mode,
-            ),
             account_manager,
             access_mode_handler,
             api_runtime,
@@ -1659,7 +1612,6 @@ impl Daemon {
                 event,
                 endpoint_active_tx,
             } => self.handle_access_method_event(event, endpoint_active_tx),
-            DeviceMigrationEvent(event) => self.handle_device_migration_event(event),
             LocationEvent(location_data) => self.handle_location_event(location_data),
             SettingsChanged => {
                 self.update_feature_indicators_on_settings_changed();
@@ -1792,8 +1744,18 @@ impl Daemon {
             .on_tunnel_state_transition(tunnel_state_transition.clone());
 
         self.reset_rpc_sockets_on_tunnel_state_transition(&tunnel_state_transition);
-        self.device_checker
-            .handle_state_transition(&tunnel_state_transition);
+        // Refresh the account expiry when a connection attempt starts,
+        // so the subscription-expiry kill-switch (driven by
+        // `AccountEvent::Expiry`) keeps working.
+        if matches!(
+            tunnel_state_transition,
+            TunnelStateTransition::Connecting(_)
+        ) {
+            let account_manager = self.account_manager.clone();
+            tokio::spawn(async move {
+                let _ = account_manager.check_expiry().await;
+            });
+        }
 
         let tunnel_state = match tunnel_state_transition {
             #[cfg(not(target_os = "android"))]
@@ -2066,10 +2028,6 @@ impl Daemon {
             LogoutAccount(tx) => self.on_logout_account(tx),
             GetDevice(tx) => self.on_get_device(tx),
             UpdateDevice(tx) => self.on_update_device(tx),
-            ListDevices(tx, account_number) => self.on_list_devices(tx, account_number),
-            RemoveDevice(tx, account_number, device_id) => {
-                self.on_remove_device(tx, account_number, device_id)
-            }
             GetAccountHistory(tx) => self.on_get_account_history(tx),
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
@@ -2146,13 +2104,8 @@ impl Daemon {
             SetWireguardAllowedIps(tx, allowed_ips) => {
                 self.on_set_wireguard_allowed_ips(tx, allowed_ips).await
             }
-            SetWireguardRotationInterval(tx, interval) => {
-                self.on_set_wireguard_rotation_interval(tx, interval).await
-            }
             GetSettings(tx) => self.on_get_settings(tx),
             ResetSettings(tx) => self.on_reset_settings(tx).await,
-            RotateWireguardKey(tx) => self.on_rotate_wireguard_key(tx),
-            GetWireguardKey(tx) => self.on_get_wireguard_key(tx).await,
             CreateCustomList(tx, name, locations) => {
                 self.on_create_custom_list(tx, name, locations).await
             }
@@ -2248,10 +2201,10 @@ impl Daemon {
 
     async fn handle_device_event(&mut self, event: AccountEvent) {
         match &event {
-            AccountEvent::Device(PrivateDeviceEvent::Login(device)) => {
+            AccountEvent::Device(PrivateDeviceEvent::Login(pubkey)) => {
                 if let Err(error) = self
                     .account_history
-                    .set(device.pubkey.as_str().to_owned())
+                    .set(pubkey.as_str().to_owned())
                     .await
                 {
                     log::error!(
@@ -2287,9 +2240,6 @@ impl Daemon {
                 if *self.target_state == TargetState::Secured =>
             {
                 self.connect_tunnel();
-            }
-            AccountEvent::Device(PrivateDeviceEvent::RotatedKey(_)) => {
-                self.schedule_reconnect(WG_RECONNECT_DELAY);
             }
             AccountEvent::Expiry(expiry) if *self.target_state == TargetState::Secured => {
                 if expiry >= &chrono::Utc::now() {
@@ -2385,45 +2335,6 @@ impl Daemon {
                 });
             }
         }
-    }
-
-    fn handle_device_migration_event(
-        &mut self,
-        result: Result<PrivateAccountAndDevice, device::Error>,
-    ) {
-        let account_manager = self.account_manager.clone();
-        let notifier = self.management_interface.notifier().clone();
-        tokio::spawn(async move {
-            if let Ok(Some(_)) = account_manager
-                .data_after_login()
-                .await
-                .map(|s| s.into_device())
-            {
-                // Discard stale device
-                return;
-            }
-
-            let result = async { account_manager.set(result?).await }.await;
-
-            if let Err(error) = result {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to move over account from old settings")
-                );
-                // Synthesize a logout or revocation if migration fails.
-                let event = match error {
-                    device::Error::InvalidDevice => DeviceEvent {
-                        cause: DeviceEventCause::Revoked,
-                        new_state: DeviceState::Revoked,
-                    },
-                    _ => DeviceEvent {
-                        cause: DeviceEventCause::LoggedOut,
-                        new_state: DeviceState::LoggedOut,
-                    },
-                };
-                notifier.notify_device_event(event);
-            }
-        });
     }
 
     #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
@@ -2547,12 +2458,17 @@ impl Daemon {
     }
 
     async fn on_get_www_auth_token(&mut self, tx: ResponseTx<String, Error>) {
-        match self.account_manager.data().await.map(|s| s.into_device()) {
-            Ok(Some(device)) => {
+        match self
+            .account_manager
+            .data()
+            .await
+            .map(|s| s.pubkey().cloned())
+        {
+            Ok(Some(pubkey)) => {
                 let future = self
                     .account_manager
                     .warren_identity_service
-                    .get_www_auth_token(device.pubkey.as_str().to_owned());
+                    .get_www_auth_token(pubkey.as_str().to_owned());
                 tokio::spawn(async {
                     Self::oneshot_send(
                         tx,
@@ -2650,8 +2566,7 @@ impl Daemon {
             let stored_pubkey = std::fs::read_to_string(&device_path)
                 .ok()
                 .and_then(|raw| serde_json::from_str::<device::PrivateDeviceState>(&raw).ok())
-                .and_then(|state| state.into_device())
-                .map(|d| d.pubkey);
+                .and_then(|state| state.pubkey().cloned());
 
             match stored_pubkey {
                 Some(old) if old != new_pubkey => Some(new_pubkey),
@@ -2868,77 +2783,7 @@ impl Daemon {
     }
 
     fn on_update_device(&mut self, tx: ResponseTx<(), Error>) {
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = match account_manager.validate_device().await {
-                Ok(_) | Err(device::Error::NoDevice) => Ok(()),
-                Err(error) => Err(error),
-            };
-            Self::oneshot_send(
-                tx,
-                result.map_err(Error::UpdateDeviceError),
-                "update_device response",
-            );
-        });
-    }
-
-    fn on_list_devices(&self, tx: ResponseTx<Vec<Device>, Error>, token: AccountNumber) {
-        let service = self.account_manager.device_service.clone();
-        tokio::spawn(async move {
-            Self::oneshot_send(
-                tx,
-                service
-                    .list_devices(token)
-                    .await
-                    .map_err(Error::ListDevicesError),
-                "list_devices response",
-            );
-        });
-    }
-
-    fn on_remove_device(
-        &mut self,
-        tx: ResponseTx<(), Error>,
-        account_number: AccountNumber,
-        device_id: DeviceId,
-    ) {
-        let device_service = self.account_manager.device_service.clone();
-        let notifier = self.management_interface.notifier().clone();
-
-        tokio::spawn(async move {
-            let result = device_service
-                .remove_device(account_number.clone(), device_id)
-                .await
-                .map(move |new_devices| {
-                    // FIXME: We should be able to get away with only returning the removed ID,
-                    //        and not have to request the list from the API.
-                    // `RemoveDeviceEvent` now carries a
-                    // `WarrenPubKey`. We parse `account_number` (=
-                    // String, possibly non-hex if it's an old
-                    // Mullvad device.json) with a dummy zero pubkey
-                    // fallback + warn (consistent with the From impl on
-                    // the `device::mod.rs` side).
-                    use std::str::FromStr;
-                    let pubkey =
-                        mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account_number)
-                            .unwrap_or_else(|e| {
-                                log::warn!(
-                                    "RemoveDeviceEvent: account_number is not a valid Warren \
-                                     pubkey ({e}), fallback dummy zero pubkey"
-                                );
-                                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&[0u8; 32])
-                            });
-                    notifier.notify_remove_device_event(RemoveDeviceEvent {
-                        pubkey,
-                        new_devices,
-                    });
-                });
-            Self::oneshot_send(
-                tx,
-                result.map_err(Error::RemoveDeviceError),
-                "remove_device response",
-            );
-        });
+        Self::oneshot_send(tx, Ok(()), "update_device response");
     }
 
     fn on_get_account_history(&mut self, tx: oneshot::Sender<Option<AccountNumber>>) {
@@ -4018,37 +3863,6 @@ impl Daemon {
         }
     }
 
-    async fn on_set_wireguard_rotation_interval(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        interval: Option<RotationInterval>,
-    ) {
-        match self
-            .settings
-            .update(move |settings| settings.tunnel_options.wireguard.rotation_interval = interval)
-            .await
-        {
-            Ok(settings_changed) => {
-                Self::oneshot_send(tx, Ok(()), "set_wireguard_rotation_interval response");
-                if settings_changed
-                    && let Err(error) = self
-                        .account_manager
-                        .set_rotation_interval(interval.unwrap_or_default())
-                        .await
-                {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg("Failed to update rotation interval")
-                    );
-                }
-            }
-            Err(e) => {
-                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_wireguard_rotation_interval response");
-            }
-        }
-    }
-
     async fn on_set_wireguard_allowed_ips(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -4077,26 +3891,6 @@ impl Daemon {
                 Self::oneshot_send(tx, Err(e), "set_wireguard_allowed_ips response");
             }
         }
-    }
-
-    fn on_rotate_wireguard_key(&self, tx: ResponseTx<(), Error>) {
-        let manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = manager
-                .rotate_key()
-                .await
-                .map(|_| ())
-                .map_err(Error::KeyRotationError);
-            Self::oneshot_send(tx, result, "rotate_wireguard_key response");
-        });
-    }
-
-    async fn on_get_wireguard_key(&self, tx: ResponseTx<Option<PublicKey>, Error>) {
-        let result = match self.account_manager.data().await.map(|s| s.into_device()) {
-            Ok(Some(config)) => Ok(Some(config.device.wg_data.get_public_key())),
-            _ => Err(Error::NoAccountNumber),
-        };
-        Self::oneshot_send(tx, result, "get_wireguard_key response");
     }
 
     async fn on_create_custom_list(
@@ -4334,20 +4128,6 @@ impl Daemon {
         tokio::spawn(async move {
             if let Err(error) = access_mode_handler.rotate().await {
                 log::error!("Failed to rotate API endpoint: {error}");
-            }
-        });
-
-        let interval = self.settings.tunnel_options.wireguard.rotation_interval;
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            if let Err(error) = account_manager
-                .set_rotation_interval(interval.unwrap_or_default())
-                .await
-            {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to update rotation interval")
-                );
             }
         });
 

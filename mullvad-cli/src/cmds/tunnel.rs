@@ -4,7 +4,7 @@ use mullvad_management_interface::MullvadProxyClient;
 use mullvad_types::{
     constraints::Constraint,
     relay_constraints::{AllowedIps, RelaySettings, WireguardConstraints},
-    wireguard::{QuantumResistantState, RotationInterval},
+    wireguard::QuantumResistantState,
 };
 
 use super::BooleanOption;
@@ -43,14 +43,6 @@ pub enum TunnelOptions {
     /// WARNING: Setting this value incorrectly may cause internet access to be blocked or the app to not work properly.
     AllowedIps { allowed_ips: String },
 
-    /// The key rotation interval. Number of hours, or 'any'
-    RotationInterval {
-        interval: Constraint<RotationInterval>,
-    },
-
-    /// Replace the WireGuard key with a new one
-    RotateKey,
-
     /// Enable or disable IPv6 in the tunnel
     #[clap(arg_required_else_help = true)]
     Ipv6 { state: BooleanOption },
@@ -87,20 +79,6 @@ impl Tunnel {
         );
 
         print_option!("DAITA", tunnel_options.wireguard.daita.enabled);
-
-        let key = rpc.get_wireguard_key().await?;
-        print_option!("Public key", key.key,);
-        print_option!(format_args!(
-            "Created {}",
-            key.created.with_timezone(&chrono::Local)
-        ),);
-        print_option!(
-            "Rotation interval",
-            match tunnel_options.wireguard.rotation_interval {
-                Some(interval) => interval.to_string(),
-                None => "unset".to_string(),
-            },
-        );
 
         // Get the WireGuard allowed IPs
         let wireguard_constraints = match rpc.get_settings().await?.relay_settings {
@@ -156,23 +134,6 @@ impl Tunnel {
                 let ips = AllowedIps::parse(allowed_ips.split(','))?;
                 rpc.set_wireguard_allowed_ips(ips).await?;
                 println!("WireGuard allowed IPs have been updated");
-            }
-            TunnelOptions::RotationInterval { interval } => match interval {
-                Constraint::Only(interval) => {
-                    rpc.set_wireguard_rotation_interval(interval).await?;
-                    println!("Set key rotation interval to {interval}");
-                }
-                Constraint::Any => {
-                    rpc.reset_wireguard_rotation_interval().await?;
-                    println!(
-                        "Reset key rotation interval to {}",
-                        RotationInterval::default()
-                    );
-                }
-            },
-            TunnelOptions::RotateKey => {
-                rpc.rotate_wireguard_key().await?;
-                println!("Rotated WireGuard key");
             }
             TunnelOptions::Ipv6 { state } => {
                 rpc.set_enable_ipv6(*state).await?;

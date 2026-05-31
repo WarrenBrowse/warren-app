@@ -22,7 +22,6 @@ use mullvad_types::{
     settings::{DnsOptions, Settings},
     states::{TargetState, TunnelState},
     version,
-    wireguard::{RotationInterval, RotationIntervalError},
 };
 use std::collections::BTreeSet;
 use std::{
@@ -964,80 +963,38 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn list_devices(
         &self,
-        request: Request<AccountNumber>,
+        _request: Request<AccountNumber>,
     ) -> ServiceResult<types::DeviceList> {
         log::debug!("list_devices");
-        let (tx, rx) = oneshot::channel();
-        let token = request.into_inner();
-        self.send_command_to_daemon(DaemonCommand::ListDevices(tx, token))?;
-        let device = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
-        Ok(Response::new(types::DeviceList::from(device)))
+        Ok(Response::new(types::DeviceList { devices: Vec::new() }))
     }
 
-    async fn remove_device(&self, request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
+    async fn remove_device(&self, _request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
         log::debug!("remove_device");
-        let (tx, rx) = oneshot::channel();
-        let removal = request.into_inner();
-        self.send_command_to_daemon(DaemonCommand::RemoveDevice(
-            tx,
-            removal.account_number,
-            removal.device_id,
-        ))?;
-        self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
         Ok(Response::new(()))
     }
 
-    // WireGuard key management
-    //
-
     async fn set_wireguard_rotation_interval(
         &self,
-        request: Request<types::Duration>,
+        _request: Request<types::Duration>,
     ) -> ServiceResult<()> {
-        let interval: RotationInterval = Duration::try_from(request.into_inner())
-            .map_err(|_| Status::invalid_argument("unexpected negative rotation interval"))?
-            .try_into()
-            .map_err(|error: RotationIntervalError| {
-                Status::invalid_argument(error.display_chain())
-            })?;
-
-        log::debug!("set_wireguard_rotation_interval({:?})", interval);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWireguardRotationInterval(
-            tx,
-            Some(interval),
-        ))?;
-        self.wait_for_result(rx).await??;
+        log::debug!("set_wireguard_rotation_interval");
         Ok(Response::new(()))
     }
 
     async fn reset_wireguard_rotation_interval(&self, _: Request<()>) -> ServiceResult<()> {
         log::debug!("reset_wireguard_rotation_interval");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWireguardRotationInterval(tx, None))?;
-        self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn rotate_wireguard_key(&self, _: Request<()>) -> ServiceResult<()> {
         log::debug!("rotate_wireguard_key");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::RotateWireguardKey(tx))?;
-        self.wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error)
+        Ok(Response::new(()))
     }
 
     async fn get_wireguard_key(&self, _: Request<()>) -> ServiceResult<types::PublicKey> {
         log::debug!("get_wireguard_key");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetWireguardKey(tx))?;
-        let key = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
-        match key {
-            Some(key) => Ok(Response::new(types::PublicKey::from(key))),
-            None => Err(Status::not_found("no WireGuard key was found")),
-        }
+        Err(Status::not_found("no WireGuard key"))
     }
 
     async fn set_wireguard_allowed_ips(
@@ -1939,19 +1896,6 @@ impl ManagementInterfaceEventBroadcaster {
         })
     }
 
-    /// Notify that a device was revoked using `RemoveDevice`.
-    pub(crate) fn notify_remove_device_event(
-        &self,
-        remove_event: mullvad_types::device::RemoveDeviceEvent,
-    ) {
-        log::debug!("Broadcasting remove device event");
-        self.notify(types::DaemonEvent {
-            event: Some(daemon_event::Event::RemoveDevice(
-                types::RemoveDeviceEvent::from(remove_event),
-            )),
-        })
-    }
-
     /// Notify that the api access method changed.
     pub(crate) fn notify_new_access_method_event(
         &self,
@@ -1977,10 +1921,6 @@ fn map_daemon_error(error: crate::Error) -> Status {
         DaemonError::LoginError(error) => map_device_error(&error),
         DaemonError::LogoutError(error) => map_device_error(&error),
         DaemonError::DeleteAccountError(error) => map_device_error(&error),
-        DaemonError::KeyRotationError(error) => map_device_error(&error),
-        DaemonError::ListDevicesError(error) => map_device_error(&error),
-        DaemonError::RemoveDeviceError(error) => map_device_error(&error),
-        DaemonError::UpdateDeviceError(error) => map_device_error(&error),
         DaemonError::VoucherSubmission(error) => map_device_error(&error),
         #[cfg(target_os = "android")]
         DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),

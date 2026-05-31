@@ -1,40 +1,8 @@
 use super::FromProtobufTypeError;
 use crate::types::proto;
-use chrono::DateTime;
-use prost_types::Timestamp;
 
-impl From<mullvad_types::wireguard::PublicKey> for proto::PublicKey {
-    fn from(public_key: mullvad_types::wireguard::PublicKey) -> Self {
-        proto::PublicKey {
-            key: public_key.key.as_bytes().to_vec(),
-            created: Some(Timestamp {
-                seconds: public_key.created.timestamp(),
-                nanos: 0,
-            }),
-        }
-    }
-}
-
-impl TryFrom<proto::PublicKey> for mullvad_types::wireguard::PublicKey {
-    type Error = FromProtobufTypeError;
-
-    fn try_from(public_key: proto::PublicKey) -> Result<Self, Self::Error> {
-        let created = public_key
-            .created
-            .ok_or(FromProtobufTypeError::invalid_argument(
-                "missing 'created' timestamp",
-            ))?;
-
-        let created = DateTime::from_timestamp(created.seconds, created.nanos as u32)
-            .ok_or(FromProtobufTypeError::invalid_argument("invalid timestamp"))?;
-
-        Ok(mullvad_types::wireguard::PublicKey {
-            key: talpid_types::net::wireguard::PublicKey::try_from(public_key.key.as_slice())
-                .map_err(|_| FromProtobufTypeError::invalid_argument("invalid wireguard key"))?,
-            created,
-        })
-    }
-}
+// The `QuantumResistantState` and `DaitaSettings` conversions feed the
+// Quinn tunnel settings.
 
 impl From<mullvad_types::wireguard::QuantumResistantState> for proto::QuantumResistantState {
     fn from(state: mullvad_types::wireguard::QuantumResistantState) -> Self {

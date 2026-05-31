@@ -132,8 +132,8 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 /// The source of truth for the identity is the `pubkey: WarrenPubKey`
 /// derived from `warren_signer::load_or_create_signing_key` — `create_account`
 /// returns this pubkey hex as the `AccountNumber` to stay consistent
-/// with the `device.json` produced by
-/// [`crate::warren_device_bootstrap::ensure_local_device`].
+/// with the login-state `device.json` produced by
+/// [`crate::device::bootstrap_local_login_state`].
 ///
 /// `delete_account` removes `device.json` and `warren_mnemonic.txt`
 /// to reproduce the classic Mullvad "logged out" semantics in local
@@ -680,9 +680,8 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_account_create_returns_signing_pubkey() {
         // Critical regression: `create_account` must return the
-        // pubkey hex of the signer identity (= consistency with
-        // `device.json` on the `warren_device_bootstrap` side). No
-        // server call — purely local.
+        // pubkey hex of the signer identity (= consistency with the
+        // login-state `device.json`). No server call — purely local.
         let (api_url, _state) = spawn_warren_api().await;
         let key = SigningKey::from_bytes(&[60u8; 32]);
         let expected_pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
