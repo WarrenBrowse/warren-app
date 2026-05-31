@@ -3,10 +3,9 @@ package com.warrenbrowse.vpn.lib.model
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
-// Warren login-state notion. The per-device payload was removed: Warren's
-// identity is the BIP39 wallet (account/pubkey), with no per-"device"
-// abstraction or WireGuard key material. `LoggedIn` carries only the
-// account identity; `Revoked` keeps the recovery-to-login path.
+// Account login state. Warren's identity is the BIP39 wallet
+// (account/pubkey); there is no per-"device" abstraction. `LoggedIn`
+// carries the account identity; `Revoked` keeps the recovery-to-login path.
 sealed class DeviceState : Parcelable {
     @Parcelize
     data class LoggedIn(val accountNumber: AccountNumber) : DeviceState()

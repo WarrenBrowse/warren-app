@@ -1,7 +1,4 @@
 use clap::Parser;
-// Device/WireGuard removed (Option A): the `remove-device` setup step
-// no longer calls the Mullvad device API, so the `DevicesProxy`-related
-// imports (DEVICE_NOT_FOUND, ApiConnectionMode, retry strategy) are gone.
 use mullvad_management_interface::MullvadProxyClient;
 use mullvad_version::Version;
 use std::{path::PathBuf, process, str::FromStr, sync::LazyLock};
@@ -47,10 +44,6 @@ pub enum Error {
 
     #[error("Firewall error")]
     FirewallError(#[source] firewall::Error),
-
-    // Device/WireGuard removed (Option A): the `RpcInitializationError`
-    // and `RemoveDeviceError` variants were only produced by the old
-    // remote device-removal path, which no longer exists.
 
     #[error("Failed to obtain settings directory path")]
     SettingsPathError(#[source] mullvad_paths::Error),
@@ -240,11 +233,7 @@ async fn reset_firewall() -> Result<(), Error> {
 }
 
 async fn remove_device() -> Result<(), Error> {
-    // Device/WireGuard removed (Option A): there is no remote WireGuard
-    // device to remove anymore. The `remove-device` setup step now just
-    // clears the local login-state cache (`device.json`) if a login
-    // state is present. The function name is kept for the existing
-    // setup CLI surface (stripped/renamed in a later phase).
+    // Clears the local login-state cache if a login state is present.
     let (_cache_path, settings_path) = get_paths()?;
     let (cacher, state) = mullvad_daemon::device::DeviceCacher::new(&settings_path)
         .await
