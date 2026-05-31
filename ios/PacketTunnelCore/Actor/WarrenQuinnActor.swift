@@ -25,6 +25,7 @@ import Foundation
 import Network
 import WarrenLogging
 import WarrenRustRuntime
+import WarrenSettings
 import WarrenTypes
 
 /// Stub-level `PacketTunnelActorProtocol` for the Warren Quinn tunnel.
@@ -197,13 +198,22 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             multiHop = nil
         }
 
+        // DAITA: read the persisted setting (written by SettingsDAITAView via
+        // DAITATunnelSettingsViewModel). The client only signals the request;
+        // the exit picks the Maybenot machine and returns it in SetupAck, so
+        // the spec content here is a placeholder — only its presence matters
+        // (the warren-ios FFI treats a non-null daita_spec as "DAITA on").
+        let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
+        let daitaSpec: WarrenDaitaSpec? =
+            daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil
+
         let config = WarrenTunnelConfig(
             exitPubkey: exitPubkey,
             exitEndpoint: exitEndpointStr,
             walletSigningKey: seed,
             multiHopRelay: multiHop,
-            daitaSpec: nil,  // DAITA spec wiring lands in C.4.3.Z (needs DaitaPool integration)
-            natPmpEnabled: false,  // settings-driven, deferred
+            daitaSpec: daitaSpec,
+            natPmpEnabled: false,  // settings-driven, deferred (needs V9 schema)
             bypassCidrs: []  // settings-driven, deferred
         )
 
