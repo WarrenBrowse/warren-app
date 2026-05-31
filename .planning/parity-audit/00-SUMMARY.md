@@ -27,12 +27,12 @@ Conséquence stratégique : **Android a besoin d'UI/UX par-dessus son backend ; 
 
 | # | Plateforme | Écart | Réf |
 |---|-----------|-------|-----|
-| P0-1 | **Android** | **Pipeline d'état écran principal lossy** : `ConnectionProxy` mappe `Failed` ET `Blocking (kill switch)` → `Disconnected`. La carte affiche « DISCONNECTED » alors que le tunnel a échoué ou que le kill switch bloque → **l'utilisateur croit être simplement déconnecté alors que le blocage est actif**. De plus la carte lit un endpoint sentinelle (`0.0.0.0:0`, `daita=false`) → In/Out IP, port, protocole, **chips DAITA/multihop/obfuscation ne s'affichent jamais** alors que l'état réel existe (`WarrenQuinnStateProxy`). | 01-connection |
+| ~~P0-1~~ ✅ | **Android** | **CORRIGÉ** (commit `bd6340c4b8`) : nouveau `WarrenConnectedInfo` typé + `connectedInfo` sur le provider ; `ConnectionProxy` mappe désormais `Failed`→`Error(non-blocking)` (« ERROR STATE »), `Blocking`→`Error(blocking)` (« BLOCKED CONNECTION »), et `Connected`→endpoint exit/entry réel + chips DAITA/MULTIHOP/DAITA_MULTIHOP/QUIC. Tests : `ConnectionProxyTest` 7/7 + `WarrenQuinnStateProxyTest` 6/6 + `ConnectViewModelTest` 10/10 (vérifiés en worktree isolé). | 01-connection |
 | P0-2 | **iOS** | **Surface compte = Mullvad non modifié** : affiche le *numéro de compte*, « Add time » via **StoreKit IAP**, restore purchases, delete account ; lit l'expiry depuis `deviceState.accountData?.expiry` au lieu du backend Warren `/v1/subscription`. Le wallet existe en onboarding/settings mais les écrans compte/abonnement/voucher n'ont jamais été re-pointés dessus. | 02-account |
 | P0-3 | **iOS** | **Voucher = DEBUG-only** : l'UI RedeemVoucher n'est atteignable que via la feuille Debug `#if DEBUG`. Aucune entrée en production. | 02-account |
 | P0-4 | **iOS** | **DAITA = scaffold mort** (`WarrenDaitaSettingsView` : `_ = newValue`, TODO) : le toggle change l'UI mais n'atteint jamais le tunnel. | 03-vpn-settings |
 | P0-5 | **iOS** | **NAT-PMP / port forwarding = scaffold mort** (`WarrenNatPmpSettingsView`) : pas de persistance, pas de FFI, statut placeholder. Différenciateur phare, fonctionnel sur desktop + Android. | 03-vpn-settings |
-| P0-6 | **Android** | **Logo Mullvad marmotte encore affiché in-app** : splash, top bar de presque tous les écrans, quick-settings tile, notifications (`TopBar.kt:121`, `SplashScreen.kt:82`, `WarrenTileService.kt:43`, `TunnelStateNotificationAction.kt:24`). Seule l'icône launcher adaptive est passée au « W ». | 07-branding-ux |
+| ~~P0-6~~ ✅ | **Android** | **CORRIGÉ** (commit `5edc8a5254`) : les 20 PNG marmotte (`logo_icon`/`launch_logo`/`small_logo_{black,white}` × 5 densités) remplacés par 4 vector drawables « W » Warren (résolution-indépendants) couvrant splash, top bar, tile, notifications, manifest. Vérifié : `processProdDebugResources` vert (worktree). | 07-branding-ux |
 
 ### 🟠 P1 — features/UX importantes manquantes
 
