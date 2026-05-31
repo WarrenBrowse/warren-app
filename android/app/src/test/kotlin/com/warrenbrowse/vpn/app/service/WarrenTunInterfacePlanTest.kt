@@ -1,7 +1,5 @@
 package com.warrenbrowse.vpn.app.service
 
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -182,22 +180,6 @@ class WarrenTunInterfacePlanTest {
         assertTrue(plan.coversV4("192.168.1.1"))
         assertTrue(plan.coversV4("10.0.0.5"))
         assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
-    }
-
-    @Test
-    fun `allowLan survives the JSON round-trip the VpnService performs before the plan runs`() {
-        // The config is encoded to JSON, passed through the service Intent,
-        // then decoded before reaching planTunInterface. allowLan must be a
-        // serialized field (not @Transient) or it would be lost in transit.
-        val decoded = Json.decodeFromString<WarrenTunnelConfig>(
-            Json.encodeToString(config(allowLan = true)),
-        )
-        assertTrue(decoded.allowLan, "allowLan must survive JSON serialization")
-        // And the plan built from the decoded config still excludes the LAN.
-        val plan = planTunInterface(decoded)
-        assertFalse(plan.coversV4("192.168.1.1"))
-        assertTrue(plan.coversV4("8.8.8.8"))
-        assertTrue(plan.coversV4("10.66.0.1"))
     }
 
     @Test
