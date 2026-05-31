@@ -1669,8 +1669,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "Înțeleg că acest lucru îmi va înlocui definitiv identitatea actuală."
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "Identitatea a fost restabilită. Reporniți serviciul Warren VPN pentru a activa noua identitate."
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Identitatea a fost restabilită. Noul tău portofel Warren este acum activ."
 
 #. Title label in navigation bar
 msgctxt "keys-view"
@@ -3164,10 +3164,6 @@ msgid "Restore wallet"
 msgstr "Restaurați portofelul"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "Se reîncarcă..."
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Omiteți asistentul (opțiuni avansate)"
 
@@ -3182,10 +3178,6 @@ msgstr "Warren utilizează un portofel non-custodial (Ed25519 + BIP39). Cheile v
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
 msgstr "Bine ați venit la Warren VPN"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "cuvinte"
 
 msgctxt "warren-onboarding"
 msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."

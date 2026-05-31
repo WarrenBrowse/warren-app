@@ -3900,8 +3900,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "ဤလုပ်ဆောင်ချက်သည် ကျွန်ုပ်၏ လက်ရှိ အထောက်အထားကို အပြီးအပိုင် အစားထိုးမည်ကို နားလည်ပါသည်။"
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "အထောက်အထား ပြန်လည်ရယူပြီးပါပြီ။ အထောက်အထားအသစ်ကို အသက်သွင်းရန် Warren VPN daemon ကို ပြန်လည်စတင်ပါ။"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "အထောက်အထား ပြန်လည်ရယူပြီးပါပြီ။ သင်၏ Warren ပိုက်ဆံအိတ်အသစ် ယခု အသက်ဝင်နေပါပြီ။"
 
 msgctxt "keys-view"
 msgid "Keys"
@@ -4036,10 +4036,6 @@ msgid "Restore wallet"
 msgstr "ပိုက်ဆံအိတ် ပြန်လည်ရယူပါ"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "ပြန်လည်ရယူနေသည်..."
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "လမ်းညွှန်ကို ကျော်ပါ (အဆင့်မြင့်)"
 
@@ -4070,10 +4066,6 @@ msgstr "သင်၏ Warren ပိုက်ဆံအိတ်"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "သင်၏ စာရင်းသွင်းမှု"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "စကားလုံးများ"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."

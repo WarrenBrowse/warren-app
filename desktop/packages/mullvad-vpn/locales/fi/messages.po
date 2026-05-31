@@ -3967,10 +3967,6 @@ msgid "Restore wallet"
 msgstr "Palauta lompakko"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "Palautetaan…"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Ohita ohjattu toiminto (lisäasetukset)"
 
@@ -4001,10 +3997,6 @@ msgstr "Warren-lompakkosi"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "Tilauksesi"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "sanaa"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
@@ -4192,8 +4184,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "Ymmärrän, että tämä korvaa nykyisen identiteettini pysyvästi."
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "Identiteetti palautettu. Käynnistä Warren VPN -taustapalvelu uudelleen ottaaksesi uuden identiteetin käyttöön."
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Identiteetti palautettu. Uusi Warren-lompakkosi on nyt käytössä."
 
 msgctxt "keys-view"
 msgid "Keys"

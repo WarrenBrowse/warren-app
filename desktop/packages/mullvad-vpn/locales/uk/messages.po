@@ -3995,10 +3995,6 @@ msgid "Restore wallet"
 msgstr "Відновити гаманець"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "Відновлення…"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Пропустити майстра (для досвідчених)"
 
@@ -4029,10 +4025,6 @@ msgstr "Ваш гаманець Warren"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "Ваша підписка"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "слів"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
@@ -4220,8 +4212,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "Я розумію, що це назавжди замінить мій поточний профіль."
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "Профіль відновлено. Перезапустіть службу Warren VPN, щоб активувати новий профіль."
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Профіль відновлено. Ваш новий гаманець Warren тепер активний."
 
 msgctxt "keys-view"
 msgid "Keys"

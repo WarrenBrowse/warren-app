@@ -3897,8 +3897,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "我了解這將永久取代我目前的身分。"
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "身分已還原。請重新啟動 Warren VPN 服務以啟用新身分。"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "身分已還原。您的新 Warren 錢包現已啟用。"
 
 msgctxt "keys-view"
 msgid "Keys"
@@ -4033,10 +4033,6 @@ msgid "Restore wallet"
 msgstr "還原錢包"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "還原中…"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "略過精靈（進階）"
 
@@ -4067,10 +4063,6 @@ msgstr "您的 Warren 錢包"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "您的訂閱"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "字"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."

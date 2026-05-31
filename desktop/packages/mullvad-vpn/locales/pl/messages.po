@@ -3995,10 +3995,6 @@ msgid "Restore wallet"
 msgstr "Przywróć portfel"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "Przywracanie…"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Pomiń kreatora (zaawansowane)"
 
@@ -4029,10 +4025,6 @@ msgstr "Twój portfel Warren"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "Twoja subskrypcja"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "słów"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
@@ -4220,8 +4212,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "Rozumiem, że trwale zastąpi to moją bieżącą tożsamość."
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "Tożsamość przywrócona. Uruchom ponownie usługę Warren VPN, aby aktywować nową tożsamość."
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Tożsamość przywrócona. Twój nowy portfel Warren jest teraz aktywny."
 
 msgctxt "keys-view"
 msgid "Keys"

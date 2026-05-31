@@ -3967,8 +3967,8 @@ msgid "I understand this will permanently replace my current identity."
 msgstr "أُدرك أن هذا سيستبدل هويتي الحالية نهائياً."
 
 msgctxt "keys-view"
-msgid "Identity restored. Restart the Warren VPN daemon to activate the new identity."
-msgstr "تمت استعادة الهوية. أعد تشغيل خدمة Warren VPN لتفعيل الهوية الجديدة."
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "تمت استعادة الهوية. محفظة Warren الجديدة نشطة الآن."
 
 msgctxt "keys-view"
 msgid "Keys"
@@ -4103,10 +4103,6 @@ msgid "Restore wallet"
 msgstr "استعادة المحفظة"
 
 msgctxt "warren-onboarding"
-msgid "Restoring..."
-msgstr "جارٍ الاستعادة..."
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "تخطّي المعالج (متقدّم)"
 
@@ -4137,10 +4133,6 @@ msgstr "محفظتك في Warren"
 msgctxt "warren-onboarding"
 msgid "Your subscription"
 msgstr "اشتراكك"
-
-msgctxt "warren-onboarding"
-msgid "words"
-msgstr "كلمات"
 
 msgctxt "warren-onboarding"
 msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
