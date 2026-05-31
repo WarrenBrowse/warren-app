@@ -129,15 +129,24 @@ fn client_config_tls12() -> ClientConfig {
         .with_no_client_auth()
 }
 
+// Live-network smoke test: resolves Warren's Encrypted DNS proxy configs over
+// Quad9 DoH. Ignored by default — it requires network access and the
+// `dns.warrenbrowse.com` AAAA records to be published.
 #[cfg(test)]
 #[tokio::test]
+#[ignore = "hits live network (Quad9 DoH) and depends on published AAAA records"]
 async fn test_resolution() {
     let nameservers = vec![Nameserver {
-        addr: vec!["1.1.1.1".parse().unwrap()],
-        name: "one.one.one.one".to_owned(),
+        name: "dns.quad9.net".to_owned(),
+        addr: vec![
+            "9.9.9.9".parse().unwrap(),
+            "149.112.112.112".parse().unwrap(),
+        ],
     }];
 
-    let _ = resolve_configs(&nameservers, "frakta.eu").await.unwrap();
+    let _ = resolve_configs(&nameservers, "dns.warrenbrowse.com")
+        .await
+        .unwrap();
 }
 
 #[cfg(test)]

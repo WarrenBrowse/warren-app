@@ -64,7 +64,7 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                 AccessMethod::BuiltIn(BuiltInAccessMethod::EncryptedDnsProxy) => {
                     if let Err(error) = self
                         .encrypted_dns_proxy_cache
-                        .fetch_configs("edns.warrenbrowse.com")
+                        .fetch_configs("dns.warrenbrowse.com")
                         .await
                     {
                         log::warn!("Failed to fetch new Encrypted DNS Proxy configurations");

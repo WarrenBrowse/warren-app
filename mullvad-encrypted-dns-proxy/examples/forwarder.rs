@@ -5,7 +5,7 @@ use tokio::net::TcpListener;
 use tracing_subscriber::{EnvFilter, filter::LevelFilter};
 
 /// This can be tested out by using curl:
-/// `curl https://api.mullvad.net:$port/app/v1/relays --resolve api.mullvad.net:$port:$addr`
+/// `curl https://api.warrenbrowse.com:$port/app/v1/relays --resolve api.warrenbrowse.com:$port:$addr`
 ///  where $addr and $port are the listening address of the proxy (bind_addr).
 #[tokio::main]
 async fn main() {
@@ -16,7 +16,7 @@ async fn main() {
     let bind_addr = args().nth(1).unwrap_or("127.0.0.1:0".to_owned());
 
     let resolvers = config_resolver::default_resolvers();
-    let configs = config_resolver::resolve_configs(&resolvers, "frakta.eu")
+    let configs = config_resolver::resolve_configs(&resolvers, "dns.warrenbrowse.com")
         .await
         .expect("Failed to resolve configs");
 
