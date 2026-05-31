@@ -1,26 +1,22 @@
-use std::net::SocketAddr;
-use std::{future::Future, net::IpAddr, pin::Pin, sync::Arc};
+use std::{future::Future, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
-use talpid_types::net::wireguard::TunnelParameters;
 use talpid_warren_tunnel::{
     MultiHopConfig, NatPmpConfig, NatPmpEventObserver, WarrenTunnelParameters,
 };
 use tokio::sync::Mutex;
 
-use mullvad_relay_selector::{GetRelay, RelaySelector, WireguardConfig};
+use mullvad_relay_selector::RelaySelector;
 use mullvad_types::{
-    endpoint::MullvadEndpoint,
     location::GeoIpLocation,
     relay_constraints::RelaySettings,
     settings::{Settings, TunnelOptions},
 };
 use talpid_core::tunnel_state_machine::TunnelParametersGenerator;
-use talpid_types::net::{obfuscation::Obfuscators, wireguard};
 
-use talpid_types::{ErrorExt, net::IpAvailability, tunnel::ParameterGenerationError};
+use talpid_types::{ErrorExt, tunnel::ParameterGenerationError};
 
-use crate::device::{AccountManagerHandle, Error as DeviceError, PrivateAccountAndDevice};
+use crate::device::{AccountManagerHandle, Error as DeviceError};
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_list_view::country_centroid_for;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -41,13 +37,13 @@ pub enum Error {
     #[error("Failed to get device data")]
     Device(#[from] DeviceError),
 
-    /// Warren mode active (env var `WARREN_TUNNEL=1`) but the Warren
-    /// selector is not configured on the generator side.
+    /// The Warren relay selector is not configured on the generator
+    /// side (should never happen: it is always wired at boot).
     #[error("Warren tunnel mode requested but no Warren relay selector configured")]
     WarrenSelectorMissing,
 
-    /// Warren mode active but the `signing_key` could not be loaded
-    /// (BIP39 mnemonic absent or corrupted, see `warren_signer`).
+    /// The `signing_key` could not be loaded (BIP39 mnemonic absent or
+    /// corrupted, see `warren_signer`).
     #[error("Warren tunnel mode requested but no Warren signing key available")]
     WarrenSigningKeyMissing,
 
@@ -90,11 +86,8 @@ struct InnerParametersGenerator {
     tunnel_options: TunnelOptions,
     account_manager: AccountManagerHandle,
 
-    last_generated_relays: Option<LastSelectedRelays>,
-
-    /// Artifacts for the parallel Warren-Iroh path. `None` on a
-    /// non-Warren daemon (= WG path only); `Some` when
-    /// `warren_mode::is_enabled()` at boot.
+    /// Artifacts for the Warren tunnel path. Always populated at boot
+    /// (Warren is the only mode); kept as `Option` for the type plumbing.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
     warren_signing_key: Option<SigningKey>,
     /// Multi-hop config loaded at boot from
@@ -171,11 +164,9 @@ struct InnerParametersGenerator {
     /// exit relay. Populated by [`produce_warren_tunnel_params`] after
     /// a successful selection so [`get_last_location`] can surface the
     /// country / city / centroid of the active exit on the connecting
-    /// and connected tunnel states. Without this, the WireGuard-only
-    /// `last_generated_relays` returns `None` for Warren tunnels and
-    /// the renderer falls back to the previous map coordinates
-    /// (typically the Gothenburg default), leaving the marker stuck on
-    /// the wrong continent.
+    /// and connected tunnel states. Without this, the renderer falls
+    /// back to the previous map coordinates (typically the Gothenburg
+    /// default), leaving the marker stuck on the wrong continent.
     last_warren_location: Option<GeoIpLocation>,
     /// Live-reconfig channel: every push fans out to the
     /// [`talpid_warren_tunnel`] controller task spawned at tunnel
@@ -193,8 +184,7 @@ struct InnerParametersGenerator {
     /// when applying the persisted user setting at boot, which makes
     /// the value visible to the controller task as soon as it
     /// `borrow()`s the channel.
-    nat_pmp_control_tx:
-        tokio::sync::watch::Sender<Option<talpid_warren_tunnel::NatPmpConfig>>,
+    nat_pmp_control_tx: tokio::sync::watch::Sender<Option<talpid_warren_tunnel::NatPmpConfig>>,
 }
 
 /// Update message produced by the Session A.4 verify hook and
@@ -217,10 +207,7 @@ pub enum WarrenPinUpdate {
     /// Reconnect to a known `exit_id`, observed pubkey matches the
     /// stored value: bump `last_seen_unix` so the UI can surface
     /// staleness ("last connected N days ago").
-    BumpLastSeen {
-        exit_id_hex: String,
-        now_unix: u64,
-    },
+    BumpLastSeen { exit_id_hex: String, now_unix: u64 },
     /// Session H A.4: verify hook refused a connect because the
     /// observed Ed25519 pubkey diverges from the locally pinned
     /// baseline. The consumer relays this to the UI through the
@@ -263,8 +250,8 @@ impl ParametersGenerator {
     ///
     /// If `warren_relay_selector` or `warren_signing_key` are `None`,
     /// `generate_warren_tunnel_params` returns the corresponding typed
-    /// error. The legacy WireGuard parameter-generation code is inert:
-    /// the Warren tunnel is the only backend the state machine drives.
+    /// error. The Warren tunnel is the only backend the state machine
+    /// drives.
     #[expect(
         clippy::too_many_arguments,
         reason = "Constructor for the daemon-side params generator: the nine inputs are all required (4 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
@@ -285,7 +272,6 @@ impl ParametersGenerator {
             relay_selector,
             relay_settings,
             account_manager,
-            last_generated_relays: None,
             warren_relay_selector,
             warren_signing_key,
             warren_multi_hop,
@@ -295,8 +281,7 @@ impl ParametersGenerator {
             warren_enable_daita: false,
             warren_last_exit_pubkey: None,
             warren_api_url,
-            warren_pinned_exit_pubkeys:
-                mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
+            warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
             last_warren_location: None,
             // Initial watch value `None` = NAT-PMP disabled. The
@@ -330,7 +315,10 @@ impl ParametersGenerator {
         new_pubkey_hex: &str,
     ) -> TrustNewExitKeyOutcome {
         let mut inner = self.0.lock().await;
-        let Some(existing) = inner.warren_pinned_exit_pubkeys.entries.get_mut(exit_id_hex)
+        let Some(existing) = inner
+            .warren_pinned_exit_pubkeys
+            .entries
+            .get_mut(exit_id_hex)
         else {
             return TrustNewExitKeyOutcome::ExitNotFound;
         };
@@ -451,11 +439,8 @@ impl ParametersGenerator {
 
     /// Assembles a [`WarrenTunnelParameters`] for the
     /// `retry_attempt` attempt, from the stored Warren artifacts.
-    ///
-    /// Asymmetric mirror API of
-    /// [`TunnelParametersGenerator::generate`] (which produces WG):
-    /// the state machine picks one OR the other depending on
-    /// `warren_mode::is_enabled`.
+    /// Warren is the only mode, so the state machine always uses this
+    /// path.
     ///
     /// # Errors
     ///
@@ -547,36 +532,36 @@ impl ParametersGenerator {
         // `multi_hop.exit.exit_id`. Falls back to empty strings if
         // the relay list has no matching entry (descriptor
         // out-of-band of the cached relays.json).
-        let (exit_id_hex, observed_pubkey_hex, country_code, city) =
-            if let Some(multi_hop) = params.multi_hop.as_ref() {
-                let exit_id = talpid_warren_tunnel::RelayExitId::from_bytes(
-                    *multi_hop.exit.exit_id.as_bytes(),
-                );
-                let (mh_country, mh_city) = inner
-                    .warren_relay_selector
-                    .as_ref()
-                    .and_then(|sel| sel.relay_by_exit_id(&exit_id))
-                    .map(|r| {
-                        (
-                            r.location().country_code().to_owned(),
-                            r.location().city().to_owned(),
-                        )
-                    })
-                    .unwrap_or_default();
-                (
-                    exit_id.to_hex(),
-                    hex::encode(multi_hop.exit.exit_ed25519_pubkey),
-                    mh_country,
-                    mh_city,
-                )
-            } else {
-                (
-                    params.exit_id.to_hex(),
-                    hex::encode(params.exit_addr.id.as_bytes()),
-                    params.country_code.clone(),
-                    params.city.clone(),
-                )
-            };
+        let (exit_id_hex, observed_pubkey_hex, country_code, city) = if let Some(multi_hop) =
+            params.multi_hop.as_ref()
+        {
+            let exit_id =
+                talpid_warren_tunnel::RelayExitId::from_bytes(*multi_hop.exit.exit_id.as_bytes());
+            let (mh_country, mh_city) = inner
+                .warren_relay_selector
+                .as_ref()
+                .and_then(|sel| sel.relay_by_exit_id(&exit_id))
+                .map(|r| {
+                    (
+                        r.location().country_code().to_owned(),
+                        r.location().city().to_owned(),
+                    )
+                })
+                .unwrap_or_default();
+            (
+                exit_id.to_hex(),
+                hex::encode(multi_hop.exit.exit_ed25519_pubkey),
+                mh_country,
+                mh_city,
+            )
+        } else {
+            (
+                params.exit_id.to_hex(),
+                hex::encode(params.exit_addr.id.as_bytes()),
+                params.country_code.clone(),
+                params.city.clone(),
+            )
+        };
         {
             let now_unix = warren_config::unix_now();
             let pin_outcome = self::warren_pin_verify(
@@ -617,9 +602,7 @@ impl ParametersGenerator {
                     });
                 }
                 WarrenPinOutcome::FirstSeen => {
-                    log::info!(
-                        "warren A.4: TOFU pin established for exit_id={exit_id_hex}"
-                    );
+                    log::info!("warren A.4: TOFU pin established for exit_id={exit_id_hex}");
                     if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
                         let _ = tx.send(WarrenPinUpdate::PinNewExit {
                             exit_id_hex,
@@ -761,11 +744,10 @@ impl ParametersGenerator {
             inner.warren_status_cache.set_nat_pmp_requesting();
         }
         // Cache the selected exit's geo so `get_last_location` can
-        // surface it on the connecting / connected tunnel state. The
-        // legacy `last_generated_relays` path is WireGuard-only — on
-        // the Warren path nothing else populates the map marker
-        // location and the renderer would otherwise show the previous
-        // / default coordinates (Gothenburg). Reuse the
+        // surface it on the connecting / connected tunnel state.
+        // Nothing else populates the map marker location, so the
+        // renderer would otherwise show the previous / default
+        // coordinates (Gothenburg). Reuse the
         // `country_code`/`city` already resolved earlier in this
         // function (which accounts for the multi-hop forensic
         // resolution caveat C1) and pair them with the static
@@ -827,177 +809,32 @@ impl ParametersGenerator {
         // Drop in-memory entries that disappeared from disk (= the
         // user invoked ResetPinnedExitKeys or edited settings.json by
         // hand).
-        inner.warren_pinned_exit_pubkeys.entries.retain(|k, _| {
-            settings
-                .warren_pinned_exit_pubkeys
-                .entries
-                .contains_key(k)
-        });
+        inner
+            .warren_pinned_exit_pubkeys
+            .entries
+            .retain(|k, _| settings.warren_pinned_exit_pubkeys.entries.contains_key(k));
     }
 
     pub async fn last_relay_was_overridden(&self) -> bool {
-        let inner = self.0.lock().await;
-        let Some(relays) = inner.last_generated_relays.as_ref() else {
-            return false;
-        };
-        relays.server_override
+        // The Warren tunnel has no Mullvad server-override concept.
+        false
     }
 
     /// Gets the location associated with the last generated tunnel
-    /// parameters. Tries the legacy WireGuard path
-    /// (`last_generated_relays`) first; falls back to the Warren-Iroh
-    /// path's [`InnerParametersGenerator::last_warren_location`]
-    /// cache when the daemon is in Warren mode. Returns `None` only
-    /// when neither path has produced parameters yet (typically the
-    /// disconnected state right after boot).
+    /// parameters. `produce_warren_tunnel_params` snapshots the selected
+    /// exit's country / city / centroid into `last_warren_location`.
+    /// Returns `None` only when no parameters have been produced yet
+    /// (typically the disconnected state right after boot).
     pub async fn get_last_location(&self) -> Option<GeoIpLocation> {
         let inner = self.0.lock().await;
-
-        // WireGuard path (Mullvad upstream behaviour, unchanged).
-        if let Some(relays) = inner.last_generated_relays.as_ref() {
-            let (entry, exit, obfuscator) = match &relays.config {
-                WireguardConfig::Singlehop { exit } => {
-                    (None, exit, relays.has_obfuscator.then_some(exit))
-                }
-                WireguardConfig::Multihop { exit, entry } => {
-                    (Some(entry), exit, relays.has_obfuscator.then_some(entry))
-                }
-            };
-            let location = exit.location.clone();
-
-            return Some(GeoIpLocation {
-                ipv4: None,
-                ipv6: None,
-                country: location.country,
-                city: Some(location.city),
-                latitude: location.latitude,
-                longitude: location.longitude,
-                mullvad_exit_ip: true,
-                hostname: Some(exit.hostname.clone()),
-                entry_hostname: entry.map(|relay| relay.hostname.clone()),
-                obfuscator_hostname: obfuscator.map(|relay| relay.hostname.clone()),
-            });
-        }
-
-        // Warren path: `produce_warren_tunnel_params` snapshots the
-        // selected exit's country / city / centroid into
-        // `last_warren_location`. Clone so the mutex guard can drop
-        // before the caller awaits anything downstream.
+        // Clone so the mutex guard can drop before the caller awaits
+        // anything downstream.
         inner.last_warren_location.clone()
     }
 }
 
-impl InnerParametersGenerator {
-    async fn generate(
-        &mut self,
-        retry_attempt: u32,
-        ip_availability: IpAvailability,
-    ) -> Result<TunnelParameters, Error> {
-        // Custom tunnel endpoints bypass relay selection entirely.
-        if let RelaySettings::CustomTunnelEndpoint(ref endpoint) = self.relay_settings {
-            self.last_generated_relays = None;
-            return endpoint
-                .to_tunnel_parameters(self.tunnel_options.clone())
-                .map_err(|e| {
-                    log::error!("Failed to resolve hostname for custom tunnel config: {}", e);
-                    Error::ResolveCustomHostname
-                });
-        }
-
-        let data = self.device().await?;
-        let selected_relay = self
-            .relay_selector
-            .get_relay(retry_attempt as usize, ip_availability)?;
-
-        let GetRelay {
-            endpoint,
-            obfuscator,
-            inner,
-        } = selected_relay;
-
-        let server_override = {
-            let first_relay = match &inner {
-                WireguardConfig::Singlehop { exit } => exit,
-                WireguardConfig::Multihop { exit: _, entry } => entry,
-            };
-            match endpoint.peer.endpoint {
-                SocketAddr::V4(_) => first_relay.overridden_ipv4,
-                SocketAddr::V6(_) => first_relay.overridden_ipv6,
-            }
-        };
-
-        self.last_generated_relays = Some(LastSelectedRelays {
-            config: inner,
-            has_obfuscator: obfuscator.is_some(),
-            server_override,
-        });
-
-        Ok(self.create_wireguard_tunnel_parameters(endpoint, data, obfuscator))
-    }
-
-    fn create_wireguard_tunnel_parameters(
-        &self,
-        endpoint: MullvadEndpoint,
-        data: PrivateAccountAndDevice,
-        obfuscator_config: Option<Obfuscators>,
-    ) -> TunnelParameters {
-        let tunnel_ipv4 = data.device.wg_data.addresses.ipv4_address.ip();
-        let tunnel_ipv6 = data.device.wg_data.addresses.ipv6_address.ip();
-        let tunnel = wireguard::TunnelConfig {
-            private_key: data.device.wg_data.private_key,
-            addresses: vec![IpAddr::from(tunnel_ipv4), IpAddr::from(tunnel_ipv6)],
-        };
-
-        wireguard::TunnelParameters {
-            connection: wireguard::ConnectionConfig {
-                tunnel,
-                peer: endpoint.peer,
-                exit_peer: endpoint.exit_peer,
-                ipv4_gateway: endpoint.ipv4_gateway,
-                ipv6_gateway: Some(endpoint.ipv6_gateway),
-                #[cfg(target_os = "linux")]
-                fwmark: Some(mullvad_types::TUNNEL_FWMARK),
-            },
-            options: self
-                .tunnel_options
-                .wireguard
-                .clone()
-                .into_talpid_tunnel_options(),
-            generic_options: self.tunnel_options.generic.clone(),
-            obfuscation: obfuscator_config,
-        }
-    }
-
-    async fn device(&self) -> Result<PrivateAccountAndDevice, Error> {
-        let device_state = self.account_manager.data().await?;
-        device_state.into_device().ok_or(Error::NoAuthDetails)
-    }
-}
-
 impl TunnelParametersGenerator for ParametersGenerator {
-    fn generate(
-        &mut self,
-        retry_attempt: u32,
-        ip_availability: IpAvailability,
-    ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>> {
-        let generator = self.0.clone();
-        Box::pin(async move {
-            let mut inner = generator.lock().await;
-            inner
-                .generate(retry_attempt, ip_availability)
-                .await
-                .inspect_err(|error| {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg("Failed to generate tunnel parameters")
-                    );
-                })
-                .map_err(ParameterGenerationError::from)
-        })
-    }
-
-    /// Override of the default trait method to wire the Warren-Iroh
-    /// path on the daemon side. Delegates to
+    /// Wires the Warren path on the daemon side. Delegates to
     /// [`Self::produce_warren_tunnel_params`] which consumes the
     /// Warren artifacts stored in `InnerParametersGenerator`.
     fn generate_warren_tunnel_params(
@@ -1061,19 +898,6 @@ impl From<Error> for ParameterGenerationError {
             },
         }
     }
-}
-
-/// Relays selected by the legacy (inert) WireGuard parameter
-/// generation; the Warren tunnel is the only backend the state
-/// machine drives.
-/// The traffic flow can look like this:
-///     client -> obfuscator -> entry -> exit -> internet
-/// But for most users, it will look like this:
-///     client -> entry -> internet
-struct LastSelectedRelays {
-    config: WireguardConfig,
-    has_obfuscator: bool,
-    server_override: bool,
 }
 
 /// Outcome of the Session A.4 pubkey-pinning verify hook.
@@ -1157,21 +981,18 @@ mod warren_pin_tests {
         observed_pubkey_hex: &str,
         now_unix: u64,
     ) -> WarrenPinOutcome {
-        warren_pin_verify(
-            table,
-            exit_id_hex,
-            observed_pubkey_hex,
-            "",
-            "",
-            now_unix,
-        )
+        warren_pin_verify(table, exit_id_hex, observed_pubkey_hex, "", "", now_unix)
     }
 
     #[test]
     fn first_seen_inserts_tofu_baseline() {
         let mut table = WarrenPinnedExitPubkeys::default();
-        let outcome =
-            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        let outcome = pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            100,
+        );
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         let entry = table.entries.get(&"aa".repeat(16)).expect("inserted");
         assert_eq!(entry.pubkey_hex, "bb".repeat(32));
@@ -1182,9 +1003,18 @@ mod warren_pin_tests {
     #[test]
     fn second_visit_with_same_pubkey_bumps_last_seen() {
         let mut table = WarrenPinnedExitPubkeys::default();
-        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
-        let outcome =
-            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 250);
+        pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            100,
+        );
+        let outcome = pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            250,
+        );
         assert_eq!(outcome, WarrenPinOutcome::Match);
         let entry = table.entries.get(&"aa".repeat(16)).expect("still pinned");
         assert_eq!(entry.first_seen_unix, 100, "first_seen frozen at TOFU time");
@@ -1198,9 +1028,18 @@ mod warren_pin_tests {
         // connect by returning Mismatch carrying the pinned hex so
         // the daemon can plumb both values into the gRPC event.
         let mut table = WarrenPinnedExitPubkeys::default();
-        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
-        let outcome =
-            pv(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
+        pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            100,
+        );
+        let outcome = pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "cc".repeat(32).as_str(),
+            200,
+        );
         match outcome {
             WarrenPinOutcome::Mismatch { pinned } => {
                 assert_eq!(pinned, "bb".repeat(32));
@@ -1210,8 +1049,15 @@ mod warren_pin_tests {
         // The pin table MUST stay unchanged on mismatch: silently
         // accepting the new key would defeat the whole pinning model.
         let entry = table.entries.get(&"aa".repeat(16)).expect("still pinned");
-        assert_eq!(entry.pubkey_hex, "bb".repeat(32), "pin unchanged on mismatch");
-        assert_eq!(entry.last_seen_unix, 100, "last_seen NOT bumped on mismatch");
+        assert_eq!(
+            entry.pubkey_hex,
+            "bb".repeat(32),
+            "pin unchanged on mismatch"
+        );
+        assert_eq!(
+            entry.last_seen_unix, 100,
+            "last_seen NOT bumped on mismatch"
+        );
     }
 
     #[test]
@@ -1220,9 +1066,18 @@ mod warren_pin_tests {
         // the existing pin for a different exit_id stays untouched
         // and the new exit_id gets its own TOFU baseline.
         let mut table = WarrenPinnedExitPubkeys::default();
-        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
-        let outcome =
-            pv(&mut table, "cd".repeat(16).as_str(), "ef".repeat(32).as_str(), 200);
+        pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            100,
+        );
+        let outcome = pv(
+            &mut table,
+            "cd".repeat(16).as_str(),
+            "ef".repeat(32).as_str(),
+            200,
+        );
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         assert_eq!(table.entries.len(), 2, "two independent pins");
     }
@@ -1234,11 +1089,20 @@ mod warren_pin_tests {
         // same exit_id should TOFU-pin a fresh entry rather than
         // emit Mismatch.
         let mut table = WarrenPinnedExitPubkeys::default();
-        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 100);
+        pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            100,
+        );
         // Simulate the daemon receiving a reset.
         table.entries.clear();
-        let outcome =
-            pv(&mut table, "aa".repeat(16).as_str(), "cc".repeat(32).as_str(), 200);
+        let outcome = pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "cc".repeat(32).as_str(),
+            200,
+        );
         assert_eq!(outcome, WarrenPinOutcome::FirstSeen);
         assert_eq!(table.entries.len(), 1);
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
@@ -1253,7 +1117,12 @@ mod warren_pin_tests {
         // strings. This locks the contract for legacy call sites and
         // multi-hop paths where the descriptor lacks geo info.
         let mut table = WarrenPinnedExitPubkeys::default();
-        pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 42);
+        pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            42,
+        );
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
         assert_eq!(entry.country_code, "");
         assert_eq!(entry.city, "");
@@ -1368,8 +1237,12 @@ mod warren_pin_tests {
                 city: "Paris".into(),
             },
         );
-        let outcome =
-            pv(&mut table, "aa".repeat(16).as_str(), "bb".repeat(32).as_str(), 80);
+        let outcome = pv(
+            &mut table,
+            "aa".repeat(16).as_str(),
+            "bb".repeat(32).as_str(),
+            80,
+        );
         assert_eq!(outcome, WarrenPinOutcome::Match);
         let entry = table.entries.get(&"aa".repeat(16)).unwrap();
         assert_eq!(entry.country_code, "fr");

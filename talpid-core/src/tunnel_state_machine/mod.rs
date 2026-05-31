@@ -50,7 +50,7 @@ use std::{
 #[cfg(target_os = "android")]
 use talpid_types::{ErrorExt, android::AndroidContext};
 use talpid_types::{
-    net::{AllowedEndpoint, Connectivity, IpAvailability, wireguard::TunnelParameters},
+    net::{AllowedEndpoint, Connectivity},
     tunnel::{ErrorStateCause, ParameterGenerationError, TunnelStateTransition},
 };
 
@@ -539,22 +539,10 @@ impl TunnelStateMachine {
 
 /// Trait for any type that can provide tunnel parameters to the `TunnelStateMachine`.
 pub trait TunnelParametersGenerator: Send + 'static {
-    /// Legacy WireGuard parameter generation. The Warren state machine
-    /// no longer calls this (it drives the QUIC backend via
-    /// [`Self::generate_warren_tunnel_params`]); it is inert.
-    fn generate(
-        &mut self,
-        retry_attempt: u32,
-        ip_availability: IpAvailability,
-    ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
-
     /// Produces [`talpid_warren_tunnel::WarrenTunnelParameters`] for
-    /// the given `retry_attempt` attempt.
-    ///
-    /// Default implementation: returns `NoMatchingRelay`. Implementers
-    /// that do not support Warren have nothing to do.
-    /// `mullvad-daemon::tunnel::ParametersGenerator` overrides this
-    /// method to wire the Warren path on the daemon side.
+    /// the given `retry_attempt` attempt. The Warren QUIC backend is the
+    /// only tunnel mode, so this is the single parameter-generation entry
+    /// point the state machine drives.
     fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
@@ -854,10 +842,6 @@ mod warren_trait_default_tests {
     //! `unimplemented!()` or panic). Critical because upstream Mullvad
     //! implementers know nothing about Warren; they
     //! must degrade gracefully.
-    use std::future::Future;
-    use std::pin::Pin;
-    use talpid_types::net::IpAvailability;
-    use talpid_types::net::wireguard::TunnelParameters;
     use talpid_types::tunnel::ParameterGenerationError;
 
     use super::TunnelParametersGenerator;
@@ -866,16 +850,7 @@ mod warren_trait_default_tests {
     /// to exercise the trait's default body.
     struct UpstreamOnlyGenerator;
 
-    impl TunnelParametersGenerator for UpstreamOnlyGenerator {
-        fn generate(
-            &mut self,
-            _retry_attempt: u32,
-            _ip_availability: IpAvailability,
-        ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>
-        {
-            Box::pin(async { Err(ParameterGenerationError::NoMatchingRelay) })
-        }
-    }
+    impl TunnelParametersGenerator for UpstreamOnlyGenerator {}
 
     #[tokio::test]
     async fn default_generate_warren_returns_no_matching_relay() {

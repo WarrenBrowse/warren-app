@@ -658,14 +658,6 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
-  // Persistent warren_mode toggle (Iroh tunnel). A daemon restart is
-  // required to apply (see resolve() on the Rust side).
-  public setWarrenMode = async (warrenMode: boolean) => {
-    const actions = this.reduxActions;
-    await IpcRendererEventChannel.settings.setWarrenMode(warrenMode);
-    actions.settings.updateWarrenMode(warrenMode);
-  };
-
   public setWarrenLocalAccount = async (warrenLocalAccount: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setWarrenLocalAccount(warrenLocalAccount);
@@ -977,7 +969,6 @@ export default class AppRenderer {
     const reduxSettings = this.reduxActions.settings;
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
-    reduxSettings.updateWarrenMode(newSettings.warrenMode);
     reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);

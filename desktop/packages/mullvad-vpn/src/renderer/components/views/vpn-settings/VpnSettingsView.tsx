@@ -6,13 +6,12 @@ import {
   LockdownModeSetting,
   QuantumResistantSetting,
 } from '../../../features/tunnel/components';
-// `warren-mode` settings (tunnel mode, local account, failover, API
-// URL) are deliberately NOT surfaced in the UI: they are
-// developer/self-hosting toggles whose default (= Warren tunnel ON,
-// remote API enabled) is the only sensible choice for end users.
-// Power users can still override them via `WARREN_TUNNEL`,
-// `WARREN_LOCAL_ACCOUNT`, `WARREN_FAILOVER`, `WARREN_API_URL` env
-// vars or by editing `/etc/warren-vpn/settings.json` directly.
+// `warren-mode` settings (local account, failover, API URL) are
+// deliberately NOT surfaced in the UI: they are developer/self-hosting
+// toggles whose default (= remote API enabled) is the only sensible
+// choice for end users. Power users can still override them via
+// `WARREN_LOCAL_ACCOUNT`, `WARREN_FAILOVER`, `WARREN_API_URL` env vars
+// or by editing `/etc/warren-vpn/settings.json` directly.
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';

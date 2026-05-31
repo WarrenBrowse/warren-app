@@ -6,7 +6,7 @@ These are instructions on how to build the app on desktop platforms. See the
 > ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
 
 Le fork Warren consomme plusieurs crates via des **path-deps cross-repo**
-(`warren-iroh-tunnel`, `warren-identity`, `warren-config`, `warren-relay-selector`,
+(`warren-tunnel`, `warren-identity`, `warren-config`, `warren-relay-selector`,
 `warren-api-client`, `warren-api`). Elles vivent dans le repo voisin
 [`warren-core`](https://github.com/WarrenBrowse/warren-core) et **doivent être
 checkout-ées en parallèle** de `warren-app`.
@@ -18,7 +18,7 @@ warrenBros/
 ├── warren-app/      ← ce repo (fork Mullvad)
 └── warren-core/     ← repo des crates Warren
     └── crates/
-        ├── warren-iroh-tunnel/
+        ├── warren-tunnel/
         ├── warren-identity/
         ├── warren-config/
         ├── warren-relay-selector/
@@ -31,8 +31,8 @@ Si `warren-core/` est absent ou à un autre path, `cargo metadata` /
 `./build.sh` échouent avec :
 
 ```
-error: failed to load manifest for dependency `warren-iroh-tunnel`
-Caused by: failed to read `../../warren-core/crates/warren-iroh-tunnel/Cargo.toml`
+error: failed to load manifest for dependency `warren-tunnel`
+Caused by: failed to read `../../warren-core/crates/warren-tunnel/Cargo.toml`
 Caused by: No such file or directory (os error 2)
 ```
 
@@ -52,8 +52,8 @@ Les path-deps sont déclarés dans :
 - [`mullvad-daemon/Cargo.toml`](mullvad-daemon/Cargo.toml) (`warren-config`,
   `warren-identity`, `warren-relay-selector`, `warren-api-client`,
   `warren-api` en dev-dep)
-- [`talpid-warren-iroh/Cargo.toml`](talpid-warren-iroh/Cargo.toml)
-  (`warren-iroh-tunnel`)
+- [`talpid-warren-tunnel/Cargo.toml`](talpid-warren-tunnel/Cargo.toml)
+  (`warren-tunnel`)
 - [`Cross.toml`](Cross.toml) (mount additionnel `../warren-core` pour les
   builds Docker `cross`)
 
@@ -133,7 +133,7 @@ sudo apt install rpm
 
 #### Warren fork — extra deps Linux (F4 fork audit)
 
-Le fork Warren-Iroh ajoute des dépendances natives au-delà des
+Le fork Warren ajoute des dépendances natives au-delà des
 besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :
 
 ```bash
@@ -160,8 +160,8 @@ sudo apt install \
 #### Cross-compile macOS → Linux (F1 fork audit)
 
 Le `cross` (Docker-based) **n'est pas supporté pour le fork Warren**
-car le path-dep cross-repo `warren-app/talpid-warren-iroh →
-../../warren-core/crates/warren-iroh-tunnel` n'est pas montable dans
+car le path-dep cross-repo `warren-app/talpid-warren-tunnel →
+../../warren-core/crates/warren-tunnel` n'est pas montable dans
 le container `cross-rs/x86_64-unknown-linux-gnu` standard.
 
 **Workaround** : build natif sur un VPS Linux via le script

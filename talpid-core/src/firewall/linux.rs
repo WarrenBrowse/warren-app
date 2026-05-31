@@ -772,7 +772,7 @@ impl<'a> PolicyBatch<'a> {
         // `split_tunnel` cgroup, its packets leave `mangle_chain`
         // marked -> this rule matches -> ACCEPT. WG-kernel has its own
         // fwmark logic. See also `add_allow_tunnel_endpoint_root_rule`
-        // for the Warren-Iroh case below.
+        // for the Warren case below.
         let mut out_rule = Rule::new(&self.out_chain);
         check_endpoint(&mut out_rule, End::Dst, &endpoint.endpoint);
         out_rule.add_expr(&nft_expr!(meta mark));
@@ -781,7 +781,7 @@ impl<'a> PolicyBatch<'a> {
 
         self.batch.add(&out_rule, nftnl::MsgType::Add);
 
-        // Warren-Iroh case (fork F6 audit): the `mullvad-daemon` itself
+        // Warren case (fork F6 audit): the `mullvad-daemon` itself
         // establishes the QUIC tunnel via `talpid-warren-tunnel::WarrenTunnelMonitor`.
         // Its sockets emit from the daemon's **root cgroup** (not the
         // `split_tunnel` cgroup reserved for split-tunneled processes). So

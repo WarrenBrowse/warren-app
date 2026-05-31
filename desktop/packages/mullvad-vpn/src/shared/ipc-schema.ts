@@ -27,13 +27,13 @@ import {
   NewCustomList,
   ObfuscationSettings,
   RelaySettings,
+  TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
-  TrustNewExitKeyOutcome,
   WarrenFailoverSettings,
   WarrenMultiHopSettings,
-  WarrenPubkeyMismatch,
   WarrenPubKey,
+  WarrenPubkeyMismatch,
   WarrenStatus,
 } from './daemon-rpc-types';
 import { IGuiSettingsState } from './gui-settings-state';
@@ -215,8 +215,7 @@ export const ipcSchema = {
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
-    // Persistent toggles for Warren mode.
-    setWarrenMode: invoke<boolean, void>(),
+    // Persistent toggle for Warren local account mode.
     setWarrenLocalAccount: invoke<boolean, void>(),
     // Persistent warren-api URL (empty string = unset). Daemon restart
     // required to apply.

@@ -3067,10 +3067,6 @@ msgid "When enabled, the daemon uses a self-hosted account derived from the loca
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of a standard VPN tunnel."
-msgstr ""
-
-msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
 msgstr ""
 

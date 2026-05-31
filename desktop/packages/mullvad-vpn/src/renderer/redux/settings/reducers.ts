@@ -87,8 +87,7 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
-  // Persistent toggles exposed via gRPC.
-  warrenMode: boolean;
+  // Persistent toggle exposed via gRPC.
   warrenLocalAccount: boolean;
   // Persistent warren-api URL.
   warrenApiUrl?: string;
@@ -153,7 +152,6 @@ const initialState: ISettingsReduxState = {
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
-  warrenMode: false,
   warrenLocalAccount: false,
   warrenApiUrl: undefined,
   warrenMultiHop: {
@@ -250,12 +248,6 @@ export default function (
       return {
         ...state,
         allowLan: action.allowLan,
-      };
-
-    case 'UPDATE_WARREN_MODE':
-      return {
-        ...state,
-        warrenMode: action.warrenMode,
       };
 
     case 'UPDATE_WARREN_LOCAL_ACCOUNT':

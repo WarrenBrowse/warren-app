@@ -23,7 +23,7 @@ import {
 
 // Upstream `MultihopListItem` is intentionally **not** rendered:
 // it surfaces the WireGuard multi-hop constraint, which is dead
-// weight in Warren mode (Warren tunnels run over Quinn/Iroh, not
+// weight for Warren (Warren tunnels run over QUIC, not
 // WireGuard). `WarrenMultiHopListItem` is the only multi-hop entry
 // users see — its label is rendered as plain "Multihop" since the
 // Warren context is implicit (the host app *is* Warren VPN). The

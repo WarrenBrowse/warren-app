@@ -3,14 +3,13 @@ use std::path::PathBuf;
 
 use futures::channel::{mpsc, oneshot};
 use futures::stream::StreamExt;
-use mullvad_api::{availability::ApiAvailability, rest::MullvadRestHandle};
 use mullvad_types::version::AppVersionInfo;
 #[cfg(not(target_os = "android"))]
 use mullvad_types::version::SuggestedUpgrade;
 #[cfg(in_app_upgrade)]
 use mullvad_update::app::{AppDownloader, AppDownloaderParameters, HttpAppDownloader};
 #[cfg(not(target_os = "android"))]
-use mullvad_update::version::{VersionInfo, rollout::Rollout};
+use mullvad_update::version::VersionInfo;
 use talpid_core::mpsc::Sender;
 #[cfg(in_app_upgrade)]
 use talpid_types::ErrorExt;
@@ -20,10 +19,7 @@ use crate::management_interface::AppUpgradeBroadcast;
 
 #[cfg(in_app_upgrade)]
 use super::downloader::ProgressUpdater;
-use super::{
-    Error,
-    check::{VersionCache, VersionUpdater},
-};
+use super::{Error, check::VersionCache};
 
 #[cfg(in_app_upgrade)]
 use super::downloader;
@@ -99,7 +95,9 @@ impl Downloader for DefaultDownloader {}
 
 /// Router of version updates and update requests.
 ///
-/// New available app version events are forwarded from the [`VersionUpdater`].
+/// New available app version events would be forwarded from a version updater
+/// task; on the Warren fork that updater is never spawned, so the router acts
+/// as a no-op responder for `GetLatestVersion`.
 /// If an update is in progress, these events are paused until the update is completed or canceled.
 /// This is done to prevent frontends from confusing which version is currently being installed,
 /// in case new version info is received while the update is in progress.
@@ -208,61 +206,35 @@ impl State {
 
 /// Spawn the version router task.
 ///
-/// When `warren_mode` is `true` the Mullvad version check is skipped
-/// entirely: Warren uses GitHub Releases for updates, not Mullvad's CDN,
-/// and contacting `api.mullvad.net` from a Warren client would leak user
-/// existence to Mullvad infrastructure.
+/// The Mullvad version check is never performed: Warren is the only mode
+/// and uses GitHub Releases for updates, not Mullvad's CDN. Contacting
+/// `api.mullvad.net` from a Warren client would leak user existence to
+/// Mullvad infrastructure.
 ///
-/// In warren mode the router still accepts `GetLatestVersion` requests
-/// (returning a placeholder "no update" response so the UI is satisfied)
-/// but it never spawns a `VersionUpdater` task pointing at Mullvad servers.
+/// The router still accepts `GetLatestVersion` requests (returning a
+/// placeholder "no update" response so the UI is satisfied) but it never
+/// spawns a `VersionUpdater` task pointing at Mullvad servers.
 #[cfg_attr(not(in_app_upgrade), expect(unused_variables))]
-#[expect(clippy::too_many_arguments, reason = "warren_mode parameter added for M-6")]
 pub(crate) fn spawn_version_router(
-    api_handle: MullvadRestHandle,
-    availability_handle: ApiAvailability,
     cache_dir: PathBuf,
     version_event_sender: DaemonEventSender<AppVersionInfo>,
     beta_program: bool,
-    #[cfg(not(target_os = "android"))] rollout: Rollout,
     app_upgrade_broadcast: AppUpgradeBroadcast,
-    warren_mode: bool,
 ) -> VersionRouterHandle {
     let (tx, rx) = mpsc::unbounded();
 
     tokio::spawn(async move {
-        let (new_version_tx, new_version_rx) = mpsc::unbounded();
+        // The sender is kept alive (never used) so `new_version_rx` stays
+        // open but permanently empty — Warren never emits Mullvad version
+        // events.
+        let (_new_version_tx, new_version_rx) = mpsc::unbounded();
         let (refresh_version_check_tx, refresh_version_check_rx) = mpsc::unbounded();
 
-        if warren_mode {
-            // M-6: Skip Mullvad version check entirely in Warren mode.
-            // The channel is simply dropped; the router below will see
-            // `new_version_rx` as permanently empty, which is the correct
-            // no-op behaviour.
-            log::info!(
-                "Warren mode: Mullvad version updater disabled (Warren uses GitHub Releases)"
-            );
-            drop(refresh_version_check_rx);
-        } else {
-            #[cfg(in_app_upgrade)]
-            let _ = downloader::clear_download_dir().await.inspect_err(|err| {
-                log::error!(
-                    "{}",
-                    err.display_chain_with_msg("Failed to clean up download directory")
-                )
-            });
-
-            VersionUpdater::spawn(
-                api_handle,
-                availability_handle,
-                cache_dir.clone(),
-                new_version_tx,
-                refresh_version_check_rx,
-                #[cfg(not(target_os = "android"))]
-                rollout,
-            )
-            .await;
-        }
+        // The Mullvad version updater is never spawned (Warren uses GitHub
+        // Releases). Dropping the receiver leaves the router as a no-op
+        // responder for `GetLatestVersion`.
+        log::info!("Mullvad version updater disabled (Warren uses GitHub Releases)");
+        drop(refresh_version_check_rx);
 
         VersionRouter {
             daemon_rx: rx,
@@ -668,32 +640,31 @@ fn recommended_version_upgrade(
     }
 }
 
-/// M-6: warren_mode integration tests — verifies that the version router
-/// behaves correctly (empty new_version channel, no Mullvad API contact)
-/// when warren_mode=true.
+/// Verifies that the version router behaves correctly (empty new_version
+/// channel, no Mullvad API contact) — the Mullvad version updater is never
+/// spawned on the Warren fork.
 #[cfg(all(test, not(in_app_upgrade)))]
-mod warren_mode_tests {
-    use futures::channel::mpsc::unbounded;
+mod no_updater_tests {
     use futures::StreamExt;
+    use futures::channel::mpsc::unbounded;
     use mullvad_types::version::AppVersionInfo;
     use std::path::PathBuf;
 
     use super::{Message, State, VersionRouter};
 
-    /// M-6 regression: in Warren mode no version event should be sent to the daemon
-    /// on startup — the new_version_rx channel will be permanently empty because
-    /// `VersionUpdater` is never spawned.
+    /// Regression: no version event should be sent to the daemon on startup —
+    /// the `new_version_rx` channel is permanently empty because no version
+    /// updater is ever spawned.
     ///
-    /// This test simulates the warren_mode=true path: we construct a router whose
-    /// `new_version_rx` is immediately closed (sender dropped), mirror what
-    /// `spawn_version_router` does when `warren_mode=true`, and verify that the
-    /// router never emits a version event.
+    /// We construct a router whose `new_version_rx` is immediately closed
+    /// (sender dropped), mirroring what `spawn_version_router` does, and verify
+    /// that the router never emits a version event.
     #[tokio::test]
-    async fn warren_mode_router_does_not_emit_version_events() {
+    async fn router_does_not_emit_version_events() {
         let (version_event_sender, mut version_event_receiver) = unbounded::<AppVersionInfo>();
         let (daemon_tx, daemon_rx) = unbounded::<Message>();
         let (refresh_version_check_tx, _refresh_version_check_rx) = unbounded::<()>();
-        // Simulate warren_mode=true: new_version_tx is dropped immediately.
+        // No updater feeds new_version: drop the sender immediately.
         let (_new_version_tx, new_version_rx) = unbounded();
         drop(_new_version_tx);
 
@@ -723,7 +694,7 @@ mod warren_mode_tests {
         // No version event should have been emitted.
         assert!(
             version_event_receiver.next().await.is_none(),
-            "expected no version event in warren_mode=true scenario"
+            "expected no version event when no updater is spawned"
         );
     }
 }
@@ -1186,11 +1157,7 @@ mod test {
         let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
         let upgrade_version = get_new_stable_version_cache();
         let mut upgrade_version_newer = upgrade_version.clone();
-        upgrade_version_newer
-            .version_info
-            .stable
-            .version
-            .minor += 1;
+        upgrade_version_newer.version_info.stable.version.minor += 1;
 
         version_router.on_new_version(upgrade_version.clone());
 

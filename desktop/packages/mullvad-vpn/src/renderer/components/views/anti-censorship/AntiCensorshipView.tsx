@@ -8,19 +8,15 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { MethodSetting } from './components';
 
 export function AntiCensorshipView() {
   const { pop } = useHistory();
-  // When warren_mode is on, the Mullvad-specific obfuscation methods
-  // (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply: Warren uses
-  // its own M4.0 HTTP/3 mimicry obfuscation (ALPN h3 + SNI
+  // Warren uses its own M4.0 HTTP/3 mimicry obfuscation (ALPN h3 + SNI
   // warrenbrowse.com + Initial split + UDP 443) which is always-on
   // per /v1 doctrine `warren_obfuscation_doctrine_v1`. We surface
   // this as an info-only indicator instead of a togglable picker so
   // the user can verify the obfuscation is active without being able
   // to disable it accidentally.
-  const warrenMode = useSelector((state) => state.settings.warrenMode);
 
   return (
     <View backgroundColor="darkBlue">
@@ -39,32 +35,7 @@ export function AntiCensorshipView() {
                     messages.pgettext('anti-censorship-view', 'Anti-censorship')
                   }
                 </HeaderTitle>
-                {warrenMode ? (
-                  <WarrenObfuscationIndicator />
-                ) : (
-                  <>
-                    <Text variant="labelTiny" color="whiteAlpha60">
-                      {
-                        // TRANSLATORS: First paragraph of description text in anti-censorship view
-                        messages.pgettext(
-                          'anti-censorship-view',
-                          'These methods may be useful in situations where you are blocked from reaching Warren. When "Automatic" is selected, the app will attempt all methods until one works.',
-                        )
-                      }
-                    </Text>
-                    <Text variant="labelTinySemiBold" color="whiteAlpha60">
-                      {
-                        // TRANSLATORS: Second paragraph of description text in anti-censorship view
-                        messages.pgettext(
-                          'anti-censorship-view',
-                          'Please note that these methods do not improve performance, and may increase system utilization and battery consumption.',
-                        )
-                      }
-                    </Text>
-
-                    <MethodSetting />
-                  </>
-                )}
+                <WarrenObfuscationIndicator />
               </View.Container>
             </View.Content>
           </NavigationScrollbars>
@@ -105,7 +76,7 @@ function WarrenObfuscationIndicator() {
       <Text variant="labelTiny" color="whiteAlpha60">
         {messages.pgettext(
           'warren-status-view',
-          'Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on.',
+          'Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel.',
         )}
       </Text>
     </>

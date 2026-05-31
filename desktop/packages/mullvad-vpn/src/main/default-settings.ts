@@ -72,9 +72,6 @@ export function getDefaultSettings(): ISettings {
     apiAccessMethods: getDefaultApiAccessMethods(),
     relayOverrides: [],
     recents: [],
-    // Defaults disabled (standard Mullvad path preserved).
-    // The user opts in via the Settings UI or `mullvad warren …`.
-    warrenMode: false,
     warrenLocalAccount: false,
     // `undefined` = unset, fallback to Mullvad upstream backend.
     warrenApiUrl: undefined,

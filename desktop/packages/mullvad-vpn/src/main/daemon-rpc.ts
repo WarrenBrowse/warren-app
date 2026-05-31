@@ -33,8 +33,8 @@ import {
   TunnelState,
   VoucherResponse,
   WarrenMultiHopSettings,
-  WarrenPubkeyMismatch,
   WarrenPubKey,
+  WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
@@ -371,12 +371,6 @@ export class DaemonRpc extends GrpcClient {
 
   public async setAllowLan(allowLan: boolean): Promise<void> {
     await this.callBool(this.client.setAllowLan, allowLan);
-  }
-
-  // Persistent toggle for the Iroh tunnel mode. Daemon restart is
-  // required to apply (see resolve() on the Rust side).
-  public async setWarrenMode(enabled: boolean): Promise<void> {
-    await this.callBool(this.client.setWarrenMode, enabled);
   }
 
   // Persistent toggle for local account mode (= no remote API).

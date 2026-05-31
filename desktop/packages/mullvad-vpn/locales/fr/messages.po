@@ -3045,10 +3045,6 @@ msgid "When enabled, the daemon uses a self-hosted account derived from the loca
 msgstr "Lorsqu'activé, le service utilise un compte auto-hébergé dérivé de la phrase mnémonique Warren locale au lieu de contacter une API de compte distante."
 
 msgctxt "vpn-settings-view"
-msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of QUIC / OpenVPN."
-msgstr "Lorsqu'activé, le trafic est routé via les serveurs de sortie Warren à travers un tunnel Iroh QUIC plutôt que via QUIC / OpenVPN."
-
-msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
 msgstr "Lorsque cette fonctionnalité est activée, elle empêche l'appareil de contacter certains domaines ou sites Web connus pour distribuer des publicités, des logiciels malveillants, des trackers et plus."
 

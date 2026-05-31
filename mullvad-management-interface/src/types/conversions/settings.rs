@@ -57,7 +57,6 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             update_default_location: settings.update_default_location,
             // Exposed via gRPC so the CLI/UI can read and
             // mutate them.
-            warren_mode: settings.warren_mode,
             warren_local_account: settings.warren_local_account,
             // None -> empty string on the wire (proto3 `string` has
             // no "absent"; we use "" as a sentinel for "unset").
@@ -290,8 +289,7 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             rollout_threshold_seed: None,
             // Propagated via gRPC from the daemon. The gRPC client can
             // read them via `GetSettings` and mutate them via
-            // `SetWarrenMode`/`SetWarrenLocalAccount`.
-            warren_mode: settings.warren_mode,
+            // `SetWarrenLocalAccount`.
             warren_local_account: settings.warren_local_account,
             // Empty string proto -> None on the mullvad_types side.
             // Lets the gRPC UI/CLI unset the field by sending "".

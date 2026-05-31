@@ -3,7 +3,7 @@
 Welcome to the Warren VPN client app source code repository.
 
 Warren VPN est un **fork de [Mullvad VPN](https://github.com/mullvad/mullvadvpn-app)** qui remplace
-le backend tunnel WireGuard par un tunnel **Iroh QUIC** (handshake TLS Ed25519, identité dérivée
+le backend tunnel WireGuard par un tunnel **QUIC** (handshake TLS Ed25519, identité dérivée
 d'une mnémonique BIP39 locale) et qui peut fonctionner **sans backend Mullvad** (`api.mullvad.net`)
 grâce à un mode account local.
 
@@ -19,10 +19,10 @@ préservées. Voir [`docs/warren-architecture.md`](docs/warren-architecture.md) 
 Phase POC privée. Le fork est en cours d'iteration ; **aucune release publique n'est encore
 disponible**. La cible de la phase POC :
 
-- Backend tunnel Iroh QUIC opérationnel sur Linux et macOS desktop
+- Backend tunnel QUIC opérationnel sur Linux et macOS desktop
 - Identité Warren BIP39 + signature Ed25519 sur les endpoints REST migrés
 - Mode `WARREN_LOCAL_ACCOUNT=1` end-to-end sans `api.mullvad.net`
-- GUI Electron rebrandée + toggle Warren mode dans Settings
+- GUI Electron rebrandée
 
 Android et iOS ne sont **pas migrés** à ce stade — les sources upstream sont conservées telles
 quelles pour réduire les conflits de merge weekly.
@@ -44,10 +44,9 @@ Pour la matrice upstream (OS, versions, archis supportées par le code Mullvad),
 
 | | Linux (Warren) | macOS (Warren) | Notes |
 |---|:-:|:-:|---|
-| **Warren Iroh tunnel (QUIC + Ed25519)** | ✓ | ✓ | Activé via `warren_mode` ou `WARREN_TUNNEL=1` |
+| **Warren tunnel (QUIC + Ed25519)** | ✓ | ✓ | Seul mode tunnel du fork |
 | **Warren local account (BIP39, no `api.mullvad.net`)** | ✓ | ✓ | Activé via `warren_local_account` ou `WARREN_LOCAL_ACCOUNT=1` |
-| WireGuard (fallback upstream) | ✓ | ✓ | Path par défaut si `warren_mode` désactivé |
-| Quantum-resistant tunnels (PQ-WG) | ✓ | ✓ | Path WireGuard uniquement |
+| Quantum-resistant tunnels (PQ-WG) | ✓ | ✓ | Code WireGuard upstream hérité |
 | Split tunneling | ✓ | ✓ | |
 | Custom DNS server | ✓ | ✓ | |
 | Content blockers (Ads etc) | ✓ | ✓ | |
@@ -55,8 +54,7 @@ Pour la matrice upstream (OS, versions, archis supportées par le code Mullvad),
 | Local network access (optionnel) | ✓ | ✓ | |
 
 Les modes obfuscation upstream (WireGuard over TCP / Shadowsocks / QUIC / LWO) et DAITA ne sont
-**pas activés** sur le path Warren — Iroh fait QUIC sur 443 nativement. Ils restent fonctionnels
-sur le path WireGuard fallback.
+**pas activés** sur le path Warren — le tunnel Warren fait QUIC sur 443 nativement.
 
 ## Sécurité utilisateur, vie privée, anonymat
 
@@ -116,9 +114,9 @@ binaries.
 
 Plusieurs crates Warren vivent dans le repo voisin [`warren-core/`](../warren-core/) et sont
 référencées par chemin (cf. `[patch.crates-io]` dans [`Cargo.toml`](Cargo.toml)) :
-`warren-identity`, `warren-iroh-tunnel`, `warren-natpmp-{server,client}`, `warren-killswitch`,
+`warren-identity`, `warren-tunnel`, `warren-natpmp-{server,client}`, `warren-killswitch`,
 `warren-ratelimit`, `warren-protocol`, `warren-config`, `warren-relay-selector`. La crate
-[`talpid-warren-iroh`](talpid-warren-iroh/) du workspace fait le pont entre la state machine
+[`talpid-warren-tunnel`](talpid-warren-tunnel/) du workspace fait le pont entre la state machine
 talpid et ces crates POC.
 
 ## Builder l'app
@@ -137,10 +135,6 @@ upstream weekly.
 ## Variables d'environnement utilisées par le daemon
 
 ### Spécifiques Warren
-
-* `WARREN_TUNNEL` — Si setée à `1` / `true` / `yes` / `on`, force le backend tunnel Iroh QUIC. Prend
-  priorité sur le flag persistant `Settings::warren_mode`. Cf.
-  [`mullvad-daemon/src/warren_mode.rs`](mullvad-daemon/src/warren_mode.rs).
 
 * `WARREN_LOCAL_ACCOUNT` — Si setée à `1`, force le mode account local : bootstrap d'un `device.json`
   depuis la mnémonique BIP39 au boot, plus aucun appel HTTP vers `api.mullvad.net`. Prend priorité
@@ -301,8 +295,8 @@ Le daemon est en Rust, multi-crates. La crate top-level qui produit le binaire `
 Comme upstream, le code se sépare en deux familles :
 
 - Crates `talpid-*` — librairie VPN générique, *agnostique* du backend account. Le fork ajoute
-  [`talpid-warren-iroh`](talpid-warren-iroh/) qui plugge le tunnel Iroh dans la state machine
-  talpid.
+  [`talpid-warren-tunnel`](talpid-warren-tunnel/) qui plugge le tunnel QUIC Warren dans la state
+  machine talpid.
 - Crates `mullvad-*` — code spécifique à l'app (settings, management interface, GUI integration).
   Le fork ajoute les modules `warren_*` dans `mullvad-daemon/src/` (cf. liste dans
   [`docs/warren-architecture.md`](docs/warren-architecture.md)).
@@ -314,7 +308,7 @@ Fichiers à connaître :
 - **mullvad-daemon/** — crate qui builde le binaire `warren-daemon`.
 - **mullvad-cli/** — crate qui builde le binaire `warren` (frontend CLI).
 - **talpid-core/** — coeur de l'implémentation VPN, agnostique Mullvad/Warren.
-- **talpid-warren-iroh/** — adaptateur Iroh pour la state machine talpid (fork-only).
+- **talpid-warren-tunnel/** — adaptateur du tunnel QUIC Warren pour la state machine talpid (fork-only).
 
 ## Vocabulaire
 
@@ -323,8 +317,8 @@ Fichiers à connaître :
   - **Frontend** — tout programme qui se connecte au management interface pour piloter le daemon.
     - **GUI** — app Electron + React (binaire bundlé `Warren VPN`).
     - **CLI** — binaire Rust `warren` (frontend terminal).
-- **Warren mode** — flag qui bascule le backend tunnel sur Iroh QUIC. Persistant
-  (`Settings::warren_mode`) avec override env (`WARREN_TUNNEL`).
+- **Warren tunnel** — le tunnel QUIC Warren (handshake TLS Ed25519). C'est l'unique backend tunnel
+  du fork : il n'y a plus de toggle pour l'activer/désactiver.
 - **Warren local account** — flag qui bascule les ops account/device sur un backend local (BIP39 +
   signing key). Persistant (`Settings::warren_local_account`) avec override env
   (`WARREN_LOCAL_ACCOUNT`).
@@ -384,7 +378,7 @@ machine. Cf. `mullvad-paths/tests/warren_collision_safety.rs`.
 | Fichier | Rôle |
 |---|---|
 | `warren_mnemonic.txt` | Mnémonique BIP39 24 mots (perms 0600, owner root) |
-| `warren_settings.json` | Toggles persistants `warren_mode` / `warren_local_account` (intégrés à `settings.json` dans certaines releases) |
+| `warren_settings.json` | Toggle persistant `warren_local_account` (intégré à `settings.json` dans certaines releases) |
 
 #### Fichiers Warren-only sous `<cache_dir>/`
 

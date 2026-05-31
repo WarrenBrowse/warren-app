@@ -19,6 +19,12 @@ pub mod logging;
 mod macos;
 pub mod management_interface;
 mod migrations;
+/// OS-native secret storage abstraction (macOS System Keychain,
+/// Windows DPAPI, plaintext file fallback). Consumed by
+/// `warren_signer` to persist the BIP39 mnemonic outside of the
+/// settings directory whenever the OS provides a daemon-friendly
+/// backend.
+pub mod os_secret_storage;
 mod relay_list;
 mod relay_selector;
 #[cfg(not(target_os = "android"))]
@@ -36,9 +42,6 @@ pub mod warren_account_mode;
 /// Bootstrap of a `device.json` consistent with the Warren mnemonic —
 /// invoked at boot in `WARREN_LOCAL_ACCOUNT=1` mode.
 pub mod warren_device_bootstrap;
-/// Detection of Warren tunnel mode via env var `WARREN_TUNNEL` (POC
-/// switch — no UI/CLI toggle for now).
-pub mod warren_mode;
 /// Loader for `<settings_dir>/warren-multihop.json` that materializes
 /// a `MultiHopConfig` from signed descriptors minted
 /// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
@@ -57,7 +60,7 @@ pub mod warren_query_from_settings;
 pub mod warren_relay_list_view;
 /// Daemon-side wrapper around
 /// `warren_relay_selector::WarrenRelaySelector`: loads the
-/// `WarrenRelayList` from `cache_dir`, selects the Iroh
+/// `WarrenRelayList` from `cache_dir`, selects the endpoint
 /// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
 /// Bootstrap fetcher for `<cache_dir>/warren-relays.json` from
@@ -68,12 +71,6 @@ pub mod warren_relays_fetch;
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
-/// OS-native secret storage abstraction (macOS System Keychain,
-/// Windows DPAPI, plaintext file fallback). Consumed by
-/// `warren_signer` to persist the BIP39 mnemonic outside of the
-/// settings directory whenever the OS provides a daemon-friendly
-/// backend.
-pub mod os_secret_storage;
 /// Loads or generates the user's BIP39 mnemonic from
 /// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
@@ -409,15 +406,13 @@ pub enum DaemonCommand {
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
-    /// Toggle persistant `Settings::warren_mode`.
-    SetWarrenMode(ResponseTx<(), settings::Error>, bool),
     /// Toggle persistant `Settings::warren_local_account`.
     SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
     /// Persistent URL `Settings::warren_api_url`. Empty string ->
     /// unset (= None on the Settings side).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
     /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
-    /// Restart required to apply (mirrors `SetWarrenMode`).
+    /// Restart required to apply (read at boot only).
     SetWarrenMultiHopSettings(
         ResponseTx<(), settings::Error>,
         mullvad_types::settings::WarrenMultiHopSettings,
@@ -869,7 +864,8 @@ pub struct Daemon {
     /// Substituted for the upstream Mullvad list for synchronous
     /// pulls — otherwise the GUI offers countries absent from the
     /// WarrenRelayList and the Warren tunnel returns NoMatchingRelay
-    /// on connect -> kill-switch. `None` if `warren_mode` inactive.
+    /// on connect -> kill-switch. Always populated (Warren is the only
+    /// mode); kept as `Option` for the type plumbing.
     warren_relay_list_view: Option<RelayList>,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
@@ -936,22 +932,17 @@ impl Daemon {
         // Initialize relay selector asap, since it's a pre-requisite for accepting incoming gRPC
         // connections.
         //
-        // F5 fork audit: in pure Warren mode (`WARREN_TUNNEL=1`), the
-        // upstream Mullvad `relays.json` list is never consumed — the tunnel
+        // F5 fork audit: the upstream Mullvad `relays.json` list is
+        // never consumed — the tunnel
         // uses `warren-relays.json` parsed by `DaemonWarrenRelaySelector`.
         // An absence of the file should not log ERROR (= noise that
-        // worries the prod operator) but just DEBUG. For upstream WG
-        // mode, keep ERROR (= real signal of a broken cache).
-        let warren_mode_for_relays_log = warren_mode::resolve(settings.warren_mode);
+        // worries the prod operator) but just DEBUG, since the list is
+        // always unused on the Warren fork.
         let initial_relay_list = parse_relays_from_file(&config.cache_dir, &config.resource_dir)
             .inspect_err(|err| {
-                if warren_mode_for_relays_log {
-                    log::debug!(
-                        "Mullvad relays.json unavailable (Warren mode active, list unused): {err}"
-                    );
-                } else {
-                    log::error!("{err}");
-                }
+                log::debug!(
+                    "Mullvad relays.json unavailable (Warren tunnel active, list unused): {err}"
+                );
             })
             .ok();
         let relay_selector = {
@@ -1085,15 +1076,12 @@ impl Daemon {
         // var, if set, takes precedence (see `warren_account_mode::resolve`).
         let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
         // Structured log at boot to ease field debugging.
-        // The admin/dev sees immediately which modes are active and
-        // their source (env override vs persistent Settings) without
-        // having to grep dozens of log lines.
-        let warren_mode_active_for_log = warren_mode::resolve(settings.warren_mode);
+        // The admin/dev sees immediately which account mode is active
+        // and its source (env override vs persistent Settings) without
+        // having to grep dozens of log lines. The Warren tunnel is the
+        // only mode on this fork, so there is nothing to report there.
         log::info!(
-            "Warren modes at boot — tunnel={} (env={}, settings={}) ; local_account={} (env={}, settings={})",
-            warren_mode_active_for_log,
-            std::env::var(warren_mode::ENV_VAR_NAME).is_ok(),
-            settings.warren_mode,
+            "Warren account mode at boot — local_account={} (env={}, settings={})",
             local_account_mode,
             std::env::var(warren_account_mode::ENV_VAR_NAME).is_ok(),
             settings.warren_local_account,
@@ -1125,17 +1113,16 @@ impl Daemon {
         let env_url = std::env::var("WARREN_API_URL").ok();
         let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
         let warren_api_config = warren_remote_config::resolve(
-            warren_mode_active_for_log,
             local_account_mode,
             settings.warren_api_url.clone(),
             env_url,
             signing_key,
         );
-        if warren_mode_active_for_log && !local_account_mode {
+        if !local_account_mode {
             match &warren_api_config {
                 Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
                 None => log::warn!(
-                    "Warren mode active but no warren_api_url + mnemonic; falling back to Mullvad upstream backend"
+                    "No warren_api_url + mnemonic; falling back to local account backend"
                 ),
             }
         }
@@ -1187,20 +1174,12 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        // Warren fork : init des artefacts Warren-Iroh au boot. Si
-        // `WARREN_TUNNEL=1`, on charge la `WarrenRelayList` depuis
-        // `<cache_dir>/warren-relays.json` (fallback liste vide si
-        // absent) et la `SigningKey` BIP39 depuis le settings dir.
-        // Sinon, ces artefacts restent `None` et le path WireGuard
-        // upstream reste seul actif.
-        // Phase E : warren_mode utilise resolve = env override + Settings.
-        let warren_mode_active = warren_mode::resolve(settings.warren_mode);
-        let (warren_relay_selector, warren_signing_key) = if warren_mode_active {
-            log::info!(
-                "Warren tunnel mode enabled (env var {}=1 or Settings::warren_mode=true)",
-                warren_mode::ENV_VAR_NAME
-            );
-
+        // Warren fork: init the Warren tunnel artifacts at boot. We load
+        // the `WarrenRelayList` from `<cache_dir>/warren-relays.json`
+        // (empty-list fallback if absent) and the BIP39 `SigningKey` from
+        // the settings dir. The Warren tunnel is the only mode on this
+        // fork, so these artifacts are always populated.
+        let (warren_relay_selector, warren_signing_key) = {
             // Best-effort refresh of the warren-relays.json cache from
             // `GET {api_url}/v1/exits`. URL: env WARREN_API_URL > Settings >
             // default warren_config::WARREN_API_URL. If the fetch fails
@@ -1237,13 +1216,9 @@ impl Daemon {
             });
             let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
             if signing_key.is_none() {
-                log::warn!(
-                    "Warren mode active but no signing key available; tunnel attempts will fail"
-                );
+                log::warn!("No Warren signing key available; tunnel attempts will fail");
             }
             (Some(selector), signing_key)
-        } else {
-            (None, None)
         };
 
         // Warren multi-hop opt-in: env var `WARREN_MULTI_HOP=1` plus a
@@ -1251,7 +1226,7 @@ impl Daemon {
         // `wapi admin-mint-*`. Either missing surfaces a deliberate
         // single-hop config; PKI failure on a present file surfaces a
         // loud warn but does not abort the boot.
-        let warren_multi_hop = if warren_mode_active && warren_multi_hop_mode::is_enabled() {
+        let warren_multi_hop = if warren_multi_hop_mode::is_enabled() {
             match warren_multi_hop::load_from_settings_dir(&config.settings_dir) {
                 Ok(Some(cfg)) => {
                     log::info!(
@@ -1292,19 +1267,14 @@ impl Daemon {
 
         // M5.B.4: forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
-        // exit-down report. `None` when Warren mode is off (the
-        // pure-Mullvad path bypasses warren-api entirely).
-        let warren_api_url_for_params: Option<String> = if warren_mode_active {
-            Some(
-                std::env::var("WARREN_API_URL")
-                    .ok()
-                    .filter(|s| !s.is_empty())
-                    .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
-                    .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned()),
-            )
-        } else {
-            None
-        };
+        // exit-down report.
+        let warren_api_url_for_params: Option<String> = Some(
+            std::env::var("WARREN_API_URL")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
+                .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned()),
+        );
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             account_manager.clone(),
             relay_selector.clone(),
@@ -1358,8 +1328,8 @@ impl Daemon {
             let internal_event_tx_pin = internal_event_tx.clone();
             tokio::spawn(async move {
                 while let Some(update) = warren_pin_rx.recv().await {
-                    let _ = internal_event_tx_pin
-                        .send(InternalDaemonEvent::WarrenPinUpdate(update));
+                    let _ =
+                        internal_event_tx_pin.send(InternalDaemonEvent::WarrenPinUpdate(update));
                 }
             });
         }
@@ -1489,35 +1459,15 @@ impl Daemon {
             });
         });
 
-        #[cfg(not(target_os = "android"))]
-        let rollout = {
-            settings
-                .update(|settings| {
-                    settings
-                        .rollout_threshold_seed
-                        .get_or_insert_with(Rollout::seed);
-                })
-                .await
-                .map_err(Error::SettingsError)?;
-            let seed = settings
-                .rollout_threshold_seed
-                .expect("Rollout seed must have been initialized");
-            let version = mullvad_version::VERSION
-                .parse()
-                .expect("App version to be parsable");
-            Rollout::threshold(seed, version)
-        };
+        // The Mullvad version updater is never spawned (Warren uses
+        // GitHub Releases), so no rollout threshold needs to be computed
+        // here. The rollout seed is generated lazily on demand by
+        // `on_get_rollout_threshold`.
         let version_handle = version::router::spawn_version_router(
-            api_handle.clone(),
-            api_handle.availability.clone(),
             config.cache_dir.clone(),
             internal_event_tx.to_specialized_sender(),
             settings.show_beta_releases,
-            #[cfg(not(target_os = "android"))]
-            rollout,
             app_upgrade_broadcast,
-            // M-6: disable Mullvad version check in Warren mode.
-            warren_mode_active,
         );
 
         // Attempt to download a fresh relay list
@@ -1531,9 +1481,6 @@ impl Daemon {
                 android_dns::AndroidDnsResolver::new(connectivity_listener),
             ),
             internal_event_tx.clone().to_specialized_sender(),
-            // C-1: pass warren_mode so the handler skips am.i.mullvad.net
-            // when Warren tunnel mode is active.
-            warren_mode_active,
         );
 
         let leak_checker = {
@@ -2127,7 +2074,6 @@ impl Daemon {
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
-            SetWarrenMode(tx, enabled) => self.on_set_warren_mode(tx, enabled).await,
             SetWarrenLocalAccount(tx, enabled) => {
                 self.on_set_warren_local_account(tx, enabled).await
             }
@@ -2140,7 +2086,10 @@ impl Daemon {
                 tx,
                 exit_id_hex,
                 new_pubkey_hex,
-            } => self.on_trust_new_exit_key(tx, exit_id_hex, new_pubkey_hex).await,
+            } => {
+                self.on_trust_new_exit_key(tx, exit_id_hex, new_pubkey_hex)
+                    .await
+            }
             ResetPinnedExitKeys(tx) => self.on_reset_pinned_exit_keys(tx).await,
             DismissPubkeyMismatch(tx) => self.on_dismiss_pubkey_mismatch(tx),
             ReportPubkeyMismatch {
@@ -2627,10 +2576,7 @@ impl Daemon {
     /// spawn needed — `read_to_string` < 1 ms on a 100-byte file).
     /// **No-log policy**: we only log the fact that a read occurred,
     /// never the content.
-    fn on_get_warren_mnemonic(
-        &self,
-        tx: oneshot::Sender<Option<zeroize::Zeroizing<String>>>,
-    ) {
+    fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<zeroize::Zeroizing<String>>>) {
         let mnemonic = warren_signer::get_warren_mnemonic(&self.settings_dir);
         log::debug!(
             "on_get_warren_mnemonic: present={} (content NEVER logged)",
@@ -2680,9 +2626,7 @@ impl Daemon {
         // Step 1 — hot-swap the in-memory signer so the new identity
         // is active for every subsequent signed request.
         let new_pubkey_bytes = match self.warren_signer.as_ref() {
-            Some(signer) => {
-                warren_signer::reload_signer_from_disk(signer, &self.settings_dir)
-            }
+            Some(signer) => warren_signer::reload_signer_from_disk(signer, &self.settings_dir),
             None => {
                 log::warn!(
                     "on_set_warren_mnemonic: no in-memory signer to hot-swap \
@@ -2705,9 +2649,7 @@ impl Daemon {
             let device_path = self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
             let stored_pubkey = std::fs::read_to_string(&device_path)
                 .ok()
-                .and_then(|raw| {
-                    serde_json::from_str::<device::PrivateDeviceState>(&raw).ok()
-                })
+                .and_then(|raw| serde_json::from_str::<device::PrivateDeviceState>(&raw).ok())
                 .and_then(|state| state.into_device())
                 .map(|d| d.pubkey);
 
@@ -3340,9 +3282,7 @@ impl Daemon {
         // unsigned macOS build, enabling is refused before any ES/BPF
         // setup, preventing the half-initialised state that breaks
         // connectivity and crashes on quit.
-        if state
-            && let Err(e) = macos_split_tunnel_enable_allowed()
-        {
+        if state && let Err(e) = macos_split_tunnel_enable_allowed() {
             Self::oneshot_send(tx, Err(e), "set_split_tunnel_state response");
             return;
         }
@@ -3438,29 +3378,8 @@ impl Daemon {
         }
     }
 
-    /// Persists `Settings::warren_mode`. The mode is read at boot by
-    /// `warren_mode::resolve`; a daemon restart is required to
-    /// apply (no hot-reload of the tunnel backend — the state
-    /// machine + signing key identity are wired once at boot).
-    async fn on_set_warren_mode(&mut self, tx: ResponseTx<(), settings::Error>, enabled: bool) {
-        let result = self
-            .settings
-            .update(move |settings| settings.warren_mode = enabled)
-            .await
-            .map(|_changed| ());
-        if let Err(ref e) = result {
-            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-        } else {
-            log::info!(
-                "Warren mode persisted to {} ; restart required for effect",
-                enabled
-            );
-        }
-        Self::oneshot_send(tx, result, "set_warren_mode response");
-    }
-
-    /// Persists `Settings::warren_local_account`. Restart required (see
-    /// `on_set_warren_mode` doc).
+    /// Persists `Settings::warren_local_account`. Restart required to
+    /// apply (the value is read at boot only).
     async fn on_set_warren_local_account(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -3506,7 +3425,7 @@ impl Daemon {
     }
 
     /// Persiste `Settings::warren_multi_hop`. Restart requis pour
-    /// appliquer (mirrors `on_set_warren_mode`) - the multi-hop
+    /// appliquer (read at boot only) - the multi-hop
     /// supervisor is wired in `start_multi_hop` once at boot via the
     /// env-var + settings-file path.
     async fn on_set_warren_multi_hop_settings(
@@ -3674,7 +3593,9 @@ impl Daemon {
     /// reports. Mirrors the resolution path used by
     /// `warren_api_url_for_params` at boot.
     fn warren_api_url_for_incidents(&self) -> Option<String> {
-        let from_env = std::env::var("WARREN_API_URL").ok().filter(|s| !s.is_empty());
+        let from_env = std::env::var("WARREN_API_URL")
+            .ok()
+            .filter(|s| !s.is_empty());
         if from_env.is_some() {
             return from_env;
         }

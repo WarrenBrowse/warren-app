@@ -5,12 +5,11 @@
 //! (`Daemon::start` in `lib.rs`) loads env + signing_key + settings
 //! then calls [`resolve`] with those already-resolved values.
 //!
-//! Covers 5 cases (see tests):
-//! 1. `warren_mode = false` -> None (preserve Mullvad upstream).
-//! 2. `local_account_mode = true` -> None (LocalBackend takes over).
-//! 3. `warren_mode && !local_account_mode && Some(url) && Some(key)` -> Some.
-//! 4. URL absent from both env AND settings -> None (Mullvad fallback).
-//! 5. signing_key absent (mnemonic not bootstrapped) -> None.
+//! Covers these cases (see tests):
+//! 1. `local_account_mode = true` -> None (LocalBackend takes over).
+//! 2. `!local_account_mode && Some(url) && Some(key)` -> Some.
+//! 3. URL absent from both env AND settings -> compiled default.
+//! 4. signing_key absent (mnemonic not bootstrapped) -> None.
 
 use ed25519_dalek::SigningKey;
 
@@ -43,13 +42,12 @@ pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 /// the default, rather than disabling the Warren remote backend.
 #[must_use]
 pub(crate) fn resolve(
-    warren_mode_active: bool,
     local_account_mode: bool,
     settings_url: Option<String>,
     env_url: Option<String>,
     signing_key: Option<SigningKey>,
 ) -> Option<WarrenApiConfig> {
-    if !warren_mode_active || local_account_mode {
+    if local_account_mode {
         return None;
     }
 
@@ -75,27 +73,11 @@ mod tests {
     }
 
     #[test]
-    fn warren_mode_disabled_returns_none() {
-        // Critical regression: a user who disables warren_mode must
-        // NOT see the warren-remote backend active. Everything must
-        // fall back to legacy Mullvad upstream.
-        let cfg = resolve(
-            false, // warren_mode_active = false
-            false,
-            Some("https://api.warrenbrowse.com".to_owned()),
-            None,
-            Some(fixed_signing_key()),
-        );
-        assert!(cfg.is_none(), "warren_mode=false MUST disable remote");
-    }
-
-    #[test]
     fn local_account_mode_takes_priority_over_warren_remote() {
-        // Regression: if warren_mode + warren_local_account are both
-        // true, `LocalAccountBackend` must take over (= stateless POC
+        // Regression: if `warren_local_account` is true,
+        // `LocalAccountBackend` must take over (= stateless POC
         // path), not warren-remote.
         let cfg = resolve(
-            true,
             true, // local_account_mode = true
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
@@ -110,7 +92,6 @@ mod tests {
     #[test]
     fn happy_path_returns_config_with_url_and_key() {
         let cfg = resolve(
-            true,
             false,
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
@@ -127,7 +108,6 @@ mod tests {
         // at `http://localhost:8080` without touching the persistent
         // production user config.
         let cfg = resolve(
-            true,
             false,
             Some("https://api.warrenbrowse.com".to_owned()),
             Some("http://127.0.0.1:8080".to_owned()),
@@ -142,12 +122,11 @@ mod tests {
 
     #[test]
     fn no_url_anywhere_uses_compiled_default() {
-        // warren_mode is on but no URL configured anywhere. Rather
-        // than silently falling back to the Mullvad upstream API
-        // (`api.mullvad.net`, which Warren does not operate), we use
-        // the compiled production default so the remote backend works
-        // out-of-the-box.
-        let cfg = resolve(true, false, None, None, Some(fixed_signing_key()));
+        // No URL configured anywhere. Rather than silently falling
+        // back to the Mullvad upstream API (`api.mullvad.net`, which
+        // Warren does not operate), we use the compiled production
+        // default so the remote backend works out-of-the-box.
+        let cfg = resolve(false, None, None, Some(fixed_signing_key()));
         let cfg = cfg.expect("no URL MUST now produce a config with the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -161,13 +140,7 @@ mod tests {
         // persists `Some("")`. We treat that as "not provided" and
         // fall through to the compiled default, not as a hard disable
         // of the Warren remote backend.
-        let cfg = resolve(
-            true,
-            false,
-            Some(String::new()),
-            None,
-            Some(fixed_signing_key()),
-        );
+        let cfg = resolve(false, Some(String::new()), None, Some(fixed_signing_key()));
         let cfg = cfg.expect("empty URL MUST fall through to the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -180,7 +153,6 @@ mod tests {
         // Priority is "first non-empty": an empty env var must not
         // shadow a real settings URL.
         let cfg = resolve(
-            true,
             false,
             Some("https://api.warrenbrowse.com".to_owned()),
             Some(String::new()),
@@ -195,12 +167,10 @@ mod tests {
 
     #[test]
     fn no_signing_key_returns_none() {
-        // Edge case: warren_mode active + URL configured but no
-        // mnemonic loaded (= identity absent). We MUST NOT
-        // build a client with a dummy key: we fall back to
-        // Mullvad upstream with a warn.
+        // Edge case: URL configured but no mnemonic loaded (= identity
+        // absent). We MUST NOT build a client with a dummy key: we fall
+        // back with a warn and no remote config.
         let cfg = resolve(
-            true,
             false,
             Some("https://api.warrenbrowse.com".to_owned()),
             None,

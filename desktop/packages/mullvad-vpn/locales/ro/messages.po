@@ -3012,10 +3012,6 @@ msgid "When enabled, the daemon uses a self-hosted account derived from the loca
 msgstr "Când această opțiune este activată, daemonul utilizează un cont auto-găzduit, generat pe baza frazei mnemonice Warren locale, în loc să contacteze API-ul unui cont la distanță."
 
 msgctxt "vpn-settings-view"
-msgid "When enabled, traffic is routed through Warren exits over an Iroh QUIC tunnel instead of QUIC / OpenVPN."
-msgstr "Când această opțiune este activată, traficul este redirecționat prin ieșirile Warren printr-un tunel Iroh QUIC, în loc de QUIC / OpenVPN."
-
-msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
 msgstr "Când această funcție este activată, ea împiedică dispozitivul să acceseze anumite domenii sau site-uri web cunoscute pentru distribuirea de reclame, programe malware, modulele de urmărire și altele."
 

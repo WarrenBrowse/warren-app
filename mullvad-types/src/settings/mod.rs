@@ -120,21 +120,15 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
-    /// If `true`, the daemon uses the Iroh tunnel backend (Warren)
-    /// instead of WireGuard. Can be overridden via the POC env var
-    /// `WARREN_TUNNEL=1` (see `warren_mode::resolve`). Default `false`
-    /// = upstream WireGuard path preserved.
-    #[serde(default)]
-    pub warren_mode: bool,
     /// If `true`, the daemon uses the local account/device backends
     /// (`LocalAccountBackend`/`LocalDeviceBackend`) instead of
-    /// contacting `api.mullvad.net`. Override via the POC env var
+    /// contacting the warren-api. Override via the POC env var
     /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
     #[serde(default)]
     pub warren_local_account: bool,
     /// URL of the warren-api server used by the
-    /// `WarrenRemote{Account,Device}Backend` (mode `warren_mode = true
-    /// && warren_local_account = false`).
+    /// `WarrenRemote{Account,Device}Backend` (mode
+    /// `warren_local_account = false`).
     ///
     /// Expected format: `http(s)://host:port` without trailing slash, e.g.
     /// `https://api.warrenbrowse.com` or `http://127.0.0.1:8080`.
@@ -463,12 +457,6 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // `warren_mode = true` by default on the Warren fork: the
-            // release binary NEVER contacts api.mullvad.net — the
-            // tunnel + account chain goes through warren-api. Setting
-            // it to `false` re-enables the upstream Mullvad path
-            // (= dev/POC only, never documented in prod).
-            warren_mode: true,
             // `warren_local_account = false` by default: fresh installs
             // use the REAL warren-api backend (subscription + voucher +
             // device enrollment), not the stateless POC stub. The stub
@@ -574,8 +562,16 @@ impl Default for TunnelOptions {
         TunnelOptions {
             wireguard: wireguard::TunnelOptions::default(),
             generic: GenericTunnelOptions {
-                // Enable IPv6 by default on Android and macOS
-                enable_ipv6: cfg!(target_os = "android") || cfg!(target_os = "macos"),
+                // Warren /v1 is IPv4-only: the exit allocates no IPv6
+                // tunnel address by default, so IPv6 must be BLOCKED by
+                // the firewall, not routed. Upstream Mullvad defaults
+                // this `true` on macOS/Android because WireGuard is
+                // dual-stack; on Warren that default leaks IPv6 traffic
+                // out the physical interface (apps reach IPv6
+                // destinations *outside* the tunnel while it looks
+                // "connected"). Default off until /v2 ships in-tunnel
+                // IPv6 end to end.
+                enable_ipv6: false,
             },
             dns_options: DnsOptions::default(),
         }
@@ -686,9 +682,20 @@ mod warren_account_mode_default_tests {
             !s.warren_local_account,
             "fresh installs MUST NOT default to the local-account POC stub"
         );
+    }
+
+    /// Warren /v1 carries IPv4 only. IPv6 must default OFF so the
+    /// firewall BLOCKS it instead of letting it leak out the physical
+    /// interface. Upstream Mullvad defaults this `true` on macOS/Android
+    /// (WireGuard is dual-stack); inheriting that default silently leaks
+    /// every IPv6 connection around the tunnel.
+    #[test]
+    fn default_blocks_ipv6_because_tunnel_is_ipv4_only() {
+        let opts = TunnelOptions::default();
         assert!(
-            s.warren_mode,
-            "warren_mode MUST stay enabled by default (never api.mullvad.net)"
+            !opts.generic.enable_ipv6,
+            "Warren is IPv4-only in /v1; enable_ipv6 must default to false \
+             so IPv6 is blocked, not leaked outside the tunnel"
         );
     }
 }

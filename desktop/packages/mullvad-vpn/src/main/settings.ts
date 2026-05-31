@@ -31,10 +31,7 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
-    // IPC handlers for the Warren toggles.
-    IpcMainEventChannel.settings.handleSetWarrenMode((enabled) =>
-      this.daemonRpc.setWarrenMode(enabled),
-    );
+    // IPC handler for the Warren local account toggle.
     IpcMainEventChannel.settings.handleSetWarrenLocalAccount((enabled) =>
       this.daemonRpc.setWarrenLocalAccount(enabled),
     );
@@ -217,10 +214,7 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
-  // Exposure of the persistent Warren toggles.
-  public get warrenMode() {
-    return this.settingsValue.warrenMode;
-  }
+  // Exposure of the persistent Warren toggle.
   public get warrenLocalAccount() {
     return this.settingsValue.warrenLocalAccount;
   }

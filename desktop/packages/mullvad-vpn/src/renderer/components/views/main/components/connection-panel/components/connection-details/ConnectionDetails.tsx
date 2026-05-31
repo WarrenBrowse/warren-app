@@ -60,7 +60,6 @@ const StyledConnectionDetailsTitle = styled(StyledConnectionDetailsLabel)({
 
 export function ConnectionDetails() {
   const reduxConnection = useSelector((state) => state.connection);
-  const warrenMode = useSelector((state) => state.settings.warrenMode);
   const [connection, setConnection] = useState(reduxConnection);
 
   const tunnelState = connection.status;
@@ -85,9 +84,7 @@ export function ConnectionDetails() {
         {messages.pgettext('connect-view', 'Connection details')}
       </StyledConnectionDetailsHeading>
       <StyledConnectionDetailsLabel data-testid="tunnel-protocol">
-        {showDetails &&
-          tunnelState.details !== undefined &&
-          (warrenMode ? strings.iroh : strings.wireguard)}
+        {showDetails && tunnelState.details !== undefined && strings.quic}
       </StyledConnectionDetailsLabel>
       <StyledIpTable>
         <StyledConnectionDetailsTitle>
@@ -112,15 +109,14 @@ export function ConnectionDetails() {
           )}
         </StyledIpLabelContainer>
       </StyledIpTable>
-      {warrenMode && <WarrenStatusRows />}
+      <WarrenStatusRows />
     </StyledConnectionDetailsContainer>
   );
 }
 
 // Warren status block: reconnect counter + age + M4.0 obfuscation
 // indicator. Reads from `state.settings.warrenStatus` which is fed by
-// the daemon WarrenStatusUpdates push stream. Hidden when warren_mode
-// is OFF (= pure Mullvad upstream path).
+// the daemon WarrenStatusUpdates push stream.
 function WarrenStatusRows() {
   const warrenStatus = useSelector((state) => state.settings.warrenStatus);
   const reconnectCount = warrenStatus?.reconnectCount ?? 0;

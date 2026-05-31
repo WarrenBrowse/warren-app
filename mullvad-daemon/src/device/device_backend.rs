@@ -335,8 +335,8 @@ impl WarrenDeviceBackend for LocalDeviceBackend {
 /// [`WarrenDeviceBackend`] via the `warren-api-client` client that
 /// talks to the warren-api server.
 ///
-/// Enabled in `warren_mode = true && warren_local_account = false` mode
-/// (= 3rd branch of the dispatch in `device/mod.rs`).
+/// Enabled in `warren_local_account = false` mode
+/// (= the warren-remote branch of the dispatch in `device/mod.rs`).
 ///
 /// Wire mapping:
 /// - [`warren_api_client::Device`] <-> [`mullvad_types::device::Device`]

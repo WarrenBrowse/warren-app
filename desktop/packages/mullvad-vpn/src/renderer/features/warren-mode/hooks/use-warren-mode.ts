@@ -4,29 +4,7 @@ import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
 
-// Hook that exposes the persistent toggle for the Iroh tunnel mode.
-// A daemon restart is required to apply the change (the mode is read
-// at boot by `warren_mode::resolve` on the Rust side).
-export function useWarrenMode() {
-  const warrenMode = useSelector((state) => state.settings.warrenMode);
-  const { setWarrenMode: contextSetWarrenMode } = useAppContext();
-
-  const setWarrenMode = React.useCallback(
-    async (value: boolean) => {
-      try {
-        await contextSetWarrenMode(value);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : '';
-        log.error('Could not set Warren tunnel mode', message);
-      }
-    },
-    [contextSetWarrenMode],
-  );
-
-  return { warrenMode, setWarrenMode };
-}
-
-// Equivalent hook for the local account mode.
+// Hook for the persistent local account mode.
 export function useWarrenLocalAccount() {
   const warrenLocalAccount = useSelector((state) => state.settings.warrenLocalAccount);
   const { setWarrenLocalAccount: contextSetWarrenLocalAccount } = useAppContext();

@@ -44,11 +44,6 @@ export interface IUpdateAllowLanAction {
 }
 
 // Update actions for the Warren toggles.
-export interface IUpdateWarrenModeAction {
-  type: 'UPDATE_WARREN_MODE';
-  warrenMode: boolean;
-}
-
 export interface IUpdateWarrenLocalAccountAction {
   type: 'UPDATE_WARREN_LOCAL_ACCOUNT';
   warrenLocalAccount: boolean;
@@ -185,7 +180,6 @@ export type SettingsAction =
   | IUpdateRelayLocationsAction
   | IUpdateWireguardEndpointData
   | IUpdateAllowLanAction
-  | IUpdateWarrenModeAction
   | IUpdateWarrenLocalAccountAction
   | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMultiHopAction
@@ -250,13 +244,6 @@ function updateAllowLan(allowLan: boolean): IUpdateAllowLanAction {
   };
 }
 
-function updateWarrenMode(warrenMode: boolean): IUpdateWarrenModeAction {
-  return {
-    type: 'UPDATE_WARREN_MODE',
-    warrenMode,
-  };
-}
-
 function updateWarrenLocalAccount(warrenLocalAccount: boolean): IUpdateWarrenLocalAccountAction {
   return {
     type: 'UPDATE_WARREN_LOCAL_ACCOUNT',
@@ -278,9 +265,7 @@ function updateWarrenMultiHop(warrenMultiHop: WarrenMultiHopSettings): IUpdateWa
   };
 }
 
-function updateWarrenFailover(
-  warrenFailover: WarrenFailoverSettings,
-): IUpdateWarrenFailoverAction {
+function updateWarrenFailover(warrenFailover: WarrenFailoverSettings): IUpdateWarrenFailoverAction {
   return {
     type: 'UPDATE_WARREN_FAILOVER',
     warrenFailover,
@@ -439,7 +424,6 @@ export default {
   updateRelayLocations,
   updateWireguardEndpointData,
   updateAllowLan,
-  updateWarrenMode,
   updateWarrenLocalAccount,
   updateWarrenApiUrl,
   updateWarrenMultiHop,

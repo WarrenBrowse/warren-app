@@ -1,6 +1,6 @@
 //! Daemon-side opt-in switch for Warren multi-hop tunnels.
 //!
-//! Mirrors [`crate::warren_mode`]: a single env var `WARREN_MULTI_HOP`
+//! A single env var `WARREN_MULTI_HOP`
 //! gates whether the tunnel state machine assembles a
 //! [`talpid_warren_tunnel::MultiHopConfig`] (when the file at
 //! `<settings_dir>/warren-multihop.json` is present) or stays on the

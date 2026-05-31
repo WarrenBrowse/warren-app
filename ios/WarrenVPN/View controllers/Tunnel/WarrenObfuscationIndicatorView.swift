@@ -58,7 +58,7 @@ public struct WarrenObfuscationIndicatorView: View {
 /// immediately recognisable on the network). The legacy Mullvad obfuscation
 /// methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do
 /// not apply to Warren tunnels, so no interactive picker is offered — this
-/// mirrors the desktop anti-censorship view when warren_mode is on.
+/// mirrors the desktop anti-censorship view.
 public struct WarrenObfuscationSettingsReadOnlyView: View {
     public init() {}
 

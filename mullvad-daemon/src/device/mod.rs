@@ -46,8 +46,8 @@ pub(crate) use service::{DeviceService, WarrenIdentityService};
 
 /// Phase G.4 — config needed to instantiate the Warren-Remote backends
 /// (= warren-api path). Built by the caller (`Daemon::start`) at boot
-/// if `warren_mode && !warren_local_account`. `None` = Mullvad upstream
-/// backend (legacy) or `LocalAccountBackend` (depending on `local_account_mode`).
+/// if `!warren_local_account`. `None` = `LocalAccountBackend`
+/// (when `local_account_mode` is set).
 ///
 /// Convention:
 /// - `url`: `http(s)://host:port`, without trailing slash. Typically

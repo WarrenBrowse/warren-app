@@ -64,7 +64,7 @@
 
 | Fichier | Modification |
 |---|---|
-| `mullvad-relay-selector/src/lib.rs` | Identifier les exits par `EndpointId` iroh (32 bytes Ed25519) en plus de IP/port |
+| `mullvad-relay-selector/src/lib.rs` | Identifier les exits par `EndpointId` (32 bytes Ed25519) en plus de IP/port |
 | `mullvad-relay-selector/src/relay_selector/` | Algorithm de sélection adapté pour les nouveaux critères |
 
 ### GUI Electron à refondre
@@ -80,19 +80,19 @@
 
 | Élément | Action |
 |---|---|
-| `wireguard-go-rs` (FFI Go) | Behind feature `tunnel_backend = "wireguard"`. POC Warren = `tunnel_backend = "iroh"` actif, WG en repli optionnel |
+| `wireguard-go-rs` (FFI Go) | Code WireGuard upstream hérité. Warren = tunnel QUIC actif (unique mode) |
 | `gotatun` | Idem |
-| `tunnel-obfuscation` (Shadowsocks, QUIC-over-TCP, LWO) | Désactivé POC. Iroh fait QUIC sur 443 nativement |
-| Feature `discovery-pkarr-dht` côté iroh | **Jamais** activée — verrouiller dans `warren-config` (cf. doc 13.2 rapport amont) |
+| `tunnel-obfuscation` (Shadowsocks, QUIC-over-TCP, LWO) | Désactivé. Le tunnel Warren fait QUIC sur 443 nativement |
+| Découverte DHT pkarr | N'existe plus depuis la migration vers Quinn (QUIC pur, sans découverte P2P) |
 
 ## Estimation effort
 
 - **Phase 1 setup** : 1 jour (clone + tag baseline + build green sans modif)
 - **Phase 1.A trait Tunnel** : 2-3 j (introduire le trait + ré-impl WG derrière + valider en CI upstream)
-- **Phase 1.B impl Iroh Tunnel** : 1-2 j (câbler `warren-iroh-tunnel` existant via le trait)
+- **Phase 1.B impl QUIC Tunnel** : 1-2 j (câbler `warren-tunnel` existant via le trait)
 - **Phase 2 auth wallet** : 5-7 j (mullvad-api refonte + AccountService → WarrenIdentityService + migrations + tests)
 - **Phase 3 GUI Electron** : 3-5 j (Account → Keys + designs)
-- **Phase 4 relay selector** : 2-3 j (EndpointId + Iroh discovery)
+- **Phase 4 relay selector** : 2-3 j (EndpointId + endpoint discovery)
 
 **Total estimé** : 14-21 j de dev focus, avant que le binaire Warren-branded soit shippable. Multiple PRs internes pour chaque phase, sans toucher l'upstream Mullvad.
 

@@ -5,7 +5,7 @@
 //! (will later be populated by a periodic fetch to the API; for the
 //! POC, loaded from `<cache_dir>/warren-relays.json`), and exposes a
 //! stable API for the `ParametersGenerator`. The wrapper returns only
-//! the Iroh components (`EndpointId` + `EndpointAddr`); final
+//! the endpoint components (`EndpointId` + `EndpointAddr`); final
 //! assembly into `WarrenTunnelParameters` (with `signing_key`,
 //! `n_connections`, `features`) is done by
 //! [`crate::warren_tunnel_params::assemble_for_attempt`].
@@ -218,7 +218,7 @@ impl DaemonWarrenRelaySelector {
     }
 
     /// Selects a relay for the `retry_attempt` attempt and
-    /// returns its Iroh components.
+    /// returns its endpoint components.
     ///
     /// Mirror API of
     /// [`mullvad_relay_selector::RelaySelector::get_relay`] on the

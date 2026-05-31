@@ -108,8 +108,8 @@ impl ConnectingState {
             }
         };
 
-        // Pre-handshake firewall enabled in Warren mode: the
-        // `BackendParams::Warren` variant exposes the candidate Iroh IPs via
+        // Pre-handshake firewall for the Warren tunnel: the
+        // `BackendParams::Warren` variant exposes the candidate exit IPs via
         // `get_next_hop_endpoints()`, and the firewall authorizes them just like
         // it does for WG peers (no no-leak regression).
         let backend_info = super::backend_params::WarrenBackendInfo::from_params(&warren_params);
@@ -191,7 +191,7 @@ impl ConnectingState {
                 Ok(monitor) => {
                     let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
                     log::debug!(
-                        "Warren Iroh tunnel monitor exited with block reason: {:?}",
+                        "Warren tunnel monitor exited with block reason: {:?}",
                         reason
                     );
                     reason
@@ -224,7 +224,7 @@ impl ConnectingState {
                 log::warn!("Tunnel state machine stopped before receiving tunnel closed event");
             }
 
-            log::trace!("Warren Iroh tunnel monitor thread exit");
+            log::trace!("Warren tunnel monitor thread exit");
         });
 
         ConnectingState {

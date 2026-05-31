@@ -6,7 +6,7 @@
 //! `device.json` (created by `warren_device_bootstrap` from the
 //! mnemonic) is considered valid as-is.
 //!
-//! Sister module of [`crate::warren_mode`]: same truthy parsing convention
+//! Same truthy parsing convention as the other Warren boot env vars
 //! (`1`, `true`, `yes`, `on`, case-insensitive). To be replaced by
 //! a persistent `Settings::warren_local_account: bool` setting exposed
 //! via gRPC + GUI/CLI when the `AccountsProxy` Mullvad ->
@@ -32,8 +32,8 @@ pub fn is_enabled() -> bool {
 
 /// Phase E — resolves the effective local account mode from the POC env var
 /// combined with the persistent `Settings::warren_local_account` flag. The env
-/// var, if set, **takes precedence**. See doc
-/// [`crate::warren_mode::resolve`] for the rationale of this precedence.
+/// var, if set, **takes precedence**: it lets devs test quickly without
+/// persisting the choice in Settings.
 #[must_use]
 pub fn resolve(settings_warren_local_account: bool) -> bool {
     match std::env::var(ENV_VAR_NAME).ok().as_deref() {

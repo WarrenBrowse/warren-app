@@ -39,7 +39,12 @@ export type AccountDataResponse = ({ type: 'success' } & IAccountData) | Account
 export type AccountNumber = string;
 
 /**
- * 64-char lowercase hex Ed25519 public key identifying a Warren wallet.
+ * Warren wallet identity, encoded as an SS58 address (Substrate
+ * address format, network prefix 13295). Such an address is 47-49
+ * chars and starts with `wb`, e.g.
+ * `wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB`. The underlying
+ * key is an Ed25519 public key; the daemon encodes it to SS58 before
+ * sending it to the renderer.
  *
  * Replaces the legacy Mullvad `AccountNumber` (10-16 digit) concept.
  * Validation: {@link isWarrenPubKey}. Display: {@link formatWarrenPubKey}.
@@ -506,9 +511,8 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
-  // Persistent toggles exposed via gRPC. Daemon restart is required
+  // Persistent toggle exposed via gRPC. Daemon restart is required
   // to apply a change.
-  warrenMode: boolean;
   warrenLocalAccount: boolean;
   // Persistent warren-api URL. `undefined` if unset (= fallback to
   // upstream Mullvad). Daemon restart required.

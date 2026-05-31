@@ -44,12 +44,12 @@ pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
-use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 /// Re-export of the single-hop stable exit identifier from
 /// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
 /// distinguishable from an exit-substitution attack.
 pub use warren_protocol::ExitId as RelayExitId;
+use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
     pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
@@ -205,8 +205,7 @@ pub struct WarrenTunnelParameters {
     /// behaviour. New code SHOULD always wire this channel — otherwise
     /// the user has to reconnect the tunnel to apply changes, which
     /// is the bug we're fixing.
-    pub nat_pmp_control_rx:
-        Option<tokio::sync::watch::Receiver<Option<NatPmpConfig>>>,
+    pub nat_pmp_control_rx: Option<tokio::sync::watch::Receiver<Option<NatPmpConfig>>>,
 
     /// IPv4 CIDRs that should bypass the tunnel and remain reachable
     /// via the host's main routing table (LAN, private ranges, inbound
@@ -528,6 +527,12 @@ pub struct WarrenTunnelMonitor {
 enum MonitorBackend {
     SingleHop {
         pump_handle: tokio::task::JoinHandle<()>,
+        /// Periodic metrics-logging task. Spawned alongside the pump but
+        /// NOT cancelled by aborting the pump (it owns its own clone of
+        /// the metrics counters). Tracked here so teardown aborts it
+        /// explicitly — otherwise every connect leaks one immortal task
+        /// that keeps logging `pump_metrics` for a dead session forever.
+        metrics_handle: tokio::task::JoinHandle<()>,
         pump_error_rx: tokio::sync::oneshot::Receiver<String>,
     },
     MultiHop {
@@ -609,9 +614,8 @@ impl WarrenTunnelMonitor {
         // metadata still carries the TUN gateway IP (10.66.0.1) in its
         // candidate list; if the client tried it, the kernel would route
         // through the tunnel itself, causing an encapsulation loop.
-        // Quinn upstream does not do path discovery the way Iroh did
-        // (no `n0_nat_traversal` extension), so this filter is now
-        // defense-in-depth.
+        // Quinn does not do peer-to-peer path discovery (no NAT-traversal
+        // extension), so this filter is now defense-in-depth.
         let exit_addr = filter_endpoint_addr_for_wan(params.exit_addr.clone());
         // Clone only the individual fields moved into the async block, not
         // the entire WarrenTunnelParameters struct. `signing_key` is copied
@@ -1017,7 +1021,7 @@ impl WarrenTunnelMonitor {
         // stalls (uplink stops but downlink continues -> server-side
         // `read_datagram` issue; both stop at once -> QUIC connection
         // closed). The task aborts when teardown aborts the pump.
-        let _metrics_task = runtime.spawn(async move {
+        let metrics_handle = runtime.spawn(async move {
             let mut prev_up = 0u64;
             let mut prev_down = 0u64;
             let tick_start = Instant::now();
@@ -1059,6 +1063,7 @@ impl WarrenTunnelMonitor {
             runtime,
             backend: MonitorBackend::SingleHop {
                 pump_handle,
+                metrics_handle,
                 pump_error_rx,
             },
             event_hook,
@@ -1512,7 +1517,10 @@ impl WarrenTunnelMonitor {
         // the race finishes). Both backends surface abnormal pump
         // terminations through the same `pump_error_rx` channel.
         enum BackendHandles {
-            SingleHop(tokio::task::JoinHandle<()>),
+            SingleHop {
+                pump: tokio::task::JoinHandle<()>,
+                metrics: tokio::task::JoinHandle<()>,
+            },
             MultiHop {
                 supervisor: tokio::task::JoinHandle<()>,
                 uplink: tokio::task::JoinHandle<anyhow::Result<()>>,
@@ -1522,8 +1530,15 @@ impl WarrenTunnelMonitor {
         let (pump_error_rx, handles) = match backend {
             MonitorBackend::SingleHop {
                 pump_handle,
+                metrics_handle,
                 pump_error_rx,
-            } => (pump_error_rx, BackendHandles::SingleHop(pump_handle)),
+            } => (
+                pump_error_rx,
+                BackendHandles::SingleHop {
+                    pump: pump_handle,
+                    metrics: metrics_handle,
+                },
+            ),
             MonitorBackend::MultiHop {
                 supervisor_handle,
                 uplink_handle,
@@ -1621,9 +1636,15 @@ impl WarrenTunnelMonitor {
         // teardown).
         runtime.block_on(async {
             match handles {
-                BackendHandles::SingleHop(pump_handle) => {
-                    pump_handle.abort();
-                    let _ = pump_handle.await;
+                BackendHandles::SingleHop { pump, metrics } => {
+                    // Abort the metrics task too: it owns its own clone
+                    // of the counters and does NOT stop when the pump is
+                    // aborted, so without this it would leak one
+                    // immortal logging task per connect.
+                    metrics.abort();
+                    pump.abort();
+                    let _ = metrics.await;
+                    let _ = pump.await;
                 }
                 BackendHandles::MultiHop {
                     supervisor,
@@ -1809,10 +1830,8 @@ async fn run_nat_pmp_controller(
         initial_config.as_ref().is_some_and(|c| c.enabled)
     );
     // Spawn initial manager if config asks for it.
-    let mut manager: Option<NatPmpManager> = initial_config
-        .as_ref()
-        .filter(|c| c.enabled)
-        .map(|c| {
+    let mut manager: Option<NatPmpManager> =
+        initial_config.as_ref().filter(|c| c.enabled).map(|c| {
             log::info!("Warren NAT-PMP controller: initial refresh loop against {server}");
             NatPmpManager::start_from_addr(&runtime, server, c, observer.clone(), bind_addr)
         });
@@ -1848,8 +1867,7 @@ async fn run_nat_pmp_controller(
         // representation carries an explicit `enabled: false` value
         // (the daemon may push `Some(cfg) { enabled: false }`) and a
         // plain `None`; we treat them identically here.
-        let new_wanted: Option<NatPmpConfig> =
-            new_cfg_opt.filter(|c| c.enabled);
+        let new_wanted: Option<NatPmpConfig> = new_cfg_opt.filter(|c| c.enabled);
 
         match (manager.is_some(), new_wanted) {
             (true, Some(new_cfg)) => {
@@ -1878,9 +1896,7 @@ async fn run_nat_pmp_controller(
             }
             (true, None) => {
                 // Disable (toggle off, or new cfg is None).
-                log::info!(
-                    "Warren NAT-PMP controller: disabling — releasing mapping"
-                );
+                log::info!("Warren NAT-PMP controller: disabling — releasing mapping");
                 if let Some(mut m) = manager.take() {
                     m.release().await;
                 }
@@ -1934,9 +1950,9 @@ async fn run_nat_pmp_controller(
 /// does not use relays today; the match stays open via `_` to track
 /// the upstream `#[non_exhaustive]` shape).
 ///
-/// Defense in depth post-Quinn migration: the underlying iroh
-/// `n0_nat_traversal` bug class (path discovery probing the peer's
-/// TUN gateway IP) is structurally eliminated, but this filter still
+/// Defense in depth: the NAT-traversal bug class (path discovery
+/// probing the peer's TUN gateway IP) is structurally eliminated on
+/// Quinn, but this filter still
 /// hardens against malformed exit metadata that would carry a private
 /// address (e.g. a RFC1918 `10.66.0.1` candidate or similar tunnel
 /// gateway leak) as an exit candidate.
@@ -2708,8 +2724,14 @@ mod tests {
         // the error string in telemetry / logs.
         let e = Error::BackendTransient("pump I/O error".into());
         let s = e.to_string();
-        assert!(s.contains("recoverable"), "display must mention recoverable: {s}");
-        assert!(s.contains("pump I/O error"), "display must contain the message: {s}");
+        assert!(
+            s.contains("recoverable"),
+            "display must mention recoverable: {s}"
+        );
+        assert!(
+            s.contains("pump I/O error"),
+            "display must contain the message: {s}"
+        );
     }
 
     #[test]
@@ -2717,7 +2739,10 @@ mod tests {
         let e = Error::BackendFatal("session rejected: bad credentials".into());
         let s = e.to_string();
         assert!(s.contains("fatal"), "display must mention fatal: {s}");
-        assert!(s.contains("bad credentials"), "display must contain the message: {s}");
+        assert!(
+            s.contains("bad credentials"),
+            "display must contain the message: {s}"
+        );
     }
 
     // --- M-4: WarrenTunnelParameters must not implement Clone ---
@@ -2994,7 +3019,7 @@ mod tests {
         // Regression sentinel: Hetzner Cloud IPs (the typical
         // warren-exit target) must be considered routable, otherwise
         // `filter_endpoint_addr_for_wan` would empty the EndpointAddr
-        // and the iroh client couldn't reach the exit.
+        // and the Warren client couldn't reach the exit.
         for ip in ["91.99.122.154:7000", "178.104.4.40:7000", "8.8.8.8:53"] {
             let sa: std::net::SocketAddr = ip.parse().unwrap();
             assert!(
@@ -3252,21 +3277,28 @@ mod tests {
 
         // Controller should spawn the manager → Mapped(port 49060).
         for _ in 0..100 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49060,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         let snapshot = log.lock().unwrap().clone();
         assert!(
-            snapshot
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. })),
+            snapshot.iter().any(|e| matches!(
+                e,
+                NatPmpEvent::Mapped {
+                    external_port: 49060,
+                    ..
+                }
+            )),
             "controller must spawn a mapping on the enable push; events: {snapshot:?}"
         );
 
@@ -3294,12 +3326,15 @@ mod tests {
 
         // Wait for the initial Mapped(49060).
         for _ in 0..100 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49060, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49060,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
@@ -3308,21 +3343,28 @@ mod tests {
         // Reconfigure to lifetime 90 → expect Mapped(49090).
         tx.send(Some(natpmp_cfg(90))).expect("watch send");
         for _ in 0..100 {
-            if log
-                .lock()
-                .unwrap()
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. }))
-            {
+            if log.lock().unwrap().iter().any(|e| {
+                matches!(
+                    e,
+                    NatPmpEvent::Mapped {
+                        external_port: 49090,
+                        ..
+                    }
+                )
+            }) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         let snapshot = log.lock().unwrap().clone();
         assert!(
-            snapshot
-                .iter()
-                .any(|e| matches!(e, NatPmpEvent::Mapped { external_port: 49090, .. })),
+            snapshot.iter().any(|e| matches!(
+                e,
+                NatPmpEvent::Mapped {
+                    external_port: 49090,
+                    ..
+                }
+            )),
             "controller must live-reconfigure on the second push; events: {snapshot:?}"
         );
 

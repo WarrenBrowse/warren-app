@@ -373,15 +373,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    async fn set_warren_mode(&self, request: Request<bool>) -> ServiceResult<()> {
-        let warren_mode = request.into_inner();
-        log::debug!("set_warren_mode({})", warren_mode);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenMode(tx, warren_mode))?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
-    }
-
     async fn set_warren_local_account(&self, request: Request<bool>) -> ServiceResult<()> {
         let warren_local_account = request.into_inner();
         log::debug!("set_warren_local_account({})", warren_local_account);
@@ -423,9 +414,7 @@ impl ManagementService for ManagementServiceImpl {
         // into the response is unavoidable here (gRPC framework needs
         // an owned `String`), but the original `Zeroizing` wrapper
         // wipes its heap on drop at end of scope.
-        let payload = mnemonic
-            .map(|z| (*z).clone())
-            .unwrap_or_default();
+        let payload = mnemonic.map(|z| (*z).clone()).unwrap_or_default();
         Ok(Response::new(payload))
     }
 
