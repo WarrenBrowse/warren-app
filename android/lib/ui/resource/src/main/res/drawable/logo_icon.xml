@@ -1,0 +1,16 @@
+<!-- Warren VPN in-app logo: white "W" monogram (matches the white WARREN
+     wordmark in logo_text.xml on the dark top bar / splash). Vector so it is
+     resolution-independent; replaces the legacy raster marmot logo_icon.png.
+     Drawn as a stroked path because Android vector drawables do not
+     rasterise SVG <text>. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="108dp"
+        android:height="108dp"
+        android:viewportWidth="108"
+        android:viewportHeight="108">
+    <path android:pathData="M30,37 L43,75 L54,53 L65,75 L78,37"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="10"
+          android:strokeLineCap="round"
+          android:strokeLineJoin="round" />
+</vector>

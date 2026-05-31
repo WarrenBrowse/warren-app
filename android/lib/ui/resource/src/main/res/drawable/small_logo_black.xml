@@ -1,0 +1,14 @@
+<!-- Warren VPN monochrome "W" mark (black), used as the unsecured
+     quick-settings tile icon and the manifest component icon. Vector
+     replacement for the legacy raster marmot small_logo_black.png. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="108"
+        android:viewportHeight="108">
+    <path android:pathData="M30,37 L43,75 L54,53 L65,75 L78,37"
+          android:strokeColor="#000000"
+          android:strokeWidth="10"
+          android:strokeLineCap="round"
+          android:strokeLineJoin="round" />
+</vector>
