@@ -85,18 +85,16 @@ fun planTunInterface(
 
     // Capture everything. The IPv6 default route is present regardless of
     // the toggle: with no v6 address it acts as a blackhole (no leak); with
-    // a v6 address it carries IPv6 through the tunnel.
-    val routes = listOf(
-        WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0),
-        WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0),
-    )
-
     if (blocking) {
-        // Kill-switch interface: capture all, resolve nothing, pump nothing.
+        // Kill-switch interface: capture EVERYTHING (LAN included), resolve
+        // nothing, pump nothing. "Allow LAN" never weakens the kill switch.
         return WarrenTunInterfacePlan(
             session = BLOCKING_SESSION,
             addresses = addresses,
-            routes = routes,
+            routes = listOf(
+                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0),
+                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0),
+            ),
             dnsServers = emptyList(),
             mtu = WarrenTunDefaults.MTU,
             blocking = true,
@@ -104,6 +102,25 @@ fun planTunInterface(
     }
 
     val dnsServers = resolveDnsServers(config.dns)
+
+    // IPv4 capture. By default the whole internet (0.0.0.0/0) is tunnelled.
+    // With "allow LAN", the RFC1918 / link-local ranges are excluded so LAN
+    // hosts are reachable directly; the Warren exit DNS forwarder
+    // (10.66.0.1, inside 10/8) is re-added as a /32 so DNS still travels
+    // through the tunnel and never leaks to the LAN resolver.
+    val ipv4Routes =
+        if (config.allowLan) {
+            ipv4RoutesExcluding(LAN_EXCLUDED_IPV4) +
+                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.EXIT_DNS_RESOLVER, 32)
+        } else {
+            listOf(WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0))
+        }
+
+    // The IPv6 default route is present regardless of the toggles: with no
+    // v6 address it acts as a blackhole (no leak); with a v6 address it
+    // carries IPv6 through the tunnel. IPv6 LAN sharing is not offered.
+    val routes = ipv4Routes +
+        WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0)
 
     return WarrenTunInterfacePlan(
         session = ACTIVE_SESSION,
@@ -114,6 +131,67 @@ fun planTunInterface(
         blocking = false,
     )
 }
+
+/**
+ * RFC1918 private ranges + link-local, excluded from the TUN routes when
+ * "allow LAN" is on so local hosts are reachable off-tunnel.
+ */
+private val LAN_EXCLUDED_IPV4 = listOf(
+    WarrenTunInterfacePlan.TunCidr("10.0.0.0", 8),
+    WarrenTunInterfacePlan.TunCidr("172.16.0.0", 12),
+    WarrenTunInterfacePlan.TunCidr("192.168.0.0", 16),
+    WarrenTunInterfacePlan.TunCidr("169.254.0.0", 16),
+)
+
+/**
+ * Compute the IPv4 route set that covers `0.0.0.0/0` minus [excluded],
+ * expressed as a minimal list of aligned CIDR blocks. Used to build the
+ * "allow LAN" split-route table without an OS `excludeRoute` call (which
+ * only exists on API 33+). Pure 32-bit arithmetic; unit-tested.
+ */
+fun ipv4RoutesExcluding(
+    excluded: List<WarrenTunInterfacePlan.TunCidr>,
+): List<WarrenTunInterfacePlan.TunCidr> {
+    var kept = listOf(0L to 0) // (network base, prefix), starting at 0.0.0.0/0
+    for (ex in excluded) {
+        val exBase = ipv4ToLong(ex.address)
+        kept = kept.flatMap { (base, prefix) -> subtractV4(base, prefix, exBase, ex.prefixLength) }
+    }
+    return kept
+        .sortedBy { it.first }
+        .map { (base, prefix) -> WarrenTunInterfacePlan.TunCidr(longToIpv4(base), prefix) }
+}
+
+/** Subtract the CIDR [exBase]/[exPrefix] from [base]/[prefix]. */
+private fun subtractV4(base: Long, prefix: Int, exBase: Long, exPrefix: Int): List<Pair<Long, Int>> {
+    // No overlap: keep the block whole.
+    if (!v4Overlaps(base, prefix, exBase, exPrefix)) return listOf(base to prefix)
+    // Block fully inside the excluded range: drop it.
+    if (v4Contains(exBase, exPrefix, base, prefix)) return emptyList()
+    // Partial overlap: split into two halves and recurse (terminates once
+    // each half is either disjoint from or contained in the excluded range).
+    val childPrefix = prefix + 1
+    val half = 1L shl (32 - childPrefix)
+    return subtractV4(base, childPrefix, exBase, exPrefix) +
+        subtractV4(base + half, childPrefix, exBase, exPrefix)
+}
+
+/** True if a/aPrefix fully contains b/bPrefix. */
+private fun v4Contains(aBase: Long, aPrefix: Int, bBase: Long, bPrefix: Int): Boolean =
+    aPrefix <= bPrefix && (bBase and v4Mask(aPrefix)) == aBase
+
+/** Two aligned CIDRs overlap iff one contains the other. */
+private fun v4Overlaps(aBase: Long, aPrefix: Int, bBase: Long, bPrefix: Int): Boolean =
+    v4Contains(aBase, aPrefix, bBase, bPrefix) || v4Contains(bBase, bPrefix, aBase, aPrefix)
+
+private fun v4Mask(prefix: Int): Long =
+    if (prefix == 0) 0L else (0xFFFFFFFFL shl (32 - prefix)) and 0xFFFFFFFFL
+
+private fun ipv4ToLong(addr: String): Long =
+    addr.split('.').fold(0L) { acc, octet -> (acc shl 8) or (octet.toLong() and 0xFF) }
+
+private fun longToIpv4(value: Long): String =
+    "${(value shr 24) and 0xFF}.${(value shr 16) and 0xFF}.${(value shr 8) and 0xFF}.${value and 0xFF}"
 
 /**
  * Resolve the DNS servers to install. Custom valid resolvers win; otherwise

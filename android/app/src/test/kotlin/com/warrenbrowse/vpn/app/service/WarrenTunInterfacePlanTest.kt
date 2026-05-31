@@ -11,6 +11,7 @@ class WarrenTunInterfacePlanTest {
         enableIpv6: Boolean = false,
         lockdown: Boolean = false,
         dns: WarrenTunnelConfig.DnsConfig? = null,
+        allowLan: Boolean = false,
     ) = WarrenTunnelConfig(
         exitPubkeyHex = "ab".repeat(32),
         exitEndpoint = "warren-exit-1.warren.brown:443",
@@ -18,6 +19,7 @@ class WarrenTunInterfacePlanTest {
         enableIpv6 = enableIpv6,
         lockdownMode = lockdown,
         dns = dns,
+        allowLan = allowLan,
     )
 
     private fun WarrenTunInterfacePlan.hasRoute(address: String) =
@@ -25,6 +27,26 @@ class WarrenTunInterfacePlanTest {
 
     private fun WarrenTunInterfacePlan.hasAddress(address: String) =
         addresses.any { it.address == address }
+
+    // Self-contained "is this IPv4 covered by some route?" check, mirroring
+    // the longest-prefix match the OS would do, so the tests can assert
+    // exactly which traffic the TUN captures vs lets out to the LAN.
+    private fun ipv4ToLong(a: String): Long =
+        a.split('.').fold(0L) { acc, o -> (acc shl 8) or (o.toLong() and 0xFF) }
+
+    private fun WarrenTunInterfacePlan.coversV4(ip: String): Boolean {
+        val addr = ipv4ToLong(ip)
+        return routes.any { r ->
+            if (r.address.contains(':')) return@any false
+            val base = ipv4ToLong(r.address)
+            val mask = if (r.prefixLength == 0) {
+                0L
+            } else {
+                (0xFFFFFFFFL shl (32 - r.prefixLength)) and 0xFFFFFFFFL
+            }
+            (addr and mask) == base
+        }
+    }
 
     @Test
     fun `ipv4 is always routed`() {
@@ -106,6 +128,77 @@ class WarrenTunInterfacePlanTest {
     @Test
     fun `active plan is not flagged blocking`() {
         assertFalse(planTunInterface(config()).blocking)
+    }
+
+    @Test
+    fun `allow lan off tunnels the entire ipv4 internet including private ranges`() {
+        val plan = planTunInterface(config(allowLan = false))
+        assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
+        // Everything is captured: public and LAN alike.
+        assertTrue(plan.coversV4("8.8.8.8"))
+        assertTrue(plan.coversV4("192.168.1.1"))
+        assertTrue(plan.coversV4("10.0.0.5"))
+    }
+
+    @Test
+    fun `allow lan excludes private and link-local ranges from the tunnel`() {
+        val plan = planTunInterface(config(allowLan = true))
+        // LAN / link-local hosts are reachable directly (NOT tunnelled).
+        assertFalse(plan.coversV4("192.168.1.1"), "192.168/16 must be off-tunnel")
+        assertFalse(plan.coversV4("10.0.0.5"), "10/8 must be off-tunnel")
+        assertFalse(plan.coversV4("172.16.5.4"), "172.16/12 must be off-tunnel")
+        assertFalse(plan.coversV4("172.31.255.1"), "172.16/12 upper bound off-tunnel")
+        assertFalse(plan.coversV4("169.254.10.10"), "169.254/16 must be off-tunnel")
+        // The full default route must be gone (no 0.0.0.0/0 catch-all).
+        assertFalse(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
+    }
+
+    @Test
+    fun `allow lan still tunnels the public internet and the exit dns resolver`() {
+        val plan = planTunInterface(config(allowLan = true))
+        // Public addresses stay tunnelled (no leak).
+        assertTrue(plan.coversV4("8.8.8.8"))
+        assertTrue(plan.coversV4("1.1.1.1"))
+        assertTrue(plan.coversV4("93.184.216.34"))
+        // Addresses just outside the excluded ranges stay tunnelled.
+        assertTrue(plan.coversV4("11.0.0.1"), "just above 10/8")
+        assertTrue(plan.coversV4("172.15.255.1"), "just below 172.16/12")
+        assertTrue(plan.coversV4("172.32.0.1"), "just above 172.16/12")
+        assertTrue(plan.coversV4("192.167.255.1"), "just below 192.168/16")
+        // The exit DNS forwarder (10.66.0.1, inside 10/8) is re-added as /32
+        // so DNS never leaks to the LAN resolver.
+        assertTrue(plan.coversV4("10.66.0.1"), "exit DNS resolver must stay tunnelled")
+        // IPv6 is still fully captured.
+        assertTrue(plan.hasRoute(WarrenTunDefaults.IPV6_DEFAULT_ROUTE))
+    }
+
+    @Test
+    fun `the kill-switch blocking plan ignores allow lan and captures everything`() {
+        val plan = planTunInterface(config(allowLan = true, lockdown = true), blocking = true)
+        assertTrue(plan.blocking)
+        // Allow-LAN must never weaken the kill switch: LAN is captured too.
+        assertTrue(plan.coversV4("192.168.1.1"))
+        assertTrue(plan.coversV4("10.0.0.5"))
+        assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
+    }
+
+    @Test
+    fun `ipv4RoutesExcluding produces a minimal complement that omits the excluded block`() {
+        val routes = ipv4RoutesExcluding(
+            listOf(WarrenTunInterfacePlan.TunCidr("10.0.0.0", 8)),
+        )
+        // No catch-all default remains.
+        assertFalse(routes.any { it.address == "0.0.0.0" && it.prefixLength == 0 })
+        // The complement is well-formed: addresses in 10/8 are not covered,
+        // neighbours are.
+        val plan = WarrenTunInterfacePlan(
+            session = "t", addresses = emptyList(), routes = routes,
+            dnsServers = emptyList(), mtu = 1280, blocking = false,
+        )
+        assertFalse(plan.coversV4("10.0.0.1"))
+        assertFalse(plan.coversV4("10.255.255.255"))
+        assertTrue(plan.coversV4("9.255.255.255"))
+        assertTrue(plan.coversV4("11.0.0.0"))
     }
 
     @Test

@@ -70,6 +70,10 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _lockdownMode = MutableStateFlow(prefs.getBoolean(KEY_LOCKDOWN_MODE, false))
     val lockdownMode: StateFlow<Boolean> = _lockdownMode.asStateFlow()
 
+    /** Local network sharing: let LAN hosts bypass the tunnel. */
+    private val _allowLan = MutableStateFlow(prefs.getBoolean(KEY_ALLOW_LAN, false))
+    val allowLan: StateFlow<Boolean> = _allowLan.asStateFlow()
+
     /** DNS mode: [DNS_STATE_DEFAULT] or [DNS_STATE_CUSTOM]. */
     private val _dnsState = MutableStateFlow(prefs.getString(KEY_DNS_STATE, DNS_STATE_DEFAULT) ?: DNS_STATE_DEFAULT)
     val dnsState: StateFlow<String> = _dnsState.asStateFlow()
@@ -212,6 +216,11 @@ class WarrenLocalSettingsRepository(context: Context) {
         _lockdownMode.value = enabled
     }
 
+    fun setAllowLan(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ALLOW_LAN, enabled).apply()
+        _allowLan.value = enabled
+    }
+
     fun setDnsState(state: String) {
         val normalized = if (state == DNS_STATE_CUSTOM) DNS_STATE_CUSTOM else DNS_STATE_DEFAULT
         prefs.edit().putString(KEY_DNS_STATE, normalized).apply()
@@ -287,6 +296,7 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
+    private const val KEY_ALLOW_LAN = "allow_lan"
         private const val KEY_DNS_STATE = "dns_state"
         private const val KEY_DNS_CUSTOM_SERVERS = "dns_custom_servers"
         private const val KEY_DNS_BLOCK_ADS = "dns_block_ads"

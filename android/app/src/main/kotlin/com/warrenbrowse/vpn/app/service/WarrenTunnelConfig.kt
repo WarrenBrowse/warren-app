@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.service
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 // JSON payload handed to `WarrenJni.connectTunnel`. Lives in this module
 // rather than `lib/model` because the Rust side reads it via `serde_json`
@@ -42,6 +43,13 @@ data class WarrenTunnelConfig(
     // Set to route DNS through the tunnel (anti-leak) and/or push custom
     // resolvers and exit-side content-blocking flags.
     @SerialName("dns") val dns: DnsConfig? = null,
+    // Local network sharing ("allow LAN"). When true, RFC1918 / link-local
+    // ranges are excluded from the TUN routes so the device can reach LAN
+    // hosts (printers, NAS, casting) directly while everything else stays
+    // tunnelled. Enforced entirely Android-side in WarrenTunInterfacePlan;
+    // @Transient so it is not part of the warren-jni wire config (the Rust
+    // tunnel does not need it).
+    @Transient val allowLan: Boolean = false,
 ) {
     @Serializable
     data class EntryHop(
