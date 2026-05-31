@@ -33,6 +33,23 @@ const RULE_PREF_EXIT_BYPASS: u32 = 50;
 /// Split-default via tun priority (= evaluated AFTER the exit bypass).
 const RULE_PREF_TUN: u32 = 51;
 
+/// Excluded-traffic priority (= evaluated BEFORE the `lookup 100` rule so
+/// packets from `warren-exclude`d processes leave via the physical
+/// interface instead of the TUN).
+///
+/// Without this rule the split-tunnel mark is applied by the firewall but
+/// no policy route sends the marked packets to the `main` table; they fall
+/// through to `RULE_PREF_TUN` (`lookup 100`), hit the TUN, and are dropped
+/// by the firewall's "block marked in-tunnel traffic" rule → black-holed.
+const RULE_PREF_EXCLUDE: u32 = 49;
+
+/// Firewall mark that the split-tunnel nftables rules apply (as packet
+/// `meta mark`) to traffic from excluded processes. Mirrors
+/// `mullvad_types::TUNNEL_FWMARK` (kept as a local literal to avoid adding
+/// a `mullvad-types` dependency edge to this crate). Expressed in hex so it
+/// matches the `ip rule show` display form.
+const SPLIT_TUNNEL_FWMARK: &str = "0x6d6f6c65";
+
 /// Builds the list of `ip` commands to execute for install. Pure
 /// (= testable without a Linux kernel). Returns `Vec<Vec<String>>`
 /// where each inner vec is the args to `ip`.
@@ -75,6 +92,20 @@ pub fn build_install_commands(exit_ip: Ipv4Addr, tun_name: &str) -> Vec<Vec<Stri
             "pref".into(),
             RULE_PREF_TUN.to_string(),
         ],
+        // Excluded (split-tunnel) traffic: the firewall tags it with
+        // `SPLIT_TUNNEL_FWMARK`; route those packets via the `main` table so
+        // they egress the physical interface (where the firewall masquerades
+        // them) instead of being routed into the TUN and dropped.
+        vec![
+            "rule".into(),
+            "add".into(),
+            "fwmark".into(),
+            SPLIT_TUNNEL_FWMARK.into(),
+            "lookup".into(),
+            "main".into(),
+            "pref".into(),
+            RULE_PREF_EXCLUDE.to_string(),
+        ],
     ]
 }
 
@@ -99,6 +130,16 @@ pub fn build_uninstall_commands(exit_ip: Ipv4Addr) -> Vec<Vec<String>> {
             "main".into(),
             "pref".into(),
             RULE_PREF_EXIT_BYPASS.to_string(),
+        ],
+        vec![
+            "rule".into(),
+            "del".into(),
+            "fwmark".into(),
+            SPLIT_TUNNEL_FWMARK.into(),
+            "lookup".into(),
+            "main".into(),
+            "pref".into(),
+            RULE_PREF_EXCLUDE.to_string(),
         ],
         vec![
             "route".into(),
@@ -265,9 +306,13 @@ mod tests {
     }
 
     #[test]
-    fn install_commands_count_is_4() {
+    fn install_commands_count_is_5() {
         let cmds = build_install_commands(ip("91.99.122.154"), "tun0");
-        assert_eq!(cmds.len(), 4, "expected 4 commands (2 routes + 2 rules)");
+        assert_eq!(
+            cmds.len(),
+            5,
+            "expected 5 commands (2 routes + 3 rules: exit-bypass, tun, exclude)"
+        );
     }
 
     #[test]
@@ -310,18 +355,63 @@ mod tests {
     }
 
     #[test]
+    fn install_fifth_command_is_exclude_rule() {
+        // Anti-regression for F1 (split tunnel black-hole): excluded
+        // traffic is marked by the firewall but, without this rule, has no
+        // policy route to the physical interface and gets dropped in-tunnel.
+        // It MUST be evaluated before the `lookup 100` rule (pref 49 < 51).
+        let cmds = build_install_commands(ip("91.99.122.154"), "tun0");
+        assert_eq!(
+            cmds[4],
+            vec![
+                "rule",
+                "add",
+                "fwmark",
+                "0x6d6f6c65",
+                "lookup",
+                "main",
+                "pref",
+                "49"
+            ]
+        );
+    }
+
+    #[test]
+    fn exclude_rule_pref_is_lower_than_tun_lookup() {
+        // The exclude rule must win over the catch-all `lookup 100` rule.
+        assert!(
+            RULE_PREF_EXCLUDE < RULE_PREF_TUN,
+            "excluded traffic must be matched before the TUN catch-all"
+        );
+    }
+
+    #[test]
     fn uninstall_uses_inverse_order() {
         let cmds = build_uninstall_commands(ip("91.99.122.154"));
-        assert_eq!(cmds.len(), 3);
+        assert_eq!(cmds.len(), 4);
         assert_eq!(cmds[0][0], "rule", "first cleanup must be rule del");
         assert_eq!(cmds[1][0], "rule", "second cleanup must be rule del");
-        assert_eq!(cmds[2][0], "route", "last cleanup must be route flush");
+        assert_eq!(cmds[2][0], "rule", "third cleanup must be rule del");
+        assert_eq!(cmds[3][0], "route", "last cleanup must be route flush");
+    }
+
+    #[test]
+    fn uninstall_removes_exclude_rule() {
+        let cmds = build_uninstall_commands(ip("91.99.122.154"));
+        assert!(
+            cmds.iter().any(|c| c
+                == &vec![
+                    "rule", "del", "fwmark", "0x6d6f6c65", "lookup", "main", "pref", "49"
+                ]),
+            "uninstall must remove the split-tunnel exclude rule"
+        );
     }
 
     #[test]
     fn uninstall_flushes_dedicated_table_not_main() {
         let cmds = build_uninstall_commands(ip("91.99.122.154"));
-        let flush_cmd = &cmds[2];
+        let flush_cmd = cmds.last().expect("uninstall has commands");
+        assert_eq!(flush_cmd[0], "route", "last cleanup must be route flush");
         assert!(flush_cmd.contains(&"100".to_string()));
         assert!(
             !flush_cmd.contains(&"main".to_string()),
