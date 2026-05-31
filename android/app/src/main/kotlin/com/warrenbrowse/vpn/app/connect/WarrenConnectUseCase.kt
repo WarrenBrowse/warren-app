@@ -90,7 +90,10 @@ class WarrenConnectUseCase(
         // regardless of the config builder (which is the natural place but is
         // kept minimal). allowLan is a serialized field, so it survives the
         // JSON round-trip through the VpnService Intent down to the TUN plan.
-        val config = built.copy(allowLan = localSettings.allowLan.value)
+        val config = built.copy(
+            allowLan = localSettings.allowLan.value,
+            mtu = localSettings.tunnelMtu.value,
+        )
         val configJson = Json.encodeToString(config)
 
         MnemonicCache.put(mnemonic)

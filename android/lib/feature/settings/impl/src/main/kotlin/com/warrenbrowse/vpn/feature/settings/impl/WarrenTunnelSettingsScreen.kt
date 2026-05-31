@@ -75,6 +75,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
     val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
     val allowLan by repo.allowLan.collectAsStateWithLifecycle()
+    val tunnelMtu by repo.tunnelMtu.collectAsStateWithLifecycle()
     val dnsState by repo.dnsState.collectAsStateWithLifecycle()
     val customDns by repo.customDnsServers.collectAsStateWithLifecycle()
     val blockAds by repo.blockAds.collectAsStateWithLifecycle()
@@ -166,6 +167,11 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     "Disabled while the kill switch is blocking.",
                 value = allowLan,
                 onValueChange = repo::setAllowLan,
+            )
+
+            MtuField(
+                mtu = tunnelMtu,
+                onCommit = repo::setTunnelMtu,
             )
 
             HorizontalDivider()
@@ -303,6 +309,30 @@ private fun ObfuscationIndicator() {
             "do not apply to Warren tunnels.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * MTU input. Lets the user lower the TUN MTU (helps on networks that drop or
+ * fragment large packets); the repository clamps to a safe range so this can
+ * never raise the MTU above the Warren QUIC floor and black-hole traffic.
+ */
+@Composable
+private fun MtuField(mtu: Int, onCommit: (Int) -> Unit) {
+    var text by remember { mutableStateOf(mtu.toString()) }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it.filter(Char::isDigit).take(4)
+            text.toIntOrNull()?.let(onCommit)
+        },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text("MTU") },
+        placeholder = {
+            Text("${WarrenLocalSettingsRepository.MTU_MIN}-${WarrenLocalSettingsRepository.MTU_MAX}")
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
 }
 

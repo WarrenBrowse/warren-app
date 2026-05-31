@@ -74,6 +74,10 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _allowLan = MutableStateFlow(prefs.getBoolean(KEY_ALLOW_LAN, false))
     val allowLan: StateFlow<Boolean> = _allowLan.asStateFlow()
 
+    /** TUN interface MTU (clamped to [MTU_MIN]..[MTU_MAX]). */
+    private val _tunnelMtu = MutableStateFlow(prefs.getInt(KEY_TUNNEL_MTU, MTU_MAX))
+    val tunnelMtu: StateFlow<Int> = _tunnelMtu.asStateFlow()
+
     /** DNS mode: [DNS_STATE_DEFAULT] or [DNS_STATE_CUSTOM]. */
     private val _dnsState = MutableStateFlow(prefs.getString(KEY_DNS_STATE, DNS_STATE_DEFAULT) ?: DNS_STATE_DEFAULT)
     val dnsState: StateFlow<String> = _dnsState.asStateFlow()
@@ -246,6 +250,13 @@ class WarrenLocalSettingsRepository(context: Context) {
         _allowLan.value = enabled
     }
 
+    /** Set the TUN MTU, clamped to [MTU_MIN]..[MTU_MAX]. */
+    fun setTunnelMtu(mtu: Int) {
+        val clamped = mtu.coerceIn(MTU_MIN, MTU_MAX)
+        prefs.edit().putInt(KEY_TUNNEL_MTU, clamped).apply()
+        _tunnelMtu.value = clamped
+    }
+
     fun setDnsState(state: String) {
         val normalized = if (state == DNS_STATE_CUSTOM) DNS_STATE_CUSTOM else DNS_STATE_DEFAULT
         prefs.edit().putString(KEY_DNS_STATE, normalized).apply()
@@ -323,6 +334,9 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
     private const val KEY_ALLOW_LAN = "allow_lan"
+    private const val KEY_TUNNEL_MTU = "tunnel_mtu"
+    const val MTU_MIN = 576
+    const val MTU_MAX = 1280
         private const val KEY_DNS_STATE = "dns_state"
         private const val KEY_DNS_CUSTOM_SERVERS = "dns_custom_servers"
         private const val KEY_DNS_BLOCK_ADS = "dns_block_ads"

@@ -12,6 +12,7 @@ class WarrenTunInterfacePlanTest {
         lockdown: Boolean = false,
         dns: WarrenTunnelConfig.DnsConfig? = null,
         allowLan: Boolean = false,
+        mtu: Int = 1280,
     ) = WarrenTunnelConfig(
         exitPubkeyHex = "ab".repeat(32),
         exitEndpoint = "warren-exit-1.warren.brown:443",
@@ -20,6 +21,7 @@ class WarrenTunInterfacePlanTest {
         lockdownMode = lockdown,
         dns = dns,
         allowLan = allowLan,
+        mtu = mtu,
     )
 
     private fun WarrenTunInterfacePlan.hasRoute(address: String) =
@@ -180,6 +182,16 @@ class WarrenTunInterfacePlanTest {
         assertTrue(plan.coversV4("192.168.1.1"))
         assertTrue(plan.coversV4("10.0.0.5"))
         assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
+    }
+
+    @Test
+    fun `mtu comes from the config and is clamped to the safe range (never above the QUIC floor)`() {
+        assertEquals(WarrenTunDefaults.MTU, planTunInterface(config()).mtu)
+        assertEquals(1000, planTunInterface(config(mtu = 1000)).mtu)
+        // Above the floor is clamped down (raising MTU could black-hole traffic).
+        assertEquals(WarrenTunDefaults.MTU, planTunInterface(config(mtu = 1500)).mtu)
+        // Below the minimum is clamped up.
+        assertEquals(576, planTunInterface(config(mtu = 100)).mtu)
     }
 
     @Test

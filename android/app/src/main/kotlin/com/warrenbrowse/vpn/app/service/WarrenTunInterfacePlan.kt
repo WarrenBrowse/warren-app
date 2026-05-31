@@ -127,10 +127,15 @@ fun planTunInterface(
         addresses = addresses,
         routes = routes,
         dnsServers = dnsServers,
-        mtu = WarrenTunDefaults.MTU,
+        // Clamp defensively: never above the Warren QUIC floor (raising it
+        // risks black-holing oversized encapsulated packets), never below a
+        // usable minimum.
+        mtu = config.mtu.coerceIn(MIN_MTU, WarrenTunDefaults.MTU),
         blocking = false,
     )
 }
+
+private const val MIN_MTU = 576
 
 /**
  * RFC1918 private ranges + link-local, excluded from the TUN routes when

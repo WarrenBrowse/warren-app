@@ -205,6 +205,22 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `setTunnelMtu clamps to the safe range`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getInt(any(), any()) } returns WarrenLocalSettingsRepository.MTU_MAX
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setTunnelMtu(1000)
+        assertEquals(1000, repo.tunnelMtu.value)
+        // Above the max is clamped down.
+        repo.setTunnelMtu(5000)
+        assertEquals(WarrenLocalSettingsRepository.MTU_MAX, repo.tunnelMtu.value)
+        // Below the min is clamped up.
+        repo.setTunnelMtu(0)
+        assertEquals(WarrenLocalSettingsRepository.MTU_MIN, repo.tunnelMtu.value)
+    }
+
+    @Test
     fun `disabling recents stops recording and clears the existing list`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         every { mockPrefs.getBoolean("recents_enabled", true) } returns true

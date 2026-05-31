@@ -53,6 +53,10 @@ data class WarrenTunnelConfig(
     // ignores this unknown field (its WarrenTunnelConfig has no
     // deny_unknown_fields), so no wire/Rust change is needed.
     @SerialName("allow_lan") val allowLan: Boolean = false,
+    // TUN interface MTU. Lower it on networks that mangle large packets;
+    // the default is the Warren QUIC floor. Android-side only (sets
+    // VpnService.Builder.setMtu); the Rust side ignores this unknown field.
+    @SerialName("mtu") val mtu: Int = 1280,
 ) {
     @Serializable
     data class EntryHop(
