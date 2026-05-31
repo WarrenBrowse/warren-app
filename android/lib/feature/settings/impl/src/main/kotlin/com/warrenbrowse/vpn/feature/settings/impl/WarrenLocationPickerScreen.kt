@@ -11,12 +11,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -74,38 +76,76 @@ fun WarrenLocationPicker(navigator: Navigator) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
-                Text(
-                    text = "Tap to select. Tap again to clear (auto-pick the first active exit).",
-                    style = MaterialTheme.typography.bodySmall,
+                var query by remember { mutableStateOf("") }
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Search country, city or address") },
+                    singleLine = true,
                 )
-                // Resolve recents (most-recent-first) against the current
-                // catalogue, dropping any that no longer exist.
-                val recentRelays = recentExitIds.mapNotNull { id ->
-                    relays.firstOrNull { it.exitId == id }
-                }
-                val onSelect: (WarrenRelaySummary) -> Unit = { relay ->
-                    settings.setSelectedExitId(
-                        if (relay.exitId == selectedExitId) null else relay.exitId
-                    )
-                }
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (recentRelays.isNotEmpty()) {
-                        item { SectionHeader("Recents") }
-                        items(recentRelays, key = { "recent-${it.exitId}" }) { relay ->
-                            RelayRow(
-                                relay = relay,
-                                selected = relay.exitId == selectedExitId,
-                                onClick = { onSelect(relay) },
-                            )
-                        }
-                        item { SectionHeader("All exits") }
+
+                val trimmed = query.trim()
+                val filtered = if (trimmed.isEmpty()) {
+                    relays
+                } else {
+                    relays.filter {
+                        it.country.contains(trimmed, ignoreCase = true) ||
+                            it.city.contains(trimmed, ignoreCase = true) ||
+                            it.endpoint.contains(trimmed, ignoreCase = true)
                     }
-                    items(relays, key = { it.exitId }) { relay ->
-                        RelayRow(
-                            relay = relay,
-                            selected = relay.exitId == selectedExitId,
-                            onClick = { onSelect(relay) },
+                }
+
+                if (filtered.isEmpty()) {
+                    Text(
+                        text = "No exits match \"$trimmed\".",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text(
+                        text = "Tap to select. Tap again to clear (auto-pick the first active exit).",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    // Recents only when not searching: resolve most-recent-first
+                    // against the current catalogue, dropping stale ids.
+                    val recentRelays = if (trimmed.isEmpty()) {
+                        recentExitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
+                    } else {
+                        emptyList()
+                    }
+                    val onSelect: (WarrenRelaySummary) -> Unit = { relay ->
+                        settings.setSelectedExitId(
+                            if (relay.exitId == selectedExitId) null else relay.exitId
                         )
+                    }
+                    // Country -> city hierarchy: group the (filtered) exits by
+                    // country, alphabetically, each under a country header.
+                    val byCountry = filtered
+                        .sortedWith(compareBy({ it.country }, { it.city }))
+                        .groupBy { it.country }
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (recentRelays.isNotEmpty()) {
+                            item(key = "header-recents") { SectionHeader("Recents") }
+                            items(recentRelays, key = { "recent-${it.exitId}" }) { relay ->
+                                RelayRow(
+                                    relay = relay,
+                                    selected = relay.exitId == selectedExitId,
+                                    onClick = { onSelect(relay) },
+                                )
+                            }
+                        }
+                        byCountry.forEach { (country, countryRelays) ->
+                            item(key = "header-$country") {
+                                SectionHeader(country.ifBlank { "Unknown" })
+                            }
+                            items(countryRelays, key = { it.exitId }) { relay ->
+                                RelayRow(
+                                    relay = relay,
+                                    selected = relay.exitId == selectedExitId,
+                                    onClick = { onSelect(relay) },
+                                )
+                            }
+                        }
                     }
                 }
             }
