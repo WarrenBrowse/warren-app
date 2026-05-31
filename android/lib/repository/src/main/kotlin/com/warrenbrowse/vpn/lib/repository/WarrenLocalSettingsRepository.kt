@@ -117,6 +117,14 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _recentExitIds = MutableStateFlow(readRecentExitIds())
     val recentExitIds: StateFlow<List<String>> = _recentExitIds.asStateFlow()
 
+    /**
+     * Whether recently-used exits are remembered. When off, no new recents
+     * are recorded and the existing list is cleared (desktop "recents"
+     * privacy toggle parity). Defaults to on.
+     */
+    private val _recentsEnabled = MutableStateFlow(prefs.getBoolean(KEY_RECENTS_ENABLED, true))
+    val recentsEnabled: StateFlow<Boolean> = _recentsEnabled.asStateFlow()
+
     fun setDaitaEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DAITA_ENABLED, enabled).apply()
         _daitaEnabled.value = enabled
@@ -193,10 +201,27 @@ class WarrenLocalSettingsRepository(context: Context) {
 
     /** Push [exitId] to the front of the recents list (deduped, capped). */
     fun recordRecentExit(exitId: String) {
+        if (!_recentsEnabled.value) return
         val updated = (listOf(exitId) + _recentExitIds.value.filter { it != exitId })
             .take(MAX_RECENT_EXITS)
         prefs.edit().putString(KEY_RECENT_EXIT_IDS, updated.joinToString(RECENT_DELIMITER)).apply()
         _recentExitIds.value = updated
+    }
+
+    /** Forget all recently-used exits. */
+    fun clearRecentExits() {
+        prefs.edit().remove(KEY_RECENT_EXIT_IDS).apply()
+        _recentExitIds.value = emptyList()
+    }
+
+    /**
+     * Enable/disable remembering recently-used exits. Turning it off also
+     * forgets the current list so the privacy choice takes effect immediately.
+     */
+    fun setRecentsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_RECENTS_ENABLED, enabled).apply()
+        _recentsEnabled.value = enabled
+        if (!enabled) clearRecentExits()
     }
 
     private fun readRecentExitIds(): List<String> =
@@ -292,6 +317,7 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
         private const val KEY_RECENT_EXIT_IDS = "recent_exit_ids"
+    private const val KEY_RECENTS_ENABLED = "recents_enabled"
         private const val RECENT_DELIMITER = ","
         private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"

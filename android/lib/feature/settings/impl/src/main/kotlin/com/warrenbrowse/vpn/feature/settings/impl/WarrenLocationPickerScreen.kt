@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.feature.settings.impl
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,13 +13,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -50,6 +54,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val selectedExitId by settings.selectedExitId.collectAsStateWithLifecycle()
     val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
+    val recentsEnabled by settings.recentsEnabled.collectAsStateWithLifecycle()
 
     // RelayProvider.list() is synchronous (in-memory today); produceState
     // resolves a fresh list on every recomposition so a future async
@@ -106,9 +111,35 @@ fun WarrenLocationPicker(navigator: Navigator) {
                         text = "Tap to select. Tap again to clear (auto-pick the first active exit).",
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    // Recents only when not searching: resolve most-recent-first
-                    // against the current catalogue, dropping stale ids.
-                    val recentRelays = if (trimmed.isEmpty()) {
+
+                    // Recents privacy toggle (desktop parity), only while not
+                    // searching so the search view stays focused on results.
+                    if (trimmed.isEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = "Remember recent exits",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (recentsEnabled && recentExitIds.isNotEmpty()) {
+                                TextButton(onClick = { settings.clearRecentExits() }) {
+                                    Text("Clear")
+                                }
+                            }
+                            Switch(
+                                checked = recentsEnabled,
+                                onCheckedChange = settings::setRecentsEnabled,
+                            )
+                        }
+                    }
+
+                    // Recents only when not searching and remembering is on:
+                    // resolve most-recent-first, dropping stale ids.
+                    val recentRelays = if (trimmed.isEmpty() && recentsEnabled) {
                         recentExitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
                     } else {
                         emptyList()

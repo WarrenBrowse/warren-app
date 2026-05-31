@@ -175,6 +175,7 @@ class WarrenLocalSettingsRepositoryTest {
     @Test
     fun `recents are most-recent-first, deduped and capped at five`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getBoolean("recents_enabled", true) } returns true
         val repo = WarrenLocalSettingsRepository(mockContext)
 
         listOf("a", "b", "c", "a").forEach { repo.recordRecentExit(it) }
@@ -191,6 +192,7 @@ class WarrenLocalSettingsRepositoryTest {
     @Test
     fun `selecting an exit records it as recent, clearing does not`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getBoolean("recents_enabled", true) } returns true
         every { mockPrefs.getString("selected_exit_id", null) } returns null
         val repo = WarrenLocalSettingsRepository(mockContext)
 
@@ -200,6 +202,30 @@ class WarrenLocalSettingsRepositoryTest {
         repo.setSelectedExitId(null)
         // Clearing the selection leaves recents untouched.
         assertEquals(listOf("exit-1"), repo.recentExitIds.value)
+    }
+
+    @Test
+    fun `disabling recents stops recording and clears the existing list`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getBoolean("recents_enabled", true) } returns true
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.recordRecentExit("a")
+        assertEquals(listOf("a"), repo.recentExitIds.value)
+
+        // Turning recents off forgets the current list immediately...
+        repo.setRecentsEnabled(false)
+        assertEquals(emptyList<String>(), repo.recentExitIds.value)
+        assertFalse(repo.recentsEnabled.value)
+
+        // ...and no new recents are recorded while it stays off.
+        repo.recordRecentExit("b")
+        assertEquals(emptyList<String>(), repo.recentExitIds.value)
+
+        // Re-enabling resumes recording.
+        repo.setRecentsEnabled(true)
+        repo.recordRecentExit("c")
+        assertEquals(listOf("c"), repo.recentExitIds.value)
     }
 
     @Test
