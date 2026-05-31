@@ -491,7 +491,12 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         if let onlyShowSection {
             snapshot.appendSections([onlyShowSection])
         } else {
-            snapshot.appendSections(Section.allCases)
+            // Warren tunnels use always-on M4.0 HTTP/3 mimicry; the legacy
+            // WireGuard obfuscation picker does not apply, so it is omitted
+            // from the main VPN settings list. The dedicated obfuscation
+            // route shows a read-only indicator instead (see
+            // VPNSettingsViewController).
+            snapshot.appendSections(Section.allCases.filter { $0 != .wireGuardObfuscation })
         }
         if snapshot.sectionIdentifiers.contains(.dnsSettings) {
             snapshot.appendItems([.dnsSettings], toSection: .dnsSettings)
