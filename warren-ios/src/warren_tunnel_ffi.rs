@@ -440,7 +440,11 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // + `pump_bidirectional_with_daita`). Leaving them ignored
         // here keeps this first wire-up scope-minimal.
         let _ = params.multi_hop_relay;
-        let _ = params.daita_spec;
+        // DAITA: the client only signals the REQUEST; the exit picks the
+        // Maybenot machine and returns it in SetupAck. The spec content
+        // passed from Swift is irrelevant to the client (mirrors the Android
+        // warren-jni path) — only its presence toggles the request.
+        let daita_requested = !params.daita_spec.is_null();
         let _ = params.nat_pmp_enabled;
         let _ = params.bypass_cidrs;
         let _ = params.bypass_cidrs_count;
@@ -471,7 +475,8 @@ pub unsafe extern "C" fn warren_tunnel_start(
             };
             arc_for_task.fire_event(connecting_event);
 
-            let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key);
+            let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key)
+                .with_daita(daita_requested);
             let session = match client.connect(exit_target).await {
                 Ok(session) => session,
                 Err(_e) => {
@@ -501,7 +506,20 @@ pub unsafe extern "C" fn warren_tunnel_start(
             // hold it on the stack of this task until pump exits.
             let tun = arc_for_task.tun.clone();
             let conn = session.clone_conn();
-            let pump_result = warren_tunnel::pump_bidirectional(tun, conn).await;
+            // Build the DAITA framework from the exit-supplied spec when the
+            // client requested it and the exit accepted (returned a spec).
+            // Falls back to the plain pump otherwise. Mirrors warren-jni.
+            let daita_state = match session.daita_spec() {
+                Some(spec) if daita_requested => {
+                    warren_tunnel::DaitaState::from_config(spec, std::time::Instant::now()).ok()
+                }
+                _ => None,
+            };
+            let pump_result = if let Some(state) = daita_state {
+                warren_tunnel::pump_bidirectional_with_daita(tun, conn, state).await
+            } else {
+                warren_tunnel::pump_bidirectional(tun, conn).await
+            };
             drop(session);
             let _ = pump_result; // pump logs errors via tracing
 
