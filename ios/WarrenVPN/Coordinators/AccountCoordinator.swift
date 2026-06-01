@@ -8,7 +8,6 @@
 
 import WarrenREST
 import Routing
-import SwiftUI
 import UIKit
 
 enum AccountDismissReason: Equatable, Sendable {
@@ -55,8 +54,6 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
 
     private func handleViewControllerAction(_ action: AccountViewControllerAction) {
         switch action {
-        case .deviceManagement:
-            navigateToDeviceManagement()
         case .finish:
             didFinish?(self, .none)
         case .logOut:
@@ -122,60 +119,6 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
                     ))
             )
         )
-    }
-
-    private func navigateToDeviceManagement() {
-        guard let accountNumber = interactor.deviceState.accountData?.number,
-            let currentDeviceId = interactor.deviceState.deviceData?.identifier
-        else {
-            return
-        }
-        let controller = UIHostingController(
-            rootView: DeviceManagementView(
-                deviceManaging: DeviceManagementInteractor(
-                    accountNumber: accountNumber,
-                    currentDeviceId: currentDeviceId,
-                    devicesProxy: interactor.deviceProxy
-                ),
-                style: .deviceManagement,
-                onError: { [weak self] title, error in
-                    self?.presentError(
-                        "device-management-error-alert",
-                        title: title,
-                        message: error.localizedDescription
-                    )
-                }
-            )
-        )
-        controller.title = NSLocalizedString("Manage devices", comment: "")
-        let doneButton = UIBarButtonItem(
-            systemItem: .done,
-            primaryAction: UIAction(handler: { _ in
-                controller.dismiss(animated: true)
-            })
-        )
-        controller.navigationItem.rightBarButtonItem = doneButton
-        let subNavigationController = CustomNavigationController(rootViewController: controller)
-        subNavigationController.navigationItem.largeTitleDisplayMode = .always
-        subNavigationController.navigationBar.prefersLargeTitles = true
-        navigationController.present(subNavigationController, animated: true)
-    }
-
-    private func presentError(_ id: String, title: String, message: String) {
-        let presentation = AlertPresentation(
-            id: id,
-            title: title,
-            message: message,
-            buttons: [
-                AlertAction(
-                    title: NSLocalizedString("Got it!", comment: ""),
-                    style: .default
-                )
-            ]
-        )
-
-        let presenter = AlertPresenter(context: self)
-        presenter.showAlert(presentation: presentation, animated: true)
     }
 
     @MainActor

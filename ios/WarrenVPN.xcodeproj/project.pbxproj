@@ -141,7 +141,6 @@
 		581F23AD2A8CF92100788AB6 /* DefaultPathObserverFake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581F23AC2A8CF92100788AB6 /* DefaultPathObserverFake.swift */; };
 		581F23AF2A8CF94D00788AB6 /* PingerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581F23AE2A8CF94D00788AB6 /* PingerMock.swift */; };
 		5820676426E771DB00655B05 /* TunnelManagerErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5820676326E771DB00655B05 /* TunnelManagerErrors.swift */; };
-		5820EDA9288FE064006BF4E4 /* DeviceManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5820EDA8288FE064006BF4E4 /* DeviceManaging.swift */; };
 		58238CB92AD57EC700768310 /* WarrenREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; };
 		5823FA5426CE49F700283BF8 /* TunnelObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5823FA5326CE49F600283BF8 /* TunnelObserver.swift */; };
 		5826B6CB2ABD83E200B1CA13 /* PacketTunnelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587C575226D2615F005EF767 /* PacketTunnelOptions.swift */; };
@@ -1143,8 +1142,6 @@
 		F910A43A2D4A283D002FF3BB /* InAppPurchaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F910A4392D4A2839002FF3BB /* InAppPurchaseViewController.swift */; };
 		F910A8572D523812002FF3BB /* TunnelSettingsV7.swift in Sources */ = {isa = PBXBuildFile; fileRef = F910A8562D523812002FF3BB /* TunnelSettingsV7.swift */; };
 		F91B94A72DC9EB5E00132C28 /* MullvadInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91B94A62DC9EB5E00132C28 /* MullvadInfoHeaderView.swift */; };
-		F91CCBF82DFABB75007F1925 /* DeviceManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91CCBF72DFABB70007F1925 /* DeviceManagementView.swift */; };
-		F91CCBFA2DFAC8ED007F1925 /* DeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91CCBF92DFAC8ED007F1925 /* DeviceListView.swift */; };
 		F91CCBFC2DFAF5E6007F1925 /* MullvadProgressViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91CCBFB2DFAF5E1007F1925 /* MullvadProgressViewStyle.swift */; };
 		F924C4532D70692E001F4660 /* MullvadApiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F924C4522D706929001F4660 /* MullvadApiTests.swift */; };
 		F924C5A42DA65F28001F4660 /* Storekit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F924C5A32DA65F28001F4660 /* Storekit.swift */; };
@@ -1884,7 +1881,6 @@
 		581F23AE2A8CF94D00788AB6 /* PingerMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingerMock.swift; sourceTree = "<group>"; };
 		5820675A26E6576800655B05 /* RelayCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCache.swift; sourceTree = "<group>"; };
 		5820676326E771DB00655B05 /* TunnelManagerErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManagerErrors.swift; sourceTree = "<group>"; };
-		5820EDA8288FE064006BF4E4 /* DeviceManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManaging.swift; sourceTree = "<group>"; };
 		58218E1428B65058000C624F /* IPv4Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IPv4Header.h; sourceTree = "<group>"; };
 		58218E1628B65396000C624F /* ICMPHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMPHeader.h; sourceTree = "<group>"; };
 		58225D252A84E8A10083D7F1 /* DefaultPathObserverProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPathObserverProtocol.swift; sourceTree = "<group>"; };
@@ -2751,8 +2747,6 @@
 		F910A4392D4A2839002FF3BB /* InAppPurchaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppPurchaseViewController.swift; sourceTree = "<group>"; };
 		F910A8562D523812002FF3BB /* TunnelSettingsV7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsV7.swift; sourceTree = "<group>"; };
 		F91B94A62DC9EB5E00132C28 /* MullvadInfoHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MullvadInfoHeaderView.swift; sourceTree = "<group>"; };
-		F91CCBF72DFABB70007F1925 /* DeviceManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManagementView.swift; sourceTree = "<group>"; };
-		F91CCBF92DFAC8ED007F1925 /* DeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceListView.swift; sourceTree = "<group>"; };
 		F91CCBFB2DFAF5E1007F1925 /* MullvadProgressViewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MullvadProgressViewStyle.swift; sourceTree = "<group>"; };
 		F924C4522D706929001F4660 /* MullvadApiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MullvadApiTests.swift; sourceTree = "<group>"; };
 		F924C5A32DA65F28001F4660 /* Storekit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storekit.swift; sourceTree = "<group>"; };
@@ -3454,7 +3448,6 @@
 				7A2960F72A964A3500389B82 /* Alert */,
 				F0EF50D12A8FA47E0031E8DF /* ChangeLog */,
 				F0E8E4B92A55593300ED26A3 /* CreationAccount */,
-				583FE01D29C197C1006E85F9 /* DeviceList */,
 				F910A4322D4A1BA1002FF3BB /* InAppPurchase */,
 				583FE02529C1AD0E006E85F9 /* Launch */,
 				583FE02129C1A0F4006E85F9 /* Login */,
@@ -3573,16 +3566,6 @@
 				7AD03E1E2E8EB48B00270EAE /* RevokedDeviceViewModel.swift */,
 			);
 			path = RevokedDevice;
-			sourceTree = "<group>";
-		};
-		583FE01D29C197C1006E85F9 /* DeviceList */ = {
-			isa = PBXGroup;
-			children = (
-				F91CCBF72DFABB70007F1925 /* DeviceManagementView.swift */,
-				F91CCBF92DFAC8ED007F1925 /* DeviceListView.swift */,
-				5820EDA8288FE064006BF4E4 /* DeviceManaging.swift */,
-			);
-			path = DeviceList;
 			sourceTree = "<group>";
 		};
 		583FE01E29C197D5006E85F9 /* Tunnel */ = {
@@ -6677,7 +6660,6 @@
 				7A6389EB2B7FAD7A008E77E1 /* SettingsFieldValidationErrorContentView.swift in Sources */,
 				440870822D7A00B70038972F /* UIImage+Assets.swift in Sources */,
 				F09444132ECCA4B30059606A /* RecentListDataSource.swift in Sources */,
-				F91CCBF82DFABB75007F1925 /* DeviceManagementView.swift in Sources */,
 				7A8A19282CF603EB000BCB5B /* SettingsViewControllerFactory.swift in Sources */,
 				58B26E2A2943545A00D5980C /* NotificationManagerDelegate.swift in Sources */,
 				7A8A19072CE4E9D3000BCB5B /* SettingsInfoView.swift in Sources */,
@@ -6745,7 +6727,6 @@
 				F0AC644C2F3B52380024427C /* NotificationPromptViewModel.swift in Sources */,
 				58CEB30C2AFD586600E6E088 /* DynamicBackgroundConfiguration.swift in Sources */,
 				F9C579C22E8FB55600C90C50 /* LocationSection.swift in Sources */,
-				5820EDA9288FE064006BF4E4 /* DeviceManaging.swift in Sources */,
 				F03A69F92C2AD414000E2E7E /* FormsheetPresentationController.swift in Sources */,
 				7A9CCCB92A96302800DD6A34 /* LocationCoordinator.swift in Sources */,
 				58FB865A26EA214400F188BC /* RelayCacheTrackerObserver.swift in Sources */,
@@ -6779,7 +6760,6 @@
 				5878A279290954790096FC88 /* TunnelViewControllerInteractor.swift in Sources */,
 				A9A60ED42DF6E5AC00CD9C3D /* UIHostingRootController.swift in Sources */,
 				7A818F1F29F0305800C7F0F4 /* RootConfiguration.swift in Sources */,
-				F91CCBFA2DFAC8ED007F1925 /* DeviceListView.swift in Sources */,
 				7A9CCCBF2A96302800DD6A34 /* SettingsCoordinator.swift in Sources */,
 				F02BFFCD2ED89886007CEA69 /* RecentLocationListItem.swift in Sources */,
 				58F70FE52AEA707800E6890E /* StoreTransactionLog.swift in Sources */,

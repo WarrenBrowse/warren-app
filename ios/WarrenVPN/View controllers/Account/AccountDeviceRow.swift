@@ -17,8 +17,6 @@ class AccountDeviceRow: UIView {
         }
     }
 
-    var deviceManagementButtonAction: (() -> Void)?
-
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("Device name", comment: "")
@@ -37,27 +35,6 @@ class AccountDeviceRow: UIView {
         return label
     }()
 
-    private let deviceManagementButton: UILabel = {
-        let button = UILabel()
-        button.adjustsFontForContentSizeCategory = true
-        button.isUserInteractionEnabled = true
-        button.numberOfLines = 0
-        button.textAlignment = .center
-
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.mullvadSmallSemiBold,
-            .foregroundColor: UIColor.primaryTextColor,
-            .underlineStyle: NSUnderlineStyle.single.rawValue,
-        ]
-        let title = NSLocalizedString("Manage devices", comment: "")
-        button.attributedText = NSMutableAttributedString(
-            string: title,
-            attributes: attributes
-        )
-        button.setAccessibilityIdentifier(.deviceManagementButton)
-        return button
-    }()
-
     override init(frame: CGRect) {
         super.init(frame: frame)
 
@@ -69,37 +46,15 @@ class AccountDeviceRow: UIView {
         contentContainerView.setContentCompressionResistancePriority(.required, for: .horizontal)
         contentContainerView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
-        deviceManagementButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        deviceManagementButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-
-        addConstrainedSubviews(
-            [contentContainerView, deviceManagementButton]
-        ) {
-            contentContainerView.pinEdgesToSuperview(PinnableEdges([.leading(0), .bottom(0), .top(0)]))
-            deviceManagementButton.topAnchor.constraint(equalTo: deviceLabel.topAnchor)
-            deviceManagementButton.pinEdgesToSuperview(PinnableEdges([.trailing(0), .bottom(0)]))
-            deviceManagementButton.leadingAnchor.constraint(equalTo: contentContainerView.trailingAnchor, constant: 16)
+        addConstrainedSubviews([contentContainerView]) {
+            contentContainerView.pinEdgesToSuperview()
         }
 
         isAccessibilityElement = true
         accessibilityLabel = titleLabel.text
-
-        deviceManagementButton.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(didTapDeviceManagementButton)
-            ))
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    func setButtons(enabled: Bool) {
-        deviceManagementButton.isEnabled = enabled
-    }
-
-    @objc private func didTapDeviceManagementButton() {
-        deviceManagementButtonAction?()
     }
 }

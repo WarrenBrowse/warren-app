@@ -578,7 +578,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         let coordinator = LoginCoordinator(
             navigationController: navigationContainer,
             tunnelManager: tunnelManager,
-            devicesProxy: devicesProxy,
             breadcrumbsProvider: breadcrumbsProvider
         )
 

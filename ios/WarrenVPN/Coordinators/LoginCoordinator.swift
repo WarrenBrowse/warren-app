@@ -11,17 +11,14 @@ import WarrenREST
 import WarrenTypes
 import Operations
 import Routing
-import SwiftUI
 import UIKit
 
 final class LoginCoordinator: Coordinator, Presenting {
     private let tunnelManager: TunnelManager
-    private let devicesProxy: DeviceHandling
     private let breadcrumbsProvider: BreadcrumbsProvider
     private var breadcrumbsObserver: BreadcrumbsObserver?
 
     private var loginController: LoginViewController?
-    nonisolated(unsafe) private var lastLoginAction: LoginAction?
     private var subscriptions = Set<Combine.AnyCancellable>()
 
     var didFinish: (@MainActor @Sendable (LoginCoordinator) -> Void)?
@@ -38,12 +35,10 @@ final class LoginCoordinator: Coordinator, Presenting {
     init(
         navigationController: RootContainerViewController,
         tunnelManager: TunnelManager,
-        devicesProxy: DeviceHandling,
         breadcrumbsProvider: BreadcrumbsProvider
     ) {
         self.navigationController = navigationController
         self.tunnelManager = tunnelManager
-        self.devicesProxy = devicesProxy
         self.breadcrumbsProvider = breadcrumbsProvider
     }
 
@@ -94,20 +89,11 @@ final class LoginCoordinator: Coordinator, Presenting {
             return .nothing
         }
 
-        if case let .useExistingAccount(accountNumber) = action {
-            if let error = error as? REST.Error, error.compareErrorCode(.maxDevicesReached) {
-                return .wait(
-                    Promise { resolve in
-                        nonisolated(unsafe) let sendableResolve = resolve
-                        self.showDeviceList(for: accountNumber) { error in
-                            self.lastLoginAction = action
-
-                            sendableResolve(error.map { .failure($0) } ?? .success(()))
-                        }
-                    })
-            } else {
-                return .activateTextField
-            }
+        // Warren enforces its concurrency cap server-side, so every login failure
+        // (including a "too many devices" server response) surfaces as a normal
+        // login error and returns focus to the account text field.
+        if case .useExistingAccount = action {
+            return .activateTextField
         }
 
         return .nothing
@@ -118,62 +104,5 @@ final class LoginCoordinator: Coordinator, Presenting {
             guard let self else { return }
             didFinish?(self)
         }
-    }
-
-    private func returnToLogin(repeatLogin: Bool) {
-        navigationController.dismiss(animated: true) { [weak self] in
-            if let lastLoginAction = self?.lastLoginAction, repeatLogin {
-                self?.loginController?.start(action: lastLoginAction)
-            }
-        }
-    }
-
-    private func showDeviceList(for accountNumber: String, completion: @escaping @Sendable (Error?) -> Void) {
-        let interactor = DeviceManagementInteractor(
-            accountNumber: accountNumber,
-            devicesProxy: devicesProxy
-        )
-        let controller = UIHostingController(
-            rootView: DeviceManagementView(
-                deviceManaging: interactor,
-                style: .tooManyDevices(returnToLogin),
-                onError: { title, error in
-                    let errorDescription =
-                        if case let .network(urlError) = error as? REST.Error {
-                            urlError.localizedDescription
-                        } else {
-                            error.localizedDescription
-                        }
-                    let presentation = AlertPresentation(
-                        id: "delete-device-error-alert",
-                        title: title,
-                        message: errorDescription,
-                        buttons: [
-                            AlertAction(
-                                title: NSLocalizedString("Got it!", comment: ""),
-                                style: .default
-                            )
-                        ]
-                    )
-
-                    let presenter = AlertPresenter(context: self)
-                    presenter.showAlert(presentation: presentation, animated: true)
-                }
-            )
-        )
-        controller.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            systemItem: .cancel,
-            primaryAction: UIAction(handler: { _ in
-                controller.dismiss(animated: true)
-            })
-        )
-        controller.isModalInPresentation = true
-        navigationController
-            .present(
-                CustomNavigationController(rootViewController: controller),
-                animated: true
-            ) {
-                completion(nil)
-            }
     }
 }

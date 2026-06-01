@@ -12,7 +12,6 @@ import StoreKit
 import UIKit
 
 enum AccountViewControllerAction: Sendable {
-    case deviceManagement
     case finish
     case logOut
     case navigateToVoucher
@@ -70,10 +69,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
 
         contentView.accountTokenRowView.copyAccountNumber = { [weak self] in
             self?.copyAccountToken()
-        }
-
-        contentView.accountDeviceRow.deviceManagementButtonAction = { [weak self] in
-            self?.actionHandler?(.deviceManagement)
         }
 
         contentView.restorePurchasesView.restoreButtonAction = { [weak self] in
@@ -148,7 +143,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
             !isFetchingProducts
             && isInteractionEnabled
             && !interactor.tunnelState.isBlockingInternet
-        contentView.accountDeviceRow.setButtons(enabled: isInteractionEnabled)
         contentView.accountTokenRowView.setButtons(enabled: isInteractionEnabled)
         contentView.restorePurchasesView.setButtons(enabled: isInteractionEnabled)
         contentView.logoutButton.isEnabled = isInteractionEnabled
