@@ -139,9 +139,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     ) {
         let startOptions = parseStartOptions(options ?? [:])
 
-        // Run device check during tunnel startup.
-        // This check is allowed to push new key to server if there are some issues with it.
-        startDeviceCheck(rotateKeyOnMismatch: true)
+        // Run account and device diagnostics during tunnel startup.
+        startDeviceCheck()
 
         setTunnelNetworkSettings(
             initialTunnelNetworkSettings(),
@@ -329,14 +328,14 @@ extension PacketTunnelProvider {
 // MARK: - Device check
 
 extension PacketTunnelProvider {
-    private func startDeviceCheck(rotateKeyOnMismatch: Bool = false) {
+    private func startDeviceCheck() {
         Task {
-            await startDeviceCheckInner(rotateKeyOnMismatch: rotateKeyOnMismatch)
+            await startDeviceCheckInner()
         }
     }
 
-    private func startDeviceCheckInner(rotateKeyOnMismatch: Bool) async {
-        let result = await deviceChecker.start(rotateKeyOnMismatch: rotateKeyOnMismatch)
+    private func startDeviceCheckInner() async {
+        let result = await deviceChecker.start()
 
         switch result {
         case let .failure(error):
@@ -351,18 +350,10 @@ extension PacketTunnelProvider {
                     )
             }
 
-        case let .success(keyRotationResult):
-            if let blockedStateReason = keyRotationResult.blockedStateReason {
+        case let .success(deviceCheck):
+            if let blockedStateReason = deviceCheck.blockedStateReason {
                 providerLogger.error("Entering blocked state after unsuccessful device check: \(blockedStateReason)")
                 implementation.actor.setErrorState(reason: blockedStateReason)
-                return
-            }
-
-            switch keyRotationResult.keyRotationStatus {
-            case let .attempted(date), let .succeeded(date):
-                implementation.actor.notifyKeyRotation(date: date)
-            case .noAction:
-                break
             }
         }
     }

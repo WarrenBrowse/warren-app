@@ -19,10 +19,4 @@ protocol DeviceCheckRemoteServiceProtocol {
         completion: @escaping @Sendable (Result<Device, Error>) -> Void
     )
         -> Cancellable
-    func rotateDeviceKey(
-        accountNumber: String,
-        identifier: String,
-        publicKey: WireGuard.PublicKey,
-        completion: @escaping @Sendable (Result<Device, Error>) -> Void
-    ) -> Cancellable
 }

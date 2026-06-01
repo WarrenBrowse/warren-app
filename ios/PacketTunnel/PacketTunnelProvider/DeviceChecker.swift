@@ -26,21 +26,18 @@ final class DeviceChecker {
 
     /**
      Start device diagnostics to determine the reason why the tunnel is not functional.
-    
+
      This involves the following steps:
-    
+
      1. Fetch account and device data.
      2. Check account validity and whether it has enough time left.
-     3. Verify that current device is registered with backend and that both device and backend point to the same public
-        key.
-     4. Rotate WireGuard key on key mismatch.
+     3. Verify that the current device is still registered with the backend.
      */
-    func start(rotateKeyOnMismatch: Bool) async -> Result<DeviceCheck, Error> {
+    func start() async -> Result<DeviceCheck, Error> {
         let checkOperation = DeviceCheckOperation(
             dispatchQueue: dispatchQueue,
             remoteSevice: DeviceCheckRemoteService(accountsProxy: accountsProxy, devicesProxy: devicesProxy),
-            deviceStateAccessor: DeviceStateAccessor(),
-            rotateImmediatelyOnKeyMismatch: rotateKeyOnMismatch
+            deviceStateAccessor: DeviceStateAccessor()
         )
 
         return await withTaskCancellationHandler {

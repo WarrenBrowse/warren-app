@@ -21,7 +21,7 @@ import Foundation
  Note that `<TaskName>` is capitalized in plist, but the label for enum case should start with a lowercase letter.
  */
 enum BackgroundTask: String {
-    case appRefresh, privateKeyRotation, addressCacheUpdate
+    case appRefresh, addressCacheUpdate
 
     /// Returns background task identifier.
     /// Use it when registering or scheduling tasks with `BGTaskScheduler`.

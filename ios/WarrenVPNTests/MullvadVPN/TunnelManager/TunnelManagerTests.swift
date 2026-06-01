@@ -74,40 +74,6 @@ class TunnelManagerTests: XCTestCase {
         tunnelObserver = nil
     }
 
-    func testLogInStartsKeyRotations() async throws {
-        accountProxy.createAccountResult = .success(NewAccountData.mockValue())
-
-        let tunnelManager = TunnelManager(
-            backgroundTaskProvider: application,
-            tunnelStore: TunnelStoreStub(backgroundTaskProvider: application),
-            relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountProxy,
-            devicesProxy: devicesProxy,
-            apiProxy: apiProxy,
-            relaySelector: RelaySelectorStub.nonFallible()
-        )
-
-        _ = try await tunnelManager.setNewAccount()
-        XCTAssertEqual(tunnelManager.isRunningPeriodicPrivateKeyRotation, true)
-    }
-
-    func testLogOutStopsKeyRotations() async throws {
-        accountProxy.createAccountResult = .success(NewAccountData.mockValue())
-
-        let tunnelManager = TunnelManager(
-            backgroundTaskProvider: application,
-            tunnelStore: TunnelStoreStub(backgroundTaskProvider: application),
-            relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountProxy,
-            devicesProxy: devicesProxy,
-            apiProxy: apiProxy,
-            relaySelector: RelaySelectorStub.nonFallible()
-        )
-        _ = try await tunnelManager.setNewAccount()
-        await tunnelManager.unsetAccount()
-        XCTAssertEqual(tunnelManager.isRunningPeriodicPrivateKeyRotation, false)
-    }
-
     /// This test verifies tunnel gets out of `blockedState` after constraints are satisfied.
     func testExitBlockedStateAfterSatisfyingConstraints() async throws {
         let blockedExpectation = expectation(description: "Relay constraints aren't satisfied!")

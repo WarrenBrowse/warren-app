@@ -36,12 +36,4 @@ public protocol DeviceHandling: Sendable {
         retryStrategy: REST.RetryStrategy,
         completion: @escaping @Sendable ProxyCompletionHandler<Bool>
     ) -> Cancellable
-
-    func rotateDeviceKey(
-        accountNumber: String,
-        identifier: String,
-        publicKey: WireGuard.PublicKey,
-        retryStrategy: REST.RetryStrategy,
-        completion: @escaping @Sendable ProxyCompletionHandler<Device>
-    ) -> Cancellable
 }

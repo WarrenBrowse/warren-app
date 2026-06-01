@@ -43,19 +43,4 @@ struct DeviceCheckRemoteService: DeviceCheckRemoteServiceProtocol {
             completion: completion
         )
     }
-
-    func rotateDeviceKey(
-        accountNumber: String,
-        identifier: String,
-        publicKey: WireGuard.PublicKey,
-        completion: @escaping @Sendable (Result<Device, Error>) -> Void
-    ) -> Cancellable {
-        devicesProxy.rotateDeviceKey(
-            accountNumber: accountNumber,
-            identifier: identifier,
-            publicKey: publicKey,
-            retryStrategy: .default,
-            completion: completion
-        )
-    }
 }

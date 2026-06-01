@@ -56,10 +56,6 @@ final class TunnelManager: @unchecked Sendable {
         5
     )
 
-    private var privateKeyRotationTimer: DispatchSourceTimer?
-    public private(set) var isRunningPeriodicPrivateKeyRotation = false
-    public private(set) var nextKeyRotationDate: Date?
-
     private var tunnelStatusPollTimer: DispatchSourceTimer?
     private var isPolling = false
 
@@ -111,76 +107,6 @@ final class TunnelManager: @unchecked Sendable {
         #endif
     }
 
-    // MARK: - Periodic private key rotation
-
-    func startPeriodicPrivateKeyRotation() {
-        nslock.lock()
-        defer { nslock.unlock() }
-
-        guard !isRunningPeriodicPrivateKeyRotation, deviceState.isLoggedIn else { return }
-
-        logger.debug("Start periodic private key rotation.")
-
-        isRunningPeriodicPrivateKeyRotation = true
-        updatePrivateKeyRotationTimer()
-    }
-
-    func stopPeriodicPrivateKeyRotation() {
-        nslock.lock()
-        defer { nslock.unlock() }
-
-        guard isRunningPeriodicPrivateKeyRotation else { return }
-
-        logger.debug("Stop periodic private key rotation.")
-
-        isRunningPeriodicPrivateKeyRotation = false
-        updatePrivateKeyRotationTimer()
-    }
-
-    func startOrStopPeriodicPrivateKeyRotation() {
-        if deviceState.isLoggedIn {
-            startPeriodicPrivateKeyRotation()
-        } else {
-            stopPeriodicPrivateKeyRotation()
-        }
-    }
-
-    func getNextKeyRotationDate() -> Date? {
-        nslock.lock()
-        defer { nslock.unlock() }
-
-        return deviceState.deviceData.flatMap { WgKeyRotation(data: $0).nextRotationDate }
-    }
-
-    private func updatePrivateKeyRotationTimer() {
-        nslock.lock()
-        defer { nslock.unlock() }
-
-        privateKeyRotationTimer?.cancel()
-        privateKeyRotationTimer = nil
-        nextKeyRotationDate = nil
-
-        guard isRunningPeriodicPrivateKeyRotation,
-            let scheduleDate = getNextKeyRotationDate()
-        else { return }
-        nextKeyRotationDate = scheduleDate
-
-        let timer = DispatchSource.makeTimerSource(queue: .main)
-
-        timer.setEventHandler { [weak self] in
-            _ = self?.rotatePrivateKey { _ in
-                // no-op
-            }
-        }
-
-        timer.schedule(wallDeadline: .now() + scheduleDate.timeIntervalSinceNow)
-        timer.activate()
-
-        privateKeyRotationTimer = timer
-
-        logger.debug("Schedule next private key rotation at \(scheduleDate.logFormatted).")
-    }
-
     // MARK: - Public methods
 
     func loadConfiguration(completionHandler: @escaping @Sendable () -> Void) {
@@ -199,7 +125,6 @@ final class TunnelManager: @unchecked Sendable {
                 )
             }
 
-            self.updatePrivateKeyRotationTimer()
             completionHandler()
         }
 
@@ -389,9 +314,7 @@ final class TunnelManager: @unchecked Sendable {
 
         operation.completionQueue = .main
         operation.completionHandler = { [weak self] result in
-            guard let self else { return }
-            startOrStopPeriodicPrivateKeyRotation()
-
+            guard self != nil else { return }
             completionHandler(result)
         }
 
@@ -524,45 +447,6 @@ final class TunnelManager: @unchecked Sendable {
         )
 
         operationQueue.addOperation(operation)
-    }
-
-    func rotatePrivateKey(completionHandler: @MainActor @escaping @Sendable (Error?) -> Void) -> Cancellable {
-        let operation = RotateKeyOperation(
-            dispatchQueue: internalQueue,
-            interactor: TunnelInteractorProxy(self),
-            devicesProxy: devicesProxy
-        )
-
-        operation.completionQueue = .main
-        operation.completionHandler = { [weak self] result in
-            guard let self else { return }
-            MainActor.assumeIsolated {
-                self.updatePrivateKeyRotationTimer()
-
-                let error = result.error
-                if let error {
-                    self.handleRestError(error)
-                }
-
-                completionHandler(error)
-            }
-        }
-
-        operation.addObserver(
-            BackgroundObserver(
-                backgroundTaskProvider: backgroundTaskProvider,
-                name: "Rotate private key",
-                cancelUponExpiration: true
-            )
-        )
-
-        operation.addCondition(
-            MutuallyExclusive(category: OperationCategory.deviceStateUpdate.category)
-        )
-
-        operationQueue.addOperation(operation)
-
-        return operation
     }
 
     func updateSettings(_ updates: [TunnelSettingsUpdate], completionHandler: (@Sendable () -> Void)? = nil) {

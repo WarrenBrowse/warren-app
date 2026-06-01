@@ -90,21 +90,3 @@ public struct CreateDeviceRequest: Codable, Sendable {
         try container.encode(hijackDNS, forKey: .hijackDNS)
     }
 }
-
-public struct RotateDeviceKeyRequest: Codable, Sendable {
-    let publicKey: WireGuard.PublicKey
-
-    public init(publicKey: WireGuard.PublicKey) {
-        self.publicKey = publicKey
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case publicKey = "pubkey"
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-
-        try container.encode(publicKey.base64Key, forKey: .publicKey)
-    }
-}

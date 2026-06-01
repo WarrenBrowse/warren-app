@@ -57,15 +57,4 @@ struct DevicesProxyStub: DeviceHandling {
         completion(.success(true))
         return AnyCancellable()
     }
-
-    func rotateDeviceKey(
-        accountNumber: String,
-        identifier: String,
-        publicKey: WireGuard.PublicKey,
-        retryStrategy: REST.RetryStrategy,
-        completion: @escaping ProxyCompletionHandler<Device>
-    ) -> Cancellable {
-        completion(deviceResult)
-        return AnyCancellable()
-    }
 }

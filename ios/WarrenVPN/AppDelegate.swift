@@ -270,13 +270,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: - Notifications
 
     @objc private func didBecomeActive(_ notification: Notification) {
-        tunnelManager.startPeriodicPrivateKeyRotation()
         relayCacheTracker.startPeriodicUpdates()
         addressCacheUpdateScheduler.startPeriodicUpdates()
     }
 
     @objc private func willResignActive(_ notification: Notification) {
-        tunnelManager.stopPeriodicPrivateKeyRotation()
         relayCacheTracker.stopPeriodicUpdates()
         addressCacheUpdateScheduler.stopPeriodicUpdates()
     }
@@ -290,7 +288,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func registerBackgroundTasks() {
         registerAppRefreshTask()
         registerAddressCacheUpdateTask()
-        registerKeyRotationTask()
     }
 
     private func registerAppRefreshTask() {
@@ -316,28 +313,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
     }
 
-    private func registerKeyRotationTask() {
-        let isRegistered = BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: BackgroundTask.privateKeyRotation.identifier,
-            using: .main
-        ) { [self] task in
-            nonisolated(unsafe) let handle = tunnelManager.rotatePrivateKey { [self] error in
-                scheduleKeyRotationTask()
-                task.setTaskCompleted(success: error == nil)
-            }
-
-            task.expirationHandler = { @Sendable in
-                handle.cancel()
-            }
-        }
-
-        if isRegistered {
-            logger.debug("Registered private key rotation task.")
-        } else {
-            logger.error("Failed to register private key rotation task.")
-        }
-    }
-
     private func registerAddressCacheUpdateTask() {
         let isRegistered = BGTaskScheduler.shared.register(
             forTaskWithIdentifier: BackgroundTask.addressCacheUpdate.identifier,
@@ -358,7 +333,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     private func scheduleBackgroundTasks() {
         scheduleAppRefreshTask()
-        scheduleKeyRotationTask()
         scheduleAddressCacheUpdateTask()
     }
 
@@ -374,24 +348,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             try BGTaskScheduler.shared.submit(request)
         } catch {
             logger.error(error: error, message: "Could not schedule app refresh task.")
-        }
-    }
-
-    private func scheduleKeyRotationTask() {
-        do {
-            guard let date = tunnelManager.getNextKeyRotationDate() else {
-                return
-            }
-
-            let request = BGProcessingTaskRequest(identifier: BackgroundTask.privateKeyRotation.identifier)
-            request.requiresNetworkConnectivity = true
-            request.earliestBeginDate = date
-
-            logger.debug("Schedule key rotation task at \(date.logFormatted).")
-
-            try BGTaskScheduler.shared.submit(request)
-        } catch {
-            logger.error(error: error, message: "Could not schedule private key rotation task.")
         }
     }
 

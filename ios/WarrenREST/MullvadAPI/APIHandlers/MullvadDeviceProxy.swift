@@ -99,30 +99,6 @@ extension REST {
             }
         }
 
-        func rotateDeviceKey(
-            accountNumber: String,
-            identifier: String,
-            publicKey: WireGuard.PublicKey,
-            retryStrategy: REST.RetryStrategy,
-            completion: @escaping ProxyCompletionHandler<Device>
-        ) -> Cancellable {
-            let responseHandler = rustResponseHandler(
-                decoding: Device.self,
-                with: responseDecoder
-            )
-
-            return createNetworkOperation(
-                request: .rotateDeviceKey(
-                    retryStrategy,
-                    accountNumber: accountNumber,
-                    identifier: identifier,
-                    publicKey: publicKey
-                ),
-                responseHandler: responseHandler,
-                completionHandler: completion
-            )
-        }
-
         private func createNetworkOperation<Success: Any>(
             request: APIRequest,
             responseHandler: RustResponseHandler<Success>,
