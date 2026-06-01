@@ -11,7 +11,6 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>$(APPLICATION_IDENTIFIER).AppRefresh</string>
-		<string>$(APPLICATION_IDENTIFIER).PrivateKeyRotation</string>
 		<string>$(APPLICATION_IDENTIFIER).AddressCacheUpdate</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
