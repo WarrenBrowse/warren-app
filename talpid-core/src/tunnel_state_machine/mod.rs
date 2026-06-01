@@ -529,6 +529,25 @@ impl TunnelStateMachine {
 
         log::debug!("Tunnel state machine exited");
 
+        // Warren guarantee (all platforms): a stopped daemon must NEVER leave a
+        // persistent blocking firewall behind. Mullvad upstream intentionally
+        // keeps the lockdown / kill-switch block applied after the state machine
+        // exits, so stopping or uninstalling the daemon while in a blocked or
+        // failed-to-connect state bricks connectivity with no recourse. Warren
+        // resets the firewall on graceful shutdown so that "daemon not running"
+        // always implies "traffic allowed", on macOS (pf), Linux (nftables) and
+        // Windows (WFP) alike. Leak protection *while the daemon runs* is
+        // unchanged (disconnected + lockdown still blocks); a hard crash
+        // (SIGKILL) never reaches this path, and the launchd/systemd/SCM
+        // KeepAlive restart resumes firewall management.
+        #[cfg(not(target_os = "android"))]
+        if let Err(error) = self.shared_values.firewall.reset_policy() {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to reset firewall during shutdown")
+            );
+        }
+
         #[cfg(target_os = "macos")]
         runtime.block_on(self.shared_values.split_tunnel.shutdown());
         #[cfg(target_os = "macos")]
