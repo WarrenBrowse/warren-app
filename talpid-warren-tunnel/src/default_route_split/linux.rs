@@ -401,7 +401,14 @@ mod tests {
         assert!(
             cmds.iter().any(|c| c
                 == &vec![
-                    "rule", "del", "fwmark", "0x6d6f6c65", "lookup", "main", "pref", "49"
+                    "rule",
+                    "del",
+                    "fwmark",
+                    "0x6d6f6c65",
+                    "lookup",
+                    "main",
+                    "pref",
+                    "49"
                 ]),
             "uninstall must remove the split-tunnel exclude rule"
         );
