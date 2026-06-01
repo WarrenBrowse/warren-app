@@ -540,12 +540,14 @@ impl TunnelStateMachine {
         // unchanged (disconnected + lockdown still blocks); a hard crash
         // (SIGKILL) never reaches this path, and the launchd/systemd/SCM
         // KeepAlive restart resumes firewall management.
+        // Plain `Display` (not `ErrorExt::display_chain_with_msg`): the
+        // `ErrorExt` trait is only imported under cfg(macos)/cfg(android)
+        // in this module, while this block runs on every non-Android
+        // platform (incl. Linux/Windows). Using Display keeps it
+        // cross-platform with no extra import.
         #[cfg(not(target_os = "android"))]
         if let Err(error) = self.shared_values.firewall.reset_policy() {
-            log::error!(
-                "{}",
-                error.display_chain_with_msg("Failed to reset firewall during shutdown")
-            );
+            log::error!("Failed to reset firewall during shutdown: {error}");
         }
 
         #[cfg(target_os = "macos")]
