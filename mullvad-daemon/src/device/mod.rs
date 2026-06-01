@@ -31,12 +31,7 @@ use mullvad_types::{
     warren_pubkey::WarrenPubKey,
 };
 
-use std::{
-    future::Future,
-    path::Path,
-    sync::Arc,
-    time::Duration,
-};
+use std::{future::Future, path::Path, sync::Arc};
 use talpid_core::mpsc::Sender;
 use talpid_types::ErrorExt;
 use tokio::{
@@ -70,13 +65,8 @@ pub(crate) struct WarrenApiConfig {
 /// File that stores the account login state.
 pub(crate) const DEVICE_CACHE_FILENAME: &str = "device.json";
 
-/// How long to wait on logout before letting it continue as a background task.
-const LOGOUT_TIMEOUT: Duration = Duration::from_secs(2);
-
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum Error {
-    #[error("The account already has a maximum number of devices")]
-    MaxDevicesReached,
     #[error("No account is set")]
     NoDevice,
     #[error("Invalid account")]
@@ -326,7 +316,6 @@ pub(crate) struct AccountManager {
     data: PrivateDeviceState,
     listeners: Vec<Box<dyn Sender<AccountEvent> + Send>>,
     expiry_requests: Vec<ResponseTx<DateTime<Utc>>>,
-    data_requests: Vec<ResponseTx<PrivateDeviceState>>,
 }
 
 impl AccountManager {
@@ -388,7 +377,6 @@ impl AccountManager {
             data: data.clone(),
             listeners: vec![Box::new(listener_tx)],
             expiry_requests: vec![],
-            data_requests: vec![],
         };
 
         tokio::spawn(manager.run(cmd_rx));
@@ -420,8 +408,6 @@ impl AccountManager {
                             // logged-in identity.
                             let pubkey = account_number_to_warren_pubkey(&number);
                             let _ = tx.send(self.set(PrivateDeviceEvent::Login(pubkey)).await);
-                            let data = self.data.clone();
-                            Self::drain_requests(&mut self.data_requests, || Ok(data.clone()));
                         }
                         Some(AccountManagerCommand::Logout(tx)) => {
                             current_api_call.clear();
@@ -712,7 +698,6 @@ impl AccountManager {
     }
 
     async fn logout(&mut self, tx: ResponseTx<()>) {
-        Self::drain_requests(&mut self.data_requests, || Err(Error::AccountChange));
         if self.data.logged_out() {
             let _ = tx.send(Ok(()));
             return;
@@ -722,7 +707,7 @@ impl AccountManager {
             return;
         }
 
-        let old_pubkey = self.data.logout();
+        self.data.logout();
 
         self.listeners.retain(|listener| {
             listener
@@ -730,22 +715,11 @@ impl AccountManager {
                 .is_ok()
         });
 
-        match old_pubkey {
-            Some(_) => {
-                // Honor the logout timeout window, then ack.
-                let _ = tokio::time::timeout(LOGOUT_TIMEOUT, async {}).await;
-                let _ = tx.send(Ok(()));
-            }
-            _ => {
-                // The state was `revoked`.
-                let _ = tx.send(Ok(()));
-            }
-        }
+        let _ = tx.send(Ok(()));
     }
 
     #[cfg(target_os = "android")]
     async fn delete(&mut self, tx: ResponseTx<()>) {
-        Self::drain_requests(&mut self.data_requests, || Err(Error::AccountChange));
         if self.data.logged_out() {
             let _ = tx.send(Err(Error::AccountChange));
             return;

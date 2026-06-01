@@ -6,7 +6,7 @@ use futures::{Stream, StreamExt};
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
     access_method::AccessMethodSetting,
-    device::{DeviceEvent, RemoveDeviceEvent},
+    device::DeviceEvent,
     relay_list::RelayList,
     settings::Settings,
     states::TunnelState,
@@ -48,7 +48,6 @@ pub enum DaemonEvent {
     RelayList(RelayList),
     AppVersionInfo(AppVersionInfo),
     Device(DeviceEvent),
-    RemoveDevice(RemoveDeviceEvent),
     NewAccessMethod(AccessMethodSetting),
     LeakDetected(LeakInfo),
 }
@@ -73,9 +72,13 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::Device(event) => DeviceEvent::try_from(event)
                 .map(DaemonEvent::Device)
                 .map_err(Error::InvalidResponse),
-            types::daemon_event::Event::RemoveDevice(event) => RemoveDeviceEvent::try_from(event)
-                .map(DaemonEvent::RemoveDevice)
-                .map_err(Error::InvalidResponse),
+            types::daemon_event::Event::RemoveDevice(_event) => {
+                Err(Error::InvalidResponse(
+                    types::FromProtobufTypeError::invalid_argument(
+                        "RemoveDevice events are not supported",
+                    ),
+                ))
+            }
             types::daemon_event::Event::NewAccessMethod(event) => {
                 AccessMethodSetting::try_from(event)
                     .map(DaemonEvent::NewAccessMethod)

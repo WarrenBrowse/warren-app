@@ -47,17 +47,6 @@ pub struct DeviceEvent {
     pub new_state: DeviceState,
 }
 
-/// Emitted when an account is removed using the `RemoveDevice` RPC.
-/// This is not sent by a normal logout or when it is revoked remotely.
-///
-/// The `pubkey` field (a validated Warren SS58 address `wb…`) identifies
-/// the account. The gRPC proto carries it as `account_number` (see
-/// mullvad-management-interface conversions).
-#[derive(Clone, Debug, Serialize)]
-pub struct RemoveDeviceEvent {
-    pub pubkey: crate::warren_pubkey::WarrenPubKey,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,13 +85,4 @@ mod tests {
         assert!(!DeviceState::Revoked.is_logged_in());
     }
 
-    #[test]
-    fn remove_device_event_carries_warren_pubkey() {
-        // `RemoveDeviceEvent.pubkey` is typed as `WarrenPubKey`. The
-        // test guarantees that the pubkey survives construction ->
-        // field accessor.
-        let pk = fixture_pubkey();
-        let event = RemoveDeviceEvent { pubkey: pk.clone() };
-        assert_eq!(event.pubkey, pk);
-    }
 }

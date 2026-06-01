@@ -112,28 +112,3 @@ impl From<proto::device_event::Cause> for mullvad_types::device::DeviceEventCaus
     }
 }
 
-impl From<mullvad_types::device::RemoveDeviceEvent> for proto::RemoveDeviceEvent {
-    fn from(event: mullvad_types::device::RemoveDeviceEvent) -> Self {
-        // Emit the SS58 pubkey in the proto `account_number` field.
-        proto::RemoveDeviceEvent {
-            account_number: event.pubkey.as_str().to_owned(),
-            new_device_list: Vec::new(),
-        }
-    }
-}
-
-impl TryFrom<proto::RemoveDeviceEvent> for mullvad_types::device::RemoveDeviceEvent {
-    type Error = FromProtobufTypeError;
-
-    fn try_from(event: proto::RemoveDeviceEvent) -> Result<Self, Self::Error> {
-        // Parse the `account_number` proto field into a `WarrenPubKey`;
-        // reject a non-Warren format.
-        let pubkey = mullvad_types::warren_pubkey::WarrenPubKey::from_str(&event.account_number)
-            .map_err(|_| {
-                FromProtobufTypeError::invalid_argument(
-                    "RemoveDeviceEvent.account_number must be a valid Warren SS58 address (wb…)",
-                )
-            })?;
-        Ok(mullvad_types::device::RemoveDeviceEvent { pubkey })
-    }
-}

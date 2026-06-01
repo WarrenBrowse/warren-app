@@ -472,8 +472,8 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
 }
 
 /// Maps a [`warren_api_client::ClientError`] to a Mullvad
-/// [`rest::Error`] to preserve the contract of the traits
-/// [`WarrenAccountBackend`] / [`super::device_backend::WarrenDeviceBackend`].
+/// [`rest::Error`] to preserve the contract of the
+/// [`WarrenAccountBackend`] trait.
 ///
 /// Convention: a non-2xx HTTP status -> `ApiError(StatusCode, msg)`
 /// (mappable on the caller side via `map_rest_error`). Everything

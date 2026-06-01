@@ -1999,7 +1999,6 @@ fn map_rest_error(error: &RestError) -> Status {
 /// Converts an instance of [`crate::device::Error`] into a tonic status.
 fn map_device_error(error: &device::Error) -> Status {
     match error {
-        device::Error::MaxDevicesReached => Status::new(Code::ResourceExhausted, error.to_string()),
         device::Error::InvalidAccount => Status::new(Code::Unauthenticated, error.to_string()),
         device::Error::InvalidDevice | device::Error::NoDevice => {
             Status::new(Code::NotFound, error.to_string())

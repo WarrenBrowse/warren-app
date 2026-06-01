@@ -56,9 +56,6 @@ impl Status {
                 DaemonEvent::Device(device) => {
                     print_debug_or_json(&args, "Device event", &device)?;
                 }
-                DaemonEvent::RemoveDevice(device) => {
-                    print_debug_or_json(&args, "Remove device event", &device)?;
-                }
                 DaemonEvent::NewAccessMethod(access_method) => {
                     print_debug_or_json(&args, "New access method", &access_method)?;
                 }

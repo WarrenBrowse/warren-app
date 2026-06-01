@@ -278,7 +278,6 @@ fn map_rest_error(error: rest::Error) -> Error {
                 Error::InvalidDevice
             }
             mullvad_api::INVALID_ACCOUNT => Error::InvalidAccount,
-            mullvad_api::MAX_DEVICES_REACHED => Error::MaxDevicesReached,
             mullvad_api::INVALID_VOUCHER => Error::InvalidVoucher,
             mullvad_api::VOUCHER_USED => Error::UsedVoucher,
             _ => Error::OtherRestError(error),
