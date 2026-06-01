@@ -31,8 +31,6 @@ private fun PreviewAppearanceScreen() {
 @Composable
 fun Appearance(navigator: Navigator) {
     AppearanceScreen(
-        // D.4 step 61: AppIcon picker dropped (Mullvad app-icon obfuscation
-        // feature dead on Warren — Warren is not Mullvad-branded).
         onLanguageClick =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 dropUnlessResumed { navigator.navigate(LanguageNavKey) }
@@ -58,7 +56,6 @@ fun AppearanceScreen(
             modifier = modifier.padding(horizontal = Dimens.sideMarginNew),
             state = lazyListState,
         ) {
-            // D.4 step 61: AppIcon list item dropped.
             if (onLanguageClick != null) {
                 item {
                     NavigationListItem(

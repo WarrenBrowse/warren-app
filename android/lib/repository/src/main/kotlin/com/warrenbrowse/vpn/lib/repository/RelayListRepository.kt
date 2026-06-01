@@ -14,17 +14,14 @@ import com.warrenbrowse.vpn.lib.model.RelayItemId
 import com.warrenbrowse.vpn.lib.model.SetRelayLocationError
 import com.warrenbrowse.vpn.lib.model.UpdateRelayLocationsError
 
-// D.4 step 58: RelayListRepository stripped of ManagementService +
-// RelayLocationTranslationRepository deps. The Mullvad daemon's relay channel
-// is dead on Warren — Warren reads the relay catalogue directly through
-// `WarrenRelayProvider` (warren-api-client / WarrenJni.listRelays) and stores
-// the user's selection in `WarrenLocalSettingsRepository.selectedExitId`.
+// Warren reads the relay catalogue directly through `WarrenRelayProvider`
+// (warren-api-client / WarrenJni.listRelays) and stores the user's selection
+// in `WarrenLocalSettingsRepository.selectedExitId`.
 //
-// The shim here keeps consumers that still reference the Mullvad-shaped API
-// (RelayItem.Location.Country list, Constraint<RelayItemId>) compiling while
-// they are being migrated. All read flows emit empty / Any defaults ; all
-// mutators are no-ops returning Right(Unit). SelectedLocationTitleUseCase
-// (only production consumer that mattered) already returns null on empty
+// This shim keeps consumers that reference the Mullvad-shaped API
+// (RelayItem.Location.Country list, Constraint<RelayItemId>) compiling. All
+// read flows emit empty / Any defaults; all mutators return Right(Unit)
+// without doing anything. SelectedLocationTitleUseCase returns null on empty
 // inputs.
 @Suppress("UNUSED_PARAMETER", "unused")
 class RelayListRepository(

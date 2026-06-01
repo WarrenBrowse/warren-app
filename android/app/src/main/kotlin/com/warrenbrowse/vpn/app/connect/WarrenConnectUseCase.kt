@@ -18,7 +18,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * End-to-end Warren connect orchestrator (D.4 step 7 follow-up).
+ * End-to-end Warren connect orchestrator.
  *
  * Flow:
  *   1. Require wallet in [WalletState.Ready]; refuse otherwise (UI should
@@ -26,8 +26,7 @@ import kotlinx.serialization.json.Json
  *   2. Resolve the mnemonic via [WalletRepository.unlock] gated by a
  *      [BiometricPromptAuthorizer] bound to the supplied [FragmentActivity].
  *   3. Build the [com.warrenbrowse.vpn.app.service.WarrenTunnelConfig]
- *      from current settings (today: hardcoded warren-exit-1; D.4 step 8
- *      swaps in the relay selector).
+ *      from current settings (today: hardcoded warren-exit-1).
  *   4. Stash the mnemonic in [MnemonicCache] and start [WarrenVpnService]
  *      with `KEY_WARREN_CONNECT_QUINN_ACTION` + the JSON-encoded config.
  *

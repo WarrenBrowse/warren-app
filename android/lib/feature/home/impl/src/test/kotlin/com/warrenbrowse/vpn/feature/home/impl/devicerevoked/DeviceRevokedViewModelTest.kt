@@ -66,8 +66,6 @@ class DeviceRevokedViewModelTest {
         }
     }
 
-    // D.4 step 38: account-expiry cancel test dropped (subscription dead).
-
     @Test
     fun `onGoToLoginClicked should invoke logout on AccountRepository`() {
         // Arrange

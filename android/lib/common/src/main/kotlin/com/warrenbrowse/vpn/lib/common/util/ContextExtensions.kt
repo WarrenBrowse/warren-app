@@ -11,9 +11,6 @@ import androidx.core.net.toUri
 import arrow.core.Either
 import co.touchlab.kermit.Logger
 
-// D.4 step 46: createAccountUri removed — only consumer was the now-dead
-// createOpenAccountPageHook (mullvad.net/account?token=… web flow).
-
 // Activity not found can be return if the device does not have system vpn settings available.
 // This is the case for Android TV devices. In normal cases, this action should not be available
 // for those devices (see SystemVpnSettingsAvailableUseCase). This is an extra safety check.

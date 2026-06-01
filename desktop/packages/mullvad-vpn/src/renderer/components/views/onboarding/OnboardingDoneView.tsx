@@ -7,7 +7,7 @@ import { Button } from '../../../lib/components';
 import { useHistory } from '../../../lib/history';
 import { OnboardingLayout } from './components';
 
-// M5.B.3 step 5: done. Persists the `onboardingCompletedUnix`
+// Done. Persists the `onboardingCompletedUnix`
 // timestamp in the GUI settings via `setOnboardingCompletedUnix` so
 // the wizard is not re-shown on the next launch (unless the user
 // explicitly chooses "Replay onboarding" from Settings, which clears

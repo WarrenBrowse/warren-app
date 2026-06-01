@@ -7,7 +7,7 @@ import { FlexColumn } from '../../../lib/components/flex-column';
 import { useHistory } from '../../../lib/history';
 import { OnboardingLayout } from './components';
 
-// M5.B.3 step 4: privacy preferences. Three Warren-specific toggles
+// Privacy preferences. Three Warren-specific toggles
 // surfaced as part of the first-run flow so the user understands the
 // stack from the start:
 //

@@ -225,10 +225,6 @@ private fun InputContent(
         onDescriptionChanged = onDescriptionChanged,
     )
 
-    // D.4 step 57: "include my account ID" checkbox + privacy-policy warning
-    // dropped (Mullvad account-number is dead on Warren ; the warren-api
-    // /v1/support endpoint will sign with the BIP39 wallet pubkey in D.6).
-
     Column {
         PrimaryButton(
             onClick = onNavigateToViewLogs,
@@ -251,10 +247,6 @@ private fun Description() {
         )
     }
 }
-
-// D.4 step 57: IncludeAccountInformationCheckBox + AccountInformationWarning
-// helpers + the entire account-token disclosure UI dropped (Mullvad account-
-// token flow dead on Warren).
 
 @Composable
 private fun ProblemMessageTextField(

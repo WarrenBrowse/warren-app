@@ -44,8 +44,7 @@ import kotlinx.coroutines.launch
  * unless the user actively kept it on screen.
  *
  * Must be hosted inside a [FragmentActivity] for `BiometricPrompt` to
- * work. The typical caller is `MainActivity` (extends FragmentActivity
- * via D.5 step 3).
+ * work. The typical caller is `MainActivity` (extends FragmentActivity).
  */
 @Composable
 fun WarrenWalletSettingsSection(

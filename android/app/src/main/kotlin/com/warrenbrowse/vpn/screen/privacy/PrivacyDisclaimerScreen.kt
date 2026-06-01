@@ -71,12 +71,9 @@ fun PrivacyDisclaimer(navigator: Navigator) {
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) {
         when (it) {
             PrivacyDisclaimerUiSideEffect.NavigateToLogin ->
-                // D.4 step 22: post-privacy on Warren mobile routes
-                // straight to the wallet onboarding instead of the
-                // Mullvad login screen (which is dead - no account
-                // number model on Warren). The wallet flow self-routes
-                // to ConnectNavKey on completion via the
-                // `WarrenWalletEvent.WalletReady` channel.
+                // Post-privacy routes straight to the wallet onboarding. The
+                // wallet flow self-routes to ConnectNavKey on completion via
+                // the `WarrenWalletEvent.WalletReady` channel.
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
             PrivacyDisclaimerUiSideEffect.StartService ->
                 launch {

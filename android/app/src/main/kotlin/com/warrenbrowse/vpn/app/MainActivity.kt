@@ -56,10 +56,9 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
 
     private fun dispatchWarrenConnect() {
-        // D.4 step 13: route the post-VPN-profile-grant connect (and the
-        // already-prepared `Prepared` branch in handleRequestVpnProfileIntent)
-        // through the Warren Quinn use-case. The legacy
-        // `warrenAppViewModel.connect()` proxied to a dead daemon.
+        // Route the post-VPN-profile-grant connect (and the already-prepared
+        // `Prepared` branch in handleRequestVpnProfileIntent) through the
+        // Warren Quinn use-case.
         lifecycleScope.launch {
             runCatching { warrenConnect.connect(this@MainActivity) }
                 .onFailure { e -> Logger.e(throwable = e) { "Warren connect dispatch failed" } }
@@ -114,13 +113,9 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        // D.4 step 19: the legacy "wait for managementService to be Ready"
-        // gate is gone (the gRPC management service does not exist on
-        // Warren mobile so the wait never completed, keeping the splash
-        // screen up indefinitely after a process recreation). Splash
-        // dismissal is now unconditional - the splash decision tree in
-        // `SplashViewModel` already routes the user to the right
-        // destination before the splash completes.
+        // Splash dismissal is unconditional: the splash decision tree in
+        // `SplashViewModel` already routes the user to the right destination
+        // before the splash completes.
         lifecycleScope.launch { splashCompleteRepository.onSplashCompleted() }
     }
 

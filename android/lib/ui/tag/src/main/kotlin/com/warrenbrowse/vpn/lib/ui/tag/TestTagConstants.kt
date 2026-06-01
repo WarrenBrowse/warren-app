@@ -75,8 +75,6 @@ const val LOGIN_BUTTON_TEST_TAG = "login_button_test_tag"
 // VoucherDialog
 const val VOUCHER_INPUT_TEST_TAG = "voucher_input_test_tag"
 
-// D.4 step 37: OUT_OF_TIME_SCREEN_TITLE_TEST_TAG removed (subscription dead).
-
 // CreateCustomListDialog
 const val CREATE_CUSTOM_LIST_DIALOG_INPUT_TEST_TAG = "create_custom_list_dialog_input_test_tag"
 
@@ -99,9 +97,6 @@ const val SELECT_LOCATION_CUSTOM_LIST_BOTTOM_SHEET_TEST_TAG =
 const val SELECT_LOCATION_LOCATION_BOTTOM_SHEET_TEST_TAG =
     "select_location_location_bottom_sheet_test_tag"
 
-// D.4 step 35: ServerIpOverrides + ResetServerIpOverridesConfirmation
-// test tags removed (module deleted - Warren exit fleet is sovereign).
-
 // SaveApiAccessMethodDialog
 const val SAVE_API_ACCESS_METHOD_LOADING_SPINNER_TEST_TAG =
     "save_api_access_method_loading_spinner_test_tag"
@@ -123,8 +118,6 @@ const val API_ACCESS_TEST_METHOD_BUTTON_TEST_TAG = "api_access_details_test_meth
 // EditApiAccessMethodScreen
 const val EDIT_API_ACCESS_NAME_INPUT_TEST_TAG = "edit_api_access_name_input_test_tag"
 const val SELECT_PORT_CUSTOM_TEST_TAG = "select_port_custom_test_tag"
-
-// D.4 step 37: ADD_TIME_BOTTOM_SHEET_TITLE_TEST_TAG removed.
 
 // LoginScreen
 const val LOGIN_SCREEN_DELETE_ACCOUNT_HISTORY_TEST_TAG =

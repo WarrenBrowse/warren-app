@@ -104,34 +104,28 @@ class ConnectViewModel(
             )
 
     init {
-        // D.4 step 36: Mullvad Play Store purchase verification dropped (Warren
-        // identity is BIP39 wallet, no VPN subscription billing).
         viewModelScope.launch { deviceRepository.updateDevice() }
     }
 
     fun onDisconnectClick() {
         viewModelScope.launch {
-            // D.4 step 60: route disconnect through WarrenQuinnDisconnectInvoker
-            // (real Warren tunnel teardown). The legacy ConnectionProxy.disconnect
-            // is now a no-op stub.
+            // Route disconnect through WarrenQuinnDisconnectInvoker for the
+            // real Warren tunnel teardown.
             warrenDisconnect.disconnect()
         }
     }
 
     fun onReconnectClick() {
         viewModelScope.launch {
-            // D.4 step 60: WarrenQuinnReconnectInvoker (real Warren reconnect).
             warrenReconnect.reconnect()
         }
     }
 
     fun onConnectClick() {
-        // D.4 step 60: connect is dispatched from `ConnectScreen` directly
-        // through `WarrenQuinnConnectInvoker.connect(activity)` since the
-        // invoker needs a FragmentActivity for biometric unlock — the
-        // ViewModel can only emit a side effect requesting the screen to
-        // perform the dispatch. The legacy connectionProxy.connect() call
-        // here was a no-op stub anyway.
+        // Connect is dispatched from `ConnectScreen` directly through
+        // `WarrenQuinnConnectInvoker.connect(activity)` since the invoker
+        // needs a FragmentActivity for biometric unlock; the ViewModel only
+        // emits a side effect requesting the screen to perform the dispatch.
         viewModelScope.launch {
             _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
         }
@@ -140,7 +134,7 @@ class ConnectViewModel(
     fun createVpnProfileResult(hasVpnPermission: Boolean) {
         viewModelScope.launch {
             if (hasVpnPermission) {
-                // D.4 step 60: VPN permission granted → request UI to dispatch
+                // VPN permission granted: request the UI to dispatch
                 // WarrenQuinnConnectInvoker.connect(activity).
                 _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
             } else {
@@ -157,16 +151,11 @@ class ConnectViewModel(
 
     fun onCancelClick() {
         viewModelScope.launch {
-            // D.4 step 60: cancel-in-progress-connect = disconnect (Warren has
-            // no separate Cancel command; tear down the in-flight tunnel).
+            // Warren has no separate Cancel command; cancelling an
+            // in-progress connect tears down the in-flight tunnel.
             warrenDisconnect.disconnect()
         }
     }
-
-    // D.4 step 43: onManageAccountClick + OpenAccountManagementPageInBrowser
-    // side effect removed entirely (mullvad.net web-account flow dead).
-    // ConnectScreen routes Manage Account taps directly to
-    // WarrenWalletSettings via NavKey now.
 
     fun openAppListing() = viewModelScope.launch {
         val target = resolveAppListing()
@@ -177,8 +166,6 @@ class ConnectViewModel(
             )
         _uiSideEffect.send(sideEffect)
     }
-
-    // D.4 step 41: dismissNewDeviceNotification removed (NewDeviceRepository dead).
 
     fun dismissAndroid16UpgradeWarning() = viewModelScope.launch {
         userPreferencesRepository.setShowAndroid16ConnectWarning(false)
@@ -198,8 +185,8 @@ class ConnectViewModel(
 
         data object RevokedDevice : UiSideEffect
 
-        // D.4 step 60: connect dispatch needs a FragmentActivity for biometric
-        // unlock, so the VM emits this side effect and ConnectScreen invokes
+        // Connect dispatch needs a FragmentActivity for biometric unlock, so
+        // the VM emits this side effect and ConnectScreen invokes
         // WarrenQuinnConnectInvoker.connect(activity) on the current Activity.
         data object RequestWarrenConnect : UiSideEffect
 

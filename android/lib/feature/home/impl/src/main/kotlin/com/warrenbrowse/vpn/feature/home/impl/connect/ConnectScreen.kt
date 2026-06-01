@@ -184,11 +184,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val context = LocalContext.current
 
     val warrenScope = rememberCoroutineScope()
-    // D.4 step 11: route the user-initiated Connect button through the
-    // Warren Quinn use-case. The legacy `connectViewModel::onConnectClick`
-    // proxied to a dead daemon and is no longer wired here. The Quinn
-    // path requires a FragmentActivity host for BiometricPrompt; the
-    // app's MainActivity extends FragmentActivity (D.5 step 3).
+    // Route the user-initiated Connect button through the Warren Quinn
+    // use-case. The Quinn path requires a FragmentActivity host for
+    // BiometricPrompt; the app's MainActivity extends FragmentActivity.
     val onWarrenConnectClick: () -> Unit = {
         (context as? FragmentActivity)?.let { activity ->
             warrenScope.launch {
@@ -212,16 +210,10 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            // D.4 step 43: UiSideEffect.OpenAccountManagementPageInBrowser
-            // dropped (mullvad.net web-account flow dead - Manage Account
-            // navigates directly to WarrenWalletSettings via NavKey).
-            // D.4 step 37: UiSideEffect.OutOfTime removed entirely (Mullvad
-            // subscription expiry model is dead on Warren - BIP39 wallet
-            // identity has no time-based subscription).
             ConnectViewModel.UiSideEffect.RevokedDevice ->
                 navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
 
-            // D.4 step 60: VM requests a Warren connect dispatch — invoke the
+            // The VM requests a Warren connect dispatch: invoke the
             // WarrenQuinnConnectInvoker on the current FragmentActivity (the
             // invoker needs the Activity host for the biometric prompt).
             ConnectViewModel.UiSideEffect.RequestWarrenConnect -> onWarrenConnectClick()
@@ -289,13 +281,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         }
     }
 
-    // D.4 step 27: SelectLocationNavResult consumer removed - the
-    // Mullvad SelectLocationScreen that produced this result is no
-    // longer reachable (the Switch-location button routes to
-    // WarrenLocationPicker). WarrenLocationPicker does not surface a
-    // "connect now" hint today; the user taps Connect on the home
-    // screen after picking. A future iteration can re-add the
-    // "select-and-connect" affordance via a Warren-native NavResult.
+    // WarrenLocationPicker does not surface a "connect now" hint today; the
+    // user taps Connect on the home screen after picking. A future iteration
+    // can add a "select-and-connect" affordance via a Warren-native NavResult.
 
 
     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides animatedVisibilityScope) {
@@ -309,17 +297,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 onConnectClick = onWarrenConnectClick,
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick =
-                // D.4 step 25: switch location routes to the Warren picker
-                // (consumes RelayCatalog) instead of the legacy Mullvad
-                // SelectLocationScreen (Mullvad signed relay list source,
-                // not available on Warren).
+                // Switch location routes to the Warren picker (consumes
+                // RelayCatalog).
                 dropUnlessResumed { navigator.navigate(WarrenLocationPickerNavKey) },
             onOpenAppListing = connectViewModel::openAppListing,
             onManageAccountClick =
-                // D.4 step 23: "Manage account" routes to the wallet settings
-                // instead of mullvad.net/account (which doesn't exist on
-                // Warren - identity is the BIP39 wallet, not a server-side
-                // account).
+                // "Manage account" routes to the wallet settings; Warren
+                // identity is the BIP39 wallet, not a server-side account.
                 dropUnlessResumed { navigator.navigate(WarrenWalletSettingsNavKey) },
             onChangelogClick =
                 dropUnlessResumed { navigator.navigate(ChangelogNavKey(isModal = true)) },
@@ -327,8 +311,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             onSettingsClick =
                 dropUnlessResumed {
                     if (navigator.screenIsListDetailTargetWidth) {
-                        // D.4 step 32: tablet detail-pane default for Settings
-                        // is the unified Warren tunnel toggles screen.
+                        // Tablet detail-pane default for Settings is the
+                        // unified Warren tunnel toggles screen.
                         navigator.navigate(SettingsNavKey, WarrenTunnelSettingsNavKey)
                     } else {
                         navigator.navigate(SettingsNavKey)
@@ -336,10 +320,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 },
             onAccountClick =
                 dropUnlessResumed {
-                    // D.4 step 14: on Warren mobile the "account" surface is the wallet
-                    // (BIP39 identity); the legacy Mullvad AccountNavKey routes to a
-                    // dead daemon-driven screen. Direct the account icon to the wallet
-                    // settings instead.
+                    // The "account" surface is the wallet (BIP39 identity), so
+                    // the account icon routes to the wallet settings.
                     navigator.navigate(WarrenWalletSettingsNavKey)
                 },
             onNavigateToFeature =
@@ -882,31 +864,25 @@ private fun PrepareError.OtherAlwaysOnApp.toMessage(resources: Resources) =
 
 private fun FeatureIndicator.navKey(): NavKey2 =
     when (this) {
-        // D.4 step 32: DAITA + Multihop indicators route to the unified
-        // Warren tunnel settings screen (was dedicated Mullvad screens).
+        // DAITA + Multihop indicators route to the unified Warren tunnel
+        // settings screen.
         FeatureIndicator.DAITA,
         FeatureIndicator.DAITA_MULTIHOP,
         FeatureIndicator.MULTIHOP -> WarrenTunnelSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
 
-        // D.4 step 35: SERVER_IP_OVERRIDE indicator routes to WarrenTunnelSettings
-        // (Mullvad relay-IP override is dead on Warren — exit fleet is sovereign).
         FeatureIndicator.SERVER_IP_OVERRIDE -> WarrenTunnelSettingsNavKey
 
-        // D.4 step 34: Mullvad anti-censorship transport indicators
-        // (UDP-over-TCP, QUIC-over-WG, WireGuard port, Shadowsocks, LWO)
-        // route to the unified WarrenTunnelSettings (Warren uses native
-        // Quinn + M4.0 obfuscation toggle ; the Mullvad WG-over-X
-        // family is gone).
+        // Anti-censorship transport indicators route to the unified
+        // WarrenTunnelSettings; Warren uses a native Quinn + M4.0 obfuscation
+        // toggle.
         FeatureIndicator.UDP_2_TCP,
         FeatureIndicator.QUIC,
         FeatureIndicator.SHADOWSOCKS,
         FeatureIndicator.LWO -> WarrenTunnelSettingsNavKey
 
-        // D.4 step 53: Mullvad VpnSettings deleted (QuantumResistance + LAN
-        // sharing + DNS content blockers + custom DNS + custom MTU were daemon-
-        // backed settings sync, dead on Warren). All FeatureIndicator chips
-        // route to WarrenTunnelSettings until Warren-native equivalents land.
+        // These chips route to WarrenTunnelSettings until Warren-native
+        // equivalents land.
         FeatureIndicator.QUANTUM_RESISTANCE,
         FeatureIndicator.LAN_SHARING,
         FeatureIndicator.DNS_CONTENT_BLOCKERS,

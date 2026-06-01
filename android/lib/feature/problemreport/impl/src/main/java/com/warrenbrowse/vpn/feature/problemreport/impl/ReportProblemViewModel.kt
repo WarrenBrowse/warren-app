@@ -20,10 +20,9 @@ import com.warrenbrowse.vpn.lib.repository.SendProblemReportResult
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportOutcome
 
-// D.4 step 57: Mullvad "include my account ID" checkbox surface removed.
-// D.6: send path rewired to WarrenSupportReportInvoker (biometric unlock +
+// The send path goes through WarrenSupportReportInvoker (biometric unlock +
 // signed POST /v1/support via warren-api-client). ProblemReportRepository
-// keeps the local log-collection surface only.
+// owns the local log-collection surface only.
 data class ReportProblemUiState(
     val sendingState: SendingReportUiState? = null,
     val email: String = "",

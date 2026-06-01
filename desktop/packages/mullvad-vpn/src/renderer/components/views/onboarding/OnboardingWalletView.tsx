@@ -16,7 +16,7 @@ import {
 } from '../../warren-mnemonic';
 import { OnboardingLayout } from './components';
 
-// M5.B.3 step 2: wallet bootstrap. Two paths:
+// Wallet bootstrap. Two paths:
 // - Generate: read the daemon's auto-bootstrapped mnemonic via
 //   `getWarrenMnemonic` and display the 12 words directly, with a
 //   "Copy to clipboard" button. The daemon generates the identity on

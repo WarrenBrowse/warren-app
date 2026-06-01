@@ -13,8 +13,6 @@ object SigningConfigs {
     const val RELEASE = "release"
 }
 
-// D.4 step 64: BILLING flavor dimension dropped (Mullvad Play Store
-// in-app billing dead on Warren — single Warren build).
 object FlavorDimensions {
     const val INFRASTRUCTURE = "infrastructure"
 }

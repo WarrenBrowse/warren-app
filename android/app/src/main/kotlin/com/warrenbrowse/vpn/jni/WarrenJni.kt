@@ -6,10 +6,7 @@ package com.warrenbrowse.vpn.jni
 // `Java_com_warrenbrowse_vpn_jni_WarrenJni_<name>` exported by
 // `libwarren_jni.so` (cf. `warren-jni/src/lib.rs`).
 //
-// D.3 scope: declarations + library load. The actual native implementations
-// are best-effort stubs - real wiring against warren-core lands in D.4 (tunnel
-// lifecycle) and D.5 (mnemonic + signing). See
-// `.planning/session-d-d3-warren-jni-design.md` for the migration plan.
+// See `.planning/session-d-d3-warren-jni-design.md` for the migration plan.
 object WarrenJni {
     init {
         System.loadLibrary("warren_jni")
@@ -78,7 +75,7 @@ object WarrenJni {
         bodyHashHex: String,
     ): ByteArray
 
-    // -- Tunnel lifecycle (D.4) --------------------------------------------
+    // -- Tunnel lifecycle --------------------------------------------------
 
     /**
      * Start a Warren Quinn tunnel on the supplied TUN file descriptor.

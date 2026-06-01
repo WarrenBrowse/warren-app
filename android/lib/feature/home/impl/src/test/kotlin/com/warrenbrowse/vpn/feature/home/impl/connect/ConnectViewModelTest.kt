@@ -196,13 +196,6 @@ class ConnectViewModelTest {
             viewModel.uiState.test { assertEquals(locationTestItem, awaitItem().location) }
         }
 
-    // D.4 step 60: connect/disconnect/reconnect/cancel tests dropped — the
-    // Mullvad ConnectionProxy.disconnect path is now a no-op stub. The real
-    // Warren connect path goes through WarrenQuinnConnectInvoker (dispatched
-    // from ConnectScreen on the FragmentActivity for biometric unlock) and
-    // disconnect/reconnect through WarrenQuinnDisconnect/ReconnectInvoker —
-    // those invokers are integration-tested end-to-end (D.6).
-
     @Test
     fun `given InAppNotificationController returns TunnelStateError notification uiState should emit notification`() =
         runTest {
@@ -219,11 +212,6 @@ class ConnectViewModelTest {
                 assertEquals(expectedConnectNotificationState, awaitItem().inAppNotification)
             }
         }
-
-    // D.4 step 43: onShowAccountClick test dropped (OpenAccountManagementPage-
-    // InBrowser side effect + onManageAccountClick + AccountRepository all
-    // removed - Manage Account routes directly to WarrenWalletSettings now).
-    // D.4 step 37: OutOfTime side effect test dropped (subscription model dead).
 
     @Test
     fun `given tunnel state error should emit last known disconnected location as location`() =

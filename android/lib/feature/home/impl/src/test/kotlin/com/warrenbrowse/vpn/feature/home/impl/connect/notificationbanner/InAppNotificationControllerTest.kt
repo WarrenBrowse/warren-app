@@ -78,9 +78,6 @@ class InAppNotificationControllerTest {
         val unsupportedVersion = InAppNotification.UnsupportedVersion(mockk())
         versionNotifications.value = unsupportedVersion
 
-        // D.4 step 41: NewDevice priority slot dropped (multi-device dead).
-        // D.4 step 38: AccountExpiry priority slot dropped (subscription dead).
-
         inAppNotificationController.notifications.test {
             val notifications = awaitItem()
 

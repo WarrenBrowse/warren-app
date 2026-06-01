@@ -23,8 +23,6 @@ fun ZonedDateTime.toExpiryDateString(): String =
 
 fun ZonedDateTime.millisFromNow(): Long = Duration.between(ZonedDateTime.now(), this).toMillis()
 
-// D.4 step 42: daysLeft() ext function dropped (no expiry tracking on Warren).
-
 fun ZonedDateTime.isBeforeNowInstant(): Boolean = toInstant().isBefore(Instant.now())
 
 fun ZonedDateTime.isAfterNowInstant(): Boolean = toInstant().isAfter(Instant.now())

@@ -2,10 +2,8 @@ package com.warrenbrowse.vpn.test.common.misc
 
 import com.warrenbrowse.vpn.test.common.constant.Production
 
-// D.4 step 64: RelayProvider simplified — Mullvad's OSS-vs-PLAY-flavor relay
-// selection (Production vs Stagemole) collapsed since Warren has a single
-// flavor. The `currentFlavor` parameter is kept for back-compat with the
-// existing e2e test call sites (now passes empty string).
+// Warren has a single flavor, so all relays come from `Production`. The
+// `currentFlavor` parameter is retained for the existing e2e test call sites.
 @Suppress("UNUSED_PARAMETER")
 class RelayProvider(val currentFlavor: String = "") {
 

@@ -78,11 +78,10 @@ class AppInteractor(
         }
     }
 
-    // D.4 step 58: applySettings stub — the Mullvad daemon (and its
-    // ManagementService gRPC bridge) is gone, so e2e settings drives are
-    // no-ops. The e2e suite (LeakTest, ConnectionTest, etc.) targets the
-    // dead Mullvad backend and is slated for D.6 rewrite against the
-    // Warren-native config surface (WarrenLocalSettingsRepository).
+    // The e2e suite (LeakTest, ConnectionTest, etc.) is slated for a rewrite
+    // against the Warren-native config surface
+    // (WarrenLocalSettingsRepository); until then settings drives here do
+    // nothing.
     @Suppress("UNUSED_PARAMETER")
     suspend fun applySettings(
         pq: QuantumResistantState? = null,

@@ -11,8 +11,8 @@ import { useHistory } from '../../../lib/history';
 import { useSelector } from '../../../redux/store';
 import { OnboardingLayout } from './components';
 
-// M5.B.3 step 3: subscription pointer. Warren is paid (~7-10
-// EUR/mo). We do **not** embed an iframe to warrenbrowse.com/pricing;
+// Subscription pointer. Warren is paid (~7-10 EUR/mo). We do
+// **not** embed an iframe to warrenbrowse.com/pricing;
 // the link opens in the user's default browser so the SPA UI is not
 // coupled to the marketing page lifecycle (the page changes on every
 // pricing tier review).

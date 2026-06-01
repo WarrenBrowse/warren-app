@@ -17,12 +17,9 @@ import com.warrenbrowse.vpn.core.NavKey2
  * the back-stack snapshot used by the splash decision tree (cf.
  * `WarrenApp.kt`) and exposes a [DaemonScreenEvent] side-effect flow.
  *
- * D.4 step 19: the legacy Mullvad daemon-connectivity overlay has been
- * removed. On Warren mobile the gRPC management service does not exist;
- * the prior implementation kept emitting "Show NoDaemonScreen" on every
- * resume, blocking the rest of the UI. The flow now stays empty (the
- * subscriber in `WarrenApp.kt` is left in place so a future Warren-
- * native "service unreachable" overlay can plug in via the same wire).
+ * The side-effect flow stays empty; the subscriber in `WarrenApp.kt` is in
+ * place so a future Warren-native "service unreachable" overlay can plug in
+ * via the same wire.
  */
 class WarrenAppViewModel : ViewModel(), LifecycleEventObserver {
 

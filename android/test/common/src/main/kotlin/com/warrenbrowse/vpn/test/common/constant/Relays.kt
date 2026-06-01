@@ -2,9 +2,7 @@ package com.warrenbrowse.vpn.test.common.constant
 
 import com.warrenbrowse.vpn.test.common.misc.TestRelay
 
-// D.4 step 64: Stagemole (Mullvad play flavor staging env) dropped — single
-// Warren flavor uses Production fixtures only.
-
+// The single Warren flavor uses Production fixtures only.
 object Production {
     val DEFAULT_RELAY = Relays.gotWg001
     val DAITA_RELAY = Relays.saoWg201

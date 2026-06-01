@@ -506,8 +506,6 @@ class ConnectScreenTest {
         }
     }
 
-    // D.4 step 38: testAccountExpiredNotification removed (subscription dead).
-
     @Test
     fun testOnUpdateVersionClick() {
         composeExtension.use {
@@ -533,8 +531,6 @@ class ConnectScreenTest {
             verify { mockedClickHandler.invoke() }
         }
     }
-
-    // D.4 step 38: testOnShowAccountClick removed (AccountExpiry banner dead).
 
     @Test
     fun testOnNewChangelogMessageClick() {

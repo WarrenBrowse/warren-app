@@ -47,8 +47,6 @@ class WarrenApplication : Application() {
             get<NotificationChannelFactory>()
             get<NotificationManager>()
             initFileLogger(get<ApplicationScope>())
-            // D.4 step 38: handleAccountExpiry coroutine dropped (Mullvad
-            // subscription expiry notifications dead on Warren).
         }
     }
 

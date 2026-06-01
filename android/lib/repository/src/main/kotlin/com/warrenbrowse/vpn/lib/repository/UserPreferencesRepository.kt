@@ -30,11 +30,6 @@ class UserPreferencesRepository(
         }
     }
 
-    // D.4 step 38: setAccountExpiry / clearAccountExpiry / accountExpiry()
-    // methods dropped (Mullvad subscription expiry tracking dead on Warren ;
-    // accountExpiryUnixTimeSeconds proto field is orphaned and will be removed
-    // in a future UserPreferences proto cleanup).
-
     suspend fun setLocationInNotificationEnabled(enable: Boolean) {
         userPreferencesStore.updateData { prefs ->
             prefs.toBuilder().setShowLocationInSystemNotification(enable).build()

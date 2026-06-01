@@ -8,12 +8,8 @@ import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 
-// D.4 step 54: TunnelStateNotificationUseCase simplified — drop SettingsRepository
-// + RelayListRepository.portRanges + maybeUpdateWithPortError. The Mullvad
-// "WireGuard port out of available range" hint only made sense with the Mullvad
-// daemon's wireguard_port obfuscation setting. Warren uses Quinn over UDP/443
-// and has no equivalent port selector ; just surface the tunnel state error
-// straight through.
+// Warren uses Quinn over UDP/443 and has no port selector, so the tunnel state
+// error is surfaced straight through.
 class TunnelStateNotificationUseCase(private val connectionProxy: ConnectionProxy) :
     InAppNotificationUseCase {
     override operator fun invoke(): Flow<InAppNotification?> =

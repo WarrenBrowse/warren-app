@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 // about. Field names mirror `warren_tunnel::ClientConfig` so the Rust
 // `serde::Deserialize` derive lines up 1:1.
 //
-// D.4 scaffold. The actual Rust deserializer lives in
+// The Rust deserializer lives in
 // `warren-jni/src/lib.rs::Java_..._connectTunnel` (TODO marker today).
 @Serializable
 data class WarrenTunnelConfig(

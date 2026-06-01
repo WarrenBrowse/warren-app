@@ -17,8 +17,6 @@ import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 class DeviceRevokedViewModel(
     private val accountRepository: AccountRepository,
     private val connectionProxy: ConnectionProxy,
-    // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
-    // Provider dropped (Mullvad subscription expiry plumbing is dead on Warren).
 ) : ViewModel() {
 
     val uiState =

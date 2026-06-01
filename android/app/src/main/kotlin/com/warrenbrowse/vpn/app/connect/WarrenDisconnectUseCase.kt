@@ -9,8 +9,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 
 /**
  * Sends [KEY_DISCONNECT_ACTION] to the running [WarrenVpnService]. The
- * service then routes the disconnect through the Quinn adapter (D.4
- * step 10).
+ * service then routes the disconnect through the Quinn adapter.
  *
  * Held by Koin as a singleton so any caller (Connect button,
  * notification action, tile service) can issue the disconnect without

@@ -55,23 +55,16 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    // D.4 step 58: ManagementService koin single dropped (Mullvad daemon gRPC
-    // bridge dead on Warren — all repository consumers slimmed to Warren-
-    // native stubs).
     single { ApplicationScope.createDoNotCallUseDiInstead() }
 
     single { androidContext().resources }
     single { androidContext().userPreferencesStore }
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
     single { ApiEndpointFromIntentHolder() }
-    // D.4 step 58: AccountRepository slimmed to Warren-native stub.
     single { AccountRepository() }
-    // D.4 step 58: DeviceRepository slimmed to Warren-native stub.
     single { DeviceRepository() }
     single { UserPreferencesRepository(get(), get()) }
-    // D.4 step 58: ConnectionProxy slimmed to Warren-native stub (no
-    // ManagementService / RelayLocationTranslationRepository deps).
-    // D.4 step 59: rewired to WarrenTunnelStateProvider (real tunnel state).
+    // ConnectionProxy reads live tunnel state from WarrenTunnelStateProvider.
     single { ConnectionProxy(tunnelStateProvider = get()) }
 
     // D.6 audit follow-up: lib/repository consumes the JNI surface via
@@ -84,22 +77,20 @@ val appModule = module {
         AndroidKeystoreWalletRepository(context = androidContext(), jni = get())
     }
 
-    // D.4 step 8: Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
-    // Kept separate from the proto-backed UserPreferencesRepository so we can
-    // drop the legacy Mullvad surface without touching these.
+    // Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0), kept
+    // separate from the proto-backed UserPreferencesRepository.
     single { WarrenLocalSettingsRepository(androidContext()) }
 
-    // D.4 step 17: relay catalogue via WarrenJni.listRelays. Hardcoded entry
-    // today; D.6 wires the signed-relay-list fetch via warren-api-client.
+    // Relay catalogue via WarrenJni.listRelays.
     single { RelayCatalog() } bind WarrenRelayProvider::class
 
-    // D.4 step 9: process-singleton mirror of WarrenQuinnAdapter.state so
-    // Composables can read tunnel transitions without binding the service.
+    // Process-singleton mirror of WarrenQuinnAdapter.state so Composables can
+    // read tunnel transitions without binding the service.
     single { WarrenQuinnStateProxy() } binds
         arrayOf(WarrenTunnelStateProvider::class, WarrenNatPmpStatusProvider::class)
 
-    // D.4 step 7 follow-up: orchestrate biometric unlock + config build +
-    // service dispatch for Warren Quinn connect.
+    // Orchestrates biometric unlock + config build + service dispatch for the
+    // Warren Quinn connect.
     single { WarrenTunnelConfigBuilder(localSettings = get(), relayCatalog = get()) }
     single {
         WarrenConnectUseCase(
@@ -109,9 +100,8 @@ val appModule = module {
         )
     } bind WarrenQuinnConnectInvoker::class
 
-    // D.4 step 12: disconnect path bound to the same lib-side surface
-    // contract; Connect button + tile service + notification action all
-    // resolve this single binding.
+    // Disconnect path bound to the lib-side surface contract; Connect button +
+    // tile service + notification action all resolve this single binding.
     single { WarrenDisconnectUseCase(context = androidContext()) } bind
         WarrenQuinnDisconnectInvoker::class
 
@@ -130,12 +120,7 @@ val appModule = module {
         WarrenSubscriptionInvoker::class
 
     single { LocaleRepository(get()) }
-    // D.4 step 58: RelayLocationTranslationRepository dropped (orphan now).
-    // D.4 step 38: ScheduleNotificationAlarmUseCase + AccountExpiryNotification-
-    // ActionUseCase dropped (Mullvad subscription expiry notifications dead).
     // TODO Move these back to UiModule when fixDisableBug is removed
-    // D.4 step 61: AppObfuscationRepository dropped (Mullvad app-icon
-    // obfuscation feature dead - Warren is not Mullvad-branded).
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         single { LanguageRepository(androidContext()) }
     }
@@ -158,10 +143,8 @@ val appModule = module {
             MainScope(),
         )
     } bind NotificationProvider::class
-    // D.4 step 64 collapsed BILLING dim, leaving only INFRASTRUCTURE.
-    // AGP no longer emits `FLAVOR_infrastructure` when there is a
-    // single dimension - the canonical flavor name surfaces via
-    // `BuildConfig.FLAVOR` directly.
+    // With a single flavor dimension AGP does not emit `FLAVOR_infrastructure`;
+    // the canonical flavor name surfaces via `BuildConfig.FLAVOR` directly.
     if (BuildConfig.FLAVOR != "prod") {
         single<ApiEndpointOverride> {
             ApiEndpointOverride(BuildConfig.API_ENDPOINT, BuildConfig.API_IP)

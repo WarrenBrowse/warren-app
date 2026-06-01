@@ -87,35 +87,27 @@ fun Settings(navigator: Navigator) {
         navigator.goBackUntil(SettingsNavKey, inclusive = true)
     }
 
-    // D.4 step 31: tablet detail-pane default is the Warren tunnel
-    // toggles screen (was legacy Mullvad Daita-only detail pane).
+    // Tablet detail-pane default is the Warren tunnel toggles screen.
     navigator.assureHasDetailPane<SettingsNavKey>(WarrenTunnelSettingsNavKey)
 
     SettingsScreen(
         state = state,
         onVpnSettingCellClick =
-            // D.4 step 53: VpnSettings module deleted (Mullvad daemon settings
-            // sync dead). "VPN settings" entry routes to WarrenTunnelSettings
-            // for the Warren-native obfuscation/multihop/DAITA toggles.
+            // "VPN settings" routes to WarrenTunnelSettings for the
+            // Warren-native obfuscation/multihop/DAITA toggles.
             dropUnlessResumed {
                 navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey)
             },
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },
         onAppInfoClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppInfoNavKey) },
-        // D.4 step 33: API access cell is a no-op on Warren (the Warren
-        // API endpoint is hardcoded; users cannot configure HTTPS proxies
-        // / Tor bridges to reach Mullvad's API since the API itself is
-        // gone). Click handler kept as no-op until the cell is fully
-        // removed from the list layout.
+        // The Warren API endpoint is hardcoded, so the API access cell does
+        // nothing.
         onApiAccessClick = {},
         onReportProblemCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ProblemReportNavKey) },
-        // D.4 step 31: Multihop + DAITA cells route to the unified Warren
-        // tunnel settings screen (4-toggle view with picker). The
-        // dedicated Mullvad MultihopScreen + DaitaScreen are no longer
-        // referenced; their entries stay registered for now in case the
-        // FeatureIndicator panel still navigates to them.
+        // Multihop + DAITA cells route to the unified Warren tunnel settings
+        // screen (4-toggle view with picker).
         onMultihopClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onDaitaClick =
@@ -212,7 +204,7 @@ private fun LazyListScope.content(
             position = Position.Top,
         )
     }
-    // D.4 step 8 — Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    // Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
     itemWithDivider {
         NavigationListItem(
             title = "Warren tunnel",
@@ -244,9 +236,6 @@ private fun LazyListScope.content(
         item { SplitTunneling(onSplitTunnelingCellClick) }
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
     }
-
-    // D.4 step 33: API access cell removed (Warren has no per-user API
-    // access method configuration; the Warren API endpoint is fixed).
 
     itemWithDivider {
         NavigationListItem(

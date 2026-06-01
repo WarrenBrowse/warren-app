@@ -50,12 +50,11 @@ class WarrenTunnelConfigBuilder(
                 return null
             }
 
-        // D.4 step 17 follow-up : multi-hop picks a distinct entry relay
-        // (different exit_id than the chosen exit). With a single-entry
-        // catalogue today there is no distinct entry to pick, so the
-        // multi-hop toggle is honoured by sending the same relay as
-        // entry - the exit still negotiates the multi-hop hop the same
-        // way; the picker UI will replace this fall-back.
+        // Multi-hop picks a distinct entry relay (different exit_id than the
+        // chosen exit). With a single-entry catalogue there is no distinct
+        // entry to pick, so the multi-hop toggle is honoured by sending the
+        // same relay as entry; the exit still negotiates the multi-hop hop the
+        // same way.
         val entryRelay = if (multiHopEnabled) {
             val distinct = relays.filter { it.active && it.exitId != exit.exitId }
             entryCountry?.let { c -> distinct.firstOrNull { it.country.equals(c, ignoreCase = true) } }

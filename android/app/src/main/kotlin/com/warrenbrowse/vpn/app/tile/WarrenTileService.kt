@@ -29,13 +29,11 @@ class WarrenTileService : TileService() {
     private lateinit var securedIcon: Icon
     private lateinit var unsecuredIcon: Icon
 
-    // D.4 step 12: dead Mullvad ConnectionProxy + ManagementService
-    // replaced by Warren-native surfaces. The tile reads state from the
-    // process-singleton proxy (live mirror of WarrenQuinnAdapter.state)
-    // and issues disconnect through the dedicated Warren use-case.
-    // Connect from the tile requires the wallet UI (BiometricPrompt),
-    // so a disconnected-tile click opens the main activity rather than
-    // dispatching a connect intent directly.
+    // The tile reads state from the process-singleton proxy (live mirror of
+    // WarrenQuinnAdapter.state) and issues disconnect through the Warren
+    // use-case. Connecting from the tile requires the wallet UI
+    // (BiometricPrompt), so a disconnected-tile click opens the main activity
+    // rather than dispatching a connect intent directly.
     private val tunnelStateProvider = get<WarrenTunnelStateProvider>()
     private val warrenDisconnect = get<WarrenQuinnDisconnectInvoker>()
 

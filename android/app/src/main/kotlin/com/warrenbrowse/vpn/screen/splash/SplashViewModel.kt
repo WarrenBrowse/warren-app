@@ -13,12 +13,9 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 data class SplashScreenState(val splashComplete: Boolean = false)
 
 /**
- * D.4 step 21: Warren-native splash decision tree.
+ * Warren-native splash decision tree.
  *
- * Drops the entire Mullvad device-state / account-expiry machinery
- * (the consumed `DeviceRepository` + `AccountRepository` source from a
- * dead gRPC daemon and the `.first()` await blocked indefinitely on
- * Warren mobile). The tree is now exhaustive:
+ * The tree is exhaustive:
  *
  *   1. Privacy disclosure not accepted → [PrivacyDisclaimer]
  *   2. Wallet absent & onboarding not done → [Onboarding] (welcome, once)
@@ -28,9 +25,8 @@ data class SplashScreenState(val splashComplete: Boolean = false)
  * The onboarding welcome is gated on a wallet still being absent, so
  * existing users (who already have a wallet) never see it on update.
  *
- * There is no "out of time" or "revoked device" branch on Warren - the
- * subscription model + multi-device accounting are Mullvad-only and
- * have no equivalent in the BIP39 wallet identity model.
+ * There is no "out of time" or "revoked device" branch on Warren: the BIP39
+ * wallet identity model has no subscription or multi-device accounting.
  */
 class SplashViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,

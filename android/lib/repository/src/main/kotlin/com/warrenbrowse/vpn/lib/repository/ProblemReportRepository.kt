@@ -17,36 +17,22 @@ import com.warrenbrowse.vpn.lib.model.UserReport
 
 const val PROBLEM_REPORT_LOGS_FILE = "problem_report.txt"
 
-// D.6 step 65 + audit follow-up: single-variant tag retained as a
-// `sealed interface` (instead of `data object`) so a future revival
-// of distinct send-failure causes (network / signature / payload-too-
-// large / ...) can re-extend it without rewriting the UI state shape.
-// The previous `Success` + `Error.CollectLog` variants were dead:
-// `Success` was never emitted (the ViewModel projects
-// `WarrenSupportReportOutcome.Success` directly to its UI state),
-// `CollectLog` was unreachable from the live flow (the legacy
-// repository.sendReport that emitted it was removed in step 65).
+// Modelled as a `sealed interface` (rather than a single `data object`) so
+// distinct send-failure causes (network / signature / payload-too-large /
+// ...) can extend it later without reshaping the UI state.
 sealed interface SendProblemReportResult {
     sealed interface Error : SendProblemReportResult {
         data object SendReport : Error
     }
 }
 
-// D.6 step 65: ProblemReportRepository slimmed to the local log surface
-// (collect / read / delete). The send path moved to
-// WarrenSupportReportInvoker which routes through WarrenJni's signed POST
-// to /v1/support. The repository keeps the StateFlow<UserReport> form
-// state + the log file lifecycle (UI continues to call setEmail /
-// setDescription / collectLogs / readLogs / deleteLogs).
-//
-// Audit follow-up: previous version carried three constructor params
-// (apiEndpointOverride / apiEndpointFromIntentHolder / kermitFileLogDirName)
-// that became dead after the send path moved. Dropped along with the
-// redundant `System.loadLibrary("warren_jni")` (WarrenJni's own static
-// init already loads the library; calling it again here only worked by
-// load-order coincidence). The JNI surface is now consumed through the
-// injected [WarrenJniBridge] instead of importing
-// `com.warrenbrowse.vpn.jni.WarrenJni` directly from the `:app` module.
+// Owns the local log surface (collect / read / delete) and the
+// StateFlow<UserReport> form state; the UI calls setEmail / setDescription /
+// collectLogs / readLogs / deleteLogs. The send path lives in
+// WarrenSupportReportInvoker, which routes through WarrenJni's signed POST to
+// /v1/support. The JNI surface is consumed through the injected
+// [WarrenJniBridge] rather than importing `com.warrenbrowse.vpn.jni.WarrenJni`
+// directly from the `:app` module.
 class ProblemReportRepository(
     context: Context,
     private val jni: WarrenJniBridge,

@@ -107,54 +107,25 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     }
 
     val entryProvider = entryProvider {
-        // D.4 step 16: Mullvad-legacy entries (account / addTime / deleteAccount /
-        // manageDevices / redeemVoucher) removed from the live navigation graph.
-        // The screens still compile (modules retained) but no NavKey routes them
-        // anymore. Full module deletion is a follow-up.
-        // D.4 step 34: anticensorshipEntry removed (Warren uses native
-        // Quinn + M4.0 toggle in WarrenTunnelSettings).
-        // D.4 step 33: apiAccessEntry removed (Warren API endpoint fixed).
-        // D.4 step 61: appIconEntry removed (Mullvad app-icon obfuscation dead).
         appearanceEntry(nav3)
         autoConnectEntry(nav3)
         changelogEntry(nav3)
-        // D.4 step 26: customListEntry removed - Mullvad custom relay lists
-        // were reached only from SelectLocationScreen (now unreachable).
-        // D.4 step 32: daitaEntry removed - DAITA is now configured via
-        // the unified WarrenTunnelSettings toggles (the dedicated Mullvad
-        // DaitaScreen is unreachable).
-        // D.4 step 26: filterEntry removed - Mullvad relay filter was
-        // reached only from SelectLocationScreen (now unreachable).
         homeEntry(nav3)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             languageEntry(nav3)
         }
-        // D.4 step 24: loginEntry + deviceListEntry +
-        // removeDeviceConfirmationDialogEntry removed from the live
-        // navigation graph - on Warren, onboarding goes via
-        // WarrenWalletNavKey (D.5) and no path pushes Mullvad
-        // LoginNavKey / DeviceListNavKey anymore.
         walletEntry(nav3)
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
         warrenLocationPickerEntry(nav3)
-        // D.4 step 32: multihopEntry removed - Multihop now configured
-        // via the unified WarrenTunnelSettings toggles.
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         onboardingEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
-        // D.4 step 25: selectLocationEntry removed - Mullvad SelectLocation
-        // is unreachable (Switch button routes to WarrenLocationPicker).
-        // D.4 step 35: serverIpOverrideEntry removed - Warren exit fleet
-        // is sovereign, no per-relay overrides needed.
         settingsEntry(nav3)
         splashEntry(nav3)
         splitTunnelingEntry(nav3)
-        // D.4 step 53: vpnSettingsEntry removed (VpnSettings module deleted —
-        // Mullvad daemon settings sync dead, Warren-native settings live in
-        // WarrenTunnelSettings).
     }
 
     SharedTransitionLayout {

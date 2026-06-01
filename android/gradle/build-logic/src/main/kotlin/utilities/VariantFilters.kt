@@ -6,9 +6,7 @@ import utilities.BuildTypes.NON_MINIFIED
 import utilities.BuildTypes.RELEASE
 import utilities.Flavors.PROD
 
-// D.4 step 64: BILLING flavor dropped — Mullvad's OSS/PLAY split is gone.
-// Filters now only constrain on INFRASTRUCTURE (PROD) + build type.
-
+// Filters constrain only on INFRASTRUCTURE (PROD) + build type.
 val prodDebugReleaseVariants =
     VariantFilter(
         infrastructurePredicate = { it == PROD },

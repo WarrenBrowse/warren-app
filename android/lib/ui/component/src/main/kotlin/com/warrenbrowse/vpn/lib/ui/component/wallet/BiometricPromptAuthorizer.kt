@@ -35,7 +35,7 @@ class BiometricPromptAuthorizer(
             BiometricResult.Success -> true
             is BiometricResult.Error -> false
             is BiometricResult.Unavailable -> {
-                // TODO (D.5 step 3): fall back to a passcode prompt via
+                // TODO: fall back to a passcode prompt via
                 //   KeyguardManager.createConfirmDeviceCredentialIntent
                 //   when biometric hardware is missing.
                 @Suppress("UNUSED_VARIABLE") val reason = result.reason

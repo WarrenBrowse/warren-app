@@ -10,11 +10,9 @@ import com.warrenbrowse.vpn.lib.model.RelayItem
 import com.warrenbrowse.vpn.lib.model.RelayItemId
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 
-// D.4 step 45: CustomListsRepository dependency dropped — Mullvad custom-list
-// picker screens were deleted in step 27, so customLists is permanently empty
-// for new installs. A stale persisted CustomListId from a prior Mullvad install
-// returns null (no title rendered, ConnectViewModel falls back to the default
-// "Switch location" placeholder).
+// Resolves the title for the selected location. A stale persisted CustomListId
+// returns null, so no title is rendered and ConnectViewModel falls back to the
+// default "Switch location" placeholder.
 class SelectedLocationTitleUseCase(
     private val relayListRepository: RelayListRepository,
 ) {

@@ -83,8 +83,6 @@ fun InAppNotification.toNotificationData(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) =
     when (this) {
-        // D.4 step 41: NewDevice banner branch removed (multi-device dead).
-        // D.4 step 38: AccountExpiry banner branch removed (subscription dead).
         InAppNotification.TunnelStateBlocked ->
             NotificationData(
                 title = stringResource(id = R.string.blocking_internet),

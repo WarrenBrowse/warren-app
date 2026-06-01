@@ -4,9 +4,6 @@ import androidx.compose.ui.platform.UriHandler
 import arrow.core.Either
 import co.touchlab.kermit.Logger
 
-// D.4 step 46: createOpenAccountPageHook removed — only consumer was the
-// OpenAccountManagementPageInBrowser side effect (deleted in step 43).
-
 fun UriHandler.createUriHook(uri: String): () -> Unit = { safeOpenUri(uri) }
 
 fun UriHandler.safeOpenUri(uri: String): Either<IllegalArgumentException, Unit> =

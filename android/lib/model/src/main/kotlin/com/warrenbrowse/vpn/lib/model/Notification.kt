@@ -11,7 +11,4 @@ sealed interface Notification {
         override val actions: List<NotificationAction.Tunnel>,
         override val ongoing: Boolean,
     ) : Notification
-
-    // D.4 step 38: Notification.AccountExpiry dropped (Mullvad subscription
-    // expiry notifications dead on Warren).
 }

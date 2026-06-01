@@ -9,7 +9,6 @@ data class ConnectUiState(
     val selectedRelayItemTitle: String?,
     val tunnelState: TunnelState,
     val inAppNotification: InAppNotification?,
-    // D.4 step 42: daysLeftUntilExpiry dropped (Mullvad subscription dead).
     val isPlayBuild: Boolean,
 ) {
 

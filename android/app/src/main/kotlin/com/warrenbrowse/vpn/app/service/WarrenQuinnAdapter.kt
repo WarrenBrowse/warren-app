@@ -39,10 +39,8 @@ import kotlinx.serialization.json.Json
 //
 // State machine + reconnect-on-network-change live here, not in Rust.
 //
-// D.4 scaffold. The actual builder configuration (DNS, bypass CIDRs,
-// multi-hop entry plumbing) is intentionally TODO - the architecture is
-// committed; the wiring is the next focused session's work. See
-// `.planning/session-d-d4-d7-design.md`.
+// TODO: the builder configuration (DNS, bypass CIDRs, multi-hop entry
+// plumbing) is not wired yet. See `.planning/session-d-d4-d7-design.md`.
 class WarrenQuinnAdapter(
     private val vpnService: VpnService,
     private val connectivityManager: ConnectivityManager,
@@ -105,10 +103,9 @@ class WarrenQuinnAdapter(
         exitBlockingMode()
 
         // Poll the Rust-side session status atomic and translate transitions
-        // back to `WarrenTunnelState`. A JNI callback channel would be more
-        // elegant (no busy-poll) but requires JVM ref management gymnastics
-        // we are deferring to D.4 step 5 follow-up. The poll cadence
-        // (250 ms) is fast enough to keep the UI responsive without
+        // back to `WarrenTunnelState`. A JNI callback channel would avoid the
+        // busy-poll but requires JVM ref management gymnastics. The poll
+        // cadence (250 ms) is fast enough to keep the UI responsive without
         // burning battery: the Rust side updates the atomic only once per
         // transition.
         val sessionConfig = config

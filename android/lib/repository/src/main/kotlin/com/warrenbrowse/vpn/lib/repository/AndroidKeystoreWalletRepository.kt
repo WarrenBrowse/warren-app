@@ -208,7 +208,7 @@ class AndroidKeystoreWalletRepository(
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(KEY_SIZE_BITS)
-            // TODO (D.5 step 2): setUserAuthenticationRequired(true) +
+            // TODO: setUserAuthenticationRequired(true) +
             //   setUserAuthenticationParameters once BiometricPrompt is
             //   wired. Until then any caller in this process can decrypt.
             .build()

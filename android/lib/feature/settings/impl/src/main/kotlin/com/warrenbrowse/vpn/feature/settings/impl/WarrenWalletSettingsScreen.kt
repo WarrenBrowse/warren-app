@@ -45,7 +45,7 @@ import org.koin.compose.koinInject
  * Reached via [com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey]
  * from the main Settings screen ("Wallet" entry).
  *
- * Hosts a "Warren Connect (test)" button (D.4 step 7 follow-up) that
+ * Hosts a "Warren Connect (test)" button that
  * dispatches the end-to-end Quinn connect flow via the
  * `WarrenQuinnConnectInvoker` interface (registered in app/AppModule
  * pointing at `WarrenConnectUseCase`). The button lives here, behind

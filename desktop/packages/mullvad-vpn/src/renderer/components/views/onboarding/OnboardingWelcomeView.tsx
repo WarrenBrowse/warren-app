@@ -6,8 +6,8 @@ import { Button } from '../../../lib/components';
 import { useHistory } from '../../../lib/history';
 import { OnboardingLayout } from './components';
 
-// M5.B.3 step 1: welcome banner. Sets the tone "Warren VPN, no
-// compromise privacy" and routes the user into the wallet step.
+// Welcome banner. Sets the tone "Warren VPN, no compromise
+// privacy" and routes the user into the wallet step.
 // First-launch detection (`onboardingCompletedUnix` undefined)
 // dispatches the user here from the boot route; users replaying the
 // wizard from Settings land here too.

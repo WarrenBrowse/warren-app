@@ -17,14 +17,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
-// D.6 step 65: sendReport flow rewired through WarrenSupportReportInvoker
-// (biometric unlock + JNI signed POST /v1/support). The original integration
-// tests asserted state transitions via the legacy
-// ProblemReportRepository.sendReport stub; they cannot exercise the new path
-// without an Activity (BiometricPromptAuthorizer requirement). Reduced to
-// the two repository-delegation tests that survive the refactor; full
-// coverage of the new flow is deferred to an instrumented test wired against
-// a real FragmentActivity.
+// The sendReport flow goes through WarrenSupportReportInvoker (biometric
+// unlock + JNI signed POST /v1/support), which needs an Activity
+// (BiometricPromptAuthorizer requirement) and so cannot be exercised here.
+// These tests cover repository delegation only; full coverage of the send
+// flow belongs in an instrumented test wired against a real FragmentActivity.
 @ExtendWith(TestCoroutineRule::class)
 class ReportProblemViewModelTest {
 

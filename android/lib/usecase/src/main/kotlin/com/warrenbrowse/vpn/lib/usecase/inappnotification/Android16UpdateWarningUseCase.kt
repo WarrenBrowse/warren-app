@@ -14,11 +14,9 @@ import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 
-// D.4 step 58: Android16UpdateWarningUseCase rewired to ConnectionProxy (Warren
-// stub) instead of the dead Mullvad ManagementService. Since ConnectionProxy
-// emits a constant `Disconnected` tunnel state until the Warren-native tunnel
-// state plumbing replaces it (D.4 step 67+), the warning never fires in
-// practice — kept here as a code-path placeholder.
+// Reads the tunnel state from ConnectionProxy. While ConnectionProxy emits a
+// constant `Disconnected` state, the warning never fires in practice; kept
+// here as a code-path placeholder.
 class Android16UpdateWarningUseCase(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val connectionProxy: ConnectionProxy,

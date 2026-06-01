@@ -31,13 +31,9 @@ import com.warrenbrowse.talpid.LifecycleVpnService
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
-// D.4 step 56: WarrenVpnService now extends LifecycleVpnService directly.
-// The old TalpidVpnService superclass was Mullvad daemon JNI glue (openTun /
-// closeTun / bypass / connectivityListener marshalling) — entirely dead on
-// Warren since the tunnel lifecycle is managed by `quinnAdapter` :
-// `WarrenQuinnAdapter` builds + establishes the VpnService.Builder itself,
-// owns its own ConnectivityManager handover hook, and never calls back into
-// the Mullvad daemon JNI.
+// The tunnel lifecycle is managed by `quinnAdapter`: `WarrenQuinnAdapter`
+// builds and establishes the VpnService.Builder itself and owns its own
+// ConnectivityManager handover hook.
 class WarrenVpnService : LifecycleVpnService() {
 
     private lateinit var keyguardManager: KeyguardManager
@@ -53,9 +49,7 @@ class WarrenVpnService : LifecycleVpnService() {
      * the [android.net.ConnectivityManager] for handover reconnect, both
      * of which are unique to this service instance).
      *
-     * D.4 step 10: the legacy gRPC management service / connection
-     * proxy layer has been fully removed; this adapter is now the only
-     * tunnel-state authority.
+     * This adapter is the only tunnel-state authority.
      */
     lateinit var quinnAdapter: WarrenQuinnAdapter
         private set
@@ -140,13 +134,10 @@ class WarrenVpnService : LifecycleVpnService() {
         WarrenJni.initLogger(filesDir.absolutePath)
         Logger.i("warren-jni initialised")
 
-        // D.4 step 10: the gRPC management service / connection proxy
-        // pathway has been entirely removed. The Quinn adapter now owns
-        // the tunnel lifecycle end-to-end; the only legacy components
-        // still resolved from Koin are the notification channel
-        // factory, foreground notification manager, split-tunnelling
-        // migration shim, and the API-endpoint intent holder (all of
-        // which are warren-native or trivial).
+        // The Quinn adapter owns the tunnel lifecycle end-to-end. The
+        // components resolved from Koin here are the notification channel
+        // factory, foreground notification manager, split-tunnelling migration
+        // shim, and the API-endpoint intent holder.
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -164,13 +155,11 @@ class WarrenVpnService : LifecycleVpnService() {
             }
 
             intent.isFromSystem() || intent?.action == KEY_CONNECT_ACTION -> {
-                // D.4 step 10: legacy KEY_CONNECT_ACTION no longer
-                // dispatches to a daemon. Callers should migrate to
+                // KEY_CONNECT_ACTION carries no config. Callers should use
                 // KEY_WARREN_CONNECT_QUINN_ACTION (with a serialised
-                // WarrenTunnelConfig + a MnemonicCache.put preceding
-                // it). For now, a system-initiated connect with no
-                // config gets a no-op + log line; the legacy
-                // ConnectionProxy is gone.
+                // WarrenTunnelConfig and a preceding MnemonicCache.put). A
+                // system-initiated connect with no config logs and does
+                // nothing else.
                 foregroundNotificationHandler.startForeground()
                 Logger.w(
                     "Received legacy KEY_CONNECT_ACTION (system or callsite); " +
@@ -179,18 +168,18 @@ class WarrenVpnService : LifecycleVpnService() {
             }
 
             intent?.action == KEY_RECONNECT_ACTION -> {
-                // D.4 step 13: reconnect routes through the Quinn adapter,
-                // which reuses the cached config + mnemonic (no biometric
-                // re-prompt). No-op if there is no active session.
+                // Reconnect routes through the Quinn adapter, which reuses the
+                // cached config + mnemonic (no biometric re-prompt). Does
+                // nothing if there is no active session.
                 foregroundNotificationHandler.startForeground()
                 lifecycleScope.launch { quinnAdapter.reconnect() }
             }
 
             intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {
-                // D.4 step 7: dedicated Quinn connect path. Caller has
-                // already retrieved the mnemonic via the UI-side
-                // BiometricPromptAuthorizer, stashed it in MnemonicCache,
-                // and serialised a WarrenTunnelConfig in the extras.
+                // Dedicated Quinn connect path. The caller has already
+                // retrieved the mnemonic via the UI-side
+                // BiometricPromptAuthorizer, stashed it in MnemonicCache, and
+                // serialised a WarrenTunnelConfig in the extras.
                 foregroundNotificationHandler.startForeground()
                 val configJson = intent.getStringExtra(KEY_WARREN_TUNNEL_CONFIG_JSON)
                 val mnemonic = MnemonicCache.consume()

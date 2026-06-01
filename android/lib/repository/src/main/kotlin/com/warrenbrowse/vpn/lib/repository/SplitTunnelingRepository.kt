@@ -8,12 +8,10 @@ import com.warrenbrowse.vpn.lib.model.AddSplitTunnelingAppError
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.RemoveSplitTunnelingAppError
 
-// D.4 step 58: SplitTunnelingRepository stripped of ManagementService
-// dependency. The Mullvad daemon's split-tunneling settings stream is dead
-// on Warren — split tunneling will be Warren-native (excludedPackages in
-// the VpnService.Builder, persisted via WarrenLocalSettingsRepository) when
-// the SplitTunneling screen is migrated (D.4 step 67+). Until then this is
-// a compile shim: state flows emit empty / disabled, mutators are no-ops.
+// Split tunneling will become Warren-native (excludedPackages in the
+// VpnService.Builder, persisted via WarrenLocalSettingsRepository) once the
+// SplitTunneling screen is migrated. Until then this is a compile shim: state
+// flows emit empty / disabled and mutators do nothing.
 @Suppress("UNUSED_PARAMETER", "unused")
 class SplitTunnelingRepository(
     @Suppress("UnusedPrivateMember") managementService: Any? = null,

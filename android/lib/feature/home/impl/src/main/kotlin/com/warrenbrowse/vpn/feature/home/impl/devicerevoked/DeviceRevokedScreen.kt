@@ -52,9 +52,6 @@ fun DeviceRevoked(navigator: Navigator) {
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) { sideEffect ->
         when (sideEffect) {
             DeviceRevokedSideEffect.NavigateToLogin ->
-                // D.4 step 22: device-revoked flow is itself Mullvad-only
-                // (Warren wallet is the identity ; no notion of "device
-                // revoked" without a server-side multi-device tracker).
                 // Route to the wallet flow so the user can re-onboard.
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
         }
