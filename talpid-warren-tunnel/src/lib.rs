@@ -452,9 +452,24 @@ impl Error {
 /// [`Error::Handshake`] — a transient network glitch is the common case
 /// and the next attempt usually succeeds.
 fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
+    // The `[TOKEN]` prefix is parsed by `mullvad_types::auth_failed::AuthFailed`
+    // (via `ErrorStateCause::AuthFailed`) into a `proto::AuthFailedError`, which
+    // the GUI renders as a precise, already-localized message. Reusing the
+    // existing tokens gives the user a meaningful cause (fr included) with no
+    // proto/GUI/i18n change:
+    //   [TOO_MANY_CONNECTIONS] -> "Too many simultaneous connections … disconnect another device"
+    //   [EXPIRED_ACCOUNT]      -> "Blocking internet: account is out of time"
+    // Both are non-retryable business rejections (see `map`-arm rationale).
     match e {
         warren_tunnel::TunnelError::AuthRejected => Error::BackendFatal(
-            "exit rejected the handshake: identity not authorized (no active subscription)"
+            "[EXPIRED_ACCOUNT] exit rejected the handshake: no active subscription for this account"
+                .to_owned(),
+        ),
+        // Device cap (v2): account already at its max simultaneous devices.
+        // Maps to TOO_MANY_CONNECTIONS — the GUI string is an exact fit
+        // ("disconnect another device or try again shortly").
+        warren_tunnel::TunnelError::DeviceLimitReached => Error::BackendFatal(
+            "[TOO_MANY_CONNECTIONS] exit rejected the handshake: device limit reached for this account"
                 .to_owned(),
         ),
         other => Error::Handshake(format!("{other:#}")),
@@ -2700,6 +2715,25 @@ mod tests {
         assert!(
             !mapped.is_recoverable(),
             "an auth rejection must NOT be retried by the state machine"
+        );
+    }
+
+    #[test]
+    fn device_limit_maps_to_fatal_non_recoverable_error() {
+        // Same regression class as auth rejection: a device-cap refusal
+        // (account already at its max simultaneous devices) is a business
+        // rejection, not a transient glitch. It must be FATAL and
+        // non-recoverable so the state machine stops retrying and the app
+        // surfaces a precise "device limit reached" message instead of
+        // the misleading "no matching relay" / "no exit available".
+        let mapped = map_handshake_error(warren_tunnel::TunnelError::DeviceLimitReached);
+        assert!(
+            matches!(mapped, Error::BackendFatal(_)),
+            "DeviceLimitReached must map to BackendFatal, got: {mapped:?}"
+        );
+        assert!(
+            !mapped.is_recoverable(),
+            "a device-limit rejection must NOT be retried by the state machine"
         );
     }
 

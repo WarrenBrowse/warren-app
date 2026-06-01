@@ -38,6 +38,19 @@ impl From<Error> for ErrorStateCause {
     fn from(error: Error) -> ErrorStateCause {
         match error {
             Error::EnableIpv6 => ErrorStateCause::Ipv6Unavailable,
+            // A Warren *business* rejection — the exit refused the
+            // handshake for a reason the user can act on (no active
+            // subscription, device limit reached, account suspended, …).
+            // It is non-retryable and carries a user-facing message;
+            // surface it as `AuthFailed(reason)` so the app shows the
+            // precise cause instead of a generic "failed to start" or the
+            // misleading "no matching relay" the retry loop used to
+            // produce. This is the single funnel for every exit-side
+            // rejection code mapped in `warren_tunnel` →
+            // `talpid_warren_tunnel::map_handshake_error`.
+            Error::WarrenTunnelMonitoring(talpid_warren_tunnel::Error::BackendFatal(reason)) => {
+                ErrorStateCause::AuthFailed(Some(reason))
+            }
             #[cfg(target_os = "windows")]
             error => match error.get_tunnel_device_error() {
                 Some(error) => ErrorStateCause::CreateTunnelDevice {
