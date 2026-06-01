@@ -7133,6 +7133,8 @@ dependencies = [
  "futures",
  "ipnetwork",
  "log",
+ "mullvad-paths",
+ "rand 0.9.4",
  "static_assertions",
  "talpid-routing",
  "talpid-tunnel",
@@ -8721,6 +8723,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "warren-protocol",
+ "warren-ss58",
 ]
 
 [[package]]

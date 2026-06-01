@@ -56,6 +56,7 @@ use warren_tunnel::{
 };
 
 mod adapter;
+mod device_id;
 use adapter::MullvadTunPacketDevice;
 
 /// Daemon-side NAT-PMP lifecycle wrapper that owns the refresh loop +
@@ -657,7 +658,11 @@ impl WarrenTunnelMonitor {
         let session_kind = runtime.block_on(async move {
             let mut client = ClientTunnel::with_signing_key(&signing)
                 .with_features(features)
-                .with_daita(enable_daita);
+                .with_daita(enable_daita)
+                // Stable per-install device id: every reconnect/retry reuses
+                // ONE device lease, so the account never trips the v2 device
+                // cap and gets locked out of connecting (see `device_id`).
+                .with_device_id(device_id::device_id());
             if let Some(addr) = bind_local_ip {
                 client = client.with_bind_local_ip(addr);
             }

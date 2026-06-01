@@ -52,6 +52,13 @@ warren-relay = { path = "../../warren-core/crates/warren-relay" }
 warren-backoff = { path = "../../warren-core/crates/warren-backoff" }
 warren-config = { path = "../../warren-core/crates/warren-config" }
 
+# Stable per-install device identifier for the v2 device cap. Persisted
+# under the daemon settings dir so reconnects / retries / restarts reuse
+# ONE device lease instead of accruing phantom devices that trip
+# MAX_DEVICES_PER_ACCOUNT and lock the user out of connecting.
+mullvad-paths = { path = "../mullvad-paths" }
+rand = { workspace = true }
+
 # Ed25519 signing key carried in `WarrenTunnelParameters`. ed25519-dalek
 # is also re-exported via `warren-relay-selector::warren_types` upstream
 # warren-core, but we depend on it directly to avoid pulling the whole
