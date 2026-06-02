@@ -31,6 +31,10 @@ function newConfig() {
     extraResources: [
       { from: distAssets('ca.crt'), to: '.' },
       { from: buildAssets('relays.json'), to: '.' },
+      // Warren bootstrap exit list: staged into build/ by build.sh (baked
+      // by the CI fetch-warren-relays action, or an inert placeholder).
+      // Loaded by the daemon at boot via load_bootstrap as resource_dir/warren-relays.json.
+      { from: buildAssets('warren-relays.json'), to: '.' },
       { from: root('CHANGELOG.md'), to: '.' },
     ],
 

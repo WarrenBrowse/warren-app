@@ -456,6 +456,25 @@ cat > build/relays.json <<'RELAYS_JSON'
 }
 RELAYS_JSON
 
+# Warren bootstrap exit list. The CI "fetch-warren-relays" action writes a
+# freshly fetched + signature-verified `dist-assets/warren-relays.json`
+# before this script runs; we stage it into `build/` so it is packaged as a
+# client resource (alongside relays.json) and loaded by the daemon at boot
+# via `warren_relay_list_updater::load_bootstrap`. If the action was skipped
+# (local build / offline CI), we write an inert placeholder so packaging
+# always finds the file: it fails the daemon's signature pin check at load
+# and is ignored, and the daemon populates the list via its startup fetch.
+log_info "Staging warren-relays.json bootstrap..."
+if [[ -f dist-assets/warren-relays.json ]]; then
+    cp dist-assets/warren-relays.json build/warren-relays.json
+    log_info "Using baked warren-relays.json bootstrap ($(wc -c < build/warren-relays.json | tr -d ' ') bytes)"
+else
+    cat > build/warren-relays.json <<'WARREN_RELAYS_JSON'
+{"version":4,"relays":[],"generation":0,"signed_at":0,"expires_at":0,"server_pubkey_hex":"","signature_hex":""}
+WARREN_RELAYS_JSON
+    log_info "No baked warren-relays.json; wrote inert placeholder (daemon fetches the list at runtime)"
+fi
+
 function build_daemon_packages {
     local pkg_success=0
 
