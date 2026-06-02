@@ -269,6 +269,11 @@ export default class UserInterface implements WindowControllerDelegate {
 
     this.windowController.close();
     this.trayIconController?.dispose();
+
+    // Destroy the tray explicitly. Otherwise the icon lingers in the menu bar
+    // until the process exits, so if the quit ever stalls the user is left with
+    // a visible-but-dead icon.
+    this.tray.destroy();
   };
 
   private createWindow(): BrowserWindow {
