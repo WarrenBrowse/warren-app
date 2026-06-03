@@ -350,7 +350,17 @@ pub struct WarrenRelayListUpdater {
     /// Highest `generation` ever accepted (anti-rollback high-water mark).
     /// Seeded from the bootstrap; a fetched list below this is rejected.
     highest_generation: u64,
-    /// Pinned **offline admin** pubkey for verifying the roster (F1).
+    /// Whether the optional offline-admin roster feature is enabled.
+    /// **Off by default** (gated by the daemon via `WARREN_ROSTER_ENABLED`).
+    /// When `false`, the updater never fetches or enforces a roster: the
+    /// online-signed `/v1/exits` list is published as-is. When `true`, it
+    /// fetches `/v1/exits/roster`, verifies it against `roster_pin`, and
+    /// drops any live-list exit the roster does not authorize (audit F1).
+    roster_enabled: bool,
+    /// Pinned **offline admin** pubkey for verifying the roster (F1). Only
+    /// consulted when `roster_enabled`. Empty = TOFU (accepts any
+    /// self-consistent roster signature) — operators enabling the feature
+    /// should pin it via `WARREN_ADMIN_ROSTER_PUBKEY`.
     roster_pin: Option<String>,
     /// Latest verified offline-admin roster; the live list is filtered to
     /// roster-authorized exits before publishing. `None` = no roster yet
@@ -393,6 +403,7 @@ impl WarrenRelayListUpdater {
         pinned_server_pubkey: Option<String>,
         initial_etag: Option<String>,
         initial_generation: u64,
+        roster_enabled: bool,
         roster_pin: Option<String>,
         initial_roster: Option<VerifiedRoster>,
         on_update: impl Fn(WarrenRelayList) + Send + 'static,
@@ -409,6 +420,7 @@ impl WarrenRelayListUpdater {
             pinned_server_pubkey,
             etag: initial_etag,
             highest_generation: initial_generation,
+            roster_enabled,
             roster_pin,
             roster: initial_roster,
             highest_roster_generation,
@@ -425,8 +437,11 @@ impl WarrenRelayListUpdater {
 
     async fn run(mut self, mut events: mpsc::Receiver<()>) {
         // On-startup: refresh the offline roster first (so the very first
-        // list it filters is enforced), then the live list.
-        self.refresh_roster().await;
+        // list it filters is enforced), then the live list. Skipped
+        // entirely when the optional roster feature is disabled (default).
+        if self.roster_enabled {
+            self.refresh_roster().await;
+        }
         // On-startup fetch: refresh immediately so a daemon that just
         // booted on a stale baked bootstrap converges to the live list
         // without waiting a full check interval.
@@ -447,7 +462,9 @@ impl WarrenRelayListUpdater {
             futures::select! {
                 _ = next_check => {
                     if download.is_terminated() && self.should_update() {
-                        self.refresh_roster().await;
+                        if self.roster_enabled {
+                            self.refresh_roster().await;
+                        }
                         download = Box::pin(
                             Self::fetch_with_retry(
                                 self.http.clone(),
@@ -656,9 +673,18 @@ impl WarrenRelayListUpdater {
                 // does not authorize before publishing to the selector.
                 let enf = enforce_roster(verified.relays, self.roster.as_ref());
                 if !enf.enforced {
-                    log::warn!(
-                        "No offline roster available; serving the live exit list UNFILTERED (rollout transition, F1 enforcement inactive)"
-                    );
+                    if self.roster_enabled {
+                        // Feature on but no roster fetched yet (rollout
+                        // transition): pass-through, but flag it loudly.
+                        log::warn!(
+                            "Roster enforcement enabled but no roster available yet; serving the live exit list UNFILTERED (transient)"
+                        );
+                    } else {
+                        // Feature off (default): pass-through is expected.
+                        log::debug!(
+                            "Roster feature disabled; serving the online-signed exit list as-is"
+                        );
+                    }
                 } else if enf.dropped > 0 {
                     log::warn!(
                         "Roster dropped {} live-list exit(s) NOT authorized by the offline admin key (possible backend tampering)",

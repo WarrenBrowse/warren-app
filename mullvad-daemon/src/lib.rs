@@ -1164,14 +1164,25 @@ impl Daemon {
                 .filter(|s| !s.is_empty())
                 .unwrap_or_else(|| warren_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
         );
-        // F1: pinned OFFLINE admin key for the exit roster. Env override
-        // for dev/staging, else the baked production key.
-        let warren_roster_pin: Option<String> = Some(
-            std::env::var("WARREN_ADMIN_ROSTER_PUBKEY")
-                .ok()
-                .filter(|s| !s.is_empty())
-                .unwrap_or_else(|| warren_config::WARREN_ADMIN_ROSTER_PUBKEY_HEX.to_owned()),
+        // Audit F1: the offline-admin exit **roster** is an OPTIONAL,
+        // OFF-BY-DEFAULT hardening. It is enabled only when
+        // `WARREN_ROSTER_ENABLED` is truthy; otherwise the client serves
+        // the online-signed `/v1/exits` list as-is and never fetches or
+        // enforces a roster. No production roster pubkey is baked into the
+        // binary: when an operator opts in, they supply the offline-admin
+        // pin via `WARREN_ADMIN_ROSTER_PUBKEY` (64-char hex). Empty pin
+        // while enabled = TOFU (logged), which operators should avoid.
+        let warren_roster_enabled = matches!(
+            std::env::var("WARREN_ROSTER_ENABLED")
+                .unwrap_or_default()
+                .trim()
+                .to_ascii_lowercase()
+                .as_str(),
+            "1" | "true" | "yes" | "on"
         );
+        let warren_roster_pin: Option<String> = std::env::var("WARREN_ADMIN_ROSTER_PUBKEY")
+            .ok()
+            .filter(|s| !s.is_empty());
         let warren_bootstrap = warren_relay_list_updater::load_bootstrap(
             &config.cache_dir,
             &config.resource_dir,
@@ -1482,10 +1493,12 @@ impl Daemon {
                 warren_server_pubkey.clone(),
                 None,
                 warren_bootstrap_generation,
+                // Optional roster feature, off by default (WARREN_ROSTER_ENABLED).
+                warren_roster_enabled,
                 warren_roster_pin.clone(),
-                // No roster bootstrap-from-disk yet: the startup
-                // refresh_roster() fetches it. Until it lands, the live
-                // list passes through unfiltered (logged).
+                // No roster bootstrap-from-disk yet: when enabled, the
+                // startup refresh_roster() fetches it. Until it lands (or
+                // when disabled), the live list passes through unfiltered.
                 None,
                 move |list| {
                     let view = warren_relay_list_view::to_mullvad_relay_list(&list);
