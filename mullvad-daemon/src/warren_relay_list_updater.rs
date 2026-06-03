@@ -291,7 +291,7 @@ pub fn load_bootstrap(
         })
         .collect();
     // Newest first.
-    candidates.sort_by(|a, b| b.1.cmp(&a.1));
+    candidates.sort_by_key(|(_, mtime)| std::cmp::Reverse(*mtime));
 
     for (path, _) in &candidates {
         match std::fs::read_to_string(path) {
@@ -386,7 +386,7 @@ impl WarrenRelayListUpdater {
     /// immediate refresh — the caller should call
     /// [`WarrenRelayListUpdaterHandle::update`] once at boot for the
     /// on-startup fetch (mirrors upstream).
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     pub fn spawn(
         api_url: String,
         cache_dir: &Path,

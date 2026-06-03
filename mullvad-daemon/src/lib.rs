@@ -142,7 +142,7 @@ use std::{
     marker::PhantomData,
     path::PathBuf,
     pin::Pin,
-    sync::{Arc, Weak},
+    sync::{Arc, Mutex, Weak},
     time::Duration,
 };
 #[cfg(target_os = "android")]
@@ -830,13 +830,21 @@ pub struct Daemon {
     relay_selector: RelaySelector,
     relay_list_updater: RelayListUpdaterHandle,
     parameters_generator: tunnel::ParametersGenerator,
-    /// Mullvad-format view of the `WarrenRelayList` computed at boot.
-    /// Substituted for the upstream Mullvad list for synchronous
-    /// pulls — otherwise the GUI offers countries absent from the
-    /// WarrenRelayList and the Warren tunnel returns NoMatchingRelay
-    /// on connect -> kill-switch. Always populated (Warren is the only
-    /// mode); kept as `Option` for the type plumbing.
-    warren_relay_list_view: Option<RelayList>,
+    /// Live Mullvad-format view of the `WarrenRelayList`. Seeded at boot
+    /// from the bootstrap and **hot-swapped** by the background
+    /// `WarrenRelayListUpdater` on every verified fetch. Substituted for
+    /// the upstream Mullvad list on synchronous pulls
+    /// (`on_get_relay_locations`) and on every push
+    /// (`on_relay_list_update`) — otherwise the GUI offers countries
+    /// absent from the WarrenRelayList and the Warren tunnel returns
+    /// NoMatchingRelay on connect -> kill-switch.
+    ///
+    /// Shared `Arc<Mutex<…>>` so the updater task can refresh it without a
+    /// daemon restart and every reader (pull RPC, broadcast closure) sees
+    /// the current list, not a stale boot snapshot. Always populated
+    /// (Warren is the only mode); the inner `Option` is `None` only before
+    /// the first bootstrap view is computed.
+    warren_relay_list_view: Arc<Mutex<Option<RelayList>>>,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
     #[cfg(target_os = "windows")]
@@ -1218,13 +1226,17 @@ impl Daemon {
             None
         };
 
-        // Pre-computes the Mullvad-format view of the warren-relays
-        // so we can broadcast it to the GUI at boot AND clone it into
-        // the synchronous `on_relay_list_update` closure (which cannot
-        // re-lock `parameters_generator`).
-        let warren_relay_list_view: Option<RelayList> = warren_relay_selector
-            .as_ref()
-            .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list()));
+        // Live, shared Mullvad-format view of the warren-relays. Seeded
+        // from the bootstrap; the background `WarrenRelayListUpdater`
+        // hot-swaps it on every verified fetch. Shared via `Arc<Mutex<…>>`
+        // so the pull RPC (`on_get_relay_locations`) and the broadcast
+        // closure (`on_relay_list_update`) always read the *current* list
+        // rather than a stale boot snapshot.
+        let warren_relay_list_view: Arc<Mutex<Option<RelayList>>> = Arc::new(Mutex::new(
+            warren_relay_selector
+                .as_ref()
+                .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list())),
+        ));
 
         // M5.B.4: forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
@@ -1366,11 +1378,16 @@ impl Daemon {
         // feed the other internal consumers (API access methods,
         // bridges) that still depend on the Mullvad list, but the
         // payload exposed to the GUI comes solely from Warren.
-        let warren_view_for_closure = warren_relay_list_view.clone();
+        let warren_view_for_closure = Arc::clone(&warren_relay_list_view);
         let on_relay_list_update = move |relay_list: &RelayList| {
+            // Read the *current* Warren view (hot-swapped by the updater),
+            // never a boot snapshot — otherwise a late Mullvad relay-list
+            // refresh would clobber the GUI with the stale (often empty)
+            // boot list.
             let to_broadcast = warren_view_for_closure
-                .as_ref()
-                .cloned()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .clone()
                 .unwrap_or_else(|| relay_list.clone());
             relay_list_listener.notify_relay_list(to_broadcast);
             let (tx, _) = oneshot::channel();
@@ -1383,7 +1400,11 @@ impl Daemon {
         // for the first `RelayListUpdater` refresh which may arrive
         // minutes later): the GUI will display the Warren exits as
         // soon as it first connects to the management interface.
-        if let Some(view) = warren_relay_list_view.as_ref() {
+        if let Some(view) = warren_relay_list_view
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+        {
             log::info!(
                 "Broadcasting Warren relay list view ({} countries) to GUI at boot",
                 view.countries.len()
@@ -1393,6 +1414,13 @@ impl Daemon {
                 .notify_relay_list(view.clone());
         }
 
+        // Warren fork: `downloads_enabled = false`. The upstream Mullvad
+        // relay list is never consumed (Warren is the only tunnel mode; the
+        // GUI is fed the Warren view, the tunnel uses the Warren selector),
+        // and warren-api does not serve the Mullvad relay endpoint, so every
+        // download would 404. Keeping the updater spawned preserves the
+        // override-application path and the handle wiring; only the futile
+        // network fetch is disabled.
         let mut relay_list_updater = RelayListUpdater::spawn(
             relay_selector.clone(),
             api_handle.clone(),
@@ -1400,6 +1428,7 @@ impl Daemon {
             settings.relay_overrides.clone(),
             on_relay_list_update,
             initial_relay_list,
+            false,
         );
 
         // Notify the relay list updater when new relay IP overrides are available.
@@ -1424,7 +1453,10 @@ impl Daemon {
             app_upgrade_broadcast,
         );
 
-        // Attempt to download a fresh relay list
+        // Warren fork: no-op (Mullvad relay downloads are disabled, see
+        // `RelayListUpdater::spawn(.., false)`). Kept for parity with
+        // upstream boot sequencing; the Warren exit list is fetched by the
+        // dedicated `WarrenRelayListUpdater` spawned just below.
         relay_list_updater.update().await;
 
         // Warren fork: spawn the dynamic Warren exit-list updater. It
@@ -1436,6 +1468,11 @@ impl Daemon {
         {
             let warren_pg = parameters_generator.clone();
             let warren_notifier = management_interface.notifier().clone();
+            // Shared live view so the updater's hot-swap is visible to the
+            // synchronous pull RPC (`on_get_relay_locations`) too — not just
+            // the broadcast push. Without this the GUI's mount-time pull
+            // keeps returning the stale (empty in dev) boot view.
+            let warren_view_for_updater = Arc::clone(&warren_relay_list_view);
             // The handle is intentionally dropped: the task keeps running
             // via its internal keepalive sender (periodic refresh for the
             // daemon's whole lifetime).
@@ -1454,6 +1491,11 @@ impl Daemon {
                     let view = warren_relay_list_view::to_mullvad_relay_list(&list);
                     let pg = warren_pg.clone();
                     let notifier = warren_notifier.clone();
+                    // Hot-swap the shared view BEFORE notifying so a GUI
+                    // pull that races the push observes the fresh list.
+                    *warren_view_for_updater
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(view.clone());
                     tokio::spawn(async move {
                         pg.set_warren_relay_selector(
                             crate::warren_relay_selector::DaemonWarrenRelaySelector::new(list),
@@ -2707,8 +2749,9 @@ impl Daemon {
         // broadcast push side.
         let relays = self
             .warren_relay_list_view
-            .as_ref()
-            .cloned()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
             .unwrap_or_else(|| self.relay_selector.get_relays());
         Self::oneshot_send(tx, relays, "relay locations");
     }

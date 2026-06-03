@@ -43,3 +43,13 @@ If you are about to write a comment in any source/config file (`src/`, `Cargo.to
 ### Translating existing French comments
 
 When you encounter a French comment in code while making unrelated changes, translate it to English as part of the change (opportunistic cleanup). Do not introduce new French comments.
+
+## Comment content: no narration, no history
+
+A comment must explain the **why** behind a non-obvious choice — never narrate what the code does, nor record what it used to do. The following are banned:
+
+- **Step narration** — comments describing the current step of a task or refactor ("now we update the state", "first parse, then validate", "wire this up"). The code already shows this.
+- **Tombstones of old behavior** — comments documenting what the code did before ("previously this used X", "removed the old Y poller", "this replaces the legacy Z"). That belongs in git history, not in the source. *Exception:* keep one only when you judge it genuinely useful so a future agent does not forget a past mistake — e.g. "do NOT switch back to X here, it caused <known bug>". The point is the warning, not the nostalgia.
+- **Restating the next line** in prose.
+
+Write a comment **only** when it carries information the code cannot: a non-obvious invariant, the subtle reason for an unusual choice, or a warning that stops a future agent from reintroducing a known bug. Be very parsimonious — when in doubt, leave it out. When you encounter this kind of noise comment in code you are already editing, delete it.

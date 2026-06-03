@@ -29,8 +29,13 @@ pub fn parse_relays_from_file(
         (Ok((cached_relays, _)), _) => cached_relays,
         (_, Ok((bundled_relays, _))) => bundled_relays,
         (Err(cached_error), Err(bundled_error)) => {
-            log::error!("Failed to load bundled relays: {bundled_error}");
-            log::error!("Failed to load cached relays: {cached_error}");
+            // Warren fork: the upstream Mullvad relay list is never shipped
+            // or consumed (the tunnel uses `warren-relays.json`). Its
+            // absence is the normal steady state, not an error — log at
+            // debug so it does not alarm the operator. The caller maps the
+            // returned `Err` to `None` and proceeds.
+            log::debug!("Mullvad bundled relays unavailable (Warren tunnel active, unused): {bundled_error}");
+            log::debug!("Mullvad cached relays unavailable (Warren tunnel active, unused): {cached_error}");
             return Err(bundled_error);
         }
     };
