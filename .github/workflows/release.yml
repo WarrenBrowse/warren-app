@@ -62,6 +62,9 @@ jobs:
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+
       - name: Decode signing certificate
         if: env.WARREN_CSC_LINK_MACOS_B64 != ''
         run: |
@@ -106,6 +109,9 @@ jobs:
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
 
       - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
         run: |
@@ -157,6 +163,9 @@ jobs:
         with:
           rust-cache-targets: "true"
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
 
       - name: Install Trusted Signing client (resolve signtool dlib)
         if: env.AZURE_CLIENT_ID != ''

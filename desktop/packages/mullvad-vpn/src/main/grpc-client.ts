@@ -196,6 +196,13 @@ export class GrpcClient {
   }
 
   private connectivityChangeCallback(timeoutErr?: Error) {
+    // Once the client has been closed (e.g. while quitting) never reconnect.
+    // A daemon that drops its socket would otherwise trigger a reconnect here
+    // and resurrect the connection mid-shutdown, keeping the GUI alive.
+    if (this.isClosed) {
+      return;
+    }
+
     const channel = this.client.getChannel();
     const currentState = channel?.getConnectivityState(true);
     log.verbose(`GRPC Channel connectivity state changed to ${currentState}`);

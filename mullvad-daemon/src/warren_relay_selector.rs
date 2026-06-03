@@ -207,14 +207,15 @@ impl DaemonWarrenRelaySelector {
         }
         let raw = std::fs::read_to_string(&path)
             .map_err(|e| LoadError::Io(path.display().to_string(), e))?;
-        let list = verify_signed_relay_list(&raw, expected_server_pubkey_hex)
+        let verified = verify_signed_relay_list(&raw, expected_server_pubkey_hex)
             .map_err(|e| LoadError::Json(path.display().to_string(), e))?;
         log::info!(
-            "Loaded {} Warren relays from {} (signature verified)",
-            list.len(),
-            path.display()
+            "Loaded {} Warren relays from {} (signature verified, generation {})",
+            verified.relays.len(),
+            path.display(),
+            verified.generation
         );
-        Ok(Self::new(list))
+        Ok(Self::new(verified.relays))
     }
 
     /// Selects a relay for the `retry_attempt` attempt and
@@ -398,7 +399,9 @@ mod tests {
                 active: true,
             }],
             &server_key,
+            1,
             1_700_000_000,
+            1_700_086_400,
         );
         let json = serde_json::to_string(&signed).expect("serialize signed v3");
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write file");
@@ -437,7 +440,9 @@ mod tests {
                 active: true,
             }],
             &server_key,
+            1,
             1_700_000_000,
+            1_700_086_400,
         );
         // Tamper the port (= MITM re-routing to its relay) without
         // re-signing.

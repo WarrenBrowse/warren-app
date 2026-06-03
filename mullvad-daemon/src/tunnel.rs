@@ -409,6 +409,17 @@ impl ParametersGenerator {
         let _ = inner.nat_pmp_control_tx.send(cfg);
     }
 
+    /// Hot-swaps the Warren relay selector with a freshly fetched +
+    /// signature-verified list (from `warren_relay_list_updater`). The
+    /// next `produce_warren_tunnel_params` (i.e. the next tunnel connect
+    /// or reconnect) selects from the new list; an in-progress tunnel is
+    /// left untouched. Mirrors the runtime-mutation pattern of
+    /// [`Self::set_warren_nat_pmp`].
+    pub async fn set_warren_relay_selector(&self, selector: DaemonWarrenRelaySelector) {
+        let mut inner = self.0.lock().await;
+        inner.warren_relay_selector = Some(selector);
+    }
+
     /// Sets the user's DAITA v2 preference (M5.B.1). Mirrors Mullvad
     /// upstream's `wireguard.daita.enabled`. The next call to
     /// [`Self::produce_warren_tunnel_params`] forwards the flag onto

@@ -60,10 +60,11 @@ pub mod warren_relay_list_view;
 /// `WarrenRelayList` from `cache_dir`, selects the endpoint
 /// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
-/// Bootstrap fetcher for `<cache_dir>/warren-relays.json` from
-/// the public endpoint `GET {warren_api_url}/v1/exits`. Best-effort at
-/// boot — if it fails, the selector falls back on the existing cache (or empty list).
-pub mod warren_relays_fetch;
+/// Periodic + on-startup updater that refreshes the signed Warren exit
+/// list from `GET {warren_api_url}/v1/exits` (ETag conditional GET,
+/// signature-verified before caching, atomic cache write, hot-swap into
+/// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
+pub mod warren_relay_list_updater;
 /// Phase #4 — resolution of `WarrenApiConfig` (warren-api URL + signing key)
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
@@ -1132,46 +1133,48 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        // Warren fork: init the Warren tunnel artifacts at boot. We load
-        // the `WarrenRelayList` from `<cache_dir>/warren-relays.json`
-        // (empty-list fallback if absent) and the BIP39 `SigningKey` from
-        // the settings dir. The Warren tunnel is the only mode on this
-        // fork, so these artifacts are always populated.
-        let (warren_relay_selector, warren_signing_key) = {
-            // Best-effort refresh of the warren-relays.json cache from
-            // `GET {api_url}/v1/exits`. URL: env WARREN_API_URL > Settings >
-            // default warren_config::WARREN_API_URL. If the fetch fails
-            // (network down, 5xx, invalid JSON), we log a warn and fall back
-            // to the existing cache (verify on load_from_cache_dir side).
-            let relays_api_url = std::env::var("WARREN_API_URL")
+        // Warren fork: init the Warren tunnel artifacts at boot. The
+        // signed exit list is loaded synchronously from the **newest
+        // verifying source** among the on-disk cache (last fetched) and
+        // the build-time baked bootstrap in `resource_dir`, pinned to the
+        // production server pubkey (anti key-swap). This never blocks on
+        // the network; a background `WarrenRelayListUpdater` (spawned
+        // further down) refreshes the list on startup + periodically and
+        // hot-swaps it into the live selector. The BIP39 `SigningKey` is
+        // loaded from the settings dir. Warren is the only tunnel mode on
+        // this fork, so these artifacts are always populated.
+        let warren_api_url = std::env::var("WARREN_API_URL")
+            .ok()
+            .filter(|s| !s.is_empty())
+            .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
+            .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned());
+        // Pinned server pubkey: env override for dev/staging, else the
+        // baked production key. Pinning is mandatory in prod.
+        let warren_server_pubkey: Option<String> = Some(
+            std::env::var("WARREN_SERVER_PUBKEY")
                 .ok()
                 .filter(|s| !s.is_empty())
-                .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
-                .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned());
-            match warren_relays_fetch::fetch_and_cache_relays(&relays_api_url, &config.cache_dir)
-                .await
-            {
-                Ok(bytes) => log::info!(
-                    "Warren relays refreshed from {} ({} bytes)",
-                    relays_api_url,
-                    bytes
-                ),
-                Err(e) => log::warn!(
-                    "Failed to refresh warren-relays from {}: {} — falling back to cached file",
-                    relays_api_url,
-                    e
-                ),
-            }
-
-            let selector = warren_relay_selector::DaemonWarrenRelaySelector::load_from_cache_dir(
-                &config.cache_dir,
-            )
-            .unwrap_or_else(|err| {
-                log::warn!(
-                    "Failed to load warren-relays.json: {err}. Falling back to empty relay list."
-                );
-                warren_relay_selector::DaemonWarrenRelaySelector::new(Default::default())
-            });
+                .unwrap_or_else(|| warren_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
+        );
+        // F1: pinned OFFLINE admin key for the exit roster. Env override
+        // for dev/staging, else the baked production key.
+        let warren_roster_pin: Option<String> = Some(
+            std::env::var("WARREN_ADMIN_ROSTER_PUBKEY")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| warren_config::WARREN_ADMIN_ROSTER_PUBKEY_HEX.to_owned()),
+        );
+        let warren_bootstrap = warren_relay_list_updater::load_bootstrap(
+            &config.cache_dir,
+            &config.resource_dir,
+            warren_server_pubkey.as_deref(),
+        );
+        // Seed the updater's anti-rollback high-water mark from the
+        // bootstrap so a later fetch cannot roll back below the baked list.
+        let warren_bootstrap_generation = warren_bootstrap.generation;
+        let (warren_relay_selector, warren_signing_key) = {
+            let selector =
+                warren_relay_selector::DaemonWarrenRelaySelector::new(warren_bootstrap.relays);
             let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
             if signing_key.is_none() {
                 log::warn!("No Warren signing key available; tunnel attempts will fail");
@@ -1226,13 +1229,7 @@ impl Daemon {
         // M5.B.4: forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
         // exit-down report.
-        let warren_api_url_for_params: Option<String> = Some(
-            std::env::var("WARREN_API_URL")
-                .ok()
-                .filter(|s| !s.is_empty())
-                .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
-                .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned()),
-        );
+        let warren_api_url_for_params: Option<String> = Some(warren_api_url.clone());
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             relay_selector.clone(),
             settings.relay_settings.clone(),
@@ -1429,6 +1426,44 @@ impl Daemon {
 
         // Attempt to download a fresh relay list
         relay_list_updater.update().await;
+
+        // Warren fork: spawn the dynamic Warren exit-list updater. It
+        // refreshes `GET {warren_api_url}/v1/exits` on startup +
+        // periodically, verifies the signature against the pinned server
+        // pubkey before caching, writes the cache atomically, and
+        // hot-swaps the live selector + rebroadcasts the GUI view with no
+        // daemon restart. Mirrors the upstream `RelayListUpdater` above.
+        {
+            let warren_pg = parameters_generator.clone();
+            let warren_notifier = management_interface.notifier().clone();
+            // The handle is intentionally dropped: the task keeps running
+            // via its internal keepalive sender (periodic refresh for the
+            // daemon's whole lifetime).
+            let _warren_updater = warren_relay_list_updater::WarrenRelayListUpdater::spawn(
+                warren_api_url.clone(),
+                &config.cache_dir,
+                warren_server_pubkey.clone(),
+                None,
+                warren_bootstrap_generation,
+                warren_roster_pin.clone(),
+                // No roster bootstrap-from-disk yet: the startup
+                // refresh_roster() fetches it. Until it lands, the live
+                // list passes through unfiltered (logged).
+                None,
+                move |list| {
+                    let view = warren_relay_list_view::to_mullvad_relay_list(&list);
+                    let pg = warren_pg.clone();
+                    let notifier = warren_notifier.clone();
+                    tokio::spawn(async move {
+                        pg.set_warren_relay_selector(
+                            crate::warren_relay_selector::DaemonWarrenRelaySelector::new(list),
+                        )
+                        .await;
+                        notifier.notify_relay_list(view);
+                    });
+                },
+            );
+        }
 
         let location_handler = GeoIpHandler::new(
             api_runtime.rest_handle(

@@ -16,7 +16,6 @@ import {
   DaemonEvent,
   DeviceEvent,
   DisconnectSource,
-  ErrorStateCause,
   IRelayListWithEndpointData,
   ISettings,
   NatPmpStatus,
@@ -143,10 +142,6 @@ class ApplicationMain
   private relayList?: IRelayListWithEndpointData;
 
   private currentApiAccessMethod?: AccessMethodSetting;
-
-  // If set to true, the GUI should restart the daemon when it exits.
-  // This is to make sure that the daemon is granted full-disk access.
-  private needFullDiskAccess = false;
 
   public constructor() {
     this.daemonRpc = new DaemonRpc(
@@ -351,16 +346,14 @@ class ApplicationMain
     }
   };
 
-  private onBeforeQuit = async (event: Electron.Event) => {
-    if (this.needFullDiskAccess && this.daemonRpc.isConnected) {
-      try {
-        await this.daemonRpc.prepareRestart(true);
-      } catch (e) {
-        const error = e as Error;
-        log.error(`Failed to prepare daemon restart on quit: ${error.message}`);
-      }
-    }
-
+  private onBeforeQuit = (event: Electron.Event) => {
+    // NOTE: keep this handler synchronous. Restarting the daemon here (the old
+    // `await prepareRestart(true)` FDA branch) tore down the management socket
+    // mid-quit, which made the gRPC client reconnect to the relaunching daemon
+    // and left the GUI alive-but-disposed: an orphaned, unresponsive tray icon
+    // that never quit. The daemon restart belongs to the explicit FDA flow
+    // (renderer-triggered), not to every quit. Do NOT reintroduce async work or
+    // a daemon restart in before-quit.
     log.info('before-quit received');
     if (this.quitInitiated) {
       event.preventDefault();
@@ -403,6 +396,12 @@ class ApplicationMain
 
     log.info('Disposable logging outputs disposed');
     log.info('Quit preparations finished');
+
+    // Watchdog: if the normal Electron quit stalls (e.g. a daemon restart or a
+    // lingering gRPC reconnect keeps the event loop alive), force the process to
+    // exit so we never leave an orphaned, unresponsive tray icon behind. The
+    // timer is unref'd so it never keeps an otherwise-clean quit alive.
+    setTimeout(() => app.exit(0), 2000).unref();
   }
 
   private detectLocale(): string {
@@ -898,12 +897,6 @@ class ApplicationMain
 
   private handleNewTunnelState(newState: TunnelState) {
     this.tunnelState.handleNewTunnelState(newState);
-    if (
-      newState.state === 'error' &&
-      newState.details?.cause === ErrorStateCause.needFullDiskPermissions
-    ) {
-      this.needFullDiskAccess = true;
-    }
   }
 
   private setRelayList(relayList: IRelayListWithEndpointData) {
@@ -1016,10 +1009,8 @@ class ApplicationMain
     IpcMainEventChannel.splitTunneling.handleGetSupported(() => {
       return this.daemonRpc.splitTunnelIsSupported();
     });
-    IpcMainEventChannel.macOsSplitTunneling.handleNeedFullDiskPermissions(async () => {
-      const fullDiskState = await this.daemonRpc.needFullDiskPermissions();
-      this.needFullDiskAccess = fullDiskState;
-      return fullDiskState;
+    IpcMainEventChannel.macOsSplitTunneling.handleNeedFullDiskPermissions(() => {
+      return this.daemonRpc.needFullDiskPermissions();
     });
 
     IpcMainEventChannel.app.handleQuit((source: DisconnectSource) =>
