@@ -436,10 +436,17 @@ impl WarrenRelayListUpdater {
     }
 
     async fn run(mut self, mut events: mpsc::Receiver<()>) {
-        // On-startup: refresh the offline roster first (so the very first
-        // list it filters is enforced), then the live list. Skipped
-        // entirely when the optional roster feature is disabled (default).
+        // Roster enforcement is opt-in (off by default). When on, refresh
+        // the roster before the first list so the very first publish is
+        // filtered. A non-empty pin is required for real protection:
+        // without it, any self-signed roster is trusted (TOFU), which an
+        // operator enabling the feature almost certainly does not want.
         if self.roster_enabled {
+            if split_pins(self.roster_pin.as_deref()).is_empty() {
+                log::warn!(
+                    "WARREN_ROSTER_ENABLED is set but no WARREN_ADMIN_ROSTER_PUBKEY pin is configured: any self-signed roster will be trusted (TOFU). Set the offline-admin pin or disable the roster."
+                );
+            }
             self.refresh_roster().await;
         }
         // On-startup fetch: refresh immediately so a daemon that just

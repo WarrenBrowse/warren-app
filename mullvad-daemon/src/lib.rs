@@ -1164,14 +1164,10 @@ impl Daemon {
                 .filter(|s| !s.is_empty())
                 .unwrap_or_else(|| warren_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
         );
-        // Audit F1: the offline-admin exit **roster** is an OPTIONAL,
-        // OFF-BY-DEFAULT hardening. It is enabled only when
-        // `WARREN_ROSTER_ENABLED` is truthy; otherwise the client serves
-        // the online-signed `/v1/exits` list as-is and never fetches or
-        // enforces a roster. No production roster pubkey is baked into the
-        // binary: when an operator opts in, they supply the offline-admin
-        // pin via `WARREN_ADMIN_ROSTER_PUBKEY` (64-char hex). Empty pin
-        // while enabled = TOFU (logged), which operators should avoid.
+        // Audit F1 roster: opt-in (off by default), no pubkey baked in.
+        // When enabled, the operator supplies the offline-admin pin via
+        // `WARREN_ADMIN_ROSTER_PUBKEY`; an empty pin falls back to TOFU
+        // (the updater warns at startup).
         let warren_roster_enabled = matches!(
             std::env::var("WARREN_ROSTER_ENABLED")
                 .unwrap_or_default()
