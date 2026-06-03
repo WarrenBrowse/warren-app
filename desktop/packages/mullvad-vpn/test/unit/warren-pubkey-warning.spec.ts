@@ -147,9 +147,9 @@ describe('settings reducer - pubkeyMismatchPending slice', () => {
 describe('warren-pubkey-warning IPC payload contract', () => {
   it('Trust handler maps observed pubkey -> new pinned key', () => {
     const trustCalls: { exitIdHex: string; newPubkeyHex: string }[] = [];
-    const trustNewExitKey = async (input: { exitIdHex: string; newPubkeyHex: string }) => {
+    const trustNewExitKey = (input: { exitIdHex: string; newPubkeyHex: string }) => {
       trustCalls.push(input);
-      return { result: 'ok' as const };
+      return Promise.resolve({ result: 'ok' as const });
     };
     // Simulate the component callback. The newPubkeyHex MUST be the
     // observed key (not the pinned one) - that's the whole point of
@@ -165,8 +165,9 @@ describe('warren-pubkey-warning IPC payload contract', () => {
 
   it('Report handler forwards the full mismatch payload to warren-api', () => {
     const reportCalls: WarrenPubkeyMismatch[] = [];
-    const reportPubkeyMismatch = async (mismatch: WarrenPubkeyMismatch) => {
+    const reportPubkeyMismatch = (mismatch: WarrenPubkeyMismatch) => {
       reportCalls.push(mismatch);
+      return Promise.resolve();
     };
     void reportPubkeyMismatch(MISMATCH);
     expect(reportCalls).toHaveLength(1);
@@ -178,8 +179,9 @@ describe('warren-pubkey-warning IPC payload contract', () => {
 
   it('Dismiss handler takes no arguments', () => {
     let dismissCalls = 0;
-    const dismissPubkeyMismatch = async () => {
+    const dismissPubkeyMismatch = () => {
       dismissCalls += 1;
+      return Promise.resolve();
     };
     void dismissPubkeyMismatch();
     expect(dismissCalls).toBe(1);
