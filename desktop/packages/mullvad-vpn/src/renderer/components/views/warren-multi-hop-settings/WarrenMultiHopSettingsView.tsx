@@ -1,11 +1,7 @@
 import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
-import {
-  WarrenMultiHopCountryPickers,
-  WarrenMultiHopSetting,
-} from '../../../features/warren-multi-hop';
-import { useWarrenMultiHop } from '../../../features/warren-multi-hop/hooks';
+import { WarrenMultiHopSetting } from '../../../features/warren-multi-hop';
 import { Image, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
@@ -33,7 +29,6 @@ const StyledIllustration = styled(Image)({
 // actively want it.
 export function WarrenMultiHopSettingsView() {
   const { pop } = useHistory();
-  const { warrenMultiHop } = useWarrenMultiHop();
 
   return (
     <View backgroundColor="darkBlue">
@@ -62,24 +57,6 @@ export function WarrenMultiHopSettingsView() {
                     </Text>
                   </FlexColumn>
                   <WarrenMultiHopSetting />
-                  {warrenMultiHop.enabled ? (
-                    <FlexColumn gap="small">
-                      <Text variant="labelTiny" color="whiteAlpha60">
-                        {messages.pgettext(
-                          'warren-multi-hop-view',
-                          'Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick.',
-                        )}
-                      </Text>
-                      <WarrenMultiHopCountryPickers />
-                    </FlexColumn>
-                  ) : (
-                    <Text variant="labelTiny" color="whiteAlpha60">
-                      {messages.pgettext(
-                        'warren-multi-hop-view',
-                        'Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode.',
-                      )}
-                    </Text>
-                  )}
                 </FlexColumn>
               </View.Container>
             </View.Content>
