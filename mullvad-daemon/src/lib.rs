@@ -5,6 +5,9 @@ mod access_method;
 pub mod account_history;
 mod android_dns;
 mod api;
+// Kept for upstream-rebase cleanliness but not spawned: the Warren backend has
+// no `app/v1/api-addrs` endpoint (see the fetcher call site in `start_daemon`).
+#[allow(dead_code)]
 mod api_address_updater;
 #[cfg(not(target_os = "android"))]
 mod cleanup;
@@ -1017,13 +1020,12 @@ impl Daemon {
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
-        // Continually update the API IP
-        tokio::spawn(api_address_updater::run_api_address_fetcher(
-            api_runtime.address_cache().clone(),
-            api_handle.clone(),
-            #[cfg(feature = "api-override")]
-            config.endpoint.clone(),
-        ));
+        // Warren uses a single fixed API host, so the upstream Mullvad
+        // API-IP rotation endpoint (`GET app/v1/api-addrs`) does not exist
+        // on the Warren backend and always answers 404. Spawning the fetcher
+        // would just log an error every 15 minutes without ever updating the
+        // cache, so we deliberately do NOT start it. The address cache stays
+        // valid via its default/stored address (read in `api.rs`).
 
         let access_method_handle = access_mode_handler.clone();
         settings.register_change_listener(move |settings| {
