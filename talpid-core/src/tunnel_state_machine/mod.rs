@@ -552,6 +552,21 @@ impl TunnelStateMachine {
 
         #[cfg(target_os = "macos")]
         runtime.block_on(self.shared_values.split_tunnel.shutdown());
+        // Warren guarantee (macOS DNS): restore the system DNS before stopping
+        // our local resolver below. While connecting or blocked, the system DNS
+        // points at our 127/8 filtering resolver; stopping that resolver without
+        // first restoring the system DNS leaves name resolution aimed at a dead
+        // address, so "daemon not running" would mean "no DNS". Worse, a
+        // co-installed Mullvad daemon then captures the dead 127/8 address as its
+        // pre-VPN DNS and re-applies it on its own disconnect. DisconnectedState
+        // already resets DNS, but doing it here too covers graceful-shutdown
+        // paths that finish without re-entering it. A hard crash (SIGKILL) never
+        // reaches this path; the startup self-heal in talpid-dns
+        // (remove_stale_loopback_dns) repairs that on the next launch.
+        #[cfg(target_os = "macos")]
+        if let Err(error) = self.shared_values.dns_monitor.reset() {
+            log::error!("Failed to reset DNS during shutdown: {error}");
+        }
         #[cfg(target_os = "macos")]
         runtime.block_on(self.shared_values.filtering_resolver.stop());
         runtime.block_on(self.shared_values.route_manager.stop());
