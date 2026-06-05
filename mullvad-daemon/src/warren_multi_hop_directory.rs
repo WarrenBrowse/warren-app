@@ -491,7 +491,7 @@ mod tests {
     use ed25519_dalek::{Signer, SigningKey};
     use warren_multihop::{
         ExitDescriptorSigned, ExitId, RelayDescriptorSigned, exit_descriptor_signing_payload,
-        relay_descriptor_signing_payload,
+        relay_descriptor_signing_payload, sign_node_attestation,
     };
     use warren_relay_selector::NodeEntry;
 
@@ -532,6 +532,9 @@ mod tests {
             city: "City".to_owned(),
             asn,
             weight,
+            attestation_hex: hex::encode(sign_node_attestation(
+                op, &relay_id, &relay_ed, asn, country,
+            )),
         }
     }
 
