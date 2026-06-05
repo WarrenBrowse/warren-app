@@ -89,12 +89,14 @@ struct InnerParametersGenerator {
     /// (Warren is the only mode); kept as `Option` for the type plumbing.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
     warren_signing_key: Option<SigningKey>,
-    /// Multi-hop config loaded at boot from
-    /// `<settings_dir>/warren-multihop.json`. `None` when the user has
-    /// not opted into multi-hop (no file or `WARREN_MULTI_HOP` env var
-    /// unset). Cloned into every `produce_warren_tunnel_params` call so
-    /// the multi-hop dispatcher in `talpid-warren-tunnel` can wire up
-    /// the `MultiHopSupervisor`.
+    /// Multi-hop config. `Some` only when the `warren_multi_hop.enabled`
+    /// UI toggle is on AND a valid signed
+    /// `<settings_dir>/warren-multihop.json` is present; `None`
+    /// otherwise (single-hop). Seeded at boot and hot-swapped at
+    /// runtime by [`ParametersGenerator::set_warren_multi_hop`] when
+    /// the user flips the toggle. Cloned into every
+    /// `produce_warren_tunnel_params` call so the multi-hop dispatcher
+    /// in `talpid-warren-tunnel` can wire up the `MultiHopSupervisor`.
     warren_multi_hop: Option<MultiHopConfig>,
     /// Live tunnel status cache shared with the gRPC management
     /// interface. Cloned into the reconnect observer passed to the
@@ -432,6 +434,22 @@ impl ParametersGenerator {
     /// daemon boot routine (initial snapshot of the persisted value).
     pub async fn set_warren_enable_daita(&self, enabled: bool) {
         self.0.lock().await.warren_enable_daita = enabled;
+    }
+
+    /// Sets the user's Warren multi-hop config (M4.H.C). `Some(cfg)`
+    /// turns the next tunnel (re)connect into a two-relay HPKE
+    /// multi-hop path; `None` keeps it single-hop. The signed
+    /// descriptor pair in `cfg` is loaded from
+    /// `<settings_dir>/warren-multihop.json` by the daemon's settings
+    /// handler when the UI toggle flips on. In-flight tunnels keep
+    /// their current mode until the daemon reconnects.
+    ///
+    /// Wired from `on_set_warren_multi_hop_settings` (live toggle) and
+    /// from the daemon boot routine (initial snapshot of the persisted
+    /// value). Mirrors the runtime-mutation pattern of
+    /// [`Self::set_warren_enable_daita`].
+    pub async fn set_warren_multi_hop(&self, cfg: Option<MultiHopConfig>) {
+        self.0.lock().await.warren_multi_hop = cfg;
     }
 
     /// Returns the current NAT-PMP preference, primarily for the

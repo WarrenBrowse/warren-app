@@ -47,6 +47,11 @@ pub mod warren_account_mode;
 /// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
 /// against the `operational_pubkey` carried in the file.
 pub mod warren_multi_hop;
+/// Dynamic multi-hop directory client: fetch + verify the signed
+/// directory from warren-api, select a 2-distinct-node circuit, assemble
+/// a `MultiHopConfig`, and push it to the parameters generator. Replaces
+/// the manual `warren-multihop.json` as the production source.
+pub mod warren_multi_hop_directory;
 /// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
 /// (POC switch — no UI/CLI toggle for now, M4.H.C scope).
 pub mod warren_multi_hop_mode;
@@ -1199,25 +1204,31 @@ impl Daemon {
             (Some(selector), signing_key)
         };
 
-        // Warren multi-hop opt-in: env var `WARREN_MULTI_HOP=1` plus a
-        // valid `<settings_dir>/warren-multihop.json` minted by ops via
-        // `wapi admin-mint-*`. Either missing surfaces a deliberate
-        // single-hop config; PKI failure on a present file surfaces a
-        // loud warn but does not abort the boot.
-        let warren_multi_hop = if warren_multi_hop_mode::is_enabled() {
+        // Warren multi-hop opt-in: driven by the `warren_multi_hop.enabled`
+        // UI toggle (persisted in settings.json). The `WARREN_MULTI_HOP`
+        // env var is kept as a bench/power-user override so existing
+        // provisioning scripts keep working. When either is on, the
+        // daemon loads the signed descriptor pair from
+        // `<settings_dir>/warren-multihop.json` (minted by ops via
+        // `wapi admin-mint-*`). A missing file surfaces a deliberate
+        // single-hop fallback; a present-but-invalid file surfaces a
+        // loud warn but does not abort the boot. Subsequent toggles
+        // flow through `on_set_warren_multi_hop_settings`, which reloads
+        // the config and reconnects without a daemon restart.
+        let warren_multi_hop_opt_in =
+            settings.warren_multi_hop.enabled || warren_multi_hop_mode::is_enabled();
+        let warren_multi_hop = if warren_multi_hop_opt_in {
             match warren_multi_hop::load_from_settings_dir(&config.settings_dir) {
                 Ok(Some(cfg)) => {
                     log::info!(
-                        "Warren multi-hop enabled (env {} + {} loaded + PKI verified)",
-                        warren_multi_hop_mode::ENV_VAR_NAME,
+                        "Warren multi-hop enabled ({} loaded + PKI verified)",
                         warren_multi_hop::MULTI_HOP_FILENAME
                     );
                     Some(cfg)
                 }
                 Ok(None) => {
                     log::warn!(
-                        "Warren multi-hop env {} is set but {} is missing in {}; falling back to single-hop",
-                        warren_multi_hop_mode::ENV_VAR_NAME,
+                        "Warren multi-hop is on but {} is missing in {}; falling back to single-hop",
                         warren_multi_hop::MULTI_HOP_FILENAME,
                         config.settings_dir.display()
                     );
@@ -1516,6 +1527,50 @@ impl Daemon {
                     });
                 },
             );
+        }
+
+        // M4.H dynamic multi-hop: a background updater fetches the signed
+        // directory from warren-api, verifies the full trust chain
+        // (server envelope -> pinned root cert -> operational descriptors),
+        // selects a 2-distinct-node circuit honoring the user's country
+        // hints, and pushes the assembled `MultiHopConfig` to the
+        // parameters generator, requesting a reconnect when the active
+        // circuit changes. The directory is signed by the same server key
+        // as the relay list, so the relay-list server pin is reused; the
+        // root pin comes from `warren_multi_hop_directory::resolve_root_pins`.
+        {
+            let (warren_mh_tx, warren_mh_rx) =
+                tokio::sync::watch::channel(settings.warren_multi_hop.clone());
+            // Push the multi-hop setting to the updater on every change so
+            // a toggle flip (or country-hint edit) refreshes the circuit
+            // without a daemon restart. Guarded so unrelated settings
+            // changes do not wake the updater.
+            settings.register_change_listener(move |s| {
+                warren_mh_tx.send_if_modified(|cur| {
+                    if *cur != s.warren_multi_hop {
+                        *cur = s.warren_multi_hop.clone();
+                        true
+                    } else {
+                        false
+                    }
+                });
+            });
+            let reconnect_event_tx: DaemonEventSender<DaemonCommand> =
+                internal_event_tx.to_specialized_sender();
+            let request_reconnect: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+                let tx = reconnect_event_tx.clone();
+                let (otx, _orx) = oneshot::channel();
+                let _ = tx.send(DaemonCommand::Reconnect(otx));
+            });
+            warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
+                api_url: warren_api_url.clone(),
+                server_pins: warren_server_pubkey.clone().into_iter().collect(),
+                root_mode: warren_multi_hop_directory::root_pin_mode(),
+                settings_rx: warren_mh_rx,
+                parameters_generator: parameters_generator.clone(),
+                request_reconnect,
+                settings_dir: config.settings_dir.clone(),
+            });
         }
 
         let location_handler = GeoIpHandler::new(
@@ -3358,10 +3413,14 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_warren_api_url response");
     }
 
-    /// Persiste `Settings::warren_multi_hop`. Restart requis pour
-    /// appliquer (read at boot only) - the multi-hop
-    /// supervisor is wired in `start_multi_hop` once at boot via the
-    /// env-var + settings-file path.
+    /// Persists `Settings::warren_multi_hop`. Application is **live** but
+    /// handled out-of-band: the boot-registered settings change listener
+    /// forwards the new value to the background
+    /// [`warren_multi_hop_directory`] updater, which re-fetches the signed
+    /// directory, re-selects a circuit (or clears it when disabled), pushes
+    /// the result onto the parameters generator and requests a reconnect.
+    /// This handler therefore only persists — it must NOT also reconnect,
+    /// or the tunnel would bounce twice per toggle.
     async fn on_set_warren_multi_hop_settings(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -3382,7 +3441,7 @@ impl Daemon {
         if let Err(ref e) = result {
             log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
         } else {
-            log::info!("Warren multi-hop persisted: {display_value} ; restart required for effect");
+            log::info!("Warren multi-hop persisted: {display_value} (applied live by the directory updater)");
         }
         Self::oneshot_send(tx, result, "set_warren_multi_hop_settings response");
     }
