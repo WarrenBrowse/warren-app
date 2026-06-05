@@ -244,10 +244,30 @@ composant entier.
 - ✅ **M2** : `assemble` défensif (`.get()` → `Option`, plus de panic d'index).
 - ✅ Vérif d'enveloppe : le préimage serveur couvre `operational_pubkey_hex` + `operational_cert_hex` + `nodes` + `generation` + `expires_at` → pas de swap de descripteur/cert sans casser la chaîne (confirmé par l'audit).
 
-**Durcissements restants (documentés, non bloquants pour le plan de contrôle) :**
-- **H2 / M1 (diversité géo cryptographique)** : `country`/`asn` ne sont couverts que par l'enveloppe serveur, pas par la signature opérationnelle → la diversité pays/AS est *server-trusted*, pas cryptographique. La confidentialité/unlinkabilité (HPKE) tient cryptographiquement ; seule la garantie de *diversité* dépend de l'API. Fix propre = format descripteur **/v2** signant `country`(+`asn`) + ASN réel minté offline (actuellement `asn:0` → règle AS inerte). À planifier comme évolution /v2.
-- **M4** : `exit_ed25519_pubkey` non couvert par la signature /v1 (RPK pinné au handshake TLS ; HPKE protège le payload même si TLS termine ailleurs). Idem → /v2.
-- **L1** : `wapi` lit la géo du fleet via l'API admin en ligne ; idéalement manifeste offline / diff de confirmation opérateur.
+**Durcissement /v2 — ✅ FAIT (H2 + M4) :**
+- Annuaire **v2** (`MULTIHOP_DIRECTORY_VERSION = 2`) : chaque `NodeEntry`
+  porte une **attestation opérationnelle** (`attestation_hex`,
+  `warren_multihop::{sign,verify}_node_attestation`, contexte
+  `WARREN_PKI_OPERATIONAL_NODE_V1`) liant `node_id || exit_ed25519 ||
+  asn || country` sous la clé **opérationnelle hors-ligne**.
+  → **H2** : la diversité pays/AS devient **cryptographique** (un
+  warren-api compromis ne peut plus relabeller la géo — test
+  `node_with_relabeled_geo_is_dropped`). → **M4** : l'identité Ed25519
+  RPC de l'exit est signée (plus de redirection du pin TLS de sortie).
+  Vérifié par `node_fully_vouched` (relay + exit + attestation) ; un
+  nœud non attesté est droppé. Minté par `wapi`.
+
+**Durcissements restants (non bloquants) :**
+- **M1 (ASN réel)** : `wapi` minte `asn:0` (attesté mais inconnu) → la
+  règle AS reste relâchée tant que l'enrichissement GeoIP n'est pas
+  ajouté. Le pays (dimension de diversité obligatoire) est, lui,
+  pleinement attesté.
+- **L1** : `wapi` lit la géo du fleet via l'API admin en ligne ; idéal =
+  manifeste offline / diff de confirmation opérateur (le pays signé n'est
+  plus modifiable post-mint, mais l'opérateur signe ce que l'API lui
+  présente).
+- **Refresh périodique** de l'annuaire côté relai dual-rôle (fetch au
+  boot pour l'instant).
 
 ## 7bis. C7 — forwarder dual-rôle (data-plane) : ✅ IMPLÉMENTÉ
 
