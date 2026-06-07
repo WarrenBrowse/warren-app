@@ -1183,6 +1183,10 @@ msgid "In"
 msgstr "Entrante"
 
 msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 sauts)"
+
+msgctxt "connection-info"
 msgid "Out"
 msgstr "Sortante"
 

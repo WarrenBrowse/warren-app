@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { strings } from '../../../../../../../../shared/constants';
 import {
   EndpointObfuscationType,
+  isMultihopTunnelState,
   ITunnelEndpoint,
   parseSocketAddress,
   RelayProtocol,
@@ -39,6 +40,11 @@ const StyledConnectionDetailsContainer = styled.div({
 const StyledIpTable = styled.div({
   display: 'grid',
   gridTemplateColumns: 'minmax(48px, min-content) auto',
+  // Keep a gap between the label column and the value column. Without it
+  // a label as wide as the column (e.g. the localized "Reconnects") leaves
+  // its value glued to it ("Reconnexions0"), unlike shorter labels which
+  // get incidental space from the shared min-content column width.
+  columnGap: '8px',
 });
 
 const StyledIpLabelContainer = styled.div({
@@ -74,9 +80,16 @@ export function ConnectionDetails() {
   }, [reduxConnection, tunnelState.state]);
 
   const entry = getEntryPoint(tunnelState);
+  const exit = getExitPoint(tunnelState);
 
   const showDetails = tunnelState.state === 'connected' || tunnelState.state === 'connecting';
   const hasEntry = showDetails && entry !== undefined;
+  const hasExit = showDetails && exit !== undefined;
+  // Multi-hop = the relay node and the exit node are DIFFERENT nodes
+  // (host/IP differs). A 1-hop circuit reuses the same node with
+  // different ports, so the port must be ignored — see
+  // `isMultihopTunnelState`.
+  const multihop = isMultihopTunnelState(tunnelState);
 
   return (
     <StyledConnectionDetailsContainer>
@@ -86,6 +99,11 @@ export function ConnectionDetails() {
       <StyledConnectionDetailsLabel data-testid="tunnel-protocol">
         {showDetails && tunnelState.details !== undefined && strings.quic}
       </StyledConnectionDetailsLabel>
+      {multihop && (
+        <StyledConnectionDetailsLabel data-testid="multihop-indicator">
+          {messages.pgettext('connection-info', 'Multihop (2 hops)')}
+        </StyledConnectionDetailsLabel>
+      )}
       <StyledIpTable>
         <StyledConnectionDetailsTitle>
           {messages.pgettext('connection-info', 'In')}
@@ -97,6 +115,11 @@ export function ConnectionDetails() {
           {messages.pgettext('connection-info', 'Out')}
         </StyledConnectionDetailsTitle>
         <StyledIpLabelContainer>
+          {hasExit && (
+            <StyledConnectionDetailsLabel data-testid="out-endpoint">
+              {`${exit.ip}:${exit.port} ${exit.protocol.toUpperCase()}`}
+            </StyledConnectionDetailsLabel>
+          )}
           {connection.ipv4 && (
             <StyledConnectionDetailsLabel data-testid="out-ip">
               {connection.ipv4}
@@ -134,14 +157,18 @@ function WarrenStatusRows() {
       <StyledConnectionDetailsLabel data-testid="warren-reconnect-count">
         {reconnectCount}
       </StyledConnectionDetailsLabel>
-      <StyledConnectionDetailsTitle>
-        {messages.pgettext('warren-status-view', 'Last')}
-      </StyledConnectionDetailsTitle>
-      <StyledConnectionDetailsLabel data-testid="warren-last-reconnect-age">
-        {lastReconnectAgeMs === null
-          ? messages.pgettext('warren-status-view', 'never')
-          : formatAge(lastReconnectAgeMs)}
-      </StyledConnectionDetailsLabel>
+      {reconnectCount > 0 && (
+        <>
+          <StyledConnectionDetailsTitle>
+            {messages.pgettext('warren-status-view', 'Last')}
+          </StyledConnectionDetailsTitle>
+          <StyledConnectionDetailsLabel data-testid="warren-last-reconnect-age">
+            {lastReconnectAgeMs === null
+              ? messages.pgettext('warren-status-view', 'never')
+              : formatAge(lastReconnectAgeMs)}
+          </StyledConnectionDetailsLabel>
+        </>
+      )}
       <StyledConnectionDetailsTitle>
         {messages.pgettext('warren-status-view', 'Obfuscation')}
       </StyledConnectionDetailsTitle>
@@ -192,6 +219,22 @@ function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
   } else {
     return inAddress;
   }
+}
+
+// The "Out" (Sortante) endpoint is the exit the user traffic leaves
+// through. The daemon always publishes it as the main `endpoint.address`
+// (for multi-hop it is the exit descriptor's endpoint; for single-hop the
+// only hop). The relay/entry endpoint, when present, lives in
+// `entryEndpoint` instead. Mirrors the CLI's `<exit> via <entry>` line.
+function getExitPoint(tunnelState: TunnelState): Endpoint | undefined {
+  if (
+    (tunnelState.state !== 'connected' && tunnelState.state !== 'connecting') ||
+    tunnelState.details === undefined
+  ) {
+    return undefined;
+  }
+
+  return tunnelEndpointToRelayInAddress(tunnelState.details.endpoint);
 }
 
 function tunnelEndpointToRelayInAddress(tunnelEndpoint: ITunnelEndpoint): Endpoint {

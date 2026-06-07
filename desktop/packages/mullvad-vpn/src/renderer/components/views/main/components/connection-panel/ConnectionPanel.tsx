@@ -16,6 +16,7 @@ import {
   FeatureIndicators,
   Hostname,
   Location,
+  MultihopIndicator,
   SelectLocationButtons,
 } from './components';
 
@@ -116,6 +117,7 @@ export function ConnectionPanel() {
         </StyledConnectionStatusContainer>
         <StyledCustomScrollbars>
           <FeatureIndicators expanded={expanded} expandIsland={expand} />
+          <MultihopIndicator />
           <PortForwardingIndicator />
           <StyledAccordion expanded={expanded}>
             <ConnectionDetails />

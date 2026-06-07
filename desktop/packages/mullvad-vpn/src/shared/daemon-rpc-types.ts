@@ -800,6 +800,53 @@ export function parseSocketAddress(socketAddrStr: string): ISocketAddress {
   return socketAddress;
 }
 
+// Extract the host portion of a `host:port` socket-address string,
+// dropping the trailing `:port`. IPv6-safe: a bracketed address such as
+// `[2a01:...]:7001` keeps everything up to and including the closing `]`
+// (the colons inside the brackets are part of the address, not the port
+// separator). A bare IPv4 like `204.168.207.130:443` splits on the last
+// colon. Used to decide whether two endpoints sit on the same node.
+export function socketAddressHost(socketAddrStr: string): string {
+  const trimmed = socketAddrStr.trim();
+  if (trimmed.startsWith('[')) {
+    const closing = trimmed.indexOf(']');
+    if (closing !== -1) {
+      return trimmed.slice(0, closing + 1);
+    }
+    return trimmed;
+  }
+  const lastColon = trimmed.lastIndexOf(':');
+  if (lastColon === -1) {
+    return trimmed;
+  }
+  return trimmed.slice(0, lastColon);
+}
+
+// A Warren circuit is multi-hop (2 hops) only when the entry/relay node
+// and the exit node are DIFFERENT physical nodes, i.e. their host/IP
+// differs. A 1-hop circuit reuses the same node as both relay and exit
+// with different ports (entry `<ip>:7001`, exit `<ip>:443`), so the port
+// MUST be ignored — comparing the full `ip:port` would falsely flag a
+// 1-hop circuit as multi-hop. Hosts are compared case-insensitively.
+export function isMultihopTunnelEndpoint(endpoint: ITunnelEndpoint): boolean {
+  if (!endpoint.entryEndpoint) {
+    return false;
+  }
+  const entryHost = socketAddressHost(endpoint.entryEndpoint.address).toLowerCase();
+  const exitHost = socketAddressHost(endpoint.address).toLowerCase();
+  return entryHost !== exitHost;
+}
+
+export function isMultihopTunnelState(tunnelState: TunnelState): boolean {
+  if (
+    (tunnelState.state !== 'connected' && tunnelState.state !== 'connecting') ||
+    tunnelState.details === undefined
+  ) {
+    return false;
+  }
+  return isMultihopTunnelEndpoint(tunnelState.details.endpoint);
+}
+
 export function compareRelayLocationCount(lhs: RelayLocation, rhs: RelayLocation): boolean {
   if (
     ('count' in lhs || 'count' in rhs) &&

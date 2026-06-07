@@ -6,4 +6,5 @@ export * from './disconnect-button';
 export * from './feature-indicators';
 export * from './hostname';
 export * from './location';
+export * from './multihop-indicator';
 export * from './select-location-buttons';

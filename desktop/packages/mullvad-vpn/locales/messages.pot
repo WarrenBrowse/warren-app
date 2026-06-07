@@ -1185,6 +1185,10 @@ msgid "In"
 msgstr ""
 
 msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr ""
+
+msgctxt "connection-info"
 msgid "Out"
 msgstr ""
 
