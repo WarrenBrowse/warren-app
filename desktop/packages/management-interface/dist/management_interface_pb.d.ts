@@ -1812,8 +1812,6 @@ export class Settings extends jspb.Message {
     setRecents(value?: Recents): Settings;
     getUpdateDefaultLocation(): boolean;
     setUpdateDefaultLocation(value: boolean): Settings;
-    getWarrenMode(): boolean;
-    setWarrenMode(value: boolean): Settings;
     getWarrenLocalAccount(): boolean;
     setWarrenLocalAccount(value: boolean): Settings;
     getWarrenApiUrl(): string;
@@ -1854,7 +1852,6 @@ export namespace Settings {
         relayOverridesList: Array<RelayOverride.AsObject>,
         recents?: Recents.AsObject,
         updateDefaultLocation: boolean,
-        warrenMode: boolean,
         warrenLocalAccount: boolean,
         warrenApiUrl: string,
         warrenMultiHop?: WarrenMultiHopSettings.AsObject,
@@ -2081,6 +2078,10 @@ export class NatPmpSettings extends jspb.Message {
     setEnabled(value: boolean): NatPmpSettings;
     getLifetimeSecs(): number;
     setLifetimeSecs(value: number): NatPmpSettings;
+    clearRulesList(): void;
+    getRulesList(): Array<NatPmpSettings.Rule>;
+    setRulesList(value: Array<NatPmpSettings.Rule>): NatPmpSettings;
+    addRules(value?: NatPmpSettings.Rule, index?: number): NatPmpSettings.Rule;
     getProtocol(): NatPmpSettings.Proto;
     setProtocol(value: NatPmpSettings.Proto): NatPmpSettings;
     getSuggestedExternalPort(): number;
@@ -2102,10 +2103,39 @@ export namespace NatPmpSettings {
     export type AsObject = {
         enabled: boolean,
         lifetimeSecs: number,
+        rulesList: Array<NatPmpSettings.Rule.AsObject>,
         protocol: NatPmpSettings.Proto,
         suggestedExternalPort: number,
         internalPort: number,
     }
+
+
+    export class Rule extends jspb.Message { 
+        getProtocol(): NatPmpSettings.Proto;
+        setProtocol(value: NatPmpSettings.Proto): Rule;
+        getSuggestedExternalPort(): number;
+        setSuggestedExternalPort(value: number): Rule;
+        getInternalPort(): number;
+        setInternalPort(value: number): Rule;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): Rule.AsObject;
+        static toObject(includeInstance: boolean, msg: Rule): Rule.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: Rule, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): Rule;
+        static deserializeBinaryFromReader(message: Rule, reader: jspb.BinaryReader): Rule;
+    }
+
+    export namespace Rule {
+        export type AsObject = {
+            protocol: NatPmpSettings.Proto,
+            suggestedExternalPort: number,
+            internalPort: number,
+        }
+    }
+
 
     export enum Proto {
     UDP = 0,
@@ -2152,6 +2182,10 @@ export class NatPmpStatus extends jspb.Message {
     clearWindowResetSecs(): void;
     getWindowResetSecs(): number | undefined;
     setWindowResetSecs(value: number): NatPmpStatus;
+    clearMappingsList(): void;
+    getMappingsList(): Array<NatPmpStatus.Mapping>;
+    setMappingsList(value: Array<NatPmpStatus.Mapping>): NatPmpStatus;
+    addMappings(value?: NatPmpStatus.Mapping, index?: number): NatPmpStatus.Mapping;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
@@ -2173,7 +2207,78 @@ export namespace NatPmpStatus {
         retryAfterSecs?: number,
         attemptsRemaining?: number,
         windowResetSecs?: number,
+        mappingsList: Array<NatPmpStatus.Mapping.AsObject>,
     }
+
+
+    export class Mapping extends jspb.Message { 
+        getInternalPort(): number;
+        setInternalPort(value: number): Mapping;
+        getProtocol(): NatPmpSettings.Proto;
+        setProtocol(value: NatPmpSettings.Proto): Mapping;
+        getState(): NatPmpStatus.State;
+        setState(value: NatPmpStatus.State): Mapping;
+
+        hasExternalPort(): boolean;
+        clearExternalPort(): void;
+        getExternalPort(): number | undefined;
+        setExternalPort(value: number): Mapping;
+
+        hasLifetimeGrantedSecs(): boolean;
+        clearLifetimeGrantedSecs(): void;
+        getLifetimeGrantedSecs(): number | undefined;
+        setLifetimeGrantedSecs(value: number): Mapping;
+
+        hasErrorMessage(): boolean;
+        clearErrorMessage(): void;
+        getErrorMessage(): string | undefined;
+        setErrorMessage(value: string): Mapping;
+
+        hasErrorReason(): boolean;
+        clearErrorReason(): void;
+        getErrorReason(): NatPmpStatus.ErrorReason | undefined;
+        setErrorReason(value: NatPmpStatus.ErrorReason): Mapping;
+
+        hasRetryAfterSecs(): boolean;
+        clearRetryAfterSecs(): void;
+        getRetryAfterSecs(): number | undefined;
+        setRetryAfterSecs(value: number): Mapping;
+
+        hasAttemptsRemaining(): boolean;
+        clearAttemptsRemaining(): void;
+        getAttemptsRemaining(): number | undefined;
+        setAttemptsRemaining(value: number): Mapping;
+
+        hasWindowResetSecs(): boolean;
+        clearWindowResetSecs(): void;
+        getWindowResetSecs(): number | undefined;
+        setWindowResetSecs(value: number): Mapping;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): Mapping.AsObject;
+        static toObject(includeInstance: boolean, msg: Mapping): Mapping.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: Mapping, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): Mapping;
+        static deserializeBinaryFromReader(message: Mapping, reader: jspb.BinaryReader): Mapping;
+    }
+
+    export namespace Mapping {
+        export type AsObject = {
+            internalPort: number,
+            protocol: NatPmpSettings.Proto,
+            state: NatPmpStatus.State,
+            externalPort?: number,
+            lifetimeGrantedSecs?: number,
+            errorMessage?: string,
+            errorReason?: NatPmpStatus.ErrorReason,
+            retryAfterSecs?: number,
+            attemptsRemaining?: number,
+            windowResetSecs?: number,
+        }
+    }
+
 
     export enum State {
     DISABLED = 0,

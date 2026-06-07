@@ -177,14 +177,15 @@ pub struct WarrenTunnelParameters {
     /// (parameters live in one struct).
     pub nat_pmp: Option<NatPmpConfig>,
 
-    /// Observer invoked for every NAT-PMP event emitted by the daemon
-    /// owned `NatPmpManager` (Mapped, Renewed, Failed, Cancelled).
-    /// `None` short-circuits the manager spawn entirely (no observer =
-    /// nowhere to forward events = the manager would be useless). The
-    /// daemon wires this to a closure that pushes events into the
-    /// `WarrenStatusCache`, which in turn drives the
-    /// `NatPmpStatusUpdates` gRPC stream the Electron UI subscribes to.
-    pub nat_pmp_observer: Option<NatPmpEventObserver>,
+    /// Observer invoked for every NAT-PMP event, tagged with the
+    /// [`NatPmpRuleId`] of the rule that produced it (Mapped, Renewed,
+    /// Failed, RateLimited, Cancelled). `None` short-circuits the manager
+    /// spawn entirely (no observer = nowhere to forward events). The
+    /// daemon wires this to a closure that records the per-rule event in
+    /// the `WarrenStatusCache`, which drives the `NatPmpStatusUpdates`
+    /// gRPC stream the Electron UI subscribes to. (A `Cancelled` event
+    /// signals the daemon to drop that rule's mapping from the status.)
+    pub nat_pmp_observer: Option<NatPmpMappingObserver>,
 
     /// Live-reconfig watch channel: every time the user toggles or
     /// edits a NAT-PMP setting in the Electron UI, the daemon pushes
@@ -265,6 +266,51 @@ impl std::fmt::Debug for WarrenTunnelParameters {
     }
 }
 
+/// Stable identity of a NAT-PMP port-forward rule, matching how the
+/// exit allocator keys an allocation: `(internal_port, protocol)`. Two
+/// rules sharing this pair would target the same exit-side mapping, so
+/// the controller dedups on it (one [`NatPmpManager`]/refresh loop per
+/// id). The suggested external port is a *property* of the rule, not
+/// part of its identity (changing it reconfigures the same mapping).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct NatPmpRuleId {
+    /// Internal port the application binds locally (0 = unset).
+    pub internal_port: u16,
+    /// Transport protocol.
+    pub protocol: NatPmpProto,
+}
+
+/// One port-forward rule the user wants active. The client may hold up
+/// to the exit-enforced quota (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`)
+/// of these at once.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NatPmpRule {
+    /// Transport protocol to map (UDP or TCP).
+    pub protocol: NatPmpProto,
+    /// Suggested external port. `0` lets the exit pick from its pool.
+    pub suggested_external_port: u16,
+    /// Internal port the application binds locally (0 = unset).
+    pub internal_port: u16,
+}
+
+impl NatPmpRule {
+    /// The dedup identity of this rule (see [`NatPmpRuleId`]).
+    #[must_use]
+    pub fn id(&self) -> NatPmpRuleId {
+        NatPmpRuleId {
+            internal_port: self.internal_port,
+            protocol: self.protocol,
+        }
+    }
+}
+
+/// Daemon-side observer invoked for every NAT-PMP event, tagged with the
+/// [`NatPmpRuleId`] of the rule that produced it, so the daemon can keep
+/// a per-rule status entry (multi-port). The controller wraps this into a
+/// per-rule [`NatPmpEventObserver`] for each [`NatPmpManager`] it spawns.
+pub type NatPmpMappingObserver =
+    std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpEvent) + Send + Sync>;
+
 /// NAT-PMP port-forwarding configuration carried by
 /// [`WarrenTunnelParameters::nat_pmp`].
 ///
@@ -272,10 +318,18 @@ impl std::fmt::Debug for WarrenTunnelParameters {
 /// Default-disabled (the field is `None` upstream when `enabled =
 /// false`) so existing user installs see no change in behaviour after
 /// the M4.H.F upgrade.
+///
+/// Multi-port: [`Self::rules`] is the source of truth for which forwards
+/// the controller maintains (one refresh loop per rule). The legacy
+/// single-port fields (`protocol`/`suggested_external_port`/
+/// `internal_port`) are retained so each per-rule [`NatPmpManager`] can
+/// be driven by a single-rule `NatPmpConfig` built via
+/// [`Self::for_rule`], and for backward compatibility with single-port
+/// callers/tests.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NatPmpConfig {
     /// User-facing toggle. `false` is the default; when `false` the
-    /// daemon-side manager does NOT start a refresh loop at all.
+    /// daemon-side controller maintains NO refresh loops.
     pub enabled: bool,
     /// Lifetime requested from the exit in seconds. The server clamps
     /// to its own `[60..3600]` range, so values outside that range will
@@ -283,19 +337,15 @@ pub struct NatPmpConfig {
     /// (6h, ends up clamped), `86400` (24h, ends up clamped). The
     /// refresh loop renews at `granted / 2`.
     pub lifetime_secs: u32,
-    /// Transport protocol to map. Single value in /v1: UDP or TCP.
-    /// Mapping both protocols simultaneously is left to a future
-    /// extension (would spawn two refresh loops).
+    /// The set of port-forward rules to maintain. The controller keeps
+    /// one [`NatPmpManager`] per distinct [`NatPmpRuleId`].
+    pub rules: Vec<NatPmpRule>,
+    /// Legacy single-port protocol (drives a per-rule single config; see
+    /// the struct docs).
     pub protocol: NatPmpProto,
-    /// Suggested external port. `0` (default) lets the server pick a
-    /// port from its allocator pool (recommended). Pinning a port is
-    /// possible by setting a value in `49152..=65535` but the server
-    /// is allowed to ignore the suggestion (RFC 6886 §3.3).
+    /// Legacy single-port suggested external port.
     pub suggested_external_port: u16,
-    /// Internal port the application binds locally. `0` means "no
-    /// specific local port", in which case the daemon defers a
-    /// concrete port choice to the manager. UI may expose this field
-    /// for advanced users.
+    /// Legacy single-port internal port.
     pub internal_port: u16,
 }
 
@@ -314,9 +364,48 @@ impl NatPmpConfig {
         Self {
             enabled: false,
             lifetime_secs: Self::DEFAULT_LIFETIME_SECS,
+            rules: Vec::new(),
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+        }
+    }
+
+    /// The set of rules the controller should maintain. Uses [`Self::rules`]
+    /// when non-empty; otherwise synthesizes a single rule from the legacy
+    /// flat fields (so single-port callers/tests that never populate `rules`
+    /// keep working). Returns empty when nothing is configured.
+    #[must_use]
+    pub fn effective_rules(&self) -> Vec<NatPmpRule> {
+        if !self.rules.is_empty() {
+            return self.rules.clone();
+        }
+        // Legacy single-port fallback: only synthesize a rule when a port
+        // was actually configured. A pristine config (0/0) yields no rules
+        // so the controller spawns no managers (matches the settings-layer
+        // `effective_rules`).
+        if self.internal_port != 0 || self.suggested_external_port != 0 {
+            return vec![NatPmpRule {
+                protocol: self.protocol,
+                suggested_external_port: self.suggested_external_port,
+                internal_port: self.internal_port,
+            }];
+        }
+        Vec::new()
+    }
+
+    /// Build a single-rule config to drive one [`NatPmpManager`]: shares
+    /// `enabled`/`lifetime_secs`, takes the protocol/ports from `rule`,
+    /// and carries no nested `rules` (a manager only ever maps one port).
+    #[must_use]
+    pub fn for_rule(&self, rule: &NatPmpRule) -> Self {
+        Self {
+            enabled: self.enabled,
+            lifetime_secs: self.lifetime_secs,
+            rules: Vec::new(),
+            protocol: rule.protocol,
+            suggested_external_port: rule.suggested_external_port,
+            internal_port: rule.internal_port,
         }
     }
 
@@ -329,6 +418,7 @@ impl NatPmpConfig {
         Self {
             enabled: true,
             lifetime_secs: Self::DEFAULT_LIFETIME_SECS,
+            rules: Vec::new(),
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
@@ -513,9 +603,9 @@ pub struct WarrenTunnelMonitor {
     /// loop and aborts the forwarder.
     ///
     /// Mutually exclusive with [`nat_pmp_controller`]: the legacy path
-    /// owns the manager directly here; the live-reconfig path moves
-    /// ownership into a controller task.
-    nat_pmp_manager: Option<NatPmpManager>,
+    /// owns the managers directly here (one per port-forward rule); the
+    /// live-reconfig path moves ownership into a controller task.
+    nat_pmp_managers: Vec<NatPmpManager>,
 
     /// Live-reconfig controller task. Owns its own `NatPmpManager`
     /// internally and reacts to settings changes pushed via the
@@ -1071,11 +1161,11 @@ impl WarrenTunnelMonitor {
         let _ = metadata; // kept for future MTU-change re-emission
 
         // Spawn the NAT-PMP runtime once the data plane is up. Picks
-        // the legacy "manager owned by monitor" path or the
-        // live-reconfig "manager owned by controller task" path based
+        // the legacy "managers owned by monitor" path or the
+        // live-reconfig "managers owned by controller task" path based
         // on whether `params.nat_pmp_control_rx` was wired.
         let NatPmpRuntimeArtifacts {
-            manager: nat_pmp_manager,
+            managers: nat_pmp_managers,
             controller: nat_pmp_controller,
         } = spawn_nat_pmp_runtime(&runtime, params);
 
@@ -1089,7 +1179,7 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
-            nat_pmp_manager,
+            nat_pmp_managers,
             nat_pmp_controller,
         })
     }
@@ -1497,7 +1587,7 @@ impl WarrenTunnelMonitor {
         // gateway (10.66.0.1:5351). On multi-hop the routing identity
         // of the gateway is the exit's TUN IP, same as single-hop.
         let NatPmpRuntimeArtifacts {
-            manager: nat_pmp_manager,
+            managers: nat_pmp_managers,
             controller: nat_pmp_controller,
         } = spawn_nat_pmp_runtime(&runtime, params);
 
@@ -1512,7 +1602,7 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
-            nat_pmp_manager,
+            nat_pmp_managers,
             nat_pmp_controller,
         })
     }
@@ -1539,7 +1629,7 @@ impl WarrenTunnelMonitor {
             mut event_hook,
             close_rx,
             default_route_guard,
-            nat_pmp_manager,
+            nat_pmp_managers,
             nat_pmp_controller,
         } = self;
 
@@ -1648,15 +1738,15 @@ impl WarrenTunnelMonitor {
         // its refresh loop stops emitting while the rest of teardown
         // proceeds.
         //
-        // - Legacy (`nat_pmp_manager`): drop → its `Drop` impl
-        //   cancels the refresh loop + aborts the forwarder.
+        // - Legacy (`nat_pmp_managers`): drop → each manager's `Drop`
+        //   impl cancels its refresh loop + aborts its forwarder.
         // - Live-reconfig (`nat_pmp_controller`): abort the
-        //   controller task; it drops its owned manager on the way
+        //   controller task; it drops its owned managers on the way
         //   out (manager `Drop` fires). The daemon's watch sender
         //   will then see its receiver gone on the next push, which
         //   `on_set_nat_pmp_settings` treats as a no-op (tunnel
         //   dying — nothing to apply).
-        drop(nat_pmp_manager);
+        drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
             h.abort();
         }
@@ -1756,7 +1846,10 @@ impl SessionKind {
 /// and the monitor stores them in distinct fields so the wait/drop
 /// teardown can disambiguate.
 struct NatPmpRuntimeArtifacts {
-    manager: Option<NatPmpManager>,
+    /// Legacy path (no live-reconfig channel): the monitor owns the
+    /// managers directly, one per initial rule. Empty on the controller
+    /// path.
+    managers: Vec<NatPmpManager>,
     controller: Option<tokio::task::JoinHandle<()>>,
 }
 
@@ -1790,7 +1883,7 @@ fn spawn_nat_pmp_runtime(
     // wiring guarantees this whenever NAT-PMP is opted-in. Without an
     // observer the manager would emit events into a void, which is
     // never useful.
-    let observer = match params.nat_pmp_observer.clone() {
+    let mapping_observer = match params.nat_pmp_observer.clone() {
         Some(o) => o,
         None => {
             // Mirror the original short-circuit log so the operator
@@ -1802,7 +1895,7 @@ fn spawn_nat_pmp_runtime(
                 );
             }
             return NatPmpRuntimeArtifacts {
-                manager: None,
+                managers: Vec::new(),
                 controller: None,
             };
         }
@@ -1810,24 +1903,33 @@ fn spawn_nat_pmp_runtime(
     let server = warren_natpmp_client::default_server_addr();
     let bind_addr = None;
 
-    // Legacy path: no live-reconfig control channel. Spawn the manager
-    // directly and let the monitor own it.
+    // Legacy path: no live-reconfig control channel. Spawn one manager
+    // per effective rule directly and let the monitor own them.
     let Some(control_rx) = params.nat_pmp_control_rx.clone() else {
-        let cfg = params.nat_pmp.as_ref().filter(|c| c.enabled);
-        let manager = cfg.map(|c| {
-            log::info!("Warren NAT-PMP: starting refresh loop against {server}");
-            NatPmpManager::start_from_addr(runtime, server, c, observer.clone(), bind_addr)
-        });
+        let mut managers = Vec::new();
+        if let Some(cfg) = params.nat_pmp.as_ref().filter(|c| c.enabled) {
+            for rule in cfg.effective_rules() {
+                log::info!(
+                    "Warren NAT-PMP: starting refresh loop against {server} for rule {:?}",
+                    rule.id()
+                );
+                let per_rule = cfg.for_rule(&rule);
+                let observer = per_rule_observer(mapping_observer.clone(), rule.id());
+                managers.push(NatPmpManager::start_from_addr(
+                    runtime, server, &per_rule, observer, bind_addr,
+                ));
+            }
+        }
         return NatPmpRuntimeArtifacts {
-            manager,
+            managers,
             controller: None,
         };
     };
 
     // Live-reconfig path: spawn a controller task that owns the
-    // manager. The controller reads the initial config from the
+    // managers. The controller reads the initial config from the
     // watch channel's current value, then loops on `changed()` to
-    // apply subsequent edits via `reconfigure`.
+    // reconcile the rule set (spawn/release/reconfigure per rule).
     let initial = params.nat_pmp.clone();
     let runtime_clone = runtime.clone();
     log::info!("Warren NAT-PMP: spawning controller task (live-reconfig path)");
@@ -1837,7 +1939,7 @@ fn spawn_nat_pmp_runtime(
             runtime_clone,
             server,
             bind_addr,
-            observer,
+            mapping_observer,
             initial,
             control_rx,
         )
@@ -1846,9 +1948,19 @@ fn spawn_nat_pmp_runtime(
     });
     log::info!("Warren NAT-PMP: controller spawn returned a handle");
     NatPmpRuntimeArtifacts {
-        manager: None,
+        managers: Vec::new(),
         controller: Some(controller),
     }
+}
+
+/// Wrap a daemon-side [`NatPmpMappingObserver`] (which is tagged with a
+/// [`NatPmpRuleId`]) into a plain [`NatPmpEventObserver`] bound to one
+/// rule, suitable for handing to a single [`NatPmpManager`].
+fn per_rule_observer(
+    mapping_observer: NatPmpMappingObserver,
+    id: NatPmpRuleId,
+) -> NatPmpEventObserver {
+    std::sync::Arc::new(move |evt| mapping_observer(id, evt))
 }
 
 /// Controller task body: owns the [`NatPmpManager`] across its
@@ -1870,37 +1982,130 @@ async fn run_nat_pmp_controller(
     runtime: tokio::runtime::Handle,
     server: std::net::SocketAddr,
     bind_addr: Option<std::net::IpAddr>,
-    observer: NatPmpEventObserver,
+    mapping_observer: NatPmpMappingObserver,
     initial_config: Option<NatPmpConfig>,
     mut control_rx: tokio::sync::watch::Receiver<Option<NatPmpConfig>>,
 ) {
+    use std::collections::{HashMap, HashSet};
+
+    // A duplicate push (same rule properties) within this window is
+    // swallowed: the renderer can emit the same settings twice in quick
+    // succession (e.g. an input's change + blur), and each redundant
+    // reconfigure is a wasted release(old)+request(new) round-trip that
+    // also spends a per-client rate-limit slot on the exit. Beyond the
+    // window an identical push IS honoured — that is a deliberate user
+    // action (e.g. re-applying the same port to RETRY after a failure);
+    // skipping it indefinitely would strand the user in `Failed` with no
+    // recovery path.
+    const RECONFIGURE_DEBOUNCE: std::time::Duration = std::time::Duration::from_secs(2);
+
+    /// Per-rule manager state keyed by [`NatPmpRuleId`]. `applied_cfg` is
+    /// the single-rule config last handed to the manager (via
+    /// [`NatPmpConfig::for_rule`]); it carries the shared `lifetime_secs`
+    /// too, so a config-wide lifetime change is detected as a diff even
+    /// though the rule identity is unchanged.
+    struct ManagerState {
+        manager: NatPmpManager,
+        applied_cfg: NatPmpConfig,
+        applied_at: std::time::Instant,
+    }
+
+    /// Reconcile the running per-rule managers against a desired config:
+    /// release rules that disappeared (emitting `Cancelled`), spawn new
+    /// rules, and live-reconfigure changed ones (debounced).
+    async fn reconcile(
+        managers: &mut HashMap<NatPmpRuleId, ManagerState>,
+        desired: Option<&NatPmpConfig>,
+        runtime: &tokio::runtime::Handle,
+        server: std::net::SocketAddr,
+        bind_addr: Option<std::net::IpAddr>,
+        mapping_observer: &NatPmpMappingObserver,
+        debounce: std::time::Duration,
+    ) {
+        let cfg = desired.filter(|c| c.enabled);
+        let wanted: Vec<NatPmpRule> = cfg.map(NatPmpConfig::effective_rules).unwrap_or_default();
+        let wanted_ids: HashSet<NatPmpRuleId> = wanted.iter().map(NatPmpRule::id).collect();
+
+        // 1) Release+remove managers whose rule disappeared. Emit
+        //    `Cancelled` so the daemon drops that mapping from status.
+        let gone: Vec<NatPmpRuleId> = managers
+            .keys()
+            .copied()
+            .filter(|id| !wanted_ids.contains(id))
+            .collect();
+        for id in gone {
+            if let Some(mut st) = managers.remove(&id) {
+                log::info!("Warren NAT-PMP controller: releasing removed rule {id:?}");
+                st.manager.release().await;
+                mapping_observer(id, NatPmpEvent::Cancelled);
+            }
+        }
+
+        let Some(cfg) = cfg else {
+            return;
+        };
+
+        // 2) Spawn new rules + reconfigure changed ones.
+        for rule in wanted {
+            let id = rule.id();
+            let per_rule_cfg = cfg.for_rule(&rule);
+            match managers.get_mut(&id) {
+                Some(st) => {
+                    // Skip only a byte-identical per-rule config re-pushed
+                    // inside the debounce window; honour everything else (a
+                    // real change or an intentional retry past the window).
+                    let recent_duplicate =
+                        st.applied_cfg == per_rule_cfg && st.applied_at.elapsed() < debounce;
+                    if recent_duplicate {
+                        log::debug!(
+                            "Warren NAT-PMP controller: duplicate rule {id:?} within debounce — skipping"
+                        );
+                    } else {
+                        log::info!("Warren NAT-PMP controller: live reconfigure rule {id:?}");
+                        st.manager.reconfigure(&per_rule_cfg).await;
+                        st.applied_cfg = per_rule_cfg;
+                        st.applied_at = std::time::Instant::now();
+                    }
+                }
+                None => {
+                    log::info!("Warren NAT-PMP controller: spawning refresh loop for rule {id:?}");
+                    let observer = per_rule_observer(mapping_observer.clone(), id);
+                    let manager = NatPmpManager::start_from_addr(
+                        runtime,
+                        server,
+                        &per_rule_cfg,
+                        observer,
+                        bind_addr,
+                    );
+                    managers.insert(
+                        id,
+                        ManagerState {
+                            manager,
+                            applied_cfg: per_rule_cfg,
+                            applied_at: std::time::Instant::now(),
+                        },
+                    );
+                }
+            }
+        }
+    }
+
     log::info!(
         "Warren NAT-PMP controller: task started (initial_enabled={})",
         initial_config.as_ref().is_some_and(|c| c.enabled)
     );
-    // Spawn initial manager if config asks for it.
-    let mut manager: Option<NatPmpManager> =
-        initial_config.as_ref().filter(|c| c.enabled).map(|c| {
-            log::info!("Warren NAT-PMP controller: initial refresh loop against {server}");
-            NatPmpManager::start_from_addr(&runtime, server, c, observer.clone(), bind_addr)
-        });
 
-    // The config currently applied to `manager` (`Some` ⇔ enabled) and
-    // WHEN it was applied. Used to swallow a *duplicate* push within a
-    // short window: the renderer can emit the same settings twice in
-    // quick succession (e.g. an input's change + blur), and each
-    // redundant reconfigure is a wasted release(old)+request(new)
-    // round-trip that also spends a per-client rate-limit slot on the
-    // exit. We therefore skip a push byte-for-byte identical to the
-    // running config ONLY if it arrives within `RECONFIGURE_DEBOUNCE`.
-    // Beyond that window an identical push IS honoured — that is a
-    // deliberate user action (e.g. re-applying the same port to RETRY
-    // after a failure); skipping it indefinitely would strand the user
-    // in `Failed` with no recovery path.
-    const RECONFIGURE_DEBOUNCE: std::time::Duration = std::time::Duration::from_secs(2);
-    let mut applied: Option<NatPmpConfig> = initial_config.filter(|c| c.enabled);
-    let mut applied_at: Option<std::time::Instant> =
-        applied.as_ref().map(|_| std::time::Instant::now());
+    let mut managers: HashMap<NatPmpRuleId, ManagerState> = HashMap::new();
+    reconcile(
+        &mut managers,
+        initial_config.as_ref(),
+        &runtime,
+        server,
+        bind_addr,
+        &mapping_observer,
+        RECONFIGURE_DEBOUNCE,
+    )
+    .await;
 
     while control_rx.changed().await.is_ok() {
         // Borrow then clone immediately so we hold the watch's
@@ -1910,81 +2115,29 @@ async fn run_nat_pmp_controller(
             "Warren NAT-PMP controller: change observed (wanted_enabled={})",
             new_cfg_opt.as_ref().is_some_and(|c| c.enabled)
         );
-
-        // Normalise the "new wanted state" into a single
-        // `Option<NatPmpConfig>` where `Some` ⇔ enabled. The wire
-        // representation carries an explicit `enabled: false` value
-        // (the daemon may push `Some(cfg) { enabled: false }`) and a
-        // plain `None`; we treat them identically here.
-        let new_wanted: Option<NatPmpConfig> = new_cfg_opt.filter(|c| c.enabled);
-
-        match (manager.is_some(), new_wanted) {
-            (true, Some(new_cfg)) => {
-                let recent_duplicate = applied.as_ref() == Some(&new_cfg)
-                    && applied_at.is_some_and(|t| t.elapsed() < RECONFIGURE_DEBOUNCE);
-                if recent_duplicate {
-                    // Identical config within the debounce window: a
-                    // duplicate push, not an intentional retry. Skip the
-                    // redundant release+reallocate.
-                    log::debug!(
-                        "Warren NAT-PMP controller: duplicate config within debounce — skipping reconfigure"
-                    );
-                } else {
-                    // Live reconfigure: params changed, OR an
-                    // intentional re-apply past the debounce window
-                    // (e.g. retrying the same port after a failure).
-                    log::info!("Warren NAT-PMP controller: live reconfigure");
-                    manager
-                        .as_mut()
-                        .expect("matched true above")
-                        .reconfigure(&new_cfg)
-                        .await;
-                    applied = Some(new_cfg);
-                    applied_at = Some(std::time::Instant::now());
-                }
-            }
-            (true, None) => {
-                // Disable (toggle off, or new cfg is None).
-                log::info!("Warren NAT-PMP controller: disabling — releasing mapping");
-                if let Some(mut m) = manager.take() {
-                    m.release().await;
-                }
-                applied = None;
-                applied_at = None;
-            }
-            (false, Some(new_cfg)) => {
-                // First enable (no manager yet, new cfg asks for one).
-                log::info!(
-                    "Warren NAT-PMP controller: enabling — spawning fresh refresh loop against {server}"
-                );
-                manager = Some(NatPmpManager::start_from_addr(
-                    &runtime,
-                    server,
-                    &new_cfg,
-                    observer.clone(),
-                    bind_addr,
-                ));
-                applied = Some(new_cfg);
-                applied_at = Some(std::time::Instant::now());
-            }
-            (false, None) => {
-                // No-op: the daemon may have written `None` while we
-                // were already in `None` state.
-                applied = None;
-                applied_at = None;
-            }
-        }
+        reconcile(
+            &mut managers,
+            new_cfg_opt.as_ref(),
+            &runtime,
+            server,
+            bind_addr,
+            &mapping_observer,
+            RECONFIGURE_DEBOUNCE,
+        )
+        .await;
     }
 
-    // Watch sender dropped → daemon teardown. The manager (if any)
-    // drops here, which fires its `Drop` impl. The Drop cancels the
-    // refresh loop but does NOT send a lifetime=0 release — that's
-    // fine because the exit will GC the mapping at its lease expiry
-    // (~1 h) and the tunnel is dying anyway.
-    if manager.is_some() {
-        log::info!("Warren NAT-PMP controller: shutdown — dropping manager");
+    // Watch sender dropped → daemon teardown. The managers drop here,
+    // firing their `Drop` impls. Drop cancels each refresh loop but does
+    // NOT send a lifetime=0 release — that's fine because the exit GCs
+    // the mappings at their lease expiry (~1 h) and the tunnel is dying.
+    if !managers.is_empty() {
+        log::info!(
+            "Warren NAT-PMP controller: shutdown — dropping {} manager(s)",
+            managers.len()
+        );
     }
-    drop(manager);
+    drop(managers);
 }
 
 /// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
@@ -2542,6 +2695,7 @@ mod tests {
         let cfg = NatPmpConfig {
             enabled: true,
             lifetime_secs: 3600,
+            rules: Vec::new(),
             protocol: NatPmpProto::Udp,
             suggested_external_port: 22222,
             internal_port: 22,
@@ -3293,11 +3447,15 @@ mod tests {
         addr
     }
 
-    fn collector_observer() -> (NatPmpEventObserver, Arc<StdMutex<Vec<NatPmpEvent>>>) {
-        let log: Arc<StdMutex<Vec<NatPmpEvent>>> = Arc::new(StdMutex::new(Vec::new()));
+    fn collector_observer() -> (
+        NatPmpMappingObserver,
+        Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>>,
+    ) {
+        let log: Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>> =
+            Arc::new(StdMutex::new(Vec::new()));
         let log_for_obs = log.clone();
-        let observer: NatPmpEventObserver = Arc::new(move |evt| {
-            log_for_obs.lock().expect("observer lock").push(evt);
+        let observer: NatPmpMappingObserver = Arc::new(move |id, evt| {
+            log_for_obs.lock().expect("observer lock").push((id, evt));
         });
         (observer, log)
     }
@@ -3306,6 +3464,7 @@ mod tests {
         NatPmpConfig {
             enabled: true,
             lifetime_secs,
+            rules: Vec::new(),
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
@@ -3347,7 +3506,7 @@ mod tests {
         for _ in 0..100 {
             if log.lock().unwrap().iter().any(|e| {
                 matches!(
-                    e,
+                    e.1,
                     NatPmpEvent::Mapped {
                         external_port: 49060,
                         ..
@@ -3361,7 +3520,7 @@ mod tests {
         let snapshot = log.lock().unwrap().clone();
         assert!(
             snapshot.iter().any(|e| matches!(
-                e,
+                e.1,
                 NatPmpEvent::Mapped {
                     external_port: 49060,
                     ..
@@ -3396,7 +3555,7 @@ mod tests {
         for _ in 0..100 {
             if log.lock().unwrap().iter().any(|e| {
                 matches!(
-                    e,
+                    e.1,
                     NatPmpEvent::Mapped {
                         external_port: 49060,
                         ..
@@ -3413,7 +3572,7 @@ mod tests {
         for _ in 0..100 {
             if log.lock().unwrap().iter().any(|e| {
                 matches!(
-                    e,
+                    e.1,
                     NatPmpEvent::Mapped {
                         external_port: 49090,
                         ..
@@ -3427,7 +3586,7 @@ mod tests {
         let snapshot = log.lock().unwrap().clone();
         assert!(
             snapshot.iter().any(|e| matches!(
-                e,
+                e.1,
                 NatPmpEvent::Mapped {
                     external_port: 49090,
                     ..

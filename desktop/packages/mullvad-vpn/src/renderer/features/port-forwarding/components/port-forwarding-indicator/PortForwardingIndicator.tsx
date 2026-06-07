@@ -12,27 +12,31 @@ const StyledWrapper = styled.div({
 });
 
 /**
- * Home-screen badge shown while a NAT-PMP port forward is live. Reuses
- * the shared `<FeatureIndicator>` chip — same look as the "Local network
- * sharing" indicator — and surfaces the granted public port + protocol
- * so the user can read their forwarded port at a glance without opening
- * the settings view. Renders nothing unless the live status is `mapped`.
+ * Home-screen badge shown while at least one NAT-PMP port forward is
+ * live. Reuses the shared `<FeatureIndicator>` chip and lists the granted
+ * public port(s) + protocol so the user can read their forwarded ports at
+ * a glance. Renders nothing unless at least one mapping is active.
  */
 export function PortForwardingIndicator() {
-  const { status, settings } = usePortForwarding();
+  const { mappings } = usePortForwarding();
 
-  if (status.state !== 'mapped') {
+  const open = mappings.flatMap((m) =>
+    m.status.state === 'mapped' ? [{ port: m.status.externalPort, protocol: m.protocol }] : [],
+  );
+
+  if (open.length === 0) {
     return null;
   }
 
-  const protocol = settings.protocol === NatPmpProto.tcp ? 'TCP' : 'UDP';
+  const ports = open
+    .map((m) => `${m.port} ${m.protocol === NatPmpProto.tcp ? 'TCP' : 'UDP'}`)
+    .join(', ');
   const label = sprintf(
     // TRANSLATORS: Active-feature chip on the main screen, shown when
     // TRANSLATORS: port forwarding is active. Available placeholders:
-    // TRANSLATORS: %(port)d - the granted public port (e.g. 53451)
-    // TRANSLATORS: %(protocol)s - the transport protocol, "UDP" or "TCP"
-    messages.pgettext('connect-view', 'Port forwarding: %(port)d %(protocol)s'),
-    { port: status.externalPort, protocol },
+    // TRANSLATORS: %(ports)s - comma-separated "port PROTO" list
+    messages.pgettext('connect-view', 'Port forwarding: %(ports)s'),
+    { ports },
   );
 
   return (

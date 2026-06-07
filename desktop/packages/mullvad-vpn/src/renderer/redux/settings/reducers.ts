@@ -103,6 +103,10 @@ export interface ISettingsReduxState {
   // from the daemon NatPmpStatusUpdates stream; treat undefined as
   // `{ state: 'disabled' }` UI-side.
   natPmpStatus?: NatPmpStatus;
+  // Wall-clock instant (ms) the current `natPmpStatus` arrived. The
+  // rate-limit countdown anchors to this (see IUpdateNatPmpStatusAction)
+  // so a stale snapshot self-expires instead of re-flashing on mount.
+  natPmpStatusReceivedAt?: number;
   // Persistent multi-exit auto-failover toggle (M5.B.2). Default ON.
   // M5.B.1 DAITA is plumbed through Mullvad upstream's
   // `wireguard.daita.enabled` rather than a Warren-specific field.
@@ -164,11 +168,13 @@ const initialState: ISettingsReduxState = {
   warrenNatPmp: {
     enabled: false,
     lifetimeSecs: 3600,
+    rules: [],
     protocol: NatPmpProto.udp,
     suggestedExternalPort: 0,
     internalPort: 0,
   },
   natPmpStatus: undefined,
+  natPmpStatusReceivedAt: undefined,
   // M5.B.2 multi-exit failover: ON by default. Differentiator vs
   // Mullvad/IVPN (which require manual reconnect on exit-down).
   // M5.B.1 DAITA toggle = Mullvad upstream `wireguard.daita.enabled`
@@ -290,6 +296,7 @@ export default function (
       return {
         ...state,
         natPmpStatus: action.natPmpStatus,
+        natPmpStatusReceivedAt: action.receivedAt,
       };
 
     case 'UPDATE_ENABLE_IPV6':

@@ -251,10 +251,32 @@ pub enum WarrenNatPmpProto {
     Tcp,
 }
 
+/// One NAT-PMP port-forward rule. A client may hold several of these
+/// simultaneously, up to the exit-enforced per-client quota
+/// (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`).
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenNatPmpRule {
+    /// Transport protocol (UDP or TCP).
+    pub protocol: WarrenNatPmpProto,
+    /// Suggested external port (0 = server picks from its pool).
+    pub suggested_external_port: u16,
+    /// Internal port the user's application binds (0 = unset; the exit
+    /// then DNATs the granted external port to the same number on the
+    /// client — the "same port on your device" model).
+    pub internal_port: u16,
+}
+
 /// Warren NAT-PMP port-forwarding settings. Persisted in
 /// [`Settings::warren_nat_pmp`] and surfaced via the
 /// `GetNatPmpSettings` gRPC rpc. Default OFF; lifetime defaults to 1h
 /// (the exit-side allocator clamps to 60..3600 s).
+///
+/// Multi-port model: [`Self::rules`] is the source of truth. The legacy
+/// single-port fields (`protocol` / `suggested_external_port` /
+/// `internal_port`) are retained ONLY so a settings.json written by a
+/// pre-multi-port build still deserializes and its one forward is
+/// preserved on upgrade (see [`Self::effective_rules`]). New writes
+/// populate `rules` and leave the legacy fields at their defaults.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct WarrenNatPmpSettings {
     /// Toggle ON/OFF. Default `false`.
@@ -263,11 +285,20 @@ pub struct WarrenNatPmpSettings {
     /// allocator clamps to its [60, 3600] range so larger values are
     /// silently capped server-side.
     pub lifetime_secs: u32,
-    /// Transport protocol (UDP or TCP).
+    /// The set of port-forward rules the user wants active. Empty +
+    /// `enabled` falls back to a single rule synthesized from the legacy
+    /// fields (upgrade path). Capped client- and exit-side by the quota.
+    #[serde(default)]
+    pub rules: Vec<WarrenNatPmpRule>,
+    /// Legacy single-port protocol. Kept for backward-compatible
+    /// deserialization of old settings; superseded by `rules`.
+    #[serde(default)]
     pub protocol: WarrenNatPmpProto,
-    /// Suggested external port (0 = server picks).
+    /// Legacy single-port suggested external port (see `protocol`).
+    #[serde(default)]
     pub suggested_external_port: u16,
-    /// Internal port the user's application binds (0 = unset).
+    /// Legacy single-port internal port (see `protocol`).
+    #[serde(default)]
     pub internal_port: u16,
 }
 
@@ -276,10 +307,38 @@ impl Default for WarrenNatPmpSettings {
         Self {
             enabled: false,
             lifetime_secs: 3600,
+            rules: Vec::new(),
             protocol: WarrenNatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
         }
+    }
+}
+
+impl WarrenNatPmpSettings {
+    /// The effective list of port-forward rules to apply.
+    ///
+    /// New (multi-port) settings carry them in `rules`. A settings.json
+    /// from a pre-multi-port build has `rules` empty but the legacy
+    /// single-port fields set — we synthesize one rule from those so the
+    /// existing forward survives the upgrade. A fresh default (disabled,
+    /// no rules) yields an empty list.
+    #[must_use]
+    pub fn effective_rules(&self) -> Vec<WarrenNatPmpRule> {
+        if !self.rules.is_empty() {
+            return self.rules.clone();
+        }
+        // Legacy single-port fallback: only meaningful when something was
+        // actually configured (a non-zero internal/external port). A
+        // pristine default would otherwise synthesize a useless 0/0 rule.
+        if self.internal_port != 0 || self.suggested_external_port != 0 {
+            return vec![WarrenNatPmpRule {
+                protocol: self.protocol,
+                suggested_external_port: self.suggested_external_port,
+                internal_port: self.internal_port,
+            }];
+        }
+        Vec::new()
     }
 }
 

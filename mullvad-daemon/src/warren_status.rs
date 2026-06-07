@@ -12,7 +12,9 @@
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use talpid_warren_tunnel::{NatPmpEvent, NatPmpFailureReason};
+use std::collections::HashMap;
+
+use talpid_warren_tunnel::{NatPmpEvent, NatPmpFailureReason, NatPmpProto, NatPmpRuleId};
 use tokio::sync::watch;
 
 /// Snapshot of the NAT-PMP refresh loop, surfaced to the UI alongside
@@ -71,6 +73,22 @@ pub enum NatPmpStateSnapshot {
     },
 }
 
+/// One NAT-PMP mapping surfaced to the UI, tagged with the rule it
+/// belongs to. Multi-port: the UI renders one row per snapshot,
+/// identified by `internal_port` + `protocol` (the rule identity). The
+/// `state` is never `Disabled` here — a removed rule is dropped from the
+/// list rather than marked disabled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NatPmpMappingSnapshot {
+    /// Internal port the user's application binds (the rule identity the
+    /// UI keys its row on).
+    pub internal_port: u16,
+    /// Transport protocol of this rule.
+    pub protocol: NatPmpProto,
+    /// Lifecycle state of this rule's mapping.
+    pub state: NatPmpStateSnapshot,
+}
+
 /// Session H A.4 surface: forensic payload pushed to the UI when the
 /// TOFU verify hook refuses a connect. All fields are operator
 /// metadata (`exit_id` and the Ed25519 pubkeys are public via the
@@ -109,10 +127,11 @@ pub struct WarrenStatusSnapshot {
     /// this always-on (doctrine), so this is true unless the daemon is
     /// in pure single-hop legacy mode with obfuscation disabled.
     pub obfuscation_active: bool,
-    /// Live NAT-PMP state for the port-forwarding UI. `Disabled` when
-    /// the user has not opted into port-forwarding; the other variants
-    /// track the refresh loop's lifecycle.
-    pub nat_pmp: NatPmpStateSnapshot,
+    /// Live NAT-PMP mappings for the port-forwarding UI, one entry per
+    /// active rule, sorted by `internal_port` for a stable UI order.
+    /// Empty when the user has not opted into port-forwarding (or all
+    /// rules were removed).
+    pub nat_pmp_mappings: Vec<NatPmpMappingSnapshot>,
     /// M5.B.2 multi-exit failover counter. Bumped each time the
     /// `assemble_failover_for_attempt` path is taken (retry > 0 with a
     /// memoized previous exit). The UI displays a toast when this
@@ -139,7 +158,7 @@ impl Default for WarrenStatusSnapshot {
             reconnect_count: 0,
             last_reconnect_age: None,
             obfuscation_active: true,
-            nat_pmp: NatPmpStateSnapshot::Disabled,
+            nat_pmp_mappings: Vec::new(),
             failover_count: 0,
             last_failover_age: None,
             pubkey_mismatch_pending: None,
@@ -155,7 +174,9 @@ struct InternalState {
     reconnect_count: u32,
     last_reconnect_at: Option<Instant>,
     obfuscation_active: bool,
-    nat_pmp: NatPmpStateSnapshot,
+    /// Per-rule NAT-PMP mappings keyed by rule identity. Materialised
+    /// into a sorted `Vec` in [`WarrenStatusCache::snapshot_of`].
+    nat_pmp: HashMap<NatPmpRuleId, NatPmpStateSnapshot>,
     failover_count: u32,
     last_failover_at: Option<Instant>,
     pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
@@ -167,7 +188,7 @@ impl Default for InternalState {
             reconnect_count: 0,
             last_reconnect_at: None,
             obfuscation_active: true,
-            nat_pmp: NatPmpStateSnapshot::Disabled,
+            nat_pmp: HashMap::new(),
             failover_count: 0,
             last_failover_at: None,
             pubkey_mismatch_pending: None,
@@ -222,11 +243,29 @@ impl WarrenStatusCache {
             reconnect_count: inner.reconnect_count,
             last_reconnect_age: inner.last_reconnect_at.map(|t| t.elapsed()),
             obfuscation_active: inner.obfuscation_active,
-            nat_pmp: inner.nat_pmp.clone(),
+            nat_pmp_mappings: Self::nat_pmp_mappings_of(&inner.nat_pmp),
             failover_count: inner.failover_count,
             last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
             pubkey_mismatch_pending: inner.pubkey_mismatch_pending.clone(),
         }
+    }
+
+    /// Materialise the per-rule NAT-PMP map into a `Vec` sorted by
+    /// `(internal_port, protocol)` so the UI sees a stable row order
+    /// regardless of `HashMap` iteration order.
+    fn nat_pmp_mappings_of(
+        map: &HashMap<NatPmpRuleId, NatPmpStateSnapshot>,
+    ) -> Vec<NatPmpMappingSnapshot> {
+        let mut v: Vec<NatPmpMappingSnapshot> = map
+            .iter()
+            .map(|(id, state)| NatPmpMappingSnapshot {
+                internal_port: id.internal_port,
+                protocol: id.protocol,
+                state: state.clone(),
+            })
+            .collect();
+        v.sort_by_key(|m| (m.internal_port, m.protocol == NatPmpProto::Tcp));
+        v
     }
 
     /// Called by the multi-hop supervisor whenever it successfully
@@ -278,13 +317,13 @@ impl WarrenStatusCache {
     /// - `Failed { error, reason }` -> `Failed { .. }`.
     /// - `Cancelled` -> `Disabled` (the user disabled the toggle, or
     ///   the tunnel went down).
-    pub fn record_nat_pmp_event(&self, event: NatPmpEvent) {
+    pub fn record_nat_pmp_event(&self, id: NatPmpRuleId, event: NatPmpEvent) {
         let snapshot = {
             let mut inner = self
                 .state
                 .write()
                 .expect("warren_status state lock poisoned");
-            inner.nat_pmp = match event {
+            match event {
                 NatPmpEvent::Mapped {
                     external_port,
                     lifetime_secs,
@@ -296,55 +335,76 @@ impl WarrenStatusCache {
                     lifetime_secs,
                     attempts_remaining,
                     window_reset_secs,
-                } => NatPmpStateSnapshot::Mapped {
-                    external_port,
-                    lifetime_secs,
-                    attempts_remaining,
-                    window_reset_secs,
-                },
+                } => {
+                    inner.nat_pmp.insert(
+                        id,
+                        NatPmpStateSnapshot::Mapped {
+                            external_port,
+                            lifetime_secs,
+                            attempts_remaining,
+                            window_reset_secs,
+                        },
+                    );
+                }
                 NatPmpEvent::RateLimited { retry_after_secs } => {
-                    NatPmpStateSnapshot::RateLimited { retry_after_secs }
+                    inner
+                        .nat_pmp
+                        .insert(id, NatPmpStateSnapshot::RateLimited { retry_after_secs });
                 }
                 NatPmpEvent::Failed { error, reason } => {
-                    NatPmpStateSnapshot::Failed { error, reason }
+                    inner
+                        .nat_pmp
+                        .insert(id, NatPmpStateSnapshot::Failed { error, reason });
                 }
-                NatPmpEvent::Cancelled => NatPmpStateSnapshot::Disabled,
-            };
+                // The rule's mapping was released (toggle off, rule
+                // removed, or tunnel down): drop it from the list.
+                NatPmpEvent::Cancelled => {
+                    inner.nat_pmp.remove(&id);
+                }
+            }
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
 
-    /// Sets the NAT-PMP state to `Requesting`, broadcasting the
-    /// resulting snapshot. Called by the daemon as soon as the
-    /// `NatPmpManager` is spawned but before the first event arrives,
-    /// so the UI immediately reflects the "in flight" condition.
-    pub fn set_nat_pmp_requesting(&self) {
+    /// Reconcile the NAT-PMP mapping list against the rules the user now
+    /// wants active: drop mappings whose rule disappeared, and pre-set
+    /// any newly-added rule to `Requesting` so the UI reflects the
+    /// in-flight state immediately (before the manager's first event).
+    /// Existing mappings (e.g. already `Mapped`) keep their state to
+    /// avoid a flicker when an unrelated rule changes.
+    pub fn set_nat_pmp_requesting(&self, rules: &[NatPmpRuleId]) {
         let snapshot = {
             let mut inner = self
                 .state
                 .write()
                 .expect("warren_status state lock poisoned");
-            inner.nat_pmp = NatPmpStateSnapshot::Requesting;
+            let wanted: std::collections::HashSet<NatPmpRuleId> = rules.iter().copied().collect();
+            inner.nat_pmp.retain(|id, _| wanted.contains(id));
+            for id in rules {
+                inner
+                    .nat_pmp
+                    .entry(*id)
+                    .or_insert(NatPmpStateSnapshot::Requesting);
+            }
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
     }
 
-    /// Resets the NAT-PMP state to `Disabled`, broadcasting the
-    /// resulting snapshot. Called when the user toggles port-forwarding
-    /// off or when a tunnel goes down without firing a `Cancelled`
-    /// event (defensive).
+    /// Clears all NAT-PMP mappings, broadcasting the resulting snapshot.
+    /// Called when the user toggles port-forwarding off or when a tunnel
+    /// goes down without firing a `Cancelled` event (defensive).
     pub fn set_nat_pmp_disabled(&self) {
         let snapshot = {
             let mut inner = self
                 .state
                 .write()
                 .expect("warren_status state lock poisoned");
-            if matches!(inner.nat_pmp, NatPmpStateSnapshot::Disabled) {
+            if inner.nat_pmp.is_empty() {
                 return;
             }
-            inner.nat_pmp = NatPmpStateSnapshot::Disabled;
+            inner.nat_pmp.clear();
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -502,44 +562,96 @@ mod tests {
 
     // --- NAT-PMP surface ----------------------------------------------------
 
+    /// Build a rule id for tests (UDP on the given internal port).
+    fn rule(internal_port: u16) -> NatPmpRuleId {
+        NatPmpRuleId {
+            internal_port,
+            protocol: NatPmpProto::Udp,
+        }
+    }
+
+    /// The state of the single mapping in the snapshot (panics if not
+    /// exactly one).
+    fn only_state(cache: &WarrenStatusCache) -> NatPmpStateSnapshot {
+        let mappings = cache.snapshot().nat_pmp_mappings;
+        assert_eq!(mappings.len(), 1, "expected exactly one mapping");
+        mappings[0].state.clone()
+    }
+
     #[test]
-    fn default_snapshot_has_nat_pmp_disabled() {
+    fn default_snapshot_has_no_nat_pmp_mappings() {
         let s = WarrenStatusSnapshot::default();
-        assert_eq!(s.nat_pmp, NatPmpStateSnapshot::Disabled);
+        assert!(s.nat_pmp_mappings.is_empty());
     }
 
     #[test]
     fn record_nat_pmp_mapped_event_updates_state_to_mapped() {
         let cache = WarrenStatusCache::new();
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 49152,
-            lifetime_secs: 3600,
-            attempts_remaining: Some(4),
-            window_reset_secs: 0,
-        });
-        match cache.snapshot().nat_pmp {
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 49152,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(4),
+                window_reset_secs: 0,
+            },
+        );
+        let m = &cache.snapshot().nat_pmp_mappings[0];
+        assert_eq!(m.internal_port, 22);
+        match &m.state {
             NatPmpStateSnapshot::Mapped {
                 external_port,
                 lifetime_secs,
                 attempts_remaining,
                 window_reset_secs,
             } => {
-                assert_eq!(external_port, 49152);
-                assert_eq!(lifetime_secs, 3600);
-                assert_eq!(attempts_remaining, Some(4));
-                assert_eq!(window_reset_secs, 0);
+                assert_eq!(*external_port, 49152);
+                assert_eq!(*lifetime_secs, 3600);
+                assert_eq!(*attempts_remaining, Some(4));
+                assert_eq!(*window_reset_secs, 0);
             }
             other => panic!("expected Mapped, got {other:?}"),
         }
     }
 
     #[test]
+    fn record_nat_pmp_two_rules_yields_two_sorted_mappings() {
+        let cache = WarrenStatusCache::new();
+        cache.record_nat_pmp_event(
+            rule(8080),
+            NatPmpEvent::Mapped {
+                external_port: 50000,
+                lifetime_secs: 60,
+                attempts_remaining: None,
+                window_reset_secs: 0,
+            },
+        );
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 49152,
+                lifetime_secs: 60,
+                attempts_remaining: None,
+                window_reset_secs: 0,
+            },
+        );
+        let mappings = cache.snapshot().nat_pmp_mappings;
+        assert_eq!(mappings.len(), 2);
+        // Sorted by internal_port ascending.
+        assert_eq!(mappings[0].internal_port, 22);
+        assert_eq!(mappings[1].internal_port, 8080);
+    }
+
+    #[test]
     fn record_nat_pmp_rate_limited_event_updates_state_with_retry_after() {
         let cache = WarrenStatusCache::new();
-        cache.record_nat_pmp_event(NatPmpEvent::RateLimited {
-            retry_after_secs: 47,
-        });
-        match cache.snapshot().nat_pmp {
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::RateLimited {
+                retry_after_secs: 47,
+            },
+        );
+        match only_state(&cache) {
             NatPmpStateSnapshot::RateLimited { retry_after_secs } => {
                 assert_eq!(retry_after_secs, 47);
             }
@@ -550,19 +662,25 @@ mod tests {
     #[test]
     fn record_nat_pmp_renewed_event_updates_state_keeps_lifetime_fresh() {
         let cache = WarrenStatusCache::new();
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 49152,
-            lifetime_secs: 3600,
-            attempts_remaining: Some(4),
-            window_reset_secs: 0,
-        });
-        cache.record_nat_pmp_event(NatPmpEvent::Renewed {
-            external_port: 49152,
-            lifetime_secs: 3600,
-            attempts_remaining: Some(3),
-            window_reset_secs: 12,
-        });
-        match cache.snapshot().nat_pmp {
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 49152,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(4),
+                window_reset_secs: 0,
+            },
+        );
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Renewed {
+                external_port: 49152,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(3),
+                window_reset_secs: 12,
+            },
+        );
+        match only_state(&cache) {
             NatPmpStateSnapshot::Mapped {
                 external_port,
                 lifetime_secs,
@@ -578,11 +696,14 @@ mod tests {
     #[test]
     fn record_nat_pmp_failed_event_updates_state_and_surfaces_error() {
         let cache = WarrenStatusCache::new();
-        cache.record_nat_pmp_event(NatPmpEvent::Failed {
-            error: "server returned error: OutOfResources".to_owned(),
-            reason: NatPmpFailureReason::OutOfResources,
-        });
-        match cache.snapshot().nat_pmp {
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Failed {
+                error: "server returned error: OutOfResources".to_owned(),
+                reason: NatPmpFailureReason::OutOfResources,
+            },
+        );
+        match only_state(&cache) {
             NatPmpStateSnapshot::Failed { error, reason } => {
                 assert!(
                     error.contains("OutOfResources"),
@@ -595,31 +716,48 @@ mod tests {
     }
 
     #[test]
-    fn record_nat_pmp_cancelled_resets_to_disabled() {
+    fn record_nat_pmp_cancelled_removes_only_that_rule() {
         let cache = WarrenStatusCache::new();
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 49152,
-            lifetime_secs: 3600,
-            attempts_remaining: Some(4),
-            window_reset_secs: 0,
-        });
-        cache.record_nat_pmp_event(NatPmpEvent::Cancelled);
-        assert_eq!(cache.snapshot().nat_pmp, NatPmpStateSnapshot::Disabled);
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 49152,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(4),
+                window_reset_secs: 0,
+            },
+        );
+        cache.record_nat_pmp_event(
+            rule(8080),
+            NatPmpEvent::Mapped {
+                external_port: 50000,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(4),
+                window_reset_secs: 0,
+            },
+        );
+        cache.record_nat_pmp_event(rule(22), NatPmpEvent::Cancelled);
+        let mappings = cache.snapshot().nat_pmp_mappings;
+        assert_eq!(mappings.len(), 1, "only rule 22 removed");
+        assert_eq!(mappings[0].internal_port, 8080);
     }
 
     #[test]
     fn set_nat_pmp_requesting_then_mapped_round_trip() {
         let cache = WarrenStatusCache::new();
-        cache.set_nat_pmp_requesting();
-        assert_eq!(cache.snapshot().nat_pmp, NatPmpStateSnapshot::Requesting);
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 60000,
-            lifetime_secs: 60,
-            attempts_remaining: Some(5),
-            window_reset_secs: 0,
-        });
+        cache.set_nat_pmp_requesting(&[rule(22)]);
+        assert_eq!(only_state(&cache), NatPmpStateSnapshot::Requesting);
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 60000,
+                lifetime_secs: 60,
+                attempts_remaining: Some(5),
+                window_reset_secs: 0,
+            },
+        );
         assert!(matches!(
-            cache.snapshot().nat_pmp,
+            only_state(&cache),
             NatPmpStateSnapshot::Mapped {
                 external_port: 60000,
                 lifetime_secs: 60,
@@ -629,11 +767,51 @@ mod tests {
     }
 
     #[test]
-    fn set_nat_pmp_disabled_idempotent_when_already_disabled() {
+    fn set_nat_pmp_requesting_drops_removed_rules_and_keeps_mapped() {
+        let cache = WarrenStatusCache::new();
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 60000,
+                lifetime_secs: 60,
+                attempts_remaining: Some(5),
+                window_reset_secs: 0,
+            },
+        );
+        // Reconcile to a set that drops rule 22 and adds rule 8080.
+        cache.set_nat_pmp_requesting(&[rule(8080)]);
+        let mappings = cache.snapshot().nat_pmp_mappings;
+        assert_eq!(mappings.len(), 1);
+        assert_eq!(mappings[0].internal_port, 8080);
+        assert_eq!(mappings[0].state, NatPmpStateSnapshot::Requesting);
+    }
+
+    #[test]
+    fn set_nat_pmp_requesting_preserves_existing_mapped_state() {
+        let cache = WarrenStatusCache::new();
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 60000,
+                lifetime_secs: 60,
+                attempts_remaining: Some(5),
+                window_reset_secs: 0,
+            },
+        );
+        // Re-asserting the same rule set must NOT flip 22 back to Requesting.
+        cache.set_nat_pmp_requesting(&[rule(22)]);
+        assert!(matches!(
+            only_state(&cache),
+            NatPmpStateSnapshot::Mapped { .. }
+        ));
+    }
+
+    #[test]
+    fn set_nat_pmp_disabled_idempotent_when_already_empty() {
         let cache = WarrenStatusCache::new();
         let mut rx = cache.subscribe();
         rx.borrow_and_update();
-        // Already disabled by default; another disable must not push.
+        // No mappings by default; another disable must not push.
         cache.set_nat_pmp_disabled();
         assert!(!rx.has_changed().unwrap_or(false));
     }
@@ -753,12 +931,15 @@ mod tests {
     fn record_failover_does_not_perturb_reconnect_count_or_nat_pmp() {
         let cache = WarrenStatusCache::new();
         cache.record_reconnect();
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 60123,
-            lifetime_secs: 3600,
-            attempts_remaining: Some(4),
-            window_reset_secs: 0,
-        });
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 60123,
+                lifetime_secs: 3600,
+                attempts_remaining: Some(4),
+                window_reset_secs: 0,
+            },
+        );
         cache.record_failover();
         let s = cache.snapshot();
         assert_eq!(s.failover_count, 1);
@@ -768,11 +949,11 @@ mod tests {
         );
         assert!(
             matches!(
-                s.nat_pmp,
-                NatPmpStateSnapshot::Mapped {
+                s.nat_pmp_mappings.first().map(|m| &m.state),
+                Some(NatPmpStateSnapshot::Mapped {
                     external_port: 60123,
                     ..
-                }
+                })
             ),
             "failover must not touch nat_pmp state"
         );
@@ -783,20 +964,23 @@ mod tests {
         let cache = WarrenStatusCache::new();
         let mut rx = cache.subscribe();
         rx.borrow_and_update();
-        cache.record_nat_pmp_event(NatPmpEvent::Mapped {
-            external_port: 51234,
-            lifetime_secs: 60,
-            attempts_remaining: Some(5),
-            window_reset_secs: 0,
-        });
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 51234,
+                lifetime_secs: 60,
+                attempts_remaining: Some(5),
+                window_reset_secs: 0,
+            },
+        );
         assert!(rx.has_changed().unwrap_or(false));
         let s = rx.borrow_and_update();
         assert!(matches!(
-            s.nat_pmp,
-            NatPmpStateSnapshot::Mapped {
+            s.nat_pmp_mappings.first().map(|m| &m.state),
+            Some(NatPmpStateSnapshot::Mapped {
                 external_port: 51234,
                 ..
-            }
+            })
         ));
     }
 }

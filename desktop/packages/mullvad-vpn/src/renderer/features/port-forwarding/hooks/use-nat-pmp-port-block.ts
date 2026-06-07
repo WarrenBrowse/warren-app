@@ -38,35 +38,71 @@ export interface NatPmpPortBlock {
  * daemon's refresh loop retries automatically and pushes a fresh status.
  */
 export function useNatPmpPortBlock(): NatPmpPortBlock {
-  const { status } = usePortForwarding();
+  const { mappings, statusReceivedAt } = usePortForwarding();
 
-  // Wall-clock instant the current status snapshot arrived. The exit's
-  // retry-after / window-reset values are relative to that moment.
-  const anchorRef = React.useRef(Date.now());
+  // Anchor = when THIS snapshot actually arrived from the daemon (stored
+  // in redux), NOT when this component mounted. This is the whole fix for
+  // the "warning flickers on every navigation / persists 10 min after the
+  // last change" bug: the exit only pushes a fresh status on a mapping
+  // event (~30 min apart between renewals), so between events the snapshot
+  // is stale. Anchoring to the real arrival time means a stale snapshot's
+  // window has already elapsed → no block, no warning, no flicker. The
+  // window self-clears purely from the clock, with zero new events.
+  //
+  // The exit's `windowResetSecs` is "seconds until ONE rate-limit slot
+  // frees" (the sliding 60 s window's oldest entry falls out). So:
+  //   - `attemptsRemaining === 0`: blocked until one slot frees, after
+  //     which exactly one change is allowed again.
+  //   - `attemptsRemaining === 1`: a heads-up ("last chance"); it stops
+  //     being the last chance once a slot frees, i.e. after the SAME
+  //     window. Both therefore expire at `arrival + windowResetSecs`.
+  //
+  // Multi-port: the rate-limit budget is SHARED across all of a client's
+  // mappings (per-source on the exit), so we aggregate across mappings —
+  // a single rate-limited mapping blocks every port control, and the
+  // budget is the minimum `attemptsRemaining` any mapping reports.
+  const anchor = statusReceivedAt ?? Date.now();
   const [now, setNow] = React.useState(() => Date.now());
-  React.useEffect(() => {
-    anchorRef.current = Date.now();
-    setNow(Date.now());
-  }, [status]);
 
-  let targetSecs = 0;
+  let windowSecs = 0;
   let reason: NatPmpPortBlockReason = null;
-  let counting = false;
-  if (status.state === 'rate-limited') {
-    targetSecs = status.retryAfterSecs;
+  let isBlock = false;
+
+  // A live rate-limit on ANY mapping blocks everything (longest wait wins).
+  const rateLimited = mappings.map((m) => m.status).filter((s) => s.state === 'rate-limited');
+  if (rateLimited.length > 0) {
+    windowSecs = Math.max(
+      ...rateLimited.map((s) => (s.state === 'rate-limited' ? s.retryAfterSecs : 0)),
+    );
     reason = 'rate-limited';
-    counting = true;
-  } else if (status.state === 'mapped') {
-    // `attemptsRemaining` is undefined on a pre-trailer exit — in that
-    // case we cannot warn proactively, so leave the control unblocked.
-    if (status.attemptsRemaining === 0) {
-      targetSecs = status.windowResetSecs;
+    isBlock = true;
+  } else {
+    // Otherwise look at the shared budget reported on the mapped entries.
+    // `attemptsRemaining` is undefined on a pre-trailer exit — ignore
+    // those (cannot reason about budget). Take the most constrained.
+    let minAttempts: number | undefined;
+    let budgetWindowSecs = 0;
+    for (const m of mappings) {
+      if (m.status.state === 'mapped' && m.status.attemptsRemaining !== undefined) {
+        if (minAttempts === undefined || m.status.attemptsRemaining < minAttempts) {
+          minAttempts = m.status.attemptsRemaining;
+          budgetWindowSecs = m.status.windowResetSecs;
+        }
+      }
+    }
+    if (minAttempts === 0) {
+      windowSecs = budgetWindowSecs;
       reason = 'budget-exhausted';
-      counting = true;
-    } else if (status.attemptsRemaining === 1) {
+      isBlock = true;
+    } else if (minAttempts === 1) {
+      windowSecs = budgetWindowSecs;
       reason = 'last-chance';
     }
   }
+
+  // A 0-second window (or a missing anchor) carries no live information —
+  // never start a ticking/blocking state from it.
+  const counting = reason !== null && windowSecs > 0;
 
   React.useEffect(() => {
     if (!counting) {
@@ -74,16 +110,19 @@ export function useNatPmpPortBlock(): NatPmpPortBlock {
     }
     const intervalId = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(intervalId);
-  }, [counting, status]);
+  }, [counting, anchor, windowSecs]);
 
-  const elapsedSecs = Math.floor((now - anchorRef.current) / 1000);
-  const remainingSecs = counting ? Math.max(0, targetSecs - elapsedSecs) : 0;
-  // Stop blocking the moment the countdown elapses: the daemon is
-  // retrying and a fresh `mapped` status will land shortly. Keeping the
-  // control disabled past 0 would strand the user.
-  const blocked = counting && remainingSecs > 0;
+  const elapsedSecs = Math.floor((now - anchor) / 1000);
+  const remainingSecs = counting ? Math.max(0, windowSecs - elapsedSecs) : 0;
+  // The whole rate-limit state (block AND warning) is live only while the
+  // window has time left. Past 0 the exit's budget has recovered at least
+  // one slot; keeping the control disabled — or the warning up — would
+  // strand the user (and is exactly the stale-snapshot bug). A fresh event
+  // re-arms it with accurate numbers if the user keeps changing ports.
+  const active = counting && remainingSecs > 0;
+  const blocked = active && isBlock;
 
-  return { blocked, remainingSecs, reason: blocked || reason === 'last-chance' ? reason : null };
+  return { blocked, remainingSecs, reason: active ? reason : null };
 }
 
 /** Formats a whole-second count as `mm:ss` for countdown display. */

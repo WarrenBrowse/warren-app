@@ -3545,6 +3545,13 @@ impl Daemon {
             // fresh spawn) — no tunnel reconnect required to apply
             // the change.
             let nat_pmp_cfg = nat_pmp_settings_to_runtime_cfg(&new_value_for_gen);
+            // Capture the rule ids before the cfg is moved into the
+            // parameters generator, so the cache can reconcile its
+            // mapping list to exactly the rules the user now wants.
+            let nat_pmp_rule_ids: Vec<_> = nat_pmp_cfg
+                .as_ref()
+                .map(|c| c.effective_rules().iter().map(|r| r.id()).collect())
+                .unwrap_or_default();
             self.parameters_generator
                 .set_warren_nat_pmp(nat_pmp_cfg)
                 .await;
@@ -3555,7 +3562,8 @@ impl Daemon {
             // The eventual `Mapped` / `Failed` event from the manager
             // (when on) overrides this pre-set value.
             if new_value_for_gen.enabled {
-                self.warren_status_cache.set_nat_pmp_requesting();
+                self.warren_status_cache
+                    .set_nat_pmp_requesting(&nat_pmp_rule_ids);
             } else {
                 self.warren_status_cache.set_nat_pmp_disabled();
             }
@@ -4693,21 +4701,33 @@ fn nat_pmp_settings_to_runtime_cfg(
     settings: &mullvad_types::settings::WarrenNatPmpSettings,
 ) -> Option<talpid_warren_tunnel::NatPmpConfig> {
     use mullvad_types::settings::WarrenNatPmpProto;
-    use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto};
+    use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto, NatPmpRule};
 
     if !settings.enabled {
         return None;
     }
-    let protocol = match settings.protocol {
+    let map_proto = |p: WarrenNatPmpProto| match p {
         WarrenNatPmpProto::Udp => NatPmpProto::Udp,
         WarrenNatPmpProto::Tcp => NatPmpProto::Tcp,
     };
+    let rules = settings
+        .effective_rules()
+        .into_iter()
+        .map(|r| NatPmpRule {
+            protocol: map_proto(r.protocol),
+            suggested_external_port: r.suggested_external_port,
+            internal_port: r.internal_port,
+        })
+        .collect();
     Some(NatPmpConfig {
         enabled: true,
         lifetime_secs: settings.lifetime_secs,
-        protocol,
-        suggested_external_port: settings.suggested_external_port,
-        internal_port: settings.internal_port,
+        rules,
+        // Legacy flat fields stay at defaults: `rules` is the source of
+        // truth and the runtime `effective_rules` prefers it.
+        protocol: NatPmpProto::Udp,
+        suggested_external_port: 0,
+        internal_port: 0,
     })
 }
 

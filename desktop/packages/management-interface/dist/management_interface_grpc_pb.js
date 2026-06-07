@@ -932,21 +932,6 @@ getSettings: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Toggle persistant du mode tunnel Warren (true = backend Iroh,
-// false = WireGuard upstream). Override via env var POC
-// `WARREN_TUNNEL=1` reste possible. Restart du daemon requis pour
-// appliquer.
-setWarrenMode: {
-    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMode',
-    requestStream: false,
-    responseStream: false,
-    requestType: google_protobuf_wrappers_pb.BoolValue,
-    responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_google_protobuf_BoolValue,
-    requestDeserialize: deserialize_google_protobuf_BoolValue,
-    responseSerialize: serialize_google_protobuf_Empty,
-    responseDeserialize: deserialize_google_protobuf_Empty,
-  },
   // Toggle persistant du mode account local (true = backends Local*
 // sans api.mullvad.net, false = Remote* historiques). Override via
 // env var POC `WARREN_LOCAL_ACCOUNT=1`. Restart requis pour

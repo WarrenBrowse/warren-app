@@ -70,18 +70,35 @@ type WarrenStatusUpdatesReceiver =
 type NatPmpStatusUpdatesReceiver =
     Box<dyn futures::Stream<Item = Result<types::NatPmpStatus, Status>> + Send + Unpin>;
 
-/// Maps the live `NatPmpStateSnapshot` into the proto status message
-/// emitted by `GetNatPmpSettings` and the `NatPmpStatusUpdates` stream.
-fn nat_pmp_state_to_proto(
-    state: &crate::warren_status::NatPmpStateSnapshot,
-) -> types::NatPmpStatus {
-    use crate::warren_status::NatPmpStateSnapshot;
+/// Map a `NatPmpFailureReason` to its proto enum discriminant.
+fn nat_pmp_error_reason_to_i32(reason: &talpid_warren_tunnel::NatPmpFailureReason) -> i32 {
     use talpid_warren_tunnel::NatPmpFailureReason;
-    use types::nat_pmp_status::{ErrorReason, State};
+    use types::nat_pmp_status::ErrorReason;
+    let r = match reason {
+        NatPmpFailureReason::SuggestedPortInUse => ErrorReason::SuggestedPortInUse,
+        NatPmpFailureReason::OutOfResources => ErrorReason::OutOfResources,
+        NatPmpFailureReason::NotAuthorized => ErrorReason::NotAuthorized,
+        NatPmpFailureReason::Other => ErrorReason::Unknown,
+    };
+    r as i32
+}
+
+/// Map one per-rule mapping snapshot into the proto `Mapping` message.
+fn nat_pmp_mapping_to_proto(
+    m: &crate::warren_status::NatPmpMappingSnapshot,
+) -> types::nat_pmp_status::Mapping {
+    use crate::warren_status::NatPmpStateSnapshot;
+    use talpid_warren_tunnel::NatPmpProto;
+    use types::nat_pmp_status::{Mapping, State};
+
+    let protocol = match m.protocol {
+        NatPmpProto::Udp => types::nat_pmp_settings::Proto::Udp as i32,
+        NatPmpProto::Tcp => types::nat_pmp_settings::Proto::Tcp as i32,
+    };
     // Base "all-unset" message; each arm overrides the fields it sets.
-    // Keeps the rate-limit / budget fields defaulted to None on the
-    // states that do not carry them.
-    let base = types::NatPmpStatus {
+    let base = Mapping {
+        internal_port: u32::from(m.internal_port),
+        protocol,
         state: State::Disabled as i32,
         external_port: None,
         lifetime_granted_secs: None,
@@ -91,12 +108,12 @@ fn nat_pmp_state_to_proto(
         attempts_remaining: None,
         window_reset_secs: None,
     };
-    match state {
-        NatPmpStateSnapshot::Disabled => types::NatPmpStatus {
+    match &m.state {
+        NatPmpStateSnapshot::Disabled => Mapping {
             state: State::Disabled as i32,
             ..base
         },
-        NatPmpStateSnapshot::Requesting => types::NatPmpStatus {
+        NatPmpStateSnapshot::Requesting => Mapping {
             state: State::Requesting as i32,
             ..base
         },
@@ -105,7 +122,7 @@ fn nat_pmp_state_to_proto(
             lifetime_secs,
             attempts_remaining,
             window_reset_secs,
-        } => types::NatPmpStatus {
+        } => Mapping {
             state: State::Mapped as i32,
             external_port: Some(u32::from(*external_port)),
             lifetime_granted_secs: Some(*lifetime_secs),
@@ -113,26 +130,55 @@ fn nat_pmp_state_to_proto(
             window_reset_secs: Some(u32::from(*window_reset_secs)),
             ..base
         },
-        NatPmpStateSnapshot::RateLimited { retry_after_secs } => types::NatPmpStatus {
+        NatPmpStateSnapshot::RateLimited { retry_after_secs } => Mapping {
             state: State::RateLimited as i32,
             retry_after_secs: Some(u32::from(*retry_after_secs)),
             ..base
         },
-        NatPmpStateSnapshot::Failed { error, reason } => {
-            let error_reason = match reason {
-                NatPmpFailureReason::SuggestedPortInUse => ErrorReason::SuggestedPortInUse,
-                NatPmpFailureReason::OutOfResources => ErrorReason::OutOfResources,
-                NatPmpFailureReason::NotAuthorized => ErrorReason::NotAuthorized,
-                NatPmpFailureReason::Other => ErrorReason::Unknown,
-            };
-            types::NatPmpStatus {
-                state: State::Failed as i32,
-                error_message: Some(error.clone()),
-                error_reason: Some(error_reason as i32),
-                ..base
-            }
-        }
+        NatPmpStateSnapshot::Failed { error, reason } => Mapping {
+            state: State::Failed as i32,
+            error_message: Some(error.clone()),
+            error_reason: Some(nat_pmp_error_reason_to_i32(reason)),
+            ..base
+        },
     }
+}
+
+/// Maps the live per-rule NAT-PMP mappings into the proto status message
+/// emitted by `GetNatPmpSettings` and the `NatPmpStatusUpdates` stream.
+/// Populates `mappings` (multi-port). The legacy top-level fields mirror
+/// the first mapping for backward compatibility with older clients, or
+/// stay Disabled when there are no active mappings.
+fn nat_pmp_state_to_proto(
+    mappings: &[crate::warren_status::NatPmpMappingSnapshot],
+) -> types::NatPmpStatus {
+    use types::nat_pmp_status::State;
+
+    let proto_mappings: Vec<types::nat_pmp_status::Mapping> =
+        mappings.iter().map(nat_pmp_mapping_to_proto).collect();
+
+    let mut status = types::NatPmpStatus {
+        state: State::Disabled as i32,
+        external_port: None,
+        lifetime_granted_secs: None,
+        error_message: None,
+        error_reason: None,
+        retry_after_secs: None,
+        attempts_remaining: None,
+        window_reset_secs: None,
+        mappings: proto_mappings,
+    };
+    if let Some(first) = status.mappings.first() {
+        status.state = first.state;
+        status.external_port = first.external_port;
+        status.lifetime_granted_secs = first.lifetime_granted_secs;
+        status.error_message = first.error_message.clone();
+        status.error_reason = first.error_reason;
+        status.retry_after_secs = first.retry_after_secs;
+        status.attempts_remaining = first.attempts_remaining;
+        status.window_reset_secs = first.window_reset_secs;
+    }
+    status
 }
 
 /// Convert a `WarrenStatusSnapshot` snapshot into the gRPC proto.
@@ -559,7 +605,7 @@ impl ManagementService for ManagementServiceImpl {
             reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values."
         )]
         let stream = tokio_stream::wrappers::WatchStream::new(rx)
-            .map(|snap| Ok(nat_pmp_state_to_proto(&snap.nat_pmp)));
+            .map(|snap| Ok(nat_pmp_state_to_proto(&snap.nat_pmp_mappings)));
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::NatPmpStatusUpdatesStream
         ))

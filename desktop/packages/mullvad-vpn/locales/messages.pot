@@ -8,12 +8,6 @@ msgstr ""
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr ""
 
-#. The label for the WireGuard port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
-msgid "%(wireguard)s port"
-msgstr ""
-
 msgid "1 day"
 msgid_plural "%d days"
 msgstr[0] ""
@@ -327,13 +321,6 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr ""
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr ""
-
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
 #. %(location)s - The name of the location being added to the list.
@@ -405,14 +392,6 @@ msgstr ""
 #. %(pubkey)s - the public key to the left of the button
 msgctxt "accessibility"
 msgid "Forget public key %(pubkey)s"
-msgstr ""
-
-#. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr ""
 
 #. Accessibility label for link to app upgrade view.
@@ -513,14 +492,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr ""
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr ""
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr ""
@@ -567,11 +538,6 @@ msgctxt "account-view"
 msgid "Log out"
 msgstr ""
 
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr ""
-
 msgctxt "account-view"
 msgid "OUT OF TIME"
 msgstr ""
@@ -592,16 +558,6 @@ msgstr ""
 #. The title for the obfuscation method selector.
 msgctxt "anti-censorship-view"
 msgid "Method"
-msgstr ""
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr ""
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
 msgstr ""
 
 msgctxt "api-access-methods-view"
@@ -1120,10 +1076,9 @@ msgstr ""
 
 #. Active-feature chip on the main screen, shown when
 #. port forwarding is active. Available placeholders:
-#. %(port)d - the granted public port (e.g. 53451)
-#. %(protocol)s - the transport protocol, "UDP" or "TCP"
+#. %(ports)s - comma-separated "port PROTO" list
 msgctxt "connect-view"
-msgid "Port forwarding: %(port)d %(protocol)s"
+msgid "Port forwarding: %(ports)s"
 msgstr ""
 
 #. Button label for navigating to the voucher redemption view.
@@ -1271,43 +1226,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr ""
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr ""
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr ""
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr ""
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr ""
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1318,77 +1236,11 @@ msgid "Going to login will unblock the Internet on this device."
 msgstr ""
 
 msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr ""
-
-#. Title label in navigation bar for the manage devices view.
-#. Title text in the manage devices view
-msgctxt "device-management"
-msgid "Manage devices"
+msgid "Session is inactive"
 msgstr ""
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr ""
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr ""
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr ""
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr ""
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr ""
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr ""
-
-msgctxt "device-management"
-msgid "Time left: %(timeLeft)s"
-msgstr ""
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr ""
-
-#. Button text to retry fetching devices.
-msgctxt "device-management"
-msgid "Try again"
-msgstr ""
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
+msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr ""
 
 #. The message displayed to the user in case of critical error in the GUI
@@ -1538,10 +1390,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr ""
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr ""
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr ""
 
@@ -1582,20 +1430,6 @@ msgstr ""
 #. Notification subtitle when the installer failed.
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
-msgstr ""
-
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr ""
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr ""
 
 #. The in-app banner displayed to the user when the app beta update is
@@ -2148,15 +1982,43 @@ msgid "Your privacy might be at risk with this unsupported app version. Please u
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "auto"
+msgid "+ Add a port"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
+msgid "applying…"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "No port is available right now. Try again in a moment."
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2164,7 +2026,15 @@ msgid "Opens a public port on the connected exit and forwards it to your device.
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Port %(port)d is already in use. Choose another one."
+msgid "pending…"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2172,15 +2042,11 @@ msgid "Port forwarding"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Port forwarding is not allowed on this server."
+msgid "port in use"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr ""
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
+msgid "Port must be between 49152 and 65535."
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2188,31 +2054,23 @@ msgid "Protocol"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
+msgid "Remove port"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
+msgid "requesting…"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Status: active"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
+msgid "This port is already in your list."
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr ""
-
-msgctxt "port-forwarding-view"
-msgid "The requested port is already in use. Choose another one."
-msgstr ""
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgid "Too many port changes. You can change ports again in %(countdown)s."
 msgstr ""
 
 #. Cancel button label for voucher redemption.
@@ -3063,10 +2921,6 @@ msgid "Warren local account"
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "Warren tunnel mode"
-msgstr ""
-
-msgctxt "vpn-settings-view"
 msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
 msgstr ""
 
@@ -3080,6 +2934,14 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr ""
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr ""
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
@@ -3103,19 +2965,11 @@ msgid "Multihop"
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
-msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
-msgstr ""
-
-msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
-msgstr ""
-
-msgctxt "warren-multi-hop-view"
-msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
@@ -3128,14 +2982,6 @@ msgstr ""
 
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
-msgstr ""
-
-msgctxt "warren-mnemonic"
-msgid "Copied to clipboard"
-msgstr ""
-
-msgctxt "warren-mnemonic"
-msgid "Copy to clipboard"
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -3339,7 +3185,7 @@ msgid "Last"
 msgstr ""
 
 msgctxt "warren-status-view"
-msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
 msgstr ""
 
 msgctxt "warren-status-view"
@@ -3374,15 +3220,6 @@ msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr ""
-
-#. Page title for WireGuard port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
@@ -3475,14 +3312,6 @@ msgid "Shadowsocks"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
 msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
 msgstr ""
 
@@ -3493,13 +3322,6 @@ msgstr ""
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr ""
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
 msgstr ""
 
 msgctxt "wireguard-settings-view"

@@ -312,6 +312,7 @@ mod tests {
         NatPmpConfig {
             enabled: true,
             lifetime_secs: 60,
+            rules: Vec::new(),
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port,
@@ -544,6 +545,7 @@ mod tests {
         let new_cfg = NatPmpConfig {
             enabled: true,
             lifetime_secs: 120,
+            rules: Vec::new(),
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
@@ -610,6 +612,7 @@ mod tests {
         let new_cfg = NatPmpConfig {
             enabled: true,
             lifetime_secs: 120,
+            rules: Vec::new(),
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
@@ -648,6 +651,7 @@ mod tests {
             let cfg = NatPmpConfig {
                 enabled: true,
                 lifetime_secs: lifetime,
+                rules: Vec::new(),
                 protocol: MapProto::Udp,
                 suggested_external_port: 0,
                 internal_port: 22,

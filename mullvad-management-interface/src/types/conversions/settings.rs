@@ -107,16 +107,70 @@ impl TryFrom<proto::WarrenMultiHopSettings> for mullvad_types::settings::WarrenM
     }
 }
 
+/// Map a `WarrenNatPmpProto` to its proto enum discriminant.
+fn nat_pmp_proto_to_i32(p: mullvad_types::settings::WarrenNatPmpProto) -> i32 {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    match p {
+        WarrenNatPmpProto::Udp => proto::nat_pmp_settings::Proto::Udp as i32,
+        WarrenNatPmpProto::Tcp => proto::nat_pmp_settings::Proto::Tcp as i32,
+    }
+}
+
+/// Map a proto enum discriminant back to a `WarrenNatPmpProto`.
+fn nat_pmp_proto_from_i32(
+    v: i32,
+) -> Result<mullvad_types::settings::WarrenNatPmpProto, FromProtobufTypeError> {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    match proto::nat_pmp_settings::Proto::try_from(v) {
+        Ok(proto::nat_pmp_settings::Proto::Udp) => Ok(WarrenNatPmpProto::Udp),
+        Ok(proto::nat_pmp_settings::Proto::Tcp) => Ok(WarrenNatPmpProto::Tcp),
+        Err(_) => Err(FromProtobufTypeError::invalid_argument(
+            "invalid NatPmpSettings.protocol enum value",
+        )),
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenNatPmpRule> for proto::nat_pmp_settings::Rule {
+    fn from(value: &mullvad_types::settings::WarrenNatPmpRule) -> Self {
+        proto::nat_pmp_settings::Rule {
+            protocol: nat_pmp_proto_to_i32(value.protocol),
+            suggested_external_port: u32::from(value.suggested_external_port),
+            internal_port: u32::from(value.internal_port),
+        }
+    }
+}
+
+impl TryFrom<proto::nat_pmp_settings::Rule> for mullvad_types::settings::WarrenNatPmpRule {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::nat_pmp_settings::Rule) -> Result<Self, Self::Error> {
+        let protocol = nat_pmp_proto_from_i32(value.protocol)?;
+        let suggested_external_port =
+            u16::try_from(value.suggested_external_port).map_err(|_| {
+                FromProtobufTypeError::invalid_argument("NatPmpRule.suggested_external_port > 65535")
+            })?;
+        let internal_port = u16::try_from(value.internal_port).map_err(|_| {
+            FromProtobufTypeError::invalid_argument("NatPmpRule.internal_port > 65535")
+        })?;
+        Ok(mullvad_types::settings::WarrenNatPmpRule {
+            protocol,
+            suggested_external_port,
+            internal_port,
+        })
+    }
+}
+
 impl From<&mullvad_types::settings::WarrenNatPmpSettings> for proto::NatPmpSettings {
     fn from(value: &mullvad_types::settings::WarrenNatPmpSettings) -> Self {
-        use mullvad_types::settings::WarrenNatPmpProto;
         proto::NatPmpSettings {
             enabled: value.enabled,
             lifetime_secs: value.lifetime_secs,
-            protocol: match value.protocol {
-                WarrenNatPmpProto::Udp => proto::nat_pmp_settings::Proto::Udp as i32,
-                WarrenNatPmpProto::Tcp => proto::nat_pmp_settings::Proto::Tcp as i32,
-            },
+            rules: value
+                .rules
+                .iter()
+                .map(proto::nat_pmp_settings::Rule::from)
+                .collect(),
+            protocol: nat_pmp_proto_to_i32(value.protocol),
             suggested_external_port: u32::from(value.suggested_external_port),
             internal_port: u32::from(value.internal_port),
         }
@@ -127,16 +181,7 @@ impl TryFrom<proto::NatPmpSettings> for mullvad_types::settings::WarrenNatPmpSet
     type Error = FromProtobufTypeError;
 
     fn try_from(value: proto::NatPmpSettings) -> Result<Self, Self::Error> {
-        use mullvad_types::settings::WarrenNatPmpProto;
-        let protocol = match proto::nat_pmp_settings::Proto::try_from(value.protocol) {
-            Ok(proto::nat_pmp_settings::Proto::Udp) => WarrenNatPmpProto::Udp,
-            Ok(proto::nat_pmp_settings::Proto::Tcp) => WarrenNatPmpProto::Tcp,
-            Err(_) => {
-                return Err(FromProtobufTypeError::invalid_argument(
-                    "invalid NatPmpSettings.protocol enum value",
-                ));
-            }
-        };
+        let protocol = nat_pmp_proto_from_i32(value.protocol)?;
         // Ports are 16-bit; reject overflow rather than silently
         // truncating, otherwise a malformed gRPC call would silently
         // wrap to e.g. (65536 -> 0).
@@ -149,9 +194,15 @@ impl TryFrom<proto::NatPmpSettings> for mullvad_types::settings::WarrenNatPmpSet
         let internal_port = u16::try_from(value.internal_port).map_err(|_| {
             FromProtobufTypeError::invalid_argument("NatPmpSettings.internal_port > 65535")
         })?;
+        let rules = value
+            .rules
+            .into_iter()
+            .map(mullvad_types::settings::WarrenNatPmpRule::try_from)
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(mullvad_types::settings::WarrenNatPmpSettings {
             enabled: value.enabled,
             lifetime_secs: value.lifetime_secs,
+            rules,
             protocol,
             suggested_external_port,
             internal_port,
@@ -515,5 +566,64 @@ mod warren_multi_hop_conversion_tests {
             result.is_err(),
             "negative duration must be rejected as invalid"
         );
+    }
+}
+
+#[cfg(test)]
+mod warren_nat_pmp_conversion_tests {
+    use super::*;
+    use mullvad_types::settings::{WarrenNatPmpProto, WarrenNatPmpRule, WarrenNatPmpSettings};
+
+    #[test]
+    fn proto_roundtrip_preserves_multi_port_rules() {
+        let original = WarrenNatPmpSettings {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![
+                WarrenNatPmpRule {
+                    protocol: WarrenNatPmpProto::Udp,
+                    suggested_external_port: 51820,
+                    internal_port: 51820,
+                },
+                WarrenNatPmpRule {
+                    protocol: WarrenNatPmpProto::Tcp,
+                    suggested_external_port: 0,
+                    internal_port: 8080,
+                },
+            ],
+            protocol: WarrenNatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let proto = proto::NatPmpSettings::from(&original);
+        assert_eq!(proto.rules.len(), 2);
+        let back = WarrenNatPmpSettings::try_from(proto).expect("roundtrip must succeed");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn proto_roundtrip_empty_rules_preserves_defaults() {
+        let original = WarrenNatPmpSettings::default();
+        let proto = proto::NatPmpSettings::from(&original);
+        assert!(proto.rules.is_empty());
+        let back = WarrenNatPmpSettings::try_from(proto).expect("roundtrip");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn rule_port_overflow_is_rejected() {
+        let proto = proto::NatPmpSettings {
+            enabled: true,
+            lifetime_secs: 60,
+            rules: vec![proto::nat_pmp_settings::Rule {
+                protocol: proto::nat_pmp_settings::Proto::Udp as i32,
+                suggested_external_port: 70000, // > 65535
+                internal_port: 22,
+            }],
+            protocol: proto::nat_pmp_settings::Proto::Udp as i32,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        assert!(WarrenNatPmpSettings::try_from(proto).is_err());
     }
 }

@@ -23,6 +23,7 @@ import {
 const OFF_NAT_PMP: NatPmpSettings = {
   enabled: false,
   lifetimeSecs: 3600,
+  rules: [],
   protocol: NatPmpProto.udp,
   suggestedExternalPort: 0,
   internalPort: 0,

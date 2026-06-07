@@ -2,7 +2,7 @@ use std::{future::Future, pin::Pin, sync::Arc};
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{
-    MultiHopConfig, NatPmpConfig, NatPmpEventObserver, WarrenTunnelParameters,
+    MultiHopConfig, NatPmpConfig, NatPmpMappingObserver, WarrenTunnelParameters,
 };
 use tokio::sync::Mutex;
 
@@ -755,8 +755,8 @@ impl ParametersGenerator {
         // disconnect and reconnect"). Always-wired closes that gap.
         {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
-            let observer: NatPmpEventObserver = Arc::new(move |event| {
-                cache_for_nat_pmp.record_nat_pmp_event(event);
+            let observer: NatPmpMappingObserver = Arc::new(move |id, event| {
+                cache_for_nat_pmp.record_nat_pmp_event(id, event);
             });
             params.nat_pmp_observer = Some(observer);
         }
@@ -766,8 +766,9 @@ impl ParametersGenerator {
         // request_map happen asynchronously after the watch push,
         // so without this pre-set the UI briefly shows the stale
         // `disabled` cache value).
-        if params.nat_pmp.as_ref().is_some_and(|cfg| cfg.enabled) {
-            inner.warren_status_cache.set_nat_pmp_requesting();
+        if let Some(cfg) = params.nat_pmp.as_ref().filter(|cfg| cfg.enabled) {
+            let ids: Vec<_> = cfg.effective_rules().iter().map(|r| r.id()).collect();
+            inner.warren_status_cache.set_nat_pmp_requesting(&ids);
         }
         // Cache the selected exit's geo so `get_last_location` can
         // surface it on the connecting / connected tunnel state.

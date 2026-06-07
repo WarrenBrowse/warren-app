@@ -87,6 +87,14 @@ export interface IUpdateNatPmpSettingsAction {
 export interface IUpdateNatPmpStatusAction {
   type: 'UPDATE_NAT_PMP_STATUS';
   natPmpStatus: NatPmpStatus;
+  // Wall-clock instant (ms) the snapshot arrived from the daemon. The
+  // exit's rate-limit `windowResetSecs` / `retryAfterSecs` are relative
+  // to this moment, so the UI countdown must anchor to it — NOT to a
+  // component mount time. Otherwise a stale snapshot (no new event for
+  // ~30 min between renewals) re-starts a fresh countdown on every
+  // navigation, making the warning flicker and persist long after the
+  // rate-limit window has actually cleared.
+  receivedAt: number;
 }
 
 export interface IUpdateEnableIpv6Action {
@@ -290,6 +298,7 @@ function updateNatPmpStatus(natPmpStatus: NatPmpStatus): IUpdateNatPmpStatusActi
   return {
     type: 'UPDATE_NAT_PMP_STATUS',
     natPmpStatus,
+    receivedAt: Date.now(),
   };
 }
 

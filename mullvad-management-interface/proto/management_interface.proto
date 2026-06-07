@@ -765,12 +765,24 @@ message NatPmpSettings {
     UDP = 0;
     TCP = 1;
   }
+  // One port-forward rule. A client may hold several at once, up to the
+  // exit-enforced per-client quota.
+  message Rule {
+    Proto protocol = 1;
+    // Suggested external port (0 = server picks from its pool).
+    uint32 suggested_external_port = 2;
+    // Internal port the user's application binds locally. 0 = unset.
+    uint32 internal_port = 3;
+  }
+  // Multi-port source of truth: one entry per rule the user wants
+  // active. New clients populate this and leave the legacy single-port
+  // fields below at their defaults.
+  repeated Rule rules = 6;
+  // --- Legacy single-port fields (deprecated) -------------------------
+  // Kept ONLY so a settings.json written by a pre-multi-port build still
+  // deserializes; superseded by `rules`. Read via effective_rules().
   Proto protocol = 3;
-  // Suggested external port (0 = server picks). Useful for advanced
-  // users who pin a port; the server may ignore the suggestion (RFC
-  // 6886 §3.3).
   uint32 suggested_external_port = 4;
-  // Internal port the user's application binds locally. 0 = unset.
   uint32 internal_port = 5;
 }
 
@@ -829,6 +841,27 @@ message NatPmpStatus {
   // by one (i.e. until the oldest in-window allocation expires). Drives
   // the "wait before next change" countdown when attempts_remaining == 0.
   optional uint32 window_reset_secs = 8;
+
+  // One NAT-PMP mapping, tagged with the rule it belongs to. Multi-port:
+  // the UI renders one row per Mapping. Carries the same per-rule state
+  // fields as the (legacy) top-level message above.
+  message Mapping {
+    // Rule identity: the internal port the user's app binds + protocol.
+    uint32 internal_port = 1;
+    NatPmpSettings.Proto protocol = 2;
+    State state = 3;
+    optional uint32 external_port = 4;
+    optional uint32 lifetime_granted_secs = 5;
+    optional string error_message = 6;
+    optional ErrorReason error_reason = 7;
+    optional uint32 retry_after_secs = 8;
+    optional uint32 attempts_remaining = 9;
+    optional uint32 window_reset_secs = 10;
+  }
+  // Multi-port: one entry per active rule. Empty == no active mappings
+  // (feature off or all rules removed). New clients read this; the
+  // top-level fields above are kept only for backward compatibility.
+  repeated Mapping mappings = 9;
 }
 
 message RelayOverride {

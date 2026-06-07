@@ -1087,6 +1087,10 @@ msgid "Port forwarding: %(port)d %(protocol)s"
 msgstr "Redirection de port : %(port)d %(protocol)s"
 
 msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Redirection de port : %(ports)s"
+
+msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Félicitations !"
 
@@ -2204,6 +2208,82 @@ msgstr "Trop de changements récents. Vous pourrez changer de port à nouveau da
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change the port again in %(countdown)s."
 msgstr "Trop de changements de port. Vous pourrez en changer à nouveau dans %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Ajouter un port"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maximum de %(max)d ports atteint"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Aucun port pour l'instant. Ajoutez-en un pour l'ouvrir sur le serveur de sortie."
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Chaque port ajouté est ouvert sur le serveur de sortie et redirigé vers le même port sur votre appareil. Les changements s'appliquent immédiatement, sans reconnexion."
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Le port doit être compris entre 49152 et 65535."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Ce port est déjà dans votre liste."
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Statut : en attente d'une connexion active au tunnel pour établir les redirections de port."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Trop de changements de port. Vous pourrez en changer à nouveau dans %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Supprimer le port"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "ouvert : %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "en attente…"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "demande…"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "application…"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port occupé"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "aucun port disponible"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "non autorisé"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "échec"
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"

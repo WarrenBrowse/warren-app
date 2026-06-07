@@ -537,6 +537,22 @@ export enum NatPmpProto {
   tcp = 'tcp',
 }
 
+// One NAT-PMP port-forward rule. Multi-port: a client may hold several
+// at once, up to the exit-enforced per-client quota
+// (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`, currently 5). The rule
+// identity used by the exit allocator is `(internalPort, protocol)`, so
+// every rule must carry a distinct internal port. The UI's "same port
+// on your device" model sets `internalPort === suggestedExternalPort`
+// (the single port number the user picks opens publicly and is what
+// their app binds locally).
+export interface NatPmpRule {
+  protocol: NatPmpProto;
+  // Suggested external (public) port (0 = server picks from its pool).
+  suggestedExternalPort: number;
+  // Internal port the user's application binds.
+  internalPort: number;
+}
+
 // Warren NAT-PMP port-forwarding settings. Persisted in
 // `Settings.warrenNatPmp` and surfaced via the port-forwarding
 // settings view (Warren differentiator since Mullvad / IVPN dropped
@@ -547,11 +563,34 @@ export interface NatPmpSettings {
   // values outside that range are silently capped server-side. UI
   // exposes 1h / 6h / 24h presets that all collapse to 3600 s.
   lifetimeSecs: number;
+  // Multi-port source of truth: one entry per port-forward rule. New
+  // writes populate this and leave the legacy fields below at 0.
+  rules: NatPmpRule[];
+  // --- Legacy single-port fields (deprecated) ---
+  // Kept for backward compatibility with a pre-multi-port daemon /
+  // settings.json; superseded by `rules`. See `effectiveNatPmpRules`.
   protocol: NatPmpProto;
-  // Suggested external port (0 = server picks).
   suggestedExternalPort: number;
-  // Internal port the user's application binds (0 = unset).
   internalPort: number;
+}
+
+// The effective list of rules: prefer `rules`, otherwise synthesize one
+// from the legacy single-port fields (upgrade path). Returns [] when
+// nothing is configured.
+export function effectiveNatPmpRules(settings: NatPmpSettings): NatPmpRule[] {
+  if (settings.rules.length > 0) {
+    return settings.rules;
+  }
+  if (settings.internalPort !== 0 || settings.suggestedExternalPort !== 0) {
+    return [
+      {
+        protocol: settings.protocol,
+        suggestedExternalPort: settings.suggestedExternalPort,
+        internalPort: settings.internalPort,
+      },
+    ];
+  }
+  return [];
 }
 
 // Stable, translatable category for a NAT-PMP mapping failure. Mirrors
@@ -567,19 +606,17 @@ export type NatPmpErrorReason =
   // Port forwarding disabled exit-side, or source not allowed.
   | 'not-authorized';
 
-// Live NAT-PMP refresh-loop status. Pushed by the daemon via the
-// `natPmpStatusUpdates` IPC channel and read on demand via
-// `getNatPmpSettings`.
-export type NatPmpStatus =
-  | { state: 'disabled' }
+// Lifecycle state of a single NAT-PMP mapping (one per rule).
+export type NatPmpMappingState =
   | { state: 'requesting' }
   | {
       state: 'mapped';
       externalPort: number;
       lifetimeGrantedSecs: number;
       // Per-source rate-limit slots still available, as reported by the
-      // exit. `undefined` when the exit sent no budget trailer. The UI
-      // warns at <= 1 and blocks the port control at 0.
+      // exit (a SHARED per-client budget — the same value on every
+      // mapping). `undefined` when the exit sent no budget trailer. The
+      // UI warns at <= 1 and blocks the port controls at 0.
       attemptsRemaining?: number;
       // Seconds until the rate-limit budget grows by one. Drives the
       // "wait before next change" countdown when attemptsRemaining === 0.
@@ -587,9 +624,24 @@ export type NatPmpStatus =
     }
   // The exit rate-limited the last port change (too many in a row). The
   // daemon retries automatically after `retryAfterSecs`; the UI blocks
-  // the port control and shows a deban countdown until then.
+  // the port controls and shows a deban countdown until then.
   | { state: 'rate-limited'; retryAfterSecs: number }
   | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason };
+
+// One live mapping, tagged with the rule it belongs to (the UI matches
+// it to a rule by `internalPort` + `protocol`).
+export interface NatPmpMapping {
+  internalPort: number;
+  protocol: NatPmpProto;
+  status: NatPmpMappingState;
+}
+
+// Live NAT-PMP status. Pushed by the daemon via the `natPmpStatusUpdates`
+// IPC channel and read on demand via `getNatPmpSettings`. Multi-port: one
+// entry per active rule (empty == nothing mapped).
+export interface NatPmpStatus {
+  mappings: NatPmpMapping[];
+}
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
 // surfaced via the Warren multi-hop view. `entryCountry` and

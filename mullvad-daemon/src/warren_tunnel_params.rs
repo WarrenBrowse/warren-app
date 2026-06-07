@@ -390,6 +390,7 @@ mod tests {
         let cfg = NatPmpConfig {
             enabled: true,
             lifetime_secs: 3600,
+            rules: Vec::new(),
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,

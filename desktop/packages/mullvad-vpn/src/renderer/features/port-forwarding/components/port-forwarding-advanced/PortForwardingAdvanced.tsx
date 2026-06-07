@@ -2,44 +2,49 @@ import React from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { NatPmpProto } from '../../../../../shared/daemon-rpc-types';
+import {
+  NatPmpErrorReason,
+  NatPmpMapping,
+  NatPmpProto,
+  NatPmpRule,
+} from '../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../shared/gettext';
 import { SettingsListItem } from '../../../../components/settings-list-item';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
 import { spacings } from '../../../../lib/foundations';
-import { formatCountdown, useNatPmpPortBlock, usePortForwarding } from '../../hooks';
-
-// Plain styled inputs (no design-system `TextField` shell here) match
-// the pattern used by `WarrenMultiHopCountryPickers`: a SettingsListItem
-// row containing a label + a minimal input. Keeps the visual weight
-// proportional to the row above (the on/off toggle) without dragging
-// in the full TextField hook plumbing for two simple values.
+import {
+  formatCountdown,
+  NATPMP_MAX_RULES,
+  useNatPmpPortBlock,
+  usePortForwarding,
+} from '../../hooks';
 
 const StyledRow = styled.div({
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
   width: '100%',
   gap: '12px',
 });
 
-const StyledInput = styled.input<{ $disabled: boolean }>(({ $disabled }) => ({
-  background: 'transparent',
-  border: 'none',
-  borderBottom: '1px solid rgba(255,255,255,0.4)',
-  color: $disabled ? 'rgba(255,255,255,0.4)' : 'white',
-  fontFamily: 'inherit',
-  fontSize: '14px',
-  padding: '4px 0',
-  textAlign: 'right',
-  width: '8ch',
-  cursor: $disabled ? 'not-allowed' : 'text',
-  '&:focus': {
-    outline: 'none',
-    borderBottomColor: 'white',
-  },
-}));
+const StyledInput = styled.input<{ $disabled: boolean; $invalid: boolean }>(
+  ({ $disabled, $invalid }) => ({
+    background: 'transparent',
+    border: 'none',
+    borderBottom: `1px solid ${$invalid ? '#e34c45' : 'rgba(255,255,255,0.4)'}`,
+    color: $disabled ? 'rgba(255,255,255,0.4)' : 'white',
+    fontFamily: 'inherit',
+    fontSize: '14px',
+    padding: '4px 0',
+    textAlign: 'right',
+    width: '7ch',
+    cursor: $disabled ? 'not-allowed' : 'text',
+    '&:focus': {
+      outline: 'none',
+      borderBottomColor: $invalid ? '#e34c45' : 'white',
+    },
+  }),
+);
 
 const StyledSelect = styled.select<{ $disabled: boolean }>(({ $disabled }) => ({
   background: 'transparent',
@@ -50,11 +55,6 @@ const StyledSelect = styled.select<{ $disabled: boolean }>(({ $disabled }) => ({
   fontSize: '14px',
   padding: '4px 0',
   cursor: $disabled ? 'not-allowed' : 'pointer',
-  // The native picker arrow is platform-dependent and looks fine on
-  // both macOS and Windows. We only ensure the dropdown items render
-  // with the system's dark/light scheme, not the chrome's translucent
-  // dark blue — readable contrast is more important than visual
-  // continuity.
   '&:focus': {
     outline: 'none',
     borderBottomColor: 'white',
@@ -64,88 +64,268 @@ const StyledSelect = styled.select<{ $disabled: boolean }>(({ $disabled }) => ({
   },
 }));
 
+const StyledRemoveButton = styled.button<{ $disabled: boolean }>(({ $disabled }) => ({
+  background: 'transparent',
+  border: 'none',
+  color: $disabled ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.7)',
+  cursor: $disabled ? 'not-allowed' : 'pointer',
+  fontSize: '18px',
+  lineHeight: 1,
+  padding: '0 4px',
+  '&:hover': {
+    color: $disabled ? 'rgba(255,255,255,0.3)' : 'white',
+  },
+}));
+
+const StyledAddButton = styled.button<{ $disabled: boolean }>(({ $disabled }) => ({
+  background: 'transparent',
+  border: 'none',
+  color: $disabled ? 'rgba(255,255,255,0.3)' : '#44ad4d',
+  cursor: $disabled ? 'not-allowed' : 'pointer',
+  fontFamily: 'inherit',
+  fontSize: '14px',
+  padding: '4px 0',
+  textAlign: 'left',
+  '&:hover': {
+    textDecoration: $disabled ? 'none' : 'underline',
+  },
+}));
+
+const StyledStatus = styled.div({
+  minWidth: '11ch',
+  textAlign: 'right',
+});
+
 // Must match the exit allocator's range (warren-config
-// NATPMP_EXTERNAL_PORT_MIN/MAX). A preferred port outside this range
-// can never be honoured by the exit — it would silently fall back to
-// a random port — so we reject it client-side instead of misleading
-// the user.
+// NATPMP_EXTERNAL_PORT_MIN/MAX). A port outside this range can never be
+// honoured by the exit, so we reject it client-side.
 const MIN_PORT = 49152;
 const MAX_PORT = 65535;
 
+/** The user-facing port of a rule (internal == suggested external in the
+ * "same port on your device" model; fall back to either if one is 0). */
+function rulePort(rule: NatPmpRule): number {
+  return rule.internalPort !== 0 ? rule.internalPort : rule.suggestedExternalPort;
+}
+
+/** Find the live mapping matching a rule by `(port, protocol)`. */
+function mappingForRule(mappings: NatPmpMapping[], rule: NatPmpRule): NatPmpMapping | undefined {
+  const port = rulePort(rule);
+  return mappings.find((m) => m.protocol === rule.protocol && m.internalPort === port);
+}
+
+/** First port in range not already used by another rule of the same
+ * protocol — a sensible, valid default for a freshly-added row. */
+function nextFreePort(rules: NatPmpRule[], protocol: NatPmpProto): number {
+  const used = new Set(rules.filter((r) => r.protocol === protocol).map((r) => rulePort(r)));
+  for (let p = MIN_PORT; p <= MAX_PORT; p++) {
+    if (!used.has(p)) {
+      return p;
+    }
+  }
+  return MIN_PORT;
+}
+
 /**
- * Advanced port-forwarding controls: TCP/UDP protocol + suggested
- * port. Rendered below the toggle in `PortForwardingSettingsView`.
+ * Multi-port NAT-PMP editor: a list of port-forward rules (protocol +
+ * port), each with its live status, plus an "add a port" affordance and
+ * the shared rate-limit countdown. Rendered below the toggle in
+ * `PortForwardingSettingsView` when port forwarding is enabled.
  *
- * Behaviour:
- * - Suggested port defaults to `0` ("server picks"). Any value in
- *   `[49152, 65535]` is sent to the daemon; the exit honours it when
- *   the port is free, or allocates a different one if already taken
- *   (the granted port is shown live in `PortForwardingStatus`).
- * - Protocol defaults to `udp` (covers BitTorrent + most P2P + UDP
- *   games). `tcp` is required by Minecraft, FTP, IRC servers.
- * - **Live reconfig (M5.D.x)**: editing the protocol or port applies
- *   the change immediately — the daemon's in-tunnel NAT-PMP
- *   controller releases the current mapping and allocates a new one
- *   without a tunnel reconnect. The inputs are therefore always
- *   editable; the change is committed on protocol-select / port-blur
- *   and the new state surfaces in `PortForwardingStatus`
- *   ("requesting…" → "active" with the new port).
+ * - Each rule's port is used as BOTH the internal and the suggested
+ *   external port ("same port on your device"): the public port the user
+ *   picks is the port their app must bind locally.
+ * - Up to {@link NATPMP_MAX_RULES} rules (the exit quota). "Add a port"
+ *   disables at the cap.
+ * - Editing/adding applies immediately (live reconfig — no reconnect).
+ * - While the exit rate-limits this client (shared budget), every control
+ *   disables with a precise mm:ss countdown so the client never trips the
+ *   ban itself.
  */
 export function PortForwardingAdvanced() {
-  const { settings, setProtocol, setSuggestedExternalPort } = usePortForwarding();
-  // While the exit rate-limits this source (or the budget is spent), a
-  // new port change would just bounce off the limit / extend the ban —
-  // disable the controls and let `PortForwardingStatus` show why and a
-  // countdown. Clears automatically when the countdown elapses.
+  const { rules, mappings, addRule, updateRule, removeRule } = usePortForwarding();
   const block = useNatPmpPortBlock();
   const controlsDisabled = block.blocked;
 
-  // Local state for the port input so the user can clear / retype
-  // without the redux value clobbering keystrokes mid-edit. We push
-  // on blur (or Enter) so transient invalid intermediate states
-  // (e.g., "5" while typing "50000") do not spam the daemon.
-  const [portDraft, setPortDraft] = React.useState<string>(
-    settings.suggestedExternalPort === 0 ? '' : String(settings.suggestedExternalPort),
-  );
-  const [invalid, setInvalid] = React.useState(false);
+  const handleAdd = React.useCallback(() => {
+    if (rules.length >= NATPMP_MAX_RULES || controlsDisabled) {
+      return;
+    }
+    const port = nextFreePort(rules, NatPmpProto.udp);
+    void addRule({
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: port,
+      internalPort: port,
+    });
+  }, [rules, controlsDisabled, addRule]);
 
-  // Re-sync when the redux value changes (e.g., the daemon pushes a
-  // fresh settings snapshot after a settings.json reload). The
-  // comparison guards against the typical case where the local
-  // draft is the source of truth in mid-edit.
+  const isDuplicate = React.useCallback(
+    (port: number, protocol: NatPmpProto, exceptIndex: number) =>
+      rules.some((r, i) => i !== exceptIndex && r.protocol === protocol && rulePort(r) === port),
+    [rules],
+  );
+
+  // Stable, index-keyed handlers so the row JSX passes a function
+  // reference rather than a fresh closure (react/jsx-no-bind).
+  const handleRuleProtocol = React.useCallback(
+    (index: number, protocol: NatPmpProto) => {
+      const port = rulePort(rules[index]);
+      void updateRule(index, { protocol, suggestedExternalPort: port, internalPort: port });
+    },
+    [rules, updateRule],
+  );
+
+  const handleRulePort = React.useCallback(
+    (index: number, port: number) => {
+      const { protocol } = rules[index];
+      void updateRule(index, { protocol, suggestedExternalPort: port, internalPort: port });
+    },
+    [rules, updateRule],
+  );
+
+  const handleRuleRemove = React.useCallback(
+    (index: number) => {
+      void removeRule(index);
+    },
+    [removeRule],
+  );
+
+  return (
+    <FlexColumn gap="small">
+      <SettingsListItem anchorId="port-forwarding-advanced">
+        <SettingsListItem.Item>
+          <FlexColumn gap="medium" style={{ width: '100%', paddingRight: spacings.medium }}>
+            {rules.length === 0 ? (
+              <Text variant="bodySmall" color="whiteAlpha60">
+                {messages.pgettext(
+                  'port-forwarding-view',
+                  'No port yet. Add one to open it on the exit.',
+                )}
+              </Text>
+            ) : (
+              rules.map((rule, index) => (
+                <PortRuleRow
+                  key={`${rule.protocol}-${rulePort(rule)}-${index}`}
+                  rule={rule}
+                  index={index}
+                  mapping={mappingForRule(mappings, rule)}
+                  disabled={controlsDisabled}
+                  isDuplicate={isDuplicate}
+                  onChangeProtocol={handleRuleProtocol}
+                  onChangePort={handleRulePort}
+                  onRemove={handleRuleRemove}
+                />
+              ))
+            )}
+          </FlexColumn>
+        </SettingsListItem.Item>
+      </SettingsListItem>
+
+      <StyledAddButton
+        type="button"
+        $disabled={controlsDisabled || rules.length >= NATPMP_MAX_RULES}
+        disabled={controlsDisabled || rules.length >= NATPMP_MAX_RULES}
+        onClick={handleAdd}>
+        {rules.length >= NATPMP_MAX_RULES
+          ? sprintf(messages.pgettext('port-forwarding-view', 'Maximum of %(max)d ports reached'), {
+              max: NATPMP_MAX_RULES,
+            })
+          : messages.pgettext('port-forwarding-view', '+ Add a port')}
+      </StyledAddButton>
+
+      {/* Single SHARED rate-limit warning for the whole view: the budget
+          is per-client, so one countdown governs every row. budget-exhausted
+          / rate-limited disable the controls with a precise mm:ss countdown
+          to when the next change is allowed — the client therefore never
+          lets the user trip the exit's rate-limit. last-chance keeps the
+          controls enabled but warns that one more change triggers a block.
+          Both self-clear from the clock (see useNatPmpPortBlock). */}
+      {block.reason === 'budget-exhausted' || block.reason === 'rate-limited' ? (
+        <Text variant="labelTiny" color="yellow">
+          {sprintf(
+            messages.pgettext(
+              'port-forwarding-view',
+              'Too many port changes. You can change ports again in %(countdown)s.',
+            ),
+            { countdown: formatCountdown(block.remainingSecs) },
+          )}
+        </Text>
+      ) : block.reason === 'last-chance' ? (
+        <Text variant="labelTiny" color="yellow">
+          {messages.pgettext(
+            'port-forwarding-view',
+            'Last port change before a temporary block. Wait a moment before changing it again.',
+          )}
+        </Text>
+      ) : null}
+
+      <Text variant="labelTiny" color="whiteAlpha60">
+        {messages.pgettext(
+          'port-forwarding-view',
+          'Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed.',
+        )}
+      </Text>
+    </FlexColumn>
+  );
+}
+
+interface PortRuleRowProps {
+  rule: NatPmpRule;
+  index: number;
+  mapping: NatPmpMapping | undefined;
+  disabled: boolean;
+  isDuplicate: (port: number, protocol: NatPmpProto, exceptIndex: number) => boolean;
+  onChangeProtocol: (index: number, protocol: NatPmpProto) => void;
+  onChangePort: (index: number, port: number) => void;
+  onRemove: (index: number) => void;
+}
+
+function PortRuleRow({
+  rule,
+  index,
+  mapping,
+  disabled,
+  isDuplicate,
+  onChangeProtocol,
+  onChangePort,
+  onRemove,
+}: PortRuleRowProps) {
+  const committedPort = rulePort(rule);
+  const [portDraft, setPortDraft] = React.useState<string>(
+    committedPort === 0 ? '' : String(committedPort),
+  );
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Re-sync when the persisted rule changes underneath us (e.g. a fresh
+  // settings snapshot), unless the user is mid-edit on the same value.
   React.useEffect(() => {
-    const fromState =
-      settings.suggestedExternalPort === 0 ? '' : String(settings.suggestedExternalPort);
-    if (portDraft === '' && settings.suggestedExternalPort === 0) {
+    const next = committedPort === 0 ? '' : String(committedPort);
+    if (Number(portDraft) === committedPort) {
       return;
     }
-    if (Number(portDraft) === settings.suggestedExternalPort) {
-      return;
-    }
-    setPortDraft(fromState);
+    setPortDraft(next);
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.suggestedExternalPort]);
+  }, [committedPort]);
 
   const commitPort = React.useCallback(() => {
-    const trimmed = portDraft.trim();
-    if (trimmed === '') {
-      setInvalid(false);
-      void setSuggestedExternalPort(0);
-      return;
-    }
-    const parsed = Number(trimmed);
+    const parsed = Number(portDraft.trim());
     if (!Number.isInteger(parsed) || parsed < MIN_PORT || parsed > MAX_PORT) {
-      setInvalid(true);
+      setError(messages.pgettext('port-forwarding-view', 'Port must be between 49152 and 65535.'));
       return;
     }
-    setInvalid(false);
-    void setSuggestedExternalPort(parsed);
-  }, [portDraft, setSuggestedExternalPort]);
+    if (isDuplicate(parsed, rule.protocol, index)) {
+      setError(messages.pgettext('port-forwarding-view', 'This port is already in your list.'));
+      return;
+    }
+    setError(null);
+    if (parsed !== committedPort) {
+      onChangePort(index, parsed);
+    }
+  }, [portDraft, rule.protocol, index, isDuplicate, committedPort, onChangePort]);
 
   const handlePortChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
-    setPortDraft(next);
+    setPortDraft(e.target.value.replace(/[^0-9]/g, '').slice(0, 5));
   }, []);
 
   const handlePortKeyDown = React.useCallback(
@@ -160,87 +340,115 @@ export function PortForwardingAdvanced() {
 
   const handleProtocolChange = React.useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const proto = e.target.value === 'tcp' ? NatPmpProto.tcp : NatPmpProto.udp;
-      void setProtocol(proto);
+      onChangeProtocol(index, e.target.value === 'tcp' ? NatPmpProto.tcp : NatPmpProto.udp);
     },
-    [setProtocol],
+    [onChangeProtocol, index],
   );
 
+  const handleRemoveClick = React.useCallback(() => {
+    onRemove(index);
+  }, [onRemove, index]);
+
   return (
-    <FlexColumn gap="small">
-      <SettingsListItem anchorId="port-forwarding-advanced">
-        <SettingsListItem.Item>
-          {/*
-            `ListItemItem` applies a left `padding-left: spacings.medium`
-            on its first child via `useIndent()` but does NOT mirror it
-            on the right side. Without an explicit `paddingRight`, the
-            native `<select>` arrow and the `<input>` text get visually
-            clipped against the container's right edge (observed on
-            macOS 14, screenshot 2026-05-28). Add a symmetric 16 px
-            so the controls breathe.
-          */}
-          <FlexColumn gap="medium" style={{ width: '100%', paddingRight: spacings.medium }}>
-            <StyledRow>
-              <Text variant="bodySmall">
-                {messages.pgettext('port-forwarding-view', 'Protocol')}
-              </Text>
-              <StyledSelect
-                $disabled={controlsDisabled}
-                disabled={controlsDisabled}
-                value={settings.protocol}
-                onChange={handleProtocolChange}
-                aria-label={messages.pgettext('port-forwarding-view', 'Protocol')}>
-                <option value={NatPmpProto.udp}>UDP</option>
-                <option value={NatPmpProto.tcp}>TCP</option>
-              </StyledSelect>
-            </StyledRow>
-            <StyledRow>
-              <Text variant="bodySmall">
-                {messages.pgettext('port-forwarding-view', 'Preferred port')}
-              </Text>
-              <StyledInput
-                $disabled={controlsDisabled}
-                disabled={controlsDisabled}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={portDraft}
-                onChange={handlePortChange}
-                onBlur={commitPort}
-                onKeyDown={handlePortKeyDown}
-                placeholder={messages.pgettext('port-forwarding-view', 'auto')}
-                aria-label={messages.pgettext('port-forwarding-view', 'Preferred port')}
-                style={invalid ? { borderBottomColor: '#e34c45' } : undefined}
-              />
-            </StyledRow>
-          </FlexColumn>
-        </SettingsListItem.Item>
-      </SettingsListItem>
-      {invalid ? (
+    <FlexColumn gap="tiny">
+      <StyledRow>
+        <StyledSelect
+          $disabled={disabled}
+          disabled={disabled}
+          value={rule.protocol}
+          onChange={handleProtocolChange}
+          aria-label={messages.pgettext('port-forwarding-view', 'Protocol')}>
+          <option value={NatPmpProto.udp}>UDP</option>
+          <option value={NatPmpProto.tcp}>TCP</option>
+        </StyledSelect>
+        <StyledInput
+          $disabled={disabled}
+          $invalid={error !== null}
+          disabled={disabled}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={portDraft}
+          onChange={handlePortChange}
+          onBlur={commitPort}
+          onKeyDown={handlePortKeyDown}
+          placeholder={messages.pgettext('port-forwarding-view', 'port')}
+          aria-label={messages.pgettext('port-forwarding-view', 'Port')}
+        />
+        <StyledStatus>
+          <RuleStatus mapping={mapping} />
+        </StyledStatus>
+        <StyledRemoveButton
+          type="button"
+          $disabled={disabled}
+          disabled={disabled}
+          onClick={handleRemoveClick}
+          aria-label={messages.pgettext('port-forwarding-view', 'Remove port')}
+          title={messages.pgettext('port-forwarding-view', 'Remove port')}>
+          ✕
+        </StyledRemoveButton>
+      </StyledRow>
+      {error !== null ? (
         <Text variant="labelTiny" color="red">
-          {messages.pgettext(
-            'port-forwarding-view',
-            'Port must be between 49152 and 65535, or empty for auto.',
-          )}
+          {error}
         </Text>
       ) : null}
-      {controlsDisabled ? (
-        <Text variant="labelTiny" color="yellow">
-          {sprintf(
-            messages.pgettext(
-              'port-forwarding-view',
-              'Too many port changes. You can change the port again in %(countdown)s.',
-            ),
-            { countdown: formatCountdown(block.remainingSecs) },
-          )}
-        </Text>
-      ) : null}
-      <Text variant="labelTiny" color="whiteAlpha60">
-        {messages.pgettext(
-          'port-forwarding-view',
-          'The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed.',
-        )}
-      </Text>
     </FlexColumn>
   );
+}
+
+/** Per-rule live status, shown inline on its row. */
+function RuleStatus({ mapping }: { mapping: NatPmpMapping | undefined }) {
+  if (!mapping) {
+    return (
+      <Text variant="labelTiny" color="whiteAlpha60">
+        {messages.pgettext('port-forwarding-view', 'pending…')}
+      </Text>
+    );
+  }
+  const status = mapping.status;
+  switch (status.state) {
+    case 'mapped':
+      return (
+        <Text variant="labelTiny" color="green">
+          {sprintf(messages.pgettext('port-forwarding-view', 'open: %(port)d'), {
+            port: status.externalPort,
+          })}
+        </Text>
+      );
+    case 'rate-limited':
+      return (
+        <Text variant="labelTiny" color="whiteAlpha60">
+          {messages.pgettext('port-forwarding-view', 'applying…')}
+        </Text>
+      );
+    case 'failed':
+      return (
+        <Text variant="labelTiny" color="red">
+          {natPmpShortFailure(status.errorReason)}
+        </Text>
+      );
+    case 'requesting':
+    default:
+      return (
+        <Text variant="labelTiny" color="whiteAlpha60">
+          {messages.pgettext('port-forwarding-view', 'requesting…')}
+        </Text>
+      );
+  }
+}
+
+/** Short, inline failure label keyed on the structured reason. */
+function natPmpShortFailure(reason: NatPmpErrorReason): string {
+  switch (reason) {
+    case 'suggested-port-in-use':
+      return messages.pgettext('port-forwarding-view', 'port in use');
+    case 'out-of-resources':
+      return messages.pgettext('port-forwarding-view', 'no port available');
+    case 'not-authorized':
+      return messages.pgettext('port-forwarding-view', 'not allowed');
+    case 'unknown':
+    default:
+      return messages.pgettext('port-forwarding-view', 'failed');
+  }
 }

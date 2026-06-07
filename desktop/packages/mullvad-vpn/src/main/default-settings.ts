@@ -87,6 +87,7 @@ export function getDefaultSettings(): ISettings {
     warrenNatPmp: {
       enabled: false,
       lifetimeSecs: 3600,
+      rules: [],
       protocol: NatPmpProto.udp,
       suggestedExternalPort: 0,
       internalPort: 0,

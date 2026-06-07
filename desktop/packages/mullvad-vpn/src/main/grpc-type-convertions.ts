@@ -42,6 +42,7 @@ import {
   LoggedInDeviceState,
   LoggedOutDeviceState,
   NatPmpErrorReason,
+  NatPmpMapping,
   NatPmpProto,
   NatPmpSettings,
   NatPmpStatus,
@@ -567,6 +568,16 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
   };
 }
 
+function protoFromNatPmpProto(protocol: NatPmpProto): grpcTypes.NatPmpSettings.Proto {
+  return protocol === NatPmpProto.tcp
+    ? grpcTypes.NatPmpSettings.Proto.TCP
+    : grpcTypes.NatPmpSettings.Proto.UDP;
+}
+
+function natPmpProtoFromProto(protoEnum: grpcTypes.NatPmpSettings.Proto): NatPmpProto {
+  return protoEnum === grpcTypes.NatPmpSettings.Proto.TCP ? NatPmpProto.tcp : NatPmpProto.udp;
+}
+
 export function convertFromNatPmpSettings(
   settings: grpcTypes.NatPmpSettings | undefined,
 ): NatPmpSettings {
@@ -576,18 +587,21 @@ export function convertFromNatPmpSettings(
     return {
       enabled: false,
       lifetimeSecs: 3600,
+      rules: [],
       protocol: NatPmpProto.udp,
       suggestedExternalPort: 0,
       internalPort: 0,
     };
   }
-  const protoEnum = settings.getProtocol();
-  const protocol =
-    protoEnum === grpcTypes.NatPmpSettings.Proto.TCP ? NatPmpProto.tcp : NatPmpProto.udp;
   return {
     enabled: settings.getEnabled(),
     lifetimeSecs: settings.getLifetimeSecs(),
-    protocol,
+    rules: settings.getRulesList().map((rule) => ({
+      protocol: natPmpProtoFromProto(rule.getProtocol()),
+      suggestedExternalPort: rule.getSuggestedExternalPort(),
+      internalPort: rule.getInternalPort(),
+    })),
+    protocol: natPmpProtoFromProto(settings.getProtocol()),
     suggestedExternalPort: settings.getSuggestedExternalPort(),
     internalPort: settings.getInternalPort(),
   };
@@ -597,48 +611,61 @@ export function convertToNatPmpSettings(settings: NatPmpSettings): grpcTypes.Nat
   const proto = new grpcTypes.NatPmpSettings();
   proto.setEnabled(settings.enabled);
   proto.setLifetimeSecs(settings.lifetimeSecs);
-  proto.setProtocol(
-    settings.protocol === NatPmpProto.tcp
-      ? grpcTypes.NatPmpSettings.Proto.TCP
-      : grpcTypes.NatPmpSettings.Proto.UDP,
+  proto.setRulesList(
+    settings.rules.map((rule) => {
+      const protoRule = new grpcTypes.NatPmpSettings.Rule();
+      protoRule.setProtocol(protoFromNatPmpProto(rule.protocol));
+      protoRule.setSuggestedExternalPort(rule.suggestedExternalPort);
+      protoRule.setInternalPort(rule.internalPort);
+      return protoRule;
+    }),
   );
+  proto.setProtocol(protoFromNatPmpProto(settings.protocol));
   proto.setSuggestedExternalPort(settings.suggestedExternalPort);
   proto.setInternalPort(settings.internalPort);
   return proto;
 }
 
-export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpStatus {
-  switch (status.getState()) {
+function convertFromNatPmpMappingState(
+  mapping: grpcTypes.NatPmpStatus.Mapping,
+): NatPmpMapping['status'] {
+  switch (mapping.getState()) {
     case grpcTypes.NatPmpStatus.State.MAPPED:
       return {
         state: 'mapped',
-        externalPort: status.getExternalPort() ?? 0,
-        lifetimeGrantedSecs: status.getLifetimeGrantedSecs() ?? 0,
+        externalPort: mapping.getExternalPort() ?? 0,
+        lifetimeGrantedSecs: mapping.getLifetimeGrantedSecs() ?? 0,
         // `hasAttemptsRemaining()` distinguishes "0 slots left" from "no
         // budget trailer sent" (older exit) — only the former blocks the
-        // port control in the UI.
-        attemptsRemaining: status.hasAttemptsRemaining()
-          ? status.getAttemptsRemaining()
+        // port controls in the UI.
+        attemptsRemaining: mapping.hasAttemptsRemaining()
+          ? mapping.getAttemptsRemaining()
           : undefined,
-        windowResetSecs: status.getWindowResetSecs() ?? 0,
+        windowResetSecs: mapping.getWindowResetSecs() ?? 0,
       };
     case grpcTypes.NatPmpStatus.State.RATE_LIMITED:
-      return {
-        state: 'rate-limited',
-        retryAfterSecs: status.getRetryAfterSecs() ?? 0,
-      };
-    case grpcTypes.NatPmpStatus.State.REQUESTING:
-      return { state: 'requesting' };
+      return { state: 'rate-limited', retryAfterSecs: mapping.getRetryAfterSecs() ?? 0 };
     case grpcTypes.NatPmpStatus.State.FAILED:
       return {
         state: 'failed',
-        errorMessage: status.getErrorMessage() ?? '',
-        errorReason: convertFromNatPmpErrorReason(status.getErrorReason()),
+        errorMessage: mapping.getErrorMessage() ?? '',
+        errorReason: convertFromNatPmpErrorReason(mapping.getErrorReason()),
       };
+    case grpcTypes.NatPmpStatus.State.REQUESTING:
     case grpcTypes.NatPmpStatus.State.DISABLED:
     default:
-      return { state: 'disabled' };
+      return { state: 'requesting' };
   }
+}
+
+export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpStatus {
+  return {
+    mappings: status.getMappingsList().map((mapping) => ({
+      internalPort: mapping.getInternalPort(),
+      protocol: natPmpProtoFromProto(mapping.getProtocol()),
+      status: convertFromNatPmpMappingState(mapping),
+    })),
+  };
 }
 
 function convertFromNatPmpErrorReason(
