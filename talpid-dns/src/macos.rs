@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::{
     collections::{BTreeSet, HashMap},
     fmt, mem,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, UdpSocket},
     sync::{Arc, RwLock, mpsc as sync_mpsc},
     thread,
     time::Duration,
@@ -551,28 +551,62 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
 ///
 /// This runs once, when the [`DnsMonitor`] is created at startup — before we
 /// have pointed the system DNS at our own resolver — so any service whose
-/// servers are *all* loopback addresses must be such a leftover. We spare the
+/// servers are *all* loopback addresses is a candidate leftover. We spare the
 /// canonical `127.0.0.1`/`::1` (which a user-run resolver such as
-/// dnscrypt-proxy would use; our resolver never binds those) and remove the
-/// rest, letting the OS fall back to its DHCP/manually-configured DNS.
+/// dnscrypt-proxy would use; our resolver never binds those).
+///
+/// Crucially we only reclaim an override whose resolver is actually **dead**
+/// (see [`loopback_resolver_is_live`]): a *stale* override by definition points
+/// at a resolver that no longer exists. A loopback resolver that is still
+/// answering belongs to a running daemon — ours from this very run, or, when a
+/// second VPN daemon coexists on the host (e.g. a separately-installed Mullvad
+/// app whose own resolver also binds a non-canonical `127/8` address), theirs.
+/// The previous code removed *every* non-canonical loopback override blindly,
+/// which wiped the other daemon's live DNS and broke all name resolution on the
+/// host the moment this daemon started. Do NOT drop the liveness check.
 fn remove_stale_loopback_dns(store: &SCDynamicStore) {
     for (path, settings) in read_all_dns(store) {
         let Some(settings) = settings else { continue };
         let addresses = settings.server_addresses();
-        let is_stale_loopback = !addresses.is_empty()
+        let all_reclaimable_loopback = !addresses.is_empty()
             && addresses
                 .iter()
                 .map(SocketAddr::ip)
                 .all(is_reclaimable_loopback);
-        if is_stale_loopback {
-            log::warn!(
-                "Removing stale loopback DNS override at {path} \
-                 (leftover from a previous unclean daemon exit)"
-            );
-            if !store.remove(CFString::new(&path)) {
-                log::error!("Failed to remove stale DNS override at {path}");
-            }
+        if !all_reclaimable_loopback {
+            continue;
         }
+        // Keep the override if ANY of its resolvers is still live: that is a
+        // running resolver (ours or a coexisting daemon's), not a leftover.
+        if addresses
+            .iter()
+            .any(|sa| loopback_resolver_is_live(sa.ip(), DNS_PORT))
+        {
+            continue;
+        }
+        log::warn!(
+            "Removing stale loopback DNS override at {path} \
+             (leftover from a previous unclean daemon exit)"
+        );
+        if !store.remove(CFString::new(&path)) {
+            log::error!("Failed to remove stale DNS override at {path}");
+        }
+    }
+}
+
+/// Whether a DNS resolver is currently listening on `addr:port`.
+///
+/// Probed by attempting to bind the address: a successful bind means nothing is
+/// listening (the override is a dead leftover, safe to reclaim); `AddrInUse`
+/// means a live resolver holds it and must be left alone. Any other bind error
+/// is treated as "live" (fail-safe: never reclaim on uncertainty, so we cannot
+/// clobber a working resolver). macOS routes the whole `127/8` to loopback, so
+/// binding an arbitrary `127.x` address works without an interface alias.
+fn loopback_resolver_is_live(addr: IpAddr, port: u16) -> bool {
+    match UdpSocket::bind((addr, port)) {
+        Ok(_) => false,
+        Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => true,
+        Err(_) => true,
     }
 }
 
@@ -586,11 +620,39 @@ fn is_reclaimable_loopback(ip: IpAddr) -> bool {
 
 #[cfg(test)]
 mod test {
-    use super::{DNS_PORT, DnsSettings, State};
+    use super::{DNS_PORT, DnsSettings, State, loopback_resolver_is_live};
     use std::{
         collections::{BTreeSet, HashMap},
+        net::{IpAddr, Ipv4Addr, UdpSocket},
         net::SocketAddr,
     };
+
+    #[test]
+    fn live_loopback_resolver_is_detected_and_preserved() {
+        // Regression: the stale-override cleanup must NOT reclaim a loopback
+        // override whose resolver is still answering — that is exactly how a
+        // coexisting Mullvad app's live resolver (a non-canonical 127/8
+        // address) got wiped, killing all DNS on daemon start.
+        let live = UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind live");
+        let live_addr = live.local_addr().expect("live addr");
+        assert!(
+            loopback_resolver_is_live(live_addr.ip(), live_addr.port()),
+            "a bound loopback resolver must read as live (preserved, never reclaimed)"
+        );
+    }
+
+    #[test]
+    fn dead_loopback_address_is_reclaimable() {
+        // A loopback address with no listener must read as not-live, so a
+        // genuine stale leftover from an unclean exit is still cleaned up.
+        let probe = UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind");
+        let free = probe.local_addr().expect("addr");
+        drop(probe); // release the port so nothing is listening
+        assert!(
+            !loopback_resolver_is_live(free.ip(), free.port()),
+            "an address with no resolver must read as not-live (reclaimable)"
+        );
+    }
 
     /// The initial backup should equal whatever the first provided state is.
     #[test]
