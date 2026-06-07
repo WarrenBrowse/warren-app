@@ -876,6 +876,12 @@ pub struct Daemon {
     /// Warren auth could not be initialized at boot (= legacy Bearer
     /// fallback path).
     warren_signer: Option<Arc<mullvad_api::warren_auth::WarrenAuthSigner>>,
+    /// `true` when the Warren multi-hop directory updater is wired and owns
+    /// the reconnect for circuit changes. While active, the standard
+    /// "relay settings changed" restart path must not reconnect on its own
+    /// (it would use the generator's stale multi-hop circuit, flashing the
+    /// wrong exit); the updater issues the single, correct reconnect.
+    warren_multi_hop_directory_active: bool,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1538,17 +1544,64 @@ impl Daemon {
         // circuit changes. The directory is signed by the same server key
         // as the relay list, so the relay-list server pin is reused; the
         // root pin comes from `warren_multi_hop_directory::resolve_root_pins`.
+        //
+        // `warren_multi_hop_directory_active` records whether that updater is
+        // wired and owns the reconnect for circuit changes. When it is, the
+        // standard "relay settings changed" restart path MUST NOT reconnect
+        // on its own: it would rebuild tunnel params from the generator's
+        // currently-stored (and now stale) multi-hop circuit, briefly
+        // connecting to the wrong exit before the updater re-selects the
+        // correct one. The directory updater is the single source of truth
+        // for the active circuit and issues exactly one reconnect with the
+        // freshly-selected circuit.
+        let warren_multi_hop_directory_active;
         {
+            let warren_mh_root_mode = warren_multi_hop_directory::root_pin_mode();
+            // Fail-closed (`Unconfigured`) never produces a circuit, so the
+            // updater does not own reconnects in that mode — keep the standard
+            // restart path so a location change still reconnects.
+            warren_multi_hop_directory_active =
+                warren_mh_root_mode != warren_multi_hop_directory::RootPinMode::Unconfigured;
+            // Mirror the GUI's exit-location choice (written into the
+            // standard relay `location` constraint) into the multi-hop
+            // exit-country hint the circuit selector reads. The GUI does
+            // NOT write `warren_multi_hop.exit_country` directly, so
+            // without this bridge the user's exit selection is silently
+            // ignored and the selector picks a random circuit. Entry is
+            // left "any": the GUI defaults the entry location to a country
+            // that may not host a Warren node, and with a small fleet the
+            // entry is implied by the exit (different-country rule).
+            fn effective_warren_multi_hop(
+                s: &mullvad_types::settings::Settings,
+            ) -> mullvad_types::settings::WarrenMultiHopSettings {
+                use mullvad_types::constraints::Constraint;
+                use mullvad_types::relay_constraints::{
+                    GeographicLocationConstraint, LocationConstraint, RelaySettings,
+                };
+                let mut mh = s.warren_multi_hop.clone();
+                if mh.exit_country.is_empty()
+                    && let RelaySettings::Normal(rc) = &s.relay_settings
+                    && let Constraint::Only(LocationConstraint::Location(geo)) = &rc.location
+                {
+                    mh.exit_country = match geo {
+                        GeographicLocationConstraint::Country(cc)
+                        | GeographicLocationConstraint::City(cc, _)
+                        | GeographicLocationConstraint::Hostname(cc, _, _) => cc.clone(),
+                    };
+                }
+                mh
+            }
             let (warren_mh_tx, warren_mh_rx) =
-                tokio::sync::watch::channel(settings.warren_multi_hop.clone());
+                tokio::sync::watch::channel(effective_warren_multi_hop(&settings));
             // Push the multi-hop setting to the updater on every change so
-            // a toggle flip (or country-hint edit) refreshes the circuit
+            // a toggle flip (or exit-location edit) refreshes the circuit
             // without a daemon restart. Guarded so unrelated settings
             // changes do not wake the updater.
             settings.register_change_listener(move |s| {
+                let eff = effective_warren_multi_hop(s);
                 warren_mh_tx.send_if_modified(|cur| {
-                    if *cur != s.warren_multi_hop {
-                        *cur = s.warren_multi_hop.clone();
+                    if *cur != eff {
+                        *cur = eff;
                         true
                     } else {
                         false
@@ -1565,7 +1618,7 @@ impl Daemon {
             warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
                 api_url: warren_api_url.clone(),
                 server_pins: warren_server_pubkey.clone().into_iter().collect(),
-                root_mode: warren_multi_hop_directory::root_pin_mode(),
+                root_mode: warren_mh_root_mode,
                 settings_rx: warren_mh_rx,
                 parameters_generator: parameters_generator.clone(),
                 request_reconnect,
@@ -1629,6 +1682,7 @@ impl Daemon {
             settings_dir: config.settings_dir,
             warren_status_cache,
             warren_signer: warren_signer_for_daemon,
+            warren_multi_hop_directory_active,
         };
 
         api_availability.unsuspend();
@@ -3318,8 +3372,23 @@ impl Daemon {
             Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_relay_settings response");
                 if settings_changed {
-                    log::info!("Initiating tunnel restart because the relay settings changed");
-                    self.reconnect_tunnel();
+                    // When the Warren multi-hop directory updater owns the
+                    // reconnect, do NOT restart here: this path would rebuild
+                    // tunnel params from the generator's stale multi-hop
+                    // circuit and briefly connect to the wrong exit before the
+                    // updater re-selects the correct one. The settings change
+                    // still fired the change listeners (the watch wakes the
+                    // updater), so the updater performs the single, correct
+                    // reconnect with the freshly-selected circuit.
+                    if self.warren_multi_hop_directory_active {
+                        log::info!(
+                            "Relay settings changed; deferring reconnect to the Warren \
+                             multi-hop directory updater (single source of truth)"
+                        );
+                    } else {
+                        log::info!("Initiating tunnel restart because the relay settings changed");
+                        self.reconnect_tunnel();
+                    }
                 }
             }
             Err(e) => {
