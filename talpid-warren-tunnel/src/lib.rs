@@ -1126,7 +1126,7 @@ impl WarrenTunnelMonitor {
         use std::time::Duration;
         use warren_backoff::Backoff;
         use warren_client::multi_hop::MultiHopClient;
-        use warren_client::supervised_pump::{run_downlink, run_uplink};
+        use warren_client::supervised_pump::{IpAssignChannel, run_downlink, run_uplink};
         use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
         let start_t = Instant::now();
@@ -1162,6 +1162,15 @@ impl WarrenTunnelMonitor {
         // Spawn the supervisor and wait for the first successful dial
         // so the rest of the bootstrap (TUN, routing) has a live
         // session to anchor to.
+        // The dual-role exit allocates this client's tunnel IPv4 and
+        // routes downlink to that address, replying with an `IpAssign`
+        // over the supervisor's reliable setup stream. The supervisor
+        // publishes it on this channel BEFORE handing out the first
+        // session, so by the time `initial_client` resolves below the
+        // assigned IP is already available and the TUN can be opened
+        // with it directly (no dynamic reassign needed; allocation is
+        // pubkey-sticky so the IP survives reconnects).
+        let ip_assign_channel = IpAssignChannel::new();
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
@@ -1175,6 +1184,7 @@ impl WarrenTunnelMonitor {
             use_warren_obfuscation: cfg.use_warren_obfuscation,
             backoff: Backoff::HANDSHAKE,
             on_reconnect: params.on_reconnect.clone(),
+            ip_assign_channel: Some(ip_assign_channel.clone()),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         let supervisor_handle = runtime.spawn(async move {
@@ -1239,7 +1249,26 @@ impl WarrenTunnelMonitor {
         // Future M4.H.C will replace this with a coordinated allocator
         // (subscription-bound, persisted exit-side).
         let pubkey_bytes = params.signing_key.verifying_key().to_bytes();
-        let tun_ip = derive_multi_hop_tun_ip(&pubkey_bytes);
+        // Prefer the exit-allocated IPv4 (published on the setup-stream
+        // IpAssign during the first dial). Fall back to the pubkey-derived
+        // self-slot only if the exit ran without an allocator or the setup
+        // round-trip fell back to its bootstrap path.
+        let tun_ip = match *ip_assign_channel.subscribe().borrow_and_update() {
+            Some(spec) => {
+                log::info!(
+                    "{TRACE_PREFIX} multi-hop TUN using exit-allocated IPv4 {} (gateway {})",
+                    spec.assigned,
+                    spec.gateway
+                );
+                spec.assigned
+            }
+            None => {
+                log::info!(
+                    "{TRACE_PREFIX} multi-hop TUN using pubkey-derived IPv4 (no exit IpAssign yet)"
+                );
+                derive_multi_hop_tun_ip(&pubkey_bytes)
+            }
+        };
         let tun_config = build_multi_hop_tun_config(tun_ip);
 
         let tun_t = Instant::now();
