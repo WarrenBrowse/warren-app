@@ -24,7 +24,6 @@
 use std::time::Duration;
 
 use futures::FutureExt;
-use rand::Rng;
 use talpid_warren_tunnel::MultiHopConfig;
 use warren_relay_selector::{
     DirectoryError, VerifiedMultiHopDirectory, verify_multihop_directory_any,
@@ -277,8 +276,15 @@ fn pick_two_hop_circuit(
     assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
 }
 
-/// Weighted-random `(entry_idx, exit_idx)` pick over `pairs`, weighting by
-/// `entry.weight * exit.weight`. `pairs` must be non-empty.
+/// Deterministic `(entry_idx, exit_idx)` pick over `pairs`: highest combined
+/// `entry.weight * exit.weight`, ties broken by `(relay_id, exit_id)`.
+/// `pairs` must be non-empty.
+///
+/// Was a weighted RNG, which re-rolled on every updater poll and churned the
+/// 2-hop circuit whenever the country hints left more than one valid pair —
+/// the same reconnect loop fixed for the 1-hop path. A stable pick means the
+/// updater only reconnects on a real change. Do NOT reintroduce per-call
+/// randomness here.
 fn weighted_pick_pair(
     dir: &VerifiedMultiHopDirectory,
     pairs: &[(usize, usize)],
@@ -289,21 +295,25 @@ fn weighted_pick_pair(
             .max(1)
             .saturating_mul(dir.nodes[j].weight.max(1))
     };
-    let total: u128 = pairs.iter().map(|p| u128::from(weight(p))).sum();
-    if total == 0 {
-        return pairs[0];
-    }
-    let mut roll = rand::rng().random_range(0..total);
-    let mut chosen = pairs[0];
-    for p in pairs {
-        let w = u128::from(weight(p));
-        if roll < w {
-            chosen = *p;
-            break;
-        }
-        roll -= w;
-    }
-    chosen
+    let mut ranked: Vec<(usize, usize)> = pairs.to_vec();
+    ranked.sort_by(|a, b| {
+        weight(b)
+            .cmp(&weight(a))
+            .then_with(|| {
+                dir.nodes[a.0]
+                    .relay
+                    .relay_id
+                    .cmp(&dir.nodes[b.0].relay.relay_id)
+            })
+            .then_with(|| {
+                dir.nodes[a.1]
+                    .exit
+                    .exit_id
+                    .as_bytes()
+                    .cmp(dir.nodes[b.1].exit.exit_id.as_bytes())
+            })
+    });
+    ranked[0]
 }
 
 /// Picks a **1-hop** circuit with sticky stability (toggle OFF). Keeps
@@ -359,23 +369,29 @@ pub fn select_one_hop_circuit(
     if candidates.is_empty() {
         return None;
     }
-    let weight = |i: usize| u128::from(dir.nodes[i].weight.max(1));
-    let total: u128 = candidates.iter().map(|&i| weight(i)).sum();
-    let idx = if total == 0 {
-        candidates[0]
-    } else {
-        let mut roll = rand::rng().random_range(0..total);
-        let mut chosen = candidates[0];
-        for &i in &candidates {
-            let w = weight(i);
-            if roll < w {
-                chosen = i;
-                break;
-            }
-            roll -= w;
-        }
-        chosen
-    };
+    // Deterministic pick: highest weight, ties broken by smallest exit_id.
+    // Previously this rolled a weighted RNG on every call, so when more than
+    // one node was a candidate (notably when the exit-country hint is empty,
+    // which makes every node match) the selection changed on each poll. The
+    // directory updater saw a "different" circuit each time and tore the
+    // tunnel down to reconnect — an endless reconnect loop that blocked all
+    // traffic. A stable selection means re-evaluating the same inputs always
+    // yields the same circuit, so the updater only reconnects on a real
+    // change. Do NOT reintroduce per-call randomness here.
+    let mut ranked = candidates;
+    ranked.sort_by(|&a, &b| {
+        dir.nodes[b]
+            .weight
+            .cmp(&dir.nodes[a].weight)
+            .then_with(|| {
+                dir.nodes[a]
+                    .exit
+                    .exit_id
+                    .as_bytes()
+                    .cmp(dir.nodes[b].exit.exit_id.as_bytes())
+            })
+    });
+    let idx = ranked[0];
     assemble(dir, idx, idx, enable_gso, use_warren_obfuscation)
 }
 
@@ -502,6 +518,17 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
 
         loop {
             let settings = cfg.settings_rx.borrow().clone();
+            // Diagnostic: the effective (bridged) country hints the selector
+            // sees. An empty exit_country makes every node a candidate, which
+            // (with a non-deterministic picker) churns the circuit on every
+            // poll → reconnect loop. Logged so a churn report can be triaged
+            // from the daemon log alone.
+            log::info!(
+                "Warren multi-hop selection inputs: enabled={} entry={:?} exit={:?}",
+                settings.enabled,
+                settings.entry_country,
+                settings.exit_country
+            );
 
             // `skip_apply` keeps the currently-active circuit untouched
             // when we cannot trust a fresh answer (rollback, verification
@@ -921,6 +948,32 @@ mod tests {
             let next = pick_one_hop_circuit(&d, "", true, true, Some(&cur)).expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "1-hop node must stick");
             cur = next;
+        }
+    }
+
+    #[test]
+    fn one_hop_selection_is_deterministic_across_calls() {
+        // Regression (reconnect loop): when the exit-country hint is empty
+        // every node is a candidate. The fallback picker MUST be
+        // deterministic so re-evaluating the same directory yields the SAME
+        // circuit — a non-deterministic pick churned the tunnel (DE↔SG) on
+        // every updater poll and blocked all traffic. Independent of the
+        // stickiness path (current = None here), so it guards the fallback
+        // itself.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "sg", 0, 100),
+        ]);
+        let first =
+            circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
+        for _ in 0..50 {
+            let again =
+                circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
+            assert_eq!(
+                first, again,
+                "1-hop fallback selection must be stable across calls (no churn)"
+            );
         }
     }
 
