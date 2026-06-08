@@ -1,8 +1,10 @@
+import React from 'react';
 import { sprintf } from 'sprintf-js';
 
 import { strings } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
-import { DaitaDirectOnlySetting, DaitaSetting } from '../../../features/daita/components';
+import { DaitaSetting } from '../../../features/daita/components';
+import { useDaitaDirectOnly } from '../../../features/daita/hooks';
 import { Flex, Icon, Text } from '../../../lib/components';
 import { Carousel } from '../../../lib/components/carousel';
 import { FlexColumn } from '../../../lib/components/flex-column';
@@ -18,6 +20,16 @@ import { useShowDaitaMultihopInfo } from './hooks';
 export function DaitaSettingsView() {
   const { pop } = useHistory();
   const showDaitaMultihopInfo = useShowDaitaMultihopInfo();
+  const { daitaDirectOnly, setDaitaDirectOnly } = useDaitaDirectOnly();
+
+  // Warren always uses multihop to enable DAITA, so the "direct only" mode is not
+  // exposed. Reset any value persisted by an older build so a user can't get stuck
+  // in a state with no UI control to leave it.
+  React.useEffect(() => {
+    if (daitaDirectOnly) {
+      void setDaitaDirectOnly(false);
+    }
+  }, [daitaDirectOnly, setDaitaDirectOnly]);
 
   return (
     <View backgroundColor="darkBlue">
@@ -60,18 +72,10 @@ export function DaitaSettingsView() {
                             }
                           />
                           <Carousel.Slides.Slide.TextGroup>
-                            <Carousel.Slides.Slide.Text variant="labelTinySemiBold">
-                              {messages.pgettext(
-                                // TRANSLATORS: Information to the user that with this setting enabled their network and device's battery life will be
-                                // TRANSLATORS: affected negatively.
-                                'wireguard-settings-view',
-                                'Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans.',
-                              )}
-                            </Carousel.Slides.Slide.Text>
                             <Carousel.Slides.Slide.Text>
                               {sprintf(
                                 messages.pgettext(
-                                  // TRANSLATORS: Information to the user what the DAITA setting does.
+                                  // TRANSLATORS: Short description of what the DAITA setting does.
                                   // TRANSLATORS: Available placeholders:
                                   // TRANSLATORS: %(daita)s - Will be replaced with DAITA
                                   // TRANSLATORS: %(daitaFull)s - Will be replaced with Defence against AI-guided Traffic Analysis
@@ -83,9 +87,9 @@ export function DaitaSettingsView() {
                             </Carousel.Slides.Slide.Text>
                             <Carousel.Slides.Slide.Text>
                               {messages.pgettext(
-                                // TRANSLATORS: Information to the user on the background why the DAITA setting exists.
+                                // TRANSLATORS: Explains why traffic analysis is a threat even when traffic is encrypted.
                                 'wireguard-settings-view',
-                                'By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted).',
+                                'Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity.',
                               )}
                             </Carousel.Slides.Slide.Text>
                           </Carousel.Slides.Slide.TextGroup>
@@ -105,36 +109,20 @@ export function DaitaSettingsView() {
                             <Carousel.Slides.Slide.Text>
                               {sprintf(
                                 messages.pgettext(
-                                  // TRANSLATORS: Information to the user on the background why the DAITA setting exists.
+                                  // TRANSLATORS: Explains how DAITA protects the user.
+                                  // TRANSLATORS: Available placeholders:
+                                  // TRANSLATORS: %(daita)s - Will be replaced with DAITA
                                   'wireguard-settings-view',
-                                  'If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating.',
+                                  '%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with.',
                                 ),
                                 { daita: strings.daita },
                               )}
                             </Carousel.Slides.Slide.Text>
-                            <Carousel.Slides.Slide.Text>
-                              {sprintf(
-                                messages.pgettext(
-                                  // TRANSLATORS: Information to the user what the DAITA setting does.
-                                  // TRANSLATORS: Available placeholders:
-                                  // TRANSLATORS: %(daita)s - Will be replaced with DAITA
-                                  'wireguard-settings-view',
-                                  '%(daita)s does this by carefully adding network noise and making all network packets the same size.',
-                                ),
-                                { daita: strings.daita },
-                              )}
-                            </Carousel.Slides.Slide.Text>
-                            <Carousel.Slides.Slide.Text>
-                              {sprintf(
-                                messages.pgettext(
-                                  // TRANSLATORS: Information to the user that DAITA is not available on all servers, however in the background the multihop
-                                  // TRANSLATORS: feature is used automatically which enables the use of DAITA with any server.
-                                  // TRANSLATORS: Available placeholders:
-                                  // TRANSLATORS: %(daita)s - Will be replaced with DAITA
-                                  'wireguard-settings-view',
-                                  'Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server.',
-                                ),
-                                { daita: strings.daita },
+                            <Carousel.Slides.Slide.Text variant="labelTinySemiBold">
+                              {messages.pgettext(
+                                // TRANSLATORS: Warning that the DAITA setting increases traffic and affects performance and battery life.
+                                'wireguard-settings-view',
+                                'Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans.',
                               )}
                             </Carousel.Slides.Slide.Text>
                           </Carousel.Slides.Slide.TextGroup>
@@ -148,10 +136,7 @@ export function DaitaSettingsView() {
                         </Carousel.Controls.ControlGroup>
                       </Carousel.Controls>
                     </Carousel>
-                    <FlexColumn>
-                      <DaitaSetting />
-                      <DaitaDirectOnlySetting />
-                    </FlexColumn>
+                    <DaitaSetting />
                   </FlexColumn>
                 </View.Container>
               </FlexColumn>
