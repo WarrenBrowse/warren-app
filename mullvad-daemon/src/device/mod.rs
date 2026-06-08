@@ -59,7 +59,10 @@ pub(crate) use service::WarrenIdentityService;
 #[derive(Clone)]
 pub(crate) struct WarrenApiConfig {
     pub url: String,
-    pub signing_key: ed25519_dalek::SigningKey,
+    // Shared, hot-swappable key handle (cloned from the daemon's
+    // `WarrenAuthSigner::shared`). The account-backend client built from
+    // it tracks create/restore/logout identity changes without a restart.
+    pub signing_key: std::sync::Arc<std::sync::RwLock<ed25519_dalek::SigningKey>>,
 }
 
 /// File that stores the account login state.
@@ -339,7 +342,8 @@ impl AccountManager {
         //    (legacy Mullvad upstream path).
         let account_backend: std::sync::Arc<dyn WarrenAccountBackend> =
             if let Some(cfg) = warren_api_config {
-                let client = warren_api_client::WarrenApiClient::new(cfg.url, cfg.signing_key);
+                let client =
+                    warren_api_client::WarrenApiClient::new_shared(cfg.url, Vec::new(), cfg.signing_key);
                 std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
             } else {
                 std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(

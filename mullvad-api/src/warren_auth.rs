@@ -29,7 +29,7 @@
 //! **Warren no-log**: the signing_key and pubkey are NEVER logged in
 //! the clear. The `Debug` impl explicitly masks them.
 
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use ed25519_dalek::{Signer, SigningKey};
 use rand::RngCore;
@@ -101,7 +101,12 @@ pub const NONCE_BYTES: usize = 16;
 /// write lock. The lock is uncontended in practice (signing is
 /// CPU-only, no I/O).
 pub struct WarrenAuthSigner {
-    signing_key: RwLock<SigningKey>,
+    // `Arc<RwLock<…>>` so the key handle can be SHARED (via [`Self::shared`])
+    // with the account-backend `WarrenApiClient`, the tunnel, and the
+    // incidents client. A single [`Self::replace_signing_key`] then
+    // activates the new identity (create/restore) or neutralizes it
+    // (logout) across every holder at once, the single source of truth.
+    signing_key: Arc<RwLock<SigningKey>>,
 }
 
 impl std::fmt::Debug for WarrenAuthSigner {
@@ -122,8 +127,25 @@ impl WarrenAuthSigner {
     #[must_use]
     pub fn new(signing_key: SigningKey) -> Self {
         Self {
-            signing_key: RwLock::new(signing_key),
+            signing_key: Arc::new(RwLock::new(signing_key)),
         }
+    }
+
+    /// Builds a signer that SHARES its key handle. A
+    /// [`Self::replace_signing_key`] on the resulting signer is visible
+    /// to every other holder of the same handle.
+    #[must_use]
+    pub fn from_shared(signing_key: Arc<RwLock<SigningKey>>) -> Self {
+        Self { signing_key }
+    }
+
+    /// Returns a clone of the shared key handle so other components (the
+    /// account-backend `WarrenApiClient`, the tunnel parameters
+    /// generator, the incidents client) sign with the SAME live key and
+    /// observe hot-swaps performed via [`Self::replace_signing_key`].
+    #[must_use]
+    pub fn shared(&self) -> Arc<RwLock<SigningKey>> {
+        Arc::clone(&self.signing_key)
     }
 
     /// Atomically swaps the current signing key for `new_key`. Used
@@ -645,6 +667,39 @@ mod tests {
         assert_eq!(
             new_sig.pubkey_ss58, new_pubkey,
             "the pubkey reported in the headers must match the post-swap key"
+        );
+    }
+
+    #[test]
+    fn shared_handle_propagates_replace_in_both_directions() {
+        // Regression for the dual-signer-key bug: `shared()` must hand
+        // out the SAME underlying key handle, so a `replace_signing_key`
+        // on the signer is visible to every holder of the handle (the
+        // account-backend client, the tunnel, incidents), and a write
+        // through the handle is visible to the signer. One write, one
+        // identity, everywhere.
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
+        let handle = signer.shared();
+
+        // signer -> handle
+        signer.replace_signing_key(SigningKey::from_bytes(&[9u8; 32]));
+        assert_eq!(
+            handle.read().unwrap().to_bytes(),
+            [9u8; 32],
+            "replace_signing_key MUST be visible through the shared handle"
+        );
+
+        // handle -> signer (and a second signer built from_shared)
+        let mirror = WarrenAuthSigner::from_shared(handle.clone());
+        *handle.write().unwrap() = SigningKey::from_bytes(&[11u8; 32]);
+        assert_eq!(
+            signer.pubkey_ss58(),
+            mirror.pubkey_ss58(),
+            "both signers share one identity"
+        );
+        assert_eq!(
+            signer.pubkey_ss58(),
+            ss58::encode(&SigningKey::from_bytes(&[11u8; 32]).verifying_key().to_bytes())
         );
     }
 }

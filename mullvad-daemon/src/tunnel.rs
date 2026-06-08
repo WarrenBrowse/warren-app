@@ -1,4 +1,8 @@
-use std::{future::Future, pin::Pin, sync::Arc};
+use std::{
+    future::Future,
+    pin::Pin,
+    sync::{Arc, RwLock},
+};
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{
@@ -88,7 +92,11 @@ struct InnerParametersGenerator {
     /// Artifacts for the Warren tunnel path. Always populated at boot
     /// (Warren is the only mode); kept as `Option` for the type plumbing.
     warren_relay_selector: Option<DaemonWarrenRelaySelector>,
-    warren_signing_key: Option<SigningKey>,
+    // Shared, hot-swappable identity key (cloned from the daemon's
+    // `WarrenAuthSigner::shared`). Read live at connect time so a
+    // create/restore/logout that swaps the key takes effect on the next
+    // tunnel without a daemon restart.
+    warren_signing_key: Option<Arc<RwLock<SigningKey>>>,
     /// Multi-hop config. `Some` only when the `warren_multi_hop.enabled`
     /// UI toggle is on AND a valid signed
     /// `<settings_dir>/warren-multihop.json` is present; `None`
@@ -262,7 +270,7 @@ impl ParametersGenerator {
         relay_settings: RelaySettings,
         tunnel_options: TunnelOptions,
         warren_relay_selector: Option<DaemonWarrenRelaySelector>,
-        warren_signing_key: Option<SigningKey>,
+        warren_signing_key: Option<Arc<RwLock<SigningKey>>>,
         warren_multi_hop: Option<MultiHopConfig>,
         warren_status_cache: WarrenStatusCache,
         warren_api_url: Option<String>,
@@ -339,7 +347,14 @@ impl ParametersGenerator {
     /// signing forensic incident reports. Returns `None` if Warren
     /// mode is off / the BIP39 identity was never bootstrapped.
     pub async fn warren_signing_key_for_incidents(&self) -> Option<SigningKey> {
-        self.0.lock().await.warren_signing_key.clone()
+        // Snapshot the CURRENT key (read lock) so a post-restore incident
+        // report is signed by the active identity, not the boot one.
+        self.0
+            .lock()
+            .await
+            .warren_signing_key
+            .as_ref()
+            .map(|k| k.read().expect("signing-key RwLock poisoned").clone())
     }
 
     /// Session H A.4: clear every entry from the in-memory pin table.
@@ -486,10 +501,14 @@ impl ParametersGenerator {
             .as_ref()
             .ok_or(Error::WarrenSelectorMissing)?
             .clone();
+        // Read the LIVE key at connect time so a create/restore/logout
+        // that swapped the shared handle is reflected in this tunnel.
         let signing_key = inner
             .warren_signing_key
             .as_ref()
             .ok_or(Error::WarrenSigningKeyMissing)?
+            .read()
+            .expect("signing-key RwLock poisoned")
             .clone();
         let query = relay_settings_to_warren_query(&inner.relay_settings);
         let multi_hop = inner.warren_multi_hop.clone();
@@ -683,7 +702,8 @@ impl ParametersGenerator {
                 last_pubkey,
             ) {
                 tokio::spawn(async move {
-                    let client = warren_api_client::WarrenApiClient::new(api_url, signing_key);
+                    let client =
+                        warren_api_client::WarrenApiClient::new_shared(api_url, Vec::new(), signing_key);
                     let hex_pubkey = hex::encode(excluded.as_bytes());
                     let exit_pubkey_hex =
                         match warren_api_client::PubkeyHex::try_from(hex_pubkey.as_str()) {

@@ -10,6 +10,8 @@
 //! 2. URL absent from both env AND settings -> compiled default.
 //! 3. signing_key absent (mnemonic not bootstrapped) -> None.
 
+use std::sync::{Arc, RwLock};
+
 use ed25519_dalek::SigningKey;
 
 use crate::device::WarrenApiConfig;
@@ -43,7 +45,7 @@ pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 pub(crate) fn resolve(
     settings_url: Option<String>,
     env_url: Option<String>,
-    signing_key: Option<SigningKey>,
+    signing_key: Option<Arc<RwLock<SigningKey>>>,
 ) -> Option<WarrenApiConfig> {
     // First non-empty of [env, settings], else the compiled prod
     // default — so remote mode never silently falls back to the
@@ -62,8 +64,8 @@ pub(crate) fn resolve(
 mod tests {
     use super::*;
 
-    fn fixed_signing_key() -> SigningKey {
-        SigningKey::from_bytes(&[7u8; 32])
+    fn fixed_signing_key() -> Arc<RwLock<SigningKey>> {
+        Arc::new(RwLock::new(SigningKey::from_bytes(&[7u8; 32])))
     }
 
     #[test]
@@ -75,7 +77,7 @@ mod tests {
         );
         let cfg = cfg.expect("must produce a config");
         assert_eq!(cfg.url, "https://api.warrenbrowse.com");
-        assert_eq!(cfg.signing_key.to_bytes(), [7u8; 32]);
+        assert_eq!(cfg.signing_key.read().unwrap().to_bytes(), [7u8; 32]);
     }
 
     #[test]

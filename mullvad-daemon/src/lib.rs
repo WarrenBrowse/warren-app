@@ -1030,6 +1030,15 @@ impl Daemon {
         // identity.
         let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
         let warren_signer_for_daemon = warren_signer.clone();
+        // Single source of truth for the active Warren identity: the
+        // SAME `Arc<RwLock<SigningKey>>` that `WarrenAuthSigner` wraps is
+        // shared with the account backend, the tunnel, and the incidents
+        // client below. A `reload_signer_from_disk` (create/restore) or
+        // `clear_signer` (logout) on `warren_signer_for_daemon` therefore
+        // propagates to every consumer without a daemon restart, instead
+        // of leaving frozen per-consumer copies signing as the old/erased
+        // identity.
+        let warren_shared_key = warren_signer_for_daemon.as_ref().map(|signer| signer.shared());
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
@@ -1058,11 +1067,10 @@ impl Daemon {
         // None) stays here because the fn is silent to remain
         // testable without log capture.
         let env_url = std::env::var("WARREN_API_URL").ok();
-        let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
         let warren_api_config = warren_remote_config::resolve(
             settings.warren_api_url.clone(),
             env_url,
-            signing_key,
+            warren_shared_key.clone(),
         );
         match &warren_api_config {
             Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
@@ -1160,7 +1168,10 @@ impl Daemon {
         let (warren_relay_selector, warren_signing_key) = {
             let selector =
                 warren_relay_selector::DaemonWarrenRelaySelector::new(warren_bootstrap.relays);
-            let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
+            // Share the SAME swappable key handle with the tunnel (read
+            // live at connect) instead of a frozen disk re-read, so a
+            // restore/create takes effect on the next connect.
+            let signing_key = warren_shared_key.clone();
             if signing_key.is_none() {
                 log::warn!("No Warren signing key available; tunnel attempts will fail");
             }
