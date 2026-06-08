@@ -19,12 +19,9 @@ impl DisconnectedState {
         shared_values: &mut SharedTunnelStateValues,
         should_reset_firewall: bool,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
-        // Ultimate guarantee: the Disconnected state is the one place where
-        // the user's internet MUST be fully restored, whatever path led
-        // here. The Warren split-default routes live outside the talpid
-        // `RouteManager`, so force them out unconditionally — even if a
-        // guard leaked, this is the backstop that makes a no-internet
-        // lockup unreachable. Idempotent no-op when nothing is installed.
+        // Terminal backstop: internet must be fully restored here whatever
+        // path led in, so force out any Warren split (out-of-band from the
+        // `RouteManager`) even if a guard leaked. See `force_route_cleanup`.
         talpid_warren_tunnel::force_route_cleanup();
 
         #[cfg(target_os = "macos")]

@@ -58,24 +58,15 @@ mod stub;
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use stub::DefaultRouteSplitGuard;
 
-/// Synchronous, OS-agnostic force-cleanup of any Warren split-default
-/// routing this process installed, regardless of guard lifetime.
+/// Force out any Warren split-default routing this process installed,
+/// synchronously, regardless of guard lifetime.
 ///
-/// The tunnel state machine's route-reset path and the daemon's
-/// force-disconnect / watchdog call this so connectivity is **guaranteed**
-/// restored even if a guard leaked (a hard kill, a panic, an aborted
-/// task between install and teardown). This is necessary because the
-/// Warren split routes are installed via the `route`/`ip` CLI
-/// out-of-band: the talpid `RouteManager` has no record of them, so its
-/// `clear_routes()` leaves them in place — exactly the state that
-/// blackholes every egress packet (the relay endpoint is not in the
-/// host-route exception) and strands the user with no internet until the
-/// daemon is killed.
-///
-/// Idempotent and privilege-tolerant. macOS is the platform where the
-/// global-table split can outlive its guard, so it carries the real
-/// implementation; other platforms rely on their guard `Drop` and treat
-/// this as a no-op for now.
+/// These routes are installed via the `route`/`ip` CLI out-of-band, so
+/// the talpid `RouteManager`'s `clear_routes()` cannot see them: the
+/// state machine's reset paths call this so a leaked split can never
+/// blackhole egress. Idempotent and privilege-tolerant. macOS carries
+/// the real impl (only there can the global-table split outlive its
+/// guard); other platforms rely on their guard `Drop` and no-op here.
 pub fn force_route_cleanup() {
     #[cfg(target_os = "macos")]
     warren_client::default_route_split_macos::force_cleanup_all();

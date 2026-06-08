@@ -224,9 +224,8 @@ impl ConnectedState {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
 
-        // Warren split-default routes live outside the talpid
-        // `RouteManager`; force them out here so a reset from the
-        // connected state cannot leave a split blackholing egress.
+        // Warren split routes are out-of-band from the `RouteManager`.
+        // See `force_route_cleanup`.
         talpid_warren_tunnel::force_route_cleanup();
 
         #[cfg(target_os = "linux")]
@@ -435,13 +434,9 @@ impl ConnectedState {
             return NewState(ErrorState::enter(shared_values, block_reason));
         }
 
-        // Bound the reconnect loop from the Connected side too. The Warren
-        // backend emits a premature `Up`, so a path that is up at the QUIC
-        // level but cannot carry data laps Connecting→Connected→Down
-        // through here, not through `ConnectingState`. Feeding the shared
-        // flap window from both paths is what makes the bound real: once
-        // the tunnel flaps faster than any legitimate cadence, drop into a
-        // STABLE, cancelable blocked state instead of churning forever.
+        // The premature `Up` means most laps drop through here, not
+        // `ConnectingState`; both must feed the shared window for the
+        // bound to hold. See [`RECENT_RECONNECTS`].
         if note_reconnect_and_is_flapping(Instant::now()) {
             log::error!(
                 "Warren tunnel is flapping (>{FLAP_MAX} reconnects within {FLAP_WINDOW:?}); \
