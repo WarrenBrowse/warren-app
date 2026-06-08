@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "Warren VPN – a service, for a monthly fee, that helps keep your online activity, identity, and location private."
+msgid "Warren VPN, a service, for a monthly fee, that helps keep your online activity, identity, and location private."
 msgstr ""
 
 msgid "GET STARTED"
@@ -20,7 +20,7 @@ msgstr ""
 msgid "If you are not pleased with our service we have a refund policy and offer support via support@warrenbrowse.com."
 msgstr ""
 
-msgid "ANONYMOUS ACCOUNTS – NO ACTIVITY LOGS"
+msgid "ANONYMOUS ACCOUNTS, NO ACTIVITY LOGS"
 msgstr ""
 
 msgid "Creating an account requires no personal info - not even an email address."

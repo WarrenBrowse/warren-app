@@ -2914,7 +2914,7 @@ msgstr "Квантово-устойчивый туннель"
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Установите значение MTU для %(wireguard)s. Диапазон значений: %(min)d–%(max)d."
+msgstr "Установите значение MTU для %(wireguard)s. Диапазон значений: %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2939,7 +2939,7 @@ msgstr "UDP через TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Диапазон значений: %(min)s–%(max)s"
+msgstr "Диапазон значений: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -3544,7 +3544,7 @@ msgid "Send email"
 msgstr "Отправить письмо"
 
 msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Установите значение MTU для QUIC. Диапазон значений: %1$d–%2$d."
+msgstr "Установите значение MTU для QUIC. Диапазон значений: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Установить как вход многократного перехода"
@@ -4032,7 +4032,7 @@ msgstr "• Постоянная обфускация (по умолчанию �
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr "• DAITA v2 (по умолчанию ВЫКЛ): добавляет паддинг для противодействия анализу трафика ML. ~5–15 % пропускной способности."
+msgstr "• DAITA v2 (по умолчанию ВЫКЛ): добавляет паддинг для противодействия анализу трафика ML. ~5-15 % пропускной способности."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."

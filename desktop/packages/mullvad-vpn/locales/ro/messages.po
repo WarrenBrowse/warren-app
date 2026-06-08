@@ -880,7 +880,7 @@ msgstr "Au mai rămas câteva secunde..."
 #. %(minutes)s - Will be replaced with remaining minutes until download is complete
 msgctxt "app-upgrade-view"
 msgid "About %(minutes)s minutes remaining..."
-msgstr "Despre „%(minutes)s” – mai sunt câteva minute..."
+msgstr "Despre „%(minutes)s”, mai sunt câteva minute..."
 
 #. Status text displayed below a progress bar when the update is being downloaded
 #. with the estimated time of completion represented in seconds.
@@ -3113,7 +3113,7 @@ msgstr "Continuați"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Serviciul nu are încă o frază mnemonică – autentificați-vă sau reporniți aplicația."
+msgstr "Serviciul nu are încă o frază mnemonică, autentificați-vă sau reporniți aplicația."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3185,7 +3185,7 @@ msgstr "Notați aceste 12 cuvinte în ordine și păstrați-le într-un loc sigu
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Încă nu aveți un abonament activ. Tarifele încep de la câțiva euro pe lună – fără facturare recurentă, fără crearea unui cont, plătiți doar ce folosiți."
+msgstr "Încă nu aveți un abonament activ. Tarifele încep de la câțiva euro pe lună, fără facturare recurentă, fără crearea unui cont, plătiți doar ce folosiți."
 
 msgctxt "warren-onboarding"
 msgid "Your subscription"

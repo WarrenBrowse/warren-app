@@ -2927,7 +2927,7 @@ msgstr "UDP-over-TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Gyldig område: %(min)s–%(max)s"
+msgstr "Gyldig område: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -3298,10 +3298,10 @@ msgid "Failed to load products, please try again"
 msgstr "Kunne ikke laste opp produkter. Prøv på nytt"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "Kunne ikke angi til gjeldende – API ikke tilgjengelig"
+msgstr "Kunne ikke angi til gjeldende, API ikke tilgjengelig"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "Kunne ikke angi til gjeldende – ukjent årsak"
+msgstr "Kunne ikke angi til gjeldende, ukjent årsak"
 
 msgid "File"
 msgstr "Fil"
@@ -3532,7 +3532,7 @@ msgid "Send email"
 msgstr "Send e-post"
 
 msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Angi QUIC MTU-verdi. Verdiområde: %1$d–%2$d."
+msgstr "Angi QUIC MTU-verdi. Verdiområde: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Angi som multihopp-inngang"
@@ -3916,7 +3916,7 @@ msgstr "Kunne ikke sjekke abonnementsstatus. Prøv igjen."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Daemonen har ennå ingen mnemonic – logg inn eller start appen på nytt."
+msgstr "Daemonen har ennå ingen mnemonic, logg inn eller start appen på nytt."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Skriv ned disse 12 ordene i rekkefølge, og oppbevar dem på et trygt st
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Du har ennå ikke et aktivt abonnement. Planene starter på noen få euro per måned – ingen gjentakende fakturering, ingen kontoregistrering, betal etter bruk."
+msgstr "Du har ennå ikke et aktivt abonnement. Planene starter på noen få euro per måned, ingen gjentakende fakturering, ingen kontoregistrering, betal etter bruk."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4004,7 +4004,7 @@ msgstr "• Alltid-på-obfuskering (PÅ som standard): HTTP/3-mimikk slik at tra
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr "• DAITA v2 (AV som standard): injiserer utfylling for å motvirke ML-trafikkanalyse. ~5–15 % båndbredde."
+msgstr "• DAITA v2 (AV som standard): injiserer utfylling for å motvirke ML-trafikkanalyse. ~5-15 % båndbredde."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
@@ -4193,7 +4193,7 @@ msgstr "Nøkler"
 
 msgctxt "keys-view"
 msgid "No mnemonic available. Log in or restore an identity first."
-msgstr "Ingen gjenopprettingsfrase tilgjengelig – logg inn eller gjenopprett en identitet først."
+msgstr "Ingen gjenopprettingsfrase tilgjengelig, logg inn eller gjenopprett en identitet først."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4213,7 +4213,7 @@ msgstr "Vis gjenopprettingsfrase"
 
 msgctxt "keys-view"
 msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "ADVARSEL – Dette vil ERSTATTE din nåværende identitet. Ethvert abonnement knyttet til den nåværende identiteten kan ikke gjenopprettes."
+msgstr "ADVARSEL: Dette vil ERSTATTE din nåværende identitet. Ethvert abonnement knyttet til den nåværende identiteten kan ikke gjenopprettes."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."

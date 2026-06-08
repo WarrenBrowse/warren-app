@@ -2902,7 +2902,7 @@ msgstr "Kvantresistent tunnel"
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Ange värde för %(wireguard)s MTU. Giltigt intervall: %(min)d–%(max)d."
+msgstr "Ange värde för %(wireguard)s MTU. Giltigt intervall: %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2927,7 +2927,7 @@ msgstr "UDP över TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Giltigt intervall: %(min)s–%(max)s"
+msgstr "Giltigt intervall: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -3298,10 +3298,10 @@ msgid "Failed to load products, please try again"
 msgstr "Det gick inte att läsa in produkterna, försök igen"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "Kan inte ställas in som aktuell – API kan inte nås"
+msgstr "Kan inte ställas in som aktuell, API kan inte nås"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "Kan inte ställas in som aktuell – Okänd anledning"
+msgstr "Kan inte ställas in som aktuell, Okänd anledning"
 
 msgid "File"
 msgstr "Fil"
@@ -3532,7 +3532,7 @@ msgid "Send email"
 msgstr "Skicka e-post"
 
 msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Ange QUIC MTU-värde. Giltigt intervall: %1$d–%2$d."
+msgstr "Ange QUIC MTU-värde. Giltigt intervall: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Ange som första multihopp"
@@ -3916,7 +3916,7 @@ msgstr "Det gick inte att kontrollera prenumerationsstatusen. Försök igen."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Daemonen har ännu ingen frasminne – logga in eller starta om appen."
+msgstr "Daemonen har ännu ingen frasminne, logga in eller starta om appen."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Skriv ner dessa 12 ord i ordning och förvara dem på ett säkert ställ
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Du har ännu ingen aktiv prenumeration. Planerna börjar på några euro per månad – ingen återkommande fakturering, ingen kontoregistrering, betala efter användning."
+msgstr "Du har ännu ingen aktiv prenumeration. Planerna börjar på några euro per månad, ingen återkommande fakturering, ingen kontoregistrering, betala efter användning."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4004,7 +4004,7 @@ msgstr "• Alltid-på-obfuskering (PÅ som standard): HTTP/3-mimikry så att tr
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr "• DAITA v2 (AV som standard): injicerar utfyllnad för att motverka ML-trafikanalys. ~5–15 % bandbredd."
+msgstr "• DAITA v2 (AV som standard): injicerar utfyllnad för att motverka ML-trafikanalys. ~5-15 % bandbredd."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
@@ -4193,7 +4193,7 @@ msgstr "Nycklar"
 
 msgctxt "keys-view"
 msgid "No mnemonic available. Log in or restore an identity first."
-msgstr "Ingen återställningsfras tillgänglig – logga in eller återställ en identitet först."
+msgstr "Ingen återställningsfras tillgänglig, logga in eller återställ en identitet först."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"

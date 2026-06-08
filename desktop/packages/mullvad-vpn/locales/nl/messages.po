@@ -3916,7 +3916,7 @@ msgstr "Kon abonnementsstatus niet controleren. Probeer het opnieuw."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "De daemon heeft nog geen mnemonic – log in of herstart de app."
+msgstr "De daemon heeft nog geen mnemonic, log in of herstart de app."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Schrijf deze 12 woorden in volgorde op en bewaar ze op een veilige plek.
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Je hebt nog geen actief abonnement. Abonnementen beginnen vanaf enkele euro's per maand – geen terugkerende facturatie, geen accountaanmaak, betalen naar gebruik."
+msgstr "Je hebt nog geen actief abonnement. Abonnementen beginnen vanaf enkele euro's per maand, geen terugkerende facturatie, geen accountaanmaak, betalen naar gebruik."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

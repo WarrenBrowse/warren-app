@@ -2955,15 +2955,7 @@ msgid "Could not check subscription status. Please try again."
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr ""
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr ""
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -2983,15 +2975,7 @@ msgid "I have written it down in a safe place."
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr ""
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
-msgstr ""
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
 msgstr ""
 
 msgctxt "warren-onboarding"
@@ -3007,19 +2991,11 @@ msgid "Privacy preferences"
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr ""
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr ""
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
-msgstr ""
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
 msgstr ""
 
 msgctxt "warren-onboarding"

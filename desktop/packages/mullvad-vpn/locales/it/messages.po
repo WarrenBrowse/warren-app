@@ -3988,7 +3988,7 @@ msgstr "Annota queste 12 parole in ordine e conservale in un luogo sicuro. Sono 
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Non hai ancora un abbonamento attivo. I piani partono da pochi euro al mese – nessuna fatturazione ricorrente, nessuna creazione di account, paghi quello che usi."
+msgstr "Non hai ancora un abbonamento attivo. I piani partono da pochi euro al mese, nessuna fatturazione ricorrente, nessuna creazione di account, paghi quello che usi."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

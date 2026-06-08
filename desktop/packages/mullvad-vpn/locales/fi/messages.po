@@ -2778,7 +2778,7 @@ msgstr "VPN-asetukset"
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
-msgstr "Varoitus: haittaohjelmien estotoiminto ei ole virustorjuntaohjelma, eikä sitä pidä käyttää sellaisena – kyseessä on vain ylimääräinen suojauskerros."
+msgstr "Varoitus: haittaohjelmien estotoiminto ei ole virustorjuntaohjelma, eikä sitä pidä käyttää sellaisena, kyseessä on vain ylimääräinen suojauskerros."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -2902,7 +2902,7 @@ msgstr "Kvanttihyökkäyksiä kestävä tunneli"
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Aseta %(wireguard)s MTU -arvo välillä %(min)d–%(max)d."
+msgstr "Aseta %(wireguard)s MTU -arvo välillä %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2927,7 +2927,7 @@ msgstr "UDP TCP:n kautta"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Kelvolliset portit: %(min)s–%(max)s"
+msgstr "Kelvolliset portit: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -3298,10 +3298,10 @@ msgid "Failed to load products, please try again"
 msgstr "Tuotteiden lataaminen epäonnistui, yritä uudelleen"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "Nykyisen asetus epäonnistui – APIa ei tavoiteta"
+msgstr "Nykyisen asetus epäonnistui, APIa ei tavoiteta"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "Nykyisen asetus epäonnistui – Tuntematon syy"
+msgstr "Nykyisen asetus epäonnistui, Tuntematon syy"
 
 msgid "File"
 msgstr "Tiedosto"
@@ -3532,7 +3532,7 @@ msgid "Send email"
 msgstr "Lähetä sähköpostia"
 
 msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Aseta QUICin MTU-arvo väliltä %1$d–%2$d."
+msgstr "Aseta QUICin MTU-arvo väliltä %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Aseta multihopin tulopaikaksi"
@@ -3916,7 +3916,7 @@ msgstr "Tilauksen tilaa ei voitu tarkistaa. Yritä uudelleen."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Demonilla ei ole vielä mnemonista – kirjaudu sisään tai käynnistä sovellus uudelleen."
+msgstr "Demonilla ei ole vielä mnemonista, kirjaudu sisään tai käynnistä sovellus uudelleen."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Kirjoita nämä 12 sanaa muistiin järjestyksessä ja säilytä ne turva
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Sinulla ei ole vielä aktiivista tilausta. Tilaukset alkavat muutamasta eurosta kuukaudessa – ei toistuvaa laskutusta, ei tilin luomista, maksat käytön mukaan."
+msgstr "Sinulla ei ole vielä aktiivista tilausta. Tilaukset alkavat muutamasta eurosta kuukaudessa, ei toistuvaa laskutusta, ei tilin luomista, maksat käytön mukaan."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4004,7 +4004,7 @@ msgstr "• Aina päällä oleva hämärrys (oletuksena PÄÄLLÄ): HTTP/3-jälj
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr "• DAITA v2 (oletuksena POIS): lisää täytteen estääkseen ML-liikenneanalyysin. ~5–15 % kaistanleveydestä."
+msgstr "• DAITA v2 (oletuksena POIS): lisää täytteen estääkseen ML-liikenneanalyysin. ~5-15 % kaistanleveydestä."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
@@ -4121,7 +4121,7 @@ msgstr "Porttiohjaus"
 
 msgctxt "port-forwarding-view"
 msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "Portin on oltava välillä 49152–65535 tai tyhjä automaattista varten."
+msgstr "Portin on oltava välillä 49152-65535 tai tyhjä automaattista varten."
 
 msgctxt "port-forwarding-view"
 msgid "Preferred port"
@@ -4420,7 +4420,7 @@ msgstr "Portti"
 
 msgctxt "port-forwarding-view"
 msgid "Port must be between 49152 and 65535."
-msgstr "Portin on oltava välillä 49152–65535."
+msgstr "Portin on oltava välillä 49152-65535."
 
 msgctxt "port-forwarding-view"
 msgid "Remove port"

@@ -3298,10 +3298,10 @@ msgid "Failed to load products, please try again"
 msgstr "بارگذاری محصولات ناموفق بود، لطفاً دوباره تلاش کنید"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "تنظیم به وضعیت فعلی ناموفق بود – دسترسی به API ممکن نیست"
+msgstr "تنظیم به وضعیت فعلی ناموفق بود، دسترسی به API ممکن نیست"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "تنظیم به وضعیت فعلی ناموفق بود – دلیل نامشخص"
+msgstr "تنظیم به وضعیت فعلی ناموفق بود، دلیل نامشخص"
 
 msgid "File"
 msgstr "فایل"

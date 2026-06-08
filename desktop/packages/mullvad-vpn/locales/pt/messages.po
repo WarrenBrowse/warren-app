@@ -3916,7 +3916,7 @@ msgstr "Não foi possível verificar o estado da subscrição. Tenta novamente."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "O daemon ainda não tem frase mnemónica – inicia sessão ou reinicia a aplicação."
+msgstr "O daemon ainda não tem frase mnemónica, inicia sessão ou reinicia a aplicação."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Anote estas 12 palavras por ordem e guarde-as num local seguro. São a �
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Ainda não tens uma subscrição ativa. Os planos começam em alguns euros por mês – sem faturação recorrente, sem criação de conta, paga conforme usas."
+msgstr "Ainda não tens uma subscrição ativa. Os planos começam em alguns euros por mês, sem faturação recorrente, sem criação de conta, paga conforme usas."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

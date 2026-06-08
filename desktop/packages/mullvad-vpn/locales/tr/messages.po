@@ -3916,7 +3916,7 @@ msgstr "Abonelik durumu kontrol edilemedi. Lütfen tekrar dene."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Daemon'da henüz mnemonik ifade yok – oturum aç ya da uygulamayı yeniden başlat."
+msgstr "Daemon'da henüz mnemonik ifade yok, oturum aç ya da uygulamayı yeniden başlat."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3988,7 +3988,7 @@ msgstr "Bu 12 kelimeyi sırayla not edin ve güvenli bir yerde saklayın. Bu cih
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Henüz etkin bir aboneliğin yok. Planlar ayda birkaç eurodan başlıyor – tekrarlayan faturalandırma yok, hesap oluşturma yok, kullandıkça öde."
+msgstr "Henüz etkin bir aboneliğin yok. Planlar ayda birkaç eurodan başlıyor, tekrarlayan faturalandırma yok, hesap oluşturma yok, kullandıkça öde."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

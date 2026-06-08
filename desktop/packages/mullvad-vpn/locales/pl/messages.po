@@ -2914,7 +2914,7 @@ msgstr "Tunel odporny na ataki z użyciem komputerów kwantowych"
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Ustaw wartość MTU %(wireguard)s. Prawidłowy zakres: %(min)d–%(max)d."
+msgstr "Ustaw wartość MTU %(wireguard)s. Prawidłowy zakres: %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2939,7 +2939,7 @@ msgstr "UDP-przez-TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Prawidłowy zakres: %(min)s – %(max)s"
+msgstr "Prawidłowy zakres: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -3544,7 +3544,7 @@ msgid "Send email"
 msgstr "Wyślij wiadomość e-mail"
 
 msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Ustaw wartość MTU QUIC. Prawidłowy zakres: %1$d–%2$d."
+msgstr "Ustaw wartość MTU QUIC. Prawidłowy zakres: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Ustaw jako wejście z wielokrotnym przeskokiem"
@@ -3944,7 +3944,7 @@ msgstr "Nie udało się sprawdzić statusu subskrypcji. Spróbuj ponownie."
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Demon nie ma jeszcze frazy mnemonicznej – zaloguj się lub uruchom ponownie aplikację."
+msgstr "Demon nie ma jeszcze frazy mnemonicznej, zaloguj się lub uruchom ponownie aplikację."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4016,7 +4016,7 @@ msgstr "Zapisz te 12 słów w kolejności i przechowuj je w bezpiecznym miejscu.
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Nie masz jeszcze aktywnej subskrypcji. Plany zaczynają się od kilku euro miesięcznie – bez cyklicznych płatności, bez zakładania konta, płacisz za użycie."
+msgstr "Nie masz jeszcze aktywnej subskrypcji. Plany zaczynają się od kilku euro miesięcznie, bez cyklicznych płatności, bez zakładania konta, płacisz za użycie."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4032,7 +4032,7 @@ msgstr "• Obfuskacja zawsze włączona (domyślnie WŁ.): mimikra HTTP/3, aby 
 
 msgctxt "warren-onboarding"
 msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
-msgstr "• DAITA v2 (domyślnie WYŁ.): wstrzykuje wypełnienie, aby udaremnić analizę ruchu przez ML. ~5–15 % przepustowości."
+msgstr "• DAITA v2 (domyślnie WYŁ.): wstrzykuje wypełnienie, aby udaremnić analizę ruchu przez ML. ~5-15 % przepustowości."
 
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."

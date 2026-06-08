@@ -3431,6 +3431,18 @@ msgid "%(daita)s does this by carefully adding network noise and making all netw
 msgstr "%(daita)s y parvient en ajoutant soigneusement du bruit au réseau et en faisant en sorte que tous les paquets du réseau aient la même taille."
 
 msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s ajoute du bruit réseau et uniformise la taille des paquets, ce qui rend bien plus difficile d'identifier les sites que vous visitez ou les personnes avec qui vous communiquez."
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "Même chiffrés, les paquets de données entrant et sortant de votre appareil peuvent être analysés par une IA pour révéler votre activité."
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "Note : cette option augmente le trafic réseau et peut réduire la vitesse, la latence et l'autonomie de la batterie. À utiliser avec précaution avec un forfait limité."
+
+msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "Port %(wireguard)s"
 
