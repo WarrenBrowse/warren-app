@@ -77,7 +77,16 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                     ApiConnectionMode::Proxied(ProxyConfig::from(edp))
                 }
                 AccessMethod::BuiltIn(BuiltInAccessMethod::DomainFronting) => {
-                    mullvad_api::domain_fronting::resolve().await?
+                    // Warren operates no built-in domain-fronting endpoint
+                    // (the upstream Mullvad CDN77 front was dead code and
+                    // removed). The method stays disabled in settings for
+                    // upstream-rebase compatibility; if ever selected it
+                    // resolves to "unavailable". A real fronting endpoint can
+                    // still be added as a Custom access method.
+                    log::warn!(
+                        "DomainFronting has no Warren built-in endpoint; method unavailable"
+                    );
+                    return None;
                 }
                 AccessMethod::Custom(config) => {
                     ApiConnectionMode::Proxied(ProxyConfig::from(config.clone()))

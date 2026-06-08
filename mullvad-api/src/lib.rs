@@ -18,7 +18,6 @@ pub mod version;
 
 mod abortable_stream;
 pub mod access_mode;
-pub mod domain_fronting;
 mod https_client;
 pub mod proxy;
 mod tls_stream;
