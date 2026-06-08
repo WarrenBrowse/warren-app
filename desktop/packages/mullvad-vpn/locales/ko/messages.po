@@ -3905,8 +3905,8 @@ msgid "Keys"
 msgstr "키"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "사용 가능한 니모닉이 없습니다 — 먼저 로그인하거나 신원을 복구하세요."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "사용 가능한 니모닉이 없습니다. 먼저 로그인하거나 신원을 복구하세요."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3925,8 +3925,8 @@ msgid "Reveal mnemonic"
 msgstr "니모닉 표시"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "경고 — 현재 신원이 대체됩니다. 현재 신원에 연결된 구독은 복구할 수 없게 됩니다."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "경고: 현재 신원이 대체됩니다. 현재 신원에 연결된 구독은 복구할 수 없게 됩니다."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4139,3 +4139,366 @@ msgstr "Warren에 오신 것을 환영합니다"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "이 12개 단어를 적어 안전하게 보관하세요. 이 기기를 분실할 경우 계정을 복구할 수 있는 유일한 방법입니다."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "결제를 완료했습니다"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "세션이 비활성 상태입니다"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "세션이 종료되었습니다. 다시 연결하려면 다시 로그인해야 합니다."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "서버 ID 불일치가 감지되었습니다. 출구 노드의 공개 키가 변경되었습니다."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "자동 장애 조치"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "현재 출구 서버에 연결할 수 없게 되면 자동으로 다른 출구 서버로 전환합니다."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "이 설정은 서비스를 다시 시작하지 않고 즉시 적용됩니다."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api 서버의 URL입니다. 형식 http(s)://host:port. 비어 있음 = 설정 안 함(기본 백엔드로 대체). 변경 사항을 적용하려면 서비스를 다시 시작하세요."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "기존 난독화 방식(Shadowsocks, UDP-over-TCP, QUIC, LWO)은 Warren 터널에 적용되지 않습니다."
+
+msgid "OK"
+msgstr "확인"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "공개 키 복사"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "공개 키 숨기기"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "공개 키 표시"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "키 백업"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "공개 키"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "사용되는 CDN은 Datapacket의 CDN77입니다. 이 CDN은 중계되는 TLS 트래픽만 관찰할 수 있으며 그 내용은 볼 수 없습니다."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "앱은 %(domainFronting)s을(를) 통해 Warren API 서버와 통신합니다."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "직접 접속 및 다른 방식이 검열로 차단된 경우에 유용할 수 있습니다."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s 접속 방식을 사용하면 앱이 CDN을 통해 Warren API에 연결되어, 트래픽이 다른 많은 인터넷 트래픽과 섞이므로 검열하기가 더 어려워집니다."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "유효하지 않은 공개 키로 로그인되어 있습니다. 로그아웃한 뒤 다른 키로 시도해 주세요."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "확인 중... (지금 새로고침하려면 클릭하세요)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "여기 공개 키가 있습니다. 잘 보관하세요!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "포트 포워딩: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "멀티홉(2홉)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "출구 서버 변경됨"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "이전 출구 서버에 연결할 수 없게 되었습니다. Warren이 자동으로 대체 서버를 통해 경로를 변경했습니다."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ 포트 추가"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "추가하는 각 포트는 출구 서버에서 열리며 사용자 기기의 동일한 포트로 전달됩니다. 변경 사항은 즉시 적용되며 재연결이 필요하지 않습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "일시적 차단 전 마지막 포트 변경입니다. 다시 변경하기 전에 잠시 기다려 주세요."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "최대 %(max)d개의 포트에 도달했습니다"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "아직 포트가 없습니다. 출구 서버에서 열려면 하나를 추가하세요."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "포트"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "포트는 49152에서 65535 사이여야 합니다."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "포트 제거"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "상태: 포트 매핑을 설정하기 위해 활성 터널 연결을 기다리는 중입니다."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "이 포트는 이미 목록에 있습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "포트 변경이 너무 잦습니다. %(countdown)s 후에 다시 포트를 변경할 수 있습니다."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "적용 중…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "실패"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "사용 가능한 포트 없음"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "허용되지 않음"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "열림: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "대기 중…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "포트"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "포트 사용 중"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "요청 중…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "바우처 코드 대신 공개 키를 입력하신 것 같습니다. 활성 계정을 변경하려면 먼저 로그아웃해 주세요."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "포트 포워딩"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "온보딩 다시 보기"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "고정된 출구 키 항목 %(count)s개를 삭제했습니다."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "이전에 연결했던 모든 Warren 출구 서버는 다음 연결 시 다시 고정됩니다(Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "고정 테이블이 비워졌습니다"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "초기화"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "모두 초기화"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "초기화 실패"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "고정된 출구 키 초기화"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "고정된 출구 키를 초기화할까요?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "새 고정 항목이 설정될 때까지 대체 탐지 보호 기능이 잠시 비활성화됩니다. 초기화 사이에 출구 서버를 교체한 공격자는 첫 재연결 시 표시되지 않습니다."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren API URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "입구 국가"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "출구 국가"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "사용자 IP와 목적지 IP 간의 연결 불가능성을 얻는 대가로 단일홉 대역폭의 약 절반을 예상하세요. 기본적으로 꺼져 있으며, 개인정보 보호를 위해 직접 켜야 합니다."
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "멀티홉"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "이 설정을 변경한 후에는 Warren 서비스를 다시 시작하세요."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "HPKE 종단 간 암호화를 사용하여 두 개의 Warren 릴레이를 통해 트래픽을 전달합니다. 입구 릴레이는 암호문만 보고, 출구 서버는 복호화된 페이로드만 볼 뿐 사용자의 IP는 절대 보지 않습니다. Apple Private Relay에서 영감을 받은 방식입니다."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "절충점: 단일홉 대역폭의 약 절반입니다. 기본적으로 꺼져 있으며, 개인정보 보호를 위해 직접 켜야 합니다. 이 설정을 변경한 후에는 서비스 재시작이 필요합니다."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren 멀티홉"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "활성화하면 클라이언트와 출구 서버 간의 HPKE 종단 간 암호화를 사용하여 두 개의 Warren 릴레이(입구 후 출구)를 통해 트래픽이 전달됩니다. 입구 릴레이는 암호문만 보고, 출구 서버는 복호화된 페이로드만 볼 뿐 사용자 IP는 절대 보지 않습니다."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "자동"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "암호화 불일치 세부 정보"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "출구 ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "위치"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "새로 관찰된 키"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "이전에 고정된 키"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "선택을 처리하는 중입니다. 잠시 기다려 주세요."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "거부(연결 해제)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "거부하고 연결 해제 상태 유지"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Warren에 신고"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "서버 신원이 변경됨"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "이전에 신뢰했던 Warren 출구 서버가 이제 다른 암호화 신원을 제시합니다."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "이는 보통 운영자가 키를 교체했음을 의미하지만, 서버가 교체되었거나 침해되었음을 나타낼 수도 있습니다. 변경을 예상하지 않았다면 거부하세요."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "새 키 신뢰"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 모방(활성)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3 모방 난독화는 Warren 터널(/v1)에서 항상 켜져 있습니다."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3 모방 난독화가 현재 비활성 상태입니다."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "마지막"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "난독화"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "재연결"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren 터널은 표준 브라우저의 HTTP/3 트래픽으로 위장합니다: ALPN h3, SNI warrenbrowse.com, Initial 패킷 분할, UDP/443. 이를 비활성화하면 Warren 클라이언트가 네트워크에서 즉시 식별될 수 있으므로 /v1에서는 전환할 수 없습니다."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "비활성"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "없음"

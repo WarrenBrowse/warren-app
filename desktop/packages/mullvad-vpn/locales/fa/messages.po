@@ -3919,8 +3919,8 @@ msgid "Keys"
 msgstr "کلیدها"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "عبارت بازیابی در دسترس نیست — ابتدا وارد شوید یا یک هویت را بازیابی کنید."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "عبارت بازیابی در دسترس نیست، ابتدا وارد شوید یا یک هویت را بازیابی کنید."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3939,8 +3939,8 @@ msgid "Reveal mnemonic"
 msgstr "نمایش عبارت بازیابی"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "هشدار — این کار هویت فعلی شما را جایگزین می‌کند. هر اشتراکی که به هویت فعلی متصل باشد غیرقابل بازیابی خواهد شد."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "هشدار: این کار هویت فعلی شما را جایگزین می‌کند. هر اشتراکی که به هویت فعلی متصل باشد غیرقابل بازیابی خواهد شد."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -3996,7 +3996,7 @@ msgstr "ایجاد کیف پول جدید (توصیه‌شده)"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "سرویس هنوز عبارت بازیابی‌ای ندارد — وارد شوید یا برنامه را دوباره راه‌اندازی کنید."
+msgstr "سرویس هنوز عبارت بازیابی‌ای ندارد، وارد شوید یا برنامه را دوباره راه‌اندازی کنید."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4068,7 +4068,7 @@ msgstr "این ۱۲ کلمه را به ترتیب یادداشت کنید و د�
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "هنوز اشتراک فعالی ندارید. اشتراک‌ها از چند یورو در ماه شروع می‌شوند — بدون پرداخت دوره‌ای، بدون ساخت حساب کاربری، پرداخت به اندازه مصرف."
+msgstr "هنوز اشتراک فعالی ندارید. اشتراک‌ها از چند یورو در ماه شروع می‌شوند، بدون پرداخت دوره‌ای، بدون ساخت حساب کاربری، پرداخت به اندازه مصرف."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4153,3 +4153,366 @@ msgstr "به Warren خوش آمدید"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "این ۱۲ کلمه را یادداشت کنید و در جای امنی نگه دارید. اگر این دستگاه را از دست بدهید، تنها راه بازیابی حساب شما هستند."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "پرداخت را تکمیل کردم"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "نشست غیرفعال است"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "نشست شما به پایان رسید. برای اتصال مجدد، باید دوباره وارد شوید."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "عدم تطابق هویت سرور شناسایی شد. کلید عمومی گره خروجی تغییر کرده است."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "جابجایی خودکار در زمان خرابی"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "اگر سرور خروجی فعلی غیرقابل دسترس شد، به‌طور خودکار به سرور خروجی دیگری سوئیچ کن."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "این تنظیم بدون راه‌اندازی مجدد سرویس، بلافاصله اعمال می‌شود."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "نشانی URL سرور warren-api. قالب http(s)://host:port. خالی = تنظیم‌نشده (بازگشت به بک‌اند پیش‌فرض). برای اعمال تغییر، سرویس را مجدداً راه‌اندازی کنید."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "روش‌های مبهم‌سازی قدیمی (Shadowsocks، UDP-over-TCP، QUIC، LWO) برای تونل Warren اعمال نمی‌شوند."
+
+msgid "OK"
+msgstr "تأیید"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "کپی کلید عمومی"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "پنهان کردن کلید عمومی"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "نمایش کلید عمومی"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "پشتیبان‌گیری از کلیدها"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "کلید عمومی"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "CDN مورد استفاده، CDN77 از Datapacket است. این CDN فقط می‌تواند ترافیک TLS بازپخش‌شده را مشاهده کند، نه محتوای آن را."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "برنامه از طریق %(domainFronting)s با یک سرور warren-api ارتباط برقرار می‌کند."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "این می‌تواند زمانی مفید باشد که دسترسی مستقیم و روش‌های دیگر توسط سانسور مسدود شده‌اند."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "با روش دسترسی %(domainFronting)s، برنامه از طریق یک CDN به warren-api می‌رسد و ترافیک را با حجم زیادی از دیگر ترافیک اینترنت در هم می‌آمیزد، که سانسور آن را دشوارتر می‌کند."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "شما با یک کلید عمومی نامعتبر وارد شده‌اید. لطفاً خارج شوید و کلید دیگری را امتحان کنید."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "در حال بررسی... (برای به‌روزرسانی فوری کلیک کنید)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "این کلید عمومی شماست. آن را ذخیره کنید!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "هدایت پورت: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "چندپرشی (۲ پرش)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "گره خروجی تغییر کرد"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "گره خروجی قبلی شما غیرقابل دسترسی شد. Warren به‌طور خودکار شما را از طریق یک سرور جایگزین مسیریابی کرد."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ افزودن پورت"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "هر پورتی که اضافه می‌کنید روی گره خروجی باز شده و به همان پورت روی دستگاه شما هدایت می‌شود. تغییرات بلافاصله اعمال می‌شوند و نیازی به اتصال مجدد نیست."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "آخرین تغییر پورت پیش از یک مسدودسازی موقت. پیش از تغییر مجدد، لحظه‌ای صبر کنید."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "به حداکثر %(max)d پورت رسیدید"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "هنوز پورتی وجود ندارد. یکی اضافه کنید تا روی گره خروجی باز شود."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "پورت"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "پورت باید بین ۴۹۱۵۲ و ۶۵۵۳۵ باشد."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "حذف پورت"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "وضعیت: در انتظار یک اتصال فعال تونل برای راه‌اندازی نگاشت پورت‌ها."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "این پورت از قبل در فهرست شما وجود دارد."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "تغییرات پورت بیش از حد زیاد است. می‌توانید پورت‌ها را تا %(countdown)s دیگر دوباره تغییر دهید."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "در حال اعمال…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "ناموفق"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "هیچ پورتی در دسترس نیست"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "مجاز نیست"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "باز: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "در انتظار…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "پورت"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "پورت در حال استفاده"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "در حال درخواست…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "به نظر می‌رسد به جای کد کوپن، یک کلید عمومی وارد کرده‌اید. اگر می‌خواهید حساب فعال را تغییر دهید، لطفاً ابتدا خارج شوید."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "هدایت پورت"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "پخش مجدد راهنمای شروع"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "%(count)s ورودی کلید خروجی سنجاق‌شده حذف شد."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "هر گره خروجی Warren که قبلاً به آن متصل شده‌اید، در اتصال بعدی دوباره سنجاق خواهد شد (اعتماد در نخستین استفاده)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "جدول سنجاق پاک شد"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "بازنشانی"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "بازنشانی همه"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "بازنشانی ناموفق بود"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "بازنشانی کلیدهای خروجی سنجاق‌شده"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "کلیدهای خروجی سنجاق‌شده بازنشانی شوند؟"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "تا زمانی که سنجاق‌های جدید برقرار شوند، محافظ تشخیص جایگزینی برای مدت کوتاهی غیرفعال است: مهاجمی که گره خروجی را میان دو بازنشانی جایگزین کرده باشد، در نخستین اتصال مجدد علامت‌گذاری نخواهد شد."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "نشانی warren-api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "کشور ورودی"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "کشور خروجی"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "در ازای عدم امکان پیوند دادن IP کاربر و IP مقصد، انتظار حدود نیمی از پهنای باند تک‌پرشی را داشته باشید. به‌طور پیش‌فرض خاموش است؛ برای حفظ حریم خصوصی فعالش کنید."
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "چندپرشی"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "پس از تغییر این تنظیم، سرویس Warren را دوباره راه‌اندازی کنید."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "ترافیک شما را با استفاده از رمزنگاری سرتاسری HPKE از طریق دو رله Warren مسیریابی می‌کند. رله ورودی فقط متن رمزشده را می‌بیند؛ گره خروجی فقط محتوای رمزگشایی‌شده را می‌بیند و هرگز IP شما را نمی‌بیند. الگو الهام‌گرفته از Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "موازنه: تقریباً نیمی از پهنای باند تک‌پرشی. به‌طور پیش‌فرض خاموش است؛ برای حفظ حریم خصوصی فعالش کنید. پس از تغییر این تنظیم، راه‌اندازی مجدد سرویس لازم است."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "چندپرشی Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "هنگامی که فعال باشد، ترافیک از طریق دو رله Warren (ابتدا ورودی سپس خروجی) با رمزنگاری سرتاسری HPKE میان کلاینت و گره خروجی مسیریابی می‌شود. رله ورودی فقط متن رمزشده را می‌بیند؛ گره خروجی فقط محتوای رمزگشایی‌شده را می‌بیند و هرگز IP کاربر را نمی‌بیند."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "خودکار"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "جزئیات ناهماهنگی رمزنگاری"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "شناسه خروجی"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "مکان"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "کلید تازه مشاهده‌شده"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "کلید سنجاق‌شده پیشین"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "در حال پردازش انتخاب شما، لطفاً صبر کنید."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "رد کردن (قطع اتصال)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "رد کردن و قطع‌شده ماندن"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "گزارش به Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "هویت سرور تغییر کرد"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "سرور خروجی Warren که پیش‌تر به آن اعتماد کرده بودید، اکنون هویت رمزنگاری متفاوتی ارائه می‌دهد."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "این معمولاً به این معناست که گرداننده کلید را چرخانده است، اما می‌تواند نشان‌دهنده جایگزینی یا به خطر افتادن سرور نیز باشد. اگر انتظار تغییری را نداشتید، رد کنید."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "اعتماد به کلید جدید"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "تقلید HTTP/3 (فعال)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "مبهم‌سازی با تقلید HTTP/3 برای تونل‌های Warren همیشه فعال است (‎/v1‎)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "مبهم‌سازی با تقلید HTTP/3 در حال حاضر غیرفعال است."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "آخرین"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "مبهم‌سازی"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "اتصال‌های مجدد"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "تونل‌های Warren خود را به‌صورت ترافیک HTTP/3 استاندارد یک مرورگر جا می‌زنند: ALPN h3، SNI warrenbrowse.com، تقسیم بسته Initial، UDP/443. این قابلیت در /v1 قابل تغییر نیست، زیرا غیرفعال کردن آن کلاینت‌های Warren را بلافاصله در شبکه قابل تشخیص می‌کند."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "غیرفعال"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "هرگز"

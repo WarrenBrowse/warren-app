@@ -4192,7 +4192,7 @@ msgid "Keys"
 msgstr "Nycklar"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
+msgid "No mnemonic available. Log in or restore an identity first."
 msgstr "Ingen återställningsfras tillgänglig – logga in eller återställ en identitet först."
 
 msgctxt "keys-view"
@@ -4212,8 +4212,8 @@ msgid "Reveal mnemonic"
 msgstr "Visa återställningsfras"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "VARNING — Detta ERSÄTTER din nuvarande identitet. Alla prenumerationer kopplade till den nuvarande identiteten går inte att återställa."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "VARNING: Detta ERSÄTTER din nuvarande identitet. Alla prenumerationer kopplade till den nuvarande identiteten går inte att återställa."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4290,3 +4290,242 @@ msgstr "Välkommen till Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Skriv ner dessa 12 ord och förvara dem säkert. De är det enda sättet att återställa ditt konto om du förlorar den här enheten."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Jag har slutfört betalningen"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sessionen är inaktiv"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Din session har avslutats. För att ansluta igen måste du logga in på nytt."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Avvikelse i serveridentitet upptäckt. Exitnodens publika nyckel har ändrats."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatisk växling"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Växla automatiskt till en annan exitserver om den nuvarande blir onåbar."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Den här inställningen träder i kraft omedelbart, utan att starta om tjänsten."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL till warren-api-servern. Format http(s)://host:port. Tomt = inte angivet (återgår till standardbackend). Starta om tjänsten för att ändringen ska träda i kraft."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Äldre obfuskeringsmetoder (Shadowsocks, UDP-over-TCP, QUIC, LWO) gäller inte för Warren-tunneln."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Kopiera publik nyckel"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Dölj publik nyckel"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Visa publik nyckel"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Säkerhetskopiera nycklar"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Publik nyckel"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Det CDN som används är Datapackets CDN77. Detta CDN kan endast se den vidarebefordrade TLS-trafiken, inte innehållet."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Appen kommunicerar med en Warren API-server via %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Detta kan vara användbart när direktåtkomst och andra metoder blockeras av censur."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Med åtkomstmetoden %(domainFronting)s når appen Warren API via ett CDN och blandar trafiken med massor av annan internettrafik, vilket gör den svårare att censurera."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Du är inloggad med en ogiltig publik nyckel. Logga ut och prova en annan."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrollerar … (klicka för att uppdatera nu)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Här är din publika nyckel. Spara den!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Portvidarebefordran: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 hopp)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXITNOD BYTT"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Din tidigare exitnod blev oåtkomlig. Warren dirigerade dig automatiskt via en annan server."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Lägg till en port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Varje port du lägger till öppnas på exitnoden och vidarebefordras till samma port på din enhet. Ändringar börjar gälla omedelbart, ingen återanslutning behövs."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Sista portändringen före en tillfällig blockering. Vänta en stund innan du ändrar igen."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maxgränsen på %(max)d portar har nåtts"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Ingen port ännu. Lägg till en för att öppna den på exitnoden."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Porten måste vara mellan 49152 och 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Ta bort port"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: väntar på en aktiv tunnelanslutning för att ställa in portmappningarna."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Den här porten finns redan i din lista."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "För många portändringar. Du kan ändra portar igen om %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "tillämpar …"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "misslyckades"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ingen port tillgänglig"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ej tillåtet"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "öppen: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "väntar …"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "porten används"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "begär …"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Det ser ut som att du har angett en publik nyckel i stället för en värdekod. Om du vill byta aktivt konto, logga ut först."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Portvidarebefordran"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Spela upp introduktionen igen"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Tog bort %(count)s fästa exitnyckelposter."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Varje Warren-exit du tidigare anslutit till fästs på nytt vid nästa anslutning (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Fästtabellen rensad"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Återställ"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Återställ allt"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Återställning misslyckades"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Återställ fästa exitnycklar"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Återställa fästa exitnycklar?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Tills de nya fästena är etablerade är skyddet mot substitutionsdetektering tillfälligt nere: en angripare som bytt ut en exit mellan återställningarna skulle inte flaggas vid den första återanslutningen."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL för Warren API"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

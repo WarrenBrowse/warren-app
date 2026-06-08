@@ -1513,7 +1513,7 @@ msgid "Keys"
 msgstr ""
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
+msgid "No mnemonic available. Log in or restore an identity first."
 msgstr ""
 
 msgctxt "keys-view"
@@ -1533,7 +1533,7 @@ msgid "Reveal mnemonic"
 msgstr ""
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
 msgstr ""
 
 msgctxt "keys-view"

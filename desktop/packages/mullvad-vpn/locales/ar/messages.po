@@ -3975,8 +3975,8 @@ msgid "Keys"
 msgstr "المفاتيح"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "لا توجد عبارة استرجاعية متاحة — سجّل الدخول أو استعد هوية أولاً."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "لا توجد عبارة استرجاعية متاحة، سجّل الدخول أو استعد هوية أولاً."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3995,8 +3995,8 @@ msgid "Reveal mnemonic"
 msgstr "إظهار العبارة الاسترجاعية"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "تحذير — سيؤدي هذا إلى استبدال هويتك الحالية. أي اشتراك مرتبط بالهوية الحالية سيصبح غير قابل للاسترجاع."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "تحذير: سيؤدي هذا إلى استبدال هويتك الحالية. أي اشتراك مرتبط بالهوية الحالية سيصبح غير قابل للاسترجاع."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4052,7 +4052,7 @@ msgstr "إنشاء محفظتي الجديدة (مُوصى به)"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "لا تحتوي الخدمة على عبارة استرجاعية بعد — سجّل الدخول أو أعد تشغيل التطبيق."
+msgstr "لا تحتوي الخدمة على عبارة استرجاعية بعد، سجّل الدخول أو أعد تشغيل التطبيق."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4124,7 +4124,7 @@ msgstr "دوّن هذه الكلمات الـ12 بالترتيب واحتفظ ب
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً — بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
+msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً، بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4209,3 +4209,366 @@ msgstr "مرحبًا بك في Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "اكتب هذه الكلمات الـ 12 واحتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة حسابك إذا فقدت هذا الجهاز."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "لقد أكملت الدفع"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "الجلسة غير نشطة"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "انتهت جلستك. لإعادة الاتصال، ستحتاج إلى تسجيل الدخول مرة أخرى."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "تم اكتشاف عدم تطابق في هوية الخادم. لقد تغيّر المفتاح العام لعقدة الخروج."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "تجاوز الفشل التلقائي"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "التبديل تلقائيًا إلى خادم خروج آخر إذا أصبح الخادم الحالي غير قابل للوصول."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "يسري هذا الإعداد فورًا دون إعادة تشغيل الخدمة."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "عنوان URL لخادم warren-api. الصيغة http(s)://host:port. فارغ = غير مُعيَّن (العودة إلى الخلفية الافتراضية). أعد تشغيل الخدمة حتى يسري التغيير."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "طرق التعتيم القديمة (Shadowsocks وUDP-over-TCP وQUIC وLWO) لا تنطبق على نفق Warren."
+
+msgid "OK"
+msgstr "موافق"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "نسخ المفتاح العام"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "إخفاء المفتاح العام"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "إظهار المفتاح العام"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "النسخ الاحتياطي للمفاتيح"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "المفتاح العام"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "شبكة توصيل المحتوى (CDN) المستخدمة هي CDN77 التابعة لـ Datapacket. لا يمكن لـ CDN سوى مراقبة حركة TLS المُمرَّرة، وليس محتواها."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "يتواصل التطبيق مع خادم Warren API عبر %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "يمكن أن يكون ذلك مفيدًا عندما يكون الوصول المباشر والطرق الأخرى محجوبة بسبب الرقابة."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "باستخدام طريقة الوصول %(domainFronting)s، يصل التطبيق إلى Warren API عبر CDN، فيختلط بذلك حركة المرور بكمٍّ كبير من حركة الإنترنت الأخرى، مما يجعل حجبها أكثر صعوبة."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "أنت مسجّل الدخول بمفتاح عام غير صالح. يُرجى تسجيل الخروج وتجربة مفتاح آخر."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "جارٍ التحقق... (انقر للتحديث الآن)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "هذا هو مفتاحك العام. احفظه!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "إعادة توجيه المنافذ: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "تعدد القفزات (قفزتان)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "تم تبديل خادم الخروج"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "أصبح خادم الخروج السابق غير قابل للوصول. وجّهك Warren تلقائيًا عبر خادم بديل."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ إضافة منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "كل منفذ تضيفه يُفتح على خادم الخروج ويُعاد توجيهه إلى المنفذ نفسه على جهازك. تُطبَّق التغييرات فورًا دون الحاجة إلى إعادة الاتصال."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "آخر تغيير للمنفذ قبل حظر مؤقت. انتظر لحظة قبل تغييره مجددًا."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "تم بلوغ الحد الأقصى وهو %(max)d منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "لا يوجد منفذ بعد. أضف واحدًا لفتحه على خادم الخروج."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "المنفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "يجب أن يكون المنفذ بين 49152 و65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "إزالة المنفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "الحالة: في انتظار اتصال نفقي نشط لإعداد تعيينات المنافذ."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "هذا المنفذ موجود بالفعل في قائمتك."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "عدد كبير جدًا من تغييرات المنافذ. يمكنك تغيير المنافذ مجددًا خلال %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "جارٍ التطبيق…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "فشل"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "لا يوجد منفذ متاح"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "غير مسموح"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "مفتوح: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "قيد الانتظار…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "المنفذ قيد الاستخدام"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "جارٍ الطلب…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "يبدو أنك أدخلت مفتاحًا عامًا بدلًا من رمز قسيمة. إذا كنت ترغب في تغيير الحساب النشط، فيُرجى تسجيل الخروج أولًا."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "إعادة توجيه المنافذ"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "إعادة تشغيل التهيئة الأولية"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "تم حذف %(count)s من إدخالات مفاتيح الخروج المثبَّتة."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "كل خادم خروج Warren اتصلت به سابقًا سيُعاد تثبيته عند الاتصال التالي (الثقة عند الاستخدام الأول)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "تم مسح جدول التثبيت"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "إعادة تعيين"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "إعادة تعيين الكل"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "فشلت إعادة التعيين"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة؟"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "إلى أن تُنشأ التثبيتات الجديدة، تكون حماية كشف الاستبدال معطّلة لفترة وجيزة: فالمهاجم الذي استبدل خادم خروج بين عمليتي إعادة تعيين لن يُكتشف عند أول إعادة اتصال."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "عنوان URL لـ Warren api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "بلد الدخول"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "بلد الخروج"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "توقّع نحو نصف عرض النطاق الترددي للقفزة الواحدة مقابل عدم إمكانية الربط بين عنوان IP للمستخدم وعنوان IP للوجهة. معطّل افتراضيًا؛ فعّله اختياريًا لحماية الخصوصية."
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "تعدد القفزات"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "أعد تشغيل خدمة Warren بعد تغيير هذا الإعداد."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "يوجّه حركة مرورك عبر مُرحِّلَي Warren باستخدام تشفير HPKE من طرف إلى طرف. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بك أبدًا. نمط مستوحى من Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "المقايضة: نحو نصف عرض النطاق الترددي للقفزة الواحدة. معطّل افتراضيًا؛ فعّله اختياريًا لحماية الخصوصية. يلزم إعادة تشغيل الخدمة بعد تغيير هذا الإعداد."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "تعدد قفزات Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "عند التفعيل، تُوجَّه حركة المرور عبر مُرحِّلَي Warren (الدخول ثم الخروج) باستخدام تشفير HPKE من طرف إلى طرف بين العميل وعقدة الخروج. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بالمستخدم أبدًا."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "تلقائي"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "تفاصيل عدم التطابق التشفيري"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "معرّف الخروج"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "الموقع"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "المفتاح المرصود حديثًا"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "المفتاح المثبَّت سابقًا"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "جارٍ معالجة اختيارك، يُرجى الانتظار."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "رفض (قطع الاتصال)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "ارفض وابقَ غير متصل"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "إبلاغ Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "تغيّرت هوية الخادم"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "خادم خروج Warren الذي كنت تثق به سابقًا يقدّم الآن هوية تشفيرية مختلفة."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "يعني هذا عادةً أن المشغّل قام بتدوير المفتاح، لكنه قد يشير أيضًا إلى أن الخادم قد استُبدل أو اختُرق. ارفض إذا لم تكن تتوقع حدوث تغيير."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "الوثوق بالمفتاح الجديد"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "محاكاة HTTP/3 (نشطة)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "إخفاء الهوية بمحاكاة HTTP/3 مُفعَّل دائمًا لأنفاق Warren (‏‎/v1)."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "إخفاء الهوية بمحاكاة HTTP/3 غير نشط حاليًا."
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "الأخير"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "إخفاء الهوية"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "إعادات الاتصال"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "تتنكّر أنفاق Warren على هيئة حركة HTTP/3 قياسية صادرة عن متصفح: ALPN h3، وSNI warrenbrowse.com، وتقسيم الحزمة الأولية (Initial)، وUDP/443. لا يمكن إيقاف ذلك في /v1 لأن تعطيله سيجعل عملاء Warren قابلين للتعرّف فورًا على الشبكة."
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "غير نشط"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "أبدًا"

@@ -4192,8 +4192,8 @@ msgid "Keys"
 msgstr "Nøgler"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Ingen gendannelsessætning tilgængelig — log ind eller gendan en identitet først."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Ingen gendannelsessætning tilgængelig. Log ind eller gendan en identitet først."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4212,8 +4212,8 @@ msgid "Reveal mnemonic"
 msgstr "Vis gendannelsessætning"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "ADVARSEL — Dette ERSTATTER din nuværende identitet. Ethvert abonnement knyttet til den nuværende identitet kan ikke gendannes."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ADVARSEL: Dette ERSTATTER din nuværende identitet. Ethvert abonnement knyttet til den nuværende identitet kan ikke gendannes."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4290,3 +4290,242 @@ msgstr "Velkommen til Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Skriv disse 12 ord ned, og opbevar dem sikkert. De er den eneste måde at gendanne din konto på, hvis du mister denne enhed."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Jeg har gennemført betalingen"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sessionen er inaktiv"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Din session er afsluttet. For at oprette forbindelse igen skal du logge ind på ny."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Uoverensstemmelse i serveridentitet registreret. Exit-nodens offentlige nøgle er ændret."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatisk failover"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Skift automatisk til en anden exit-server, hvis den nuværende bliver utilgængelig."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Denne indstilling træder i kraft med det samme, uden at genstarte tjenesten."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL til warren-api-serveren. Format http(s)://host:port. Tom = ikke angivet (falder tilbage til standardbackend). Genstart tjenesten, for at ændringen træder i kraft."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Ældre sløringsmetoder (Shadowsocks, UDP-over-TCP, QUIC, LWO) gælder ikke for Warren-tunnelen."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Kopiér offentlig nøgle"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Skjul offentlig nøgle"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Vis offentlig nøgle"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Sikkerhedskopiér nøgler"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Offentlig nøgle"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Det anvendte CDN er Datapackets CDN77. CDN'et kan kun se den videresendte TLS-trafik, ikke indholdet."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Appen kommunikerer med en Warren API-server via %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Dette kan være nyttigt, når direkte adgang og andre metoder blokeres af censur."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Med adgangsmetoden %(domainFronting)s når appen Warren-API'et via et CDN, hvilket blander trafikken med en masse anden internettrafik og gør den sværere at censurere."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Du er logget ind med en ugyldig offentlig nøgle. Log ud, og prøv en anden."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrollerer... (klik for at opdatere nu)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Her er din offentlige nøgle. Gem den!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Portvideresendelse: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 hop)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXIT SKIFTET"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Din tidligere exit blev utilgængelig. Warren rutede dig automatisk gennem en alternativ server."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Tilføj en port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Hver port, du tilføjer, åbnes på exit-serveren og videresendes til den samme port på din enhed. Ændringer træder i kraft med det samme uden behov for genforbindelse."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Sidste portændring før en midlertidig blokering. Vent et øjeblik, før du ændrer den igen."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maksimum på %(max)d porte nået"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Ingen port endnu. Tilføj en for at åbne den på exit-serveren."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Porten skal være mellem 49152 og 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Fjern port"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: venter på en aktiv tunnelforbindelse for at opsætte porttilknytningerne."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Denne port er allerede på din liste."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "For mange portændringer. Du kan ændre porte igen om %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "anvender…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "mislykkedes"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ingen port tilgængelig"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ikke tilladt"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "åben: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "afventer…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port i brug"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "anmoder…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Det ser ud til, at du har indtastet en offentlig nøgle i stedet for en værdikupon-kode. Hvis du vil skifte den aktive konto, skal du først logge ud."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Portvideresendelse"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Afspil introduktion igen"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Fjernede %(count)s fastgjorte exit-nøgleposter."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Hver Warren-exit, du tidligere har forbundet til, vil blive fastgjort igen ved næste forbindelse (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Fastgørelsestabel ryddet"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Nulstil"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Nulstil alt"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Nulstilling mislykkedes"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Nulstil fastgjorte exit-nøgler"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Nulstil fastgjorte exit-nøgler?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Indtil de nye fastgørelser er etableret, er beskyttelsen mod udskiftningsdetektering kortvarigt deaktiveret: en angriber, der har udskiftet en exit mellem to nulstillinger, vil ikke blive markeret ved den første genforbindelse."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren-API-URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

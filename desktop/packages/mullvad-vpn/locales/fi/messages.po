@@ -4192,8 +4192,8 @@ msgid "Keys"
 msgstr "Avaimet"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Palautuslausetta ei ole saatavilla — kirjaudu sisään tai palauta ensin identiteetti."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Palautuslausetta ei ole saatavilla. Kirjaudu sisään tai palauta ensin identiteetti."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4212,8 +4212,8 @@ msgid "Reveal mnemonic"
 msgstr "Näytä palautuslause"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "VAROITUS — Tämä KORVAA nykyisen identiteettisi. Mitään nykyiseen identiteettiin sidottua tilausta ei voi enää palauttaa."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "VAROITUS: Tämä KORVAA nykyisen identiteettisi. Mitään nykyiseen identiteettiin sidottua tilausta ei voi enää palauttaa."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4290,3 +4290,242 @@ msgstr "Tervetuloa Warreniin"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Kirjoita nämä 12 sanaa muistiin ja säilytä ne turvallisesti. Ne ovat ainoa tapa palauttaa tilisi, jos menetät tämän laitteen."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Olen suorittanut maksun"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Istunto ei ole aktiivinen"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Istuntosi on päättynyt. Yhdistääksesi uudelleen sinun on kirjauduttava sisään uudestaan."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Palvelimen identiteetin epäjohdonmukaisuus havaittu. Poistumissolmun julkinen avain on muuttunut."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automaattinen vaihto"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Vaihda automaattisesti toiseen poistumispalvelimeen, jos nykyinen tulee tavoittamattomaksi."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Tämä asetus tulee voimaan välittömästi ilman palvelun uudelleenkäynnistystä."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api-palvelimen URL-osoite. Muoto http(s)://host:port. Tyhjä = ei asetettu (palautuu oletustaustajärjestelmään). Käynnistä palvelu uudelleen, jotta muutos tulee voimaan."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Vanhat hämärrysmenetelmät (Shadowsocks, UDP-over-TCP, QUIC, LWO) eivät koske Warren-tunnelia."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Kopioi julkinen avain"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Piilota julkinen avain"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Näytä julkinen avain"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Varmuuskopioi avaimet"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Julkinen avain"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Käytössä on Datapacketin CDN77-sisällönjakeluverkko. CDN voi havaita vain välitetyn TLS-liikenteen, ei sen sisältöä."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Sovellus kommunikoi Warren API -palvelimen kanssa %(domainFronting)s-menetelmällä."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Tästä voi olla hyötyä, kun suora yhteys ja muut menetelmät on estetty sensuurilla."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s-yhteysmenetelmällä sovellus tavoittaa Warren-rajapinnan CDN:n kautta sekoittaen liikenteen runsaaseen muuhun internetliikenteeseen, mikä vaikeuttaa sensurointia."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Olet kirjautunut sisään virheellisellä julkisella avaimella. Kirjaudu ulos ja kokeile toista."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Tarkistetaan… (päivitä napsauttamalla)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Tässä on julkinen avaimesi. Tallenna se!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Portin edelleenlähetys: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 hyppyä)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "POISTUMISPALVELIN VAIHDETTU"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Edellinen poistumispalvelimesi muuttui tavoittamattomaksi. Warren reititti sinut automaattisesti vaihtoehtoisen palvelimen kautta."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Lisää portti"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Jokainen lisäämäsi portti avataan poistumispalvelimella ja edelleenlähetetään samaan porttiin laitteellasi. Muutokset tulevat voimaan heti, uudelleenyhdistystä ei tarvita."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Viimeinen portin muutos ennen tilapäistä estoa. Odota hetki ennen seuraavaa muutosta."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Enimmäismäärä %(max)d porttia saavutettu"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Ei vielä porttia. Lisää portti avataksesi sen poistumispalvelimella."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Portti"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Portin on oltava välillä 49152–65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Poista portti"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Tila: odotetaan aktiivista tunneliyhteyttä porttiohjausten määrittämiseksi."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Tämä portti on jo luettelossasi."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Liian monta portin muutosta. Voit muuttaa portteja uudelleen %(countdown)s kuluttua."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "otetaan käyttöön…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "epäonnistui"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ei vapaata porttia"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ei sallittu"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "auki: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "odottaa…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "portti"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "portti käytössä"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "pyydetään…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Näyttää siltä, että syötit julkisen avaimen lahjakorttikoodin sijaan. Jos haluat vaihtaa aktiivista tiliä, kirjaudu ensin ulos."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Portin edelleenlähetys"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Toista käyttöönotto-opastus"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Poistettiin %(count)s kiinnitettyä poistumisavainmerkintää."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Jokainen aiemmin yhdistämäsi Warren-poistumispalvelin kiinnitetään uudelleen seuraavalla yhteydellä (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Kiinnitystaulu tyhjennetty"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Nollaa"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Nollaa kaikki"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Nollaus epäonnistui"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Nollaa kiinnitetyt poistumisavaimet"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Nollataanko kiinnitetyt poistumisavaimet?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Kunnes uudet kiinnitykset on muodostettu, korvaamisen havaitsemissuoja on hetkellisesti poissa käytöstä: hyökkääjää, joka korvasi poistumispalvelimen nollausten välillä, ei merkitä ensimmäisellä uudelleenyhdistyksellä."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren-rajapinnan URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

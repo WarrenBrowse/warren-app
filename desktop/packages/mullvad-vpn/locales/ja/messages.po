@@ -3905,8 +3905,8 @@ msgid "Keys"
 msgstr "キー"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "利用可能なニーモニックがありません — まずログインするか、IDを復元してください。"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "利用可能なニーモニックがありません。まずログインするか、IDを復元してください。"
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3925,8 +3925,8 @@ msgid "Reveal mnemonic"
 msgstr "ニーモニックを表示"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "警告 — 現在のIDが置き換えられます。現在のIDに紐づくサブスクリプションは復元できなくなります。"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告：現在のIDが置き換えられます。現在のIDに紐づくサブスクリプションは復元できなくなります。"
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4139,3 +4139,366 @@ msgstr "Warren へようこそ"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "この12個の単語を書き留めて安全に保管してください。このデバイスを紛失した場合、アカウントを復元する唯一の方法です。"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "支払いを完了しました"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "セッションが非アクティブです"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "セッションが終了しました。再接続するには、もう一度ログインする必要があります。"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "サーバー identity の不一致が検出されました。出口ノードの公開鍵が変更されました。"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "自動フェイルオーバー"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "現在の出口サーバーに到達できなくなった場合、自動的に別の出口サーバーに切り替えます。"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "この設定はサービスを再起動せずに、すぐに反映されます。"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api サーバーの URL。形式 http(s)://host:port。空 = 未設定（既定のバックエンドにフォールバック）。変更を反映するにはサービスを再起動してください。"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "従来の難読化方式（Shadowsocks、UDP-over-TCP、QUIC、LWO）は Warren トンネルには適用されません。"
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "公開鍵をコピー"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "公開鍵を非表示"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "公開鍵を表示"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "鍵をバックアップ"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "公開鍵"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "使用される CDN は Datapacket の CDN77 です。CDN は中継される TLS トラフィックを観測できますが、その内容は確認できません。"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "アプリは %(domainFronting)s を介して Warren API サーバーと通信します。"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "これは、直接アクセスやその他の方法が検閲によってブロックされている場合に役立ちます。"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s アクセス方式では、アプリは CDN を介して Warren API に接続し、トラフィックを他の多数のインターネット通信に紛れ込ませることで、検閲をより困難にします。"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "無効な公開鍵でログインしています。ログアウトして、別の公開鍵をお試しください。"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "確認中…（クリックして今すぐ更新）"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "こちらがあなたの公開鍵です。必ず保存してください。"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "ポート転送: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "マルチホップ（2 ホップ）"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "出口サーバーが切り替わりました"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "以前の出口サーバーに到達できなくなりました。Warren が自動的に別のサーバー経由で接続を切り替えました。"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "＋ ポートを追加"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "追加した各ポートは出口サーバー上で開かれ、お使いのデバイスの同じポートに転送されます。変更は即座に適用され、再接続は不要です。"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "一時的なブロックがかかる前の、最後のポート変更です。再度変更する前に、しばらくお待ちください。"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "ポートの最大数 %(max)d に達しました"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "まだポートがありません。出口サーバーで開くには、ポートを追加してください。"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "ポート"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "ポートは 49152 から 65535 の範囲で指定してください。"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "ポートを削除"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "ステータス: ポートマッピングを設定するため、アクティブなトンネル接続を待機しています。"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "このポートはすでにリストに含まれています。"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "ポートの変更が多すぎます。%(countdown)s 後に再度変更できます。"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "適用中…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "失敗"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "利用可能なポートがありません"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "許可されていません"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "開放中: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "保留中…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "ポート"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "ポート使用中"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "要求中…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "バウチャーコードの代わりに公開鍵を入力されたようです。アクティブなアカウントを変更したい場合は、まずログアウトしてください。"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "ポート転送"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "オンボーディングを再生"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "ピン留めされた出口サーバーの鍵エントリを %(count)s 件削除しました。"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "以前接続したすべての Warren 出口サーバーは、次回の接続時に再度ピン留めされます（Trust On First Use）。"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "ピン留めテーブルをクリアしました"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "リセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "すべてリセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "リセットに失敗しました"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "ピン留めされた出口サーバーの鍵をリセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "ピン留めされた出口サーバーの鍵をリセットしますか？"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "新しいピンが確立されるまでの間、すり替え検知の保護は一時的に無効になります。リセットの間に出口サーバーをすり替えた攻撃者がいた場合、最初の再接続時には検出されません。"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren API の URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "入口の国"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "出口の国"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "ユーザー IP と宛先 IP の関連付けを断つ代わりに、帯域幅はシングルホップのおよそ半分になるとお考えください。デフォルトでは無効です。プライバシーのために任意で有効化してください。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "マルチホップ"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "この設定を変更した後は、Warren サービスを再起動してください。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "HPKE のエンドツーエンド暗号化を使用して、トラフィックを 2 つの Warren リレー経由でルーティングします。入口リレーには暗号文しか見えず、出口には復号されたペイロードしか見えず、あなたの IP が見えることはありません。Apple Private Relay にヒントを得た方式です。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "トレードオフ: 帯域幅はシングルホップのおよそ半分になります。デフォルトでは無効です。プライバシーのために任意で有効化してください。この設定を変更した後はサービスの再起動が必要です。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren マルチホップ"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "有効にすると、トラフィックは 2 つの Warren リレー（入口、次に出口）を経由してルーティングされ、クライアントと出口の間で HPKE のエンドツーエンド暗号化が行われます。入口リレーには暗号文しか見えず、出口には復号されたペイロードしか見えず、ユーザー IP が見えることはありません。"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "暗号的不一致の詳細"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "出口 ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "場所"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "新たに観測された鍵"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "以前ピン留めされた鍵"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "選択内容を処理しています。しばらくお待ちください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "拒否（切断）"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "拒否して切断したままにする"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Warren に報告"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "サーバーの識別情報が変更されました"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "以前信頼していた Warren 出口サーバーが、現在は異なる暗号的な識別情報を提示しています。"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "これは通常、運営者が鍵を更新したことを意味しますが、サーバーがすり替えられたか、侵害された可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "新しい鍵を信頼"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 模倣（有効）"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3 模倣による難読化は、Warren トンネル（/v1）では常に有効です。"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3 模倣による難読化は現在無効です。"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "最終"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "難読化"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "再接続回数"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren トンネルは、標準的なブラウザの HTTP/3 トラフィックを装います。ALPN h3、SNI warrenbrowse.com、Initial パケットの分割、UDP/443。これを無効にすると Warren クライアントがネットワーク上で直ちに識別可能になってしまうため、/v1 では切り替えできません。"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "無効"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "なし"

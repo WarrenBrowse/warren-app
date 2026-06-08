@@ -4192,8 +4192,8 @@ msgid "Keys"
 msgstr "Sleutels"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Geen herstelzin beschikbaar — log eerst in of herstel een identiteit."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Geen herstelzin beschikbaar. Log eerst in of herstel een identiteit."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4212,8 +4212,8 @@ msgid "Reveal mnemonic"
 msgstr "Herstelzin tonen"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "WAARSCHUWING — Hiermee VERVANG je je huidige identiteit. Elk abonnement dat aan de huidige identiteit is gekoppeld, wordt onherstelbaar."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "WAARSCHUWING: Hiermee VERVANG je je huidige identiteit. Elk abonnement dat aan de huidige identiteit is gekoppeld, wordt onherstelbaar."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4290,3 +4290,242 @@ msgstr "Welkom bij Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Schrijf deze 12 woorden op en bewaar ze veilig. Ze zijn de enige manier om je account te herstellen als je dit apparaat verliest."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Ik heb de betaling voltooid"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sessie inactief"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Je sessie is beëindigd. Om opnieuw verbinding te maken, moet je opnieuw inloggen."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Verschil in serveridentiteit gedetecteerd. De openbare sleutel van het exitknooppunt is gewijzigd."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatische failover"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Schakel automatisch over naar een andere exitserver als de huidige onbereikbaar wordt."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Deze instelling wordt direct van kracht, zonder de service opnieuw te starten."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL van de warren-api-server. Formaat http(s)://host:poort. Leeg = niet ingesteld (terugval op de standaard-backend). Start de service opnieuw om de wijziging door te voeren."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Verouderde versluieringsmethoden (Shadowsocks, UDP-over-TCP, QUIC, LWO) zijn niet van toepassing op de Warren-tunnel."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Publieke sleutel kopiëren"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Publieke sleutel verbergen"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Publieke sleutel tonen"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Sleutels back-uppen"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Publieke sleutel"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "De gebruikte CDN is CDN77 van Datapacket. De CDN kan alleen het doorgestuurde TLS-verkeer waarnemen, niet de inhoud."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "De app communiceert met een Warren API-server via %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Dit kan nuttig zijn wanneer directe toegang en andere methoden door censuur worden geblokkeerd."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Met de toegangsmethode %(domainFronting)s bereikt de app de Warren API via een CDN, waarbij het verkeer wordt vermengd met veel ander internetverkeer, wat censuur moeilijker maakt."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "U bent aangemeld met een ongeldige publieke sleutel. Meld u af en probeer een andere."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Bezig met controleren... (klik om nu te vernieuwen)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Hier is uw publieke sleutel. Bewaar hem!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Poortdoorsturing: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 hops)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXIT GEWISSELD"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Uw vorige exitserver werd onbereikbaar. Warren heeft u automatisch via een alternatieve server geleid."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Een poort toevoegen"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Elke poort die u toevoegt wordt op de exitserver geopend en doorgestuurd naar dezelfde poort op uw apparaat. Wijzigingen worden direct toegepast, zonder dat opnieuw verbinden nodig is."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Laatste poortwijziging vóór een tijdelijke blokkade. Wacht even voordat u hem opnieuw wijzigt."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maximum van %(max)d poorten bereikt"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Nog geen poort. Voeg er een toe om hem op de exitserver te openen."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Poort"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Poort moet tussen 49152 en 65535 liggen."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Poort verwijderen"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: wachten op een actieve tunnelverbinding om de poorttoewijzingen in te stellen."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Deze poort staat al in uw lijst."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Te veel poortwijzigingen. U kunt poorten opnieuw wijzigen over %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "bezig met toepassen…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "mislukt"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "geen poort beschikbaar"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "niet toegestaan"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "open: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "in behandeling…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "poort"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "poort in gebruik"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "bezig met aanvragen…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Het lijkt erop dat u een publieke sleutel heeft ingevoerd in plaats van een vouchercode. Als u het actieve account wilt wijzigen, meld u dan eerst af."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Poortdoorsturing"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Onboarding opnieuw afspelen"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "%(count)s vastgezette exitsleutel-vermeldingen verwijderd."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Elke Warren-exit waarmee u eerder verbinding maakte, wordt bij de volgende verbinding opnieuw vastgezet (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Vastzettabel gewist"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Opnieuw instellen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Alles opnieuw instellen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Opnieuw instellen mislukt"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Vastgezette exitsleutels opnieuw instellen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Vastgezette exitsleutels opnieuw instellen?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Totdat de nieuwe vastzettingen tot stand zijn gekomen, is de beveiliging tegen substitutiedetectie kortstondig uitgeschakeld: een aanvaller die een exit tussen twee resets heeft vervangen, wordt bij de eerste herverbinding niet gemarkeerd."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren api-URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

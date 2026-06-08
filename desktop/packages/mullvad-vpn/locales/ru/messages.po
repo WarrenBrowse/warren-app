@@ -481,7 +481,7 @@ msgstr "Подробнее"
 #. Accessibility label for link to go to download page.
 msgctxt "accessibility"
 msgid "New version available, click here to go to download page, opens externally"
-msgstr "Вышла новая версия. Чтобы перейти на страницу скачивания, нажмите здесь — ссылка откроется во внешнем браузере."
+msgstr "Вышла новая версия. Чтобы перейти на страницу скачивания, нажмите здесь, ссылка откроется во внешнем браузере."
 
 msgctxt "accessibility"
 msgid "New version available, click here to go to update view"
@@ -768,7 +768,7 @@ msgstr "TCP-порт, на котором ваш локальный сервер
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "Это может быть полезно, если API подвергается цензуре, а серверы-мосты Warren — нет."
+msgstr "Это может быть полезно, если API подвергается цензуре, а серверы-мосты Warren, нет."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -1550,7 +1550,7 @@ msgstr "Не удалось запустить установщик."
 #. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "Выбранный порт %(wireGuard)s не поддерживается — <a>измените его в настройках VPN</a>."
+msgstr "Выбранный порт %(wireGuard)s не поддерживается, <a>измените его в настройках VPN</a>."
 
 #. Notification text when a new device has been created.
 #. Available placeholders:
@@ -1638,7 +1638,7 @@ msgstr "Перезапустить фоновый процесс Warren"
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
 msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
-msgstr "Перезапустить фоновый процесс Warren: для этого нажмите «Назад», затем — «Повторить попытку»"
+msgstr "Перезапустить фоновый процесс Warren: для этого нажмите «Назад», затем, «Повторить попытку»"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1927,12 +1927,12 @@ msgstr "Не удалось включить %(splitTunneling)s. Чтобы ра
 #. Label for notification when IPv4 is not available.
 msgctxt "notifications"
 msgid "IPv4 is not available, please try changing Device IP version setting."
-msgstr "Протокол IPv4 недоступен — попробуйте изменить версию IP на устройстве в настройках."
+msgstr "Протокол IPv4 недоступен, попробуйте изменить версию IP на устройстве в настройках."
 
 #. Label for notification when IPv6 is not available.
 msgctxt "notifications"
 msgid "IPv6 is not available, please try changing Device IP version setting."
-msgstr "Протокол IPv6 недоступен — попробуйте изменить версию IP на устройстве в настройках."
+msgstr "Протокол IPv6 недоступен, попробуйте изменить версию IP на устройстве в настройках."
 
 msgctxt "notifications"
 msgid "Lockdown mode active, connection blocked"
@@ -2790,7 +2790,7 @@ msgstr "Настройки VPN"
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
-msgstr "Внимание! Блокировщик вредоносного ПО — это просто дополнительный уровень защиты, а не антивирус."
+msgstr "Внимание! Блокировщик вредоносного ПО, это просто дополнительный уровень защиты, а не антивирус."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3307,7 +3307,7 @@ msgid "Failed to delete account, please contact support"
 msgstr "Не удалось удалить учетную запись, обратитесь в службу поддержки"
 
 msgid "Failed to load products, please try again"
-msgstr "Не удалось загрузить продукты — повторите попытку"
+msgstr "Не удалось загрузить продукты, повторите попытку"
 
 msgid "Failed to set to current - API not reachable"
 msgstr "Не удалось установить текущий метод: API недоступен"
@@ -3322,7 +3322,7 @@ msgid "For details, please see our %s."
 msgstr "Подробнее смотрите здесь: %s."
 
 msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "Чтобы VPN подключался автоматически при запуске устройства, приложению нужны разрешения на использование VPN. Чтобы предоставить их, нажмите «Подключить» на карте и подтвердите выбор кнопкой «ОК». Убедитесь также, что приложение установлено во внутренней памяти устройства — это можно увидеть в сведениях о приложении в системных настройках."
+msgstr "Чтобы VPN подключался автоматически при запуске устройства, приложению нужны разрешения на использование VPN. Чтобы предоставить их, нажмите «Подключить» на карте и подтвердите выбор кнопкой «ОК». Убедитесь также, что приложение установлено во внутренней памяти устройства, это можно увидеть в сведениях о приложении в системных настройках."
 
 msgid "Go to VPN settings"
 msgstr "Перейти к настройкам VPN"
@@ -3367,7 +3367,7 @@ msgid "Importing new overrides might replace some previously imported overrides.
 msgstr "Импорт новых переопределений может заменить некоторые ранее импортированные переопределения."
 
 msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "Встроенные покупки недоступны — убедитесь, что у вас установлена последняя версия Google Play."
+msgstr "Встроенные покупки недоступны, убедитесь, что у вас установлена последняя версия Google Play."
 
 msgid "Include my account token for faster help with payment or account related issues"
 msgstr "Прикрепить токен моей учетной записи для ускоренной помощи по вопросам, связанным с оплатой или учетной записью"
@@ -3454,7 +3454,7 @@ msgid "No matching servers found."
 msgstr "Подходящих серверов не найдено."
 
 msgid "No result for \"%s\", please try a different search"
-msgstr "По запросу «%s» ничего не найдено — попробуйте другой запрос"
+msgstr "По запросу «%s» ничего не найдено, попробуйте другой запрос"
 
 msgid "Not found"
 msgstr "Не найдено"
@@ -3592,7 +3592,7 @@ msgid "Text"
 msgstr "Текст"
 
 msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "Спасибо, что были частью нашего сообщества.\\nКонфиденциальность — право каждого!"
+msgstr "Спасибо, что были частью нашего сообщества.\\nКонфиденциальность, право каждого!"
 
 msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
 msgstr "Настройки автоподключения и режима блокировки можно найти в системных настройках Android. Чтобы включить их, следуйте этой инструкции."
@@ -3604,7 +3604,7 @@ msgid "The Lockdown mode is called \"Block connections without VPN\" in the Andr
 msgstr "В системных настройках Android режим блокировки называется «Блокировать соединения без VPN». Он помогает минимизировать утечки, однако имеет ряд известных ограничений, прочитать подробнее о которых можно"
 
 msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "«Текущий» метод — это метод, который приложение использует для связи с API."
+msgstr "«Текущий» метод, это метод, который приложение использует для связи с API."
 
 msgid "The app is blocking internet, please disconnect first"
 msgstr "Приложение блокирует интернет. Сначала отключитесь."
@@ -3748,7 +3748,7 @@ msgid "We are still verifying your purchase, this might take some time. Your tim
 msgstr "Мы все еще проверяем, прошла ли оплата; нужно немного подождать. После успешного завершения проверки оплаченное время будет добавлено."
 
 msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "Не удалось начать процесс оплаты — убедитесь, что у вас установлена последняя версия Google Play."
+msgstr "Не удалось начать процесс оплаты, убедитесь, что у вас установлена последняя версия Google Play."
 
 msgid "We were unable to start the payment process, please try again later."
 msgstr "Не удалось начать процесс оплаты. Повторите попытку позже."
@@ -3944,7 +3944,7 @@ msgstr "Не удалось проверить статус подписки. П
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "У демона ещё нет мнемонической фразы — войдите или перезапустите приложение."
+msgstr "У демона ещё нет мнемонической фразы, войдите или перезапустите приложение."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4016,7 +4016,7 @@ msgstr "Запишите эти 12 слов по порядку и хранит�
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц — никаких повторяющихся платежей, никакого создания аккаунта, оплата по факту использования."
+msgstr "У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц, никаких повторяющихся платежей, никакого создания аккаунта, оплата по факту использования."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4220,8 +4220,8 @@ msgid "Keys"
 msgstr "Ключи"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Сид-фраза недоступна — сначала войдите или восстановите профиль."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Сид-фраза недоступна. Сначала войдите или восстановите профиль."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4240,8 +4240,8 @@ msgid "Reveal mnemonic"
 msgstr "Показать сид-фразу"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "ВНИМАНИЕ — Это ЗАМЕНИТ ваш текущий профиль. Любая подписка, привязанная к текущему профилю, будет утеряна безвозвратно."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ВНИМАНИЕ: Это ЗАМЕНИТ ваш текущий профиль. Любая подписка, привязанная к текущему профилю, будет утеряна безвозвратно."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4249,7 +4249,7 @@ msgstr "Запишите её на бумаге. Никогда не храни�
 
 msgctxt "keys-view"
 msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
-msgstr "Ваша сид-фраза из 12 слов — ЕДИНСТВЕННЫЙ способ восстановить профиль Warren на другом устройстве. При её утере подписка будет утеряна безвозвратно."
+msgstr "Ваша сид-фраза из 12 слов, ЕДИНСТВЕННЫЙ способ восстановить профиль Warren на другом устройстве. При её утере подписка будет утеряна безвозвратно."
 
 msgctxt "keys-view"
 msgid "words"
@@ -4309,7 +4309,7 @@ msgstr "Восстановите свою учётную запись"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
-msgstr "Warren использует некастодиальный кошелёк: ваша учётная запись — это фраза восстановления из 12 слов, которой владеете только вы."
+msgstr "Warren использует некастодиальный кошелёк: ваша учётная запись, это фраза восстановления из 12 слов, которой владеете только вы."
 
 msgctxt "login-view"
 msgid "Welcome to Warren"
@@ -4318,3 +4318,242 @@ msgstr "Добро пожаловать в Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Запишите эти 12 слов и храните их в надёжном месте. Это единственный способ восстановить вашу учётную запись, если вы потеряете это устройство."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Я завершил оплату"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Сеанс неактивен"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Ваш сеанс завершён. Чтобы подключиться снова, вам потребуется войти заново."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Обнаружено несоответствие идентификатора сервера. Открытый ключ выходного узла изменился."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Автоматическое переключение"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Автоматически переключаться на другой выходной сервер, если текущий становится недоступен."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Этот параметр вступает в силу немедленно, без перезапуска службы."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL-адрес сервера warren-api. Формат http(s)://host:port. Пусто = не задано (используется бэкенд по умолчанию). Перезапустите службу, чтобы изменение вступило в силу."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Устаревшие методы обфускации (Shadowsocks, UDP-over-TCP, QUIC, LWO) не применяются к туннелю Warren."
+
+msgid "OK"
+msgstr "ОК"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Скопировать открытый ключ"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Скрыть открытый ключ"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Показать открытый ключ"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Резервная копия ключей"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Открытый ключ"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Используется CDN77 от Datapacket. CDN может наблюдать только проксируемый TLS-трафик, но не его содержимое."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Приложение взаимодействует с сервером Warren API через %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Это может быть полезно, когда прямой доступ и другие методы блокируются цензурой."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "При использовании метода доступа %(domainFronting)s приложение обращается к Warren API через CDN, смешивая трафик с большим объёмом другого интернет-трафика, что усложняет цензуру."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Вы вошли с недействительным открытым ключом. Выйдите и попробуйте другой."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Проверка… (нажмите, чтобы обновить сейчас)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Вот ваш открытый ключ. Сохраните его!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Переадресация портов: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 узла)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "ВЫХОДНОЙ СЕРВЕР ИЗМЕНЁН"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Ваш предыдущий выходной сервер стал недоступен. Warren автоматически перенаправил вас через другой сервер."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Добавить порт"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Каждый добавленный порт открывается на выходном сервере и переадресуется на тот же порт на вашем устройстве. Изменения применяются сразу, переподключение не требуется."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Последнее изменение порта перед временной блокировкой. Подождите немного, прежде чем менять его снова."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Достигнут максимум в %(max)d портов"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Пока нет ни одного порта. Добавьте порт, чтобы открыть его на выходном сервере."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Порт"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Порт должен быть в диапазоне от 49152 до 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Удалить порт"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Статус: ожидание активного подключения к туннелю для настройки переадресации портов."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Этот порт уже есть в вашем списке."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Слишком много изменений портов. Вы сможете снова изменить порты через %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "применение…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "сбой"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "нет доступных портов"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "не разрешено"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "открыт: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "ожидание…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "порт"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "порт занят"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "запрос…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Похоже, вы ввели открытый ключ вместо кода ваучера. Если вы хотите сменить активную учётную запись, сначала выйдите из неё."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Переадресация портов"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Повторить первоначальную настройку"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Удалено записей закреплённых ключей выходных серверов: %(count)s."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Каждый выходной сервер Warren, к которому вы ранее подключались, будет повторно закреплён при следующем подключении (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Таблица закреплений очищена"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Сбросить"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Сбросить всё"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Не удалось выполнить сброс"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Сбросить закреплённые ключи выходных серверов"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Сбросить закреплённые ключи выходных серверов?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Пока новые закрепления не установлены, защита от обнаружения подмены ненадолго отключается: злоумышленник, заменивший выходной сервер между сбросами, не будет обнаружен при первом переподключении."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL-адрес Warren api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

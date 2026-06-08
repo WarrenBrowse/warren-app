@@ -4193,7 +4193,7 @@ msgid "Keys"
 msgstr "Schlüssel"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
+msgid "No mnemonic available. Log in or restore an identity first."
 msgstr "Keine Wiederherstellungsphrase verfügbar – melden Sie sich an oder stellen Sie zuerst eine Identität wieder her."
 
 msgctxt "keys-view"
@@ -4213,7 +4213,7 @@ msgid "Reveal mnemonic"
 msgstr "Wiederherstellungsphrase anzeigen"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
 msgstr "WARNUNG – Dies ERSETZT Ihre aktuelle Identität. Jedes mit der aktuellen Identität verknüpfte Abonnement wird unwiederbringlich verloren sein."
 
 msgctxt "keys-view"
@@ -4291,3 +4291,242 @@ msgstr "Willkommen bei Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Schreiben Sie diese 12 Wörter auf und bewahren Sie sie sicher auf. Sie sind die einzige Möglichkeit, Ihr Konto wiederherzustellen, wenn Sie dieses Gerät verlieren."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Ich habe die Zahlung abgeschlossen"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sitzung inaktiv"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Ihre Sitzung ist beendet. Um sich erneut zu verbinden, müssen Sie sich wieder anmelden."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Nichtübereinstimmung der Serveridentität erkannt. Der öffentliche Schlüssel des Exit-Knotens hat sich geändert."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatische Umschaltung"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Automatisch zu einem anderen Exit-Server wechseln, wenn der aktuelle nicht mehr erreichbar ist."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Diese Einstellung wird sofort wirksam, ohne Neustart des Dienstes."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL des warren-api-Servers. Format http(s)://host:port. Leer = nicht gesetzt (Rückfall auf das Standard-Backend). Starten Sie den Dienst neu, damit die Änderung wirksam wird."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Veraltete Verschleierungsmethoden (Shadowsocks, UDP-over-TCP, QUIC, LWO) gelten nicht für den Warren-Tunnel."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Öffentlichen Schlüssel kopieren"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Öffentlichen Schlüssel ausblenden"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Öffentlichen Schlüssel anzeigen"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Schlüssel sichern"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Öffentlicher Schlüssel"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Das verwendete CDN ist das CDN77 von Datapacket. Das CDN kann nur den weitergeleiteten TLS-Verkehr beobachten, nicht dessen Inhalt."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Die App kommuniziert über %(domainFronting)s mit einem Warren-API-Server."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Das kann nützlich sein, wenn der direkte Zugriff und andere Methoden durch Zensur blockiert werden."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Mit der Zugriffsmethode %(domainFronting)s erreicht die App die Warren-API über ein CDN und vermischt den Datenverkehr mit viel anderem Internetverkehr, was die Zensur erschwert."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Sie sind mit einem ungültigen öffentlichen Schlüssel angemeldet. Bitte melden Sie sich ab und versuchen Sie es mit einem anderen."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Wird geprüft... (zum sofortigen Aktualisieren klicken)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Hier ist Ihr öffentlicher Schlüssel. Speichern Sie ihn!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Portweiterleitung: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 Hops)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXIT GEWECHSELT"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Ihr vorheriger Exit-Server wurde unerreichbar. Warren hat Sie automatisch über einen alternativen Server geleitet."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Port hinzufügen"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Jeder hinzugefügte Port wird auf dem Exit-Server geöffnet und an denselben Port auf Ihrem Gerät weitergeleitet. Änderungen werden sofort wirksam, ohne erneute Verbindung."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Letzte Portänderung vor einer vorübergehenden Sperre. Warten Sie einen Moment, bevor Sie sie erneut ändern."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maximum von %(max)d Ports erreicht"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Noch kein Port. Fügen Sie einen hinzu, um ihn auf dem Exit-Server zu öffnen."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Der Port muss zwischen 49152 und 65535 liegen."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Port entfernen"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: Warten auf eine aktive Tunnelverbindung, um die Portweiterleitungen einzurichten."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Dieser Port befindet sich bereits in Ihrer Liste."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Zu viele Portänderungen. Sie können Ports in %(countdown)s erneut ändern."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "wird angewendet…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "fehlgeschlagen"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "kein Port verfügbar"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "nicht erlaubt"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "offen: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "ausstehend…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "Port belegt"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "wird angefordert…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Es sieht so aus, als hätten Sie einen öffentlichen Schlüssel statt eines Gutscheincodes eingegeben. Wenn Sie das aktive Konto wechseln möchten, melden Sie sich bitte zuerst ab."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Portweiterleitung"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Einführung erneut abspielen"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "%(count)s angeheftete Exit-Schlüsseleinträge entfernt."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Jeder Warren-Exit, mit dem Sie sich zuvor verbunden haben, wird bei der nächsten Verbindung erneut angeheftet (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Anheftungstabelle geleert"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Alle zurücksetzen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Zurücksetzen fehlgeschlagen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Angeheftete Exit-Schlüssel zurücksetzen"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Angeheftete Exit-Schlüssel zurücksetzen?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Bis die neuen Anheftungen eingerichtet sind, ist der Schutz zur Substitutionserkennung kurzzeitig deaktiviert: Ein Angreifer, der einen Exit zwischen den Zurücksetzungen ausgetauscht hätte, würde bei der ersten erneuten Verbindung nicht gemeldet werden."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren-API-URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

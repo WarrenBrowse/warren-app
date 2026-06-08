@@ -3905,8 +3905,8 @@ msgid "Keys"
 msgstr "คีย์"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "ไม่มีวลีกู้คืน — กรุณาเข้าสู่ระบบหรือกู้คืนตัวตนก่อน"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "ไม่มีวลีกู้คืน กรุณาเข้าสู่ระบบหรือกู้คืนตัวตนก่อน"
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3925,8 +3925,8 @@ msgid "Reveal mnemonic"
 msgstr "แสดงวลีกู้คืน"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "คำเตือน — การกระทำนี้จะ แทนที่ ตัวตนปัจจุบันของคุณ การสมัครสมาชิกใดๆ ที่ผูกกับตัวตนปัจจุบันจะไม่สามารถกู้คืนได้"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "คำเตือน: การกระทำนี้จะ แทนที่ ตัวตนปัจจุบันของคุณ การสมัครสมาชิกใดๆ ที่ผูกกับตัวตนปัจจุบันจะไม่สามารถกู้คืนได้"
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -3982,7 +3982,7 @@ msgstr "สร้างกระเป๋าเงินใหม่ของฉ
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "บริการยังไม่มีวลีกู้คืน — กรุณาเข้าสู่ระบบหรือรีสตาร์ตแอป"
+msgstr "บริการยังไม่มีวลีกู้คืน กรุณาเข้าสู่ระบบหรือรีสตาร์ตแอป"
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4054,7 +4054,7 @@ msgstr "จด 12 คำนี้ตามลำดับและเก็บ�
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน — ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
+msgstr "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4139,3 +4139,366 @@ msgstr "ยินดีต้อนรับสู่ Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "จดคำ 12 คำเหล่านี้และเก็บไว้ในที่ปลอดภัย คำเหล่านี้เป็นวิธีเดียวที่จะกู้คืนบัญชีของคุณหากคุณทำอุปกรณ์นี้หาย"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "ฉันชำระเงินเสร็จแล้ว"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "เซสชันไม่ได้ใช้งาน"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "เซสชันของคุณสิ้นสุดลงแล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "ตรวจพบข้อมูลประจำตัวเซิร์ฟเวอร์ไม่ตรงกัน คีย์สาธารณะของโหนดทางออกมีการเปลี่ยนแปลง"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "การสลับอัตโนมัติเมื่อเกิดข้อผิดพลาด"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "สลับไปยังเซิร์ฟเวอร์ทางออกอื่นโดยอัตโนมัติหากเซิร์ฟเวอร์ปัจจุบันไม่สามารถเข้าถึงได้"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "การตั้งค่านี้มีผลทันทีโดยไม่ต้องรีสตาร์ทบริการ"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL ของเซิร์ฟเวอร์ warren-api รูปแบบ http(s)://host:port ว่าง = ไม่ได้ตั้งค่า (กลับไปใช้แบ็กเอนด์เริ่มต้น) รีสตาร์ทบริการเพื่อให้การเปลี่ยนแปลงมีผล"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "วิธีการสร้างความสับสนแบบเดิม (Shadowsocks, UDP-over-TCP, QUIC, LWO) ไม่ใช้กับอุโมงค์ Warren"
+
+msgid "OK"
+msgstr "ตกลง"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "คัดลอกกุญแจสาธารณะ"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "ซ่อนกุญแจสาธารณะ"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "แสดงกุญแจสาธารณะ"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "สำรองกุญแจ"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "กุญแจสาธารณะ"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "CDN ที่ใช้คือ CDN77 ของ Datapacket โดย CDN จะเห็นได้เพียงทราฟฟิก TLS ที่ส่งผ่านเท่านั้น ไม่เห็นเนื้อหา"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "แอปสื่อสารกับเซิร์ฟเวอร์ warren-api ผ่าน %(domainFronting)s"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "วิธีนี้มีประโยชน์เมื่อการเข้าถึงโดยตรงและวิธีอื่น ๆ ถูกบล็อกด้วยการเซ็นเซอร์"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "ด้วยวิธีการเข้าถึง %(domainFronting)s แอปจะเข้าถึง Warren API ผ่าน CDN ทำให้ทราฟฟิกผสมกับทราฟฟิกอินเทอร์เน็ตอื่น ๆ จำนวนมาก จึงเซ็นเซอร์ได้ยากขึ้น"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "คุณเข้าสู่ระบบด้วยกุญแจสาธารณะที่ไม่ถูกต้อง โปรดออกจากระบบแล้วลองกุญแจอื่น"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "กำลังตรวจสอบ... (คลิกเพื่อรีเฟรชเดี๋ยวนี้)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "นี่คือกุญแจสาธารณะของคุณ บันทึกเก็บไว้!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "การส่งต่อพอร์ต: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "มัลติฮอป (2 ฮอป)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "เปลี่ยนเซิร์ฟเวอร์ทางออกแล้ว"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "เซิร์ฟเวอร์ทางออกก่อนหน้าของคุณเข้าถึงไม่ได้ Warren ได้กำหนดเส้นทางคุณผ่านเซิร์ฟเวอร์อื่นโดยอัตโนมัติ"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ เพิ่มพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "ทุกพอร์ตที่คุณเพิ่มจะถูกเปิดบนเซิร์ฟเวอร์ทางออกและส่งต่อไปยังพอร์ตเดียวกันบนอุปกรณ์ของคุณ การเปลี่ยนแปลงมีผลทันที ไม่ต้องเชื่อมต่อใหม่"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "นี่คือการเปลี่ยนพอร์ตครั้งสุดท้ายก่อนการบล็อกชั่วคราว โปรดรอสักครู่ก่อนเปลี่ยนอีกครั้ง"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "ถึงจำนวนพอร์ตสูงสุด %(max)d พอร์ตแล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "ยังไม่มีพอร์ต เพิ่มพอร์ตเพื่อเปิดบนเซิร์ฟเวอร์ทางออก"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "พอร์ตต้องอยู่ระหว่าง 49152 ถึง 65535"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "ลบพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการจับคู่พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "พอร์ตนี้อยู่ในรายการของคุณแล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "เปลี่ยนพอร์ตบ่อยเกินไป คุณจะเปลี่ยนพอร์ตได้อีกครั้งใน %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "กำลังนำไปใช้…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "ล้มเหลว"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ไม่มีพอร์ตว่าง"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ไม่อนุญาต"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "เปิด: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "รอดำเนินการ…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "พอร์ตถูกใช้งานอยู่"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "กำลังร้องขอ…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "ดูเหมือนว่าคุณป้อนกุญแจสาธารณะแทนรหัสคูปอง หากต้องการเปลี่ยนบัญชีที่ใช้งานอยู่ โปรดออกจากระบบก่อน"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "การส่งต่อพอร์ต"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "เล่นการแนะนำเริ่มต้นใหม่"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "ลบรายการกุญแจทางออกที่ปักหมุดไว้ %(count)s รายการแล้ว"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "เซิร์ฟเวอร์ทางออก Warren ทุกตัวที่คุณเคยเชื่อมต่อมาก่อนจะถูกปักหมุดใหม่ในการเชื่อมต่อครั้งถัดไป (Trust On First Use)"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "ล้างตารางการปักหมุดแล้ว"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "รีเซ็ต"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "รีเซ็ตทั้งหมด"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "รีเซ็ตล้มเหลว"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "รีเซ็ตกุญแจทางออกที่ปักหมุดไว้"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "รีเซ็ตกุญแจทางออกที่ปักหมุดไว้หรือไม่?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "จนกว่าจะมีการปักหมุดใหม่ ระบบป้องกันการตรวจจับการสับเปลี่ยนจะหยุดทำงานชั่วครู่ ผู้โจมตีที่เปลี่ยนเซิร์ฟเวอร์ทางออกในช่วงระหว่างการรีเซ็ตจะไม่ถูกตรวจจับในการเชื่อมต่อใหม่ครั้งแรก"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL ของ Warren API"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "ประเทศทางเข้า"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "ประเทศทางออก"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "คาดว่าจะได้แบนด์วิดท์ราวครึ่งหนึ่งของแบบฮอปเดียว เพื่อแลกกับการที่ IP ของผู้ใช้และ IP ปลายทางไม่สามารถเชื่อมโยงกันได้ ปิดไว้โดยค่าเริ่มต้น เปิดใช้เองเพื่อความเป็นส่วนตัว"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "มัลติฮอป"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "รีสตาร์ตบริการ Warren หลังจากเปลี่ยนการตั้งค่านี้"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "กำหนดเส้นทางทราฟฟิกของคุณผ่านรีเลย์ Warren สองตัวโดยใช้การเข้ารหัสแบบ end-to-end ด้วย HPKE รีเลย์ทางเข้าเห็นเฉพาะข้อความที่เข้ารหัสไว้ ส่วนทางออกเห็นเฉพาะข้อมูลที่ถอดรหัสแล้ว ไม่เห็น IP ของคุณ รูปแบบนี้ได้แรงบันดาลใจจาก Apple Private Relay"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "ข้อแลกเปลี่ยน: แบนด์วิดท์ราวครึ่งหนึ่งของแบบฮอปเดียว ปิดไว้โดยค่าเริ่มต้น เปิดใช้เองเพื่อความเป็นส่วนตัว ต้องรีสตาร์ตบริการหลังจากเปลี่ยนการตั้งค่านี้"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "มัลติฮอป Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "เมื่อเปิดใช้งาน ทราฟฟิกจะถูกกำหนดเส้นทางผ่านรีเลย์ Warren สองตัว (ทางเข้าแล้วจึงทางออก) โดยใช้การเข้ารหัสแบบ end-to-end ด้วย HPKE ระหว่างไคลเอนต์และทางออก รีเลย์ทางเข้าเห็นเฉพาะข้อความที่เข้ารหัสไว้ ส่วนทางออกเห็นเฉพาะข้อมูลที่ถอดรหัสแล้ว ไม่เห็น IP ของผู้ใช้"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "อัตโนมัติ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "รายละเอียดความไม่ตรงกันทางการเข้ารหัส"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "รหัสทางออก"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "ตำแหน่งที่ตั้ง"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "กุญแจที่พบใหม่"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "กุญแจที่ปักหมุดไว้ก่อนหน้า"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "กำลังประมวลผลตัวเลือกของคุณ โปรดรอสักครู่"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "ปฏิเสธ (ตัดการเชื่อมต่อ)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "ปฏิเสธและคงสถานะตัดการเชื่อมต่อ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "รายงานไปยัง Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "อัตลักษณ์ของเซิร์ฟเวอร์เปลี่ยนไป"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "เซิร์ฟเวอร์ทางออก Warren ที่คุณเคยเชื่อถือ ตอนนี้แสดงอัตลักษณ์ทางการเข้ารหัสที่แตกต่างออกไป"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเปลี่ยนกุญแจ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกแทนที่หรือถูกเจาะระบบ ปฏิเสธหากคุณไม่ได้คาดหวังการเปลี่ยนแปลง"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "เชื่อถือกุญแจใหม่"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "การเลียนแบบ HTTP/3 (กำลังทำงาน)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "การพรางด้วยการเลียนแบบ HTTP/3 เปิดใช้งานตลอดเวลาสำหรับอุโมงค์ Warren (/v1)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "การพรางด้วยการเลียนแบบ HTTP/3 ขณะนี้ไม่ได้ทำงานอยู่"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "ล่าสุด"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "การพราง"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "การเชื่อมต่อใหม่"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "อุโมงค์ Warren ปลอมตัวเป็นทราฟฟิก HTTP/3 ของเบราว์เซอร์มาตรฐาน: ALPN h3, SNI warrenbrowse.com, การแยกแพ็กเก็ต Initial, UDP/443 ซึ่งไม่สามารถสลับเปิดปิดได้ใน /v1 เพราะการปิดมันจะทำให้ไคลเอนต์ Warren ถูกระบุตัวตนได้ทันทีบนเครือข่าย"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "ไม่ทำงาน"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ไม่เคย"

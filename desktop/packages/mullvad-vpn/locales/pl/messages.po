@@ -3310,10 +3310,10 @@ msgid "Failed to load products, please try again"
 msgstr "Nie udało się załadować produktów. Spróbuj ponownie"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "Nie udało się ustawić jako bieżącą — interfejs API nieosiągalny"
+msgstr "Nie udało się ustawić jako bieżącą, interfejs API nieosiągalny"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "Nie udało się ustawić jako bieżącą — przyczyna nieznana"
+msgstr "Nie udało się ustawić jako bieżącą, przyczyna nieznana"
 
 msgid "File"
 msgstr "Plik"
@@ -4220,8 +4220,8 @@ msgid "Keys"
 msgstr "Klucze"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Brak dostępnej frazy odzyskiwania — najpierw zaloguj się lub przywróć tożsamość."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Brak dostępnej frazy odzyskiwania. Najpierw zaloguj się lub przywróć tożsamość."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4240,8 +4240,8 @@ msgid "Reveal mnemonic"
 msgstr "Pokaż frazę odzyskiwania"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "OSTRZEŻENIE — To ZASTĄPI Twoją bieżącą tożsamość. Każda subskrypcja powiązana z bieżącą tożsamością będzie nie do odzyskania."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "OSTRZEŻENIE: To ZASTĄPI Twoją bieżącą tożsamość. Każda subskrypcja powiązana z bieżącą tożsamością będzie nie do odzyskania."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4318,3 +4318,242 @@ msgstr "Witamy w Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Zapisz te 12 słów i przechowuj je w bezpiecznym miejscu. Są jedynym sposobem na przywrócenie konta, jeśli utracisz to urządzenie."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Zakończyłem płatność"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sesja nieaktywna"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Twoja sesja zakończyła się. Aby połączyć się ponownie, musisz zalogować się jeszcze raz."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Wykryto niezgodność tożsamości serwera. Klucz publiczny węzła wyjściowego uległ zmianie."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatyczne przełączanie"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Automatycznie przełącz na inny serwer wyjściowy, jeśli bieżący stanie się nieosiągalny."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "To ustawienie zaczyna obowiązywać natychmiast, bez ponownego uruchamiania usługi."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "Adres URL serwera warren-api. Format http(s)://host:port. Puste = nieustawione (powrót do domyślnego backendu). Uruchom ponownie usługę, aby zmiana zaczęła obowiązywać."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Starsze metody zaciemniania (Shadowsocks, UDP-over-TCP, QUIC, LWO) nie mają zastosowania do tunelu Warren."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Kopiuj klucz publiczny"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Ukryj klucz publiczny"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Pokaż klucz publiczny"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Utwórz kopię zapasową kluczy"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Klucz publiczny"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Używana sieć CDN to CDN77 firmy Datapacket. CDN może obserwować jedynie przekazywany ruch TLS, a nie jego zawartość."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Aplikacja komunikuje się z serwerem API Warren przez %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Może to być przydatne, gdy bezpośredni dostęp i inne metody są blokowane przez cenzurę."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Przy metodzie dostępu %(domainFronting)s aplikacja łączy się z API Warren przez sieć CDN, mieszając swój ruch z dużą ilością innego ruchu internetowego, co utrudnia cenzurę."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Jesteś zalogowany za pomocą nieprawidłowego klucza publicznego. Wyloguj się i spróbuj innego."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Sprawdzanie… (kliknij, aby odświeżyć teraz)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Oto Twój klucz publiczny. Zapisz go!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Przekierowanie portów: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 przeskoki)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "ZMIENIONO WĘZEŁ WYJŚCIOWY"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Twój poprzedni węzeł wyjściowy stał się nieosiągalny. Warren automatycznie przekierował Cię przez serwer alternatywny."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Dodaj port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Każdy dodany port jest otwierany na węźle wyjściowym i przekierowywany na ten sam port na Twoim urządzeniu. Zmiany działają natychmiast, bez potrzeby ponownego łączenia."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Ostatnia zmiana portu przed tymczasową blokadą. Odczekaj chwilę przed kolejną zmianą."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Osiągnięto maksymalną liczbę portów: %(max)d"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Brak portów. Dodaj jeden, aby otworzyć go na węźle wyjściowym."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Port musi być z zakresu od 49152 do 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Usuń port"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: oczekiwanie na aktywne połączenie tunelu, aby skonfigurować przekierowania portów."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Ten port jest już na Twojej liście."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Zbyt wiele zmian portów. Kolejną zmianę będzie można wykonać za %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "stosowanie…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "niepowodzenie"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "brak dostępnego portu"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "niedozwolone"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "otwarty: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "oczekiwanie…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port zajęty"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "żądanie…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Wygląda na to, że wprowadzono klucz publiczny zamiast kodu kuponu. Jeśli chcesz zmienić aktywne konto, najpierw się wyloguj."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Przekierowanie portów"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Odtwórz wprowadzenie ponownie"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Usunięto przypięte wpisy kluczy wyjściowych: %(count)s."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Każdy węzeł wyjściowy Warren, z którym wcześniej się łączyłeś, zostanie ponownie przypięty przy następnym połączeniu (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Wyczyszczono tabelę przypięć"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Resetuj"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Resetuj wszystko"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Resetowanie nie powiodło się"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Resetuj przypięte klucze wyjściowe"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Zresetować przypięte klucze wyjściowe?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Dopóki nowe przypięcia nie zostaną ustanowione, zabezpieczenie wykrywające podmianę jest na krótko wyłączone: atakujący, który podmienił węzeł wyjściowy między resetami, nie zostałby oznaczony przy pierwszym ponownym połączeniu."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Adres URL API Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

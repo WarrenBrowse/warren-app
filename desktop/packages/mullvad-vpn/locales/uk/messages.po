@@ -359,13 +359,13 @@ msgstr "Налаштування порту %(wireguard)s"
 #. %(listName)s - The name of the custom list the location will be added to.
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
-msgstr "%(location)s — додати до списку «%(listName)s»"
+msgstr "%(location)s - додати до списку «%(listName)s»"
 
 #. Accessibility label for button to add a location to a custom list.
 #. The placeholder is replaced with the name of the location.
 msgctxt "accessibility"
 msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)s — додати до користувацького списку"
+msgstr "%(locationName)s - додати до користувацького списку"
 
 #. This is an accessibility label for a button that opens a dialog to create a new custom list.
 msgctxt "accessibility"
@@ -768,7 +768,7 @@ msgstr "TCP-порт, на якому працює ваш локальний с�
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "Це може бути корисно, якщо API піддається цензурі, а сервери-мости Warren — ні."
+msgstr "Це може бути корисно, якщо API піддається цензурі, а сервери-мости Warren, ні."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -1169,21 +1169,21 @@ msgstr "%(customList)s (Додано)"
 #. %(locationName)s - The name of the location being added to the list.
 msgctxt "custom-list-feature"
 msgid "Add %(locationName)s to list"
-msgstr "%(locationName)s — додати до списку"
+msgstr "%(locationName)s - додати до списку"
 
 #. Label for button to create a new custom list with a specific location.
 #. Available placeholder:
 #. %(locationName)s - The name of the location being added to the list.
 msgctxt "custom-list-feature"
 msgid "Add %(locationName)s to new list"
-msgstr "%(locationName)s — додати до нового списку"
+msgstr "%(locationName)s - додати до нового списку"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
 #. %(locationType) - Could be either "Country", "City" and "Relay"
 msgctxt "custom-list-feature"
 msgid "Add %(locationType)s to list"
-msgstr "%(locationType)s — додати до списку"
+msgstr "%(locationType)s - додати до списку"
 
 msgctxt "custom-list-feature"
 msgid "City"
@@ -1638,7 +1638,7 @@ msgstr "Перезапустити фоновий процес Warren"
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
 msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
-msgstr "Перезапустити фоновий процес Warren, натиснувши «Назад», а потім — «Повторити»"
+msgstr "Перезапустити фоновий процес Warren, натиснувши «Назад», а потім «Повторити»"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -2768,7 +2768,7 @@ msgstr "Функція забезпечує доступ до інших при�
 #. explaining how the user can configure the setting.
 msgctxt "vpn-settings-view"
 msgid "This feature allows you to choose whether to use only IPv4, only IPv6, or allow the app to automatically decide the best option when connecting to a server."
-msgstr "Ця функція дає змогу вибирати протокол, який використовується, — лише IPv4, лише IPv6 — або дозволити застосунку автоматично визначати найкращий варіант під час підключення до сервера."
+msgstr "Ця функція дає змогу вибирати протокол, який використовується, лише IPv4, лише IPv6, або дозволити застосунку автоматично визначати найкращий варіант під час підключення до сервера."
 
 msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
@@ -2790,7 +2790,7 @@ msgstr "Налаштування VPN"
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
-msgstr "Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий — це лише додатковий рівень захисту."
+msgstr "Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий, це лише додатковий рівень захисту."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3322,7 +3322,7 @@ msgid "For details, please see our %s."
 msgstr "Більше інформації тут: %s."
 
 msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "Щоб VPN автоматично підключався під час запуску пристрою, застосунку потрібні дозволи на використання VPN. Щоб надати їх, натисніть «Підключити» на карті, а потім — «OK» (за потреби). Також переконайтеся, що застосунок установлено у внутрішній пам’яті пристрою — це можна побачити у відомостях про застосунок у налаштуваннях системи."
+msgstr "Щоб VPN автоматично підключався під час запуску пристрою, застосунку потрібні дозволи на використання VPN. Щоб надати їх, натисніть «Підключити» на карті, а потім «OK» (за потреби). Також переконайтеся, що застосунок установлено у внутрішній пам’яті пристрою, це можна побачити у відомостях про застосунок у налаштуваннях системи."
 
 msgid "Go to VPN settings"
 msgstr "До налаштувань VPN"
@@ -3604,7 +3604,7 @@ msgid "The Lockdown mode is called \"Block connections without VPN\" in the Andr
 msgstr "У системних налаштуваннях Android режим блокування називається «Блокувати з’єднання без VPN». Він допомагає мінімізувати витоки, хоча має деякі обмеження, про які ви можете прочитати"
 
 msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "«Поточний» метод — це метод, який застосунок використовує для доступу до API."
+msgstr "«Поточний» метод, це метод, який застосунок використовує для доступу до API."
 
 msgid "The app is blocking internet, please disconnect first"
 msgstr "Застосунок блокує Інтернет, спочатку відключіться"
@@ -3748,7 +3748,7 @@ msgid "We are still verifying your purchase, this might take some time. Your tim
 msgstr "Ми досі перевіряємо вашу покупку, це може зайняти певний час. Щойно перевірку буде успішно завершено, час буде додано."
 
 msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "Нам не вдалося запустити процес оплати — переконайтесь, що у вас установлена остання версія Google Play."
+msgstr "Нам не вдалося запустити процес оплати, переконайтесь, що у вас установлена остання версія Google Play."
 
 msgid "We were unable to start the payment process, please try again later."
 msgstr "Нам не вдалося запустити процес оплати, повторіть спробу пізніше."
@@ -3944,7 +3944,7 @@ msgstr "Не вдалося перевірити статус підписки. 
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "У демона ще немає мнемонічної фрази — увійдіть або перезапустіть застосунок."
+msgstr "У демона ще немає мнемонічної фрази, увійдіть або перезапустіть застосунок."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4016,7 +4016,7 @@ msgstr "Запишіть ці 12 слів по порядку та зберіг�
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "У вас ще немає активної підписки. Тарифи починаються від кількох євро на місяць — без повторюваних платежів, без створення облікового запису, оплата за використання."
+msgstr "У вас ще немає активної підписки. Тарифи починаються від кількох євро на місяць, без повторюваних платежів, без створення облікового запису, оплата за використання."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4220,8 +4220,8 @@ msgid "Keys"
 msgstr "Ключі"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Мнемонічна фраза недоступна — спершу увійдіть або відновіть профіль."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Мнемонічна фраза недоступна. Спершу увійдіть або відновіть профіль."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4240,8 +4240,8 @@ msgid "Reveal mnemonic"
 msgstr "Показати мнемонічну фразу"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "УВАГА — Це ЗАМІНИТЬ ваш поточний профіль. Будь-яку підписку, прив’язану до поточного профілю, буде неможливо відновити."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "УВАГА: Це ЗАМІНИТЬ ваш поточний профіль. Будь-яку підписку, прив’язану до поточного профілю, буде неможливо відновити."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4249,7 +4249,7 @@ msgstr "Запишіть її на папері. Ніколи не зберіг�
 
 msgctxt "keys-view"
 msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
-msgstr "Ваша мнемонічна фраза з 12 слів — ЄДИНИЙ спосіб відновити ваш профіль Warren на іншому пристрої. Якщо її втратити, підписку буде неможливо відновити."
+msgstr "Ваша мнемонічна фраза з 12 слів, ЄДИНИЙ спосіб відновити ваш профіль Warren на іншому пристрої. Якщо її втратити, підписку буде неможливо відновити."
 
 msgctxt "keys-view"
 msgid "words"
@@ -4309,7 +4309,7 @@ msgstr "Відновіть свій обліковий запис"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
-msgstr "Warren використовує некастодіальний гаманець: ваш обліковий запис — це фраза відновлення з 12 слів, якою володієте лише ви."
+msgstr "Warren використовує некастодіальний гаманець: ваш обліковий запис, це фраза відновлення з 12 слів, якою володієте лише ви."
 
 msgctxt "login-view"
 msgid "Welcome to Warren"
@@ -4318,3 +4318,242 @@ msgstr "Ласкаво просимо до Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Запишіть ці 12 слів і зберігайте їх у надійному місці. Це єдиний спосіб відновити ваш обліковий запис, якщо ви втратите цей пристрій."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Я завершив оплату"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Сеанс неактивний"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Ваш сеанс завершено. Щоб під'єднатися знову, вам потрібно буде ввійти заново."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Виявлено невідповідність ідентичності сервера. Відкритий ключ вихідного вузла змінився."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Автоматичне перемикання"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Автоматично перемикатися на інший вихідний сервер, якщо поточний стає недоступним."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Цей параметр набуває чинності негайно, без перезапуску служби."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL-адреса сервера warren-api. Формат http(s)://host:port. Порожнє = не задано (повернення до типового бекенда). Перезапустіть службу, щоб зміна набула чинності."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Застарілі методи обфускації (Shadowsocks, UDP-over-TCP, QUIC, LWO) не застосовуються до тунелю Warren."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Скопіювати відкритий ключ"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Сховати відкритий ключ"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Показати відкритий ключ"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Резервне копіювання ключів"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Відкритий ключ"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Використовується мережа CDN77 від Datapacket. CDN бачить лише ретрансльований трафік TLS, але не його вміст."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Застосунок взаємодіє із сервером Warren API через %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Це може бути корисним, коли прямий доступ та інші методи заблоковані цензурою."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "За допомогою методу доступу %(domainFronting)s застосунок звертається до Warren API через CDN, змішуючи трафік із великою кількістю іншого інтернет-трафіку, що ускладнює цензуру."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Ви ввійшли з недійсним відкритим ключем. Будь ласка, вийдіть і спробуйте інший."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Перевірка… (натисніть, щоб оновити зараз)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Ось ваш відкритий ключ. Збережіть його!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Переадресація портів: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 переходи)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "ВИХІДНИЙ СЕРВЕР ЗМІНЕНО"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Ваш попередній вихідний сервер став недоступним. Warren автоматично перенаправив вас через альтернативний сервер."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Додати порт"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Кожен доданий порт відкривається на вихідному сервері та переадресовується на той самий порт на вашому пристрої. Зміни застосовуються негайно, повторне підключення не потрібне."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Остання зміна порту перед тимчасовим блокуванням. Зачекайте трохи, перш ніж змінювати його знову."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Досягнуто максимуму у %(max)d портів"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Поки що немає портів. Додайте порт, щоб відкрити його на вихідному сервері."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Порт"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Порт має бути в діапазоні від 49152 до 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Видалити порт"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Статус: очікування активного підключення до тунелю для налаштування переадресації портів."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Цей порт уже є у вашому списку."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Забагато змін портів. Ви зможете змінити порти знову через %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "застосування…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "помилка"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "немає доступних портів"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "не дозволено"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "відкрито: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "очікування…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "порт"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "порт зайнятий"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "запит…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Схоже, ви ввели відкритий ключ замість коду ваучера. Якщо ви хочете змінити активний обліковий запис, спершу вийдіть."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Переадресація портів"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Повторити початкове налаштування"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Видалено записів закріплених ключів вихідних серверів: %(count)s."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Кожен вихідний сервер Warren, до якого ви раніше підключалися, буде повторно закріплено під час наступного підключення (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Таблицю закріплень очищено"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Скинути"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Скинути все"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Не вдалося скинути"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Скинути закріплені ключі вихідних серверів"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Скинути закріплені ключі вихідних серверів?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Доки не встановлено нові закріплення, захист від виявлення підміни ненадовго вимкнено: зловмисник, який підмінив вихідний сервер між скиданнями, не буде позначений під час першого повторного підключення."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL-адреса Warren api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

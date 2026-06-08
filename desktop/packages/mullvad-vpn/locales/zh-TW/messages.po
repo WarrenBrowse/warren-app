@@ -3905,8 +3905,8 @@ msgid "Keys"
 msgstr "金鑰"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "沒有可用的助記詞 — 請先登入或還原身分。"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "沒有可用的助記詞。請先登入或還原身分。"
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3925,8 +3925,8 @@ msgid "Reveal mnemonic"
 msgstr "顯示助記詞"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "警告 — 此操作將「取代」您目前的身分。任何與目前身分綁定的訂閱都將無法復原。"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告：此操作將「取代」您目前的身分。任何與目前身分綁定的訂閱都將無法復原。"
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -3982,7 +3982,7 @@ msgstr "建立我的新錢包（建議）"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "服務尚無助記詞 — 請登入或重新啟動應用程式。"
+msgstr "服務尚無助記詞。請登入或重新啟動應用程式。"
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -4054,7 +4054,7 @@ msgstr "請依序抄下這 12 個字並妥善保管於安全之處。若您失�
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "您目前尚無有效的訂閱。方案每月僅需數歐元起 — 不自動續費、不需建立帳號，用多少付多少。"
+msgstr "您目前尚無有效的訂閱。方案每月僅需數歐元起，不自動續費、不需建立帳號，用多少付多少。"
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"
@@ -4094,7 +4094,7 @@ msgstr "登出此帳戶？"
 
 msgctxt "account-view"
 msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
-msgstr "登出會從此裝置中刪除此帳戶。沒有可重新登入的電子郵件或密碼——您的復原短語是復原它的唯一方式。"
+msgstr "登出會從此裝置中刪除此帳戶。沒有可重新登入的電子郵件或密碼，您的復原短語是復原它的唯一方式。"
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4139,3 +4139,366 @@ msgstr "歡迎使用 Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "請寫下這 12 個單字並妥善保管。如果您遺失此裝置，它們是復原您帳戶的唯一方式。"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "我已完成付款"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "工作階段處於非作用中狀態"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "您的工作階段已結束。若要重新連線，您需要重新登入。"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "偵測到伺服器身分不符。出口節點的公開金鑰已變更。"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "自動容錯移轉"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "若目前的出口伺服器變得無法連線，則自動切換到另一台出口伺服器。"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "此設定會立即生效，無需重新啟動服務。"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api 伺服器的 URL。格式 http(s)://host:port。留空 = 未設定（回退至預設後端）。請重新啟動服務以使變更生效。"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "舊版混淆方式（Shadowsocks、UDP-over-TCP、QUIC、LWO）不適用於 Warren 通道。"
+
+msgid "OK"
+msgstr "確定"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "複製公鑰"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "隱藏公鑰"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "顯示公鑰"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "備份金鑰"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "公鑰"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "使用的 CDN 是 Datapacket 的 CDN77。CDN 只能觀察到經中繼的 TLS 流量，無法看到其內容。"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "應用程式透過 %(domainFronting)s 與 Warren API 伺服器通訊。"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "當直接存取及其他方式遭審查封鎖時，這會很有用。"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "使用 %(domainFronting)s 存取方式時，應用程式會透過 CDN 連線至 Warren API，將流量與大量其他網際網路流量混雜在一起，使其更難被審查。"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "您目前使用無效的公鑰登入。請登出並改用另一個公鑰。"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "檢查中……（點按以立即重新整理）"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "這是您的公鑰。請妥善保存！"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "通訊埠轉送：%(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "多重跳躍（2 跳）"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "出口已切換"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "您先前的出口已無法連線。Warren 已自動為您改用其他伺服器路由。"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ 新增通訊埠"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "您新增的每個通訊埠都會在出口伺服器上開啟，並轉送至您裝置上的相同通訊埠。變更會立即生效，無需重新連線。"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "這是暫時封鎖前的最後一次通訊埠變更。請稍候片刻再進行變更。"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "已達到 %(max)d 個通訊埠的上限"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "目前尚無通訊埠。新增一個即可在出口伺服器上開啟它。"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "通訊埠"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "通訊埠必須介於 49152 與 65535 之間。"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "移除通訊埠"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "狀態：正在等待使用中的通道連線以建立通訊埠對應。"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "此通訊埠已在您的清單中。"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "通訊埠變更次數過多。您可在 %(countdown)s 後再次變更通訊埠。"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "套用中…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "失敗"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "無可用通訊埠"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "不允許"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "已開啟：%(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "處理中…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "通訊埠"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "通訊埠使用中"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "請求中…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "您似乎輸入的是公鑰，而非兌換券代碼。若您想變更使用中的帳戶，請先登出。"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "通訊埠轉送"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "重新播放新手引導"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "已移除 %(count)s 筆釘選的出口金鑰項目。"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "您先前連線過的每個 Warren 出口都會在下次連線時重新釘選（首次使用即信任）。"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "釘選表已清除"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "重設"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "全部重設"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "重設失敗"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "重設釘選的出口金鑰"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "要重設釘選的出口金鑰嗎？"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "在新的釘選建立之前，防止替換偵測的防護會短暫停用：若有攻擊者在兩次重設之間替換了某個出口，在第一次重新連線時將不會被標記。"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren API URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "入口國家／地區"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "出口國家／地區"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "預期頻寬約為單跳的一半，以換取使用者 IP 與目的地 IP 之間的不可關聯性。預設為關閉；如需保護隱私可自行啟用。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "多重跳躍"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "變更此設定後，請重新啟動 Warren 服務。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "使用 HPKE 端對端加密，透過兩個 Warren 中繼路由您的流量。入口中繼只看得到密文；出口只看得到解密後的內容，永遠看不到您的 IP。此設計靈感來自 Apple Private Relay。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "取捨：頻寬約為單跳的一半。預設為關閉；如需保護隱私可自行啟用。變更此設定後需重新啟動服務。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren 多重跳躍"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "啟用後，流量會透過兩個 Warren 中繼（先入口再出口）路由，並在用戶端與出口之間使用 HPKE 端對端加密。入口中繼只看得到密文；出口只看得到解密後的內容，永遠看不到使用者 IP。"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "密碼學不符的詳細資訊"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "出口 ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "位置"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "新觀察到的金鑰"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "先前釘選的金鑰"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "正在處理您的選擇，請稍候。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "拒絕（中斷連線）"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "拒絕並保持中斷連線"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "回報給 Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "伺服器身分已變更"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "您先前信任的 Warren 出口伺服器現在呈現不同的密碼學身分。"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "這通常表示營運者輪換了金鑰，但也可能代表該伺服器已遭替換或入侵。若您未預期會有變更，請拒絕。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "信任新金鑰"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 模擬（使用中）"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "Warren 通道（/v1）一律啟用 HTTP/3 模擬混淆。"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3 模擬混淆目前未啟用。"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "上次"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "混淆"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "重新連線次數"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren 通道會偽裝成標準瀏覽器的 HTTP/3 流量：ALPN h3、SNI warrenbrowse.com、Initial 封包分割、UDP/443。此功能在 /v1 中無法切換，因為停用它會使 Warren 用戶端立即在網路上被辨識出來。"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "未啟用"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "從未"

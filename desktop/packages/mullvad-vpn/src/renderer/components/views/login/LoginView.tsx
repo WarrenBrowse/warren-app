@@ -163,7 +163,9 @@ export function LoginView() {
         <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
           <FlexColumn gap="medium">
             {(showBlockMessage || statusIcon) && (
-              <Flex justifyContent="center">{showBlockMessage ? <BlockMessage /> : statusIcon}</Flex>
+              <Flex justifyContent="center">
+                {showBlockMessage ? <BlockMessage /> : statusIcon}
+              </Flex>
             )}
 
             <View.Container

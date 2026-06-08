@@ -1686,8 +1686,8 @@ msgstr "Clés"
 #. stored (= identity never bootstrapped). User must
 #. log in or restore from mnemonic first.
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Aucune phrase mnémonique disponible — connectez-vous ou restaurez d'abord une identité."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Aucune phrase mnémonique disponible. Connectez-vous ou restaurez d'abord une identité."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -1707,8 +1707,8 @@ msgid "Reveal mnemonic"
 msgstr "Révéler la phrase mnémonique"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "AVERTISSEMENT — Ceci REMPLACERA votre identité actuelle. Tout abonnement lié à l'identité actuelle deviendra irrécupérable."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "AVERTISSEMENT : Ceci REMPLACERA votre identité actuelle. Tout abonnement lié à l'identité actuelle deviendra irrécupérable."
 
 msgctxt "keys-view"
 msgid "words"
@@ -3238,7 +3238,7 @@ msgstr "Continuer"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Le service n'a pas encore de phrase mnémonique — connectez-vous ou redémarrez l'application."
+msgstr "Le service n'a pas encore de phrase mnémonique. Connectez-vous ou redémarrez l'application."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3310,7 +3310,7 @@ msgstr "Notez ces 12 mots dans l'ordre et conservez-les en lieu sûr. C'est le s
 
 msgctxt "warren-onboarding"
 msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Vous n'avez pas encore d'abonnement actif. Les offres démarrent à quelques euros par mois — sans facturation récurrente, sans création de compte, à l'usage."
+msgstr "Vous n'avez pas encore d'abonnement actif. Les offres démarrent à quelques euros par mois, sans facturation récurrente, sans création de compte, à l'usage."
 
 msgctxt "warren-onboarding"
 msgid "Your subscription"
@@ -3655,3 +3655,39 @@ msgstr "Bienvenue dans Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Notez ces 12 mots et conservez-les en lieu sûr. Ils sont le seul moyen de restaurer votre compte si vous perdez cet appareil."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "J'ai effectué le paiement"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Session inactive"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Votre session a pris fin. Pour vous reconnecter, vous devrez vous identifier à nouveau."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Incohérence d'identité du serveur détectée. La clé publique du nœud de sortie a changé."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Bascule automatique"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Basculer automatiquement vers un autre serveur de sortie si le serveur actuel devient injoignable."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Ce réglage prend effet immédiatement, sans redémarrage du service."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL du serveur warren-api. Format http(s)://hôte:port. Vide = non défini (repli sur le backend par défaut). Redémarrez le service pour appliquer le changement."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Les méthodes d'obfuscation héritées (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas au tunnel Warren."

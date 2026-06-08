@@ -44,6 +44,25 @@ If you are about to write a comment in any source/config file (`src/`, `Cargo.to
 
 When you encounter a French comment in code while making unrelated changes, translate it to English as part of the change (opportunistic cleanup). Do not introduce new French comments.
 
+## Typography: never use the em-dash (—)
+
+**The em-dash character `—` (U+2014) is BANNED everywhere you author text in this repository.** This is a hard rule, not a stylistic preference. Never type, paste, or generate `—` in:
+
+- User-facing strings and UI copy (source default strings in `.tsx`/`.swift`/`.kt`, etc.).
+- Translation / i18n files in **every language**: `.po`, `.pot`, `.xcstrings`, Android `strings.xml`, and any other localization resource.
+- Code comments, doc comments, and commit messages / PR descriptions.
+
+When a sentence needs the kind of break an em-dash would provide, choose the natural alternative for the context:
+
+- A **comma** (`,`) in the general case (use the language's own comma: `،` for Arabic, `，` for Chinese, `、` for Japanese).
+- A **period** or a **colon** (`:`) when the clause is a full sentence or a label prefix (e.g. `WARNING: ...`). French keeps its space before the colon (` : `).
+- A **hyphen** (`-`) for numeric or value ranges (e.g. `1-100`).
+- **Nothing** (just a space, or restructure the sentence) when no punctuation is needed. In Thai, prefer a plain space.
+
+Do **not** introduce the en-dash `–` (U+2013) as a substitute either; it is the same AI-typography tell.
+
+**Rationale**: the em-dash reads as machine-generated boilerplate, is inconsistent with the rest of the copy, and was bulk-removed from the app once already. When you edit a file that still contains a stray `—`, replace it as part of your change (opportunistic cleanup).
+
 ## Comment content: no narration, no history
 
 A comment must explain the **why** behind a non-obvious choice — never narrate what the code does, nor record what it used to do. The following are banned:

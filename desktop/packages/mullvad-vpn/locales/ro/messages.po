@@ -1681,8 +1681,8 @@ msgstr "Chei"
 #. stored (= identity never bootstrapped). User must
 #. log in or restore from mnemonic first.
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Nu există frază mnemonică disponibilă — autentificați-vă sau restabiliți mai întâi o identitate."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Nu există frază mnemonică disponibilă. Autentificați-vă sau restabiliți mai întâi o identitate."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -1702,8 +1702,8 @@ msgid "Reveal mnemonic"
 msgstr "Afișați fraza mnemonică"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "ATENȚIE — Această acțiune va ÎNLOCUI identitatea dvs. actuală. Orice abonament asociat identității actuale va fi irecuperabil."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ATENȚIE: Această acțiune va ÎNLOCUI identitatea dvs. actuală. Orice abonament asociat identității actuale va fi irecuperabil."
 
 msgctxt "keys-view"
 msgid "words"
@@ -3538,3 +3538,142 @@ msgstr "Bun venit la Warren"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Notează aceste 12 cuvinte și păstrează-le în siguranță. Sunt singurul mod de a-ți restaura contul dacă pierzi acest dispozitiv."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Am finalizat plata"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sesiune inactivă"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Sesiunea ta s-a încheiat. Pentru a te conecta din nou, va trebui să te autentifici iar."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Nepotrivire de identitate a serverului detectată. Cheia publică a nodului de ieșire s-a schimbat."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Comutare automată"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Comută automat la alt server de ieșire dacă cel curent devine inaccesibil."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Această setare intră în vigoare imediat, fără repornirea serviciului."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL-ul serverului warren-api. Format http(s)://host:port. Gol = nesetat (revine la backendul implicit). Repornește serviciul pentru ca modificarea să intre în vigoare."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Metodele de ofuscare vechi (Shadowsocks, UDP-over-TCP, QUIC, LWO) nu se aplică tunelului Warren."
+
+msgid "Continue"
+msgstr "Continuă"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Se verifică... (apasă pentru a reîmprospăta acum)"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Redirecționare porturi: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 salturi)"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Adaugă un port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Fiecare port pe care îl adaugi este deschis pe serverul de ieșire și redirecționat către același port de pe dispozitivul tău. Modificările se aplică imediat, fără reconectare."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Ultima modificare de port înainte de o blocare temporară. Așteaptă un moment înainte de a-l schimba din nou."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "S-a atins maximul de %(max)d porturi"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Niciun port deocamdată. Adaugă unul pentru a-l deschide pe serverul de ieșire."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Portul trebuie să fie între 49152 și 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Elimină portul"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Stare: se așteaptă o conexiune activă la tunel pentru a configura maparea porturilor."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Acest port este deja în lista ta."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Prea multe modificări de port. Poți schimba porturile din nou în %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "se aplică…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "eșuat"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "niciun port disponibil"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "nepermis"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "deschis: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "în așteptare…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port ocupat"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "se solicită…"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Redirecționare porturi"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"

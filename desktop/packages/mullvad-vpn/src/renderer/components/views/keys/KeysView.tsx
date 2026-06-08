@@ -42,7 +42,7 @@ export function KeysView() {
         setError(
           messages.pgettext(
             'keys-view',
-            'No mnemonic available — log in or restore an identity first.',
+            'No mnemonic available. Log in or restore an identity first.',
           ),
         );
         return;

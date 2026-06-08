@@ -4192,8 +4192,8 @@ msgid "Keys"
 msgstr "Anahtarlar"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "Kullanılabilir kurtarma ifadesi yok — önce oturum açın veya bir kimlik geri yükleyin."
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Kullanılabilir kurtarma ifadesi yok. Önce oturum açın veya bir kimlik geri yükleyin."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -4212,8 +4212,8 @@ msgid "Reveal mnemonic"
 msgstr "Kurtarma ifadesini göster"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "UYARI — Bu işlem mevcut kimliğinizin YERİNE GEÇECEK. Mevcut kimliğe bağlı tüm abonelikler kurtarılamaz hale gelecek."
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "UYARI: Bu işlem mevcut kimliğinizin YERİNE GEÇECEK. Mevcut kimliğe bağlı tüm abonelikler kurtarılamaz hale gelecek."
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4290,3 +4290,242 @@ msgstr "Warren'a hoş geldiniz"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "Bu 12 kelimeyi yazın ve güvenli bir yerde saklayın. Bu cihazı kaybederseniz hesabınızı geri yüklemenin tek yolu bunlardır."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Ödemeyi tamamladım"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Oturum etkin değil"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Oturumunuz sona erdi. Yeniden bağlanmak için tekrar giriş yapmanız gerekir."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Sunucu kimliği uyuşmazlığı algılandı. Çıkış düğümünün ortak anahtarı değişti."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Otomatik yük devretme"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Geçerli çıkış sunucusu erişilemez hâle gelirse otomatik olarak başka bir çıkış sunucusuna geç."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Bu ayar, hizmeti yeniden başlatmadan hemen geçerli olur."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api sunucusunun URL'si. Biçim http(s)://host:port. Boş = ayarlanmadı (varsayılan arka uca geri döner). Değişikliğin geçerli olması için hizmeti yeniden başlatın."
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "Eski gizleme yöntemleri (Shadowsocks, UDP-over-TCP, QUIC, LWO) Warren tüneli için geçerli değildir."
+
+msgid "OK"
+msgstr "Tamam"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Genel anahtarı kopyala"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Genel anahtarı gizle"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Genel anahtarı göster"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Anahtarları yedekle"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Genel anahtar"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Kullanılan CDN, Datapacket’in CDN77 hizmetidir. CDN yalnızca yönlendirilen TLS trafiğini görebilir, içeriği göremez."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Uygulama, %(domainFronting)s aracılığıyla bir Warren API sunucusuyla iletişim kurar."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Bu, doğrudan erişim ve diğer yöntemler sansür tarafından engellendiğinde işe yarayabilir."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s erişim yöntemiyle uygulama, Warren API’ye bir CDN üzerinden ulaşır ve trafiği diğer pek çok internet trafiğiyle harmanlayarak sansürü daha zor hale getirir."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Geçersiz bir genel anahtarla oturum açtınız. Lütfen oturumu kapatıp başka bir anahtar deneyin."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrol ediliyor... (şimdi yenilemek için tıklayın)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "İşte genel anahtarınız. Saklayın!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Bağlantı noktası yönlendirme: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Çok atlamalı (2 atlama)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "ÇIKIŞ DEĞİŞTİRİLDİ"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Önceki çıkış sunucunuza ulaşılamaz oldu. Warren sizi otomatik olarak alternatif bir sunucu üzerinden yönlendirdi."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Bağlantı noktası ekle"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Eklediğiniz her bağlantı noktası çıkış sunucusunda açılır ve cihazınızdaki aynı bağlantı noktasına yönlendirilir. Değişiklikler anında uygulanır, yeniden bağlanmaya gerek yoktur."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Geçici bir engellemeden önceki son bağlantı noktası değişikliği. Tekrar değiştirmeden önce bir süre bekleyin."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "En fazla %(max)d bağlantı noktası sınırına ulaşıldı"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Henüz bağlantı noktası yok. Çıkış sunucusunda açmak için bir tane ekleyin."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Bağlantı noktası"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Bağlantı noktası 49152 ile 65535 arasında olmalıdır."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Bağlantı noktasını kaldır"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Durum: bağlantı noktası eşlemelerini kurmak için etkin bir tünel bağlantısı bekleniyor."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Bu bağlantı noktası zaten listenizde."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Çok fazla bağlantı noktası değişikliği. Bağlantı noktalarını %(countdown)s sonra yeniden değiştirebilirsiniz."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "uygulanıyor…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "başarısız"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "kullanılabilir bağlantı noktası yok"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "izin verilmiyor"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "açık: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "beklemede…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "bağlantı noktası"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "bağlantı noktası kullanımda"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "isteniyor…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Görünüşe göre bir kupon kodu yerine bir genel anahtar girdiniz. Etkin hesabı değiştirmek istiyorsanız lütfen önce oturumu kapatın."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Bağlantı noktası yönlendirme"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Tanıtımı yeniden oynat"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "%(count)s sabitlenmiş çıkış anahtarı girdisi kaldırıldı."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Daha önce bağlandığınız her Warren çıkışı, bir sonraki bağlantıda yeniden sabitlenecek (İlk Kullanımda Güven)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Sabitleme tablosu temizlendi"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Sıfırla"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Tümünü sıfırla"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Sıfırlama başarısız"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Sabitlenmiş çıkış anahtarlarını sıfırla"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Sabitlenmiş çıkış anahtarları sıfırlansın mı?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Yeni sabitlemeler oluşturulana kadar, ikame algılama koruması kısa süreliğine devre dışı kalır: iki sıfırlama arasında bir çıkışı değiştiren bir saldırgan, ilk yeniden bağlanmada işaretlenmez."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren api URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Çok atlamalı"

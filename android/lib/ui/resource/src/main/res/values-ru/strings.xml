@@ -137,7 +137,7 @@
     <string name="retry">Повторить</string>
     <string name="save">Сохранить</string>
     <string name="search">Поиск</string>
-    <string name="search_no_matches_for_text">По запросу «%1$s» ничего не найдено — попробуйте другой запрос</string>
+    <string name="search_no_matches_for_text">По запросу «%1$s» ничего не найдено, попробуйте другой запрос</string>
     <string name="search_placeholder">Поиск...</string>
     <string name="send">Отправить</string>
     <string name="send_anyway">Все равно отправить</string>

@@ -95,7 +95,7 @@ export function RestoreMnemonicView() {
                       <Text variant="bodySmallSemibold" color="white">
                         {messages.pgettext(
                           'keys-view',
-                          'WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable.',
+                          'WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable.',
                         )}
                       </Text>
                     </DangerCallout>

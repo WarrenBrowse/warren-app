@@ -3908,8 +3908,8 @@ msgid "Keys"
 msgstr "သော့များ"
 
 msgctxt "keys-view"
-msgid "No mnemonic available — log in or restore an identity first."
-msgstr "ပြန်လည်ရယူရေး စကားစု မရှိပါ — ဦးစွာ အကောင့်ဝင်ပါ သို့မဟုတ် အထောက်အထားကို ပြန်လည်ရယူပါ။"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "ပြန်လည်ရယူရေး စကားစု မရှိပါ။ ဦးစွာ အကောင့်ဝင်ပါ သို့မဟုတ် အထောက်အထားကို ပြန်လည်ရယူပါ။"
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
@@ -3928,8 +3928,8 @@ msgid "Reveal mnemonic"
 msgstr "ပြန်လည်ရယူရေး စကားစုကို ဖော်ပြပါ"
 
 msgctxt "keys-view"
-msgid "WARNING — This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
-msgstr "သတိပေးချက် — ဤလုပ်ဆောင်ချက်သည် သင်၏ လက်ရှိ အထောက်အထားကို အစားထိုးပစ်မည်။ လက်ရှိ အထောက်အထားနှင့် ချိတ်ဆက်ထားသော မည်သည့် စာရင်းသွင်းမှုမဆို ပြန်လည်ရယူ၍ ရတော့မည်မဟုတ်ပါ။"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "သတိပေးချက်: ဤလုပ်ဆောင်ချက်သည် သင်၏ လက်ရှိ အထောက်အထားကို အစားထိုးပစ်မည်။ လက်ရှိ အထောက်အထားနှင့် ချိတ်ဆက်ထားသော မည်သည့် စာရင်းသွင်းမှုမဆို ပြန်လည်ရယူ၍ ရတော့မည်မဟုတ်ပါ။"
 
 msgctxt "keys-view"
 msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
@@ -4133,7 +4133,7 @@ msgstr "သင်၏အကောင့်ကို ပြန်လည်ရယ�
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
-msgstr "Warren သည် non-custodial wallet ကို အသုံးပြုသည်— သင်၏အကောင့်သည် သင်တစ်ဦးတည်းသာ ပိုင်ဆိုင်သော စကားလုံး ၁၂ လုံးပါ ပြန်လည်ရယူရေးစကားစုဖြစ်သည်။"
+msgstr "Warren သည် non-custodial wallet ကို အသုံးပြုသည်။ သင်၏အကောင့်သည် သင်တစ်ဦးတည်းသာ ပိုင်ဆိုင်သော စကားလုံး ၁၂ လုံးပါ ပြန်လည်ရယူရေးစကားစုဖြစ်သည်။"
 
 msgctxt "login-view"
 msgid "Welcome to Warren"
@@ -4142,3 +4142,366 @@ msgstr "Warren မှ ကြိုဆိုပါသည်"
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr "ဤစကားလုံး ၁၂ လုံးကို ချရေး၍ လုံခြုံစွာ သိမ်းဆည်းပါ။ ဤစက်ပစ္စည်းကို ပျောက်ဆုံးပါက သင်၏အကောင့်ကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "ကျွန်ုပ် ငွေပေးချေမှု ပြီးဆုံးပါပြီ"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "စက်ရှင် မလှုပ်ရှားပါ"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "သင်၏ စက်ရှင် ပြီးဆုံးသွားပါပြီ။ ပြန်လည်ချိတ်ဆက်ရန် ထပ်မံ၍ လော့ဂ်အင်ဝင်ရန် လိုအပ်ပါသည်။"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "ဆာဗာ အထောက်အထား မကိုက်ညီမှု တွေ့ရှိသည်။ ထွက်ပေါက်နုဒ်၏ အများသုံးသော့ ပြောင်းလဲသွားပါသည်။"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "အလိုအလျောက် ကြိုတင်ကာကွယ်ပြောင်းခြင်း"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "လက်ရှိ ထွက်ပေါက်ဆာဗာ မရောက်ရှိနိုင်တော့ပါက အခြား ထွက်ပေါက်ဆာဗာသို့ အလိုအလျောက် ပြောင်းပါ။"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "ဤဆက်တင်သည် ဝန်ဆောင်မှုကို ပြန်လည်စတင်စရာမလိုဘဲ ချက်ချင်း သက်ရောက်ပါသည်။"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api ဆာဗာ၏ URL။ ပုံစံ http(s)://host:port။ ဗလာ = မသတ်မှတ်ထား (မူရင်း backend သို့ ပြန်သုံးသည်)။ ပြောင်းလဲမှု သက်ရောက်စေရန် ဝန်ဆောင်မှုကို ပြန်လည်စတင်ပါ။"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
+msgstr "ဟောင်းနွမ်းသော ဖုံးကွယ်မှုနည်းလမ်းများ (Shadowsocks, UDP-over-TCP, QUIC, LWO) သည် Warren tunnel တွင် အသက်မဝင်ပါ။"
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Public key ကို ကူးယူရန်"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Public key ကို ဖျောက်ထားရန်"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Public key ကို ပြရန်"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "သော့များကို အရန်သိမ်းရန်"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Public key"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "အသုံးပြုသော CDN မှာ Datapacket ၏ CDN77 ဖြစ်သည်။ CDN သည် ပြန်လည်ဆက်သွယ်ပေးထားသော TLS အသွားအလာကိုသာ မြင်နိုင်ပြီး အကြောင်းအရာများကို မမြင်နိုင်ပါ။"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "အက်ပ်သည် %(domainFronting)s မှတစ်ဆင့် Warren API ဆာဗာနှင့် ဆက်သွယ်သည်။"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "တိုက်ရိုက်ဝင်ရောက်မှုနှင့် အခြားနည်းလမ်းများကို ဆင်ဆာဖြတ်တောက်မှုဖြင့် ပိတ်ဆို့ထားသည့်အခါ ဤနည်းသည် အသုံးဝင်နိုင်သည်။"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s ဝင်ရောက်မှုနည်းလမ်းဖြင့် အက်ပ်သည် CDN မှတစ်ဆင့် Warren API သို့ ရောက်ရှိပြီး အသွားအလာကို အခြားအင်တာနက်အသွားအလာများစွာနှင့် ရောစပ်စေကာ ဆင်ဆာဖြတ်တောက်ရန် ပိုခက်ခဲစေသည်။"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "သင်သည် မမှန်ကန်သော public key ဖြင့် ဝင်ရောက်ထားသည်။ ကျေးဇူးပြု၍ ထွက်ပြီး အခြားတစ်ခုဖြင့် ပြန်စမ်းကြည့်ပါ။"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "စစ်ဆေးနေသည်... (ယခု ပြန်လည်စစ်ဆေးရန် နှိပ်ပါ)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "ဤသည်မှာ သင်၏ public key ဖြစ်သည်။ သိမ်းထားပါ။"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Port forwarding: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (၂ hops)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXIT ပြောင်းလဲပြီး"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "သင်၏ ယခင် exit သည် မရောက်ရှိနိုင်တော့ပါ။ Warren သည် သင့်ကို အခြားဆာဗာတစ်ခုမှတစ်ဆင့် အလိုအလျောက် လမ်းကြောင်းပြောင်းပေးခဲ့သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Port တစ်ခု ထည့်ရန်"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "သင်ထည့်သော port တိုင်းကို exit တွင် ဖွင့်ပြီး သင့်စက်ပစ္စည်းရှိ port တူသို့ ပြန်လည်ပို့ဆောင်ပေးသည်။ အပြောင်းအလဲများသည် ချက်ချင်းအကျိုးသက်ရောက်ပြီး ပြန်လည်ချိတ်ဆက်ရန် မလိုအပ်ပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "ယာယီပိတ်ဆို့မှုမတိုင်မီ နောက်ဆုံး port ပြောင်းလဲမှု။ ထပ်မံပြောင်းလဲခြင်းမပြုမီ ခဏစောင့်ပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "အများဆုံး port %(max)d ခု ပြည့်သွားပြီ"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Port မရှိသေးပါ။ Exit တွင် ဖွင့်ရန် တစ်ခု ထည့်ပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Port သည် 49152 နှင့် 65535 ကြားတွင် ရှိရမည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Port ကို ဖယ်ရှားရန်"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "အခြေအနေ - port mapping များ ပြုလုပ်ရန် တက်ကြွသော tunnel ချိတ်ဆက်မှုကို စောင့်ဆိုင်းနေသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "ဤ port သည် သင့်စာရင်းတွင် ရှိနှင့်ပြီးဖြစ်သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Port ပြောင်းလဲမှု များလွန်းသည်။ %(countdown)s အကြာတွင် port များကို ထပ်မံပြောင်းလဲနိုင်သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "သက်ရောက်စေနေသည်…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "မအောင်မြင်ပါ"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "port မရရှိနိုင်ပါ"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ခွင့်မပြုပါ"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "ဖွင့်ထား - %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "ဆိုင်းငံ့ဆဲ…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port အသုံးပြုဆဲ"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "တောင်းဆိုနေသည်…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "သင်သည် voucher code အစား public key တစ်ခု ထည့်သွင်းထားပုံရသည်။ တက်ကြွသောအကောင့်ကို ပြောင်းလဲလိုပါက ကျေးဇူးပြု၍ ဦးစွာ ထွက်လိုက်ပါ။"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Port forwarding"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "မိတ်ဆက်လမ်းညွှန်ကို ပြန်ဖွင့်ရန်"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "ပင်ထိုးထားသော exit သော့ %(count)s ခုကို ဖျက်လိုက်ပြီ။"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "သင် ယခင်ချိတ်ဆက်ဖူးသော Warren exit တိုင်းကို နောက်တစ်ကြိမ်ချိတ်ဆက်ချိန်တွင် ပြန်လည်ပင်ထိုးပေးမည် (Trust On First Use)။"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "ပင်ထိုးဇယားကို ရှင်းလင်းပြီးပါပြီ"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "ပြန်လည်သတ်မှတ်ရန်"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "အားလုံးကို ပြန်လည်သတ်မှတ်ရန်"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "ပြန်လည်သတ်မှတ်ခြင်း မအောင်မြင်ပါ"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "ပင်ထိုးထားသော exit သော့များကို ပြန်လည်သတ်မှတ်ရန်"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "ပင်ထိုးထားသော exit သော့များကို ပြန်လည်သတ်မှတ်မလား။"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "ပင်ထိုးမှုအသစ်များ မပြုလုပ်ရသေးမီ အစားထိုးခြင်းရှာဖွေသည့် ကာကွယ်မှုသည် ခဏတာ ပိတ်နေသည် - ပြန်လည်သတ်မှတ်မှုနှစ်ခုကြားတွင် exit ကို အစားထိုးထားသည့် တိုက်ခိုက်သူတစ်ဦးကို ပထမအကြိမ် ပြန်ချိတ်ဆက်ချိန်တွင် သတိပေးဖော်ပြမည် မဟုတ်ပါ။"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren api URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "ဝင်ရောက်သည့်နိုင်ငံ"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "ထွက်ခွာသည့်နိုင်ငံ"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "အသုံးပြုသူ IP နှင့် ဦးတည်ရာ IP အကြား ဆက်စပ်၍မရစေရန်အတွက် single-hop bandwidth ၏ ထက်ဝက်ခန့်သာ ရရှိမည်ကို မျှော်လင့်ထားပါ။ ပုံမှန်အားဖြင့် ပိတ်ထားသည်၊ ကိုယ်ရေးကိုယ်တာအတွက် ရွေးချယ်ဖွင့်ပါ။"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "ဤဆက်တင်ကို ပြောင်းလဲပြီးနောက် Warren daemon ကို ပြန်လည်စတင်ပါ။"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "သင်၏အသွားအလာကို HPKE end-to-end encryption အသုံးပြု၍ Warren relay နှစ်ခုမှတစ်ဆင့် လမ်းကြောင်းပေးသည်။ ဝင်ရောက်သည့် relay သည် ciphertext ကိုသာ မြင်ရသည်၊ exit သည် ဖွင့်ပြီးသား payload ကိုသာ မြင်ရပြီး သင်၏ IP ကို ဘယ်တော့မှ မမြင်ရပါ။ Apple Private Relay မှ စံနမူနာယူထားသော ပုံစံဖြစ်သည်။"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "အလဲအလှယ် - single-hop bandwidth ၏ ထက်ဝက်ခန့်သာ ရရှိမည်။ ပုံမှန်အားဖြင့် ပိတ်ထားသည်၊ ကိုယ်ရေးကိုယ်တာအတွက် ရွေးချယ်ဖွင့်ပါ။ ဤဆက်တင်ကို ပြောင်းလဲပြီးနောက် daemon ကို ပြန်လည်စတင်ရန် လိုအပ်သည်။"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "ဖွင့်ထားသည့်အခါ အသွားအလာကို client နှင့် exit အကြား HPKE end-to-end encryption အသုံးပြု၍ Warren relay နှစ်ခုမှတစ်ဆင့် (ဝင်ရောက်ပြီးနောက် ထွက်ခွာ) လမ်းကြောင်းပေးသည်။ ဝင်ရောက်သည့် relay သည် ciphertext ကိုသာ မြင်ရသည်၊ exit သည် ဖွင့်ပြီးသား payload ကိုသာ မြင်ရပြီး အသုံးပြုသူ IP ကို ဘယ်တော့မှ မမြင်ရပါ။"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Cryptographic မကိုက်ညီမှု အသေးစိတ်"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "Exit ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "တည်နေရာ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "အသစ်တွေ့ရှိသော သော့"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "ယခင်ပင်ထိုးထားသော သော့"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "သင့်ရွေးချယ်မှုကို ဆောင်ရွက်နေသည်၊ ကျေးဇူးပြု၍ စောင့်ဆိုင်းပါ။"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "ငြင်းဆိုရန် (ချိတ်ဆက်မှုဖြတ်)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "ငြင်းဆိုပြီး ချိတ်ဆက်မှုဖြတ်ထားရန်"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Warren သို့ တိုင်ကြားရန်"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "ဆာဗာ၏ အထောက်အထား ပြောင်းလဲသွားသည်"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "သင် ယခင်ယုံကြည်ခဲ့သော Warren exit ဆာဗာသည် ယခု မတူညီသော cryptographic အထောက်အထားကို ပြသနေသည်။"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "ဤသည်က များသောအားဖြင့် အော်ပရေတာက သော့ကို လှည့်ပြောင်းလိုက်ခြင်းကို ဆိုလိုသော်လည်း ဆာဗာကို အစားထိုးခြင်း သို့မဟုတ် အလဟာသဖြစ်ခြင်းကိုလည်း ညွှန်ပြနိုင်သည်။ အပြောင်းအလဲ မမျှော်လင့်ထားပါက ငြင်းဆိုပါ။"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "သော့အသစ်ကို ယုံကြည်ရန်"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 mimicry (တက်ကြွ)"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is always-on for Warren tunnels (/v1)."
+msgstr "HTTP/3 mimicry obfuscation သည် Warren tunnel များ (/v1) အတွက် အမြဲဖွင့်ထားသည်။"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry obfuscation is currently inactive."
+msgstr "HTTP/3 mimicry obfuscation သည် လောလောဆယ် မတက်ကြွပါ။"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "နောက်ဆုံး"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Obfuscation"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "ပြန်လည်ချိတ်ဆက်မှုများ"
+
+msgctxt "warren-status-view"
+msgid "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable in /v1 because disabling it would make Warren clients immediately recognisable on the network."
+msgstr "Warren tunnel များသည် စံပြ browser HTTP/3 အသွားအလာအဖြစ် ဟန်ဆောင်သည် - ALPN h3၊ SNI warrenbrowse.com၊ Initial-packet split၊ UDP/443။ ၎င်းကို ပိတ်ပါက ကွန်ရက်ပေါ်တွင် Warren client များ ချက်ချင်းသိသာထင်ရှားသွားမည်ဖြစ်၍ /v1 တွင် ၎င်းကို ဖွင့်/ပိတ် ပြုလုပ်၍ မရပါ။"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "မတက်ကြွ"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ဘယ်တော့မှ"
