@@ -418,18 +418,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    async fn set_warren_local_account(&self, request: Request<bool>) -> ServiceResult<()> {
-        let warren_local_account = request.into_inner();
-        log::debug!("set_warren_local_account({})", warren_local_account);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenLocalAccount(
-            tx,
-            warren_local_account,
-        ))?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
-    }
-
     async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
         let warren_api_url = request.into_inner();
         // Warren no-log: URL may potentially contain a sensitive

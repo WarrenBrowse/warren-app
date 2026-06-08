@@ -21,7 +21,7 @@ disponible**. La cible de la phase POC :
 
 - Backend tunnel QUIC opérationnel sur Linux et macOS desktop
 - Identité Warren BIP39 + signature Ed25519 sur les endpoints REST migrés
-- Mode `WARREN_LOCAL_ACCOUNT=1` end-to-end sans `api.mullvad.net`
+- Compte/abonnement servis par warren-api (`https://api.warrenbrowse.com`)
 - GUI Electron rebrandée
 
 Android et iOS ne sont **pas migrés** à ce stade — les sources upstream sont conservées telles
@@ -45,7 +45,7 @@ Pour la matrice upstream (OS, versions, archis supportées par le code Mullvad),
 | | Linux (Warren) | macOS (Warren) | Notes |
 |---|:-:|:-:|---|
 | **Warren tunnel (QUIC + Ed25519)** | ✓ | ✓ | Seul mode tunnel du fork |
-| **Warren local account (BIP39, no `api.mullvad.net`)** | ✓ | ✓ | Activé via `warren_local_account` ou `WARREN_LOCAL_ACCOUNT=1` |
+| **Compte/abonnement Warren (BIP39 + warren-api)** | ✓ | ✓ | Identité BIP39, abonnement servi par warren-api |
 | Quantum-resistant tunnels (PQ-WG) | ✓ | ✓ | Code WireGuard upstream hérité |
 | Split tunneling | ✓ | ✓ | |
 | Custom DNS server | ✓ | ✓ | |
@@ -136,12 +136,8 @@ upstream weekly.
 
 ### Spécifiques Warren
 
-* `WARREN_LOCAL_ACCOUNT` — Si setée à `1`, force le mode account local : bootstrap d'un `device.json`
-  depuis la mnémonique BIP39 au boot, plus aucun appel HTTP vers `api.mullvad.net`. Prend priorité
-  sur `Settings::warren_local_account`.
-
-* `WARREN_API_URL` — URL du backend API Warren custom (côté `warren-api` server, non encore livré).
-  Vide = pas de backend Warren remote.
+* `WARREN_API_URL` — URL du backend warren-api (compte/abonnement/device). Vide = défaut compilé
+  (`https://api.warrenbrowse.com`).
 
 * `WARREN_SETTINGS_DIR`, `WARREN_LOG_DIR`, `WARREN_CACHE_DIR`, `WARREN_RPC_SOCKET_PATH` —
   Surchargent les paths daemon. Si non setés, les variantes upstream `MULLVAD_*` sont consultées en
@@ -204,8 +200,7 @@ Edit du systemd unit via `systemctl edit warren-daemon.service` :
 
 ```ini
 [Service]
-Environment="WARREN_TUNNEL=1"
-Environment="WARREN_LOCAL_ACCOUNT=1"
+Environment="WARREN_API_URL=https://api.warrenbrowse.com"
 ```
 
 Restart du daemon :
@@ -220,7 +215,7 @@ Utiliser `plutil` (path plist à confirmer selon l'installer fork) :
 
 ```bash
 sudo plutil -replace EnvironmentVariables -json \
-  '{"WARREN_TUNNEL": "1", "WARREN_LOCAL_ACCOUNT": "1"}' \
+  '{"WARREN_API_URL": "https://api.warrenbrowse.com"}' \
   /Library/LaunchDaemons/net.mullvad.daemon.plist
 launchctl unload -w /Library/LaunchDaemons/net.mullvad.daemon.plist
 launchctl load   -w /Library/LaunchDaemons/net.mullvad.daemon.plist
@@ -319,9 +314,8 @@ Fichiers à connaître :
     - **CLI** — binaire Rust `warren` (frontend terminal).
 - **Warren tunnel** — le tunnel QUIC Warren (handshake TLS Ed25519). C'est l'unique backend tunnel
   du fork : il n'y a plus de toggle pour l'activer/désactiver.
-- **Warren local account** — flag qui bascule les ops account/device sur un backend local (BIP39 +
-  signing key). Persistant (`Settings::warren_local_account`) avec override env
-  (`WARREN_LOCAL_ACCOUNT`).
+- **Compte Warren** — les opérations account/device/abonnement passent par warren-api
+  (backend distant signé Ed25519). L'identité vient de la mnémonique BIP39 locale.
 - **Mnémonique** — BIP39 24 mots stockée dans `<settings_dir>/warren_mnemonic.txt`, source de la
   `SigningKey` Ed25519 qui sert d'identité Warren.
 - **EndpointId / WarrenPubKey** — pubkey Ed25519 (32 bytes) qui identifie un exit Warren dans le
@@ -378,7 +372,6 @@ machine. Cf. `mullvad-paths/tests/warren_collision_safety.rs`.
 | Fichier | Rôle |
 |---|---|
 | `warren_mnemonic.txt` | Mnémonique BIP39 24 mots (perms 0600, owner root) |
-| `warren_settings.json` | Toggle persistant `warren_local_account` (intégré à `settings.json` dans certaines releases) |
 
 #### Fichiers Warren-only sous `<cache_dir>/`
 

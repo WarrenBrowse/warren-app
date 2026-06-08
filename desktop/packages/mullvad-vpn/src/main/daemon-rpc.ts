@@ -370,12 +370,6 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAllowLan, allowLan);
   }
 
-  // Persistent toggle for local account mode (= no remote API).
-  // Daemon restart required.
-  public async setWarrenLocalAccount(enabled: boolean): Promise<void> {
-    await this.callBool(this.client.setWarrenLocalAccount, enabled);
-  }
-
   // Persistent warren-api URL. Empty string → unset on the daemon
   // side (= fallback to upstream Mullvad backend). Daemon restart is
   // required to apply (see `resolve_warren_api_config` on the Rust

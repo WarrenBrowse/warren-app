@@ -87,8 +87,6 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
-  // Persistent toggle exposed via gRPC.
-  warrenLocalAccount: boolean;
   // Persistent warren-api URL.
   warrenApiUrl?: string;
   // Warren two-relayed QUIC multi-hop settings (M4.E.D).
@@ -156,7 +154,6 @@ const initialState: ISettingsReduxState = {
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
-  warrenLocalAccount: false,
   warrenApiUrl: undefined,
   warrenMultiHop: {
     enabled: false,
@@ -254,12 +251,6 @@ export default function (
       return {
         ...state,
         allowLan: action.allowLan,
-      };
-
-    case 'UPDATE_WARREN_LOCAL_ACCOUNT':
-      return {
-        ...state,
-        warrenLocalAccount: action.warrenLocalAccount,
       };
 
     case 'UPDATE_WARREN_API_URL':

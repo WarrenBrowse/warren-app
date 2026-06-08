@@ -498,9 +498,6 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
-  // Persistent toggle exposed via gRPC. Daemon restart is required
-  // to apply a change.
-  warrenLocalAccount: boolean;
   // Persistent warren-api URL. `undefined` if unset (= fallback to
   // upstream Mullvad). Daemon restart required.
   warrenApiUrl?: string;

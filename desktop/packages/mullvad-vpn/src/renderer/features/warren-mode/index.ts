@@ -3,9 +3,5 @@
 // The Settings screen consumes these components to expose the toggles
 // to the user. A daemon restart is required to apply any change.
 
-export {
-  WarrenLocalAccountSwitch,
-  WarrenLocalAccountSetting,
-  WarrenApiUrlSetting,
-} from './components';
-export { useWarrenLocalAccount, useWarrenApiUrl } from './hooks';
+export { WarrenApiUrlSetting } from './components';
+export { useWarrenApiUrl } from './hooks';

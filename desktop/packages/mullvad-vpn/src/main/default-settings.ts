@@ -72,7 +72,6 @@ export function getDefaultSettings(): ISettings {
     apiAccessMethods: getDefaultApiAccessMethods(),
     relayOverrides: [],
     recents: [],
-    warrenLocalAccount: false,
     // `undefined` = unset, fallback to Mullvad upstream backend.
     warrenApiUrl: undefined,
     // Default OFF per doctrine `warren_multihop_doctrine_v1`.

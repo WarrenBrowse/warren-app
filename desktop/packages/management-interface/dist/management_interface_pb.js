@@ -14542,7 +14542,6 @@ proto.mullvad_daemon.management_interface.Settings.toObject = function(includeIn
     proto.mullvad_daemon.management_interface.RelayOverride.toObject, includeInstance),
     recents: (f = msg.getRecents()) && proto.mullvad_daemon.management_interface.Recents.toObject(includeInstance, f),
     updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
-    warrenLocalAccount: jspb.Message.getBooleanFieldWithDefault(msg, 16, false),
     warrenApiUrl: jspb.Message.getFieldWithDefault(msg, 17, ""),
     warrenMultiHop: (f = msg.getWarrenMultiHop()) && proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.toObject(includeInstance, f),
     warrenNatPmp: (f = msg.getWarrenNatPmp()) && proto.mullvad_daemon.management_interface.NatPmpSettings.toObject(includeInstance, f)
@@ -14641,10 +14640,6 @@ proto.mullvad_daemon.management_interface.Settings.deserializeBinaryFromReader =
     case 14:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setUpdateDefaultLocation(value);
-      break;
-    case 16:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setWarrenLocalAccount(value);
       break;
     case 17:
       var value = /** @type {string} */ (reader.readString());
@@ -14785,13 +14780,6 @@ proto.mullvad_daemon.management_interface.Settings.serializeBinaryToWriter = fun
   if (f) {
     writer.writeBool(
       14,
-      f
-    );
-  }
-  f = message.getWarrenLocalAccount();
-  if (f) {
-    writer.writeBool(
-      16,
       f
     );
   }
@@ -15205,24 +15193,6 @@ proto.mullvad_daemon.management_interface.Settings.prototype.getUpdateDefaultLoc
  */
 proto.mullvad_daemon.management_interface.Settings.prototype.setUpdateDefaultLocation = function(value) {
   return jspb.Message.setProto3BooleanField(this, 14, value);
-};
-
-
-/**
- * optional bool warren_local_account = 16;
- * @return {boolean}
- */
-proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenLocalAccount = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 16, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
- */
-proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenLocalAccount = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 16, value);
 };
 
 

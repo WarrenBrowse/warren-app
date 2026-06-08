@@ -54,9 +54,6 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 .collect(),
             recents: settings.recents.clone().map(proto::Recents::from),
             update_default_location: settings.update_default_location,
-            // Exposed via gRPC so the CLI/UI can read and
-            // mutate them.
-            warren_local_account: settings.warren_local_account,
             // None -> empty string on the wire (proto3 `string` has
             // no "absent"; we use "" as a sentinel for "unset").
             // Consistent with the reverse conversion on the
@@ -334,10 +331,6 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // included in the serializable settings, such as the below value.
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // Propagated via gRPC from the daemon. The gRPC client can
-            // read them via `GetSettings` and mutate them via
-            // `SetWarrenLocalAccount`.
-            warren_local_account: settings.warren_local_account,
             // Empty string proto -> None on the mullvad_types side.
             // Lets the gRPC UI/CLI unset the field by sending "".
             warren_api_url: if settings.warren_api_url.is_empty() {

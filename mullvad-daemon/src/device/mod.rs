@@ -43,14 +43,14 @@ mod account_backend;
 mod api;
 mod service;
 pub(crate) use account_backend::{
-    LocalAccountBackend, RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
+    RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
 };
 pub(crate) use service::WarrenIdentityService;
 
 /// Config needed to instantiate the Warren-Remote account backend
-/// (= warren-api path). Built by the caller (`Daemon::start`) at boot
-/// if `!warren_local_account`. `None` = `LocalAccountBackend`
-/// (when `local_account_mode` is set).
+/// (= warren-api path). Built by the caller (`Daemon::start`) at boot.
+/// `None` falls back to the legacy [`RemoteAccountBackend`] (no
+/// mnemonic/signing key available).
 ///
 /// Convention:
 /// - `url`: `http(s)://host:port`, without trailing slash.
@@ -325,43 +325,27 @@ impl AccountManager {
         rest_handle: rest::MullvadRestHandle,
         settings_dir: &Path,
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
-        local_account_mode: bool,
         warren_api_config: Option<WarrenApiConfig>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         let number = data.pubkey().map(|pubkey| pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
-        // 3-branch dispatch of the account backend, prioritized in
-        // this order:
-        // 1. `local_account_mode = true` -> [`LocalAccountBackend`]
-        //    (POC stateless, no network, from mnemonic).
-        // 2. Otherwise, `warren_api_config = Some(_)` ->
-        //    [`WarrenRemoteAccountBackend`] (talks to warren-api via
-        //    signed HTTP Ed25519).
-        // 3. Otherwise -> [`RemoteAccountBackend`] (legacy Mullvad
-        //    upstream path).
-        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if local_account_mode {
-            // In local mode, the pubkey comes from the loaded mnemonic
-            // via the warren-api config (when present) or from the
-            // cached login state.
-            let pubkey = data
-                .pubkey()
-                .cloned()
-                .or_else(|| {
-                    warren_api_config
-                        .as_ref()
-                        .map(|cfg| pubkey_from_signing_key(&cfg.signing_key))
-                })
-                .unwrap_or_else(|| WarrenPubKey::from_bytes(&[0u8; 32]));
-            std::sync::Arc::new(LocalAccountBackend::new(pubkey, settings_dir.to_path_buf()))
-        } else if let Some(cfg) = warren_api_config {
-            let client = warren_api_client::WarrenApiClient::new(cfg.url, cfg.signing_key);
-            std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
-        } else {
-            std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
-                rest_handle.clone(),
-            )))
-        };
+        // 2-branch dispatch of the account backend:
+        // 1. `warren_api_config = Some(_)` -> [`WarrenRemoteAccountBackend`]
+        //    (talks to warren-api via signed HTTP Ed25519). This is the
+        //    standard Warren path: the real subscription expiry is read
+        //    from `GET /v1/subscription`.
+        // 2. Otherwise (no mnemonic/signing key) -> [`RemoteAccountBackend`]
+        //    (legacy Mullvad upstream path).
+        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> =
+            if let Some(cfg) = warren_api_config {
+                let client = warren_api_client::WarrenApiClient::new(cfg.url, cfg.signing_key);
+                std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
+            } else {
+                std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
+                    rest_handle.clone(),
+                )))
+            };
         let warren_identity_service = service::spawn_warren_identity_service(
             rest_handle.clone(),
             number,
@@ -785,33 +769,6 @@ impl AccountManager {
     async fn shutdown(self) {
         self.cacher.finalize().await;
     }
-}
-
-/// Derives the [`WarrenPubKey`] from an Ed25519 signing key.
-fn pubkey_from_signing_key(signing_key: &ed25519_dalek::SigningKey) -> WarrenPubKey {
-    WarrenPubKey::from_bytes(&signing_key.verifying_key().to_bytes())
-}
-
-/// Bootstraps the pubkey-only login-state cache for local POC mode.
-///
-/// If the cache is currently logged out (fresh install or wiped), it is
-/// set to `LoggedIn(pubkey)` derived from the mnemonic so the daemon can
-/// connect without any remote account call. An explicit `Revoked` state
-/// is left untouched.
-pub(crate) async fn bootstrap_local_login_state(
-    settings_dir: &Path,
-    signing_key: &ed25519_dalek::SigningKey,
-) -> Result<(), Error> {
-    let (mut cacher, state) = DeviceCacher::new(settings_dir).await?;
-    if matches!(state, PrivateDeviceState::LoggedOut) {
-        let pubkey = pubkey_from_signing_key(signing_key);
-        cacher
-            .write(&PrivateDeviceState::LoggedIn(pubkey))
-            .await?;
-        log::info!("Warren local login-state bootstrap: logged in from mnemonic");
-    }
-    cacher.finalize().await;
-    Ok(())
 }
 
 pub struct DeviceCacher {

@@ -632,12 +632,6 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
-  public setWarrenLocalAccount = async (warrenLocalAccount: boolean) => {
-    const actions = this.reduxActions;
-    await IpcRendererEventChannel.settings.setWarrenLocalAccount(warrenLocalAccount);
-    actions.settings.updateWarrenLocalAccount(warrenLocalAccount);
-  };
-
   // Persistent warren-api URL. Empty string → unset on the daemon
   // side (= fallback to upstream Mullvad backend). Daemon restart is
   // required to apply.
@@ -943,7 +937,6 @@ export default class AppRenderer {
     const reduxSettings = this.reduxActions.settings;
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
-    reduxSettings.updateWarrenLocalAccount(newSettings.warrenLocalAccount);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
     reduxSettings.updateWarrenFailover(newSettings.warrenFailover);

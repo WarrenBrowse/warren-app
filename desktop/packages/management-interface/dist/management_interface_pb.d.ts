@@ -1812,8 +1812,6 @@ export class Settings extends jspb.Message {
     setRecents(value?: Recents): Settings;
     getUpdateDefaultLocation(): boolean;
     setUpdateDefaultLocation(value: boolean): Settings;
-    getWarrenLocalAccount(): boolean;
-    setWarrenLocalAccount(value: boolean): Settings;
     getWarrenApiUrl(): string;
     setWarrenApiUrl(value: string): Settings;
 
@@ -1852,7 +1850,6 @@ export namespace Settings {
         relayOverridesList: Array<RelayOverride.AsObject>,
         recents?: Recents.AsObject,
         updateDefaultLocation: boolean,
-        warrenLocalAccount: boolean,
         warrenApiUrl: string,
         warrenMultiHop?: WarrenMultiHopSettings.AsObject,
         warrenNatPmp?: NatPmpSettings.AsObject,

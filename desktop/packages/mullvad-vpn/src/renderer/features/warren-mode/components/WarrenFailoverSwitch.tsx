@@ -2,7 +2,6 @@ import { Switch, SwitchProps } from '../../../lib/components/switch';
 import { useWarrenFailover } from '../hooks';
 
 // UI toggle for the multi-exit auto-failover setting (M5.B.2).
-// Symmetric to `WarrenLocalAccountSwitch`.
 export type WarrenFailoverSwitch = SwitchProps;
 
 function WarrenFailoverSwitch({ children, ...props }: WarrenFailoverSwitch) {

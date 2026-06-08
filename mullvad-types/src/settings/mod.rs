@@ -120,15 +120,8 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
-    /// If `true`, the daemon uses the local account/device backends
-    /// (`LocalAccountBackend`/`LocalDeviceBackend`) instead of
-    /// contacting the warren-api. Override via the POC env var
-    /// `WARREN_LOCAL_ACCOUNT=1`. Default `false`.
-    #[serde(default)]
-    pub warren_local_account: bool,
     /// URL of the warren-api server used by the
-    /// `WarrenRemote{Account,Device}Backend` (mode
-    /// `warren_local_account = false`).
+    /// `WarrenRemote{Account,Device}Backend`.
     ///
     /// Expected format: `http(s)://host:port` without trailing slash, e.g.
     /// `https://api.warrenbrowse.com` or `http://127.0.0.1:8080`.
@@ -516,16 +509,6 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
-            // `warren_local_account = false` by default: fresh installs
-            // use the REAL warren-api backend (subscription + voucher +
-            // device enrollment), not the stateless POC stub. The stub
-            // fabricated a far-future "99 years" account and silently
-            // ignored voucher redemption, which misled users into
-            // thinking they were provisioned while the exit kept
-            // refusing the unenrolled key. Opt into the POC stub
-            // explicitly with `warren warren local-account set on` (or
-            // `WARREN_LOCAL_ACCOUNT=1`) for offline bench/dev only.
-            warren_local_account: false,
             // `None` here resolves to the compiled production default
             // (`warren_remote_config::DEFAULT_WARREN_API_URL`) at boot,
             // so the remote backend works without any manual `api-url
@@ -723,25 +706,8 @@ mod warren_pinned_exit_pubkeys_tests {
 }
 
 #[cfg(test)]
-mod warren_account_mode_default_tests {
+mod warren_settings_default_tests {
     use super::*;
-
-    /// Fresh installs MUST default to the REAL warren-api backend, not
-    /// the local-account POC stub. The stub fabricated a far-future
-    /// "99 years" account and silently no-op'd voucher redemption,
-    /// misleading users into believing they were provisioned while the
-    /// exit kept refusing their unenrolled key (internet blocked, no
-    /// clear reason). Defaulting `warren_local_account` to `false`
-    /// routes account/device/voucher operations through warren-api so
-    /// the displayed state is truthful.
-    #[test]
-    fn default_is_remote_backend_not_local_account_stub() {
-        let s = Settings::default();
-        assert!(
-            !s.warren_local_account,
-            "fresh installs MUST NOT default to the local-account POC stub"
-        );
-    }
 
     /// Warren /v1 carries IPv4 only. IPv6 must default OFF so the
     /// firewall BLOCKS it instead of letting it leak out the physical

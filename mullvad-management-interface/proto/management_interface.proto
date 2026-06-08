@@ -56,11 +56,6 @@ service ManagementService {
   rpc SetEnableRecents(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetUserspaceWireguard(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
 
-  // Toggle persistant du mode account local (true = backends Local*
-  // sans api.mullvad.net, false = Remote* historiques). Override via
-  // env var POC `WARREN_LOCAL_ACCOUNT=1`. Restart requis pour
-  // appliquer.
-  rpc SetWarrenLocalAccount(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   // URL persistante du serveur warren-api (consumed par
   // WarrenRemote{Account,Device}Backend). Format
   // `http(s)://host:port` sans trailing slash. Empty string → unset
@@ -643,8 +638,7 @@ message Settings {
   optional Recents recents = 13;
   bool update_default_location = 14;
   reserved 15; // was warren_mode (removed: Warren is the only mode)
-  // Cf. SetWarrenLocalAccount rpc.
-  bool warren_local_account = 16;
+  reserved 16; // was warren_local_account (removed: always remote backend)
   // Empty string = unset. Cf. SetWarrenApiUrl rpc.
   string warren_api_url = 17;
   // Warren two-relayed QUIC multi-hop settings. Cf.

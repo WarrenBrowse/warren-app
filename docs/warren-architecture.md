@@ -10,44 +10,10 @@ quelles décisions architecturales ont été prises), voir le repo POC
 
 Le **tunnel Warren (QUIC)** est l'**unique** backend tunnel du fork : il
 remplace WireGuard et n'est plus optionnel (il n'y a plus de toggle pour
-l'activer/désactiver). À côté, le fork ajoute un mode orthogonal optionnel :
-
-| Mode | Effet | Toggle |
-|---|---|---|
-| **Warren local account** | Les opérations account/device locales (sans `api.mullvad.net`) | `Settings::warren_local_account` ou env `WARREN_LOCAL_ACCOUNT=1` |
-
-Avec le mode local account actif, le daemon fonctionne **end-to-end sans
-backend Mullvad** : identité dérivée d'une mnémonique BIP39 locale, tunnel
-QUIC vers un exit Warren custom, aucun appel HTTP vers `api.mullvad.net`.
-Sinon, le tunnel reste le tunnel Warren QUIC mais les opérations
-account/device passent par la warren-api distante.
-
-## Mode local account
-
-### Option A — Toggle persistant via CLI
-
-```bash
-# Activer le mode account local (= no api.mullvad.net)
-mullvad warren local-account set on
-
-# Vérifier l'état persisté
-mullvad warren local-account get
-
-# Restart requis pour appliquer (le flag est lu au boot)
-sudo systemctl restart mullvad-daemon  # Linux
-# ou redémarrer l'app GUI
-```
-
-### Option B — Env var POC (dev / debug rapide)
-
-Sans persister dans Settings :
-
-```bash
-WARREN_LOCAL_ACCOUNT=1 sudo mullvad-daemon
-```
-
-L'env var prend **toujours priorité** sur Settings — pratique pour
-tester sans toucher la config persistée.
+l'activer/désactiver). Les opérations compte/device/abonnement passent
+par la **warren-api distante** (`https://api.warrenbrowse.com` par défaut,
+override via `WARREN_API_URL`), signées Ed25519 avec l'identité dérivée de
+la mnémonique BIP39 locale.
 
 ## Pré-requis
 
@@ -77,28 +43,21 @@ Le mode Warren tunnel nécessite :
    Si absent, le selector retourne `NoRelayMatch` au premier connect (=
    l'utilisateur n'est pas en mode Warren utilisable).
 
-En mode local account, un `device.json` est **bootstrappé automatiquement
-au boot** à partir de la mnémonique (cf.
-[`mullvad-daemon/src/warren_device_bootstrap.rs`](../mullvad-daemon/src/warren_device_bootstrap.rs)).
-
 ## Architecture du fork
 
 ### Modules ajoutés (mullvad-daemon)
 
-- [`warren_account_mode`](../mullvad-daemon/src/warren_account_mode.rs) —
-  résolution env-or-Settings du flag `warren_local_account`.
 - [`warren_signer`](../mullvad-daemon/src/warren_signer.rs) — charge la
   mnémonique BIP39 et la dérive en `SigningKey` Ed25519 + `WarrenAuthSigner`.
-- [`warren_device_bootstrap`](../mullvad-daemon/src/warren_device_bootstrap.rs) —
-  bootstrap atomique du `device.json` cohérent avec la mnémonique.
+- [`warren_remote_config`](../mullvad-daemon/src/warren_remote_config.rs) —
+  résolution de l'URL warren-api (env > settings > défaut compilé).
 - [`warren_relay_selector`](../mullvad-daemon/src/warren_relay_selector.rs) —
   wrapper daemon-side autour de la crate `warren-relay-selector` (pocs).
 - [`warren_tunnel_params`](../mullvad-daemon/src/warren_tunnel_params.rs) —
   assemble `WarrenTunnelParameters` à partir du selector + signing key.
 - [`device::account_backend`](../mullvad-daemon/src/device/account_backend.rs) —
-  trait `WarrenAccountBackend` + `Remote*`/`Local*` impls.
-- [`device::device_backend`](../mullvad-daemon/src/device/device_backend.rs) —
-  trait `WarrenDeviceBackend` + `Remote*`/`Local*` impls.
+  trait `WarrenAccountBackend` + `WarrenRemoteAccountBackend` (warren-api) /
+  `RemoteAccountBackend` (fallback legacy).
 
 ### Path connect en mode Warren
 
@@ -149,14 +108,14 @@ cd ../warren-core
 - ✅ Phase 2.B/C/D : Identité Warren (mnémonique → SigningKey + WarrenPubKey)
 - ✅ Phase 3 : GUI rebrand cosmétique
 - ✅ Phase 4 : Relay selector + state machine wiring
-- ✅ Phase B : `WARREN_LOCAL_ACCOUNT=1` mode + bootstrap device.json
-- ✅ Phase C : `WarrenAccountBackend` + `WarrenDeviceBackend` traits
+- ✅ Phase C : `WarrenAccountBackend` trait + backend warren-api signé
 - ✅ Phase D.1 : 10 endpoints REST signés via `WarrenAuthSigner`
 - ✅ Phase D.2 : Allowlist côté exit warren-core
-- ✅ Phase E : `Settings::warren_local_account` persistant
-- ✅ Phase F : gRPC `SetWarrenLocalAccount` + `mullvad warren` CLI
+- ✅ Phase F : `mullvad warren` CLI (api-url + mnemonic)
 - ✅ Le tunnel Warren QUIC est devenu l'unique mode tunnel (toggle
   `warren_mode` supprimé).
+- ✅ Compte/device toujours servis par warren-api (mode compte local
+  supprimé — plus de stub « 99 ans »).
 
 ### Reste à livrer
 
@@ -164,4 +123,4 @@ cd ../warren-core
   pour la production multi-tenant.
 - **Distribution `warren-relays.json` signée** — endpoint signé OU
   baked-in dans le binaire.
-- **Bench Hetzner end-to-end** du daemon fork avec `WARREN_LOCAL_ACCOUNT=1`.
+- **Bench Hetzner end-to-end** du daemon fork.

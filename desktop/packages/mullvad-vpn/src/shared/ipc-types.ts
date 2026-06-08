@@ -29,8 +29,6 @@ export type ScrollToAnchorId =
   | 'port-setting'
   | 'mss-fix-setting'
   | 'quantum-resistant-setting'
-  // Anchors for the Warren toggles in VpnSettingsView.
-  | 'warren-local-account-setting'
   // Anchor for the warren-api URL input.
   | 'warren-api-url-setting'
   // Anchors for the Warren multi-hop view (M4.H.C).

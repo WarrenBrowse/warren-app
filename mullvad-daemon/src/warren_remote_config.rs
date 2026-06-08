@@ -6,10 +6,9 @@
 //! then calls [`resolve`] with those already-resolved values.
 //!
 //! Covers these cases (see tests):
-//! 1. `local_account_mode = true` -> None (LocalBackend takes over).
-//! 2. `!local_account_mode && Some(url) && Some(key)` -> Some.
-//! 3. URL absent from both env AND settings -> compiled default.
-//! 4. signing_key absent (mnemonic not bootstrapped) -> None.
+//! 1. `Some(url) && Some(key)` -> Some.
+//! 2. URL absent from both env AND settings -> compiled default.
+//! 3. signing_key absent (mnemonic not bootstrapped) -> None.
 
 use ed25519_dalek::SigningKey;
 
@@ -42,15 +41,10 @@ pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 /// the default, rather than disabling the Warren remote backend.
 #[must_use]
 pub(crate) fn resolve(
-    local_account_mode: bool,
     settings_url: Option<String>,
     env_url: Option<String>,
     signing_key: Option<SigningKey>,
 ) -> Option<WarrenApiConfig> {
-    if local_account_mode {
-        return None;
-    }
-
     // First non-empty of [env, settings], else the compiled prod
     // default — so remote mode never silently falls back to the
     // Mullvad upstream API just because no URL was configured.
@@ -73,26 +67,8 @@ mod tests {
     }
 
     #[test]
-    fn local_account_mode_takes_priority_over_warren_remote() {
-        // Regression: if `warren_local_account` is true,
-        // `LocalAccountBackend` must take over (= stateless POC
-        // path), not warren-remote.
-        let cfg = resolve(
-            true, // local_account_mode = true
-            Some("https://api.warrenbrowse.com".to_owned()),
-            None,
-            Some(fixed_signing_key()),
-        );
-        assert!(
-            cfg.is_none(),
-            "local_account_mode=true MUST short-circuit warren-remote"
-        );
-    }
-
-    #[test]
     fn happy_path_returns_config_with_url_and_key() {
         let cfg = resolve(
-            false,
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
             Some(fixed_signing_key()),
@@ -108,7 +84,6 @@ mod tests {
         // at `http://localhost:8080` without touching the persistent
         // production user config.
         let cfg = resolve(
-            false,
             Some("https://api.warrenbrowse.com".to_owned()),
             Some("http://127.0.0.1:8080".to_owned()),
             Some(fixed_signing_key()),
@@ -126,7 +101,7 @@ mod tests {
         // back to the Mullvad upstream API (`api.mullvad.net`, which
         // Warren does not operate), we use the compiled production
         // default so the remote backend works out-of-the-box.
-        let cfg = resolve(false, None, None, Some(fixed_signing_key()));
+        let cfg = resolve(None, None, Some(fixed_signing_key()));
         let cfg = cfg.expect("no URL MUST now produce a config with the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -140,7 +115,7 @@ mod tests {
         // persists `Some("")`. We treat that as "not provided" and
         // fall through to the compiled default, not as a hard disable
         // of the Warren remote backend.
-        let cfg = resolve(false, Some(String::new()), None, Some(fixed_signing_key()));
+        let cfg = resolve(Some(String::new()), None, Some(fixed_signing_key()));
         let cfg = cfg.expect("empty URL MUST fall through to the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -153,7 +128,6 @@ mod tests {
         // Priority is "first non-empty": an empty env var must not
         // shadow a real settings URL.
         let cfg = resolve(
-            false,
             Some("https://api.warrenbrowse.com".to_owned()),
             Some(String::new()),
             Some(fixed_signing_key()),
@@ -171,7 +145,6 @@ mod tests {
         // absent). We MUST NOT build a client with a dummy key: we fall
         // back with a warn and no remote config.
         let cfg = resolve(
-            false,
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
             None, // signing_key absent

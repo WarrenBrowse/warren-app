@@ -278,13 +278,6 @@ impl MullvadProxyClient {
         Ok(())
     }
 
-    /// Toggle persistant `Settings::warren_local_account`. Restart
-    /// requis pour appliquer (la valeur est lue au boot).
-    pub async fn set_warren_local_account(&mut self, state: bool) -> Result<()> {
-        self.0.set_warren_local_account(state).await?;
-        Ok(())
-    }
-
     /// URL persistante `Settings::warren_api_url`. `None` → unset (=
     /// empty string sur le wire). Restart requis.
     pub async fn set_warren_api_url(&mut self, url: Option<String>) -> Result<()> {

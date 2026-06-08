@@ -32,8 +32,8 @@ pub struct WarrenIdentityService {
     proxy: AccountsProxy,
     /// Abstract backend for the 3 critical MVP methods
     /// (`create_account`, `get_data`, `delete_account`). The caller
-    /// (`spawn_warren_identity_service`) injects `RemoteAccountBackend`
-    /// or `LocalAccountBackend` depending on `local_account_mode`.
+    /// (`spawn_warren_identity_service`) injects `WarrenRemoteAccountBackend`
+    /// (warren-api) or the legacy `RemoteAccountBackend`.
     backend: Arc<dyn WarrenAccountBackend>,
 }
 

@@ -4,26 +4,6 @@ import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
 
-// Hook for the persistent local account mode.
-export function useWarrenLocalAccount() {
-  const warrenLocalAccount = useSelector((state) => state.settings.warrenLocalAccount);
-  const { setWarrenLocalAccount: contextSetWarrenLocalAccount } = useAppContext();
-
-  const setWarrenLocalAccount = React.useCallback(
-    async (value: boolean) => {
-      try {
-        await contextSetWarrenLocalAccount(value);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : '';
-        log.error('Could not set Warren local account mode', message);
-      }
-    },
-    [contextSetWarrenLocalAccount],
-  );
-
-  return { warrenLocalAccount, setWarrenLocalAccount };
-}
-
 // Hook for the multi-exit auto-failover toggle (M5.B.2). GUI-only:
 // the daemon handles failover unconditionally; this flag controls
 // whether the UI shows the toggle as ON and whether the failover

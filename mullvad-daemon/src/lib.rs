@@ -38,10 +38,6 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
-/// Detection of Warren local account mode via env var
-/// `WARREN_LOCAL_ACCOUNT` (POC switch — bypass api.mullvad.net for the
-/// initial `get_data` retry-loop).
-pub mod warren_account_mode;
 /// Loader for `<settings_dir>/warren-multihop.json` that materializes
 /// a `MultiHopConfig` from signed descriptors minted
 /// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
@@ -393,8 +389,6 @@ pub enum DaemonCommand {
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
-    /// Toggle persistant `Settings::warren_local_account`.
-    SetWarrenLocalAccount(ResponseTx<(), settings::Error>, bool),
     /// Persistent URL `Settings::warren_api_url`. Empty string ->
     /// unset (= None on the Settings side).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
@@ -1050,47 +1044,6 @@ impl Daemon {
         let _ = migration_data;
         let migration_complete = migrations::MigrationComplete::new(true);
 
-        // If the env var `WARREN_LOCAL_ACCOUNT=1` is set, bootstrap
-        // a pubkey-only login-state `device.json` consistent with the
-        // mnemonic before `AccountManager::spawn` reads the cache.
-        // Allows the daemon to reach `Connecting` without any remote
-        // account/device call in local POC mode.
-        // Combines the POC env var `WARREN_LOCAL_ACCOUNT` with the
-        // persistent flag `Settings::warren_local_account`. The env
-        // var, if set, takes precedence (see `warren_account_mode::resolve`).
-        let local_account_mode = warren_account_mode::resolve(settings.warren_local_account);
-        // Structured log at boot to ease field debugging.
-        // The admin/dev sees immediately which account mode is active
-        // and its source (env override vs persistent Settings) without
-        // having to grep dozens of log lines. The Warren tunnel is the
-        // only mode on this fork, so there is nothing to report there.
-        log::info!(
-            "Warren account mode at boot — local_account={} (env={}, settings={})",
-            local_account_mode,
-            std::env::var(warren_account_mode::ENV_VAR_NAME).is_ok(),
-            settings.warren_local_account,
-        );
-        // Bootstrap a pubkey-only login-state cache: if a mnemonic
-        // exists and no login state is cached yet, mark the daemon as
-        // logged in with the wallet pubkey derived from the mnemonic.
-        if local_account_mode {
-            match warren_signer::load_or_create_signing_key(&config.settings_dir) {
-                Some(signing_key) => {
-                    if let Err(e) = device::bootstrap_local_login_state(
-                        &config.settings_dir,
-                        &signing_key,
-                    )
-                    .await
-                    {
-                        log::error!("Warren local login-state bootstrap failed: {e}");
-                    }
-                }
-                None => {
-                    log::warn!("Warren local account: no mnemonic available, bootstrap skipped");
-                }
-            }
-        }
-
         // Resolution delegated to `warren_remote_config::resolve` (pure
         // testable fn). Side effects (env, signing_key load) resolved
         // here, the pure flags passed to the fn. The diff log (Some vs
@@ -1099,25 +1052,21 @@ impl Daemon {
         let env_url = std::env::var("WARREN_API_URL").ok();
         let signing_key = warren_signer::load_or_create_signing_key(&config.settings_dir);
         let warren_api_config = warren_remote_config::resolve(
-            local_account_mode,
             settings.warren_api_url.clone(),
             env_url,
             signing_key,
         );
-        if !local_account_mode {
-            match &warren_api_config {
-                Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
-                None => log::warn!(
-                    "No warren_api_url + mnemonic; falling back to local account backend"
-                ),
-            }
+        match &warren_api_config {
+            Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
+            None => log::warn!(
+                "No warren-api signing key (mnemonic missing); account backend unavailable"
+            ),
         }
 
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
             internal_event_tx.to_specialized_sender(),
-            local_account_mode,
             warren_api_config,
         )
         .await
@@ -2229,9 +2178,6 @@ impl Daemon {
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
-            SetWarrenLocalAccount(tx, enabled) => {
-                self.on_set_warren_local_account(tx, enabled).await
-            }
             SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
             SetWarrenMultiHopSettings(tx, settings) => {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
@@ -3436,28 +3382,6 @@ impl Daemon {
         }
     }
 
-    /// Persists `Settings::warren_local_account`. Restart required to
-    /// apply (the value is read at boot only).
-    async fn on_set_warren_local_account(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        enabled: bool,
-    ) {
-        let result = self
-            .settings
-            .update(move |settings| settings.warren_local_account = enabled)
-            .await
-            .map(|_changed| ());
-        if let Err(ref e) = result {
-            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-        } else {
-            log::info!(
-                "Warren local account persisted to {} ; restart required for effect",
-                enabled
-            );
-        }
-        Self::oneshot_send(tx, result, "set_warren_local_account response");
-    }
 
     /// Persists `Settings::warren_api_url`. Restart required to
     /// apply (the daemon resolves the URL at boot in `Daemon::start`,

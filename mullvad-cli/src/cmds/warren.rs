@@ -1,22 +1,12 @@
-//! CLI subcommands to drive the `Settings::warren_local_account` flag
-//! without having to export a POC env var.
-//!
-//! A daemon restart is required to apply a change (see
-//! `warren_account_mode::resolve` on the daemon side, which reads the
-//! flag at boot only).
+//! CLI subcommands for Warren-specific settings: the warren-api server
+//! URL and the BIP39 identity (recovery phrase) backup/restore.
 
 use anyhow::Result;
 use clap::Subcommand;
 use mullvad_management_interface::MullvadProxyClient;
 
-use super::BooleanOption;
-
 #[derive(Subcommand, Debug)]
 pub enum Warren {
-    /// Manage the Warren local account mode (no api.mullvad.net) toggle
-    #[clap(subcommand)]
-    LocalAccount(WarrenLocalAccount),
-
     /// Manage the warren-api server URL (consumed by remote backends)
     #[clap(subcommand)]
     ApiUrl(WarrenApiUrl),
@@ -24,18 +14,6 @@ pub enum Warren {
     /// Back up or restore the Warren identity (BIP39 recovery phrase)
     #[clap(subcommand)]
     Mnemonic(WarrenMnemonic),
-}
-
-#[derive(Subcommand, Debug)]
-pub enum WarrenLocalAccount {
-    /// Show the persisted Warren local account setting
-    Get,
-
-    /// Persist the Warren local account setting (restart daemon to apply)
-    Set {
-        #[arg(value_parser = BooleanOption::custom_parser("on", "off"))]
-        state: BooleanOption,
-    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -90,10 +68,6 @@ fn normalize_mnemonic_words(words: &[String]) -> String {
 impl Warren {
     pub async fn handle(self) -> Result<()> {
         match self {
-            Warren::LocalAccount(WarrenLocalAccount::Get) => Self::local_account_get().await,
-            Warren::LocalAccount(WarrenLocalAccount::Set { state }) => {
-                Self::local_account_set(*state).await
-            }
             Warren::ApiUrl(WarrenApiUrl::Get) => Self::api_url_get().await,
             Warren::ApiUrl(WarrenApiUrl::Set { url }) => Self::api_url_set(Some(url)).await,
             Warren::ApiUrl(WarrenApiUrl::Unset) => Self::api_url_set(None).await,
@@ -102,24 +76,6 @@ impl Warren {
                 Self::mnemonic_import(&words).await
             }
         }
-    }
-
-    async fn local_account_get() -> Result<()> {
-        let mut rpc = MullvadProxyClient::new().await?;
-        let label =
-            BooleanOption::with_labels(rpc.get_settings().await?.warren_local_account, "on", "off");
-        println!("Warren local account mode: {label}");
-        Ok(())
-    }
-
-    async fn local_account_set(state: bool) -> Result<()> {
-        let mut rpc = MullvadProxyClient::new().await?;
-        rpc.set_warren_local_account(state).await?;
-        let label = BooleanOption::with_labels(state, "on", "off");
-        println!(
-            "Warren local account mode persisted: {label} (restart `mullvad-daemon` to apply)"
-        );
-        Ok(())
     }
 
     async fn api_url_get() -> Result<()> {

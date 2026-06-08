@@ -2,12 +2,10 @@
 //! through `AccountsProxy` to `api.mullvad.net`.
 //!
 //! Lets us dispatch at boot between:
+//! - [`WarrenRemoteAccountBackend`]: signed HTTP backend talking to
+//!   warren-api (the standard Warren path — real subscription expiry).
 //! - [`RemoteAccountBackend`]: thin wrap over the legacy Mullvad
-//!   `AccountsProxy`. Behavior strictly identical in non-`local`.
-//! - [`LocalAccountBackend`]: stateless POC that serves data
-//!   consistent with the mnemonic loaded at boot, **without touching
-//!   the network**. Replaces the env-var bypass `WARREN_LOCAL_ACCOUNT=1`
-//!   with a real pluggable backend.
+//!   `AccountsProxy`, used only when no Warren signing key is available.
 //!
 //! Scope (4 methods): `create_account`, `get_data`,
 //! `delete_account`, `submit_voucher`. The remaining methods
@@ -16,7 +14,6 @@
 //! the `AccountsProxy` for this phase.
 
 use std::future::Future;
-use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -24,7 +21,6 @@ use chrono::Utc;
 use mullvad_api::AccountsProxy;
 use mullvad_api::rest;
 use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
-use mullvad_types::warren_pubkey::WarrenPubKey;
 
 /// Type alias for the futures returned by the trait. `Pin<Box<dyn …>>`
 /// is required by object-safety (`Arc<dyn WarrenAccountBackend>`).
@@ -125,185 +121,13 @@ impl WarrenAccountBackend for RemoteAccountBackend {
     }
 }
 
-/// POC backend that serves data consistent with the Warren mnemonic
-/// loaded at boot, without any network call. Idempotent and
-/// deterministic (modulo `Utc::now()` for `get_data.expiry`).
-///
-/// The source of truth for the identity is the `pubkey: WarrenPubKey`
-/// derived from `warren_signer::load_or_create_signing_key` — `create_account`
-/// returns this pubkey hex as the `AccountNumber` to stay consistent
-/// with the login-state `device.json` produced by
-/// [`crate::device::bootstrap_local_login_state`].
-///
-/// `delete_account` removes `device.json` and `warren_mnemonic.txt`
-/// to reproduce the classic Mullvad "logged out" semantics in local
-/// mode: the user will have to re-bootstrap to start over.
-#[derive(Clone)]
-pub struct LocalAccountBackend {
-    pubkey: WarrenPubKey,
-    /// Used exclusively by `delete_account` (see the trait method's
-    /// doc: not invoked outside Android on the caller side, but
-    /// the field is necessary for the cross-platform test and for
-    /// a future desktop migration).
-    settings_dir: Arc<PathBuf>,
-    /// warren-api base URL used **only** by `submit_voucher` to
-    /// perform the real, unsigned `POST /v1/register` redemption.
-    /// Local mode bypasses the *subscription expiry check* (it serves
-    /// a far-future stub from `get_data`), but voucher redemption is a
-    /// genuine backend operation: it binds the daemon's pubkey to a
-    /// subscription so the exit accepts the handshake. Faking it here
-    /// (the historical behaviour) made the GUI "add voucher" field
-    /// silently enroll nothing, so any code "succeeded" forever while
-    /// the tunnel stayed blocked. Resolved from `WARREN_API_URL` when
-    /// set, else the production default.
-    warren_api_url: String,
-}
-
-/// Resolves the warren-api URL for local-mode voucher redemption:
-/// `WARREN_API_URL` (non-empty) wins, otherwise the shared production
-/// default ([`crate::warren_remote_config::DEFAULT_WARREN_API_URL`]).
-/// Mirrors the env override honoured elsewhere for the warren-api URL
-/// so a developer pointing at a local backend redeems against it too.
-fn default_voucher_api_url() -> String {
-    std::env::var("WARREN_API_URL")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| crate::warren_remote_config::DEFAULT_WARREN_API_URL.to_owned())
-}
-
-impl LocalAccountBackend {
-    /// Builds a local backend from the current Warren pubkey and
-    /// the `settings_dir` to use for `delete_account`. The voucher
-    /// redemption URL is resolved from `WARREN_API_URL` or the
-    /// production default.
-    #[must_use]
-    pub fn new(pubkey: WarrenPubKey, settings_dir: PathBuf) -> Self {
-        Self::new_with_api_url(pubkey, settings_dir, default_voucher_api_url())
-    }
-
-    /// Same as [`new`](Self::new) but with an explicit warren-api URL.
-    /// Used by tests to point voucher redemption at a controlled
-    /// endpoint.
-    #[must_use]
-    pub fn new_with_api_url(
-        pubkey: WarrenPubKey,
-        settings_dir: PathBuf,
-        warren_api_url: String,
-    ) -> Self {
-        Self {
-            pubkey,
-            settings_dir: Arc::new(settings_dir),
-            warren_api_url,
-        }
-    }
-
-    /// Expiry returned by `get_data` in local mode: `Utc::now() +
-    /// 100 years`. Consistent with `handle_account_data_result` on
-    /// the caller side which interprets `expiry >= now` ->
-    /// `resume_background()` (Wireguard BG key rotation enabled as expected).
-    fn far_future_expiry() -> chrono::DateTime<Utc> {
-        // 36500 days ~ 100 years. Well beyond any reasonable
-        // usage duration, < `chrono::DateTime::MAX` which
-        // panics beyond year 262143.
-        Utc::now() + chrono::Duration::days(36500)
-    }
-}
-
-impl WarrenAccountBackend for LocalAccountBackend {
-    fn create_account(&self) -> BoxFut<Result<AccountNumber, rest::Error>> {
-        // POC identity = pubkey hex (64 chars). Idempotent by
-        // construction: the pubkey does not change for a given
-        // settings_dir (same mnemonic).
-        let number = self.pubkey.as_str().to_owned();
-        Box::pin(async move { Ok(number) })
-    }
-
-    fn get_data(&self, _account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
-        // The Mullvad `AccountId` is an opaque `String`; we return
-        // the pubkey hex for consistency with `create_account`. The expiry
-        // pushes `handle_account_data_result` to `resume_background()`.
-        let id = self.pubkey.as_str().to_owned();
-        let data = AccountData {
-            id,
-            expiry: Self::far_future_expiry(),
-        };
-        Box::pin(async move { Ok(data) })
-    }
-
-    fn submit_voucher(
-        &self,
-        _account: AccountNumber,
-        voucher: String,
-    ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
-        // Voucher redemption is a REAL backend operation, even in
-        // local mode: `POST /v1/register` (unsigned) binds this
-        // daemon's pubkey to a subscription so the exit accepts the
-        // handshake. The previous stub fabricated a far-future success
-        // for any input and contacted nothing — the GUI's "add
-        // voucher" field then reported success for every code while
-        // the pubkey stayed unenrolled and the tunnel blocked. We now
-        // mirror `WarrenRemoteAccountBackend::submit_voucher` and fail
-        // closed on any backend error so an invalid / used voucher
-        // surfaces honestly instead of a lie.
-        let url = self.warren_api_url.clone();
-        let pubkey = self.pubkey.clone();
-        Box::pin(async move {
-            // The register endpoint is unsigned and carries the pubkey
-            // explicitly in the body, so a no-key client is correct
-            // here (the daemon's real signing identity is unrelated to
-            // this call).
-            let client = warren_api_client::WarrenApiClient::new_unsigned(url);
-            let req = warren_api_client::RegisterAccountRequest {
-                pubkey_ss58: warren_api_client::PubkeySs58::try_from(pubkey.as_str())
-                    .map_err(|_| rest::Error::Aborted)?,
-                voucher_secret: voucher,
-                referral_code: None,
-            };
-            let resp = client
-                .register_with_voucher(&req)
-                .await
-                .map_err(map_voucher_register_error)?;
-            let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
-            let now_secs = Utc::now().timestamp() as u64;
-            let time_added = resp.expires_at.saturating_sub(now_secs);
-            Ok(VoucherSubmission {
-                new_expiry,
-                time_added,
-            })
-        })
-    }
-
-    fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
-        let settings_dir = self.settings_dir.clone();
-        Box::pin(async move {
-            let device_path = settings_dir.join(super::DEVICE_CACHE_FILENAME);
-            let mnemonic_path = settings_dir.join(crate::warren_signer::MNEMONIC_FILENAME);
-            for path in [device_path, mnemonic_path] {
-                match std::fs::remove_file(&path) {
-                    Ok(()) => {}
-                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                    Err(e) => {
-                        log::error!(
-                            "LocalAccountBackend::delete_account failed to remove {}: {}",
-                            path.display(),
-                            e
-                        );
-                        return Err(rest::Error::Aborted);
-                    }
-                }
-            }
-            Ok(())
-        })
-    }
-}
-
 /// Warren-Remote backend — Phase G.3 — implements
 /// [`WarrenAccountBackend`] via the signed HTTP `warren-api-client`
 /// client that talks to the warren-api server (= alternative to the
 /// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
 ///
-/// Enabled in `warren_local_account = false` mode
-/// (= the warren-remote branch of the dispatch in `device/mod.rs`, see Phase G.4).
+/// The standard Warren account backend (= the warren-remote branch of
+/// the dispatch in `device/mod.rs`).
 ///
 /// Mapping semantics:
 /// - `create_account()`: returns the `WarrenApiClient` pubkey hex
@@ -500,151 +324,6 @@ pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Err
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
-
-    fn fixed_pubkey() -> WarrenPubKey {
-        // Warren SS58 address of the all-zero 32-byte pubkey (prefix 13295).
-        WarrenPubKey::from_str("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
-            .expect("valid Warren SS58 address")
-    }
-
-    fn isolated_tempdir() -> std::path::PathBuf {
-        use std::sync::atomic::{AtomicU64, Ordering};
-        static COUNTER: AtomicU64 = AtomicU64::new(0);
-        let pid = std::process::id();
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or(0);
-        let n = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!("warren-account-backend-{pid}-{nanos}-{n}"));
-        std::fs::create_dir_all(&dir).expect("create tempdir");
-        dir
-    }
-
-    #[tokio::test]
-    async fn local_get_data_returns_far_future_expiry() {
-        // Critical regression: if the returned expiry < now, the caller
-        // `handle_account_data_result` (see service.rs) triggers
-        // `pause_background()` -> Wireguard BG key rotation
-        // stops silently. This is exactly the behavior
-        // we want to avoid in local POC mode.
-        let backend = LocalAccountBackend::new(fixed_pubkey(), isolated_tempdir());
-        let data = backend
-            .get_data("ignored".to_owned())
-            .await
-            .expect("local get_data must never fail in nominal case");
-
-        let lower_bound = Utc::now() + chrono::Duration::days(50 * 365);
-        assert!(
-            data.expiry > lower_bound,
-            "expiry {} must be > now + 50 years to activate resume_background",
-            data.expiry
-        );
-    }
-
-    #[tokio::test]
-    async fn local_submit_voucher_fails_closed_instead_of_fabricating_success() {
-        // Regression: the local backend used to IGNORE the voucher and
-        // return a fabricated ~100-year success for ANY input,
-        // contacting no backend and enrolling nothing — so the GUI
-        // "add voucher" field reported success for every code (even the
-        // same one repeatedly) while the pubkey stayed unenrolled and
-        // the exit kept refusing the handshake, blocking internet.
-        // Voucher redemption must hit warren-api for real; when the
-        // backend is unreachable the call MUST fail, never fabricate a
-        // far-future subscription.
-        let backend = LocalAccountBackend::new_with_api_url(
-            fixed_pubkey(),
-            isolated_tempdir(),
-            // Refused port: an immediate connection error, so the unit
-            // test carries no real network dependency.
-            "http://127.0.0.1:1".to_owned(),
-        );
-        let result = backend
-            .submit_voucher("ignored".to_owned(), "ANY-CODE-1234".to_owned())
-            .await;
-        assert!(
-            result.is_err(),
-            "local submit_voucher must fail closed when warren-api is unreachable, \
-             not fabricate a success (the historical lying-stub regression)"
-        );
-    }
-
-    #[tokio::test]
-    async fn local_create_account_returns_pubkey_ss58_deterministic() {
-        // Critical regression: if `create_account` returned a
-        // random or call-varying String, the
-        // `device.json` bootstrapped from the mnemonic would become
-        // orphaned from the created account -> the user could no
-        // longer reload their session after reboot.
-        let backend = LocalAccountBackend::new(fixed_pubkey(), isolated_tempdir());
-        let n1 = backend
-            .create_account()
-            .await
-            .expect("create_account must never fail locally");
-        let n2 = backend
-            .create_account()
-            .await
-            .expect("create_account must never fail locally");
-
-        assert_eq!(
-            n1, n2,
-            "create_account must be idempotent (= deterministic)"
-        );
-        assert_eq!(
-            n1,
-            fixed_pubkey().as_str(),
-            "AccountNumber MUST be the pubkey hex (= consistency with device.json bootstrap)"
-        );
-    }
-
-    #[tokio::test]
-    async fn local_delete_account_removes_device_json_and_mnemonic() {
-        // Critical regression: if delete_account does not remove the
-        // identity artifacts, the user stays "logged in" via
-        // device.json after an account delete = serious UX +
-        // security bug (impossible to "really" log out).
-        let dir = isolated_tempdir();
-        let device_path = dir.join(super::super::DEVICE_CACHE_FILENAME);
-        let mnemonic_path = dir.join(crate::warren_signer::MNEMONIC_FILENAME);
-        std::fs::write(&device_path, "{}").expect("write device.json");
-        std::fs::write(&mnemonic_path, "test mnemonic").expect("write mnemonic");
-
-        let backend = LocalAccountBackend::new(fixed_pubkey(), dir.clone());
-        backend
-            .delete_account("ignored".to_owned())
-            .await
-            .expect("delete_account must succeed");
-
-        assert!(
-            !device_path.exists(),
-            "device.json must be removed after delete_account"
-        );
-        assert!(
-            !mnemonic_path.exists(),
-            "warren_mnemonic.txt must be removed after delete_account"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[tokio::test]
-    async fn local_delete_account_is_idempotent_on_missing_files() {
-        // Edge case: if the user calls delete_account twice, or
-        // the bootstrap has already been cleaned up manually, we
-        // must not raise an error (which would be interpreted
-        // as an API failure and propagated to the UI).
-        let dir = isolated_tempdir();
-        let backend = LocalAccountBackend::new(fixed_pubkey(), dir.clone());
-
-        backend
-            .delete_account("ignored".to_owned())
-            .await
-            .expect("delete_account with absent files must return Ok");
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
 
     // ===================================================================
     // WarrenRemoteAccountBackend — Phase G.3 tests E2E.
