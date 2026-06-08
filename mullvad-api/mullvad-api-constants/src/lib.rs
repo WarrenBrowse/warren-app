@@ -28,12 +28,17 @@ pub const API_PORT_DEFAULT: u16 = 443;
 /// like Mullvad's Direct method. Certificate validation still binds to
 /// `api.warrenbrowse.com` (the SAN), so security is unchanged.
 ///
-/// ⚠️ REQUIRES a server-side prerequisite: the API must be reachable on a
-/// dedicated, stable IP whose TLS endpoint presents the `api.warrenbrowse.com`
-/// certificate **without** SNI (Caddy `default_sni api.warrenbrowse.com`).
-/// Today the API shares a Caddy vhost with checkout/admin and needs SNI to
-/// select the cert, so this MUST stay `None` until that split is live. With
-/// `None`, behaviour is unchanged (system DNS + SNI).
+/// STATUS: intentionally **deferred / left `None`** (decision 2026-06-08).
+/// Full rationale + the exact resume steps live in warren-core
+/// `docs/31-API-BOOTSTRAP-PRIVACY.md`. Read that before changing this.
+///
+/// ⚠️ REQUIRES a server-side prerequisite: the API must answer on a dedicated,
+/// stable IP that serves the `api.warrenbrowse.com` certificate **without**
+/// SNI. Today the API shares a Caddy host with checkout/admin, where Caddy
+/// needs SNI to pick the cert; the `default_sni` workaround was tested live and
+/// does NOT work for a multi-site host (caddy#6979). The reliable prerequisite
+/// is a **dedicated single-vhost host** for the API. So this MUST stay `None`
+/// until that host exists. With `None`, behaviour is unchanged (system DNS + SNI).
 ///
 /// Resilience: a dead or rotated pinned IP triggers a one-shot DNS fallback at
 /// startup (`seed_pinned_or_dns_fallback` in `mullvad-api`), so the app still
