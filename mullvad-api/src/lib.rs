@@ -331,6 +331,60 @@ impl DnsResolver for NullDnsResolver {
     }
 }
 
+/// Startup reachability-probe budget for a pinned API IP before falling back
+/// to DNS. Short: a live pinned IP answers a TCP SYN in well under this; the
+/// budget only bites on the rare dead-pin path.
+const PINNED_IP_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
+
+/// True if a TCP connection to `addr` completes within `dur`.
+async fn tcp_reachable(addr: SocketAddr, dur: std::time::Duration) -> bool {
+    matches!(
+        tokio::time::timeout(dur, tokio::net::TcpStream::connect(addr)).await,
+        Ok(Ok(_))
+    )
+}
+
+/// Bootstrap-privacy resilience for a pinned API IP (`API_PINNED_IP`).
+///
+/// When a pin is in effect, the cache was seeded from the pinned IP (or a
+/// stale on-disk cache). Probe that seed; if it is unreachable at startup,
+/// re-seed from DNS so a dead/rotated pin cannot brick the app. The privacy
+/// benefit (no DNS query) is given up only on this failure path. No-op when no
+/// pin is in effect (`API_PINNED_IP == None` or an explicit address override),
+/// so default behaviour is unchanged.
+async fn seed_pinned_or_dns_fallback<T: address_cache::AddressCacheBacking>(
+    endpoint: &ApiEndpoint,
+    cache: &address_cache::AddressCache<T>,
+) {
+    if endpoint.address.is_some() || API_PINNED_IP.is_none() {
+        return;
+    }
+    let seeded = cache.get_address().await;
+    if tcp_reachable(seeded, PINNED_IP_PROBE_TIMEOUT).await {
+        return;
+    }
+    match DefaultDnsResolver.resolve(endpoint.host().to_owned()).await {
+        Ok(addrs) if !addrs.is_empty() => {
+            let a = addrs[0];
+            let port = if a.port() == 0 {
+                API_PORT_DEFAULT
+            } else {
+                a.port()
+            };
+            let dns_addr = SocketAddr::new(a.ip(), port);
+            log::warn!(
+                "pinned API IP {seeded} unreachable at startup; falling back to DNS-resolved {dns_addr}"
+            );
+            if let Err(e) = cache.set_address(dns_addr).await {
+                log::error!("failed to apply DNS fallback API address: {e}");
+            }
+        }
+        _ => log::warn!(
+            "pinned API IP {seeded} unreachable and DNS fallback failed; keeping pinned address"
+        ),
+    }
+}
+
 /// A type that helps with the creation of API connections.
 pub struct Runtime<B = FileAddressCacheBacking>
 where
@@ -426,6 +480,9 @@ impl Runtime {
             }
         };
         let address_cache = Arc::new(address_cache);
+        // Bootstrap-privacy resilience: a dead/rotated pinned IP must not brick
+        // startup. No-op unless an API IP is pinned.
+        seed_pinned_or_dns_fallback(endpoint, &address_cache).await;
         let api_availability = ApiAvailability::default();
 
         Ok(Runtime {
@@ -887,5 +944,18 @@ mod bootstrap_privacy_tests {
             ApiEndpoint::pinned_or_explicit(Some(explicit), None),
             Some(explicit)
         );
+    }
+
+    #[tokio::test]
+    async fn tcp_reachable_distinguishes_open_and_closed() {
+        use std::time::Duration;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        // An open listener is reachable.
+        assert!(super::tcp_reachable(addr, Duration::from_secs(2)).await);
+        // Once closed, the port refuses (RST) → unreachable, drives the
+        // DNS-fallback path for a dead pinned IP.
+        drop(listener);
+        assert!(!super::tcp_reachable(addr, Duration::from_millis(800)).await);
     }
 }
