@@ -4254,3 +4254,63 @@ msgstr "Ваша мнемонічна фраза з 12 слів — ЄДИНИЙ
 msgctxt "keys-view"
 msgid "words"
 msgstr "слів"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Зберегти мою фразу"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Я зберіг свою фразу відновлення й розумію, що цей обліковий запис буде видалено з цього пристрою."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Якщо ви не зберегли свою фразу відновлення, вашу підписку буде втрачено назавжди."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Вийти з цього облікового запису?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Під час виходу цей обліковий запис видаляється з цього пристрою. Немає ні електронної пошти, ні пароля для повторного входу — ваша фраза відновлення є ЄДИНИМ способом його відновити."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Збережіть свою фразу відновлення"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Не вдалося прочитати нову фразу відновлення. Спробуйте ще раз."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Введіть свою фразу відновлення з 12 слів, розділених пробілами, щоб відновити обліковий запис на цьому пристрої."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "У мене вже є обліковий запис"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Я записав свою фразу відновлення в надійному місці."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Недійсна фраза відновлення. Перевірте слова та їхній порядок, потім спробуйте ще раз."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Відновити обліковий запис"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Відновіть свій обліковий запис"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren використовує некастодіальний гаманець: ваш обліковий запис — це фраза відновлення з 12 слів, якою володієте лише ви."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Ласкаво просимо до Warren"

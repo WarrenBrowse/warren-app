@@ -4,7 +4,6 @@ import accountActions from '../../src/renderer/redux/account/actions';
 import accountReducer from '../../src/renderer/redux/account/reducers';
 
 const validPubKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-const otherPubKey = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
 
 describe('account reducer — Warren pubkey state shape', () => {
   it('initial state has no pubkey and no pubkey history', () => {
@@ -17,12 +16,6 @@ describe('account reducer — Warren pubkey state shape', () => {
     const action = accountActions.loggedIn(validPubKey);
     const state = accountReducer(undefined, action);
     expect(state.pubkey).toBe(validPubKey);
-  });
-
-  it('updatePubKey replaces the current pubkey', () => {
-    const initial = accountReducer(undefined, accountActions.loggedIn(validPubKey));
-    const next = accountReducer(initial, accountActions.updatePubKey(otherPubKey));
-    expect(next.pubkey).toBe(otherPubKey);
   });
 
   it('LOGGED_OUT clears the pubkey', () => {
@@ -50,9 +43,24 @@ describe('account reducer — Warren pubkey state shape', () => {
     expect(state.expiry).toBe(expiry);
   });
 
-  it('startLogin transitions to logging in with pubkey', () => {
-    const state = accountReducer(undefined, accountActions.startLogin(validPubKey));
-    expect(state.pubkey).toBe(validPubKey);
+  it('startCreateAccount transitions to logging in (new_account)', () => {
+    const state = accountReducer(undefined, accountActions.startCreateAccount());
     expect(state.status.type).toBe('logging in');
+    expect(state.status).toMatchObject({ method: 'new_account' });
+  });
+
+  it('accountAwaitingBackup holds on the backup step with the new pubkey', () => {
+    const state = accountReducer(undefined, accountActions.accountAwaitingBackup(validPubKey));
+    expect(state.status.type).toBe('backup-pending');
+    expect(state.status).toMatchObject({ pubkey: validPubKey });
+    expect(state.pubkey).toBe(validPubKey);
+  });
+
+  it('accountCreated finalizes the backup-pending state as expired', () => {
+    const awaiting = accountReducer(undefined, accountActions.accountAwaitingBackup(validPubKey));
+    const expiry = '2020-01-01T00:00:00.000Z';
+    const next = accountReducer(awaiting, accountActions.accountCreated(validPubKey, expiry));
+    expect(next.status.type).toBe('ok');
+    expect(next.status).toMatchObject({ method: 'new_account', expiredState: 'expired' });
   });
 });

@@ -215,20 +215,9 @@ fn bootstrap_fresh_mnemonic(
     storage: &dyn SecretStorage,
     _settings_dir: &Path,
 ) -> Option<Zeroizing<String>> {
-    let mnemonic = match bip39::Mnemonic::generate(12) {
-        Ok(m) => m,
-        Err(e) => {
-            log::warn!("Warren auth disabled: BIP39 mnemonic generation failed: {e}");
-            return None;
-        }
-    };
-    // `Mnemonic::to_string()` allocates a new `String`. Wrap it in
-    // `Zeroizing` right away so the buffer is wiped when this
-    // function returns, regardless of which branch we take below.
-    // The source `Mnemonic` (which holds the underlying entropy
-    // bytes) is itself ZeroizeOnDrop and drops at the end of this
-    // function.
-    let raw_mnemonic = Zeroizing::new(mnemonic.to_string());
+    let raw_mnemonic = generate_fresh_mnemonic()
+        .inspect_err(|e| log::warn!("Warren auth disabled: BIP39 mnemonic generation failed: {e}"))
+        .ok()?;
 
     if let Err(e) = storage.store(MNEMONIC_KEY, raw_mnemonic.as_bytes()) {
         log::warn!(
@@ -296,6 +285,104 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
 
     log::info!(
         "set_warren_mnemonic: identity overwritten via {} (content NEVER logged)",
+        storage.backend_name()
+    );
+    Ok(())
+}
+
+/// Generates a fresh 12-word BIP39 mnemonic in memory.
+///
+/// The source `bip39::Mnemonic` holds the entropy and is
+/// `ZeroizeOnDrop`; the returned `String` is wrapped in `Zeroizing`
+/// so its heap buffer is wiped on drop. NEVER log the result.
+fn generate_fresh_mnemonic() -> io::Result<Zeroizing<String>> {
+    let mnemonic = bip39::Mnemonic::generate(12)
+        .map_err(|e| io::Error::other(format!("BIP39 mnemonic generation failed: {e}")))?;
+    Ok(Zeroizing::new(mnemonic.to_string()))
+}
+
+/// Removes any leftover legacy plaintext mnemonic file at the
+/// pre-secret-storage location, so we never keep a second persistent
+/// copy after a vault write/delete. A missing file is a no-op.
+fn remove_legacy_mnemonic_file(settings_dir: &Path, storage: &dyn SecretStorage) {
+    let legacy_path = settings_dir.join(MNEMONIC_FILENAME);
+    if legacy_path.exists()
+        && let Err(e) = std::fs::remove_file(&legacy_path)
+        && e.kind() != io::ErrorKind::NotFound
+    {
+        log::warn!(
+            "failed to remove legacy mnemonic file at {} (storage backend {}): {e}",
+            legacy_path.display(),
+            storage.backend_name()
+        );
+    }
+}
+
+/// Mints a brand-new identity: generates a fresh BIP39 mnemonic,
+/// persists it via the active secret-storage backend (**overwriting**
+/// any existing entry), removes any leftover legacy plaintext file,
+/// and returns the new phrase.
+///
+/// **Use case**: GUI "Create a new account". The caller pairs this
+/// with [`reload_signer_from_disk`] + an `account_manager.login(new_pubkey)`
+/// to activate the identity without a restart, then shows the returned
+/// phrase so the user can back it up before it is ever the only copy.
+///
+/// Unlike [`bootstrap_fresh_mnemonic`] (first-launch only, guarded by
+/// the absence of any stored entry), this is the explicit user-driven
+/// rotation path and always overwrites.
+///
+/// # No-log policy
+///
+/// NEVER log the returned phrase. Only the backend name is logged.
+pub fn generate_and_store_mnemonic(settings_dir: &Path) -> io::Result<Zeroizing<String>> {
+    let phrase = generate_fresh_mnemonic()?;
+    let storage = get_storage(settings_dir);
+    storage.store(MNEMONIC_KEY, phrase.as_bytes())?;
+    remove_legacy_mnemonic_file(settings_dir, &*storage);
+    log::info!(
+        "generate_and_store_mnemonic: new identity minted via {} (content NEVER logged)",
+        storage.backend_name()
+    );
+    Ok(phrase)
+}
+
+/// Neutralizes the in-memory signing identity after a true sign-out.
+///
+/// Replaces the live Ed25519 key in the shared [`WarrenAuthSigner`]
+/// with an all-zero sentinel key. This serves two purposes:
+/// 1. The previous key material is dropped and zeroized (the
+///    `SigningKey` is `ZeroizeOnDrop`), so the just-erased identity no
+///    longer lingers in process memory.
+/// 2. Any signed request that happens to fire while logged out (e.g. a
+///    background relay-list refresh) is signed by the sentinel key, not
+///    the user's real (now-erased) identity — the server rejects it
+///    rather than the daemon authenticating as the deleted account.
+///
+/// Pairs with [`clear_warren_mnemonic`] in the GUI logout path.
+pub fn clear_signer(signer: &WarrenAuthSigner) {
+    signer.replace_signing_key(SigningKey::from_bytes(&[0u8; 32]));
+}
+
+/// Erases the persisted BIP39 mnemonic from the active secret-storage
+/// backend and deletes any leftover legacy plaintext file. Idempotent:
+/// deleting an absent entry succeeds.
+///
+/// **Use case**: GUI logout = true sign-out. After this call the device
+/// no longer holds the identity; the account (and any subscription
+/// tied to it) is unrecoverable on this device unless the user backed
+/// up the recovery phrase. The caller MUST gate this behind a strong
+/// confirmation.
+///
+/// # No-log policy
+///
+/// Only the backend name is logged, never any content.
+pub fn clear_warren_mnemonic(settings_dir: &Path) -> io::Result<()> {
+    let storage = get_storage(settings_dir);
+    storage.delete(MNEMONIC_KEY)?;
+    remove_legacy_mnemonic_file(settings_dir, &*storage);
+    log::info!(
+        "clear_warren_mnemonic: identity erased from {} (true sign-out)",
         storage.backend_name()
     );
     Ok(())
@@ -454,6 +541,66 @@ mod tests {
             pubkey_via_signer, pubkey_via_export,
             "exported mnemonic MUST re-derive identical pubkey, else backup is broken"
         );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_and_store_mnemonic_persists_a_valid_phrase() {
+        let dir = isolated_tempdir();
+
+        let phrase = generate_and_store_mnemonic(&dir).expect("must mint an identity");
+        let word_count = phrase.split_whitespace().count();
+        assert_eq!(word_count, 12, "a fresh Warren identity is a 12-word phrase");
+
+        // The minted phrase must be the one retrievable from the vault.
+        let stored = get_warren_mnemonic(&dir).expect("vault holds the new phrase");
+        assert_eq!(stored.as_str(), phrase.as_str());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_and_store_mnemonic_rotates_to_a_distinct_identity() {
+        // Regression for the "Create a new account is a no-op" bug:
+        // two successive creations MUST yield different identities.
+        let dir = isolated_tempdir();
+
+        let first = generate_and_store_mnemonic(&dir).expect("first create");
+        let first_pk = {
+            let seed = warren_identity::seed_from_mnemonic(&first).expect("seed 1");
+            hex::encode(warren_identity::derive_node_key(&seed).verifying_key().as_bytes())
+        };
+
+        let second = generate_and_store_mnemonic(&dir).expect("second create");
+        assert_ne!(
+            first.as_str(),
+            second.as_str(),
+            "a new account must mint a fresh phrase, not reuse the old one"
+        );
+        let second_pk = {
+            let seed = warren_identity::seed_from_mnemonic(&second).expect("seed 2");
+            hex::encode(warren_identity::derive_node_key(&seed).verifying_key().as_bytes())
+        };
+        assert_ne!(first_pk, second_pk, "distinct phrases must yield distinct pubkeys");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn clear_warren_mnemonic_erases_identity_and_is_idempotent() {
+        let dir = isolated_tempdir();
+        let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
+        assert!(get_warren_mnemonic(&dir).is_some(), "identity present before clear");
+
+        clear_warren_mnemonic(&dir).expect("clear must succeed");
+        assert!(
+            get_warren_mnemonic(&dir).is_none(),
+            "vault must be empty after a true sign-out"
+        );
+
+        // Idempotent: clearing an already-empty vault is a no-op success.
+        clear_warren_mnemonic(&dir).expect("second clear is a no-op success");
 
         let _ = std::fs::remove_dir_all(&dir);
     }

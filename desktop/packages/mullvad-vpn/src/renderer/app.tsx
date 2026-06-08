@@ -450,7 +450,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.setRelaySettings(relaySettings);
   public setDnsOptions = (dnsOptions: IDnsOptions) =>
     IpcRendererEventChannel.settings.setDnsOptions(dnsOptions);
-  public clearAccountHistory = () => IpcRendererEventChannel.accountHistory.clear();
   public setAutoConnect = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setAutoConnect(value);
   public setEnableSystemNotifications = (value: boolean) =>
@@ -566,20 +565,6 @@ export default class AppRenderer {
     }
   };
 
-  public login = async (pubkey: WarrenPubKey) => {
-    const actions = this.reduxActions;
-    actions.account.startLogin(pubkey);
-
-    log.info('Logging in');
-
-    this.loginState = 'logging in';
-
-    const response = await IpcRendererEventChannel.account.login(pubkey);
-    if (response?.type === 'error') {
-      actions.account.loginFailed(response.error);
-    }
-  };
-
   public cancelLogin = (): void => {
     const reduxAccount = this.reduxActions.account;
     reduxAccount.loggedOut();
@@ -600,9 +585,14 @@ export default class AppRenderer {
     await this.disconnectTunnel('gui-device-revoked');
   };
 
+  // Mints a fresh Warren identity in the daemon (generates a new BIP39
+  // mnemonic, hot-swaps the signer, and logs in). The daemon emits a
+  // `logged in` device event which — because `loginState` is
+  // `creating account` — transitions the GUI to the `backup-pending`
+  // state instead of completing the login, so the welcome screen can
+  // run its mandatory recovery-phrase backup step before proceeding.
   public createNewAccount = async () => {
     log.info('Creating account');
-
     const actions = this.reduxActions;
     actions.account.startCreateAccount();
     this.loginState = 'creating account';
@@ -610,9 +600,16 @@ export default class AppRenderer {
     try {
       await IpcRendererEventChannel.account.create();
     } catch (e) {
-      const error = e as Error;
-      actions.account.createAccountFailed(error);
+      this.loginState = 'none';
+      actions.account.createAccountFailed(e as Error);
     }
+  };
+
+  // Called once the user confirms they backed up their recovery phrase:
+  // completes the new-account login state so navigation proceeds (to the
+  // buy-plan / expired screen for a fresh account).
+  public finishAccountBackup = (pubkey: WarrenPubKey) => {
+    this.reduxActions.account.accountCreated(pubkey, new Date().toISOString());
   };
 
   public openUrlWithAuth = async (url: Url): Promise<void> => {
@@ -994,6 +991,14 @@ export default class AppRenderer {
       case 'logged in': {
         const pubkey = deviceEvent.deviceState.warrenIdentity.pubkey;
 
+        // If we are holding on the mandatory backup step for a freshly
+        // created account, ignore any re-emitted `logged in` event so it
+        // cannot bypass the backup gate (the daemon is already logged in;
+        // the user finalizes via `finishAccountBackup`).
+        if (this.reduxStore.getState().account.status.type === 'backup-pending') {
+          break;
+        }
+
         switch (this.loginState) {
           case 'none':
             reduxAccount.loggedIn(pubkey);
@@ -1002,7 +1007,10 @@ export default class AppRenderer {
             reduxAccount.loggedIn(pubkey);
             break;
           case 'creating account':
-            reduxAccount.accountCreated(pubkey, new Date().toISOString());
+            // The daemon has minted + logged into the new identity, but
+            // hold on the login screen until the user backs up their
+            // recovery phrase (see `finishAccountBackup`).
+            reduxAccount.accountAwaitingBackup(pubkey);
             break;
         }
         break;

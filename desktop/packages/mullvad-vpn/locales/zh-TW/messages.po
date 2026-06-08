@@ -4075,3 +4075,63 @@ msgstr "• DAITA v2（預設關閉）：注入填充資料以對抗機器學習
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
 msgstr "• 多重跳躍（預設關閉）：透過兩個中繼節點轉送，使入口與出口無法被關聯。"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "備份我的助記詞"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "我已備份復原短語，並了解此帳戶將從此裝置中移除。"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "如果您尚未備份復原短語，您的訂閱將永久遺失。"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "登出此帳戶？"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "登出會從此裝置中刪除此帳戶。沒有可重新登入的電子郵件或密碼——您的復原短語是復原它的唯一方式。"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "備份您的復原短語"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "無法讀取新的復原短語。請重試。"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "輸入以空格分隔的 12 個單字復原短語，以在此裝置上復原您的帳戶。"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "我已有帳戶"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "我已將復原短語記錄在安全的地方。"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "復原短語無效。請檢查單字及其順序，然後重試。"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "復原帳戶"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "復原您的帳戶"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren 使用非託管錢包：您的帳戶是一組僅由您持有的 12 個單字復原短語。"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "歡迎使用 Warren"

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
@@ -15,7 +15,7 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { countMnemonicWords, MnemonicTextarea } from '../../warren-mnemonic';
+import { countMnemonicWords, MnemonicTextarea, normalizeMnemonic } from '../../warren-mnemonic';
 
 const DangerCallout = styled.div`
   padding: ${spacings.small} ${spacings.medium};
@@ -34,6 +34,12 @@ export function RestoreMnemonicView() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Drop the pasted recovery phrase from React memory when leaving the
+  // view (it is a secret; do not let it linger after navigation).
+  useEffect(() => {
+    return () => setInput('');
+  }, []);
+
   const wordCount = countMnemonicWords(input);
   const wordCountValid = wordCount === 12 || wordCount === 24;
   const canSubmit = wordCountValid && confirmed && !submitting && !success;
@@ -42,8 +48,7 @@ export function RestoreMnemonicView() {
     setError(null);
     setSubmitting(true);
     try {
-      const normalized = input.trim().toLowerCase().split(/\s+/).join(' ');
-      await setWarrenMnemonic(normalized);
+      await setWarrenMnemonic(normalizeMnemonic(input));
       setSuccess(true);
     } catch (e) {
       const err = e as Error;

@@ -274,6 +274,9 @@ pub enum Error {
     #[error("An account is already set")]
     AlreadyLoggedIn,
 
+    #[error("Failed to mint a new Warren identity")]
+    WarrenIdentityError(#[source] io::Error),
+
     #[error("No account number is set")]
     NoAccountNumber,
 
@@ -380,7 +383,12 @@ pub enum DaemonCommand {
     /// Log in with a given account and create a new device.
     LoginAccount(ResponseTx<(), Error>, AccountNumber),
     /// Log out of the current account and remove the device, if they exist.
-    LogoutAccount(ResponseTx<(), Error>),
+    /// The `bool` is `wipe_identity`: when `true` (explicit user
+    /// sign-out from the GUI), the local BIP39 mnemonic is also erased
+    /// from the OS vault (true sign-out). When `false` (e.g. a
+    /// server-driven device-revoked event, or a CLI/Android logout),
+    /// the identity is preserved on the device so it can be recovered.
+    LogoutAccount(ResponseTx<(), Error>, bool),
     /// Return the current account login state.
     GetDevice(ResponseTx<DeviceState, Error>),
     /// Update/check the current login state.
@@ -2171,7 +2179,7 @@ impl Daemon {
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
             LoginAccount(tx, account_number) => self.on_login_account(tx, account_number),
-            LogoutAccount(tx) => self.on_logout_account(tx),
+            LogoutAccount(tx, wipe_identity) => self.on_logout_account(tx, wipe_identity).await,
             GetDevice(tx) => self.on_get_device(tx),
             UpdateDevice(tx) => self.on_update_device(tx),
             GetAccountHistory(tx) => self.on_get_account_history(tx),
@@ -2554,8 +2562,30 @@ impl Daemon {
         Self::oneshot_send(tx, performing_post_upgrade, "performing post upgrade");
     }
 
+    /// Mints a brand-new Warren identity and logs into it.
+    ///
+    /// Unlike the legacy Mullvad flow (which asked the server for a new
+    /// account number), a Warren identity is a freshly generated BIP39
+    /// mnemonic: we generate one, persist it to the OS vault
+    /// (overwriting any prior entry — safe because the caller is logged
+    /// out, so the vault holds at most an unclaimed boot identity),
+    /// hot-swap it into the in-memory signer, then `login()` under the
+    /// new pubkey so the device state is consistent for every client
+    /// (CLI, Android, desktop) that calls `CreateNewAccount`.
+    ///
+    /// The desktop GUI additionally runs a mandatory recovery-phrase
+    /// backup step before letting the user proceed past the login
+    /// screen (it observes the `logged in` device event, fetches the
+    /// phrase via `GetWarrenMnemonic`, and only advances once the user
+    /// confirms they saved it) — but that gating lives in the GUI, not
+    /// here, so non-GUI clients still get a logged-in account.
+    ///
+    /// Returns the new pubkey (SS58) as the account "token". No-log
+    /// policy: the mnemonic itself is never logged or returned here.
     fn on_create_new_account(&mut self, tx: ResponseTx<String, Error>) {
         let account_manager = self.account_manager.clone();
+        let settings_dir = self.settings_dir.clone();
+        let signer = self.warren_signer.clone();
         tokio::spawn(async move {
             let result = async {
                 if let Ok(data) = account_manager.data().await
@@ -2563,11 +2593,34 @@ impl Daemon {
                 {
                     return Err(Error::AlreadyLoggedIn);
                 }
-                let token = account_manager
-                    .warren_identity_service
-                    .create_account()
-                    .await
-                    .map_err(Error::RestError)?;
+
+                let signer = signer.ok_or_else(|| {
+                    Error::WarrenIdentityError(io::Error::other(
+                        "no in-memory Warren signer to activate the new identity",
+                    ))
+                })?;
+
+                // Generate + persist a fresh mnemonic, then hot-swap it
+                // into the running signer so the new identity is active.
+                // Both steps are synchronous keychain/DPAPI I/O, so run
+                // them off the async executor to avoid stalling a worker
+                // thread on a slow vault.
+                let new_pubkey_bytes = tokio::task::spawn_blocking(move || -> io::Result<[u8; 32]> {
+                    warren_signer::generate_and_store_mnemonic(&settings_dir)?;
+                    warren_signer::reload_signer_from_disk(&signer, &settings_dir).ok_or_else(|| {
+                        io::Error::other(
+                            "freshly generated mnemonic failed to reload into the signer",
+                        )
+                    })
+                })
+                .await
+                .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
+                .map_err(Error::WarrenIdentityError)?;
+
+                let token =
+                    mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes)
+                        .to_string();
+
                 account_manager
                     .login(token.clone())
                     .await
@@ -2695,13 +2748,19 @@ impl Daemon {
             }
         };
 
-        // Step 2 — determine whether device-state migration is needed.
-        // If `device.json` already records the new pubkey (= no
-        // identity change) or is absent (= first-launch import),
-        // there is nothing to log into and we can ack the gRPC call
-        // immediately. Otherwise we must `login()` under the new
-        // pubkey before acknowledging, so the GUI does not observe
-        // a `set_mnemonic` Ok while the daemon is still mid-swap.
+        // Step 2 — determine whether a `login()` under the new pubkey
+        // is needed before acknowledging, so the GUI does not observe a
+        // `set_mnemonic` Ok while the daemon is still mid-swap.
+        //
+        // We log in whenever the daemon is not already logged in as the
+        // new identity:
+        // - `device.json` records a DIFFERENT pubkey → identity change.
+        // - `device.json` is logged out / absent (restore from the
+        //   logged-out welcome screen, or first-launch import) → the
+        //   restore IS the login; the GUI relies on the resulting
+        //   `LoggedIn` device event to navigate.
+        // The only no-op case is when we are already logged in as the
+        // exact same pubkey.
         let needs_login = if let Some(new_pubkey_bytes) = new_pubkey_bytes {
             let new_pubkey =
                 mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes);
@@ -2712,22 +2771,14 @@ impl Daemon {
                 .and_then(|state| state.pubkey().cloned());
 
             match stored_pubkey {
-                Some(old) if old != new_pubkey => Some(new_pubkey),
-                Some(_) => {
+                Some(old) if old == new_pubkey => {
                     log::debug!(
                         "on_set_warren_mnemonic: same pubkey as device.json, \
                          signer swapped, no device action needed"
                     );
                     None
                 }
-                None => {
-                    log::debug!(
-                        "on_set_warren_mnemonic: no device state on disk \
-                         (first-launch import), signer swapped — login will \
-                         be triggered by the GUI"
-                    );
-                    None
-                }
+                _ => Some(new_pubkey),
             }
         } else {
             None
@@ -2886,17 +2937,60 @@ impl Daemon {
         });
     }
 
-    fn on_logout_account(&mut self, tx: ResponseTx<(), Error>) {
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = async {
-                account_manager.logout().await.map_err(|error| {
-                    log::error!("{}", error.display_chain_with_msg("Logout failed"));
-                    Error::LogoutError(error)
-                })
-            };
-            Self::oneshot_send(tx, result.await, "logout_account response");
+    /// Logs out of the current device.
+    ///
+    /// When `wipe_identity` is `true` (explicit, backup-confirmed user
+    /// sign-out from the GUI) this is a **true sign-out**: after the
+    /// device is logged out, the BIP39 mnemonic is erased from the OS
+    /// vault, the in-memory signer is neutralized, and the account
+    /// history is cleared — so a subsequent "Create a new account"
+    /// mints a genuinely fresh identity and nothing is left to silently
+    /// "continue as".
+    ///
+    /// When `wipe_identity` is `false` (a server-driven device-revoked
+    /// event, or a CLI/Android logout) the identity is PRESERVED on the
+    /// device: only the device-login state is cleared, so the account
+    /// stays recoverable. This avoids irreversible data loss on a
+    /// revocation the user did not initiate.
+    async fn on_logout_account(&mut self, tx: ResponseTx<(), Error>, wipe_identity: bool) {
+        let logout_result = self.account_manager.logout().await.map_err(|error| {
+            log::error!("{}", error.display_chain_with_msg("Logout failed"));
+            Error::LogoutError(error)
         });
+
+        let result = match logout_result {
+            Ok(()) if wipe_identity => {
+                // Erase the on-disk identity off the async executor —
+                // keychain/DPAPI deletes are synchronous and can take
+                // tens to hundreds of ms; running them inline would
+                // stall the daemon command loop.
+                let settings_dir = self.settings_dir.clone();
+                let wipe = tokio::task::spawn_blocking(move || {
+                    warren_signer::clear_warren_mnemonic(&settings_dir)
+                })
+                .await
+                .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
+                .map_err(Error::WarrenIdentityError);
+
+                // Neutralize the in-memory signer so no signed request
+                // can keep authenticating as the just-erased identity.
+                if let Some(signer) = self.warren_signer.as_ref() {
+                    warren_signer::clear_signer(signer);
+                }
+
+                let history = self
+                    .account_history
+                    .clear()
+                    .await
+                    .map_err(Error::AccountHistory);
+                // Attempt both regardless so we never leave a half-wiped
+                // state, but surface the first failure.
+                wipe.and(history)
+            }
+            other => other,
+        };
+
+        Self::oneshot_send(tx, result, "logout_account response");
     }
 
     #[cfg(target_os = "android")]

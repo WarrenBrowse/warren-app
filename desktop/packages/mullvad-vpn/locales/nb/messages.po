@@ -4226,3 +4226,63 @@ msgstr "Gjenopprettingsfrasen din på 12 ord er den ENESTE måten å gjenopprett
 msgctxt "keys-view"
 msgid "words"
 msgstr "ord"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Sikkerhetskopier frasen min"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Jeg har sikkerhetskopiert gjenopprettingsfrasen min og forstår at denne kontoen fjernes fra denne enheten."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Hvis du ikke har sikkerhetskopiert gjenopprettingsfrasen din, går abonnementet ditt tapt permanent."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Logge ut av denne kontoen?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Når du logger ut, slettes denne kontoen fra denne enheten. Det finnes ingen e-post eller passord for å logge inn igjen — gjenopprettingsfrasen din er den ENESTE måten å gjenopprette den på."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Sikkerhetskopier gjenopprettingsfrasen din"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Kunne ikke lese den nye gjenopprettingsfrasen. Prøv igjen."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Skriv inn gjenopprettingsfrasen din på 12 ord, atskilt med mellomrom, for å gjenopprette kontoen din på denne enheten."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Jeg har allerede en konto"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Jeg har skrevet ned gjenopprettingsfrasen min på et trygt sted."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Ugyldig gjenopprettingsfrase. Kontroller ordene og rekkefølgen deres, og prøv igjen."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Gjenopprett konto"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Gjenopprett kontoen din"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren bruker en ikke-forvaltet lommebok: kontoen din er en gjenopprettingsfrase på 12 ord som bare du har."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Velkommen til Warren"

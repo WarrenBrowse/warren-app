@@ -4226,3 +4226,63 @@ msgstr "Din återställningsfras med 12 ord är det ENDA sättet att återställ
 msgctxt "keys-view"
 msgid "words"
 msgstr "ord"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Säkerhetskopiera min fras"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Jag har säkerhetskopierat min återställningsfras och förstår att detta konto kommer att tas bort från den här enheten."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Om du inte har säkerhetskopierat din återställningsfras går din prenumeration förlorad permanent."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Logga ut från det här kontot?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Att logga ut raderar det här kontot från den här enheten. Det finns ingen e-postadress eller lösenord för att logga in igen – din återställningsfras är det ENDA sättet att återställa det."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Säkerhetskopiera din återställningsfras"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Det gick inte att läsa den nya återställningsfrasen. Försök igen."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Ange din återställningsfras på 12 ord, åtskilda med mellanslag, för att återställa ditt konto på den här enheten."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Jag har redan ett konto"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Jag har skrivit ner min återställningsfras på en säker plats."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Ogiltig återställningsfras. Kontrollera orden och deras ordning och försök igen."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Återställ konto"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Återställ ditt konto"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren använder en icke-förvaltad plånbok: ditt konto är en återställningsfras på 12 ord som bara du har."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Välkommen till Warren"

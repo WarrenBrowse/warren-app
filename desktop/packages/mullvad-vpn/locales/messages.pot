@@ -98,6 +98,9 @@ msgstr ""
 msgid "CONNECTING..."
 msgstr ""
 
+msgid "Continue"
+msgstr ""
+
 msgid "Create"
 msgstr ""
 
@@ -160,11 +163,6 @@ msgstr ""
 
 #. A toggle that refers to the setting "Direct only".
 msgid "Enable direct only"
-msgstr ""
-
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
 msgstr ""
 
 msgid "FAILED TO SECURE CONNECTION"
@@ -255,10 +253,6 @@ msgid "Quit"
 msgstr ""
 
 msgid "Reconnect"
-msgstr ""
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
 msgstr ""
 
 msgid "Remove from list"
@@ -387,13 +381,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr ""
 
-#. This is used by screenreaders to communicate the "x" button next to a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the public key to the left of the button
-msgctxt "accessibility"
-msgid "Forget public key %(pubkey)s"
-msgstr ""
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -420,18 +407,6 @@ msgstr ""
 #. Alt text for an illustration showing VPN traffic without DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
-msgstr ""
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr ""
-
-#. This is used by screenreaders to communicate logging in with a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the saved public key
-msgctxt "accessibility"
-msgid "Login with public key %(pubkey)s"
 msgstr ""
 
 msgctxt "accessibility"
@@ -523,6 +498,11 @@ msgctxt "account-view"
 msgid "Account"
 msgstr ""
 
+#. Button that opens the recovery-phrase backup view before logging out.
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr ""
+
 #. Button label that opens the Keys
 #. backup view (= reveal/copy BIP39 mnemonic).
 msgctxt "account-view"
@@ -533,9 +513,25 @@ msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr ""
 
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr ""
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr ""
+
 #. Button label for logging out.
 msgctxt "account-view"
 msgid "Log out"
+msgstr ""
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr ""
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
 msgstr ""
 
 msgctxt "account-view"
@@ -1239,6 +1235,14 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr ""
 
+#. Label in the main header showing the remaining
+#. subscription time.
+#. Available placeholders:
+#. %(timeLeft)s - the remaining time, e.g. "29 days"
+msgctxt "device-management"
+msgid "Time left: %(timeLeft)s"
+msgstr ""
+
 msgctxt "device-management"
 msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr ""
@@ -1648,114 +1652,52 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr ""
 
+#. Title of the step that shows the new recovery phrase.
 msgctxt "login-view"
-msgid "Account created"
+msgid "Back up your recovery phrase"
 msgstr ""
 
 msgctxt "login-view"
-msgid "Checking public key"
+msgid "Could not read the new recovery phrase. Try again."
 msgstr ""
 
-#. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr ""
 
-#. Button which confirms the action to create a new account.
 msgctxt "login-view"
-msgid "Create new account"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr ""
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr ""
-
-#. Text that asks the user if they really want to remove the saved public key.
-msgctxt "login-view"
-msgid "Do you want to remove the saved public key?"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Enter your public key"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Error"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr ""
 
 msgctxt "login-view"
 msgid "Failed to create account"
 msgstr ""
 
+#. Button that starts restoring an existing account from a recovery phrase.
 msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr ""
-
-#. Error message shown above login input when trying to login with a
-#. non-existent public key.
-msgctxt "login-view"
-msgid "Invalid public key"
+msgid "I already have an account"
 msgstr ""
 
 msgctxt "login-view"
-msgid "Logged in"
+msgid "I have written down my recovery phrase in a safe place."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Logging in..."
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
 msgstr ""
 
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr ""
-
-#. Error message shown when the account exists but has
-#. no active subscription yet.
-msgctxt "login-view"
-msgid "No active subscription"
-msgstr ""
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr ""
-
-#. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Please wait"
+msgid "Restore account"
 msgstr ""
 
-#. Text that informs the user about the consequences of clearing the saved
-#. public key.
+#. Title of the step where the user enters their recovery phrase.
 msgctxt "login-view"
-msgid "Removing the saved public key from this device cannot be undone."
-msgstr ""
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Unknown error"
+msgid "Restore your account"
 msgstr ""
 
 msgctxt "login-view"
@@ -1763,12 +1705,16 @@ msgid "Upgrading..."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Valid public key"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
 msgstr ""
 
-#. Text that informs the users about consequences of creating a new account.
+#. Title of the logged-out welcome screen.
 msgctxt "login-view"
-msgid "You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone."
+msgid "Welcome to Warren"
+msgstr ""
+
+msgctxt "login-view"
+msgid "Write these 12 words down in order and keep them somewhere safe. They are the ONLY way to restore your account. If you lose them, your subscription is unrecoverable."
 msgstr ""
 
 #. The title for the LWO port selector.
@@ -2836,10 +2782,6 @@ msgid "Reset pinned exit keys?"
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "Restart the daemon for the change to take effect."
-msgstr ""
-
-msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr ""
 
@@ -2914,14 +2856,6 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Warren api URL"
-msgstr ""
-
-msgctxt "vpn-settings-view"
-msgid "Warren local account"
-msgstr ""
-
-msgctxt "vpn-settings-view"
-msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
 msgstr ""
 
 msgctxt "vpn-settings-view"

@@ -1,568 +1,387 @@
-import React, { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { Url } from '../../../../shared/constants';
-import { AccountDataError, WarrenPubKey } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
-import { isWarrenPubKey } from '../../../../shared/utils';
+import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
-import useActions from '../../../lib/actionsHook';
-import { Box, Button, Flex, Icon, Spinner, Text, TitleMedium } from '../../../lib/components';
+import { Button, Checkbox, Flex, Spinner, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
-import { Label } from '../../../lib/components/label';
 import { Link } from '../../../lib/components/link';
 import { View } from '../../../lib/components/view';
-import { colors } from '../../../lib/foundations';
+import { colors, Radius, spacings } from '../../../lib/foundations';
 import { formatHtml } from '../../../lib/html-formatter';
 import { IconBadge } from '../../../lib/icon-badge';
-import { formatWarrenPubKey } from '../../../lib/pubkey';
-import accountActions from '../../../redux/account/actions';
-import { LoginState } from '../../../redux/account/reducers';
 import { useSelector } from '../../../redux/store';
-import Accordion from '../../Accordion';
 import { AppMainHeader } from '../../app-main-header';
-import ClearAccountHistoryDialog from './ClearAccountHistoryDialog';
-import CreateAccountDialog from './CreateAccountDialog';
 import {
-  StyledAccountDropdownContainer,
-  StyledAccountDropdownItem,
-  StyledAccountDropdownItemButton,
-  StyledAccountDropdownItemIconButton,
-  StyledAccountInputBackdrop,
-  StyledAccountInputGroup,
+  CopyMnemonicButton,
+  countMnemonicWords,
+  MnemonicGrid,
+  MnemonicTextarea,
+  normalizeMnemonic,
+} from '../../warren-mnemonic';
+import {
   StyledBlockMessage,
   StyledBlockMessageContainer,
   StyledBlockTitle,
-  StyledDropdownSpacer,
-  StyledInput,
-  StyledLine,
   StyledStatusIcon,
 } from './LoginStyles';
 
+// The logged-out entry screen, redesigned around the Warren wallet
+// model: an identity IS a BIP39 recovery phrase, not a public key you
+// type in. Two paths:
+// - "Create a new account": the daemon mints a fresh identity (and logs
+//   in); the GUI then holds on this screen (redux `backup-pending`)
+//   showing the 12-word recovery phrase and requires the user to
+//   confirm they saved it before proceeding (mandatory backup step).
+// - "I already have an account": the user pastes their recovery phrase,
+//   which the daemon validates + hot-swaps to restore the identity.
+
+const DangerCallout = styled.div`
+  padding: ${spacings.small} ${spacings.medium};
+  border-radius: ${Radius.radius4};
+  background-color: ${colors.redAlpha40};
+  border: 1px solid ${colors.red40};
+`;
+
+type Mode = 'pick' | 'restore';
+
 export function LoginView() {
-  const { openUrl, login, clearAccountHistory, createNewAccount } = useAppContext();
-  const { resetLoginError, updatePubKey } = useActions(accountActions);
+  const { createNewAccount, finishAccountBackup, getWarrenMnemonic, setWarrenMnemonic } =
+    useAppContext();
 
-  const { pubkey, pubkeyHistory, status } = useSelector((state) => state.account);
-
+  const status = useSelector((state) => state.account.status);
   const tunnelState = useSelector((state) => state.connection.status);
-  const showBlockMessage =
-    tunnelState.state === 'error' ||
-    (tunnelState.state === 'disconnected' && tunnelState.lockedDown);
-
   const isPerformingPostUpgrade = useSelector(
     (state) => state.userInterface.isPerformingPostUpgrade,
   );
 
-  return (
-    <Login
-      pubkey={pubkey}
-      pubkeyHistory={pubkeyHistory}
-      loginState={status}
-      showBlockMessage={showBlockMessage}
-      openExternalLink={openUrl}
-      login={login}
-      resetLoginError={resetLoginError}
-      updatePubKey={updatePubKey}
-      clearAccountHistory={clearAccountHistory}
-      createNewAccount={createNewAccount}
-      isPerformingPostUpgrade={isPerformingPostUpgrade}
-    />
-  );
-}
+  const showBlockMessage =
+    tunnelState.state === 'error' ||
+    (tunnelState.state === 'disconnected' && tunnelState.lockedDown);
 
-interface IProps {
-  pubkey?: WarrenPubKey;
-  pubkeyHistory?: WarrenPubKey;
-  loginState: LoginState;
-  showBlockMessage: boolean;
-  openExternalLink: (type: Url) => void;
-  login: (pubkey: WarrenPubKey) => void;
-  resetLoginError: () => void;
-  updatePubKey: (pubkey: WarrenPubKey) => void;
-  clearAccountHistory: () => Promise<void>;
-  createNewAccount: () => void;
-  isPerformingPostUpgrade?: boolean;
-}
+  const isBackup = status.type === 'backup-pending';
+  const backupPubkey = status.type === 'backup-pending' ? status.pubkey : null;
+  // The daemon is busy minting + logging into the new identity.
+  const creating = status.type === 'logging in';
+  const createFailed = status.type === 'failed' ? status.error.message : null;
 
-interface IState {
-  isActive: boolean;
-  clearAccountHistoryDialogVisible: boolean;
-  createAccountDialogVisible: boolean;
-}
+  const [mode, setMode] = useState<Mode>('pick');
+  const [mnemonic, setMnemonic] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [restoreInput, setRestoreInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-// Max length of a Warren SS58 address (prefix 13295 yields 47-49
-// chars). Used to cap the login input — an SS58 address is a single
-// token, so there is no chunking/grouping.
-const WARREN_ADDRESS_MAX_LEN = 49;
-
-// base58 alphabet used by SS58 addresses (Bitcoin/Flickr variant:
-// no `0`, `O`, `I`, `l`). Restricts what the input accepts so a
-// pasted `wb…` address round-trips without stray characters.
-const WARREN_ADDRESS_ALLOWED_CHARS = '[1-9A-HJ-NP-Za-km-z]';
-
-class Login extends React.Component<IProps, IState> {
-  public state: IState = {
-    isActive: true,
-    clearAccountHistoryDialogVisible: false,
-    createAccountDialogVisible: false,
-  };
-
-  private accountInput = React.createRef<HTMLInputElement>();
-  private shouldResetLoginError = false;
-
-  constructor(props: IProps) {
-    super(props);
-
-    if (props.loginState.type === 'failed') {
-      this.shouldResetLoginError = true;
+  // Once the daemon has minted the identity (backup-pending), fetch the
+  // freshly generated phrase to display for backup.
+  useEffect(() => {
+    if (isBackup && mnemonic === null) {
+      getWarrenMnemonic()
+        .then((phrase) => {
+          if (phrase) {
+            setMnemonic(phrase);
+          } else {
+            setError(
+              messages.pgettext('login-view', 'Could not read the new recovery phrase. Try again.'),
+            );
+          }
+        })
+        .catch((e: unknown) => {
+          log.error(`getWarrenMnemonic failed: ${(e as Error).message}`);
+          setError(
+            messages.pgettext('login-view', 'Could not read the new recovery phrase. Try again.'),
+          );
+        });
     }
-  }
+  }, [isBackup, mnemonic, getWarrenMnemonic]);
 
-  public componentDidUpdate(prevProps: IProps, _prevState: IState) {
-    if (
-      this.props.loginState.type !== prevProps.loginState.type &&
-      this.props.loginState.type === 'failed'
-    ) {
-      this.shouldResetLoginError = true;
+  // Drop the secret from React memory when leaving the view.
+  useEffect(() => {
+    return () => {
+      setMnemonic(null);
+      setRestoreInput('');
+    };
+  }, []);
 
-      // focus on login field when failed to log in
-      this.accountInput.current?.focus();
+  const goRestore = useCallback(() => {
+    setError(null);
+    setMode('restore');
+  }, []);
+
+  const goPick = useCallback(() => {
+    setError(null);
+    setMode('pick');
+  }, []);
+
+  const onCreate = useCallback(() => {
+    setError(null);
+    setMnemonic(null);
+    setConfirmed(false);
+    void createNewAccount();
+  }, [createNewAccount]);
+
+  const onConfirmBackup = useCallback(() => {
+    if (backupPubkey) {
+      finishAccountBackup(backupPubkey);
     }
-  }
+  }, [finishAccountBackup, backupPubkey]);
 
-  public render() {
-    const allowInteraction = this.allowInteraction();
-    return (
-      <View>
-        <AppMainHeader>
-          <AppMainHeader.SettingsButton disabled={!allowInteraction} />
-        </AppMainHeader>
-        <View.Content>
-          <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
-            <FlexColumn gap="medium">
-              <Flex justifyContent="center">
-                {this.props.showBlockMessage ? <BlockMessage /> : this.getStatusIcon()}
-              </Flex>
+  const restoreWordCount = countMnemonicWords(restoreInput);
+  const restoreValid = restoreWordCount === 12 || restoreWordCount === 24;
 
-              <View.Container
-                gap="large"
-                horizontalMargin="small"
-                justifyContent="center"
-                flexDirection="column">
-                <FlexColumn gap="small">
-                  <Text as="h1" variant="titleBig" aria-live="polite">
-                    {this.formTitle()}
-                  </Text>
-
-                  {this.createLoginForm()}
-                </FlexColumn>
-                <Flex justifyContent="center">
-                  <StyledLine margin={{ vertical: 'small', right: 'small' }} />
-                  <Text variant="labelTinySemiBold">
-                    {
-                      // TRANSLATORS: Text shown between two horizontal lines above the "create account" button.
-                      // TRANSLATORS: In this context it is used to separate the users alternative of logging in
-                      // TRANSLATORS: or creating a new account, "Login or Create a new account".
-                      messages.pgettext('login-view', 'Or')
-                    }
-                  </Text>
-                  <StyledLine margin={{ vertical: 'small', left: 'small' }} />
-                </Flex>
-              </View.Container>
-              {this.createFooter()}
-            </FlexColumn>
-          </View.Container>
-        </View.Content>
-      </View>
-    );
-  }
-
-  private onFocus = () => {
-    this.setState({ isActive: true });
-  };
-
-  private onBlur = () => {
-    this.setState({ isActive: false });
-  };
-
-  private onSubmit = (event?: React.FormEvent) => {
-    event?.preventDefault();
-
-    if (this.pubkeyValid()) {
-      this.props.login(this.props.pubkey!);
-    }
-  };
-
-  private onInputChange = (pubkey: string) => {
-    // reset error when user types in the new pubkey
-    if (this.shouldResetLoginError) {
-      this.shouldResetLoginError = false;
-      this.props.resetLoginError();
-    }
-
-    this.props.updatePubKey(pubkey);
-  };
-
-  private formTitle() {
-    if (this.props.isPerformingPostUpgrade) {
-      return messages.pgettext('login-view', 'Upgrading...');
-    }
-
-    switch (this.props.loginState.type) {
-      case 'logging in':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Logging in...')
-          : messages.pgettext('login-view', 'Creating account...');
-      case 'failed':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Login failed')
-          : messages.pgettext('login-view', 'Error');
-      case 'ok':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Logged in')
-          : messages.pgettext('login-view', 'Account created');
-      default:
-        return messages.pgettext('login-view', 'Login');
-    }
-  }
-
-  private formSubtitle() {
-    if (this.props.isPerformingPostUpgrade) {
-      return messages.pgettext('login-view', 'Finishing upgrade.');
-    }
-
-    switch (this.props.loginState.type) {
-      case 'failed':
-        return this.props.loginState.method === 'existing_account'
-          ? this.errorString(this.props.loginState.error)
-          : messages.pgettext('login-view', 'Failed to create account');
-      case 'logging in':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Checking public key')
-          : messages.pgettext('login-view', 'Please wait');
-      case 'ok':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Valid public key')
-          : messages.pgettext('login-view', 'Logged in');
-      default:
-        return messages.pgettext('login-view', 'Enter your public key');
-    }
-  }
-
-  private errorString(error: AccountDataError['error']): string {
-    switch (error) {
-      case 'invalid-account':
-        // TRANSLATORS: Error message shown above login input when trying to login with a
-        // TRANSLATORS: non-existent public key.
-        return messages.pgettext('login-view', 'Invalid public key');
-      case 'too-many-devices':
-        // TRANSLATORS: Error message shown above login input when trying to login to an account
-        // TRANSLATORS: with too many registered devices.
-        return messages.pgettext('login-view', 'Too many devices');
-      case 'list-devices':
-        // TRANSLATORS: Error message shown trying to login but the app fails
-        // TRANSLATORS: to fetch the list of registered devices.
-        return messages.gettext('Failed to fetch list of devices');
-      case 'communication':
-        return 'api.warrenbrowse.com is blocked, please check your firewall';
-      case 'no-subscription':
-        // The login flow itself does not surface this variant
-        // today (it originates from `get_account_data` 404, which
-        // is handled by the account-data cache as an expired
-        // state). Kept here for exhaustiveness in case a future
-        // login path starts to differentiate it; the navigation
-        // logic will route the user to the "buy plan" screen
-        // before this string is rendered in practice.
-        // TRANSLATORS: Error message shown when the account exists but has
-        // TRANSLATORS: no active subscription yet.
-        return messages.pgettext('login-view', 'No active subscription');
-      default:
-        return messages.pgettext('login-view', 'Unknown error');
-    }
-  }
-
-  private getStatusIcon() {
-    return <StyledStatusIcon>{this.getStatusIconPath()}</StyledStatusIcon>;
-  }
-
-  private getStatusIconPath() {
-    if (this.props.isPerformingPostUpgrade) {
-      return <Spinner size="big" />;
-    }
-
-    switch (this.props.loginState.type) {
-      case 'logging in':
-        return <Spinner size="big" />;
-      case 'failed':
-        return <IconBadge state="negative" />;
-      case 'ok':
-        return <IconBadge state="positive" />;
-      default:
-        return null;
-    }
-  }
-
-  private allowInteraction() {
-    return (
-      !this.props.isPerformingPostUpgrade &&
-      this.props.loginState.type !== 'logging in' &&
-      this.props.loginState.type !== 'ok'
-    );
-  }
-
-  private allowCreateAccount() {
-    const { pubkey } = this.props;
-    return this.allowInteraction() && (pubkey === undefined || pubkey.length === 0);
-  }
-
-  private pubkeyValid(): boolean {
-    const { pubkey } = this.props;
-    return pubkey !== undefined && isWarrenPubKey(pubkey);
-  }
-
-  private shouldShowAccountHistory() {
-    return this.allowInteraction() && this.props.pubkeyHistory !== undefined;
-  }
-
-  private onSelectAccountFromHistory = (pubkey: string) => {
-    this.props.updatePubKey(pubkey);
-    this.props.login(pubkey);
-  };
-
-  private onClearAccountHistory = () => {
-    this.setState({ clearAccountHistoryDialogVisible: true });
-  };
-
-  private onConfirmClearAccountHistory = () => {
-    this.hideClearAccountHistoryDialog();
-    void this.clearAccountHistory();
-  };
-
-  private hideClearAccountHistoryDialog = () => {
-    this.setState({ clearAccountHistoryDialogVisible: false });
-  };
-
-  private async clearAccountHistory() {
+  const onRestore = useCallback(async () => {
+    setError(null);
+    setBusy(true);
     try {
-      await this.props.clearAccountHistory();
-
-      // TODO: Remove account from memory
-    } catch {
-      // TODO: Show error
+      await setWarrenMnemonic(normalizeMnemonic(restoreInput));
+      // On success the daemon logs in and emits a device event that
+      // navigates away from this screen.
+    } catch (e) {
+      log.error(`Failed to restore identity: ${(e as Error).message}`);
+      setError(
+        messages.pgettext(
+          'login-view',
+          'Invalid recovery phrase. Check the words and their order, then try again.',
+        ),
+      );
+    } finally {
+      setBusy(false);
     }
-  }
+  }, [restoreInput, setWarrenMnemonic]);
 
-  private onCreateNewAccount = () => {
-    if (this.props.pubkeyHistory !== undefined) {
-      this.setState({ createAccountDialogVisible: true });
-    } else {
-      this.onConfirmCreateNewAccount();
-    }
-  };
+  const title = formTitle(isBackup, mode, isPerformingPostUpgrade);
+  const statusIcon = getStatusIcon(isPerformingPostUpgrade, creating, createFailed !== null);
 
-  private onConfirmCreateNewAccount = () => {
-    this.props.createNewAccount();
-    this.hideCreateAccountDialog();
-  };
+  return (
+    <View>
+      <AppMainHeader>
+        <AppMainHeader.SettingsButton disabled={isPerformingPostUpgrade || creating} />
+      </AppMainHeader>
+      <View.Content>
+        <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
+          <FlexColumn gap="medium">
+            <Flex justifyContent="center">{showBlockMessage ? <BlockMessage /> : statusIcon}</Flex>
 
-  private hideCreateAccountDialog = () => {
-    this.setState({ createAccountDialogVisible: false });
-  };
+            <View.Container
+              gap="large"
+              horizontalMargin="small"
+              justifyContent="center"
+              flexDirection="column">
+              <FlexColumn gap="small">
+                <Text as="h1" variant="titleBig" aria-live="polite">
+                  {title}
+                </Text>
 
-  private createLoginForm() {
-    const inputId = 'warren-pubkey-input';
-    const allowInteraction = this.allowInteraction();
-    const allowLogin = allowInteraction && this.pubkeyValid();
-    const hasError =
-      this.props.loginState.type === 'failed' &&
-      this.props.loginState.method === 'existing_account';
+                {(error || createFailed) && (
+                  <Text variant="bodySmall" color="red">
+                    {error ?? createFailed}
+                  </Text>
+                )}
 
-    return (
-      <>
-        <Flex flexDirection="column" gap="tiny">
-          <Label
-            htmlFor={inputId}
-            variant="labelTinySemiBold"
-            color="whiteAlpha60"
-            data-testid="subtitle">
-            {this.formSubtitle()}
-          </Label>
-          <form onSubmit={this.onSubmit}>
-            <FlexColumn gap="large">
-              <StyledAccountInputGroup
-                $active={allowInteraction && this.state.isActive}
-                $editable={allowInteraction}
-                $error={hasError}>
-                <StyledAccountInputBackdrop>
-                  <StyledInput
-                    id={inputId}
-                    allowedCharacters={WARREN_ADDRESS_ALLOWED_CHARS}
-                    separator=""
-                    groupLength={WARREN_ADDRESS_MAX_LEN}
-                    maxLength={WARREN_ADDRESS_MAX_LEN}
-                    placeholder="wb…"
-                    value={this.props.pubkey || ''}
-                    disabled={!allowInteraction}
-                    onFocus={this.onFocus}
-                    onBlur={this.onBlur}
-                    handleChange={this.onInputChange}
-                    autoFocus={true}
-                    ref={this.accountInput}
-                    aria-autocomplete="list"
+                {isBackup ? (
+                  <BackupStep
+                    mnemonic={mnemonic}
+                    confirmed={confirmed}
+                    onConfirmedChange={setConfirmed}
+                    onContinue={onConfirmBackup}
                   />
-                </StyledAccountInputBackdrop>
-                <Accordion expanded={this.shouldShowAccountHistory()}>
-                  <StyledAccountDropdownContainer>
-                    <AccountDropdown
-                      item={this.props.pubkeyHistory}
-                      onSelect={this.onSelectAccountFromHistory}
-                      onRemove={this.onClearAccountHistory}
-                    />
-                  </StyledAccountDropdownContainer>
-                </Accordion>
-              </StyledAccountInputGroup>
-              <Button
-                type="submit"
-                variant="success"
-                disabled={!allowLogin}
-                aria-label={
-                  // TRANSLATORS: This is used by screenreaders to communicate the login button.
-                  messages.pgettext('accessibility', 'Login')
-                }>
-                <Button.Text>
-                  {
-                    // TRANSLATORS: Label for the login button.
-                    messages.pgettext('login-view', 'Login')
-                  }
-                </Button.Text>
-              </Button>
-            </FlexColumn>
-          </form>
-        </Flex>
+                ) : mode === 'restore' ? (
+                  <RestoreStep
+                    value={restoreInput}
+                    onValueChange={setRestoreInput}
+                    canSubmit={restoreValid && !busy}
+                    busy={busy}
+                    onSubmit={onRestore}
+                    onBack={goPick}
+                  />
+                ) : (
+                  <PickStep creating={creating} onCreate={onCreate} onRestore={goRestore} />
+                )}
+              </FlexColumn>
+            </View.Container>
+          </FlexColumn>
+        </View.Container>
+      </View.Content>
+    </View>
+  );
+}
 
-        <ClearAccountHistoryDialog
-          visible={this.state.clearAccountHistoryDialogVisible}
-          onConfirm={this.onConfirmClearAccountHistory}
-          onHide={this.hideClearAccountHistoryDialog}
-        />
-      </>
-    );
+function formTitle(isBackup: boolean, mode: Mode, isPerformingPostUpgrade?: boolean): string {
+  if (isPerformingPostUpgrade) {
+    return messages.pgettext('login-view', 'Upgrading...');
   }
+  if (isBackup) {
+    // TRANSLATORS: Title of the step that shows the new recovery phrase.
+    return messages.pgettext('login-view', 'Back up your recovery phrase');
+  }
+  if (mode === 'restore') {
+    // TRANSLATORS: Title of the step where the user enters their recovery phrase.
+    return messages.pgettext('login-view', 'Restore your account');
+  }
+  // TRANSLATORS: Title of the logged-out welcome screen.
+  return messages.pgettext('login-view', 'Welcome to Warren');
+}
 
-  private createFooter() {
+function getStatusIcon(
+  isPerformingPostUpgrade: boolean | undefined,
+  creating: boolean,
+  failed: boolean,
+) {
+  if (isPerformingPostUpgrade || creating) {
     return (
-      <>
-        <Flex flexDirection="column" gap="small" alignItems="center">
-          <Link as="button" onClick={this.onCreateNewAccount} disabled={!this.allowCreateAccount()}>
-            <Link.Text>
-              {
-                // TRANSLATORS: Text in button that allows user to create a new account.
-                messages.pgettext('login-view', 'Create a new account')
-              }
-            </Link.Text>
-          </Link>
-        </Flex>
-        <CreateAccountDialog
-          visible={this.state.createAccountDialogVisible}
-          onConfirm={this.onConfirmCreateNewAccount}
-          onHide={this.hideCreateAccountDialog}
-        />
-      </>
+      <StyledStatusIcon>
+        <Spinner size="big" />
+      </StyledStatusIcon>
     );
   }
-}
-
-interface IAccountDropdownProps {
-  item?: WarrenPubKey;
-  onSelect: (value: WarrenPubKey) => void;
-  onRemove: (value: WarrenPubKey) => void;
-}
-
-function AccountDropdown(props: IAccountDropdownProps) {
-  const pubkey = props.item;
-  if (!pubkey) {
-    return null;
+  if (failed) {
+    return (
+      <StyledStatusIcon>
+        <IconBadge state="negative" />
+      </StyledStatusIcon>
+    );
   }
-  const label = formatWarrenPubKey(pubkey);
+  return null;
+}
+
+interface PickStepProps {
+  creating: boolean;
+  onCreate: () => void;
+  onRestore: () => void;
+}
+
+function PickStep({ creating, onCreate, onRestore }: PickStepProps) {
   return (
-    <AccountDropdownItem
-      value={pubkey}
-      label={label}
-      onSelect={props.onSelect}
-      onRemove={props.onRemove}
-    />
+    <FlexColumn gap="medium">
+      <Text variant="bodySmall" color="whiteAlpha60">
+        {messages.pgettext(
+          'login-view',
+          'Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold.',
+        )}
+      </Text>
+      <Button variant="success" onClick={onCreate} disabled={creating} data-testid="login-create">
+        {creating ? (
+          <Spinner />
+        ) : (
+          // TRANSLATORS: Button that creates a brand-new account.
+          <Button.Text>{messages.pgettext('login-view', 'Create a new account')}</Button.Text>
+        )}
+      </Button>
+      <Button variant="primary" onClick={onRestore} disabled={creating} data-testid="login-restore">
+        <Button.Text>
+          {
+            // TRANSLATORS: Button that starts restoring an existing account from a recovery phrase.
+            messages.pgettext('login-view', 'I already have an account')
+          }
+        </Button.Text>
+      </Button>
+    </FlexColumn>
   );
 }
 
-interface AccountDropdownItemProps {
-  label: string;
-  value: WarrenPubKey;
-  onRemove: (value: WarrenPubKey) => void;
-  onSelect: (value: WarrenPubKey) => void;
+interface BackupStepProps {
+  mnemonic: string | null;
+  confirmed: boolean;
+  onConfirmedChange: (value: boolean) => void;
+  onContinue: () => void;
 }
 
-const StyledIcon = styled(Icon)({
-  backgroundColor: colors.whiteOnBlue20,
-});
-
-function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdownItemProps) {
-  const handleSelect = useCallback(() => {
-    onSelect(value);
-  }, [onSelect, value]);
-
-  const handleRemove = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      // Prevent login form from submitting
-      event.preventDefault();
-      onRemove(value);
-    },
-    [onRemove, value],
-  );
-
-  const itemId = React.useId();
-
+function BackupStep({ mnemonic, confirmed, onConfirmedChange, onContinue }: BackupStepProps) {
+  if (!mnemonic) {
+    return (
+      <Flex justifyContent="center">
+        <Spinner size="big" />
+      </Flex>
+    );
+  }
   return (
-    <>
-      <StyledDropdownSpacer />
-      <StyledAccountDropdownItem>
-        <Flex alignItems="center" justifyContent="space-between" flexGrow={1}>
-          <StyledAccountDropdownItemButton
-            id={itemId}
-            onClick={handleSelect}
-            type="button"
-            aria-label={sprintf(
-              // TRANSLATORS: This is used by screenreaders to communicate logging in with a saved public key.
-              // TRANSLATORS: Available placeholders:
-              // TRANSLATORS: %(pubkey)s - the saved public key
-              messages.pgettext('accessibility', 'Login with public key %(pubkey)s'),
-              {
-                pubkey: label,
-              },
-            )}>
-            <TitleMedium color="blue80">{label}</TitleMedium>
-          </StyledAccountDropdownItemButton>
-          <Box $height="48px" $width="48px" center>
-            <StyledAccountDropdownItemIconButton
-              onClick={handleRemove}
-              type="button"
-              aria-controls={itemId}
-              aria-label={sprintf(
-                // TRANSLATORS: This is used by screenreaders to communicate the "x" button next to a saved public key.
-                // TRANSLATORS: Available placeholders:
-                // TRANSLATORS: %(pubkey)s - the public key to the left of the button
-                messages.pgettext('accessibility', 'Forget public key %(pubkey)s'),
-                {
-                  pubkey: label,
-                },
-              )}>
-              <StyledIcon icon="cross-circle" size="small" />
-            </StyledAccountDropdownItemIconButton>
-          </Box>
+    <FlexColumn gap="medium">
+      <DangerCallout>
+        <Text variant="bodySmallSemibold" color="white">
+          {messages.pgettext(
+            'login-view',
+            'Write these 12 words down in order and keep them somewhere safe. They are the ONLY way to restore your account. If you lose them, your subscription is unrecoverable.',
+          )}
+        </Text>
+      </DangerCallout>
+
+      <MnemonicGrid mnemonic={mnemonic} revealed data-testid="login-mnemonic-grid" />
+      <CopyMnemonicButton mnemonic={mnemonic} data-testid="login-mnemonic-copy" />
+
+      <Checkbox checked={confirmed} onCheckedChange={onConfirmedChange}>
+        <Flex gap="small" alignItems="flex-start">
+          <Checkbox.Trigger>
+            <Checkbox.Input />
+          </Checkbox.Trigger>
+          <Checkbox.Label>
+            {messages.pgettext(
+              'login-view',
+              'I have written down my recovery phrase in a safe place.',
+            )}
+          </Checkbox.Label>
         </Flex>
-      </StyledAccountDropdownItem>
-    </>
+      </Checkbox>
+
+      <Button
+        variant="success"
+        onClick={onContinue}
+        disabled={!confirmed}
+        data-testid="login-backup-continue">
+        <Button.Text>{messages.gettext('Continue')}</Button.Text>
+      </Button>
+    </FlexColumn>
+  );
+}
+
+interface RestoreStepProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  canSubmit: boolean;
+  busy: boolean;
+  onSubmit: () => void;
+  onBack: () => void;
+}
+
+function RestoreStep({
+  value,
+  onValueChange,
+  canSubmit,
+  busy,
+  onSubmit,
+  onBack,
+}: RestoreStepProps) {
+  return (
+    <FlexColumn gap="medium">
+      <Text variant="bodySmall" color="whiteAlpha60">
+        {messages.pgettext(
+          'login-view',
+          'Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device.',
+        )}
+      </Text>
+      <MnemonicTextarea
+        value={value}
+        onValueChange={onValueChange}
+        placeholder="abandon abandon abandon ... about"
+        data-testid="login-restore-input"
+      />
+      <Button
+        variant="success"
+        onClick={onSubmit}
+        disabled={!canSubmit}
+        data-testid="login-restore-submit">
+        {busy ? (
+          <Spinner />
+        ) : (
+          // TRANSLATORS: Button that restores the account from the entered recovery phrase.
+          <Button.Text>{messages.pgettext('login-view', 'Restore account')}</Button.Text>
+        )}
+      </Button>
+      <Link as="button" onClick={onBack} disabled={busy}>
+        <Link.Text>{messages.gettext('Back')}</Link.Text>
+      </Link>
+    </FlexColumn>
   );
 }
 
@@ -595,8 +414,7 @@ function BlockMessage() {
           ),
           { lockdownModeSettingName },
         )
-      : // This makes the translator comment appear on it's own line.
-        // TRANSLATORS: This is a warning message shown when the app is blocking the users
+      : // TRANSLATORS: This is a warning message shown when the app is blocking the users
         // TRANSLATORS: internet connection while logged out.
         messages.pgettext('login-view', 'Our kill switch is currently blocking your connection.'),
   );

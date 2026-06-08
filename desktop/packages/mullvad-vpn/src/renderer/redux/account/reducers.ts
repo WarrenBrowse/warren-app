@@ -1,4 +1,4 @@
-import { AccountDataError, WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
 import { ReduxAction } from '../store';
 
 type LoginMethod = 'existing_account' | 'new_account';
@@ -7,8 +7,12 @@ type ExpiredState = 'expired' | 'time_added';
 export type LoginState =
   | { type: 'none'; deviceRevoked: boolean }
   | { type: 'logging in'; method: LoginMethod }
+  // A new account has been minted + logged in daemon-side, but the GUI
+  // is holding on the login screen until the user backs up the freshly
+  // generated recovery phrase. Carries the new pubkey so the backup
+  // step can finalize via `accountCreated`.
+  | { type: 'backup-pending'; pubkey: WarrenPubKey }
   | { type: 'ok'; method: LoginMethod; expiredState?: ExpiredState }
-  | { type: 'failed'; method: 'existing_account'; error: AccountDataError['error'] }
   | { type: 'failed'; method: 'new_account'; error: Error };
 export interface IAccountReduxState {
   pubkey?: WarrenPubKey;
@@ -29,12 +33,6 @@ export default function (
   action: ReduxAction,
 ): IAccountReduxState {
   switch (action.type) {
-    case 'START_LOGIN':
-      return {
-        ...state,
-        status: { type: 'logging in', method: 'existing_account' },
-        pubkey: action.pubkey,
-      };
     case 'LOGGED_IN':
       return {
         ...state,
@@ -44,22 +42,12 @@ export default function (
         },
         pubkey: action.pubkey,
       };
-    case 'LOGIN_FAILED':
-      return {
-        ...state,
-        status: { type: 'failed', method: 'existing_account', error: action.error },
-      };
     case 'LOGGED_OUT':
       return {
         ...state,
         status: { type: 'none', deviceRevoked: false },
         pubkey: undefined,
         expiry: undefined,
-      };
-    case 'RESET_LOGIN_ERROR':
-      return {
-        ...state,
-        status: { type: 'none', deviceRevoked: false },
       };
     case 'DEVICE_REVOKED':
       return {
@@ -76,6 +64,12 @@ export default function (
         ...state,
         status: { type: 'failed', method: 'new_account', error: action.error },
       };
+    case 'ACCOUNT_AWAITING_BACKUP':
+      return {
+        ...state,
+        status: { type: 'backup-pending', pubkey: action.pubkey },
+        pubkey: action.pubkey,
+      };
     case 'ACCOUNT_CREATED':
       return {
         ...state,
@@ -91,11 +85,6 @@ export default function (
       return {
         ...state,
         status: { type: 'ok', method: 'existing_account' },
-      };
-    case 'UPDATE_PUBKEY':
-      return {
-        ...state,
-        pubkey: action.pubkey,
       };
     case 'UPDATE_PUBKEY_HISTORY':
       return {

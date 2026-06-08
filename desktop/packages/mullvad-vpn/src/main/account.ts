@@ -1,6 +1,5 @@
 import { closeToExpiry, hasExpired } from '../shared/account-expiry';
 import {
-  AccountDataError,
   DeviceEvent,
   DeviceState,
   IAccountData,
@@ -70,9 +69,6 @@ export default class Account {
 
   public registerIpcListeners() {
     IpcMainEventChannel.account.handleCreate(() => this.createNewAccount());
-    IpcMainEventChannel.account.handleLogin(
-      async (pubkey: WarrenPubKey) => (await this.login(pubkey)) ?? undefined,
-    );
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
     IpcMainEventChannel.account.handleGetWwwAuthToken(() => this.daemonRpc.getWwwAuthToken());
     IpcMainEventChannel.account.handleGetWarrenMnemonic(() => this.daemonRpc.getWarrenMnemonic());
@@ -90,11 +86,6 @@ export default class Account {
       return response;
     });
     IpcMainEventChannel.account.handleUpdateData(() => this.updateAccountData());
-
-    IpcMainEventChannel.accountHistory.handleClear(async () => {
-      await this.daemonRpc.clearAccountHistory();
-      void this.updateAccountHistory();
-    });
   }
 
   public isLoggedIn(): boolean {
@@ -170,15 +161,6 @@ export default class Account {
       const error = e as Error;
       log.error(`Failed to create account: ${error.message}`);
       throw error;
-    }
-  }
-
-  private async login(pubkey: WarrenPubKey): Promise<AccountDataError | void> {
-    const error = await this.daemonRpc.loginAccount(pubkey);
-
-    if (error) {
-      log.error(`Failed to login: ${error.error}`);
-      return error;
     }
   }
 

@@ -4226,3 +4226,63 @@ msgstr "12 sanan palautuslauseesi on AINOA tapa palauttaa Warren-identiteettisi 
 msgctxt "keys-view"
 msgid "words"
 msgstr "sanaa"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Varmuuskopioi lauseeni"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Olen varmuuskopioinut palautuslauseeni ja ymmärrän, että tämä tili poistetaan tältä laitteelta."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Jos et ole varmuuskopioinut palautuslausettasi, tilauksesi menetetään pysyvästi."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Kirjaudutaanko ulos tästä tilistä?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Uloskirjautuminen poistaa tämän tilin tältä laitteelta. Takaisin kirjautumiseen ei ole sähköpostia eikä salasanaa — palautuslauseesi on AINOA tapa palauttaa se."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Varmuuskopioi palautuslauseesi"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Uutta palautuslausetta ei voitu lukea. Yritä uudelleen."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Anna 12 sanan palautuslauseesi välilyönnein eroteltuna palauttaaksesi tilisi tälle laitteelle."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Minulla on jo tili"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Olen kirjoittanut palautuslauseeni muistiin turvalliseen paikkaan."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Virheellinen palautuslause. Tarkista sanat ja niiden järjestys ja yritä uudelleen."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Palauta tili"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Palauta tilisi"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren käyttää ei-säilytyksellistä lompakkoa: tilisi on 12 sanan palautuslause, joka on vain sinun hallussasi."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Tervetuloa Warreniin"

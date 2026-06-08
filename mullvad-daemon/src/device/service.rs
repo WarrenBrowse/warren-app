@@ -30,26 +30,14 @@ pub struct WarrenIdentityService {
     /// www_auth_token, init/verify_play_purchase Android). Keeps the
     /// legacy path as long as these flows are not migrated.
     proxy: AccountsProxy,
-    /// Abstract backend for the 3 critical MVP methods
-    /// (`create_account`, `get_data`, `delete_account`). The caller
+    /// Abstract backend for the critical MVP methods
+    /// (`get_data`, `delete_account`, `submit_voucher`). The caller
     /// (`spawn_warren_identity_service`) injects `WarrenRemoteAccountBackend`
     /// (warren-api) or the legacy `RemoteAccountBackend`.
     backend: Arc<dyn WarrenAccountBackend>,
 }
 
 impl WarrenIdentityService {
-    pub fn create_account(
-        &self,
-    ) -> impl Future<Output = Result<AccountNumber, rest::Error>> + use<> {
-        let backend = self.backend.clone();
-        let api_handle = self.api_availability.clone();
-        retry_future(
-            move || backend.create_account(),
-            move |result| should_retry(result, &api_handle),
-            RETRY_ACTION_STRATEGY,
-        )
-    }
-
     pub fn get_www_auth_token(
         &self,
         account: AccountNumber,

@@ -3591,3 +3591,63 @@ msgstr "Statut : en attente d'une connexion tunnel active pour configurer le map
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Le serveur peut attribuer un autre port si celui préféré est déjà pris. Les changements s'appliquent immédiatement, sans reconnexion."
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Sauvegarder ma phrase"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "J'ai sauvegardé ma phrase de restauration et je comprends que ce compte sera supprimé de cet appareil."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Si vous n'avez pas sauvegardé votre phrase de restauration, votre abonnement sera définitivement perdu."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Se déconnecter de ce compte ?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter — votre phrase de restauration est le SEUL moyen de le restaurer."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Sauvegardez votre phrase de restauration"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Impossible de lire la nouvelle phrase de restauration. Réessayez."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Saisissez votre phrase de restauration de 12 mots, séparés par des espaces, pour restaurer votre compte sur cet appareil."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "J'ai déjà un compte"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "J'ai noté ma phrase de restauration en lieu sûr."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Phrase de restauration invalide. Vérifiez les mots et leur ordre, puis réessayez."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Restaurer le compte"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Restaurez votre compte"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren utilise un portefeuille non dépositaire : votre compte est une phrase de restauration de 12 mots que vous seul détenez."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Bienvenue dans Warren"

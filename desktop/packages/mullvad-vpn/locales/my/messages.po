@@ -4078,3 +4078,63 @@ msgstr "• DAITA v2 (ပုံသေအားဖြင့် ပိတ်ထာ
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
 msgstr "• Multi-hop (ပုံသေအားဖြင့် ပိတ်ထား): ဝင်ပေါက်/ထွက်ပေါက်ကို ချိတ်ဆက်၍ မရစေရန် relay နှစ်ခုကို ဖြတ်သန်း ပို့ဆောင်သည်။"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "ကျွန်ုပ်၏ စကားစုကို အရန်သိမ်းပါ"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "ကျွန်ုပ်၏ ပြန်လည်ရယူရေးစကားစုကို အရန်သိမ်းပြီးပါပြီ၊ ဤအကောင့်ကို ဤစက်ပစ္စည်းမှ ဖယ်ရှားမည်ဖြစ်ကြောင်း နားလည်ပါသည်။"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "သင်၏ ပြန်လည်ရယူရေးစကားစုကို အရန်မသိမ်းထားပါက သင်၏ subscription သည် အပြီးအပိုင် ဆုံးရှုံးသွားပါမည်။"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "ဤအကောင့်မှ ထွက်မလား။"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "ထွက်လိုက်ခြင်းသည် ဤအကောင့်ကို ဤစက်ပစ္စည်းမှ ဖျက်ပစ်ပါသည်။ ပြန်လည်ဝင်ရောက်ရန် အီးမေးလ် သို့မဟုတ် စကားဝှက် မရှိပါ — သင်၏ ပြန်လည်ရယူရေးစကားစုသည် ၎င်းကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "သင်၏ ပြန်လည်ရယူရေးစကားစုကို အရန်သိမ်းပါ"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "ပြန်လည်ရယူရေးစကားစုအသစ်ကို မဖတ်နိုင်ပါ။ ထပ်စမ်းကြည့်ပါ။"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "ဤစက်ပစ္စည်းတွင် သင်၏အကောင့်ကို ပြန်လည်ရယူရန် သင်၏ စကားလုံး ၁၂ လုံးပါ ပြန်လည်ရယူရေးစကားစုကို ကွက်လပ်ဖြင့်ခြား၍ ထည့်ပါ။"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "ကျွန်ုပ်တွင် အကောင့်ရှိပြီးသားဖြစ်သည်"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "ကျွန်ုပ်၏ ပြန်လည်ရယူရေးစကားစုကို လုံခြုံသောနေရာတွင် ရေးမှတ်ထားပါသည်။"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "ပြန်လည်ရယူရေးစကားစု မမှန်ကန်ပါ။ စကားလုံးများနှင့် ၎င်းတို့၏ အစီအစဉ်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "အကောင့် ပြန်လည်ရယူပါ"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "သင်၏အကောင့်ကို ပြန်လည်ရယူပါ"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren သည် non-custodial wallet ကို အသုံးပြုသည်— သင်၏အကောင့်သည် သင်တစ်ဦးတည်းသာ ပိုင်ဆိုင်သော စကားလုံး ၁၂ လုံးပါ ပြန်လည်ရယူရေးစကားစုဖြစ်သည်။"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Warren မှ ကြိုဆိုပါသည်"

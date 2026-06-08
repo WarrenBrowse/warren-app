@@ -64,7 +64,8 @@ fait son maximum pour empêcher les fuites de trafic, avec des défauts orienté
 autorise, et comment.
 
 **Spécifique Warren** : l'identité est portée par une clé Ed25519 dérivée d'une mnémonique BIP39
-stockée dans `<settings_dir>/warren_mnemonic.txt`. Aucun numéro de compte, aucun token bearer.
+(12 mots) stockée dans le coffre de secrets de l'OS (Keychain macOS / DPAPI Windows / fichier
+`<settings_dir>/secrets/warren_mnemonic.txt` 0600 sous Linux). Aucun numéro de compte, aucun token bearer.
 Cette même clé authentifie le handshake TLS QUIC vers l'exit *et* signe les requêtes API Warren
 (headers `X-Warren-{PubKey,Signature,Timestamp,Nonce}`). Voir
 [`docs/warren-architecture.md`](docs/warren-architecture.md) § « Crypto handshake ».
@@ -315,9 +316,14 @@ Fichiers à connaître :
 - **Warren tunnel** — le tunnel QUIC Warren (handshake TLS Ed25519). C'est l'unique backend tunnel
   du fork : il n'y a plus de toggle pour l'activer/désactiver.
 - **Compte Warren** — les opérations account/device/abonnement passent par warren-api
-  (backend distant signé Ed25519). L'identité vient de la mnémonique BIP39 locale.
-- **Mnémonique** — BIP39 24 mots stockée dans `<settings_dir>/warren_mnemonic.txt`, source de la
-  `SigningKey` Ed25519 qui sert d'identité Warren.
+  (backend distant signé Ed25519). L'identité vient de la mnémonique BIP39 locale. « Créer un
+  compte » génère une mnémonique fraîche (sauvegarde obligatoire de la phrase à l'écran avant de
+  continuer) ; « Restaurer » importe une phrase existante ; la « Déconnexion » efface la mnémonique
+  de cet appareil (vraie déconnexion). Il n'y a pas de connexion par clé publique : on s'identifie
+  avec la phrase de restauration.
+- **Mnémonique** — BIP39 12 mots stockée dans le coffre de secrets de l'OS (Keychain / DPAPI /
+  fichier `secrets/warren_mnemonic.txt` 0600 sous Linux), source de la `SigningKey` Ed25519 qui sert
+  d'identité Warren.
 - **EndpointId / WarrenPubKey** — pubkey Ed25519 (32 bytes) qui identifie un exit Warren dans le
   `warren-relays.json`.
 
@@ -371,7 +377,7 @@ machine. Cf. `mullvad-paths/tests/warren_collision_safety.rs`.
 
 | Fichier | Rôle |
 |---|---|
-| `warren_mnemonic.txt` | Mnémonique BIP39 24 mots (perms 0600, owner root) |
+| `secrets/warren_mnemonic.txt` | Mnémonique BIP39 12 mots — uniquement le repli Linux/plaintext (perms 0600, owner root) ; sur macOS/Windows elle est dans le Keychain/DPAPI. Un fichier hérité `<settings_dir>/warren_mnemonic.txt` est migré puis supprimé au boot. |
 
 #### Fichiers Warren-only sous `<cache_dir>/`
 

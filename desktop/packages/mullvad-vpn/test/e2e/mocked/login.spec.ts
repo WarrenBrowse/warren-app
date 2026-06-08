@@ -10,6 +10,12 @@ const NON_EXPIRED_EXPIRY = {
   expiry: new Date(START_DATE.getTime() + 60 * 60 * 1000).toISOString(),
 };
 
+// A freshly minted Warren identity is an SS58 pubkey; the exact value
+// is opaque to the GUI, which just echoes it back on finalize-login.
+const NEW_PUBKEY = 'wb1234123412341234123412341234123412341234123412';
+const RECOVERY_PHRASE =
+  'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+
 let page: Page;
 let util: MockedTestUtils;
 let routes: RoutesObjectModel;
@@ -43,98 +49,60 @@ test.describe('Login view', () => {
     await util?.closePage();
   });
 
-  const VALID_PUBKEY_TYPED =
-    '12341234 12341234 12341234 12341234 12341234 12341234 12341234 12341234';
-  const VALID_PUBKEY_RAW = '1234123412341234123412341234123412341234123412341234123412341234';
+  test('Should offer create and restore paths (no public-key input)', async () => {
+    await expect(routes.login.selectors.header()).toHaveText('Welcome to Warren');
+    await expect(routes.login.selectors.createAccountButton()).toBeVisible();
+    await expect(routes.login.selectors.restoreButton()).toBeVisible();
+  });
 
-  const setAccountHistory = async () => {
-    await util.ipc.accountHistory[''].notify(VALID_PUBKEY_RAW);
-  };
+  test('Should require backing up the recovery phrase before finalizing a new account', async () => {
+    await util.ipc.account.create.handle(NEW_PUBKEY);
+    await util.ipc.account.getWarrenMnemonic.handle(RECOVERY_PHRASE);
 
-  test('Should login when clicking login button', async () => {
-    await routes.login.fillPubKey(VALID_PUBKEY_TYPED);
+    await routes.login.createNewAccount();
 
-    await Promise.all([util.ipc.account.login.expect(), routes.login.loginByClickingLoginButton()]);
-    const header = routes.login.selectors.header();
-    await expect(header).toHaveText('Logging in...');
-    await expect(routes.login.selectors.loginButton()).toBeDisabled();
+    // The daemon mints + logs into the new identity; the GUI holds on
+    // the login screen to run the mandatory backup step.
+    await util.ipc.account.device.notify({
+      type: 'logged in',
+      deviceState: {
+        type: 'logged in',
+        warrenIdentity: { pubkey: NEW_PUBKEY },
+      },
+    });
+
+    // The minted phrase is shown for backup.
+    await expect(routes.login.selectors.header()).toHaveText('Back up your recovery phrase');
+    await expect(routes.login.selectors.mnemonicGrid()).toBeVisible();
+
+    // Proceeding is gated behind the explicit "I saved it" confirmation.
+    await expect(routes.login.selectors.backupContinueButton()).toBeDisabled();
+
+    // After confirming, the brand-new (no-subscription) account routes
+    // to the expired / buy-plan screen.
+    await routes.login.confirmBackup();
+    await page.clock.fastForward(1000);
+    await routes.expired.waitForRoute();
+  });
+
+  test('Should restore an account from a recovery phrase', async () => {
+    await routes.login.startRestore();
+    await expect(routes.login.selectors.header()).toHaveText('Restore your account');
+
+    await routes.login.fillRecoveryPhrase(RECOVERY_PHRASE);
+
+    await Promise.all([util.ipc.account.setWarrenMnemonic.expect(), routes.login.submitRestore()]);
 
     await util.ipc.account.device.notify({
       type: 'logged in',
       deviceState: {
         type: 'logged in',
-        warrenIdentity: {
-          pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
-        },
+        warrenIdentity: { pubkey: NEW_PUBKEY },
       },
     });
     await util.ipc.account[''].notify(NON_EXPIRED_EXPIRY);
 
-    await expect(header).toHaveText('Logged in');
     await page.clock.fastForward(1000);
     await routes.main.waitForRoute();
-  });
-
-  test('Should try to login when pressing enter', async () => {
-    await routes.login.fillPubKey(VALID_PUBKEY_TYPED);
-
-    await Promise.all([util.ipc.account.login.expect(), routes.login.loginByPressingEnter()]);
-    const header = routes.login.selectors.header();
-    await expect(header).toHaveText('Logging in...');
-    await expect(routes.login.selectors.loginButton()).toBeDisabled();
-  });
-
-  test('Should disable login button when input is invalid', async () => {
-    const loginButton = routes.login.selectors.loginButton();
-    await expect(loginButton).toBeDisabled();
-
-    await routes.login.fillPubKey('1234 1234');
-    await expect(loginButton).toBeDisabled();
-  });
-
-  test('Should not warn about creating an account', async () => {
-    const accountHistoryItemButton = routes.login.getAccountHistoryItemButton();
-    await expect(accountHistoryItemButton).not.toBeVisible();
-
-    await Promise.all([util.ipc.account.create.expect(), routes.login.createNewAccount()]);
-  });
-
-  test('Should warn about creating an account', async () => {
-    await setAccountHistory();
-
-    const confirmationMessage = routes.login.getCreateNewAccountConfirmationMessage();
-    await expect(confirmationMessage).not.toBeVisible();
-    await routes.login.createNewAccount();
-    await expect(confirmationMessage).toBeVisible();
-    await routes.login.cancelCreateNewAccount();
-    await expect(confirmationMessage).not.toBeVisible();
-
-    await routes.login.createNewAccount();
-
-    await Promise.all([util.ipc.account.create.expect(), routes.login.confirmCreateNewAccount()]);
-  });
-
-  test('Should warn about clearing account history', async () => {
-    await setAccountHistory();
-
-    const accountHistoryItemButton = routes.login.getAccountHistoryItemButton();
-    await expect(accountHistoryItemButton).toBeVisible();
-
-    const confirmationMessage = routes.login.getClearAccountHistoryConfirmationMessage();
-    await expect(confirmationMessage).not.toBeVisible();
-    await routes.login.clearAccountHistory();
-    await expect(confirmationMessage).toBeVisible();
-    await routes.login.cancelClearAccountHistory();
-    await expect(confirmationMessage).not.toBeVisible();
-    await expect(accountHistoryItemButton).toBeVisible();
-
-    await routes.login.clearAccountHistory();
-    await Promise.all([
-      util.ipc.accountHistory.clear.expect(),
-      routes.login.confirmClearAccountHistory(),
-    ]);
-
-    await util.ipc.accountHistory[''].notify(undefined);
-    await expect(accountHistoryItemButton).not.toBeVisible();
   });
 });

@@ -12,6 +12,7 @@ export function getNavigationBase(
     } else if (
       loginState.type === 'none' ||
       loginState.type === 'logging in' ||
+      loginState.type === 'backup-pending' ||
       loginState.type === 'failed'
     ) {
       return RoutePath.login;

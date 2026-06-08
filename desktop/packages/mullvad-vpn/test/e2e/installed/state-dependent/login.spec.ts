@@ -1,24 +1,24 @@
 import { expect, test } from '@playwright/test';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { Page } from 'playwright';
 
 import { RoutePath } from '../../../../src/shared/routes';
 import { RoutesObjectModel } from '../../route-object-models';
-import { expectDisconnected } from '../../shared/tunnel-state';
 import { TestUtils } from '../../utils';
 import { startInstalledApp } from '../installed-utils';
 
-// This test expects the daemon to be logged out and the public key history to be cleared.
+// This test expects the daemon to be logged out.
 // Env parameters:
-//   `ACCOUNT_NUMBER`: Warren pubkey (64-char hex) to use when logging in
+//   `ACCOUNT_MNEMONIC`: a 12/24-word BIP39 recovery phrase whose
+//   account is known to be expired, used to exercise the restore flow.
+//
+// Warren has no public-key login: an identity is a BIP39 recovery
+// phrase. You either create a brand-new account (which mints a fresh
+// phrase) or restore an existing one by entering its phrase.
 
 let page: Page;
 let util: TestUtils;
 let routes: RoutesObjectModel;
-
-let pubkey: string;
-
-const INVALID_PUBKEY = '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234ZZZZ';
 
 test.beforeAll(async () => {
   ({ page, util } = await startInstalledApp());
@@ -29,94 +29,44 @@ test.afterAll(async () => {
   await util?.closePage();
 });
 
-test('App should fail to login', async () => {
+test('App should show the welcome screen', async () => {
   await util.expectRoute(RoutePath.login);
 
-  const title = page.locator('h1');
-  const subtitle = page.getByTestId('subtitle');
-
-  await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your public key');
-
-  await routes.login.fillPubKey(INVALID_PUBKEY);
-  await routes.login.loginByPressingEnter();
-
-  await expect(title).toHaveText('Login failed');
-  await expect(subtitle).toHaveText('Invalid public key');
-
-  await routes.login.fillPubKey('');
+  await expect(page.locator('h1')).toHaveText('Welcome to Warren');
+  await expect(routes.login.selectors.createAccountButton()).toBeVisible();
+  await expect(routes.login.selectors.restoreButton()).toBeVisible();
 });
 
-test('App should create account', async () => {
+test('App should create a new account after backing up the phrase', async () => {
   await util.expectRoute(RoutePath.login);
 
   await routes.login.createNewAccount();
+  await expect(page.locator('h1')).toHaveText('Back up your recovery phrase');
+  await expect(routes.login.selectors.mnemonicGrid()).toBeVisible();
+
+  // A brand-new account has no subscription yet → expired screen.
+  await routes.login.confirmBackup();
   await util.expectRoute(RoutePath.expired);
 
-  const outOfTimeTitle = page.getByTestId('title');
-  await expect(outOfTimeTitle).toHaveText('Congrats!');
-
-  const inputValue = await page.getByTestId('warren-pubkey').textContent();
-  // 64 hex chars + 7 spaces (8 groups of 8) = 71 visible chars
-  expect(inputValue).toHaveLength(71);
-  pubkey = inputValue!.replaceAll(' ', '');
+  // Clean up the freshly created identity from the daemon.
+  execSync('mullvad account logout');
 });
 
 test('App should become logged out', async () => {
-  exec('mullvad account logout');
   await util.expectRoute(RoutePath.login);
 });
 
-test('App should log in', async () => {
+test('App should restore an expired account from its recovery phrase', async () => {
+  test.skip(!process.env.ACCOUNT_MNEMONIC, 'ACCOUNT_MNEMONIC not provided');
   await util.expectRoute(RoutePath.login);
 
-  const title = page.locator('h1');
-  const subtitle = page.getByTestId('subtitle');
+  await routes.login.startRestore();
+  await expect(page.locator('h1')).toHaveText('Restore your account');
 
-  await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your public key');
+  await routes.login.fillRecoveryPhrase(process.env.ACCOUNT_MNEMONIC!);
+  await routes.login.submitRestore();
 
-  await routes.login.fillPubKey(process.env.ACCOUNT_NUMBER!);
-  await routes.login.loginByClickingLoginButton();
-
-  await expect(title).toHaveText('Logged in');
-  await expect(subtitle).toHaveText('Valid public key');
-
-  await util.expectRoute(RoutePath.main);
-
-  await expectDisconnected(page);
-});
-
-test('App should log out', async () => {
-  await page.getByTestId('account-button').click();
-
-  await util.expectRoute(RoutePath.account);
-
-  await page.getByText('Log out').click();
-  await util.expectRoute(RoutePath.login);
-
-  const title = page.locator('h1');
-  const subtitle = page.getByTestId('subtitle');
-  await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your public key');
-});
-
-test('App should log in to expired account', async () => {
-  await util.expectRoute(RoutePath.login);
-
-  const title = page.locator('h1');
-  const subtitle = page.getByTestId('subtitle');
-
-  await expect(title).toHaveText('Login');
-  await expect(subtitle).toHaveText('Enter your public key');
-
-  await routes.login.fillPubKey(pubkey);
-
-  await routes.login.loginByPressingEnter();
   await util.expectRoute(RoutePath.expired);
-
-  const outOfTimeTitle = page.getByTestId('title');
-  await expect(outOfTimeTitle).toHaveText('Out of time');
 
   execSync('mullvad account logout');
 });

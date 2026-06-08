@@ -6,7 +6,6 @@ import * as grpcTypes from 'management-interface/management-interface/grpc-types
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
-  AccountDataError,
   AccountDataResponse,
   CustomListError,
   CustomProxy,
@@ -331,22 +330,6 @@ export class DaemonRpc extends GrpcClient {
     return response.getValue();
   }
 
-  public async loginAccount(pubkey: WarrenPubKey): Promise<AccountDataError | void> {
-    try {
-      await this.callString(this.client.loginAccount, pubkey);
-    } catch (e) {
-      const error = e as grpc.ServiceError;
-      switch (error.code) {
-        case grpc.status.RESOURCE_EXHAUSTED:
-          return { type: 'error', error: 'too-many-devices' };
-        case grpc.status.UNAUTHENTICATED:
-          return { type: 'error', error: 'invalid-account' };
-        default:
-          return { type: 'error', error: 'communication' };
-      }
-    }
-  }
-
   public async logoutAccount(source: LogoutSource): Promise<void> {
     const prefixedSource = `desktop ${source}`;
     await this.callString(this.client.logoutAccount, prefixedSource);
@@ -635,10 +618,6 @@ export class DaemonRpc extends GrpcClient {
   public async getAccountHistory(): Promise<WarrenPubKey | undefined> {
     const response = await this.callEmpty<grpcTypes.AccountHistory>(this.client.getAccountHistory);
     return response.getNumber()?.getValue();
-  }
-
-  public async clearAccountHistory(): Promise<void> {
-    await this.callEmpty(this.client.clearAccountHistory);
   }
 
   public async getCurrentVersion(): Promise<string> {

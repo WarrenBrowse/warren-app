@@ -4226,3 +4226,63 @@ msgstr "12 kelimelik kurtarma ifadeniz, Warren kimliğinizi başka bir cihazda g
 msgctxt "keys-view"
 msgid "words"
 msgstr "kelime"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "İfademi yedekle"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Kurtarma ifademi yedekledim ve bu hesabın bu cihazdan kaldırılacağını anlıyorum."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Kurtarma ifadenizi yedeklemediyseniz aboneliğiniz kalıcı olarak kaybolur."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Bu hesaptan çıkış yapılsın mı?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Çıkış yapmak bu hesabı bu cihazdan siler. Yeniden giriş yapmak için e-posta veya parola yoktur — kurtarma ifadeniz onu geri yüklemenin TEK yoludur."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Kurtarma ifadenizi yedekleyin"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Yeni kurtarma ifadesi okunamadı. Tekrar deneyin."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Hesabınızı bu cihazda geri yüklemek için 12 kelimelik kurtarma ifadenizi boşluklarla ayırarak girin."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Zaten bir hesabım var"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Kurtarma ifademi güvenli bir yere yazdım."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Geçersiz kurtarma ifadesi. Kelimeleri ve sıralarını kontrol edin, sonra tekrar deneyin."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Hesabı geri yükle"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Hesabınızı geri yükleyin"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren saklamasız bir cüzdan kullanır: hesabınız yalnızca sizde bulunan 12 kelimelik bir kurtarma ifadesidir."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Warren'a hoş geldiniz"

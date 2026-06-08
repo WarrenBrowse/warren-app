@@ -18,51 +18,24 @@ export class LoginRouteObjectModel {
     await this.utils.expectRoute(RoutePath.login);
   }
 
-  fillPubKey(pubkey: string) {
-    return this.selectors.loginInput().fill(pubkey);
-  }
-
-  async loginByPressingEnter() {
-    await this.selectors.loginInput().press('Enter');
-  }
-
-  async loginByClickingLoginButton() {
-    await this.selectors.loginButton().click();
-  }
-
   async createNewAccount() {
-    await this.selectors.createNewAccountButton().click();
+    await this.selectors.createAccountButton().click();
   }
 
-  getCreateNewAccountConfirmationMessage() {
-    return this.selectors.createNewAccountMessage();
+  async confirmBackup() {
+    await this.selectors.backupConfirmCheckbox().click();
+    await this.selectors.backupContinueButton().click();
   }
 
-  async confirmCreateNewAccount() {
-    await this.selectors.confirmCreateNewAccountButton().click();
+  async startRestore() {
+    await this.selectors.restoreButton().click();
   }
 
-  async cancelCreateNewAccount() {
-    await this.selectors.cancelDialogButton().click();
+  async fillRecoveryPhrase(phrase: string) {
+    await this.selectors.restoreInput().fill(phrase);
   }
 
-  async clearAccountHistory() {
-    await this.selectors.clearAccountHistory().click();
-  }
-
-  getAccountHistoryItemButton() {
-    return this.selectors.accountHistoryItemButton();
-  }
-
-  getClearAccountHistoryConfirmationMessage() {
-    return this.selectors.clearAccountHistoryMessage();
-  }
-
-  async confirmClearAccountHistory() {
-    await this.selectors.confirmClearAccountHistoryButton().click();
-  }
-
-  async cancelClearAccountHistory() {
-    await this.selectors.cancelDialogButton().click();
+  async submitRestore() {
+    await this.selectors.restoreSubmitButton().click();
   }
 }

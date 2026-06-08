@@ -4226,3 +4226,63 @@ msgstr "Je herstelzin van 12 woorden is de ENIGE manier om je Warren-identiteit 
 msgctxt "keys-view"
 msgid "words"
 msgstr "woorden"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Back-up van mijn zin maken"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Ik heb een back-up van mijn herstelzin gemaakt en begrijp dat dit account van dit apparaat wordt verwijderd."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Als je geen back-up van je herstelzin hebt gemaakt, gaat je abonnement permanent verloren."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Uitloggen bij dit account?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Bij uitloggen wordt dit account van dit apparaat gewist. Er is geen e-mailadres of wachtwoord om opnieuw in te loggen — je herstelzin is de ENIGE manier om het te herstellen."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Maak een back-up van je herstelzin"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Kan de nieuwe herstelzin niet lezen. Probeer het opnieuw."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Voer je herstelzin van 12 woorden in, gescheiden door spaties, om je account op dit apparaat te herstellen."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Ik heb al een account"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Ik heb mijn herstelzin op een veilige plek opgeschreven."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Ongeldige herstelzin. Controleer de woorden en hun volgorde en probeer het opnieuw."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Account herstellen"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Herstel je account"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren gebruikt een non-custodial wallet: je account is een herstelzin van 12 woorden die alleen jij bezit."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Welkom bij Warren"

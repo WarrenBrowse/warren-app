@@ -4075,3 +4075,63 @@ msgstr "• DAITA v2（デフォルトでオフ）：パディングを挿入し
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
 msgstr "• マルチホップ（デフォルトでオフ）：2つのリレーを経由し、入口と出口を関連付けられないようにします。"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "フレーズをバックアップ"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "リカバリーフレーズをバックアップしました。このアカウントがこのデバイスから削除されることを理解しています。"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "リカバリーフレーズをバックアップしていない場合、サブスクリプションは完全に失われます。"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "このアカウントからログアウトしますか？"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "ログアウトすると、このアカウントはこのデバイスから消去されます。再ログインするためのメールアドレスやパスワードはありません。リカバリーフレーズが復元する唯一の方法です。"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "リカバリーフレーズをバックアップ"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "新しいリカバリーフレーズを読み取れませんでした。もう一度お試しください。"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "このデバイスでアカウントを復元するには、12単語のリカバリーフレーズをスペースで区切って入力してください。"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "すでにアカウントを持っています"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "リカバリーフレーズを安全な場所に書き留めました。"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "無効なリカバリーフレーズです。単語とその順序を確認してから、もう一度お試しください。"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "アカウントを復元"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "アカウントを復元する"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren は非カストディアル型ウォレットを使用します。アカウントは、あなただけが保有する12単語のリカバリーフレーズです。"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Warren へようこそ"

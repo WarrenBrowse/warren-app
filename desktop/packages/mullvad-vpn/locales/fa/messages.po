@@ -4089,3 +4089,63 @@ msgstr "• DAITA v2 (به‌طور پیش‌فرض خاموش): تزریق دا
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
 msgstr "• چندپرشی (به‌طور پیش‌فرض خاموش): مسیریابی از طریق دو رله تا ورود و خروج قابل ارتباط‌دهی به یکدیگر نباشند."
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "از عبارت من نسخه پشتیبان بگیر"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "از عبارت بازیابی خود نسخه پشتیبان گرفته‌ام و می‌دانم که این حساب از این دستگاه حذف خواهد شد."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "اگر از عبارت بازیابی خود نسخه پشتیبان نگرفته باشید، اشتراک شما برای همیشه از دست می‌رود."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "از این حساب خارج می‌شوید؟"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "خروج از حساب، این حساب را از این دستگاه پاک می‌کند. هیچ ایمیل یا گذرواژه‌ای برای ورود مجدد وجود ندارد — عبارت بازیابی شما تنها راه بازیابی آن است."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "از عبارت بازیابی خود نسخه پشتیبان بگیرید"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "خواندن عبارت بازیابی جدید ممکن نشد. دوباره تلاش کنید."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "عبارت بازیابی ۱۲ کلمه‌ای خود را که با فاصله جدا شده‌اند وارد کنید تا حساب خود را روی این دستگاه بازیابی کنید."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "از قبل حساب دارم"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "عبارت بازیابی خود را در جای امنی یادداشت کرده‌ام."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "عبارت بازیابی نامعتبر است. کلمات و ترتیب آن‌ها را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "بازیابی حساب"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "حساب خود را بازیابی کنید"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren از کیف پول غیرامانی استفاده می‌کند: حساب شما یک عبارت بازیابی ۱۲ کلمه‌ای است که فقط شما آن را دارید."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "به Warren خوش آمدید"

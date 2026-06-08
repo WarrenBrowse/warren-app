@@ -3474,3 +3474,63 @@ msgstr "Stare: se așteaptă o conexiune de tunel activă pentru a configura map
 msgctxt "port-forwarding-view"
 msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
 msgstr "Serverul poate atribui un alt port dacă cel preferat este deja ocupat. Modificările se aplică imediat, fără reconectare."
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Salvează fraza mea"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Am salvat fraza mea de recuperare și înțeleg că acest cont va fi eliminat de pe acest dispozitiv."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Dacă nu ți-ai salvat fraza de recuperare, abonamentul tău va fi pierdut definitiv."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Te deconectezi de la acest cont?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Deconectarea șterge acest cont de pe acest dispozitiv. Nu există e-mail sau parolă pentru reconectare — fraza ta de recuperare este SINGURUL mod de a-l restaura."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Salvează-ți fraza de recuperare"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Nu s-a putut citi noua frază de recuperare. Încearcă din nou."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Introdu fraza de recuperare din 12 cuvinte, separate prin spații, pentru a-ți restaura contul pe acest dispozitiv."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Am deja un cont"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Mi-am notat fraza de recuperare într-un loc sigur."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Frază de recuperare invalidă. Verifică cuvintele și ordinea lor, apoi încearcă din nou."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Restaurează contul"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Restaurează-ți contul"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren folosește un portofel fără custodie: contul tău este o frază de recuperare din 12 cuvinte pe care doar tu o deții."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Bun venit la Warren"

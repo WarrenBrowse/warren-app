@@ -40,6 +40,13 @@ export function countMnemonicWords(input: string): number {
   return input.split(/\s+/).filter((w) => w.length > 0).length;
 }
 
+// Canonicalizes a pasted BIP39 phrase before handing it to the daemon:
+// trims, lowercases, and collapses runs of whitespace to single spaces.
+// Shared by every restore/import entry point so they stay consistent.
+export function normalizeMnemonic(input: string): string {
+  return input.trim().toLowerCase().split(/\s+/).join(' ');
+}
+
 export type MnemonicTextareaProps = {
   value: string;
   onValueChange: (value: string) => void;

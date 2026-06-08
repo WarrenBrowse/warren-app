@@ -1,11 +1,11 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Button, Text } from '../../../lib/components';
+import { Button, Checkbox, Flex, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
@@ -14,6 +14,7 @@ import { useEffectEvent } from '../../../lib/utility-hooks';
 import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
+import { ModalAlert, ModalAlertType } from '../../Modal';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
 import { AccountExpiryRow, LabelledRow, WarrenPubKeyRow } from './components';
@@ -54,13 +55,32 @@ export function AccountView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => onMount(), []);
 
+  // Logout is a TRUE sign-out: the daemon erases the recovery phrase
+  // from this device. Gate it behind an explicit confirmation that the
+  // user has backed up their phrase, otherwise the account (and its
+  // subscription) is unrecoverable.
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [backedUp, setBackedUp] = useState(false);
+
+  const openLogoutConfirm = useCallback(() => {
+    setBackedUp(false);
+    setLogoutConfirmOpen(true);
+  }, []);
+  const closeLogoutConfirm = useCallback(() => setLogoutConfirmOpen(false), []);
+
   // Hack needed because if we just call `logout` directly in `onClick`
   // then it is run with the wrong `this`.
   const doLogout = useCallback(async () => {
+    setLogoutConfirmOpen(false);
     await logout('gui-logout-button');
   }, [logout]);
 
   const goToKeys = useCallback(() => {
+    history.push(RoutePath.keys);
+  }, [history]);
+
+  const goBackupPhrase = useCallback(() => {
+    setLogoutConfirmOpen(false);
     history.push(RoutePath.keys);
   }, [history]);
 
@@ -114,7 +134,7 @@ export function AccountView() {
                 </Button.Text>
               </Button>
 
-              <Button variant="destructive" onClick={doLogout}>
+              <Button variant="destructive" onClick={openLogoutConfirm}>
                 <Button.Text>
                   {
                     // TRANSLATORS: Button label for logging out.
@@ -126,6 +146,49 @@ export function AccountView() {
           </StyledViewContainer>
         </View.Content>
       </BackAction>
+
+      <ModalAlert
+        isOpen={logoutConfirmOpen}
+        type={ModalAlertType.caution}
+        title={messages.pgettext('account-view', 'Log out of this account?')}
+        message={[
+          messages.pgettext(
+            'account-view',
+            'Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it.',
+          ),
+          messages.pgettext(
+            'account-view',
+            'If you have not backed up your recovery phrase, your subscription will be lost permanently.',
+          ),
+        ]}
+        gridButtons={[
+          <Button key="backup" onClick={goBackupPhrase}>
+            <Button.Text>
+              {
+                // TRANSLATORS: Button that opens the recovery-phrase backup view before logging out.
+                messages.pgettext('account-view', 'Back up my phrase')
+              }
+            </Button.Text>
+          </Button>,
+          <Button key="logout" variant="destructive" disabled={!backedUp} onClick={doLogout}>
+            <Button.Text>{messages.pgettext('account-view', 'Log out')}</Button.Text>
+          </Button>,
+        ]}
+        close={closeLogoutConfirm}>
+        <Checkbox checked={backedUp} onCheckedChange={setBackedUp}>
+          <Flex gap="small" alignItems="flex-start">
+            <Checkbox.Trigger>
+              <Checkbox.Input />
+            </Checkbox.Trigger>
+            <Checkbox.Label>
+              {messages.pgettext(
+                'account-view',
+                'I have backed up my recovery phrase and understand this account will be removed from this device.',
+              )}
+            </Checkbox.Label>
+          </Flex>
+        </Checkbox>
+      </ModalAlert>
     </View>
   );
 }

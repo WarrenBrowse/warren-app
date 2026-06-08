@@ -1,27 +1,13 @@
 import { hasExpired } from '../../../shared/account-expiry';
-import { AccountDataError, WarrenPubKey } from '../../../shared/daemon-rpc-types';
-
-interface IStartLoginAction {
-  type: 'START_LOGIN';
-  pubkey: WarrenPubKey;
-}
+import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
 
 interface ILoggedInAction {
   type: 'LOGGED_IN';
   pubkey: WarrenPubKey;
 }
 
-interface ILoginFailedAction {
-  type: 'LOGIN_FAILED';
-  error: AccountDataError['error'];
-}
-
 interface ILoggedOutAction {
   type: 'LOGGED_OUT';
-}
-
-interface IResetLoginErrorAction {
-  type: 'RESET_LOGIN_ERROR';
 }
 
 interface IDeviceRevokedAction {
@@ -37,6 +23,11 @@ interface ICreateAccountFailed {
   error: Error;
 }
 
+interface IAccountAwaitingBackup {
+  type: 'ACCOUNT_AWAITING_BACKUP';
+  pubkey: WarrenPubKey;
+}
+
 interface IAccountCreated {
   type: 'ACCOUNT_CREATED';
   pubkey: WarrenPubKey;
@@ -45,11 +36,6 @@ interface IAccountCreated {
 
 interface IAccountSetupFinished {
   type: 'ACCOUNT_SETUP_FINISHED';
-}
-
-interface IUpdatePubKeyAction {
-  type: 'UPDATE_PUBKEY';
-  pubkey: WarrenPubKey;
 }
 
 interface IUpdatePubKeyHistoryAction {
@@ -64,26 +50,16 @@ interface IUpdateAccountExpiryAction {
 }
 
 export type AccountAction =
-  | IStartLoginAction
   | ILoggedInAction
-  | ILoginFailedAction
   | ILoggedOutAction
-  | IResetLoginErrorAction
   | IDeviceRevokedAction
   | IStartCreateAccount
   | ICreateAccountFailed
+  | IAccountAwaitingBackup
   | IAccountCreated
   | IAccountSetupFinished
-  | IUpdatePubKeyAction
   | IUpdatePubKeyHistoryAction
   | IUpdateAccountExpiryAction;
-
-function startLogin(pubkey: WarrenPubKey): IStartLoginAction {
-  return {
-    type: 'START_LOGIN',
-    pubkey,
-  };
-}
 
 function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
@@ -92,22 +68,9 @@ function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   };
 }
 
-function loginFailed(error: AccountDataError['error']): ILoginFailedAction {
-  return {
-    type: 'LOGIN_FAILED',
-    error,
-  };
-}
-
 function loggedOut(): ILoggedOutAction {
   return {
     type: 'LOGGED_OUT',
-  };
-}
-
-function resetLoginError(): IResetLoginErrorAction {
-  return {
-    type: 'RESET_LOGIN_ERROR',
   };
 }
 
@@ -130,6 +93,13 @@ function createAccountFailed(error: Error): ICreateAccountFailed {
   };
 }
 
+function accountAwaitingBackup(pubkey: WarrenPubKey): IAccountAwaitingBackup {
+  return {
+    type: 'ACCOUNT_AWAITING_BACKUP',
+    pubkey,
+  };
+}
+
 function accountCreated(pubkey: WarrenPubKey, expiry: string): IAccountCreated {
   return {
     type: 'ACCOUNT_CREATED',
@@ -140,13 +110,6 @@ function accountCreated(pubkey: WarrenPubKey, expiry: string): IAccountCreated {
 
 function accountSetupFinished(): IAccountSetupFinished {
   return { type: 'ACCOUNT_SETUP_FINISHED' };
-}
-
-function updatePubKey(pubkey: WarrenPubKey): IUpdatePubKeyAction {
-  return {
-    type: 'UPDATE_PUBKEY',
-    pubkey,
-  };
 }
 
 function updatePubKeyHistory(pubkeyHistory?: WarrenPubKey): IUpdatePubKeyHistoryAction {
@@ -165,17 +128,14 @@ function updateAccountExpiry(expiry?: string): IUpdateAccountExpiryAction {
 }
 
 export default {
-  startLogin,
   loggedIn,
-  loginFailed,
   loggedOut,
-  resetLoginError,
   deviceRevoked,
   startCreateAccount,
   createAccountFailed,
+  accountAwaitingBackup,
   accountCreated,
   accountSetupFinished,
-  updatePubKey,
   updatePubKeyHistory,
   updateAccountExpiry,
 };

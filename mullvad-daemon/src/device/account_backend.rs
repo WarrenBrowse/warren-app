@@ -7,8 +7,8 @@
 //! - [`RemoteAccountBackend`]: thin wrap over the legacy Mullvad
 //!   `AccountsProxy`, used only when no Warren signing key is available.
 //!
-//! Scope (4 methods): `create_account`, `get_data`,
-//! `delete_account`, `submit_voucher`. The remaining methods
+//! Scope (3 methods): `get_data`, `delete_account`,
+//! `submit_voucher`. The remaining methods
 //! (`get_www_auth_token`, `init_play_purchase`, `verify_play_purchase`)
 //! stay in [`super::service::WarrenIdentityService`] directly on
 //! the `AccountsProxy` for this phase.
@@ -38,9 +38,6 @@ pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 /// only for degraded cases (disk corruption for instance) —
 /// the nominal path is always `Ok`.
 pub trait WarrenAccountBackend: Send + Sync {
-    /// Creates a new account. Returns the produced `AccountNumber`.
-    fn create_account(&self) -> BoxFut<Result<AccountNumber, rest::Error>>;
-
     /// Fetches the account data (= mainly the expiry).
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>>;
 
@@ -88,11 +85,6 @@ impl RemoteAccountBackend {
 }
 
 impl WarrenAccountBackend for RemoteAccountBackend {
-    fn create_account(&self) -> BoxFut<Result<AccountNumber, rest::Error>> {
-        let proxy = self.proxy.clone();
-        Box::pin(async move { proxy.create_account().await })
-    }
-
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
         let proxy = self.proxy.clone();
         Box::pin(async move { proxy.get_data(account).await })
@@ -130,10 +122,6 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 /// the dispatch in `device/mod.rs`).
 ///
 /// Mapping semantics:
-/// - `create_account()`: returns the `WarrenApiClient` pubkey hex
-///   (= Warren signer identity at daemon boot). No server call —
-///   real account creation on the warren-api side goes through the
-///   voucher flow (`POST /v1/register` non-auth) outside this trait.
 /// - `get_data(account)`: signed `GET /v1/subscription` ->
 ///   [`AccountData`] with `id = account` and `expiry` reconstructed from
 ///   `expires_at` (unix seconds -> `chrono::DateTime<Utc>`).
@@ -156,15 +144,6 @@ impl WarrenRemoteAccountBackend {
 }
 
 impl WarrenAccountBackend for WarrenRemoteAccountBackend {
-    fn create_account(&self) -> BoxFut<Result<AccountNumber, rest::Error>> {
-        // No server call: the Warren identity is fixed by the
-        // mnemonic loaded at boot. The actual subscription creation on
-        // the warren-api side goes through the voucher flow (`POST /v1/register`
-        // non-auth) outside this trait.
-        let pubkey_ss58 = self.client.pubkey_ss58();
-        Box::pin(async move { Ok(pubkey_ss58) })
-    }
-
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
         let client = self.client.clone();
         Box::pin(async move {
@@ -354,21 +333,6 @@ mod tests {
             axum::serve(listener, app).await.expect("serve");
         });
         (format!("http://{addr}"), state)
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_account_create_returns_signing_pubkey() {
-        // Critical regression: `create_account` must return the
-        // pubkey hex of the signer identity (= consistency with the
-        // login-state `device.json`). No server call — purely local.
-        let (api_url, _state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[60u8; 32]);
-        let expected_pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
-        let client = WarrenApiClient::new(api_url, key);
-        let backend = WarrenRemoteAccountBackend::new(client);
-
-        let acc = backend.create_account().await.expect("create OK");
-        assert_eq!(acc, expected_pubkey_ss58);
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

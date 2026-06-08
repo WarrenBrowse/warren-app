@@ -13,6 +13,7 @@ import {
   countMnemonicWords,
   MnemonicGrid,
   MnemonicTextarea,
+  normalizeMnemonic,
 } from '../../warren-mnemonic';
 import { OnboardingLayout } from './components';
 
@@ -86,8 +87,7 @@ export function OnboardingWalletView() {
     setError(null);
     setSubmitting(true);
     try {
-      const normalized = importInput.trim().toLowerCase().split(/\s+/).join(' ');
-      await setWarrenMnemonic(normalized);
+      await setWarrenMnemonic(normalizeMnemonic(importInput));
       push(RoutePath.onboardingSubscription);
     } catch (e) {
       const err = e as Error;

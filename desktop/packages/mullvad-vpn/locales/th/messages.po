@@ -4075,3 +4075,63 @@ msgstr "• DAITA v2 (ปิดเป็นค่าเริ่มต้น): �
 msgctxt "warren-onboarding"
 msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
 msgstr "• Multi-hop (ปิดเป็นค่าเริ่มต้น): กำหนดเส้นทางผ่านรีเลย์สองจุด เพื่อไม่ให้เชื่อมโยงจุดเข้าและจุดออกเข้าด้วยกันได้"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "สำรองวลีของฉัน"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "ฉันได้สำรองวลีกู้คืนของฉันแล้ว และเข้าใจว่าบัญชีนี้จะถูกลบออกจากอุปกรณ์นี้"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "หากคุณยังไม่ได้สำรองวลีกู้คืน การสมัครสมาชิกของคุณจะสูญหายอย่างถาวร"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "ออกจากระบบบัญชีนี้หรือไม่"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "การออกจากระบบจะลบบัญชีนี้ออกจากอุปกรณ์นี้ ไม่มีอีเมลหรือรหัสผ่านสำหรับเข้าสู่ระบบอีกครั้ง — วลีกู้คืนของคุณเป็นวิธีเดียวที่จะกู้คืนได้"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "สำรองวลีกู้คืนของคุณ"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "ไม่สามารถอ่านวลีกู้คืนใหม่ได้ โปรดลองอีกครั้ง"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "ป้อนวลีกู้คืน 12 คำของคุณ โดยคั่นด้วยช่องว่าง เพื่อกู้คืนบัญชีของคุณบนอุปกรณ์นี้"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "ฉันมีบัญชีอยู่แล้ว"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "ฉันได้จดวลีกู้คืนของฉันไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "วลีกู้คืนไม่ถูกต้อง ตรวจสอบคำและลำดับของคำ แล้วลองอีกครั้ง"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "กู้คืนบัญชี"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "กู้คืนบัญชีของคุณ"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren ใช้กระเป๋าเงินแบบไม่รับฝาก บัญชีของคุณคือวลีกู้คืน 12 คำที่มีเพียงคุณเท่านั้นที่ถือครอง"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "ยินดีต้อนรับสู่ Warren"

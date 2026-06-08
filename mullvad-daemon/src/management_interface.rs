@@ -863,8 +863,20 @@ impl ManagementService for ManagementServiceImpl {
     async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
         let source = request.into_inner();
         log::debug!("logout_account (source: {source})");
+        // Only an explicit, backup-confirmed user sign-out from the GUI
+        // erases the local BIP39 identity (true sign-out). Every other
+        // logout — a server-driven device-revoked event
+        // (`gui-device-revoked`), a CLI logout, Android, etc. — must
+        // PRESERVE the mnemonic so the account stays recoverable on this
+        // device. The GUI gates the "log out" button behind a
+        // "I backed up my phrase" confirmation (see AccountView).
+        //
+        // `ends_with` (not `==`) because the desktop prefixes the source
+        // with the client name, e.g. `"desktop gui-logout-button"`
+        // (see daemon-rpc.ts `logoutAccount`).
+        let wipe_identity = source.ends_with("gui-logout-button");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx))?;
+        self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx, wipe_identity))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)

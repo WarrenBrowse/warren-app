@@ -19,9 +19,19 @@ la mnémonique BIP39 locale.
 
 Le mode Warren tunnel nécessite :
 
-1. **Une mnémonique BIP39** dans `<settings_dir>/warren_mnemonic.txt`.
-   Générée automatiquement au premier boot si absente. Pour réutiliser
-   une mnémonique existante, écrire le fichier avant de lancer le daemon.
+1. **Une mnémonique BIP39** (12 mots) dans le coffre de secrets de l'OS
+   (Keychain macOS / DPAPI Windows / fichier `<settings_dir>/secrets/warren_mnemonic.txt`
+   à 0600 sous Linux). Générée automatiquement au premier boot si absente.
+   Les flux GUI la gèrent :
+   - **Créer un compte** (`CreateNewAccount`) génère une mnémonique fraîche,
+     échange la clé du signer à chaud et connecte ; la GUI impose une étape
+     de sauvegarde de la phrase avant de continuer.
+   - **Restaurer** (`SetWarrenMnemonic`) importe une phrase existante,
+     échange la clé à chaud et connecte.
+   - **Déconnexion** (vraie déconnexion, source `gui-logout-button`) efface la
+     mnémonique du coffre, neutralise le signer en mémoire et vide l'historique.
+     Les autres logouts (device révoqué, CLI, Android) **conservent** la
+     mnémonique pour rester récupérables.
 
 2. **Une `warren-relays.json`** dans `<cache_dir>/warren-relays.json` qui
    liste les exits Warren accessibles. Format v1 :

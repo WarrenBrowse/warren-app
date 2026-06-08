@@ -6,7 +6,6 @@ import { ILinuxSplitTunnelingApplication, ISplitTunnelingApplication } from './a
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
-  AccountDataError,
   CustomListError,
   CustomProxy,
   DeviceEvent,
@@ -280,7 +279,6 @@ export const ipcSchema = {
     '': notifyRenderer<IAccountData | undefined>(),
     device: notifyRenderer<DeviceEvent>(),
     create: invoke<void, string>(),
-    login: invoke<WarrenPubKey, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
     getWwwAuthToken: invoke<void, string>(),
     // Returns the BIP39 mnemonic (12 words) so the user can back it
@@ -288,17 +286,16 @@ export const ipcSchema = {
     // The renderer caller must display it with a safety warning and
     // explicit user confirmation.
     getWarrenMnemonic: invoke<void, string>(),
-    // Replaces the identity with the provided BIP39 mnemonic. BIP39
+    // Restores an identity from the provided BIP39 mnemonic. BIP39
     // validation is performed daemon-side. Throws if invalid (=
-    // caller must catch + show error). Daemon restart is required to
-    // activate.
+    // caller must catch + show error). The daemon hot-swaps the
+    // identity and logs in without requiring a restart.
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: invoke<void, void>(),
   },
   accountHistory: {
     '': notifyRenderer<WarrenPubKey | undefined>(),
-    clear: invoke<void, void>(),
   },
   autoStart: {
     '': notifyRenderer<boolean>(),

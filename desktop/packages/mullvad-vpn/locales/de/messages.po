@@ -4227,3 +4227,63 @@ msgstr "Ihre Wiederherstellungsphrase aus 12 Wörtern ist die EINZIGE Möglichke
 msgctxt "keys-view"
 msgid "words"
 msgstr "Wörter"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Meine Phrase sichern"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Ich habe meine Wiederherstellungsphrase gesichert und verstehe, dass dieses Konto von diesem Gerät entfernt wird."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Wenn Sie Ihre Wiederherstellungsphrase nicht gesichert haben, geht Ihr Abonnement unwiderruflich verloren."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Von diesem Konto abmelden?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgstr "Beim Abmelden wird dieses Konto von diesem Gerät gelöscht. Es gibt keine E-Mail-Adresse und kein Passwort zum erneuten Anmelden – Ihre Wiederherstellungsphrase ist der EINZIGE Weg, es wiederherzustellen."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Sichern Sie Ihre Wiederherstellungsphrase"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Die neue Wiederherstellungsphrase konnte nicht gelesen werden. Versuchen Sie es erneut."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Geben Sie Ihre 12-Wörter-Wiederherstellungsphrase durch Leerzeichen getrennt ein, um Ihr Konto auf diesem Gerät wiederherzustellen."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Ich habe bereits ein Konto"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Ich habe meine Wiederherstellungsphrase an einem sicheren Ort notiert."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Ungültige Wiederherstellungsphrase. Überprüfen Sie die Wörter und ihre Reihenfolge und versuchen Sie es erneut."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Konto wiederherstellen"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Stellen Sie Ihr Konto wieder her"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren verwendet ein nicht-verwahrtes Wallet: Ihr Konto ist eine 12-Wörter-Wiederherstellungsphrase, die nur Sie besitzen."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Willkommen bei Warren"
