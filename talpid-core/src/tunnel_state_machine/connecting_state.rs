@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex, PoisonError};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -35,6 +35,60 @@ pub(crate) type TunnelCloseEvent = Fuse<oneshot::Receiver<Option<ErrorStateCause
 const MIN_TUNNEL_ALIVE_TIME: Duration = Duration::from_millis(1000);
 #[cfg(target_os = "windows")]
 const MAX_ATTEMPT_CREATE_TUN: u32 = 4;
+
+/// Sliding-window flap detector for the reconnect loop.
+///
+/// `retry_attempt` alone cannot bound the loop: the Warren backend emits
+/// `TunnelEvent::Up` as soon as routes install, *before* the data plane
+/// is confirmed, so a tunnel that immediately drops still looks
+/// "connected" for an instant and resets `retry_attempt`. A network
+/// handover that leaves the path unusable therefore churns
+/// Connecting→(fake)Connected→Down forever, holding the kill-switch and
+/// re-installing split routes on every lap — with no escape for the user
+/// (the exact ethernet→WiFi lockup this guards against).
+///
+/// This wall-clock detector is independent of `retry_attempt`: if the
+/// loop laps more than [`FLAP_MAX`] times within [`FLAP_WINDOW`], the
+/// state machine stops churning and drops into a STABLE, cancelable
+/// `ErrorState` (fail-closed: the kill-switch still blocks leaks, but the
+/// route churn stops and `Disconnect` clears it instantly). The window is
+/// self-cleaning: a genuinely stable connection emits no close events, so
+/// the timestamps age out and the next disconnect starts fresh.
+static RECENT_RECONNECTS: LazyLock<Mutex<Vec<Instant>>> =
+    LazyLock::new(|| Mutex::new(Vec::new()));
+
+/// Max reconnect laps tolerated within [`FLAP_WINDOW`] before the loop is
+/// broken to a stable blocked state. Six laps in 25 s (~one every 4 s) is
+/// pathological flapping, well clear of any legitimate reconnect cadence.
+pub(super) const FLAP_MAX: usize = 6;
+pub(super) const FLAP_WINDOW: Duration = Duration::from_secs(25);
+
+/// Record a reconnect lap and report whether the tunnel is flapping.
+/// Prunes timestamps older than [`FLAP_WINDOW`] first so the window
+/// slides and a stable connection naturally empties it.
+///
+/// Shared with [`super::ConnectedState`]: the Warren backend emits a
+/// premature `Up`, so most laps run Connecting→Connected→Down and the
+/// drop is handled by `ConnectedState`, not `ConnectingState`. Both
+/// reconnect paths must feed the same window or the detector misses the
+/// dominant churn.
+pub(super) fn note_reconnect_and_is_flapping(now: Instant) -> bool {
+    let mut laps = RECENT_RECONNECTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    laps.retain(|t| now.duration_since(*t) < FLAP_WINDOW);
+    laps.push(now);
+    laps.len() > FLAP_MAX
+}
+
+/// Clear the flap window. Called once the loop is broken to a stable
+/// state so a later user-initiated reconnect starts from a clean slate.
+pub(super) fn reset_flap_detector() {
+    RECENT_RECONNECTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clear();
+}
 
 const INITIAL_ALLOWED_TUNNEL_TRAFFIC: AllowedTunnelTraffic = AllowedTunnelTraffic::None;
 
@@ -330,6 +384,15 @@ impl ConnectingState {
         if let Err(error) = shared_values.route_manager.clear_routes() {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
+
+        // The Warren split-default routes are installed via the
+        // `route`/`ip` CLI out-of-band, so the talpid `RouteManager` above
+        // has no record of them and `clear_routes()` cannot remove them.
+        // Force them out here so a route reset (disconnect, reconnect,
+        // error transition) can never leave a `0.0.0.0/1` → TUN split
+        // blackholing every egress packet. Idempotent no-op when nothing
+        // is installed.
+        talpid_warren_tunnel::force_route_cleanup();
         #[cfg(target_os = "linux")]
         if let Err(error) = shared_values
             .runtime
@@ -596,8 +659,29 @@ impl ConnectingState {
         use self::EventConsequence::*;
 
         if let Some(block_reason) = block_reason {
+            reset_flap_detector();
             Self::reset_routes(shared_values);
             return NewState(ErrorState::enter(shared_values, block_reason));
+        }
+
+        // Bound the reconnect loop. If the tunnel is flapping faster than
+        // any legitimate reconnect cadence, stop churning and drop into a
+        // STABLE, cancelable blocked state instead of holding the
+        // kill-switch and re-installing split routes forever. This is the
+        // structural guarantee that a bad network handover can never wedge
+        // Warren with no escape (fail-closed but always cancelable).
+        if note_reconnect_and_is_flapping(Instant::now()) {
+            log::error!(
+                "Warren tunnel is flapping (>{FLAP_MAX} reconnects within {FLAP_WINDOW:?}); \
+                 entering a stable blocked state instead of churning. \
+                 Disconnect to clear, then reconnect once the network is stable."
+            );
+            reset_flap_detector();
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(
+                shared_values,
+                ErrorStateCause::StartTunnelError,
+            ));
         }
 
         log::info!(

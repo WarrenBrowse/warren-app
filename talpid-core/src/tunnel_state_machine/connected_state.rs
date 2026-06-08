@@ -12,8 +12,12 @@ use crate::firewall::FirewallPolicy;
 use crate::resolver::LOCAL_DNS_RESOLVER;
 use talpid_dns::ResolvedDnsConfig;
 
+use std::time::Instant;
+
 use super::backend_params::BackendParams;
-use super::connecting_state::TunnelCloseEvent;
+use super::connecting_state::{
+    FLAP_MAX, FLAP_WINDOW, TunnelCloseEvent, note_reconnect_and_is_flapping, reset_flap_detector,
+};
 use super::{
     AfterDisconnect, ConnectingState, DisconnectingState, ErrorState, EventConsequence,
     EventResult, SharedTunnelStateValues, TunnelCommand, TunnelCommandReceiver, TunnelState,
@@ -219,6 +223,12 @@ impl ConnectedState {
         if let Err(error) = shared_values.route_manager.clear_routes() {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
+
+        // Warren split-default routes live outside the talpid
+        // `RouteManager`; force them out here so a reset from the
+        // connected state cannot leave a split blackholing egress.
+        talpid_warren_tunnel::force_route_cleanup();
+
         #[cfg(target_os = "linux")]
         if let Err(error) = shared_values
             .runtime
@@ -419,9 +429,32 @@ impl ConnectedState {
         use self::EventConsequence::*;
 
         if let Some(block_reason) = block_reason {
+            reset_flap_detector();
             Self::reset_dns(shared_values);
             Self::reset_routes(shared_values);
             return NewState(ErrorState::enter(shared_values, block_reason));
+        }
+
+        // Bound the reconnect loop from the Connected side too. The Warren
+        // backend emits a premature `Up`, so a path that is up at the QUIC
+        // level but cannot carry data laps Connecting→Connected→Down
+        // through here, not through `ConnectingState`. Feeding the shared
+        // flap window from both paths is what makes the bound real: once
+        // the tunnel flaps faster than any legitimate cadence, drop into a
+        // STABLE, cancelable blocked state instead of churning forever.
+        if note_reconnect_and_is_flapping(Instant::now()) {
+            log::error!(
+                "Warren tunnel is flapping (>{FLAP_MAX} reconnects within {FLAP_WINDOW:?}); \
+                 entering a stable blocked state instead of churning. \
+                 Disconnect to clear, then reconnect once the network is stable."
+            );
+            reset_flap_detector();
+            Self::reset_dns(shared_values);
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(
+                shared_values,
+                ErrorStateCause::StartTunnelError,
+            ));
         }
 
         log::info!("Tunnel closed. Reconnecting.");

@@ -69,6 +69,7 @@ pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpFailureReason,
 /// Split-default policy routing helper that routes Internet traffic via
 /// the tunnel without overriding the kernel main routing table.
 pub mod default_route_split;
+pub use default_route_split::force_route_cleanup;
 
 // Trace prefix used by the start-sequence and pump-metrics debug logs.
 // Format: `[warren-trace] T{N}={ms}ms <event>`. `N` increments at each
@@ -738,6 +739,11 @@ impl WarrenTunnelMonitor {
         // explicitly to that IP instead of `0.0.0.0:0`. Defense in depth
         // against any future regression that might re-introduce
         // multi-path / rebind behavior in the transport layer.
+        // Fail-safe before binding: clear any split-default route a prior
+        // attempt may have leaked so the exit dial starts on the real
+        // physical default rather than a dead TUN. No-op when nothing
+        // leaked. See `default_route_split::force_route_cleanup`.
+        default_route_split::force_route_cleanup();
         let bind_local_ip: Option<std::net::SocketAddr> =
             exit_addr.ip_addrs().next().and_then(|exit_sa| {
                 match detect_default_local_ip(exit_sa) {
@@ -1234,6 +1240,13 @@ impl WarrenTunnelMonitor {
         // exit) so the QUIC `Endpoint` binds explicitly to that IP and
         // does not rebind onto the TUN once routing flips.
         let relay_endpoint = cfg.relay.endpoint;
+        // Fail-safe before binding: a split-default route leaked by a
+        // previous attempt (hard kill, panic) would capture the relay
+        // dial into a dead TUN and make `detect_default_local_ip` fail
+        // with "Network is unreachable", stranding every retry. Force any
+        // stale Warren split out of the table so this dial starts on the
+        // real physical default. No-op when nothing leaked.
+        default_route_split::force_route_cleanup();
         let bind_local_ip: std::net::SocketAddr = match detect_default_local_ip(relay_endpoint) {
             Ok(ip) => std::net::SocketAddr::new(ip, 0),
             Err(e) => {
