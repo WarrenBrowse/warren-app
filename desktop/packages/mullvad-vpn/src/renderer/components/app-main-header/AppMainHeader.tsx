@@ -2,7 +2,11 @@ import { TunnelState } from '../../../shared/daemon-rpc-types';
 import { Flex, HeaderProps, Logo, LogoProps, MainHeader } from '../../lib/components';
 import { useSelector } from '../../redux/store';
 import { InitialFocus } from '../initial-focus';
-import { AppMainHeaderBarAccountButton, AppMainHeaderSettingsButton } from './components';
+import {
+  AppMainHeaderBarAccountButton,
+  AppMainHeaderSettingsButton,
+  AppMainHeaderTimeLeft,
+} from './components';
 
 export interface MainHeaderProps extends Omit<HeaderProps, 'variant' | 'size'> {
   variant?: HeaderProps['variant'] | 'basedOnConnectionStatus';
@@ -38,6 +42,11 @@ const AppMainHeader = ({
           {children}
         </Flex>
       </Flex>
+      {size == '2' && (
+        <Flex alignItems="flex-end">
+          <AppMainHeaderTimeLeft />
+        </Flex>
+      )}
     </MainHeader>
   );
 };
