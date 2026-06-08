@@ -94,7 +94,7 @@ jobs:
             dist/WarrenVPN-*.dmg
             dist/WarrenVPN-*.pkg
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
 
   build-linux:
     name: Build Linux .deb/.rpm
@@ -133,7 +133,7 @@ jobs:
             dist/warren-vpn-daemon_*.deb
             dist/warren-vpn-daemon_*.rpm
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
 
   build-windows:
     name: Build Windows MSI
@@ -222,7 +222,7 @@ jobs:
             dist/WarrenVPN-*.exe
             dist/WarrenVPN-*.msi
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
 
   build-ios:
     name: Build iOS IPA + TestFlight upload
@@ -344,7 +344,7 @@ jobs:
             ios/build/ipa/*.ipa
             ios/build/WarrenVPN.xcarchive
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
 
   build-android:
     name: Build Android AAB + Play Store internal-test upload
@@ -431,7 +431,7 @@ jobs:
             android/app/build/outputs/apk/**/*.apk
             android/app/build/outputs/bundle/**/*.aab
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
 
   publish-release:
     name: Publish GitHub Release
