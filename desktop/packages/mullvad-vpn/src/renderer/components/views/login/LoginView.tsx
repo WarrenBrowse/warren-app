@@ -39,7 +39,7 @@ import {
 //   which the daemon validates + hot-swaps to restore the identity.
 
 const DangerCallout = styled.div`
-  padding: ${spacings.small} ${spacings.medium};
+  padding: ${spacings.tiny} ${spacings.small};
   border-radius: ${Radius.radius4};
   background-color: ${colors.redAlpha40};
   border: 1px solid ${colors.red40};
@@ -162,15 +162,17 @@ export function LoginView() {
       <View.Content>
         <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
           <FlexColumn gap="medium">
-            <Flex justifyContent="center">{showBlockMessage ? <BlockMessage /> : statusIcon}</Flex>
+            {(showBlockMessage || statusIcon) && (
+              <Flex justifyContent="center">{showBlockMessage ? <BlockMessage /> : statusIcon}</Flex>
+            )}
 
             <View.Container
-              gap="large"
+              gap="medium"
               horizontalMargin="small"
               justifyContent="center"
               flexDirection="column">
               <FlexColumn gap="small">
-                <Text as="h1" variant="titleBig" aria-live="polite">
+                <Text as="h1" variant={isBackup ? 'titleMedium' : 'titleBig'} aria-live="polite">
                   {title}
                 </Text>
 
@@ -297,12 +299,12 @@ function BackupStep({ mnemonic, confirmed, onConfirmedChange, onContinue }: Back
     );
   }
   return (
-    <FlexColumn gap="medium">
+    <FlexColumn gap="small">
       <DangerCallout>
-        <Text variant="bodySmallSemibold" color="white">
+        <Text variant="footnoteMini" color="white">
           {messages.pgettext(
             'login-view',
-            'Write these 12 words down in order and keep them somewhere safe. They are the ONLY way to restore your account. If you lose them, your subscription is unrecoverable.',
+            'Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device.',
           )}
         </Text>
       </DangerCallout>

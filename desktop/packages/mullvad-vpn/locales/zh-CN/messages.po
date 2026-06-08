@@ -4093,7 +4093,7 @@ msgid "Log out of this account?"
 msgstr "退出此账户？"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr "退出登录会从此设备中删除此账户。没有用于重新登录的电子邮件或密码——您的恢复短语是恢复它的唯一方式。"
 
 msgctxt "login-view"
@@ -4135,3 +4135,7 @@ msgstr "Warren 使用非托管钱包：您的账户是一个仅由您持有的 1
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "欢迎使用 Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "请写下这 12 个单词并妥善保管。如果您丢失此设备，它们是恢复您账户的唯一方式。"

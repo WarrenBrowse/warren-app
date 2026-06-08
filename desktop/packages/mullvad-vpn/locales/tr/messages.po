@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Bu hesaptan çıkış yapılsın mı?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Çıkış yapmak bu hesabı bu cihazdan siler. Yeniden giriş yapmak için e-posta veya parola yoktur — kurtarma ifadeniz onu geri yüklemenin TEK yoludur."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Çıkış yapmak bu hesabı bu cihazdan siler. Yeniden giriş yapmak için e-posta veya parola yoktur, kurtarma ifadeniz onu geri yüklemenin TEK yoludur."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren saklamasız bir cüzdan kullanır: hesabınız yalnızca sizde bu
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Warren'a hoş geldiniz"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Bu 12 kelimeyi yazın ve güvenli bir yerde saklayın. Bu cihazı kaybederseniz hesabınızı geri yüklemenin tek yolu bunlardır."

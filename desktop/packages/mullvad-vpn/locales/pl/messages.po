@@ -4272,8 +4272,8 @@ msgid "Log out of this account?"
 msgstr "Wylogować się z tego konta?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Wylogowanie usuwa to konto z tego urządzenia. Nie ma adresu e-mail ani hasła do ponownego zalogowania — Twoja fraza odzyskiwania jest JEDYNYM sposobem na jego przywrócenie."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Wylogowanie usuwa to konto z tego urządzenia. Nie ma adresu e-mail ani hasła do ponownego zalogowania, Twoja fraza odzyskiwania jest JEDYNYM sposobem na jego przywrócenie."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4314,3 +4314,7 @@ msgstr "Warren korzysta z portfela niepowierniczego: Twoje konto to 12-wyrazowa 
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Witamy w Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Zapisz te 12 słów i przechowuj je w bezpiecznym miejscu. Są jedynym sposobem na przywrócenie konta, jeśli utracisz to urządzenie."

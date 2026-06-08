@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Terminar sessão desta conta?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Terminar sessão apaga esta conta deste dispositivo. Não existe e-mail nem palavra-passe para voltar a iniciar sessão — a sua frase de recuperação é a ÚNICA forma de a restaurar."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Terminar sessão apaga esta conta deste dispositivo. Não existe e-mail nem palavra-passe para voltar a iniciar sessão, a sua frase de recuperação é a ÚNICA forma de a restaurar."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "A Warren utiliza uma carteira sem custódia: a sua conta é uma frase de
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Bem-vindo à Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Anote estas 12 palavras e guarde-as num local seguro. São a única forma de restaurar a sua conta se perder este dispositivo."

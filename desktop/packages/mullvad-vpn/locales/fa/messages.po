@@ -4107,8 +4107,8 @@ msgid "Log out of this account?"
 msgstr "از این حساب خارج می‌شوید؟"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "خروج از حساب، این حساب را از این دستگاه پاک می‌کند. هیچ ایمیل یا گذرواژه‌ای برای ورود مجدد وجود ندارد — عبارت بازیابی شما تنها راه بازیابی آن است."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "خروج از حساب، این حساب را از این دستگاه پاک می‌کند. هیچ ایمیل یا گذرواژه‌ای برای ورود مجدد وجود ندارد, عبارت بازیابی شما تنها راه بازیابی آن است."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4149,3 +4149,7 @@ msgstr "Warren از کیف پول غیرامانی استفاده می‌کند:
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "به Warren خوش آمدید"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "این ۱۲ کلمه را یادداشت کنید و در جای امنی نگه دارید. اگر این دستگاه را از دست بدهید، تنها راه بازیابی حساب شما هستند."

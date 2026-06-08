@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Log ud af denne konto?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Når du logger ud, slettes denne konto fra denne enhed. Der er ingen e-mail eller adgangskode til at logge ind igen — din gendannelsessætning er den ENESTE måde at gendanne den på."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Når du logger ud, slettes denne konto fra denne enhed. Der er ingen e-mail eller adgangskode til at logge ind igen, din gendannelsessætning er den ENESTE måde at gendanne den på."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren bruger en non-custodial wallet: din konto er en gendannelsessætn
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Velkommen til Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Skriv disse 12 ord ned, og opbevar dem sikkert. De er den eneste måde at gendanne din konto på, hvis du mister denne enhed."

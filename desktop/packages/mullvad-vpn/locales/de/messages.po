@@ -4245,7 +4245,7 @@ msgid "Log out of this account?"
 msgstr "Von diesem Konto abmelden?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr "Beim Abmelden wird dieses Konto von diesem Gerät gelöscht. Es gibt keine E-Mail-Adresse und kein Passwort zum erneuten Anmelden – Ihre Wiederherstellungsphrase ist der EINZIGE Weg, es wiederherzustellen."
 
 msgctxt "login-view"
@@ -4287,3 +4287,7 @@ msgstr "Warren verwendet ein nicht-verwahrtes Wallet: Ihr Konto ist eine 12-Wör
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Willkommen bei Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Schreiben Sie diese 12 Wörter auf und bewahren Sie sie sicher auf. Sie sind die einzige Möglichkeit, Ihr Konto wiederherzustellen, wenn Sie dieses Gerät verlieren."

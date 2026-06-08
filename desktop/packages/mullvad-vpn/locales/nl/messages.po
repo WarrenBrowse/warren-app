@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Uitloggen bij dit account?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Bij uitloggen wordt dit account van dit apparaat gewist. Er is geen e-mailadres of wachtwoord om opnieuw in te loggen — je herstelzin is de ENIGE manier om het te herstellen."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Bij uitloggen wordt dit account van dit apparaat gewist. Er is geen e-mailadres of wachtwoord om opnieuw in te loggen, je herstelzin is de ENIGE manier om het te herstellen."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren gebruikt een non-custodial wallet: je account is een herstelzin v
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Welkom bij Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Schrijf deze 12 woorden op en bewaar ze veilig. Ze zijn de enige manier om je account te herstellen als je dit apparaat verliest."

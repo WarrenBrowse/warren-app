@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Logge ut av denne kontoen?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Når du logger ut, slettes denne kontoen fra denne enheten. Det finnes ingen e-post eller passord for å logge inn igjen — gjenopprettingsfrasen din er den ENESTE måten å gjenopprette den på."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Når du logger ut, slettes denne kontoen fra denne enheten. Det finnes ingen e-post eller passord for å logge inn igjen, gjenopprettingsfrasen din er den ENESTE måten å gjenopprette den på."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren bruker en ikke-forvaltet lommebok: kontoen din er en gjenoppretti
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Velkommen til Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Skriv ned disse 12 ordene og oppbevar dem trygt. De er den eneste måten å gjenopprette kontoen din på hvis du mister denne enheten."

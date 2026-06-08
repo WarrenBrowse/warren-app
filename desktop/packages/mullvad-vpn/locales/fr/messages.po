@@ -3609,8 +3609,8 @@ msgid "Log out of this account?"
 msgstr "Se déconnecter de ce compte ?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter — votre phrase de restauration est le SEUL moyen de le restaurer."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter, votre phrase de restauration est le SEUL moyen de le restaurer."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -3651,3 +3651,7 @@ msgstr "Warren utilise un portefeuille non dépositaire : votre compte est une p
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Bienvenue dans Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Notez ces 12 mots et conservez-les en lieu sûr. Ils sont le seul moyen de restaurer votre compte si vous perdez cet appareil."

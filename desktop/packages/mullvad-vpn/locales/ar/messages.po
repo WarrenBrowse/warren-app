@@ -4163,8 +4163,8 @@ msgid "Log out of this account?"
 msgstr "تسجيل الخروج من هذا الحساب؟"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "يؤدي تسجيل الخروج إلى مسح هذا الحساب من هذا الجهاز. لا يوجد بريد إلكتروني أو كلمة مرور لإعادة تسجيل الدخول — عبارة الاسترداد الخاصة بك هي الطريقة الوحيدة لاستعادته."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "يؤدي تسجيل الخروج إلى مسح هذا الحساب من هذا الجهاز. لا يوجد بريد إلكتروني أو كلمة مرور لإعادة تسجيل الدخول, عبارة الاسترداد الخاصة بك هي الطريقة الوحيدة لاستعادته."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4205,3 +4205,7 @@ msgstr "يستخدم Warren محفظة غير وصائية: حسابك هو عب
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "مرحبًا بك في Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "اكتب هذه الكلمات الـ 12 واحتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة حسابك إذا فقدت هذا الجهاز."

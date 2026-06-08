@@ -4272,8 +4272,8 @@ msgid "Log out of this account?"
 msgstr "Выйти из этой учётной записи?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "При выходе эта учётная запись удаляется с этого устройства. Нет ни электронной почты, ни пароля для повторного входа — ваша фраза восстановления является ЕДИНСТВЕННЫМ способом её восстановить."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "При выходе эта учётная запись удаляется с этого устройства. Нет ни электронной почты, ни пароля для повторного входа, ваша фраза восстановления является ЕДИНСТВЕННЫМ способом её восстановить."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4314,3 +4314,7 @@ msgstr "Warren использует некастодиальный кошелё�
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Добро пожаловать в Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Запишите эти 12 слов и храните их в надёжном месте. Это единственный способ восстановить вашу учётную запись, если вы потеряете это устройство."

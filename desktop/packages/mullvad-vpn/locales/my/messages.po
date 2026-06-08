@@ -4096,8 +4096,8 @@ msgid "Log out of this account?"
 msgstr "ဤအကောင့်မှ ထွက်မလား။"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "ထွက်လိုက်ခြင်းသည် ဤအကောင့်ကို ဤစက်ပစ္စည်းမှ ဖျက်ပစ်ပါသည်။ ပြန်လည်ဝင်ရောက်ရန် အီးမေးလ် သို့မဟုတ် စကားဝှက် မရှိပါ — သင်၏ ပြန်လည်ရယူရေးစကားစုသည် ၎င်းကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "ထွက်လိုက်ခြင်းသည် ဤအကောင့်ကို ဤစက်ပစ္စည်းမှ ဖျက်ပစ်ပါသည်။ ပြန်လည်ဝင်ရောက်ရန် အီးမေးလ် သို့မဟုတ် စကားဝှက် မရှိပါ, သင်၏ ပြန်လည်ရယူရေးစကားစုသည် ၎င်းကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4138,3 +4138,7 @@ msgstr "Warren သည် non-custodial wallet ကို အသုံးပြု
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Warren မှ ကြိုဆိုပါသည်"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "ဤစကားလုံး ၁၂ လုံးကို ချရေး၍ လုံခြုံစွာ သိမ်းဆည်းပါ။ ဤစက်ပစ္စည်းကို ပျောက်ဆုံးပါက သင်၏အကောင့်ကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"

@@ -154,7 +154,7 @@ export function AccountView() {
         message={[
           messages.pgettext(
             'account-view',
-            'Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it.',
+            'Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it.',
           ),
           messages.pgettext(
             'account-view',

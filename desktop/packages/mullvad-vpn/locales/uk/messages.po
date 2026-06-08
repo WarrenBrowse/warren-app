@@ -4272,8 +4272,8 @@ msgid "Log out of this account?"
 msgstr "Вийти з цього облікового запису?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Під час виходу цей обліковий запис видаляється з цього пристрою. Немає ні електронної пошти, ні пароля для повторного входу — ваша фраза відновлення є ЄДИНИМ способом його відновити."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Під час виходу цей обліковий запис видаляється з цього пристрою. Немає ні електронної пошти, ні пароля для повторного входу, ваша фраза відновлення є ЄДИНИМ способом його відновити."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4314,3 +4314,7 @@ msgstr "Warren використовує некастодіальний гама�
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Ласкаво просимо до Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Запишіть ці 12 слів і зберігайте їх у надійному місці. Це єдиний спосіб відновити ваш обліковий запис, якщо ви втратите цей пристрій."

@@ -531,7 +531,7 @@ msgid "Log out of this account?"
 msgstr ""
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr ""
 
 msgctxt "account-view"
@@ -1669,10 +1669,6 @@ msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr ""
 
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr ""
-
 #. Button that starts restoring an existing account from a recovery phrase.
 msgctxt "login-view"
 msgid "I already have an account"
@@ -1714,7 +1710,7 @@ msgid "Welcome to Warren"
 msgstr ""
 
 msgctxt "login-view"
-msgid "Write these 12 words down in order and keep them somewhere safe. They are the ONLY way to restore your account. If you lose them, your subscription is unrecoverable."
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr ""
 
 #. The title for the LWO port selector.

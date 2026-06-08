@@ -4093,7 +4093,7 @@ msgid "Log out of this account?"
 msgstr "このアカウントからログアウトしますか？"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr "ログアウトすると、このアカウントはこのデバイスから消去されます。再ログインするためのメールアドレスやパスワードはありません。リカバリーフレーズが復元する唯一の方法です。"
 
 msgctxt "login-view"
@@ -4135,3 +4135,7 @@ msgstr "Warren は非カストディアル型ウォレットを使用します�
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Warren へようこそ"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "この12個の単語を書き留めて安全に保管してください。このデバイスを紛失した場合、アカウントを復元する唯一の方法です。"

@@ -3492,8 +3492,8 @@ msgid "Log out of this account?"
 msgstr "Te deconectezi de la acest cont?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Deconectarea șterge acest cont de pe acest dispozitiv. Nu există e-mail sau parolă pentru reconectare — fraza ta de recuperare este SINGURUL mod de a-l restaura."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Deconectarea șterge acest cont de pe acest dispozitiv. Nu există e-mail sau parolă pentru reconectare, fraza ta de recuperare este SINGURUL mod de a-l restaura."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -3534,3 +3534,7 @@ msgstr "Warren folosește un portofel fără custodie: contul tău este o frază
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Bun venit la Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Notează aceste 12 cuvinte și păstrează-le în siguranță. Sunt singurul mod de a-ți restaura contul dacă pierzi acest dispozitiv."

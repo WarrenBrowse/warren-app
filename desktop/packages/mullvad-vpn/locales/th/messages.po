@@ -4093,8 +4093,8 @@ msgid "Log out of this account?"
 msgstr "ออกจากระบบบัญชีนี้หรือไม่"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "การออกจากระบบจะลบบัญชีนี้ออกจากอุปกรณ์นี้ ไม่มีอีเมลหรือรหัสผ่านสำหรับเข้าสู่ระบบอีกครั้ง — วลีกู้คืนของคุณเป็นวิธีเดียวที่จะกู้คืนได้"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "การออกจากระบบจะลบบัญชีนี้ออกจากอุปกรณ์นี้ ไม่มีอีเมลหรือรหัสผ่านสำหรับเข้าสู่ระบบอีกครั้ง, วลีกู้คืนของคุณเป็นวิธีเดียวที่จะกู้คืนได้"
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4135,3 +4135,7 @@ msgstr "Warren ใช้กระเป๋าเงินแบบไม่ร�
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "ยินดีต้อนรับสู่ Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "จดคำ 12 คำเหล่านี้และเก็บไว้ในที่ปลอดภัย คำเหล่านี้เป็นวิธีเดียวที่จะกู้คืนบัญชีของคุณหากคุณทำอุปกรณ์นี้หาย"

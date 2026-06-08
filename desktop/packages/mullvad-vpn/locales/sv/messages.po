@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Logga ut från det här kontot?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Att logga ut raderar det här kontot från den här enheten. Det finns ingen e-postadress eller lösenord för att logga in igen – din återställningsfras är det ENDA sättet att återställa det."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Att logga ut raderar det här kontot från den här enheten. Det finns ingen e-postadress eller lösenord för att logga in igen, din återställningsfras är det ENDA sättet att återställa det."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren använder en icke-förvaltad plånbok: ditt konto är en återst�
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Välkommen till Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Skriv ner dessa 12 ord och förvara dem säkert. De är det enda sättet att återställa ditt konto om du förlorar den här enheten."

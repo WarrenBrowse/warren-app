@@ -4244,8 +4244,8 @@ msgid "Log out of this account?"
 msgstr "Kirjaudutaanko ulos tästä tilistä?"
 
 msgctxt "account-view"
-msgid "Logging out erases this account from this device. There is no email or password to log back in — your recovery phrase is the ONLY way to restore it."
-msgstr "Uloskirjautuminen poistaa tämän tilin tältä laitteelta. Takaisin kirjautumiseen ei ole sähköpostia eikä salasanaa — palautuslauseesi on AINOA tapa palauttaa se."
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Uloskirjautuminen poistaa tämän tilin tältä laitteelta. Takaisin kirjautumiseen ei ole sähköpostia eikä salasanaa, palautuslauseesi on AINOA tapa palauttaa se."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
@@ -4286,3 +4286,7 @@ msgstr "Warren käyttää ei-säilytyksellistä lompakkoa: tilisi on 12 sanan pa
 msgctxt "login-view"
 msgid "Welcome to Warren"
 msgstr "Tervetuloa Warreniin"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Kirjoita nämä 12 sanaa muistiin ja säilytä ne turvallisesti. Ne ovat ainoa tapa palauttaa tilisi, jos menetät tämän laitteen."
