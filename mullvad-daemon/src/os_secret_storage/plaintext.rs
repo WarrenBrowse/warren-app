@@ -150,6 +150,26 @@ impl SecretStorage for PlaintextStorage {
 
     fn delete(&self, key: &str) -> io::Result<()> {
         let path = self.key_path(key)?;
+        // Also sweep any stale atomic-write tempfiles for this key. `store`
+        // writes `.{key}.txt.tmp.{pid}.{nanos}` then renames; a crash
+        // between write and rename leaves a tempfile holding the full
+        // plaintext secret. A "true sign-out" must remove those too, or
+        // the wipe leaves a readable copy behind on the weakest-at-rest
+        // platform. Best-effort: failures here do not fail the delete.
+        if let Some(file_name) = path.file_name().and_then(|os| os.to_str()) {
+            let tmp_prefix = format!(".{file_name}.tmp.");
+            if let Ok(entries) = fs::read_dir(&self.secrets_dir) {
+                for entry in entries.flatten() {
+                    if entry
+                        .file_name()
+                        .to_str()
+                        .is_some_and(|n| n.starts_with(&tmp_prefix))
+                    {
+                        let _ = fs::remove_file(entry.path());
+                    }
+                }
+            }
+        }
         match fs::remove_file(&path) {
             Ok(()) => Ok(()),
             Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
@@ -240,6 +260,28 @@ mod tests {
             .expect("delete is idempotent on missing");
 
         assert!(storage.load("k").expect("load ok").is_none());
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn delete_sweeps_stale_atomic_write_tempfiles() {
+        // Regression: a crash between `store`'s write and rename leaves a
+        // `.warren_mnemonic.txt.tmp.*` plaintext secret on disk. A true
+        // sign-out (`delete`) must remove it, not just the final file.
+        let dir = isolated_tempdir();
+        let storage = PlaintextStorage::new(&dir);
+        storage.store("warren_mnemonic", b"secret phrase").expect("write");
+
+        let secrets = dir.join(SECRETS_SUBDIR);
+        let stale = secrets.join(".warren_mnemonic.txt.tmp.123.456");
+        fs::write(&stale, b"leaked plaintext secret").expect("seed stale tempfile");
+        assert!(stale.exists());
+
+        storage.delete("warren_mnemonic").expect("delete");
+
+        assert!(!stale.exists(), "stale plaintext tempfile must be swept on delete");
+        assert!(storage.load("warren_mnemonic").expect("load ok").is_none());
 
         let _ = fs::remove_dir_all(&dir);
     }
