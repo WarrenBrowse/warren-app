@@ -86,15 +86,17 @@ jobs:
         if: always() && env.WARREN_CSC_LINK_MACOS != ''
         run: rm -f "$WARREN_CSC_LINK_MACOS" || true
 
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+      # Upload installers directly as GitHub Release assets instead of Actions
+      # artifacts: release assets live in separate storage that is NOT subject to
+      # the Actions artifact storage quota (which the artifact path kept hitting).
+      - name: Publish macOS installers to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: macos-installers
-          path: |
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: |
             dist/WarrenVPN-*.dmg
             dist/WarrenVPN-*.pkg
-          if-no-files-found: warn
-          retention-days: 1
 
   build-linux:
     name: Build Linux .deb/.rpm
