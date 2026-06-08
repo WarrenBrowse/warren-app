@@ -22564,7 +22564,8 @@ proto.mullvad_daemon.management_interface.DnsOptions.toObject = function(include
   var f, obj = {
     state: jspb.Message.getFieldWithDefault(msg, 1, 0),
     defaultOptions: (f = msg.getDefaultOptions()) && proto.mullvad_daemon.management_interface.DefaultDnsOptions.toObject(includeInstance, f),
-    customOptions: (f = msg.getCustomOptions()) && proto.mullvad_daemon.management_interface.CustomDnsOptions.toObject(includeInstance, f)
+    customOptions: (f = msg.getCustomOptions()) && proto.mullvad_daemon.management_interface.CustomDnsOptions.toObject(includeInstance, f),
+    allowExternalDns: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -22614,6 +22615,10 @@ proto.mullvad_daemon.management_interface.DnsOptions.deserializeBinaryFromReader
       var value = new proto.mullvad_daemon.management_interface.CustomDnsOptions;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.CustomDnsOptions.deserializeBinaryFromReader);
       msg.setCustomOptions(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setAllowExternalDns(value);
       break;
     default:
       reader.skipField();
@@ -22665,6 +22670,13 @@ proto.mullvad_daemon.management_interface.DnsOptions.serializeBinaryToWriter = f
       3,
       f,
       proto.mullvad_daemon.management_interface.CustomDnsOptions.serializeBinaryToWriter
+    );
+  }
+  f = message.getAllowExternalDns();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
     );
   }
 };
@@ -22767,6 +22779,24 @@ proto.mullvad_daemon.management_interface.DnsOptions.prototype.clearCustomOption
  */
 proto.mullvad_daemon.management_interface.DnsOptions.prototype.hasCustomOptions = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional bool allow_external_dns = 4;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.DnsOptions.prototype.getAllowExternalDns = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.DnsOptions} returns this
+ */
+proto.mullvad_daemon.management_interface.DnsOptions.prototype.setAllowExternalDns = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 
@@ -30283,7 +30313,8 @@ proto.mullvad_daemon.management_interface.FeatureIndicator = {
   SERVER_IP_OVERRIDE: 12,
   CUSTOM_MTU: 13,
   DAITA: 14,
-  DAITA_MULTIHOP: 15
+  DAITA_MULTIHOP: 15,
+  ALLOW_EXTERNAL_DNS: 16
 };
 
 /**

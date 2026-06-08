@@ -432,7 +432,8 @@ WinFw_ApplyPolicyConnected(
 	const wchar_t * const *tunnelDnsServers,
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
-	size_t numNonTunnelDnsServers
+	size_t numNonTunnelDnsServers,
+	bool allowExternalDns
 )
 {
 	if (nullptr == g_fwContext)
@@ -542,7 +543,8 @@ WinFw_ApplyPolicyConnected(
 			relayClientWstrings,
 			tunnelInterfaceAlias,
 			convertedTunnelDnsServers,
-			convertedNonTunnelDnsServers
+			convertedNonTunnelDnsServers,
+			allowExternalDns
 		) ? WINFW_POLICY_STATUS_SUCCESS : WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
 	catch (common::error::WindowsException &err)

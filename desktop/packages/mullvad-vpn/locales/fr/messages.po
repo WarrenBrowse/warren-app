@@ -3703,3 +3703,19 @@ msgstr "URL du serveur warren-api. Format http(s)://hôte:port. Vide = non défi
 msgctxt "warren-status-view"
 msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to the Warren tunnel."
 msgstr "Les méthodes d'obfuscation héritées (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas au tunnel Warren."
+
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "Autoriser le DNS externe"
+
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "Autoriser les résolveurs DNS externes"
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "Pour les utilisateurs avancés. Lorsque cette option est activée, le pare-feu cesse de bloquer les requêtes DNS vers des résolveurs autres que celui configuré, de sorte que des outils comme « dig @1.1.1.1 » fonctionnent une fois connecté."
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "Les requêtes transitent malgré tout par le tunnel VPN, mais le résolveur que vous choisissez les verra. Laissez cette option désactivée, sauf si vous testez la résolution DNS distante."

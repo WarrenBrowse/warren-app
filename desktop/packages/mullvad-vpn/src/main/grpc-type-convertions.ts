@@ -400,6 +400,8 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.dnsContentBlockers;
     case grpcTypes.FeatureIndicator.CUSTOM_DNS:
       return FeatureIndicator.customDns;
+    case grpcTypes.FeatureIndicator.ALLOW_EXTERNAL_DNS:
+      return FeatureIndicator.allowExternalDns;
     case grpcTypes.FeatureIndicator.SERVER_IP_OVERRIDE:
       return FeatureIndicator.serverIpOverride;
     case grpcTypes.FeatureIndicator.CUSTOM_MTU:
@@ -821,6 +823,7 @@ function convertFromTunnelOptions(tunnelOptions: grpcTypes.TunnelOptions.AsObjec
         tunnelOptions.dnsOptions?.state === grpcTypes.DnsOptions.DnsState.CUSTOM
           ? 'custom'
           : 'default',
+      allowExternalDns: tunnelOptions.dnsOptions?.allowExternalDns ?? false,
       defaultOptions: {
         blockAds: tunnelOptions.dnsOptions?.defaultOptions?.blockAds ?? false,
         blockTrackers: tunnelOptions.dnsOptions?.defaultOptions?.blockTrackers ?? false,

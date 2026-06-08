@@ -647,6 +647,8 @@ export class DaemonRpc extends GrpcClient {
       dnsOptions.setState(grpcTypes.DnsOptions.DnsState.DEFAULT);
     }
 
+    dnsOptions.setAllowExternalDns(dns.allowExternalDns);
+
     await this.call<grpcTypes.DnsOptions, Empty>(this.client.setDnsOptions, dnsOptions);
   }
 

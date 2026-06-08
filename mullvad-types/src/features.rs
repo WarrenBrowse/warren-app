@@ -78,6 +78,9 @@ pub enum FeatureIndicator {
     LanSharing,
     DnsContentBlockers,
     CustomDns,
+    /// The advanced opt-out that lifts the firewall's DNS leak protection (allows queries to
+    /// arbitrary resolvers through the tunnel).
+    AllowExternalDns,
     ServerIpOverride,
     CustomMtu,
     /// Whether DAITA (without multihop) is in use.
@@ -104,6 +107,7 @@ impl FeatureIndicator {
             FeatureIndicator::LanSharing => "LAN Sharing",
             FeatureIndicator::DnsContentBlockers => "Dns Content Blocker",
             FeatureIndicator::CustomDns => "Custom Dns",
+            FeatureIndicator::AllowExternalDns => "Allow External Dns",
             FeatureIndicator::ServerIpOverride => "Server Ip Override",
             FeatureIndicator::CustomMtu => "Custom MTU",
             FeatureIndicator::Daita => "DAITA",
@@ -145,6 +149,7 @@ pub fn compute_feature_indicators(
         .default_options
         .any_blockers_enabled();
     let custom_dns = settings.tunnel_options.dns_options.state == DnsState::Custom;
+    let allow_external_dns = settings.tunnel_options.dns_options.allow_external_dns;
 
     let quantum_resistant = endpoint.quantum_resistant;
 
@@ -191,6 +196,7 @@ pub fn compute_feature_indicators(
         (lan_sharing, FeatureIndicator::LanSharing),
         (dns_content_blockers, FeatureIndicator::DnsContentBlockers),
         (custom_dns, FeatureIndicator::CustomDns),
+        (allow_external_dns, FeatureIndicator::AllowExternalDns),
         (server_ip_override, FeatureIndicator::ServerIpOverride),
         #[cfg(not(target_os = "android"))]
         (lockdown_mode, FeatureIndicator::LockdownMode),
@@ -276,6 +282,15 @@ mod tests {
 
         expected_indicators.0.insert(FeatureIndicator::LanSharing);
 
+        assert_eq!(
+            compute_feature_indicators(&settings, &endpoint, false),
+            expected_indicators
+        );
+
+        settings.tunnel_options.dns_options.allow_external_dns = true;
+        expected_indicators
+            .0
+            .insert(FeatureIndicator::AllowExternalDns);
         assert_eq!(
             compute_feature_indicators(&settings, &endpoint, false),
             expected_indicators
@@ -426,6 +441,7 @@ mod tests {
             FeatureIndicator::LanSharing => {}
             FeatureIndicator::DnsContentBlockers => {}
             FeatureIndicator::CustomDns => {}
+            FeatureIndicator::AllowExternalDns => {}
             FeatureIndicator::ServerIpOverride => {}
             FeatureIndicator::CustomMtu => {}
             FeatureIndicator::Daita => {}

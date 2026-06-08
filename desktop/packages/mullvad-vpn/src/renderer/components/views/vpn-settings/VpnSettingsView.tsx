@@ -1,5 +1,6 @@
 import { messages } from '../../../../shared/gettext';
 import { AutoConnectSetting, AutoStartSetting } from '../../../features/client/components';
+import { AllowExternalDnsSetting } from '../../../features/dns/components';
 import { AllowLanSetting } from '../../../features/lan-sharing/components';
 import {
   EnableIpv6Setting,
@@ -60,6 +61,7 @@ export function VpnSettingsView() {
                   <FlexColumn gap="small">
                     <DnsBlockerSettings position="solo" />
                     <CustomDnsSettings position="solo" />
+                    <AllowExternalDnsSetting position="solo" />
                   </FlexColumn>
 
                   <EnableIpv6Setting />

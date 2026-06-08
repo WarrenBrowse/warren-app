@@ -52,6 +52,16 @@ pub enum DnsSet {
         #[arg(required(true), num_args = 1..)]
         servers: Vec<IpAddr>,
     },
+
+    /// Allow DNS queries to resolvers other than the configured ones (advanced).
+    /// When enabled, the firewall no longer blocks port 53 to arbitrary servers, so commands like
+    /// `dig @1.1.1.1` work while connected. Queries still egress through the tunnel; the only cost
+    /// is that the chosen resolver sees them. This is independent of the default/custom DNS state.
+    AllowExternalDns {
+        /// Whether to allow external resolvers (true/false)
+        #[arg(action = clap::ArgAction::Set)]
+        enabled: bool,
+    },
 }
 
 impl Dns {
@@ -82,6 +92,9 @@ impl Dns {
             Dns::Set {
                 cmd: DnsSet::Custom { servers },
             } => Self::set_custom(servers).await,
+            Dns::Set {
+                cmd: DnsSet::AllowExternalDns { enabled },
+            } => Self::set_allow_external_dns(enabled).await,
         }
     }
 
@@ -112,6 +125,8 @@ impl Dns {
                 }
             }
         }
+
+        println!("Allow external DNS: {}", options.allow_external_dns);
 
         Ok(())
     }
@@ -149,6 +164,18 @@ impl Dns {
         rpc.set_dns_options(DnsOptions {
             state: DnsState::Custom,
             custom_options: CustomDnsOptions { addresses: servers },
+            ..settings.tunnel_options.dns_options
+        })
+        .await?;
+        println!("Updated DNS settings");
+        Ok(())
+    }
+
+    async fn set_allow_external_dns(enabled: bool) -> Result<()> {
+        let mut rpc = MullvadProxyClient::new().await?;
+        let settings = rpc.get_settings().await?;
+        rpc.set_dns_options(DnsOptions {
+            allow_external_dns: enabled,
             ..settings.tunnel_options.dns_options
         })
         .await?;

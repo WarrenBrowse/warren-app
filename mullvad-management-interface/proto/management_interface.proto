@@ -456,6 +456,7 @@ enum FeatureIndicator {
   CUSTOM_MTU = 13;
   DAITA = 14;
   DAITA_MULTIHOP = 15;
+  ALLOW_EXTERNAL_DNS = 16;
 }
 
 message ObfuscationInfo {
@@ -984,6 +985,9 @@ message DnsOptions {
   DnsState state = 1;
   DefaultDnsOptions default_options = 2;
   CustomDnsOptions custom_options = 3;
+  // Advanced toggle: when true the firewall stops blocking DNS to resolvers other than the
+  // configured ones (lifts DNS leak protection). Queries still egress through the tunnel.
+  bool allow_external_dns = 4;
 }
 
 message PublicKey {

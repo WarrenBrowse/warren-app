@@ -203,6 +203,10 @@ WinFw_ApplyPolicyConnecting(
 //   IP address of the exit relay, if it differs from `relay`. Otherwise, this should be set to
 //   `nullptr`.
 //
+// allowExternalDns:
+//   When true, the DNS leak protection (block-all DNS) rule is not installed, so DNS requests to
+//   arbitrary resolvers are permitted (they still travel through the VPN tunnel). Advanced opt-in.
+//
 extern "C"
 WINFW_LINKAGE
 WINFW_POLICY_STATUS
@@ -218,7 +222,8 @@ WinFw_ApplyPolicyConnected(
 	const wchar_t * const *tunnelDnsServers,
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
-	size_t numNonTunnelDnsServers
+	size_t numNonTunnelDnsServers,
+	bool allowExternalDns
 );
 
 //

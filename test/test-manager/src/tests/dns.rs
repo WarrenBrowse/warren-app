@@ -85,6 +85,7 @@ pub async fn test_dns_leak_custom_public_ip(
                 addresses: vec![CONFIG_IP],
             },
             state: settings::DnsState::Custom,
+            allow_external_dns: false,
         })
         .await
         .expect("failed to configure DNS server");
@@ -117,6 +118,7 @@ pub async fn test_dns_leak_custom_private_ip(
                 addresses: vec![CONFIG_IP],
             },
             state: settings::DnsState::Custom,
+            allow_external_dns: false,
         })
         .await
         .expect("failed to configure DNS server");
@@ -368,6 +370,7 @@ pub async fn test_dns_config_custom_private(
                 addresses: vec![IpAddr::V4(TEST_CONFIG.host_bridge_ip)],
             },
             state: settings::DnsState::Custom,
+            allow_external_dns: false,
         })
         .await
         .context("failed to configure DNS server")?;
@@ -402,6 +405,7 @@ pub async fn test_dns_config_custom_public(
                 addresses: vec![custom_ip],
             },
             state: settings::DnsState::Custom,
+            allow_external_dns: false,
         })
         .await
         .context("failed to configure DNS server")?;
@@ -506,6 +510,7 @@ pub async fn test_content_blockers(
                 default_options: test_opts,
                 custom_options: settings::CustomDnsOptions::default(),
                 state: settings::DnsState::Default,
+                allow_external_dns: false,
             })
             .await
             .context("failed to configure DNS server")?;

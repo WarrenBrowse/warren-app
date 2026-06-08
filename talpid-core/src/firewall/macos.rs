@@ -436,7 +436,11 @@ impl Firewall {
 
                 // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
                 // can't leak to the wrong IPs in the tunnel or on the LAN.
-                rules.append(&mut self.get_block_dns_rules()?);
+                // The advanced `allow_external_dns` toggle deliberately skips this block so that
+                // queries to arbitrary resolvers reach the exit through the tunnel.
+                if !dns_config.allow_external_dns() {
+                    rules.append(&mut self.get_block_dns_rules()?);
+                }
 
                 if *allow_lan {
                     rules.append(&mut self.get_allow_lan_rules()?);

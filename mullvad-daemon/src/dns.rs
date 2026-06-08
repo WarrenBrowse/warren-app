@@ -17,7 +17,7 @@ const DNS_SOCIAL_MEDIA_BLOCKING_IP_BIT: u8 = 1 << 5; // 0b00100000
 
 /// Return the DNS resolvers to use
 pub fn addresses_from_options(options: &DnsOptions) -> DnsConfig {
-    match options.state {
+    let config = match options.state {
         DnsState::Default => {
             // Check if we should use a custom blocking DNS resolver.
             // And if so, compute the IP.
@@ -61,7 +61,8 @@ pub fn addresses_from_options(options: &DnsOptions) -> DnsConfig {
                 .partition(|addr| is_local_address(*addr));
             DnsConfig::from_addresses(&tunnel_config, &non_tunnel_config)
         }
-    }
+    };
+    config.allow_external_dns(options.allow_external_dns)
 }
 
 #[cfg(test)]
@@ -76,6 +77,7 @@ mod test {
             state: DnsState::Default,
             custom_options: CustomDnsOptions::default(),
             default_options: DefaultDnsOptions::default(),
+            allow_external_dns: false,
         };
 
         assert_eq!(addresses_from_options(&public_cfg), DnsConfig::default());
@@ -90,6 +92,7 @@ mod test {
                 block_ads: true,
                 ..DefaultDnsOptions::default()
             },
+            allow_external_dns: false,
         };
 
         assert_eq!(
@@ -109,6 +112,7 @@ mod test {
                 addresses: vec![public_ip, private_ip],
             },
             default_options: DefaultDnsOptions::default(),
+            allow_external_dns: false,
         };
 
         assert_eq!(

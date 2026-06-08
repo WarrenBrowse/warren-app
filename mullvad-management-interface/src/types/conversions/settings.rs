@@ -232,6 +232,7 @@ impl From<&mullvad_types::settings::DnsOptions> for proto::DnsOptions {
                     .map(|addr| addr.to_string())
                     .collect(),
             }),
+            allow_external_dns: options.allow_external_dns,
         }
     }
 }
@@ -460,6 +461,7 @@ impl TryFrom<proto::DnsOptions> for mullvad_types::settings::DnsOptions {
                     })
                     .collect::<Result<Vec<_>, _>>()?,
             },
+            allow_external_dns: options.allow_external_dns,
         })
     }
 }

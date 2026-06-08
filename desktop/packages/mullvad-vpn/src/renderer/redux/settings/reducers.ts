@@ -184,6 +184,7 @@ const initialState: ISettingsReduxState = {
   },
   dns: {
     state: 'default',
+    allowExternalDns: false,
     defaultOptions: {
       blockAds: false,
       blockTrackers: false,

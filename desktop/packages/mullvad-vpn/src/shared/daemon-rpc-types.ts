@@ -262,6 +262,7 @@ export enum FeatureIndicator {
   lanSharing,
   dnsContentBlockers,
   customDns,
+  allowExternalDns,
   serverIpOverride,
   customMtu,
 }
@@ -420,6 +421,10 @@ export interface ITunnelOptions {
 
 export interface IDnsOptions {
   state: 'custom' | 'default';
+  // Advanced opt-in that lifts the firewall's DNS leak protection: when true, queries to
+  // resolvers other than the configured ones (e.g. `dig @1.1.1.1`) are no longer blocked. The
+  // queries still travel through the tunnel. Intended for advanced users testing remote DNS.
+  allowExternalDns: boolean;
   customOptions: {
     addresses: string[];
   };

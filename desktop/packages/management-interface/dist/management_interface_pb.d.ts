@@ -2881,6 +2881,8 @@ export class DnsOptions extends jspb.Message {
     clearCustomOptions(): void;
     getCustomOptions(): CustomDnsOptions | undefined;
     setCustomOptions(value?: CustomDnsOptions): DnsOptions;
+    getAllowExternalDns(): boolean;
+    setAllowExternalDns(value: boolean): DnsOptions;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DnsOptions.AsObject;
@@ -2897,6 +2899,7 @@ export namespace DnsOptions {
         state: DnsOptions.DnsState,
         defaultOptions?: DefaultDnsOptions.AsObject,
         customOptions?: CustomDnsOptions.AsObject,
+        allowExternalDns: boolean,
     }
 
     export enum DnsState {
@@ -3966,6 +3969,7 @@ export enum FeatureIndicator {
     CUSTOM_MTU = 13,
     DAITA = 14,
     DAITA_MULTIHOP = 15,
+    ALLOW_EXTERNAL_DNS = 16,
 }
 
 export enum Ownership {

@@ -153,6 +153,7 @@ unsafe extern "system" {
         numTunnelDnsServers: usize,
         nonTunnelDnsServers: *const *const libc::wchar_t,
         numNonTunnelDnsServers: usize,
+        allowExternalDns: bool,
     ) -> WinFwPolicyStatus;
 
     #[link_name = "WinFw_ApplyPolicyBlocked"]

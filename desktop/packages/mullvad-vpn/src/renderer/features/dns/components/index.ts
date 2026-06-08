@@ -1,3 +1,5 @@
+export * from './allow-external-dns-setting';
+export * from './allow-external-dns-switch';
 export * from './block-ads-setting';
 export * from './block-ads-switch';
 export * from './block-adult-content-setting';

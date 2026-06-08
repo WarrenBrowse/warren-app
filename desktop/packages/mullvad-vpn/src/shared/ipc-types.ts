@@ -21,6 +21,7 @@ export type ScrollToAnchorId =
   | 'daita-enable-setting'
   | 'multihop-setting'
   | 'custom-dns-settings'
+  | 'allow-external-dns-setting'
   | 'allow-lan-setting'
   | 'lockdown-mode-setting'
   | 'dns-blocker-setting'

@@ -701,7 +701,11 @@ impl<'a> PolicyBatch<'a> {
 
                 // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
                 // can't leak to the wrong IPs in the tunnel or on the LAN.
-                self.add_drop_dns_rule();
+                // The advanced `allow_external_dns` toggle deliberately skips this block so that
+                // queries to arbitrary resolvers reach the exit through the tunnel.
+                if !dns_config.allow_external_dns() {
+                    self.add_drop_dns_rule();
+                }
                 self.add_allow_tunnel_rules(&tunnel.interface)?;
                 if *allow_lan {
                     self.add_block_cve_2019_14899(tunnel);

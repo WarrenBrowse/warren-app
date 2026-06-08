@@ -2632,6 +2632,18 @@ msgctxt "vpn-settings-view"
 msgid "Adult content"
 msgstr ""
 
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr ""
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr ""
+
 #. Label for list item that navigates to anti-censorship
 #. settings view.
 msgctxt "vpn-settings-view"
@@ -2702,6 +2714,10 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
 msgstr ""
 
 #. Label for settings that enables block of gamling related websites.
@@ -2800,6 +2816,10 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -3125,19 +3145,11 @@ msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
@@ -3150,7 +3162,7 @@ msgid "Device IP version"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
@@ -3182,7 +3194,7 @@ msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, 
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr ""
 
 #. The title for the WireGuard port selector.

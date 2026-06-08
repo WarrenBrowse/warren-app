@@ -306,6 +306,7 @@ pub(super) fn apply_policy_connected(
             tunnel_dns_servers.len(),
             non_tunnel_dns_servers.as_ptr(),
             non_tunnel_dns_servers.len(),
+            dns_config.allow_external_dns(),
         )
     };
 

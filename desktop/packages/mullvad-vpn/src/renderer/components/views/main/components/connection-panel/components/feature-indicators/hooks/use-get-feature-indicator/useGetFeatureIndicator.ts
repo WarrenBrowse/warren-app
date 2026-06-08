@@ -52,6 +52,18 @@ export const useGetFeatureIndicator = () => {
     });
   }, [history]);
 
+  const gotoAllowExternalDnsFeature = React.useCallback(() => {
+    history.push(RoutePath.vpnSettings, {
+      transition: TransitionType.show,
+      options: [
+        {
+          type: 'scroll-to-anchor',
+          id: 'allow-external-dns-setting',
+        },
+      ],
+    });
+  }, [history]);
+
   const gotoLanSharingFeature = React.useCallback(() => {
     history.push(RoutePath.vpnSettings, {
       transition: TransitionType.show,
@@ -183,6 +195,13 @@ export const useGetFeatureIndicator = () => {
         // TRANSLATORS: displayed when the feature is on.
         messages.gettext('Custom DNS'),
       onClick: gotoCustomDnsFeature,
+    },
+    [FeatureIndicator.allowExternalDns]: {
+      label:
+        // TRANSLATORS: Feature indicator shown when the advanced "Allow external DNS resolvers"
+        // TRANSLATORS: setting is on, i.e. DNS leak protection is relaxed.
+        messages.pgettext('vpn-settings-view', 'Allow external DNS'),
+      onClick: gotoAllowExternalDnsFeature,
     },
     [FeatureIndicator.customMtu]: {
       label: messages.pgettext('wireguard-settings-view', 'MTU'),
