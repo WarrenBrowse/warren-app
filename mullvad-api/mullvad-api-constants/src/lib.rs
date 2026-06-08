@@ -35,8 +35,9 @@ pub const API_PORT_DEFAULT: u16 = 443;
 /// select the cert, so this MUST stay `None` until that split is live. With
 /// `None`, behaviour is unchanged (system DNS + SNI).
 ///
-/// Resilience follow-up (Phase 2, not yet wired): DNS fallback when the pinned
-/// IP is unreachable, plus in-tunnel address-cache refresh so a server IP
-/// change self-heals without an app update. Until then, only pin a stable
-/// (e.g. Hetzner floating) IP.
+/// Resilience: a dead or rotated pinned IP triggers a one-shot DNS fallback at
+/// startup (`seed_pinned_or_dns_fallback` in `mullvad-api`), so the app still
+/// boots (it merely gives up the privacy benefit for that session). A stable
+/// (e.g. floating) IP is still recommended. Mid-session self-heal via the
+/// in-tunnel `api-addrs` cache refresh is a separate follow-up.
 pub const API_PINNED_IP: Option<IpAddr> = None;
