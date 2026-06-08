@@ -63,4 +63,34 @@ describe('account reducer — Warren pubkey state shape', () => {
     expect(next.status.type).toBe('ok');
     expect(next.status).toMatchObject({ method: 'new_account', expiredState: 'expired' });
   });
+
+  it('createAccountFailed surfaces the error on the failed state', () => {
+    const loggingIn = accountReducer(undefined, accountActions.startCreateAccount());
+    const error = new Error('daemon refused');
+    const next = accountReducer(loggingIn, accountActions.createAccountFailed(error));
+    expect(next.status.type).toBe('failed');
+    expect(next.status).toMatchObject({ method: 'new_account', error });
+  });
+
+  // Security-critical asymmetry: a server-driven revocation must NOT
+  // wipe the local identity (the account stays recoverable), whereas an
+  // explicit sign-out clears it. Guards against regressing the
+  // device-revoked path into a destructive logout.
+  it('DEVICE_REVOKED preserves the pubkey and expiry, LOGGED_OUT clears them', () => {
+    const expiry = '2030-01-01T00:00:00.000Z';
+    const loggedIn = accountReducer(
+      accountReducer(undefined, accountActions.loggedIn(validPubKey)),
+      accountActions.updateAccountExpiry(expiry),
+    );
+
+    const revoked = accountReducer(loggedIn, accountActions.deviceRevoked());
+    expect(revoked.status).toMatchObject({ type: 'none', deviceRevoked: true });
+    expect(revoked.pubkey).toBe(validPubKey);
+    expect(revoked.expiry).toBe(expiry);
+
+    const loggedOut = accountReducer(loggedIn, accountActions.loggedOut());
+    expect(loggedOut.status).toMatchObject({ type: 'none', deviceRevoked: false });
+    expect(loggedOut.pubkey).toBeUndefined();
+    expect(loggedOut.expiry).toBeUndefined();
+  });
 });

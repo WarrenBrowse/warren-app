@@ -565,12 +565,6 @@ export default class AppRenderer {
     }
   };
 
-  public cancelLogin = (): void => {
-    const reduxAccount = this.reduxActions.account;
-    reduxAccount.loggedOut();
-    this.loginState = 'none';
-  };
-
   public logout = async (source: LogoutSource) => {
     try {
       await IpcRendererEventChannel.account.logout(source);

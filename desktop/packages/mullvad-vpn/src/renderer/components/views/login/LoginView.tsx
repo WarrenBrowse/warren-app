@@ -107,6 +107,10 @@ export function LoginView() {
 
   const goRestore = useCallback(() => {
     setError(null);
+    // Drop any freshly minted phrase still held in state and any stale
+    // create-failure before switching to the restore path.
+    setMnemonic(null);
+    setConfirmed(false);
     setMode('restore');
   }, []);
 
@@ -152,12 +156,18 @@ export function LoginView() {
   }, [restoreInput, setWarrenMnemonic]);
 
   const title = formTitle(isBackup, mode, isPerformingPostUpgrade);
-  const statusIcon = getStatusIcon(isPerformingPostUpgrade, creating, createFailed !== null);
+  const statusIcon = getStatusIcon(isPerformingPostUpgrade, createFailed !== null);
+  // The create-failure error belongs to the welcome (pick) step only. In
+  // restore/backup steps it would be stale, leftover text under the wrong
+  // title, so it is suppressed there.
+  const shownError = error ?? (!isBackup && mode === 'pick' ? createFailed : null);
 
   return (
     <View>
       <AppMainHeader>
-        <AppMainHeader.SettingsButton disabled={isPerformingPostUpgrade || creating} />
+        {/* Keep the user on the mandatory backup gate: no settings escape
+            while creating or while the new phrase is awaiting backup. */}
+        <AppMainHeader.SettingsButton disabled={isPerformingPostUpgrade || creating || isBackup} />
       </AppMainHeader>
       <View.Content>
         <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
@@ -178,9 +188,9 @@ export function LoginView() {
                   {title}
                 </Text>
 
-                {(error || createFailed) && (
+                {shownError && (
                   <Text variant="bodySmall" color="red">
-                    {error ?? createFailed}
+                    {shownError}
                   </Text>
                 )}
 
@@ -228,12 +238,11 @@ function formTitle(isBackup: boolean, mode: Mode, isPerformingPostUpgrade?: bool
   return messages.pgettext('login-view', 'Welcome to Warren');
 }
 
-function getStatusIcon(
-  isPerformingPostUpgrade: boolean | undefined,
-  creating: boolean,
-  failed: boolean,
-) {
-  if (isPerformingPostUpgrade || creating) {
+function getStatusIcon(isPerformingPostUpgrade: boolean | undefined, failed: boolean) {
+  // Account creation shows its spinner on the "Create" button itself
+  // (see PickStep), so the prominent top spinner is reserved for the
+  // post-upgrade wait to avoid two spinners on screen at once.
+  if (isPerformingPostUpgrade) {
     return (
       <StyledStatusIcon>
         <Spinner size="big" />
