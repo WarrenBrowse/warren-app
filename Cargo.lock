@@ -3817,6 +3817,7 @@ dependencies = [
  "log",
  "log-panics",
  "mullvad-api",
+ "mullvad-api-constants",
  "mullvad-encrypted-dns-proxy",
  "mullvad-fs",
  "mullvad-leak-checker",

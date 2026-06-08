@@ -254,20 +254,34 @@ impl ApiEndpoint {
         self.host.as_deref().unwrap_or(API_HOST_DEFAULT)
     }
 
-    /// Read the [`Self::address`] value. When no explicit address is set,
-    /// Warren resolves [`API_HOST_DEFAULT`] via DNS (unlike upstream Mullvad,
-    /// which pinned a hardcoded IP). Resolution happens once here at
-    /// construction; the address cache is later refreshed from the API. Falls
-    /// back to [`API_IP_DEFAULT`] (an unspecified sentinel) if DNS fails.
+    /// Read the [`Self::address`] value. Resolution order:
+    /// 1. an explicit override (`MULLVAD_API_ADDR`) if set;
+    /// 2. the pinned [`API_PINNED_IP`] if configured (no DNS query — the
+    ///    bootstrap-privacy path, `None` by default);
+    /// 3. otherwise resolve [`API_HOST_DEFAULT`] via system DNS, falling back
+    ///    to the [`API_IP_DEFAULT`] sentinel if that fails.
     pub fn address(&self) -> SocketAddr {
-        self.address.unwrap_or_else(|| {
-            use std::net::ToSocketAddrs;
-            (API_HOST_DEFAULT, API_PORT_DEFAULT)
-                .to_socket_addrs()
-                .ok()
-                .and_then(|mut addrs| addrs.next())
-                .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
-        })
+        // Explicit override (MULLVAD_API_ADDR), then a pinned IP — both skip
+        // DNS. `API_PINNED_IP` is `None` by default, so this normally falls
+        // through to system DNS (unchanged behaviour).
+        if let Some(addr) = Self::pinned_or_explicit(self.address, API_PINNED_IP) {
+            return addr;
+        }
+        use std::net::ToSocketAddrs;
+        (API_HOST_DEFAULT, API_PORT_DEFAULT)
+            .to_socket_addrs()
+            .ok()
+            .and_then(|mut addrs| addrs.next())
+            .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
+    }
+
+    /// Pure resolution-order helper (testable): an explicit override wins,
+    /// then the pinned IP; `None` means the caller must resolve via DNS.
+    fn pinned_or_explicit(
+        explicit: Option<SocketAddr>,
+        pinned: Option<std::net::IpAddr>,
+    ) -> Option<SocketAddr> {
+        explicit.or_else(|| pinned.map(|ip| SocketAddr::new(ip, API_PORT_DEFAULT)))
     }
 
     /// Try to read the value of an environment variable. Returns `None` if the
@@ -843,5 +857,36 @@ impl ApiProxy {
 
         let response = self.handle.service.request(request).await?;
         Ok(response.status().is_success())
+    }
+}
+
+#[cfg(test)]
+mod bootstrap_privacy_tests {
+    use super::ApiEndpoint;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    #[test]
+    fn pinned_or_explicit_resolution_order() {
+        let pinned_ip = IpAddr::V4(Ipv4Addr::new(203, 0, 113, 9));
+        let explicit = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(198, 51, 100, 1)), 8443);
+
+        // No override, no pin → None (caller resolves via DNS = shipped default).
+        assert_eq!(ApiEndpoint::pinned_or_explicit(None, None), None);
+
+        // Pinned only → <ip>:443.
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(None, Some(pinned_ip)),
+            Some(SocketAddr::new(pinned_ip, 443))
+        );
+
+        // Explicit override always wins over the pin.
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(Some(explicit), Some(pinned_ip)),
+            Some(explicit)
+        );
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(Some(explicit), None),
+            Some(explicit)
+        );
     }
 }

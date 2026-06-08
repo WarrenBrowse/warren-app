@@ -55,6 +55,41 @@ const UPDATE_INTERVAL: Duration = Duration::from_secs(60 * 60);
 /// Per-request network timeout.
 const FETCH_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// Build the reqwest client used for roster fetches.
+///
+/// When an API IP is pinned ([`mullvad_api_constants::API_PINNED_IP`]) *and*
+/// `api_url` targets the default API host, resolve that host to the pinned IP
+/// (no DNS query) and omit TLS SNI — bootstrap-privacy parity with the main
+/// API client (`mullvad-api`). The host guard avoids mis-pinning when the
+/// operator overrides the API URL to a different host. `API_PINNED_IP` is
+/// `None` by default, so this is the plain client (system DNS + SNI) until the
+/// server-side dedicated-IP prerequisite is live.
+fn build_http_client(api_url: &str) -> reqwest::Client {
+    use mullvad_api_constants::{API_HOST_DEFAULT, API_PINNED_IP};
+
+    let mut builder = reqwest::Client::builder().timeout(FETCH_TIMEOUT);
+    if let Some(addr) = pin_target(api_url, API_PINNED_IP) {
+        // No DNS query (resolve the host to the pinned IP) and no SNI on the
+        // wire — the dedicated endpoint presents the cert without SNI.
+        builder = builder.resolve(API_HOST_DEFAULT, addr).tls_sni(false);
+    }
+    builder.build().unwrap_or_else(|_| reqwest::Client::new())
+}
+
+/// Pure helper (testable): the pinned `SocketAddr` to dial when `api_url`
+/// targets the default API host and an IP is pinned, else `None`. The
+/// host guard prevents mis-pinning when the API URL is overridden.
+fn pin_target(api_url: &str, pinned: Option<std::net::IpAddr>) -> Option<std::net::SocketAddr> {
+    use mullvad_api_constants::{API_HOST_DEFAULT, API_PORT_DEFAULT};
+    let ip = pinned?;
+    let url = reqwest::Url::parse(api_url).ok()?;
+    if url.host_str()?.eq_ignore_ascii_case(API_HOST_DEFAULT) {
+        Some(std::net::SocketAddr::new(ip, API_PORT_DEFAULT))
+    } else {
+        None
+    }
+}
+
 /// Exponential backoff on repeated download failures so a flapping API or
 /// offline client does not hammer the network or flood the logs.
 const DOWNLOAD_RETRY_STRATEGY: Jittered<ExponentialBackoff> = Jittered::jitter(
@@ -409,10 +444,7 @@ impl WarrenRelayListUpdater {
         on_update: impl Fn(WarrenRelayList) + Send + 'static,
     ) -> WarrenRelayListUpdaterHandle {
         let (tx, rx) = mpsc::channel(1);
-        let http = reqwest::Client::builder()
-            .timeout(FETCH_TIMEOUT)
-            .build()
-            .unwrap_or_else(|_| reqwest::Client::new());
+        let http = build_http_client(&api_url);
         let highest_roster_generation = initial_roster.as_ref().map_or(0, |r| r.generation);
         let updater = Self {
             api_url,
@@ -735,6 +767,31 @@ mod tests {
 
     /// Far-future expiry so default fixtures are never "expired".
     const FAR_FUTURE: u64 = 4_000_000_000;
+
+    #[test]
+    fn pin_target_only_pins_default_host_when_ip_set() {
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+        let ip = IpAddr::V4(Ipv4Addr::new(203, 0, 113, 7));
+
+        // No pinned IP → never pins (the shipped default, unchanged behaviour).
+        assert_eq!(pin_target("https://api.warrenbrowse.com", None), None);
+
+        // Pinned IP + default host → pins to <ip>:443.
+        assert_eq!(
+            pin_target("https://api.warrenbrowse.com/v1/exits", Some(ip)),
+            Some(SocketAddr::new(ip, 443))
+        );
+        // Host match is case-insensitive.
+        assert_eq!(
+            pin_target("https://API.WarrenBrowse.com", Some(ip)),
+            Some(SocketAddr::new(ip, 443))
+        );
+
+        // Pinned IP but a DIFFERENT host (operator override) → must NOT pin.
+        assert_eq!(pin_target("https://staging.example.org", Some(ip)), None);
+        // Garbage URL → no pin (graceful).
+        assert_eq!(pin_target("not a url", Some(ip)), None);
+    }
 
     fn signed_body(server_key: &SigningKey, seed: u8) -> String {
         signed_body_full(server_key, seed, 1, FAR_FUTURE)
