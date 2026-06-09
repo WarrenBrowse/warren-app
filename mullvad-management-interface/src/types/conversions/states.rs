@@ -100,6 +100,9 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             talpid_tunnel::ErrorStateCause::StartTunnelError => {
                                 i32::from(Cause::StartTunnelError)
                             }
+                            talpid_tunnel::ErrorStateCause::WarrenTunnelFlapping => {
+                                i32::from(Cause::WarrenTunnelFlapping)
+                            }
                             #[cfg(target_os = "windows")]
                             talpid_tunnel::ErrorStateCause::CreateTunnelDevice { os_error: _ } => {
                                 i32::from(Cause::CreateTunnelDevice)
@@ -452,6 +455,9 @@ impl TryFrom<proto::TunnelState> for mullvad_types::states::TunnelState {
                     }
                     Ok(proto::error_state::Cause::StartTunnelError) => {
                         talpid_tunnel::ErrorStateCause::StartTunnelError
+                    }
+                    Ok(proto::error_state::Cause::WarrenTunnelFlapping) => {
+                        talpid_tunnel::ErrorStateCause::WarrenTunnelFlapping
                     }
                     #[cfg(target_os = "windows")]
                     Ok(proto::error_state::Cause::CreateTunnelDevice) => {

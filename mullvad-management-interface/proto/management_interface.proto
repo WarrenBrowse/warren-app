@@ -315,6 +315,9 @@ message ErrorState {
     INVALID_IPV6_CONFIG = 14;
     SPLIT_TUNNEL_ERROR = 12;
     NEED_FULL_DISK_PERMISSIONS = 13;
+    // Warren: the tunnel reconnected too many times in a short window
+    // (network flapping); the retry loop was stopped and parked here.
+    WARREN_TUNNEL_FLAPPING = 15;
   }
 
   enum AuthFailedError {

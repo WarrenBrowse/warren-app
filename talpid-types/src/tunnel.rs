@@ -101,6 +101,10 @@ pub enum ErrorStateCause {
     CreateTunnelDevice { os_error: Option<i32> },
     /// Failed to start connection to remote server.
     StartTunnelError,
+    /// The tunnel reconnected too many times in a short window (network is
+    /// flapping). The state machine stopped the uncancelable retry loop and
+    /// parked here so the user can act once the network settles.
+    WarrenTunnelFlapping,
     /// Tunnel parameter generation failure
     TunnelParameterError(ParameterGenerationError),
     /// This device is offline, no tunnels can be established.
@@ -255,6 +259,10 @@ impl fmt::Display for ErrorStateCause {
                 );
             }
             StartTunnelError => "Failed to start connection to remote server",
+            WarrenTunnelFlapping => {
+                "The network is unstable: the tunnel reconnected too many times in a row. \
+                 Reconnect once the network has settled"
+            }
             #[cfg(target_os = "windows")]
             CreateTunnelDevice {
                 os_error: Some(error),

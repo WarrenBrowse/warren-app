@@ -284,6 +284,11 @@ function convertFromTunnelStateError(state: grpcTypes.ErrorState.AsObject): Erro
         ...baseError,
         cause: ErrorStateCause.needFullDiskPermissions,
       };
+    case grpcTypes.ErrorState.Cause.WARREN_TUNNEL_FLAPPING:
+      return {
+        ...baseError,
+        cause: ErrorStateCause.warrenTunnelFlapping,
+      };
     // These are only ever created on Android
     case grpcTypes.ErrorState.Cause.INVALID_DNS_SERVERS:
     case grpcTypes.ErrorState.Cause.NOT_PREPARED:

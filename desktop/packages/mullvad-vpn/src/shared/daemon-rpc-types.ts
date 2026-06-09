@@ -88,6 +88,7 @@ export enum ErrorStateCause {
   isOffline,
   splitTunnelError,
   needFullDiskPermissions,
+  warrenTunnelFlapping,
 }
 
 export enum AuthFailedError {
@@ -114,7 +115,8 @@ export type ErrorStateDetails =
         | ErrorStateCause.startTunnelError
         | ErrorStateCause.isOffline
         | ErrorStateCause.splitTunnelError
-        | ErrorStateCause.needFullDiskPermissions;
+        | ErrorStateCause.needFullDiskPermissions
+        | ErrorStateCause.warrenTunnelFlapping;
       blockingError?: FirewallPolicyError;
     }
   | {

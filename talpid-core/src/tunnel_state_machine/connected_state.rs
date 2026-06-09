@@ -448,7 +448,7 @@ impl ConnectedState {
             Self::reset_routes(shared_values);
             return NewState(ErrorState::enter(
                 shared_values,
-                ErrorStateCause::StartTunnelError,
+                ErrorStateCause::WarrenTunnelFlapping,
             ));
         }
 

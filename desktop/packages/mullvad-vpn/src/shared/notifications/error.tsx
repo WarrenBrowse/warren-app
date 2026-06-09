@@ -220,6 +220,11 @@ export class ErrorNotificationProvider
             'notifications',
             'Your device is offline. The tunnel will automatically connect once your device is back online.',
           );
+        case ErrorStateCause.warrenTunnelFlapping:
+          return messages.pgettext(
+            'notifications',
+            'Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled.',
+          );
         case ErrorStateCause.needFullDiskPermissions:
           return messages.pgettext('notifications', 'Failed to enable split tunneling.');
         case ErrorStateCause.splitTunnelError:
