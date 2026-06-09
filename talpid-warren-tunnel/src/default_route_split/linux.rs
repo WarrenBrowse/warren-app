@@ -304,29 +304,85 @@ impl Drop for DefaultRouteSplitGuard {
     }
 }
 
+/// Upper bound on a single synchronous cleanup command. These run on the
+/// tunnel state-machine thread (via `force_route_cleanup()`) and in `Drop`, so
+/// an `ip` invocation wedged on a stuck netlink socket must never hang teardown
+/// indefinitely. On timeout the child is killed and the failure logged.
+const SYNC_CLEANUP_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
 /// Synchronous, best-effort `ip` invocation for the `Drop` / recovery paths
-/// that cannot `await`. Tolerates "already gone" stderr and never panics, so
-/// it is safe to call from `Drop` and during shutdown.
+/// that cannot `await`. Tolerates "already gone" stderr, bounds its own
+/// runtime, and never panics, so it is safe to call from `Drop` and during
+/// shutdown.
 fn run_ip_sync_tolerant(args: &[String]) {
-    match std::process::Command::new("ip").args(args).output() {
-        Ok(out) if out.status.success() => {
-            log::debug!("ip {} OK (sync)", args.join(" "));
+    let mut child = match std::process::Command::new("ip")
+        .args(args)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+    {
+        Ok(child) => child,
+        Err(e) => {
+            log::warn!("spawn ip {} failed (sync cleanup, non-fatal): {e}", args.join(" "));
+            return;
         }
-        Ok(out) => {
-            let stderr = String::from_utf8_lossy(&out.stderr);
-            if stderr.contains("No such")
-                || stderr.contains("not found")
-                || stderr.contains("does not")
-            {
-                return;
+    };
+
+    let Some(status) = wait_sync_command(&mut child, SYNC_CLEANUP_TIMEOUT) else {
+        let _ = child.kill();
+        let _ = child.wait();
+        log::warn!(
+            "ip {} did not complete within {:?} (sync cleanup, killed)",
+            args.join(" "),
+            SYNC_CLEANUP_TIMEOUT
+        );
+        return;
+    };
+
+    if status.success() {
+        log::debug!("ip {} OK (sync)", args.join(" "));
+        return;
+    }
+
+    let mut stderr = String::new();
+    if let Some(mut handle) = child.stderr.take() {
+        use std::io::Read;
+        let _ = handle.read_to_string(&mut stderr);
+    }
+    if stderr.contains("No such") || stderr.contains("not found") || stderr.contains("does not") {
+        return;
+    }
+    log::warn!(
+        "ip {} failed (sync cleanup, non-fatal): {}",
+        args.join(" "),
+        stderr.trim()
+    );
+}
+
+/// Poll-based portable bounded wait. `std` has no `wait_timeout` and pulling a
+/// crate in for a best-effort cleanup path is not worth it, so poll `try_wait`
+/// on a short interval until the deadline. Returns `None` if the child has not
+/// exited by the deadline (or the wait itself errored), in which case the
+/// caller kills it.
+fn wait_sync_command(
+    child: &mut std::process::Child,
+    timeout: std::time::Duration,
+) -> Option<std::process::ExitStatus> {
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return Some(status),
+            Ok(None) => {}
+            Err(e) => {
+                log::warn!("waiting on ip child failed (sync cleanup, non-fatal): {e}");
+                return None;
             }
-            log::warn!(
-                "ip {} failed (sync cleanup, non-fatal): {}",
-                args.join(" "),
-                stderr.trim()
-            );
         }
-        Err(e) => log::warn!("spawn ip {} failed (sync cleanup, non-fatal): {e}", args.join(" ")),
+        if std::time::Instant::now() >= deadline {
+            return None;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
     }
 }
 
