@@ -515,6 +515,11 @@ impl ParametersGenerator {
         let nat_pmp = inner.warren_nat_pmp.clone();
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let enable_daita = inner.warren_enable_daita;
+        // IPv6 dual-stack opt-in (Mullvad `tunnel_options.generic.enable_ipv6`,
+        // default false). Forwarded onto `params.features` post-assemble
+        // (single-hop only). When off, the exit allocates no v6 and the
+        // firewall blocks native IPv6 - no leak.
+        let enable_ipv6 = inner.tunnel_options.generic.enable_ipv6;
         // M5.B.2 multi-exit failover: when this is a retry and we
         // remember which exit was used on the failed attempt, ask the
         // selector to skip it. The failover selector falls back to
@@ -746,6 +751,12 @@ impl ParametersGenerator {
         // wire path differs (Quinn + warren-protocol v3 here vs
         // WireGuard + maybenot-ffi in the upstream backend).
         params.enable_daita = enable_daita;
+        // Forward the IPv6 opt-in onto the Setup-frame features bitmask.
+        // Single-hop only: `features_for` returns 0 on the multi-hop path
+        // (IPv4-only `/v1` wire), so the exit never allocates a v6 the
+        // multi-hop pump could not carry. Mirrors the post-assemble wiring
+        // of `enable_daita` above.
+        params.features = warren_tunnel_params::features_for(enable_ipv6, params.multi_hop.is_none());
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI
         // `reconnect_count` row advances on every successful reconnect.

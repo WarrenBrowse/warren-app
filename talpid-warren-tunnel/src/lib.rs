@@ -44,6 +44,13 @@ pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
+/// Re-export of the `Setup`-frame feature bitmask constants
+/// (`features::IPV6`, `PORT_FORWARD`, ...) so daemon-side callers that
+/// only depend on `talpid-warren-tunnel` (e.g.
+/// `mullvad_daemon::warren_tunnel_params`) can OR them into
+/// [`WarrenTunnelParameters::features`] without taking a direct
+/// `warren-protocol` dependency.
+pub use warren_protocol::features;
 /// Re-export of the single-hop stable exit identifier from
 /// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
@@ -2325,7 +2332,13 @@ fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
         // Hardcoded literal until `warren-config` is wired as a
         // direct path-dep.
         ipv4_gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
-        ipv6_gateway: None,
+        // Warren convention: the IPv6 gateway is `fdcc:f:1::1`
+        // (`warren_config::TUNNEL_GATEWAY_IPV6`), set only when the exit
+        // actually allocated a tunnel v6 (i.e. the client advertised
+        // `features::IPV6` on the single-hop path). `None` keeps the
+        // interface v4-only so the firewall blocks native IPv6 with no
+        // leak. Hardcoded literal until `warren-config` is a direct dep.
+        ipv6_gateway: ipv6.map(|_| std::net::Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 1)),
         // No additional routes here; routing is owned by the route
         // installer below and refined by the relay selector for
         // future full-tunnel vs split-tunnel modes.
