@@ -19,8 +19,7 @@
 //! settings so it is the same for the whole install (and distinct per
 //! machine, which keeps the cap meaningful across real devices).
 
-use std::path::Path;
-use std::sync::OnceLock;
+use std::{path::Path, sync::OnceLock};
 
 use warren_protocol::DEVICE_ID_LEN;
 
@@ -31,9 +30,8 @@ static DEVICE_ID: OnceLock<[u8; DEVICE_ID_LEN]> = OnceLock::new();
 ///
 /// Resolution order:
 /// 1. persisted `<settings_dir>/warren-device-id` (created on first run);
-/// 2. if the settings dir cannot be resolved, a per-process random id
-///    (still stable for this process via the `OnceLock`, so the
-///    reconnect loop never leaks leases within a run).
+/// 2. if the settings dir cannot be resolved, a per-process random id (still stable for this
+///    process via the `OnceLock`, so the reconnect loop never leaks leases within a run).
 #[must_use]
 pub fn device_id() -> [u8; DEVICE_ID_LEN] {
     *DEVICE_ID.get_or_init(|| match mullvad_paths::settings_dir() {

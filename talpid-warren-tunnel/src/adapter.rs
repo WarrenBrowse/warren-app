@@ -11,8 +11,10 @@
 //! cloned between the uplink (TUN -> QUIC) and downlink (QUIC -> TUN)
 //! tasks of Warren's `pump_multi_bidirectional`.
 
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 
 use warren_tunnel::PacketDevice;
 
