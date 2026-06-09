@@ -8,7 +8,7 @@ use nftnl::{
 };
 use std::{
     env,
-    ffi::CStr,
+    ffi::{CStr, CString},
     fs, io,
     net::{IpAddr, Ipv4Addr},
     sync::LazyLock,
@@ -52,6 +52,12 @@ pub enum Error {
     /// it's the host that does not support nftables properly.
     #[error("Failed to set firewall rules")]
     NetfilterTableNotSetError,
+
+    /// Our table is still present after a reset. The kill-switch block
+    /// rules would remain in place and keep traffic blocked after
+    /// disconnect.
+    #[error("Failed to remove firewall rules")]
+    NetfilterTableStillPresentError,
 
     /// Unable to translate network interface name into index.
     #[error("Unable to translate network interface name \"{0}\" into index")]
@@ -166,7 +172,12 @@ impl Firewall {
         log::debug!("Removing table and chain from netfilter");
         Self::send_and_process(&batch)?;
 
-        Ok(())
+        // Confirm the table is actually gone. The apply path verifies the
+        // table is present after applying; teardown must symmetrically confirm
+        // removal, because a silently-failed delete leaves the default-drop
+        // chains in place and keeps the kill-switch blocking traffic after
+        // disconnect (the "no internet after disconnect" failure class).
+        self.verify_table_removed(TABLE_NAME)
     }
 
     fn apply_kernel_config(policy: &FirewallPolicy) {
@@ -224,7 +235,8 @@ impl Firewall {
         Ok(())
     }
 
-    fn verify_tables(&self, expected_tables: &[&CStr]) -> Result<()> {
+    /// Enumerate the netfilter tables currently present in the inet family.
+    fn fetch_table_set(&self) -> Result<std::collections::HashSet<CString>> {
         let socket = mnl::Socket::new(mnl::Bus::Netfilter).map_err(Error::NetlinkOpenError)?;
         let portid = socket.portid();
         let seq = 1;
@@ -247,6 +259,11 @@ impl Firewall {
             mnl::cb_run2(message, seq, portid, table::get_tables_cb, &mut table_set)
                 .map_err(Error::ProcessNetlinkError)?;
         }
+        Ok(table_set)
+    }
+
+    fn verify_tables(&self, expected_tables: &[&CStr]) -> Result<()> {
+        let table_set = self.fetch_table_set()?;
 
         for expected_table in expected_tables {
             if !table_set.contains(*expected_table) {
@@ -256,6 +273,19 @@ impl Firewall {
                 );
                 return Err(Error::NetfilterTableNotSetError);
             }
+        }
+        Ok(())
+    }
+
+    fn verify_table_removed(&self, table_name: &CStr) -> Result<()> {
+        let table_set = self.fetch_table_set()?;
+
+        if table_set.contains(table_name) {
+            log::error!(
+                "'{}' netfilter table is still present after reset",
+                table_name.to_string_lossy()
+            );
+            return Err(Error::NetfilterTableStillPresentError);
         }
         Ok(())
     }
