@@ -752,11 +752,11 @@ impl ParametersGenerator {
         // WireGuard + maybenot-ffi in the upstream backend).
         params.enable_daita = enable_daita;
         // Forward the IPv6 opt-in onto the Setup-frame features bitmask.
-        // Single-hop only: `features_for` returns 0 on the multi-hop path
-        // (IPv4-only `/v1` wire), so the exit never allocates a v6 the
-        // multi-hop pump could not carry. Mirrors the post-assemble wiring
-        // of `enable_daita` above.
-        params.features = warren_tunnel_params::features_for(enable_ipv6, params.multi_hop.is_none());
+        // Both single-hop and multi-hop now carry v6 (multi-hop via the
+        // control `/v2` IpRequestV2/IpAssignV2, cf. docs/31). When the exit
+        // cannot serve v6 it answers v4-only and the firewall keeps native
+        // IPv6 blocked. Mirrors the post-assemble wiring of `enable_daita`.
+        params.features = warren_tunnel_params::features_for(enable_ipv6);
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI
         // `reconnect_count` row advances on every successful reconnect.

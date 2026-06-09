@@ -1303,6 +1303,11 @@ impl WarrenTunnelMonitor {
         // assigned IP is already available and the TUN can be opened
         // with it directly (no dynamic reassign needed; allocation is
         // pubkey-sticky so the IP survives reconnects).
+        // Multi-hop `/v2` dual-stack: request a v6 alongside the v4 when
+        // the user enabled IPv6 (the `IPV6` feature bit, set by
+        // `warren_tunnel_params::features_for`). The exit MAY answer
+        // v4-only; the firewall keeps native v6 blocked either way.
+        let wants_ipv6 = (params.features & features::IPV6) != 0;
         let ip_assign_channel = IpAssignChannel::new();
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
@@ -1318,6 +1323,7 @@ impl WarrenTunnelMonitor {
             backoff: Backoff::HANDSHAKE,
             on_reconnect: params.on_reconnect.clone(),
             ip_assign_channel: Some(ip_assign_channel.clone()),
+            wants_ipv6,
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         let supervisor_handle = runtime.spawn(async move {
@@ -1386,23 +1392,27 @@ impl WarrenTunnelMonitor {
         // IpAssign during the first dial). Fall back to the pubkey-derived
         // self-slot only if the exit ran without an allocator or the setup
         // round-trip fell back to its bootstrap path.
-        let tun_ip = match *ip_assign_channel.subscribe().borrow_and_update() {
+        // `/v2` dual-stack: the same setup-stream `IpAssign(V2)` carries
+        // the exit-allocated v6 when one was negotiated. `None` keeps the
+        // TUN v4-only (firewall blocks native v6 - no leak).
+        let (tun_ip, tun_ipv6) = match *ip_assign_channel.subscribe().borrow_and_update() {
             Some(spec) => {
                 log::info!(
-                    "{TRACE_PREFIX} multi-hop TUN using exit-allocated IPv4 {} (gateway {})",
+                    "{TRACE_PREFIX} multi-hop TUN using exit-allocated IPv4 {} (gateway {}, dual_stack={})",
                     spec.assigned,
-                    spec.gateway
+                    spec.gateway,
+                    spec.assigned_v6.is_some()
                 );
-                spec.assigned
+                (spec.assigned, if wants_ipv6 { spec.assigned_v6 } else { None })
             }
             None => {
                 log::info!(
                     "{TRACE_PREFIX} multi-hop TUN using pubkey-derived IPv4 (no exit IpAssign yet)"
                 );
-                derive_multi_hop_tun_ip(&pubkey_bytes)
+                (derive_multi_hop_tun_ip(&pubkey_bytes), None)
             }
         };
-        let tun_config = build_multi_hop_tun_config(tun_ip);
+        let tun_config = build_multi_hop_tun_config(tun_ip, tun_ipv6);
 
         let tun_t = Instant::now();
         let tun = {
@@ -1556,6 +1566,33 @@ impl WarrenTunnelMonitor {
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
+        // Multi-hop `/v2` dual-stack: route `::/1` + `8000::/1` into the
+        // TUN's dedicated table so the exit-allocated tunnel v6 carries
+        // user traffic. Installed only when the exit allocated a v6
+        // (`ipv6_gateway` set in `build_multi_hop_tun_config`). The relay
+        // transport is IPv4, so there is no v6 endpoint to except. A
+        // failed install is non-fatal: the firewall keeps native IPv6
+        // blocked, so v6 is non-functional but never leaks. Mirrors the
+        // single-hop install.
+        let v6_route_guard = if metadata.ipv6_gateway.is_some() {
+            let tun_name_for_v6 = metadata.interface.clone();
+            runtime
+                .block_on(async move {
+                    default_route_split::DefaultRouteSplitV6Guard::install(None, &tun_name_for_v6)
+                        .await
+                })
+                .map(Some)
+                .unwrap_or_else(|e| {
+                    log::warn!(
+                        "Warren multi-hop: failed to install IPv6 split-default: {e}. \
+                         Native IPv6 stays firewall-blocked (no leak), v6 non-functional."
+                    );
+                    None
+                })
+        } else {
+            None
+        };
+
         // Emit TunnelEvent::Up now that routes AND the split-default guard
         // are fully installed. The UI transitions to "Connected" only after
         // the default route already points at the TUN.
@@ -1644,9 +1681,9 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
-            // Multi-hop is IPv4-only on the `/v1` HPKE wire: no v6 is ever
-            // assigned, so there is no v6 route to install or tear down.
-            v6_route_guard: None,
+            // Multi-hop `/v2` dual-stack: holds the `::/1`+`8000::/1` split
+            // route when the exit allocated a v6; `None` keeps it v4-only.
+            v6_route_guard,
             nat_pmp_managers,
             nat_pmp_controller,
         })
@@ -2311,24 +2348,34 @@ fn derive_multi_hop_tun_ip(pubkey_bytes: &[u8; 32]) -> std::net::Ipv4Addr {
     std::net::Ipv4Addr::new(10, 66, octet_c, octet_d)
 }
 
-/// Builds a `TunConfig` for the multi-hop path with the given IPv4.
-/// MTU pinned to 1280 (Warren `TUNNEL_INITIAL_MTU`), gateway pinned to
-/// `10.66.0.1` (Warren `TUNNEL_GATEWAY_IP`). No IPv6 address: multi-hop
-/// /v1 is IPv4-only (cf. `warren-client::ipv6_killswitch`).
-fn build_multi_hop_tun_config(ipv4: std::net::Ipv4Addr) -> TunConfig {
+/// Builds a `TunConfig` for the multi-hop path with the given IPv4 and
+/// an optional exit-allocated IPv6 (multi-hop `/v2` dual-stack, cf.
+/// docs/31). MTU pinned to 1280 (Warren `TUNNEL_INITIAL_MTU`), v4
+/// gateway pinned to `10.66.0.1`. When `ipv6` is `Some`, the v6 address
+/// is added and the gateway is pinned to `fdcc:f:1::1`
+/// (`TUNNEL_GATEWAY_IPV6`); `None` keeps the TUN v4-only and the
+/// firewall blocks native v6 (no leak).
+fn build_multi_hop_tun_config(
+    ipv4: std::net::Ipv4Addr,
+    ipv6: Option<std::net::Ipv6Addr>,
+) -> TunConfig {
+    let mut addresses: Vec<IpAddr> = vec![IpAddr::V4(ipv4)];
+    if let Some(v6) = ipv6 {
+        addresses.push(IpAddr::V6(v6));
+    }
     TunConfig {
         #[cfg(target_os = "linux")]
         name: None,
         #[cfg(target_os = "linux")]
         packet_information: false,
-        addresses: vec![IpAddr::V4(ipv4)],
+        addresses,
         // 1280 matches the multi-hop CLI binary default and the
         // baseline `TUNNEL_INITIAL_MTU` floor agreed in /v1 obfuscation
         // doctrine. DPLPMTUD on the QUIC transport may negotiate higher
         // path-MTU; the TUN itself stays at the safe floor.
         mtu: 1280,
         ipv4_gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
-        ipv6_gateway: None,
+        ipv6_gateway: ipv6.map(|_| std::net::Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 1)),
         routes: vec![],
         allow_lan: false,
         dns_servers: None,
@@ -2843,21 +2890,40 @@ mod tests {
     }
 
     #[test]
-    fn build_multi_hop_tun_config_pins_mtu_and_gateway() {
-        // Multi-hop /v1 is IPv4-only at MTU 1280 with the canonical
-        // gateway `10.66.0.1`. Any mutation here would silently
-        // change the wire profile across deployments.
-        let cfg = build_multi_hop_tun_config(std::net::Ipv4Addr::new(10, 66, 7, 42));
+    fn build_multi_hop_tun_config_v4_only_pins_mtu_and_gateway() {
+        // v4-only multi-hop (exit served no v6, or user IPv6 off) at MTU
+        // 1280 with the canonical gateway `10.66.0.1`. Any mutation here
+        // would silently change the wire profile across deployments.
+        let cfg = build_multi_hop_tun_config(std::net::Ipv4Addr::new(10, 66, 7, 42), None);
         assert_eq!(cfg.mtu, 1280, "multi-hop TUN MTU must be 1280");
         assert_eq!(
             cfg.ipv4_gateway,
             std::net::Ipv4Addr::new(10, 66, 0, 1),
             "multi-hop TUN gateway must be 10.66.0.1"
         );
-        assert!(cfg.ipv6_gateway.is_none(), "multi-hop is IPv4-only in /v1");
+        assert!(
+            cfg.ipv6_gateway.is_none(),
+            "v4-only multi-hop must not set a v6 gateway"
+        );
         assert_eq!(cfg.addresses.len(), 1);
         assert!(!cfg.allow_lan, "no LAN access on multi-hop");
         assert!(cfg.dns_servers.is_none(), "DNS handled by exit forwarder");
+    }
+
+    #[test]
+    fn build_multi_hop_tun_config_dual_stack_adds_v6_address_and_gateway() {
+        // `/v2` dual-stack: when the exit allocated a v6, the TUN carries
+        // both addresses and pins the v6 gateway to `fdcc:f:1::1`.
+        let v6 = std::net::Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 2);
+        let cfg = build_multi_hop_tun_config(std::net::Ipv4Addr::new(10, 66, 7, 42), Some(v6));
+        assert_eq!(cfg.mtu, 1280);
+        assert_eq!(cfg.addresses.len(), 2, "dual-stack TUN carries v4 + v6");
+        assert!(cfg.addresses.contains(&IpAddr::V6(v6)));
+        assert_eq!(
+            cfg.ipv6_gateway,
+            Some(std::net::Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 1)),
+            "dual-stack multi-hop must pin the v6 gateway to fdcc:f:1::1"
+        );
     }
 
     #[test]
@@ -3493,12 +3559,11 @@ mod tests {
         addr
     }
 
-    fn collector_observer() -> (
-        NatPmpMappingObserver,
-        Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>>,
-    ) {
-        let log: Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>> =
-            Arc::new(StdMutex::new(Vec::new()));
+    /// Shared event log captured by [`collector_observer`].
+    type NatPmpEventLog = Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>>;
+
+    fn collector_observer() -> (NatPmpMappingObserver, NatPmpEventLog) {
+        let log: NatPmpEventLog = Arc::new(StdMutex::new(Vec::new()));
         let log_for_obs = log.clone();
         let observer: NatPmpMappingObserver = Arc::new(move |id, evt| {
             log_for_obs.lock().expect("observer lock").push((id, evt));

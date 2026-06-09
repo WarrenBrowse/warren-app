@@ -40,16 +40,15 @@ const DEFAULT_FEATURES: u32 = 0;
 /// from the live user settings.
 ///
 /// Today the only user-driven feature is IPv6 dual-stack: the `IPV6`
-/// bit is set iff the user enabled IPv6 **and** the session is
-/// single-hop. Multi-hop is IPv4-only on the `/v1` HPKE wire (cf. doc 30
-/// + `warren-client::ipv6_killswitch`), so `IPV6` is never advertised on
-/// the multi-hop path: the exit then allocates no v6 the multi-hop pump
-/// could not carry, and the firewall keeps native IPv6 blocked there
+/// bit is set iff the user enabled IPv6. Both single-hop and multi-hop
+/// now carry v6 - multi-hop negotiates it over the control `/v2`
+/// (`IpRequestV2`/`IpAssignV2`, cf. docs/31). When the exit cannot serve
+/// v6 it answers v4-only and the firewall keeps native IPv6 blocked
 /// (no leak).
 #[must_use]
-pub fn features_for(enable_ipv6: bool, single_hop: bool) -> u32 {
+pub fn features_for(enable_ipv6: bool) -> u32 {
     let mut features = 0;
-    if enable_ipv6 && single_hop {
+    if enable_ipv6 {
         features |= talpid_warren_tunnel::features::IPV6;
     }
     features
@@ -211,13 +210,14 @@ mod tests {
     }
 
     #[test]
-    fn features_sets_ipv6_bit_for_single_hop_when_enabled() {
-        // enable_ipv6 ON + single-hop => advertise IPV6 so the exit
-        // allocates a tunnel v6 and the client goes dual-stack.
+    fn features_sets_ipv6_bit_when_enabled() {
+        // enable_ipv6 ON => advertise IPV6 so the exit allocates a tunnel
+        // v6 and the client goes dual-stack. Now true for both single-hop
+        // and multi-hop (the latter negotiates v6 over the control /v2).
         assert_eq!(
-            features_for(true, true),
+            features_for(true),
             talpid_warren_tunnel::features::IPV6,
-            "single-hop + IPv6 enabled must advertise the IPV6 feature"
+            "IPv6 enabled must advertise the IPV6 feature"
         );
     }
 
@@ -226,21 +226,9 @@ mod tests {
         // enable_ipv6 OFF => baseline 0 => exit allocates no v6 => the
         // firewall blocks native IPv6 (no leak, no v6 connectivity).
         assert_eq!(
-            features_for(false, true),
+            features_for(false),
             0,
             "IPv6 disabled must advertise no feature"
-        );
-    }
-
-    #[test]
-    fn features_omits_ipv6_on_multi_hop_even_when_enabled() {
-        // Multi-hop /v1 is IPv4-only; advertising IPV6 there would make
-        // the exit allocate a v6 the multi-hop pump cannot carry. Must
-        // stay 0 regardless of the user toggle.
-        assert_eq!(
-            features_for(true, false),
-            0,
-            "multi-hop must never advertise IPV6 on the /v1 wire"
         );
     }
 
