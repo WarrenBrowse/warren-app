@@ -406,12 +406,23 @@ impl super::DnsMonitorT for DnsMonitor {
         let port = config.port;
         let servers: Vec<_> = config.addresses().collect();
 
-        let mut state = self.state.lock();
-        state.apply_new_config(&self.store, interface, &servers, port)
+        let result = {
+            let mut state = self.state.lock();
+            state.apply_new_config(&self.store, interface, &servers, port)
+        };
+        if result.is_ok() {
+            flush_dns_cache();
+        }
+        result
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.state.lock().reset(&self.store)
+        let result = self.state.lock().reset(&self.store);
+        // Always nudge the resolver on teardown, even if restoring the store
+        // entries reported an error: the goal is to leave the system with a
+        // working resolver, not stranded on a dead in-tunnel one.
+        flush_dns_cache();
+        result
     }
 }
 
@@ -590,6 +601,29 @@ fn remove_stale_loopback_dns(store: &SCDynamicStore) {
         );
         if !store.remove(CFString::new(&path)) {
             log::error!("Failed to remove stale DNS override at {path}");
+        }
+    }
+}
+
+/// Force mDNSResponder to reload DNS configuration and drop its cache.
+///
+/// Rewriting the `State:/Network/Service/.../DNS` entries is not always enough
+/// on disconnect: mDNSResponder can keep serving the previous resolver (a
+/// now-dead in-tunnel address such as the multi-hop gateway) until it is told
+/// to reload, leaving every app unable to resolve names even though the store
+/// is correct. Flushing the cache and sending SIGHUP forces an immediate
+/// reload, so `getaddrinfo` recovers without a manual fix. Best-effort: any
+/// failure is logged, never propagated, since a missing tool must not turn a
+/// teardown into a hard error.
+fn flush_dns_cache() {
+    for (bin, args) in [
+        ("/usr/bin/dscacheutil", &["-flushcache"][..]),
+        ("/usr/bin/killall", &["-HUP", "mDNSResponder"][..]),
+    ] {
+        match std::process::Command::new(bin).args(args).status() {
+            Ok(status) if status.success() => {}
+            Ok(status) => log::debug!("{bin} {args:?} exited with {status}"),
+            Err(e) => log::warn!("failed to run {bin} to flush DNS cache: {e}"),
         }
     }
 }
