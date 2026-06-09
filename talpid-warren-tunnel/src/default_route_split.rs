@@ -134,13 +134,13 @@ pub fn force_route_cleanup() {
 
 #[cfg(test)]
 mod facade_tests {
-    use super::DefaultRouteSplitGuard;
-    use std::net::Ipv4Addr;
+    use super::{DefaultRouteSplitGuard, DefaultRouteSplitV6Guard};
+    use std::net::{Ipv4Addr, Ipv6Addr};
 
     // Anti-regression: the facade must expose the same `install
     // (Ipv4Addr, &str) -> Result<Self>` shape and a `uninstall(self)
     // -> Result<()>` shape, so the OS-agnostic call site in `lib.rs`
-    // stays compatible. If the upstream signature drifts (e.g. an
+    // stays compatible. If the per-OS impl signature drifts (e.g. an
     // extra arg lands in `warren_client::default_route_split_macos::install`),
     // this test fails at compile time and the operator gets a clear
     // signal that the facade needs to be re-aligned.
@@ -152,19 +152,31 @@ mod facade_tests {
         let _exercise = async {
             let exit_ip: Ipv4Addr = "10.0.0.1".parse().unwrap();
             let tun_name = "tun0";
-            // Mirrors lib.rs:693 / 1061 verbatim. Fails to compile if
-            // either the in-crate Linux impl or the warren-core macOS
-            // port diverges from the (Ipv4Addr, &str) signature.
+            // Mirrors the lib.rs v4 call site verbatim. Fails to compile if
+            // the Linux wrapper or the warren-core macOS/Windows ports diverge
+            // from the (Ipv4Addr, &str) signature.
             let guard: anyhow::Result<DefaultRouteSplitGuard> =
                 DefaultRouteSplitGuard::install(exit_ip, tun_name).await;
-            // Mirrors lib.rs:wait() teardown: uninstall consumes the
-            // guard and returns Result<()>. Drops the value otherwise.
             if let Ok(g) = guard {
                 let _: anyhow::Result<()> = g.uninstall().await;
             }
         };
-        // Black-hole the future so the compiler keeps the shape check
-        // but the test is a true no-op at runtime.
+        let _ = &_exercise;
+    }
+
+    #[test]
+    fn v6_api_surface_matches_lib_rs_call_site() {
+        // Same compile-time pin for the v6 guard: every OS impl (3 + stub)
+        // must keep the `install(Option<Ipv6Addr>, &str) -> Result<Self>` +
+        // `uninstall(self) -> Result<()>` shape the lib.rs call site relies on.
+        let _exercise = async {
+            let exit_ip_v6: Option<Ipv6Addr> = Some("2a01:4f8:1::2".parse().unwrap());
+            let guard: anyhow::Result<DefaultRouteSplitV6Guard> =
+                DefaultRouteSplitV6Guard::install(exit_ip_v6, "tun0").await;
+            if let Ok(g) = guard {
+                let _: anyhow::Result<()> = g.uninstall().await;
+            }
+        };
         let _ = &_exercise;
     }
 }

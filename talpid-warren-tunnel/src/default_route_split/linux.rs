@@ -10,6 +10,13 @@
 //! TUN. We inject that here via warren-core's `split_tunnel_fwmark` parameter,
 //! so no part of the recipe is duplicated; this wrapper only supplies the
 //! Warren-specific mark and keeps the facade's `install(Ipv4Addr, &str)` shape.
+//!
+//! Scope note: the fwmark bypass is injected on the **v4** guard only. The v6
+//! split (`DefaultRouteSplitV6Guard`, re-exported straight from warren-core)
+//! has no fwmark exception, so excluded-app traffic over IPv6 is routed into
+//! the tunnel rather than around it. This is a pre-existing, narrow gap (the v6
+//! split-default is only installed when the exit advertises a v6 gateway); a v6
+//! fwmark bypass would mirror this wrapper on the v6 guard.
 
 use std::net::Ipv4Addr;
 
