@@ -146,7 +146,7 @@ final class TunnelStateAccessibilityAnnouncer {
                 reason.localizedReason
             )
 
-        // Transient/intermediate states — stay silent.
+        // Transient/intermediate states - stay silent.
         case .pendingReconnect,
             .negotiatingEphemeralPeer,
             .disconnecting(.reconnect):

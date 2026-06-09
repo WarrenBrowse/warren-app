@@ -18,7 +18,7 @@ prost-types = { workspace = true }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
 tipsy = { workspace = true }
-tokio = { workspace = true, features = ["rt"] }
+tokio = { workspace = true, features = ["rt", "net"] }
 tonic = { workspace = true }
 tower = { workspace = true }
 vec1 = { workspace = true }

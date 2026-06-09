@@ -59,7 +59,7 @@ mod security_tests {
     }
 
     /// Fix L-2: the mnemonic string must be zeroized (all bytes set to 0)
-    /// immediately after key derivation — it must not survive into the
+    /// immediately after key derivation - it must not survive into the
     /// returned value or any heap allocation the caller still holds.
     ///
     /// We cannot observe the internal zeroization directly, but we can verify

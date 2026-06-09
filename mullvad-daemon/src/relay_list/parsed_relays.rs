@@ -31,7 +31,7 @@ pub fn parse_relays_from_file(
         (Err(cached_error), Err(bundled_error)) => {
             // Warren fork: the upstream Mullvad relay list is never shipped
             // or consumed (the tunnel uses `warren-relays.json`). Its
-            // absence is the normal steady state, not an error — log at
+            // absence is the normal steady state, not an error - log at
             // debug so it does not alarm the operator. The caller maps the
             // returned `Err` to `None` and proceeds.
             log::debug!("Mullvad bundled relays unavailable (Warren tunnel active, unused): {bundled_error}");

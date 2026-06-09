@@ -826,7 +826,7 @@ impl<'a> PolicyBatch<'a> {
         // Symmetrically to `add_allow_endpoint_rules` (= mullvad API
         // accessible via root without fwmark), we add a rule here that
         // accepts traffic to the peer endpoint when `skuid == 0` (=
-        // root). Security: equivalent to the existing API rule — a root
+        // root). Security: equivalent to the existing API rule - a root
         // userspace attacker could always disable nftables, so this
         // rule does not widen the attack surface.
         let mut out_rule_root = Rule::new(&self.out_chain);

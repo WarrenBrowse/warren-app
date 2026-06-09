@@ -56,7 +56,7 @@ public struct WarrenDiagnosticInfoView: View {
 
             Text(
                 String(
-                    localized: "Take a screenshot and attach it to your support request. This screen contains no secrets — your recovery phrase and wallet seed are never displayed here.",
+                    localized: "Take a screenshot and attach it to your support request. This screen contains no secrets - your recovery phrase and wallet seed are never displayed here.",
                     table: "Settings",
                     comment: "Body explaining the screen is screenshot-safe"
                 )

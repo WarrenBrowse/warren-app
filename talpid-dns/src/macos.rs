@@ -562,8 +562,8 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
 /// system is left pointing at a loopback resolver that no longer exists and
 /// all name resolution breaks until a tunnel takes over again.
 ///
-/// This runs once, when the [`DnsMonitor`] is created at startup — before we
-/// have pointed the system DNS at our own resolver — so any service whose
+/// This runs once, when the [`DnsMonitor`] is created at startup - before we
+/// have pointed the system DNS at our own resolver - so any service whose
 /// servers are *all* loopback addresses is a candidate leftover. We spare the
 /// canonical `127.0.0.1`/`::1` (which a user-run resolver such as
 /// dnscrypt-proxy would use; our resolver never binds those).
@@ -571,7 +571,7 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
 /// Crucially we only reclaim an override whose resolver is actually **dead**
 /// (see [`loopback_resolver_is_live`]): a *stale* override by definition points
 /// at a resolver that no longer exists. A loopback resolver that is still
-/// answering belongs to a running daemon — ours from this very run, or, when a
+/// answering belongs to a running daemon - ours from this very run, or, when a
 /// second VPN daemon coexists on the host (e.g. a separately-installed Mullvad
 /// app whose own resolver also binds a non-canonical `127/8` address), theirs.
 /// The previous code removed *every* non-canonical loopback override blindly,
@@ -670,7 +670,7 @@ mod test {
     #[test]
     fn live_loopback_resolver_is_detected_and_preserved() {
         // Regression: the stale-override cleanup must NOT reclaim a loopback
-        // override whose resolver is still answering — that is exactly how a
+        // override whose resolver is still answering - that is exactly how a
         // coexisting Mullvad app's live resolver (a non-canonical 127/8
         // address) got wiped, killing all DNS on daemon start.
         let live = UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind live");

@@ -211,12 +211,12 @@ final class SettingsViewControllerFactory {
     /// Loads the mnemonic from the Keychain synchronously (the iOS
     /// Keychain entry uses `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
     /// so the device must be unlocked, but no extra Face ID prompt is
-    /// required since the pubkey is non-secret — sharing it cannot
+    /// required since the pubkey is non-secret - sharing it cannot
     /// grant wallet access).
     private func makeWarrenWalletIdentityViewController() -> MakeChildResult {
         // `publicKeyAddress()` returns nil when no wallet is present ;
         // the row is hidden in that case (see `SettingsDataSource`), so
-        // this is defensive only — fall back to an empty string which
+        // this is defensive only - fall back to an empty string which
         // the view renders as a blank field.
         let address = WarrenWalletInteractor().publicKeyAddress() ?? ""
         let view = WarrenWalletIdentityView(address: address)

@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  C.6 scaffold — multi-exit failover banner. Surfaces a transient
+//  C.6 scaffold - multi-exit failover banner. Surfaces a transient
 //  notification when `WarrenQuinnAdapter` reported a failover to an
 //  alternate exit relay (cf. memory `warren_session_b_delivered` M5.B.2
 //  `select_failover_alternative_for_attempt`). Consumes App Group

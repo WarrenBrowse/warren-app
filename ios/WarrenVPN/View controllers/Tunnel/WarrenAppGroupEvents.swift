@@ -7,7 +7,7 @@
 //
 //  Reads transient Warren tunnel events broadcast from the
 //  `PacketTunnelProvider` extension via the shared App Group
-//  UserDefaults container. Surfacing happens here only — the producer
+//  UserDefaults container. Surfacing happens here only - the producer
 //  side lives in the tunnel extension (cf.
 //  `.planning/c4-packet-tunnel-provider-quinn-design.md` §2.3).
 //
@@ -35,7 +35,7 @@ public struct WarrenFailoverEvent: Equatable {
 }
 
 /// Bridge between the tunnel extension's App Group UserDefaults writes
-/// and SwiftUI/UIKit consumers in the main app. Owns no UI state — just
+/// and SwiftUI/UIKit consumers in the main app. Owns no UI state - just
 /// surfaces decoded events.
 @MainActor
 public final class WarrenAppGroupEvents: ObservableObject {
@@ -65,7 +65,7 @@ public final class WarrenAppGroupEvents: ObservableObject {
         // NotificationCenter automatically drops weak observer references
         // when the observed object is deallocated. The explicit unregister
         // would require accessing the @MainActor-isolated `observer`
-        // ivar from a nonisolated deinit — disallowed under Swift 6
+        // ivar from a nonisolated deinit - disallowed under Swift 6
         // strict concurrency. The block-based observer holds `self`
         // weakly, so leaking is bounded.
     }

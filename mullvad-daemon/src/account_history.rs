@@ -81,7 +81,7 @@ impl AccountHistory {
                     // pre-Phase-2 format (numeric `AccountNumber`) and
                     // the Phase-2 format (64-char hex `WarrenPubKey`)
                     // are both accepted by `ACCOUNT_REGEX`, so this
-                    // branch only fires on a genuinely garbled file —
+                    // branch only fires on a genuinely garbled file -
                     // worth logging at INFO rather than WARN since the
                     // recovery is silent and automatic.
                     log::info!(

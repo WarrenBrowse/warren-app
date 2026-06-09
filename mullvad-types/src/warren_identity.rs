@@ -7,13 +7,13 @@
 use crate::warren_pubkey::WarrenPubKey;
 use serde::{Deserialize, Serialize};
 
-/// Warren identity — the Ed25519 wallet pubkey of the logged-in user.
+/// Warren identity - the Ed25519 wallet pubkey of the logged-in user.
 ///
 /// The `pubkey` is the Warren user identifier (Ed25519, SS58 `wb…`),
 /// derived from the BIP39 mnemonic via `warren_identity::derive_node_key`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WarrenIdentity {
-    /// Warren user identifier — Ed25519 pubkey derived from
+    /// Warren user identifier - Ed25519 pubkey derived from
     /// the BIP39 mnemonic via `warren_identity::derive_node_key`.
     pub pubkey: WarrenPubKey,
 }

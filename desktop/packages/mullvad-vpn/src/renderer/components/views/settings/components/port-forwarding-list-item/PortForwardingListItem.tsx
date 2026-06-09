@@ -10,7 +10,7 @@ export type PortForwardingListItemProps = Omit<ListItemProps, 'children'>;
 // (NAT-PMP via the connected exit). Warren-specific differentiator:
 // upstream Mullvad + IVPN dropped port-forwarding in 2023. The view
 // itself was implemented but had no entry point in the Settings list
-// — this component closes that gap. State pill ("On" / "Off") reads
+// - this component closes that gap. State pill ("On" / "Off") reads
 // `Settings::warren_nat_pmp.enabled` from redux so the user can see
 // the toggle state without entering the sub-view.
 export function PortForwardingListItem(props: PortForwardingListItemProps) {

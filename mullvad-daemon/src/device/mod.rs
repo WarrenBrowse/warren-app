@@ -173,7 +173,7 @@ pub(crate) fn account_number_to_warren_pubkey(account_number: &str) -> WarrenPub
     WarrenPubKey::from_str(account_number).unwrap_or_else(|e| {
         log::warn!(
             "account_number is not a valid Warren pubkey ({e}), fallback dummy zero \
-             pubkey — relogin required for Warren auth",
+             pubkey - relogin required for Warren auth",
         );
         WarrenPubKey::from_bytes(&[0u8; 32])
     })

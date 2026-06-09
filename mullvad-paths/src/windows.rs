@@ -44,7 +44,7 @@ use windows_sys::{
     core::{GUID, PWSTR},
 };
 
-// Renamed to `Warren VPN` for the Warren fork — see
+// Renamed to `Warren VPN` for the Warren fork - see
 // `unix.rs::PRODUCT_NAME` for the rationale (anti-collision with
 // Mullvad upstream).
 pub const PRODUCT_NAME: &str = "Warren VPN";

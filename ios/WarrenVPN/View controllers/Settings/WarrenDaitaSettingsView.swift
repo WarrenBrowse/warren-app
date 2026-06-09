@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  C.6 scaffold — DAITA toggle in Settings. DAITA defaults OFF
+//  C.6 scaffold - DAITA toggle in Settings. DAITA defaults OFF
 //  (per memory `warren_daita_doctrine_v1` + Session F instability
 //  finding resolved in Session G `pump_*_with_daita` production
 //  wiring fix). Persists the user choice to App Group UserDefaults

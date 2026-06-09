@@ -8,8 +8,8 @@ export type WarrenMultiHopListItemProps = Omit<ListItemProps, 'children'>;
 
 // Settings entry that navigates to the Warren two-relayed QUIC
 // multi-hop view (M4.E.D). The legacy upstream `MultihopListItem`
-// (WireGuard multi-hop constraint) is hidden from the Warren build —
-// see `SettingsView.tsx` — so this is the only multi-hop entry the
+// (WireGuard multi-hop constraint) is hidden from the Warren build -
+// see `SettingsView.tsx` - so this is the only multi-hop entry the
 // user sees. The label drops the "Warren" qualifier because the host
 // app *is* Warren VPN; users see plain "Multihop" matching the
 // upstream Mullvad label they may already be familiar with.

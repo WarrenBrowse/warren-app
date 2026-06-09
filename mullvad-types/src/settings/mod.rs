@@ -255,7 +255,7 @@ pub struct WarrenNatPmpRule {
     pub suggested_external_port: u16,
     /// Internal port the user's application binds (0 = unset; the exit
     /// then DNATs the granted external port to the same number on the
-    /// client — the "same port on your device" model).
+    /// client - the "same port on your device" model).
     pub internal_port: u16,
 }
 
@@ -313,7 +313,7 @@ impl WarrenNatPmpSettings {
     ///
     /// New (multi-port) settings carry them in `rules`. A settings.json
     /// from a pre-multi-port build has `rules` empty but the legacy
-    /// single-port fields set — we synthesize one rule from those so the
+    /// single-port fields set - we synthesize one rule from those so the
     /// existing forward survives the upgrade. A fresh default (disabled,
     /// no rules) yields an empty list.
     #[must_use]

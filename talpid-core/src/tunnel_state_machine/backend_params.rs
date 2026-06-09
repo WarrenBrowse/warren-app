@@ -1,4 +1,4 @@
-//! Tunnel parameters for the Warren backend — the abstraction stored
+//! Tunnel parameters for the Warren backend - the abstraction stored
 //! by `ConnectingState` and `ConnectedState`.
 //!
 //! The accessor methods (`get_tunnel_endpoint`, `get_next_hop_endpoints`,

@@ -27,8 +27,8 @@ interface WarrenQuinnConnectInvoker {
  *
  * Unlike the `String` projection on [WarrenTunnelStateProvider.state] (kept
  * for legacy banner display), this carries the structured fields the main
- * connection card needs — the real endpoint hosts, the feature flags, and a
- * distinct [Failed] vs [Blocking] (kill-switch) status — so the card can show
+ * connection card needs - the real endpoint hosts, the feature flags, and a
+ * distinct [Failed] vs [Blocking] (kill-switch) status - so the card can show
  * the true state instead of collapsing everything to "Disconnected".
  */
 sealed interface WarrenConnectedInfo {
@@ -170,7 +170,7 @@ sealed interface WarrenSubscriptionOutcome {
     data object AuthorizationDenied : WarrenSubscriptionOutcome
     /** Wallet has no mnemonic yet (onboarding hasn't run). */
     data object WalletNotReady : WarrenSubscriptionOutcome
-    /** Network / server / signature error — `message` is loggable, not user-facing. */
+    /** Network / server / signature error - `message` is loggable, not user-facing. */
     data class Failure(val message: String) : WarrenSubscriptionOutcome
 }
 

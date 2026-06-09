@@ -1,7 +1,7 @@
 // The iOS-specific runtime + API-client code only compiles on `target_os =
 // "ios"`.  The FFI modules (`warren_tunnel_ffi`, `warren_wallet_ffi`) are
 // also included under `test` so that unit tests can run on the macOS host
-// without an iOS cross-compilation toolchain — their deps (bip39,
+// without an iOS cross-compilation toolchain - their deps (bip39,
 // ed25519-dalek, warren-identity, zeroize, std) are all cross-platform.
 #![cfg(any(target_os = "ios", test))]
 // AUDIT_COMPLET.md M-4: the blanket

@@ -162,7 +162,7 @@ impl DaemonWarrenRelaySelector {
     /// unreadable, returns a wrapper with an empty list + log warn,
     /// to allow the daemon to keep booting in WG mode. The
     /// state machine will see an empty `WarrenRelayList` and return
-    /// `NoRelayMatch` on the first selection — expected behavior:
+    /// `NoRelayMatch` on the first selection - expected behavior:
     /// the user is not in Warren mode.
     ///
     /// # Errors
@@ -184,7 +184,7 @@ impl DaemonWarrenRelaySelector {
     /// Expected format: v2 signed Ed25519 (see
     /// [`warren_relay_selector::verify_signed_relay_list`]). The
     /// unsigned v1 format is **rejected** post-F3 audit (anti-downgrade
-    /// attack — an attacker serving an unsigned v1 could
+    /// attack - an attacker serving an unsigned v1 could
     /// substitute the list without detection).
     ///
     /// # Errors
@@ -200,7 +200,7 @@ impl DaemonWarrenRelaySelector {
         let path = cache_dir.join(WARREN_RELAYS_FILENAME);
         if !path.exists() {
             log::info!(
-                "Warren relays file not found at {} — booting with empty relay list",
+                "Warren relays file not found at {} - booting with empty relay list",
                 path.display()
             );
             return Ok(Self::new(WarrenRelayList::default()));
@@ -223,7 +223,7 @@ impl DaemonWarrenRelaySelector {
     ///
     /// Mirror API of
     /// [`mullvad_relay_selector::RelaySelector::get_relay`] on the
-    /// WireGuard side — eases dispatch via
+    /// WireGuard side - eases dispatch via
     /// `ParametersGenerator::generate(retry_attempt, ...)`.
     ///
     /// # Errors
@@ -375,7 +375,7 @@ mod tests {
         // F3 fork audit: warren-api `/v1/exits` returns a
         // **signed v2** format (`SignedRelayList` with server_pubkey + Ed25519
         // signature). The daemon must parse it and verify the signature
-        // — not accept unsigned v1. Frozen format: if serde changes
+        // - not accept unsigned v1. Frozen format: if serde changes
         // the order of v2 fields, this test (and any existing
         // installation) breaks -> `/v3` rotation mandatory.
         use ed25519_dalek::SigningKey;

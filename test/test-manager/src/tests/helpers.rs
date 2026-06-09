@@ -713,8 +713,8 @@ pub async fn constrain_to_relay(
 /// overwriting the default location custom list.
 ///
 /// `Intersection` no longer lives on the whole query, so we apply it to the relevant
-/// `Constraint<LocationConstraint>` fields by hand: always the exit location, and — for
-/// multihop queries — the entry location too.
+/// `Constraint<LocationConstraint>` fields by hand: always the exit location, and - for
+/// multihop queries - the entry location too.
 async fn intersect_with_current_location(
     mullvad_client: &mut MullvadProxyClient,
     mut query: RelayQuery,

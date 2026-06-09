@@ -217,7 +217,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'l
 
 /// Convenience wrapper: derive the wallet pubkey and return it as a
 /// Warren **SS58 address** (`wb…`, network prefix 13295). This is the
-/// canonical string form of the Warren wallet identity — the value the
+/// canonical string form of the Warren wallet identity - the value the
 /// `X-Warren-PubKey` request header carries and the Kotlin wallet
 /// repository stores, so the caller can pass the result straight through.
 #[unsafe(no_mangle)]
@@ -360,7 +360,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     mnemonic: JString<'local>,
     config_json: JString<'local>,
 ) -> jint {
-    // parking_lot::Mutex::lock() returns the guard directly — no poisoning,
+    // parking_lot::Mutex::lock() returns the guard directly - no poisoning,
     // no Result to unwrap.
     let mut slot = ACTIVE_TUNNEL.lock();
     if slot.is_some() {
@@ -413,7 +413,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
 
         // Fix L-2: derive the signing key synchronously at the JNI boundary,
         // before any async task is spawned.  The mnemonic is wrapped in
-        // Zeroizing so it is wiped immediately after key derivation — it never
+        // Zeroizing so it is wiped immediately after key derivation - it never
         // enters the async task nor persists for the session lifetime.
         let mnemonic_zeroing = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
         let signing_key = match crate::wallet::signing_key_from_mnemonic(&mnemonic_zeroing) {
@@ -459,7 +459,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) {
-    // parking_lot::Mutex::lock() returns the guard directly — no poisoning,
+    // parking_lot::Mutex::lock() returns the guard directly - no poisoning,
     // no Result to unwrap.
     if let Some(_handle) = ACTIVE_TUNNEL.lock().take() {
         // Dropping `_cancel_tx` notifies the Quinn task to wind down. The
@@ -545,7 +545,7 @@ const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 /// `warren-backend-api`).
 ///
 /// Verified against the live `GET /v1/exits` response on
-/// 2026-05-23 — the embedded `server_pubkey_hex` field matches this
+/// 2026-05-23 - the embedded `server_pubkey_hex` field matches this
 /// constant byte-for-byte, and deriving the verifying key from the
 /// on-disk seed via `ed25519_dalek::SigningKey::from_bytes` produces
 /// the same hex.

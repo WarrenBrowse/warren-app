@@ -5,7 +5,7 @@
 //  Originally created by Emils on 2026-04-07 for the Mullvad fork
 //  (used the Rust `mullvad_generate_private_key` + `mullvad_derive_public_key`
 //  FFI symbols, both of which are NOT exported by Warren's `warren-ios`
-//  staticlib — Warren tunnels via Quinn over Ed25519 wallet identity,
+//  staticlib - Warren tunnels via Quinn over Ed25519 wallet identity,
 //  not WireGuard X25519).
 //
 //  Reimplemented (2026-05-22, C.4.5) on top of `CryptoKit.Curve25519`
@@ -38,7 +38,7 @@ extension WireGuard.PrivateKey {
         // against future ABI changes. Force-unwrap the failable
         // `init?(rawValue:)` since we just validated the length.
         guard data.count == 32, let key = WireGuard.PrivateKey(rawValue: data) else {
-            preconditionFailure("Curve25519 keypair did not produce 32 bytes — CryptoKit ABI change")
+            preconditionFailure("Curve25519 keypair did not produce 32 bytes - CryptoKit ABI change")
         }
         self = key
     }

@@ -224,7 +224,7 @@ class FileCacheTests: XCTestCase {
         XCTAssertEqual(try fileCache.read(), "final")
     }
 
-    /// Deadlock smoke test with a timeout — if any operation deadlocks, the test will fail by
+    /// Deadlock smoke test with a timeout - if any operation deadlocks, the test will fail by
     /// exceeding the XCTest timeout rather than hanging the suite indefinitely.
     func testNoDeadlockUnderTimeout() throws {
         try JSONEncoder().encode("timeout-test").write(to: testFileURL)

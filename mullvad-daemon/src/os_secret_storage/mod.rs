@@ -7,7 +7,7 @@
 //! no daemon-friendly OS-native store exists (= Linux, where
 //! `secret-service` requires a session D-Bus the daemon does not
 //! have), we explicitly fall back to a plaintext file with a loud
-//! warning, instead of pretending to encrypt with a custom scheme —
+//! warning, instead of pretending to encrypt with a custom scheme -
 //! the latter is exactly the Signal Desktop "BasicTextEncryption"
 //! fiasco we want to avoid.
 //!
@@ -16,7 +16,7 @@
 //! - macOS: System Keychain is excluded from Time Machine backups
 //!   by default, protecting against backup leak. Its file is
 //!   encrypted at rest with a key derived from `/var/db/SystemKey`,
-//!   which is also `0o600 root:root` — defending against offline
+//!   which is also `0o600 root:root` - defending against offline
 //!   disk theft on unencrypted volumes.
 //! - Windows: DPAPI with `CRYPTPROTECT_LOCAL_MACHINE` ties the
 //!   ciphertext to the machine's master key, surviving user logoff
@@ -33,7 +33,7 @@
 //! daemon's secure boundary (root-owned process) and is always
 //! wrapped in `zeroize::Zeroizing` by the caller. We do not attempt
 //! to defend against an attacker who already has root on the machine
-//! — that battle is lost upstream of this module.
+//! - that battle is lost upstream of this module.
 
 use std::io;
 
@@ -74,7 +74,7 @@ mod windows;
 pub trait SecretStorage: Send + Sync {
     /// Persist `value` under the logical `key`. Overwrites any
     /// existing entry under the same key atomically (the trait
-    /// contract is "last write wins" — implementations MUST NOT
+    /// contract is "last write wins" - implementations MUST NOT
     /// surface a "conflict" error when overwriting).
     fn store(&self, key: &str, value: &[u8]) -> io::Result<()>;
 
@@ -130,7 +130,7 @@ pub trait SecretStorage: Send + Sync {
 /// at **every** daemon launch, because the binary's code signature
 /// hash changes on each `cargo build`. A stable Apple Developer ID
 /// signature is required for the macOS Authorization database to
-/// remember the grant — that is set up only on signed release
+/// remember the grant - that is set up only on signed release
 /// builds. In development this is unworkable, so we offer an opt-out
 /// that keeps the dev loop friction-free.
 ///
@@ -143,7 +143,7 @@ const PLAINTEXT_OVERRIDE_ENV: &str = "WARREN_USE_PLAINTEXT_STORAGE";
 pub fn get_storage(settings_dir: &std::path::Path) -> Box<dyn SecretStorage> {
     if std::env::var_os(PLAINTEXT_OVERRIDE_ENV).is_some_and(|v| !v.is_empty()) {
         // `get_storage` is called multiple times during a single
-        // daemon boot (once per call site in `warren_signer` — see
+        // daemon boot (once per call site in `warren_signer` - see
         // F-5 deferred optimization). Logging the override notice
         // every time would drown the boot log in three or four
         // identical lines. `std::sync::Once` guarantees at most one
@@ -154,7 +154,7 @@ pub fn get_storage(settings_dir: &std::path::Path) -> Box<dyn SecretStorage> {
             log::info!(
                 "{PLAINTEXT_OVERRIDE_ENV} is set: using plaintext storage instead of \
                  the OS-native secret store. This is intended for development builds \
-                 that lack a stable code signature — DO NOT use in production."
+                 that lack a stable code signature - DO NOT use in production."
             );
         });
         return Box::new(plaintext::PlaintextStorage::new(settings_dir));
@@ -167,7 +167,7 @@ pub fn get_storage(settings_dir: &std::path::Path) -> Box<dyn SecretStorage> {
             Err(e) => {
                 log::warn!(
                     "macOS System Keychain unavailable ({e}); falling back to plaintext \
-                     storage in settings_dir — backups of settings_dir will contain \
+                     storage in settings_dir - backups of settings_dir will contain \
                      the BIP39 mnemonic in clear"
                 );
             }
@@ -181,7 +181,7 @@ pub fn get_storage(settings_dir: &std::path::Path) -> Box<dyn SecretStorage> {
             Err(e) => {
                 log::warn!(
                     "Windows DPAPI unavailable ({e}); falling back to plaintext \
-                     storage in settings_dir — backups of settings_dir will contain \
+                     storage in settings_dir - backups of settings_dir will contain \
                      the BIP39 mnemonic in clear"
                 );
             }

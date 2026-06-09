@@ -81,7 +81,7 @@ impl RelayListProxy {
         // signed mode to validate end-to-end injection; the
         // `app/v1/relays` endpoint is public server-side, so the
         // Warren headers are ignored but still emitted on the wire
-        // — proof of integration.
+        // - proof of integration.
         let request = self.handle.factory.get_or_signed("app/v1/relays");
 
         async move {

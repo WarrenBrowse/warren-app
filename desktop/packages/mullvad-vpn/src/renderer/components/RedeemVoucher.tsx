@@ -182,7 +182,7 @@ export function RedeemVoucherInput(props: IRedeemVoucherInputProps) {
       className={props.className}
       // `FormattableTextInput` filters input character-by-character
       // against `allowedCharacters`. `WARREN_VOUCHER_ALLOWED_CHARS`
-      // is the Crockford-32 char class — pasted I/L/O/U characters
+      // is the Crockford-32 char class - pasted I/L/O/U characters
       // are silently dropped (matching the backend's strict alphabet
       // gate, see `warren_api::vouchers::normalize_secret`'s "no
       // Crockford aliasing" rationale).

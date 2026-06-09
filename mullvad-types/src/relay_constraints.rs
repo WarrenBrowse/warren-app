@@ -114,7 +114,7 @@ impl fmt::Display for RelayConstraintsFormatter<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // The fork ONLY dispatches to talpid-warren-tunnel when
         // the Warren tunnel. `wireguard_constraints` is still used for
-        // selection (port, IP version, obfuscation) — hence the rename
+        // selection (port, IP version, obfuscation) - hence the rename
         // to "Tunnel constraints" so it does not suggest an actual WG
         // tunnel. Display label is "warren" (no transport qualifier):
         // Warren runs on Quinn (QUIC), but the display is meant to be
@@ -692,7 +692,7 @@ pub struct ObfuscationSettings {
 
 /// Represents a specific obfuscation method (or explicit "off").
 ///
-/// This enum does *not* have an `Auto` variant — that role is played by
+/// This enum does *not* have an `Auto` variant - that role is played by
 /// `Constraint::Any` on the wrapping `Constraint<ObfuscationMode>`.
 #[derive(Debug, Clone, Eq, PartialEq, Intersection)]
 pub enum ObfuscationMode {

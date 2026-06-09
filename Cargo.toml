@@ -15,7 +15,6 @@ members = [
   "mullvad-leak-checker",
   "mullvad-logging",
   "mullvad-management-interface",
-  "mullvad-masque-proxy",
   "mullvad-nsis",
   "mullvad-paths",
   "mullvad-problem-report",
@@ -192,7 +191,6 @@ lto = true
 
 # Selectively optimize packages where we know it makes a difference
 [profile.release.package]
-mullvad-masque-proxy.opt-level = 3
 quinn.opt-level = 3
 quinn-proto.opt-level = 3
 quinn-udp.opt-level = 3

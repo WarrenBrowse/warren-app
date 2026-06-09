@@ -87,7 +87,7 @@ export function ConnectionDetails() {
   const hasExit = showDetails && exit !== undefined;
   // Multi-hop = the relay node and the exit node are DIFFERENT nodes
   // (host/IP differs). A 1-hop circuit reuses the same node with
-  // different ports, so the port must be ignored — see
+  // different ports, so the port must be ignored - see
   // `isMultihopTunnelState`.
   const multihop = isMultihopTunnelState(tunnelState);
 

@@ -148,7 +148,7 @@ pub enum TunnelStartError {
 /// Fix L-2: the function now accepts a pre-derived `signing_key` instead of
 /// a raw mnemonic string.  Key derivation happens at the JNI boundary
 /// (synchronously, before this task is spawned) and the mnemonic is
-/// zeroized there — it never crosses into the async lifetime.
+/// zeroized there - it never crosses into the async lifetime.
 pub async fn run_session(
     tun: AndroidTun,
     signing_key: SigningKey,

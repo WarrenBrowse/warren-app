@@ -90,12 +90,12 @@ mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
-# Warren fork — fetches `GET /v1/exits` at boot to bootstrap
+# Warren fork - fetches `GET /v1/exits` at boot to bootstrap
 # `<cache_dir>/warren-relays.json` from warren-api. Public endpoint
 # (no client signature); the server-signed v2 response is verified at
 # load time by `DaemonWarrenRelaySelector`.
 reqwest = { workspace = true }
-# Warren fork — Phase 2 auth wallet: the BIP39 mnemonic stored in
+# Warren fork - Phase 2 auth wallet: the BIP39 mnemonic stored in
 # `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
 # SigningKey at daemon boot via these two cross-repo path-dep crates
 # (see `../../warren-core/crates/warren-identity/`).
@@ -267,7 +267,7 @@ macos-split-tunnel = []
 
 # Warren rebrand Level A: installed binary `warren-daemon` instead of
 # `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept
-# unchanged to ease upstream Mullvad rebases — only the binary name
+# unchanged to ease upstream Mullvad rebases - only the binary name
 # produced in `target/release/` is rebranded.
 [[bin]]
 name = "warren-daemon"

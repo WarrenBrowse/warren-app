@@ -72,7 +72,7 @@ pub struct WarrenAuthHeaders {
     /// Unix epoch-seconds timestamp (= maximum request age on the
     /// server, which rejects if `|now - timestamp| > 60 s`).
     pub timestamp: u64,
-    /// Random 32-char hex nonce (16 bytes), unique per request — used
+    /// Random 32-char hex nonce (16 bytes), unique per request - used
     /// by the server to block replay attacks within the 120 s window.
     pub nonce_hex: String,
 }
@@ -81,7 +81,7 @@ pub struct WarrenAuthHeaders {
 /// can generate 2^64 requests without collisions at probability << 1%).
 pub const NONCE_BYTES: usize = 16;
 
-/// Warren signer — owns the Ed25519 private key and exposes
+/// Warren signer - owns the Ed25519 private key and exposes
 /// [`Self::sign_request`], which produces the 4 HTTP headers to inject
 /// into a request.
 ///
@@ -263,7 +263,7 @@ impl WarrenAuthSigner {
     ) -> std::io::Result<()> {
         let method = request.method().as_str();
         // Path with query string. `path_and_query` returns `path?query`
-        // or just `path` if no query — this is what we want to sign for
+        // or just `path` if no query - this is what we want to sign for
         // anti-tampering.
         let path = request
             .uri()
@@ -347,7 +347,7 @@ mod tests {
     fn signature_is_deterministic_with_fixed_inputs() {
         // Vector test: identical (key, method, path, body, timestamp,
         // nonce) -> identical signature, guaranteed. Frozen-wire-format
-        // guardrail — any format regression breaks this test.
+        // guardrail - any format regression breaks this test.
         let signer = fixed_signer();
         let h1 = signer.sign_request_at(
             "POST",

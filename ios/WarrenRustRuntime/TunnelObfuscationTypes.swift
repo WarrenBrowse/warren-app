@@ -2,7 +2,7 @@
 //  TunnelObfuscationTypes.swift
 //  WarrenRustRuntime
 //
-//  Created by Warren on 2026-05-22 (C.4.5 partial — Warren tunnels via
+//  Created by Warren on 2026-05-22 (C.4.5 partial - Warren tunnels via
 //  Quinn over HTTP/3 mimicry baked into the warren-tunnel stack, NOT
 //  via Mullvad's local obfuscation-proxy pattern). This file extracts
 //  just the namespace + protocol + enum surface so legacy Mullvad
@@ -44,7 +44,7 @@ public protocol TunnelObfuscation {
 /// HTTP/3 mimicry (M4.0) is baked into the `warren-tunnel` Quinn
 /// transport_config and applied uniformly to every connection ; no
 /// local proxy is needed. Consumers that instantiate this stub get
-/// a `localUdpPort = remotePort` passthrough — effectively a no-op
+/// a `localUdpPort = remotePort` passthrough - effectively a no-op
 /// obfuscator that leaves the original endpoint intact.
 public final class TunnelObfuscator: TunnelObfuscation {
     private let remoteAddress: IPAddress

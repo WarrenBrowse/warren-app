@@ -23,8 +23,8 @@ extension String {
     /// characters, an ellipsis (`…`, U+2026), then the last 6
     /// characters (e.g. `wb7kgy…hP9DnB`). Returns the string unchanged
     /// when it is 13 characters or shorter (too short to abbreviate
-    /// without losing information). The full address — never this short
-    /// form — must be used for copy / share.
+    /// without losing information). The full address - never this short
+    /// form - must be used for copy / share.
     var shortWarrenAddress: String {
         guard count > 13 else { return self }
         return "\(prefix(6))\u{2026}\(suffix(6))"
@@ -32,7 +32,7 @@ extension String {
 
     /// Lightweight, non-authoritative check that `self` looks like a
     /// Warren SS58 wallet address. This is a fast client-side guard for
-    /// the login / import field only — it does NOT validate the SS58
+    /// the login / import field only - it does NOT validate the SS58
     /// checksum. Authoritative validation happens in the Rust layer
     /// (`warren_identity::ss58::decode`, reached via
     /// `WarrenWallet.fromMnemonic` / address import).

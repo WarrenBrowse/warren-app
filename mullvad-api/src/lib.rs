@@ -255,12 +255,12 @@ impl ApiEndpoint {
 
     /// Read the [`Self::address`] value. Resolution order:
     /// 1. an explicit override (`MULLVAD_API_ADDR`) if set;
-    /// 2. the pinned [`API_PINNED_IP`] if configured (no DNS query — the
+    /// 2. the pinned [`API_PINNED_IP`] if configured (no DNS query - the
     ///    bootstrap-privacy path, `None` by default);
     /// 3. otherwise resolve [`API_HOST_DEFAULT`] via system DNS, falling back
     ///    to the [`API_IP_DEFAULT`] sentinel if that fails.
     pub fn address(&self) -> SocketAddr {
-        // Explicit override (MULLVAD_API_ADDR), then a pinned IP — both skip
+        // Explicit override (MULLVAD_API_ADDR), then a pinned IP - both skip
         // DNS. `API_PINNED_IP` is `None` by default, so this normally falls
         // through to system DNS (unchanged behaviour).
         if let Some(addr) = Self::pinned_or_explicit(self.address, API_PINNED_IP) {

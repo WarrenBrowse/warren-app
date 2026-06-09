@@ -787,7 +787,7 @@ impl RequestFactory {
 
     /// Dispatcher between [`Self::delete`] and [`Self::signed_delete`]
     /// based on whether a Warren signer is configured. Symmetric of
-    /// [`Self::get_or_signed`] for DELETE — used by `DELETE
+    /// [`Self::get_or_signed`] for DELETE - used by `DELETE
     /// /accounts/me` and `DELETE /devices/{id}`.
     ///
     /// # Errors
@@ -976,7 +976,7 @@ impl RequestFactory {
         let mut request = self.hyper_request::<Full<Bytes>>(path, Method::POST)?;
         let body_length = body.len();
 
-        // Sign while the body bytes are still held as `Vec<u8>` —
+        // Sign while the body bytes are still held as `Vec<u8>` -
         // ordering avoids a clone (`inject_warren_signature` reads
         // the slice and sets the headers; the body is inserted right
         // after).
@@ -1150,7 +1150,7 @@ mod tests {
         // Documents the exact error shape that the M4.H.A bench v1
         // observed. Any future regression that calls `.account()` on
         // a factory without a token store would still surface this
-        // error verbatim — the test ensures the user-facing message
+        // error verbatim - the test ensures the user-facing message
         // does not silently drift away from the documented caveat.
         let bare = RequestFactory::new("api.example.test", None);
         let req: Request<Empty<Bytes>> = bare.get("auth/v1/anything").expect("bare get builds");
@@ -1165,7 +1165,7 @@ mod tests {
 
     #[test]
     fn get_or_signed_dispatches_on_has_warren_signer() {
-        // Phase 2.A.4 V5 — `get_or_signed(path)` must return a signed
+        // Phase 2.A.4 V5 - `get_or_signed(path)` must return a signed
         // request (X-Warren-* headers) when a signer is configured,
         // and a bare request (no X-Warren-*) otherwise. The caller
         // (e.g. RelayListProxy) calls this helper without having to
@@ -1191,7 +1191,7 @@ mod tests {
 
     #[test]
     fn has_warren_signer_reflects_factory_state() {
-        // Phase 2.B Wave 3 — a caller (e.g. mullvad-daemon or an
+        // Phase 2.B Wave 3 - a caller (e.g. mullvad-daemon or an
         // integration test) must be able to query the factory to know
         // whether it is configured in Warren auth mode (to decide
         // between `signed_*` and legacy Bearer helpers).
@@ -1208,7 +1208,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_without_warren_signer_returns_error() {
-        // Phase 2.A.3 — a caller that invokes a `signed_*` helper on
+        // Phase 2.A.3 - a caller that invokes a `signed_*` helper on
         // a factory with no Warren signer configured must receive an
         // explicit error (no panic, no silent header injection).
         let factory = RequestFactory::new("api.example.test", None);
@@ -1221,7 +1221,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_with_warren_signer_injects_four_warren_headers() {
-        // Phase 2.A.3 — happy path: a factory configured with a
+        // Phase 2.A.3 - happy path: a factory configured with a
         // signer must produce a request with the 4 X-Warren-*
         // headers (pubkey 64ch, sig 128ch, timestamp u64, nonce
         // 32ch), **plus** the standard HTTP headers (content-length,
@@ -1261,7 +1261,7 @@ mod tests {
 
     #[test]
     fn signed_get_signs_with_empty_body_hash() {
-        // Phase 2.A.3 — for body-less requests (GET, DELETE, HEAD),
+        // Phase 2.A.3 - for body-less requests (GET, DELETE, HEAD),
         // the `body_hash` in canonical_message is sha256(b"") =
         // `e3b0c44...` (frozen test vector in warren_auth.rs). This
         // test verifies that `signed_get` produces a request whose
@@ -1364,7 +1364,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_serializes_serde_value_then_signs_canonical_bytes() {
-        // Phase 2.A.3 — `signed_post_json<S: Serialize>` must produce
+        // Phase 2.A.3 - `signed_post_json<S: Serialize>` must produce
         // exactly the same request as `signed_post_json_bytes` once
         // the body has been serialized via `serde_json::to_vec`.
         // Test: sign the same payload through both helpers while
@@ -1428,7 +1428,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_signature_verifies_e2e_via_pubkey() {
-        // Phase 2.A.3 — E2E test that mimics what the axum middleware
+        // Phase 2.A.3 - E2E test that mimics what the axum middleware
         // in `warren-api` would do: extract pubkey/sig/nonce/timestamp
         // from the headers, rebuild the `canonical_message` from
         // (method, path-and-query, body sha256), and verify the
@@ -1470,7 +1470,7 @@ mod tests {
         let canonical = format!("POST\n{path}\n{ts}\n{nonce_hex}\n{body_hash_hex}");
 
         vk.verify(canonical.as_bytes(), &sig)
-            .expect("signature must verify — otherwise the wire format has diverged");
+            .expect("signature must verify - otherwise the wire format has diverged");
     }
 
     /// Critical Phase D.1 regression: the 4 new `*_or_signed`

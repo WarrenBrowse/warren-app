@@ -405,12 +405,12 @@ impl ParametersGenerator {
     /// controller task in `talpid-warren-tunnel` reacts by calling
     /// [`NatPmpManager::reconfigure`] (or releasing + dropping the
     /// manager on disable, or spawning a fresh one on enable). The
-    /// tunnel stays up the whole time — the user never sees a
+    /// tunnel stays up the whole time - the user never sees a
     /// connectivity blip when changing the protocol / preferred port
     /// / toggle.
     ///
     /// The stored value (`warren_nat_pmp`) is still updated for the
-    /// next reconnect — required so a fresh `produce_warren_tunnel_params`
+    /// next reconnect - required so a fresh `produce_warren_tunnel_params`
     /// call picks the same value the live channel currently holds
     /// (the two sources of truth stay coherent).
     ///
@@ -419,7 +419,7 @@ impl ParametersGenerator {
     pub async fn set_warren_nat_pmp(&self, cfg: Option<NatPmpConfig>) {
         let mut inner = self.0.lock().await;
         inner.warren_nat_pmp = cfg.clone();
-        // `send` returns Err iff no receivers exist; that's fine —
+        // `send` returns Err iff no receivers exist; that's fine -
         // it just means no tunnel is currently up. The next
         // tunnel start will pick up the value via
         // `produce_warren_tunnel_params` → `Receiver::borrow()`.
@@ -778,7 +778,7 @@ impl ParametersGenerator {
         // to a later `set_warren_nat_pmp(Some(cfg)) where cfg.enabled
         // == true` push without requiring a tunnel reconnect.
         //
-        // Before M5.D.x we gated this on `cfg.enabled` — which meant
+        // Before M5.D.x we gated this on `cfg.enabled` - which meant
         // that a user starting the tunnel with NAT-PMP off and then
         // toggling it on saw NO controller spawned (observer was
         // None → `spawn_nat_pmp_runtime` short-circuited → no
@@ -809,7 +809,7 @@ impl ParametersGenerator {
         // `country_code`/`city` already resolved earlier in this
         // function (which accounts for the multi-hop forensic
         // resolution caveat C1) and pair them with the static
-        // centroid table — when the country code is unknown to the
+        // centroid table - when the country code is unknown to the
         // table the fallback `(0.0, 0.0)` cues an operator the
         // table needs a new entry. `mullvad_exit_ip` mirrors the
         // WireGuard path semantics (`true` = the connected endpoint
@@ -1341,7 +1341,7 @@ mod m8_pubkey_mismatch_tests {
                 assert_eq!(observed, "ddeeff");
             }
             other => panic!(
-                "expected WarrenPubkeyMismatch, got {other:?} — \
+                "expected WarrenPubkeyMismatch, got {other:?} - \
                  M-8 regression: pin mismatch must not map to NoMatchingRelay"
             ),
         }

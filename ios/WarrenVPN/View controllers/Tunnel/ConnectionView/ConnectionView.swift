@@ -81,7 +81,7 @@ struct ConnectionView: View {
                                     // Warren-specific: M4.0 always-on HTTP/3
                                     // mimicry indicator. Shown inside expanded
                                     // details only when the tunnel is secured
-                                    // — surfaces the baseline obfuscation so
+                                    // - surfaces the baseline obfuscation so
                                     // users know their traffic is
                                     // indistinguishable from regular HTTPS.
                                     WarrenObfuscationIndicatorView()

@@ -26,7 +26,7 @@ export const NATPMP_MAX_RULES = 5;
  * daemon keeps one mapping per rule; the live `mappings` array carries
  * per-rule status.
  *
- * Writes go through `setNatPmpSettings` (pushed live — the daemon's
+ * Writes go through `setNatPmpSettings` (pushed live - the daemon's
  * in-tunnel controller reconciles the running mappings without a tunnel
  * reconnect). New writes populate `rules` and zero the legacy
  * single-port fields.

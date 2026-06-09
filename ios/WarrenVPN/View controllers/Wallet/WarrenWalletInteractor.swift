@@ -97,7 +97,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
     /// address (first 6 + `…` + last 6). Used in compact UI surfaces
     /// (Diagnostic info row, App Group status) where the full address
     /// would wrap. Returns `nil` when no wallet exists. The full
-    /// address — not this short form — must be used for copy / share.
+    /// address - not this short form - must be used for copy / share.
     public func publicKeyShort() -> String? {
         guard let address = publicKeyAddress() else { return nil }
         return address.shortWarrenAddress

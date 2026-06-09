@@ -287,7 +287,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
  * always-on and not togglable: disabling it would make Warren clients
  * immediately recognisable on the network. The legacy Mullvad obfuscation
  * methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do
- * not apply to Warren tunnels, so no picker is shown — this mirrors the
+ * not apply to Warren tunnels, so no picker is shown - this mirrors the
  * desktop anti-censorship view.
  */
 @Composable
@@ -441,15 +441,15 @@ internal fun natPmpStatusLabel(json: String): String =
     when (jsonField(json, "state") ?: "idle") {
         "mapped" -> buildString {
             append("Status: mapped")
-            jsonField(json, "external_port")?.let { append(" — external port $it") }
+            jsonField(json, "external_port")?.let { append(" - external port $it") }
             jsonField(json, "lifetime_secs")?.let { append(" (lifetime ${it}s)") }
         }
         "requesting" -> "Status: requesting a port…"
         "rate_limited" ->
             "Status: rate-limited" +
-                (jsonField(json, "retry_after_secs")?.let { " — retry in ${it}s" } ?: "")
+                (jsonField(json, "retry_after_secs")?.let { " - retry in ${it}s" } ?: "")
         "failed" ->
-            "Status: failed" + (jsonField(json, "reason")?.let { " — $it" } ?: "")
+            "Status: failed" + (jsonField(json, "reason")?.let { " - $it" } ?: "")
         else -> "Status: idle (no active mapping)"
     }
 

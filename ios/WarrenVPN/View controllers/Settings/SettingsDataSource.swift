@@ -301,7 +301,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
 
         snapshot.appendSections([.misc])
         // About Warren + Diagnostic info appear in misc near problem
-        // report — all are user-facing support / legal tools.
+        // report - all are user-facing support / legal tools.
         snapshot.appendItems(
             [.warrenDiagnosticInfo, .warrenAbout, .problemReport, .faq, .language],
             toSection: .misc

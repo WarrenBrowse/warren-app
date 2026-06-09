@@ -115,7 +115,7 @@ function mappingForRule(mappings: NatPmpMapping[], rule: NatPmpRule): NatPmpMapp
 }
 
 /** First port in range not already used by another rule of the same
- * protocol — a sensible, valid default for a freshly-added row. */
+ * protocol - a sensible, valid default for a freshly-added row. */
 function nextFreePort(rules: NatPmpRule[], protocol: NatPmpProto): number {
   const used = new Set(rules.filter((r) => r.protocol === protocol).map((r) => rulePort(r)));
   for (let p = MIN_PORT; p <= MAX_PORT; p++) {
@@ -137,7 +137,7 @@ function nextFreePort(rules: NatPmpRule[], protocol: NatPmpProto): number {
  *   picks is the port their app must bind locally.
  * - Up to {@link NATPMP_MAX_RULES} rules (the exit quota). "Add a port"
  *   disables at the cap.
- * - Editing/adding applies immediately (live reconfig — no reconnect).
+ * - Editing/adding applies immediately (live reconfig - no reconnect).
  * - While the exit rate-limits this client (shared budget), every control
  *   disables with a precise mm:ss countdown so the client never trips the
  *   ban itself.
@@ -236,7 +236,7 @@ export function PortForwardingAdvanced() {
       {/* Single SHARED rate-limit warning for the whole view: the budget
           is per-client, so one countdown governs every row. budget-exhausted
           / rate-limited disable the controls with a precise mm:ss countdown
-          to when the next change is allowed — the client therefore never
+          to when the next change is allowed - the client therefore never
           lets the user trip the exit's rate-limit. last-chance keeps the
           controls enabled but warns that one more change triggers a block.
           Both self-clear from the clock (see useNatPmpPortBlock). */}

@@ -91,7 +91,7 @@ fun ReportProblem(navigator: Navigator) {
     // D.6: BiometricPrompt (raised by WarrenSendProblemReportUseCase
     // to unlock the wallet mnemonic that signs /v1/support) needs a
     // FragmentActivity host. Resolved lazily inside each send-trigger
-    // lambda via a safe `as?` cast — if the host activity is somehow
+    // lambda via a safe `as?` cast - if the host activity is somehow
     // not a FragmentActivity (custom TV shell, instrumentation harness,
     // ...) the click is a no-op rather than a runtime crash.
     val context = androidx.compose.ui.platform.LocalContext.current

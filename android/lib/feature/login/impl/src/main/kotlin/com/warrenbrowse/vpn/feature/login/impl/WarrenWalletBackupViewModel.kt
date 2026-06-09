@@ -14,7 +14,7 @@ import com.warrenbrowse.vpn.lib.repository.MnemonicCache
  * Audit follow-up: the previous design used
  * `remember { MnemonicCache.consume() }` directly inside the
  * Composable. `remember` is scoped to the composition, not to the
- * back-stack entry — a configuration change (rotation, dark-mode
+ * back-stack entry - a configuration change (rotation, dark-mode
  * toggle, ...) destroys and recomposes the Activity, ré-runs the
  * `remember` block, and the second `consume()` returns null because
  * the slot was already drained by the first composition. The user
@@ -23,13 +23,13 @@ import com.warrenbrowse.vpn.lib.repository.MnemonicCache
  *
  * A NavBackStackEntry-scoped ViewModel survives configuration
  * changes (the ViewModelStore is preserved across Activity recreate)
- * but is destroyed on process kill — which is exactly the lifecycle
+ * but is destroyed on process kill - which is exactly the lifecycle
  * we want for the mnemonic handoff slot.
  */
 class WarrenWalletBackupViewModel : ViewModel() {
 
     /**
-     * `null` when the cache slot was empty at ViewModel init —
+     * `null` when the cache slot was empty at ViewModel init -
      * typically after a process kill / restore. The screen routes
      * the user back to the login entry in that case.
      */
@@ -39,7 +39,7 @@ class WarrenWalletBackupViewModel : ViewModel() {
         super.onCleared()
         // Zero the CharArray as soon as the NavBackStackEntry is
         // popped (user confirmed backup, or the host cleared the
-        // back stack). Idempotent — safe if the screen never read it
+        // back stack). Idempotent - safe if the screen never read it
         // OR if it was never staged.
         mnemonic?.close()
     }

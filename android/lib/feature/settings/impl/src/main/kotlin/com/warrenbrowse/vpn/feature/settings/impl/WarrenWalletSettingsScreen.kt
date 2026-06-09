@@ -86,7 +86,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 walletRepository = walletRepository,
             )
 
-            // Proactive status from the last-known cached expiry — shown
+            // Proactive status from the last-known cached expiry - shown
             // immediately, without a fresh biometric-gated request.
             cachedSubscriptionLabel(cachedExpiry)?.let { msg ->
                 Text(
@@ -205,7 +205,7 @@ internal fun subscriptionLabel(
             .toLocalDate()
             .toString()
         if (outcome.expiresAtUnixSecs > nowSecs) {
-            "Subscription active — expires $date"
+            "Subscription active - expires $date"
         } else {
             "Subscription expired ($date)"
         }
@@ -222,7 +222,7 @@ internal fun voucherLabel(outcome: WarrenVoucherOutcome): String = when (outcome
             .atZone(java.time.ZoneId.systemDefault())
             .toLocalDate()
             .toString()
-        "Voucher redeemed — subscription expires $date"
+        "Voucher redeemed - subscription expires $date"
     }
     WarrenVoucherOutcome.AuthorizationDenied -> "Authorization cancelled."
     WarrenVoucherOutcome.WalletNotReady -> "Set up your wallet first."
@@ -250,7 +250,7 @@ internal fun cachedSubscriptionLabel(
             val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400 // ceil to whole days
             "Subscription expires in $days day${if (days == 1L) "" else "s"} ($date)"
         }
-        else -> "Subscription active — expires $date"
+        else -> "Subscription active - expires $date"
     }
 }
 

@@ -22,12 +22,25 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Security
+- Restrict the daemon management socket to root plus a dedicated `warren` group (created by the
+  installer) instead of leaving it world-accessible, and authorize wallet/secret RPCs
+  (mnemonic read/write, destructive sign-out) against the calling process' Unix credentials so
+  another local user cannot read the seed phrase or wipe the identity.
+- Honor a persistent kill switch ("Always require VPN") across daemon shutdown instead of always
+  clearing the firewall, so a stopped daemon cannot leak when the user opted into lockdown.
+  Uninstall still clears the firewall out-of-band.
+- macOS: when "allow external DNS" is enabled together with "allow local network", keep DNS
+  queries inside the tunnel instead of letting them leak to a LAN resolver.
 ### Fixed
 - Enable TLS SNI when connecting to the Warren API. The endpoint sits behind a reverse proxy that
   needs the SNI hostname to present its certificate; without it the handshake failed with a TLS
   `InternalError` alert.
 
 ### Changed
+- Add a global connection cap and per-source-IP rate limit to the relay / unified-dispatcher
+  accept loops so a connection flood cannot exhaust memory or the exit's handshake CPU.
+- Remove the unused `mullvad-masque-proxy` crate from the build (orphaned; no in-repo consumers).
 - Disable the Mullvad-operated built-in API access methods (Mullvad Bridges, Encrypted DNS proxy,
   Domain fronting). Warren reaches its own API directly and does not run that circumvention
   infrastructure. Settings format updated to `v16` (migration disables the methods on existing
@@ -37,6 +50,66 @@ Line wrap the file at 100 chars.                                              Th
 - Rebrand user-facing protocol references from "WireGuard" to "QUIC" across the desktop, Android
   and iOS apps (settings labels, info popups, translations). The required GPL/AGPL attribution to
   Mullvad in the iOS About screen is preserved.
+
+## [1.0.6] - 2026-06-08
+### Added
+- Dynamic multi-hop directory client with toggle-driven, sticky 2-hop circuit selection and a
+  1-hop toggle-off, so the multi-hop path stops churning on reconnect.
+- Multi-port NAT-PMP port forwarding (up to 5 ports per client).
+- Show the multi-hop indicator and exit endpoint in the connection panel, and restore the
+  "Time left" subscription readout in the main header.
+- Bootstrap-privacy switch to pin the API IP and omit SNI (`API_PINNED_IP`, default off).
+- Point purchase/pricing to the `checkout.warrenbrowse.com` funnel.
+### Changed
+- Wallet-model account flow (create / login / logout) with recovery-phrase onboarding; remove the
+  local account mode (always use the warren-api backend). Recovery-phrase UI localized to 23
+  languages.
+- Use the exit-allocated IPv4 for the multi-hop TUN.
+### Fixed
+- Bound the reconnect loop and guarantee Warren route teardown to kill a macOS net-change internet
+  lockup.
+- Only reclaim dead loopback DNS overrides on macOS.
+- Fit the backup screen without scrolling.
+
+## [1.0.4] - 2026-06-01
+### Changed
+- Collapse the account model to wallet-identity only: remove the per-device management UI and the
+  too-many-devices login path across desktop, Android and iOS.
+- Map exit business rejections to precise auth-failure causes (device limit, no subscription)
+  instead of a generic block.
+### Fixed
+- Use a stable per-install `device_id` so reconnects and restarts reuse one device lease, fixing a
+  false device-limit lockout.
+- Reset the firewall on daemon shutdown so a stopped daemon does not brick connectivity
+  (anti-lockout; refined in a later release to honor an explicit persistent kill switch).
+
+## [1.0.3] - 2026-05-30
+### Added
+- Surface NAT-PMP rate-limit retry-after and budget, with a UI countdown on the port-forwarding
+  page.
+### Fixed
+- macOS: store the Warren identity in a root-owned `0600` file on unsigned builds, which cannot
+  persist it in the System Keychain across upgrades.
+
+## [1.0.2] - 2026-05-30
+### Fixed
+- Restore the desktop dependency layout so electron-builder bundles the full `node_modules`,
+  fixing a missing `@grpc/grpc-js` at runtime.
+
+## [1.0.1] - 2026-05-30
+### Fixed
+- Desktop build: pin `postcss` so electron-builder resolves the `styled-components` dependency.
+- Write an empty placeholder `relays.json` at build time instead of querying the dead Mullvad
+  endpoint.
+
+## [1.0.0] - 2026-05-29
+### Changed
+- First Warren 1.0 release: complete Mullvad to Warren rebrand across branding, the backend API,
+  CI and drivers.
+### Removed
+- Remove the legacy WireGuard data plane and its dead code (obfuscation UI, port-forwarding test
+  scaffolding, `wireguard-go` bundling, stale schemes and migrations); the tunnel runs on the
+  Warren QUIC stack only.
 
 ## [0.1.0-beta.1] - 2026-05-22
 First public beta of Warren VPN, the warrenBrowse fork of Mullvad VPN built on Quinn QUIC instead

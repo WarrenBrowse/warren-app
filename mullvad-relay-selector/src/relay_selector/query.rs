@@ -58,7 +58,7 @@ impl RelayQuery {
     /// Tighten `self`'s entry-specific constraints by intersecting them with `retry`.
     ///
     /// Returns `None` when the retry's constraints are incompatible with the user's
-    /// — e.g., the user pinned ip_version=v4 and the retry wants v6. The retry order
+    /// - e.g., the user pinned ip_version=v4 and the retry wants v6. The retry order
     /// only ever modifies obfuscation and ip_version, both of which live in
     /// [`EntrySpecificConstraints`], so this is the only kind of merging needed.
     pub fn merge_retry(mut self, retry: EntrySpecificConstraints) -> Option<Self> {
@@ -68,7 +68,7 @@ impl RelayQuery {
     }
 
     // ---------------------------------------------------------------------------
-    // Accessors — uniform regardless of variant
+    // Accessors - uniform regardless of variant
     // ---------------------------------------------------------------------------
 
     /// The constraints on the relay the client connects to first. For singlehop and
@@ -144,7 +144,7 @@ impl RelayQuery {
 impl From<&Settings> for RelayQuery {
     fn from(settings: &Settings) -> Self {
         let RelaySettings::Normal(relay_settings) = &settings.relay_settings else {
-            // Custom tunnel endpoints bypass the relay selector entirely — return a
+            // Custom tunnel endpoints bypass the relay selector entirely - return a
             // dormant default. Callers that care about custom endpoints check
             // `relay_settings` themselves before consulting the relay selector.
             return Self::default();
@@ -332,9 +332,9 @@ pub mod builder {
 
     /// Builder for [`RelayQuery`].
     ///
-    /// - `Multihop` — `Any` until [`Self::multihop`] is called, then `bool` (gates
+    /// - `Multihop` - `Any` until [`Self::multihop`] is called, then `bool` (gates
     ///   `.entry_*` setters).
-    /// - `Obfuscation` — `Any` until an obfuscation method is chosen, then a type
+    /// - `Obfuscation` - `Any` until an obfuscation method is chosen, then a type
     ///   carrying the in-flight settings so port setters can mutate them.
     pub struct RelayQueryBuilder<Multihop = Any, Obfuscation = Any> {
         entry_specific: EntrySpecificConstraints,

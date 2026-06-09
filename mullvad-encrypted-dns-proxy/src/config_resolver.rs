@@ -137,7 +137,7 @@ fn client_config_tls12() -> ClientConfig {
 }
 
 // Live-network smoke test: resolves Warren's Encrypted DNS proxy configs over
-// Quad9 DoH. Ignored by default — it requires network access and the
+// Quad9 DoH. Ignored by default - it requires network access and the
 // `dns.warrenbrowse.com` AAAA records to be published.
 #[cfg(test)]
 #[tokio::test]

@@ -14,7 +14,7 @@ import { IpcMainEventChannel } from './ipc-event-channel';
 import { NotificationSender } from './notification-controller';
 
 // The product version is injected at build time by Vite's `define` (see
-// vite.config.ts) from the `mullvad-version` binary — the single source of
+// vite.config.ts) from the `mullvad-version` binary - the single source of
 // truth shared with the daemon (dist-assets/desktop-product-version.txt). Using
 // it verbatim guarantees the GUI version equals what the daemon reports in every
 // build mode: `1.0.0` on a release tag, `1.0.0-dev-<hash>` in development. This

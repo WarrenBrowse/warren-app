@@ -4,7 +4,7 @@
 //! reached via DNS (the shared reverse proxy needs SNI to select the cert),
 //! and **omitted** when an API IP is pinned (the dedicated endpoint presents
 //! the cert without SNI via Caddy `default_sni`). Omitting SNI keeps the
-//! hostname off the wire — bootstrap-privacy parity with upstream Mullvad.
+//! hostname off the wire - bootstrap-privacy parity with upstream Mullvad.
 //! Certificate validation always binds to the hostname (SAN), regardless.
 use mullvad_api_constants::API_PINNED_IP;
 use std::{

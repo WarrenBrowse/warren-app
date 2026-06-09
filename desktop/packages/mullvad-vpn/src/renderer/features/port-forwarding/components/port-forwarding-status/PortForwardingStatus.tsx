@@ -10,7 +10,7 @@ import { usePortForwarding } from '../../hooks';
  * whole-feature condition the rows cannot express on their own:
  *
  * - Port forwarding is ON and the user has at least one rule, but NO
- *   mapping has come back yet — typically because the tunnel is DOWN (the
+ *   mapping has come back yet - typically because the tunnel is DOWN (the
  *   daemon's in-tunnel controller only maps through an active tunnel). The
  *   honest message is "waiting for the tunnel", not "reconnect" (live
  *   reconfig means an already-up tunnel never needs a reconnect).

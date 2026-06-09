@@ -76,7 +76,7 @@ pub enum NatPmpStateSnapshot {
 /// One NAT-PMP mapping surfaced to the UI, tagged with the rule it
 /// belongs to. Multi-port: the UI renders one row per snapshot,
 /// identified by `internal_port` + `protocol` (the rule identity). The
-/// `state` is never `Disabled` here — a removed rule is dropped from the
+/// `state` is never `Disabled` here - a removed rule is dropped from the
 /// list rather than marked disabled.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NatPmpMappingSnapshot {

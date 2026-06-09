@@ -54,7 +54,7 @@ fun OnboardingScreen(navigator: Navigator) {
         )
         Text(
             text = "A fast, private VPN built on the Warren QUIC tunnel. Your " +
-                "identity is a wallet you alone control — no email, no account number.",
+                "identity is a wallet you alone control - no email, no account number.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -65,7 +65,7 @@ fun OnboardingScreen(navigator: Navigator) {
         )
         ValueProp(
             title = "No logs, no tracking",
-            body = "We can't tie traffic to you — there's no account identity to log.",
+            body = "We can't tie traffic to you - there's no account identity to log.",
         )
         ValueProp(
             title = "You hold the keys",

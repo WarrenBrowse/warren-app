@@ -60,7 +60,7 @@ pub fn pubkey_from_mnemonic(mnemonic: &str) -> Result<[u8; 32], WalletError> {
 /// Convenience wrapper: derive the Ed25519 verifying key from `mnemonic`
 /// and return its **Warren SS58 address** (`wb…`, network prefix 13295).
 ///
-/// This is the canonical string form of the Warren wallet identity — the
+/// This is the canonical string form of the Warren wallet identity - the
 /// value carried in the `X-Warren-PubKey` request header, copied to the
 /// clipboard, and stored by the Kotlin wallet repository. The same
 /// algorithm (`warren_identity::ss58`) is used by the daemon and the

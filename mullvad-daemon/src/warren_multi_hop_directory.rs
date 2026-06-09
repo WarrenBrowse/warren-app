@@ -19,7 +19,7 @@
 //! also be on different ASNs. The resulting
 //! [`talpid_warren_tunnel::MultiHopConfig`] is pushed to the
 //! [`crate::tunnel::ParametersGenerator`] and a reconnect is requested so
-//! the new circuit comes up — no manual `warren-multihop.json`.
+//! the new circuit comes up - no manual `warren-multihop.json`.
 
 use std::time::Duration;
 
@@ -62,7 +62,7 @@ pub enum Error {
 /// Explicit sentinel that opts a deployment into TOFU (trust the carried
 /// operational key without a pinned root). Required so an empty/missing
 /// pin **fails closed** (no multi-hop) instead of silently trusting the
-/// online server — see [`root_pin_mode`].
+/// online server - see [`root_pin_mode`].
 const INSECURE_TOFU_SENTINEL: &str = "INSECURE_TOFU";
 
 /// How the client should treat the root trust anchor for the directory.
@@ -75,7 +75,7 @@ pub(crate) enum RootPinMode {
     /// key is trusted as-is. Requires `WARREN_MULTIHOP_ROOT_PUBKEY=INSECURE_TOFU`.
     InsecureTofu,
     /// No pin and no explicit TOFU opt-in. Multi-hop is **refused**
-    /// (fail closed) — the client stays single-hop rather than trust an
+    /// (fail closed) - the client stays single-hop rather than trust an
     /// unpinned, server-supplied operational key.
     Unconfigured,
 }
@@ -84,7 +84,7 @@ pub(crate) enum RootPinMode {
 /// override wins (the `INSECURE_TOFU` sentinel opts into TOFU; otherwise
 /// it is a comma-separated pin set), else the baked constant. An empty /
 /// whitespace / garbage configuration yields [`RootPinMode::Unconfigured`]
-/// — a deliberate **fail-closed** default so a missing or fat-fingered
+/// - a deliberate **fail-closed** default so a missing or fat-fingered
 /// pin disables multi-hop instead of degrading to trusting the server.
 #[must_use]
 pub(crate) fn root_pin_mode() -> RootPinMode {
@@ -246,7 +246,7 @@ fn exit_index(dir: &VerifiedMultiHopDirectory, exit_id: &[u8; 16]) -> Option<usi
 /// Picks a **2-hop** circuit with sticky stability. If `current` is still a
 /// valid circuit under the live directory + country hints, it is KEPT
 /// (re-assembled from the current directory so refreshed node data is
-/// picked up, but the same two nodes — no churn). Only when the current
+/// picked up, but the same two nodes - no churn). Only when the current
 /// circuit is gone (a node left the directory) or no longer satisfies the
 /// hints (the user changed the exit/entry country) is a fresh weighted
 /// pick made. A fresh pick is therefore a ONE-TIME event that then sticks
@@ -281,7 +281,7 @@ fn pick_two_hop_circuit(
 /// `pairs` must be non-empty.
 ///
 /// Was a weighted RNG, which re-rolled on every updater poll and churned the
-/// 2-hop circuit whenever the country hints left more than one valid pair —
+/// 2-hop circuit whenever the country hints left more than one valid pair -
 /// the same reconnect loop fixed for the 1-hop path. A stable pick means the
 /// updater only reconnects on a real change. Do NOT reintroduce per-call
 /// randomness here.
@@ -375,7 +375,7 @@ pub fn select_one_hop_circuit(
     // one node was a candidate (notably when the exit-country hint is empty,
     // which makes every node match) the selection changed on each poll. The
     // directory updater saw a "different" circuit each time and tore the
-    // tunnel down to reconnect — an endless reconnect loop that blocked all
+    // tunnel down to reconnect - an endless reconnect loop that blocked all
     // traffic. A stable selection means re-evaluating the same inputs always
     // yields the same circuit, so the updater only reconnects on a real
     // change. Do NOT reintroduce per-call randomness here.
@@ -477,7 +477,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         RootPinMode::InsecureTofu => {
             log::warn!(
                 "Warren multi-hop root pin is INSECURE_TOFU: the operational key is trusted \
-                 as carried by the server. Dev/bench only — set WARREN_MULTIHOP_ROOT_PUBKEY \
+                 as carried by the server. Dev/bench only - set WARREN_MULTIHOP_ROOT_PUBKEY \
                  to a pinned root pubkey in production."
             );
             (Vec::new(), false)
@@ -540,7 +540,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 None
             } else {
                 // Refresh the cached directory only when due (periodic timer
-                // or first boot pass) — NOT on a settings change, which
+                // or first boot pass) - NOT on a settings change, which
                 // re-selects from the cache instantly below so an exit switch
                 // is immediate (never blocks on the 15 s fetch timeout). On
                 // ANY fetch/verify failure keep the last verified directory
@@ -567,7 +567,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 highest_generation = dir.generation;
                                 if dir.dropped > 0 {
                                     log::warn!(
-                                        "Warren multi-hop directory: {} node(s) dropped — \
+                                        "Warren multi-hop directory: {} node(s) dropped - \
                                          descriptor not vouched by the operational key \
                                          (possible server injection)",
                                         dir.dropped
@@ -690,7 +690,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         break;
                     }
                     // Settings change (toggle / exit-country): re-select from
-                    // the cached directory instantly — do NOT block on a fetch.
+                    // the cached directory instantly - do NOT block on a fetch.
                     refresh_due = false;
                 }
             }
@@ -957,7 +957,7 @@ mod tests {
         // Regression (reconnect loop): when the exit-country hint is empty
         // every node is a candidate. The fallback picker MUST be
         // deterministic so re-evaluating the same directory yields the SAME
-        // circuit — a non-deterministic pick churned the tunnel (DE↔SG) on
+        // circuit - a non-deterministic pick churned the tunnel (DE↔SG) on
         // every updater poll and blocked all traffic. Independent of the
         // stickiness path (current = None here), so it guards the fallback
         // itself.

@@ -759,7 +759,7 @@ mod relay_selection {
 
     /// `include_in_country = false` relays are excluded from country-level selection and
     /// only selectable via city or hostname constraints. There is no "use when necessary"
-    /// fallback — country-level queries that would only be served by `=false` relays must
+    /// fallback - country-level queries that would only be served by `=false` relays must
     /// fail rather than silently picking a relay the operator opted out of.
     #[test]
     fn test_include_in_country() {
@@ -1255,7 +1255,7 @@ mod partition_relays {
     /// - multihop exits would match both, but `remove_conflicting_relay` moves
     ///   `only_daita` out of exits with [Conflict] because it's the unique entry
     ///
-    /// Autohop must still report `only_daita` as a match — it's a valid singlehop
+    /// Autohop must still report `only_daita` as a match - it's a valid singlehop
     /// configuration. Naively returning `multihop.exits` would put it in discards.
     #[test]
     fn autohop_singlehop_survives_multihop_conflict() {
@@ -1281,7 +1281,7 @@ mod partition_relays {
         );
         assert!(
             !discards.iter().any(|(r, _)| r.hostname == "only_daita"),
-            "`only_daita` must not be discarded with [Conflict] — \
+            "`only_daita` must not be discarded with [Conflict] - \
              the conflict only blocks multihop, not singlehop. discards: {discards:?}",
         );
     }
@@ -1819,7 +1819,7 @@ mod partition_relays {
         //! reflect real production relay diversity: mixed ownership, multiple providers, relays
         //! with/without DAITA, QUIC, LWO, shadowsocks extra addresses, etc.
         //!
-        //! The snapshots will be large, but that is intentional — any algorithmic change will
+        //! The snapshots will be large, but that is intentional - any algorithmic change will
         //! produce a clear, reviewable diff across the full relay population.
         //!
         //! To review and accept changes after intentionally modifying the algorithm, run:

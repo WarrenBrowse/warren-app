@@ -34,24 +34,17 @@ Le mode Warren tunnel nécessite :
      mnémonique pour rester récupérables.
 
 2. **Une `warren-relays.json`** dans `<cache_dir>/warren-relays.json` qui
-   liste les exits Warren accessibles. Format v1 :
-   ```json
-   {
-     "version": 1,
-     "relays": [
-       {
-         "endpoint_id": "<hex-64ch pubkey ed25519>",
-         "ip_addrs": ["198.51.100.7:51820"],
-         "country": "se",
-         "city": "Stockholm",
-         "weight": 100,
-         "active": true
-       }
-     ]
-   }
-   ```
-   Si absent, le selector retourne `NoRelayMatch` au premier connect (=
-   l'utilisateur n'est pas en mode Warren utilisable).
+   liste les exits Warren accessibles. Ce n'est PAS un JSON brut : c'est un
+   `SignedRelayList` (format v4, défini dans
+   `warren-relay-selector/src/signed.rs`, constante `SIGNED_VERSION = 4`),
+   récupéré depuis `/v1/exits` de warren-api et vérifié côté client contre
+   la clé admin épinglée avant usage. Outre la liste des exits, l'enveloppe
+   signée porte une `generation`, une fenêtre de fraîcheur (expiry) et la
+   signature Ed25519 ; un payload mal signé ou périmé est rejeté en bloc
+   (pas d'application partielle). Ne pas fabriquer ce fichier à la main à
+   partir d'un JSON brut : il serait illisible (signature absente). Si le
+   fichier est absent ou invalide, le selector retourne `NoRelayMatch` au
+   premier connect (= l'utilisateur n'est pas en mode Warren utilisable).
 
 ## Architecture du fork
 

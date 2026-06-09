@@ -93,7 +93,7 @@ pub(crate) struct RelayListUpdater {
     /// only tunnel mode and the Mullvad list is never consumed (the tunnel
     /// uses `warren-relays.json` via `DaemonWarrenRelaySelector`, the GUI
     /// gets the Warren view). The download endpoint does not even exist on
-    /// warren-api, so every fetch would 404 — disabling it is
+    /// warren-api, so every fetch would 404 - disabling it is
     /// behaviour-preserving (the selector stays empty either way) and
     /// removes the recurring 404 log noise. Overrides still apply locally.
     downloads_enabled: bool,
@@ -172,7 +172,7 @@ impl RelayListUpdater {
                             download_future = Box::pin(Self::download_relay_list(self.api_availability.clone(), self.api_client.clone(), etag).fuse());
                             self.last_check = SystemTime::now();
                         },
-                        // Warren fork: downloads disabled — the Mullvad relay
+                        // Warren fork: downloads disabled - the Mullvad relay
                         // list is never consumed (see `downloads_enabled`).
                         Event::Update => {
                             log::trace!("Mullvad relay-list download skipped (Warren fork: list unused)");

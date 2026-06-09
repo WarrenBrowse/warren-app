@@ -2,7 +2,7 @@
 //!
 //! Pure function: no I/O. Maps the Mullvad UI (countries/cities,
 //! custom lists, hostname) onto the Warren filtering grammar (which
-//! only supports `Any`, `Country`, or `(Country, City)` — no
+//! only supports `Any`, `Country`, or `(Country, City)` - no
 //! provider, ownership, multihop, obfuscation, nor DAITA).
 //!
 //! Behavior for non-mappable cases:
@@ -43,12 +43,12 @@ pub fn relay_settings_to_warren_query(rs: &RelaySettings) -> WarrenRelayQuery {
                 },
             },
             // Mullvad custom lists point to a separate `CustomListsSettings`
-            // — no pure resolution here. Fallback `Any` =
+            // - no pure resolution here. Fallback `Any` =
             // defensive behavior. To be extended when the resolver is wired.
             Constraint::Only(MullvadLocation::CustomList { .. }) => WarrenLocation::Any,
         },
         // The custom tunnel endpoint targets a specific host (IP/port +
-        // pubkey) — unrelated to Warren selection based on
+        // pubkey) - unrelated to Warren selection based on
         // exits enrolled via warren-api. We leave `Any` to avoid
         // accidentally blocking the user.
         RelaySettings::CustomTunnelEndpoint(_) => WarrenLocation::Any,

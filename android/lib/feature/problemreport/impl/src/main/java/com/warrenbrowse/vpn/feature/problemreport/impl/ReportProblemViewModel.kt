@@ -57,7 +57,7 @@ sealed interface DescriptionError {
 }
 
 // Audit follow-up: the previous constructor took two ProblemReportRepository
-// parameters resolved from the same Koin singleton — a latent footgun for
+// parameters resolved from the same Koin singleton - a latent footgun for
 // any future split. Collapsed to a single parameter; all log-lifecycle calls
 // now go through `problemReportRepository`.
 class ReportProblemViewModel(

@@ -38,6 +38,9 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Authorization for wallet/secret management RPCs against the calling
+/// process' Unix credentials (`SO_PEERCRED`).
+pub mod wallet_access;
 /// Loader for `<settings_dir>/warren-multihop.json` that materializes
 /// a `MultiHopConfig` from signed descriptors minted
 /// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
@@ -49,7 +52,7 @@ pub mod warren_multi_hop;
 /// the manual `warren-multihop.json` as the production source.
 pub mod warren_multi_hop_directory;
 /// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
-/// (POC switch — no UI/CLI toggle for now, M4.H.C scope).
+/// (POC switch - no UI/CLI toggle for now, M4.H.C scope).
 pub mod warren_multi_hop_mode;
 /// Conversion `RelaySettings` (Mullvad UI) -> `WarrenRelayQuery`
 /// (filtering on the warren-relay-selector side). Maps country/city, fallback
@@ -69,7 +72,7 @@ pub mod warren_relay_selector;
 /// signature-verified before caching, atomic cache write, hot-swap into
 /// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
 pub mod warren_relay_list_updater;
-/// Phase #4 — resolution of `WarrenApiConfig` (warren-api URL + signing key)
+/// Phase #4 - resolution of `WarrenApiConfig` (warren-api URL + signing key)
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
@@ -845,7 +848,7 @@ pub struct Daemon {
     /// `WarrenRelayListUpdater` on every verified fetch. Substituted for
     /// the upstream Mullvad list on synchronous pulls
     /// (`on_get_relay_locations`) and on every push
-    /// (`on_relay_list_update`) — otherwise the GUI offers countries
+    /// (`on_relay_list_update`) - otherwise the GUI offers countries
     /// absent from the WarrenRelayList and the Warren tunnel returns
     /// NoMatchingRelay on connect -> kill-switch.
     ///
@@ -907,7 +910,7 @@ impl Daemon {
 
         // F7 fork audit: `migrate_all` may fail for non-fatal reasons
         // (e.g. account-history.json absent on fresh boot Warren mode). The
-        // daemon continues with `None` migration data — this is expected, not
+        // daemon continues with `None` migration data - this is expected, not
         // an operational error. Logging WARN avoids false alarms
         // in prod logs without masking a real migration problem
         // on an existing upstream install.
@@ -927,7 +930,7 @@ impl Daemon {
         // connections.
         //
         // F5 fork audit: the upstream Mullvad `relays.json` list is
-        // never consumed — the tunnel
+        // never consumed - the tunnel
         // uses `warren-relays.json` parsed by `DaemonWarrenRelaySelector`.
         // An absence of the file should not log ERROR (= noise that
         // worries the prod operator) but just DEBUG, since the list is
@@ -1375,7 +1378,7 @@ impl Daemon {
         let warren_view_for_closure = Arc::clone(&warren_relay_list_view);
         let on_relay_list_update = move |relay_list: &RelayList| {
             // Read the *current* Warren view (hot-swapped by the updater),
-            // never a boot snapshot — otherwise a late Mullvad relay-list
+            // never a boot snapshot - otherwise a late Mullvad relay-list
             // refresh would clobber the GUI with the stale (often empty)
             // boot list.
             let to_broadcast = warren_view_for_closure
@@ -1463,7 +1466,7 @@ impl Daemon {
             let warren_pg = parameters_generator.clone();
             let warren_notifier = management_interface.notifier().clone();
             // Shared live view so the updater's hot-swap is visible to the
-            // synchronous pull RPC (`on_get_relay_locations`) too — not just
+            // synchronous pull RPC (`on_get_relay_locations`) too - not just
             // the broadcast push. Without this the GUI's mount-time pull
             // keeps returning the stale (empty in dev) boot view.
             let warren_view_for_updater = Arc::clone(&warren_relay_list_view);
@@ -1526,7 +1529,7 @@ impl Daemon {
         {
             let warren_mh_root_mode = warren_multi_hop_directory::root_pin_mode();
             // Fail-closed (`Unconfigured`) never produces a circuit, so the
-            // updater does not own reconnects in that mode — keep the standard
+            // updater does not own reconnects in that mode - keep the standard
             // restart path so a location change still reconnects.
             warren_multi_hop_directory_active =
                 warren_mh_root_mode != warren_multi_hop_directory::RootPinMode::Unconfigured;
@@ -2578,7 +2581,7 @@ impl Daemon {
     /// Unlike the legacy Mullvad flow (which asked the server for a new
     /// account number), a Warren identity is a freshly generated BIP39
     /// mnemonic: we generate one, persist it to the OS vault
-    /// (overwriting any prior entry — safe because the caller is logged
+    /// (overwriting any prior entry - safe because the caller is logged
     /// out, so the vault holds at most an unclaimed boot identity),
     /// hot-swap it into the in-memory signer, then `login()` under the
     /// new pubkey so the device state is consistent for every client
@@ -2588,7 +2591,7 @@ impl Daemon {
     /// backup step before letting the user proceed past the login
     /// screen (it observes the `logged in` device event, fetches the
     /// phrase via `GetWarrenMnemonic`, and only advances once the user
-    /// confirms they saved it) — but that gating lives in the GUI, not
+    /// confirms they saved it) - but that gating lives in the GUI, not
     /// here, so non-GUI clients still get a logged-in account.
     ///
     /// Returns the new pubkey (SS58) as the account "token". No-log
@@ -2696,7 +2699,7 @@ impl Daemon {
 
     /// Reads the user's BIP39 mnemonic via
     /// `warren_signer::get_warren_mnemonic`. Read-only, sync (no
-    /// spawn needed — `read_to_string` < 1 ms on a 100-byte file).
+    /// spawn needed - `read_to_string` < 1 ms on a 100-byte file).
     /// **No-log policy**: we only log the fact that a read occurred,
     /// never the content.
     fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<zeroize::Zeroizing<String>>>) {
@@ -2726,7 +2729,7 @@ impl Daemon {
     ///    the onboarding/restore flow naturally.
     /// 3. If no `device.json` is present (first-launch boot) or the
     ///    pubkey is unchanged (no-op import), no device action is
-    ///    needed — the signer reload alone is sufficient.
+    ///    needed - the signer reload alone is sufficient.
     ///
     /// **No-log policy**: never the content of `mnemonic`, just the
     /// result, whether identity changed, and the public pubkey hex.
@@ -2746,20 +2749,20 @@ impl Daemon {
             return;
         }
 
-        // Step 1 — hot-swap the in-memory signer so the new identity
+        // Step 1 - hot-swap the in-memory signer so the new identity
         // is active for every subsequent signed request.
         let new_pubkey_bytes = match self.warren_signer.as_ref() {
             Some(signer) => warren_signer::reload_signer_from_disk(signer, &self.settings_dir),
             None => {
                 log::warn!(
                     "on_set_warren_mnemonic: no in-memory signer to hot-swap \
-                     (legacy Bearer mode) — restart required to pick up new identity"
+                     (legacy Bearer mode) - restart required to pick up new identity"
                 );
                 None
             }
         };
 
-        // Step 2 — determine whether a `login()` under the new pubkey
+        // Step 2 - determine whether a `login()` under the new pubkey
         // is needed before acknowledging, so the GUI does not observe a
         // `set_mnemonic` Ok while the daemon is still mid-swap.
         //
@@ -2800,7 +2803,7 @@ impl Daemon {
             return;
         };
 
-        // Step 3 — async login under the new pubkey, then ack the
+        // Step 3 - async login under the new pubkey, then ack the
         // gRPC caller. We DO NOT ack before login completion: the
         // GUI relies on the Ok response to know the daemon is in
         // its post-import steady state. Acking early would let the
@@ -2835,13 +2838,13 @@ impl Daemon {
                     // sees the error rather than a misleading Ok.
                     log::error!(
                         "on_set_warren_mnemonic: hot-swap login failed \
-                         ({login_err}) — forcing logout to leave the \
+                         ({login_err}) - forcing logout to leave the \
                          daemon in a deterministic state"
                     );
                     if let Err(logout_err) = manager.logout().await {
                         log::error!(
                             "on_set_warren_mnemonic: subsequent logout also failed: \
-                             {logout_err} — daemon is in an inconsistent state, \
+                             {logout_err} - daemon is in an inconsistent state, \
                              user should re-login"
                         );
                     }
@@ -2870,7 +2873,7 @@ impl Daemon {
 
     fn on_get_relay_locations(&mut self, tx: oneshot::Sender<RelayList>) {
         // Substitute the Warren view for the Mullvad list on the
-        // synchronous pull — without this, the GUI populates its
+        // synchronous pull - without this, the GUI populates its
         // selector with relays absent from the WarrenRelayList ->
         // NoMatchingRelay on connect -> kill-switch. Substitution
         // equivalent to the `on_relay_list_update` closure on the
@@ -2954,7 +2957,7 @@ impl Daemon {
     /// sign-out from the GUI) this is a **true sign-out**: after the
     /// device is logged out, the BIP39 mnemonic is erased from the OS
     /// vault, the in-memory signer is neutralized, and the account
-    /// history is cleared — so a subsequent "Create a new account"
+    /// history is cleared - so a subsequent "Create a new account"
     /// mints a genuinely fresh identity and nothing is left to silently
     /// "continue as".
     ///
@@ -2971,7 +2974,7 @@ impl Daemon {
 
         let result = match logout_result {
             Ok(()) if wipe_identity => {
-                // Erase the on-disk identity off the async executor —
+                // Erase the on-disk identity off the async executor -
                 // keychain/DPAPI deletes are synchronous and can take
                 // tens to hundreds of ms; running them inline would
                 // stall the daemon command loop.
@@ -3066,7 +3069,7 @@ impl Daemon {
                         // its own GitHub Releases pipeline), so the
                         // router is permanently in `VersionRouterClosed`
                         // state. The GUI still calls `get_version_info`
-                        // periodically — logging that at ERROR drowns
+                        // periodically - logging that at ERROR drowns
                         // the daemon log in expected noise. Demote the
                         // "router closed" variant to DEBUG; any other
                         // failure mode (API down, parse error, etc.)
@@ -3517,7 +3520,7 @@ impl Daemon {
     /// [`warren_multi_hop_directory`] updater, which re-fetches the signed
     /// directory, re-selects a circuit (or clears it when disabled), pushes
     /// the result onto the parameters generator and requests a reconnect.
-    /// This handler therefore only persists — it must NOT also reconnect,
+    /// This handler therefore only persists - it must NOT also reconnect,
     /// or the tunnel would bounce twice per toggle.
     async fn on_set_warren_multi_hop_settings(
         &mut self,
@@ -3571,7 +3574,7 @@ impl Daemon {
             // the generator now fans the value to every active tunnel
             // via a watch channel, and the in-tunnel controller task
             // calls `NatPmpManager::reconfigure` (or release+drop, or
-            // fresh spawn) — no tunnel reconnect required to apply
+            // fresh spawn) - no tunnel reconnect required to apply
             // the change.
             let nat_pmp_cfg = nat_pmp_settings_to_runtime_cfg(&new_value_for_gen);
             // Capture the rule ids before the cfg is moved into the

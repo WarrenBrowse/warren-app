@@ -28,19 +28,19 @@ use std::str::FromStr;
 /// codec crate. Chosen so every address starts with `wb`.
 pub use warren_ss58::WARREN_SS58_PREFIX;
 
-// The SS58 codec is the shared `warren-ss58` leaf crate — the single
+// The SS58 codec is the shared `warren-ss58` leaf crate - the single
 // source of truth, also re-exported as `warren_identity::ss58` on the
 // backend. No checksum logic is duplicated in this crate.
 use warren_ss58 as ss58;
 
-/// Warren pubkey — validated wrapper around a Warren SS58 address
+/// Warren pubkey - validated wrapper around a Warren SS58 address
 /// (`wb…`) representing an Ed25519 pubkey (32 bytes).
 ///
 /// Construct via [`Self::from_str`] or [`Self::from_bytes`] (the only
 /// validated paths). The inner field stays `pub(crate)` to forbid
 /// non-validated instantiation from outside the crate.
 ///
-/// **Serde serialization**: `#[serde(transparent)]` — a JSON string.
+/// **Serde serialization**: `#[serde(transparent)]` - a JSON string.
 /// The `Deserialize` impl re-validates via [`Self::from_str`] so that a
 /// corrupt payload fails deserialization rather than silently producing
 /// an invalid `WarrenPubKey`.

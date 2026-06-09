@@ -26,7 +26,7 @@ import com.warrenbrowse.vpn.lib.repository.MnemonicCache
  *
  * Audit follow-up: the previous implementation passed the phrase by
  * value through the NavKey parcelable, which Compose Navigation
- * persists in the saved-state Bundle — defeating the [Mnemonic]
+ * persists in the saved-state Bundle - defeating the [Mnemonic]
  * zero-on-close lifecycle. The handoff now goes through the
  * [MnemonicCache] process-internal slot. A process kill empties the
  * cache, in which case [WarrenWalletBackupScreen] navigates back to

@@ -31,7 +31,7 @@ import org.koin.androidx.compose.koinViewModel
  * construction and zeros its [CharArray] in `onCleared` when the
  * back-stack entry is popped. The ViewModel survives configuration
  * changes (rotation, dark-mode toggle) but is destroyed on process
- * kill — which is exactly the lifecycle we need.
+ * kill - which is exactly the lifecycle we need.
  *
  * On a process restore (cache slot empty), [onProcessRestoreFailure]
  * is invoked so the host can route back to the login entry.

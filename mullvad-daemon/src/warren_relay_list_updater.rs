@@ -59,7 +59,7 @@ const FETCH_TIMEOUT: Duration = Duration::from_secs(15);
 ///
 /// When an API IP is pinned ([`mullvad_api_constants::API_PINNED_IP`]) *and*
 /// `api_url` targets the default API host, resolve that host to the pinned IP
-/// (no DNS query) and omit TLS SNI — bootstrap-privacy parity with the main
+/// (no DNS query) and omit TLS SNI - bootstrap-privacy parity with the main
 /// API client (`mullvad-api`). The host guard avoids mis-pinning when the
 /// operator overrides the API URL to a different host. `API_PINNED_IP` is
 /// `None` by default, so this is the plain client (system DNS + SNI) until the
@@ -70,7 +70,7 @@ fn build_http_client(api_url: &str) -> reqwest::Client {
     let mut builder = reqwest::Client::builder().timeout(FETCH_TIMEOUT);
     if let Some(addr) = pin_target(api_url, API_PINNED_IP) {
         // No DNS query (resolve the host to the pinned IP) and no SNI on the
-        // wire — the dedicated endpoint presents the cert without SNI.
+        // wire - the dedicated endpoint presents the cert without SNI.
         builder = builder.resolve(API_HOST_DEFAULT, addr).tls_sni(false);
     }
     builder.build().unwrap_or_else(|_| reqwest::Client::new())
@@ -146,7 +146,7 @@ pub enum FreshnessReject {
 
 /// Pure freshness gate (no clock, no I/O): rejects an expired list
 /// (freeze defense) or one whose `generation` is below the high-water
-/// mark (rollback defense). Per TUF, BOTH checks are required — a signed
+/// mark (rollback defense). Per TUF, BOTH checks are required - a signed
 /// creation timestamp alone defeats neither attack.
 ///
 /// `generation == highest_generation` is **accepted** (idempotent
@@ -192,10 +192,10 @@ pub struct RosterEnforcement {
 ///
 /// With a verified roster present, only roster-authorized exits survive:
 /// a compromised online backend cannot inject a new exit, relocate one to
-/// another country, or swap its pubkey — all such relays are dropped
+/// another country, or swap its pubkey - all such relays are dropped
 /// (audit F1, the core anti-backend-compromise property).
 ///
-/// When **no** roster is available (never fetched and none baked — i.e.
+/// When **no** roster is available (never fetched and none baked - i.e.
 /// during the rollout before rosters are deployed), the list passes
 /// through unfiltered with `enforced = false`. This fail-**open** is a
 /// deliberate transitional choice so a client predating roster deployment
@@ -394,7 +394,7 @@ pub struct WarrenRelayListUpdater {
     roster_enabled: bool,
     /// Pinned **offline admin** pubkey for verifying the roster (F1). Only
     /// consulted when `roster_enabled`. Empty = TOFU (accepts any
-    /// self-consistent roster signature) — operators enabling the feature
+    /// self-consistent roster signature) - operators enabling the feature
     /// should pin it via `WARREN_ADMIN_ROSTER_PUBKEY`.
     roster_pin: Option<String>,
     /// Latest verified offline-admin roster; the live list is filtered to
@@ -407,7 +407,7 @@ pub struct WarrenRelayListUpdater {
     roster_etag: Option<String>,
     /// F6: whether a non-empty list was ever published. Once true, a
     /// subsequently *empty* result (transient registry drain, or a roster
-    /// that dropped every live exit) is NOT published — we keep the
+    /// that dropped every live exit) is NOT published - we keep the
     /// last-good list rather than cut the user to zero exits (= no
     /// connectivity). Avoids a momentary backend blip / all-dropped roster
     /// bricking a working client.
@@ -428,7 +428,7 @@ impl WarrenRelayListUpdater {
     /// Spawn the updater task. `on_update` is invoked with each newly
     /// verified list (the daemon wires it to swap the live selector and
     /// rebroadcast the GUI relay list). Returns a handle to force an
-    /// immediate refresh — the caller should call
+    /// immediate refresh - the caller should call
     /// [`WarrenRelayListUpdaterHandle::update`] once at boot for the
     /// on-startup fetch (mirrors upstream).
     #[expect(clippy::too_many_arguments)]
@@ -550,7 +550,7 @@ impl WarrenRelayListUpdater {
 
     /// Best-effort refresh of the offline-admin roster (audit F1). On any
     /// failure (network, 404 = none published yet, bad signature, stale or
-    /// rolled-back) the last-good roster is kept untouched — a roster
+    /// rolled-back) the last-good roster is kept untouched - a roster
     /// refresh must never weaken enforcement.
     async fn refresh_roster(&mut self) {
         let url = format!("{}/v1/exits/roster", self.api_url.trim_end_matches('/'));

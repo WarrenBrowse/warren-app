@@ -36,6 +36,11 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 const RPC_SERVER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(1);
 
+/// Trailing token a logout source must carry for the daemon to perform a
+/// destructive identity wipe (true sign-out). The desktop sends it only
+/// from the backup-confirmed "log out" button (see AccountView.tsx).
+const WIPE_IDENTITY_LOGOUT_TOKEN: &str = "gui-logout-button";
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     // Unable to start the management interface server
@@ -55,6 +60,9 @@ struct ManagementServiceImpl {
     /// without round-tripping through the daemon command channel
     /// (the cache is `Arc`-backed and the values are pure RAM).
     warren_status_cache: crate::warren_status::WarrenStatusCache,
+    /// Authorizes wallet/secret RPCs (mnemonic read/write, destructive
+    /// sign-out) against the calling process' Unix credentials.
+    wallet_access: Arc<crate::wallet_access::WalletAccessControl>,
 }
 
 pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
@@ -436,9 +444,10 @@ impl ManagementService for ManagementServiceImpl {
     /// The daemon side keeps the secret wrapped in `Zeroizing<String>`.
     /// Once we hand it to `tonic` via `Response::new`, the bytes are
     /// copied into the gRPC outbound buffer, which is out of our
-    /// control — but the daemon-side heap allocation is wiped as soon
+    /// control - but the daemon-side heap allocation is wiped as soon
     /// as the `Zeroizing` wrapper goes out of scope here.
-    async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn get_warren_mnemonic(&self, request: Request<()>) -> ServiceResult<String> {
+        self.authorize_wallet_access(&request)?;
         log::debug!("get_warren_mnemonic (content NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
@@ -460,6 +469,7 @@ impl ManagementService for ManagementServiceImpl {
     /// `Zeroizing<String>` immediately so the secret heap buffer is
     /// wiped after `on_set_warren_mnemonic` returns.
     async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
+        self.authorize_wallet_access(&request)?;
         let mnemonic = zeroize::Zeroizing::new(request.into_inner());
         log::info!(
             "set_warren_mnemonic request received (len={}, content NEVER logged)",
@@ -861,20 +871,32 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
+        // The wipe branch irreversibly erases the on-disk BIP39 identity,
+        // so it is a wallet/secret operation: authorize the caller before
+        // honoring it, otherwise any local process could destroy the seed.
+        self.authorize_wallet_access(&request)?;
         let source = request.into_inner();
         log::debug!("logout_account (source: {source})");
         // Only an explicit, backup-confirmed user sign-out from the GUI
         // erases the local BIP39 identity (true sign-out). Every other
-        // logout — a server-driven device-revoked event
-        // (`gui-device-revoked`), a CLI logout, Android, etc. — must
-        // PRESERVE the mnemonic so the account stays recoverable on this
-        // device. The GUI gates the "log out" button behind a
-        // "I backed up my phrase" confirmation (see AccountView).
+        // logout (a server-driven device-revoked event
+        // `gui-device-revoked`, a CLI logout, Android, etc.) must PRESERVE
+        // the mnemonic so the account stays recoverable on this device. The
+        // GUI gates the "log out" button behind a "I backed up my phrase"
+        // confirmation (see AccountView).
         //
-        // `ends_with` (not `==`) because the desktop prefixes the source
-        // with the client name, e.g. `"desktop gui-logout-button"`
-        // (see daemon-rpc.ts `logoutAccount`).
-        let wipe_identity = source.ends_with("gui-logout-button");
+        // Match the exact trailing token (the desktop prefixes the source
+        // with the client name, e.g. `"desktop gui-logout-button"`, see
+        // daemon-rpc.ts `logoutAccount`). Exact-token rather than
+        // `ends_with` so a near-miss label cannot accidentally trip the
+        // destructive path.
+        let wipe_identity = source
+            .split_whitespace()
+            .next_back()
+            .is_some_and(|token| token == WIPE_IDENTITY_LOGOUT_TOKEN);
+        if wipe_identity {
+            log::info!("logout_account: erasing local identity (authorized true sign-out)");
+        }
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx, wipe_identity))?;
         self.wait_for_result(rx)
@@ -917,7 +939,7 @@ impl ManagementService for ManagementServiceImpl {
             .map(|account_data| Response::new(types::AccountData::from(account_data)))
             .map_err(|error: RestError| {
                 // A 404 from `warren-api` on `get_account_data` means
-                // "this pubkey has no active subscription yet" — an
+                // "this pubkey has no active subscription yet" - an
                 // expected state for a newly bootstrapped Warren
                 // identity that has not purchased a plan. Demote the
                 // log to DEBUG so the daemon does not flood the
@@ -928,7 +950,7 @@ impl ManagementService for ManagementServiceImpl {
                 if matches!(&error, RestError::ApiError(status, _) if *status == StatusCode::NOT_FOUND)
                 {
                     log::debug!(
-                        "get_account_data: 404 (no subscription yet) — \
+                        "get_account_data: 404 (no subscription yet) - \
                          GUI will keep polling until the user purchases a plan"
                     );
                 } else {
@@ -1737,6 +1759,23 @@ impl ManagementService for ManagementServiceImpl {
 
 #[expect(clippy::result_large_err)]
 impl ManagementServiceImpl {
+    /// Authorize a wallet/secret operation against the calling process'
+    /// Unix credentials, captured by the management interface from the
+    /// socket's `SO_PEERCRED`. Returns `PermissionDenied` if another local
+    /// user is trying to reach this account's secrets. `extensions` is the
+    /// incoming request's extension map.
+    fn authorize_wallet_access<T>(&self, request: &Request<T>) -> Result<(), Status> {
+        let peer = request
+            .extensions()
+            .get::<mullvad_management_interface::ManagementConnectInfo>()
+            .copied()
+            .flatten();
+        self.wallet_access.authorize(peer).map_err(|e| {
+            log::warn!("Refused wallet/secret RPC: {e}");
+            Status::permission_denied(e.to_string())
+        })
+    }
+
     /// Sends a command to the daemon and maps the error to an RPC error.
     fn send_command_to_daemon(&self, command: DaemonCommand) -> Result<(), Status> {
         self.daemon_tx
@@ -1778,28 +1817,37 @@ impl ManagementInterfaceServer {
         // received and started processing the shutdown signal.
         let (server_abort_tx, server_abort_rx) = mpsc::channel(0);
 
+        let wallet_access = Arc::new(crate::wallet_access::WalletAccessControl::new());
+
         let management_service = ManagementServiceImpl {
             daemon_tx,
             subscriptions: subscriptions.clone(),
             app_upgrade_broadcast,
             log_reload_handle,
             warren_status_cache,
+            wallet_access: wallet_access.clone(),
         };
 
         let relay_selector_service = RelaySelectorServiceImpl::new(relay_selector);
 
-        let rpc_server_join_handle = mullvad_management_interface::spawn_rpc_server(
-            management_service,
-            relay_selector_service,
-            async move {
-                StreamExt::into_future(server_abort_rx).await;
-            },
-            rpc_socket_path.clone(),
-        )
-        .map_err(Error::SetupError)?;
+        let (rpc_server_join_handle, socket_security) =
+            mullvad_management_interface::spawn_rpc_server(
+                management_service,
+                relay_selector_service,
+                async move {
+                    StreamExt::into_future(server_abort_rx).await;
+                },
+                rpc_socket_path.clone(),
+            )
+            .map_err(Error::SetupError)?;
+
+        // Tell the wallet guard which access-control mode the socket landed in
+        // so it can decide whether to rely on the kernel's group gate or fall
+        // back to per-uid trust-on-first-use.
+        wallet_access.set_socket_security(socket_security);
 
         log::info!(
-            "Management interface listening on {}",
+            "Management interface listening on {} (access control: {socket_security:?})",
             rpc_socket_path.display()
         );
 
@@ -2016,7 +2064,7 @@ fn map_rest_error(error: &RestError) -> Status {
             Status::new(Code::InvalidArgument, message)
         }
         // A 404 on `get_account_data` means "this pubkey has no
-        // active subscription yet" — an expected steady state for a
+        // active subscription yet" - an expected steady state for a
         // freshly bootstrapped Warren identity. The renderer
         // translates `Code::NotFound` here into the
         // `'no-subscription'` AccountDataError variant, which the
@@ -2024,7 +2072,7 @@ fn map_rest_error(error: &RestError) -> Status {
         // as expired so the UI redirects to the "buy plan" screen
         // instead of letting the user click the now-broken Connect
         // button (which would otherwise trigger a doomed handshake
-        // and lock down the firewall — see the M5.D.x no-sub UX
+        // and lock down the firewall - see the M5.D.x no-sub UX
         // fix). Other 404-bearing REST surfaces (none today) would
         // need their own renderer-side mapping.
         RestError::ApiError(status, message) if *status == StatusCode::NOT_FOUND => {

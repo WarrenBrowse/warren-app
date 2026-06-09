@@ -638,7 +638,7 @@ function convertFromNatPmpMappingState(
         externalPort: mapping.getExternalPort() ?? 0,
         lifetimeGrantedSecs: mapping.getLifetimeGrantedSecs() ?? 0,
         // `hasAttemptsRemaining()` distinguishes "0 slots left" from "no
-        // budget trailer sent" (older exit) — only the former blocks the
+        // budget trailer sent" (older exit) - only the former blocks the
         // port controls in the UI.
         attemptsRemaining: mapping.hasAttemptsRemaining()
           ? mapping.getAttemptsRemaining()

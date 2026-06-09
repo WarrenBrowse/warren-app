@@ -151,7 +151,7 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
 /// Derives the **Warren SS58 address** (`wb…`, network prefix 13295)
 /// from a 32-byte seed.
 ///
-/// This is the canonical string form of the Warren wallet identity — the
+/// This is the canonical string form of the Warren wallet identity - the
 /// value shown in the UI, copied to the clipboard, and carried in the
 /// `X-Warren-PubKey` request header. The same algorithm
 /// (`warren_identity::ss58`) is used by the daemon and the backend

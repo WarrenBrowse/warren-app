@@ -130,7 +130,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     public func applyEvent(_ event: WarrenTunnelEvent) {
         // C.4.3.Z TODO : `ObservedState.connected/.reconnecting` require
         // an `ObservedConnectionState` payload (selectedRelay + IP +
-        // etc.) — Warren's actor doesn't have that context yet. For
+        // etc.) - Warren's actor doesn't have that context yet. For
         // the scaffold we map every non-disconnect to `.initial` and
         // only fire `.disconnected` definitively. Real wiring lands
         // once `WarrenQuinnTunnelImplementation.startStatsBroadcastTask`
@@ -201,7 +201,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // DAITA: read the persisted setting (written by SettingsDAITAView via
         // DAITATunnelSettingsViewModel). The client only signals the request;
         // the exit picks the Maybenot machine and returns it in SetupAck, so
-        // the spec content here is a placeholder — only its presence matters
+        // the spec content here is a placeholder - only its presence matters
         // (the warren-ios FFI treats a non-null daita_spec as "DAITA on").
         let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
         let daitaSpec: WarrenDaitaSpec? =

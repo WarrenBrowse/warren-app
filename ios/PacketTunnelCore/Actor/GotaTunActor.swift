@@ -12,7 +12,7 @@ import WarrenTypes
 import Network
 
 /// Stub actor for GotaTun tunnel implementation.
-/// Implements `PacketTunnelActorProtocol` with no-op methods — the real
+/// Implements `PacketTunnelActorProtocol` with no-op methods - the real
 /// GotaTun logic will be filled in later.
 public final class GotaTunActor: PacketTunnelActorProtocol, @unchecked Sendable {
     private let logger = Logger(label: "GotaTunActor")

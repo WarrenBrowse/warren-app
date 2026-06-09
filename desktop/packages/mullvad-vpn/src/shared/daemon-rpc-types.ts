@@ -616,7 +616,7 @@ export type NatPmpMappingState =
       externalPort: number;
       lifetimeGrantedSecs: number;
       // Per-source rate-limit slots still available, as reported by the
-      // exit (a SHARED per-client budget — the same value on every
+      // exit (a SHARED per-client budget - the same value on every
       // mapping). `undefined` when the exit sent no budget trailer. The
       // UI warns at <= 1 and blocks the port controls at 0.
       attemptsRemaining?: number;
@@ -880,7 +880,7 @@ export function socketAddressHost(socketAddrStr: string): string {
 // and the exit node are DIFFERENT physical nodes, i.e. their host/IP
 // differs. A 1-hop circuit reuses the same node as both relay and exit
 // with different ports (entry `<ip>:7001`, exit `<ip>:443`), so the port
-// MUST be ignored — comparing the full `ip:port` would falsely flag a
+// MUST be ignored - comparing the full `ip:port` would falsely flag a
 // 1-hop circuit as multi-hop. Hosts are compared case-insensitively.
 export function isMultihopTunnelEndpoint(endpoint: ITunnelEndpoint): boolean {
   if (!endpoint.entryEndpoint) {

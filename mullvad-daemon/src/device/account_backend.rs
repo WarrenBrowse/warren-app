@@ -3,7 +3,7 @@
 //!
 //! Lets us dispatch at boot between:
 //! - [`WarrenRemoteAccountBackend`]: signed HTTP backend talking to
-//!   warren-api (the standard Warren path — real subscription expiry).
+//!   warren-api (the standard Warren path - real subscription expiry).
 //! - [`RemoteAccountBackend`]: thin wrap over the legacy Mullvad
 //!   `AccountsProxy`, used only when no Warren signing key is available.
 //!
@@ -25,7 +25,7 @@ use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 /// Type alias for the futures returned by the trait. `Pin<Box<dyn …>>`
 /// is required by object-safety (`Arc<dyn WarrenAccountBackend>`).
 /// `'static` is required by `retry_future` compatibility (which
-/// requires the futures returned by the factory to be `'static`) —
+/// requires the futures returned by the factory to be `'static`) -
 /// each trait impl must clone its deps before `Box::pin(async move {…})`.
 pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 
@@ -35,7 +35,7 @@ pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 /// preserve ABI compatibility with `retry_future` and with the existing
 /// error map (`map_rest_error` on the
 /// [`super::service`] side). In local mode, `rest::Error` is produced
-/// only for degraded cases (disk corruption for instance) —
+/// only for degraded cases (disk corruption for instance) -
 /// the nominal path is always `Ok`.
 pub trait WarrenAccountBackend: Send + Sync {
     /// Fetches the account data (= mainly the expiry).
@@ -113,7 +113,7 @@ impl WarrenAccountBackend for RemoteAccountBackend {
     }
 }
 
-/// Warren-Remote backend — Phase G.3 — implements
+/// Warren-Remote backend - Phase G.3 - implements
 /// [`WarrenAccountBackend`] via the signed HTTP `warren-api-client`
 /// client that talks to the warren-api server (= alternative to the
 /// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
@@ -215,7 +215,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
 /// not versioned, so a future edit (`"voucher unknown or invalid" →
 /// "Voucher is invalid."`) should still route correctly. Should a
 /// rewrite ever break the substring, the fallback preserves the raw
-/// body in the error log for diagnostics — and the user gets the
+/// body in the error log for diagnostics - and the user gets the
 /// generic toast rather than a silent failure.
 fn map_voucher_register_error(err: warren_api_client::ClientError) -> rest::Error {
     use warren_api_client::ClientError;
@@ -247,7 +247,7 @@ fn map_voucher_register_error(err: warren_api_client::ClientError) -> rest::Erro
             // through to the generic path: the user sees a generic
             // error, and the operator gets the raw body in the
             // daemon log to triage. "pubkey already registered"
-            // specifically should not normally happen here — it
+            // specifically should not normally happen here - it
             // would mean `get_account_data` returned 404 for a
             // pubkey that the server side still has on file, which
             // is a server-state inconsistency worth investigating.
@@ -280,7 +280,7 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
 ///
 /// Convention: a non-2xx HTTP status -> `ApiError(StatusCode, msg)`
 /// (mappable on the caller side via `map_rest_error`). Everything
-/// else (transport down, serde, clock) -> `Aborted` — consistent with
+/// else (transport down, serde, clock) -> `Aborted` - consistent with
 /// the Mullvad pattern for infrastructure failures.
 pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Error {
     use warren_api_client::ClientError;
@@ -305,7 +305,7 @@ mod tests {
     use super::*;
 
     // ===================================================================
-    // WarrenRemoteAccountBackend — Phase G.3 tests E2E.
+    // WarrenRemoteAccountBackend - Phase G.3 tests E2E.
     //
     // Strategy: spawn warren-api in-process (axum::serve loopback),
     // build an Ed25519-signed `WarrenApiClient`, instantiate the backend,
@@ -429,7 +429,7 @@ mod tests {
     }
 
     // ===================================================================
-    // Voucher error mapping — locks down the substring matching against
+    // Voucher error mapping - locks down the substring matching against
     // the human-readable bodies emitted by
     // `warren_api::handlers::subscription::register`. Should the upstream
     // strings be edited, these tests fail loudly and prompt a sync of
@@ -493,7 +493,7 @@ mod tests {
     #[test]
     fn map_voucher_register_error_pubkey_already_registered_falls_through() {
         // "pubkey already registered" is a server-state inconsistency
-        // that should be diagnosable in the daemon log — fall through
+        // that should be diagnosable in the daemon log - fall through
         // to the opaque body to preserve the raw context.
         let err = super::map_voucher_register_error(server_status(
             409,
@@ -519,7 +519,7 @@ mod tests {
     #[test]
     fn map_voucher_register_error_bad_clock_maps_aborted() {
         // Any non-`ServerStatus` warren-api-client error (transport,
-        // serde, system clock pre-epoch, …) is infra down — must
+        // serde, system clock pre-epoch, …) is infra down - must
         // map to `Aborted` to align with the convention of
         // [`map_client_error`]. `BadClock` is a convenient no-arg
         // variant for unit testing the catch-all arm.

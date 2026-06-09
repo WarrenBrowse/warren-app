@@ -211,7 +211,7 @@ pub struct WarrenTunnelParameters {
     /// `None` here = the daemon did not wire live reconfig (typical
     /// in tests or in builds that pre-date the feature); the monitor
     /// task falls back to the original "params at tunnel start"
-    /// behaviour. New code SHOULD always wire this channel — otherwise
+    /// behaviour. New code SHOULD always wire this channel - otherwise
     /// the user has to reconnect the tunnel to apply changes, which
     /// is the bug we're fixing.
     pub nat_pmp_control_rx: Option<tokio::sync::watch::Receiver<Option<NatPmpConfig>>>,
@@ -502,7 +502,7 @@ pub enum Error {
     /// TUN I/O error, temporary network disruption, or a session
     /// closed by the peer without an explicit rejection code. The
     /// tunnel data plane was interrupted but the configuration and
-    /// credentials are still valid — a reconnect is expected to
+    /// credentials are still valid - a reconnect is expected to
     /// succeed.
     #[error("Warren tunnel transient backend error (recoverable): {0}")]
     BackendTransient(String),
@@ -520,13 +520,13 @@ impl Error {
     /// Whether the error is worth retrying from the state-machine
     /// side.
     ///
-    /// - [`Error::Handshake`]: `true` — transient network glitch is the common cause; the next
+    /// - [`Error::Handshake`]: `true` - transient network glitch is the common cause; the next
     ///   attempt will likely succeed.
-    /// - [`Error::TunSetup`]: `false` — privilege / kernel module / name collision: retry will not
+    /// - [`Error::TunSetup`]: `false` - privilege / kernel module / name collision: retry will not
     ///   help without operator action.
-    /// - [`Error::BackendTransient`]: `true` — TUN I/O error or peer-initiated session close; the
+    /// - [`Error::BackendTransient`]: `true` - TUN I/O error or peer-initiated session close; the
     ///   configuration is still valid and a fresh connect should succeed.
-    /// - [`Error::BackendFatal`]: `false` — auth failure or explicit session rejection; retrying
+    /// - [`Error::BackendFatal`]: `false` - auth failure or explicit session rejection; retrying
     ///   immediately would waste bandwidth and produce the same outcome.
     #[must_use]
     pub fn is_recoverable(&self) -> bool {
@@ -537,13 +537,13 @@ impl Error {
 /// Maps a `warren_tunnel` handshake error to the talpid backend [`Error`].
 ///
 /// An explicit auth rejection from the exit
-/// ([`warren_tunnel::TunnelError::AuthRejected`] — the client's identity
+/// ([`warren_tunnel::TunnelError::AuthRejected`] - the client's identity
 /// is not authorized: no active subscription / not enrolled) is FATAL
 /// and non-retryable: retrying re-derives the same outcome, and the
 /// state machine would otherwise loop and surface a misleading "no
 /// matching relay" instead of the real "subscription required" cause.
 /// Every other handshake failure is treated as a (recoverable)
-/// [`Error::Handshake`] — a transient network glitch is the common case
+/// [`Error::Handshake`] - a transient network glitch is the common case
 /// and the next attempt usually succeeds.
 fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
     // The `[TOKEN]` prefix is parsed by `mullvad_types::auth_failed::AuthFailed`
@@ -560,7 +560,7 @@ fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
                 .to_owned(),
         ),
         // Device cap (v2): account already at its max simultaneous devices.
-        // Maps to TOO_MANY_CONNECTIONS — the GUI string is an exact fit
+        // Maps to TOO_MANY_CONNECTIONS - the GUI string is an exact fit
         // ("disconnect another device or try again shortly").
         warren_tunnel::TunnelError::DeviceLimitReached => Error::BackendFatal(
             "[TOO_MANY_CONNECTIONS] exit rejected the handshake: device limit reached for this account"
@@ -645,7 +645,7 @@ enum MonitorBackend {
         /// Periodic metrics-logging task. Spawned alongside the pump but
         /// NOT cancelled by aborting the pump (it owns its own clone of
         /// the metrics counters). Tracked here so teardown aborts it
-        /// explicitly — otherwise every connect leaks one immortal task
+        /// explicitly - otherwise every connect leaks one immortal task
         /// that keeps logging `pump_metrics` for a dead session forever.
         metrics_handle: tokio::task::JoinHandle<()>,
         pump_error_rx: tokio::sync::oneshot::Receiver<String>,
@@ -842,14 +842,14 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Startup event sequence — order is load-bearing (M-1 fix):
+        // Startup event sequence - order is load-bearing (M-1 fix):
         //
-        // 1. InterfaceUp  — tells the state machine to install the Connecting-state firewall
+        // 1. InterfaceUp  - tells the state machine to install the Connecting-state firewall
         //    (allows traffic to the exit only). Emitted BEFORE routing so the firewall fence is up
         //    before any route change could let traffic escape via the physical NIC.
-        // 2. add_routes   — bypass exit IPs + split-default installed.
-        // 3. DefaultRouteSplitGuard::install — policy route table 100.
-        // 4. TunnelEvent::Up — signals "Connected" to the UI. By the time the UI shows "Connected"
+        // 2. add_routes   - bypass exit IPs + split-default installed.
+        // 3. DefaultRouteSplitGuard::install - policy route table 100.
+        // 4. TunnelEvent::Up - signals "Connected" to the UI. By the time the UI shows "Connected"
         //    the default route already points at the TUN, so there is no window where traffic
         //    bypasses the tunnel.
         log::debug!(
@@ -1443,14 +1443,14 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Startup event sequence — order is load-bearing (M-1 fix):
+        // Startup event sequence - order is load-bearing (M-1 fix):
         //
-        // 1. InterfaceUp  — installs the Connecting-state firewall; emitted BEFORE routing so the
+        // 1. InterfaceUp  - installs the Connecting-state firewall; emitted BEFORE routing so the
         //    firewall fence is in place before any route change could let traffic escape via the
         //    physical NIC.
-        // 2. add_routes   — relay bypass + split-default installed.
-        // 3. DefaultRouteSplitGuard::install — policy route table 100.
-        // 4. TunnelEvent::Up — signals "Connected" to the UI only after the default route already
+        // 2. add_routes   - relay bypass + split-default installed.
+        // 3. DefaultRouteSplitGuard::install - policy route table 100.
+        // 4. TunnelEvent::Up - signals "Connected" to the UI only after the default route already
         //    points at the TUN.
         log::debug!(
             "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (multi-hop, firewall fence up, routes pending)",
@@ -1723,7 +1723,7 @@ impl WarrenTunnelMonitor {
         //
         // An earlier version dropped `nat_pmp_manager` + aborted
         // `nat_pmp_controller` right here, which killed the refresh
-        // loop / controller microseconds after they were spawned —
+        // loop / controller microseconds after they were spawned -
         // the controller's body never even got polled (M5.D.x bug:
         // "Status: requesting forever"; the legacy manager had the
         // same latent issue, surviving only the transient window
@@ -1732,7 +1732,7 @@ impl WarrenTunnelMonitor {
         //
         // We instead keep both bound in this stack frame and tear
         // them down AFTER the `block_on` returns (tunnel actually
-        // closing) — see the teardown block further down.
+        // closing) - see the teardown block further down.
 
         // Split the backend into its oneshot receiver (raced against
         // `close_rx` below) and its owned task handles (aborted after
@@ -1785,7 +1785,7 @@ impl WarrenTunnelMonitor {
                     // External close: daemon requests shutdown. Err =
                     // Sender dropped without signaling (rare: daemon
                     // crashed). We treat it as an implicit close
-                    // (no error — the state machine will continue
+                    // (no error - the state machine will continue
                     // its normal cycle).
                     let _ = close_res;
                     Ok(())
@@ -1795,7 +1795,7 @@ impl WarrenTunnelMonitor {
                     // `Ok(msg)`: the pump explicitly sent an error.
                     //   Classify as BackendTransient: pump errors are
                     //   TUN I/O failures or peer-initiated session
-                    //   closes — the configuration is still valid and
+                    //   closes - the configuration is still valid and
                     //   a reconnect should succeed. Fatal conditions
                     //   (auth failure, explicit rejection) surface
                     //   through Error::Handshake before the pump even
@@ -1826,7 +1826,7 @@ impl WarrenTunnelMonitor {
         // - Live-reconfig (`nat_pmp_controller`): abort the controller task; it drops its owned
         //   managers on the way out (manager `Drop` fires). The daemon's watch sender will then see
         //   its receiver gone on the next push, which `on_set_nat_pmp_settings` treats as a no-op
-        //   (tunnel dying — nothing to apply).
+        //   (tunnel dying - nothing to apply).
         drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
             h.abort();
@@ -1966,7 +1966,7 @@ fn spawn_nat_pmp_runtime(
         params.nat_pmp_control_rx.is_some(),
         params.nat_pmp.as_ref().is_some_and(|c| c.enabled),
     );
-    // The observer must be present in both paths — the daemon-side
+    // The observer must be present in both paths - the daemon-side
     // wiring guarantees this whenever NAT-PMP is opted-in. Without an
     // observer the manager would emit events into a void, which is
     // never useful.
@@ -2059,7 +2059,7 @@ fn per_rule_observer(
 /// fires on the FIRST mutation after subscription. The daemon writes
 /// the initial config to the watch BEFORE spawning the tunnel, so
 /// when we land here we synthesize the initial state from
-/// `initial_config` (= `params.nat_pmp.clone()` at spawn time) — we
+/// `initial_config` (= `params.nat_pmp.clone()` at spawn time) - we
 /// don't re-read the watch's current value to avoid a TOCTOU with
 /// the daemon's pre-tunnel push.
 ///
@@ -2080,7 +2080,7 @@ async fn run_nat_pmp_controller(
     // succession (e.g. an input's change + blur), and each redundant
     // reconfigure is a wasted release(old)+request(new) round-trip that
     // also spends a per-client rate-limit slot on the exit. Beyond the
-    // window an identical push IS honoured — that is a deliberate user
+    // window an identical push IS honoured - that is a deliberate user
     // action (e.g. re-applying the same port to RETRY after a failure);
     // skipping it indefinitely would strand the user in `Failed` with no
     // recovery path.
@@ -2145,7 +2145,7 @@ async fn run_nat_pmp_controller(
                         st.applied_cfg == per_rule_cfg && st.applied_at.elapsed() < debounce;
                     if recent_duplicate {
                         log::debug!(
-                            "Warren NAT-PMP controller: duplicate rule {id:?} within debounce — skipping"
+                            "Warren NAT-PMP controller: duplicate rule {id:?} within debounce - skipping"
                         );
                     } else {
                         log::info!("Warren NAT-PMP controller: live reconfigure rule {id:?}");
@@ -2216,11 +2216,11 @@ async fn run_nat_pmp_controller(
 
     // Watch sender dropped → daemon teardown. The managers drop here,
     // firing their `Drop` impls. Drop cancels each refresh loop but does
-    // NOT send a lifetime=0 release — that's fine because the exit GCs
+    // NOT send a lifetime=0 release - that's fine because the exit GCs
     // the mappings at their lease expiry (~1 h) and the tunnel is dying.
     if !managers.is_empty() {
         log::info!(
-            "Warren NAT-PMP controller: shutdown — dropping {} manager(s)",
+            "Warren NAT-PMP controller: shutdown - dropping {} manager(s)",
             managers.len()
         );
     }
@@ -2506,16 +2506,16 @@ fn build_warren_tunnel_routes(
 /// from the upstream Mullvad routing pattern to Warren's needs (single
 /// exit, Quinn QUIC transport).
 ///
-/// macOS strategy — do NOT reproduce the Linux `/1 + /1` recipe:
+/// macOS strategy - do NOT reproduce the Linux `/1 + /1` recipe:
 ///
-/// 1. **`<exit_ip>/32 NetNode::DefaultNode`** — bypass so that the daemon's QUIC packets to the
+/// 1. **`<exit_ip>/32 NetNode::DefaultNode`** - bypass so that the daemon's QUIC packets to the
 ///    exit take the physical NIC instead of the TUN (otherwise routing loop). `DefaultNode` is a
 ///    symbolic node: talpid-routing macOS posts `<ip>/32 via best_default_route.router_ip` in
 ///    `apply_non_tunnel_routes` (`talpid-routing/src/unix/macos/mod.rs:541`), executed **after**
 ///    the ifscope dance, hence with an ARP-able L3 gateway (not the SDL link-scope that fails ARP
 ///    for off-LAN exits).
 ///
-/// 2. **`0.0.0.0/0 dev <tun>`** — default redirect. Prefix 0 triggers the `tunnel_default_routes`
+/// 2. **`0.0.0.0/0 dev <tun>`** - default redirect. Prefix 0 triggers the `tunnel_default_routes`
 ///    special case in talpid-routing macOS (`mod.rs:344-354`) which:
 ///    - Transforms the previous default `0.0.0.0/0 via gw dev <physical>` into an **ifscope** route
 ///      (= visible only to sockets bound to the physical iface).
@@ -2990,7 +2990,7 @@ mod tests {
         let e = Error::BackendFatal("auth rejected by exit".into());
         assert!(
             !e.is_recoverable(),
-            "BackendFatal must NOT be recoverable — the state machine must enter \
+            "BackendFatal must NOT be recoverable - the state machine must enter \
              ErrorState rather than looping on a guaranteed-to-fail reconnect"
         );
     }
@@ -3508,7 +3508,7 @@ mod tests {
     // M5.D.x live-reconfig controller tests. Reproduces the exact user
     // scenario: tunnel connected with NAT-PMP OFF, then the user
     // toggles it ON via the watch channel. The controller must spawn a
-    // manager and the observer must see a Mapped event — all without a
+    // manager and the observer must see a Mapped event - all without a
     // tunnel reconnect.
     // ===================================================================
     use std::{

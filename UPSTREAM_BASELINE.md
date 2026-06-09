@@ -1,5 +1,14 @@
 # Warren — fork upstream baseline
 
+> **Document historique (2026-05-06).** Ceci est l'inventaire de reconnaissance
+> pris au moment du clone upstream, AVANT les modifications Warren. Il ne décrit
+> pas l'état actuel du code et n'est pas tenu à jour : plusieurs intentions
+> notées ici ont divergé (ex. le tunnel a finalement été intégré via le crate
+> dédié `talpid-warren-tunnel` et non un `warren-iroh-tunnel` ; toute référence
+> à Iroh est obsolète, Iroh a été retiré). Pour l'architecture réelle, voir
+> `docs/warren-architecture.md` et le code. Conservé comme trace de la baseline
+> de rebase upstream uniquement.
+
 ## Métadonnées
 
 - **Upstream** : https://github.com/mullvad/mullvadvpn-app

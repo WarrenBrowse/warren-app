@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  C.6 scaffold — NAT-PMP port-forwarding settings.
+//  C.6 scaffold - NAT-PMP port-forwarding settings.
 //  Warren's signature differentiator vs Mullvad/IVPN abandonment
 //  (cf. memory `warren_m4h_f_delivered`). Default OFF: avoids
 //  unexpected port exposure ; users opt in when they need it (e.g.

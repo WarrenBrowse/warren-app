@@ -2,7 +2,7 @@
 //!
 //! Converts the flat warren-relays list (`Vec<WarrenRelay>`) into a
 //! hierarchical [`RelayList`] countries -> cities -> relays. Allows the
-//! Electron GUI — which historically consumes the Mullvad list — to display
+//! Electron GUI - which historically consumes the Mullvad list - to display
 //! the available Warren exits in its country/city selector without
 //! a major frontend refactor.
 //!
@@ -74,7 +74,7 @@ pub fn to_mullvad_relay_list(warren: &WarrenRelayList) -> RelayList {
             // doubles as the city centroid. When a country grows
             // multiple cities we can move to a city-level table (or
             // ship the coordinates from the signed `warren-relays.json`
-            // directly — preferable long-term, drops the static table).
+            // directly - preferable long-term, drops the static table).
             cities.push(RelayListCity {
                 name: city_name,
                 code: city_code,
@@ -160,7 +160,7 @@ fn make_wireguard_relay(
 
 /// Rough slug of a city name to produce a `CityCode`
 /// (`ascii_lower`, `-` instead of space, removes non
-/// `[a-z0-9-]` characters). No uniqueness guarantee — `(country_code,
+/// `[a-z0-9-]` characters). No uniqueness guarantee - `(country_code,
 /// city_code)` must remain unique on the warren-api producer side.
 fn slugify(s: &str) -> String {
     let lowered = s.to_lowercase().replace([' ', '_'], "-");
@@ -171,7 +171,7 @@ fn slugify(s: &str) -> String {
 }
 
 /// Display name of a country from its ISO-3166 alpha-2 code.
-/// Minimal POC table — falls back to the code in uppercase if
+/// Minimal POC table - falls back to the code in uppercase if
 /// the entry is unknown (the GUI will display "FR", "SE", "US" rather
 /// than "France", "Sweden", "United States"). To enrich or replace
 /// with an `isocountry`/`celes` crate if needed.
@@ -201,7 +201,7 @@ fn country_display_name(code: &str) -> String {
 
 /// Geographic centroid (latitude, longitude) of a country from its
 /// ISO-3166 alpha-2 code. Values are approximate population/area
-/// centers (CIA World Factbook style — accurate to a few degrees,
+/// centers (CIA World Factbook style - accurate to a few degrees,
 /// which is the right resolution for a globe-scale VPN map marker).
 ///
 /// Fallback `(0.0, 0.0)` lands at Null Island (Gulf of Guinea); the
@@ -215,7 +215,7 @@ fn country_display_name(code: &str) -> String {
 /// (preferred long-term; this table is a Warren-POC stopgap).
 ///
 /// MUST keep ISO-3166 alpha-2 codes in sync with
-/// [`country_display_name`] — any country listed there should also
+/// [`country_display_name`] - any country listed there should also
 /// appear here so the relay list view never silently degrades to
 /// Null Island for a supported country.
 fn country_centroid(code: &str) -> (f64, f64) {
@@ -247,7 +247,7 @@ fn country_centroid(code: &str) -> (f64, f64) {
 /// Exposes [`country_centroid`] to other modules in the daemon
 /// (specifically `tunnel.rs`, which uses the same lookup to populate
 /// `GeoIpLocation` on the connecting path). Pub(crate) keeps the API
-/// surface internal to the daemon — the table is not a stable
+/// surface internal to the daemon - the table is not a stable
 /// downstream contract.
 #[must_use]
 pub(crate) fn country_centroid_for(code: &str) -> (f64, f64) {
@@ -259,7 +259,7 @@ pub(crate) fn country_centroid_for(code: &str) -> (f64, f64) {
 /// `tunnel.rs::produce_warren_tunnel_params` carries the same
 /// human-readable country string the relay-list view ships to the
 /// renderer (otherwise the map marker and the connection panel show
-/// inconsistent labels — e.g. "Germany" in the panel vs "DE" in the
+/// inconsistent labels - e.g. "Germany" in the panel vs "DE" in the
 /// hover popup).
 #[must_use]
 pub(crate) fn country_display_name_pub(code: &str) -> String {

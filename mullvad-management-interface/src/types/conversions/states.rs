@@ -142,7 +142,7 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             talpid_tunnel::ErrorStateCause::NeedFullDiskPermissions => {
                                 i32::from(Cause::NeedFullDiskPermissions)
                             }
-                            // M-8: Warren TOFU pubkey mismatch — surfaces as a
+                            // M-8: Warren TOFU pubkey mismatch - surfaces as a
                             // TunnelParameterError so the existing proto Cause enum
                             // covers it; the UI distinguishes it via `parameter_error`
                             // = WARREN_PUBKEY_MISMATCH.

@@ -28,7 +28,7 @@ final class WarrenAboutViewTests: XCTestCase {
     }
 
     /// Empty version / build strings are rendered as-is (no
-    /// substitution to "unknown" etc.) — the factory upstream
+    /// substitution to "unknown" etc.) - the factory upstream
     /// substitutes "?" when the Info.plist key is missing, so this
     /// view stays dumb.
     func test_init_acceptsEmptyStrings() {

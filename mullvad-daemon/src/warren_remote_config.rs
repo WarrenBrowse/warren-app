@@ -23,7 +23,7 @@ use crate::device::WarrenApiConfig;
 /// set …`.
 ///
 /// This is the canonical Warren backend over TLS, baked into the
-/// release binary — it is **not** a MITM vector (an attacker cannot
+/// release binary - it is **not** a MITM vector (an attacker cannot
 /// substitute it without rebuilding the binary, and TLS authenticates
 /// the host). Defaulting here is strictly safer than the historical
 /// "no default → fall back to `api.mullvad.net`" behaviour, which
@@ -48,7 +48,7 @@ pub(crate) fn resolve(
     signing_key: Option<Arc<RwLock<SigningKey>>>,
 ) -> Option<WarrenApiConfig> {
     // First non-empty of [env, settings], else the compiled prod
-    // default — so remote mode never silently falls back to the
+    // default - so remote mode never silently falls back to the
     // Mullvad upstream API just because no URL was configured.
     let url = [env_url, settings_url]
         .into_iter()

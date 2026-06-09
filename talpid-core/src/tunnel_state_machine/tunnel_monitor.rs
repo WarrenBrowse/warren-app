@@ -38,7 +38,7 @@ impl From<Error> for ErrorStateCause {
     fn from(error: Error) -> ErrorStateCause {
         match error {
             Error::EnableIpv6 => ErrorStateCause::Ipv6Unavailable,
-            // A Warren *business* rejection — the exit refused the
+            // A Warren *business* rejection - the exit refused the
             // handshake for a reason the user can act on (no active
             // subscription, device limit reached, account suspended, …).
             // It is non-retryable and carries a user-facing message;

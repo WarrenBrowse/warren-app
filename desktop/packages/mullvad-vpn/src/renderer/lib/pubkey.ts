@@ -44,7 +44,7 @@ export function shortenWarrenPubKey(pubkey: string): string {
  * the shortened `head…tail` form via {@link shortenWarrenPubKey}.
  *
  * Kept under this name because it is the widely-imported display
- * helper across the renderer. It no longer chunks a hex string — the
+ * helper across the renderer. It no longer chunks a hex string - the
  * pubkey is now a single SS58 token.
  */
 export function formatWarrenPubKey(pubkey: string): string {

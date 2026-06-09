@@ -86,7 +86,7 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
         Err(e) => {
             log::warn!(
                 "Warren auth disabled: persisted mnemonic failed BIP39 validation \
-                 ({e}) — backend={}",
+                 ({e}) - backend={}",
                 storage.backend_name()
             );
             None
@@ -136,7 +136,7 @@ fn migrate_legacy_mnemonic(storage: &dyn SecretStorage, settings_dir: &Path) {
     let trimmed = legacy_contents.trim();
     if let Err(e) = storage.store(MNEMONIC_KEY, trimmed.as_bytes()) {
         log::error!(
-            "migration of legacy mnemonic to {} failed: {e} — keeping \
+            "migration of legacy mnemonic to {} failed: {e} - keeping \
              legacy file as the only persistent copy",
             storage.backend_name()
         );
@@ -172,7 +172,7 @@ fn load_or_create_mnemonic_via_storage(
             Err(e) => {
                 log::warn!(
                     "Warren auth disabled: secret storage returned non-UTF8 mnemonic \
-                     ({e}) — backend={}",
+                     ({e}) - backend={}",
                     storage.backend_name()
                 );
                 None
@@ -181,7 +181,7 @@ fn load_or_create_mnemonic_via_storage(
         Ok(None) => bootstrap_fresh_mnemonic(storage, settings_dir),
         Err(e) => {
             log::warn!(
-                "Warren auth disabled: secret storage read failed ({e}) — backend={}",
+                "Warren auth disabled: secret storage read failed ({e}) - backend={}",
                 storage.backend_name()
             );
             None
@@ -195,7 +195,7 @@ fn load_or_create_mnemonic_via_storage(
 ///
 /// This deliberately bypasses `warren_identity::load_or_create_mnemonic`
 /// because that helper unconditionally writes to its `path` argument
-/// — which would mean creating a plaintext copy at the legacy path
+/// - which would mean creating a plaintext copy at the legacy path
 /// every first launch, even on macOS / Windows where the active
 /// backend stores in the System Keychain / DPAPI. Time Machine or
 /// Windows Shadow Copy could snapshot that file during the brief
@@ -208,7 +208,7 @@ fn load_or_create_mnemonic_via_storage(
 /// feature on `bip39`. The `to_string()` allocation is wrapped in
 /// `Zeroizing<String>` immediately so the heap buffer is wiped on
 /// scope exit. If the storage write fails, we surface the failure
-/// and refuse to fall back to a plaintext legacy file — better to
+/// and refuse to fall back to a plaintext legacy file - better to
 /// disable Warren auth this boot than silently regress the security
 /// posture.
 fn bootstrap_fresh_mnemonic(
@@ -222,7 +222,7 @@ fn bootstrap_fresh_mnemonic(
     if let Err(e) = storage.store(MNEMONIC_KEY, raw_mnemonic.as_bytes()) {
         log::warn!(
             "Warren auth disabled: secret storage write failed at bootstrap \
-             ({e}) — backend={}. Refusing to fall back to a plaintext legacy \
+             ({e}) - backend={}. Refusing to fall back to a plaintext legacy \
              file; the daemon will retry on next boot.",
             storage.backend_name()
         );
@@ -256,7 +256,7 @@ fn bootstrap_fresh_mnemonic(
 /// NEVER log `mnemonic`. Only log the fact that a write
 /// succeeded/failed (= audit trail) and the backend name.
 pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()> {
-    // Step 1 — BIP39 validation BEFORE any write.
+    // Step 1 - BIP39 validation BEFORE any write.
     warren_identity::seed_from_mnemonic(mnemonic).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -264,11 +264,11 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
         )
     })?;
 
-    // Step 2 — persist via the active backend.
+    // Step 2 - persist via the active backend.
     let storage = get_storage(settings_dir);
     storage.store(MNEMONIC_KEY, mnemonic.trim().as_bytes())?;
 
-    // Step 3 — clean up any leftover legacy file so we never have
+    // Step 3 - clean up any leftover legacy file so we never have
     // two persistent copies after a successful overwrite.
     let legacy_path = settings_dir.join(MNEMONIC_FILENAME);
     if legacy_path.exists()
@@ -356,7 +356,7 @@ pub fn generate_and_store_mnemonic(settings_dir: &Path) -> io::Result<Zeroizing<
 ///    longer lingers in process memory.
 /// 2. Any signed request that happens to fire while logged out (e.g. a
 ///    background relay-list refresh) is signed by the sentinel key, not
-///    the user's real (now-erased) identity — the server rejects it
+///    the user's real (now-erased) identity - the server rejects it
 ///    rather than the daemon authenticating as the deleted account.
 ///
 /// Pairs with [`clear_warren_mnemonic`] in the GUI logout path.
@@ -733,7 +733,7 @@ mod tests {
 
         // Legacy file should be gone after migration (and we ignore
         // failure on platforms where it cannot be removed for some
-        // reason — the data is now in the storage backend either way).
+        // reason - the data is now in the storage backend either way).
         assert!(
             !legacy_path.exists(),
             "legacy mnemonic file must be removed after successful migration"

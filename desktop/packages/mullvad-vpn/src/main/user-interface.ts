@@ -383,7 +383,7 @@ export default class UserInterface implements WindowControllerDelegate {
       // active subscription yet) or on transient network failures.
       // The retry loop is owned by `account-data-cache` and we do not
       // want each focus event to surface an `UnhandledPromiseRejectionWarning`
-      // in the daemon log — log at debug level and move on.
+      // in the daemon log - log at debug level and move on.
       this.delegate.updateAccountData().catch((error) => {
         log.debug(`updateAccountData on focus failed: ${error}`);
       });

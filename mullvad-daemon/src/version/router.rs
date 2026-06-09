@@ -225,7 +225,7 @@ pub(crate) fn spawn_version_router(
 
     tokio::spawn(async move {
         // The sender is kept alive (never used) so `new_version_rx` stays
-        // open but permanently empty — Warren never emits Mullvad version
+        // open but permanently empty - Warren never emits Mullvad version
         // events.
         let (_new_version_tx, new_version_rx) = mpsc::unbounded();
         let (refresh_version_check_tx, refresh_version_check_rx) = mpsc::unbounded();
@@ -641,7 +641,7 @@ fn recommended_version_upgrade(
 }
 
 /// Verifies that the version router behaves correctly (empty new_version
-/// channel, no Mullvad API contact) — the Mullvad version updater is never
+/// channel, no Mullvad API contact) - the Mullvad version updater is never
 /// spawned on the Warren fork.
 #[cfg(all(test, not(in_app_upgrade)))]
 mod no_updater_tests {
@@ -652,7 +652,7 @@ mod no_updater_tests {
 
     use super::{Message, State, VersionRouter};
 
-    /// Regression: no version event should be sent to the daemon on startup —
+    /// Regression: no version event should be sent to the daemon on startup -
     /// the `new_version_rx` channel is permanently empty because no version
     /// updater is ever spawned.
     ///
@@ -686,7 +686,7 @@ mod no_updater_tests {
             _phantom: std::marker::PhantomData::<()>,
         };
 
-        // Drop the daemon side — this closes the daemon_rx channel, causing router.run()
+        // Drop the daemon side - this closes the daemon_rx channel, causing router.run()
         // to terminate immediately via the `else => ControlFlow::Break(())` branch.
         drop(daemon_tx);
         router.run().await;

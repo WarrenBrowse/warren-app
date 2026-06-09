@@ -142,7 +142,7 @@ export default class AccountDataCache {
 
   private handleFetchError(pubkey: WarrenPubKey, error: AccountDataError['error']) {
     // Warren-specific: a 404 from warren-api (mapped here as
-    // 'no-subscription') is not a transient failure — it is a
+    // 'no-subscription') is not a transient failure - it is a
     // semantic "the current pubkey has no active subscription yet"
     // state. Synthesize an epoch-past expiry so the renderer sees
     // the account as expired (Redux `expiredState: 'expired'`),
@@ -154,7 +154,7 @@ export default class AccountDataCache {
     //
     // We still kick off the retry loop so the UI flips to "active"
     // the moment the user purchases a plan. `setValue` resolves any
-    // pending watchers as `onFinish` (the data IS available — just
+    // pending watchers as `onFinish` (the data IS available - just
     // expired) and sets a 10 s cache validity window for `fetch()`
     // callers; the retry loop drives background polling beyond
     // that.
@@ -174,9 +174,9 @@ export default class AccountDataCache {
     this.waitStrategy.increase();
     const delay = this.waitStrategy.delay();
 
-    // Both `'communication'` (gRPC Unknown — could be the 404
+    // Both `'communication'` (gRPC Unknown - could be the 404
     // pre-fix, transient network, or an undecoded API error) and
-    // `'no-subscription'` (gRPC NOT_FOUND — the explicit 404 path
+    // `'no-subscription'` (gRPC NOT_FOUND - the explicit 404 path
     // post-fix) are expected steady states for a freshly
     // bootstrapped Warren identity until the user purchases a plan.
     // The retry loop is essential (so the UI updates the moment a
@@ -187,7 +187,7 @@ export default class AccountDataCache {
     if (error === 'communication') {
       log.debug(`Account data fetch: retrying in ${delay} ms (no subscription yet?)`);
     } else if (error === 'no-subscription') {
-      log.debug(`Account data fetch: 404 — no active subscription, retrying in ${delay} ms`);
+      log.debug(`Account data fetch: 404 - no active subscription, retrying in ${delay} ms`);
     } else {
       log.warn(`Failed to fetch account data (${error}). Retrying in ${delay} ms`);
     }

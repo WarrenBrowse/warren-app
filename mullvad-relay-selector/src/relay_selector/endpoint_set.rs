@@ -156,7 +156,7 @@ impl RelayEndpointSet {
         }: &EntrySpecificConstraints,
     ) -> Verdict {
         match obfuscation {
-            // Constraint::Any means "auto" — we can always fallback to routing traffic through the plain WireGuard endpoint.
+            // Constraint::Any means "auto" - we can always fallback to routing traffic through the plain WireGuard endpoint.
             Constraint::Any | Constraint::Only(ObfuscationMode::Off) => self
                 .wireguard
                 .supports_ip_version(*ip_version)
@@ -463,7 +463,7 @@ impl ShadowsocksEndpoints {
         };
 
         // If the WG path rejects but dedicated addrs exist, they must be the wrong IP family
-        // (has_dedicated_addr was checked above) — switching IP version is the most
+        // (has_dedicated_addr was checked above) - switching IP version is the most
         // actionable fix, so override the WG rejection reasons. Note: it's possible the WG
         // path could be unblocked by a port change too, but the reject-reasons model doesn't
         // let us express "either of these would work".

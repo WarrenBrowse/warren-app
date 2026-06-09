@@ -84,7 +84,7 @@ final class RelayCacheTests: XCTestCase {
         XCTAssertNotNil(json["future_feature"], "Unknown field should survive the round-trip")
 
         // On main, the Codable encoding of StoredRelays included a redundant `relays` key.
-        // Verify it is NOT present — only etag, rawData, and updatedAt should be encoded.
+        // Verify it is NOT present - only etag, rawData, and updatedAt should be encoded.
         let diskData = try Data(contentsOf: tempDir.appendingPathComponent("relays.json"))
         let diskJson = try JSONSerialization.jsonObject(with: diskData) as! [String: Any]
         XCTAssertNil(diskJson["relays"], "StoredRelays should not encode a redundant 'relays' key")

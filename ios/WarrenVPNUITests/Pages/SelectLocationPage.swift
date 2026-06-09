@@ -42,7 +42,7 @@ class SelectLocationPage: Page {
         // it works on any device size.
         let chevronCenter = 1.0 - (28.0 / cell.frame.width)
 
-        // Retry the tap if the cell didn't expand — the first tap after a scroll
+        // Retry the tap if the cell didn't expand - the first tap after a scroll
         // can be absorbed by scroll deceleration.
         for _ in 0..<3 {
             cell.coordinate(withNormalizedOffset: CGVector(dx: chevronCenter, dy: 0.5)).tap()

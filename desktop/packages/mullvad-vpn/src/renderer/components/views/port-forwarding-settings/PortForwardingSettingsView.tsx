@@ -30,7 +30,7 @@ import { HeaderTitle } from '../../SettingsHeader';
 export function PortForwardingSettingsView() {
   const { pop } = useHistory();
   // Advanced controls (protocol, preferred port) only matter when the
-  // feature is enabled — keeps the screen visually quiet when the
+  // feature is enabled - keeps the screen visually quiet when the
   // user just landed and has the toggle off. Mirrors the
   // WarrenMultiHopSettingsView pattern (country pickers only appear
   // when multi-hop is enabled).

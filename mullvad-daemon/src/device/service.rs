@@ -229,14 +229,14 @@ fn handle_account_data_result(
         }
         Err(mullvad_api::rest::Error::ApiError(status, code)) => {
             // HTTP 404 from warren-api means "no subscription found for this pubkey".
-            // This is NOT a transient network error — retrying forever would produce
+            // This is NOT a transient network error - retrying forever would produce
             // an infinite loop before the user redeems a voucher.  Treat it the same
             // way as INVALID_ACCOUNT: pause background activity and report "settled"
             // (= stop the retry loop) so the caller can surface the state to the UI.
             if *status == rest::StatusCode::NOT_FOUND {
                 log::info!(
                     "handle_account_data_result: 404 from warren-api \
-                     (no subscription yet) — pausing background, stopping retry loop"
+                     (no subscription yet) - pausing background, stopping retry loop"
                 );
                 api_availability.pause_background();
                 return true;
@@ -314,7 +314,7 @@ mod tests {
     /// After a 404, background API calls must be paused so the daemon
     /// does not keep making requests while the user has no subscription.
     /// We verify "paused" by asserting that `wait_background()` does NOT
-    /// resolve within 50 ms — if it did, background would be un-paused.
+    /// resolve within 50 ms - if it did, background would be un-paused.
     #[tokio::test]
     async fn handle_account_data_result_404_pauses_background() {
         let api_availability = online_availability();
@@ -341,7 +341,7 @@ mod tests {
     }
 
     /// A transient network error (= `rest::Error::Aborted`) must NOT
-    /// stop the retry loop — the daemon should keep retrying until the
+    /// stop the retry loop - the daemon should keep retrying until the
     /// network is back. This is the pre-existing contract; the G-2 fix
     /// must not regress it.
     #[tokio::test]
@@ -359,7 +359,7 @@ mod tests {
     }
 
     /// INVALID_ACCOUNT (symbolic string code) must still stop the retry
-    /// loop as before — this is the pre-existing behavior and must not
+    /// loop as before - this is the pre-existing behavior and must not
     /// be broken by the G-2 change.
     #[tokio::test]
     async fn handle_account_data_result_invalid_account_stops_retry_loop() {

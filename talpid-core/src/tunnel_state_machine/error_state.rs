@@ -78,10 +78,10 @@ impl ErrorState {
         shared_values: &mut SharedTunnelStateValues,
     ) -> Result<(), FirewallPolicyError> {
         // Only block all traffic if lockdown mode (kill switch) is active.
-        // When lockdown is OFF, the user opted out of leak protection — don't
+        // When lockdown is OFF, the user opted out of leak protection - don't
         // cut their internet on transient errors (missing relays, offline, etc.).
         if !shared_values.lockdown_mode.bool() {
-            log::info!("Error state with lockdown OFF — resetting firewall (traffic allowed)");
+            log::info!("Error state with lockdown OFF - resetting firewall (traffic allowed)");
 
             #[cfg(target_os = "linux")]
             shared_values.disable_connectivity_check();

@@ -15,7 +15,7 @@
 //!   to another machine will not decrypt without also extracting
 //!   the source machine's DPAPI master key (offline attack
 //!   requires `\SYSTEM` registry hive + boot key).
-//! - Windows Backup excludes DPAPI master keys by default — a
+//! - Windows Backup excludes DPAPI master keys by default - a
 //!   user-level backup that grabs the ciphertext blob cannot
 //!   decrypt it on a restore to a different machine.
 //!
@@ -23,7 +23,7 @@
 //!
 //! - A SYSTEM-context process on the same machine. DPAPI machine
 //!   scope is by design accessible to any admin/SYSTEM caller.
-//!   We are not pretending otherwise — this layer is purely
+//!   We are not pretending otherwise - this layer is purely
 //!   defense-in-depth against offline disk theft and naive
 //!   backup leak.
 //!
@@ -58,7 +58,7 @@ const SECRETS_SUBDIR: &str = "secrets";
 const DPAPI_EXTENSION: &str = "dpapi";
 
 /// Optional `entropy` passed to `CryptProtectData`. Tied to the
-/// fixed string `"net.warrenvpn.daemon.identity"` — a second factor
+/// fixed string `"net.warrenvpn.daemon.identity"` - a second factor
 /// that prevents another SYSTEM-context process from trivially
 /// decrypting our blob unless they also know this constant. It is
 /// **not** a secret (the binary is distributed), but it makes
@@ -85,7 +85,7 @@ impl WindowsDpapiStorage {
         if plaintext.as_slice() != probe {
             return Err(io::Error::other(
                 "DPAPI round-trip probe returned a different value than the input \
-                 — refusing to use a broken DPAPI subsystem",
+                 - refusing to use a broken DPAPI subsystem",
             ));
         }
         Ok(Self {
@@ -121,7 +121,7 @@ impl SecretStorage for WindowsDpapiStorage {
 
         // Atomic write: tempfile + rename, same pattern as
         // `plaintext` storage. We do not zeroize the plaintext
-        // `value` here — the caller owns its lifecycle and is
+        // `value` here - the caller owns its lifecycle and is
         // expected to wrap secrets in `Zeroizing` upstream.
         let parent = final_path
             .parent()

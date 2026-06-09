@@ -29,7 +29,7 @@ public protocol FileCacheProtocol<Content> {
 /// A separate lock file (`.lock` extension) is used as the locking point so that atomic renames
 /// don't invalidate held locks.
 ///
-/// Multiple `FileCache` instances backed by the same file are safe — they all coordinate through the
+/// Multiple `FileCache` instances backed by the same file are safe - they all coordinate through the
 /// same lock file.
 public final class FileCache<Content: Codable>: FileCacheProtocol, @unchecked Sendable {
     public let fileURL: URL

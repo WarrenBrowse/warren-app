@@ -86,7 +86,7 @@ impl NatPmpManager {
     /// `bind_addr`. Required on Android (and any host whose default
     /// route bypasses the tunnel) so the NAT-PMP request egresses
     /// through the tunnel rather than the underlying mobile-data /
-    /// Wi-Fi interface — otherwise the exit's NAT-PMP server never
+    /// Wi-Fi interface - otherwise the exit's NAT-PMP server never
     /// sees the request. Pass the assigned tunnel inner IPv4 (typ.
     /// `10.66.0.x` after the IP allocator's IpAssign frame).
     #[must_use = "the returned manager owns the spawned tasks; drop discards control"]
@@ -148,7 +148,7 @@ impl NatPmpManager {
     /// 1. Release the current mapping via
     ///    [`RefreshLoopHandle::release`] (sends a `lifetime = 0` Map
     ///    so the exit's per-client quota slot is freed before the
-    ///    new allocation arrives — otherwise the new request hits
+    ///    new allocation arrives - otherwise the new request hits
     ///    `QuotaExceeded` and fails until the old lease GCs at
     ///    expiry, ~1 h).
     /// 2. Abort the forwarder task. The release step already
@@ -163,7 +163,7 @@ impl NatPmpManager {
     /// The observer will receive a fresh `Mapped` event for the new
     /// allocation, which the UI surfaces as the new public port. No
     /// `Cancelled` is propagated to the observer for the *old* loop
-    /// — the daemon's UI state model treats the live-swap as "the
+    /// - the daemon's UI state model treats the live-swap as "the
     /// mapping moved to new params" rather than "the mapping
     /// disappeared and reappeared".
     pub async fn reconfigure(&mut self, new_config: &NatPmpConfig) {
@@ -172,7 +172,7 @@ impl NatPmpManager {
         // the old loop to the observer. If we released first, the
         // refresh loop would emit `Cancelled` on the event channel,
         // the forwarder would still be alive, and the observer
-        // would briefly see `disabled` between reconfigures —
+        // would briefly see `disabled` between reconfigures -
         // visible in the UI as a status flicker (and as a
         // brief 'disabled' write to the daemon-side
         // WarrenStatusCache).
@@ -183,7 +183,7 @@ impl NatPmpManager {
         // calls `cancel()` internally (the loop's Cancelled `send`
         // now fails silently because the forwarder is gone, which
         // is fine) and then sends a `lifetime = 0` Map so the
-        // exit's per-client quota slot frees up immediately —
+        // exit's per-client quota slot frees up immediately -
         // without this, the next allocation hits `QuotaExceeded`
         // and is refused until the old lease GCs (~1 h).
         if let Some(mut handle) = self.refresh_handle.take() {
@@ -217,12 +217,12 @@ impl NatPmpManager {
     /// exit so the per-client quota slot frees immediately, then
     /// cancels the refresh loop and aborts the forwarder. Use this
     /// (instead of [`cancel`] or `drop`) when the caller wants the
-    /// exit to free the slot before the natural lease expiry —
+    /// exit to free the slot before the natural lease expiry -
     /// typically the live-reconfig controller path when the user
     /// disables port forwarding.
     ///
     /// Idempotent: a second call (or a call after `cancel`) is a
-    /// no-op-ish — the lifetime=0 Map still fires but the exit
+    /// no-op-ish - the lifetime=0 Map still fires but the exit
     /// silently ignores requests for unknown mappings, and the
     /// internal Option<…> fields are taken to None on first call so
     /// later cancels do nothing.
@@ -230,7 +230,7 @@ impl NatPmpManager {
         // Order mirrors `reconfigure`: forwarder first so the
         // refresh-loop's `Cancelled` event from `release()` does not
         // propagate to the observer (which would briefly flip the
-        // UI to "disabled" — fine here because the next thing the
+        // UI to "disabled" - fine here because the next thing the
         // controller does on `Disable` is set the cache to
         // Disabled anyway, but we still keep the order consistent
         // for predictability).
@@ -442,7 +442,7 @@ mod tests {
     }
 
     /// Stub that replies with a configurable external port determined
-    /// by the request's lifetime — lets the test infer which Map
+    /// by the request's lifetime - lets the test infer which Map
     /// request the response is for by reading the granted port back.
     /// Used by the reconfigure tests to assert that the new mapping
     /// kicks in (different port emitted by the stub after reconfigure).

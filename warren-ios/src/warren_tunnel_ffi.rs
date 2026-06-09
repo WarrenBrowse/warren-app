@@ -126,7 +126,7 @@ pub struct WarrenTunnelStatusC {
 )]
 pub enum WarrenTunnelEventTagC {
     // Prefix `Event` to disambiguate from `WarrenTunnelStateC`
-    // enumerators (C doesn't scope enum names — `Connected` would
+    // enumerators (C doesn't scope enum names - `Connected` would
     // collide otherwise). Swift bridges via the imported C constants.
     EventConnected = 0,
     EventDisconnected = 1,
@@ -443,7 +443,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // DAITA: the client only signals the REQUEST; the exit picks the
         // Maybenot machine and returns it in SetupAck. The spec content
         // passed from Swift is irrelevant to the client (mirrors the Android
-        // warren-jni path) — only its presence toggles the request.
+        // warren-jni path) - only its presence toggles the request.
         let daita_requested = !params.daita_spec.is_null();
         let _ = params.nat_pmp_enabled;
         let _ = params.bypass_cidrs;
@@ -878,7 +878,7 @@ unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
 ///
 /// The three-step pattern (`from_raw` → `clone` → `into_raw`) is the
 /// canonical safe way to borrow an `Arc` through a raw pointer:
-/// 1. `Arc::from_raw` reinterprets the pointer as a live `Arc` — this does
+/// 1. `Arc::from_raw` reinterprets the pointer as a live `Arc` - this does
 ///    NOT decrement the ref-count on its own.
 /// 2. `Arc::clone` bumps the ref-count, producing an independent owned copy.
 /// 3. `Arc::into_raw` converts the original back to a raw pointer, keeping the
@@ -896,7 +896,7 @@ unsafe fn cstr_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
 /// `handle` must be null or point to a `Box<Arc<WarrenTunnelHandleImpl>>` that
 /// was produced by [`warren_tunnel_start`].  The pointer itself must be valid
 /// for a non-atomic read at the time of this call (i.e. the `Box` has not yet
-/// been freed — `warren_tunnel_stop` has not been called).
+/// been freed - `warren_tunnel_stop` has not been called).
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 unsafe fn clone_arc_from_raw(
     handle: *mut WarrenTunnelHandle,
@@ -907,7 +907,7 @@ unsafe fn clone_arc_from_raw(
     // SAFETY: caller guarantees `handle` came from `warren_tunnel_start` and
     // is still live. The handle is a `Box<Arc<T>>` raw pointer, so we read
     // through it to reach the inner Arc and clone it (atomic ref-count bump).
-    // The Box allocation itself is untouched — only `warren_tunnel_stop`
+    // The Box allocation itself is untouched - only `warren_tunnel_stop`
     // reconstitutes it via `Box::from_raw`.
     let box_ptr = handle as *const std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>;
     let cloned = unsafe { (*box_ptr).clone() };

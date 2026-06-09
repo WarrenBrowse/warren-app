@@ -112,7 +112,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // it via the same `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
         // attribute. WarrenWallet.fromMnemonic derives the seed in
         // ~milliseconds (BIP39 → HKDF-SHA256 → Ed25519). Failure
-        // here means the wallet was never provisioned — the actor's
+        // here means the wallet was never provisioned - the actor's
         // `start(options:)` will log + bail out cleanly.
         do {
             let mnemonic = try WarrenWalletKeychain.load()

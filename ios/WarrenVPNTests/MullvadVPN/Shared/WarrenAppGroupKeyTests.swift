@@ -48,7 +48,7 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         }
     }
 
-    /// The exact raw value strings — pinning prevents silent renames.
+    /// The exact raw value strings - pinning prevents silent renames.
     /// If a key needs to be renamed, update this test AND every
     /// producer/consumer in lock-step.
     func test_rawValues_exactStrings() {

@@ -40,7 +40,7 @@ fn product_name_does_not_collide_with_mullvad_upstream() {
     );
     assert!(
         name.to_lowercase().contains("warren"),
-        "PRODUCT_NAME='{name}' does not identify Warren — \
+        "PRODUCT_NAME='{name}' does not identify Warren - \
          should contain 'warren' for ops traceability"
     );
 }
@@ -55,7 +55,7 @@ fn settings_dir_path_isolates_from_mullvad_upstream() {
     );
     assert!(
         path_contains_warren(&path),
-        "settings_dir={} does not contain 'warren' — Warren namespacing broken",
+        "settings_dir={} does not contain 'warren' - Warren namespacing broken",
         path.display()
     );
 }

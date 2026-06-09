@@ -38,7 +38,7 @@ export function AccountView() {
   // or on transient communication failures. Without a `.catch()`,
   // the Promise rejection bubbles up as an unhandled rejection and
   // can interact badly with React error boundaries on some
-  // platforms — silent render failures, blank-screen navigations
+  // platforms - silent render failures, blank-screen navigations
   // and similar UX bugs were traced back to this missing handler.
   // The retry strategy is owned upstream by `account-data-cache`,
   // so swallowing the failure here is safe.

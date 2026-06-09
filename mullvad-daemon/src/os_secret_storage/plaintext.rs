@@ -8,7 +8,7 @@
 //! initialize at startup.
 //!
 //! The implementation purposefully avoids any custom "obfuscation
-//! pretending to be encryption" — that pattern is exactly the
+//! pretending to be encryption" - that pattern is exactly the
 //! Signal Desktop BasicTextEncryption fiasco of 2024 (locally
 //! readable key shipped with the binary). When this backend is in
 //! use, we surface `is_plaintext() == true` so the boot path can log
@@ -49,7 +49,7 @@ impl PlaintextStorage {
         // The `key` namespace is internal to `mullvad-daemon` and
         // every current caller uses hard-coded identifiers like
         // `"warren_mnemonic"`. We still validate at runtime as a
-        // defense-in-depth measure — `debug_assert!` would compile
+        // defense-in-depth measure - `debug_assert!` would compile
         // out in release builds and the trait being `pub` makes
         // future misuse possible.
         if !super::is_valid_storage_key(key) {

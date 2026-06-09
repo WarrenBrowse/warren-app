@@ -83,7 +83,7 @@ export interface IUpdateNatPmpStatusAction {
   natPmpStatus: NatPmpStatus;
   // Wall-clock instant (ms) the snapshot arrived from the daemon. The
   // exit's rate-limit `windowResetSecs` / `retryAfterSecs` are relative
-  // to this moment, so the UI countdown must anchor to it — NOT to a
+  // to this moment, so the UI countdown must anchor to it - NOT to a
   // component mount time. Otherwise a stale snapshot (no new event for
   // ~30 min between renewals) re-starts a fresh countdown on every
   // navigation, making the warning flicker and persist long after the

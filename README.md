@@ -174,8 +174,14 @@ upstream weekly.
 * `TALPID_NET_CLS_MOUNT_DIR` — Linux : force le mount point du controller `net_cls` (cgroup v1
   legacy split tunneling).
 
-* `MULLVAD_MANAGEMENT_SOCKET_GROUP` — Linux/macOS : restreint l'accès au socket UDS de management à
-  un groupe Unix donné (= seul ce groupe peut piloter CLI/GUI). Par défaut, accessible à tous.
+* `WARREN_MANAGEMENT_SOCKET_GROUP` (alias hérité : `MULLVAD_MANAGEMENT_SOCKET_GROUP`) — Linux/macOS :
+  restreint l'accès au socket UDS de management à un groupe Unix donné (= seul root et ce groupe
+  peuvent piloter CLI/GUI et lire la phrase mnémonique du wallet). Si la variable est définie mais
+  que le groupe n'existe pas, le daemon refuse de démarrer le socket (fail-closed). Si elle n'est
+  pas définie, le daemon utilise le groupe `warren` (créé par l'installeur). En l'absence de ce
+  groupe, le socket retombe en accès global (`0o766`) avec un avertissement : dans ce mode, les RPC
+  wallet/secrets sont restreints au premier uid local qui s'y connecte (trust-on-first-use). Pour la
+  sûreté multi-utilisateurs, créez le groupe `warren` et ajoutez-y votre utilisateur de bureau.
 
 * `MULLVAD_BACKTRACE_ON_FAULT` — Sur SIGSEGV etc., log un backtrace dans `daemon.log`. Activé par
   défaut en debug-build, désactivé en release-build. Allocation depuis le signal handler =

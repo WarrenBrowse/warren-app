@@ -36,7 +36,7 @@ public struct WarrenAboutView: View {
 
                 Text(
                     String(
-                        localized: "Warren is a wallet-authenticated, censorship-resistant VPN. Your account is a 12-word phrase you alone control — no email, no payment processor account, no centralised identity.",
+                        localized: "Warren is a wallet-authenticated, censorship-resistant VPN. Your account is a 12-word phrase you alone control - no email, no payment processor account, no centralised identity.",
                         table: "Settings",
                         comment: "Body explaining Warren's differentiator"
                     )

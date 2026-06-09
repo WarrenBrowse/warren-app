@@ -102,7 +102,7 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         nat_pmp_observer: None,
-        // Live-reconfig channel: same logic — wired by the caller
+        // Live-reconfig channel: same logic - wired by the caller
         // after assembly so the assembler stays oblivious to runtime
         // signalling concerns. `None` here keeps the legacy
         // "params at start" behaviour for callers that don't opt

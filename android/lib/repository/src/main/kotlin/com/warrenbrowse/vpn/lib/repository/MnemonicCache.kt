@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
  *   1. **Connect flow** (UI -> [WarrenVpnService]): the connect use
  *      case unlocks the wallet, stashes the mnemonic, dispatches the
  *      VPN-service-start intent, and the service consumes the slot
- *      inside `onStartCommand`. The intent itself carries no secret —
+ *      inside `onStartCommand`. The intent itself carries no secret -
  *      Intent extras are visible to anyone with the right permission
  *      and can leak through verbose system logging.
  *   2. **Wallet onboarding** (login feature -> backup screen): the
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference
  *      backup screen consumes the slot at first composition. Audit
  *      follow-up: the previous design passed the phrase by value
  *      through the NavKey, which Compose Navigation persists in the
- *      saved-state Bundle — defeating the [Mnemonic] zero-on-close
+ *      saved-state Bundle - defeating the [Mnemonic] zero-on-close
  *      lifecycle.
  *
  * Both flows are sequential (the user cannot tap Connect while on

@@ -581,8 +581,8 @@ export default class AppRenderer {
 
   // Mints a fresh Warren identity in the daemon (generates a new BIP39
   // mnemonic, hot-swaps the signer, and logs in). The daemon emits a
-  // `logged in` device event which — because `loginState` is
-  // `creating account` — transitions the GUI to the `backup-pending`
+  // `logged in` device event which - because `loginState` is
+  // `creating account` - transitions the GUI to the `backup-pending`
   // state instead of completing the login, so the welcome screen can
   // run its mandatory recovery-phrase backup step before proceeding.
   public createNewAccount = async () => {

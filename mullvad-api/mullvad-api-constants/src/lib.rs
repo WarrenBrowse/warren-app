@@ -15,7 +15,7 @@ pub const API_HOST_DEFAULT: &str = "api.warrenbrowse.com";
 pub const API_IP_DEFAULT: IpAddr = IpAddr::V4(Ipv4Addr::UNSPECIFIED);
 pub const API_PORT_DEFAULT: u16 = 443;
 
-/// Optional **pinned** IP for the API host — the single switch for the
+/// Optional **pinned** IP for the API host - the single switch for the
 /// bootstrap-privacy hardening (parity with upstream Mullvad).
 ///
 /// When `Some(ip)`:

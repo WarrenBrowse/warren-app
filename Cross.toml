@@ -1,4 +1,4 @@
-# Cross config — edge image (GCC 11+, cmake, clang, lld) required by
+# Cross config - edge image (GCC 11+, cmake, clang, lld) required by
 # aws-lc-sys (dependency of the QUIC/TLS stack via tls-aws-lc-rs).
 # Mirror of /Users/poka/dev/warrenBros/warren-core/Cross.toml.
 #

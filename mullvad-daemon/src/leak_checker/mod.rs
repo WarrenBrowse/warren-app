@@ -122,7 +122,7 @@ impl Task {
             if !leak_test_applies_to(tunnel.tunnel_type) {
                 // Warren (userspace QUIC): the probe would target the
                 // transport endpoint, which is legitimately reachable on
-                // the physical interface. Skip — leak protection is the
+                // the physical interface. Skip - leak protection is the
                 // firewall kill-switch, not this probe. See
                 // `leak_test_applies_to`.
                 log::debug!(

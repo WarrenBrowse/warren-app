@@ -9,7 +9,7 @@
 //! connection attempt (as `ClientTunnel::with_signing_key` does by
 //! default), the tunnel state machine's reconnect loop would mint a new
 //! lease per attempt. A few failed attempts then exhaust the cap and the
-//! account is locked out of connecting for a full TTL — an *undesired*
+//! account is locked out of connecting for a full TTL - an *undesired*
 //! block that has nothing to do with the user's intent. See the incident
 //! where repeated reconnects produced `handshake failed: device limit
 //! reached for this account`.
@@ -113,7 +113,7 @@ mod tests {
         let second = load_or_create(&path);
         assert_eq!(
             first, second,
-            "a persisted device id must be reused across calls (no per-call randomness) — \
+            "a persisted device id must be reused across calls (no per-call randomness) - \
              this is what stops the reconnect loop from exhausting the device cap"
         );
 

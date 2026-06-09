@@ -15,7 +15,7 @@ export const StyledLabel = styled.span(smallText, {
 // emitted by `warren_api::vouchers::generate_secret`. The renderer
 // configures the input in `RedeemVoucher.tsx` with the Warren
 // alphabet (`[0-9A-HJKM-NP-TV-Z]`), uppercase enforcement, and a
-// strict 16-char raw maxLength — pasting either the dashed display
+// strict 16-char raw maxLength - pasting either the dashed display
 // form or the raw form normalises locally to the same canonical
 // string before submit.
 export const StyledInput = styled(FormattableTextInput)(normalText, {

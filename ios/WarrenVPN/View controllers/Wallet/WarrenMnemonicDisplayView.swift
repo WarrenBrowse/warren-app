@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold for C.5 — UI Swift wallet Ed25519 mnemonic auth.
+//  Scaffold for C.5 - UI Swift wallet Ed25519 mnemonic auth.
 //  SwiftUI 12-word BIP39 mnemonic display with blur+reveal pattern
 //  (no copy button by design: reduces clipboard-malware attack surface).
 //  Used during onboarding wizard Step 2a (Generate new wallet) and in
@@ -34,7 +34,7 @@ public struct WarrenMnemonicDisplayView: View {
 
     /// `true` while the user-screenshot warning alert is presented.
     /// Triggered by `UIApplication.userDidTakeScreenshotNotification`
-    /// when iOS reports a screenshot was just captured — Warren cannot
+    /// when iOS reports a screenshot was just captured - Warren cannot
     /// scrub the screenshot from the Photos library (iOS doesn't
     /// expose that API), but we can immediately re-hide the mnemonic
     /// AND surface a warning that the screenshot leaked.
@@ -88,8 +88,8 @@ public struct WarrenMnemonicDisplayView: View {
         .background(Color.Warren.navy)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
             // Force-hide the mnemonic + surface a strong-language
-            // warning. The screenshot has already been captured —
-            // iOS doesn't expose a way to scrub it from Photos —
+            // warning. The screenshot has already been captured -
+            // iOS doesn't expose a way to scrub it from Photos -
             // but immediate re-hide prevents follow-on screenshots
             // showing a different angle, and the alert tells the user
             // the leak happened so they can rotate the wallet.

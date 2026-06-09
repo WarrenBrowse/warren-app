@@ -104,7 +104,7 @@ impl Warren {
         let mut rpc = MullvadProxyClient::new().await?;
         let mnemonic = rpc.get_warren_mnemonic().await?;
         if mnemonic.is_empty() {
-            println!("No Warren identity has been created yet — nothing to export.");
+            println!("No Warren identity has been created yet - nothing to export.");
             return Ok(());
         }
         println!(
@@ -120,7 +120,7 @@ impl Warren {
         let phrase = normalize_mnemonic_words(words);
         let mut rpc = MullvadProxyClient::new().await?;
         rpc.set_warren_mnemonic(phrase).await?;
-        println!("Warren identity restored — the new identity is now active.");
+        println!("Warren identity restored - the new identity is now active.");
         println!(
             "If it has an active subscription you can connect; otherwise redeem a voucher first."
         );
@@ -137,7 +137,7 @@ mod tests {
         // A user may paste the phrase as one quoted argument with
         // irregular spacing and mixed case. Normalisation must produce
         // the canonical lowercase single-spaced form the BIP39
-        // validator (and the GUI restore path) expect — otherwise a
+        // validator (and the GUI restore path) expect - otherwise a
         // perfectly valid phrase would be rejected.
         let words = vec!["  Abandon   ABILITY ".to_owned(), "able\tABOUT".to_owned()];
         assert_eq!(

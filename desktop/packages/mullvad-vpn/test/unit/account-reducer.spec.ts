@@ -5,7 +5,7 @@ import accountReducer from '../../src/renderer/redux/account/reducers';
 
 const validPubKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
-describe('account reducer — Warren pubkey state shape', () => {
+describe('account reducer - Warren pubkey state shape', () => {
   it('initial state has no pubkey and no pubkey history', () => {
     const state = accountReducer(undefined, { type: 'INIT' } as never);
     expect(state.pubkey).toBeUndefined();

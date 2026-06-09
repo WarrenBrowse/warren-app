@@ -5,14 +5,14 @@
 //! `/Library/Keychains/System.keychain`. The modern Data Protection
 //! Keychain (`SecItemAdd` with default keychain) requires the
 //! `keychain-access-groups` entitlement and a signed app bundle,
-//! neither of which we have for the Warren daemon binary — Apple
+//! neither of which we have for the Warren daemon binary - Apple
 //! still recommends the legacy path for non-bundled daemons (see
 //! Apple Developer Forums thread 657874 + 759976).
 //!
 //! ### What this gives us vs raw `0o600` plaintext
 //!
 //! - `/Library/Keychains/System.keychain` is **excluded from Time
-//!   Machine backups** by default — protects against user-initiated
+//!   Machine backups** by default - protects against user-initiated
 //!   backup leaks.
 //! - Its file is encrypted at rest with a key derived from
 //!   `/var/db/SystemKey`, itself `0o600 root:root`. An attacker who
@@ -27,7 +27,7 @@
 //!   `securityd` returns `errSecWrPerm (-61)` on write attempts.
 //! - The binary should be at minimum ad-hoc signed on Apple
 //!   Silicon (`codesign -s -`), but **no Apple Developer ID nor
-//!   notarization is required** for Keychain access — only for
+//!   notarization is required** for Keychain access - only for
 //!   Gatekeeper distribution UX.
 //!
 //! ### Pitfalls deliberately avoided
@@ -77,7 +77,7 @@ impl MacOsKeychainStorage {
     /// exists and parses; it does not require root because securityd
     /// gates writes, not reads. Without a probe, a non-root daemon
     /// would happily construct the backend then fail with `errSecWrPerm`
-    /// on the first `set_generic_password` — well after the upstream
+    /// on the first `set_generic_password` - well after the upstream
     /// fallback opportunity has passed.
     ///
     /// We therefore do a write+delete round-trip on a sentinel key
@@ -97,18 +97,18 @@ impl MacOsKeychainStorage {
             return Err(io::Error::new(
                 e.kind(),
                 format!(
-                    "System Keychain open probe failed on write ({e}) — \
+                    "System Keychain open probe failed on write ({e}) - \
                      likely missing root privileges"
                 ),
             ));
         }
         if let Err(e) = storage.delete(PROBE_KEY) {
-            // Write succeeded but delete failed — unusual. Keep
+            // Write succeeded but delete failed - unusual. Keep
             // using the backend but log the leftover so an admin
             // can clean it up manually.
             log::warn!(
                 "System Keychain open probe wrote {PROBE_KEY} but failed to delete \
-                 it: {e} — leftover sentinel entry remains in the System Keychain"
+                 it: {e} - leftover sentinel entry remains in the System Keychain"
             );
         }
         Ok(storage)
@@ -145,7 +145,7 @@ impl SecretStorage for MacOsKeychainStorage {
         match self.keychain.find_generic_password(SERVICE_NAME, key) {
             Ok((_password, item)) => {
                 // `SecKeychainItem::delete()` returns `()` (the
-                // underlying FFI panics on error, by design — it
+                // underlying FFI panics on error, by design - it
                 // happens only on programmer error like passing a
                 // dangling pointer). The match arm therefore just
                 // calls it and returns Ok.

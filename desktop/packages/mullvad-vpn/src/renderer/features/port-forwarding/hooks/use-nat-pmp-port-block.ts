@@ -8,7 +8,7 @@ import { usePortForwarding } from './use-port-forwarding';
  * - `rate-limited`: the exit already rate-limited the last change; the
  *   daemon is auto-retrying and the user must wait `remainingSecs`.
  * - `budget-exhausted`: the mapping is active but no rate-limit slots
- *   remain — the *next* change would trigger a ban, so we pre-emptively
+ *   remain - the *next* change would trigger a ban, so we pre-emptively
  *   block until a slot frees (`remainingSecs`).
  * - `last-chance`: exactly one slot remains. Not blocked, but the UI
  *   warns so the user slows down.
@@ -34,7 +34,7 @@ export interface NatPmpPortBlock {
  * retry-after on a rate-limit rejection; this hook turns that into a
  * single ticking countdown the port input and the status readout share,
  * so the UI can warn before a ban and block (with a countdown) during
- * one. The block clears on its own when the countdown reaches 0 — the
+ * one. The block clears on its own when the countdown reaches 0 - the
  * daemon's refresh loop retries automatically and pushes a fresh status.
  */
 export function useNatPmpPortBlock(): NatPmpPortBlock {
@@ -58,7 +58,7 @@ export function useNatPmpPortBlock(): NatPmpPortBlock {
   //     window. Both therefore expire at `arrival + windowResetSecs`.
   //
   // Multi-port: the rate-limit budget is SHARED across all of a client's
-  // mappings (per-source on the exit), so we aggregate across mappings —
+  // mappings (per-source on the exit), so we aggregate across mappings -
   // a single rate-limited mapping blocks every port control, and the
   // budget is the minimum `attemptsRemaining` any mapping reports.
   const anchor = statusReceivedAt ?? Date.now();
@@ -78,7 +78,7 @@ export function useNatPmpPortBlock(): NatPmpPortBlock {
     isBlock = true;
   } else {
     // Otherwise look at the shared budget reported on the mapped entries.
-    // `attemptsRemaining` is undefined on a pre-trailer exit — ignore
+    // `attemptsRemaining` is undefined on a pre-trailer exit - ignore
     // those (cannot reason about budget). Take the most constrained.
     let minAttempts: number | undefined;
     let budgetWindowSecs = 0;
@@ -100,7 +100,7 @@ export function useNatPmpPortBlock(): NatPmpPortBlock {
     }
   }
 
-  // A 0-second window (or a missing anchor) carries no live information —
+  // A 0-second window (or a missing anchor) carries no live information -
   // never start a ticking/blocking state from it.
   const counting = reason !== null && windowSecs > 0;
 
@@ -116,7 +116,7 @@ export function useNatPmpPortBlock(): NatPmpPortBlock {
   const remainingSecs = counting ? Math.max(0, windowSecs - elapsedSecs) : 0;
   // The whole rate-limit state (block AND warning) is live only while the
   // window has time left. Past 0 the exit's budget has recovered at least
-  // one slot; keeping the control disabled — or the warning up — would
+  // one slot; keeping the control disabled - or the warning up - would
   // strand the user (and is exactly the stale-snapshot bug). A fresh event
   // re-arms it with accurate numbers if the user keeps changing ports.
   const active = counting && remainingSecs > 0;

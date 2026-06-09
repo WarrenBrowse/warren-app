@@ -554,25 +554,40 @@ impl TunnelStateMachine {
 
         log::debug!("Tunnel state machine exited");
 
-        // Warren guarantee (all platforms): a stopped daemon must NEVER leave a
-        // persistent blocking firewall behind. Mullvad upstream intentionally
-        // keeps the lockdown / kill-switch block applied after the state machine
-        // exits, so stopping or uninstalling the daemon while in a blocked or
-        // failed-to-connect state bricks connectivity with no recourse. Warren
-        // resets the firewall on graceful shutdown so that "daemon not running"
-        // always implies "traffic allowed", on macOS (pf), Linux (nftables) and
-        // Windows (WFP) alike. Leak protection *while the daemon runs* is
-        // unchanged (disconnected + lockdown still blocks); a hard crash
-        // (SIGKILL) never reaches this path, and the launchd/systemd/SCM
-        // KeepAlive restart resumes firewall management.
+        // Warren guarantee (all platforms): unless the user explicitly opted
+        // into a persistent kill switch, a stopped daemon must NEVER leave a
+        // blocking firewall behind. Mullvad upstream always keeps the lockdown
+        // block applied after the state machine exits, so stopping or
+        // uninstalling the daemon while blocked or failing-to-connect bricks
+        // connectivity with no recourse. Warren resets the firewall on graceful
+        // shutdown so that "daemon not running" implies "traffic allowed", on
+        // macOS (pf), Linux (nftables) and Windows (WFP) alike.
+        //
+        // EXCEPTION (lockdown / "Always require VPN"): when the user enabled a
+        // persistent kill switch, fail-closed is the whole point of the
+        // setting, so honor it across shutdown and keep the block in place
+        // rather than silently leaking. This matches DisconnectedState, which
+        // also keeps the block while lockdown is engaged. Uninstall does not
+        // brick: the package removal scripts reset the firewall out-of-band via
+        // `warren-setup reset-firewall` (see dist-assets before-remove.sh /
+        // uninstall_macos.sh). A hard crash (SIGKILL) never reaches this path,
+        // and the launchd/systemd/SCM KeepAlive restart resumes management.
+        //
         // Plain `Display` (not `ErrorExt::display_chain_with_msg`): the
         // `ErrorExt` trait is only imported under cfg(macos)/cfg(android)
         // in this module, while this block runs on every non-Android
         // platform (incl. Linux/Windows). Using Display keeps it
         // cross-platform with no extra import.
         #[cfg(not(target_os = "android"))]
-        if let Err(error) = self.shared_values.firewall.reset_policy() {
-            log::error!("Failed to reset firewall during shutdown: {error}");
+        {
+            let lockdown = self.shared_values.lockdown_mode;
+            if lockdown.bool() && lockdown.should_persist() {
+                log::info!(
+                    "Persistent lockdown is enabled; leaving the kill-switch firewall in place on shutdown"
+                );
+            } else if let Err(error) = self.shared_values.firewall.reset_policy() {
+                log::error!("Failed to reset firewall during shutdown: {error}");
+            }
         }
 
         #[cfg(target_os = "macos")]

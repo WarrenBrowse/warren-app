@@ -45,7 +45,7 @@ const MAX_ATTEMPT_CREATE_TUN: u32 = 4;
 /// Connected→Down forever. This wall-clock detector is independent of
 /// `retry_attempt`: more than [`FLAP_MAX`] laps within [`FLAP_WINDOW`]
 /// drop into a stable, cancelable `ErrorState` instead (fail-closed: the
-/// kill-switch still blocks, but the churn stops). Self-cleaning — a
+/// kill-switch still blocks, but the churn stops). Self-cleaning - a
 /// stable connection emits no close events, so the window ages out.
 static RECENT_RECONNECTS: LazyLock<Mutex<Vec<Instant>>> =
     LazyLock::new(|| Mutex::new(Vec::new()));
@@ -121,10 +121,10 @@ impl ConnectingState {
 
     /// Warren (QUIC) connecting path.
     ///
-    /// - No `ip_availability` check on the state machine side — the
+    /// - No `ip_availability` check on the state machine side - the
     ///   backend handles its own multi-path resolution (v4/v6) at
     ///   handshake time.
-    /// - No Android `prepare_tun_config` — the Warren backend opens its
+    /// - No Android `prepare_tun_config` - the Warren backend opens its
     ///   own TUN via `args.tun_provider` on the `WarrenTunnelMonitor::start` side.
     ///
     /// The pre-handshake firewall is applied via
