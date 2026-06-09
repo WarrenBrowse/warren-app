@@ -6,9 +6,14 @@
 //! routing primitives differ:
 //!
 //! - **Linux**: dedicated table 100 + `ip rule` priorities + an exit-IP bypass exception. The
-//!   in-crate impl in [`linux`] shells out to `ip` directly (= same recipe as
-//!   `warren_client::default_route_split` upstream, kept inline here because the adapter predates
-//!   the upstream crate split).
+//!   recipe lives once in `warren_client::default_route_split` (table 100, the `0.0.0.0/1` +
+//!   `128.0.0.0/1` halves, exit-IP bypass at pref 50, TUN lookup at pref 51, synchronous `Drop`
+//!   teardown, ownership-scoped crash recovery). The thin [`linux`] wrapper only injects the
+//!   desktop daemon's split-tunnel **fwmark** bypass (`fwmark <TUNNEL_FWMARK> lookup main pref
+//!   49`, so excluded apps egress the physical NIC) via warren-core's `split_tunnel_fwmark`
+//!   parameter. The standalone CLI passes `--bypass-cidr` (a `to <cidr> lookup main pref 49`
+//!   rule) through the same parameter slot instead; both coexist at pref 49 with distinct
+//!   selectors. No part of the recipe is duplicated.
 //! - **macOS**: route-specificity ordering in the global table - `<exit_ip>/32 -interface
 //!   <default_iface>` (host-route exception) then `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>`.
 //!   Implementation re-exported verbatim from `warren_client::default_route_split_macos` so the
@@ -103,10 +108,12 @@ mod v6_stub {
 /// never blackhole egress. Every desktop OS carries a real, idempotent,
 /// privilege-tolerant implementation:
 ///
-/// - **Linux**: `ip rule del` the Warren priorities + flush the dedicated
-///   table 100 (never touches `main`).
-/// - **macOS**: reclaim the registry-tracked host route + the `/1` halves.
-/// - **Windows**: `Remove-NetRoute` the `/1` halves from the ActiveStore.
+/// - **Linux**: read `ip rule show`, delete the `lookup 100` rule and the `/1`
+///   routes inside table 100 by destination (never a blanket flush, never
+///   `main`), sparing any foreign rule/route.
+/// - **macOS**: reclaim the registry-tracked host route + the owned `/1` halves.
+/// - **Windows**: `Remove-NetRoute` the `/1` halves scoped to the Warren
+///   tunnel alias in the ActiveStore.
 ///
 /// This is the recovery backstop on top of each guard's synchronous `Drop`:
 /// it also reclaims a split leaked by a *previous* unclean exit, where no
