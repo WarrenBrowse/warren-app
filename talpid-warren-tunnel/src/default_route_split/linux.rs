@@ -150,6 +150,42 @@ pub fn build_uninstall_commands(exit_ip: Ipv4Addr) -> Vec<Vec<String>> {
     ]
 }
 
+/// Builds the `ip` commands for a blind, exit-IP-agnostic teardown of any
+/// Warren split this process (or a crashed predecessor) left behind. Pure
+/// (= testable). The three rules are deleted by their Warren-owned priorities
+/// (`ip rule del pref N` matches on priority, no selector needed), and the
+/// dedicated table is flushed. We never touch the `main` table, so a stray
+/// invocation cannot harm the physical default route.
+#[must_use]
+pub fn build_force_cleanup_commands() -> Vec<Vec<String>> {
+    vec![
+        vec![
+            "rule".into(),
+            "del".into(),
+            "pref".into(),
+            RULE_PREF_EXCLUDE.to_string(),
+        ],
+        vec![
+            "rule".into(),
+            "del".into(),
+            "pref".into(),
+            RULE_PREF_EXIT_BYPASS.to_string(),
+        ],
+        vec![
+            "rule".into(),
+            "del".into(),
+            "pref".into(),
+            RULE_PREF_TUN.to_string(),
+        ],
+        vec![
+            "route".into(),
+            "flush".into(),
+            "table".into(),
+            ROUTE_TABLE.to_string(),
+        ],
+    ]
+}
+
 /// Minimal TUN name validation (= shell injection protection even
 /// when passing via `Command::new`). 1-15 alphanum chars + `-`/`_`.
 fn validate_tun_name(name: &str) -> Result<()> {
@@ -248,13 +284,61 @@ impl DefaultRouteSplitGuard {
 
 impl Drop for DefaultRouteSplitGuard {
     fn drop(&mut self) {
-        if self.installed {
+        if !self.installed {
+            return;
+        }
+        // uninstall() was never awaited (panic, task abort, early `?`, daemon
+        // kill). A leaked table-100 split-default plus its `lookup 100` rule
+        // blackholes the next relay dial, so tear it down synchronously here
+        // instead of only logging. Synchronous on purpose: Drop cannot await,
+        // and leaving the routes is worse than a brief blocking `ip` call.
+        log::warn!(
+            "DefaultRouteSplitGuard dropped without explicit uninstall \
+             (exit_ip={}); removing routes synchronously",
+            self.exit_ip
+        );
+        for args in build_uninstall_commands(self.exit_ip) {
+            run_ip_sync_tolerant(&args);
+        }
+        self.installed = false;
+    }
+}
+
+/// Synchronous, best-effort `ip` invocation for the `Drop` / recovery paths
+/// that cannot `await`. Tolerates "already gone" stderr and never panics, so
+/// it is safe to call from `Drop` and during shutdown.
+fn run_ip_sync_tolerant(args: &[String]) {
+    match std::process::Command::new("ip").args(args).output() {
+        Ok(out) if out.status.success() => {
+            log::debug!("ip {} OK (sync)", args.join(" "));
+        }
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            if stderr.contains("No such")
+                || stderr.contains("not found")
+                || stderr.contains("does not")
+            {
+                return;
+            }
             log::warn!(
-                "DefaultRouteSplitGuard dropped without explicit uninstall \
-                 (exit_ip={}); routes may persist",
-                self.exit_ip
+                "ip {} failed (sync cleanup, non-fatal): {}",
+                args.join(" "),
+                stderr.trim()
             );
         }
+        Err(e) => log::warn!("spawn ip {} failed (sync cleanup, non-fatal): {e}", args.join(" ")),
+    }
+}
+
+/// Blind synchronous removal of any Warren split-default routing left in the
+/// dedicated table / ip rules, even from a previously crashed process where
+/// no guard survives to run its `Drop`. Idempotent and privilege-tolerant
+/// (tolerates "already gone"). The cross-platform `force_route_cleanup()`
+/// hook calls this from the tunnel state machine's reset paths so a leaked
+/// split can never persist into the next connection.
+pub fn force_cleanup_all() {
+    for args in build_force_cleanup_commands() {
+        run_ip_sync_tolerant(&args);
     }
 }
 
@@ -423,6 +507,28 @@ mod tests {
         assert!(
             !flush_cmd.contains(&"main".to_string()),
             "must NOT flush table main (= would destroy default route eth0)"
+        );
+    }
+
+    #[test]
+    fn force_cleanup_dels_three_rules_and_flushes_table_100() {
+        let cmds = build_force_cleanup_commands();
+        assert_eq!(cmds.len(), 4, "3 rule dels (by pref) + 1 table flush");
+        // Deleted by Warren-owned priorities, no selector needed.
+        assert_eq!(cmds[0], vec!["rule", "del", "pref", "49"]);
+        assert_eq!(cmds[1], vec!["rule", "del", "pref", "50"]);
+        assert_eq!(cmds[2], vec!["rule", "del", "pref", "51"]);
+        assert_eq!(cmds[3], vec!["route", "flush", "table", "100"]);
+    }
+
+    #[test]
+    fn force_cleanup_never_touches_main_table() {
+        // Anti-regression: blind recovery must not flush `main` (would wipe
+        // the physical default route).
+        let cmds = build_force_cleanup_commands();
+        assert!(
+            !cmds.iter().any(|c| c.contains(&"main".to_string())),
+            "force cleanup must never reference the main table"
         );
     }
 

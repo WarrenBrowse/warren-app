@@ -94,18 +94,30 @@ mod v6_stub {
     }
 }
 
-/// Force out any Warren split-default routing this process installed,
-/// synchronously, regardless of guard lifetime.
+/// Force out any Warren split-default routing this process (or a crashed
+/// predecessor) installed, synchronously, regardless of guard lifetime.
 ///
-/// These routes are installed via the `route`/`ip` CLI out-of-band, so
-/// the talpid `RouteManager`'s `clear_routes()` cannot see them: the
-/// state machine's reset paths call this so a leaked split can never
-/// blackhole egress. Idempotent and privilege-tolerant. macOS carries
-/// the real impl (only there can the global-table split outlive its
-/// guard); other platforms rely on their guard `Drop` and no-op here.
+/// These routes are installed via the `route`/`ip`/PowerShell CLI
+/// out-of-band, so the talpid `RouteManager`'s `clear_routes()` cannot see
+/// them: the state machine's reset paths call this so a leaked split can
+/// never blackhole egress. Every desktop OS carries a real, idempotent,
+/// privilege-tolerant implementation:
+///
+/// - **Linux**: `ip rule del` the Warren priorities + flush the dedicated
+///   table 100 (never touches `main`).
+/// - **macOS**: reclaim the registry-tracked host route + the `/1` halves.
+/// - **Windows**: `Remove-NetRoute` the `/1` halves from the ActiveStore.
+///
+/// This is the recovery backstop on top of each guard's synchronous `Drop`:
+/// it also reclaims a split leaked by a *previous* unclean exit, where no
+/// guard survives.
 pub fn force_route_cleanup() {
     #[cfg(target_os = "macos")]
     warren_client::default_route_split_macos::force_cleanup_all();
+    #[cfg(target_os = "linux")]
+    linux::force_cleanup_all();
+    #[cfg(target_os = "windows")]
+    warren_client::default_route_split_windows::force_cleanup_all();
 }
 
 #[cfg(test)]
