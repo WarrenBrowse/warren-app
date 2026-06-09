@@ -508,7 +508,32 @@ impl TunnelStateMachine {
         let runtime = self.shared_values.runtime.clone();
 
         while let Some(state) = self.current_state.take() {
-            match state.handle_event(&runtime, &mut self.commands, &mut self.shared_values) {
+            let consequence = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                state.handle_event(&runtime, &mut self.commands, &mut self.shared_values)
+            }));
+            let consequence = match consequence {
+                Ok(consequence) => consequence,
+                Err(_panic) => {
+                    // Without this, a panic inside `handle_event` unwinds out of
+                    // the detached `spawn_blocking` task that drives `run`: tokio
+                    // swallows it, the shutdown signal below never fires, and the
+                    // daemon is left wedged with the kill-switch firewall AND the
+                    // split-default `/1` routes still installed. The leaked split
+                    // blackholes the next connection attempt, and because the
+                    // process never exits, neither the supervisor restart nor the
+                    // startup self-heal recover it. Catch it, drop any leaked
+                    // split route, and fall through to the graceful-shutdown block
+                    // (firewall reset + shutdown signal) so a panic degrades to a
+                    // clean, recoverable stop instead of a silent wedge.
+                    log::error!(
+                        "Tunnel state machine panicked while handling an event; \
+                         tearing down to a safe state and exiting"
+                    );
+                    talpid_warren_tunnel::force_route_cleanup();
+                    break;
+                }
+            };
+            match consequence {
                 NewState((state, transition)) => {
                     self.current_state = Some(state);
 
