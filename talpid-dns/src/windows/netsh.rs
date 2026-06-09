@@ -208,8 +208,8 @@ fn flush_resolver_cache() -> Result<(), Error> {
 }
 
 fn create_netsh_set_command(interface_index: u32, server: &IpAddr) -> String {
-    // Set primary DNS server:
-    // netsh interface ipv4 set dnsservers name="Mullvad" source=static address=10.64.0.1
+    // Set primary DNS server (the interface is addressed by its numeric index):
+    // netsh interface ipv4 set dnsservers name=12 source=static address=10.64.0.1
     // validate=no
 
     let interface_type = if server.is_ipv4() { "ipv4" } else { "ipv6" };
@@ -219,8 +219,8 @@ fn create_netsh_set_command(interface_index: u32, server: &IpAddr) -> String {
 }
 
 fn create_netsh_add_command(interface_index: u32, server: &IpAddr) -> String {
-    // Add DNS server:
-    // netsh interface ipv4 add dnsservers name="Mullvad" address=10.64.0.2 validate=no
+    // Add DNS server (the interface is addressed by its numeric index):
+    // netsh interface ipv4 add dnsservers name=12 address=10.64.0.2 validate=no
 
     let interface_type = if server.is_ipv4() { "ipv4" } else { "ipv6" };
     format!(

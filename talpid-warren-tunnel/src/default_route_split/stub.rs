@@ -1,17 +1,14 @@
-//! No-op default-route split guard for platforms that do not have a
-//! Warren-specific routing recipe wired yet (Windows + everything that
-//! is not Linux or macOS).
+//! No-op default-route split guard for exotic targets with no Warren-specific
+//! routing recipe. Linux, macOS AND Windows are all wired in the parent module
+//! (Windows via the warren-core port), so this stub is only reached on targets
+//! that are none of those three.
 //!
 //! The type exists purely so the `WarrenTunnelMonitor::default_route_guard`
 //! field compiles unconditionally. Calling [`DefaultRouteSplitGuard::install`]
 //! always returns an error so the operator sees that no policy routing
 //! is being applied (and that the tunnel is up but the host's Internet
 //! traffic still flows through the original default route, not via the
-//! Warren TUN). The Linux + macOS impls cover the supported platforms.
-//!
-//! When Windows split-default lands (Session A.2), this stub gets
-//! replaced by a `pub use` of the warren-core Windows port, mirroring
-//! the macOS arm in the parent module.
+//! Warren TUN).
 
 use std::net::Ipv4Addr;
 
