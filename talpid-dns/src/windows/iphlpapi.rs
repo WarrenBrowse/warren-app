@@ -160,9 +160,15 @@ impl DnsMonitorT for DnsMonitor {
 
     fn reset(&mut self) -> Result<(), Error> {
         if let Some(guid) = self.current_guid.take() {
-            set_interface_dns_servers_v4(&guid, &[])
-                .and(set_interface_dns_servers_v6(&guid, &[]))
-                .and(flush_dns_cache())?;
+            // Evaluate all three steps independently so a failure clearing one
+            // family does not skip the other clear or the cache flush. The
+            // flush must happen on teardown regardless, so apps stop serving
+            // names resolved via the now-dead tunnel resolver (same principle
+            // as the macOS mDNSResponder reload and the netsh backend).
+            let cleared_v4 = set_interface_dns_servers_v4(&guid, &[]);
+            let cleared_v6 = set_interface_dns_servers_v6(&guid, &[]);
+            let flushed = flush_dns_cache();
+            cleared_v4.and(cleared_v6).and(flushed)?;
         }
         Ok(())
     }

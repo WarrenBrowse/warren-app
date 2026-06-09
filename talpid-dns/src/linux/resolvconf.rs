@@ -63,10 +63,77 @@ impl Resolvconf {
             return Err(Error::DnsmasqMisconfiguration);
         }
 
+        // Repair leftovers from a previous unclean exit (SIGKILL, panic):
+        // our records are not tracked across restarts (`record_names` is
+        // in-memory), so a stale `<iface>.mullvad` record can keep resolvconf
+        // regenerating /etc/resolv.conf with a now-dead in-tunnel resolver.
+        Self::reclaim_stale_records(&resolvconf_path);
+
         Ok(Resolvconf {
             record_names: HashSet::new(),
             resolvconf: resolvconf_path,
         })
+    }
+
+    /// Remove leftover Warren resolvconf records (`<iface>.mullvad`) whose
+    /// interface no longer exists.
+    ///
+    /// A freshly-constructed manager owns no records yet, so any present are
+    /// leftovers from a crashed predecessor. We delete one ONLY when its
+    /// interface is gone: a record whose interface still exists is live (this
+    /// daemon's own current run, or a separately-installed Mullvad app's
+    /// resolver that also uses the `.mullvad` suffix) and must never be
+    /// clobbered. Interface existence is the Linux-idiomatic liveness gate,
+    /// mirroring the macOS "only reclaim a dead override" rule. Best-effort:
+    /// every failure is logged, never fatal.
+    fn reclaim_stale_records(resolvconf: &Path) {
+        // openresolv and the Debian `resolvconf` both store one file per
+        // record in an `interface` directory under their run dir; the exact
+        // location differs by distro, so probe the known candidates and act
+        // on the first that exists.
+        const RUN_DIRS: &[&str] = &[
+            "/run/resolvconf/interface",
+            "/var/run/resolvconf/interface",
+            "/etc/resolvconf/run/interface",
+        ];
+        for dir in RUN_DIRS {
+            let entries = match fs::read_dir(dir) {
+                Ok(entries) => entries,
+                Err(_) => continue,
+            };
+            for record_name in entries
+                .flatten()
+                .filter_map(|e| e.file_name().into_string().ok())
+            {
+                let Some(iface) = record_name.strip_suffix(".mullvad") else {
+                    continue;
+                };
+                if Path::new(&format!("/sys/class/net/{iface}")).exists() {
+                    // Interface still up: a live record. Never reclaim it.
+                    continue;
+                }
+                log::info!(
+                    "Removing stale resolvconf record '{record_name}' \
+                     (interface gone; leftover from a previous unclean exit)"
+                );
+                match Command::new(resolvconf)
+                    .args(["-d", &record_name, "-f"])
+                    .output()
+                {
+                    Ok(out) if out.status.success() => {}
+                    Ok(out) => log::warn!(
+                        "Failed to delete stale resolvconf record '{record_name}': {}",
+                        String::from_utf8_lossy(&out.stderr).trim()
+                    ),
+                    Err(e) => {
+                        log::warn!("Failed to run resolvconf -d for '{record_name}': {e}")
+                    }
+                }
+            }
+            // Records live in exactly one of these dirs; stop after the first
+            // that exists so we do not double-process a symlinked path.
+            break;
+        }
     }
 
     fn resolvconf_is_resolved_symlink(resolvconf_path: &Path) -> bool {

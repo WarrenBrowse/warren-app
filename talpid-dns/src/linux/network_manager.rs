@@ -14,6 +14,11 @@ impl NetworkManager {
     pub fn new() -> Result<Self> {
         let connection = DBus::new()?;
         connection.ensure_can_be_used_to_manage_dns()?;
+        // No startup stale-resolver repair needed: our DNS override is applied
+        // through NetworkManager's `Reapply` as a runtime overlay on the
+        // active connection, never written to the saved profile. An unclean
+        // exit simply loses the overlay, and NM re-derives the device's real
+        // DNS on its next reapply/reactivation, so nothing dead lingers.
         let manager = NetworkManager {
             connection,
             device: None,

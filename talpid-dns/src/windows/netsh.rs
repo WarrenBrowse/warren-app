@@ -54,6 +54,10 @@ pub enum Error {
     /// netsh did not return in a timely manner.
     #[error("'netsh' took too long to complete")]
     NetshTimeout,
+
+    /// Failure to flush the DNS resolver cache.
+    #[error("Failed to flush the DNS resolver cache")]
+    FlushResolverCache(#[source] super::dnsapi::Error),
 }
 
 pub struct DnsMonitor {
@@ -109,6 +113,13 @@ impl DnsMonitorT for DnsMonitor {
 
         run_netsh_with_timeout(netsh_input, NETSH_TIMEOUT)?;
 
+        // `netsh ... set dnsservers` only changes the per-interface server
+        // list; it does NOT drop entries the Dnscache service already
+        // resolved against the previous resolver. Flush so apps re-resolve
+        // against the new servers immediately (parity with the iphlpapi and
+        // tcpip backends, which both flush here).
+        flush_resolver_cache()?;
+
         Ok(())
     }
 
@@ -120,6 +131,17 @@ impl DnsMonitorT for DnsMonitor {
 
             if let Err(error) = run_netsh_with_timeout(netsh_input, NETSH_TIMEOUT) {
                 log::error!("{}", error.display_chain_with_msg("Failed to reset DNS"));
+            }
+
+            // Flush unconditionally (even if the clear above failed): on
+            // disconnect, apps must stop serving names resolved via the
+            // now-dead tunnel resolver. This is the netsh-path equivalent of
+            // the macOS mDNSResponder reload.
+            if let Err(error) = flush_resolver_cache() {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Failed to flush DNS cache on reset")
+                );
             }
         }
         Ok(())
@@ -175,6 +197,14 @@ fn wait_for_child(subproc: &mut Child, timeout: Duration) -> io::Result<Option<E
         WAIT_TIMEOUT => Ok(None),
         _error => Err(io::Error::last_os_error()),
     }
+}
+
+/// Drop the system DNS client (Dnscache) resolver cache via the Win32
+/// `DnsFlushResolverCache` API. Shared with the iphlpapi and tcpip backends;
+/// netsh has no native way to flush the resolver cache, so we reach for the
+/// same API they use.
+fn flush_resolver_cache() -> Result<(), Error> {
+    super::dnsapi::flush_resolver_cache().map_err(Error::FlushResolverCache)
 }
 
 fn create_netsh_set_command(interface_index: u32, server: &IpAddr) -> String {
