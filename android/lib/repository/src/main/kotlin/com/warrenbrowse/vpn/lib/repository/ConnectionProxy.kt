@@ -58,7 +58,14 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                 is WarrenConnectedInfo.Blocking ->
                     TunnelState.Error(
                         ErrorState(
-                            cause = ErrorStateCause.FirewallPolicyError.Generic,
+                            // The kill switch is up either way (isBlocking);
+                            // a flap surfaces the dedicated unstable-network
+                            // cause instead of a generic firewall error.
+                            cause = if (info.flapping) {
+                                ErrorStateCause.WarrenTunnelFlapping
+                            } else {
+                                ErrorStateCause.FirewallPolicyError.Generic
+                            },
                             isBlocking = true,
                         ),
                     )

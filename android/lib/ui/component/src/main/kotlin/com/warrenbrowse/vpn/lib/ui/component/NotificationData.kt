@@ -195,6 +195,8 @@ private fun ErrorState.title(): String {
             stringResource(R.string.always_on_vpn_error_notification_title, cause.appName)
         cause is ErrorStateCause.OtherLegacyAlwaysOnApp ->
             stringResource(R.string.legacy_always_on_vpn_error_notification_title)
+        cause is ErrorStateCause.WarrenTunnelFlapping ->
+            stringResource(R.string.warren_tunnel_flapping_title)
         isBlocking -> stringResource(R.string.blocking_internet)
         else -> stringResource(R.string.critical_error)
     }
@@ -217,6 +219,8 @@ private fun ErrorStateCause.errorMessageId(): String =
         is ErrorStateCause.FirewallPolicyError -> stringResource(R.string.set_firewall_policy_error)
         is ErrorStateCause.DnsError -> stringResource(R.string.set_dns_error)
         is ErrorStateCause.StartTunnelError -> stringResource(R.string.start_tunnel_error)
+        is ErrorStateCause.WarrenTunnelFlapping ->
+            stringResource(R.string.warren_tunnel_flapping)
         is ErrorStateCause.IsOffline -> stringResource(R.string.is_offline)
         is ErrorStateCause.TunnelParameterError -> stringResource(error.errorMessageId())
         is ErrorStateCause.NotPrepared ->

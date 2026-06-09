@@ -31,8 +31,16 @@ sealed class WarrenTunnelState {
      * blocking interface in place, so traffic is blocked rather than
      * leaking to the physical network. Mirrors the desktop `lockedDown`
      * state / "BLOCKING INTERNET" notification.
+     *
+     * [flapping] is set when the lockdown reconnect loop gave up after too
+     * many drops in a short window: the blackhole stays up but no further
+     * reconnect is scheduled, so the error reads as an unstable network
+     * rather than a generic block.
      */
-    data class Blocking(val reason: String) : WarrenTunnelState()
+    data class Blocking(
+        val reason: String,
+        val flapping: Boolean = false,
+    ) : WarrenTunnelState()
 
     companion object {
         fun fromStatusCode(code: Int): WarrenTunnelState = when (code) {

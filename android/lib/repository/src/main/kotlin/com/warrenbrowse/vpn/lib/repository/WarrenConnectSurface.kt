@@ -56,8 +56,16 @@ sealed interface WarrenConnectedInfo {
      * Tunnel down but the kill switch (lockdown) is keeping a blocking
      * interface in place, so traffic is blocked rather than leaking.
      * Surfaced as a blocking error ("BLOCKED CONNECTION").
+     *
+     * [flapping] is set when the block is the result of the reconnect loop
+     * giving up after too many drops in a short window (network flapping):
+     * the kill switch stays up but the loop stopped, so the error reads as a
+     * flap rather than a generic firewall block.
      */
-    data class Blocking(val reason: String) : WarrenConnectedInfo
+    data class Blocking(
+        val reason: String,
+        val flapping: Boolean = false,
+    ) : WarrenConnectedInfo
 }
 
 /**

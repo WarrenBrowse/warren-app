@@ -21,6 +21,14 @@ sealed class ErrorStateCause {
 
     data object StartTunnelError : ErrorStateCause()
 
+    /**
+     * The tunnel reconnected too many times in a short window (the network is
+     * flapping). The retry loop was stopped and the tunnel parked here so the
+     * user can act once the connection settles. Under lockdown the kill switch
+     * stays engaged, so traffic is blocked rather than leaked, while parked.
+     */
+    data object WarrenTunnelFlapping : ErrorStateCause()
+
     data class TunnelParameterError(val error: ParameterGenerationError) : ErrorStateCause()
 
     data object IsOffline : ErrorStateCause()

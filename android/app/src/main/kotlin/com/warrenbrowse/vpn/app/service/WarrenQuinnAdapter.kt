@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +73,10 @@ class WarrenQuinnAdapter(
     // unexpected drop (engage the kill switch).
     private var userInitiatedDisconnect = false
 
+    // Detects a flapping tunnel so the lockdown reconnect loop stops hammering
+    // a network that is clearly down. Reset on a real connect + user teardown.
+    private val flapDetector = FlapDetector()
+
     suspend fun connect(config: WarrenTunnelConfig, mnemonic: String) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
             Logger.w("WarrenQuinnAdapter: connect() called while not disconnected")
@@ -130,6 +135,10 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
+                    // A real connection settles the network: forget prior
+                    // drops so a later isolated drop is not mistaken for the
+                    // tail of an earlier flap.
+                    if (code == STATUS_CONNECTED) flapDetector.reset()
                     _state.value = statusFromCode(code, sessionConfig)
                 }
                 // Mirror the live NAT-PMP status (cheap static read).
@@ -171,6 +180,7 @@ class WarrenQuinnAdapter(
         // User-requested teardown: release traffic instead of engaging the
         // kill switch.
         userInitiatedDisconnect = true
+        flapDetector.reset()
         unregisterNetworkCallback()
         pendingHandover?.cancel()
         pendingHandover = null
@@ -236,8 +246,19 @@ class WarrenQuinnAdapter(
         activeFd = null
         _natPmpStatus.value = NATPMP_IDLE
         if (config.lockdownMode && !userInitiatedDisconnect) {
-            enterBlockingMode(config, reason)
-            scheduleLockdownReconnect(config)
+            // The blackhole stays up regardless, so traffic never leaks. The
+            // only question is whether to keep retrying. Once the tunnel is
+            // flapping (too many drops in a short window), stop scheduling
+            // reconnects and park in a flap state so the user can act; the
+            // network callback is still registered, so a genuine handover
+            // (or a user reconnect) resumes the normal flow.
+            if (flapDetector.recordDrop(SystemClock.elapsedRealtime())) {
+                Logger.w("WarrenQuinnAdapter: tunnel flapping, parking ($reason)")
+                enterBlockingMode(config, reason, flapping = true)
+            } else {
+                enterBlockingMode(config, reason)
+                scheduleLockdownReconnect(config)
+            }
         } else {
             unregisterNetworkCallback()
             _state.value = WarrenTunnelState.Failed(reason)
@@ -249,7 +270,11 @@ class WarrenQuinnAdapter(
      * all traffic but pumps nothing, so it is dropped instead of leaking to
      * the physical network. Must be called holding [lock].
      */
-    private fun enterBlockingMode(config: WarrenTunnelConfig, reason: String) {
+    private fun enterBlockingMode(
+        config: WarrenTunnelConfig,
+        reason: String,
+        flapping: Boolean = false,
+    ) {
         if (blockingFd == null) {
             val fd = applyPlan(planTunInterface(config, blocking = true))
             if (fd == null) {
@@ -260,7 +285,7 @@ class WarrenQuinnAdapter(
             blockingFd = fd
             Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
         }
-        _state.value = WarrenTunnelState.Blocking(reason)
+        _state.value = WarrenTunnelState.Blocking(reason, flapping)
     }
 
     /** Tear down the kill-switch blackhole interface, if any. */

@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.lib.repository
 
+import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +48,22 @@ class ConnectionProxyTest {
         val state = mapped(WarrenConnectedInfo.Blocking("kill switch"))
         assertTrue(state is TunnelState.Error, "got: $state")
         assertTrue((state as TunnelState.Error).errorState.isBlocking)
+    }
+
+    @Test
+    fun `a non-flapping Blocking carries the generic firewall cause`() = runTest {
+        val state = mapped(WarrenConnectedInfo.Blocking("kill switch")) as TunnelState.Error
+        assertTrue(state.errorState.cause is ErrorStateCause.FirewallPolicyError.Generic)
+    }
+
+    @Test
+    fun `a flapping Blocking stays blocking but carries the flap cause`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Blocking("flapping", flapping = true)) as TunnelState.Error
+        // Kill switch still engaged (no leak)...
+        assertTrue(state.errorState.isBlocking)
+        // ...but the user sees "network unstable" rather than a firewall error.
+        assertTrue(state.errorState.cause is ErrorStateCause.WarrenTunnelFlapping)
     }
 
     @Test
