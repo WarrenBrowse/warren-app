@@ -53,27 +53,30 @@ mod stub;
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use stub::DefaultRouteSplitGuard;
 
-// IPv6 split-default routing. Unlike v4, the leak-safe v6 guard exists
-// only on Linux today (`::/1` + `8000::/1` in the dedicated table via the
-// shared `warren_client` impl). macOS/Windows v6 routing is Phase E, so
-// every non-Linux target gets a stub whose `install` bails with a clear
-// "Linux-only" message - mirroring how the v4 stub behaves on unsupported
-// targets. This keeps the `WarrenTunnelMonitor::v6_route_guard` field type
-// present on every platform without per-OS cfg on the struct/init/teardown.
+// IPv6 split-default routing. Each desktop OS now ships a real leak-safe
+// v6 guard from `warren_client` (Linux: `::/1` + `8000::/1` in the
+// dedicated table; macOS: `route -inet6` halves; Windows: `New-NetRoute`
+// halves), all with the same `install(Option<Ipv6Addr>, &str)` shape so
+// this facade stays OS-agnostic at the call site. Truly exotic targets
+// (not Linux/macOS/Windows) fall back to a stub whose `install` bails -
+// the firewall keeps native v6 blocked there regardless (no leak).
 #[cfg(target_os = "linux")]
 pub use warren_client::default_route_split::DefaultRouteSplitV6Guard;
+#[cfg(target_os = "macos")]
+pub use warren_client::default_route_split_macos::DefaultRouteSplitV6Guard;
+#[cfg(target_os = "windows")]
+pub use warren_client::default_route_split_windows::DefaultRouteSplitV6Guard;
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use v6_stub::DefaultRouteSplitV6Guard;
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 mod v6_stub {
     use std::net::Ipv6Addr;
 
-    /// Cross-OS placeholder so the monitor field type exists. v6 routing
-    /// is Linux-only today (Phase E). `install` always fails loudly so a
-    /// non-Linux build never silently believes it routed v6 through the
-    /// tunnel; the firewall keeps native v6 blocked regardless (no leak).
+    /// Cross-OS placeholder so the monitor field type exists on exotic
+    /// targets. `install` fails loudly so such a build never believes it
+    /// routed v6; the firewall keeps native v6 blocked regardless (no leak).
     #[derive(Debug)]
     pub struct DefaultRouteSplitV6Guard;
 
@@ -82,7 +85,7 @@ mod v6_stub {
             _exit_ip_v6: Option<Ipv6Addr>,
             _tun_name: &str,
         ) -> anyhow::Result<Self> {
-            anyhow::bail!("IPv6 split-default routing is Linux-only on this build (Phase E)")
+            anyhow::bail!("IPv6 split-default routing not supported on this target")
         }
 
         pub async fn uninstall(self) -> anyhow::Result<()> {
