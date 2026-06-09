@@ -96,7 +96,17 @@ impl Resolvconf {
             "/var/run/resolvconf/interface",
             "/etc/resolvconf/run/interface",
         ];
+        // De-duplicate symlinked candidates (e.g. `/var/run` -> `/run`) by
+        // canonical path so the same directory is never processed twice, while
+        // still visiting every distinct location: the records live in only one
+        // of them, but the first that exists can legitimately be empty, so we
+        // must not stop at it.
+        let mut seen_dirs = HashSet::new();
         for dir in RUN_DIRS {
+            let canonical = fs::canonicalize(dir).unwrap_or_else(|_| PathBuf::from(*dir));
+            if !seen_dirs.insert(canonical) {
+                continue;
+            }
             let entries = match fs::read_dir(dir) {
                 Ok(entries) => entries,
                 Err(_) => continue,
@@ -130,9 +140,6 @@ impl Resolvconf {
                     }
                 }
             }
-            // Records live in exactly one of these dirs; stop after the first
-            // that exists so we do not double-process a symlinked path.
-            break;
         }
     }
 

@@ -410,9 +410,11 @@ impl super::DnsMonitorT for DnsMonitor {
             let mut state = self.state.lock();
             state.apply_new_config(&self.store, interface, &servers, port)
         };
-        if result.is_ok() {
-            flush_dns_cache();
-        }
+        // Nudge the resolver whether or not the apply fully succeeded: a partial
+        // apply can leave some services pointing at the new resolver while
+        // mDNSResponder still caches answers from the old one, so flush
+        // unconditionally (same reasoning as `reset`).
+        flush_dns_cache();
         result
     }
 
@@ -589,9 +591,13 @@ fn remove_stale_loopback_dns(store: &SCDynamicStore) {
         }
         // Keep the override if ANY of its resolvers is still live: that is a
         // running resolver (ours or a coexisting daemon's), not a leftover.
+        // Probe each resolver on its OWN port (parsed from the store, which can
+        // carry a non-53 ServerPort), not a hardcoded 53: a coexisting resolver
+        // bound on e.g. 127.x:5353 must read as live, otherwise we probe the
+        // wrong port, find it free, and reclaim a live foreign override.
         if addresses
             .iter()
-            .any(|sa| loopback_resolver_is_live(sa.ip(), DNS_PORT))
+            .any(|sa| loopback_resolver_is_live(sa.ip(), sa.port()))
         {
             continue;
         }
