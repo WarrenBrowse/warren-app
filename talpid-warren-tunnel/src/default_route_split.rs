@@ -66,7 +66,7 @@ pub use stub::DefaultRouteSplitGuard;
 // (not Linux/macOS/Windows) fall back to a stub whose `install` bails -
 // the firewall keeps native v6 blocked there regardless (no leak).
 #[cfg(target_os = "linux")]
-pub use warren_client::default_route_split::DefaultRouteSplitV6Guard;
+pub use linux::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "macos")]
 pub use warren_client::default_route_split_macos::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "windows")]
