@@ -343,11 +343,12 @@ fn pick_one_hop_circuit(
 }
 
 /// Selects a **1-hop** circuit: one node serves as both the entry relay
-/// (`:7001`) and the exit (`:443`). Honors the `exit_country` hint and
-/// weights the random pick by node weight.
+/// and the exit, both reached on the node's unified `:443` dispatcher
+/// (doc 33). Honors the `exit_country` hint and weights the random pick
+/// by node weight.
 ///
 /// Toggle OFF uses this. The fleet is multi-hop only (legacy single-hop
-/// was dropped), so OFF must still ride the multi-hop wire protocol — it
+/// was dropped), so OFF must still ride the multi-hop wire protocol, it
 /// just collapses the circuit onto a single trusted node (1-hop privacy,
 /// same as a classic VPN). Returning `None` here (→ legacy single-hop)
 /// would make the exit reject the handshake and strand the daemon in the
@@ -596,8 +597,8 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
 
                 // Select the circuit from the cached directory using the live
                 // settings. Toggle ON → 2-hop (entry != exit, country/AS
-                // diverse). Toggle OFF → 1-hop (one node is both relay :7001
-                // and exit :443). The fleet is multi-hop only, so OFF must NOT
+                // diverse). Toggle OFF → 1-hop (one node is both relay and
+                // exit, unified on :443). The fleet is multi-hop only, so OFF must NOT
                 // clear to legacy single-hop: the exits no longer speak it,
                 // the handshake fails, tunnel params cannot be generated, and
                 // the daemon blocks all traffic.
