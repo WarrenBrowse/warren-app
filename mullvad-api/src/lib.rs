@@ -26,6 +26,7 @@ pub use crate::https_client::SocketBypassRequest;
 
 mod access;
 mod address_cache;
+mod device;
 mod relay_list;
 /// Auth wallet: Ed25519 signature on HTTP API requests.
 /// See `warren-core/docs/06-auth-wallet.md`.
@@ -34,6 +35,7 @@ pub mod warren_auth;
 pub use address_cache::Error as AddressCacheError;
 pub use address_cache::{AddressCache, AddressCacheBacking, FileAddressCacheBacking};
 
+pub use device::DevicesProxy;
 pub use hyper::StatusCode;
 pub use relay_list::{CachedRelayList, ETag, RelayListProxy};
 
