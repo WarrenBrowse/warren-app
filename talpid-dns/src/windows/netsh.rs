@@ -229,8 +229,8 @@ fn create_netsh_add_command(interface_index: u32, server: &IpAddr) -> String {
 }
 
 fn create_netsh_flush_command(interface_index: u32, ip_version: IpVersion) -> String {
-    // Flush DNS settings:
-    // netsh interface ipv4 set dnsservers name="Mullvad" source=static address=none validate=no
+    // Flush DNS settings (the interface is addressed by its numeric index):
+    // netsh interface ipv4 set dnsservers name=12 source=static address=none validate=no
 
     let interface_type = match ip_version {
         IpVersion::V4 => "ipv4",
