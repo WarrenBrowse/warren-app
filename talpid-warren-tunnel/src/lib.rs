@@ -13,9 +13,7 @@
 //! `wait()` blocks on the close-signal, drops the routing-table
 //! override and aborts the pump.
 
-use std::net::IpAddr;
-use std::path::Path;
-use std::time::Instant;
+use std::{net::IpAddr, path::Path, time::Instant};
 
 use ed25519_dalek::{SigningKey, VerifyingKey};
 #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -23,15 +21,19 @@ use ipnetwork::IpNetwork;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use talpid_routing::Node;
 use talpid_routing::RequiredRoute;
-use talpid_tunnel::tun_provider::{Tun, TunConfig};
-use talpid_tunnel::{TunnelArgs, TunnelEvent, TunnelMetadata};
+use talpid_tunnel::{
+    TunnelArgs, TunnelEvent, TunnelMetadata,
+    tun_provider::{Tun, TunConfig},
+};
 use talpid_types::net::AllowedTunnelTraffic;
 use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warren-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
-pub use warren_multihop::RelayDescriptorSigned as MultiHopRelayDescriptor;
-pub use warren_multihop::{ExitDescriptorSigned as MultiHopExitDescriptor, ExitId};
+pub use warren_multihop::{
+    ExitDescriptorSigned as MultiHopExitDescriptor, ExitId,
+    RelayDescriptorSigned as MultiHopRelayDescriptor,
+};
 // NAT-PMP wire protocol enum re-exported so daemon code constructs
 // `NatPmpConfig { protocol: NatPmpProto::Udp, .. }` without depending
 // directly on the warren-natpmp-protocol crate. The crate itself is a
@@ -44,6 +46,11 @@ pub use warren_natpmp_protocol::MapProto as NatPmpProto;
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
+/// Re-export of the single-hop stable exit identifier from
+/// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
+/// on this 16-byte value so a legitimate Ed25519 rotation stays
+/// distinguishable from an exit-substitution attack.
+pub use warren_protocol::ExitId as RelayExitId;
 /// Re-export of the `Setup`-frame feature bitmask constants
 /// (`features::IPV6`, `PORT_FORWARD`, ...) so daemon-side callers that
 /// only depend on `talpid-warren-tunnel` (e.g.
@@ -51,11 +58,6 @@ pub use warren_client::bypass_cidr::BypassCidr;
 /// [`WarrenTunnelParameters::features`] without taking a direct
 /// `warren-protocol` dependency.
 pub use warren_protocol::features;
-/// Re-export of the single-hop stable exit identifier from
-/// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
-/// on this 16-byte value so a legitimate Ed25519 rotation stays
-/// distinguishable from an exit-substitution attack.
-pub use warren_protocol::ExitId as RelayExitId;
 use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
@@ -201,13 +203,10 @@ pub struct WarrenTunnelParameters {
     /// monitor task listens on the receiver and applies the change
     /// without requiring the tunnel to reconnect:
     ///
-    /// - `Some(cfg)` when previously `None` → spawn a fresh
-    ///   `NatPmpManager`.
-    /// - `Some(cfg)` when previously `Some(other)` → call
-    ///   [`NatPmpManager::reconfigure`] to release the old mapping
-    ///   and allocate a new one with `cfg`.
-    /// - `None` when previously `Some(_)` → release the mapping and
-    ///   drop the manager.
+    /// - `Some(cfg)` when previously `None` → spawn a fresh `NatPmpManager`.
+    /// - `Some(cfg)` when previously `Some(other)` → call [`NatPmpManager::reconfigure`] to
+    ///   release the old mapping and allocate a new one with `cfg`.
+    /// - `None` when previously `Some(_)` → release the mapping and drop the manager.
     ///
     /// `None` here = the daemon did not wire live reconfig (typical
     /// in tests or in builds that pre-date the feature); the monitor
@@ -316,8 +315,7 @@ impl NatPmpRule {
 /// [`NatPmpRuleId`] of the rule that produced it, so the daemon can keep
 /// a per-rule status entry (multi-port). The controller wraps this into a
 /// per-rule [`NatPmpEventObserver`] for each [`NatPmpManager`] it spawns.
-pub type NatPmpMappingObserver =
-    std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpEvent) + Send + Sync>;
+pub type NatPmpMappingObserver = std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpEvent) + Send + Sync>;
 
 /// NAT-PMP port-forwarding configuration carried by
 /// [`WarrenTunnelParameters::nat_pmp`].
@@ -522,16 +520,14 @@ impl Error {
     /// Whether the error is worth retrying from the state-machine
     /// side.
     ///
-    /// - [`Error::Handshake`]: `true` — transient network glitch is
-    ///   the common cause; the next attempt will likely succeed.
-    /// - [`Error::TunSetup`]: `false` — privilege / kernel module /
-    ///   name collision: retry will not help without operator action.
-    /// - [`Error::BackendTransient`]: `true` — TUN I/O error or
-    ///   peer-initiated session close; the configuration is still
-    ///   valid and a fresh connect should succeed.
-    /// - [`Error::BackendFatal`]: `false` — auth failure or explicit
-    ///   session rejection; retrying immediately would waste
-    ///   bandwidth and produce the same outcome.
+    /// - [`Error::Handshake`]: `true` — transient network glitch is the common cause; the next
+    ///   attempt will likely succeed.
+    /// - [`Error::TunSetup`]: `false` — privilege / kernel module / name collision: retry will not
+    ///   help without operator action.
+    /// - [`Error::BackendTransient`]: `true` — TUN I/O error or peer-initiated session close; the
+    ///   configuration is still valid and a fresh connect should succeed.
+    /// - [`Error::BackendFatal`]: `false` — auth failure or explicit session rejection; retrying
+    ///   immediately would waste bandwidth and produce the same outcome.
     #[must_use]
     pub fn is_recoverable(&self) -> bool {
         matches!(self, Error::Handshake(_) | Error::BackendTransient(_))
@@ -577,8 +573,7 @@ fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
 /// Active Warren tunnel monitor.
 ///
 /// API:
-/// - [`Self::start`]: blocking factory (QUIC handshake + TUN setup +
-///   pump spawn).
+/// - [`Self::start`]: blocking factory (QUIC handshake + TUN setup + pump spawn).
 /// - [`Self::wait`]: blocks until the daemon close-signal fires.
 ///
 /// `start` performs the QUIC handshake via warren-tunnel, opens the
@@ -603,6 +598,14 @@ pub struct WarrenTunnelMonitor {
     /// happens in `wait()` before the pump is aborted (mirrors the
     /// install order). `None` if no IPv4 next-hop IP was available.
     default_route_guard: Option<default_route_split::DefaultRouteSplitGuard>,
+    /// Guard for the IPv6 split-default routing (`::/1` + `8000::/1` in
+    /// the dedicated table). Installed in `start_single_hop` only when the
+    /// exit allocated a tunnel v6 (`metadata.ipv6_gateway.is_some()`).
+    /// `None` on the multi-hop path (IPv4-only `/v1`), when no v6 was
+    /// assigned, or on non-Linux (Phase E). Torn down in `wait()`
+    /// alongside the v4 guard; the firewall blocks native v6 regardless so
+    /// a failed install never leaks.
+    v6_route_guard: Option<default_route_split::DefaultRouteSplitV6Guard>,
     /// Lifecycle owner of the NAT-PMP refresh loop + event forwarder
     /// spawned after the tunnel is up. `None` when port-forwarding is
     /// disabled in the user settings (`params.nat_pmp.is_none()` OR
@@ -630,14 +633,12 @@ pub struct WarrenTunnelMonitor {
 
 /// Backend-specific task ownership.
 ///
-/// - [`MonitorBackend::SingleHop`] owns a single bidirectional pump
-///   spawned by `warren_tunnel::pump_bidirectional` /
-///   `pump_multi_bidirectional` and an oneshot channel to surface
-///   abnormal pump terminations.
-/// - [`MonitorBackend::MultiHop`] owns a 3-task fanout: the
-///   `MultiHopSupervisor` future (drives connect+reconnect), the
-///   uplink pump (TUN -> multi-hop) and the downlink pump (multi-hop
-///   -> TUN), wired together through a watch channel.
+/// - [`MonitorBackend::SingleHop`] owns a single bidirectional pump spawned by
+///   `warren_tunnel::pump_bidirectional` / `pump_multi_bidirectional` and an oneshot channel to
+///   surface abnormal pump terminations.
+/// - [`MonitorBackend::MultiHop`] owns a 3-task fanout: the `MultiHopSupervisor` future (drives
+///   connect+reconnect), the uplink pump (TUN -> multi-hop) and the downlink pump (multi-hop ->
+///   TUN), wired together through a watch channel.
 enum MonitorBackend {
     SingleHop {
         pump_handle: tokio::task::JoinHandle<()>,
@@ -703,10 +704,9 @@ impl WarrenTunnelMonitor {
     ///
     /// # Errors
     ///
-    /// - [`Error::Handshake`] if the QUIC handshake or `Setup`
-    ///   exchange fails.
-    /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
-    ///   interface name collision, kernel module missing).
+    /// - [`Error::Handshake`] if the QUIC handshake or `Setup` exchange fails.
+    /// - [`Error::TunSetup`] if opening the TUN fails (privileges, interface name collision, kernel
+    ///   module missing).
     fn start_single_hop(
         params: &WarrenTunnelParameters,
         args: TunnelArgs<'_>,
@@ -844,16 +844,14 @@ impl WarrenTunnelMonitor {
 
         // Startup event sequence — order is load-bearing (M-1 fix):
         //
-        // 1. InterfaceUp  — tells the state machine to install the
-        //    Connecting-state firewall (allows traffic to the exit only).
-        //    Emitted BEFORE routing so the firewall fence is up before any
-        //    route change could let traffic escape via the physical NIC.
+        // 1. InterfaceUp  — tells the state machine to install the Connecting-state firewall
+        //    (allows traffic to the exit only). Emitted BEFORE routing so the firewall fence is up
+        //    before any route change could let traffic escape via the physical NIC.
         // 2. add_routes   — bypass exit IPs + split-default installed.
         // 3. DefaultRouteSplitGuard::install — policy route table 100.
-        // 4. TunnelEvent::Up — signals "Connected" to the UI. By the
-        //    time the UI shows "Connected" the default route already points
-        //    at the TUN, so there is no window where traffic bypasses the
-        //    tunnel.
+        // 4. TunnelEvent::Up — signals "Connected" to the UI. By the time the UI shows "Connected"
+        //    the default route already points at the TUN, so there is no window where traffic
+        //    bypasses the tunnel.
         log::debug!(
             "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (firewall fence installed, routes pending)",
             start_t.elapsed().as_millis()
@@ -879,25 +877,21 @@ impl WarrenTunnelMonitor {
         // == routing loop).
         //
         // Split-default strategy:
-        // - 0.0.0.0/1 + 128.0.0.0/1 dev tun0 : covers all of 0.0.0.0/0
-        //   without replacing the existing default route, less
-        //   intrusive, clean restore at teardown via route_manager.
-        // - <exit_ip>/32 dev <physical_iface> : more specific than /1
-        //   so daemon -> exit packets bypass the tun.
+        // - 0.0.0.0/1 + 128.0.0.0/1 dev tun0 : covers all of 0.0.0.0/0 without replacing the
+        //   existing default route, less intrusive, clean restore at teardown via route_manager.
+        // - <exit_ip>/32 dev <physical_iface> : more specific than /1 so daemon -> exit packets
+        //   bypass the tun.
         let exit_ips: Vec<IpAddr> = params.exit_addr.ip_addrs().map(|sa| sa.ip()).collect();
         // Per-platform route set, mirroring Mullvad WireGuard's
         // `get_endpoint_routes` / `get_pre_tunnel_routes` /
         // `get_post_tunnel_routes` dispatch:
-        // - Linux: bypass `<exit_ip>/32 via <gw> dev <physical>` in
-        //   the main table + split-default `/1 + /1 dev <tun>` in
-        //   table 100 via `default_route_split`. Iface + gw detected
-        //   from `/proc/net/route`.
-        // - macOS: bypass `<exit_ip>/32 NetNode::DefaultNode`
-        //   (talpid-routing resolves best_default_route at apply
-        //   time) + `0.0.0.0/0 dev <tun>` (triggers the
-        //   `tunnel_default_routes` ifscope dance). No upfront
-        //   detection: talpid-routing already tracks the physical
-        //   iface and gw via its internal monitor.
+        // - Linux: bypass `<exit_ip>/32 via <gw> dev <physical>` in the main table + split-default
+        //   `/1 + /1 dev <tun>` in table 100 via `default_route_split`. Iface + gw detected from
+        //   `/proc/net/route`.
+        // - macOS: bypass `<exit_ip>/32 NetNode::DefaultNode` (talpid-routing resolves
+        //   best_default_route at apply time) + `0.0.0.0/0 dev <tun>` (triggers the
+        //   `tunnel_default_routes` ifscope dance). No upfront detection: talpid-routing already
+        //   tracks the physical iface and gw via its internal monitor.
         #[cfg(target_os = "linux")]
         let routes = {
             let physical_iface = detect_default_iface().unwrap_or_else(|e| {
@@ -961,12 +955,12 @@ impl WarrenTunnelMonitor {
         // Install the platform-specific split-default policy routing.
         // The OS-specific recipe lives in the `default_route_split`
         // facade module:
-        // - Linux: dedicated table 100 + `ip rule` bypass for the exit
-        //   IP (in-crate impl, see `default_route_split::linux`).
-        // - macOS: host-route exception + `/1` split-default on the
-        //   global table, ported from `warren_client::default_route_split_macos`.
-        // - Other platforms: stub that fails to install (operator sees
-        //   "Internet traffic will NOT route via tunnel" warning).
+        // - Linux: dedicated table 100 + `ip rule` bypass for the exit IP (in-crate impl, see
+        //   `default_route_split::linux`).
+        // - macOS: host-route exception + `/1` split-default on the global table, ported from
+        //   `warren_client::default_route_split_macos`.
+        // - Other platforms: stub that fails to install (operator sees "Internet traffic will NOT
+        //   route via tunnel" warning).
         //
         // Both Linux and macOS expose the same `install(Ipv4Addr, &str)
         // -> Result<Self>` signature, so the install branch is OS-
@@ -1009,6 +1003,41 @@ impl WarrenTunnelMonitor {
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         let default_route_guard: Option<default_route_split::DefaultRouteSplitGuard> = None;
 
+        // IPv6 split-default: route `::/1` + `8000::/1` into the TUN's
+        // dedicated table so the exit-allocated tunnel v6 actually carries
+        // user traffic. Installed only when the exit allocated a v6
+        // (`ipv6_gateway` set in `build_tun_config_for_kind`). The facade
+        // bails on non-Linux (Phase E). A failed install is non-fatal: the
+        // firewall keeps native IPv6 blocked, so v6 is non-functional but
+        // never leaks. The exit's own v6 endpoint (if the transport is v6)
+        // is passed as the self-poison bypass.
+        let v6_route_guard = if metadata.ipv6_gateway.is_some() {
+            let exit_ip_v6 = exit_ips.iter().find_map(|ip| match ip {
+                IpAddr::V6(v6) => Some(*v6),
+                IpAddr::V4(_) => None,
+            });
+            let tun_name_for_v6 = metadata.interface.clone();
+            runtime
+                .block_on(async move {
+                    default_route_split::DefaultRouteSplitV6Guard::install(
+                        exit_ip_v6,
+                        &tun_name_for_v6,
+                    )
+                    .await
+                })
+                .map(Some)
+                .unwrap_or_else(|e| {
+                    log::warn!(
+                        "Warren: failed to install IPv6 split-default routing: {e}. \
+                         IPv6 will NOT route via the tunnel (the firewall keeps native \
+                         IPv6 blocked, so there is no leak - only no v6 connectivity)."
+                    );
+                    None
+                })
+        } else {
+            None
+        };
+
         // Emit TunnelEvent::Up now that routes AND the split-default
         // guard are fully installed. The UI transitions to "Connected"
         // only after the default route already points at the TUN, so
@@ -1036,14 +1065,12 @@ impl WarrenTunnelMonitor {
         // so the state machine can decide whether to retry.
         //
         // Dispatch on `SessionKind`:
-        // - Mono -> `pump_bidirectional(tun, conn)`. The session value
-        //   must be moved into the closure to keep the underlying
-        //   `Endpoint` alive (otherwise its drop makes `read_datagram`
-        //   return "endpoint driver future was dropped" immediately).
-        //   Same pattern as `warren-client::main`.
-        // - Multi -> `pump_multi_bidirectional(tun, multi_session)`
-        //   for N-connection bonding (uplink round-robin + N downlink
-        //   tasks).
+        // - Mono -> `pump_bidirectional(tun, conn)`. The session value must be moved into the
+        //   closure to keep the underlying `Endpoint` alive (otherwise its drop makes
+        //   `read_datagram` return "endpoint driver future was dropped" immediately). Same pattern
+        //   as `warren-client::main`.
+        // - Multi -> `pump_multi_bidirectional(tun, multi_session)` for N-connection bonding
+        //   (uplink round-robin + N downlink tasks).
         let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
         let pump_metrics = packet_device.metrics();
         let pump_spawn_t = Instant::now();
@@ -1190,6 +1217,7 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
+            v6_route_guard,
             nat_pmp_managers,
             nat_pmp_controller,
         })
@@ -1210,25 +1238,25 @@ impl WarrenTunnelMonitor {
     ///
     /// # Errors
     ///
-    /// - [`Error::Handshake`] if the supervisor cannot establish an
-    ///   initial session within the bounded wait window.
-    /// - [`Error::TunSetup`] if opening the TUN fails (privileges,
-    ///   interface name collision, kernel module missing).
-    /// - [`Error::BackendFatal`] for non-retriable supervisor errors
-    ///   (PKI, TLS provider setup), bubbled up before any pump is
-    ///   spawned.
+    /// - [`Error::Handshake`] if the supervisor cannot establish an initial session within the
+    ///   bounded wait window.
+    /// - [`Error::TunSetup`] if opening the TUN fails (privileges, interface name collision, kernel
+    ///   module missing).
+    /// - [`Error::BackendFatal`] for non-retriable supervisor errors (PKI, TLS provider setup),
+    ///   bubbled up before any pump is spawned.
     fn start_multi_hop(
         params: &WarrenTunnelParameters,
         cfg: MultiHopConfig,
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
-        use std::sync::Arc;
-        use std::time::Duration;
+        use std::{sync::Arc, time::Duration};
         use warren_backoff::Backoff;
-        use warren_client::multi_hop::MultiHopClient;
-        use warren_client::supervised_pump::{IpAssignChannel, run_downlink, run_uplink};
-        use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
+        use warren_client::{
+            multi_hop::MultiHopClient,
+            supervised_pump::{IpAssignChannel, run_downlink, run_uplink},
+            supervisor::{MultiHopSupervisor, SupervisorConfig},
+        };
 
         let start_t = Instant::now();
         log::debug!(
@@ -1407,14 +1435,13 @@ impl WarrenTunnelMonitor {
 
         // Startup event sequence — order is load-bearing (M-1 fix):
         //
-        // 1. InterfaceUp  — installs the Connecting-state firewall;
-        //    emitted BEFORE routing so the firewall fence is in place
-        //    before any route change could let traffic escape via the
+        // 1. InterfaceUp  — installs the Connecting-state firewall; emitted BEFORE routing so the
+        //    firewall fence is in place before any route change could let traffic escape via the
         //    physical NIC.
         // 2. add_routes   — relay bypass + split-default installed.
         // 3. DefaultRouteSplitGuard::install — policy route table 100.
-        // 4. TunnelEvent::Up — signals "Connected" to the UI only after
-        //    the default route already points at the TUN.
+        // 4. TunnelEvent::Up — signals "Connected" to the UI only after the default route already
+        //    points at the TUN.
         log::debug!(
             "{TRACE_PREFIX} T4={}ms phase=interfaceup_emit (multi-hop, firewall fence up, routes pending)",
             start_t.elapsed().as_millis()
@@ -1617,6 +1644,9 @@ impl WarrenTunnelMonitor {
             event_hook,
             close_rx: args.tunnel_close_rx,
             default_route_guard,
+            // Multi-hop is IPv4-only on the `/v1` HPKE wire: no v6 is ever
+            // assigned, so there is no v6 route to install or tear down.
+            v6_route_guard: None,
             nat_pmp_managers,
             nat_pmp_controller,
         })
@@ -1644,6 +1674,7 @@ impl WarrenTunnelMonitor {
             mut event_hook,
             close_rx,
             default_route_guard,
+            v6_route_guard,
             nat_pmp_managers,
             nat_pmp_controller,
         } = self;
@@ -1753,14 +1784,12 @@ impl WarrenTunnelMonitor {
         // its refresh loop stops emitting while the rest of teardown
         // proceeds.
         //
-        // - Legacy (`nat_pmp_managers`): drop → each manager's `Drop`
-        //   impl cancels its refresh loop + aborts its forwarder.
-        // - Live-reconfig (`nat_pmp_controller`): abort the
-        //   controller task; it drops its owned managers on the way
-        //   out (manager `Drop` fires). The daemon's watch sender
-        //   will then see its receiver gone on the next push, which
-        //   `on_set_nat_pmp_settings` treats as a no-op (tunnel
-        //   dying — nothing to apply).
+        // - Legacy (`nat_pmp_managers`): drop → each manager's `Drop` impl cancels its refresh loop
+        //   + aborts its forwarder.
+        // - Live-reconfig (`nat_pmp_controller`): abort the controller task; it drops its owned
+        //   managers on the way out (manager `Drop` fires). The daemon's watch sender will then see
+        //   its receiver gone on the next push, which `on_set_nat_pmp_settings` treats as a no-op
+        //   (tunnel dying — nothing to apply).
         drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
             h.abort();
@@ -1774,6 +1803,15 @@ impl WarrenTunnelMonitor {
                 && let Err(e) = guard.uninstall().await
             {
                 log::warn!("Warren default-route split cleanup failed: {e}");
+            }
+            // Tear down the IPv6 split-default after the v4 one. `None` on
+            // the multi-hop / no-v6 / non-Linux paths, so this is a no-op
+            // there. The firewall keeps native v6 blocked throughout, so
+            // there is no teardown window where v6 could leak.
+            if let Some(guard) = v6_route_guard
+                && let Err(e) = guard.uninstall().await
+            {
+                log::warn!("Warren IPv6 split-default cleanup failed: {e}");
             }
         });
 
@@ -1873,14 +1911,11 @@ struct NatPmpRuntimeArtifacts {
 /// the right one based on whether [`WarrenTunnelParameters::nat_pmp_control_rx`]
 /// was wired:
 ///
-/// - `nat_pmp_control_rx == None` → spawn the manager directly,
-///   return it owned by the monitor. Settings changes will NOT
-///   propagate until the tunnel reconnects (legacy behaviour).
-/// - `nat_pmp_control_rx == Some(rx)` → spawn a controller task
-///   that owns the manager and listens on `rx`. Each push on `rx`
-///   triggers a live `reconfigure` (or `cancel` + drop on `None`,
-///   or a fresh spawn on `Some(_)` when starting from a disabled
-///   state).
+/// - `nat_pmp_control_rx == None` → spawn the manager directly, return it owned by the monitor.
+///   Settings changes will NOT propagate until the tunnel reconnects (legacy behaviour).
+/// - `nat_pmp_control_rx == Some(rx)` → spawn a controller task that owns the manager and listens
+///   on `rx`. Each push on `rx` triggers a live `reconfigure` (or `cancel` + drop on `None`, or a
+///   fresh spawn on `Some(_)` when starting from a disabled state).
 fn spawn_nat_pmp_runtime(
     runtime: &tokio::runtime::Handle,
     params: &WarrenTunnelParameters,
@@ -2041,8 +2076,8 @@ async fn run_nat_pmp_controller(
         let wanted: Vec<NatPmpRule> = cfg.map(NatPmpConfig::effective_rules).unwrap_or_default();
         let wanted_ids: HashSet<NatPmpRuleId> = wanted.iter().map(NatPmpRule::id).collect();
 
-        // 1) Release+remove managers whose rule disappeared. Emit
-        //    `Cancelled` so the daemon drops that mapping from status.
+        // 1) Release+remove managers whose rule disappeared. Emit `Cancelled` so the daemon drops
+        //    that mapping from status.
         let gone: Vec<NatPmpRuleId> = managers
             .keys()
             .copied()
@@ -2158,10 +2193,8 @@ async fn run_nat_pmp_controller(
 /// Filter `WarrenExitAddr.addrs` to keep only Internet-routable
 /// addresses. Excludes:
 /// - RFC 1918 private IPv4 (10/8, 172.16/12, 192.168/16).
-/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast,
-///   multicast, unspecified.
-/// - IPv6 loopback (::1), unspecified, multicast, link-local
-///   (fe80::/10), unique-local (fc00::/7).
+/// - IPv4 loopback (127/8), link-local (169.254/16), broadcast, multicast, unspecified.
+/// - IPv6 loopback (::1), unspecified, multicast, link-local (fe80::/10), unique-local (fc00::/7).
 ///
 /// Preserves `id` and any future non-IP transport variants (Warren
 /// does not use relays today; the match stays open via `_` to track
@@ -2248,9 +2281,8 @@ enum SessionRequest {
 }
 
 /// Selects the session variant from `n_connections`:
-/// - `0` or `1` -> [`SessionRequest::Mono`] (0 is the degenerate case
-///   and gets mono rather than a panic, since the upper layer should
-///   validate stricter).
+/// - `0` or `1` -> [`SessionRequest::Mono`] (0 is the degenerate case and gets mono rather than a
+///   panic, since the upper layer should validate stricter).
 /// - `>= 2` -> [`SessionRequest::Multi(n)`].
 #[must_use]
 fn select_session_request(n_connections: u8) -> SessionRequest {
@@ -2373,12 +2405,10 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig) -> TunnelMetadata {
 /// tunnel).
 ///
 /// Strategy:
-/// 1. For each candidate exit IP: a `/32` (or `/128`) route via the
-///    physical interface, more specific than the `/1 + /1` below, so
-///    the daemon -> exit packets keep using the physical NIC.
-/// 2. `0.0.0.0/1` + `128.0.0.0/1` via the TUN interface: covers the
-///    entire IPv4 space without replacing the existing default route,
-///    a classic split-default trick.
+/// 1. For each candidate exit IP: a `/32` (or `/128`) route via the physical interface, more
+///    specific than the `/1 + /1` below, so the daemon -> exit packets keep using the physical NIC.
+/// 2. `0.0.0.0/1` + `128.0.0.0/1` via the TUN interface: covers the entire IPv4 space without
+///    replacing the existing default route, a classic split-default trick.
 ///
 /// Bypass form: `<exit_ip>/32 via <gateway> dev <physical>` with the
 /// explicit gateway is required on cloud VPS where the exit IP is
@@ -2431,23 +2461,19 @@ fn build_warren_tunnel_routes(
 ///
 /// macOS strategy — do NOT reproduce the Linux `/1 + /1` recipe:
 ///
-/// 1. **`<exit_ip>/32 NetNode::DefaultNode`** — bypass so that the
-///    daemon's QUIC packets to the exit take the physical NIC instead
-///    of the TUN (otherwise routing loop). `DefaultNode` is a symbolic
-///    node: talpid-routing macOS posts `<ip>/32 via
-///    best_default_route.router_ip` in `apply_non_tunnel_routes`
-///    (`talpid-routing/src/unix/macos/mod.rs:541`), executed **after**
-///    the ifscope dance, hence with an ARP-able L3 gateway (not the SDL
-///    link-scope that fails ARP for off-LAN exits).
+/// 1. **`<exit_ip>/32 NetNode::DefaultNode`** — bypass so that the daemon's QUIC packets to the
+///    exit take the physical NIC instead of the TUN (otherwise routing loop). `DefaultNode` is a
+///    symbolic node: talpid-routing macOS posts `<ip>/32 via best_default_route.router_ip` in
+///    `apply_non_tunnel_routes` (`talpid-routing/src/unix/macos/mod.rs:541`), executed **after**
+///    the ifscope dance, hence with an ARP-able L3 gateway (not the SDL link-scope that fails ARP
+///    for off-LAN exits).
 ///
-/// 2. **`0.0.0.0/0 dev <tun>`** — default redirect. Prefix 0 triggers
-///    the `tunnel_default_routes` special case in talpid-routing macOS
-///    (`mod.rs:344-354`) which:
-///    - Transforms the previous default `0.0.0.0/0 via gw dev <physical>`
-///      into an **ifscope** route (= visible only to sockets bound to
-///      the physical iface).
-///    - Posts the new default `0.0.0.0/0 dev <tun>` un-scoped (= visible
-///      to everything else, i.e. user traffic).
+/// 2. **`0.0.0.0/0 dev <tun>`** — default redirect. Prefix 0 triggers the `tunnel_default_routes`
+///    special case in talpid-routing macOS (`mod.rs:344-354`) which:
+///    - Transforms the previous default `0.0.0.0/0 via gw dev <physical>` into an **ifscope** route
+///      (= visible only to sockets bound to the physical iface).
+///    - Posts the new default `0.0.0.0/0 dev <tun>` un-scoped (= visible to everything else, i.e.
+///      user traffic).
 ///
 /// Cleanup is automatic via `cleanup_routes` + `try_restore_default_routes`
 /// (with exponential backoff retry, `mod.rs:613-671`) when the tunnel
@@ -3153,12 +3179,10 @@ mod tests {
     fn build_routes_macos_uses_default_node_bypass_and_default_redirect() {
         // macOS - mirror of the Mullvad WireGuard pattern, adapted to
         // Warren's needs:
-        //   1. `<exit_ip>/32 NetNode::DefaultNode` -> bypass via the
-        //      best default route (resolved at apply time by
-        //      talpid-routing).
-        //   2. `0.0.0.0/0 dev <tun>` -> triggers the
-        //      `tunnel_default_routes` ifscope dance (native macOS
-        //      recipe, no policy routing on Darwin).
+        //   1. `<exit_ip>/32 NetNode::DefaultNode` -> bypass via the best default route (resolved
+        //      at apply time by talpid-routing).
+        //   2. `0.0.0.0/0 dev <tun>` -> triggers the `tunnel_default_routes` ifscope dance (native
+        //      macOS recipe, no policy routing on Darwin).
         //
         // The `node` field on `RequiredRoute` is private, so the
         // assertions below use the `Debug` output, which exposes
@@ -3421,9 +3445,10 @@ mod tests {
     // manager and the observer must see a Mapped event — all without a
     // tunnel reconnect.
     // ===================================================================
-    use std::sync::Arc;
-    use std::sync::Mutex as StdMutex;
-    use std::time::Duration;
+    use std::{
+        sync::{Arc, Mutex as StdMutex},
+        time::Duration,
+    };
     use tokio::net::UdpSocket;
     use warren_natpmp_protocol::{
         MapProto, Response as NatPmpResponse, ResultCode, parse_request, serialize_response,

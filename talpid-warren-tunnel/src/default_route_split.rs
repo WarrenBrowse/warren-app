@@ -5,26 +5,21 @@
 //! compiles everywhere. The per-OS implementation differs because the
 //! routing primitives differ:
 //!
-//! - **Linux**: dedicated table 100 + `ip rule` priorities + an
-//!   exit-IP bypass exception. The in-crate impl in
-//!   [`linux`] shells out to `ip` directly (= same recipe as
-//!   `warren_client::default_route_split` upstream, kept inline here
-//!   because the adapter predates the upstream crate split).
-//! - **macOS**: route-specificity ordering in the global table -
-//!   `<exit_ip>/32 -interface <default_iface>` (host-route exception)
-//!   then `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>`. Implementation
-//!   re-exported verbatim from `warren_client::default_route_split_macos`
-//!   so the adapter stays a thin wrapper.
-//! - **Windows**: PowerShell `New-NetRoute` recipe - host-route
-//!   exception on the captured default `(ifindex, NextHop)` pair, then
-//!   `0.0.0.0/1` + `128.0.0.0/1 -InterfaceAlias <tun>`. Re-exported
+//! - **Linux**: dedicated table 100 + `ip rule` priorities + an exit-IP bypass exception. The
+//!   in-crate impl in [`linux`] shells out to `ip` directly (= same recipe as
+//!   `warren_client::default_route_split` upstream, kept inline here because the adapter predates
+//!   the upstream crate split).
+//! - **macOS**: route-specificity ordering in the global table - `<exit_ip>/32 -interface
+//!   <default_iface>` (host-route exception) then `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>`.
+//!   Implementation re-exported verbatim from `warren_client::default_route_split_macos` so the
+//!   adapter stays a thin wrapper.
+//! - **Windows**: PowerShell `New-NetRoute` recipe - host-route exception on the captured default
+//!   `(ifindex, NextHop)` pair, then `0.0.0.0/1` + `128.0.0.0/1 -InterfaceAlias <tun>`. Re-exported
 //!   from `warren_client::default_route_split_windows`.
-//! - **Other** (any target that is not Linux, macOS or Windows): a
-//!   [`stub`] that always fails to install. Lets the
-//!   `default_route_guard` field type exist so the crate compiles on
-//!   every target while making it visible at runtime that traffic is
-//!   **not** being captured by the tunnel (operator log surfaces the
-//!   install error and the warning that no Internet traffic flows
+//! - **Other** (any target that is not Linux, macOS or Windows): a [`stub`] that always fails to
+//!   install. Lets the `default_route_guard` field type exist so the crate compiles on every target
+//!   while making it visible at runtime that traffic is **not** being captured by the tunnel
+//!   (operator log surfaces the install error and the warning that no Internet traffic flows
 //!   through the TUN).
 //!
 //! The `install(exit_ip, tun_name)` / `uninstall(self)` / `Drop` API is
@@ -57,6 +52,44 @@ pub use warren_client::default_route_split_windows::DefaultRouteSplitGuard;
 mod stub;
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use stub::DefaultRouteSplitGuard;
+
+// IPv6 split-default routing. Unlike v4, the leak-safe v6 guard exists
+// only on Linux today (`::/1` + `8000::/1` in the dedicated table via the
+// shared `warren_client` impl). macOS/Windows v6 routing is Phase E, so
+// every non-Linux target gets a stub whose `install` bails with a clear
+// "Linux-only" message - mirroring how the v4 stub behaves on unsupported
+// targets. This keeps the `WarrenTunnelMonitor::v6_route_guard` field type
+// present on every platform without per-OS cfg on the struct/init/teardown.
+#[cfg(target_os = "linux")]
+pub use warren_client::default_route_split::DefaultRouteSplitV6Guard;
+
+#[cfg(not(target_os = "linux"))]
+pub use v6_stub::DefaultRouteSplitV6Guard;
+
+#[cfg(not(target_os = "linux"))]
+mod v6_stub {
+    use std::net::Ipv6Addr;
+
+    /// Cross-OS placeholder so the monitor field type exists. v6 routing
+    /// is Linux-only today (Phase E). `install` always fails loudly so a
+    /// non-Linux build never silently believes it routed v6 through the
+    /// tunnel; the firewall keeps native v6 blocked regardless (no leak).
+    #[derive(Debug)]
+    pub struct DefaultRouteSplitV6Guard;
+
+    impl DefaultRouteSplitV6Guard {
+        pub async fn install(
+            _exit_ip_v6: Option<Ipv6Addr>,
+            _tun_name: &str,
+        ) -> anyhow::Result<Self> {
+            anyhow::bail!("IPv6 split-default routing is Linux-only on this build (Phase E)")
+        }
+
+        pub async fn uninstall(self) -> anyhow::Result<()> {
+            Ok(())
+        }
+    }
+}
 
 /// Force out any Warren split-default routing this process installed,
 /// synchronously, regardless of guard lifetime.
