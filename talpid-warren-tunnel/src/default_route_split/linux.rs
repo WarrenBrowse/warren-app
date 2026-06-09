@@ -150,41 +150,11 @@ pub fn build_uninstall_commands(exit_ip: Ipv4Addr) -> Vec<Vec<String>> {
     ]
 }
 
-/// Builds the `ip` commands for a blind, exit-IP-agnostic teardown of any
-/// Warren split this process (or a crashed predecessor) left behind. Pure
-/// (= testable). The three rules are deleted by their Warren-owned priorities
-/// (`ip rule del pref N` matches on priority, no selector needed), and the
-/// dedicated table is flushed. We never touch the `main` table, so a stray
-/// invocation cannot harm the physical default route.
-#[must_use]
-pub fn build_force_cleanup_commands() -> Vec<Vec<String>> {
-    vec![
-        vec![
-            "rule".into(),
-            "del".into(),
-            "pref".into(),
-            RULE_PREF_EXCLUDE.to_string(),
-        ],
-        vec![
-            "rule".into(),
-            "del".into(),
-            "pref".into(),
-            RULE_PREF_EXIT_BYPASS.to_string(),
-        ],
-        vec![
-            "rule".into(),
-            "del".into(),
-            "pref".into(),
-            RULE_PREF_TUN.to_string(),
-        ],
-        vec![
-            "route".into(),
-            "flush".into(),
-            "table".into(),
-            ROUTE_TABLE.to_string(),
-        ],
-    ]
-}
+// Crash-recovery reclaim is delegated to the shared, ownership-scoped
+// `warren_client::default_route_split::force_cleanup_all` (see the parent
+// module's `force_route_cleanup`): it reads the live `ip rule` database and
+// removes only the `lookup 100` rule + the `/1` routes inside the private
+// table 100, sparing a co-resident tool's rules.
 
 /// Minimal TUN name validation (= shell injection protection even
 /// when passing via `Command::new`). 1-15 alphanum chars + `-`/`_`.
@@ -386,18 +356,6 @@ fn wait_sync_command(
     }
 }
 
-/// Blind synchronous removal of any Warren split-default routing left in the
-/// dedicated table / ip rules, even from a previously crashed process where
-/// no guard survives to run its `Drop`. Idempotent and privilege-tolerant
-/// (tolerates "already gone"). The cross-platform `force_route_cleanup()`
-/// hook calls this from the tunnel state machine's reset paths so a leaked
-/// split can never persist into the next connection.
-pub fn force_cleanup_all() {
-    for args in build_force_cleanup_commands() {
-        run_ip_sync_tolerant(&args);
-    }
-}
-
 async fn run_ip_tolerant_exists(args: &[String]) -> Result<()> {
     let str_args: Vec<&str> = args.iter().map(String::as_str).collect();
     let out = Command::new("ip")
@@ -566,27 +524,10 @@ mod tests {
         );
     }
 
-    #[test]
-    fn force_cleanup_dels_three_rules_and_flushes_table_100() {
-        let cmds = build_force_cleanup_commands();
-        assert_eq!(cmds.len(), 4, "3 rule dels (by pref) + 1 table flush");
-        // Deleted by Warren-owned priorities, no selector needed.
-        assert_eq!(cmds[0], vec!["rule", "del", "pref", "49"]);
-        assert_eq!(cmds[1], vec!["rule", "del", "pref", "50"]);
-        assert_eq!(cmds[2], vec!["rule", "del", "pref", "51"]);
-        assert_eq!(cmds[3], vec!["route", "flush", "table", "100"]);
-    }
-
-    #[test]
-    fn force_cleanup_never_touches_main_table() {
-        // Anti-regression: blind recovery must not flush `main` (would wipe
-        // the physical default route).
-        let cmds = build_force_cleanup_commands();
-        assert!(
-            !cmds.iter().any(|c| c.contains(&"main".to_string())),
-            "force cleanup must never reference the main table"
-        );
-    }
+    // Crash-recovery reclaim moved to the shared, ownership-scoped
+    // `warren_client::default_route_split::plan_force_cleanup`, which is unit
+    // tested there (it reads `ip rule show` and removes only the `lookup 100`
+    // rule + the `/1` routes in table 100, sparing foreign rules).
 
     #[test]
     fn install_uses_supplied_exit_ip() {

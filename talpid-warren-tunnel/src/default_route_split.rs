@@ -111,11 +111,16 @@ mod v6_stub {
 /// This is the recovery backstop on top of each guard's synchronous `Drop`:
 /// it also reclaims a split leaked by a *previous* unclean exit, where no
 /// guard survives.
+///
+/// All three desktop reclaimers are ownership-scoped: they reclaim only
+/// Warren's own artifacts (the macOS registry host route + owned `/1` halves;
+/// the Linux `lookup 100` rule + the `/1` routes inside the private table 100;
+/// the Windows `/1` halves), so a co-resident VPN's routing is never disturbed.
 pub fn force_route_cleanup() {
     #[cfg(target_os = "macos")]
     warren_client::default_route_split_macos::force_cleanup_all();
     #[cfg(target_os = "linux")]
-    linux::force_cleanup_all();
+    warren_client::default_route_split::force_cleanup_all();
     #[cfg(target_os = "windows")]
     warren_client::default_route_split_windows::force_cleanup_all();
 }
