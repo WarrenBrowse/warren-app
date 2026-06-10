@@ -26,7 +26,7 @@ use talpid_tunnel::{
     tun_provider::{Tun, TunConfig},
 };
 use talpid_types::net::AllowedTunnelTraffic;
-use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
+use warren_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warren-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
@@ -508,10 +508,16 @@ pub enum Error {
     BackendTransient(String),
 
     /// Fatal backend error that the state machine must NOT retry
-    /// automatically: configuration mismatch, authentication failure,
-    /// session explicitly rejected by the exit, or PKI/TLS setup
-    /// failure. Retrying immediately would produce the same outcome
-    /// and only waste network bandwidth.
+    /// automatically: configuration mismatch, authentication failure, or
+    /// PKI/TLS setup failure. Retrying immediately would produce the same
+    /// outcome and only waste network bandwidth.
+    ///
+    /// NOTE: a multi-hop `not-allowlisted` rejection is deliberately NOT
+    /// fatal: it self-heals once the exit's allowlist refresh picks up a
+    /// freshly-redeemed subscription, so [`reject_error`] maps it to
+    /// [`Self::BackendTransient`] (recoverable). Do not "promote" it to
+    /// fatal: that would strand a just-subscribed user in an
+    /// uncancelable-until-manual-reconnect state.
     #[error("Warren tunnel fatal backend error: {0}")]
     BackendFatal(String),
 }
@@ -532,6 +538,23 @@ impl Error {
     pub fn is_recoverable(&self) -> bool {
         matches!(self, Error::Handshake(_) | Error::BackendTransient(_))
     }
+}
+
+/// Map an exit's definitive session rejection to a tunnel error.
+///
+/// Classified recoverable ([`Error::BackendTransient`]) on purpose: a
+/// `not-allowlisted` rejection clears on its own once the exit's
+/// allowlist refresh picks up a freshly-redeemed subscription (the exit
+/// polls every few minutes). The state machine retries with its own
+/// backoff and, if the rejection persists, the flap detector settles
+/// into a stable, cancelable blocked error state. The firewall
+/// kill-switch stays up throughout, so a rejected session never leaks
+/// and never blackholes the user into an uncancelable wedge.
+fn reject_error(reason: RejectionReason) -> Error {
+    Error::BackendTransient(format!(
+        "exit rejected the session ({reason}); no active subscription, or the exit \
+         has not yet synced a freshly-redeemed one"
+    ))
 }
 
 /// Maps a `warren_tunnel` handshake error to the talpid backend [`Error`].
@@ -662,6 +685,11 @@ enum MonitorBackend {
         /// absorbs it transparently and the pump tasks park on the
         /// watch channel until the supervisor re-publishes.
         pump_error_rx: tokio::sync::oneshot::Receiver<String>,
+        /// Terminal-rejection signal from the supervisor. `wait()` races
+        /// it so a mid-session policy rejection (the exit revokes the
+        /// pubkey) surfaces as a clean, cancelable error state rather
+        /// than an endless silent reconnect.
+        supervisor_fatal_rx: tokio::sync::watch::Receiver<Option<RejectionReason>>,
     },
 }
 
@@ -1326,6 +1354,11 @@ impl WarrenTunnelMonitor {
             wants_ipv6,
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
+        // Subscribe to the supervisor's terminal-rejection signal BEFORE
+        // `run()` consumes it. The exit publishes a rejection here (e.g.
+        // pubkey not allowlisted) instead of letting the session masquerade
+        // as a live "Connected" that silently carries no traffic.
+        let mut supervisor_fatal_rx = supervisor.fatal_rx();
         let supervisor_handle = runtime.spawn(async move {
             if let Err(e) = supervisor.run().await {
                 log::warn!(
@@ -1350,19 +1383,34 @@ impl WarrenTunnelMonitor {
                     if let Some(c) = client_rx.borrow().clone() {
                         return Ok(c);
                     }
+                    // A definitive rejection short-circuits the wait: the
+                    // session will never come up under the current identity,
+                    // so surface a clean (recoverable) error instead of
+                    // blocking the full timeout.
+                    if let Some(reason) = *supervisor_fatal_rx.borrow() {
+                        return Err(reject_error(reason));
+                    }
                     let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
                     if remaining.is_zero() {
                         return Err(Error::Handshake(format!(
                             "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
                         )));
                     }
-                    if tokio::time::timeout(remaining, client_rx.changed())
-                        .await
-                        .is_err()
-                    {
-                        return Err(Error::Handshake(format!(
-                            "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
-                        )));
+                    // Wake on whichever fires first: a live session, a
+                    // rejection, or the timeout.
+                    tokio::select! {
+                        changed = tokio::time::timeout(remaining, client_rx.changed()) => {
+                            if changed.is_err() {
+                                return Err(Error::Handshake(format!(
+                                    "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
+                                )));
+                            }
+                        }
+                        _ = supervisor_fatal_rx.changed() => {
+                            if let Some(reason) = *supervisor_fatal_rx.borrow() {
+                                return Err(reject_error(reason));
+                            }
+                        }
                     }
                 }
             })?;
@@ -1688,6 +1736,7 @@ impl WarrenTunnelMonitor {
                 uplink_handle,
                 downlink_handle,
                 pump_error_rx,
+                supervisor_fatal_rx,
             },
             event_hook,
             close_rx: args.tunnel_close_rx,
@@ -1760,6 +1809,10 @@ impl WarrenTunnelMonitor {
                 downlink: tokio::task::JoinHandle<anyhow::Result<()>>,
             },
         }
+        // `None` for single-hop (no supervisor); `Some` for multi-hop.
+        let mut supervisor_fatal_rx: Option<
+            tokio::sync::watch::Receiver<Option<RejectionReason>>,
+        > = None;
         let (pump_error_rx, handles) = match backend {
             MonitorBackend::SingleHop {
                 pump_handle,
@@ -1777,21 +1830,52 @@ impl WarrenTunnelMonitor {
                 uplink_handle,
                 downlink_handle,
                 pump_error_rx,
-            } => (
-                pump_error_rx,
-                BackendHandles::MultiHop {
-                    supervisor: supervisor_handle,
-                    uplink: uplink_handle,
-                    downlink: downlink_handle,
+                supervisor_fatal_rx: fatal_rx,
+            } => {
+                supervisor_fatal_rx = Some(fatal_rx);
+                (
+                    pump_error_rx,
+                    BackendHandles::MultiHop {
+                        supervisor: supervisor_handle,
+                        uplink: uplink_handle,
+                        downlink: downlink_handle,
+                    },
+                )
+            }
+        };
+
+        // A future that resolves with the rejection reason if the
+        // supervisor publishes one mid-session; never resolves for
+        // single-hop (no supervisor) so it is inert in the race.
+        let fatal_fut = async move {
+            match supervisor_fatal_rx.as_mut() {
+                Some(rx) => loop {
+                    if let Some(reason) = *rx.borrow_and_update() {
+                        return reason;
+                    }
+                    if rx.changed().await.is_err() {
+                        // Supervisor dropped without a rejection: park
+                        // forever so the other select arms decide.
+                        std::future::pending::<()>().await;
+                    }
                 },
-            ),
+                None => std::future::pending().await,
+            }
         };
 
         let result = runtime.block_on(async move {
-            // `tokio::select!` races the two signals. The first
-            // to arrive "wins" and the losing branch is dropped (= the
-            // internal futures are cleanly cancelled, no leak).
+            tokio::pin!(fatal_fut);
+            // `tokio::select!` races the signals. The first to arrive
+            // "wins" and the losing branches are dropped (= the internal
+            // futures are cleanly cancelled, no leak).
             let outcome: Result<(), Error> = tokio::select! {
+                reason = &mut fatal_fut => {
+                    // Mid-session policy rejection (the exit revoked the
+                    // pubkey). Recoverable so the state machine retries
+                    // and the flap detector settles into a stable
+                    // cancelable blocked state; the kill-switch stays up.
+                    Err(reject_error(reason))
+                }
                 close_res = close_rx => {
                     // External close: daemon requests shutdown. Err =
                     // Sender dropped without signaling (rare: daemon
@@ -2659,6 +2743,23 @@ fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std:
 mod tests {
     use super::*;
     use warren_protocol::WarrenPubkey;
+
+    #[test]
+    fn reject_error_is_recoverable_so_killswitch_stays_cancelable() {
+        // Load-bearing invariant: an exit rejection must map to a
+        // RECOVERABLE error. Recoverable keeps the firewall kill-switch up
+        // (fail-closed, no leak) while leaving the state cancelable and
+        // letting the tunnel self-heal once the allowlist syncs. Promoting
+        // this to a fatal error would strand a just-subscribed user.
+        for reason in [RejectionReason::NotAllowlisted, RejectionReason::IpExhausted] {
+            let err = reject_error(reason);
+            assert!(
+                matches!(err, Error::BackendTransient(_)),
+                "rejection must map to BackendTransient, got {err:?}"
+            );
+            assert!(err.is_recoverable(), "rejection error must be recoverable");
+        }
+    }
 
     #[test]
     fn warren_tunnel_parameters_debug_does_not_leak_secrets() {
