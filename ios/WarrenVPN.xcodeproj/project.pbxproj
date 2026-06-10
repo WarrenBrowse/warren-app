@@ -3011,7 +3011,7 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
-		440E9EF02BDA93CB00B1FD11 /* WarrenVPN */ = {
+		440E9EF02BDA93CB00B1FD11 /* MullvadVPN */ = {
 			isa = PBXGroup;
 			children = (
 				F9EDB26A2EC4C03A0015DE36 /* Interactors */,
@@ -3026,7 +3026,7 @@
 				440E9EFF2BDA995800B1FD11 /* TunnelManager */,
 				440E9EFC2BDA982200B1FD11 /* View controllers */,
 			);
-			path = WarrenVPN;
+			path = MullvadVPN;
 			sourceTree = "<group>";
 		};
 		440E9EF12BDA940500B1FD11 /* Notifications */ = {
@@ -3045,14 +3045,14 @@
 			path = NotificationProviders;
 			sourceTree = "<group>";
 		};
-		440E9EF32BDA942E00B1FD11 /* WarrenREST */ = {
+		440E9EF32BDA942E00B1FD11 /* MullvadREST */ = {
 			isa = PBXGroup;
 			children = (
 				F0F146932D9462BA00BF78E7 /* MullvadApi */,
 				F072D3D02C071A9100906F64 /* Shadowsocks */,
 				440E9EF52BDA954000B1FD11 /* Relay */,
 			);
-			path = WarrenREST;
+			path = MullvadREST;
 			sourceTree = "<group>";
 		};
 		440E9EF52BDA954000B1FD11 /* Relay */ = {
@@ -3097,7 +3097,7 @@
 			path = DeviceCheck;
 			sourceTree = "<group>";
 		};
-		440E9EF92BDA95FC00B1FD11 /* WarrenTypes */ = {
+		440E9EF92BDA95FC00B1FD11 /* MullvadTypes */ = {
 			isa = PBXGroup;
 			children = (
 				7AF36A992CA2964000E1D497 /* AnyIPAddressTests.swift */,
@@ -3106,10 +3106,10 @@
 				58C3FA652A38549D006A450A /* MockFileCache.swift */,
 				7ABFB09D2BA316220074A49E /* RelayConstraintsTests.swift */,
 			);
-			path = WarrenTypes;
+			path = MullvadTypes;
 			sourceTree = "<group>";
 		};
-		440E9EFA2BDA976800B1FD11 /* WarrenLogging */ = {
+		440E9EFA2BDA976800B1FD11 /* MullvadLogging */ = {
 			isa = PBXGroup;
 			children = (
 				A902E7A52D3FB0D9007F844A /* LogFileOutputStreamTests.swift */,
@@ -3117,7 +3117,7 @@
 				44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */,
 				7AA513852BC91C6B00D081A4 /* LogRotationTests.swift */,
 			);
-			path = WarrenLogging;
+			path = MullvadLogging;
 			sourceTree = "<group>";
 		};
 		440E9EFB2BDA97C600B1FD11 /* GeneralAPIs */ = {
@@ -3218,7 +3218,7 @@
 			path = "SwiftUI components";
 			sourceTree = "<group>";
 		};
-		449872E22B7CB91B00094DDC /* WarrenSettings */ = {
+		449872E22B7CB91B00094DDC /* MullvadSettings */ = {
 			isa = PBXGroup;
 			children = (
 				7A83A0C52B29A750008B5CE7 /* APIAccessMethodsTests.swift */,
@@ -3233,7 +3233,7 @@
 				F072D3CE2C07122400906F64 /* SettingsUpdaterTests.swift */,
 				449872E32B7CB96300094DDC /* TunnelSettingsUpdateTests.swift */,
 			);
-			path = WarrenSettings;
+			path = MullvadSettings;
 			sourceTree = "<group>";
 		};
 		449EBA242B975B7C00DFA4EB /* Protocols */ = {
@@ -3952,11 +3952,11 @@
 		58B0A2A1238EE67E00BC001D /* WarrenVPNTests */ = {
 			isa = PBXGroup;
 			children = (
-				440E9EFA2BDA976800B1FD11 /* WarrenLogging */,
-				440E9EF32BDA942E00B1FD11 /* WarrenREST */,
-				449872E22B7CB91B00094DDC /* WarrenSettings */,
-				440E9EF92BDA95FC00B1FD11 /* WarrenTypes */,
-				440E9EF02BDA93CB00B1FD11 /* WarrenVPN */,
+				440E9EFA2BDA976800B1FD11 /* MullvadLogging */,
+				440E9EF32BDA942E00B1FD11 /* MullvadREST */,
+				449872E22B7CB91B00094DDC /* MullvadSettings */,
+				440E9EF92BDA95FC00B1FD11 /* MullvadTypes */,
+				440E9EF02BDA93CB00B1FD11 /* MullvadVPN */,
 				58B0A2A4238EE67E00BC001D /* Info.plist */,
 				F0B0E6962AFE6E7E001DC66B /* XCTest+Async.swift */,
 				DC80C06F35C54E9DCBB87ABD /* MullvadVPN */,
