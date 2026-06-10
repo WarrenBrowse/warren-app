@@ -71,13 +71,10 @@ class AccountViewController: UIViewController, @unchecked Sendable {
             self?.copyAccountToken()
         }
 
-        contentView.restorePurchasesView.restoreButtonAction = { [weak self] in
-            self?.restorePurchases()
-        }
-
-        contentView.restorePurchasesView.infoButtonAction = { [weak self] in
-            self?.actionHandler?(.restorePurchasesInfo)
-        }
+        // Warren has no in-app purchase to restore (payment is the Stripe
+        // checkout funnel + voucher redemption), so the StoreKit
+        // restore-purchases UI is hidden. The stack view collapses it.
+        contentView.restorePurchasesView.isHidden = true
 
         interactor.didReceiveTunnelState = { [weak self] in
             guard let self else { return }

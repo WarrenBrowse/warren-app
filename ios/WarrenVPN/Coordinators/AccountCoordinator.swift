@@ -8,6 +8,7 @@
 
 import WarrenREST
 import Routing
+import SafariServices
 import UIKit
 
 enum AccountDismissReason: Equatable, Sendable {
@@ -67,10 +68,23 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         case .showFailedToLoadProducts:
             showFailToFetchProducts()
         case .showRestorePurchases:
-            didRequestShowInAppPurchase(paymentAction: .restorePurchase)
+            openCheckout()
         case .showPurchaseOptions:
-            didRequestShowInAppPurchase(paymentAction: .purchase)
+            openCheckout()
         }
+    }
+
+    /// Opens the Warren Stripe checkout funnel. Aligned with desktop and
+    /// Android: there is no in-app purchase. The user buys a plan on
+    /// `checkout.warrenbrowse.com`, receives a voucher, and redeems it
+    /// in-app (Redeem voucher). The funnel is stateless, so no wallet
+    /// identifier is passed in the URL.
+    private func openCheckout() {
+        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
+        let safari = SFSafariViewController(url: url)
+        safari.preferredBarTintColor = .Warren.navy
+        safari.preferredControlTintColor = .Warren.yellow
+        navigationController.present(safari, animated: true)
     }
 
     private func didRequestShowInAppPurchase(
