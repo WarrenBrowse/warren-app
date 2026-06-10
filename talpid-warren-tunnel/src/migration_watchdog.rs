@@ -289,6 +289,10 @@ pub(crate) struct RealWatchdogIo {
     /// (Windows `CallbackHandle`); `None` elsewhere.
     #[allow(dead_code)]
     pub _subscription_guard: Option<Box<dyn std::any::Any + Send>>,
+    // Only macOS reads this (get_default_routes / refresh_routes); the
+    // Linux and Windows nudge + has-route paths use free functions, so
+    // the field is dead there but kept for a uniform struct shape.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub route_manager: RouteManagerHandle,
     pub client_rx: ClientWatch,
     pub supervisor: SupervisorHandle,
@@ -538,7 +542,7 @@ pub(crate) async fn subscribe_route_events(
             while let Some(msg) = events.next().await {
                 let is_default_route = match &msg {
                     CallbackMessage::NewRoute(route) | CallbackMessage::DelRoute(route) => {
-                        route.prefix.prefix() == 0
+                        route.prefix().prefix() == 0
                     }
                 };
                 if is_default_route && tx.send(()).is_err() {
