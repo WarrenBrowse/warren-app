@@ -1397,25 +1397,15 @@ impl WarrenTunnelMonitor {
         // TUN v4-only (firewall blocks native v6 - no leak).
         let (tun_ip, tun_ipv6) = match *ip_assign_channel.subscribe().borrow_and_update() {
             Some(spec) => {
-                // Decoherence-by-design: if we asked for a feature the exit
-                // did not grant (its authoritative `granted_features` echo),
-                // surface it LOUDLY instead of silently going v4-only. This
-                // is the warren-app-layer half of the contract: a lagging
-                // exit can no longer make the daemon believe v6 is active.
-                let requested = if wants_ipv6 {
-                    warren_protocol::features::IPV6
-                } else {
-                    0
-                };
-                let unfulfilled = spec.unfulfilled(requested);
-                if unfulfilled & warren_protocol::features::IPV6 != 0 {
+                // Capability echo: if we asked for v6 but the exit did not
+                // grant one (`assigned_v6` is None), surface it LOUDLY
+                // instead of silently going v4-only. The presence of
+                // `assigned_v6` is the exit's authoritative answer.
+                if wants_ipv6 && spec.assigned_v6.is_none() {
                     log::warn!(
-                        "{TRACE_PREFIX} IPv6 was requested but this exit did NOT grant it \
-                         (granted_features=0x{:x}, exit_protocol_version={}); staying IPv4-only. \
-                         IPv6 is UNAVAILABLE on this exit - this is surfaced, not a silent fallback. \
-                         The exit binary likely predates multi-hop IPv6 (/v2).",
-                        spec.granted_features,
-                        spec.exit_protocol_version,
+                        "{TRACE_PREFIX} IPv6 was requested but this exit did NOT grant it; \
+                         staying IPv4-only. IPv6 is UNAVAILABLE on this exit - surfaced, \
+                         not a silent fallback."
                     );
                 }
                 log::info!(
