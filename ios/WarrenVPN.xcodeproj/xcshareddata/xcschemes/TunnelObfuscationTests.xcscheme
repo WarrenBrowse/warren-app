@@ -13,11 +13,11 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:TestPlans/MullvadVPNApp.xctestplan"
+            reference = "container:TestPlans/WarrenVPNApp.xctestplan"
             default = "YES">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:TestPlans/MullvadVPNCI.xctestplan">
+            reference = "container:TestPlans/WarrenVPNCI.xctestplan">
          </TestPlanReference>
       </TestPlans>
       <Testables>

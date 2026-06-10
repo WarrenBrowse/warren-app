@@ -324,10 +324,19 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public func setErrorState(reason: BlockedStateReason) {
-        // C.4.3.X TODO: surface the blocked-state reason to the
-        // PacketTunnelProvider so the iOS Settings panel reflects the
-        // user-visible cause (revoked wallet, no signal, etc.).
-        logger.info("setErrorState called (C.4.3 scaffold no-op, reason=\(reason))")
+        // Surface the blocked-state reason as an `.error` observed state so
+        // the parent `PacketTunnelProvider` chain (BlockedStateErrorMapper ->
+        // IPC -> TunnelState.error -> UI) reflects the user-visible cause
+        // (device revoked/logged out, no signal, etc.). Without this a
+        // failed device check (PacketTunnelProvider.startDeviceCheckInner)
+        // would vanish silently.
+        logger.info("setErrorState: entering blocked state (reason=\(reason))")
+        let nextState: ObservedState = .error(ObservedBlockedState(reason: reason))
+        stateLock.lock()
+        currentState = nextState
+        let continuation = observedStatesContinuation
+        stateLock.unlock()
+        continuation?.yield(nextState)
     }
 
     public func notifyEphemeralPeerNegotiated() {

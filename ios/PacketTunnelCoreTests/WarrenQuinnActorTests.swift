@@ -46,6 +46,33 @@ final class WarrenQuinnActorTests: XCTestCase {
         await assertObservedState(actor, equals: .disconnected)
     }
 
+    // MARK: - setErrorState surfaces a blocked state
+
+    func test_setErrorState_surfacesErrorObservedStateWithReason() async {
+        let actor = WarrenQuinnActor()
+        actor.setErrorState(reason: .deviceLoggedOut)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .deviceLoggedOut)
+    }
+
+    func test_setErrorState_emitsErrorOnObservedStatesStream() async {
+        let actor = WarrenQuinnActor()
+        let stream = await actor.observedStates
+        var iterator = stream.makeAsyncIterator()
+        // Drain the initial snapshot (.disconnected) so the next value is
+        // the transition we are asserting.
+        _ = await iterator.next()
+        actor.setErrorState(reason: .deviceRevoked)
+        let next = await iterator.next()
+        guard case let .error(blocked) = next else {
+            return XCTFail("Expected .error emission, got \(String(describing: next))")
+        }
+        XCTAssertEqual(blocked.reason, .deviceRevoked)
+    }
+
     // MARK: - NAT-PMP events are state-neutral
 
     func test_applyEvent_natPmpEvents_doNotChangeState() async {
