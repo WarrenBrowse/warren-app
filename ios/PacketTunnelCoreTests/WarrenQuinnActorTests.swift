@@ -14,27 +14,94 @@
 import XCTest
 
 @testable import PacketTunnelCore
+@testable import WarrenMockData
+@testable import WarrenREST
 @testable import WarrenRustRuntime
+@testable import WarrenSettings
+
+/// No-op stand-in for the FFI-backed `WarrenQuinnAdapter` so the actor's
+/// lifecycle can be unit-tested without standing up the Rust tunnel.
+private final class MockWarrenQuinnAdapter: WarrenQuinnAdapting {
+    func start(config: WarrenTunnelConfig) throws {}
+    func stop() {}
+    func reconnect() {}
+    func pause() {}
+    func resume() {}
+}
+
+/// Empty in-memory settings store so `SettingsManager.readSettings()` (called
+/// inside `WarrenQuinnActor.start()`) returns a not-found error the actor
+/// swallows into defaults, instead of hitting the real App Group store whose
+/// container URL is nil under XCTest (a force-unwrap crash).
+private final class InMemoryTestSettingsStore: SettingsStore, @unchecked Sendable {
+    private var storage: [SettingsKey: Data] = [:]
+    enum StoreError: Error { case notFound }
+    func read(key: SettingsKey) throws -> Data {
+        guard let data = storage[key] else { throw StoreError.notFound }
+        return data
+    }
+    func write(_ data: Data, for key: SettingsKey) throws { storage[key] = data }
+    func delete(key: SettingsKey) throws { storage[key] = nil }
+}
 
 final class WarrenQuinnActorTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        // Route SettingsManager at the in-memory store so start()'s settings
+        // reads don't touch the App Group container (nil under XCTest).
+        SettingsManager.unitTestStore = InMemoryTestSettingsStore()
+    }
+
+    override func tearDown() {
+        SettingsManager.unitTestStore = nil
+        super.tearDown()
+    }
+
     // MARK: - applyEvent updates currentState
 
-    // These three pin the intended connected/reconnecting surfacing but are
-    // skipped until the actor threads a real `ObservedConnectionState`
-    // (selectedRelays + IP) from `start()` on the `.connected`/`.reconnecting`
-    // events. Today `applyEvent` maps them to `.initial`, and building a real
-    // connection state in a unit test needs a mock adapter + mock relays
-    // (separate P1 connected-state work). Un-skip when that lands.
-    func test_applyEvent_connected_updatesObservedStateToConnected() async throws {
-        throw XCTSkip("connected-state surfacing pending (P1): applyEvent(.connected) -> .initial")
+    func test_applyEvent_connected_surfacesConnectedWithSelectedRelay() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        let state = await actor.observedState
+        guard case let .connected(conn) = state else {
+            return XCTFail("Expected .connected, got \(state)")
+        }
+        // The connection state carries the relay we started with, so the UI
+        // can render the real exit (not a blank "Connected").
+        XCTAssertEqual(
+            conn.selectedRelays.exit.hostname,
+            RelaySelectorStub.selectedRelays.exit.hostname
+        )
     }
 
-    func test_applyEvent_failover_updatesObservedStateToReconnecting() async throws {
-        throw XCTSkip("connected-state surfacing pending (P1): applyEvent(.failover) -> .initial")
+    func test_applyEvent_failover_surfacesReconnecting() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.failover(toExit: "Sweden"))
+        let state = await actor.observedState
+        guard case .reconnecting = state else {
+            return XCTFail("Expected .reconnecting, got \(state)")
+        }
     }
 
-    func test_applyEvent_reconnecting_updatesObservedStateToReconnecting() async throws {
-        throw XCTSkip("connected-state surfacing pending (P1): applyEvent(.reconnecting) -> .initial")
+    func test_applyEvent_reconnecting_surfacesReconnecting() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.reconnecting)
+        let state = await actor.observedState
+        guard case .reconnecting = state else {
+            return XCTFail("Expected .reconnecting, got \(state)")
+        }
+    }
+
+    func test_applyEvent_connected_withoutStart_staysInitial() async {
+        // No start() means no captured connection context, so a stray
+        // `.connected` event must not fabricate a relay.
+        let actor = WarrenQuinnActor()
+        actor.applyEvent(.connected)
+        let state = await actor.observedState
+        guard case .initial = state else {
+            return XCTFail("Expected .initial without a start context, got \(state)")
+        }
     }
 
     func test_applyEvent_disconnected_updatesObservedStateToDisconnected() async {
@@ -133,6 +200,20 @@ final class WarrenQuinnActorTests: XCTestCase {
     }
 
     // MARK: - bindWalletSigningSeed + start flow
+
+    /// An actor wired with a no-op adapter + seed and started against the
+    /// stub relays, so it has captured a connection context and `.connected`
+    /// events surface a real `ObservedConnectionState`.
+    private func makeStartedActor() -> WarrenQuinnActor {
+        let actor = WarrenQuinnActor()
+        actor.bindAdapter(MockWarrenQuinnAdapter())
+        actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
+        actor.start(options: StartOptions(
+            launchSource: .app,
+            selectedRelays: RelaySelectorStub.selectedRelays
+        ))
+        return actor
+    }
 
     func test_start_withoutSeedBound_doesNotCrash() async {
         let actor = WarrenQuinnActor()

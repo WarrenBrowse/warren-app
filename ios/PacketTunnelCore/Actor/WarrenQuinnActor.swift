@@ -24,6 +24,7 @@
 import Foundation
 import Network
 import WarrenLogging
+import WarrenREST
 import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
@@ -55,7 +56,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// owning `WarrenQuinnTunnelImplementation` via [`bindAdapter(_:)`].
     /// `nil` until `bindAdapter` is called ; `start(options:)` is a
     /// no-op until then.
-    private var adapter: WarrenQuinnAdapter?
+    private var adapter: WarrenQuinnAdapting?
 
     /// 32-byte Ed25519 signing seed derived from the user wallet,
     /// loaded via the cross-process Keychain bridge by the owning
@@ -64,6 +65,19 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// `start(options:)` falls back to a logged no-op until then.
     /// Cleared by [`stop()`].
     private var walletSigningSeed: Data?
+
+    /// Connection details captured at [`start(options:)`] so the Rust-side
+    /// `.connected`/`.reconnecting`/`.failover` events (which carry no payload)
+    /// can be surfaced as a real `ObservedConnectionState` (relay + IP + port)
+    /// the UI can render. `nil` before the first start ; events that arrive
+    /// without it fall back to `.initial`. Cleared by [`stop()`].
+    private struct ConnectionContext {
+        let selectedRelays: SelectedRelays
+        let relayConstraints: RelayConstraints
+        let remotePort: UInt16
+        let isDaitaEnabled: Bool
+    }
+    private var connectionContext: ConnectionContext?
 
     public var observedState: ObservedState {
         get async { snapshotState() }
@@ -104,7 +118,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// `WarrenQuinnTunnelImplementation`. Called once during the
     /// implementation's `setUp(provider:...)` ; subsequent calls are
     /// idempotent (replace).
-    public func bindAdapter(_ adapter: WarrenQuinnAdapter) {
+    public func bindAdapter(_ adapter: WarrenQuinnAdapting) {
         stateLock.lock()
         self.adapter = adapter
         stateLock.unlock()
@@ -128,27 +142,35 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// Called from the Rust dispatcher thread ; thread-safe via
     /// `stateLock`.
     public func applyEvent(_ event: WarrenTunnelEvent) {
-        // C.4.3.Z TODO : `ObservedState.connected/.reconnecting` require
-        // an `ObservedConnectionState` payload (selectedRelay + IP +
-        // etc.) - Warren's actor doesn't have that context yet. For
-        // the scaffold we map every non-disconnect to `.initial` and
-        // only fire `.disconnected` definitively. Real wiring lands
-        // once `WarrenQuinnTunnelImplementation.startStatsBroadcastTask`
-        // pushes the connection details up to the actor.
-        let nextState: ObservedState
-        var disconnectContinuation: CheckedContinuation<Void, Never>? = nil
+        // NAT-PMP events are state-neutral (surfaced via the App Group
+        // broadcast layer), so they never touch the observed state.
         switch event {
-        case .connected, .reconnecting, .failover:
-            nextState = .initial
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
+            return
+        default:
+            break
+        }
+
+        var disconnectContinuation: CheckedContinuation<Void, Never>? = nil
+        stateLock.lock()
+        // `connected`/`reconnecting`/`failover` carry no payload, so we rebuild
+        // the connection state from the context captured at `start()`. Without
+        // that context (an event before start), there is nothing to show, so
+        // we stay `.initial` rather than fabricate a relay.
+        let nextState: ObservedState
+        switch event {
+        case .connected:
+            nextState = connectionContext
+                .map { .connected(observedConnectionState(from: $0)) } ?? .initial
+        case .reconnecting, .failover:
+            nextState = connectionContext
+                .map { .reconnecting(observedConnectionState(from: $0)) } ?? .initial
         case .disconnected:
             nextState = .disconnected
         case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
-            // NAT-PMP events do not change the tunnel state ; they are
-            // surfaced separately via the App Group broadcast layer.
+            stateLock.unlock()
             return
         }
-
-        stateLock.lock()
         currentState = nextState
         let continuation = observedStatesContinuation
         if case .disconnected = nextState {
@@ -159,6 +181,22 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
 
         continuation?.yield(nextState)
         disconnectContinuation?.resume()
+    }
+
+    /// Build the UI-facing connection state from the captured context.
+    /// Pure (takes no lock) ; callers hold `stateLock`. Warren is QUIC/UDP
+    /// and post-quantum-free, hence the fixed `transportLayer`/`isPostQuantum`.
+    private func observedConnectionState(from ctx: ConnectionContext) -> ObservedConnectionState {
+        ObservedConnectionState(
+            selectedRelays: ctx.selectedRelays,
+            relayConstraints: ctx.relayConstraints,
+            networkReachability: .reachable,
+            connectionAttemptCount: 0,
+            transportLayer: .udp,
+            remotePort: ctx.remotePort,
+            isPostQuantum: false,
+            isDaitaEnabled: ctx.isDaitaEnabled
+        )
     }
 
     public func start(options: StartOptions) {
@@ -217,6 +255,21 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             bypassCidrs: []  // settings-driven, deferred
         )
 
+        // Capture the connection details so a later Rust-side `.connected`
+        // event (payload-free) can be surfaced as a real
+        // `ObservedConnectionState`. Settings reads are best-effort: a unit
+        // test or a not-yet-provisioned store falls back to defaults.
+        let relayConstraints =
+            (try? SettingsManager.readSettings().relayConstraints) ?? RelayConstraints()
+        stateLock.lock()
+        connectionContext = ConnectionContext(
+            selectedRelays: selectedRelays,
+            relayConstraints: relayConstraints,
+            remotePort: exit.endpoint.socketAddress.port,
+            isDaitaEnabled: daitaEnabled
+        )
+        stateLock.unlock()
+
         do {
             try adapter.start(config: config)
             logger.info("Warren tunnel started via WarrenQuinnAdapter")
@@ -232,6 +285,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // Clear the wallet seed so its memory window is narrow.
         // bindWalletSigningSeed will re-push on next start.
         self.walletSigningSeed = nil
+        self.connectionContext = nil
         stateLock.unlock()
         adapter?.stop()
         // The adapter's `stop()` triggers a Disconnected event on the

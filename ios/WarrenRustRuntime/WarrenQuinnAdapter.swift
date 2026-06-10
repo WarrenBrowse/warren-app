@@ -152,7 +152,18 @@ public enum WarrenQuinnAdapterError: Error {
 /// forward outbound packets to `packetFlow.writePackets` immediately,
 /// from any thread (`NEPacketTunnelFlow.writePackets` is thread-safe).
 /// Internal mutable state is guarded by an `NSLock`.
-public final class WarrenQuinnAdapter: @unchecked Sendable {
+/// The slice of `WarrenQuinnAdapter` that `WarrenQuinnActor` drives.
+/// Extracted as a protocol so the actor can be unit-tested against a mock
+/// without standing up the real Rust FFI tunnel.
+public protocol WarrenQuinnAdapting: AnyObject {
+    func start(config: WarrenTunnelConfig) throws
+    func stop()
+    func reconnect()
+    func pause()
+    func resume()
+}
+
+public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting {
     // `fileprivate` (not `private`) so the file-level @convention(c)
     // callbacks below can access these via the Unmanaged self-ref
     // recovered from the FFI context pointer.
