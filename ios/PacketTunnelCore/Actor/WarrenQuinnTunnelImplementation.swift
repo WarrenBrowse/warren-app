@@ -15,12 +15,10 @@
 //  ultimately driven by the Rust-side event callback registered through
 //  `warren_tunnel_set_event_callback` (cf. `WarrenRustRuntime/WarrenQuinnAdapter.swift`).
 //
-//  At this C.4.3 scaffold stage the implementation is a structural
-//  surface : `setUp/startTunnel/stopTunnel/sleep/wake` forward to the
-//  no-op `WarrenQuinnActor`. C.4.3.X follow-up wires the actor to the
-//  real `WarrenQuinnAdapter` instance owned by `PacketTunnelProvider`
-//  (the adapter requires a `NEPacketTunnelFlow` reference + an event
-//  callback, both threaded through `setUp`).
+//  `setUp/startTunnel/stopTunnel/sleep/wake` forward to the
+//  `WarrenQuinnActor`, which owns the `WarrenQuinnAdapter` instance (the
+//  adapter requires a `NEPacketTunnelFlow` reference + an event callback,
+//  both threaded through `setUp`).
 //
 
 import Foundation
@@ -97,23 +95,18 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             eventCallback: { event in
                 let defaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
                 Self.broadcastEvent(event, into: defaults)
-                // Feed actor's observed state stream (C.4.3.X follow-up
-                // will turn this into a proper AsyncStream backed by the
-                // events ; for now we update the snapshot directly).
                 weakActor.applyEvent(event)
             }
         )
         self.adapter = adapter
         _actor.bindAdapter(adapter)
 
-        // C.4.3.Z : push the wallet Ed25519 signing seed into the
-        // actor. The Keychain entry lives in `Shared/` (was extracted
-        // from WarrenVPN target) so PacketTunnel extension can read
-        // it via the same `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
-        // attribute. WarrenWallet.fromMnemonic derives the seed in
-        // ~milliseconds (BIP39 → HKDF-SHA256 → Ed25519). Failure
-        // here means the wallet was never provisioned - the actor's
-        // `start(options:)` will log + bail out cleanly.
+        // Push the wallet Ed25519 signing seed into the actor. The
+        // Keychain entry lives in `Shared/` so the PacketTunnel extension
+        // can read it via the same
+        // `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` attribute.
+        // Failure here means the wallet was never provisioned: the actor's
+        // `start(options:)` logs + bails out cleanly.
         do {
             let mnemonic = try WarrenWalletKeychain.load()
             let wallet = try WarrenWallet.fromMnemonic(mnemonic)

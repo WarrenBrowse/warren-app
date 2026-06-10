@@ -88,11 +88,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
 
         deviceChecker = DeviceChecker(accountsProxy: accountsProxy, devicesProxy: devicesProxy)
 
-        // C.4.4 : Warren tunnels via Quinn (`warren-tunnel`) ; the
-        // legacy WireGuardGo path is removed. The debug `GotaTun`
-        // toggle is preserved as an alternate path for local
-        // development (no real tunnel traffic, useful for UI/iOS
-        // lifecycle smoke tests). Default = `WarrenQuinnTunnelImplementation`.
+        // Warren tunnels via Quinn (`warren-tunnel`). The debug `GotaTun`
+        // toggle is an alternate path for local development (no real
+        // tunnel traffic, useful for UI/iOS lifecycle smoke tests).
+        // Default = `WarrenQuinnTunnelImplementation`.
         #if DEBUG
             if PacketTunnelDebugSettings.useGotaTun {
                 providerLogger.info("Using GotaTun implementation (debug)")

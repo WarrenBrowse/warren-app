@@ -5,12 +5,8 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold for C.5 - UI Swift wallet Ed25519 mnemonic auth.
-//  SwiftUI 12-word BIP39 mnemonic display with blur+reveal pattern
-//  (no copy button by design: reduces clipboard-malware attack surface).
-//  Used during onboarding wizard Step 2a (Generate new wallet) and in
-//  Settings → Backup → View mnemonic (Face ID gated). NOT yet wired
-//  into the Xcode project.
+//  SwiftUI 12-word BIP39 mnemonic display, used during onboarding
+//  (generate new wallet) and in Settings backup (Face ID gated).
 //
 
 import SwiftUI

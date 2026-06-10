@@ -1,8 +1,8 @@
 /* Bundle display name */
-"CFBundleDisplayName" = "Mullvad VPN";
+"CFBundleDisplayName" = "Warren VPN";
 
 /* Bundle name */
-"CFBundleName" = "MullvadVPN";
+"CFBundleName" = "Warren VPN";
 
 /* Privacy - Local Network Usage Description */
 "NSLocalNetworkUsageDescription" = "Aplikacja potrzebuje tego aby połączyć się i przetestować nową metodę.";

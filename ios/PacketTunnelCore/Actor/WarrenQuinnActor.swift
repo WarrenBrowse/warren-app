@@ -12,11 +12,9 @@
 //  warren-tunnel Quinn stack via `WarrenRustRuntime.WarrenQuinnAdapter`
 //  (cf. `ios/WarrenRustRuntime/WarrenQuinnAdapter.swift`).
 //
-//  At this C.4.3 scaffold stage most methods are no-ops mirroring the
-//  `GotaTunActor` pattern : the Quinn handshake + pump are driven
-//  Rust-side via `warren_tunnel_ffi` (C.4.0/C.4.1). Future passes wire
-//  the actor's observed state stream to the Rust-side event callback
-//  (`warren_tunnel_set_event_callback`) so the parent
+//  The Quinn handshake + pump run Rust-side via `warren_tunnel_ffi`;
+//  the actor's observed-state stream is fed from the Rust-side event
+//  callback (`warren_tunnel_set_event_callback`) so the parent
 //  `PacketTunnelProvider` reacts to Connected / Disconnected / Failover
 //  transitions.
 //
@@ -29,12 +27,11 @@ import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 
-/// Stub-level `PacketTunnelActorProtocol` for the Warren Quinn tunnel.
-/// Real lifecycle wiring lands in C.4.3.X follow-up : connect
-/// `start(options:)` to `WarrenQuinnAdapter.start(config:)`, expose
-/// `observedStates` AsyncStream backed by the Rust-side event callback,
-/// and forward `setErrorState(reason:)` to a blocked-state surface in
-/// the parent `PacketTunnelProvider`.
+/// `PacketTunnelActorProtocol` for the Warren Quinn tunnel: `start(options:)`
+/// drives `WarrenQuinnAdapter.start(config:)`, `observedStates` is an
+/// AsyncStream backed by the Rust-side event callback, and
+/// `setErrorState(reason:)` surfaces a blocked state to the parent
+/// `PacketTunnelProvider`.
 public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Sendable {
     private let logger = Logger(label: "WarrenQuinnActor")
 

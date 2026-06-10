@@ -5,10 +5,9 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold for C.6 - Multi-hop UI parity with desktop M4.H.C.
-//  Toggle + entry country picker + exit country picker. Persists
-//  selection to `UserDefaults` keys consumed by `SettingsReader` in the
-//  PacketTunnel extension. NOT yet wired into the Xcode project.
+//  Multi-hop settings: toggle plus entry/exit country pickers. Persists
+//  to the `UserDefaults` keys read by `SettingsReader` in the
+//  PacketTunnel extension.
 //
 
 import SwiftUI

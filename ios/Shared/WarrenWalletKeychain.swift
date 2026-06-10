@@ -5,11 +5,8 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold for C.5 - UI Swift wallet Ed25519 mnemonic auth.
 //  Stores the user BIP39 mnemonic in the iOS Keychain with strict
-//  device-local + biometrics-friendly attributes. NOT yet wired into
-//  the Xcode project (pbxproj target add is part of the C.5
-//  implementation brief). See `.planning/session-c-followup-briefs.md`.
+//  device-local + biometrics-friendly attributes.
 //
 
 import Foundation

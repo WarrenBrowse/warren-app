@@ -5,11 +5,8 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Scaffold for C.5 - UI Swift wallet Ed25519 mnemonic auth.
-//  SwiftUI 12-word BIP39 input view used during wallet restore (Login
-//  → Restore mnemonic) and onboarding wizard Step 2b (Import existing
-//  wallet). NOT yet wired into the Xcode project (pbxproj target add is
-//  part of the C.5 implementation brief).
+//  SwiftUI 12-word BIP39 input view, used during wallet restore and
+//  onboarding (import existing wallet).
 //
 
 import SwiftUI
