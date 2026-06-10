@@ -274,9 +274,12 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         if isLoggedIn {
             // Warren-specific tunnel features that depend on an active
             // wallet session. Statistics row stays visible even when
-            // disconnected (shows a zero snapshot).
+            // disconnected (shows a zero snapshot). The NAT-PMP port
+            // forwarding row is hidden until the warren_natpmp FFI is
+            // implemented and a settings field carries the toggle; surfacing
+            // it now would be an inert switch.
             snapshot.appendItems(
-                [.warrenTunnelStatistics, .warrenPortForwarding],
+                [.warrenTunnelStatistics],
                 toSection: .vpnSettings
             )
         }

@@ -231,21 +231,22 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
 
     /// Build the FFI tunnel config + the UI connection context from a relay
     /// selection. Shared by `start(options:)` and the relay-change
-    /// `reconnect(to:)` path so both marshal identically. Multi-hop entry is
-    /// honored when present; DAITA presence is settings-driven (the exit picks
-    /// the Maybenot machine, so the spec content is a placeholder).
+    /// `reconnect(to:)` path so both marshal identically. DAITA presence is
+    /// settings-driven (the exit picks the Maybenot machine, so the spec
+    /// content is a placeholder). Multi-hop is forced off (see below).
     private func makeConfigAndContext(
         selectedRelays: SelectedRelays,
         seed: Data
     ) -> (WarrenTunnelConfig, ConnectionContext) {
         let exit = selectedRelays.exit
-        let multiHop: WarrenRelayConfig? = selectedRelays.entry.map { entry in
-            WarrenRelayConfig(
-                pubkey: entry.endpoint.publicKey,
-                endpoint: "\(entry.endpoint.socketAddress)",
-                countryCode: entry.location.countryCode
-            )
-        }
+        // The Warren Quinn FFI does not consume a multi-hop entry relay yet:
+        // the iOS relay model carries none of the signed relay/exit descriptors
+        // the multi-hop handshake needs. Force single-hop here so a user whose
+        // persisted setting is multi-hop is never silently single-hopped at the
+        // data plane while believing otherwise. The multi-hop settings UI is
+        // gated to match. Re-enable by building WarrenRelayConfig from
+        // selectedRelays.entry once the FFI and the relay descriptors land.
+        let multiHop: WarrenRelayConfig? = nil
         let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
         let daitaSpec: WarrenDaitaSpec? =
             daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil

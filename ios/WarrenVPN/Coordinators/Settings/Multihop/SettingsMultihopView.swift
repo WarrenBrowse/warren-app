@@ -14,6 +14,13 @@ struct SettingsMultihopView: View {
     @State private var alert: MullvadAlert?
     private let itemFactory = ListItemFactory()
 
+    // The Warren Quinn data plane does not establish a multi-hop circuit on
+    // iOS yet (the relay model lacks the signed relay/exit descriptors the
+    // handshake needs), so the mode selector is disabled until it lands.
+    // WarrenQuinnActor forces single-hop regardless; this only stops the user
+    // from making a choice that would not take effect.
+    private let multihopAvailable = false
+
     private struct OptionSpec: Identifiable {
         let id: MultihopState
         let label: String
@@ -59,6 +66,18 @@ struct SettingsMultihopView: View {
 
                 SettingsInfoView(viewModel: dataViewModel)
 
+                if !multihopAvailable {
+                    ComingSoonNotice()
+                        .padding(
+                            EdgeInsets(
+                                top: 0,
+                                leading: UIMetrics.contentInsets.toEdgeInsets.leading,
+                                bottom: 8,
+                                trailing: UIMetrics.contentInsets.toEdgeInsets.trailing
+                            )
+                        )
+                }
+
                 VStack(spacing: 0) {
                     SegmentedListItem(
                         isLastInList: false,
@@ -92,6 +111,7 @@ struct SettingsMultihopView: View {
                                     },
                                     groupedContent: {},
                                     onSelect: {
+                                        guard multihopAvailable else { return }
                                         viewModel.multihopState = option.id
                                     }
                                 )
@@ -102,6 +122,8 @@ struct SettingsMultihopView: View {
                 }
                 .padding(.leading, UIMetrics.contentInsets.left)
                 .padding(.trailing, UIMetrics.contentInsets.right)
+                .disabled(!multihopAvailable)
+                .opacity(multihopAvailable ? 1 : 0.4)
             }
         }
         .warrenAlert(item: $alert)
@@ -229,6 +251,20 @@ extension SettingsMultihopView {
             HStack(alignment: .center, spacing: 8) {
                 UIImage.Multihop.whenNeeded.scaledIcon(fromBaseSize: 18, to: .subheadline, offset: .init(x: 0, y: 2))
                 Text("An additional server is used to match your settings for your selected location")
+            }
+            .font(.warrenTinySemiBold)
+            .foregroundColor(Color.warrenTextSecondary)
+        }
+    }
+
+    struct ComingSoonNotice: View {
+        var body: some View {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "clock.badge.exclamationmark")
+                Text(
+                    "Multihop is coming soon on iOS. For now your traffic is "
+                        + "routed through a single server."
+                )
             }
             .font(.warrenTinySemiBold)
             .foregroundColor(Color.warrenTextSecondary)
