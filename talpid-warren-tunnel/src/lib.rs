@@ -66,6 +66,7 @@ use warren_tunnel::{
 
 mod adapter;
 mod device_id;
+mod migration_watchdog;
 use adapter::MullvadTunPacketDevice;
 
 /// Daemon-side NAT-PMP lifecycle wrapper that owns the refresh loop +
@@ -677,6 +678,12 @@ enum MonitorBackend {
         supervisor_handle: tokio::task::JoinHandle<()>,
         uplink_handle: tokio::task::JoinHandle<anyhow::Result<()>>,
         downlink_handle: tokio::task::JoinHandle<anyhow::Result<()>>,
+        /// Migration watchdog task (route-change verification + the
+        /// forced-reconnect/escalation fallbacks). Aborted FIRST during
+        /// teardown: it holds a supervisor watch receiver and a control
+        /// handle, and the supervisor's no-receivers shutdown check
+        /// must still fire once the pumps drop theirs.
+        watchdog_handle: tokio::task::JoinHandle<()>,
         /// Channel through which the pump task reports the first fatal
         /// error (uplink/downlink/supervisor death). `wait()` consumes
         /// it the same way the single-hop path consumes
@@ -1297,28 +1304,11 @@ impl WarrenTunnelMonitor {
         let runtime = args.runtime.clone();
         let mut event_hook = args.event_hook;
 
-        // Detect the outbound source IP towards the RELAY (not the
-        // exit) so the QUIC `Endpoint` binds explicitly to that IP and
-        // does not rebind onto the TUN once routing flips.
         let relay_endpoint = cfg.relay.endpoint;
-        // Clear any leaked split before binding so the relay dial is not
-        // routed into a dead TUN (would fail `detect_default_local_ip`
-        // with "Network is unreachable"). See `force_route_cleanup`.
+        // Clear any leaked split before dialing so the relay dial is not
+        // routed into a dead TUN. See `force_route_cleanup`.
         default_route_split::force_route_cleanup();
-        let bind_local_ip: std::net::SocketAddr = match detect_default_local_ip(relay_endpoint) {
-            Ok(ip) => std::net::SocketAddr::new(ip, 0),
-            Err(e) => {
-                log::warn!(
-                    "Warren multi-hop: detect_default_local_ip for relay failed: {e}. \
-                         Falling back to 0.0.0.0:0 (unspecified)."
-                );
-                std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
-            }
-        };
-        log::info!(
-            "Warren multi-hop client bind local IP = {}",
-            bind_local_ip.ip()
-        );
+        let bind_local_ip = multi_hop_bind_addr(relay_endpoint);
 
         // Spawn the supervisor and wait for the first successful dial
         // so the rest of the bootstrap (TUN, routing) has a live
@@ -1369,6 +1359,9 @@ impl WarrenTunnelMonitor {
         // pubkey not allowlisted) instead of letting the session masquerade
         // as a live "Connected" that silently carries no traffic.
         let mut supervisor_fatal_rx = supervisor.fatal_rx();
+        // Control handle for the migration watchdog's forced-reconnect
+        // fallback; must be taken before `run()` consumes the supervisor.
+        let supervisor_control = supervisor.handle();
         let supervisor_handle = runtime.spawn(async move {
             if let Err(e) = supervisor.run().await {
                 log::warn!(
@@ -1562,8 +1555,6 @@ impl WarrenTunnelMonitor {
                 gateway_v4,
             )
         };
-        #[cfg(target_os = "macos")]
-        let routes = build_warren_tunnel_routes_macos(&metadata.interface, &next_hop_ips);
         // Windows: routing fully owned by the warren-core PowerShell
         // port via `DefaultRouteSplitGuard::install` below; talpid-
         // routing gets an empty set to avoid double-install.
@@ -1582,6 +1573,32 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
         let metadata_iface_for_log = metadata.interface.clone();
+        // macOS installs in two ordered calls: the relay/32 bypass must
+        // be live BEFORE 0/0 lands on the tun, because the wildcard-bound
+        // QUIC socket has no interface pin to fall back on (see
+        // `build_warren_tunnel_routes_macos_ordered`).
+        #[cfg(target_os = "macos")]
+        runtime.block_on(async move {
+            let (bypass, defaults) =
+                build_warren_tunnel_routes_macos_ordered(&metadata_iface_for_log, &next_hop_ips);
+            match route_manager.add_routes(bypass.into_iter().collect()).await {
+                Ok(()) => log::info!("Warren multi-hop relay bypass route installed"),
+                Err(e) => log::warn!(
+                    "Failed to install Warren multi-hop relay bypass route: {e}. \
+                     Relay traffic may transiently self-nest through the tun."
+                ),
+            }
+            match route_manager.add_routes(defaults.into_iter().collect()).await {
+                Ok(()) => log::info!(
+                    "Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})"
+                ),
+                Err(e) => log::warn!(
+                    "Failed to install Warren multi-hop tunnel routes: {e}. \
+                     Tunnel up but no traffic forwarding."
+                ),
+            }
+        });
+        #[cfg(not(target_os = "macos"))]
         runtime.block_on(async move {
             match route_manager.add_routes(routes.into_iter().collect()).await {
                 Ok(()) => log::info!(
@@ -1720,8 +1737,44 @@ impl WarrenTunnelMonitor {
             res
         });
 
-        // Drop the local watch receiver. Only the uplink/downlink keep
-        // theirs alive; once those are aborted, the supervisor sees
+        // Migration watchdog: verifies the QUIC path after every
+        // default-route change and layers the fallbacks (bypass nudge,
+        // forced supervisor reconnect, state-machine escalation). See
+        // `migration_watchdog` module docs.
+        let watchdog_handle = {
+            let client_rx = client_rx.clone();
+            let supervisor = supervisor_control;
+            let pump_error_tx = pump_error_tx.clone();
+            let route_manager = args.route_manager.clone();
+            let relay_ipv4 = match relay_endpoint.ip() {
+                IpAddr::V4(v4) => Some(v4),
+                IpAddr::V6(_) => None,
+            };
+            runtime.spawn(async move {
+                match migration_watchdog::subscribe_route_events(&route_manager).await {
+                    Ok((route_events, guard)) => {
+                        let mut io = migration_watchdog::RealWatchdogIo {
+                            route_events,
+                            _subscription_guard: guard,
+                            route_manager,
+                            client_rx,
+                            supervisor,
+                            pump_error_tx,
+                            relay_ipv4,
+                        };
+                        migration_watchdog::run_watchdog(&mut io).await;
+                        log::debug!("{TRACE_PREFIX} migration watchdog terminated");
+                    }
+                    Err(e) => log::warn!(
+                        "Warren migration watchdog disabled (route-event subscription failed): {e}"
+                    ),
+                }
+            })
+        };
+
+        // Drop the local watch receiver. The uplink/downlink pumps and
+        // the watchdog keep theirs alive; teardown aborts the watchdog
+        // first, then the pumps, so the supervisor still observes
         // `tx.closed()` and terminates cleanly.
         drop(client_rx);
 
@@ -1745,6 +1798,7 @@ impl WarrenTunnelMonitor {
                 supervisor_handle,
                 uplink_handle,
                 downlink_handle,
+                watchdog_handle,
                 pump_error_rx,
                 supervisor_fatal_rx,
             },
@@ -1817,6 +1871,7 @@ impl WarrenTunnelMonitor {
                 supervisor: tokio::task::JoinHandle<()>,
                 uplink: tokio::task::JoinHandle<anyhow::Result<()>>,
                 downlink: tokio::task::JoinHandle<anyhow::Result<()>>,
+                watchdog: tokio::task::JoinHandle<()>,
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
@@ -1839,6 +1894,7 @@ impl WarrenTunnelMonitor {
                 supervisor_handle,
                 uplink_handle,
                 downlink_handle,
+                watchdog_handle,
                 pump_error_rx,
                 supervisor_fatal_rx: fatal_rx,
             } => {
@@ -1849,6 +1905,7 @@ impl WarrenTunnelMonitor {
                         supervisor: supervisor_handle,
                         uplink: uplink_handle,
                         downlink: downlink_handle,
+                        watchdog: watchdog_handle,
                     },
                 )
             }
@@ -1984,7 +2041,14 @@ impl WarrenTunnelMonitor {
                     supervisor,
                     uplink,
                     downlink,
+                    watchdog,
                 } => {
+                    // Watchdog first: it holds a supervisor watch
+                    // receiver + control handle; dropping them before
+                    // the pumps keeps the supervisor's no-receivers
+                    // shutdown check working as before.
+                    watchdog.abort();
+                    let _ = watchdog.await;
                     uplink.abort();
                     downlink.abort();
                     let _ = tokio::join!(uplink, downlink);
@@ -2636,23 +2700,62 @@ fn build_warren_tunnel_routes(
 #[cfg(target_os = "macos")]
 #[must_use]
 fn build_warren_tunnel_routes_macos(tun_iface: &str, exit_ips: &[IpAddr]) -> Vec<RequiredRoute> {
+    let (mut bypass, defaults) = build_warren_tunnel_routes_macos_ordered(tun_iface, exit_ips);
+    bypass.extend(defaults);
+    bypass
+}
+
+/// Same routes as [`build_warren_tunnel_routes_macos`], split into
+/// `(bypass, tunnel_default)` so a call site can install them in two
+/// ORDERED `add_routes` calls. Within a single call talpid-routing
+/// macOS applies the tunnel default BEFORE the `DefaultNode` bypass
+/// (`add_required_routes`: `apply_tunnel_default_routes` runs first),
+/// which opens a millisecond window where a wildcard-bound QUIC socket
+/// has its relay packets captured by `0/0 dev tun` (self-nesting; no
+/// plaintext leak, but garbage). Installing the bypass in its own call
+/// first makes the window zero. Required for the wildcard-bind QUIC
+/// migration path.
+#[cfg(target_os = "macos")]
+#[must_use]
+fn build_warren_tunnel_routes_macos_ordered(
+    tun_iface: &str,
+    exit_ips: &[IpAddr],
+) -> (Vec<RequiredRoute>, Vec<RequiredRoute>) {
     use talpid_routing::NetNode;
 
-    let mut routes: Vec<RequiredRoute> = Vec::with_capacity(exit_ips.len() + 1);
-
-    for ip in exit_ips {
-        routes.push(RequiredRoute::new(
-            IpNetwork::from(*ip),
-            NetNode::DefaultNode,
-        ));
-    }
+    let bypass: Vec<RequiredRoute> = exit_ips
+        .iter()
+        .map(|ip| RequiredRoute::new(IpNetwork::from(*ip), NetNode::DefaultNode))
+        .collect();
 
     let tun_node = Node::device(tun_iface.to_owned());
     let default_v4 = ipnetwork::Ipv4Network::new(std::net::Ipv4Addr::new(0, 0, 0, 0), 0)
         .expect("0.0.0.0/0 is a valid prefix");
-    routes.push(RequiredRoute::new(IpNetwork::V4(default_v4), tun_node));
+    let defaults = vec![RequiredRoute::new(IpNetwork::V4(default_v4), tun_node)];
 
-    routes
+    (bypass, defaults)
+}
+
+/// Local QUIC bind address for the multi-hop client: always wildcard,
+/// NEVER the detected physical source IP. An unconnected UDP socket
+/// picks its source address per packet from the live routing table,
+/// so after a WiFi<->ethernet switch the next QUIC packet leaves
+/// through the new interface and the relay (migration enabled)
+/// revalidates the path in ~1 RTT with no re-handshake. A pinned
+/// source IP dies with its interface and forces a full redial
+/// instead. Loop prevention does not depend on the bind: the relay/32
+/// bypass route (and on Linux the pref-50 ip rule) keeps relay-bound
+/// packets off the TUN.
+#[must_use]
+fn multi_hop_bind_addr(relay_endpoint: std::net::SocketAddr) -> std::net::SocketAddr {
+    match relay_endpoint {
+        std::net::SocketAddr::V4(_) => {
+            std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
+        }
+        std::net::SocketAddr::V6(_) => {
+            std::net::SocketAddr::from((std::net::Ipv6Addr::UNSPECIFIED, 0))
+        }
+    }
 }
 
 /// Detects the name of the interface carrying the IPv4 default
@@ -2753,6 +2856,39 @@ fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std:
 mod tests {
     use super::*;
     use warren_protocol::WarrenPubkey;
+
+    #[test]
+    fn multi_hop_bind_addr_is_always_wildcard() {
+        // QUIC migration regression: pinning the bind to a detected
+        // physical source IP kills the connection on every interface
+        // switch (the socket dies with its interface). The bind must
+        // be wildcard, family-matched to the relay endpoint.
+        let v4 = multi_hop_bind_addr("203.0.113.10:443".parse().unwrap());
+        assert!(v4.ip().is_unspecified() && v4.is_ipv4() && v4.port() == 0);
+        let v6 = multi_hop_bind_addr("[2001:db8::1]:443".parse().unwrap());
+        assert!(v6.ip().is_unspecified() && v6.is_ipv6() && v6.port() == 0);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_ordered_routes_put_relay_bypass_before_tunnel_default() {
+        // With a wildcard-bound socket the relay/32 bypass must be
+        // installed in its own add_routes call BEFORE 0/0 lands on the
+        // tun, or relay packets transiently self-nest through the tun.
+        use std::net::IpAddr;
+        let relay: IpAddr = "203.0.113.10".parse().unwrap();
+        let (bypass, defaults) = build_warren_tunnel_routes_macos_ordered("utun7", &[relay]);
+        assert_eq!(bypass.len(), 1, "one bypass route per relay IP");
+        assert_eq!(bypass[0].prefix.ip(), relay);
+        assert_eq!(bypass[0].prefix.prefix(), 32);
+        assert_eq!(defaults.len(), 1, "exactly the 0/0 tunnel default");
+        assert_eq!(defaults[0].prefix.prefix(), 0);
+        // The concatenated legacy builder must preserve the same order.
+        let all = build_warren_tunnel_routes_macos("utun7", &[relay]);
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0].prefix.prefix(), 32);
+        assert_eq!(all[1].prefix.prefix(), 0);
+    }
 
     #[test]
     fn reject_error_is_recoverable_so_killswitch_stays_cancelable() {

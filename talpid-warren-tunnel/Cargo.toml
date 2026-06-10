@@ -13,7 +13,18 @@ talpid-routing = { path = "../talpid-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "sync", "io-util"] }
+# `time` + `macros` for the migration watchdog (sleep/select), `process`
+# for its Linux `ip route replace` bypass nudge. These were previously
+# satisfied only by workspace feature unification; spelled out so the
+# crate compiles standalone.
+tokio = { workspace = true, features = [
+  "rt-multi-thread",
+  "sync",
+  "io-util",
+  "time",
+  "macros",
+  "process",
+] }
 log = { workspace = true }
 
 # `tun08` is the same `tun = 0.8.x` crate used by `talpid-tunnel`
@@ -68,10 +79,17 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
 ] }
 anyhow = "1"
 
+[target.'cfg(windows)'.dependencies]
+# `AddressFamily` for the migration watchdog's default-route gate
+# (`talpid_routing::get_best_default_route` takes it on Windows).
+talpid-windows = { path = "../talpid-windows" }
+
 [dev-dependencies]
 # Compile-time trait-implementation assertions used in the test module
 # (e.g. `assert_not_impl_any!(WarrenTunnelParameters: Clone)`).
 static_assertions = "1"
+# `start_paused` virtual-clock tests for the migration watchdog policy.
+tokio = { workspace = true, features = ["test-util", "macros", "time"] }
 
 [lints]
 workspace = true

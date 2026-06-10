@@ -7013,6 +7013,7 @@ dependencies = [
  "talpid-routing",
  "talpid-tunnel",
  "talpid-types",
+ "talpid-windows",
  "thiserror 2.0.18",
  "tokio",
  "tun 0.8.7",
