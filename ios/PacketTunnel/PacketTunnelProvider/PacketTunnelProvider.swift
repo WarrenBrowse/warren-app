@@ -272,7 +272,19 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         ipv4Settings.includedRoutes = [NEIPv4Route.default()]
         settings.ipv4Settings = ipv4Settings
 
-        // IPv6 settings
+        // IPv6 blackhole (privacy invariant, aligned with Android's
+        // `planTunInterface` and the desktop `enable_ipv6 = false` default).
+        // The ULA address + `::/0` included route capture ALL IPv6 into the
+        // tunnel so it can never leak to the physical network. Warren does
+        // not carry IPv6 yet, so captured v6 is dropped at the exit and apps
+        // fall back to IPv4 (the ULA is deprioritized by RFC 6724 address
+        // selection). On iOS a route cannot exist without an interface
+        // address (unlike the Linux/Android tun), so assigning `fc00::1` is
+        // the only way to install the `::/0` capture: do NOT remove the
+        // address thinking it tightens the blackhole, it would instead drop
+        // the v6 capture and reopen the leak. The blocked/error state keeps
+        // these settings (WarrenQuinnActor does not reconfigure), so the
+        // kill switch holds for IPv6 too.
         let ipv6Settings = NEIPv6Settings(
             addresses: [LocalNetworkIPs.gatewayAddressIpV6.rawValue],
             networkPrefixLengths: [128]
