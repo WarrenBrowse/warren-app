@@ -153,6 +153,29 @@ typedef struct WarrenTunnelParametersC {
    * Number of entries in `bypass_cidrs`.
    */
   uint32_t bypass_cidrs_count;
+  /**
+   * Signed multi-hop directory JSON, fetched by Swift over URLSession
+   * from `GET {api}/v1/multihop/directory`. When non-null the tunnel
+   * rides the multi-hop wire protocol (the production fleet is
+   * multi-hop only): a 2-hop circuit when `multihop_two_hop` is 1,
+   * otherwise a 1-hop circuit collapsed onto one node. The JSON is
+   * verified Rust-side against the baked root pin before use. Null
+   * falls back to the legacy single-hop path (dev / loopback only).
+   */
+  const char *multihop_directory_json;
+  /**
+   * 1 selects a 2-hop circuit (entry != exit, country diverse); 0 a
+   * 1-hop circuit. Ignored when `multihop_directory_json` is null.
+   */
+  uint8_t multihop_two_hop;
+  /**
+   * Optional ISO 3166-1 alpha-2 entry-country hint (null / empty = any).
+   */
+  const char *multihop_entry_country;
+  /**
+   * Optional ISO 3166-1 alpha-2 exit-country hint (null / empty = any).
+   */
+  const char *multihop_exit_country;
 } WarrenTunnelParametersC;
 
 /**

@@ -59,6 +59,21 @@ pub struct WarrenTunnelParametersC {
     pub bypass_cidrs: *const *const c_char,
     /// Number of entries in `bypass_cidrs`.
     pub bypass_cidrs_count: u32,
+    /// Signed multi-hop directory JSON, fetched by Swift over URLSession
+    /// from `GET {api}/v1/multihop/directory`. When non-null the tunnel
+    /// rides the multi-hop wire protocol (the production fleet is
+    /// multi-hop only): a 2-hop circuit when `multihop_two_hop` is 1,
+    /// otherwise a 1-hop circuit collapsed onto one node. The JSON is
+    /// verified Rust-side against the baked root pin before use. Null
+    /// falls back to the legacy single-hop path (dev / loopback only).
+    pub multihop_directory_json: *const c_char,
+    /// 1 selects a 2-hop circuit (entry != exit, country diverse); 0 a
+    /// 1-hop circuit. Ignored when `multihop_directory_json` is null.
+    pub multihop_two_hop: u8,
+    /// Optional ISO 3166-1 alpha-2 entry-country hint (null / empty = any).
+    pub multihop_entry_country: *const c_char,
+    /// Optional ISO 3166-1 alpha-2 exit-country hint (null / empty = any).
+    pub multihop_exit_country: *const c_char,
 }
 
 /// Multi-hop entry relay configuration.
@@ -379,6 +394,148 @@ mod handle_impl {
     }
 }
 
+/// Drives a multi-hop circuit on the handle's runtime: verify + select a
+/// circuit from the signed directory, bring up a `MultiHopSupervisor`,
+/// and pump `IosTun` against the live session. Surfaces Connecting /
+/// Connected / Reconnecting / Disconnected on the event callback from the
+/// supervisor's session watch. The supervisor owns reconnect; the pumps
+/// drop packets while it is mid-reconnect.
+///
+/// First-cut scope (documented follow-ups, not silently missing): no
+/// periodic directory refresh (the directory is fetched once per connect
+/// by Swift), no exit-allocated IP reassign (the bootstrap address from
+/// the network settings is kept; the daemon's reassign loop is
+/// RealTun-specific), and DAITA is disabled on this path.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn spawn_multi_hop(
+    arc: std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
+    directory_json: String,
+    two_hop: bool,
+    entry_country: String,
+    exit_country: String,
+    signing_key: ed25519_dalek::SigningKey,
+) {
+    use std::sync::atomic::Ordering;
+
+    use warren_client::supervised_pump::{
+        DaitaShared, run_downlink_with_daita, run_uplink_with_daita,
+    };
+    use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
+
+    let arc_for_task = std::sync::Arc::clone(&arc);
+    arc.runtime.spawn(async move {
+        arc_for_task.set_state(WarrenTunnelStateC::Connecting);
+        let first_attempt = !arc_for_task.has_connected_once.load(Ordering::Acquire);
+        arc_for_task.fire_event(if first_attempt {
+            WarrenTunnelEventTagC::EventConnecting
+        } else {
+            WarrenTunnelEventTagC::EventReconnecting
+        });
+
+        let circuit = match crate::warren_multihop_directory::verify_and_select(
+            &directory_json,
+            two_hop,
+            &entry_country,
+            &exit_country,
+            now_secs(),
+        ) {
+            Ok(Some(circuit)) => circuit,
+            Ok(None) => {
+                tracing::warn!("Warren multi-hop: no valid circuit in the directory");
+                arc_for_task.set_state(WarrenTunnelStateC::Failed);
+                arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+                return;
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Warren multi-hop directory verification failed");
+                arc_for_task.set_state(WarrenTunnelStateC::Failed);
+                arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+                return;
+            }
+        };
+
+        let Ok(bind_addr) = "0.0.0.0:0".parse::<std::net::SocketAddr>() else {
+            arc_for_task.set_state(WarrenTunnelStateC::Failed);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+            return;
+        };
+        let cfg = SupervisorConfig {
+            relay: std::sync::Arc::new(circuit.relay),
+            exit_id: circuit.exit.exit_id,
+            exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
+            operational_pubkey: circuit.operational_pubkey,
+            client_signing: signing_key,
+            bind_addr,
+            enable_gso: false,
+            use_warren_obfuscation: true,
+            backoff: warren_backoff::Backoff::HANDSHAKE,
+            on_reconnect: None,
+            ip_assign_channel: None,
+            wants_ipv6: false,
+        };
+        let (supervisor, watch) = MultiHopSupervisor::new(cfg);
+
+        let daita: DaitaShared = std::sync::Arc::new(parking_lot::Mutex::new(
+            warren_tunnel::daita::DaitaState::disabled(),
+        ));
+        let notify = std::sync::Arc::new(tokio::sync::Notify::new());
+        let tun = arc_for_task.tun.clone();
+
+        let up_watch = watch.clone();
+        let up_daita = daita.clone();
+        let up_notify = notify.clone();
+        let up_tun = tun.clone();
+        tokio::spawn(async move {
+            if let Err(e) = run_uplink_with_daita(up_watch, up_tun, up_daita, up_notify).await {
+                tracing::error!(error = %e, "multi-hop uplink terminated");
+            }
+        });
+        let dn_watch = watch.clone();
+        let dn_tun = tun.clone();
+        tokio::spawn(async move {
+            if let Err(e) =
+                run_downlink_with_daita(dn_watch, dn_tun, daita, notify, None).await
+            {
+                tracing::error!(error = %e, "multi-hop downlink terminated");
+            }
+        });
+        tokio::spawn(async move {
+            if let Err(e) = supervisor.run().await {
+                tracing::error!(error = %e, "multi-hop supervisor terminated");
+            }
+        });
+
+        // Surface connection state from the session watch: a `Some` value
+        // is a live session (Connected); `None` after a live session is a
+        // reconnect in flight (Reconnecting). When the sender drops (the
+        // supervisor task exits) the tunnel is down.
+        let mut ev = watch;
+        loop {
+            let has_session = ev.borrow().is_some();
+            if has_session {
+                if !arc_for_task.has_connected_once.load(Ordering::Acquire) {
+                    arc_for_task
+                        .has_connected_once
+                        .store(true, Ordering::Release);
+                    arc_for_task.set_state(WarrenTunnelStateC::Connected);
+                    arc_for_task
+                        .connected_at_secs
+                        .store(now_secs(), Ordering::Relaxed);
+                    arc_for_task.fire_event(WarrenTunnelEventTagC::EventConnected);
+                }
+            } else if arc_for_task.has_connected_once.load(Ordering::Acquire) {
+                arc_for_task.set_state(WarrenTunnelStateC::Reconnecting);
+                arc_for_task.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+            }
+            if ev.changed().await.is_err() {
+                break;
+            }
+        }
+        arc_for_task.set_state(WarrenTunnelStateC::Disconnected);
+        arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+    });
+}
+
 // ---- Public FFI entry points ----
 
 /// Starts a Warren tunnel with the given parameters. Returns an opaque
@@ -428,6 +585,39 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // drop is provided by `ed25519-dalek` via the `zeroize` feature
         // already enabled in `warren-ios/Cargo.toml`.
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
+
+        // Multi-hop path (production). The fleet is multi-hop only: the
+        // exits no longer serve the legacy single-hop Setup/SetupAck, so a
+        // supplied verified directory drives a MultiHopClient circuit
+        // (2-hop when multihop_two_hop, else 1-hop collapsed onto one node).
+        // A null directory falls through to the legacy single-hop
+        // ClientTunnel path below, kept for dev / loopback only.
+        if let Some(json) = unsafe { cstr_to_str(params.multihop_directory_json) } {
+            let directory_json = json.to_owned();
+            let two_hop = params.multihop_two_hop != 0;
+            let entry_country = unsafe { cstr_to_str(params.multihop_entry_country) }
+                .unwrap_or("")
+                .to_owned();
+            let exit_country = unsafe { cstr_to_str(params.multihop_exit_country) }
+                .unwrap_or("")
+                .to_owned();
+
+            let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
+                return std::ptr::null_mut();
+            };
+            let arc = std::sync::Arc::new(impl_);
+            arc.spawn_outbound_dispatcher();
+            spawn_multi_hop(
+                std::sync::Arc::clone(&arc),
+                directory_json,
+                two_hop,
+                entry_country,
+                exit_country,
+                signing_key,
+            );
+            let boxed = Box::new(arc);
+            return Box::into_raw(boxed) as *mut WarrenTunnelHandle;
+        }
 
         // C.4.1 wire-up : single-hop only on this first pass. The
         // multi-hop + DAITA bug flagged in memory `warren_session_n`

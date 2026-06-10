@@ -47,6 +47,21 @@ public struct WarrenTunnelConfig: Sendable {
     public let natPmpEnabled: Bool
     /// CIDRs to bypass the tunnel routing (M4.H.G `--bypass-cidr`).
     public let bypassCidrs: [String]
+    /// Signed multi-hop directory JSON (fetched from
+    /// `GET {api}/v1/multihop/directory`). When non-nil the tunnel rides
+    /// the multi-hop wire protocol (the production fleet is multi-hop
+    /// only); the FFI verifies it against the baked root pin and selects a
+    /// circuit. When nil the FFI falls back to the legacy single-hop path
+    /// (dev / loopback only).
+    public let multihopDirectoryJSON: String?
+    /// `true` selects a 2-hop circuit (entry != exit, country diverse);
+    /// `false` a 1-hop circuit collapsed onto one node. Ignored when
+    /// `multihopDirectoryJSON` is nil.
+    public let multihopTwoHop: Bool
+    /// Optional ISO 3166-1 alpha-2 entry-country hint (empty = any).
+    public let multihopEntryCountry: String
+    /// Optional ISO 3166-1 alpha-2 exit-country hint (empty = any).
+    public let multihopExitCountry: String
 
     public init(
         exitPubkey: Data,
@@ -55,7 +70,11 @@ public struct WarrenTunnelConfig: Sendable {
         multiHopRelay: WarrenRelayConfig? = nil,
         daitaSpec: WarrenDaitaSpec? = nil,
         natPmpEnabled: Bool = false,
-        bypassCidrs: [String] = []
+        bypassCidrs: [String] = [],
+        multihopDirectoryJSON: String? = nil,
+        multihopTwoHop: Bool = false,
+        multihopEntryCountry: String = "",
+        multihopExitCountry: String = ""
     ) {
         self.exitPubkey = exitPubkey
         self.exitEndpoint = exitEndpoint
@@ -64,6 +83,10 @@ public struct WarrenTunnelConfig: Sendable {
         self.daitaSpec = daitaSpec
         self.natPmpEnabled = natPmpEnabled
         self.bypassCidrs = bypassCidrs
+        self.multihopDirectoryJSON = multihopDirectoryJSON
+        self.multihopTwoHop = multihopTwoHop
+        self.multihopEntryCountry = multihopEntryCountry
+        self.multihopExitCountry = multihopExitCountry
     }
 }
 
@@ -385,10 +408,10 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
     /// 4. `withUnsafePointer(to:)` to expose `&relayCfg` / `&daitaCfg`
     ///    as stable C pointers inside the innermost FFI call.
     ///
-    /// The Rust side currently ignores both fields (C.4.1 wires them
-    /// into `warren_tunnel::ClientTunnel::connect`) - but Swift-side
-    /// marshalling is in place so the future wire-up is a one-line
-    /// flip on the Rust side.
+    /// 5. multi-hop directory JSON (optional) + entry/exit country hints
+    ///    (innermost pin). When the directory is present the Rust side
+    ///    verifies it and rides the multi-hop wire protocol; the legacy
+    ///    `multiHopRelay` field is unused on that path.
     fileprivate static func callTunnelStart(config: WarrenTunnelConfig) throws -> OpaquePointer
     {
         var exitPubkeyBytes = [UInt8](repeating: 0, count: 32)
@@ -447,17 +470,30 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                     return Self.withMultiHopRelayPinned(config.multiHopRelay, pubkeyTuple: relayPubkeyTuple) {
                         relayPtr in
                         Self.withDaitaPinned(daitaTuple) { daitaPtr in
-                            var parameters = WarrenTunnelParametersC(
-                                exit_pubkey: exitPubkeyTuple,
-                                exit_endpoint: exitEndpointC,
-                                wallet_signing_seed: signingSeedTuple,
-                                multi_hop_relay: relayPtr,
-                                daita_spec: daitaPtr,
-                                nat_pmp_enabled: natPmpFlag,
-                                bypass_cidrs: bypassBase,
-                                bypass_cidrs_count: bypassCount
-                            )
-                            return warren_tunnel_start(&parameters, -1)
+                            let twoHopFlag: UInt8 = config.multihopTwoHop ? 1 : 0
+                            // Innermost pin: the multi-hop directory JSON
+                            // (optional) + entry/exit country hints.
+                            return config.multihopEntryCountry.withCString { entryC in
+                                config.multihopExitCountry.withCString { exitC in
+                                    Self.withOptionalCString(config.multihopDirectoryJSON) { dirPtr in
+                                        var parameters = WarrenTunnelParametersC(
+                                            exit_pubkey: exitPubkeyTuple,
+                                            exit_endpoint: exitEndpointC,
+                                            wallet_signing_seed: signingSeedTuple,
+                                            multi_hop_relay: relayPtr,
+                                            daita_spec: daitaPtr,
+                                            nat_pmp_enabled: natPmpFlag,
+                                            bypass_cidrs: bypassBase,
+                                            bypass_cidrs_count: bypassCount,
+                                            multihop_directory_json: dirPtr,
+                                            multihop_two_hop: twoHopFlag,
+                                            multihop_entry_country: entryC,
+                                            multihop_exit_country: exitC
+                                        )
+                                        return warren_tunnel_start(&parameters, -1)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -465,6 +501,18 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
 
         guard let raw = handlePtr else { throw WarrenQuinnAdapterError.ffiStartFailed }
         return OpaquePointer(raw)
+    }
+
+    /// Pin an optional Swift string as a C string for the duration of
+    /// `body`, passing a null pointer when the string is nil.
+    private static func withOptionalCString<Result>(
+        _ string: String?,
+        _ body: (UnsafePointer<CChar>?) -> Result
+    ) -> Result {
+        if let string {
+            return string.withCString { body($0) }
+        }
+        return body(nil)
     }
 
     /// Pin a `WarrenRelayConfigC` C struct on the stack for the
