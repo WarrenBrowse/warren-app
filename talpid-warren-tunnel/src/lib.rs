@@ -1348,7 +1348,17 @@ impl WarrenTunnelMonitor {
             bind_addr: bind_local_ip,
             enable_gso: cfg.enable_gso,
             use_warren_obfuscation: cfg.use_warren_obfuscation,
-            backoff: Backoff::HANDSHAKE,
+            // Low ceiling on purpose. The default HANDSHAKE profile caps at
+            // 15 s, which overshoots a network-change recovery: when the
+            // physical link comes back the re-dial can be parked in a 15 s
+            // backoff and miss the window, stretching a handover to ~20 s.
+            // A 2 s ceiling re-dials within ~2 s of the link returning, so a
+            // Wi-Fi <-> ethernet switch reconnects promptly. Cold start is
+            // unaffected (the relay is normally reachable on the first try).
+            backoff: Backoff {
+                base: Duration::from_millis(300),
+                max: Duration::from_secs(2),
+            },
             on_reconnect: params.on_reconnect.clone(),
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6,
