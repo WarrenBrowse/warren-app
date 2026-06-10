@@ -60,14 +60,12 @@ tower = { workspace = true }
 tracing = "0.1"
 tracing-subscriber = { workspace = true }
 
-# Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature.
-# warren-tunnel currently uses `tun-rs::DeviceBuilder`, which has no iOS
-# backend in tun-rs 2.8 (same blocker as Android, cf. memory
-# `warren_session_d_delivered`). C.4 will either contribute an iOS backend
-# to tun-rs upstream or bridge via `NEPacketTunnelFlow.readPackets/
-# writePackets` (preferred, cf. `.planning/c4-packet-tunnel-provider-
-# quinn-design.md` §3.2). The feature is enabled in this crate once the
-# adapter lands.
+# Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,
+# enabled by the iOS Xcode build phase (build-rust-library.sh warren-ios
+# "api-override tunnel"). warren-tunnel bridges the iOS packet flow via
+# `IosTun` (`NEPacketTunnelFlow.readPackets/writePackets`, cf.
+# `.planning/c4-packet-tunnel-provider-quinn-design.md` §3.2), so it no
+# longer depends on a tun-rs iOS backend.
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
 warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
@@ -84,8 +82,9 @@ cbindgen = { version = "0.28.0", default-features = false }
 default = []
 # Allow the API server to be used
 api-override = ["mullvad-api/api-override"]
-# Pull in the Quinn tunnel stack. Requires an iOS `PacketDevice` adapter
-# (cf. C.4 design doc §3.2). OFF by default until the bridge lands.
+# Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
+# has landed, so the iOS Xcode build phase enables this feature. It stays
+# off the crate default so a no-tunnel host build path remains minimal.
 tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol"]
 
 [lints]
