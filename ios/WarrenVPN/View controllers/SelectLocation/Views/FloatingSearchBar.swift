@@ -39,8 +39,8 @@ struct FloatingSearchBar: View {
                         Button {
                             searchText = ""
                         } label: {
-                            Image.mullvadIconCross
-                                .foregroundColor(.mullvadTextSecondary)
+                            Image.warrenIconCross
+                                .foregroundColor(.warrenTextSecondary)
                         }
                         .accessibilityLabel(Text("Clear search"))
                     }
@@ -49,7 +49,7 @@ struct FloatingSearchBar: View {
                 .frame(height: 48)
                 .background {
                     RoundedRectangle(cornerRadius: 28)
-                        .fill(Color.mullvadContainerBackground)
+                        .fill(Color.warrenContainerBackground)
                         .matchedGeometryEffect(id: AnimationID.searchBackground, in: animation)
                 }
                 .accessibilityAddTraits(.isSearchField)
@@ -62,10 +62,10 @@ struct FloatingSearchBar: View {
                         isFocused.wrappedValue = false
                     }
                 } label: {
-                    Image.mullvadIconCross
-                        .foregroundColor(.mullvadTextPrimary)
+                    Image.warrenIconCross
+                        .foregroundColor(.warrenTextPrimary)
                         .frame(width: 48, height: 48)
-                        .background(Color.mullvadContainerBackground)
+                        .background(Color.warrenContainerBackground)
                         .clipShape(Circle())
                 }
                 .accessibilityLabel(Text("Close search"))
@@ -82,7 +82,7 @@ struct FloatingSearchBar: View {
                         .frame(width: 48, height: 48)
                         .background {
                             RoundedRectangle(cornerRadius: 28)
-                                .fill(Color.mullvadContainerBackground)
+                                .fill(Color.warrenContainerBackground)
                                 .matchedGeometryEffect(id: AnimationID.searchBackground, in: animation)
                         }
                 }
@@ -101,8 +101,8 @@ struct FloatingSearchBar: View {
     }
 
     private var searchIcon: some View {
-        Image.mullvadIconSearch
-            .foregroundColor(.mullvadTextPrimary)
+        Image.warrenIconSearch
+            .foregroundColor(.warrenTextPrimary)
             .matchedGeometryEffect(id: AnimationID.searchIcon, in: animation)
     }
 }

@@ -9,7 +9,7 @@ struct MullvadProgressViewStyle: ProgressViewStyle {
 
     @State var isAnimating = false
     func makeBody(configuration: Configuration) -> some View {
-        Image.mullvadIconSpinner
+        Image.warrenIconSpinner
             .resizable()
             .frame(maxWidth: size, maxHeight: size)
             .rotationEffect(.degrees(isAnimating ? 360 : 0))
@@ -26,5 +26,5 @@ struct MullvadProgressViewStyle: ProgressViewStyle {
 #Preview {
     ProgressView()
         .progressViewStyle(MullvadProgressViewStyle())
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
 }

@@ -36,7 +36,7 @@ public struct WarrenWalletIdentityView: View {
                     comment: "Title of the read-only pubkey display view"
                 )
             )
-            .font(.mullvadBig)
+            .font(.warrenBig)
             .foregroundColor(.white)
 
             Text(
@@ -46,13 +46,13 @@ public struct WarrenWalletIdentityView: View {
                     comment: "Explanatory body for the wallet address display view"
                 )
             )
-            .font(.mullvadMicro)
+            .font(.warrenMicro)
             .foregroundColor(.white.opacity(0.7))
 
             // Compact headline (first 6 + … + last 6) for quick visual
             // identification ; the full address remains below.
             Text(address.shortWarrenAddress)
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundColor(.white.opacity(0.7))
 
             // Full address, selectable so the user can copy any portion.
@@ -92,7 +92,7 @@ public struct WarrenWalletIdentityView: View {
                         )
                     )
                 }
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundColor(.Warren.navy)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)

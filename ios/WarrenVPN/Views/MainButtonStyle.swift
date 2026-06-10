@@ -21,8 +21,8 @@ struct MainButtonStyle: ButtonStyle {
             .frame(minHeight: 44)
             .foregroundColor(
                 isEnabled
-                    ? .mullvadTextPrimary
-                    : .mullvadTextPrimaryDisabled
+                    ? .warrenTextPrimary
+                    : .warrenTextPrimaryDisabled
             )
             .background(
                 isEnabled

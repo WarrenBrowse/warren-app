@@ -39,7 +39,7 @@ public struct WarrenMnemonicInputView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(String(localized: "Enter your 12 recovery words", table: "Wallet"))
-                .font(.mullvadLarge)
+                .font(.warrenLarge)
                 .foregroundColor(.white)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(0..<12, id: \.self) { idx in
@@ -49,7 +49,7 @@ public struct WarrenMnemonicInputView: View {
             if isComplete {
                 Button(action: submitIfValid) {
                     Text(String(localized: "Restore wallet", table: "Wallet"))
-                        .font(.mullvadSmallSemiBold)
+                        .font(.warrenSmallSemiBold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(allWordsValid ? Color.Warren.yellow : Color.gray)

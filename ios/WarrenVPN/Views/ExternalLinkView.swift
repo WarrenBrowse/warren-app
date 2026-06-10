@@ -37,8 +37,8 @@ struct ExternalLinkView: View {
     ExternalLinkView(
         url: URL(string: "https://www.warrenbrowse.com")!,
         label: NSLocalizedString("Warren website", comment: ""),
-        font: .mullvadTiny,
+        font: .warrenTiny,
         color: Color.red
     )
-    .background(Color.mullvadBackground)
+    .background(Color.warrenBackground)
 }

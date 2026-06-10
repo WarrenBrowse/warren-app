@@ -103,7 +103,7 @@ final class NewAppVersionInAppNotificationProvider:
             NSAttributedString(
                 string: NSLocalizedString("Tap here to go to AppStore", comment: ""),
                 attributes: [
-                    .font: UIFont.mullvadTinySemiBold,
+                    .font: UIFont.warrenTinySemiBold,
                     .foregroundColor: UIColor.white,
                 ]))
 

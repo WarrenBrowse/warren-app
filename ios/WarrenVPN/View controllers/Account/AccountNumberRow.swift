@@ -27,7 +27,7 @@ class AccountNumberRow: UIView {
     private let titleLabel: UILabel = {
         let textLabel = UILabel()
         textLabel.text = NSLocalizedString("Account number", comment: "")
-        textLabel.font = .mullvadTiny
+        textLabel.font = .warrenTiny
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = UIColor(white: 1.0, alpha: 0.6)
         return textLabel
@@ -35,7 +35,7 @@ class AccountNumberRow: UIView {
 
     private let accountNumberLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadSmall
+        textLabel.font = .warrenSmall
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = .white
         textLabel.numberOfLines = 0

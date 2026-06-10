@@ -17,7 +17,7 @@ enum MullvadAPIError: Error {
 }
 
 class MullvadAPIWrapper: @unchecked Sendable {
-    private var mullvadAPI: MullvadApi
+    private var warrenAPI: MullvadApi
     private let throttleQueue = DispatchQueue(label: "MullvadAPIWrapperThrottleQueue", qos: .userInitiated)
     private var lastCallDate: Date?
     private let throttleDelay: TimeInterval = 0.25
@@ -36,7 +36,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
         RustLogging.initialize()
         let apiAddress = try Self.getAPIIPAddress() + ":" + Self.getAPIPort()
         let hostname = Self.hostName
-        mullvadAPI = try MullvadApi(apiAddress: apiAddress, hostname: hostname)
+        warrenAPI = try MullvadApi(apiAddress: apiAddress, hostname: hostname)
     }
 
     /// Throttle what's in the callback. This is used for throttling requests to the app API. All requests should be throttled or else we might be rate limited. The API allows maximum 5 requests per second. Note that the implementation assumes what is being throttled is synchronous.
@@ -92,7 +92,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
 
         throttle {
             do {
-                accountNumber = try self.mullvadAPI.createAccount()
+                accountNumber = try self.warrenAPI.createAccount()
             } catch {
                 XCTFail("Failed to create account with error: \(error.localizedDescription)")
             }
@@ -111,7 +111,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
 
         throttle {
             do {
-                try self.mullvadAPI.delete(account: accountNumber)
+                try self.warrenAPI.delete(account: accountNumber)
             } catch {
                 XCTFail("Failed to delete account with error: \(error.localizedDescription)")
             }
@@ -131,7 +131,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
             let devicePublicKey = self.generateMockWireGuardKey()
 
             do {
-                try self.mullvadAPI.addDevice(forAccount: account, publicKey: devicePublicKey)
+                try self.warrenAPI.addDevice(forAccount: account, publicKey: devicePublicKey)
             } catch {
                 XCTFail("Failed to add device with error: \(error.localizedDescription)")
             }
@@ -157,7 +157,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
 
         throttle {
             do {
-                let accountExpiryTimestamp = Double(try self.mullvadAPI.getExpiry(forAccount: account))
+                let accountExpiryTimestamp = Double(try self.warrenAPI.getExpiry(forAccount: account))
                 accountExpiryDate = Date(timeIntervalSince1970: accountExpiryTimestamp)
             } catch {
                 XCTFail("Failed to get account expiry with error: \(error.localizedDescription)")
@@ -178,7 +178,7 @@ class MullvadAPIWrapper: @unchecked Sendable {
 
         throttle {
             do {
-                devices = try self.mullvadAPI.listDevices(forAccount: account)
+                devices = try self.warrenAPI.listDevices(forAccount: account)
             } catch {
                 XCTFail("Failed to get devices with error: \(error.localizedDescription)")
             }

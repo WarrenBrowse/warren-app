@@ -37,7 +37,7 @@ public struct WarrenFailoverBannerView: View {
                 .font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(String(localized: "Switched exit relay", table: "Settings"))
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .foregroundColor(.white)
                 Text(
                     String(
@@ -45,7 +45,7 @@ public struct WarrenFailoverBannerView: View {
                         info.country
                     )
                 )
-                .font(.mullvadMicro)
+                .font(.warrenMicro)
                 .foregroundColor(.white.opacity(0.7))
             }
             Spacer()

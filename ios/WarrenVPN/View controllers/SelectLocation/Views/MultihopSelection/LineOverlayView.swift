@@ -24,7 +24,7 @@ struct LineOverlayView: View {
                 id: \.0.0
             ) { (curr, next) in
                 let length = max(next.1.topCenter.y - curr.1.bottomCenter.y - 2 * iconPadding, 0)
-                Color.mullvadTextPrimary.opacity(0.6)
+                Color.warrenTextPrimary.opacity(0.6)
                     .frame(
                         width: lineWidth,
                         height: length

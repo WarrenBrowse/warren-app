@@ -25,19 +25,19 @@ struct ActiveFilterView: View {
                                 .foregroundStyle(
                                     automaticLocationIsActive && filter.isOverriddenByAutomaticLocation
                                         ? Color.MullvadText.disabled
-                                        : Color.mullvadTextPrimary
+                                        : Color.warrenTextPrimary
                                 )
                             if filter.isRemovable {
                                 Button {
                                     onRemove(filter)
                                 } label: {
                                     Image(systemName: "xmark")
-                                        .tint(Color.mullvadTextPrimary)
+                                        .tint(Color.warrenTextPrimary)
                                 }
                                 .accessibilityIdentifier(.relayFilterChipCloseButton)
                             }
                         }
-                        .font(.mullvadMiniSemiBold)
+                        .font(.warrenMiniSemiBold)
                         .padding(8)
                         .background {
                             RoundedRectangle(cornerRadius: 8)
@@ -57,7 +57,7 @@ struct ActiveFilterView: View {
                     .scaledIcon(fromBaseSize: 14, to: .footnote)
                     .foregroundStyle(Color.white)
                 Text("Filters are overridden when using the automatic location")
-                    .font(.mullvadMini)
+                    .font(.warrenMini)
                     .foregroundStyle(Color.MullvadText.onBackground)
             }
             .padding(.horizontal)
@@ -83,7 +83,7 @@ struct ActiveFilterView: View {
                         onSelect: { _ in },
                         onRemove: { _ in }
                     )
-                    .background(Color.mullvadBackground)
+                    .background(Color.warrenBackground)
                 }
             }
         }

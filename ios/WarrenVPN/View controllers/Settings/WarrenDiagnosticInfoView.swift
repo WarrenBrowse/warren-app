@@ -51,7 +51,7 @@ public struct WarrenDiagnosticInfoView: View {
                     comment: "Title of the support-friendly diagnostic summary"
                 )
             )
-            .font(.mullvadBig)
+            .font(.warrenBig)
             .foregroundColor(.white)
 
             Text(
@@ -61,7 +61,7 @@ public struct WarrenDiagnosticInfoView: View {
                     comment: "Body explaining the screen is screenshot-safe"
                 )
             )
-            .font(.mullvadMicro)
+            .font(.warrenMicro)
             .foregroundColor(.white.opacity(0.7))
 
             VStack(spacing: 8) {
@@ -94,7 +94,7 @@ public struct WarrenDiagnosticInfoView: View {
                         )
                     )
                 }
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundColor(.Warren.navy)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
@@ -114,7 +114,7 @@ public struct WarrenDiagnosticInfoView: View {
     private func row(label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundColor(.white.opacity(0.7))
             Spacer()
             Text(value)

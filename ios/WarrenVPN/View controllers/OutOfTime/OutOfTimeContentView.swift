@@ -19,7 +19,7 @@ class OutOfTimeContentView: UIView {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("Out of time", comment: "")
-        label.font = .mullvadLarge
+        label.font = .warrenLarge
         label.adjustsFontForContentSizeCategory = true
         label.textColor = .white
         label.numberOfLines = 0
@@ -145,7 +145,7 @@ class OutOfTimeContentView: UIView {
     func setBodyLabelText(_ text: String) {
         bodyLabel.attributedText = NSAttributedString(
             markdownString: text,
-            options: MarkdownStylingOptions(font: .mullvadSmall)
+            options: MarkdownStylingOptions(font: .warrenSmall)
         )
     }
 }

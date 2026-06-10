@@ -104,7 +104,7 @@ struct SettingsMultihopView: View {
                 .padding(.trailing, UIMetrics.contentInsets.right)
             }
         }
-        .mullvadAlert(item: $alert)
+        .warrenAlert(item: $alert)
     }
 
     private func getInfoAlert(for customView: AnyView, completion: @escaping () -> Void) -> MullvadAlert {
@@ -167,8 +167,8 @@ extension SettingsMultihopView {
                 )
                 .accessibilityLabel("This will be indicated by the “Multihop when needed“ symbol")
             }
-            .font(.mullvadTiny)
-            .foregroundStyle(Color.mullvadTextSecondary)
+            .font(.warrenTiny)
+            .foregroundStyle(Color.warrenTextSecondary)
         }
     }
 
@@ -182,8 +182,8 @@ extension SettingsMultihopView {
                         + "exiting through the selected location."
                 )
             }
-            .font(.mullvadTiny)
-            .foregroundStyle(Color.mullvadTextSecondary)
+            .font(.warrenTiny)
+            .foregroundStyle(Color.warrenTextSecondary)
         }
     }
 
@@ -197,8 +197,8 @@ extension SettingsMultihopView {
                         + "order to establish a connection."
                 )
             }
-            .font(.mullvadTiny)
-            .foregroundStyle(Color.mullvadTextSecondary)
+            .font(.warrenTiny)
+            .foregroundStyle(Color.warrenTextSecondary)
         }
     }
 
@@ -219,8 +219,8 @@ extension SettingsMultihopView {
                         + "being automatically selected."
                 )
             }
-            .font(.mullvadSmall)
-            .foregroundStyle(Color.mullvadTextSecondary)
+            .font(.warrenSmall)
+            .foregroundStyle(Color.warrenTextSecondary)
         }
     }
 
@@ -230,8 +230,8 @@ extension SettingsMultihopView {
                 UIImage.Multihop.whenNeeded.scaledIcon(fromBaseSize: 18, to: .subheadline, offset: .init(x: 0, y: 2))
                 Text("An additional server is used to match your settings for your selected location")
             }
-            .font(.mullvadTinySemiBold)
-            .foregroundColor(Color.mullvadTextSecondary)
+            .font(.warrenTinySemiBold)
+            .foregroundColor(Color.warrenTextSecondary)
         }
     }
 }

@@ -24,7 +24,7 @@ class SettingsDNSTextCell: SettingsCell, UITextFieldDelegate {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-        textField.font = .mullvadSmall
+        textField.font = .warrenSmall
         textField.adjustsFontForContentSizeCategory = true
         textField.backgroundColor = .clear
         textField.textColor = UIColor.TextField.textColor

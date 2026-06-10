@@ -100,7 +100,7 @@ class ListItemPickerViewController<DataSource: ListItemDataSourceProtocol>: UITa
 
         if let cell = cell as? DynamicBackgroundConfiguration {
             cell.isUserInteractionEnabled = item.isEnabled
-            cell.setAutoAdaptingBackgroundConfiguration(.mullvadListPlainCell(), selectionType: .dimmed)
+            cell.setAutoAdaptingBackgroundConfiguration(.warrenListPlainCell(), selectionType: .dimmed)
         }
 
         return cell

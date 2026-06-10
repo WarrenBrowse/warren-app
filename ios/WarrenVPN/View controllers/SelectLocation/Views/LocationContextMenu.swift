@@ -14,7 +14,7 @@ extension ExitLocationView {
                     } label: {
                         HStack {
                             Text("Edit list")
-                            Image.mullvadIconEdit
+                            Image.warrenIconEdit
                                 .renderingMode(.template)
                         }
                     }
@@ -44,7 +44,7 @@ extension ExitLocationView {
                     } label: {
                         HStack {
                             Text("Delete list")
-                            Image.mullvadIconDelete
+                            Image.warrenIconDelete
                                 .renderingMode(.template)
                         }
                     }
@@ -65,7 +65,7 @@ extension ExitLocationView {
                     } label: {
                         HStack {
                             Text("Remove")
-                            Image.mullvadIconDelete
+                            Image.warrenIconDelete
                                 .renderingMode(.template)
                         }
                     }
@@ -131,7 +131,7 @@ extension ExitLocationView {
             } label: {
                 HStack {
                     Text("New list")
-                    Image.mullvadIconAdd
+                    Image.warrenIconAdd
                         .renderingMode(.template)
                 }
             }

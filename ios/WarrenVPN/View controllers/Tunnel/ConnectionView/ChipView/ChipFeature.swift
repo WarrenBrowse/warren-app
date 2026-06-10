@@ -74,7 +74,7 @@ struct MultihopFeature: ChipFeature {
     }
 
     var icon: Image? {
-        settings.tunnelMultihopState.isWhenNeeded ? .mullvadIconMultihopWhenNeeded : nil
+        settings.tunnelMultihopState.isWhenNeeded ? .warrenIconMultihopWhenNeeded : nil
     }
 }
 

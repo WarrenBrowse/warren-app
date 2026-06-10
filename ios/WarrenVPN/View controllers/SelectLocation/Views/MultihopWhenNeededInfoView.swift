@@ -6,7 +6,7 @@ struct MultihopWhenNeededInfoView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image.mullvadIconMultihopWhenNeeded
+            Image.warrenIconMultihopWhenNeeded
                 .resizable()
                 .frame(width: 48, height: 48)
 
@@ -20,8 +20,8 @@ struct MultihopWhenNeededInfoView: View {
                 )
             }
             .multilineTextAlignment(.center)
-            .foregroundStyle(Color.mullvadTextSecondary)
-            .font(.mullvadSmall)
+            .foregroundStyle(Color.warrenTextSecondary)
+            .font(.warrenSmall)
 
             Spacer()
 
@@ -35,5 +35,5 @@ struct MultihopWhenNeededInfoView: View {
 
 #Preview {
     MultihopWhenNeededInfoView(onSetMultihopToAlways: {})
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
 }

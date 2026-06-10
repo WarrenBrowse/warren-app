@@ -68,7 +68,7 @@ struct SelectLocationView<ViewModel>: View where ViewModel: SelectLocationViewMo
                 .padding(.horizontal, 16)
             }
             .padding(.vertical)
-            .background(Color.mullvadDarkBackground)
+            .background(Color.warrenDarkBackground)
             .zIndex(1)
             .sizeOfView { size in
                 withAnimation {
@@ -149,7 +149,7 @@ struct SelectLocationView<ViewModel>: View where ViewModel: SelectLocationViewMo
         .animation(.default, value: viewModel.multihopContext)
         .animation(.default, value: viewModel.isMultihopActive)
         .animation(.default, value: viewModel.isRecentsEnabled)
-        .background(Color.mullvadDarkBackground)
+        .background(Color.warrenDarkBackground)
         .navigationTitle("Select location")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -159,7 +159,7 @@ struct SelectLocationView<ViewModel>: View where ViewModel: SelectLocationViewMo
                     Button("Done") {
                         viewModel.didFinish()
                     }
-                    .foregroundStyle(Color.mullvadTextPrimary)
+                    .foregroundStyle(Color.warrenTextPrimary)
                     .accessibilityIdentifier(.closeSelectLocationButton)
                 }
             )
@@ -216,9 +216,9 @@ struct SelectLocationView<ViewModel>: View where ViewModel: SelectLocationViewMo
                             HStack {
                                 Text(viewModel.isRecentsEnabled ? "Disable recents" : "Enable recents")
                                 viewModel.isRecentsEnabled
-                                    ? Image.mullvadIconDisableRecents
+                                    ? Image.warrenIconDisableRecents
                                         .renderingMode(.template)
-                                    : Image.mullvadIconEnableRecents
+                                    : Image.warrenIconEnableRecents
                                         .renderingMode(.template)
                             }
                         }
@@ -229,18 +229,18 @@ struct SelectLocationView<ViewModel>: View where ViewModel: SelectLocationViewMo
                         } label: {
                             HStack {
                                 Text("Update server list")
-                                Image.mullvadIconReload
+                                Image.warrenIconReload
                             }
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle.fill")
-                            .foregroundStyle(Color.mullvadTextPrimary)
+                            .foregroundStyle(Color.warrenTextPrimary)
                             .accessibilityIdentifier(.selectLocationToolbarMenu)
                     }
                 }
             )
         }
-        .mullvadAlert(item: $disablingRecentConnectionsAlert)
+        .warrenAlert(item: $disablingRecentConnectionsAlert)
     }
 }
 

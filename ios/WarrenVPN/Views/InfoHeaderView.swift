@@ -39,12 +39,12 @@ class InfoHeaderView: UIView, UITextViewDelegate {
     }
 
     private let defaultTextAttributes: [NSAttributedString.Key: Any] = [
-        .font: UIFont.mullvadTinySemiBold,
+        .font: UIFont.warrenTinySemiBold,
         .foregroundColor: UIColor.ContentHeading.textColor,
     ]
 
     private let defaultLinkAttributes: [NSAttributedString.Key: Any] = [
-        .font: UIFont.mullvadTinySemiBold,
+        .font: UIFont.warrenTinySemiBold,
         .foregroundColor: UIColor.ContentHeading.linkColor,
         .attachment: "#",
     ]

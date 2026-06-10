@@ -11,17 +11,17 @@ import UIKit
 /// Content configuration presenting a label and switch control.
 struct ListCellContentConfiguration: UIContentConfiguration, Equatable {
     struct TextProperties: Equatable {
-        var font = UIFont.mullvadSmall
+        var font = UIFont.warrenSmall
         var color = UIColor.Cell.titleTextColor
     }
 
     struct SecondaryTextProperties: Equatable {
-        var font = UIFont.mullvadSmall
+        var font = UIFont.warrenSmall
         var color = UIColor.Cell.detailTextColor.withAlphaComponent(0.6)
     }
 
     struct TertiaryTextProperties: Equatable {
-        var font = UIFont.mullvadTiny
+        var font = UIFont.warrenTiny
         var color = UIColor.Cell.titleTextColor.withAlphaComponent(0.6)
     }
 

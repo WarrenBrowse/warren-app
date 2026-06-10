@@ -1,18 +1,18 @@
 import SwiftUI
 
 extension Color {
-    private static let mullvadPrimaryColor = MullvadBlue.base
-    private static let mullvadSecondaryColor = MullvadDarkBlue.base
-    private static let mullvadWarningColor = UIColor.warningColor.color
-    static let mullvadDangerColor = UIColor.dangerColor.color
-    static let mullvadSuccessColor = UIColor.successColor.color
+    private static let warrenPrimaryColor = MullvadBlue.base
+    private static let warrenSecondaryColor = MullvadDarkBlue.base
+    private static let warrenWarningColor = UIColor.warningColor.color
+    static let warrenDangerColor = UIColor.dangerColor.color
+    static let warrenSuccessColor = UIColor.successColor.color
 
-    static let mullvadBackground: Color = .mullvadSecondaryColor
-    static let mullvadContainerBackground: Color = MullvadDarkBlue._10
-    static let mullvadDarkBackground: Color = MullvadDarkBlue._50
-    static let mullvadTextPrimary: Color = UIColor.primaryTextColor.color
-    static let mullvadTextSecondary: Color = MullvadWhite._60
-    static let mullvadTextPrimaryDisabled: Color = .mullvadTextPrimary.opacity(
+    static let warrenBackground: Color = .warrenSecondaryColor
+    static let warrenContainerBackground: Color = MullvadDarkBlue._10
+    static let warrenDarkBackground: Color = MullvadDarkBlue._50
+    static let warrenTextPrimary: Color = UIColor.primaryTextColor.color
+    static let warrenTextSecondary: Color = MullvadWhite._60
+    static let warrenTextPrimaryDisabled: Color = .warrenTextPrimary.opacity(
         0.2
     )
     static let secondaryTextColor: Color = UIColor.secondaryTextColor.color
@@ -61,7 +61,7 @@ extension Color {
     }
 
     enum MullvadActionBox {
-        static let border: Color = .mullvadPrimaryColor
+        static let border: Color = .warrenPrimaryColor
     }
 
     enum MullvadText {
@@ -72,22 +72,22 @@ extension Color {
     }
 
     enum MullvadButton {
-        static let primary: Color = .mullvadPrimaryColor
+        static let primary: Color = .warrenPrimaryColor
         static let primaryPressed = Color(red: 0.12, green: 0.23, blue: 0.34)
         static let primaryDisabled = primaryPressed
-        static let danger: Color = .mullvadDangerColor
+        static let danger: Color = .warrenDangerColor
         static let dangerPressed = Color(red: 0.42, green: 0.21, blue: 0.25)
         static let dangerDisabled = dangerPressed
-        static let positive: Color = .mullvadSuccessColor
+        static let positive: Color = .warrenSuccessColor
         static let positivePressed = Color(red: 0.16, green: 0.38, blue: 0.28)
         static let positiveDisabled = positivePressed
     }
 
     enum MullvadList {
-        static let separator: Color = .mullvadSecondaryColor
-        static let background: Color = .mullvadPrimaryColor
+        static let separator: Color = .warrenSecondaryColor
+        static let background: Color = .warrenPrimaryColor
         enum Item {
-            static let parent: Color = .mullvadPrimaryColor
+            static let parent: Color = .warrenPrimaryColor
             static let child1 = Color.MullvadBlue._60
             static let child2 = Color.MullvadBlue._40
             static let child3 = Color.MullvadBlue._20

@@ -52,7 +52,7 @@ struct IncludeAllNetworksSettingsView<ViewModel: IncludeAllNetworksSettingsViewM
             guard showAlert else { return }
             showReconsiderNotificationsAlert()
         }
-        .mullvadAlert(item: $alert)
+        .warrenAlert(item: $alert)
     }
 }
 
@@ -140,7 +140,7 @@ extension IncludeAllNetworksSettingsView {
                                 comment: ""
                             )
                         )
-                        .font(.mullvadTinySemiBold)
+                        .font(.warrenTinySemiBold)
                     )
                 ),
                 SettingsInfoViewModelPage(
@@ -159,7 +159,7 @@ extension IncludeAllNetworksSettingsView {
                         ExternalLinkView(
                             url: blogUrl,
                             label: "For details, please see our blog post",
-                            font: .mullvadTiny
+                            font: .warrenTiny
                         )
                     )
                 ),

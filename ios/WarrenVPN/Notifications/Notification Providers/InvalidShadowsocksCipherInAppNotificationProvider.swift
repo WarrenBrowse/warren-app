@@ -37,7 +37,7 @@ final class InvalidShadowsocksCipherInAppNotificationProvider: NotificationProvi
             NSAttributedString(
                 string: NSLocalizedString("Tap to view API access methods", comment: ""),
                 attributes: [
-                    .font: UIFont.mullvadTinySemiBold,
+                    .font: UIFont.warrenTinySemiBold,
                     .foregroundColor: UIColor.white,
                 ]
             )

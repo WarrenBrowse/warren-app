@@ -18,7 +18,7 @@ class LocationCell: UITableViewCell {
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadSmall
+        label.font = .warrenSmall
         label.adjustsFontForContentSizeCategory = true
         label.textColor = .white
         label.lineBreakMode = .byTruncatingTail

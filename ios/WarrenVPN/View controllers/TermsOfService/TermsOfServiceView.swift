@@ -29,12 +29,12 @@ struct TermsOfServiceView: View {
     var scrollableContent: some View {
         ScrollView {
             Text(LocalizedStringKey("Do you agree to remaining anonymous?"))
-                .font(.mullvadLarge)
+                .font(.warrenLarge)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 16)
             Text(termsOfService)
-                .font(.mullvadSmall)
+                .font(.warrenSmall)
                 .foregroundStyle(Color.secondaryTextColor)
         }
         .padding(padding)
@@ -50,7 +50,7 @@ struct TermsOfServiceView: View {
                             "[\(privacyPolicyText)](\(ApplicationConfiguration.privacyPolicyLink(for :ApplicationLanguage.currentLanguage.id)))"
                     )
                 )
-                .font(.mullvadSmall)
+                .font(.warrenSmall)
                 .underline(true, color: .white)
                 .foregroundStyle(.white)
                 .tint(.white)

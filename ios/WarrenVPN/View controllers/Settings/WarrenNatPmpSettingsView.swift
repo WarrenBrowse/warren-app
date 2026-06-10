@@ -32,7 +32,7 @@ public struct WarrenNatPmpSettingsView: View {
                     .tint(.Warren.yellow)
             } footer: {
                 Text(String(localized: "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections.", table: "Settings"))
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
             }
 
             if isEnabled {
@@ -44,7 +44,7 @@ public struct WarrenNatPmpSettingsView: View {
                                 .foregroundColor(.white.opacity(0.7))
                             Spacer()
                             Text(formatLifetime(lifetime))
-                                .font(.mullvadSmallSemiBold.monospacedDigit())
+                                .font(.warrenSmallSemiBold.monospacedDigit())
                                 .foregroundColor(.white)
                         }
                     }
@@ -69,7 +69,7 @@ public struct WarrenNatPmpSettingsView: View {
             Spacer()
             if let port = forwardedPort {
                 Text("\(port)")
-                    .font(.mullvadSmallSemiBold.monospacedDigit())
+                    .font(.warrenSmallSemiBold.monospacedDigit())
                     .foregroundColor(.Warren.yellow)
             } else {
                 ProgressView()

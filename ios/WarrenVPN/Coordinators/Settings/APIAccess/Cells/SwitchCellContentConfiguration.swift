@@ -11,7 +11,7 @@ import UIKit
 /// Content configuration presenting a label and switch control.
 struct SwitchCellContentConfiguration: UIContentConfiguration, Equatable {
     struct TextProperties: Equatable {
-        var font = UIFont.mullvadSmall
+        var font = UIFont.warrenSmall
         var color = UIColor.Cell.titleTextColor
     }
 

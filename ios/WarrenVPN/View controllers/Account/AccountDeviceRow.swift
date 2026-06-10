@@ -20,7 +20,7 @@ class AccountDeviceRow: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("Device name", comment: "")
-        label.font = .mullvadTiny
+        label.font = .warrenTiny
         label.adjustsFontForContentSizeCategory = true
         label.textColor = UIColor(white: 1.0, alpha: 0.6)
         return label
@@ -28,7 +28,7 @@ class AccountDeviceRow: UIView {
 
     private let deviceLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadSmall
+        label.font = .warrenSmall
         label.adjustsFontForContentSizeCategory = true
         label.textColor = .white
         label.numberOfLines = 0

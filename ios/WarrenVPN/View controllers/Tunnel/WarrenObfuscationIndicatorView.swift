@@ -28,10 +28,10 @@ public struct WarrenObfuscationIndicatorView: View {
                 .font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(String(localized: "HTTP/3 mimicry active", table: "Settings"))
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .foregroundColor(.white)
                 Text(String(localized: "Your VPN traffic is indistinguishable from regular HTTPS browsing.", table: "Settings"))
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
                     .foregroundColor(.white.opacity(0.7))
             }
             Spacer()
@@ -70,14 +70,14 @@ public struct WarrenObfuscationSettingsReadOnlyView: View {
                 localized: "Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable because disabling it would make Warren clients immediately recognisable on the network.",
                 table: "Settings"
             ))
-            .font(.mullvadSmall)
+            .font(.warrenSmall)
             .foregroundColor(.white.opacity(0.8))
 
             Text(String(
                 localized: "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to Warren tunnels.",
                 table: "Settings"
             ))
-            .font(.mullvadSmall)
+            .font(.warrenSmall)
             .foregroundColor(.white.opacity(0.6))
 
             Spacer(minLength: 0)

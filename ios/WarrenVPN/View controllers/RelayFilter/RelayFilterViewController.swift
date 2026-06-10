@@ -124,7 +124,7 @@ class RelayFilterViewController: UIViewController {
                         let label = UILabel()
                         label.numberOfLines = 0
                         label.lineBreakMode = .byWordWrapping
-                        label.font = .mullvadTiny
+                        label.font = .warrenTiny
                         label.adjustsFontForContentSizeCategory = true
                         label.textColor = .secondaryTextColor
                         label.text = description

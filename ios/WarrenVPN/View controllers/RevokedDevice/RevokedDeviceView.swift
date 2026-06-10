@@ -18,22 +18,22 @@ struct RevokedDeviceView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         Spacer()
-                        Image.mullvadIconFail
+                        Image.warrenIconFail
                         Spacer()
                     }
 
                     Text("Device is inactive")
-                        .font(.mullvadLarge)
+                        .font(.warrenLarge)
                         .foregroundStyle(Color.MullvadText.onBackgroundEmphasis100)
                         .padding(.top, 16)
 
                     Text("You have removed this device. To connect again, you will need to log back in.")
-                        .font(.mullvadSmall)
+                        .font(.warrenSmall)
                         .foregroundStyle(Color.MullvadText.onBackground)
                         .padding(.top, 8)
 
                     Text("Going to login will unblock the Internet on this device.")
-                        .font(.mullvadSmall)
+                        .font(.warrenSmall)
                         .foregroundStyle(Color.MullvadText.onBackground)
                         .padding(.top, 16)
                         .showIf(viewModel.tunnelState.isSecured)
@@ -48,7 +48,7 @@ struct RevokedDeviceView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
     }
 }
 

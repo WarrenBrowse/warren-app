@@ -1,29 +1,29 @@
 import SwiftUI
 
 extension Font {
-    static var mullvadBig: Font { .largeTitle.bold() }
-    static var mullvadLarge: Font { .title.bold() }
-    static var mullvadMedium: Font { .title3.weight(.semibold) }
-    static var mullvadSmall: Font { .body }
-    static var mullvadSmallSemiBold: Font { mullvadSmall.weight(.semibold) }
-    static var mullvadTiny: Font { .subheadline }
-    static var mullvadTinySemiBold: Font { .mullvadTiny.weight(.semibold) }
-    static var mullvadMini: Font { .footnote }
-    static var mullvadMiniSemiBold: Font { mullvadMini.weight(.semibold) }
-    static var mullvadMicro: Font { .caption2 }
-    static var mullvadMicroSemiBold: Font { mullvadMicro.weight(.semibold) }
+    static var warrenBig: Font { .largeTitle.bold() }
+    static var warrenLarge: Font { .title.bold() }
+    static var warrenMedium: Font { .title3.weight(.semibold) }
+    static var warrenSmall: Font { .body }
+    static var warrenSmallSemiBold: Font { warrenSmall.weight(.semibold) }
+    static var warrenTiny: Font { .subheadline }
+    static var warrenTinySemiBold: Font { .warrenTiny.weight(.semibold) }
+    static var warrenMini: Font { .footnote }
+    static var warrenMiniSemiBold: Font { warrenMini.weight(.semibold) }
+    static var warrenMicro: Font { .caption2 }
+    static var warrenMicroSemiBold: Font { warrenMicro.weight(.semibold) }
 }
 
 extension UIFont {
-    static var mullvadBig: UIFont { .preferredFont(forTextStyle: .largeTitle, weight: .bold) }
-    static var mullvadLarge: UIFont { .preferredFont(forTextStyle: .title1, weight: .bold) }
-    static var mullvadMedium: UIFont { .preferredFont(forTextStyle: .title3, weight: .semibold) }
-    static var mullvadSmall: UIFont { .preferredFont(forTextStyle: .body) }
-    static var mullvadSmallSemiBold: UIFont { .preferredFont(forTextStyle: .body, weight: .semibold) }
-    static var mullvadTiny: UIFont { .preferredFont(forTextStyle: .subheadline) }
-    static var mullvadTinySemiBold: UIFont { .preferredFont(forTextStyle: .subheadline, weight: .semibold) }
-    static var mullvadMini: UIFont { .preferredFont(forTextStyle: .footnote) }
-    static var mullvadMiniSemiBold: UIFont { .preferredFont(forTextStyle: .footnote, weight: .semibold) }
-    static var mullvadMicro: UIFont { .preferredFont(forTextStyle: .caption2) }
-    static var mullvadMicroSemiBold: UIFont { .preferredFont(forTextStyle: .caption2, weight: .semibold) }
+    static var warrenBig: UIFont { .preferredFont(forTextStyle: .largeTitle, weight: .bold) }
+    static var warrenLarge: UIFont { .preferredFont(forTextStyle: .title1, weight: .bold) }
+    static var warrenMedium: UIFont { .preferredFont(forTextStyle: .title3, weight: .semibold) }
+    static var warrenSmall: UIFont { .preferredFont(forTextStyle: .body) }
+    static var warrenSmallSemiBold: UIFont { .preferredFont(forTextStyle: .body, weight: .semibold) }
+    static var warrenTiny: UIFont { .preferredFont(forTextStyle: .subheadline) }
+    static var warrenTinySemiBold: UIFont { .preferredFont(forTextStyle: .subheadline, weight: .semibold) }
+    static var warrenMini: UIFont { .preferredFont(forTextStyle: .footnote) }
+    static var warrenMiniSemiBold: UIFont { .preferredFont(forTextStyle: .footnote, weight: .semibold) }
+    static var warrenMicro: UIFont { .preferredFont(forTextStyle: .caption2) }
+    static var warrenMicroSemiBold: UIFont { .preferredFont(forTextStyle: .caption2, weight: .semibold) }
 }

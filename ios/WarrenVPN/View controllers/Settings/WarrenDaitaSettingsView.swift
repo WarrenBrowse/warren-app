@@ -34,7 +34,7 @@ public struct WarrenDaitaSettingsView: View {
                     .tint(.Warren.yellow)
             } footer: {
                 Text(String(localized: "Defense Against AI-Guided Traffic Analysis. Emits constant-rate cover traffic to make your VPN sessions indistinguishable to network observers. Adds ~10% bandwidth overhead.", table: "Settings"))
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
             }
 
             if isEnabled {
@@ -43,7 +43,7 @@ public struct WarrenDaitaSettingsView: View {
                         String(localized: "DAITA is experimental and may degrade throughput on high-bandwidth links.", table: "Settings"),
                         systemImage: "exclamationmark.triangle.fill"
                     )
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
                     .foregroundColor(.Warren.yellow)
                     .listRowBackground(Color.Warren.surface)
                 }

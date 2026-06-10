@@ -24,7 +24,7 @@ class MethodTestingStatusCellContentView: UIView, UIContentView {
 
     private let textLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadSmall
+        textLabel.font = .warrenSmall
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.numberOfLines = 0
         textLabel.textColor = .primaryTextColor
@@ -33,7 +33,7 @@ class MethodTestingStatusCellContentView: UIView, UIContentView {
 
     private let detailLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadTiny
+        textLabel.font = .warrenTiny
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.numberOfLines = 0
         textLabel.textColor = .secondaryTextColor

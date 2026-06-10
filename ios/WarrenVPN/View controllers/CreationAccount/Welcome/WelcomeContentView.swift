@@ -24,7 +24,7 @@ final class WelcomeContentView: UIView, Sendable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadLarge
+        label.font = .warrenLarge
         label.textColor = .white
         label.adjustsFontForContentSizeCategory = true
         label.lineBreakMode = .byWordWrapping
@@ -35,7 +35,7 @@ final class WelcomeContentView: UIView, Sendable {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadSmall
+        label.font = .warrenSmall
         label.textColor = .white
         label.adjustsFontForContentSizeCategory = true
         label.lineBreakMode = .byWordWrapping
@@ -50,7 +50,7 @@ final class WelcomeContentView: UIView, Sendable {
         label.adjustsFontForContentSizeCategory = true
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = .zero
-        label.font = .mullvadMedium
+        label.font = .warrenMedium
         label.textColor = .white
         return label
     }()
@@ -69,7 +69,7 @@ final class WelcomeContentView: UIView, Sendable {
         let label = UILabel()
         label.adjustsFontForContentSizeCategory = true
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .mullvadSmall
+        label.font = .warrenSmall
         label.textColor = .white
         label.setContentHuggingPriority(.defaultLow, for: .horizontal)
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -91,7 +91,7 @@ final class WelcomeContentView: UIView, Sendable {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadSmall
+        label.font = .warrenSmall
         label.adjustsFontForContentSizeCategory = true
         label.textColor = .white
         label.numberOfLines = .zero

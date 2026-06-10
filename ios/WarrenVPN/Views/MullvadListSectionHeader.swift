@@ -12,16 +12,16 @@ struct MullvadListSectionHeader: View {
     var body: some View {
         HStack {
             Text(title)
-                .font(.mullvadTiny)
-                .foregroundStyle(Color.mullvadTextPrimary)
+                .font(.warrenTiny)
+                .foregroundStyle(Color.warrenTextPrimary)
                 .layoutPriority(1)
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color.mullvadTextPrimary.opacity(0.2))
+                .foregroundStyle(Color.warrenTextPrimary.opacity(0.2))
             if let subtitle {
                 Text(subtitle)
-                    .font(.mullvadTiny)
-                    .foregroundStyle(Color.mullvadTextSecondary)
+                    .font(.warrenTiny)
+                    .foregroundStyle(Color.warrenTextSecondary)
                     .layoutPriority(1)
             }
         }

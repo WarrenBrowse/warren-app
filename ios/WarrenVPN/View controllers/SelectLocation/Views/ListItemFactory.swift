@@ -57,7 +57,7 @@ struct ListItemFactory {
             Button {
                 onSelect?()
             } label: {
-                Image.mullvadIconChevron
+                Image.warrenIconChevron
                     .rotationEffect(.degrees(isExpanded ? -90 : 90))
                     .accessibilityLabel(
                         isExpanded ? Text("Collapse") : Text("Expand")
@@ -68,7 +68,7 @@ struct ListItemFactory {
             Button {
                 onSelect?()
             } label: {
-                Image.mullvadIconInfo
+                Image.warrenIconInfo
                     .accessibilityLabel(Text("Information"))
                     .accessibilityIdentifier(.infoButton)
             }
@@ -80,15 +80,15 @@ struct ListItemFactory {
         case .dot(let style):
             switch style {
             case .issue:
-                Image.mullvadIconStateIssue
+                Image.warrenIconStateIssue
             case .offline:
-                Image.mullvadIconStateOffline
+                Image.warrenIconStateOffline
             case .online:
-                Image.mullvadIconStateOnline
+                Image.warrenIconStateOnline
             }
         case .tick:
-            Image.mullvadIconTick
-                .foregroundStyle(Color.mullvadSuccessColor)
+            Image.warrenIconTick
+                .foregroundStyle(Color.warrenSuccessColor)
         }
     }
 }

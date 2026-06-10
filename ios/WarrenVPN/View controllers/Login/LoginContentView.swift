@@ -13,7 +13,7 @@ class LoginContentView: UIView {
 
     let titleLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadBig
+        textLabel.font = .warrenBig
         textLabel.textColor = .white
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         textLabel.adjustsFontForContentSizeCategory = true
@@ -22,7 +22,7 @@ class LoginContentView: UIView {
 
     let messageLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadTinySemiBold
+        textLabel.font = .warrenTinySemiBold
         textLabel.textColor = UIColor.white.withAlphaComponent(0.6)
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         textLabel.adjustsFontForContentSizeCategory = true
@@ -73,7 +73,7 @@ class LoginContentView: UIView {
 
     let footerLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadSmall
+        textLabel.font = .warrenSmall
         textLabel.textColor = UIColor.white.withAlphaComponent(0.6)
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         textLabel.adjustsFontForContentSizeCategory = true

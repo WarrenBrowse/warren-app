@@ -46,7 +46,7 @@ final class AccountInputGroupView: UIView {
 
     private let privateTextField: AccountTextField = {
         let textField = AccountTextField()
-        textField.font = .mullvadMedium
+        textField.font = .warrenMedium
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.adjustsFontForContentSizeCategory = true
         textField.placeholder = "0000 0000 0000 0000"
@@ -98,7 +98,7 @@ final class AccountInputGroupView: UIView {
         button.configuration?
             .titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributeContainer in
                 var updatedAttributeContainer = attributeContainer
-                updatedAttributeContainer.font = UIFont.mullvadMedium
+                updatedAttributeContainer.font = UIFont.warrenMedium
                 updatedAttributeContainer.foregroundColor = .AccountTextField.NormalState.textColor
                 return updatedAttributeContainer
             }

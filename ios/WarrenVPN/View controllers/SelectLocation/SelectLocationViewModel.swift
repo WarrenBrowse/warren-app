@@ -484,11 +484,11 @@ extension MultihopState {
     var icon: Image {
         switch self {
         case .always:
-            .mullvadIconMultihopAlways
+            .warrenIconMultihopAlways
         case .never:
-            .mullvadIconMultihopNever
+            .warrenIconMultihopNever
         case .whenNeeded:
-            .mullvadIconMultihopWhenNeeded
+            .warrenIconMultihopWhenNeeded
         }
     }
 }

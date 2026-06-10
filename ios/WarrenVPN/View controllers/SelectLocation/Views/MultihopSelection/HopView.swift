@@ -54,12 +54,12 @@ struct HopView: View {
                 let icon: Image =
                     if hasFilters {
                         automaticMultihopIsActive
-                            ? .mullvadIconFilterCutoutDisabled
-                            : .mullvadIconFilterCutout
+                            ? .warrenIconFilterCutoutDisabled
+                            : .warrenIconFilterCutout
                     } else {
                         automaticMultihopIsActive
-                            ? .mullvadIconFilterDisabled
-                            : .mullvadIconFilter
+                            ? .warrenIconFilterDisabled
+                            : .warrenIconFilter
                     }
                 icon
                     .resizable()
@@ -69,11 +69,11 @@ struct HopView: View {
                 hop.multihopContext == .entry ? .selectLocationEntryFilterButton : .selectLocationExitFilterButton
             )
         }
-        .font(.mullvadSmallSemiBold)
+        .font(.warrenSmallSemiBold)
         .foregroundStyle(
             isSelected
-                ? Color.mullvadTextPrimary
-                : Color.mullvadTextSecondary
+                ? Color.warrenTextPrimary
+                : Color.warrenTextSecondary
         )
         .padding(8)
     }

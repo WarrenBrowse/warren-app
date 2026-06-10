@@ -36,7 +36,7 @@ struct AutomaticLocationListItem: View {
             }
         )
         .id(location.id)  // to be able to scroll to this item programmatically
-        .mullvadAlert(item: $alert)
+        .warrenAlert(item: $alert)
     }
 
     func getAutomaticLocationInfoAlert(completion: @escaping () -> Void) -> MullvadAlert {

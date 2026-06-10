@@ -209,7 +209,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         var contentConfiguration = ListCellContentConfiguration(
             textProperties:
                 ListCellContentConfiguration.TextProperties(
-                    font: .mullvadTiny,
+                    font: .warrenTiny,
                     color: .TableSection.footerTextColor
                 ),
             directionalLayoutMargins: NSDirectionalEdgeInsets(UIMetrics.SettingsRowView.footerLayoutMargins)

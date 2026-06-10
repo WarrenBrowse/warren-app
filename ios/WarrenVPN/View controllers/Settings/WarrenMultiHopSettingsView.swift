@@ -48,7 +48,7 @@ public struct WarrenMultiHopSettingsView: View {
                     .tint(.Warren.yellow)
             } footer: {
                 Text(String(localized: "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default.", table: "Settings"))
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
             }
 
             if isEnabled {
@@ -69,7 +69,7 @@ public struct WarrenMultiHopSettingsView: View {
                     Text(String(localized: "Exit relay", table: "Settings"))
                 } footer: {
                     Text(String(localized: "The exit relay determines your apparent location to websites.", table: "Settings"))
-                        .font(.mullvadMicro)
+                        .font(.warrenMicro)
                 }
             }
         }

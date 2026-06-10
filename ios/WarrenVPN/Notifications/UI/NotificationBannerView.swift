@@ -14,7 +14,7 @@ final class NotificationBannerView: UIView {
 
     private let titleLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadTinySemiBold
+        textLabel.font = .warrenTinySemiBold
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = UIColor.InAppNotificationBanner.titleColor
         textLabel.numberOfLines = 0
@@ -25,7 +25,7 @@ final class NotificationBannerView: UIView {
 
     private let bodyLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .mullvadTiny
+        textLabel.font = .warrenTiny
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = UIColor.InAppNotificationBanner.bodyColor
         textLabel.numberOfLines = 0

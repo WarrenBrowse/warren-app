@@ -34,7 +34,7 @@ struct NotificationPromptView<ViewModel>: View where ViewModel: NotificationProm
                                     .foregroundStyle(Color(.primaryTextColor))
 
                                 Text(text)
-                                    .font(.mullvadLarge)
+                                    .font(.warrenLarge)
                                     .foregroundStyle(.white)
                                     .multilineTextAlignment(.center)
                             }
@@ -59,7 +59,7 @@ struct NotificationPromptView<ViewModel>: View where ViewModel: NotificationProm
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: geo.size.height)
             }
-            .background(Color.mullvadBackground)
+            .background(Color.warrenBackground)
             .onAppear(perform: {
                 viewModel.checkNotificationPermission()
             })

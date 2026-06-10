@@ -64,7 +64,7 @@ class BaseUITestCase: XCTestCase {
         .infoDictionary?["AttachAppLogsOnFailure"] as! String == "1"
     let partnerApiToken = Bundle(for: BaseUITestCase.self).infoDictionary?["PartnerApiToken"] as? String
 
-    lazy var mullvadAPIWrapper: MullvadAPIWrapper = {
+    lazy var warrenAPIWrapper: MullvadAPIWrapper = {
         do {
             return try! MullvadAPIWrapper()
         }
@@ -103,7 +103,7 @@ class BaseUITestCase: XCTestCase {
             let partnerAPIClient = PartnerAPIClient()
             return partnerAPIClient.createAccount()
         } else {
-            return mullvadAPIWrapper.createAccount()
+            return warrenAPIWrapper.createAccount()
         }
     }
 

@@ -85,8 +85,8 @@ struct SettingsInfoView: View {
                         .aspectRatio(contentMode: .fit)
                     bodyText(page)
                         .fixedSize(horizontal: false, vertical: true)
-                        .font(.mullvadTiny)
-                        .foregroundStyle(Color.mullvadTextSecondary)
+                        .font(.warrenTiny)
+                        .foregroundStyle(Color.warrenTextSecondary)
                     if let customView = page.customView {
                         customView
                             .fixedSize(horizontal: false, vertical: true)

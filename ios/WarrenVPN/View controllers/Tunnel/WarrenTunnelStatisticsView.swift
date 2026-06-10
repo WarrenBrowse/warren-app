@@ -86,7 +86,7 @@ public struct WarrenTunnelStatisticsView: View {
                     comment: "Title of the tunnel session statistics view"
                 )
             )
-            .font(.mullvadBig)
+            .font(.warrenBig)
             .foregroundColor(.white)
 
             row(
@@ -126,7 +126,7 @@ public struct WarrenTunnelStatisticsView: View {
     private func row(label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundColor(.white.opacity(0.7))
             Spacer()
             Text(value)

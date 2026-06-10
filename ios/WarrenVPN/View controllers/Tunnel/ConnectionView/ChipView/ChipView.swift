@@ -56,7 +56,7 @@ struct ChipView: View {
 
 #Preview("Text + icon") {
     ZStack {
-        ChipView(item: ChipModel(id: .daita, name: "Example", icon: .mullvadIconMultihopWhenNeeded)) {}
+        ChipView(item: ChipModel(id: .daita, name: "Example", icon: .warrenIconMultihopWhenNeeded)) {}
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(UIColor.secondaryColor.color)

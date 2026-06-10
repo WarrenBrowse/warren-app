@@ -60,12 +60,12 @@ struct MullvadListNavigationItemView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .foregroundStyle(Color(.Cell.titleTextColor))
-                        .font(.mullvadSmallSemiBold)
+                        .font(.warrenSmallSemiBold)
                         .fixedSize(horizontal: false, vertical: true)
                     if let detail {
                         Text(detail)
                             .foregroundStyle(Color(.Cell.detailTextColor.withAlphaComponent(0.6)))
-                            .font(.mullvadMiniSemiBold)
+                            .font(.warrenMiniSemiBold)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -74,14 +74,14 @@ struct MullvadListNavigationItemView: View {
                     HStack(alignment: .center) {
                         Text(state.description)
                             .foregroundStyle(Color(.Cell.titleTextColor.withAlphaComponent(0.6)))
-                            .font(.mullvadTiny)
+                            .font(.warrenTiny)
                             .fixedSize(horizontal: false, vertical: true)
                         if case .warning = state {
-                            Image.mullvadIconStateIssue
+                            Image.warrenIconStateIssue
                                 .resizable()
                                 .frame(width: 18, height: 18)
                         } else if case .error = state {
-                            Image.mullvadIconStateOffline
+                            Image.warrenIconStateOffline
                                 .resizable()
                                 .frame(width: 18, height: 18)
                         }

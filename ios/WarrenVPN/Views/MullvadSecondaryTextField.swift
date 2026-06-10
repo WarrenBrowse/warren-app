@@ -10,7 +10,7 @@ struct MullvadSecondaryTextField: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image.mullvadIconSearch
+            Image.warrenIconSearch
                 .accessibilityHidden(true)
             TextField(
                 placeholder,
@@ -29,7 +29,7 @@ struct MullvadSecondaryTextField: View {
                         text = ""
                     }
                 } label: {
-                    Image.mullvadIconCross
+                    Image.warrenIconCross
                 }
             }
         }
@@ -88,6 +88,6 @@ struct MullvadSecondaryTextField: View {
             .disabled(true)
         }
         .padding()
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
     }
 }

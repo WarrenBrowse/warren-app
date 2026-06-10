@@ -27,7 +27,7 @@ public struct WarrenAboutView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Warren VPN")
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
 
                 Text("v\(appVersion) (build \(buildNumber))")
@@ -90,7 +90,7 @@ public struct WarrenAboutView: View {
                 comment: "Bottom legal credit explaining the Mullvad fork relationship + license"
             )
         )
-        .font(.mullvadMicro)
+        .font(.warrenMicro)
         .foregroundColor(.white.opacity(0.5))
         .padding(.top, 12)
     }
@@ -102,7 +102,7 @@ public struct WarrenAboutView: View {
                 Image(systemName: icon)
                     .foregroundColor(.Warren.yellow)
                 Text(label)
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .foregroundColor(.white)
                 Spacer()
                 Image(systemName: "arrow.up.right")

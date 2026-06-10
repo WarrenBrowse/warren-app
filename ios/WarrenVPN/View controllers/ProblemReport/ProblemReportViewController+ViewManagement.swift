@@ -28,7 +28,7 @@ extension ProblemReportViewController {
     func makeSubheaderLabel() -> UILabel {
         let textLabel = UILabel()
         textLabel.translatesAutoresizingMaskIntoConstraints = false
-        textLabel.font = .mullvadTinySemiBold
+        textLabel.font = .warrenTinySemiBold
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.numberOfLines = 0
         textLabel.textColor = .white
@@ -44,7 +44,7 @@ extension ProblemReportViewController {
         let reduceAnonymityWarningView = ReduceAnonymityWarningView()
         reduceAnonymityWarningView.isHidden = true
         let userPrivacyLabel = UILabel()
-        userPrivacyLabel.font = .mullvadTiny
+        userPrivacyLabel.font = .warrenTiny
         userPrivacyLabel.adjustsFontForContentSizeCategory = true
         userPrivacyLabel.numberOfLines = 0
         userPrivacyLabel.textColor = .white
@@ -111,7 +111,7 @@ extension ProblemReportViewController {
         textField.borderStyle = .none
         textField.backgroundColor = .white
         textField.inputAccessoryView = emailAccessoryToolbar
-        textField.font = .mullvadSmall
+        textField.font = .warrenSmall
         textField.adjustsFontForContentSizeCategory = true
         textField.placeholder = ProblemReportViewModel.emailPlaceholderText
         return textField
@@ -122,7 +122,7 @@ extension ProblemReportViewController {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.backgroundColor = .white
         textView.inputAccessoryView = messageAccessoryToolbar
-        textView.font = .mullvadSmall
+        textView.font = .warrenSmall
         textView.adjustsFontForContentSizeCategory = true
         textView.placeholder = ProblemReportViewModel.messageTextViewPlaceholder
         textView.contentInsetAdjustmentBehavior = .never

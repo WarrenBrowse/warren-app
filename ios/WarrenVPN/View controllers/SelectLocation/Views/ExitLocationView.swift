@@ -62,8 +62,8 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
                         }
                         if !isShowingCustomListsSection && !isShowingAllLocationsSection {
                             Text("No result for \"\(viewModel.searchText)\", please try a different search term.")
-                                .font(.mullvadMiniSemiBold)
-                                .foregroundStyle(Color.mullvadTextPrimary.opacity(0.6))
+                                .font(.warrenMiniSemiBold)
+                                .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
                                 .padding(.vertical)
                         }
                     }
@@ -101,8 +101,8 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
                 }
             }
         }
-        .mullvadInputAlert(item: $newCustomListAlert)
-        .mullvadAlert(item: $alert)
+        .warrenInputAlert(item: $newCustomListAlert)
+        .warrenAlert(item: $alert)
     }
 
     @ViewBuilder
@@ -165,7 +165,7 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
                     viewModel.showAddCustomListView(
                         locations: context.customListAvailableLocations)
                 } label: {
-                    Image.mullvadIconAdd
+                    Image.warrenIconAdd
                         .padding(.horizontal, 10)
                 }
                 .accessibilityLabel(Text("Create new custom list"))
@@ -176,7 +176,7 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
                             locations: context.customListAvailableLocations
                         )
                     } label: {
-                        Image.mullvadIconEdit
+                        Image.warrenIconEdit
                             .padding(.horizontal, 10)
                     }
                     .accessibilityLabel(Text("Edit custom lists"))
@@ -224,7 +224,7 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
         alert: nil,
         onScrollVisibilityChange: { _ in }
     )
-    .background(Color.mullvadBackground)
+    .background(Color.warrenBackground)
 }
 
 #Preview("Empty lists") {
@@ -236,5 +236,5 @@ struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
         alert: nil,
         onScrollVisibilityChange: { _ in }
     )
-    .background(Color.mullvadBackground)
+    .background(Color.warrenBackground)
 }

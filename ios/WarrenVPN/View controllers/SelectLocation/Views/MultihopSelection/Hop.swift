@@ -25,17 +25,17 @@ struct Hop {
 
     var icon: Image {
         return if noMatchFound != nil {
-            .mullvadIconError
+            .warrenIconError
         } else {
             switch multihopContext {
             case .entry:
                 if selectedLocation is AutomaticLocationNode {
                     multihopState.icon
                 } else {
-                    .mullvadServer
+                    .warrenServer
                 }
             case .exit:
-                .mullvadLocation
+                .warrenLocation
             }
         }
     }

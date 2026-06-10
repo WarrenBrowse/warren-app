@@ -41,7 +41,7 @@ class CustomTextView: UITextView {
 
     override var font: UIFont? {
         didSet {
-            placeholderTextLabel.font = font ?? .mullvadSmall
+            placeholderTextLabel.font = font ?? .warrenSmall
         }
     }
 

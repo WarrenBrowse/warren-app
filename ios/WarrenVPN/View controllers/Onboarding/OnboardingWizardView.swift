@@ -151,12 +151,12 @@ private struct WelcomeStepView: View {
                     .accessibilityHidden(true)
 
                 Text(String(localized: "Welcome to Warren VPN", table: "Onboarding"))
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
 
                 Text(String(localized: "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing.", table: "Onboarding"))
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -187,12 +187,12 @@ private struct WalletStepView: View {
                     .accessibilityHidden(true)
 
                 Text(String(localized: "Your Warren wallet", table: "Onboarding"))
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
 
                 Text(String(localized: "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase.", table: "Onboarding"))
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -202,7 +202,7 @@ private struct WalletStepView: View {
                         String(localized: "Wallet ready", table: "Onboarding"),
                         systemImage: "checkmark.circle.fill"
                     )
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .foregroundColor(.Warren.yellow)
                 }
             }
@@ -240,12 +240,12 @@ private struct SubscriptionStepView: View {
                     .accessibilityHidden(true)
 
                 Text(String(localized: "Activate your subscription", table: "Onboarding"))
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
 
                 Text(String(localized: "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required.", table: "Onboarding"))
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -276,11 +276,11 @@ private struct PrivacyPrefsStepView: View {
         StepContainer {
             VStack(alignment: .leading, spacing: 16) {
                 Text(String(localized: "Privacy preferences", table: "Onboarding"))
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
 
                 Text(String(localized: "Pick your defaults. You can change these anytime in Settings.", table: "Onboarding"))
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .foregroundColor(.white.opacity(0.7))
 
                 VStack(spacing: 12) {
@@ -328,12 +328,12 @@ private struct DoneStepView: View {
                     .accessibilityHidden(true)
 
                 Text(String(localized: "You're all set", table: "Onboarding"))
-                    .font(.mullvadBig)
+                    .font(.warrenBig)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
 
                 Text(String(localized: "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key.", table: "Onboarding"))
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -375,7 +375,7 @@ private struct PrimaryStepButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(Color.Warren.yellow)
@@ -393,7 +393,7 @@ private struct SecondaryStepButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.mullvadSmall)
+                .font(.warrenSmall)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Color.clear)
@@ -424,10 +424,10 @@ private struct PrefRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .foregroundColor(.white)
                 Text(subtitle)
-                    .font(.mullvadMicro)
+                    .font(.warrenMicro)
                     .foregroundColor(.white.opacity(0.65))
                     .fixedSize(horizontal: false, vertical: true)
             }

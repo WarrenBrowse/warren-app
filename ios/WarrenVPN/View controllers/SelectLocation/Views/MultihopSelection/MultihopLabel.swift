@@ -14,8 +14,8 @@ struct MultihopLabel: View {
                 }
             Text(label)
         }
-        .foregroundStyle(Color.mullvadTextPrimary.opacity(0.6))
-        .font(.mullvadMiniSemiBold)
+        .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
+        .font(.warrenMiniSemiBold)
         .accessibilityHidden(true)
     }
 }

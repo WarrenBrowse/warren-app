@@ -74,7 +74,7 @@ class SettingsFieldValidationErrorContentView: UIView, UIContentView {
             label.text = error.errorDescription
             label.numberOfLines = 0
             label.adjustsFontForContentSizeCategory = true
-            label.font = .mullvadTiny
+            label.font = .warrenTiny
             label.textColor = .white
 
             let stackView = UIStackView(arrangedSubviews: [icon, label])

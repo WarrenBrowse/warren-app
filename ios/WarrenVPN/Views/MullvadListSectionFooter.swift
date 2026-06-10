@@ -12,8 +12,8 @@ struct MullvadListSectionFooter: View {
     let title: LocalizedStringKey
     var body: some View {
         Text(title)
-            .font(.mullvadMini)
-            .foregroundStyle(Color.mullvadTextPrimary.opacity(0.6))
+            .font(.warrenMini)
+            .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 24)
     }

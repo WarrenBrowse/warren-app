@@ -49,7 +49,7 @@ struct TextCellContentConfiguration: UIContentConfiguration, Equatable {
 extension TextCellContentConfiguration {
     /// The text label properties.
     struct TextProperties: Equatable {
-        var font = UIFont.mullvadSmall
+        var font = UIFont.warrenSmall
         var adjustsFontForContentSizeCategory = true
         var color = UIColor.Cell.titleTextColor
     }
@@ -78,7 +78,7 @@ extension TextCellContentConfiguration {
     /// Text field configuration.
     struct TextFieldProperties: Equatable {
         /// Text font.
-        var font = UIFont.mullvadSmall
+        var font = UIFont.warrenSmall
 
         var adjustsFontForContentSizeCategory = true
 

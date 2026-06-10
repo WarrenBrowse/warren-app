@@ -112,7 +112,7 @@ struct AlertModifier: ViewModifier {
             }
         }
         .padding()
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
         .cornerRadius(8)
     }
 
@@ -120,11 +120,11 @@ struct AlertModifier: ViewModifier {
     private func alertIcon(for type: MullvadAlert.AlertType) -> some View {
         switch type {
         case .info:
-            Image.mullvadIconInfo
+            Image.warrenIconInfo
                 .resizable()
                 .frame(width: 48, height: 48)
         case .error, .warning:
-            Image.mullvadIconAlert
+            Image.warrenIconAlert
                 .resizable()
                 .frame(width: 48, height: 48)
         }
@@ -137,8 +137,8 @@ struct AlertModifier: ViewModifier {
                 ForEach(Array(messages.enumerated()), id: \.offset) { _, text in
                     HStack {
                         Text(text)
-                            .font(.mullvadSmall)
-                            .foregroundColor(.mullvadTextSecondary)
+                            .font(.warrenSmall)
+                            .foregroundColor(.warrenTextSecondary)
                         Spacer()
                     }
                 }
@@ -179,8 +179,8 @@ struct InputAlertModifier: ViewModifier {
                     Spacer()
                     VStack(alignment: .leading, spacing: 16) {
                         Text(alert.title)
-                            .font(.mullvadLarge)
-                            .foregroundStyle(Color.mullvadTextPrimary)
+                            .font(.warrenLarge)
+                            .foregroundStyle(Color.warrenTextPrimary)
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                         MullvadPrimaryTextField(
@@ -212,7 +212,7 @@ struct InputAlertModifier: ViewModifier {
                         }
                     }
                     .padding()
-                    .background(Color.mullvadBackground)
+                    .background(Color.warrenBackground)
                     .cornerRadius(8)
                     Spacer()
                 }
@@ -231,18 +231,18 @@ struct InputAlertModifier: ViewModifier {
 }
 
 extension View {
-    func mullvadAlert(item: Binding<MullvadAlert?>) -> some View {
+    func warrenAlert(item: Binding<MullvadAlert?>) -> some View {
         modifier(AlertModifier(alert: item))
     }
 
-    func mullvadInputAlert(item: Binding<MullvadInputAlert?>) -> some View {
+    func warrenInputAlert(item: Binding<MullvadInputAlert?>) -> some View {
         modifier(InputAlertModifier(alert: item))
     }
 }
 
 #Preview {
     Text("Hello, World!")
-        .mullvadAlert(
+        .warrenAlert(
             item:
                 .constant(
                     .init(
@@ -267,7 +267,7 @@ extension View {
 
 #Preview("Input") {
     Text("Hello, World!")
-        .mullvadInputAlert(
+        .warrenInputAlert(
             item:
                 .constant(
                     .init(

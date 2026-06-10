@@ -34,7 +34,7 @@ final class RedeemVoucherContentView: UIView {
 
     private let title: UILabel = {
         let label = UILabel()
-        label.font = .mullvadLarge
+        label.font = .warrenLarge
         label.text = NSLocalizedString("Redeem voucher", comment: "")
         label.textColor = .white
         label.numberOfLines = 0
@@ -44,7 +44,7 @@ final class RedeemVoucherContentView: UIView {
 
     private let enterVoucherLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadTinySemiBold
+        label.font = .warrenTinySemiBold
 
         label.text = NSLocalizedString("Enter voucher code", comment: "")
         label.textColor = .white
@@ -79,7 +79,7 @@ final class RedeemVoucherContentView: UIView {
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadMiniSemiBold
+        label.font = .warrenMiniSemiBold
         label.numberOfLines = 2
         label.adjustsFontForContentSizeCategory = true
         label.lineBreakMode = .byWordWrapping

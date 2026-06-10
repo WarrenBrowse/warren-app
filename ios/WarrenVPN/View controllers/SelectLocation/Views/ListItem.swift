@@ -22,12 +22,12 @@ struct ListItem<StatusIndicator: View>: View {
 
             VStack(alignment: .leading) {
                 Text(title)
-                    .font(.mullvadSmallSemiBold)
-                    .foregroundStyle(selected ? Color.mullvadSuccessColor : Color.mullvadTextPrimary)
+                    .font(.warrenSmallSemiBold)
+                    .foregroundStyle(selected ? Color.warrenSuccessColor : Color.warrenTextPrimary)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.mullvadMiniSemiBold)
-                        .foregroundStyle(Color.mullvadTextPrimary.opacity(0.6))
+                        .font(.warrenMiniSemiBold)
+                        .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
                 }
             }
 

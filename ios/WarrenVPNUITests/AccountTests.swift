@@ -17,7 +17,7 @@ class AccountTests: LoggedOutUITestCase {
         // Verify welcome page is shown and get account number from it
         let accountNumber = WelcomePage(app).getAccountNumber()
 
-        mullvadAPIWrapper.deleteAccount(accountNumber)
+        warrenAPIWrapper.deleteAccount(accountNumber)
     }
 
     func testCreateAccountWithLastUsedAccount() throws {
@@ -26,7 +26,7 @@ class AccountTests: LoggedOutUITestCase {
 
         // Teardown
         addTeardownBlock {
-            self.mullvadAPIWrapper.deleteAccount(temporaryAccountNumber)
+            self.warrenAPIWrapper.deleteAccount(temporaryAccountNumber)
         }
 
         login(accountNumber: temporaryAccountNumber)
@@ -46,7 +46,7 @@ class AccountTests: LoggedOutUITestCase {
         // Verify welcome page is shown and get account number from it
         let accountNumber = WelcomePage(app).getAccountNumber()
 
-        self.mullvadAPIWrapper.deleteAccount(accountNumber)
+        self.warrenAPIWrapper.deleteAccount(accountNumber)
     }
 
     func testDeleteAccount() throws {
@@ -80,7 +80,7 @@ class AccountTests: LoggedOutUITestCase {
 
         // Teardown
         addTeardownBlock {
-            self.mullvadAPIWrapper.deleteAccount(temporaryAccountNumber)
+            self.warrenAPIWrapper.deleteAccount(temporaryAccountNumber)
         }
 
         login(accountNumber: temporaryAccountNumber)
@@ -102,11 +102,11 @@ class AccountTests: LoggedOutUITestCase {
         let otherDevicesCount = 2
         // Setup
         let temporaryAccountNumber = createTemporaryAccountWithoutTime()
-        mullvadAPIWrapper.addDevices(otherDevicesCount, account: temporaryAccountNumber)
+        warrenAPIWrapper.addDevices(otherDevicesCount, account: temporaryAccountNumber)
 
         // Teardown
         addTeardownBlock {
-            self.mullvadAPIWrapper.deleteAccount(temporaryAccountNumber)
+            self.warrenAPIWrapper.deleteAccount(temporaryAccountNumber)
         }
 
         login(accountNumber: temporaryAccountNumber)
@@ -159,11 +159,11 @@ class AccountTests: LoggedOutUITestCase {
     func testLoginToAccountWithTooManyDevices() throws {
         // Setup
         let temporaryAccountNumber = createTemporaryAccountWithoutTime()
-        mullvadAPIWrapper.addDevices(5, account: temporaryAccountNumber)
+        warrenAPIWrapper.addDevices(5, account: temporaryAccountNumber)
 
         // Teardown
         addTeardownBlock {
-            self.mullvadAPIWrapper.deleteAccount(temporaryAccountNumber)
+            self.warrenAPIWrapper.deleteAccount(temporaryAccountNumber)
         }
 
         login(accountNumber: temporaryAccountNumber)
@@ -178,7 +178,7 @@ class AccountTests: LoggedOutUITestCase {
     func testLogOut() throws {
         let newAccountNumber = createTemporaryAccountWithoutTime()
         login(accountNumber: newAccountNumber)
-        XCTAssertEqual(try mullvadAPIWrapper.getDevices(newAccountNumber).count, 1, "Account has one device")
+        XCTAssertEqual(try warrenAPIWrapper.getDevices(newAccountNumber).count, 1, "Account has one device")
 
         HeaderBar(app)
             .tapAccountButton()
@@ -188,8 +188,8 @@ class AccountTests: LoggedOutUITestCase {
 
         LoginPage(app)
 
-        XCTAssertEqual(try mullvadAPIWrapper.getDevices(newAccountNumber).count, 0, "Account has 0 devices")
-        mullvadAPIWrapper.deleteAccount(newAccountNumber)
+        XCTAssertEqual(try warrenAPIWrapper.getDevices(newAccountNumber).count, 0, "Account has 0 devices")
+        warrenAPIWrapper.deleteAccount(newAccountNumber)
     }
 
     func testTimeLeft() throws {
@@ -201,7 +201,7 @@ class AccountTests: LoggedOutUITestCase {
 
         login(accountNumber: hasTimeAccountNumber)
 
-        let accountExpiry = try mullvadAPIWrapper.getAccountExpiry(hasTimeAccountNumber)
+        let accountExpiry = try warrenAPIWrapper.getAccountExpiry(hasTimeAccountNumber)
 
         HeaderBar(app)
             .tapAccountButton()

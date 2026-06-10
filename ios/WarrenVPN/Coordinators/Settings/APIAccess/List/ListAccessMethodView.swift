@@ -87,7 +87,7 @@ struct ListAccessMethodView<ViewModel>: View where ViewModel: ListAccessViewMode
             .scrollBounceBehavior(.basedOnSize)
             Spacer()
         }
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
     }
 
     func getState(for item: ListAccessMethodItem) -> MullvadListNavigationItem.State? {

@@ -126,7 +126,7 @@ class ListCustomListViewController: UIViewController {
         cell.contentConfiguration = contentConfiguration
 
         if let cell = cell as? DynamicBackgroundConfiguration {
-            cell.setAutoAdaptingBackgroundConfiguration(.mullvadListPlainCell(), selectionType: .dimmed)
+            cell.setAutoAdaptingBackgroundConfiguration(.warrenListPlainCell(), selectionType: .dimmed)
         }
 
         if let cell = cell as? CustomCellDisclosureHandling {

@@ -69,7 +69,7 @@ class RestorePurchasesView: UIView {
         return NSAttributedString(
             string: text,
             attributes: [
-                .font: UIFont.mullvadMini,
+                .font: UIFont.warrenMini,
                 .foregroundColor: UIColor.white,
                 .underlineStyle: NSUnderlineStyle.single.rawValue,
             ])

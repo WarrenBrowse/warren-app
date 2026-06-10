@@ -12,7 +12,7 @@ import XCTest
 class PaymentTests: LoggedOutUITestCase {
     func testMakeInAppPurchaseOnAccountScreen() throws {
         let accountNumberWithTime = getAccountWithTime()
-        let accountExpiry = try mullvadAPIWrapper.getAccountExpiry(accountNumberWithTime)
+        let accountExpiry = try warrenAPIWrapper.getAccountExpiry(accountNumberWithTime)
 
         addTeardownBlock {
             self.deleteTemporaryAccountWithTime(accountNumber: accountNumberWithTime)
@@ -100,7 +100,7 @@ class PaymentTests: LoggedOutUITestCase {
         firewallAPIClient.removeRules()
 
         let accountNumberWithTime = getAccountWithTime()
-        let accountExpiry = try mullvadAPIWrapper.getAccountExpiry(accountNumberWithTime)
+        let accountExpiry = try warrenAPIWrapper.getAccountExpiry(accountNumberWithTime)
 
         addTeardownBlock {
             self.deleteTemporaryAccountWithTime(accountNumber: accountNumberWithTime)
@@ -160,7 +160,7 @@ extension PaymentTests {
     }
 
     private func verifyAccountUpdated(accountNumber: String, accountExpiry: Date) throws {
-        let newAccountExpiry = try mullvadAPIWrapper.getAccountExpiry(accountNumber)
+        let newAccountExpiry = try warrenAPIWrapper.getAccountExpiry(accountNumber)
         XCTAssertTrue(newAccountExpiry > accountExpiry)
 
         AccountPage(app)

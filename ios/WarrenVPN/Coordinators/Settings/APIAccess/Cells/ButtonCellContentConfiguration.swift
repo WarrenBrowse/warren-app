@@ -42,7 +42,7 @@ struct ButtonCellContentConfiguration: UIContentConfiguration, Equatable {
 
 extension ButtonCellContentConfiguration {
     struct TextProperties: Equatable {
-        var font = UIFont.mullvadSmallSemiBold
+        var font = UIFont.warrenSmallSemiBold
         var color = UIColor.Cell.titleTextColor
     }
 }

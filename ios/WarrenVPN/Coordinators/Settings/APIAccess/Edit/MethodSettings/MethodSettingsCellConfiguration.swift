@@ -79,7 +79,7 @@ class MethodSettingsCellConfiguration {
             return
         }
 
-        cell.setAutoAdaptingBackgroundConfiguration(.mullvadListGroupedCell(), selectionType: .dimmed)
+        cell.setAutoAdaptingBackgroundConfiguration(.warrenListGroupedCell(), selectionType: .dimmed)
     }
 
     private func configureErrorState(

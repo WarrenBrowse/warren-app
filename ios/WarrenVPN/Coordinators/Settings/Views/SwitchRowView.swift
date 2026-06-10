@@ -46,7 +46,7 @@ struct SwitchRowView: View {
             )
             .disabled(disabled)
         }
-        .font(.mullvadSmall)
+        .font(.warrenSmall)
         .padding(UIMetrics.SettingsRowView.layoutMargins)
         .background(Color(.primaryColor))
         .foregroundColor(Color(.primaryTextColor))

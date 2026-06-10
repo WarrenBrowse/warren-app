@@ -15,7 +15,7 @@ class SettingsHeaderView: UITableViewHeaderFooterView {
     let titleLabel: UILabel = {
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.font = .mullvadSmallSemiBold
+        titleLabel.font = .warrenSmallSemiBold
         titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.textColor = UIColor.Cell.titleTextColor
         titleLabel.numberOfLines = 0

@@ -44,18 +44,18 @@ final class NotificationPromptViewModel: NotificationPromptViewModelProtocol {
     var rows: [NotificationPromptViewRowType] {
         [
             .emptyView,
-            .header(image: .mullvadIconInfo, text: "Set up notifications"),
+            .header(image: .warrenIconInfo, text: "Set up notifications"),
             .message(
                 "Stay informed about your VPN connection and any actions needed to ensure it works correctly.",
-                font: .mullvadSmall),
+                font: .warrenSmall),
             .message("We will never send you any ads or tips.", font: .body),
             .emptyView,
             isNotificationsDisabled
                 ? NotificationPromptViewRowType.message(
                     "Notifications for Warren VPN are disabled on this device. Please change your system settings for Warren VPN if you wish to enable them again. These settings can be changed at any time.",
-                    font: .mullvadTiny)
+                    font: .warrenTiny)
                 : NotificationPromptViewRowType.message(
-                    "These settings can be changed at any time", font: .mullvadTiny),
+                    "These settings can be changed at any time", font: .warrenTiny),
             .action(
                 text: isNotificationsDisabled ? "Open system settings" : "Enable notifications",
                 style: .success,

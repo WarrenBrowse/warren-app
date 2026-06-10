@@ -35,10 +35,10 @@ public struct WarrenMnemonicDisplayView: View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(String(localized: "Your 12 recovery words", table: "Wallet"))
-                    .font(.mullvadLarge)
+                    .font(.warrenLarge)
                     .foregroundColor(.white)
                 Text(String(localized: "Write them down on paper and store them somewhere safe. Anyone with access to these words can recover your Warren wallet.", table: "Wallet"))
-                    .font(.mullvadTiny)
+                    .font(.warrenTiny)
                     .foregroundColor(.white.opacity(0.7))
             }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -53,13 +53,13 @@ public struct WarrenMnemonicDisplayView: View {
                         : String(localized: "Copy", table: "Wallet"),
                     systemImage: didCopy ? "checkmark" : "doc.on.doc"
                 )
-                .font(.mullvadSmall)
+                .font(.warrenSmall)
                 .foregroundColor(.Warren.yellow)
             }
             .accessibilityAddTraits(.isButton)
             Button(action: onConfirmed) {
                 Text(String(localized: "I have written them down", table: "Wallet"))
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.Warren.yellow)

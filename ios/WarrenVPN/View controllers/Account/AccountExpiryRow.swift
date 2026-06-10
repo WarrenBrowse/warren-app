@@ -41,7 +41,7 @@ class AccountExpiryRow: UIView {
     private let textLabel: UILabel = {
         let textLabel = UILabel()
         textLabel.text = NSLocalizedString("Paid until", comment: "")
-        textLabel.font = .mullvadTiny
+        textLabel.font = .warrenTiny
         textLabel.numberOfLines = 0
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = UIColor(white: 1.0, alpha: 0.6)
@@ -53,7 +53,7 @@ class AccountExpiryRow: UIView {
     private let valueLabel: UILabel = {
         let valueLabel = UILabel()
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
-        valueLabel.font = .mullvadSmall
+        valueLabel.font = .warrenSmall
         valueLabel.adjustsFontForContentSizeCategory = true
         valueLabel.textColor = .white
         valueLabel.numberOfLines = 0

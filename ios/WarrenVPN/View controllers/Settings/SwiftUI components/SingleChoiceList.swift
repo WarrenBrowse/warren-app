@@ -319,7 +319,7 @@ struct SingleChoiceList<Value>: View where Value: Equatable {
     private func subtitleRow(_ text: String) -> some View {
         HStack {
             Text(text)
-                .font(.mullvadTiny)
+                .font(.warrenTiny)
             Spacer()
         }
         .padding(.horizontal, UIMetrics.SettingsCell.defaultLayoutMargins.leading)

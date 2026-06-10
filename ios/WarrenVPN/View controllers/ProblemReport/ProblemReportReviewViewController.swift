@@ -55,7 +55,7 @@ class ProblemReportReviewViewController: UIViewController {
         textView.setAccessibilityIdentifier(.problemReportAppLogsTextView)
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isEditable = false
-        textView.font = .mullvadSmall
+        textView.font = .warrenSmall
         textView.adjustsFontForContentSizeCategory = true
         textView.backgroundColor = .systemBackground
         textView.textAlignment = .left

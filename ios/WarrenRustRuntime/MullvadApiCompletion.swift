@@ -7,7 +7,7 @@
 //
 
 @_cdecl("mullvad_api_completion_finish")
-func mullvadApiCompletionFinish(
+func warrenApiCompletionFinish(
     response: SwiftMullvadApiResponse,
     completionCookie: UnsafeMutableRawPointer
 ) {

@@ -16,9 +16,9 @@ struct AccessMethodInvalidView: View {
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Custom API access method is invalid")
-                        .font(.mullvadSmallSemiBold)
+                        .font(.warrenSmallSemiBold)
                     Text("Please update it or enable a different one to be able to reach the API using this method.")
-                        .font(.mullvadTinySemiBold)
+                        .font(.warrenTinySemiBold)
                 }
                 MainButton(text: "API access methods", style: .default) {
                     didPressButton()

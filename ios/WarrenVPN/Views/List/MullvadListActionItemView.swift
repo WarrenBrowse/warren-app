@@ -42,11 +42,11 @@ struct MullvadListActionItemView<Icon: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .foregroundStyle(Color(.Cell.titleTextColor))
-                    .font(.mullvadSmallSemiBold)
+                    .font(.warrenSmallSemiBold)
                 if let detail {
                     Text(detail)
                         .foregroundStyle(Color(.Cell.detailTextColor.withAlphaComponent(0.6)))
-                        .font(.mullvadMiniSemiBold)
+                        .font(.warrenMiniSemiBold)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -54,7 +54,7 @@ struct MullvadListActionItemView<Icon: View>: View {
             if let state {
                 Text(state)
                     .foregroundStyle(Color(.Cell.titleTextColor.withAlphaComponent(0.6)))
-                    .font(.mullvadTiny)
+                    .font(.warrenTiny)
             }
             if let icon {
                 Button {
@@ -107,7 +107,7 @@ struct MullvadListActionItemView<Icon: View>: View {
                 content: { item in
                     MullvadListActionItemView(item: item) {
                         if item.pressed != nil {
-                            Image.mullvadIconClose
+                            Image.warrenIconClose
                         }
                     }
                 }

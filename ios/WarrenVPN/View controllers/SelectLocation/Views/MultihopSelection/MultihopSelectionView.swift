@@ -64,7 +64,7 @@ struct MultihopSelectionView: View {
                 }
                 MultihopLabel(
                     label: label,
-                    image: Image.mullvadSmartphone,
+                    image: Image.warrenSmartphone,
                     onIconPositionChange: { position in
                         iconPositions[ViewPositionIdentifiers.yourDevice] = position
                     }
@@ -118,7 +118,7 @@ struct MultihopSelectionView: View {
                                                 if hop.noMatchFound != nil {
                                                     RoundedRectangle(cornerRadius: 12)
                                                         .inset(by: 1)
-                                                        .stroke(Color.mullvadDangerColor)
+                                                        .stroke(Color.warrenDangerColor)
                                                 }
                                             }
                                         }
@@ -136,8 +136,8 @@ struct MultihopSelectionView: View {
                                 if let noMatchFound = hop.noMatchFound {
                                     Text(noMatchFound.description)
                                         .padding(.leading, 34)
-                                        .foregroundStyle(Color.mullvadDangerColor)
-                                        .font(.mullvadMini)
+                                        .foregroundStyle(Color.warrenDangerColor)
+                                        .font(.warrenMini)
                                 }
                             }
                         }
@@ -149,7 +149,7 @@ struct MultihopSelectionView: View {
                 .padding(.vertical, outerPadding)
                 .background {
                     if hops.count > 1 {
-                        Color.mullvadContainerBackground
+                        Color.warrenContainerBackground
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .matchedGeometryEffect(
                                 id: animationIdBackground,
@@ -161,7 +161,7 @@ struct MultihopSelectionView: View {
                 if isExpanded {
                     MultihopLabel(
                         label: "Internet",
-                        image: Image.mullvadIconInternet,
+                        image: Image.warrenIconInternet,
                         onIconPositionChange: { position in
                             iconPositions[ViewPositionIdentifiers.internet] = position
                         }
@@ -258,5 +258,5 @@ struct MultihopSelectionView: View {
             Spacer()
         }
     }
-    .background(Color.mullvadDarkBackground)
+    .background(Color.warrenDarkBackground)
 }

@@ -101,12 +101,12 @@ private struct WarrenWalletLoginView: View {
                 .accessibilityHidden(true)
 
             Text(String(localized: "Your Warren wallet", table: "Onboarding"))
-                .font(.mullvadBig)
+                .font(.warrenBig)
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
 
             Text(String(localized: "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase.", table: "Onboarding"))
-                .font(.mullvadSmall)
+                .font(.warrenSmall)
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
@@ -116,7 +116,7 @@ private struct WarrenWalletLoginView: View {
             VStack(spacing: 12) {
                 Button(action: onCreate) {
                     Text(String(localized: "Generate new wallet", table: "Onboarding"))
-                        .font(.mullvadSmallSemiBold)
+                        .font(.warrenSmallSemiBold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(Color.Warren.yellow)
@@ -127,7 +127,7 @@ private struct WarrenWalletLoginView: View {
 
                 Button(action: onRestore) {
                     Text(String(localized: "I already have a recovery phrase", table: "Onboarding"))
-                        .font(.mullvadSmall)
+                        .font(.warrenSmall)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .foregroundColor(.white.opacity(0.85))

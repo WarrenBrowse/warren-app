@@ -92,7 +92,7 @@ class SettingsCell: UITableViewCell, CustomCellDisclosureHandling {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadSmallSemiBold
+        label.font = .warrenSmallSemiBold
         label.numberOfLines = 0
         label.adjustsFontForContentSizeCategory = true
         label.textColor = UIColor.Cell.titleTextColor
@@ -103,7 +103,7 @@ class SettingsCell: UITableViewCell, CustomCellDisclosureHandling {
 
     let detailTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadTiny
+        label.font = .warrenTiny
         label.numberOfLines = 0
         label.adjustsFontForContentSizeCategory = true
         label.textColor = UIColor.Cell.detailTextColor

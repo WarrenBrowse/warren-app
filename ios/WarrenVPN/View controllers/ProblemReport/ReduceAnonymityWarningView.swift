@@ -25,18 +25,18 @@ class ReduceAnonymityWarningView: UIView {
 
         let warningHeader = UILabel()
         warningHeader.text = NSLocalizedString("This impacts your anonymity", comment: "")
-        warningHeader.font = .mullvadMiniSemiBold
+        warningHeader.font = .warrenMiniSemiBold
         warningHeader.numberOfLines = 0
         warningHeader.textColor = .white
         warningHeader.adjustsFontForContentSizeCategory = true
 
         let normalTextAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.mullvadMini,
+            .font: UIFont.warrenMini,
             .foregroundColor: UIColor.white,
         ]
 
         let linkAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.mullvadMini,
+            .font: UIFont.warrenMini,
             .foregroundColor: UIColor.ContentHeading.linkColor,
             .underlineStyle: NSUnderlineStyle.single.rawValue,
             .underlineColor: UIColor.ContentHeading.linkColor,

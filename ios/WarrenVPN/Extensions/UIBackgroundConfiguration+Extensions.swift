@@ -19,7 +19,7 @@ extension UIBackgroundConfiguration {
 
     /// Returns a plain cell background configuration adapted for Mullvad UI.
     /// - Returns: a background configuration
-    static func mullvadListPlainCell() -> UIBackgroundConfiguration {
+    static func warrenListPlainCell() -> UIBackgroundConfiguration {
         var config = listPlainCell()
         config.backgroundColor = UIColor.Cell.Background.normal
         return config
@@ -27,7 +27,7 @@ extension UIBackgroundConfiguration {
 
     /// Returns the corresponding grouped cell background configuration adapted for Mullvad UI.
     /// - Returns: a background configuration
-    static func mullvadListGroupedCell() -> UIBackgroundConfiguration {
+    static func warrenListGroupedCell() -> UIBackgroundConfiguration {
         var config = listGroupedCell()
         config.backgroundColor = UIColor.Cell.Background.normal
         return config
@@ -44,7 +44,7 @@ extension UIBackgroundConfiguration {
         selectionType: CellSelectionType
     ) -> UIBackgroundConfiguration {
         var config = self
-        config.backgroundColor = state.mullvadCellBackgroundColor(selectionType: selectionType)
+        config.backgroundColor = state.warrenCellBackgroundColor(selectionType: selectionType)
         return config
     }
 }
@@ -54,7 +54,7 @@ extension UICellConfigurationState {
     ///
     /// - Parameter selectionType: cell selection type.
     /// - Returns: a background color to apply to cell.
-    func mullvadCellBackgroundColor(selectionType: UIBackgroundConfiguration.CellSelectionType) -> UIColor {
+    func warrenCellBackgroundColor(selectionType: UIBackgroundConfiguration.CellSelectionType) -> UIColor {
         switch selectionType {
         case .dimmed:
             if isSelected || isHighlighted {

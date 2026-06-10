@@ -98,7 +98,7 @@ struct MullvadPrimaryTextField: View {
                                 text = ""
                             }
                         } label: {
-                            Image.mullvadIconCross
+                            Image.warrenIconCross
                         }
                         .padding(0)
                     }
@@ -176,7 +176,7 @@ struct MullvadPrimaryTextField: View {
                                 self.suggestion = nil
                             }
                         } label: {
-                            Image.mullvadIconCross
+                            Image.warrenIconCross
                         }
                     }
                     .transition(.move(edge: .top))

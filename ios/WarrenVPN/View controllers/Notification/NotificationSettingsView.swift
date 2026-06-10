@@ -34,7 +34,7 @@ struct NotificationSettingsView<ViewModel>: View where ViewModel: NotificationSe
                     Text(
                         "Notifications for Warren VPN are disabled on this device. Please change your system settings for Warren VPN if you wish to enable them again."
                     )
-                    .font(.mullvadSmall)
+                    .font(.warrenSmall)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(.bottom, 16)

@@ -17,13 +17,13 @@ struct SegmentedListItem: View {
                 HStack {
                     VStack {
                         Text(title)
-                            .font(.mullvadSmallSemiBold)
+                            .font(.warrenSmallSemiBold)
                         ifLet(subtitle) { _, value in
                             Text(value)
-                                .font(.mullvadMiniSemiBold)
+                                .font(.warrenMiniSemiBold)
                         }
                     }
-                    .foregroundStyle(Color.mullvadTextPrimary.opacity(0.6))
+                    .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
                     .padding(.horizontal, 16)
                     .padding(.vertical, subtitle != nil ? 8 : 16)
 
@@ -58,7 +58,7 @@ struct SegmentedListItem: View {
     SegmentedListItem(
         title: "Automatic",
         subtitle: "Sweden, Stockholm",
-        secondaryButtonImage: Image.mullvadIconInfo,
+        secondaryButtonImage: Image.warrenIconInfo,
         onSelect: {
             print("Selected")
         },

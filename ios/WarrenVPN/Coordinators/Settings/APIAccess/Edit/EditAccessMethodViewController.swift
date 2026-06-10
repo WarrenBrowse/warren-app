@@ -140,7 +140,7 @@ extension EditAccessMethodViewController: UITableViewDelegate {
             textProperties:
                 ListCellContentConfiguration
                 .TextProperties(
-                    font: .mullvadMini,
+                    font: .warrenMini,
                     color: .TableSection.footerTextColor
                 ),
             directionalLayoutMargins: NSDirectionalEdgeInsets(UIMetrics.SettingsRowView.footerLayoutMargins)
@@ -203,7 +203,7 @@ extension EditAccessMethodViewController: UITableViewDelegate {
             return
         }
 
-        cell.setAutoAdaptingBackgroundConfiguration(.mullvadListGroupedCell(), selectionType: .dimmed)
+        cell.setAutoAdaptingBackgroundConfiguration(.warrenListGroupedCell(), selectionType: .dimmed)
     }
 
     private func configureTestMethod(_ cell: UITableViewCell, itemIdentifier: EditAccessMethodItemIdentifier) {

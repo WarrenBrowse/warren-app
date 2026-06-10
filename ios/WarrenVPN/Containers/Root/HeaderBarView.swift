@@ -30,7 +30,7 @@ class HeaderBarView: UIView {
 
     private lazy var deviceNameLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadMiniSemiBold
+        label.font = .warrenMiniSemiBold
         label.adjustsFontForContentSizeCategory = true
         label.textColor = UIColor(white: 1.0, alpha: 0.8)
         label.setContentHuggingPriority(.defaultHigh, for: .horizontal)  // Resist growing
@@ -41,7 +41,7 @@ class HeaderBarView: UIView {
 
     private lazy var timeLeftLabel: UILabel = {
         let label = UILabel()
-        label.font = .mullvadMiniSemiBold
+        label.font = .warrenMiniSemiBold
         label.adjustsFontForContentSizeCategory = true
         label.textColor = UIColor(white: 1.0, alpha: 0.8)
         label.setContentHuggingPriority(.defaultLow, for: .horizontal)  // Allow growing

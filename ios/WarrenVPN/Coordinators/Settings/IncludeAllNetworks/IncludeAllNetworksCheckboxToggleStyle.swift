@@ -19,12 +19,12 @@ struct IncludeAllNetworksCheckboxToggleStyle: ToggleStyle {
             label: {
                 HStack {
                     (configuration.isOn
-                        ? Image.mullvadIconTick
+                        ? Image.warrenIconTick
                         : Image(uiImage: UIImage.checkboxUnselected))
                         .padding(8)
                     configuration.label
                         .multilineTextAlignment(.leading)
-                        .font(.mullvadTiny)
+                        .font(.warrenTiny)
                     Spacer()
                 }
             }

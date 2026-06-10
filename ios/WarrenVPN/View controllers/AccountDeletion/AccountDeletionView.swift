@@ -18,7 +18,7 @@ struct AccountDeletionView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 Text("Account deletion")
-                    .font(.mullvadLarge)
+                    .font(.warrenLarge)
                     .foregroundStyle(Color.white)
                     .padding(.bottom, 8)
 
@@ -34,7 +34,7 @@ struct AccountDeletionView: View {
                     if you really want to delete the account:
                     """
                 )
-                .font(.mullvadSmallSemiBold)
+                .font(.warrenSmallSemiBold)
                 .foregroundStyle(Color.white)
                 .padding(.bottom, 8)
 
@@ -58,7 +58,7 @@ struct AccountDeletionView: View {
                     }
                     if let statusText = viewModel.statusText {
                         Text(statusText)
-                            .font(.mullvadSmall)
+                            .font(.warrenSmall)
                             .foregroundStyle(Color.white)
                     }
                 }
@@ -77,7 +77,7 @@ struct AccountDeletionView: View {
             }
         }
         .padding(16)
-        .background(Color.mullvadBackground)
+        .background(Color.warrenBackground)
     }
 }
 
