@@ -114,23 +114,23 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(mock.reconnectCount, 0, "a relay change is a restart, not a same-exit re-handshake")
     }
 
-    func test_start_forcesSingleHop_evenWhenAMultihopEntryRelayIsSelected() async {
-        // The Warren Quinn FFI does not consume a multi-hop entry relay yet.
-        // The stub selection carries a non-nil entry, so this guards that the
-        // actor still builds a single-hop FFI config: a user whose persisted
-        // setting is multi-hop must never be silently single-hopped at the data
-        // plane while believing otherwise. Remove this guard only when the FFI
-        // and the relay descriptors actually establish a multi-hop circuit.
-        XCTAssertNotNil(
-            RelaySelectorStub.selectedRelays.entry,
-            "the stub must select an entry relay or this guard is vacuous"
-        )
+    func test_start_doesNotUseTheLegacyMultiHopRelayField() async {
+        // Multi-hop rides the signed directory path (multihopDirectoryJSON +
+        // MultiHopClient), not the legacy `multiHopRelay` (WarrenRelayConfig
+        // built from a Mullvad-style entry relay), which the FFI no longer
+        // consumes. Guard that the actor leaves it nil. With no directory
+        // fetched (tests do not set multihopDirectoryJSON), the config is the
+        // single-hop dev fallback.
         let mock = MockWarrenQuinnAdapter()
         _ = makeStartedActor(adapter: mock)
         XCTAssertEqual(mock.startCount, 1)
         XCTAssertNil(
             mock.lastStartConfig?.multiHopRelay,
-            "the FFI config must force single-hop until multi-hop is wired"
+            "the legacy multiHopRelay field must stay unused (multi-hop rides the directory)"
+        )
+        XCTAssertNil(
+            mock.lastStartConfig?.multihopDirectoryJSON,
+            "tests do not fetch a directory, so the config is the single-hop fallback"
         )
     }
 

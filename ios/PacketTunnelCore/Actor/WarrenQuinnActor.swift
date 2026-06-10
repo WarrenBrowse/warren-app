@@ -55,6 +55,15 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// no-op until then.
     private var adapter: WarrenQuinnAdapting?
 
+    /// Signed multi-hop directory JSON, fetched by the owning
+    /// `WarrenQuinnTunnelImplementation` (async, off the actor) before
+    /// `start(options:)`. When non-nil the resolved config rides the
+    /// multi-hop wire protocol (the FFI verifies it against the baked root
+    /// pin). Left nil by tests and when the fetch fails, in which case the
+    /// FFI falls back to the legacy single-hop path. Kept out of the actor
+    /// I/O path so the actor stays unit-testable.
+    public var multihopDirectoryJSON: String?
+
     /// 32-byte Ed25519 signing seed derived from the user wallet,
     /// loaded via the cross-process Keychain bridge by the owning
     /// `WarrenQuinnTunnelImplementation` and pushed in via
@@ -233,37 +242,47 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// selection. Shared by `start(options:)` and the relay-change
     /// `reconnect(to:)` path so both marshal identically. DAITA presence is
     /// settings-driven (the exit picks the Maybenot machine, so the spec
-    /// content is a placeholder). Multi-hop is forced off (see below).
+    /// content is a placeholder).
+    ///
+    /// The production fleet is multi-hop only: when a verified directory was
+    /// fetched (`multihopDirectoryJSON` set before start), the config rides
+    /// the multi-hop wire protocol. The multi-hop toggle picks 2-hop (entry
+    /// != exit) vs a 1-hop circuit collapsed onto one node. The single-hop
+    /// `exit*` fields are the legacy dev fallback used only when no directory
+    /// was fetched.
     private func makeConfigAndContext(
         selectedRelays: SelectedRelays,
         seed: Data
     ) -> (WarrenTunnelConfig, ConnectionContext) {
         let exit = selectedRelays.exit
-        // The Warren Quinn FFI does not consume a multi-hop entry relay yet:
-        // the iOS relay model carries none of the signed relay/exit descriptors
-        // the multi-hop handshake needs. Force single-hop here so a user whose
-        // persisted setting is multi-hop is never silently single-hopped at the
-        // data plane while believing otherwise. The multi-hop settings UI is
-        // gated to match. Re-enable by building WarrenRelayConfig from
-        // selectedRelays.entry once the FFI and the relay descriptors land.
-        let multiHop: WarrenRelayConfig? = nil
-        let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
+        // Settings reads are best-effort: a unit test or a not-yet-provisioned
+        // store falls back to defaults.
+        let settings = try? SettingsManager.readSettings()
+        let daitaEnabled = settings?.daita.isEnabled ?? false
         let daitaSpec: WarrenDaitaSpec? =
             daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil
+
+        // Multi-hop toggle: 2-hop when the user enabled multi-hop (always /
+        // when-needed), else a 1-hop circuit. Country hints are left empty
+        // (the selector picks by weight); mapping the relay-constraint
+        // locations to country codes is a follow-up.
+        let multihopState = settings?.tunnelMultihopState
+        let twoHop = multihopState?.isAlways == true || multihopState?.isWhenNeeded == true
 
         let config = WarrenTunnelConfig(
             exitPubkey: exit.endpoint.publicKey,
             exitEndpoint: "\(exit.endpoint.socketAddress)",
             walletSigningKey: seed,
-            multiHopRelay: multiHop,
+            multiHopRelay: nil,
             daitaSpec: daitaSpec,
-            natPmpEnabled: false,  // settings-driven, deferred (needs V9 schema)
-            bypassCidrs: []  // settings-driven, deferred
+            natPmpEnabled: false,
+            bypassCidrs: [],
+            multihopDirectoryJSON: multihopDirectoryJSON,
+            multihopTwoHop: twoHop,
+            multihopEntryCountry: "",
+            multihopExitCountry: ""
         )
-        // Settings reads are best-effort: a unit test or a not-yet-provisioned
-        // store falls back to defaults.
-        let relayConstraints =
-            (try? SettingsManager.readSettings().relayConstraints) ?? RelayConstraints()
+        let relayConstraints = settings?.relayConstraints ?? RelayConstraints()
         let context = ConnectionContext(
             selectedRelays: selectedRelays,
             relayConstraints: relayConstraints,

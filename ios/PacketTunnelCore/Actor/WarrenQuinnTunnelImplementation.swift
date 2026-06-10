@@ -174,12 +174,46 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     }
 
     public func startTunnel(options: StartOptions) async {
+        // The production fleet is multi-hop only, so fetch the signed
+        // multi-hop directory before starting: the actor's resolved config
+        // carries it to the FFI, which verifies it against the baked root
+        // pin and brings up a MultiHopClient circuit. A failed fetch leaves
+        // it nil and the FFI falls back to the legacy single-hop path (dev).
+        // Done here (async, off the actor) so the actor stays I/O-free and
+        // unit-testable.
+        _actor.multihopDirectoryJSON = await Self.fetchMultihopDirectory()
+
         // Forward to the actor ; the actor decides whether to call
         // `adapter.start(config:)` based on the resolved tunnel config
         // (built from `options` + tunnel settings). No external state
         // observer like WireGuardGo : the Rust-side event callback
         // drives state transitions through `applyEvent`.
         actor.start(options: options)
+    }
+
+    /// warren-api base URL (mirrors the account FFI's baked endpoint).
+    private static let warrenApiBaseURL = "https://api.warrenbrowse.com"
+
+    /// Fetches the signed multi-hop directory JSON over URLSession
+    /// (transport only; the trust-chain verification happens Rust-side in
+    /// the FFI). Returns nil on any non-200 / transport failure so the
+    /// caller falls back to the single-hop path rather than blocking the
+    /// tunnel start on a dead network.
+    private static func fetchMultihopDirectory() async -> String? {
+        guard let url = URL(string: "\(warrenApiBaseURL)/v1/multihop/directory") else {
+            return nil
+        }
+        var request = URLRequest(url: url, timeoutInterval: 15)
+        request.httpMethod = "GET"
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                return nil
+            }
+            return String(data: data, encoding: .utf8)
+        } catch {
+            return nil
+        }
     }
 
     public func stopTunnel() async {
