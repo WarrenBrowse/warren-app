@@ -555,6 +555,7 @@ export namespace ErrorState {
     INVALID_IPV6_CONFIG = 14,
     SPLIT_TUNNEL_ERROR = 12,
     NEED_FULL_DISK_PERMISSIONS = 13,
+    WARREN_TUNNEL_FLAPPING = 15,
     }
 
     export enum AuthFailedError {
@@ -1824,6 +1825,8 @@ export class Settings extends jspb.Message {
     clearWarrenNatPmp(): void;
     getWarrenNatPmp(): NatPmpSettings | undefined;
     setWarrenNatPmp(value?: NatPmpSettings): Settings;
+    getWarrenNConnections(): number;
+    setWarrenNConnections(value: number): Settings;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
@@ -1853,6 +1856,7 @@ export namespace Settings {
         warrenApiUrl: string,
         warrenMultiHop?: WarrenMultiHopSettings.AsObject,
         warrenNatPmp?: NatPmpSettings.AsObject,
+        warrenNConnections: number,
     }
 }
 

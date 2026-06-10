@@ -5087,7 +5087,8 @@ proto.mullvad_daemon.management_interface.ErrorState.Cause = {
   INVALID_DNS_SERVERS: 11,
   INVALID_IPV6_CONFIG: 14,
   SPLIT_TUNNEL_ERROR: 12,
-  NEED_FULL_DISK_PERMISSIONS: 13
+  NEED_FULL_DISK_PERMISSIONS: 13,
+  WARREN_TUNNEL_FLAPPING: 15
 };
 
 /**
@@ -14544,7 +14545,8 @@ proto.mullvad_daemon.management_interface.Settings.toObject = function(includeIn
     updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
     warrenApiUrl: jspb.Message.getFieldWithDefault(msg, 17, ""),
     warrenMultiHop: (f = msg.getWarrenMultiHop()) && proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.toObject(includeInstance, f),
-    warrenNatPmp: (f = msg.getWarrenNatPmp()) && proto.mullvad_daemon.management_interface.NatPmpSettings.toObject(includeInstance, f)
+    warrenNatPmp: (f = msg.getWarrenNatPmp()) && proto.mullvad_daemon.management_interface.NatPmpSettings.toObject(includeInstance, f),
+    warrenNConnections: jspb.Message.getFieldWithDefault(msg, 20, 0)
   };
 
   if (includeInstance) {
@@ -14654,6 +14656,10 @@ proto.mullvad_daemon.management_interface.Settings.deserializeBinaryFromReader =
       var value = new proto.mullvad_daemon.management_interface.NatPmpSettings;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.NatPmpSettings.deserializeBinaryFromReader);
       msg.setWarrenNatPmp(value);
+      break;
+    case 20:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setWarrenNConnections(value);
       break;
     default:
       reader.skipField();
@@ -14804,6 +14810,13 @@ proto.mullvad_daemon.management_interface.Settings.serializeBinaryToWriter = fun
       19,
       f,
       proto.mullvad_daemon.management_interface.NatPmpSettings.serializeBinaryToWriter
+    );
+  }
+  f = message.getWarrenNConnections();
+  if (f !== 0) {
+    writer.writeUint32(
+      20,
+      f
     );
   }
 };
@@ -15285,6 +15298,24 @@ proto.mullvad_daemon.management_interface.Settings.prototype.clearWarrenNatPmp =
  */
 proto.mullvad_daemon.management_interface.Settings.prototype.hasWarrenNatPmp = function() {
   return jspb.Message.getField(this, 19) != null;
+};
+
+
+/**
+ * optional uint32 warren_n_connections = 20;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenNConnections = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 20, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenNConnections = function(value) {
+  return jspb.Message.setProto3IntField(this, 20, value);
 };
 
 

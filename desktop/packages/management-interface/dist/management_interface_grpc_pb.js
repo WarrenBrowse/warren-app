@@ -948,6 +948,23 @@ setWarrenApiUrl: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
+  // Number of parallel QUIC connections for the Warren tunnel.
+// 0 = reset to the compiled default (8). Valid range 1..=16,
+// rejected otherwise. Applied on the next (re)connect; the daemon
+// reconnects automatically when the tunnel is up. The env var
+// `WARREN_N_CONNECTIONS` on the daemon takes priority over this
+// setting.
+setWarrenNConnections: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenNConnections',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.UInt32Value,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_UInt32Value,
+    requestDeserialize: deserialize_google_protobuf_UInt32Value,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
   // Retourne la mnémonique BIP39 utilisateur (12 mots) pour permettre
 // backup user-side via le GUI. Empty string si l'identité n'a
 // jamais été bootstrappée (= mode Mullvad legacy ou premier boot
