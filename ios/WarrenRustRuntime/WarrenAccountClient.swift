@@ -52,9 +52,15 @@ public enum WarrenAccountError: Error, Equatable {
 /// Stateless facade over the Warren account FFI. All methods are
 /// synchronous and blocking; run them off the main thread.
 public enum WarrenAccountClient {
+    /// The wallet seed length the FFI reads. A `Data` of any other length
+    /// would make the Rust side read out of bounds, so callers are rejected
+    /// before the FFI boundary.
+    private static let seedByteCount = 32
+
     /// Signed `GET /v1/subscription`. Returns the subscription status
     /// for the wallet identified by `seed`.
     public static func subscription(seed: Data) -> Result<WarrenSubscriptionStatus, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
         let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
             guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
             return warren_account_get_subscription(base)
@@ -79,6 +85,7 @@ public enum WarrenAccountClient {
     /// subscription via `code`. Returns the new expiry. The voucher code
     /// is never logged.
     public static func redeemVoucher(seed: Data, code: String) -> Result<Date, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
         let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
             guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
             return code.withCString { codePtr in
@@ -100,6 +107,7 @@ public enum WarrenAccountClient {
     /// Signed `DELETE /v1/account`. Permanently deletes the wallet's
     /// subscription server-side.
     public static func deleteAccount(seed: Data) -> Result<Void, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
         let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
             guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
             return warren_account_delete(base)

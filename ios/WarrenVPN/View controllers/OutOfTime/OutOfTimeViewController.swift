@@ -75,11 +75,10 @@ class OutOfTimeViewController: UIViewController, RootContainment {
             action: #selector(requestStoreProducts),
             for: .touchUpInside
         )
-        contentView.restoreButton.addTarget(
-            self,
-            action: #selector(restorePurchases),
-            for: .touchUpInside
-        )
+        // Warren has no in-app purchase to restore (payment is the Stripe
+        // checkout funnel + voucher redemption), so the StoreKit restore
+        // button is hidden.
+        contentView.restoreButton.isHidden = true
 
         interactor.didReceiveTunnelStatus = { [weak self] _ in
             Task { @MainActor in
@@ -124,8 +123,8 @@ class OutOfTimeViewController: UIViewController, RootContainment {
                 [
                     baseMessage,
                     NSLocalizedString(
-                        "Either buy credit on our website "
-                            + "or make an in-app purchase via the **Add time** button below.",
+                        "Tap the **Add time** button below to buy a subscription on our website, "
+                            + "then redeem the voucher you receive.",
                         comment: ""
                     ),
                 ].joined()
@@ -142,16 +141,6 @@ class OutOfTimeViewController: UIViewController, RootContainment {
         delegate?.didRequestShowInAppPurchase(
             accountNumber: accountNumber,
             paymentAction: .purchase
-        )
-    }
-
-    @objc func restorePurchases() {
-        guard let accountNumber = interactor.deviceState.accountData?.number else {
-            return
-        }
-        delegate?.didRequestShowInAppPurchase(
-            accountNumber: accountNumber,
-            paymentAction: .restorePurchase
         )
     }
 

@@ -7,6 +7,7 @@
 //
 
 import Routing
+import SafariServices
 import UIKit
 
 class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeViewControllerDelegate, Poppable {
@@ -76,15 +77,14 @@ class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeVi
         accountNumber: String,
         paymentAction: PaymentAction
     ) {
-        let coordinator = InAppPurchaseCoordinator(
-            storePaymentManager: storePaymentManager,
-            accountNumber: accountNumber,
-            paymentAction: paymentAction
-        )
-        coordinator.didFinish = { coordinator in
-            coordinator.dismiss(animated: true)
-        }
-        coordinator.start()
-        presentChild(coordinator, animated: true)
+        // Warren has no in-app purchase: the user buys a plan on the Stripe
+        // checkout funnel and redeems the voucher in-app, aligned with the
+        // account screen and desktop/Android. The funnel is stateless, so no
+        // wallet identifier is passed in the URL.
+        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
+        let safari = SFSafariViewController(url: url)
+        safari.preferredBarTintColor = .Warren.navy
+        safari.preferredControlTintColor = .Warren.yellow
+        navigationController.present(safari, animated: true)
     }
 }
