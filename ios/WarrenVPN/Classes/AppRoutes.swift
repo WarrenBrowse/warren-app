@@ -9,6 +9,24 @@
 import Routing
 import UIKit
 
+/// Pure routing decision for the wallet identity model. "Logged in" means a
+/// wallet exists in the Keychain; the legacy Mullvad account-number login is
+/// gone. Order: terms of service, then the one-time onboarding wizard, then a
+/// revoked device, then wallet presence (no wallet routes to the Create /
+/// Restore login screen), otherwise the main UI.
+func nextWarrenRoutes(
+    agreedToTOS: Bool,
+    onboardingComplete: Bool,
+    isRevoked: Bool,
+    walletExists: Bool
+) -> [AppRoute] {
+    guard agreedToTOS else { return [.tos] }
+    guard onboardingComplete else { return [.warrenOnboarding] }
+    if isRevoked { return [.revoked] }
+    guard walletExists else { return [.login] }
+    return [.main]
+}
+
 /**
  Enum type describing groups of routes.
  */

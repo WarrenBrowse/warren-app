@@ -132,7 +132,9 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         }
 
         contentView.accountDeviceRow.deviceName = deviceData.name
-        contentView.accountTokenRowView.accountNumber = accountData.number
+        // Show the Warren wallet SS58 identity in place of the Mullvad
+        // account number; fall back to the stored number if unavailable.
+        contentView.accountTokenRowView.accountNumber = interactor.walletAddress ?? accountData.number
         contentView.accountExpiryRowView.value = accountData.expiry
     }
 
@@ -157,11 +159,11 @@ class AccountViewController: UIViewController, @unchecked Sendable {
     }
 
     private func copyAccountToken() {
-        guard let accountData = interactor.deviceState.accountData else {
+        guard let address = interactor.walletAddress ?? interactor.deviceState.accountData?.number else {
             return
         }
 
-        UIPasteboard.general.string = accountData.number
+        UIPasteboard.general.string = address
     }
 
     // MARK: - Actions

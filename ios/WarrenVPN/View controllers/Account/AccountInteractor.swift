@@ -57,7 +57,16 @@ final class AccountInteractor: Sendable {
         tunnelManager.deviceState
     }
 
+    /// The Warren wallet SS58 identity shown in place of the Mullvad account
+    /// number, or nil when no wallet is provisioned.
+    var walletAddress: String? {
+        WarrenWalletInteractor().publicKeyAddress()
+    }
+
     func logout() async {
         await tunnelManager.unsetAccount()
+        await MainActor.run {
+            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+        }
     }
 }

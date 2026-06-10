@@ -37,6 +37,10 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Wallet/WarrenWalletIdentityView.swift" => "WarrenVPN",
   "WarrenVPN/Coordinators/WarrenWalletCoordinator.swift" => "WarrenVPN",
 
+  # P3.1 wallet-as-login: Create/Restore login coordinator + logout-wipe helper.
+  "WarrenVPN/Coordinators/WarrenWalletLoginCoordinator.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenWalletLogout.swift" => "WarrenVPN",
+
   # Settings + Tunnel Warren-specific views.
   "WarrenVPN/View controllers/Settings/WarrenMultiHopSettingsView.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/WarrenObfuscationIndicatorView.swift" => "WarrenVPN",
@@ -92,6 +96,10 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenAboutViewTests.swift" =>
     "WarrenVPNTests",
   "PacketTunnelCoreTests/WarrenQuinnActorTests.swift" => "PacketTunnelCoreTests",
+
+  # P3.1 wallet-as-login unit tests: DeviceState synthesizer + route decision.
+  "WarrenVPNTests/MullvadVPN/WarrenWallet/WarrenWalletDeviceStateTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/WarrenWallet/WarrenWalletRoutingTests.swift" => "WarrenVPNTests",
 
   # i18n resources: Wallet + Settings + Onboarding tables for FR + EN.
   "Assets/Wallet.xcstrings" => "WarrenVPN",

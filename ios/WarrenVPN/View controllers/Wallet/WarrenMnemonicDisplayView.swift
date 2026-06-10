@@ -12,13 +12,11 @@
 import SwiftUI
 import UIKit
 
-/// 12-word BIP39 mnemonic backup view. The phrase is hidden under a
-/// blur overlay by default; tap-and-hold reveals it, releasing hides
-/// it again. No copy button: the user is expected to hand-write the
-/// 12 words during backup.
+/// 12-word BIP39 mnemonic backup view. The phrase is shown directly with a
+/// copy button (aligned with the desktop app). Copying clears the clipboard
+/// after 60 seconds, but only if it still holds this phrase.
 ///
-/// Accessibility: VoiceOver reads each word as `index. word` (e.g.
-/// "1. wisdom") only when the reveal gesture is active.
+/// Accessibility: VoiceOver reads each word as `index. word` (e.g. "1. wisdom").
 public struct WarrenMnemonicDisplayView: View {
     /// The 12-word mnemonic to display (space-separated).
     public let mnemonic: String
@@ -26,15 +24,7 @@ public struct WarrenMnemonicDisplayView: View {
     /// Callback when the user confirms they have written the words down.
     public var onConfirmed: () -> Void
 
-    @State private var isRevealed: Bool = false
-
-    /// `true` while the user-screenshot warning alert is presented.
-    /// Triggered by `UIApplication.userDidTakeScreenshotNotification`
-    /// when iOS reports a screenshot was just captured - Warren cannot
-    /// scrub the screenshot from the Photos library (iOS doesn't
-    /// expose that API), but we can immediately re-hide the mnemonic
-    /// AND surface a warning that the screenshot leaked.
-    @State private var screenshotWarningPresented: Bool = false
+    @State private var didCopy: Bool = false
 
     public init(mnemonic: String, onConfirmed: @escaping () -> Void) {
         self.mnemonic = mnemonic
@@ -56,20 +46,17 @@ public struct WarrenMnemonicDisplayView: View {
                     wordCell(index: idx, word: word)
                 }
             }
-            .overlay(blurOverlay)
-            .gesture(
-                LongPressGesture(minimumDuration: 0.2)
-                    .onChanged { _ in isRevealed = true }
-                    .onEnded { _ in
-                        // Re-hide after a short delay.
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            isRevealed = false
-                        }
-                    }
-            )
-            Text(String(localized: "Press and hold to reveal. Do not screenshot.", table: "Wallet"))
-                .font(.mullvadMicro)
-                .foregroundColor(.white.opacity(0.5))
+            Button(action: copyMnemonic) {
+                Label(
+                    didCopy
+                        ? String(localized: "Copied", table: "Wallet")
+                        : String(localized: "Copy", table: "Wallet"),
+                    systemImage: didCopy ? "checkmark" : "doc.on.doc"
+                )
+                .font(.mullvadSmall)
+                .foregroundColor(.Warren.yellow)
+            }
+            .accessibilityAddTraits(.isButton)
             Button(action: onConfirmed) {
                 Text(String(localized: "I have written them down", table: "Wallet"))
                     .font(.mullvadSmallSemiBold)
@@ -82,41 +69,26 @@ public struct WarrenMnemonicDisplayView: View {
         }
         .padding()
         .background(Color.Warren.navy)
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
-            // Force-hide the mnemonic + surface a strong-language
-            // warning. The screenshot has already been captured -
-            // iOS doesn't expose a way to scrub it from Photos -
-            // but immediate re-hide prevents follow-on screenshots
-            // showing a different angle, and the alert tells the user
-            // the leak happened so they can rotate the wallet.
-            isRevealed = false
-            screenshotWarningPresented = true
-        }
-        .alert(
-            String(
-                localized: "Screenshot detected",
-                table: "Wallet",
-                comment: "Title of the alert shown when iOS reports a screenshot was just taken"
-            ),
-            isPresented: $screenshotWarningPresented
-        ) {
-            Button(
-                String(localized: "Close", table: "Wallet", comment: ""),
-                role: .cancel
-            ) {}
-        } message: {
-            Text(
-                String(
-                    localized: "Your recovery phrase has been captured in a screenshot. Anyone with access to that screenshot can recover your wallet. Generate a new wallet and move your funds if you cannot guarantee the screenshot stays private.",
-                    table: "Wallet",
-                    comment: "Body of the post-screenshot warning explaining the threat model"
-                )
-            )
-        }
     }
 
     private var words: [String] {
         mnemonic.split(separator: " ").map(String.init)
+    }
+
+    private func copyMnemonic() {
+        let phrase = mnemonic
+        UIPasteboard.general.string = phrase
+        didCopy = true
+        // Clear the clipboard after a minute, but only if it still holds the
+        // phrase, so we never wipe something the user copied afterwards.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
+            if UIPasteboard.general.string == phrase {
+                UIPasteboard.general.string = ""
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            didCopy = false
+        }
     }
 
     @ViewBuilder
@@ -135,21 +107,7 @@ public struct WarrenMnemonicDisplayView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.Warren.yellow.opacity(0.4), lineWidth: 1)
                 )
-                .accessibilityLabel("\(index + 1). \(isRevealed ? word : "hidden")")
-        }
-    }
-
-    @ViewBuilder
-    private var blurOverlay: some View {
-        if !isRevealed {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.Warren.navy.opacity(0.85))
-                .overlay(
-                    Image(systemName: "eye.slash.fill")
-                        .foregroundColor(Color.Warren.yellow)
-                        .font(.title)
-                )
-                .allowsHitTesting(false)
+                .accessibilityLabel("\(index + 1). \(word)")
         }
     }
 }

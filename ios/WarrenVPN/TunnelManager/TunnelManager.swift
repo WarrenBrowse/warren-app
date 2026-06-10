@@ -674,6 +674,13 @@ final class TunnelManager: @unchecked Sendable {
         }
     }
 
+    /// Promotes the Warren wallet identity to a logged-in device state so
+    /// the Mullvad operation scaffolding (StartTunnelOperation) and UI chrome
+    /// that still read `DeviceState.loggedIn` keep working on the wallet path.
+    func setWalletBackedDeviceState(ss58Address: String, publicKeyHex: String, persist: Bool) {
+        setDeviceState(.walletBacked(ss58Address: ss58Address, publicKeyHex: publicKeyHex), persist: persist)
+    }
+
     // MARK: - Private methods
 
     @objc private func applicationDidBecomeActive() {

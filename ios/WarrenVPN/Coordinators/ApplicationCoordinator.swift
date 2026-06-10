@@ -355,38 +355,36 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
      Evaluates conditions and returns the routes that need to be presented next.
      */
     private func evaluateNextRoutes() -> [AppRoute] {
-        // Show TOS alone blocking all other routes.
-        guard appPreferences.isAgreedToTermsOfService else {
-            return [.tos]
-        }
+        let walletExists = WarrenWalletInteractor().walletExists()
+        let routes = nextWarrenRoutes(
+            agreedToTOS: appPreferences.isAgreedToTermsOfService,
+            onboardingComplete: appPreferences.hasCompletedWarrenOnboarding,
+            isRevoked: tunnelManager.deviceState == .revoked,
+            walletExists: walletExists
+        )
 
-        // Warren onboarding takes precedence over the regular Mullvad
-        // login UX. We want the wallet (and the user's understanding of
-        // multi-hop / DAITA) to exist before any tunnel attempt. The
-        // wizard runs once per fresh install or post-logout reset.
-        guard appPreferences.hasCompletedWarrenOnboarding else {
-            return [.warrenOnboarding]
-        }
-
-        var routes = [AppRoute]()
-
-        // Pick the primary route to present
-        switch tunnelManager.deviceState {
-        case .revoked:
-            routes.append(.revoked)
-
-        case .loggedOut:
-            routes.append(.login)
-
-        case let .loggedIn(accountData, _):
-            if !appPreferences.isShownOnboarding {
-                routes.append(.welcome)
-            } else {
-                routes.append(accountData.isExpired ? .outOfTime : .main)
-            }
+        // Self-heal: a wallet exists but the device state is not logged in
+        // (first launch after upgrading into the wallet model, where the old
+        // state was .loggedOut). Promote it so StartTunnelOperation and the
+        // logged-in UI chrome work without forcing the user through login.
+        if routes == [.main], !tunnelManager.deviceState.isLoggedIn {
+            promoteWalletToDeviceState()
         }
 
         return routes
+    }
+
+    /// Synthesizes a wallet-backed `DeviceState.loggedIn` from the Warren
+    /// wallet identity currently in the Keychain. No-op if no wallet.
+    private func promoteWalletToDeviceState() {
+        let interactor = WarrenWalletInteractor()
+        guard let ss58 = interactor.publicKeyAddress(),
+              let pubHex = interactor.publicKeyHex() else { return }
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: ss58,
+            publicKeyHex: pubHex,
+            persist: true
+        )
     }
 
     private func logoutRevokedDevice() {
@@ -575,37 +573,28 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     }
 
     private func presentLogin(animated: Bool, completion: @escaping (Coordinator) -> Void) {
-        let coordinator = LoginCoordinator(
-            navigationController: navigationContainer,
-            tunnelManager: tunnelManager,
-            breadcrumbsProvider: breadcrumbsProvider
-        )
-
-        coordinator.preferredAccountNumberPublisher = preferredAccountNumberSubject.eraseToAnyPublisher()
-
-        coordinator.navigateToAccessMethods = { [weak self] in
-            self?.router.present(.apiAccess, animated: true)
-        }
+        let coordinator = WarrenWalletLoginCoordinator()
 
         coordinator.didFinish = { [weak self] _ in
             guard let self else { return }
             appPreferences.hasDoneFirstTimeLogin = true
-            if appPreferences.isNotificationPermissionAsked == false && appPreferences.isShownOnboarding {
-                presentNotificationsPrompt(animated: animated) { coordinator in
-                    self.continueFlow(animated: true)
-                }
-            } else {
-                continueFlow(animated: true)
-            }
-        }
-
-        coordinator.didCreateAccount = { [weak self] in
-            guard let self else { return }
-            appPreferences.isShownOnboarding = false
+            appPreferences.isShownOnboarding = true
+            promoteWalletToDeviceState()
+            router.dismiss(.login, animated: animated)
+            continueFlow(animated: animated)
         }
 
         addChild(coordinator)
-        coordinator.start(animated: animated)
+        coordinator.start(animated: false)
+
+        presentChild(
+            coordinator,
+            animated: animated,
+            configuration: ModalPresentationConfiguration(
+                preferredContentSize: navigationContainer.preferredContentSize,
+                modalPresentationStyle: .fullScreen
+            )
+        )
 
         completion(coordinator)
     }
@@ -1292,6 +1281,10 @@ extension ApplicationCoordinator: @preconcurrency OnboardingWizardCoordinatorDel
     /// route (login / welcome / main / outOfTime / revoked).
     func onboardingWizardDidFinish(_ coordinator: OnboardingWizardCoordinator) {
         appPreferences.hasCompletedWarrenOnboarding = true
+        appPreferences.isShownOnboarding = true
+        // The wizard provisions the wallet; promote it to a logged-in state
+        // so the next route resolves to .main instead of the login screen.
+        promoteWalletToDeviceState()
         router.dismiss(.warrenOnboarding, animated: true)
         continueFlow(animated: true)
     }
