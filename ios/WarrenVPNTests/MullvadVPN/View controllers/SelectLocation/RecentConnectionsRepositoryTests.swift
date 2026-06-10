@@ -11,6 +11,7 @@ import Testing
 
 @testable import WarrenSettings
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 @Suite("RecentConnectionsRepositoryTests")
 final class RecentConnectionsRepositoryTests {

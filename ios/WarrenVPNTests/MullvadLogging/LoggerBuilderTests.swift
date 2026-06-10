@@ -9,6 +9,7 @@
 import Testing
 
 @testable import WarrenLogging
+@testable import WarrenVPN
 
 struct LoggerBuilderTests {
 

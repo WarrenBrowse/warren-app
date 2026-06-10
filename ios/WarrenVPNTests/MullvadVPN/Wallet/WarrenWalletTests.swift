@@ -13,6 +13,7 @@
 
 @testable import WarrenRustRuntime
 import XCTest
+@testable import WarrenVPN
 
 final class WarrenWalletTests: XCTestCase {
     /// Generating a fresh wallet yields a valid 12-word BIP39 phrase

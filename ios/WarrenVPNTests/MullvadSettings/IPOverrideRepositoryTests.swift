@@ -8,6 +8,7 @@
 
 import Network
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenSettings
 

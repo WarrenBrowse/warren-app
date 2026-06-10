@@ -5,6 +5,7 @@ import Testing
 @testable import WarrenRustRuntime
 @testable import WarrenSettings
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 struct CustomListInteractorTests {
     static let store = InMemorySettingsStore<SettingNotFound>()

@@ -9,6 +9,7 @@
 import Foundation
 import WarrenTypes
 import NetworkExtension
+@testable import WarrenVPN
 
 struct TunnelStoreStub: TunnelStoreProtocol, Sendable {
     typealias TunnelType = TunnelStub

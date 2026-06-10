@@ -7,6 +7,7 @@
 
 import WarrenSettings
 import XCTest
+@testable import WarrenVPN
 
 final class WarrenWalletDeviceStateTests: XCTestCase {
     func test_walletBacked_carriesSS58AsAccountNumber() {

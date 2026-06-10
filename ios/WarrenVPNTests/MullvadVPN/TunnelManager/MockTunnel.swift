@@ -9,6 +9,7 @@
 import Foundation
 import WarrenTypes
 import NetworkExtension
+@testable import WarrenVPN
 
 class MockTunnel: TunnelProtocol, @unchecked Sendable {
     typealias TunnelManagerProtocol = SimulatorTunnelProviderManager

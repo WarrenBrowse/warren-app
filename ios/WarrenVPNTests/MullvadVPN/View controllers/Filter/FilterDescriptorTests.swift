@@ -11,6 +11,7 @@ import Testing
 @testable import WarrenREST
 @testable import WarrenSettings
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 @Suite("FilterDescriptorTests")
 struct FilterDescriptorTests {

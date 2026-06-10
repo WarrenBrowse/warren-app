@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import WarrenVPN
 
 class CustomDateComponentsFormattingTests: XCTestCase {
     func testEqualToTwoYearsFormatting() throws {

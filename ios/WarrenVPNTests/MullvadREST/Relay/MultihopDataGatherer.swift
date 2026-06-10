@@ -12,6 +12,7 @@ import Testing
 @testable import WarrenREST
 @testable import WarrenSettings
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 // Not meant to be run as a test, only for gathering data about multihop relay selection.
 

@@ -10,6 +10,7 @@ import Foundation
 import WarrenMockData
 import Network
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenREST
 @testable import WarrenSettings

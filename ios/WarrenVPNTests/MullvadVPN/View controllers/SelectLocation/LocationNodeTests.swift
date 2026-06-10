@@ -8,6 +8,7 @@
 
 import WarrenSettings
 import XCTest
+@testable import WarrenVPN
 
 class LocationNodeTests: XCTestCase {
     let listNode = CustomListLocationNode(

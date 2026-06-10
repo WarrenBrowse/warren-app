@@ -12,6 +12,7 @@
 //
 
 import XCTest
+@testable import WarrenVPN
 
 
 final class WarrenTunnelStatisticsViewTests: XCTestCase {

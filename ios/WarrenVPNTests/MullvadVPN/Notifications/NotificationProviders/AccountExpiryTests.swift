@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import WarrenVPN
 
 class AccountExpiryTests: XCTestCase {
     private let calendar = Calendar.current

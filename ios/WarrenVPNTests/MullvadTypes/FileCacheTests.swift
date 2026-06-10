@@ -8,6 +8,7 @@
 
 import Foundation
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenTypes
 

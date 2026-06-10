@@ -11,6 +11,7 @@ import WarrenMockData
 
 @testable import WarrenREST
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 struct RelayCacheTrackerStub: RelayCacheTrackerProtocol {
     func startPeriodicUpdates() {}

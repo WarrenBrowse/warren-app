@@ -8,6 +8,7 @@
 
 import Foundation
 import WarrenTypes
+@testable import WarrenVPN
 
 /// File cache implementation that simulates file state and uses internal lock to synchronize access to it.
 final class MockFileCache<Content: Codable & Equatable>: FileCacheProtocol {

@@ -10,6 +10,7 @@ import Testing
 
 @testable import WarrenRustRuntime
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 struct RustProblemReportRequestTests {
     @Test(

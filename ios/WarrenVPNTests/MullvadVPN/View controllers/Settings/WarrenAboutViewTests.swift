@@ -14,6 +14,7 @@
 
 import SwiftUI
 import XCTest
+@testable import WarrenVPN
 
 
 final class WarrenAboutViewTests: XCTestCase {

@@ -8,6 +8,7 @@
 
 @preconcurrency import Combine
 import WarrenSettings
+@testable import WarrenVPN
 
 struct IPOverrideRepositoryStub: IPOverrideRepositoryProtocol {
     let passthroughSubject: CurrentValueSubject<[IPOverride], Never> = CurrentValueSubject([])

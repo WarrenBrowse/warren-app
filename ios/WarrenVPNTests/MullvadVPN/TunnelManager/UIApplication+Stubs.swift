@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 struct UIApplicationStub: BackgroundTaskProviding {
     var backgroundTimeRemaining: TimeInterval { .infinity }

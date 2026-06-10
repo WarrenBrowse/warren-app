@@ -9,6 +9,7 @@
 import Combine
 import WarrenSettings
 import WarrenTypes
+@testable import WarrenVPN
 
 class CustomListsRepositoryStub: CustomListRepositoryProtocol {
     var customLists: [CustomList]

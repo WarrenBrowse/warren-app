@@ -8,6 +8,7 @@
 import WarrenSettings
 import WarrenTypes
 import XCTest
+@testable import WarrenVPN
 
 final class TunnelSettingsStrategyTests: XCTestCase {
     func testConnectToNewRelayOnMultihopChanges() {

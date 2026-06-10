@@ -1,4 +1,5 @@
 import XCTest
+@testable import WarrenVPN
 
 //
 //  SettingsUpdaterTests.swift

@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import WarrenVPN
 
 final class ConsolidatedApplicationLogTests: XCTestCase, @unchecked Sendable {
     nonisolated(unsafe) var consolidatedLog: ConsolidatedApplicationLog!

@@ -8,6 +8,7 @@
 
 import Foundation
 import XCTest
+@testable import WarrenVPN
 
 extension XCTest {
     func XCTAssertThrowsErrorAsync<T: Sendable>(

@@ -12,6 +12,7 @@ import Testing
 @testable import WarrenREST
 @testable import WarrenSettings
 @testable import WarrenTypes
+@testable import WarrenVPN
 
 final class MultihopMigrationTrackerTests {
     var relaySelectorWrapper: RelaySelectorWrapper!

@@ -10,6 +10,7 @@
 import Testing
 
 @testable import WarrenLogging
+@testable import WarrenVPN
 
 @Suite("LogFileOutputStream Tests")
 actor LogFileOutputStreamTests {

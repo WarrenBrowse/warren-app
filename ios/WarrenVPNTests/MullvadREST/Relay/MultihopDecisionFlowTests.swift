@@ -8,6 +8,7 @@
 
 import WarrenMockData
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenREST
 @testable import WarrenSettings

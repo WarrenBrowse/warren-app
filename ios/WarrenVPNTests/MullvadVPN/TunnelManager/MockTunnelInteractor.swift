@@ -10,6 +10,7 @@ import Foundation
 import WarrenREST
 import WarrenSettings
 import WarrenTypes
+@testable import WarrenVPN
 
 // this is still very minimal, and will be fleshed out as needed.
 final class MockTunnelInteractor: TunnelInteractor, @unchecked Sendable {

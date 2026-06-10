@@ -11,6 +11,7 @@ import WarrenMockData
 import WarrenTypes
 import Network
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenREST
 @testable import WarrenSettings

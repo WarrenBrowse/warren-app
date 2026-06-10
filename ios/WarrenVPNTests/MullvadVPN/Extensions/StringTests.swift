@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import WarrenVPN
 
 class StringTests: XCTestCase {
     /// A valid Warren SS58 address (48 chars, `wb` prefix) used across

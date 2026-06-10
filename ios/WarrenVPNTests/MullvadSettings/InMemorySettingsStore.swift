@@ -8,6 +8,7 @@
 
 import Foundation
 import WarrenSettings
+@testable import WarrenVPN
 
 protocol Instantiable {
     init()

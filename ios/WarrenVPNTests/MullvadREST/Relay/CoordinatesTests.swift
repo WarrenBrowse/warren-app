@@ -8,6 +8,7 @@
 
 import CoreLocation
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenREST
 

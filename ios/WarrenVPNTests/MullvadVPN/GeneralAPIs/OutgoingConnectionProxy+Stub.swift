@@ -7,6 +7,7 @@
 //
 
 import WarrenREST
+@testable import WarrenVPN
 
 struct OutgoingConnectionProxyStub: OutgoingConnectionHandling {
     var ipV4: IPV4ConnectionData

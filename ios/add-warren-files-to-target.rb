@@ -98,7 +98,11 @@ FILES_TO_ADD = {
     "WarrenVPNTests",
   "PacketTunnelCoreTests/WarrenQuinnActorTests.swift" => "PacketTunnelCoreTests",
 
-  # P3.1 wallet-as-login unit tests: DeviceState synthesizer + route decision.
+  # P3.1 wallet-as-login unit tests: DeviceState synthesizer + route
+  # decision. WarrenWalletRoutingTests references `nextWarrenRoutes`/
+  # `AppRoute`; it compiles now that WarrenVPNTests is a HOSTED target
+  # (TEST_HOST=WarrenVPN.app) and reaches app internals via
+  # `@testable import WarrenVPN`.
   "WarrenVPNTests/MullvadVPN/WarrenWallet/WarrenWalletDeviceStateTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/WarrenWallet/WarrenWalletRoutingTests.swift" => "WarrenVPNTests",
 

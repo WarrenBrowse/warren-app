@@ -12,6 +12,7 @@ import WarrenTypes
 import Operations
 import PacketTunnelCore
 import XCTest
+@testable import WarrenVPN
 
 @testable import WarrenMockData
 
