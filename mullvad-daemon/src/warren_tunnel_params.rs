@@ -24,10 +24,13 @@ pub enum AssembleError {
     Selector(#[from] SelectorError),
 }
 
-/// Number of parallel QUIC connections. `1` = mono-conn (baseline);
-/// multi-conn (bonding) gets enabled once the benches justify the
-/// extra complexity.
-const DEFAULT_N_CONNECTIONS: u8 = 1;
+/// Number of parallel QUIC connections. `8` captures ~95% of the
+/// multi-conn benefit (the throughput curve plateaus around N=8, cf.
+/// warren-core `bench/scripts/m3e-multi-conn-sweep.sh` and the
+/// standalone warren-client default). Mono-conn (`1`) caps the whole
+/// tunnel on a single exit-side pump task (~350 Mbps measured against
+/// a cpx32 exit on 2026-06-10).
+const DEFAULT_N_CONNECTIONS: u8 = 8;
 
 /// Assemble-time `features` baseline (`0` = IPv4-only). The real
 /// user-driven bitmask is computed post-assemble by the caller via
@@ -237,7 +240,7 @@ mod tests {
         // The function must produce a `WarrenTunnelParameters` whose
         // `exit_addr` comes from the selector, whose `signing_key` is
         // passed through verbatim, and where the two constants
-        // `n_connections == 1` + `features == 0` are set.
+        // `n_connections == 8` + `features == 0` are set.
         let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
         let selector = DaemonWarrenRelaySelector::new(list);
         let key = fixture_signing_key();
@@ -268,7 +271,7 @@ mod tests {
             expected_pubkey,
             "signing_key must be passed through verbatim"
         );
-        assert_eq!(params.n_connections, 1);
+        assert_eq!(params.n_connections, 8);
         assert_eq!(params.features, 0);
         assert!(
             params.multi_hop.is_none(),
