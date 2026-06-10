@@ -155,9 +155,9 @@ enum Cli {
     #[clap(subcommand)]
     Log(log::Log),
 
-    /// Manage Warren settings (local-account POC mode, warren-api URL,
-    /// recovery mnemonic). A daemon restart is required to apply a
-    /// change to the persistent flags.
+    /// Manage Warren settings (warren-api URL, recovery mnemonic,
+    /// parallel connection count). The api-url change requires a
+    /// daemon restart; n-connections applies on the next (re)connect.
     #[clap(subcommand)]
     Warren(warren::Warren),
 }

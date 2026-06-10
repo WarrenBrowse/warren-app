@@ -32,6 +32,52 @@ pub enum AssembleError {
 /// a cpx32 exit on 2026-06-10).
 const DEFAULT_N_CONNECTIONS: u8 = 8;
 
+/// Valid range for the parallel-connection count. Above 16 the m3e
+/// sweep shows no measurable gain (N=32 adds ~5% over N=8) while the
+/// exit pays one pump task per connection.
+pub const N_CONNECTIONS_RANGE: std::ops::RangeInclusive<u8> = 1..=16;
+
+/// Env var overriding the persisted `Settings::warren_n_connections`
+/// (ops/debug surface, mirrors `WARREN_API_URL` precedence).
+pub const N_CONNECTIONS_ENV: &str = "WARREN_N_CONNECTIONS";
+
+/// Resolves the effective parallel-connection count:
+/// env var > persisted setting > compiled default.
+///
+/// Invalid or out-of-range values are ignored with a warning rather
+/// than clamped, so a typo cannot silently change the wire profile.
+pub fn resolve_n_connections(setting: Option<u8>) -> u8 {
+    resolve_n_connections_from(std::env::var(N_CONNECTIONS_ENV).ok().as_deref(), setting)
+}
+
+fn resolve_n_connections_from(env: Option<&str>, setting: Option<u8>) -> u8 {
+    if let Some(raw) = env {
+        match raw.trim().parse::<u8>() {
+            Ok(n) if N_CONNECTIONS_RANGE.contains(&n) => {
+                log::warn!(
+                    "{N_CONNECTIONS_ENV}={n} overrides the persisted n_connections setting"
+                );
+                return n;
+            }
+            _ => log::warn!(
+                "ignoring invalid {N_CONNECTIONS_ENV}={raw:?} (expected integer in {:?})",
+                N_CONNECTIONS_RANGE
+            ),
+        }
+    }
+    match setting {
+        Some(n) if N_CONNECTIONS_RANGE.contains(&n) => n,
+        Some(n) => {
+            log::warn!(
+                "ignoring out-of-range persisted n_connections={n}, \
+                 using default {DEFAULT_N_CONNECTIONS}"
+            );
+            DEFAULT_N_CONNECTIONS
+        }
+        None => DEFAULT_N_CONNECTIONS,
+    }
+}
+
 /// Assemble-time `features` baseline (`0` = IPv4-only). The real
 /// user-driven bitmask is computed post-assemble by the caller via
 /// [`features_for`] (mirrors how `on_reconnect` / `enable_daita` are
@@ -210,6 +256,46 @@ mod tests {
             100,
             true,
         )
+    }
+
+    #[test]
+    fn resolve_n_connections_defaults_when_unset() {
+        // No env, no setting -> compiled default. The baseline path
+        // every fresh install takes.
+        assert_eq!(resolve_n_connections_from(None, None), 8);
+    }
+
+    #[test]
+    fn resolve_n_connections_uses_persisted_setting() {
+        assert_eq!(resolve_n_connections_from(None, Some(4)), 4);
+        assert_eq!(resolve_n_connections_from(None, Some(1)), 1);
+        assert_eq!(resolve_n_connections_from(None, Some(16)), 16);
+    }
+
+    #[test]
+    fn resolve_n_connections_rejects_out_of_range_setting() {
+        // Out-of-range persisted values (hand-edited settings.json)
+        // must fall back to the default, never clamp: clamping would
+        // silently bind the user to a value they never chose.
+        assert_eq!(resolve_n_connections_from(None, Some(0)), 8);
+        assert_eq!(resolve_n_connections_from(None, Some(17)), 8);
+        assert_eq!(resolve_n_connections_from(None, Some(255)), 8);
+    }
+
+    #[test]
+    fn resolve_n_connections_env_overrides_setting() {
+        assert_eq!(resolve_n_connections_from(Some("2"), Some(8)), 2);
+        assert_eq!(resolve_n_connections_from(Some(" 12 "), None), 12);
+    }
+
+    #[test]
+    fn resolve_n_connections_invalid_env_falls_back_to_setting() {
+        // A broken env value must not take the default over a valid
+        // persisted setting: the user's choice outranks a typo.
+        assert_eq!(resolve_n_connections_from(Some("abc"), Some(4)), 4);
+        assert_eq!(resolve_n_connections_from(Some("0"), Some(4)), 4);
+        assert_eq!(resolve_n_connections_from(Some("64"), Some(4)), 4);
+        assert_eq!(resolve_n_connections_from(Some(""), None), 8);
     }
 
     #[test]

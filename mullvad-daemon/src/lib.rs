@@ -403,6 +403,11 @@ pub enum DaemonCommand {
     /// Persistent URL `Settings::warren_api_url`. Empty string ->
     /// unset (= None on the Settings side).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
+    /// Persist the Warren parallel QUIC connection count
+    /// (`Settings::warren_n_connections`). `None` resets to the
+    /// compiled default. Applied on the next (re)connect; reconnects
+    /// when the tunnel is up.
+    SetWarrenNConnections(ResponseTx<(), settings::Error>, Option<u8>),
     /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
     /// Restart required to apply (read at boot only).
     SetWarrenMultiHopSettings(
@@ -1261,6 +1266,20 @@ impl Daemon {
             tokio::spawn(async move {
                 pg_for_daita_boot
                     .set_warren_enable_daita(initial_daita)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted parallel-connection preference at
+        // boot, mirroring the DAITA snapshot above: without it, the
+        // first connect after a daemon restart would always use the
+        // compiled default even when the user persisted a custom value.
+        {
+            let initial_n_connections = settings.warren_n_connections;
+            let pg_for_nconns_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_nconns_boot
+                    .set_warren_n_connections(initial_n_connections)
                     .await;
             });
         }
@@ -2201,6 +2220,7 @@ impl Daemon {
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
             SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
+            SetWarrenNConnections(tx, n) => self.on_set_warren_n_connections(tx, n).await,
             SetWarrenMultiHopSettings(tx, settings) => {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
@@ -3512,6 +3532,38 @@ impl Daemon {
             log::info!("Warren api_url persisted to {display_value} ; restart required for effect");
         }
         Self::oneshot_send(tx, result, "set_warren_api_url response");
+    }
+
+    /// Persists `Settings::warren_n_connections` and mirrors it onto
+    /// the parameters generator so the next (re)connect uses the new
+    /// count. Range validation (1..=16) happens at the gRPC boundary;
+    /// `None` resets to the compiled default. Mirrors the
+    /// settings-then-reconnect flow of `on_set_daita_enabled`.
+    async fn on_set_warren_n_connections(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        value: Option<u8>,
+    ) {
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_n_connections = value)
+            .await;
+        match result {
+            Ok(settings_changed) => {
+                Self::oneshot_send(tx, Ok(()), "set_warren_n_connections response");
+                self.parameters_generator
+                    .set_warren_n_connections(value)
+                    .await;
+                if settings_changed {
+                    log::info!("Reconnecting because the Warren n_connections setting changed");
+                    self.reconnect_tunnel();
+                }
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_warren_n_connections response");
+            }
+        }
     }
 
     /// Persists `Settings::warren_multi_hop`. Application is **live** but

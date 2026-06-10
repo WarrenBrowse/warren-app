@@ -285,6 +285,17 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Persisted `Settings::warren_n_connections`. `None` resets to the
+    /// compiled default (= 0 on the wire). Applied on the next
+    /// (re)connect; the daemon reconnects automatically when the tunnel
+    /// is up.
+    pub async fn set_warren_n_connections(&mut self, n: Option<u8>) -> Result<()> {
+        self.0
+            .set_warren_n_connections(u32::from(n.unwrap_or_default()))
+            .await?;
+        Ok(())
+    }
+
     /// Reads the persisted Warren BIP39 recovery phrase so the user can
     /// back it up (export). Returns an empty string when no identity
     /// has been bootstrapped yet. The caller MUST NOT log the returned

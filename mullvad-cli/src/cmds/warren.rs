@@ -1,5 +1,6 @@
 //! CLI subcommands for Warren-specific settings: the warren-api server
-//! URL and the BIP39 identity (recovery phrase) backup/restore.
+//! URL, the BIP39 identity (recovery phrase) backup/restore, and the
+//! parallel QUIC connection count (performance tuning).
 
 use anyhow::Result;
 use clap::Subcommand;
@@ -14,6 +15,30 @@ pub enum Warren {
     /// Back up or restore the Warren identity (BIP39 recovery phrase)
     #[clap(subcommand)]
     Mnemonic(WarrenMnemonic),
+
+    /// Tune the number of parallel QUIC connections (1-16)
+    #[clap(subcommand)]
+    NConnections(WarrenNConnections),
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WarrenNConnections {
+    /// Show the persisted connection count ("<unset>" = daemon default)
+    Get,
+
+    /// Persist the connection count. Applied on the next (re)connect;
+    /// the daemon reconnects automatically when the tunnel is up. The
+    /// env var WARREN_N_CONNECTIONS on the daemon takes priority over
+    /// this setting.
+    Set {
+        /// Parallel QUIC connections (1-16). Throughput plateaus at 8
+        /// (the default); lower values reduce per-client footprint.
+        #[arg(value_parser = clap::value_parser!(u8).range(1..=16))]
+        n: u8,
+    },
+
+    /// Reset to the daemon's compiled default (8)
+    Reset,
 }
 
 #[derive(Subcommand, Debug)]
@@ -75,7 +100,34 @@ impl Warren {
             Warren::Mnemonic(WarrenMnemonic::Import { words }) => {
                 Self::mnemonic_import(&words).await
             }
+            Warren::NConnections(WarrenNConnections::Get) => Self::n_connections_get().await,
+            Warren::NConnections(WarrenNConnections::Set { n }) => {
+                Self::n_connections_set(Some(n)).await
+            }
+            Warren::NConnections(WarrenNConnections::Reset) => Self::n_connections_set(None).await,
         }
+    }
+
+    async fn n_connections_get() -> Result<()> {
+        let mut rpc = MullvadProxyClient::new().await?;
+        let settings = rpc.get_settings().await?;
+        match settings.warren_n_connections {
+            Some(n) => println!("Warren n_connections: {n}"),
+            None => println!("Warren n_connections: <unset> (daemon default, 8)"),
+        }
+        Ok(())
+    }
+
+    async fn n_connections_set(n: Option<u8>) -> Result<()> {
+        let mut rpc = MullvadProxyClient::new().await?;
+        rpc.set_warren_n_connections(n).await?;
+        match n {
+            Some(n) => println!(
+                "Warren n_connections set to {n} (reconnects automatically if the tunnel is up)"
+            ),
+            None => println!("Warren n_connections reset to the daemon default"),
+        }
+        Ok(())
     }
 
     async fn api_url_get() -> Result<()> {

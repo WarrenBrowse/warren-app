@@ -437,6 +437,32 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn set_warren_n_connections(&self, request: Request<u32>) -> ServiceResult<()> {
+        let raw = request.into_inner();
+        log::debug!("set_warren_n_connections({raw})");
+        // 0 = reset to the compiled default; anything else must sit in
+        // the valid range. Reject rather than clamp so a buggy client
+        // cannot silently change the wire profile.
+        let value = match raw {
+            0 => None,
+            n => Some(
+                u8::try_from(n)
+                    .ok()
+                    .filter(|n| crate::warren_tunnel_params::N_CONNECTIONS_RANGE.contains(n))
+                    .ok_or_else(|| {
+                        Status::invalid_argument(format!(
+                            "n_connections must be in {:?}",
+                            crate::warren_tunnel_params::N_CONNECTIONS_RANGE
+                        ))
+                    })?,
+            ),
+        };
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenNConnections(tx, value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
     /// Returns the user's BIP39 mnemonic. Empty string if
     /// the identity has never been bootstrapped. **No-log policy**:
     /// never log the content.

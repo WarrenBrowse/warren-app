@@ -59,6 +59,10 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             // Consistent with the reverse conversion on the
             // `try_from(SettingsProto)` side.
             warren_api_url: settings.warren_api_url.clone().unwrap_or_default(),
+            // None -> 0 on the wire (proto3 `uint32` has no "absent";
+            // 0 is outside the valid 1..=16 range so it is a safe
+            // "unset" sentinel).
+            warren_n_connections: u32::from(settings.warren_n_connections.unwrap_or_default()),
             warren_multi_hop: Some(proto::WarrenMultiHopSettings::from(
                 &settings.warren_multi_hop,
             )),
@@ -338,6 +342,18 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 None
             } else {
                 Some(settings.warren_api_url)
+            },
+            // 0 on the wire -> None (unset, compiled default). Other
+            // values must fit u8; range validation (1..=16) is done at
+            // the SetWarrenNConnections rpc and again at
+            // parameter-production time.
+            warren_n_connections: match settings.warren_n_connections {
+                0 => None,
+                n => Some(u8::try_from(n).map_err(|_| {
+                    FromProtobufTypeError::invalid_argument(
+                        "warren_n_connections out of u8 range",
+                    )
+                })?),
             },
             warren_multi_hop: settings
                 .warren_multi_hop

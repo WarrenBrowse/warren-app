@@ -132,6 +132,13 @@ struct InnerParametersGenerator {
     /// on the `wireguard.daita` settings slice (the DAITA toggle reuses
     /// the upstream-named settings field for the Warren backend).
     warren_enable_daita: bool,
+    /// User-tunable parallel QUIC connection count, mirroring
+    /// `Settings::warren_n_connections`. `None` = compiled default.
+    /// Resolved (env var `WARREN_N_CONNECTIONS` override included)
+    /// through [`warren_tunnel_params::resolve_n_connections`] at
+    /// parameter-production time and forwarded onto
+    /// [`talpid_warren_tunnel::WarrenTunnelParameters::n_connections`].
+    warren_n_connections: Option<u8>,
     /// M5.B.2 multi-exit auto-failover: pubkey of the most recently
     /// assembled Warren exit. The state machine increments
     /// `retry_attempt` after every connection failure; on the next
@@ -286,6 +293,7 @@ impl ParametersGenerator {
             warren_nat_pmp: None,
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
+            warren_n_connections: None,
             warren_last_exit_pubkey: None,
             warren_api_url,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
@@ -451,6 +459,21 @@ impl ParametersGenerator {
         self.0.lock().await.warren_enable_daita = enabled;
     }
 
+    /// Sets the user's parallel QUIC connection preference
+    /// (`Settings::warren_n_connections`). `None` = compiled default.
+    /// The next call to [`Self::produce_warren_tunnel_params`] resolves
+    /// it (env var override included) onto
+    /// `WarrenTunnelParameters::n_connections`. In-flight tunnels keep
+    /// their current count until the daemon reconnects.
+    ///
+    /// Wired from the daemon's `on_set_warren_n_connections` handler
+    /// and from the daemon boot routine (initial snapshot of the
+    /// persisted value). Mirrors the runtime-mutation pattern of
+    /// [`Self::set_warren_enable_daita`].
+    pub async fn set_warren_n_connections(&self, n: Option<u8>) {
+        self.0.lock().await.warren_n_connections = n;
+    }
+
     /// Sets the user's Warren multi-hop config (M4.H.C). `Some(cfg)`
     /// turns the next tunnel (re)connect into a two-relay HPKE
     /// multi-hop path; `None` keeps it single-hop. The signed
@@ -515,6 +538,7 @@ impl ParametersGenerator {
         let nat_pmp = inner.warren_nat_pmp.clone();
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let enable_daita = inner.warren_enable_daita;
+        let n_connections_setting = inner.warren_n_connections;
         // IPv6 dual-stack opt-in (Mullvad `tunnel_options.generic.enable_ipv6`,
         // default false). Forwarded onto `params.features` post-assemble
         // (single-hop only). When off, the exit allocates no v6 and the
@@ -751,6 +775,10 @@ impl ParametersGenerator {
         // wire path differs (Quinn + warren-protocol v3 here vs
         // WireGuard + maybenot-ffi in the upstream backend).
         params.enable_daita = enable_daita;
+        // Resolve the parallel-connection count (env var override >
+        // persisted setting > compiled default). Mirrors the
+        // post-assemble wiring of `enable_daita`.
+        params.n_connections = warren_tunnel_params::resolve_n_connections(n_connections_setting);
         // Forward the IPv6 opt-in onto the Setup-frame features bitmask.
         // Both single-hop and multi-hop now carry v6 (multi-hop via the
         // control `/v2` IpRequestV2/IpAssignV2, cf. docs/31). When the exit

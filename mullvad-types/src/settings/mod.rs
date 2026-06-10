@@ -131,6 +131,14 @@ pub struct Settings {
     /// overridden via env var `WARREN_API_URL` (takes priority over Settings).
     #[serde(default)]
     pub warren_api_url: Option<String>,
+    /// Number of parallel QUIC connections for the Warren tunnel.
+    /// `None` resolves to the compiled default (8, cf. warren-core
+    /// `m3e-multi-conn-sweep`: the throughput curve plateaus at N=8).
+    /// Valid range 1..=16; out-of-range persisted values fall back to
+    /// the default at parameter-production time. Can be overridden via
+    /// env var `WARREN_N_CONNECTIONS` (takes priority over Settings).
+    #[serde(default)]
+    pub warren_n_connections: Option<u8>,
     /// Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
     /// Default = OFF per doctrine `warren_multihop_doctrine_v1`
     /// (opt-in privacy, full bandwidth single-hop). The env var
@@ -514,6 +522,7 @@ impl Default for Settings {
             // so the remote backend works without any manual `api-url
             // set`.
             warren_api_url: None,
+            warren_n_connections: None,
             warren_multi_hop: WarrenMultiHopSettings::default(),
             warren_nat_pmp: WarrenNatPmpSettings::default(),
             warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys::default(),

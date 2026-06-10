@@ -62,6 +62,13 @@ service ManagementService {
   // (= None côté Settings, fallback Mullvad upstream). Override via
   // env var `WARREN_API_URL`. Restart requis pour appliquer.
   rpc SetWarrenApiUrl(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  // Number of parallel QUIC connections for the Warren tunnel.
+  // 0 = reset to the compiled default (8). Valid range 1..=16,
+  // rejected otherwise. Applied on the next (re)connect; the daemon
+  // reconnects automatically when the tunnel is up. The env var
+  // `WARREN_N_CONNECTIONS` on the daemon takes priority over this
+  // setting.
+  rpc SetWarrenNConnections(google.protobuf.UInt32Value) returns (google.protobuf.Empty) {}
   // Retourne la mnémonique BIP39 utilisateur (12 mots) pour permettre
   // backup user-side via le GUI. Empty string si l'identité n'a
   // jamais été bootstrappée (= mode Mullvad legacy ou premier boot
@@ -651,6 +658,8 @@ message Settings {
   // Warren NAT-PMP port-forwarding settings. Cf. SetNatPmpSettings
   // rpc. Absent = OFF (no refresh loop spawned).
   NatPmpSettings warren_nat_pmp = 19;
+  // 0 = unset (compiled default, 8). Cf. SetWarrenNConnections rpc.
+  uint32 warren_n_connections = 20;
 }
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and
