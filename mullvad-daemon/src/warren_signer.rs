@@ -444,9 +444,50 @@ pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<Zeroizing<String>> {
     Some(Zeroizing::new(s.trim().to_string()))
 }
 
+/// Decide whether `device.json` must be re-aligned to the active signer.
+///
+/// The BIP39-derived signer is the cryptographic root of truth: it signs
+/// every API request and builds the tunnel params. `device.json` is only
+/// a cache of the logged-in pubkey and can drift from it. Returns
+/// `Some(expected)` when the device records a DIFFERENT logged-in pubkey
+/// and must be re-logged-in to `expected`; returns `None` when they
+/// already match OR when `stored_pubkey` is `None` (logged out / revoked),
+/// which is a deliberate state that must be preserved (never auto-login a
+/// user who logged out).
+#[must_use]
+pub fn reconcile_login_target<'a>(
+    signer_pubkey_ss58: &'a str,
+    stored_pubkey: Option<&str>,
+) -> Option<&'a str> {
+    match stored_pubkey {
+        Some(stored) if stored != signer_pubkey_ss58 => Some(signer_pubkey_ss58),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reconcile_noop_when_device_matches_signer() {
+        assert_eq!(reconcile_login_target("wbSIGNER", Some("wbSIGNER")), None);
+    }
+
+    #[test]
+    fn reconcile_targets_signer_when_device_differs() {
+        assert_eq!(
+            reconcile_login_target("wbSIGNER", Some("wbOTHER")),
+            Some("wbSIGNER")
+        );
+    }
+
+    #[test]
+    fn reconcile_skips_logged_out_or_revoked_device() {
+        // `device.pubkey()` is None for LoggedOut/Revoked. A deliberate
+        // logout/revocation must NEVER be silently re-logged-in.
+        assert_eq!(reconcile_login_target("wbSIGNER", None), None);
+    }
 
     fn isolated_tempdir() -> std::path::PathBuf {
         use std::sync::atomic::{AtomicU64, Ordering};

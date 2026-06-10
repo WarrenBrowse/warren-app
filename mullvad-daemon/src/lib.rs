@@ -1096,6 +1096,51 @@ impl Daemon {
         .await
         .map_err(Error::LoadAccountManager)?;
 
+        // Boot-time identity reconciliation. The BIP39-derived signer is
+        // the cryptographic root of truth: it signs every API request and
+        // builds the tunnel params. `device.json` is only a cache of the
+        // logged-in pubkey and can drift from the signer (e.g. the
+        // secret-storage backend changed under the daemon, or a partial
+        // restore). When they disagree, the displayed account and the
+        // actually-signing identity diverge - the exact desync that once
+        // stranded a paid subscription on an unsubscribed key while the UI
+        // showed a different, subscribed account. Re-align `device.json` to
+        // the signer here so the three views (signer, device.json,
+        // `account get`) can never silently differ. Only the LoggedIn case
+        // is touched: `pubkey()` is None for LoggedOut/Revoked, so a
+        // deliberate logout or revocation is preserved.
+        if let Some(signer) = warren_signer_for_daemon.as_ref() {
+            let expected = signer.pubkey_ss58();
+            let stored = data.pubkey().map(|p| p.as_str().to_owned());
+            if let Some(target) =
+                warren_signer::reconcile_login_target(&expected, stored.as_deref())
+            {
+                log::error!(
+                    "Warren identity desync at boot: signer={target} device.json={}; \
+                     re-aligning device.json to the signer-derived identity",
+                    stored.as_deref().unwrap_or("<none>")
+                );
+                let manager = account_manager.clone();
+                let target = target.to_owned();
+                tokio::spawn(async move {
+                    match manager.login(target).await {
+                        Ok(()) => log::info!(
+                            "Warren identity reconciled: device.json now matches the signer"
+                        ),
+                        // `login` here is a local device-cache write (no
+                        // network), so do NOT force a logout on failure:
+                        // the only failure mode is a cache write error. The
+                        // signer stays the source of truth for signing;
+                        // reconciliation retries on the next boot.
+                        Err(e) => log::warn!(
+                            "Warren identity reconciliation failed ({e}); device.json still \
+                             records a stale identity, will retry next boot"
+                        ),
+                    }
+                });
+            }
+        }
+
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
             // AccountHistory.set/get take an AccountNumber (= String).
