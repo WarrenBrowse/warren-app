@@ -684,6 +684,9 @@ enum MonitorBackend {
         /// handle, and the supervisor's no-receivers shutdown check
         /// must still fire once the pumps drop theirs.
         watchdog_handle: tokio::task::JoinHandle<()>,
+        /// IpAssign drift guard: escalates when a reconnect republishes
+        /// a different exit-allocated IPv4 than the one the TUN holds.
+        assign_guard_handle: tokio::task::JoinHandle<()>,
         /// Channel through which the pump task reports the first fatal
         /// error (uplink/downlink/supervisor death). `wait()` consumes
         /// it the same way the single-hop path consumes
@@ -1772,6 +1775,46 @@ impl WarrenTunnelMonitor {
             })
         };
 
+        // IpAssign drift guard: the TUN was opened with the FIRST
+        // exit-allocated IPv4 and is never live-reconfigured. The exit
+        // keeps the address sticky across reconnects (same-pubkey
+        // takeover allocator-side), so a republished IpAssign with a
+        // DIFFERENT address should never happen; if it does, a tunnel
+        // whose TUN address no longer matches the exit's routing table
+        // is silently dead behind a "Connected" UI. Escalate through
+        // the pump-error channel so the state machine rebuilds the
+        // tunnel with the new address instead.
+        let assign_guard_handle = {
+            let mut assign_rx = ip_assign_channel.subscribe();
+            let pump_error_tx = pump_error_tx.clone();
+            let tun_ip_v4 = tun_ip;
+            runtime.spawn(async move {
+                // Mark the initial publication as seen; only react to
+                // republications (reconnects).
+                let _ = assign_rx.borrow_and_update();
+                loop {
+                    if assign_rx.changed().await.is_err() {
+                        return;
+                    }
+                    let republished = *assign_rx.borrow_and_update();
+                    if let Some(spec) = republished
+                        && spec.assigned != tun_ip_v4
+                    {
+                        let msg = format!(
+                            "exit reassigned the tunnel IPv4 {tun_ip_v4} -> {} on reconnect; \
+                             rebuilding the tunnel to adopt it",
+                            spec.assigned
+                        );
+                        log::warn!("{TRACE_PREFIX} {msg}");
+                        if let Some(tx) = pump_error_tx.lock().ok().and_then(|mut g| g.take()) {
+                            let _ = tx.send(msg);
+                        }
+                        return;
+                    }
+                }
+            })
+        };
+
         // Drop the local watch receiver. The uplink/downlink pumps and
         // the watchdog keep theirs alive; teardown aborts the watchdog
         // first, then the pumps, so the supervisor still observes
@@ -1799,6 +1842,7 @@ impl WarrenTunnelMonitor {
                 uplink_handle,
                 downlink_handle,
                 watchdog_handle,
+                assign_guard_handle,
                 pump_error_rx,
                 supervisor_fatal_rx,
             },
@@ -1872,6 +1916,7 @@ impl WarrenTunnelMonitor {
                 uplink: tokio::task::JoinHandle<anyhow::Result<()>>,
                 downlink: tokio::task::JoinHandle<anyhow::Result<()>>,
                 watchdog: tokio::task::JoinHandle<()>,
+                assign_guard: tokio::task::JoinHandle<()>,
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
@@ -1895,6 +1940,7 @@ impl WarrenTunnelMonitor {
                 uplink_handle,
                 downlink_handle,
                 watchdog_handle,
+                assign_guard_handle,
                 pump_error_rx,
                 supervisor_fatal_rx: fatal_rx,
             } => {
@@ -1906,6 +1952,7 @@ impl WarrenTunnelMonitor {
                         uplink: uplink_handle,
                         downlink: downlink_handle,
                         watchdog: watchdog_handle,
+                        assign_guard: assign_guard_handle,
                     },
                 )
             }
@@ -2042,6 +2089,7 @@ impl WarrenTunnelMonitor {
                     uplink,
                     downlink,
                     watchdog,
+                    assign_guard,
                 } => {
                     // Watchdog first: it holds a supervisor watch
                     // receiver + control handle; dropping them before
@@ -2049,6 +2097,8 @@ impl WarrenTunnelMonitor {
                     // shutdown check working as before.
                     watchdog.abort();
                     let _ = watchdog.await;
+                    assign_guard.abort();
+                    let _ = assign_guard.await;
                     uplink.abort();
                     downlink.abort();
                     let _ = tokio::join!(uplink, downlink);
