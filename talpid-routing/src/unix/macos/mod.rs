@@ -250,9 +250,9 @@ impl RouteManagerImpl {
                         }
 
                         Some(RouteManagerCommand::RefreshRoutes) => {
-                            if let Err(error) = self.refresh_routes().await {
-                                log::error!("Failed to refresh routes: {error}");
-                            }
+                            // `refresh_routes` already logs and arms the
+                            // default-route restore timer on failure.
+                            let _ = self.refresh_routes().await;
                         },
                         None => {
                             break;
@@ -356,11 +356,19 @@ impl RouteManagerImpl {
             self.add_route_with_record(message).await?;
         }
 
-        self.apply_tunnel_default_routes().await?;
+        // Same blackhole fail-safe as `refresh_routes`: the tunnel-default
+        // install can delete the unscoped default and then fail, so arm the
+        // restore timer before propagating rather than leaving the host
+        // with no default route.
+        if let Err(error) = self.apply_tunnel_default_routes().await {
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
+            return Err(error);
+        }
 
         // Add routes that use the default interface
         if let Err(error) = self.apply_non_tunnel_routes().await {
             self.non_tunnel_routes.clear();
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
             return Err(error);
         }
 
@@ -447,6 +455,31 @@ impl RouteManagerImpl {
                 .retain(|tx| tx.unbounded_send(event).is_ok());
         }
 
+        if let Err(error) = self.refresh_routes_inner().await {
+            // Fail-safe against a default-route blackhole. The replace
+            // dance in `apply_tunnel_default_routes` deletes the unscoped
+            // default before installing the tunnel default; if that
+            // install fails (typically because the egress interface
+            // vanished mid-refresh, e.g. ethernet -> Wi-Fi handover), the
+            // host would be left with NO default route and all traffic
+            // would blackhole until the next route event happened to
+            // succeed. Arm the restore timer so `try_restore_default_routes`
+            // re-adds the unscoped default over its bounded backoff. This
+            // is the same recovery the disconnect/cleanup path uses; we
+            // extend it to the refresh-failure path, which previously had
+            // none.
+            log::error!("Failed to refresh routes: {error}; arming default-route restore");
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
+            return Err(error);
+        }
+
+        Ok(())
+    }
+
+    /// The fallible body of [`Self::refresh_routes`]. Any error here can
+    /// leave the routing table mid-mutation, so the caller arms the
+    /// default-route restore timer on `Err`.
+    async fn refresh_routes_inner(&mut self) -> Result<()> {
         if !self.unhandled_default_route_changes {
             self.ensure_default_tunnel_routes_exist().await?;
             return Ok(());
@@ -706,7 +739,12 @@ impl RouteManagerImpl {
         }
 
         if let Err(error) = self.routing_table.add_route(&desired_default_route).await {
-            log::trace!("Failed to add unscoped default {family} route: {error}");
+            // Surfaced at warn (not trace): while this keeps failing the
+            // host has no default route. We re-`trigger` below so a fresh
+            // refresh re-arms the restore timer rather than giving up, but
+            // a persistent failure here is the residual blackhole risk and
+            // must be visible in logs.
+            log::warn!("Failed to add unscoped default {family} route: {error}");
         }
 
         self.update_trigger.trigger();
