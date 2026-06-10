@@ -163,7 +163,6 @@
 		582BB1B1229569620055B6EF /* UINavigationBar+Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582BB1B0229569620055B6EF /* UINavigationBar+Appearance.swift */; };
 		58342C042AAB61FB003BA12D /* State+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58342C032AAB61FB003BA12D /* State+Extensions.swift */; };
 		5835B7CC233B76CB0096D79F /* TunnelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5835B7CB233B76CB0096D79F /* TunnelManager.swift */; };
-		5838321B2AC1B18400EA2071 /* PacketTunnelActor+Mocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5838321A2AC1B18400EA2071 /* PacketTunnelActor+Mocks.swift */; };
 		583D86482A2678DC0060D63B /* DeviceStateAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583D86472A2678DC0060D63B /* DeviceStateAccessor.swift */; };
 		58421030282D8A3C00F24E46 /* UpdateAccountDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5842102F282D8A3C00F24E46 /* UpdateAccountDataOperation.swift */; };
 		58421032282E42B000F24E46 /* UpdateDeviceDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58421031282E42B000F24E46 /* UpdateDeviceDataOperation.swift */; };
@@ -994,21 +993,13 @@
 		F072D3CF2C07122400906F64 /* SettingsUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F072D3CE2C07122400906F64 /* SettingsUpdaterTests.swift */; };
 		F072D3D22C071AD100906F64 /* ShadowsocksLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F072D3D12C071AD100906F64 /* ShadowsocksLoaderTests.swift */; };
 		F073FCB32C6617D70062EA1D /* TunnelStore+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = F073FCB22C6617D70062EA1D /* TunnelStore+Stubs.swift */; };
-		F07751552C50F149006E6A12 /* EphemeralPeerExchangeActorStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C4C9BF2C495E7500A79006 /* EphemeralPeerExchangeActorStub.swift */; };
-		F07751572C50F149006E6A12 /* EphemeralPeerExchangingPipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F053F4B92C4A94D300FBD937 /* EphemeralPeerExchangingPipelineTests.swift */; };
-		F07751582C50F149006E6A12 /* MultiHopEphemeralPeerExchangerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C4C9BD2C49477B00A79006 /* MultiHopEphemeralPeerExchangerTests.swift */; };
-		F07751592C50F149006E6A12 /* SingleHopEphemeralPeerExchangerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A163882C47B46300592300 /* SingleHopEphemeralPeerExchangerTests.swift */; };
 		F0791F1B2D76377500449F6D /* RelayCandidates.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0791F1A2D76377400449F6D /* RelayCandidates.swift */; };
 		F07B53572C53B5270024F547 /* LocalNetworkIPs.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07B53562C53B5270024F547 /* LocalNetworkIPs.swift */; };
 		F07BF2622A26279100042943 /* RedeemVoucherOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07BF2612A26279100042943 /* RedeemVoucherOperation.swift */; };
 		F07CFF2029F2720E008C0343 /* NewDeviceNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07CFF1F29F2720E008C0343 /* NewDeviceNotificationProvider.swift */; };
 		F07F63CE2C63E5790027A351 /* AccessMethodRepository+Stub.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0164EB92B4456D30020268D /* AccessMethodRepository+Stub.swift */; };
 		F08827892B3192110020A383 /* AccessMethodRepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58EF875A2B16385400C098B2 /* AccessMethodRepositoryProtocol.swift */; };
-		F08B6B772C52878400D0A121 /* EphemeralPeerExchangeActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F1B502C19C48D003C869E /* EphemeralPeerExchangeActorTests.swift */; };
 		F08B6B782C528B8A00D0A121 /* EphemeralPeerExchangingProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F059197E2C454CE000C301F3 /* EphemeralPeerExchangingProtocol.swift */; };
-		F08B6B7C2C528C6300D0A121 /* SingleHopEphemeralPeerExchanger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919782C45402E00C301F3 /* SingleHopEphemeralPeerExchanger.swift */; };
-		F08B6B7D2C528C6300D0A121 /* EphemeralPeerExchangingPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05919762C453FAF00C301F3 /* EphemeralPeerExchangingPipeline.swift */; };
-		F08B6B7E2C528C6300D0A121 /* MultiHopEphemeralPeerExchanger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F059197C2C454C9200C301F3 /* MultiHopEphemeralPeerExchanger.swift */; };
 		F09084682C6E88ED001CD36E /* DaitaPromptAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09084672C6E88ED001CD36E /* DaitaPromptAlert.swift */; };
 		F09444132ECCA4B30059606A /* RecentListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09444122ECCA4990059606A /* RecentListDataSource.swift */; };
 		F09444142ECCA4B30059606A /* RecentListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09444122ECCA4990059606A /* RecentListDataSource.swift */; };
@@ -6544,23 +6535,15 @@
 				7AD0AA1C2AD6A63F00119E10 /* PacketTunnelActorStub.swift in Sources */,
 				58EC067A2A8D208D00BEB973 /* TunnelDeviceInfoStub.swift in Sources */,
 				58EC067C2A8D2A0B00BEB973 /* NetworkCounters.swift in Sources */,
-				F07751552C50F149006E6A12 /* EphemeralPeerExchangeActorStub.swift in Sources */,
 				58FE25EC2AA77639003D1918 /* TunnelMonitorStub.swift in Sources */,
 				58FE25EE2AA7764E003D1918 /* TunnelAdapterDummy.swift in Sources */,
 				581F23AD2A8CF92100788AB6 /* DefaultPathObserverFake.swift in Sources */,
-				F07751582C50F149006E6A12 /* MultiHopEphemeralPeerExchangerTests.swift in Sources */,
-				5838321B2AC1B18400EA2071 /* PacketTunnelActor+Mocks.swift in Sources */,
 				58092E542A8B832E00C3CC72 /* TunnelMonitorTests.swift in Sources */,
 				7AD0AA212AD6CB0000119E10 /* APIRequestProxyStub.swift in Sources */,
 				581F23AF2A8CF94D00788AB6 /* PingerMock.swift in Sources */,
-				F07751592C50F149006E6A12 /* SingleHopEphemeralPeerExchangerTests.swift in Sources */,
 				F0077EEE2C52844800DAB2AA /* KeyExchangingResultStub.swift in Sources */,
 				58FE25F22AA77674003D1918 /* SettingsReaderStub.swift in Sources */,
-				F08B6B7C2C528C6300D0A121 /* SingleHopEphemeralPeerExchanger.swift in Sources */,
-				F08B6B7D2C528C6300D0A121 /* EphemeralPeerExchangingPipeline.swift in Sources */,
-				F08B6B7E2C528C6300D0A121 /* MultiHopEphemeralPeerExchanger.swift in Sources */,
 				58F7753D2AB8473200425B47 /* BlockedStateErrorMapperStub.swift in Sources */,
-				F07751572C50F149006E6A12 /* EphemeralPeerExchangingPipelineTests.swift in Sources */,
 				7A3FD1B52AD4465A0042BEA6 /* AppMessageHandlerTests.swift in Sources */,
 				F062B94D2C16E09700B6D47A /* TunnelSettingsManagerTests.swift in Sources */,
 				B82E29EE6A35B4062DA6E211 /* WarrenQuinnActorTests.swift in Sources */,
@@ -7331,7 +7314,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F08B6B772C52878400D0A121 /* EphemeralPeerExchangeActorTests.swift in Sources */,
 				016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */,
 				A9D9A4CF2C36D54E004088DD /* TCPConnection.swift in Sources */,
 				A9D9A4CC2C36D54E004088DD /* UnsafeListener.swift in Sources */,
@@ -8557,37 +8539,6 @@
 			};
 			name = Release;
 		};
-		58FBDA9822A519BC00EB69A3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
-			buildSettings = {
-				DEBUGGING_SYMBOLS = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PATH = "${PATH}:/opt/homebrew/opt/go@1.21/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-			};
-			name = Debug;
-		};
-		58FBDA9922A519BC00EB69A3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
-			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PATH = "${PATH}:/opt/homebrew/opt/go@1.21/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-			};
-			name = Release;
-		};
 		58FBFBED291622580020E046 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
@@ -8928,23 +8879,6 @@
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = minimal;
-			};
-			name = Staging;
-		};
-		A93559502B4EADD600D5D524 /* Staging */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
-			buildSettings = {
-				DEBUGGING_SYMBOLS = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PATH = "${PATH}:/opt/homebrew/opt/go@1.21/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 			};
 			name = Staging;
 		};
@@ -9449,9 +9383,12 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
-				OTHER_LDFLAGS = "-framework SystemConfiguration";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-framework",
+					SystemConfiguration,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -9499,9 +9436,12 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
-				OTHER_LDFLAGS = "-framework SystemConfiguration";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-framework",
+					SystemConfiguration,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -9548,9 +9488,12 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
-				OTHER_LDFLAGS = "-framework SystemConfiguration";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-framework",
+					SystemConfiguration,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -9596,9 +9539,12 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MODULEMAP_PRIVATE_FILE = $PROJECT_DIR/WarrenRustRuntime/module.private.modulemap;
-				OTHER_LDFLAGS = "-framework SystemConfiguration";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-framework",
+					SystemConfiguration,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APPLICATION_IDENTIFIER).WarrenRustRuntime";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -9806,20 +9752,6 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_STRICT_CONCURRENCY = minimal;
-			};
-			name = MockRelease;
-		};
-		A9E99CE32B5195E600869AF2 /* MockRelease */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5808273928487E3E006B77A4 /* Base.xcconfig */;
-			buildSettings = {
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PATH = "${PATH}:/opt/homebrew/opt/go@1.21/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 			};
 			name = MockRelease;
 		};

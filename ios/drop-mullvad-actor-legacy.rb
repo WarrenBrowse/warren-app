@@ -29,9 +29,15 @@
 #   PacketTunnelActorTests.swift
 #   PacketTunnelActorReducerTests.swift
 #   ProtocolObfuscatorTests.swift
+#   PacketTunnelActor+Mocks.swift
+#   the EphemeralPeer/PostQuantum cluster (exchangers + their tests +
+#   EphemeralPeerExchangeActorStub) : dead in the PQ-free Warren path,
+#   only the warren-ios FFI Quinn transport remains.
 #
-# `PacketTunnelActorProtocol.swift` is KEPT, both `WarrenQuinnActor`
-# and `GotaTunActor` conform to it.
+# `PacketTunnelActorProtocol.swift` is KEPT (its ephemeral-negotiation
+# methods stay vestigial in the contract), both `WarrenQuinnActor` and
+# `GotaTunActor` conform to it. `PacketTunnelActorStub.swift` is KEPT
+# (AppMessageHandlerTests still uses it).
 #
 # Idempotent.
 
@@ -63,6 +69,14 @@ DROP_FROM_CORE_TESTS = %w[
   EventChannelTests.swift
   TunnelObfuscationStub.swift
   ProtocolObfuscationStub.swift
+  PacketTunnelActor+Mocks.swift
+  EphemeralPeerExchangeActorStub.swift
+  EphemeralPeerExchangingPipeline.swift
+  EphemeralPeerExchangingPipelineTests.swift
+  MultiHopEphemeralPeerExchanger.swift
+  MultiHopEphemeralPeerExchangerTests.swift
+  SingleHopEphemeralPeerExchanger.swift
+  SingleHopEphemeralPeerExchangerTests.swift
 ].freeze
 
 DROP_FROM_RUST_RUNTIME = %w[
@@ -71,6 +85,7 @@ DROP_FROM_RUST_RUNTIME = %w[
 
 DROP_FROM_RUST_RUNTIME_TESTS = %w[
   TunnelObfuscationTests.swift
+  EphemeralPeerExchangeActorTests.swift
 ].freeze
 
 def drop_from_target(project, target_name, filenames)
