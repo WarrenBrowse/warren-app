@@ -438,8 +438,7 @@ final class TunnelManager: @unchecked Sendable {
     func updateDeviceData(_ completionHandler: (@Sendable (Error?) -> Void)? = nil) {
         let operation = UpdateDeviceDataOperation(
             dispatchQueue: internalQueue,
-            interactor: TunnelInteractorProxy(self),
-            devicesProxy: devicesProxy
+            interactor: TunnelInteractorProxy(self)
         )
 
         operation.completionQueue = .main

@@ -341,6 +341,13 @@ extension PacketTunnelProvider {
 
 extension PacketTunnelProvider {
     private func startDeviceCheck() {
+        // Warren enforces subscription / access exit-side via the wallet
+        // pubkey allowlist; there is no Mullvad account or device to
+        // diagnose client-side. The Mullvad device check queries
+        // account/device endpoints that warren-api does not serve and
+        // would wrongly force a logout, so it is skipped on the Warren
+        // Quinn path. The GotaTun debug path (Mullvad WireGuard) keeps it.
+        guard !(implementation is WarrenQuinnTunnelImplementation) else { return }
         Task {
             await startDeviceCheckInner()
         }

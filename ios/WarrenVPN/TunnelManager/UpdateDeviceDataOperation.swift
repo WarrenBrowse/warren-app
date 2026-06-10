@@ -8,70 +8,34 @@
 
 import Foundation
 import WarrenLogging
-import WarrenREST
 import WarrenSettings
 import WarrenTypes
 import Operations
 
+/// Warren has no Mullvad device registration: the wallet pubkey is the
+/// identity and the exit enforces access via its allowlist. The
+/// synthesized device data is static, so there is nothing to refresh from
+/// the backend. This operation therefore returns the stored device data
+/// unchanged instead of calling the Mullvad `getDevice` endpoint, which
+/// warren-api does not serve and which would surface a spurious
+/// `deviceNotFound` error that wrongly revokes the device.
 class UpdateDeviceDataOperation: ResultOperation<StoredDeviceData>, @unchecked Sendable {
     private let interactor: TunnelInteractor
-    private let devicesProxy: DeviceHandling
-
-    private var task: Cancellable?
 
     init(
         dispatchQueue: DispatchQueue,
-        interactor: TunnelInteractor,
-        devicesProxy: DeviceHandling
+        interactor: TunnelInteractor
     ) {
         self.interactor = interactor
-        self.devicesProxy = devicesProxy
 
         super.init(dispatchQueue: dispatchQueue)
     }
 
     override func main() {
-        guard case let .loggedIn(accountData, deviceData) = interactor.deviceState else {
+        guard case let .loggedIn(_, deviceData) = interactor.deviceState else {
             finish(result: .failure(InvalidDeviceStateError()))
             return
         }
-
-        task = devicesProxy.getDevice(
-            accountNumber: accountData.number,
-            identifier: deviceData.identifier,
-            retryStrategy: .default,
-            completion: { [weak self] result in
-                self?.dispatchQueue.async { [weak self] in
-                    self?.didReceiveDeviceResponse(result: result)
-                }
-            }
-        )
-    }
-
-    override func operationDidCancel() {
-        task?.cancel()
-        task = nil
-    }
-
-    private func didReceiveDeviceResponse(result: Result<Device, Error>) {
-        let result = result.tryMap { device -> StoredDeviceData in
-            switch interactor.deviceState {
-            case .loggedIn(let storedAccount, var storedDevice):
-                storedDevice.update(from: device)
-                let newDeviceState = DeviceState.loggedIn(storedAccount, storedDevice)
-                interactor.setDeviceState(newDeviceState, persist: true)
-
-                return storedDevice
-
-            default:
-                throw InvalidDeviceStateError()
-            }
-        }
-
-        if let error = result.error {
-            interactor.handleRestError(error)
-        }
-
-        finish(result: result)
+        finish(result: .success(deviceData))
     }
 }
