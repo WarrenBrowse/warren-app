@@ -49,9 +49,15 @@ pub(crate) const MIGRATION_TIMEOUT: Duration = Duration::from_secs(3);
 pub(crate) const ESCALATE_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Identity + rx-counter sample of the currently published session.
-/// The `id` is the `Arc` pointer of the published client: rx counters
-/// are only comparable between samples of the SAME session (a fresh
-/// session restarts its counters near zero).
+/// The `id` combines the `Arc` pointer of the published client with
+/// its local UDP port: rx counters are only comparable between samples
+/// of the SAME session (a fresh session restarts its counters near
+/// zero). The pointer alone is NOT a safe identity: the allocator can
+/// reuse a freed `Arc` address for the very next session (ABA), which
+/// once made the watchdog kill a freshly re-established session
+/// because its low rx counter read as "no progress" on the old
+/// baseline. The wildcard bind gives every session a fresh ephemeral
+/// port, which disambiguates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RxSample {
     pub id: usize,
@@ -73,6 +79,15 @@ pub(crate) trait WatchdogIo {
     /// Re-point the relay bypass host route at the current default
     /// gateway. Best-effort.
     async fn nudge_bypass(&mut self);
+
+    /// Actively rebind the live session's QUIC endpoint onto a fresh
+    /// wildcard UDP socket. On macOS a wildcard socket does NOT
+    /// reliably follow an interface change on its own (the kernel
+    /// keeps the old flow's source state), so passive migration
+    /// stalls; a fresh socket forces the next packet out the current
+    /// default route, giving the relay a new 4-tuple to validate.
+    /// Best-effort and a no-op when no session is published.
+    fn rebind_endpoint(&mut self);
 
     /// Send one in-tunnel liveness probe (DAITA padding datagram) on
     /// the current session, if any. Any answer bumps the rx counters
@@ -112,7 +127,11 @@ pub(crate) enum CycleOutcome {
 /// session only exists because a full handshake just succeeded.
 fn rx_advanced(base: Option<RxSample>, cur: Option<RxSample>) -> bool {
     match (base, cur) {
-        (Some(b), Some(c)) if b.id == c.id => c.rx_datagrams > b.rx_datagrams,
+        // Same id but the counter went BACKWARDS: quinn counters are
+        // monotonic within a session, so this is an ABA id collision
+        // with a fresh session (= a handshake succeeded) and counts as
+        // alive.
+        (Some(b), Some(c)) if b.id == c.id => c.rx_datagrams != b.rx_datagrams,
         (Some(b), Some(c)) => b.id != c.id,
         // No baseline session but one is published now: it was just
         // dialed on the new network, which is proof of liveness.
@@ -172,8 +191,21 @@ pub(crate) async fn run_cycle<I: WatchdogIo>(io: &mut I) -> CycleOutcome {
     }
 
     io.nudge_bypass().await;
+    // Active migration: rebind onto a fresh socket BEFORE probing.
+    // Passive migration on the existing socket is unreliable on macOS
+    // (kernel keeps the old interface's flow state), so the probes
+    // below would otherwise keep leaving the dead interface and the
+    // path would never revalidate. A fresh socket + the repointed
+    // relay bypass route is what actually moves traffic to the new
+    // interface; the relay (migration enabled) then validates it.
+    io.rebind_endpoint();
 
     let started = tokio::time::Instant::now();
+    log::info!(
+        "Warren migration watchdog: default-route change; rebound socket, probing the path \
+         (baseline {:?})",
+        io.rx_sample()
+    );
     if probe_until(io, MIGRATION_TIMEOUT).await {
         log::info!(
             "Warren migration watchdog: QUIC path revalidated in {} ms after default-route change",
@@ -182,10 +214,11 @@ pub(crate) async fn run_cycle<I: WatchdogIo>(io: &mut I) -> CycleOutcome {
         return CycleOutcome::Migrated;
     }
 
+    let last_sample = io.rx_sample();
     let had_session = io.force_reconnect();
     log::warn!(
-        "Warren migration watchdog: path not revalidated within {MIGRATION_TIMEOUT:?}; \
-         forced supervisor reconnect (had_session={had_session})"
+        "Warren migration watchdog: path not revalidated within {MIGRATION_TIMEOUT:?} \
+         (last sample {last_sample:?}); forced supervisor reconnect (had_session={had_session})"
     );
 
     let escalate_deadline = tokio::time::Instant::now() + ESCALATE_TIMEOUT;
@@ -260,10 +293,7 @@ pub(crate) struct RealWatchdogIo {
     pub client_rx: ClientWatch,
     pub supervisor: SupervisorHandle,
     pub pump_error_tx: PumpErrorTx,
-    /// Relay endpoint IPv4, for the bypass-route nudge. macOS does not
-    /// read it (its nudge goes through `refresh_routes`, which already
-    /// knows the relay/32 from the installed `DefaultNode` route).
-    #[cfg_attr(target_os = "macos", allow(dead_code))]
+    /// Relay endpoint IPv4, for the bypass-route nudge.
     pub relay_ipv4: Option<std::net::Ipv4Addr>,
 }
 
@@ -308,9 +338,49 @@ impl WatchdogIo for RealWatchdogIo {
     async fn nudge_bypass(&mut self) {
         #[cfg(target_os = "macos")]
         {
-            // talpid-routing re-points the relay/32 DefaultNode route at
-            // the new best gateway on refresh; calling it directly
-            // shortcuts the BurstGuard's up-to-2 s coalescing.
+            // Two layers, both load-bearing. The QUIC path validation
+            // after a migration times out in ~2-3 s, so the relay/32
+            // bypass MUST point at the new gateway well before then or
+            // the migrated path can never be validated and the relay
+            // tears the connection down (observed as "closed by peer").
+            //
+            // 1. Directly delete+add relay/32 at the freshly-read
+            //    gateway. Deterministic and immediate, independent of
+            //    talpid's internal best-route freshness timing.
+            if let Some(relay) = self.relay_ipv4 {
+                match self.route_manager.get_default_routes().await {
+                    Ok((Some(v4), _)) => {
+                        let relay_host = format!("{relay}");
+                        let gw = v4.router_ip.to_string();
+                        // delete is best-effort: the stale route may have
+                        // already died with the old interface.
+                        let _ = tokio::process::Command::new("route")
+                            .args(["-n", "delete", "-host", &relay_host])
+                            .output()
+                            .await;
+                        let add = tokio::process::Command::new("route")
+                            .args(["-n", "add", "-host", &relay_host, &gw])
+                            .output()
+                            .await;
+                        match add {
+                            Ok(o) if o.status.success() => log::info!(
+                                "watchdog: repointed relay bypass {relay_host} -> gw {gw}"
+                            ),
+                            Ok(o) => log::debug!(
+                                "watchdog: relay bypass add rc={:?} stderr={}",
+                                o.status.code(),
+                                String::from_utf8_lossy(&o.stderr).trim()
+                            ),
+                            Err(e) => log::debug!("watchdog: relay bypass add failed: {e}"),
+                        }
+                    }
+                    Ok((None, _)) => log::debug!("watchdog: no v4 default route to repoint bypass"),
+                    Err(e) => log::debug!("watchdog: get_default_routes failed: {e}"),
+                }
+            }
+            // 2. Also kick talpid's own refresh so its DefaultNode record
+            //    and the tunnel default converge (and it owns the
+            //    eventual clean teardown of our manual route).
             if let Err(e) = self.route_manager.refresh_routes() {
                 log::debug!("watchdog: refresh_routes nudge failed: {e}");
             }
@@ -369,6 +439,31 @@ impl WatchdogIo for RealWatchdogIo {
         }
     }
 
+    fn rebind_endpoint(&mut self) {
+        let Some(client) = self.current_client() else {
+            return;
+        };
+        // Family-match the fresh socket to the live local address so a
+        // v6-dialed relay keeps a v6 source. Bind wildcard so the OS
+        // picks the source per packet from the current routing table.
+        let bind: std::net::SocketAddr = match client.local_addr() {
+            Ok(std::net::SocketAddr::V6(_)) => {
+                (std::net::Ipv6Addr::UNSPECIFIED, 0).into()
+            }
+            _ => (std::net::Ipv4Addr::UNSPECIFIED, 0).into(),
+        };
+        match std::net::UdpSocket::bind(bind) {
+            Ok(sock) => {
+                if let Err(e) = client.rebind(sock) {
+                    log::debug!("watchdog: endpoint rebind failed: {e}");
+                } else {
+                    log::info!("Warren migration watchdog: rebound QUIC endpoint to a fresh socket");
+                }
+            }
+            Err(e) => log::debug!("watchdog: fresh migration socket bind failed: {e}"),
+        }
+    }
+
     async fn send_probe(&mut self) {
         if let Some(client) = self.current_client()
             && let Err(e) = client.send_daita_padding().await
@@ -378,9 +473,15 @@ impl WatchdogIo for RealWatchdogIo {
     }
 
     fn rx_sample(&mut self) -> Option<RxSample> {
-        self.current_client().map(|client| RxSample {
-            id: Arc::as_ptr(&client) as usize,
-            rx_datagrams: client.quinn_stats().udp_rx.datagrams,
+        self.current_client().map(|client| {
+            // Mix the local port into the identity: the Arc address can
+            // be reused by the very next session (ABA), the wildcard
+            // bind's ephemeral port cannot, within any realistic window.
+            let port = client.local_addr().map(|a| a.port()).unwrap_or(0);
+            RxSample {
+                id: (Arc::as_ptr(&client) as usize) ^ (usize::from(port) << 47),
+                rx_datagrams: client.quinn_stats().udp_rx.datagrams,
+            }
         })
     }
 
@@ -480,6 +581,7 @@ mod tests {
         last_sample: Option<RxSample>,
         probes_sent: u32,
         nudges: u32,
+        rebinds: u32,
         force_reconnects: u32,
         escalations: Vec<String>,
     }
@@ -500,6 +602,7 @@ mod tests {
                     last_sample: last,
                     probes_sent: 0,
                     nudges: 0,
+                    rebinds: 0,
                     force_reconnects: 0,
                     escalations: Vec::new(),
                 },
@@ -517,6 +620,9 @@ mod tests {
         }
         async fn nudge_bypass(&mut self) {
             self.nudges += 1;
+        }
+        fn rebind_endpoint(&mut self) {
+            self.rebinds += 1;
         }
         async fn send_probe(&mut self) {
             self.probes_sent += 1;
@@ -544,10 +650,12 @@ mod tests {
     }
 
     #[test]
-    fn rx_advanced_same_session_requires_counter_growth() {
+    fn rx_advanced_same_session_requires_counter_movement() {
         assert!(rx_advanced(sample(1, 10), sample(1, 11)));
         assert!(!rx_advanced(sample(1, 10), sample(1, 10)));
-        assert!(!rx_advanced(sample(1, 10), sample(1, 9)));
+        // Counter going BACKWARDS on the same id = ABA address reuse by
+        // a fresh session (monotonic within a session) = alive.
+        assert!(rx_advanced(sample(1, 10), sample(1, 9)));
     }
 
     #[test]
@@ -568,6 +676,7 @@ mod tests {
         let outcome = run_cycle(&mut io).await;
         assert_eq!(outcome, CycleOutcome::Migrated);
         assert_eq!(io.nudges, 1);
+        assert_eq!(io.rebinds, 1, "active rebind must run before probing");
         assert_eq!(io.force_reconnects, 0);
         assert!(io.escalations.is_empty());
         assert!(io.probes_sent >= 1);
