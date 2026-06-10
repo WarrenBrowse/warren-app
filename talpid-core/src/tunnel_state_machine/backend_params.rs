@@ -90,6 +90,17 @@ impl BackendParams {
             Self::Warren(_) => None,
         }
     }
+
+    /// `true` for the multi-hop backend (client -> relay -> exit). The
+    /// connected-state offline grace only applies there: multi-hop is
+    /// the only backend whose QUIC connection can migrate (or be
+    /// force-redialed by the supervisor) across a network change
+    /// without tearing the tunnel down.
+    pub fn is_multi_hop(&self) -> bool {
+        match self {
+            Self::Warren(info) => info.relay_endpoint.is_some(),
+        }
+    }
 }
 
 /// Build the `TunnelEndpoint` published in the state transition for a

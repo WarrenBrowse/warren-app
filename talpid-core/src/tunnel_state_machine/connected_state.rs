@@ -27,6 +27,43 @@ use super::{
 pub(crate) type TunnelEventsReceiver =
     Fuse<mpsc::UnboundedReceiver<(TunnelEvent, oneshot::Sender<()>)>>;
 
+/// How long a multi-hop tunnel is held through an offline window
+/// before the state machine finally blocks with `IsOffline`. During a
+/// WiFi<->ethernet switch the offline edge is transient (link flap +
+/// DHCP, typically 2-5 s) and the QUIC connection migrates (or the
+/// supervisor force-redials) without any teardown; blocking
+/// immediately would destroy a tunnel that is about to self-heal.
+/// Holding Connected is fail-closed by construction: the Connected
+/// firewall policy only ever lets tunnel-interface traffic and
+/// root-owned UDP to the relay out of a physical NIC, no matter what
+/// the routing table does meanwhile.
+const OFFLINE_GRACE: std::time::Duration = std::time::Duration::from_secs(15);
+
+/// Decision for a `Connectivity` command while Connected. Pure so the
+/// 8-cell matrix (single/multi-hop x grace armed/not x online/offline)
+/// is unit-testable without a state machine harness.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GraceAction {
+    /// Offline on a multi-hop tunnel with no grace armed: arm it.
+    Arm,
+    /// Offline while the grace is already armed: keep waiting.
+    Hold,
+    /// Online: clear any armed grace, the tunnel survived.
+    Cancel,
+    /// Offline on a single-hop tunnel: block immediately (no
+    /// migration nor supervisor redial exists on that path).
+    Block,
+}
+
+fn grace_action(is_multi_hop: bool, grace_armed: bool, is_offline: bool) -> GraceAction {
+    match (is_offline, is_multi_hop, grace_armed) {
+        (false, _, _) => GraceAction::Cancel,
+        (true, false, _) => GraceAction::Block,
+        (true, true, false) => GraceAction::Arm,
+        (true, true, true) => GraceAction::Hold,
+    }
+}
+
 /// The tunnel is up and working.
 pub struct ConnectedState {
     metadata: TunnelMetadata,
@@ -34,6 +71,10 @@ pub struct ConnectedState {
     tunnel_parameters: BackendParams,
     tunnel_close_event: TunnelCloseEvent,
     tunnel_close_tx: oneshot::Sender<()>,
+    /// Armed while the host is offline on a multi-hop tunnel: when it
+    /// expires with the host still offline, the state finally blocks
+    /// with `IsOffline` (exactly the pre-grace consequence, delayed).
+    offline_grace_deadline: Option<tokio::time::Instant>,
 }
 
 impl ConnectedState {
@@ -45,13 +86,36 @@ impl ConnectedState {
         tunnel_close_event: TunnelCloseEvent,
         tunnel_close_tx: oneshot::Sender<()>,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
-        let connected_state = ConnectedState {
+        let mut connected_state = ConnectedState {
             metadata,
             tunnel_events,
             tunnel_parameters,
             tunnel_close_event,
             tunnel_close_tx,
+            offline_grace_deadline: None,
         };
+
+        // The offline edge can land while the monitor is between `Up`
+        // and this `enter` (ConnectingState would otherwise have
+        // blocked already). Multi-hop arms the grace right away;
+        // single-hop blocks immediately, exactly as the Connectivity
+        // command would have.
+        if shared_values.connectivity.is_offline() {
+            if connected_state.tunnel_parameters.is_multi_hop() {
+                connected_state.offline_grace_deadline =
+                    Some(tokio::time::Instant::now() + OFFLINE_GRACE);
+                log::info!(
+                    "Entering connected state while offline; holding the tunnel for \
+                     migration (grace {OFFLINE_GRACE:?})"
+                );
+            } else {
+                return DisconnectingState::enter(
+                    connected_state.tunnel_close_tx,
+                    connected_state.tunnel_close_event,
+                    AfterDisconnect::Block(ErrorStateCause::IsOffline),
+                );
+            }
+        }
 
         let tunnel_interface = Some(connected_state.metadata.interface.clone());
         let tunnel_endpoint = talpid_types::net::TunnelEndpoint {
@@ -256,7 +320,7 @@ impl ConnectedState {
     }
 
     fn handle_commands(
-        self: Box<Self>,
+        mut self: Box<Self>,
         command: Option<TunnelCommand>,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
@@ -339,13 +403,34 @@ impl ConnectedState {
             }
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
-                if connectivity.is_offline() {
-                    self.disconnect(
+                match grace_action(
+                    self.tunnel_parameters.is_multi_hop(),
+                    self.offline_grace_deadline.is_some(),
+                    connectivity.is_offline(),
+                ) {
+                    GraceAction::Block => self.disconnect(
                         shared_values,
                         AfterDisconnect::Block(ErrorStateCause::IsOffline),
-                    )
-                } else {
-                    SameState(self)
+                    ),
+                    GraceAction::Arm => {
+                        self.offline_grace_deadline =
+                            Some(tokio::time::Instant::now() + OFFLINE_GRACE);
+                        log::info!(
+                            "Offline edge while connected; holding the tunnel for \
+                             migration (grace {OFFLINE_GRACE:?})"
+                        );
+                        SameState(self)
+                    }
+                    GraceAction::Hold => SameState(self),
+                    GraceAction::Cancel => {
+                        if self.offline_grace_deadline.take().is_some() {
+                            log::info!(
+                                "Network restored within the offline grace; tunnel held \
+                                 (QUIC migration / supervisor redial takes over)"
+                            );
+                        }
+                        SameState(self)
+                    }
                 }
             }
             Some(TunnelCommand::Connect) => {
@@ -434,6 +519,17 @@ impl ConnectedState {
             return NewState(ErrorState::enter(shared_values, block_reason));
         }
 
+        // A close during an offline window is the offline, not a flap:
+        // reconnect-churning here would mis-trip the flap detector into
+        // `WarrenTunnelFlapping`. `IsOffline` is honest and auto-recovers
+        // on the online edge.
+        if shared_values.connectivity.is_offline() {
+            reset_flap_detector();
+            Self::reset_dns(shared_values);
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(shared_values, ErrorStateCause::IsOffline));
+        }
+
         // The premature `Up` means most laps drop through here, not
         // `ConnectingState`; both must feed the shared window for the
         // bound to hold. See [`RECENT_RECONNECTS`].
@@ -459,6 +555,36 @@ impl ConnectedState {
     }
 }
 
+#[cfg(test)]
+mod offline_grace_tests {
+    use super::{GraceAction, grace_action};
+
+    #[test]
+    fn online_always_cancels() {
+        // Whatever the backend and the armed state, an online edge
+        // clears the grace: the tunnel survived the window.
+        for multi in [false, true] {
+            for armed in [false, true] {
+                assert_eq!(grace_action(multi, armed, false), GraceAction::Cancel);
+            }
+        }
+    }
+
+    #[test]
+    fn single_hop_offline_blocks_immediately() {
+        // Single-hop has no migration nor supervisor redial: the
+        // pre-grace fail-closed behavior must be preserved verbatim.
+        assert_eq!(grace_action(false, false, true), GraceAction::Block);
+        assert_eq!(grace_action(false, true, true), GraceAction::Block);
+    }
+
+    #[test]
+    fn multi_hop_offline_arms_then_holds() {
+        assert_eq!(grace_action(true, false, true), GraceAction::Arm);
+        assert_eq!(grace_action(true, true, true), GraceAction::Hold);
+    }
+}
+
 impl TunnelState for ConnectedState {
     fn handle_event(
         mut self: Box<Self>,
@@ -466,11 +592,22 @@ impl TunnelState for ConnectedState {
         commands: &mut TunnelCommandReceiver,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
+        let grace_deadline = self.offline_grace_deadline;
         let result = runtime.block_on(async {
+            use futures::FutureExt;
+            let grace = async move {
+                match grace_deadline {
+                    Some(deadline) => tokio::time::sleep_until(deadline).await,
+                    None => futures::future::pending::<()>().await,
+                }
+            }
+            .fuse();
+            futures::pin_mut!(grace);
             futures::select! {
                 command = commands.next() => EventResult::Command(command),
                 event = self.tunnel_events.next() => EventResult::Event(event),
                 result = &mut self.tunnel_close_event => EventResult::Close(result),
+                () = grace => EventResult::OfflineGraceExpired,
             }
         });
 
@@ -483,6 +620,22 @@ impl TunnelState for ConnectedState {
                 }
                 let block_reason = result.unwrap_or(None);
                 self.handle_tunnel_close_event(block_reason, shared_values)
+            }
+            EventResult::OfflineGraceExpired => {
+                if shared_values.connectivity.is_offline() {
+                    log::info!(
+                        "Offline persisted past the {OFFLINE_GRACE:?} grace; blocking"
+                    );
+                    self.disconnect(
+                        shared_values,
+                        AfterDisconnect::Block(ErrorStateCause::IsOffline),
+                    )
+                } else {
+                    // The online command can be queued behind the timer:
+                    // connectivity is already back, just disarm.
+                    self.offline_grace_deadline = None;
+                    EventConsequence::SameState(self)
+                }
             }
         }
     }

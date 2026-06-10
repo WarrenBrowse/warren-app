@@ -648,6 +648,15 @@ impl ConnectingState {
             return NewState(ErrorState::enter(shared_values, block_reason));
         }
 
+        // Same offline precedence as ConnectedState: a close while the
+        // host is offline must read as `IsOffline` (auto-recovers on the
+        // online edge), never count toward the flap detector.
+        if shared_values.connectivity.is_offline() {
+            reset_flap_detector();
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(shared_values, ErrorStateCause::IsOffline));
+        }
+
         // Bound the loop: sustained flapping drops to a stable, cancelable
         // blocked state instead of churning. See [`RECENT_RECONNECTS`].
         if note_reconnect_and_is_flapping(Instant::now()) {
@@ -709,6 +718,9 @@ impl TunnelState for ConnectingState {
                 }
                 let block_reason = result.unwrap_or(None);
                 self.handle_tunnel_close_event(block_reason, shared_values)
+            }
+            EventResult::OfflineGraceExpired => {
+                unreachable!("offline grace only exists in the connected state")
             }
         }
     }

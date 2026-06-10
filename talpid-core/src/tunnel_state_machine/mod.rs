@@ -321,6 +321,11 @@ enum EventResult {
     Command(Option<TunnelCommand>),
     Event(Option<(TunnelEvent, oneshot::Sender<()>)>),
     Close(Result<Option<ErrorStateCause>, oneshot::Canceled>),
+    /// Produced only by `ConnectedState`: the offline-grace window
+    /// expired while the host was still offline, so the tunnel must
+    /// finally transition to the blocked state it would previously
+    /// have entered immediately on the offline edge.
+    OfflineGraceExpired,
 }
 
 /// If firewall should apply blocking rules in the disconnected state.
