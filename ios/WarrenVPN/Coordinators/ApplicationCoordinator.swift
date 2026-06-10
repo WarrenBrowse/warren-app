@@ -660,12 +660,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     }
 
     private func presentAccount(animated: Bool, completion: @escaping (Coordinator) -> Void) {
-        let accountInteractor = AccountInteractor(
-            tunnelManager: tunnelManager,
-            accountsProxy: accountsProxy,
-            apiProxy: apiProxy,
-            deviceProxy: devicesProxy
-        )
+        let accountInteractor = AccountInteractor(tunnelManager: tunnelManager, accountsProxy: accountsProxy)
 
         let coordinator = AccountCoordinator(
             navigationController: CustomNavigationController(),

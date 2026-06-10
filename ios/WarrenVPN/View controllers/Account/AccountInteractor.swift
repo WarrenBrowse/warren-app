@@ -15,24 +15,15 @@ import Operations
 final class AccountInteractor: Sendable {
     let tunnelManager: TunnelManager
     let accountsProxy: RESTAccountHandling
-    let apiProxy: APIQuerying
-    let deviceProxy: DeviceHandling
 
     nonisolated(unsafe) var didReceiveTunnelState: (() -> Void)?
     nonisolated(unsafe) var didReceiveDeviceState: (@Sendable (DeviceState) -> Void)?
 
     nonisolated(unsafe) private var tunnelObserver: TunnelObserver?
 
-    init(
-        tunnelManager: TunnelManager,
-        accountsProxy: RESTAccountHandling,
-        apiProxy: APIQuerying,
-        deviceProxy: DeviceHandling
-    ) {
+    init(tunnelManager: TunnelManager, accountsProxy: RESTAccountHandling) {
         self.tunnelManager = tunnelManager
         self.accountsProxy = accountsProxy
-        self.apiProxy = apiProxy
-        self.deviceProxy = deviceProxy
 
         let tunnelObserver =
             TunnelBlockObserver(
