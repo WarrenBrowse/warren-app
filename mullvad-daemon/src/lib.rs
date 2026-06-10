@@ -1115,7 +1115,11 @@ impl Daemon {
             if let Some(target) =
                 warren_signer::reconcile_login_target(&expected, stored.as_deref())
             {
-                log::error!(
+                // Self-healing: WARN, not ERROR. We detected the drift and
+                // re-align it on the spot, so it is an operational notice,
+                // not a fatal condition. Kept loud (warn) because the
+                // historical desync silently stranded a paid subscription.
+                log::warn!(
                     "Warren identity desync at boot: signer={target} device.json={}; \
                      re-aligning device.json to the signer-derived identity",
                     stored.as_deref().unwrap_or("<none>")
