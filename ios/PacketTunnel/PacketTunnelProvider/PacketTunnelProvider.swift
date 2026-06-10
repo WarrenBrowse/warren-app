@@ -281,6 +281,19 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         ipv6Settings.includedRoutes = [NEIPv6Route.default()]
         settings.ipv6Settings = ipv6Settings
 
+        // Force every DNS query through the tunnel's in-tunnel resolver (the
+        // Warren exit DNS forwarder, mirroring the Android client's
+        // EXIT_DNS_RESOLVER). `matchDomains = [""]` makes it authoritative for
+        // all domains, so DNS cannot leak to the underlying network's resolver
+        // while connected. Without this, queries used the physical network's
+        // DNS (a leak). The resolver lives inside 10/8, already covered by the
+        // default IPv4 route. Custom/content-blocking DNS is deferred to P2
+        // (the FFI tunnel config does not yet carry a DNS field).
+        let exitDNSResolver = "10.66.0.1"
+        let dnsSettings = NEDNSSettings(servers: [exitDNSResolver])
+        dnsSettings.matchDomains = [""]
+        settings.dnsSettings = dnsSettings
+
         return settings
     }
 }
