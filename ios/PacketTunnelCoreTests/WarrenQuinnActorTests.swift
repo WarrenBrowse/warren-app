@@ -22,9 +22,12 @@ import XCTest
 /// No-op stand-in for the FFI-backed `WarrenQuinnAdapter` so the actor's
 /// lifecycle can be unit-tested without standing up the Rust tunnel.
 private final class MockWarrenQuinnAdapter: WarrenQuinnAdapting {
-    func start(config: WarrenTunnelConfig) throws {}
-    func stop() {}
-    func reconnect() {}
+    private(set) var startCount = 0
+    private(set) var stopCount = 0
+    private(set) var reconnectCount = 0
+    func start(config: WarrenTunnelConfig) throws { startCount += 1 }
+    func stop() { stopCount += 1 }
+    func reconnect() { reconnectCount += 1 }
     func pause() {}
     func resume() {}
 }
@@ -91,6 +94,31 @@ final class WarrenQuinnActorTests: XCTestCase {
         guard case .reconnecting = state else {
             return XCTFail("Expected .reconnecting, got \(state)")
         }
+    }
+
+    // MARK: - reconnect(to:) relay change
+
+    func test_reconnect_toPreSelected_restartsTheAdapterForTheNewExit() async {
+        let mock = MockWarrenQuinnAdapter()
+        let actor = makeStartedActor(adapter: mock)
+        XCTAssertEqual(mock.startCount, 1, "start() brings up the first session")
+
+        actor.reconnect(to: .preSelected(RelaySelectorStub.selectedRelays), reconnectReason: .userInitiated)
+
+        XCTAssertEqual(mock.stopCount, 1, "a relay change tears down the old session")
+        XCTAssertEqual(mock.startCount, 2, "a relay change brings up a new session")
+        XCTAssertEqual(mock.reconnectCount, 0, "a relay change is a restart, not a same-exit re-handshake")
+    }
+
+    func test_reconnect_toCurrent_reHandshakesSameExitWithoutRestart() async {
+        let mock = MockWarrenQuinnAdapter()
+        let actor = makeStartedActor(adapter: mock)
+
+        actor.reconnect(to: .current, reconnectReason: .userInitiated)
+
+        XCTAssertEqual(mock.reconnectCount, 1, ".current re-handshakes via adapter.reconnect()")
+        XCTAssertEqual(mock.stopCount, 0, ".current must not tear the session down")
+        XCTAssertEqual(mock.startCount, 1, ".current must not start a second session")
     }
 
     func test_applyEvent_connected_withoutStart_staysInitial() async {
@@ -204,9 +232,11 @@ final class WarrenQuinnActorTests: XCTestCase {
     /// An actor wired with a no-op adapter + seed and started against the
     /// stub relays, so it has captured a connection context and `.connected`
     /// events surface a real `ObservedConnectionState`.
-    private func makeStartedActor() -> WarrenQuinnActor {
+    private func makeStartedActor(
+        adapter: WarrenQuinnAdapting = MockWarrenQuinnAdapter()
+    ) -> WarrenQuinnActor {
         let actor = WarrenQuinnActor()
-        actor.bindAdapter(MockWarrenQuinnAdapter())
+        actor.bindAdapter(adapter)
         actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
         actor.start(options: StartOptions(
             launchSource: .app,

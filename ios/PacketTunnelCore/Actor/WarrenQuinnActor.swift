@@ -218,56 +218,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             return
         }
 
-        // Build the WarrenTunnelConfig from the selected exit relay's
-        // resolved socket address + 32-byte pubkey. Multi-hop entry
-        // relay is honored when present (Session R B.1.8 closed).
-        let exit = selectedRelays.exit
-        let exitEndpointStr = "\(exit.endpoint.socketAddress)"
-        let exitPubkey = exit.endpoint.publicKey
-
-        let multiHop: WarrenRelayConfig?
-        if let entry = selectedRelays.entry {
-            multiHop = WarrenRelayConfig(
-                pubkey: entry.endpoint.publicKey,
-                endpoint: "\(entry.endpoint.socketAddress)",
-                countryCode: entry.location.countryCode
-            )
-        } else {
-            multiHop = nil
-        }
-
-        // DAITA: read the persisted setting (written by SettingsDAITAView via
-        // DAITATunnelSettingsViewModel). The client only signals the request;
-        // the exit picks the Maybenot machine and returns it in SetupAck, so
-        // the spec content here is a placeholder - only its presence matters
-        // (the warren-ios FFI treats a non-null daita_spec as "DAITA on").
-        let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
-        let daitaSpec: WarrenDaitaSpec? =
-            daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil
-
-        let config = WarrenTunnelConfig(
-            exitPubkey: exitPubkey,
-            exitEndpoint: exitEndpointStr,
-            walletSigningKey: seed,
-            multiHopRelay: multiHop,
-            daitaSpec: daitaSpec,
-            natPmpEnabled: false,  // settings-driven, deferred (needs V9 schema)
-            bypassCidrs: []  // settings-driven, deferred
-        )
-
-        // Capture the connection details so a later Rust-side `.connected`
-        // event (payload-free) can be surfaced as a real
-        // `ObservedConnectionState`. Settings reads are best-effort: a unit
-        // test or a not-yet-provisioned store falls back to defaults.
-        let relayConstraints =
-            (try? SettingsManager.readSettings().relayConstraints) ?? RelayConstraints()
+        let (config, context) = makeConfigAndContext(selectedRelays: selectedRelays, seed: seed)
         stateLock.lock()
-        connectionContext = ConnectionContext(
-            selectedRelays: selectedRelays,
-            relayConstraints: relayConstraints,
-            remotePort: exit.endpoint.socketAddress.port,
-            isDaitaEnabled: daitaEnabled
-        )
+        connectionContext = context
         stateLock.unlock()
 
         do {
@@ -277,6 +230,49 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             logger.error("WarrenQuinnAdapter.start failed: \(error)")
             applyEvent(.disconnected)
         }
+    }
+
+    /// Build the FFI tunnel config + the UI connection context from a relay
+    /// selection. Shared by `start(options:)` and the relay-change
+    /// `reconnect(to:)` path so both marshal identically. Multi-hop entry is
+    /// honored when present; DAITA presence is settings-driven (the exit picks
+    /// the Maybenot machine, so the spec content is a placeholder).
+    private func makeConfigAndContext(
+        selectedRelays: SelectedRelays,
+        seed: Data
+    ) -> (WarrenTunnelConfig, ConnectionContext) {
+        let exit = selectedRelays.exit
+        let multiHop: WarrenRelayConfig? = selectedRelays.entry.map { entry in
+            WarrenRelayConfig(
+                pubkey: entry.endpoint.publicKey,
+                endpoint: "\(entry.endpoint.socketAddress)",
+                countryCode: entry.location.countryCode
+            )
+        }
+        let daitaEnabled = (try? SettingsManager.readSettings().daita.isEnabled) ?? false
+        let daitaSpec: WarrenDaitaSpec? =
+            daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil
+
+        let config = WarrenTunnelConfig(
+            exitPubkey: exit.endpoint.publicKey,
+            exitEndpoint: "\(exit.endpoint.socketAddress)",
+            walletSigningKey: seed,
+            multiHopRelay: multiHop,
+            daitaSpec: daitaSpec,
+            natPmpEnabled: false,  // settings-driven, deferred (needs V9 schema)
+            bypassCidrs: []  // settings-driven, deferred
+        )
+        // Settings reads are best-effort: a unit test or a not-yet-provisioned
+        // store falls back to defaults.
+        let relayConstraints =
+            (try? SettingsManager.readSettings().relayConstraints) ?? RelayConstraints()
+        let context = ConnectionContext(
+            selectedRelays: selectedRelays,
+            relayConstraints: relayConstraints,
+            remotePort: exit.endpoint.socketAddress.port,
+            isDaitaEnabled: daitaEnabled
+        )
+        return (config, context)
     }
 
     public func stop() {
@@ -365,9 +361,50 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public func reconnect(to nextRelays: NextRelays, reconnectReason: ActorReconnectReason) {
-        // C.4.3.X TODO: re-marshal exit relay selection + call
-        // `adapter.stop()` + `adapter.start(newConfig:)`.
-        logger.info("reconnect called (C.4.3 scaffold no-op)")
+        switch nextRelays {
+        case let .preSelected(selectedRelays):
+            // A relay change: the app re-selected (Warren has no in-actor
+            // selector), so rebuild the config for the new exit and restart
+            // the adapter.
+            restartAdapter(with: selectedRelays)
+        case .current, .random:
+            // No new relays to marshal and no in-actor selector, so the best
+            // the actor can do is re-handshake the current exit. True relay
+            // changes arrive as `.preSelected` from the app.
+            stateLock.lock()
+            let adapter = self.adapter
+            stateLock.unlock()
+            adapter?.reconnect()
+        }
+    }
+
+    /// Tear down the current Quinn session and bring up a new one against
+    /// `selectedRelays` (relay-change path). Holds no lock across the adapter
+    /// calls.
+    private func restartAdapter(with selectedRelays: SelectedRelays) {
+        stateLock.lock()
+        let adapter = self.adapter
+        let seed = self.walletSigningSeed
+        stateLock.unlock()
+
+        guard let adapter, let seed, seed.count == 32 else {
+            logger.warning("reconnect(to:) before a started session ; ignoring")
+            return
+        }
+
+        let (config, context) = makeConfigAndContext(selectedRelays: selectedRelays, seed: seed)
+        stateLock.lock()
+        connectionContext = context
+        stateLock.unlock()
+
+        adapter.stop()
+        do {
+            try adapter.start(config: config)
+            logger.info("Warren tunnel reconnected to a new exit via WarrenQuinnAdapter")
+        } catch {
+            logger.error("WarrenQuinnAdapter.start (relay change) failed: \(error)")
+            applyEvent(.disconnected)
+        }
     }
 
     public func notifyKeyRotation(date: Date?) {

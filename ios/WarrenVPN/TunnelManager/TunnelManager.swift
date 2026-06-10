@@ -220,7 +220,20 @@ final class TunnelManager: @unchecked Sendable {
                     throw UnsetTunnelError()
                 }
 
-                return tunnel.reconnectTunnel(to: selectNewRelay ? .random : .current) { result in
+                // Warren selects relays app-side (the tunnel actor has no
+                // selector), so a relay change must re-select here and hand the
+                // new relays to the actor as `.preSelected`. `.current` is a
+                // same-exit re-handshake; `.random` is only a fallback when
+                // re-selection fails.
+                let nextRelays: NextRelays
+                if selectNewRelay {
+                    nextRelays = (try? self.selectRelays(tunnelSettings: self.settings))
+                        .map(NextRelays.preSelected) ?? .random
+                } else {
+                    nextRelays = .current
+                }
+
+                return tunnel.reconnectTunnel(to: nextRelays) { result in
                     if case let .success(observedState) = result {
                         guard let connectionState = observedState.connectionState else { return }
 
