@@ -382,6 +382,11 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             publicKeyHex: pubHex,
             persist: true
         )
+        // The synthesized device state starts with a placeholder expiry;
+        // fetch the real subscription expiry from warren-api now so the
+        // account chrome and expiry notifications reflect reality without
+        // waiting for the user to open the account screen.
+        tunnelManager.updateAccountData()
     }
 
     private func logoutRevokedDevice() {
