@@ -12,7 +12,6 @@
 //
 
 @testable import WarrenRustRuntime
-@testable import WarrenVPN
 import XCTest
 
 final class WarrenWalletTests: XCTestCase {

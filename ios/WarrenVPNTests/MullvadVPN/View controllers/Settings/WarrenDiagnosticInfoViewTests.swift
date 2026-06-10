@@ -12,8 +12,8 @@
 
 import XCTest
 
-@testable import WarrenVPN
 
+@MainActor
 final class WarrenDiagnosticInfoViewTests: XCTestCase {
     private func makeStats(
         state: String = "Connected",

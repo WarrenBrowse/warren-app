@@ -12,7 +12,7 @@
 
 import XCTest
 
-@testable import WarrenVPN
+@testable import WarrenRustRuntime
 
 @MainActor
 final class WarrenWalletInteractorTests: XCTestCase {

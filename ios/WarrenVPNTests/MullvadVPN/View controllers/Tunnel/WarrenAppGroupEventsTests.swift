@@ -18,7 +18,6 @@ import Combine
 import Foundation
 import XCTest
 
-@testable import WarrenVPN
 
 @MainActor
 final class WarrenAppGroupEventsTests: XCTestCase {

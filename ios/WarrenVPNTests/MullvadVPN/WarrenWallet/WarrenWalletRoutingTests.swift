@@ -7,7 +7,6 @@
 
 import XCTest
 
-@testable import WarrenVPN
 
 final class WarrenWalletRoutingTests: XCTestCase {
     func test_termsOfServiceGatesEverything() {

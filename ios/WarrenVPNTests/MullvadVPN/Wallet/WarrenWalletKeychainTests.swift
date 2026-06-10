@@ -11,7 +11,6 @@
 //  cross-test contamination.
 //
 
-@testable import WarrenVPN
 import XCTest
 
 final class WarrenWalletKeychainTests: XCTestCase {

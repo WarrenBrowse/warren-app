@@ -15,7 +15,6 @@
 import SwiftUI
 import XCTest
 
-@testable import WarrenVPN
 
 final class WarrenAboutViewTests: XCTestCase {
     /// Init stores the version + build exactly as passed (no

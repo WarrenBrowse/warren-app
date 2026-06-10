@@ -13,7 +13,6 @@
 
 import XCTest
 
-@testable import WarrenVPN
 
 final class WarrenAppGroupKeyTests: XCTestCase {
     /// All 4 declared keys are present in `allCases`. Adding a 5th

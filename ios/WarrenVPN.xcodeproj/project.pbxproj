@@ -26,18 +26,20 @@
 		014E8C2A2F28B09700837D0A /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		014E8C302F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		014E8C312F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
+		016C31A76953C4B7F67032D8 /* CustomListsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE612B74DBAC003F4EDB /* CustomListsDataSource.swift */; };
 		016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */; };
 		016EE0422F8540B00035B25C /* IPAddressRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0412F8540B00035B25C /* IPAddressRange.swift */; };
 		016EE0442F8640B00035B25C /* DaitaConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0432F8640B00035B25C /* DaitaConfiguration.swift */; };
 		01B2FF862D70B914004AED35 /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
 		01C981E82F43C3410002D284 /* BlockedStateReason+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E52F43C3410002D284 /* BlockedStateReason+Localization.swift */; };
 		01C981E92F43C3410002D284 /* TunnelStateAccessibilityAnnouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E62F43C3410002D284 /* TunnelStateAccessibilityAnnouncer.swift */; };
-		01C981EA2F43C3410002D284 /* BlockedStateReason+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E52F43C3410002D284 /* BlockedStateReason+Localization.swift */; };
 		01C981EB2F45D5C20002D284 /* TunnelControlPageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981EA2F45D5C20002D284 /* TunnelControlPageTests.swift */; };
 		01D13C212F11130500EC63DE /* RustLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D13C202F11130500EC63DE /* RustLogging.swift */; };
 		01FFF9582F0469FC00BDAF45 /* IPVersionSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FFF9562F0469FC00BDAF45 /* IPVersionSettings.swift */; };
 		01FFF95F2F0BE13900BDAF45 /* SelectedEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FFF95E2F0BE13900BDAF45 /* SelectedEndpoint.swift */; };
 		01FFF9612F0BE14E00BDAF45 /* ObfuscationMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FFF9602F0BE14E00BDAF45 /* ObfuscationMethod.swift */; };
+		025F94067FC053E69E7E846C /* NotificationProviderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E232943520C00D5980C /* NotificationProviderProtocol.swift */; };
+		03453BDBB92E209973A65810 /* TunnelStatusBlockObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E0317D2ACC32920095D843 /* TunnelStatusBlockObserver.swift */; };
 		048CADB4C4829811E348CEA5 /* WarrenWallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 197FF985CD18EA65FE765862 /* WarrenWallet.swift */; };
 		062B45A328FD4CA700746E77 /* le_root_cert.cer in Resources */ = {isa = PBXBuildFile; fileRef = 06799AB428F98CE700ACD94E /* le_root_cert.cer */; };
 		062B45BC28FD8C3B00746E77 /* RESTDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062B45BB28FD8C3B00746E77 /* RESTDefaults.swift */; };
@@ -60,29 +62,55 @@
 		06799AEF28F98E4800ACD94E /* RetryStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FAE67628F83CA40033DD93 /* RetryStrategy.swift */; };
 		06799AF028F98E4800ACD94E /* REST.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FAE67B28F83CA50033DD93 /* REST.swift */; };
 		06799AF128F98E4800ACD94E /* RESTSubmitVoucherResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FAE67328F83CA40033DD93 /* RESTSubmitVoucherResponse.swift */; };
+		06964966862FE37126B04832 /* DestinationDescriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E1F7572D3EA82C003A60FF /* DestinationDescriber.swift */; };
 		0697D6E728F01513007A9E99 /* APITransportMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0697D6E628F01513007A9E99 /* APITransportMonitor.swift */; };
 		06AC116228F94C450037AF9A /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
 		07210005B6715F4501377AE9 /* WarrenTunnelStatisticsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A436FEFD79CF74A9A98F5160 /* WarrenTunnelStatisticsViewTests.swift */; };
+		088D3B1BF4591C98827A2631 /* SimulatorTunnelProviderHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587A01FB23F1F0BE00B68763 /* SimulatorTunnelProviderHost.swift */; };
+		0895CA15B1F774CD0C1B766E /* UpdateDeviceDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58421031282E42B000F24E46 /* UpdateDeviceDataOperation.swift */; };
+		08ED5B505C9041C01A96D430 /* InvalidShadowsocksCipherInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFF5B9D2F60079B0088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift */; };
+		09B992E7D9E74B4CCA3A8562 /* NewDeviceNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07CFF1F29F2720E008C0343 /* NewDeviceNotificationProvider.swift */; };
+		09D3193AB2D0C5419BB6043E /* CustomListInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389DA2B7E3BD6008E77E1 /* CustomListInteractor.swift */; };
+		0D83830740D6DBE661E7782F /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E0A98727C8F46300FE6BDD /* Tunnel.swift */; };
+		0FF045538D56E456A7BBA759 /* NotificationManagerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E292943545A00D5980C /* NotificationManagerDelegate.swift */; };
+		126F0E0FFC601DE7CFDDA9AE /* VPNConnectionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F360332AAB626300F53531 /* VPNConnectionProtocol.swift */; };
 		1553A67903D811C3B2B0758B /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3551208643554FEF36479DE8 /* OnboardingWizardView.swift */; };
 		159583073F2424FC16CE3287 /* WarrenTunnelStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A13ECB1DF8DA8EC8980AA6 /* WarrenTunnelStatisticsView.swift */; };
 		176F73E06E245707A9927E0C /* WarrenWalletKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA06E7B2FEC1E4E3AD8756 /* WarrenWalletKeychain.swift */; };
 		1BA12DA441BA260489F72C48 /* WarrenFailoverBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9046C307DEE8E15A14705F7 /* WarrenFailoverBannerView.swift */; };
 		1CAA6458750314DA8CBE32A2 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 26AF969EC5F8DB7B39216445 /* Settings.xcstrings */; };
+		1CC5748BF15BECA05CDEC8B3 /* InAppNotificationDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E1D2943514300D5980C /* InAppNotificationDescriptor.swift */; };
+		1F32FE13EF08D87341565E41 /* UNUserNotificationCenter+Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643E2F3B51830024427C /* UNUserNotificationCenter+Permission.swift */; };
+		2017F940E92F7FCEE83566AF /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7CF2B02560400F864E0 /* NSAttributedString+Extensions.swift */; };
+		207F6352032E98B1109799DD /* Font+Mullvad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9276C612DBA20FC006FE43D /* Font+Mullvad.swift */; };
+		224F8495FE9117DB8ACC052C /* AccountDataThrottling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587988C628A2A01F00E3DF54 /* AccountDataThrottling.swift */; };
 		2313BA996FBC4C7AB1C89088 /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE03B2F8524EB0035B25C /* WireGuardKey.swift */; };
 		24634C011C8C772E22F94AFA /* UIColor+Warren.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940C223ABB77F4278C8753BF /* UIColor+Warren.swift */; };
+		271578B02E626154B849F239 /* RelayFilterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8D2A331C7B00DBFEDB /* RelayFilterViewModel.swift */; };
+		2AD8A5250B3426659AB81908 /* NotificationSettingsObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643B2F3B50860024427C /* NotificationSettingsObserver.swift */; };
+		2B3370955A467B9B7D8431BD /* UIImage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F062000B2CB7EB5D002E6DB9 /* UIImage+Helpers.swift */; };
 		2B3AF0D1257ACFF3B565A940 /* Locks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B450D0D3C08B845D609047 /* Locks.swift */; };
+		2D3D8B79E8BDD7425295D939 /* CharacterSet+IPAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587EB669270EFACB00123C75 /* CharacterSet+IPAddress.swift */; };
 		2E0C2C56CC9C0EA6779C44DA /* OnboardingWizardCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5A0CC275E051314591B380 /* OnboardingWizardCoordinator.swift */; };
 		2EB3CB5161A46994F9680A03 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8058EA0701064C65079095EC /* Logging.swift */; };
 		2F169CDAE6E8C601F85C543E /* TunnelImplementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24C2F93919B5526A741ADA8 /* TunnelImplementation.swift */; };
 		3003135F90F2F22F01344CF3 /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0F1263FE8BB0EC1B7928F1 /* LogHandler.swift */; };
 		3150505A447A1F806C4A18FE /* WarrenAppGroupKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5968217D68AEED5186653B3 /* WarrenAppGroupKeyTests.swift */; };
+		327208975A63BA1899D330AE /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A09C98029D99215000C2CAC /* String+Search.swift */; };
 		34C0CD946F4CFE1D8F6120AF /* WarrenWalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A878961076F78F42C4BD70 /* WarrenWalletTests.swift */; };
+		34D7F1BA43FBDA65FED0356B /* BackgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C76A0A2A338E4300100D75 /* BackgroundTask.swift */; };
+		356CD129170A8182DAF87D86 /* MultihopMigrationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E560D72F7D43D20027B900 /* MultihopMigrationTracker.swift */; };
 		36A9D443214464D1D5725BC3 /* WarrenWalletGenerateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE61426DEC27860AFC0D2EA /* WarrenWalletGenerateViewController.swift */; };
+		382F76F2098B8992083983D3 /* RedeemVoucherOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07BF2612A26279100042943 /* RedeemVoucherOperation.swift */; };
+		3848B8042E7301A9647D7BFF /* MarkdownStylingOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7D12B0256A300F864E0 /* MarkdownStylingOptions.swift */; };
+		39E4D40E8218EFD4357622A0 /* InAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E21294351EA00D5980C /* InAppNotificationProvider.swift */; };
 		3A16D8BCDA037FB3F631334E /* WarrenWalletEraseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */; };
+		3D1F87CB440645AB1D379089 /* TunnelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4B12940A48700C23744 /* TunnelStore.swift */; };
+		3DAB104A84D76E9EEB034650 /* AccountExpiry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F2FA62AFBB9AE006D0856 /* AccountExpiry.swift */; };
+		40648044C852C7981A5A3090 /* AppStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0164EBB2B482E430020268D /* AppStorage.swift */; };
+		42300548335E0C1E1B852CAF /* OutgoingConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04BC2AEBB7C5003D4F89 /* OutgoingConnectionService.swift */; };
 		44075DFB2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44075DFA2CDA4F7400F61139 /* UDPOverTCPObfuscationSettingsViewModel.swift */; };
 		440870822D7A00B70038972F /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
-		440870832D809B550038972F /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
-		440870842D809C980038972F /* UIImage+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F062000B2CB7EB5D002E6DB9 /* UIImage+Helpers.swift */; };
 		440E5AB02CDBD67D00B09614 /* StatefulPreviewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440E5AAF2CDBD67D00B09614 /* StatefulPreviewWrapper.swift */; };
 		440E5AB42CDCF24500B09614 /* TunnelObfuscationSettingsWatchingObservableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440E5AB32CDCF24500B09614 /* TunnelObfuscationSettingsWatchingObservableObject.swift */; };
 		4410117CBA1776F82293707A /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0372F850C0E0035B25C /* WireGuardKey.swift */; };
@@ -104,7 +132,6 @@
 		449EBA262B975B9700DFA4EB /* EphemeralPeerReceiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449EBA252B975B9700DFA4EB /* EphemeralPeerReceiving.swift */; };
 		44A6D4382F50AB960085A50A /* InMemorySettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B6AC192ADE8FBB00F7802A /* InMemorySettingsStore.swift */; };
 		44B02E3B2BC5732D008EDF34 /* LoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */; };
-		44B3C43D2C00CBBD0079782C /* PacketTunnelActorReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3C43C2C00CBBC0079782C /* PacketTunnelActorReducerTests.swift */; };
 		44CAEAA12D442F5E004A8E65 /* LocationIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAEAA02D442F56004A8E65 /* LocationIdentifier.swift */; };
 		44DD7D242B6CFFD70005F67F /* StartTunnelOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DD7D232B6CFFD70005F67F /* StartTunnelOperationTests.swift */; };
 		44DD7D272B6D18FB0005F67F /* MockTunnelInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DD7D262B6D18FB0005F67F /* MockTunnelInteractor.swift */; };
@@ -113,12 +140,16 @@
 		44DFB71C2F3DD8AB002C528E /* SwiftData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DFB71B2F3DD8A6002C528E /* SwiftData.swift */; };
 		44E1F7582D3EA83A003A60FF /* DestinationDescriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E1F7572D3EA82C003A60FF /* DestinationDescriber.swift */; };
 		44E1F75A2D3FDCCA003A60FF /* DestinationDescriberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E1F7592D3FDCBA003A60FF /* DestinationDescriberTests.swift */; };
-		44E1F75B2D3FEC81003A60FF /* DestinationDescriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E1F7572D3EA82C003A60FF /* DestinationDescriber.swift */; };
 		44EC6C5A2E3BB3F60087F54A /* PersistentProxyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EC6C592E3BB3EF0087F54A /* PersistentProxyConfiguration.swift */; };
 		44EE8E062E4CB8B80025196E /* AccountDeletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EE8E052E4CB8B30025196E /* AccountDeletionView.swift */; };
+		45EFE6D959E7EBAAAEFAF435 /* LocationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389F72B864CDF008E77E1 /* LocationNode.swift */; };
+		4C8FC342A3E05ACF75B52E2F /* UpdateAccountDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5842102F282D8A3C00F24E46 /* UpdateAccountDataOperation.swift */; };
 		4CC79D3105ACE0F41C0A4BE3 /* WarrenWalletBackupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA4BA60D784465FCA33AC51 /* WarrenWalletBackupViewController.swift */; };
+		4E5BF46F08E660D2BC611E7D /* SystemNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E272943527300D5980C /* SystemNotificationProvider.swift */; };
+		53489C9013D2CDBEE6C79734 /* LoadTunnelConfigurationOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588527B1276B3F0700BAA373 /* LoadTunnelConfigurationOperation.swift */; };
 		560D3C4F6B13B880F1DC82F3 /* WarrenWalletInteractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A72BCA8C08FEA431AF4457 /* WarrenWalletInteractorTests.swift */; };
 		561E7BE937F5479EB69CCC73 /* WarrenWalletKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA06E7B2FEC1E4E3AD8756 /* WarrenWalletKeychain.swift */; };
+		57D3E909AFAC3702FFE35269 /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
 		5803B4B02940A47300C23744 /* TunnelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4AF2940A47300C23744 /* TunnelConfiguration.swift */; };
 		5803B4B22940A48700C23744 /* TunnelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4B12940A48700C23744 /* TunnelStore.swift */; };
 		5807E2C02432038B00F5FF30 /* String+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5807E2BF2432038B00F5FF30 /* String+Helpers.swift */; };
@@ -247,6 +278,7 @@
 		5897F1742913EAF800AF5695 /* ExponentialBackoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5897F1732913EAF800AF5695 /* ExponentialBackoff.swift */; };
 		589A455D28E094BF00565204 /* OperationObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583E1E292848DF67004838B3 /* OperationObserverTests.swift */; };
 		589A455F28E094BF00565204 /* OperationConditionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580CBFB72848D503007878F0 /* OperationConditionTests.swift */; };
+		589DCE7A80D5A621B7ABB703 /* APITransportMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0697D6E628F01513007A9E99 /* APITransportMonitor.swift */; };
 		589E76C02A9378F100E502F3 /* RESTRequestExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 589E76BF2A9378F100E502F3 /* RESTRequestExecutor.swift */; };
 		58ACF6492655365700ACE4B7 /* VPNSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ACF6482655365700ACE4B7 /* VPNSettingsViewController.swift */; };
 		58ACF64B26553C3F00ACE4B7 /* SettingsSwitchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ACF64A26553C3F00ACE4B7 /* SettingsSwitchCell.swift */; };
@@ -254,7 +286,6 @@
 		58ACF64F26567A7100ACE4B7 /* CustomSwitchContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ACF64E26567A7100ACE4B7 /* CustomSwitchContainer.swift */; };
 		58AFC99529F96F7B000829DE /* AsyncBlockOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AFC99429F96F7B000829DE /* AsyncBlockOperationTests.swift */; };
 		58AFC99729F9753D000829DE /* AsyncResultBlockOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AFC99629F9753D000829DE /* AsyncResultBlockOperationTests.swift */; };
-		58B07C182AEFDD6C00A09625 /* StoreTransactionLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F70FE42AEA707800E6890E /* StoreTransactionLog.swift */; };
 		58B26E22294351EA00D5980C /* InAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E21294351EA00D5980C /* InAppNotificationProvider.swift */; };
 		58B26E242943520C00D5980C /* NotificationProviderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E232943520C00D5980C /* NotificationProviderProtocol.swift */; };
 		58B26E262943522400D5980C /* NotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E252943522400D5980C /* NotificationProvider.swift */; };
@@ -281,7 +312,6 @@
 		58B993B12608A34500BA7811 /* LoginContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B993B02608A34500BA7811 /* LoginContentView.swift */; };
 		58B9EB152489139B00095626 /* RESTError+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B9EB142489139B00095626 /* RESTError+Display.swift */; };
 		58BA693123EADA6A009DC256 /* SimulatorTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BA693023EADA6A009DC256 /* SimulatorTunnelProvider.swift */; };
-		58BE4B9D2B18A85B007EA1D3 /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7CF2B02560400F864E0 /* NSAttributedString+Extensions.swift */; };
 		58BFA5C622A7C97F00A6173D /* RelayCacheTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5C522A7C97F00A6173D /* RelayCacheTracker.swift */; };
 		58BFA5CC22A7CE1F00A6173D /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
 		58C3A4B222456F1B00340BDB /* AccountInputGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C3A4B122456F1A00340BDB /* AccountInputGroupView.swift */; };
@@ -388,7 +418,6 @@
 		58DF28A52417CB4B00E836B0 /* StorePaymentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DF28A42417CB4B00E836B0 /* StorePaymentManager.swift */; };
 		58DFF7D02B02560400F864E0 /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7CF2B02560400F864E0 /* NSAttributedString+Extensions.swift */; };
 		58DFF7D22B0256A300F864E0 /* MarkdownStylingOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7D12B0256A300F864E0 /* MarkdownStylingOptions.swift */; };
-		58DFF7D32B02570000F864E0 /* MarkdownStylingOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7D12B0256A300F864E0 /* MarkdownStylingOptions.swift */; };
 		58DFF7D82B02774C00F864E0 /* ListItemPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7D72B02774C00F864E0 /* ListItemPickerViewController.swift */; };
 		58E0A98827C8F46300FE6BDD /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E0A98727C8F46300FE6BDD /* Tunnel.swift */; };
 		58E11188292FA11F009FCA84 /* SettingsMigrationUIHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E11187292FA11F009FCA84 /* SettingsMigrationUIHandler.swift */; };
@@ -421,6 +450,7 @@
 		58FBFBEA291622580020E046 /* WarrenREST.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06799ABC28F98E1D00ACD94E /* WarrenREST.framework */; };
 		58FD5BF42428C67600112C88 /* InAppPurchaseButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FD5BF32428C67600112C88 /* InAppPurchaseButton.swift */; };
 		58FDF2D92A0BA11A00C2B061 /* DeviceCheckOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FDF2D82A0BA11900C2B061 /* DeviceCheckOperation.swift */; };
+		58FE17A4CC485C764B8CE725 /* String+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5807E2BF2432038B00F5FF30 /* String+Helpers.swift */; };
 		58FE25BB2AA72188003D1918 /* WarrenLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58D223F3294C8FF00029F5F8 /* WarrenLogging.framework */; };
 		58FE25BF2AA72311003D1918 /* MigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D96B192A8247C100A5C673 /* MigrationManager.swift */; };
 		58FE25C62AA72779003D1918 /* PacketTunnelCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C7A4362A863F440060C66F /* PacketTunnelCore.framework */; };
@@ -445,10 +475,23 @@
 		58FF9FF02B07C4D300E4C97D /* PersistentAccessMethod+ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FF9FEF2B07C4D300E4C97D /* PersistentAccessMethod+ViewModel.swift */; };
 		58FF9FF42B07C61B00E4C97D /* AccessMethodValidationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FF9FF32B07C61B00E4C97D /* AccessMethodValidationError.swift */; };
 		594DA15C5D053CDE5E45F6EA /* WarrenDaitaSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B669EAD3D687D3EF8BC2879 /* WarrenDaitaSettingsView.swift */; };
+		597ECC124697E3ED4C031DF6 /* TunnelObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5823FA5326CE49F600283BF8 /* TunnelObserver.swift */; };
+		5AEAB1646DD770E5CB19DB59 /* DeviceDataThrottling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58138E60294871C600684F0C /* DeviceDataThrottling.swift */; };
+		5D510C25BE11920B642A69D3 /* TunnelManagerErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5820676326E771DB00655B05 /* TunnelManagerErrors.swift */; };
 		5F1434BB8C17ADA76D4AC62C /* WarrenMnemonicInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0C134193058006539F4C53 /* WarrenMnemonicInputView.swift */; };
 		5FA76A21033E4CEF4F79F32C /* MetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75ECF1A086E07899D640B8C /* MetadataProvider.swift */; };
 		5FE0DE1014575C757540E21F /* WarrenQuinnTunnelImplementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449E1703D9FB3187F09ED6A4 /* WarrenQuinnTunnelImplementation.swift */; };
+		6364D568860E49CDED175D16 /* StorePaymentObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5846227226E22A160035F7C2 /* StorePaymentObserver.swift */; };
+		64530F936C0164898D3C6E41 /* StorePaymentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DF28A42417CB4B00E836B0 /* StorePaymentManager.swift */; };
+		66655FCEC9B1192A35A3D16A /* NotificationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C8191729FAA2C400DEB1B4 /* NotificationConfiguration.swift */; };
+		688D0860DB200ABDFF68D2DF /* StopTunnelOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F2E145276A2C9900A79513 /* StopTunnelOperation.swift */; };
+		694C55E3B398F34E71F7F42C /* RelayFilterDataSourceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017F8DF2D78ABE90076EC01 /* RelayFilterDataSourceItem.swift */; };
+		69B3648128B7210BF2FE1B95 /* LatestChangesNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D5591D2D3805050072B63F /* LatestChangesNotificationProvider.swift */; };
+		6AF88E82D5CF679D5F4C0A91 /* SendTunnelProviderMessageOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586E54FA27A2DF6D0029B88B /* SendTunnelProviderMessageOperation.swift */; };
+		6BD5834856B85F6DE48E24AF /* CodingErrors+CustomErrorDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E511E528DDDEAC00B0BCDE /* CodingErrors+CustomErrorDescription.swift */; };
 		71C95BE61E6E1BF7CD9EB5D9 /* WarrenWalletCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02729CBAC67895DA4769372D /* WarrenWalletCoordinator.swift */; };
+		7358E1419B0763626CD4AD09 /* UIFont+Weight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABE318C2A1CDD4500DF4963 /* UIFont+Weight.swift */; };
+		74A7E57323216C0F51CC7F5F /* PacketTunnelDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */; };
 		773BCEFEC45DD10D84A75F6C /* WarrenWalletLogout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A936A414CE52F9EA1F098C1 /* WarrenWalletLogout.swift */; };
 		7A09C98129D99215000C2CAC /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A09C98029D99215000C2CAC /* String+Search.swift */; };
 		7A0B311E2B303A0D004B12E0 /* AccessbilityIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0B311D2B303A0D004B12E0 /* AccessbilityIdentifier.swift */; };
@@ -469,7 +512,6 @@
 		7A27E3D12CC299F90088BCFF /* VPNSettingsDetailsButtonItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27E3D02CC299E60088BCFF /* VPNSettingsDetailsButtonItem.swift */; };
 		7A28826A2BA8336600FD9F20 /* VPNSettingsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2882692BA8336600FD9F20 /* VPNSettingsCoordinator.swift */; };
 		7A2917F62F606D7C001E5DB6 /* BreadcrumbsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F52F606D76001E5DB6 /* BreadcrumbsProvider.swift */; };
-		7A2917FB2F606F58001E5DB6 /* SettingsNavigationRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F92F606F48001E5DB6 /* SettingsNavigationRoute.swift */; };
 		7A2960F62A963F7500389B82 /* AlertCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2960F52A963F7500389B82 /* AlertCoordinator.swift */; };
 		7A2960FD2A964BB700389B82 /* AlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2960FC2A964BB700389B82 /* AlertPresentation.swift */; };
 		7A2C0E8C2D8B13F0003D8048 /* MullvadAPIProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2C0E8B2D8B13E8003D8048 /* MullvadAPIProxy.swift */; };
@@ -479,7 +521,6 @@
 		7A2E7B732D6C9FEB009EF2C3 /* APIRequestProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A95B6742D5DF86400687524 /* APIRequestProxy.swift */; };
 		7A2E7B752D6CA0B1009EF2C3 /* APITransportProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E7B742D6CA0AC009EF2C3 /* APITransportProvider.swift */; };
 		7A2F41092EC38FD20013D3C5 /* StoreSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F41082EC38FC00013D3C5 /* StoreSubscription.swift */; };
-		7A2F410A2EC38FD20013D3C5 /* StoreSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F41082EC38FC00013D3C5 /* StoreSubscription.swift */; };
 		7A307ADB2A8F56DF0017618B /* Duration+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A307ADA2A8F56DF0017618B /* Duration+Extensions.swift */; };
 		7A3215722D3934E6005DF395 /* MullvadApiCompletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3215702D392F0B005DF395 /* MullvadApiCompletion.swift */; };
 		7A33538F2AA9FF1600F0A71C /* SimulatorTunnelProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A33538E2AA9FF1600F0A71C /* SimulatorTunnelProviderManager.swift */; };
@@ -491,13 +532,11 @@
 		7A4080A42F59897700C02173 /* AccessMethodInvalidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4080A32F59897600C02173 /* AccessMethodInvalidView.swift */; };
 		7A4080AA2F5AFDE300C02173 /* ShadowsocksCipherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DFF7D92B02862E00F864E0 /* ShadowsocksCipherService.swift */; };
 		7A4080AD2F5B1F7F00C02173 /* Breadcrumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4080A52F5AF8C800C02173 /* Breadcrumb.swift */; };
-		7A4080AE2F5B1F7F00C02173 /* Breadcrumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4080A52F5AF8C800C02173 /* Breadcrumb.swift */; };
 		7A42DEC92A05164100B209BE /* SettingsInputCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A42DEC82A05164100B209BE /* SettingsInputCell.swift */; };
 		7A45CFC62C05FF6A00D80B21 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45CFC22C05FF2F00D80B21 /* ScreenshotTests.swift */; };
 		7A45CFC72C071DD400D80B21 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58D0C79D23F1CEBA00FE9BA7 /* SnapshotHelper.swift */; };
 		7A460F9D2F34E2FC005A265D /* Bundle+ProductVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A460F9C2F34E2FC005A265D /* Bundle+ProductVersion.swift */; };
 		7A460F9F2F35D05A005A265D /* NewAppVersionInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A460F9E2F35D04C005A265D /* NewAppVersionInAppNotificationProvider.swift */; };
-		7A460FA02F35D05A005A265D /* NewAppVersionInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A460F9E2F35D04C005A265D /* NewAppVersionInAppNotificationProvider.swift */; };
 		7A460FA12F35D854005A265D /* InAppNotificationDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E1D2943514300D5980C /* InAppNotificationDescriptor.swift */; };
 		7A460FA22F363023005A265D /* VersionCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABBE01F2F20C55F00AD8176 /* VersionCheck.swift */; };
 		7A460FA32F363045005A265D /* NotificationProviderIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C2AEFC2A0BB5CC00986207 /* NotificationProviderIdentifier.swift */; };
@@ -510,16 +549,13 @@
 		7A516C3A2B7111A700BBD33D /* IPOverrideWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A516C392B7111A700BBD33D /* IPOverrideWrapper.swift */; };
 		7A516C3C2B712F0B00BBD33D /* IPOverrideWrapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A516C3B2B712F0B00BBD33D /* IPOverrideWrapperTests.swift */; };
 		7A52C4502F6D8A6A005CD885 /* RecentItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A52C44F2F6D8A60005CD885 /* RecentItemView.swift */; };
-		7A52C45A2F7277C9005CD885 /* BreadcrumbsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F52F606D76001E5DB6 /* BreadcrumbsProvider.swift */; };
 		7A52F96A2C1735AE00B133B9 /* RelaySelectorStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FE25EF2AA77664003D1918 /* RelaySelectorStub.swift */; };
 		7A52F96C2C17450C00B133B9 /* RelaySelectorWrapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A52F96B2C17450C00B133B9 /* RelaySelectorWrapperTests.swift */; };
 		7A5468AC2C6A55B100590086 /* LocationRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5468AB2C6A55B100590086 /* LocationRelays.swift */; };
-		7A5468AD2C6B5E4B00590086 /* LocationRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5468AB2C6A55B100590086 /* LocationRelays.swift */; };
 		7A56B3402F11444800CBF960 /* AppVersionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A56B33F2F11443400CBF960 /* AppVersionService.swift */; };
 		7A56B3422F1145FE00CBF960 /* AppStoreMetaData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A56B3412F11457200CBF960 /* AppStoreMetaData.swift */; };
 		7A56B3432F14ECCC00CBF960 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04FBE602A8379EE009278D7 /* AppPreferences.swift */; };
 		7A56B34A2F190C7B00CBF960 /* AppVersionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A56B3492F190C6D00CBF960 /* AppVersionServiceTests.swift */; };
-		7A56B34B2F1918CB00CBF960 /* AppStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0164EBB2B482E430020268D /* AppStorage.swift */; };
 		7A5869952B32E9C700640D27 /* LinkButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5869942B32E9C700640D27 /* LinkButton.swift */; };
 		7A5869972B32EA4500640D27 /* AppButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5869962B32EA4500640D27 /* AppButton.swift */; };
 		7A58699B2B482FE200640D27 /* UITableViewCell+Disable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A58699A2B482FE200640D27 /* UITableViewCell+Disable.swift */; };
@@ -536,7 +572,6 @@
 		7A5869C52B5A899C00640D27 /* MethodSettingsCellConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5869C42B5A899C00640D27 /* MethodSettingsCellConfiguration.swift */; };
 		7A5869C72B5A8E4C00640D27 /* MethodSettingsDataSourceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5869C62B5A8E4C00640D27 /* MethodSettingsDataSourceConfiguration.swift */; };
 		7A6000F62B60092F001CF0D9 /* AccessMethodViewModelEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6000F52B60092F001CF0D9 /* AccessMethodViewModelEditing.swift */; };
-		7A6000F92B6273A4001CF0D9 /* AccessMethodViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C0D7B2B03BDD100E7CDD7 /* AccessMethodViewModel.swift */; };
 		7A6000FC2B628DF6001CF0D9 /* ListCellContentConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6000FB2B628DF6001CF0D9 /* ListCellContentConfiguration.swift */; };
 		7A6000FE2B628E9F001CF0D9 /* ListCellContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6000FD2B628E9F001CF0D9 /* ListCellContentView.swift */; };
 		7A6389DB2B7E3BD6008E77E1 /* CustomListCellConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389D22B7E3BD6008E77E1 /* CustomListCellConfiguration.swift */; };
@@ -553,7 +588,6 @@
 		7A6389ED2B7FADA1008E77E1 /* SettingsFieldValidationErrorConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389EC2B7FADA1008E77E1 /* SettingsFieldValidationErrorConfiguration.swift */; };
 		7A6389F82B864CDF008E77E1 /* LocationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389F72B864CDF008E77E1 /* LocationNode.swift */; };
 		7A6652B82BB44C3E0042D848 /* LocationDiffableDataSourceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6652B62BB44B120042D848 /* LocationDiffableDataSourceProtocol.swift */; };
-		7A6811542DC8EC6E009CB61A /* UIFont+Weight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABE318C2A1CDD4500DF4963 /* UIFont+Weight.swift */; };
 		7A6AA3AB2EC5C8FB00F1C80C /* StoreSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F41082EC38FC00013D3C5 /* StoreSubscription.swift */; };
 		7A6B4F592AB8412E00123853 /* TunnelMonitorTimings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6B4F582AB8412E00123853 /* TunnelMonitorTimings.swift */; };
 		7A6D6BA62F7D477A001EA05C /* AutomaticLocationListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6D6BA52F7D4773001EA05C /* AutomaticLocationListItem.swift */; };
@@ -598,7 +632,6 @@
 		7A8A19242CF4C9BF000BCB5B /* MultihopPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8A19232CF4C9B8000BCB5B /* MultihopPage.swift */; };
 		7A8A19262CF4D37B000BCB5B /* DAITAPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8A19252CF4D373000BCB5B /* DAITAPage.swift */; };
 		7A8A19282CF603EB000BCB5B /* SettingsViewControllerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8A19272CF603E3000BCB5B /* SettingsViewControllerFactory.swift */; };
-		7A9246AB2EB0C765008FE31A /* StorePaymentManagerInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9246AA2EB0C75A008FE31A /* StorePaymentManagerInteractor.swift */; };
 		7A9246AC2EB0C765008FE31A /* StorePaymentManagerInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9246AA2EB0C75A008FE31A /* StorePaymentManagerInteractor.swift */; };
 		7A9519952EBE1FA200AA8B19 /* PaymentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9519942EBDDE6F00AA8B19 /* PaymentTests.swift */; };
 		7A95B67B2D5F758300687524 /* relays.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A95B67A2D5F758300687524 /* relays.json */; };
@@ -609,12 +642,8 @@
 		7A99D36F2D56070400891FF7 /* MullvadApiRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A99D36E2D5606F900891FF7 /* MullvadApiRequestFactory.swift */; };
 		7A99D3712D56222000891FF7 /* MullvadApiCancellable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A99D3702D56220E00891FF7 /* MullvadApiCancellable.swift */; };
 		7A9BE5A22B8F88C500E2A7D0 /* LocationNodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9BE5A12B8F88C500E2A7D0 /* LocationNodeTests.swift */; };
-		7A9BE5A32B8F89B900E2A7D0 /* LocationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389F72B864CDF008E77E1 /* LocationNode.swift */; };
 		7A9BE5A52B90760C00E2A7D0 /* CustomListsDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9BE5A42B90760C00E2A7D0 /* CustomListsDataSourceTests.swift */; };
-		7A9BE5A62B90762F00E2A7D0 /* CustomListsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE612B74DBAC003F4EDB /* CustomListsDataSource.swift */; };
-		7A9BE5A72B907EEC00E2A7D0 /* AllLocationDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE5F2B73A41E003F4EDB /* AllLocationDataSource.swift */; };
 		7A9BE5A92B90806800E2A7D0 /* CustomListsRepositoryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9BE5A82B90806800E2A7D0 /* CustomListsRepositoryStub.swift */; };
-		7A9BE5AB2B909A1700E2A7D0 /* LocationDataSourceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE5D2B739A73003F4EDB /* LocationDataSourceProtocol.swift */; };
 		7A9BE5AD2B90DF2D00E2A7D0 /* AllLocationsDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9BE5AC2B90DF2D00E2A7D0 /* AllLocationsDataSourceTests.swift */; };
 		7A9CCCB32A96302800DD6A34 /* WelcomeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CCCA12A96302700DD6A34 /* WelcomeCoordinator.swift */; };
 		7A9CCCB62A96302800DD6A34 /* OutOfTimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CCCA42A96302700DD6A34 /* OutOfTimeCoordinator.swift */; };
@@ -631,8 +660,6 @@
 		7A9CCCC32A96302800DD6A34 /* ApplicationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CCCB12A96302800DD6A34 /* ApplicationCoordinator.swift */; };
 		7A9CCCC42A96302800DD6A34 /* TunnelCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CCCB22A96302800DD6A34 /* TunnelCoordinator.swift */; };
 		7A9ED2A72F3CA781005BC0D9 /* NewAppVersionSystemNotificationHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9ED2A62F3CA77B005BC0D9 /* NewAppVersionSystemNotificationHandler.swift */; };
-		7A9ED2A92F433D1B005BC0D9 /* NotificationProviderIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C2AEFC2A0BB5CC00986207 /* NotificationProviderIdentifier.swift */; };
-		7A9ED2AA2F433D6D005BC0D9 /* Font+Mullvad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9276C612DBA20FC006FE43D /* Font+Mullvad.swift */; };
 		7A9F29352CAA8829005F2089 /* AccessMethodsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9F29342CAA8823005F2089 /* AccessMethodsTests.swift */; };
 		7A9F29392CABFAFC005F2089 /* InfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9F29382CABFAEC005F2089 /* InfoHeaderView.swift */; };
 		7A9F293B2CAC4443005F2089 /* InfoHeaderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9F293A2CAC4420005F2089 /* InfoHeaderConfig.swift */; };
@@ -714,7 +741,6 @@
 		7AF9BE8C2A321D1F00DBFEDB /* RelayFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8A2A321BEF00DBFEDB /* RelayFilter.swift */; };
 		7AF9BE8E2A331C7B00DBFEDB /* RelayFilterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8D2A331C7B00DBFEDB /* RelayFilterViewModel.swift */; };
 		7AF9BE902A39F26000DBFEDB /* Collection+Sorting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8F2A39F26000DBFEDB /* Collection+Sorting.swift */; };
-		7AFB81D32F31E23B0086147C /* VersionCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABBE01F2F20C55F00AD8176 /* VersionCheck.swift */; };
 		7AFBE3892D089163002335FC /* TunnelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBE3882D08915D002335FC /* TunnelViewController.swift */; };
 		7AFBE38B2D09AAFF002335FC /* SinglehopPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBE38A2D09AAFF002335FC /* SinglehopPicker.swift */; };
 		7AFBE38D2D09AB2E002335FC /* MultihopPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBE38C2D09AB2E002335FC /* MultihopPicker.swift */; };
@@ -722,14 +748,17 @@
 		7AFE63332ED9D10400D27DC7 /* SetUpAccountCompletedPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE63322ED9D0FC00D27DC7 /* SetUpAccountCompletedPage.swift */; };
 		7AFE63352EE31BA800D27DC7 /* CustomErrorDescriptionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE63342EE31BA800D27DC7 /* CustomErrorDescriptionProtocol.swift */; };
 		7AFF5B9E2F6007A70088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFF5B9D2F60079B0088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift */; };
-		7AFF5B9F2F6007A70088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFF5B9D2F60079B0088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift */; };
+		7F29BCE71FD33E422A438CDB /* SimulatorTunnelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353922AAA089000F0A71C /* SimulatorTunnelInfo.swift */; };
+		833E77D4B9DC595CDDD28E95 /* FilterDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B583D32D6DCE0D007F5AE4 /* FilterDescriptor.swift */; };
 		84BDDE81F21D1ACAE63CA6ED /* WarrenAboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7D324F603E72910E352F01 /* WarrenAboutView.swift */; };
+		84DCC5ADF77396E60C097550 /* AccessMethodViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586C0D7B2B03BDD100E7CDD7 /* AccessMethodViewModel.swift */; };
 		850201DB2B503D7700EF8C96 /* RelayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850201DA2B503D7700EF8C96 /* RelayTests.swift */; };
 		850201DD2B503D8C00EF8C96 /* SelectLocationPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850201DC2B503D8C00EF8C96 /* SelectLocationPage.swift */; };
 		850201DF2B5040A500EF8C96 /* TunnelControlPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850201DE2B5040A500EF8C96 /* TunnelControlPage.swift */; };
 		85021CAE2BDBC4290098B400 /* AppLogsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85021CAD2BDBC4290098B400 /* AppLogsPage.swift */; };
 		85139B2D2B84B4A700734217 /* OutOfTimePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85139B2C2B84B4A700734217 /* OutOfTimePage.swift */; };
 		8518A123639B25A5DB0F4755 /* TunnelObfuscationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DAA9F44837ACF0BE222048 /* TunnelObfuscationTypes.swift */; };
+		85259CF2C1704386205F67E3 /* UIColor+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA0152242560B004F3011 /* UIColor+Palette.swift */; };
 		852969282B4D9C1F007EAD4C /* AccountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852969272B4D9C1F007EAD4C /* AccountTests.swift */; };
 		852969332B4E9232007EAD4C /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852969322B4E9232007EAD4C /* Page.swift */; };
 		852969352B4E9270007EAD4C /* LoginPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852969342B4E9270007EAD4C /* LoginPage.swift */; };
@@ -761,6 +790,7 @@
 		8590A5442C2AF43400B9BF7B /* TrafficGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8590A5432C2AF43400B9BF7B /* TrafficGenerator.swift */; };
 		85978A542BE0F10E00F999A7 /* PacketCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85978A532BE0F10E00F999A7 /* PacketCapture.swift */; };
 		85A42B882BB44D31007BABF7 /* DeviceManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A42B872BB44D31007BABF7 /* DeviceManagementPage.swift */; };
+		85C60393EC40D2580878EB44 /* UIEdgeInsets+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E034632ABB302000E59A5A /* UIEdgeInsets+Extensions.swift */; };
 		85C7A2E92B89024B00035D5A /* SettingsLoggedOutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C7A2E82B89024B00035D5A /* SettingsLoggedOutTests.swift */; };
 		85D039982BA4711800940E7F /* SettingsMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D039972BA4711800940E7F /* SettingsMigrationTests.swift */; };
 		85D2B0B12B6BD32400DF9DA7 /* BaseUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8590896A2B61763B003AF5F5 /* BaseUITestCase.swift */; };
@@ -770,14 +800,37 @@
 		85FB5A0C2B6903990015DCED /* WelcomePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB5A0B2B6903990015DCED /* WelcomePage.swift */; };
 		85FB5A102B6960A30015DCED /* AccountDeletionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB5A0F2B6960A30015DCED /* AccountDeletionPage.swift */; };
 		87A647B96EC28D42434F4D03 /* AllLocationDataSourceBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A647B96EC28D42434F4D02 /* AllLocationDataSourceBenchmarkTests.swift */; };
+		88348C667A2D53AF6664F148 /* BlockedStateReason+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C981E52F43C3410002D284 /* BlockedStateReason+Localization.swift */; };
+		88D8330B53BDB082A6B3FCEB /* CustomListLocationNodeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04413602BA45CD70018A6EE /* CustomListLocationNodeBuilder.swift */; };
+		897264E96AC9E64D3A714582 /* LocationRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5468AB2C6A55B100590086 /* LocationRelays.swift */; };
+		8983D2BDD2FD427BD92D7F9B /* NewAppVersionInAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A460F9E2F35D04C005A265D /* NewAppVersionInAppNotificationProvider.swift */; };
 		89FAC61A88D651B617CE77B1 /* WarrenWalletLoginCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AB698353B23DAD21E76DB9 /* WarrenWalletLoginCoordinator.swift */; };
+		8A589E466B4D53162C3F3A33 /* StoreSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F41082EC38FC00013D3C5 /* StoreSubscription.swift */; };
+		8B83349E9FFFD2BE1FEEB3F4 /* RecentListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09444122ECCA4990059606A /* RecentListDataSource.swift */; };
 		8C15E1D89D2368BF0F9E5289 /* WarrenQuinnActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2924177537FDF6009557600 /* WarrenQuinnActor.swift */; };
 		8D575D2BE82ABFD999B5297E /* WarrenObfuscationIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF58C66213C70276492438AD /* WarrenObfuscationIndicatorView.swift */; };
+		8FE2BB54E022B547BC1CB85C /* PacketTunnelAPITransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 063687B928EB234F00BE7161 /* PacketTunnelAPITransport.swift */; };
+		910F3E2A09CD3A8ABC09EFE6 /* Color+Mullvad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9394EEB2DBF56AA009595EA /* Color+Mullvad.swift */; };
 		919C76F699EB2C74D4BBC11E /* WarrenMultiHopSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB89BFA251FFA1708D36A8B6 /* WarrenMultiHopSettingsView.swift */; };
+		92993C6D3E6ECE5D5709A426 /* StoreTransactionLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F70FE42AEA707800E6890E /* StoreTransactionLog.swift */; };
+		92C387B83065C5AD1B65B661 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B7535266528A200DEF7E9 /* NotificationManager.swift */; };
 		9324B35E56227AC4B4509941 /* WarrenWalletInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56FDC9BBE11AC3F00C6C8C07 /* WarrenWalletInteractor.swift */; };
+		94BEFD25301C7BD25593E355 /* AddressCacheUpdateScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AC114028F841390037AF9A /* AddressCacheUpdateScheduler.swift */; };
+		96D1A6CA089D4877E0BA2629 /* TunnelBlockObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5878A27229091D6D0096FC88 /* TunnelBlockObserver.swift */; };
 		982C0E988565162719F1F6CD /* WarrenAppGroupEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22157641BAA2EE822C65A14 /* WarrenAppGroupEvents.swift */; };
 		9A9178B0D184553274A03720 /* WarrenAppGroupEventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D9EA944346A66F854BBE62 /* WarrenAppGroupEventsTests.swift */; };
+		9AC4F3C684506E00C7A4BF93 /* StorePaymentOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FAE67828F83CA50033DD93 /* StorePaymentOutcome.swift */; };
+		9B9AED4AA7C793589E0F8DE3 /* WarrenAboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7D324F603E72910E352F01 /* WarrenAboutView.swift */; };
+		9C0B1A53BB44834C8E5C6852 /* SimulatorTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BA693023EADA6A009DC256 /* SimulatorTunnelProvider.swift */; };
+		9CC4A912D95C4B0A463F6E01 /* StorePaymentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5878A27429093A310096FC88 /* StorePaymentEvent.swift */; };
+		9CDDBAFE5CD1D455A7F95EB1 /* WarrenWalletInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56FDC9BBE11AC3F00C6C8C07 /* WarrenWalletInteractor.swift */; };
+		9E30169FBF28599B918D05C7 /* StorePaymentManagerInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9246AA2EB0C75A008FE31A /* StorePaymentManagerInteractor.swift */; };
+		9F1BDBD5C113E996FD42DEFF /* ConsolidatedApplicationLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5871FB95254ADE4E0051A0A4 /* ConsolidatedApplicationLog.swift */; };
+		9F564A07512D0192725A6B0A /* LocationDataSourceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE5D2B739A73003F4EDB /* LocationDataSourceProtocol.swift */; };
+		A05E0F80952431B7FA8CBAC0 /* Tunnel+Messaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5875960926F371FC00BF6711 /* Tunnel+Messaging.swift */; };
+		A210AB53462A2E18A0A37A6B /* OutgoingConnectionProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04AF2AE7F83D003D4F89 /* OutgoingConnectionProxy.swift */; };
 		A52963DB473093BE6F037914 /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
+		A89D38D895A2DFC0499C0A3F /* TunnelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4AF2940A47300C23744 /* TunnelConfiguration.swift */; };
 		A902E7A62D3FB0D9007F844A /* LogFileOutputStreamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A902E7A52D3FB0D9007F844A /* LogFileOutputStreamTests.swift */; };
 		A90C48692C36BF3900DCB94C /* TunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90C48682C36BF3900DCB94C /* TunnelProvider.swift */; };
 		A91614D12B108D1B00F416EB /* TransportLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91614D02B108D1B00F416EB /* TransportLayer.swift */; };
@@ -797,6 +850,7 @@
 		A96D0B452D675F0400DD6C59 /* MullvadConnectionModeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D0B442D675F0400DD6C59 /* MullvadConnectionModeProvider.swift */; };
 		A97275562CE36CAE00029F15 /* DaitaV2Parameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97275552CE36CAE00029F15 /* DaitaV2Parameters.swift */; };
 		A977E15D2E816B8200B7ABF6 /* MullvadAccessMethodChangeListening.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4483EC352E2693D5007E5473 /* MullvadAccessMethodChangeListening.swift */; };
+		A9790654CA630AC3788AD23B /* AllLocationDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F050AE5F2B73A41E003F4EDB /* AllLocationDataSource.swift */; };
 		A97D30172AE6B5E90045C0E4 /* StoredWgKeyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97D30162AE6B5E90045C0E4 /* StoredWgKeyData.swift */; };
 		A97FF5502A0D2FFC00900996 /* NSFileCoordinator+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97FF54F2A0D2FFC00900996 /* NSFileCoordinator+Extensions.swift */; };
 		A98207EB2D9190F100654558 /* ShadowsocksConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DDE4132B220458006B57A7 /* ShadowsocksConfiguration.swift */; };
@@ -804,7 +858,6 @@
 		A98207F12D91A0AC00654558 /* MullvadShadowsocksBridgeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98207F02D91A0AC00654558 /* MullvadShadowsocksBridgeProvider.swift */; };
 		A98207F32D9ACE4C00654558 /* MullvadAccessMethodReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98207F22D9ACE4C00654558 /* MullvadAccessMethodReceiver.swift */; };
 		A98502032B627B120061901E /* LocalNetworkProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98502022B627B120061901E /* LocalNetworkProbe.swift */; };
-		A988A3E22AFE54AC0008D2C7 /* AccountExpiry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F2FA62AFBB9AE006D0856 /* AccountExpiry.swift */; };
 		A988DF272ADE86ED00D807EF /* WireGuardObfuscationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A988DF252ADE86ED00D807EF /* WireGuardObfuscationSettings.swift */; };
 		A988DF2A2ADE880300D807EF /* TunnelSettingsV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = A988DF282ADE880300D807EF /* TunnelSettingsV3.swift */; };
 		A992DA202C24709F00DE7CE5 /* WarrenRustRuntime.h in Headers */ = {isa = PBXBuildFile; fileRef = A992DA1F2C24709F00DE7CE5 /* WarrenRustRuntime.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -814,63 +867,8 @@
 		A998DA832BD2B055001D61A2 /* EditCustomListLocationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A998DA822BD2B055001D61A2 /* EditCustomListLocationsPage.swift */; };
 		A99E5EE02B7628150033F241 /* ProblemReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99E5EDF2B7628150033F241 /* ProblemReportViewModel.swift */; };
 		A99E5EE22B762ED30033F241 /* ProblemReportViewController+ViewManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99E5EE12B762ED30033F241 /* ProblemReportViewController+ViewManagement.swift */; };
+		A9A27C2B1D80548F84F94676 /* SimulatorVPNConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353902AAA014400F0A71C /* SimulatorVPNConnection.swift */; };
 		A9A557F32B7E19B10017ADA8 /* SettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850201E22B51A93C00EF8C96 /* SettingsPage.swift */; };
-		A9A5F9E12ACB05160083449F /* AddressCacheUpdateScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AC114028F841390037AF9A /* AddressCacheUpdateScheduler.swift */; };
-		A9A5F9E22ACB05160083449F /* BackgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C76A0A2A338E4300100D75 /* BackgroundTask.swift */; };
-		A9A5F9E32ACB05160083449F /* AccountDataThrottling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587988C628A2A01F00E3DF54 /* AccountDataThrottling.swift */; };
-		A9A5F9E42ACB05160083449F /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04FBE602A8379EE009278D7 /* AppPreferences.swift */; };
-		A9A5F9E52ACB05160083449F /* CustomDateComponentsFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5896AE83246D5889005B36CB /* CustomDateComponentsFormatting.swift */; };
-		A9A5F9E62ACB05160083449F /* DeviceDataThrottling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58138E60294871C600684F0C /* DeviceDataThrottling.swift */; };
-		A9A5F9EB2ACB05160083449F /* CharacterSet+IPAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587EB669270EFACB00123C75 /* CharacterSet+IPAddress.swift */; };
-		A9A5F9EC2ACB05160083449F /* CodingErrors+CustomErrorDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E511E528DDDEAC00B0BCDE /* CodingErrors+CustomErrorDescription.swift */; };
-		A9A5F9ED2ACB05160083449F /* NSRegularExpression+IPAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5871FB9F254C26BF0051A0A4 /* NSRegularExpression+IPAddress.swift */; };
-		A9A5F9EE2ACB05160083449F /* StorePaymentOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FAE67828F83CA50033DD93 /* StorePaymentOutcome.swift */; };
-		A9A5F9EF2ACB05160083449F /* String+AccountFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158B35F285381C60002F069 /* String+AccountFormatting.swift */; };
-		A9A5F9F02ACB05160083449F /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A09C98029D99215000C2CAC /* String+Search.swift */; };
-		A9A5F9F12ACB05160083449F /* String+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5807E2BF2432038B00F5FF30 /* String+Helpers.swift */; };
-		A9A5F9F22ACB05160083449F /* NotificationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C8191729FAA2C400DEB1B4 /* NotificationConfiguration.swift */; };
-		A9A5F9F32ACB05160083449F /* AccountExpirySystemNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B75402668FD7700DEF7E9 /* AccountExpirySystemNotificationProvider.swift */; };
-		A9A5F9F52ACB05160083449F /* NewDeviceNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07CFF1F29F2720E008C0343 /* NewDeviceNotificationProvider.swift */; };
-		A9A5F9F62ACB05160083449F /* TunnelStatusNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A94AE326CFD945001CB97C /* TunnelStatusNotificationProvider.swift */; };
-		A9A5F9F72ACB05160083449F /* NotificationProviderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E232943520C00D5980C /* NotificationProviderProtocol.swift */; };
-		A9A5F9F92ACB05160083449F /* NotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E252943522400D5980C /* NotificationProvider.swift */; };
-		A9A5F9FA2ACB05160083449F /* InAppNotificationDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E1D2943514300D5980C /* InAppNotificationDescriptor.swift */; };
-		A9A5F9FB2ACB05160083449F /* InAppNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E21294351EA00D5980C /* InAppNotificationProvider.swift */; };
-		A9A5F9FC2ACB05160083449F /* SystemNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E272943527300D5980C /* SystemNotificationProvider.swift */; };
-		A9A5F9FD2ACB05160083449F /* NotificationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5877F94D2A0A59AA0052D9E9 /* NotificationResponse.swift */; };
-		A9A5F9FE2ACB05160083449F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B7535266528A200DEF7E9 /* NotificationManager.swift */; };
-		A9A5F9FF2ACB05160083449F /* NotificationManagerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E292943545A00D5980C /* NotificationManagerDelegate.swift */; };
-		A9A5FA012ACB05160083449F /* RelayCacheTrackerObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FB865926EA214400F188BC /* RelayCacheTrackerObserver.swift */; };
-		A9A5FA022ACB05160083449F /* RelayCacheTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5C522A7C97F00A6173D /* RelayCacheTracker.swift */; };
-		A9A5FA032ACB05160083449F /* SimulatorTunnelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353922AAA089000F0A71C /* SimulatorTunnelInfo.swift */; };
-		A9A5FA042ACB05160083449F /* SimulatorTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BA693023EADA6A009DC256 /* SimulatorTunnelProvider.swift */; };
-		A9A5FA052ACB05160083449F /* SimulatorTunnelProviderHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587A01FB23F1F0BE00B68763 /* SimulatorTunnelProviderHost.swift */; };
-		A9A5FA062ACB05160083449F /* SimulatorTunnelProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A33538E2AA9FF1600F0A71C /* SimulatorTunnelProviderManager.swift */; };
-		A9A5FA072ACB05160083449F /* SimulatorVPNConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353902AAA014400F0A71C /* SimulatorVPNConnection.swift */; };
-		A9A5FA0A2ACB05160083449F /* StorePaymentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5878A27429093A310096FC88 /* StorePaymentEvent.swift */; };
-		A9A5FA0B2ACB05160083449F /* StorePaymentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DF28A42417CB4B00E836B0 /* StorePaymentManager.swift */; };
-		A9A5FA0E2ACB05160083449F /* StorePaymentObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5846227226E22A160035F7C2 /* StorePaymentObserver.swift */; };
-		A9A5FA102ACB05160083449F /* PacketTunnelAPITransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 063687B928EB234F00BE7161 /* PacketTunnelAPITransport.swift */; };
-		A9A5FA112ACB05160083449F /* APITransportMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0697D6E628F01513007A9E99 /* APITransportMonitor.swift */; };
-		A9A5FA132ACB05160083449F /* LoadTunnelConfigurationOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588527B1276B3F0700BAA373 /* LoadTunnelConfigurationOperation.swift */; };
-		A9A5FA152ACB05160083449F /* RedeemVoucherOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07BF2612A26279100042943 /* RedeemVoucherOperation.swift */; };
-		A9A5FA172ACB05160083449F /* SendTunnelProviderMessageOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586E54FA27A2DF6D0029B88B /* SendTunnelProviderMessageOperation.swift */; };
-		A9A5FA182ACB05160083449F /* SetAccountOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588527B3276B4F2F00BAA373 /* SetAccountOperation.swift */; };
-		A9A5FA192ACB05160083449F /* StartTunnelOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F2E143276A13F300A79513 /* StartTunnelOperation.swift */; };
-		A9A5FA1A2ACB05160083449F /* StopTunnelOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F2E145276A2C9900A79513 /* StopTunnelOperation.swift */; };
-		A9A5FA1B2ACB05160083449F /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E0A98727C8F46300FE6BDD /* Tunnel.swift */; };
-		A9A5FA1C2ACB05160083449F /* Tunnel+Messaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5875960926F371FC00BF6711 /* Tunnel+Messaging.swift */; };
-		A9A5FA1D2ACB05160083449F /* TunnelBlockObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5878A27229091D6D0096FC88 /* TunnelBlockObserver.swift */; };
-		A9A5FA1E2ACB05160083449F /* TunnelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4AF2940A47300C23744 /* TunnelConfiguration.swift */; };
-		A9A5FA1F2ACB05160083449F /* TunnelInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58968FAD28743E2000B799DC /* TunnelInteractor.swift */; };
-		A9A5FA202ACB05160083449F /* TunnelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5835B7CB233B76CB0096D79F /* TunnelManager.swift */; };
-		A9A5FA212ACB05160083449F /* TunnelManagerErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5820676326E771DB00655B05 /* TunnelManagerErrors.swift */; };
-		A9A5FA222ACB05160083449F /* TunnelObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5823FA5326CE49F600283BF8 /* TunnelObserver.swift */; };
-		A9A5FA232ACB05160083449F /* TunnelState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B93A1226C3F13600A55733 /* TunnelState.swift */; };
-		A9A5FA242ACB05160083449F /* TunnelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5803B4B12940A48700C23744 /* TunnelStore.swift */; };
-		A9A5FA252ACB05160083449F /* UpdateAccountDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5842102F282D8A3C00F24E46 /* UpdateAccountDataOperation.swift */; };
-		A9A5FA262ACB05160083449F /* UpdateDeviceDataOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58421031282E42B000F24E46 /* UpdateDeviceDataOperation.swift */; };
-		A9A5FA272ACB05160083449F /* VPNConnectionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F360332AAB626300F53531 /* VPNConnectionProtocol.swift */; };
 		A9A5FA2A2ACB05160083449F /* CoordinatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EC20E72A5D3A8C0040D56E /* CoordinatesTests.swift */; };
 		A9A5FA2B2ACB05160083449F /* CustomDateComponentsFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5896AE85246D6AD8005B36CB /* CustomDateComponentsFormattingTests.swift */; };
 		A9A5FA2C2ACB05160083449F /* DeviceCheckOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58915D622A25F8400066445B /* DeviceCheckOperationTests.swift */; };
@@ -882,18 +880,12 @@
 		A9A5FA332ACB05160083449F /* RelaySelectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584B26F3237434D00073B10E /* RelaySelectorTests.swift */; };
 		A9A5FA342ACB05160083449F /* StringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5807E2C1243203D000F5FF30 /* StringTests.swift */; };
 		A9A5FA362ACB05160083449F /* TunnelManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A5F9A12ACB003D0083449F /* TunnelManagerTests.swift */; };
-		A9A5FA372ACB052D0083449F /* ApplicationTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C76A072A33850E00100D75 /* ApplicationTarget.swift */; };
-		A9A5FA382ACB05600083449F /* InputTextFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582AE30F2440A6CA00E6733A /* InputTextFormatter.swift */; };
-		A9A5FA392ACB05910083449F /* UIColor+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA0152242560B004F3011 /* UIColor+Palette.swift */; };
-		A9A5FA3A2ACB05910083449F /* UIEdgeInsets+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E034632ABB302000E59A5A /* UIEdgeInsets+Extensions.swift */; };
-		A9A5FA3B2ACB05910083449F /* UIMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585CA70E25F8C44600B47C62 /* UIMetrics.swift */; };
 		A9A5FA3D2ACB05D90083449F /* DeviceCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FE65922AB1CDE000E53CB5 /* DeviceCheck.swift */; };
 		A9A5FA3E2ACB05D90083449F /* DeviceCheckOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FDF2D82A0BA11900C2B061 /* DeviceCheckOperation.swift */; };
 		A9A5FA3F2ACB05D90083449F /* DeviceCheckRemoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58915D672A25FA080066445B /* DeviceCheckRemoteService.swift */; };
 		A9A5FA402ACB05D90083449F /* DeviceCheckRemoteServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580810E72A30E15500B74552 /* DeviceCheckRemoteServiceProtocol.swift */; };
 		A9A5FA412ACB05D90083449F /* DeviceStateAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583D86472A2678DC0060D63B /* DeviceStateAccessor.swift */; };
 		A9A5FA422ACB05D90083449F /* DeviceStateAccessorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580810E42A30E13A00B74552 /* DeviceStateAccessorProtocol.swift */; };
-		A9A5FA432ACB05F20083449F /* UIColor+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587CBFE222807F530028DED3 /* UIColor+Helpers.swift */; };
 		A9A60ED42DF6E5AC00CD9C3D /* UIHostingRootController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A60ED32DF6E5AC00CD9C3D /* UIHostingRootController.swift */; };
 		A9A8A8EB2A262AB30086D569 /* FileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A8A8EA2A262AB30086D569 /* FileCache.swift */; };
 		A9AA56782EAF9FDB005807E4 /* ReduceAnonymityWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9AA56772EAF9FDB005807E4 /* ReduceAnonymityWarningView.swift */; };
@@ -916,24 +908,40 @@
 		A9DF789D2B7D1E8B0094E4AD /* LoggedInWithTimeUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 859089692B61763B003AF5F5 /* LoggedInWithTimeUITestCase.swift */; };
 		A9E031782ACB09930095D843 /* BackgroundTaskProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E031762ACB08950095D843 /* BackgroundTaskProvider.swift */; };
 		A9E0317A2ACB0AE70095D843 /* UIApplication+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E031792ACB0AE70095D843 /* UIApplication+Stubs.swift */; };
-		A9E0317F2ACC331C0095D843 /* TunnelStatusBlockObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E0317D2ACC32920095D843 /* TunnelStatusBlockObserver.swift */; };
 		A9E034642ABB302000E59A5A /* UIEdgeInsets+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E034632ABB302000E59A5A /* UIEdgeInsets+Extensions.swift */; };
 		A9EE85612DF1BE2900F2D769 /* TermsOfServiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EE85602DF1BE2900F2D769 /* TermsOfServiceView.swift */; };
 		AD64574C02EB4FB77407A82A /* WarrenWalletKeychainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30109DEB88F1488580E32A63 /* WarrenWalletKeychainTests.swift */; };
+		B18ADA99A54EB1433982D472 /* UIColor+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587CBFE222807F530028DED3 /* UIColor+Helpers.swift */; };
+		B2F277C0B5C5DB8E8CB33C37 /* OutgoingConnectionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D8825A2B04F53600D3EF9A /* OutgoingConnectionData.swift */; };
+		B460B759B20256640D3A8F64 /* WarrenDiagnosticInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40B81613595944EC7C13C40 /* WarrenDiagnosticInfoView.swift */; };
+		B69351CA6CE2D7D8C0B3FE61 /* WarrenAppGroupEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22157641BAA2EE822C65A14 /* WarrenAppGroupEvents.swift */; };
 		B773F9ED27BF01BEAAABBDE1 /* Wallet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 29ACE2686C7ABAE92EBB8423 /* Wallet.xcstrings */; };
 		B7AB2068E5128119501B59F3 /* WarrenDiagnosticInfoViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D2414206900ECD6A78CA9 /* WarrenDiagnosticInfoViewTests.swift */; };
+		B7CF9AB0A3909659029BC7A3 /* CustomDateComponentsFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5896AE83246D5889005B36CB /* CustomDateComponentsFormatting.swift */; };
 		B82E29EE6A35B4062DA6E211 /* WarrenQuinnActorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B1E45B64802388842609561 /* WarrenQuinnActorTests.swift */; };
+		B92F61B37C71A61317E1E948 /* Breadcrumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4080A52F5AF8C800C02173 /* Breadcrumb.swift */; };
+		BD9D8E8E1FEF910E6B2B9CC3 /* RelayCacheTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5C522A7C97F00A6173D /* RelayCacheTracker.swift */; };
 		BF434ABF6F9543C9BABD3CBA /* FloatingSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B364DC07F3CF4B63A5B1BB6C /* FloatingSearchBar.swift */; };
+		C0ABCD02D1E8DE6E3EE679B0 /* SettingsNavigationRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F92F606F48001E5DB6 /* SettingsNavigationRoute.swift */; };
 		C1EA193A1103489C981B6E59 /* EnvironmentValues+DismissSearchFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323AB4F0478E4995ABAF99AF /* EnvironmentValues+DismissSearchFocus.swift */; };
 		C23BFD5AAA8E64A4556D4BA4 /* WarrenQuinnAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BB970369A93560F440D57E /* WarrenQuinnAdapter.swift */; };
+		C651D2EF7DE96BF7DBDC411B /* UIImage+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440870812D7A00B00038972F /* UIImage+Assets.swift */; };
+		C8A7D1C8282C44BE7FA1E0A4 /* VersionCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABBE01F2F20C55F00AD8176 /* VersionCheck.swift */; };
 		C8AA20AAD238C15F2D0708DF /* WarrenNatPmpSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146875D841693CAE84567B3 /* WarrenNatPmpSettingsView.swift */; };
 		CAC481DBD9B0E268D1EBE684 /* WarrenWalletKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA06E7B2FEC1E4E3AD8756 /* WarrenWalletKeychain.swift */; };
+		CCEB2E1F5E3E81DA7CB3BB8F /* TunnelInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58968FAD28743E2000B799DC /* TunnelInteractor.swift */; };
+		CE062A33F7E9CE711A1F0D50 /* NotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B26E252943522400D5980C /* NotificationProvider.swift */; };
+		D24A54F7481E59DAF381BBFE /* UIMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585CA70E25F8C44600B47C62 /* UIMetrics.swift */; };
+		D277DFCC09F8F2A7B08F453B /* SetAccountOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588527B3276B4F2F00BAA373 /* SetAccountOperation.swift */; };
 		D364F748953D22AC567664A0 /* WarrenWalletIdentityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F928D999C6A19DF02A20FC6 /* WarrenWalletIdentityView.swift */; };
 		D75A8DA0D11591A4617D3D56 /* WarrenWalletDeviceStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EAB01779C42FF6E8529BAC /* WarrenWalletDeviceStateTests.swift */; };
 		DBDB63C111ED6C64494962E3 /* WarrenMnemonicDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28CA642BD064C2972F7792BE /* WarrenMnemonicDisplayView.swift */; };
+		DC09D146BE2A8C84F81A4FB6 /* NotificationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5877F94D2A0A59AA0052D9E9 /* NotificationResponse.swift */; };
+		DD020A7D5C47A055514E5A3A /* StartTunnelOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F2E143276A13F300A79513 /* StartTunnelOperation.swift */; };
+		DFFC4A5AD73DF018A4470374 /* WarrenTunnelStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A13ECB1DF8DA8EC8980AA6 /* WarrenTunnelStatisticsView.swift */; };
 		E019A1DAE3BC3D4508472017 /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
+		E0F34E9ACADD291E02A20DA4 /* TunnelStatusNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A94AE326CFD945001CB97C /* TunnelStatusNotificationProvider.swift */; };
 		E10A0001000000000000AB01 /* GotaTunActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0001000000000000AA01 /* GotaTunActor.swift */; };
-		E10A0002000000000000AB01 /* PacketTunnelDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */; };
 		E10A0002000000000000AB02 /* PacketTunnelDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */; };
 		E10A0002000000000000AB03 /* PacketTunnelDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */; };
 		E10A0002000000000000AB04 /* PacketTunnelDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A0002000000000000AA01 /* PacketTunnelDebugSettings.swift */; };
@@ -942,9 +950,19 @@
 		E1187ABD289BBB850024E748 /* OutOfTimeContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1187ABB289BBB850024E748 /* OutOfTimeContentView.swift */; };
 		E158B360285381C60002F069 /* String+AccountFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158B35F285381C60002F069 /* String+AccountFormatting.swift */; };
 		E1FD0DF528AA7CE400299DB4 /* StatusActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FD0DF428AA7CE400299DB4 /* StatusActivityView.swift */; };
+		E2A40F5509CDC207AC6CE9AF /* Collection+Sorting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8F2A39F26000DBFEDB /* Collection+Sorting.swift */; };
+		E2B9FB5781C85D80DD5ACB53 /* TunnelState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B93A1226C3F13600A55733 /* TunnelState.swift */; };
 		E50C9CED345A31999F751FA8 /* WarrenWalletImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889423709B53600B90FE0DF7 /* WarrenWalletImportViewController.swift */; };
+		E67F183250FE0BF118AFCF26 /* InputTextFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582AE30F2440A6CA00E6733A /* InputTextFormatter.swift */; };
+		E6D381D2619D5E6F5CACCDB4 /* UIColor+Warren.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940C223ABB77F4278C8753BF /* UIColor+Warren.swift */; };
 		E79BD7E565693BF2BDA5D9E6 /* GotaTunTunnelImplementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F678736F5403E23B77CA9990 /* GotaTunTunnelImplementation.swift */; };
+		E814FA676830718556B5873F /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04FBE602A8379EE009278D7 /* AppPreferences.swift */; };
 		EB23CD6DF1096707C4CE4778 /* WarrenAboutViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94342F191F024445630175FD /* WarrenAboutViewTests.swift */; };
+		EC9EE0EDF24EBC57B8DF6732 /* NSRegularExpression+IPAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5871FB9F254C26BF0051A0A4 /* NSRegularExpression+IPAddress.swift */; };
+		ECB6EA48AB1AB9ACD57FE72C /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
+		ECCFFB536FC88248B7398DF8 /* BreadcrumbsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2917F52F606D76001E5DB6 /* BreadcrumbsProvider.swift */; };
+		EEDEBA90D8FAAA178C1510B1 /* SimulatorTunnelProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A33538E2AA9FF1600F0A71C /* SimulatorTunnelProviderManager.swift */; };
+		EF12AB852D26E57C0AB90E7E /* NotificationProviderIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C2AEFC2A0BB5CC00986207 /* NotificationProviderIdentifier.swift */; };
 		F006CCFC2B99CC8400C6C2AC /* EditLocationsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006CCFB2B99CC8400C6C2AC /* EditLocationsCoordinator.swift */; };
 		F0077EEE2C52844800DAB2AA /* KeyExchangingResultStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FBD98E2C4A60CC00EE5323 /* KeyExchangingResultStub.swift */; };
 		F01528BB2BFF3FEE00B01D00 /* ShadowsocksRelaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01528BA2BFF3FEE00B01D00 /* ShadowsocksRelaySelector.swift */; };
@@ -953,7 +971,6 @@
 		F0164EC32B4C49D30020268D /* ShadowsocksLoaderStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0164EC22B4C49D30020268D /* ShadowsocksLoaderStub.swift */; };
 		F017F8E02D78AC020076EC01 /* RelayFilterDataSourceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017F8DF2D78ABE90076EC01 /* RelayFilterDataSourceItem.swift */; };
 		F01DAE332C2B032A00521E46 /* RelaySelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01DAE322C2B032A00521E46 /* RelaySelection.swift */; };
-		F022EBA62CF0C6AE009484B9 /* ConsolidatedApplicationLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5871FB95254ADE4E0051A0A4 /* ConsolidatedApplicationLog.swift */; };
 		F028A56A2A34D4E700C0CAA3 /* RedeemVoucherViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028A5692A34D4E700C0CAA3 /* RedeemVoucherViewController.swift */; };
 		F028A56C2A34D8E600C0CAA3 /* AddCreditSucceededViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028A56B2A34D8E600C0CAA3 /* AddCreditSucceededViewController.swift */; };
 		F02BFFC92ED5BBF4007CEA69 /* RecentsInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02BFFC72ED5BBEB007CEA69 /* RecentsInteractor.swift */; };
@@ -969,7 +986,6 @@
 		F041BE4F2C983C2B0083EC28 /* DAITASettingsPromptItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F041BE4E2C983C2B0083EC28 /* DAITASettingsPromptItem.swift */; };
 		F041BE532C9878B60083EC28 /* ConnectionConfigurationBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F041BE522C9878B60083EC28 /* ConnectionConfigurationBuilder.swift */; };
 		F04413612BA45CD70018A6EE /* CustomListLocationNodeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04413602BA45CD70018A6EE /* CustomListLocationNodeBuilder.swift */; };
-		F04413622BA45CE30018A6EE /* CustomListLocationNodeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04413602BA45CD70018A6EE /* CustomListLocationNodeBuilder.swift */; };
 		F04789ED2E3A4FEB0011E3A5 /* ApplicationLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04789EB2E3A4FEB0011E3A5 /* ApplicationLanguage.swift */; };
 		F048BFA22D31843000251CB9 /* ChangeLogModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F048BFA12D31842B00251CB9 /* ChangeLogModel.swift */; };
 		F04AF92D2C466013004A8314 /* EphemeralPeerNegotiationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F04AF92C2C466013004A8314 /* EphemeralPeerNegotiationState.swift */; };
@@ -1006,7 +1022,6 @@
 		F08B6B782C528B8A00D0A121 /* EphemeralPeerExchangingProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F059197E2C454CE000C301F3 /* EphemeralPeerExchangingProtocol.swift */; };
 		F09084682C6E88ED001CD36E /* DaitaPromptAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09084672C6E88ED001CD36E /* DaitaPromptAlert.swift */; };
 		F09444132ECCA4B30059606A /* RecentListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09444122ECCA4990059606A /* RecentListDataSource.swift */; };
-		F09444142ECCA4B30059606A /* RecentListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09444122ECCA4990059606A /* RecentListDataSource.swift */; };
 		F09A297B2A9F8A9B00EA3B6F /* LogoutDialogueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09A29782A9F8A9B00EA3B6F /* LogoutDialogueView.swift */; };
 		F09A297C2A9F8A9B00EA3B6F /* VoucherTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09A29792A9F8A9B00EA3B6F /* VoucherTextField.swift */; };
 		F09A297D2A9F8A9B00EA3B6F /* RedeemVoucherContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09A297A2A9F8A9B00EA3B6F /* RedeemVoucherContentView.swift */; };
@@ -1017,20 +1032,16 @@
 		F09D04B32AE919AC003D4F89 /* OutgoingConnectionProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04AF2AE7F83D003D4F89 /* OutgoingConnectionProxy.swift */; };
 		F09D04B52AE93CB6003D4F89 /* OutgoingConnectionProxy+Stub.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04B42AE93CB6003D4F89 /* OutgoingConnectionProxy+Stub.swift */; };
 		F09D04B72AE941DA003D4F89 /* OutgoingConnectionProxyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04B62AE941DA003D4F89 /* OutgoingConnectionProxyTests.swift */; };
-		F09D04B92AE95111003D4F89 /* OutgoingConnectionProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04AF2AE7F83D003D4F89 /* OutgoingConnectionProxy.swift */; };
 		F09D04BD2AEBB7C5003D4F89 /* OutgoingConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04BC2AEBB7C5003D4F89 /* OutgoingConnectionService.swift */; };
 		F09D04C02AF39D63003D4F89 /* OutgoingConnectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04BF2AF39D63003D4F89 /* OutgoingConnectionServiceTests.swift */; };
-		F09D04C12AF39EA2003D4F89 /* OutgoingConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09D04BC2AEBB7C5003D4F89 /* OutgoingConnectionService.swift */; };
 		F09D616B2F5AD5E200C85C9E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F09D616A2F5AD5E200C85C9E /* Localizable.xcstrings */; };
 		F0A005572F3DFDDC00B09EFC /* NotificationPromptPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A005562F3DFDCF00B09EFC /* NotificationPromptPage.swift */; };
 		F0A086902C22D6A700BF83E7 /* TunnelSettingsStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A0868F2C22D6A700BF83E7 /* TunnelSettingsStrategyTests.swift */; };
 		F0A7EBB22CEF6C79005BB671 /* ConsolidatedApplicationLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A7EBB12CEF6C79005BB671 /* ConsolidatedApplicationLogTests.swift */; };
-		F0A7EBB62CF092CC005BB671 /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
 		F0A89CB32D9D6C2100580C27 /* MullvadDeviceProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A89CB22D9D6C1400580C27 /* MullvadDeviceProxy.swift */; };
 		F0A89CB52D9D864B00580C27 /* RustProblemReportRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0EEFB9E2D8D60E1007FE4B3 /* RustProblemReportRequest.swift */; };
 		F0A89CB72D9D923300580C27 /* String+UnsafePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A89CB62D9D922300580C27 /* String+UnsafePointer.swift */; };
 		F0AC643A2F3B4FD40024427C /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64392F3B4FD40024427C /* NotificationSettings.swift */; };
-		F0AC643C2F3B50860024427C /* NotificationSettingsObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643B2F3B50860024427C /* NotificationSettingsObserver.swift */; };
 		F0AC643D2F3B50860024427C /* NotificationSettingsObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643B2F3B50860024427C /* NotificationSettingsObserver.swift */; };
 		F0AC643F2F3B51830024427C /* UNUserNotificationCenter+Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643E2F3B51830024427C /* UNUserNotificationCenter+Permission.swift */; };
 		F0AC64422F3B51BB0024427C /* NotificationSettingsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64412F3B51BB0024427C /* NotificationSettingsCoordinator.swift */; };
@@ -1039,8 +1050,7 @@
 		F0AC644A2F3B52380024427C /* NotificationSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64472F3B52380024427C /* NotificationSettingsViewModel.swift */; };
 		F0AC644B2F3B52380024427C /* NotificationPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64442F3B52380024427C /* NotificationPromptView.swift */; };
 		F0AC644C2F3B52380024427C /* NotificationPromptViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64452F3B52380024427C /* NotificationPromptViewModel.swift */; };
-		F0AC644D2F3B52F60024427C /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64392F3B4FD40024427C /* NotificationSettings.swift */; };
-		F0AC644E2F3B53150024427C /* UNUserNotificationCenter+Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC643E2F3B51830024427C /* UNUserNotificationCenter+Permission.swift */; };
+		F0AC7B7214049024F510ABF2 /* AccountExpirySystemNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B75402668FD7700DEF7E9 /* AccountExpirySystemNotificationProvider.swift */; };
 		F0ACE30D2BE4E478006D5333 /* WarrenMockData.h in Headers */ = {isa = PBXBuildFile; fileRef = F0ACE30A2BE4E478006D5333 /* WarrenMockData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0ACE3102BE4E478006D5333 /* WarrenMockData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */; };
 		F0ACE3112BE4E478006D5333 /* WarrenMockData.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F0ACE3082BE4E478006D5333 /* WarrenMockData.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1078,10 +1088,8 @@
 		F0C9CE3E2F110C3B00EF41CE /* UIStackView+Contentsize.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C9CE3D2F110C2A00EF41CE /* UIStackView+Contentsize.swift */; };
 		F0CFB9372ECDBA5300776BA3 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F0CFB9362ECDBA5300776BA3 /* InfoPlist.xcstrings */; };
 		F0D5591E2D38051C0072B63F /* LatestChangesNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D5591D2D3805050072B63F /* LatestChangesNotificationProvider.swift */; };
-		F0D5591F2D38051C0072B63F /* LatestChangesNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D5591D2D3805050072B63F /* LatestChangesNotificationProvider.swift */; };
 		F0D7FF8F2B31DF5900E0FDE5 /* AccessMethodRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5827B0A02B0E064E00CCBBA1 /* AccessMethodRepository.swift */; };
 		F0D8825B2B04F53600D3EF9A /* OutgoingConnectionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D8825A2B04F53600D3EF9A /* OutgoingConnectionData.swift */; };
-		F0D8825C2B04F70E00D3EF9A /* OutgoingConnectionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D8825A2B04F53600D3EF9A /* OutgoingConnectionData.swift */; };
 		F0DA87472A9CB9A2006044F1 /* AccountExpiryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DA87462A9CB9A2006044F1 /* AccountExpiryRow.swift */; };
 		F0DA87492A9CBA9F006044F1 /* AccountDeviceRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DA87482A9CBA9F006044F1 /* AccountDeviceRow.swift */; };
 		F0DA874B2A9CBACB006044F1 /* AccountNumberRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DA874A2A9CBACB006044F1 /* AccountNumberRow.swift */; };
@@ -1092,7 +1100,6 @@
 		F0E3618B2A4ADD2F00AEEF2B /* WelcomeContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E3618A2A4ADD2F00AEEF2B /* WelcomeContentView.swift */; };
 		F0E560DA2F7EB0A70027B900 /* MultihopMigrationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E560D72F7D43D20027B900 /* MultihopMigrationTracker.swift */; };
 		F0E560DC2F864F600027B900 /* MultihopMigrationTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E560DB2F864F5A0027B900 /* MultihopMigrationTrackerTests.swift */; };
-		F0E560DD2F865F280027B900 /* MultihopMigrationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E560D72F7D43D20027B900 /* MultihopMigrationTracker.swift */; };
 		F0E61CAA2BF2911D000C4A95 /* TunnelSettingsV5.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E61CA82BF2911D000C4A95 /* TunnelSettingsV5.swift */; };
 		F0E61CAB2BF2911D000C4A95 /* MultihopState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E61CA92BF2911D000C4A95 /* MultihopState.swift */; };
 		F0E8CC032A4C753B007ED3B4 /* WelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E8CC022A4C753B007ED3B4 /* WelcomeViewController.swift */; };
@@ -1103,6 +1110,7 @@
 		F0EF2B7B2F4C802000C7ECA7 /* AppResetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0EF2B762F4C801D00C7ECA7 /* AppResetManager.swift */; };
 		F0EF2B7D2F4F5FCC00C7ECA7 /* SettingsResetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0EF2B7C2F4F5FC900C7ECA7 /* SettingsResetPolicy.swift */; };
 		F0EF50D52A949F8E0031E8DF /* ChangeLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0EF50D42A949F8E0031E8DF /* ChangeLogViewModel.swift */; };
+		F0EFF581B2799A4AD7054F55 /* ApplicationTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C76A072A33850E00100D75 /* ApplicationTarget.swift */; };
 		F0F146942D9462E100BF78E7 /* RustProblemReportRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F146912D94491200BF78E7 /* RustProblemReportRequestTests.swift */; };
 		F0F266692EB3B71A00AAD7DA /* RelayLocationList.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F266682EB3B71A00AAD7DA /* RelayLocationList.swift */; };
 		F0F313A72E85321D00D55C43 /* RecentConnectionsRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F313A62E85320D00D55C43 /* RecentConnectionsRepositoryTests.swift */; };
@@ -1110,18 +1118,15 @@
 		F0F3161B2BF358590078DBCF /* NoRelaysSatisfyingConstraintsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F3161A2BF358590078DBCF /* NoRelaysSatisfyingConstraintsError.swift */; };
 		F0F56B092C0E058A009D676B /* ObserverList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CC40EE24A601900019D96E /* ObserverList.swift */; };
 		F0FA16092D7F0425007E2546 /* FilterDescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FA16082D7F0413007E2546 /* FilterDescriptorTests.swift */; };
-		F0FA160A2D7F0E8B007E2546 /* FilterDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B583D32D6DCE0D007F5AE4 /* FilterDescriptor.swift */; };
 		F0FA160C2D7F2BF2007E2546 /* ServerRelaysResponse+Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FA160B2D7F2BF2007E2546 /* ServerRelaysResponse+Stubs.swift */; };
 		F0FA160E2D7F2C40007E2546 /* MockRelayCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FA160D2D7F2C3D007E2546 /* MockRelayCache.swift */; };
 		F0FA16102D7F2FC7007E2546 /* RelayFilterViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FA160F2D7F2FC0007E2546 /* RelayFilterViewModelTests.swift */; };
-		F0FA16112D7F2FE8007E2546 /* RelayFilterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8D2A331C7B00DBFEDB /* RelayFilterViewModel.swift */; };
-		F0FA16142D7F3ABF007E2546 /* RelayFilterDataSourceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017F8DF2D78ABE90076EC01 /* RelayFilterDataSourceItem.swift */; };
-		F0FA16152D7F3E16007E2546 /* Collection+Sorting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF9BE8F2A39F26000DBFEDB /* Collection+Sorting.swift */; };
 		F0FADDEA2BE90AAA000D0B02 /* LaunchArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F1EF8C2BE8FF0A00CED01D /* LaunchArguments.swift */; };
 		F0FADDEC2BE90AB0000D0B02 /* LaunchArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F1EF8C2BE8FF0A00CED01D /* LaunchArguments.swift */; };
 		F138A0DE87717954B91F4026 /* Onboarding.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6F91573D28F92527424EE8CF /* Onboarding.xcstrings */; };
+		F36C3A2BE6A3793961C55BC5 /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AC64392F3B4FD40024427C /* NotificationSettings.swift */; };
 		F36C77C42E04C6F9DBAD3736 /* WarrenDiagnosticInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40B81613595944EC7C13C40 /* WarrenDiagnosticInfoView.swift */; };
-		F44666681C221231EE9B57C6 /* WarrenWalletRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117BD68BE2C77CD7DD746086 /* WarrenWalletRoutingTests.swift */; };
+		F38A5C6E07EA9496B6442F35 /* String+AccountFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158B35F285381C60002F069 /* String+AccountFormatting.swift */; };
 		F90052522E6B06AD0085C80E /* SelectLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90052512E6B06AA0085C80E /* SelectLocationView.swift */; };
 		F90052562E6EEB290085C80E /* SelectLocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90052552E6EEB290085C80E /* SelectLocationViewModel.swift */; };
 		F90A988A2E042D040020F64F /* ClearBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90A98892E042D040020F64F /* ClearBackgroundView.swift */; };
@@ -1159,18 +1164,19 @@
 		F96D04ED2EC318D8004A4D48 /* EntryLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96D04EC2EC318D8004A4D48 /* EntryLocationView.swift */; };
 		F97C38CA2DE49869006DCB08 /* MultihopSettingsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97C38C92DE49869006DCB08 /* MultihopSettingsCoordinator.swift */; };
 		F97C38D92DE5930F006DCB08 /* CustomDNSCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97C38D82DE59307006DCB08 /* CustomDNSCoordinator.swift */; };
-		F97C38DF2DEEDB0F006DCB08 /* Color+Mullvad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9394EEB2DBF56AA009595EA /* Color+Mullvad.swift */; };
 		F97C38E32DEEDC28006DCB08 /* MullvadListActionItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97C38E22DEEDC28006DCB08 /* MullvadListActionItemView.swift */; };
 		F97C38E52DEEDFD6006DCB08 /* Image+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97C38E42DEEDFD2006DCB08 /* Image+Assets.swift */; };
 		F97C38E82DF025D9006DCB08 /* MullvadAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97C38E72DF025D9006DCB08 /* MullvadAlert.swift */; };
+		F98DB9DADFDDD5A4F061829E /* WarrenWalletKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA06E7B2FEC1E4E3AD8756 /* WarrenWalletKeychain.swift */; };
 		F9C579C22E8FB55600C90C50 /* LocationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C579C12E8FB55600C90C50 /* LocationSection.swift */; };
 		F9C579C42E8FE08600C90C50 /* LocationListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C579C32E8FE08600C90C50 /* LocationListItem.swift */; };
 		F9C579C62E8FE0D000C90C50 /* SegmentedListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C579C52E8FE0D000C90C50 /* SegmentedListItem.swift */; };
 		F9C579C82E8FE10400C90C50 /* LocationItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C579C72E8FE10400C90C50 /* LocationItemView.swift */; };
 		F9E3BCF72DD35B78009986C3 /* ListAccessViewModelBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E3BCF62DD35B78009986C3 /* ListAccessViewModelBridge.swift */; };
 		F9EDB26C2EC4C0480015DE36 /* CustomListInteractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9EDB26B2EC4C0420015DE36 /* CustomListInteractorTests.swift */; };
-		F9EDB26D2EC4C0CD0015DE36 /* CustomListInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6389DA2B7E3BD6008E77E1 /* CustomListInteractor.swift */; };
+		FAC1D9F0F0DBC1EA50C2DBF9 /* RelayCacheTrackerObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FB865926EA214400F188BC /* RelayCacheTrackerObserver.swift */; };
 		FC4C2AD15736BFF3BE2D5D2A /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
+		FDCAAD832224FA057A2F904D /* TunnelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5835B7CB233B76CB0096D79F /* TunnelManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -6261,7 +6267,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A9A5FA432ACB05F20083449F /* UIColor+Helpers.swift in Sources */,
 				A9A5FA3D2ACB05D90083449F /* DeviceCheck.swift in Sources */,
 				A9A5FA3E2ACB05D90083449F /* DeviceCheckOperation.swift in Sources */,
 				44DD7D272B6D18FB0005F67F /* MockTunnelInteractor.swift in Sources */,
@@ -6271,152 +6276,47 @@
 				7AF36A9A2CA2964200E1D497 /* AnyIPAddressTests.swift in Sources */,
 				A9A5FA422ACB05D90083449F /* DeviceStateAccessorProtocol.swift in Sources */,
 				7A5869C32B5820CE00640D27 /* IPOverrideRepositoryTests.swift in Sources */,
-				A9A5FA392ACB05910083449F /* UIColor+Palette.swift in Sources */,
-				7A5468AD2C6B5E4B00590086 /* LocationRelays.swift in Sources */,
-				F97C38DF2DEEDB0F006DCB08 /* Color+Mullvad.swift in Sources */,
-				F0AC644D2F3B52F60024427C /* NotificationSettings.swift in Sources */,
-				A9A5FA3A2ACB05910083449F /* UIEdgeInsets+Extensions.swift in Sources */,
-				A9A5FA3B2ACB05910083449F /* UIMetrics.swift in Sources */,
-				7A9246AB2EB0C765008FE31A /* StorePaymentManagerInteractor.swift in Sources */,
-				58B07C182AEFDD6C00A09625 /* StoreTransactionLog.swift in Sources */,
-				A9A5FA382ACB05600083449F /* InputTextFormatter.swift in Sources */,
-				F022EBA62CF0C6AE009484B9 /* ConsolidatedApplicationLog.swift in Sources */,
-				A9A5FA372ACB052D0083449F /* ApplicationTarget.swift in Sources */,
-				A9A5F9E12ACB05160083449F /* AddressCacheUpdateScheduler.swift in Sources */,
-				A9A5F9E22ACB05160083449F /* BackgroundTask.swift in Sources */,
-				A9A5F9E32ACB05160083449F /* AccountDataThrottling.swift in Sources */,
-				A9A5F9E42ACB05160083449F /* AppPreferences.swift in Sources */,
-				A9A5F9E52ACB05160083449F /* CustomDateComponentsFormatting.swift in Sources */,
-				A9A5F9E62ACB05160083449F /* DeviceDataThrottling.swift in Sources */,
-				7A9BE5A32B8F89B900E2A7D0 /* LocationNode.swift in Sources */,
-				A9A5F9EB2ACB05160083449F /* CharacterSet+IPAddress.swift in Sources */,
-				F0D8825C2B04F70E00D3EF9A /* OutgoingConnectionData.swift in Sources */,
-				44B3C43D2C00CBBD0079782C /* PacketTunnelActorReducerTests.swift in Sources */,
 				F0A086902C22D6A700BF83E7 /* TunnelSettingsStrategyTests.swift in Sources */,
-				A9A5F9EC2ACB05160083449F /* CodingErrors+CustomErrorDescription.swift in Sources */,
-				7A52C45A2F7277C9005CD885 /* BreadcrumbsProvider.swift in Sources */,
-				A9A5F9ED2ACB05160083449F /* NSRegularExpression+IPAddress.swift in Sources */,
-				A9A5F9EE2ACB05160083449F /* StorePaymentOutcome.swift in Sources */,
-				F0AC644E2F3B53150024427C /* UNUserNotificationCenter+Permission.swift in Sources */,
-				7A9BE5A72B907EEC00E2A7D0 /* AllLocationDataSource.swift in Sources */,
-				A9A5F9EF2ACB05160083449F /* String+AccountFormatting.swift in Sources */,
 				F9EDB26C2EC4C0480015DE36 /* CustomListInteractorTests.swift in Sources */,
-				A9A5F9F02ACB05160083449F /* String+Search.swift in Sources */,
-				F0E560DD2F865F280027B900 /* MultihopMigrationTracker.swift in Sources */,
-				F09D04C12AF39EA2003D4F89 /* OutgoingConnectionService.swift in Sources */,
-				7A460FA02F35D05A005A265D /* NewAppVersionInAppNotificationProvider.swift in Sources */,
-				F0FA16152D7F3E16007E2546 /* Collection+Sorting.swift in Sources */,
-				A9A5F9F12ACB05160083449F /* String+Helpers.swift in Sources */,
-				A9A5F9F22ACB05160083449F /* NotificationConfiguration.swift in Sources */,
-				44E1F75B2D3FEC81003A60FF /* DestinationDescriber.swift in Sources */,
-				A9A5F9F32ACB05160083449F /* AccountExpirySystemNotificationProvider.swift in Sources */,
-				A9A5F9F52ACB05160083449F /* NewDeviceNotificationProvider.swift in Sources */,
 				F0E560DC2F864F600027B900 /* MultihopMigrationTrackerTests.swift in Sources */,
 				F09D04B72AE941DA003D4F89 /* OutgoingConnectionProxyTests.swift in Sources */,
-				440870832D809B550038972F /* UIImage+Assets.swift in Sources */,
-				F09D04B92AE95111003D4F89 /* OutgoingConnectionProxy.swift in Sources */,
-				7A6000F92B6273A4001CF0D9 /* AccessMethodViewModel.swift in Sources */,
 				7ABFB09E2BA316220074A49E /* RelayConstraintsTests.swift in Sources */,
 				F072D3D22C071AD100906F64 /* ShadowsocksLoaderTests.swift in Sources */,
-				7A2917FB2F606F58001E5DB6 /* SettingsNavigationRoute.swift in Sources */,
 				F050AE5C2B73797D003F4EDB /* CustomListRepositoryTests.swift in Sources */,
-				01C981EA2F43C3410002D284 /* BlockedStateReason+Localization.swift in Sources */,
-				A9A5F9F62ACB05160083449F /* TunnelStatusNotificationProvider.swift in Sources */,
-				A9A5F9F72ACB05160083449F /* NotificationProviderProtocol.swift in Sources */,
-				A9A5F9F92ACB05160083449F /* NotificationProvider.swift in Sources */,
-				A9A5F9FA2ACB05160083449F /* InAppNotificationDescriptor.swift in Sources */,
-				A9A5F9FB2ACB05160083449F /* InAppNotificationProvider.swift in Sources */,
-				A9A5F9FC2ACB05160083449F /* SystemNotificationProvider.swift in Sources */,
-				A9A5F9FD2ACB05160083449F /* NotificationResponse.swift in Sources */,
-				7AFB81D32F31E23B0086147C /* VersionCheck.swift in Sources */,
-				F0FA16142D7F3ABF007E2546 /* RelayFilterDataSourceItem.swift in Sources */,
-				F0AC643C2F3B50860024427C /* NotificationSettingsObserver.swift in Sources */,
-				A9A5F9FE2ACB05160083449F /* NotificationManager.swift in Sources */,
-				A9A5F9FF2ACB05160083449F /* NotificationManagerDelegate.swift in Sources */,
 				7A9BE5AD2B90DF2D00E2A7D0 /* AllLocationsDataSourceTests.swift in Sources */,
 				87A647B96EC28D42434F4D03 /* AllLocationDataSourceBenchmarkTests.swift in Sources */,
-				A9A5FA012ACB05160083449F /* RelayCacheTrackerObserver.swift in Sources */,
-				A9A5FA022ACB05160083449F /* RelayCacheTracker.swift in Sources */,
-				A9A5FA032ACB05160083449F /* SimulatorTunnelInfo.swift in Sources */,
 				7AE16DD52FA0DF6300A72A39 /* MultihopDataGatherer.swift in Sources */,
-				A9A5FA042ACB05160083449F /* SimulatorTunnelProvider.swift in Sources */,
-				A9A5FA052ACB05160083449F /* SimulatorTunnelProviderHost.swift in Sources */,
 				A9E0317A2ACB0AE70095D843 /* UIApplication+Stubs.swift in Sources */,
-				A9A5FA062ACB05160083449F /* SimulatorTunnelProviderManager.swift in Sources */,
-				A9A5FA072ACB05160083449F /* SimulatorVPNConnection.swift in Sources */,
 				7A6F2FA52AFA3CB2006D0856 /* AccountExpiryTests.swift in Sources */,
 				7A516C3C2B712F0B00BBD33D /* IPOverrideWrapperTests.swift in Sources */,
-				A9A5FA0A2ACB05160083449F /* StorePaymentEvent.swift in Sources */,
 				A902E7A62D3FB0D9007F844A /* LogFileOutputStreamTests.swift in Sources */,
-				A9A5FA0B2ACB05160083449F /* StorePaymentManager.swift in Sources */,
-				7A9ED2A92F433D1B005BC0D9 /* NotificationProviderIdentifier.swift in Sources */,
 				F0FA16092D7F0425007E2546 /* FilterDescriptorTests.swift in Sources */,
-				A9A5FA0E2ACB05160083449F /* StorePaymentObserver.swift in Sources */,
-				7A6811542DC8EC6E009CB61A /* UIFont+Weight.swift in Sources */,
-				A9A5FA102ACB05160083449F /* PacketTunnelAPITransport.swift in Sources */,
-				A9A5FA112ACB05160083449F /* APITransportMonitor.swift in Sources */,
 				A9B6AC1A2ADE8FBB00F7802A /* InMemorySettingsStore.swift in Sources */,
-				A9A5FA132ACB05160083449F /* LoadTunnelConfigurationOperation.swift in Sources */,
 				7AD63A3F2CDA53F600445268 /* ObfuscationMethodSelectorTests.swift in Sources */,
 				44DD7D292B7113CA0005F67F /* MockTunnel.swift in Sources */,
-				A9A5FA152ACB05160083449F /* RedeemVoucherOperation.swift in Sources */,
 				7AD63A3D2CD9065D00445268 /* RelayObfuscatorTests.swift in Sources */,
 				F072D3CF2C07122400906F64 /* SettingsUpdaterTests.swift in Sources */,
 				7ACE19132C1C352100260BB6 /* RelayPickingTests.swift in Sources */,
 				F09D04B52AE93CB6003D4F89 /* OutgoingConnectionProxy+Stub.swift in Sources */,
-				58BE4B9D2B18A85B007EA1D3 /* NSAttributedString+Extensions.swift in Sources */,
-				A9A5FA172ACB05160083449F /* SendTunnelProviderMessageOperation.swift in Sources */,
 				7A83A0C62B29A750008B5CE7 /* APIAccessMethodsTests.swift in Sources */,
-				A9A5FA182ACB05160083449F /* SetAccountOperation.swift in Sources */,
-				A9A5FA192ACB05160083449F /* StartTunnelOperation.swift in Sources */,
 				7ACE19152C1C429A00260BB6 /* MultihopDecisionFlowTests.swift in Sources */,
-				7A2F410A2EC38FD20013D3C5 /* StoreSubscription.swift in Sources */,
-				7A4080AE2F5B1F7F00C02173 /* Breadcrumb.swift in Sources */,
-				A9A5FA1A2ACB05160083449F /* StopTunnelOperation.swift in Sources */,
 				7A9BE5A52B90760C00E2A7D0 /* CustomListsDataSourceTests.swift in Sources */,
-				A9A5FA1B2ACB05160083449F /* Tunnel.swift in Sources */,
-				A9A5FA1C2ACB05160083449F /* Tunnel+Messaging.swift in Sources */,
 				A939661B2CAE6CE1008128CA /* MigrationManagerMultiProcessUpgradeTests.swift in Sources */,
 				7A9BE5A92B90806800E2A7D0 /* CustomListsRepositoryStub.swift in Sources */,
-				A9A5FA1D2ACB05160083449F /* TunnelBlockObserver.swift in Sources */,
-				A9A5FA1E2ACB05160083449F /* TunnelConfiguration.swift in Sources */,
-				A9A5FA1F2ACB05160083449F /* TunnelInteractor.swift in Sources */,
-				A9A5FA202ACB05160083449F /* TunnelManager.swift in Sources */,
-				A9A5FA212ACB05160083449F /* TunnelManagerErrors.swift in Sources */,
 				A9C342C32ACC3EE90045F00E /* RelayCacheTracker+Stubs.swift in Sources */,
-				A9A5FA222ACB05160083449F /* TunnelObserver.swift in Sources */,
-				A988A3E22AFE54AC0008D2C7 /* AccountExpiry.swift in Sources */,
-				A9E0317F2ACC331C0095D843 /* TunnelStatusBlockObserver.swift in Sources */,
-				7A9BE5A62B90762F00E2A7D0 /* CustomListsDataSource.swift in Sources */,
 				F09D04C02AF39D63003D4F89 /* OutgoingConnectionServiceTests.swift in Sources */,
 				7A9BE5A22B8F88C500E2A7D0 /* LocationNodeTests.swift in Sources */,
-				F0FA160A2D7F0E8B007E2546 /* FilterDescriptor.swift in Sources */,
-				F9EDB26D2EC4C0CD0015DE36 /* CustomListInteractor.swift in Sources */,
-				A9A5FA232ACB05160083449F /* TunnelState.swift in Sources */,
-				A9A5FA242ACB05160083449F /* TunnelStore.swift in Sources */,
-				A9A5FA252ACB05160083449F /* UpdateAccountDataOperation.swift in Sources */,
-				A9A5FA262ACB05160083449F /* UpdateDeviceDataOperation.swift in Sources */,
-				A9A5FA272ACB05160083449F /* VPNConnectionProtocol.swift in Sources */,
-				F09444142ECCA4B30059606A /* RecentListDataSource.swift in Sources */,
 				449872E42B7CB96300094DDC /* TunnelSettingsUpdateTests.swift in Sources */,
 				F0A7EBB22CEF6C79005BB671 /* ConsolidatedApplicationLogTests.swift in Sources */,
 				A9B6AC182ADE8F4300F7802A /* MigrationManagerTests.swift in Sources */,
-				7A9BE5AB2B909A1700E2A7D0 /* LocationDataSourceProtocol.swift in Sources */,
 				A9A5FA2A2ACB05160083449F /* CoordinatesTests.swift in Sources */,
 				44DD7D242B6CFFD70005F67F /* StartTunnelOperationTests.swift in Sources */,
-				7A56B34B2F1918CB00CBF960 /* AppStorage.swift in Sources */,
 				A9A5FA2B2ACB05160083449F /* CustomDateComponentsFormattingTests.swift in Sources */,
-				440870842D809C980038972F /* UIImage+Helpers.swift in Sources */,
 				A9A5FA2C2ACB05160083449F /* DeviceCheckOperationTests.swift in Sources */,
 				A9A5FA2E2ACB05160083449F /* FileCacheTests.swift in Sources */,
-				F0FA16112D7F2FE8007E2546 /* RelayFilterViewModel.swift in Sources */,
-				F0D5591F2D38051C0072B63F /* LatestChangesNotificationProvider.swift in Sources */,
-				7AFF5B9F2F6007A70088028F /* InvalidShadowsocksCipherInAppNotificationProvider.swift in Sources */,
 				A9A5FA2F2ACB05160083449F /* FixedWidthIntegerArithmeticsTests.swift in Sources */,
 				F0F146942D9462E100BF78E7 /* RustProblemReportRequestTests.swift in Sources */,
 				7AA513862BC91C6B00D081A4 /* LogRotationTests.swift in Sources */,
-				F04413622BA45CE30018A6EE /* CustomListLocationNodeBuilder.swift in Sources */,
-				7A9ED2AA2F433D6D005BC0D9 /* Font+Mullvad.swift in Sources */,
 				A9A5FA302ACB05160083449F /* InputTextFormatterTests.swift in Sources */,
 				44B02E3B2BC5732D008EDF34 /* LoggingTests.swift in Sources */,
 				F0B0E6972AFE6E7E001DC66B /* XCTest+Async.swift in Sources */,
@@ -6427,13 +6327,10 @@
 				A9A5FA322ACB05160083449F /* RelayCacheTests.swift in Sources */,
 				A9A5FA332ACB05160083449F /* RelaySelectorTests.swift in Sources */,
 				F073FCB32C6617D70062EA1D /* TunnelStore+Stubs.swift in Sources */,
-				58DFF7D32B02570000F864E0 /* MarkdownStylingOptions.swift in Sources */,
 				A9A5FA342ACB05160083449F /* StringTests.swift in Sources */,
 				F0F313A72E85321D00D55C43 /* RecentConnectionsRepositoryTests.swift in Sources */,
 				7A52F96C2C17450C00B133B9 /* RelaySelectorWrapperTests.swift in Sources */,
 				A9C7B62C2EB9F71D002CABB1 /* LoggerBuilderTests.swift in Sources */,
-				F0A7EBB62CF092CC005BB671 /* ApplicationConfiguration.swift in Sources */,
-				E10A0002000000000000AB01 /* PacketTunnelDebugSettings.swift in Sources */,
 				7AB4CCB92B69097E006037F5 /* IPOverrideTests.swift in Sources */,
 				A9A5FA362ACB05160083449F /* TunnelManagerTests.swift in Sources */,
 				AD64574C02EB4FB77407A82A /* WarrenWalletKeychainTests.swift in Sources */,
@@ -6445,7 +6342,122 @@
 				EB23CD6DF1096707C4CE4778 /* WarrenAboutViewTests.swift in Sources */,
 				560D3C4F6B13B880F1DC82F3 /* WarrenWalletInteractorTests.swift in Sources */,
 				D75A8DA0D11591A4617D3D56 /* WarrenWalletDeviceStateTests.swift in Sources */,
-				F44666681C221231EE9B57C6 /* WarrenWalletRoutingTests.swift in Sources */,
+				B18ADA99A54EB1433982D472 /* UIColor+Helpers.swift in Sources */,
+				85259CF2C1704386205F67E3 /* UIColor+Palette.swift in Sources */,
+				897264E96AC9E64D3A714582 /* LocationRelays.swift in Sources */,
+				910F3E2A09CD3A8ABC09EFE6 /* Color+Mullvad.swift in Sources */,
+				F36C3A2BE6A3793961C55BC5 /* NotificationSettings.swift in Sources */,
+				85C60393EC40D2580878EB44 /* UIEdgeInsets+Extensions.swift in Sources */,
+				D24A54F7481E59DAF381BBFE /* UIMetrics.swift in Sources */,
+				9E30169FBF28599B918D05C7 /* StorePaymentManagerInteractor.swift in Sources */,
+				92993C6D3E6ECE5D5709A426 /* StoreTransactionLog.swift in Sources */,
+				E67F183250FE0BF118AFCF26 /* InputTextFormatter.swift in Sources */,
+				9F1BDBD5C113E996FD42DEFF /* ConsolidatedApplicationLog.swift in Sources */,
+				F0EFF581B2799A4AD7054F55 /* ApplicationTarget.swift in Sources */,
+				94BEFD25301C7BD25593E355 /* AddressCacheUpdateScheduler.swift in Sources */,
+				34D7F1BA43FBDA65FED0356B /* BackgroundTask.swift in Sources */,
+				224F8495FE9117DB8ACC052C /* AccountDataThrottling.swift in Sources */,
+				E814FA676830718556B5873F /* AppPreferences.swift in Sources */,
+				B7CF9AB0A3909659029BC7A3 /* CustomDateComponentsFormatting.swift in Sources */,
+				5AEAB1646DD770E5CB19DB59 /* DeviceDataThrottling.swift in Sources */,
+				45EFE6D959E7EBAAAEFAF435 /* LocationNode.swift in Sources */,
+				2D3D8B79E8BDD7425295D939 /* CharacterSet+IPAddress.swift in Sources */,
+				B2F277C0B5C5DB8E8CB33C37 /* OutgoingConnectionData.swift in Sources */,
+				6BD5834856B85F6DE48E24AF /* CodingErrors+CustomErrorDescription.swift in Sources */,
+				ECCFFB536FC88248B7398DF8 /* BreadcrumbsProvider.swift in Sources */,
+				EC9EE0EDF24EBC57B8DF6732 /* NSRegularExpression+IPAddress.swift in Sources */,
+				9AC4F3C684506E00C7A4BF93 /* StorePaymentOutcome.swift in Sources */,
+				1F32FE13EF08D87341565E41 /* UNUserNotificationCenter+Permission.swift in Sources */,
+				A9790654CA630AC3788AD23B /* AllLocationDataSource.swift in Sources */,
+				F38A5C6E07EA9496B6442F35 /* String+AccountFormatting.swift in Sources */,
+				327208975A63BA1899D330AE /* String+Search.swift in Sources */,
+				356CD129170A8182DAF87D86 /* MultihopMigrationTracker.swift in Sources */,
+				42300548335E0C1E1B852CAF /* OutgoingConnectionService.swift in Sources */,
+				8983D2BDD2FD427BD92D7F9B /* NewAppVersionInAppNotificationProvider.swift in Sources */,
+				E2A40F5509CDC207AC6CE9AF /* Collection+Sorting.swift in Sources */,
+				58FE17A4CC485C764B8CE725 /* String+Helpers.swift in Sources */,
+				66655FCEC9B1192A35A3D16A /* NotificationConfiguration.swift in Sources */,
+				06964966862FE37126B04832 /* DestinationDescriber.swift in Sources */,
+				F0AC7B7214049024F510ABF2 /* AccountExpirySystemNotificationProvider.swift in Sources */,
+				09B992E7D9E74B4CCA3A8562 /* NewDeviceNotificationProvider.swift in Sources */,
+				C651D2EF7DE96BF7DBDC411B /* UIImage+Assets.swift in Sources */,
+				A210AB53462A2E18A0A37A6B /* OutgoingConnectionProxy.swift in Sources */,
+				84DCC5ADF77396E60C097550 /* AccessMethodViewModel.swift in Sources */,
+				C0ABCD02D1E8DE6E3EE679B0 /* SettingsNavigationRoute.swift in Sources */,
+				88348C667A2D53AF6664F148 /* BlockedStateReason+Localization.swift in Sources */,
+				E0F34E9ACADD291E02A20DA4 /* TunnelStatusNotificationProvider.swift in Sources */,
+				025F94067FC053E69E7E846C /* NotificationProviderProtocol.swift in Sources */,
+				CE062A33F7E9CE711A1F0D50 /* NotificationProvider.swift in Sources */,
+				1CC5748BF15BECA05CDEC8B3 /* InAppNotificationDescriptor.swift in Sources */,
+				39E4D40E8218EFD4357622A0 /* InAppNotificationProvider.swift in Sources */,
+				4E5BF46F08E660D2BC611E7D /* SystemNotificationProvider.swift in Sources */,
+				DC09D146BE2A8C84F81A4FB6 /* NotificationResponse.swift in Sources */,
+				C8A7D1C8282C44BE7FA1E0A4 /* VersionCheck.swift in Sources */,
+				694C55E3B398F34E71F7F42C /* RelayFilterDataSourceItem.swift in Sources */,
+				2AD8A5250B3426659AB81908 /* NotificationSettingsObserver.swift in Sources */,
+				92C387B83065C5AD1B65B661 /* NotificationManager.swift in Sources */,
+				0FF045538D56E456A7BBA759 /* NotificationManagerDelegate.swift in Sources */,
+				FAC1D9F0F0DBC1EA50C2DBF9 /* RelayCacheTrackerObserver.swift in Sources */,
+				BD9D8E8E1FEF910E6B2B9CC3 /* RelayCacheTracker.swift in Sources */,
+				7F29BCE71FD33E422A438CDB /* SimulatorTunnelInfo.swift in Sources */,
+				9C0B1A53BB44834C8E5C6852 /* SimulatorTunnelProvider.swift in Sources */,
+				088D3B1BF4591C98827A2631 /* SimulatorTunnelProviderHost.swift in Sources */,
+				EEDEBA90D8FAAA178C1510B1 /* SimulatorTunnelProviderManager.swift in Sources */,
+				A9A27C2B1D80548F84F94676 /* SimulatorVPNConnection.swift in Sources */,
+				9CC4A912D95C4B0A463F6E01 /* StorePaymentEvent.swift in Sources */,
+				64530F936C0164898D3C6E41 /* StorePaymentManager.swift in Sources */,
+				EF12AB852D26E57C0AB90E7E /* NotificationProviderIdentifier.swift in Sources */,
+				6364D568860E49CDED175D16 /* StorePaymentObserver.swift in Sources */,
+				7358E1419B0763626CD4AD09 /* UIFont+Weight.swift in Sources */,
+				8FE2BB54E022B547BC1CB85C /* PacketTunnelAPITransport.swift in Sources */,
+				589DCE7A80D5A621B7ABB703 /* APITransportMonitor.swift in Sources */,
+				53489C9013D2CDBEE6C79734 /* LoadTunnelConfigurationOperation.swift in Sources */,
+				382F76F2098B8992083983D3 /* RedeemVoucherOperation.swift in Sources */,
+				2017F940E92F7FCEE83566AF /* NSAttributedString+Extensions.swift in Sources */,
+				6AF88E82D5CF679D5F4C0A91 /* SendTunnelProviderMessageOperation.swift in Sources */,
+				D277DFCC09F8F2A7B08F453B /* SetAccountOperation.swift in Sources */,
+				DD020A7D5C47A055514E5A3A /* StartTunnelOperation.swift in Sources */,
+				8A589E466B4D53162C3F3A33 /* StoreSubscription.swift in Sources */,
+				B92F61B37C71A61317E1E948 /* Breadcrumb.swift in Sources */,
+				688D0860DB200ABDFF68D2DF /* StopTunnelOperation.swift in Sources */,
+				0D83830740D6DBE661E7782F /* Tunnel.swift in Sources */,
+				A05E0F80952431B7FA8CBAC0 /* Tunnel+Messaging.swift in Sources */,
+				96D1A6CA089D4877E0BA2629 /* TunnelBlockObserver.swift in Sources */,
+				A89D38D895A2DFC0499C0A3F /* TunnelConfiguration.swift in Sources */,
+				CCEB2E1F5E3E81DA7CB3BB8F /* TunnelInteractor.swift in Sources */,
+				FDCAAD832224FA057A2F904D /* TunnelManager.swift in Sources */,
+				5D510C25BE11920B642A69D3 /* TunnelManagerErrors.swift in Sources */,
+				597ECC124697E3ED4C031DF6 /* TunnelObserver.swift in Sources */,
+				3DAB104A84D76E9EEB034650 /* AccountExpiry.swift in Sources */,
+				03453BDBB92E209973A65810 /* TunnelStatusBlockObserver.swift in Sources */,
+				016C31A76953C4B7F67032D8 /* CustomListsDataSource.swift in Sources */,
+				833E77D4B9DC595CDDD28E95 /* FilterDescriptor.swift in Sources */,
+				09D3193AB2D0C5419BB6043E /* CustomListInteractor.swift in Sources */,
+				E2B9FB5781C85D80DD5ACB53 /* TunnelState.swift in Sources */,
+				3D1F87CB440645AB1D379089 /* TunnelStore.swift in Sources */,
+				4C8FC342A3E05ACF75B52E2F /* UpdateAccountDataOperation.swift in Sources */,
+				0895CA15B1F774CD0C1B766E /* UpdateDeviceDataOperation.swift in Sources */,
+				126F0E0FFC601DE7CFDDA9AE /* VPNConnectionProtocol.swift in Sources */,
+				8B83349E9FFFD2BE1FEEB3F4 /* RecentListDataSource.swift in Sources */,
+				9F564A07512D0192725A6B0A /* LocationDataSourceProtocol.swift in Sources */,
+				40648044C852C7981A5A3090 /* AppStorage.swift in Sources */,
+				2B3370955A467B9B7D8431BD /* UIImage+Helpers.swift in Sources */,
+				271578B02E626154B849F239 /* RelayFilterViewModel.swift in Sources */,
+				69B3648128B7210BF2FE1B95 /* LatestChangesNotificationProvider.swift in Sources */,
+				08ED5B505C9041C01A96D430 /* InvalidShadowsocksCipherInAppNotificationProvider.swift in Sources */,
+				88D8330B53BDB082A6B3FCEB /* CustomListLocationNodeBuilder.swift in Sources */,
+				207F6352032E98B1109799DD /* Font+Mullvad.swift in Sources */,
+				3848B8042E7301A9647D7BFF /* MarkdownStylingOptions.swift in Sources */,
+				ECB6EA48AB1AB9ACD57FE72C /* ApplicationConfiguration.swift in Sources */,
+				74A7E57323216C0F51CC7F5F /* PacketTunnelDebugSettings.swift in Sources */,
+				F98DB9DADFDDD5A4F061829E /* WarrenWalletKeychain.swift in Sources */,
+				57D3E909AFAC3702FFE35269 /* WarrenAppGroupKey.swift in Sources */,
+				9CDDBAFE5CD1D455A7F95EB1 /* WarrenWalletInteractor.swift in Sources */,
+				DFFC4A5AD73DF018A4470374 /* WarrenTunnelStatisticsView.swift in Sources */,
+				B460B759B20256640D3A8F64 /* WarrenDiagnosticInfoView.swift in Sources */,
+				9B9AED4AA7C793589E0F8DE3 /* WarrenAboutView.swift in Sources */,
+				B69351CA6CE2D7D8C0B3FE61 /* WarrenAppGroupEvents.swift in Sources */,
+				E6D381D2619D5E6F5CACCDB4 /* UIColor+Warren.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
