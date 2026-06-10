@@ -59,6 +59,74 @@ use crate::connectivity_listener::ConnectivityListener;
 
 const TUNNEL_STATE_MACHINE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// How long the link must stay up before an `online` connectivity edge is
+/// acted on. Absorbs the burst of offline/online edges a network change
+/// (e.g. Wi-Fi <-> ethernet) produces. See [`run_connectivity_debounce`].
+const CONNECTIVITY_ONLINE_SETTLE: Duration = Duration::from_millis(2500);
+
+/// Forward connectivity changes from the offline monitor to the tunnel
+/// state machine, debounced.
+///
+/// A network change does not produce one clean offline->online edge; it
+/// produces a burst of them as the OS tears interfaces down and brings
+/// them up. Reacting to every edge rebuilds the whole tunnel each time,
+/// which thrashes routes and blackholes traffic for tens of seconds.
+///
+/// Asymmetric on purpose:
+/// - OFFLINE is forwarded immediately, so the kill-switch engages at once
+///   (fail-closed is never delayed).
+/// - ONLINE is debounced: we wait for the link to stay up for
+///   `online_settle` before forwarding a single online edge, so a burst
+///   collapses into one rebuild. The firewall stays in its blocking state
+///   for the whole settle window, so debouncing the online edge never
+///   opens a leak.
+async fn run_connectivity_debounce(
+    mut offline_rx: mpsc::UnboundedReceiver<Connectivity>,
+    command_tx: std::sync::Weak<mpsc::UnboundedSender<TunnelCommand>>,
+    offline_state_tx: mpsc::UnboundedSender<Connectivity>,
+    online_settle: Duration,
+) {
+    let mut pending_online: Option<Connectivity> = None;
+    loop {
+        let settle = async {
+            if pending_online.is_some() {
+                tokio::time::sleep(online_settle).await;
+            } else {
+                std::future::pending::<()>().await;
+            }
+        };
+        tokio::select! {
+            biased;
+            maybe = offline_rx.next() => {
+                let connectivity: Connectivity = match maybe {
+                    Some(c) => c,
+                    None => break,
+                };
+                if connectivity.is_offline() {
+                    // Immediate, and cancel any pending online so a blip
+                    // that ends offline does not later trigger a spurious
+                    // rebuild.
+                    pending_online = None;
+                    let Some(tx) = command_tx.upgrade() else { break };
+                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
+                    let _ = offline_state_tx.unbounded_send(connectivity);
+                } else {
+                    // Arm / re-arm the settle timer (the fresh `sleep` next
+                    // iteration restarts the window).
+                    pending_online = Some(connectivity);
+                }
+            }
+            () = settle => {
+                if let Some(connectivity) = pending_online.take() {
+                    let Some(tx) = command_tx.upgrade() else { break };
+                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
+                    let _ = offline_state_tx.unbounded_send(connectivity);
+                }
+            }
+        }
+    }
+}
+
 /// Errors that can happen when setting up or using the state machine.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -409,19 +477,16 @@ impl TunnelStateMachine {
         )
         .map_err(Error::InitDnsMonitorError)?;
 
-        let (offline_tx, mut offline_rx) = mpsc::unbounded();
+        let (offline_tx, offline_rx) = mpsc::unbounded();
         let initial_offline_state_tx = args.offline_state_tx.clone();
         let command_tx = args.command_tx.clone();
-        tokio::spawn(async move {
-            while let Some(connectivity) = offline_rx.next().await {
-                if let Some(tx) = command_tx.upgrade() {
-                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
-                } else {
-                    break;
-                }
-                let _ = args.offline_state_tx.unbounded_send(connectivity);
-            }
-        });
+        let offline_state_tx = args.offline_state_tx.clone();
+        tokio::spawn(run_connectivity_debounce(
+            offline_rx,
+            command_tx,
+            offline_state_tx,
+            CONNECTIVITY_ONLINE_SETTLE,
+        ));
         let offline_monitor = offline::spawn_monitor(
             offline_tx,
             #[cfg(not(target_os = "android"))]
@@ -936,5 +1001,76 @@ mod warren_trait_default_tests {
             matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
             "default impl must degrade to NoMatchingRelay (got {result:?})"
         );
+    }
+}
+
+#[cfg(test)]
+mod connectivity_debounce_tests {
+    //! Locks the asymmetric connectivity debounce: an offline edge is
+    //! forwarded immediately (fail-closed), while a burst of online edges
+    //! collapses into a single forward after the link settles, so a
+    //! network change cannot thrash the tunnel into rebuilding repeatedly.
+    use super::*;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    fn drain(rx: &mut mpsc::UnboundedReceiver<TunnelCommand>) -> Vec<Connectivity> {
+        let mut out = vec![];
+        while let Ok(TunnelCommand::Connectivity(c)) = rx.try_recv() {
+            out.push(c);
+        }
+        out
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn offline_is_immediate_and_online_burst_collapses_to_one() {
+        let settle = Duration::from_millis(2500);
+        let (offline_tx, offline_rx) = mpsc::unbounded::<Connectivity>();
+        let (cmd_tx, mut cmd_rx) = mpsc::unbounded::<TunnelCommand>();
+        let cmd_tx = Arc::new(cmd_tx);
+        let weak = Arc::downgrade(&cmd_tx);
+        let (off_state_tx, _off_state_rx) = mpsc::unbounded::<Connectivity>();
+
+        let task = tokio::spawn(run_connectivity_debounce(
+            offline_rx, weak, off_state_tx, settle,
+        ));
+
+        // Offline must be forwarded immediately, without waiting for the
+        // settle window (fail-closed is never delayed).
+        offline_tx.unbounded_send(Connectivity::Offline).unwrap();
+        tokio::task::yield_now().await;
+        assert_eq!(
+            drain(&mut cmd_rx),
+            vec![Connectivity::Offline],
+            "offline edge must be forwarded immediately"
+        );
+
+        // A burst of online edges arriving within the settle window must
+        // NOT each forward; only the last one, once the link settles.
+        for _ in 0..4 {
+            offline_tx.unbounded_send(Connectivity::PresumeOnline).unwrap();
+            tokio::task::yield_now().await;
+            // Each new edge re-arms the window; well under `settle`.
+            tokio::time::advance(Duration::from_millis(400)).await;
+            tokio::task::yield_now().await;
+        }
+        assert!(
+            drain(&mut cmd_rx).is_empty(),
+            "online edges within the settle window must not forward yet"
+        );
+
+        // After the link is quiet for the settle window, exactly one
+        // online edge is forwarded.
+        tokio::time::advance(settle).await;
+        tokio::task::yield_now().await;
+        assert_eq!(
+            drain(&mut cmd_rx),
+            vec![Connectivity::PresumeOnline],
+            "a settled online burst must collapse to a single forward"
+        );
+
+        drop(cmd_tx);
+        drop(offline_tx);
+        let _ = task.await;
     }
 }
