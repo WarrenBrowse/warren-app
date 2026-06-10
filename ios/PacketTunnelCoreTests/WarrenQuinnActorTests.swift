@@ -25,7 +25,11 @@ private final class MockWarrenQuinnAdapter: WarrenQuinnAdapting {
     private(set) var startCount = 0
     private(set) var stopCount = 0
     private(set) var reconnectCount = 0
-    func start(config: WarrenTunnelConfig) throws { startCount += 1 }
+    private(set) var lastStartConfig: WarrenTunnelConfig?
+    func start(config: WarrenTunnelConfig) throws {
+        startCount += 1
+        lastStartConfig = config
+    }
     func stop() { stopCount += 1 }
     func reconnect() { reconnectCount += 1 }
     func pause() {}
@@ -108,6 +112,26 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(mock.stopCount, 1, "a relay change tears down the old session")
         XCTAssertEqual(mock.startCount, 2, "a relay change brings up a new session")
         XCTAssertEqual(mock.reconnectCount, 0, "a relay change is a restart, not a same-exit re-handshake")
+    }
+
+    func test_start_forcesSingleHop_evenWhenAMultihopEntryRelayIsSelected() async {
+        // The Warren Quinn FFI does not consume a multi-hop entry relay yet.
+        // The stub selection carries a non-nil entry, so this guards that the
+        // actor still builds a single-hop FFI config: a user whose persisted
+        // setting is multi-hop must never be silently single-hopped at the data
+        // plane while believing otherwise. Remove this guard only when the FFI
+        // and the relay descriptors actually establish a multi-hop circuit.
+        XCTAssertNotNil(
+            RelaySelectorStub.selectedRelays.entry,
+            "the stub must select an entry relay or this guard is vacuous"
+        )
+        let mock = MockWarrenQuinnAdapter()
+        _ = makeStartedActor(adapter: mock)
+        XCTAssertEqual(mock.startCount, 1)
+        XCTAssertNil(
+            mock.lastStartConfig?.multiHopRelay,
+            "the FFI config must force single-hop until multi-hop is wired"
+        )
     }
 
     func test_reconnect_toCurrent_reHandshakesSameExitWithoutRestart() async {
