@@ -51,7 +51,7 @@ target.build_configurations.each do |config|
   end
 
   # 3. FRAMEWORK_SEARCH_PATHS : Swift modules built by SPM as
-  #    `.swiftmodule` may also be packaged as `.framework` — add this
+  #    `.swiftmodule` may also be packaged as `.framework`, add this
   #    path for completeness.
   fw_paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"]
   fw_paths_str = fw_paths.is_a?(Array) ? fw_paths.join(" ") : (fw_paths || "$(inherited)")

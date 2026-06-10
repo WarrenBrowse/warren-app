@@ -30,7 +30,7 @@
 #   PacketTunnelActorReducerTests.swift
 #   ProtocolObfuscatorTests.swift
 #
-# `PacketTunnelActorProtocol.swift` is KEPT — both `WarrenQuinnActor`
+# `PacketTunnelActorProtocol.swift` is KEPT, both `WarrenQuinnActor`
 # and `GotaTunActor` conform to it.
 #
 # Idempotent.

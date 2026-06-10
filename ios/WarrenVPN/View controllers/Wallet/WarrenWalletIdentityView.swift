@@ -15,7 +15,7 @@
 import SwiftUI
 
 public struct WarrenWalletIdentityView: View {
-    /// The Warren SS58 wallet address (`wb…`, 47–49 chars). Populated
+    /// The Warren SS58 wallet address (`wb…`, 47-49 chars). Populated
     /// from `WarrenWallet.publicKeyAddress` by the caller. The full
     /// address is displayed (selectable) and copied ; the short form is
     /// shown as a compact headline.

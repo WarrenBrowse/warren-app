@@ -4,7 +4,7 @@
 # Restore ProtocolObfuscator.swift to PacketTunnelCore target after
 # over-aggressive removal in `remove-mullvad-legacy-sources.rb`. The
 # file is referenced by `PacketTunnelActor.swift` via the
-# `ProtocolObfuscation` namespace — removing it cascades into compile
+# `ProtocolObfuscation` namespace, removing it cascades into compile
 # errors. Full Warren-native PacketTunnelActor replacement is a C.4.5
 # follow-up.
 #

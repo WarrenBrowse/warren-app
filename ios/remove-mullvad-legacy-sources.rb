@@ -5,7 +5,7 @@
 # These reference FFI symbols (`request_ephemeral_peer`,
 # `EphemeralPeerParameters`, `start_udp2tcp_obfuscator_proxy`,
 # `start_shadowsocks_obfuscator_proxy`, `start_quic_obfuscator_proxy`,
-# `ProxyHandle`) that the Warren-side warren-ios FFI does not export —
+# `ProxyHandle`) that the Warren-side warren-ios FFI does not export,
 # these are upstream Mullvad ephemeral-peer post-quantum + obfuscator
 # proxy concepts that the Warren Quinn / wallet path doesn't use.
 #
@@ -48,7 +48,7 @@ LEGACY_BASENAMES = %w[
 # flows that haven't been fully migrated to WarrenPubkey yet (deferred
 # to a future C.4.5 rebrand step). The WireGuardKey FFI calls inside
 # the file (mullvad_generate_private_key etc.) will fail compile when
-# the file is in WarrenRustRuntime target — this is the same state as
+# the file is in WarrenRustRuntime target, this is the same state as
 # pre-this-script ; full fix requires gating the FFI methods behind
 # warren-ios FFI stubs OR replacing the entire Device.pubkey contract.
 
