@@ -62,7 +62,7 @@ const TUNNEL_STATE_MACHINE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 /// How long the link must stay up before an `online` connectivity edge is
 /// acted on. Absorbs the burst of offline/online edges a network change
 /// (e.g. Wi-Fi <-> ethernet) produces. See [`run_connectivity_debounce`].
-const CONNECTIVITY_ONLINE_SETTLE: Duration = Duration::from_millis(2500);
+const CONNECTIVITY_ONLINE_SETTLE: Duration = Duration::from_millis(1000);
 
 /// Forward connectivity changes from the offline monitor to the tunnel
 /// state machine, debounced.
