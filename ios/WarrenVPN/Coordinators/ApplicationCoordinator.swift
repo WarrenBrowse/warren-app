@@ -35,9 +35,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
      */
     private let navigationContainer = RootContainerViewController()
 
-    /// Posts `preferredAccountNumber` notification when user inputs the account number instead of voucher code
-    private let preferredAccountNumberSubject = PassthroughSubject<String, Never>()
-
     private let notificationController = NotificationController()
     private var splitTunnelCoordinator: TunnelCoordinator?
     private var splitLocationCoordinator: LocationCoordinator?
@@ -544,13 +541,12 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             }
 
         }
-        coordinator.didLogout = { [weak self] preferredAccountNumber in
+        coordinator.didLogout = { [weak self] _ in
             guard let self else { return }
             router.dismissAll(.primary, animated: true)
             DispatchQueue.main.async {
                 self.continueFlow(animated: true)
             }
-            preferredAccountNumberSubject.send(preferredAccountNumber)
         }
 
         addChild(coordinator)
