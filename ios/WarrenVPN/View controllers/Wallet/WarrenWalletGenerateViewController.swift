@@ -7,8 +7,8 @@
 //
 //  UIKit shell hosting `WarrenMnemonicDisplayView` (SwiftUI). Step 2a
 //  of the onboarding wizard: generate a new BIP39 mnemonic, show it
-//  blur-and-reveal, require user confirmation before persisting to the
-//  Keychain.
+//  directly with a copy button, require user confirmation (the backup
+//  gate) before persisting to the Keychain.
 //
 
 import SwiftUI
