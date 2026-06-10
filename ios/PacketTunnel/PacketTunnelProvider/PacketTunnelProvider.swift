@@ -280,20 +280,47 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         ipv6Settings.includedRoutes = [NEIPv6Route.default()]
         settings.ipv6Settings = ipv6Settings
 
-        // Force every DNS query through the tunnel's in-tunnel resolver (the
-        // Warren exit DNS forwarder, mirroring the Android client's
-        // EXIT_DNS_RESOLVER). `matchDomains = [""]` makes it authoritative for
-        // all domains, so DNS cannot leak to the underlying network's resolver
-        // while connected. Without this, queries used the physical network's
-        // DNS (a leak). The resolver lives inside 10/8, already covered by the
-        // default IPv4 route. Custom/content-blocking DNS is deferred to P2
-        // (the FFI tunnel config does not yet carry a DNS field).
-        let exitDNSResolver = "10.66.0.1"
-        let dnsSettings = NEDNSSettings(servers: [exitDNSResolver])
+        // Inner tunnel MTU. Warren tunnels QUIC over UDP/443; 1280 (the
+        // IPv6 minimum) leaves comfortable headroom for the QUIC + UDP +
+        // IP framing under a typical 1500-byte physical path and matches
+        // the actor-path default (`TunnelAdapterProtocol.asTunnelSettings`).
+        settings.mtu = NSNumber(value: 1280)
+
+        // DNS resolvers honor the user's DNS choice (custom resolvers or a
+        // content-blocking resolver), falling back to the Warren exit DNS
+        // forwarder. `matchDomains = [""]` makes the tunnel resolver
+        // authoritative for all domains so DNS cannot leak to the
+        // underlying network's resolver while connected. All resolvers sit
+        // behind the default route, so queries traverse the tunnel to the
+        // exit regardless of which resolver is selected.
+        let dnsSettings = NEDNSSettings(servers: warrenDNSResolvers())
         dnsSettings.matchDomains = [""]
         settings.dnsSettings = dnsSettings
 
         return settings
+    }
+
+    /// Resolves the DNS servers to advertise, honoring the user's DNS
+    /// settings (custom / content-blocking) the same way desktop and
+    /// Android do, and defaulting to the Warren exit DNS forwarder (the
+    /// iOS analog of Android's `EXIT_DNS_RESOLVER`).
+    private func warrenDNSResolvers() -> [String] {
+        // The Warren exit DNS forwarder, used unless the user picked
+        // custom resolvers or enabled content blocking.
+        let warrenExitDNSResolver = "10.66.0.1"
+
+        let tunnelSettings = (try? SettingsReader().read().tunnelSettings) ?? LatestTunnelSettings()
+        let dns = tunnelSettings.dnsSettings
+
+        if dns.effectiveEnableCustomDNS {
+            let custom = Array(dns.customDNSDomains.prefix(DNSSettings.maxAllowedCustomDNSDomains))
+            if !custom.isEmpty {
+                return custom.map { "\($0)" }
+            }
+        } else if let blockingResolver = dns.blockingOptions.serverAddress {
+            return ["\(blockingResolver)"]
+        }
+        return [warrenExitDNSResolver]
     }
 }
 
