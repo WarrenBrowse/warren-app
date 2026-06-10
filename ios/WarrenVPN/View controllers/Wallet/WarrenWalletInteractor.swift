@@ -28,6 +28,9 @@ public enum WarrenWalletInteractorError: Error, Equatable {
     case authenticationFailed(String)
     /// No wallet has been provisioned yet.
     case noWallet
+    /// A warren-api account call (subscription / voucher / delete)
+    /// failed. Carries the underlying transport / server error.
+    case account(WarrenAccountError)
 
     public static func == (lhs: WarrenWalletInteractorError, rhs: WarrenWalletInteractorError) -> Bool {
         switch (lhs, rhs) {
@@ -38,6 +41,8 @@ public enum WarrenWalletInteractorError: Error, Equatable {
         case (.keychain(let a), .keychain(let b)):
             return a == b
         case (.authenticationFailed(let a), .authenticationFailed(let b)):
+            return a == b
+        case (.account(let a), .account(let b)):
             return a == b
         default:
             return false
@@ -228,6 +233,91 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
                 Task { @MainActor in
                     completion(.failure(.authenticationFailed(message)))
                 }
+            }
+        }
+    }
+
+    /// Fetches the wallet's subscription expiry from warren-api (signed
+    /// `GET /v1/subscription`), the Warren-native replacement for the
+    /// Mullvad account-expiry REST call. A wallet with no bound
+    /// subscription (HTTP 404) resolves to the Unix epoch, which the
+    /// account chrome renders as "out of time" (aligned with the desktop
+    /// `account-data-cache` no-subscription treatment).
+    ///
+    /// Runs off the main thread and loads the seed silently: the wallet
+    /// Keychain item is `WhenUnlockedThisDeviceOnly` (not biometric
+    /// gated), matching the tunnel which signs with the same key
+    /// continuously. The seed never leaves this queue.
+    public func fetchSubscriptionExpiry(
+        completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.subscription(seed: wallet.seed) {
+            case let .success(.active(expiry)):
+                completion(.success(expiry))
+            case .success(.none):
+                completion(.success(Date(timeIntervalSince1970: 0)))
+            case let .failure(error):
+                self?.logger.error("subscription fetch failed: \(error)")
+                completion(.failure(.account(error)))
+            }
+        }
+    }
+
+    /// Redeems a subscription voucher against warren-api (unsigned
+    /// `POST /v1/register`), binding this wallet's pubkey to a new
+    /// subscription. Returns the new expiry. The Warren-native
+    /// replacement for the Mullvad voucher submission. The voucher code
+    /// is never logged.
+    public func redeemVoucher(
+        code: String,
+        completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.redeemVoucher(seed: wallet.seed, code: code) {
+            case let .success(expiry):
+                completion(.success(expiry))
+            case let .failure(error):
+                self?.logger.error("voucher redemption failed: \(error)")
+                completion(.failure(.account(error)))
+            }
+        }
+    }
+
+    /// Deletes the wallet's subscription server-side (signed
+    /// `DELETE /v1/account`). Does NOT touch the local Keychain wallet;
+    /// callers wipe the wallet separately via `forgetWallet`.
+    public func deleteServerAccount(
+        completion: @escaping @Sendable (Result<Void, WarrenWalletInteractorError>) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.deleteAccount(seed: wallet.seed) {
+            case .success:
+                completion(.success(()))
+            case let .failure(error):
+                self?.logger.error("account deletion failed: \(error)")
+                completion(.failure(.account(error)))
             }
         }
     }

@@ -8415,6 +8415,7 @@ dependencies = [
  "mullvad-encrypted-dns-proxy",
  "mullvad-logging",
  "mullvad-types",
+ "serde_json",
  "shadowsocks",
  "talpid-future",
  "talpid-types",

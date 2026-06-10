@@ -20,6 +20,8 @@ mod warren_wallet_ffi;
 
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
+mod warren_account_ffi;
+#[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
 #[cfg(target_os = "ios")]
 mod warren_natpmp_ffi;

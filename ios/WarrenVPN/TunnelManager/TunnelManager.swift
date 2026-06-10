@@ -380,7 +380,7 @@ final class TunnelManager: @unchecked Sendable {
         let operation = UpdateAccountDataOperation(
             dispatchQueue: internalQueue,
             interactor: TunnelInteractorProxy(self),
-            accountsProxy: accountsProxy
+            walletInteractor: WarrenWalletInteractor()
         )
 
         operation.completionQueue = .main
@@ -411,7 +411,7 @@ final class TunnelManager: @unchecked Sendable {
             dispatchQueue: internalQueue,
             interactor: TunnelInteractorProxy(self),
             voucherCode: voucherCode,
-            apiProxy: apiProxy
+            walletInteractor: WarrenWalletInteractor()
         )
 
         operation.completionQueue = .main

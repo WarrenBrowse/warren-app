@@ -16,6 +16,11 @@ extension REST {
         public let timeAdded: Int
         public let newExpiry: Date
 
+        public init(timeAdded: Int, newExpiry: Date) {
+            self.timeAdded = timeAdded
+            self.newExpiry = newExpiry
+        }
+
         public var dateComponents: DateComponents {
             DateComponents(second: timeAdded)
         }

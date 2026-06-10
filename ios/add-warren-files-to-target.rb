@@ -59,6 +59,7 @@ FILES_TO_ADD = {
 
   # WarrenRustRuntime FFI wrappers.
   "WarrenRustRuntime/WarrenWallet.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntime/WarrenAccountClient.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
 
   # C.4.5 partial : no-op TunnelObfuscation stub. Provides the

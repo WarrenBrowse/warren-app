@@ -8,72 +8,63 @@
 
 import Foundation
 import WarrenLogging
-import WarrenREST
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import Operations
 
+/// Refreshes the subscription expiry on the synthesized wallet-backed
+/// device state. The expiry now comes from warren-api
+/// (`GET /v1/subscription`, signed with the wallet key) instead of the
+/// Mullvad account-number REST endpoint, matching desktop and Android.
 class UpdateAccountDataOperation: ResultOperation<Void>, @unchecked Sendable {
     private let logger = Logger(label: "UpdateAccountDataOperation")
     private let interactor: TunnelInteractor
-    private let accountsProxy: RESTAccountHandling
-    private var task: Cancellable?
+    private let walletInteractor: WarrenWalletInteractor
 
     init(
         dispatchQueue: DispatchQueue,
         interactor: TunnelInteractor,
-        accountsProxy: RESTAccountHandling
+        walletInteractor: WarrenWalletInteractor
     ) {
         self.interactor = interactor
-        self.accountsProxy = accountsProxy
+        self.walletInteractor = walletInteractor
 
         super.init(dispatchQueue: dispatchQueue)
     }
 
     override func main() {
-        guard case let .loggedIn(accountData, _) = interactor.deviceState else {
+        guard case .loggedIn = interactor.deviceState else {
             finish(result: .failure(InvalidDeviceStateError()))
             return
         }
 
-        task = accountsProxy.getAccountData(
-            accountNumber: accountData.number,
-            retryStrategy: .default,
-            completion: { result in
-                self.dispatchQueue.async {
-                    self.didReceiveAccountData(result: result)
-                }
+        walletInteractor.fetchSubscriptionExpiry { [weak self] result in
+            guard let self else { return }
+            self.dispatchQueue.async {
+                self.didReceiveExpiry(result: result)
             }
-        )
+        }
     }
 
-    override func operationDidCancel() {
-        task?.cancel()
-        task = nil
-    }
+    private func didReceiveExpiry(result: Result<Date, WarrenWalletInteractorError>) {
+        guard !isCancelled else {
+            finish(result: .failure(OperationError.cancelled))
+            return
+        }
 
-    private func didReceiveAccountData(result: Result<Account, Error>) {
-        let result = result.inspectError { error in
-            guard !error.isOperationCancellationError else { return }
-
-            self.logger.error(
-                error: error,
-                message: "Failed to fetch account expiry."
-            )
-        }.tryMap { accountData in
+        let mapped = result.tryMap { expiry in
             switch interactor.deviceState {
             case .loggedIn(var storedAccountData, let storedDeviceData):
-                storedAccountData.expiry = accountData.expiry
-
-                let newDeviceState = DeviceState.loggedIn(storedAccountData, storedDeviceData)
-
-                interactor.setDeviceState(newDeviceState, persist: true)
-
+                storedAccountData.expiry = expiry
+                interactor.setDeviceState(.loggedIn(storedAccountData, storedDeviceData), persist: true)
             default:
                 throw InvalidDeviceStateError()
             }
+        }.inspectError { error in
+            self.logger.error(error: error, message: "Failed to refresh subscription expiry.")
         }
 
-        finish(result: result)
+        finish(result: mapped)
     }
 }

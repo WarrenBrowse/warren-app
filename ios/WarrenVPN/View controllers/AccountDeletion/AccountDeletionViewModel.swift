@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import WarrenRustRuntime
 
 protocol AccountDeletionBackEnd: Sendable {
     var accountNumber: String? { get }
@@ -22,8 +23,30 @@ struct TunnelManagerAccountDeletionBackEnd: AccountDeletionBackEnd {
         tunnelManager.deviceState.accountData?.number
     }
 
+    /// Warren account deletion: delete the subscription server-side
+    /// (signed `DELETE /v1/account`), then wipe the local wallet. A 404
+    /// means the wallet has no subscription bound, which is the desired
+    /// end state, so we proceed to the local wipe. Any other server /
+    /// transport failure aborts before the wallet is wiped, so the user
+    /// does not lose their identity while the subscription record
+    /// lingers.
     func deleteAccount(accountNumber: String) async throws {
-        try await tunnelManager.deleteAccount(accountNumber: accountNumber)
+        let walletInteractor = WarrenWalletInteractor()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Swift.Error>) in
+            walletInteractor.deleteServerAccount { result in
+                switch result {
+                case .success:
+                    continuation.resume()
+                case let .failure(.account(.server(status, _))) where status == 404:
+                    continuation.resume()
+                case let .failure(error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+        await MainActor.run {
+            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+        }
     }
 }
 

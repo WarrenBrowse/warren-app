@@ -522,6 +522,40 @@ int warren_wallet_sign(const uint8_t *seed,
                        uint8_t *out_signature);
 
 /**
+ * Signed `GET /v1/subscription`. Returns the wallet's subscription
+ * expiry as `{"ok":true,"expires_at":<unix secs>}` or an error envelope.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_get_subscription(const uint8_t *seed);
+
+/**
+ * Unsigned `POST /v1/register`. Binds the wallet pubkey to a new
+ * subscription via a voucher secret. Returns
+ * `{"ok":true,"expires_at":<unix secs>}` or an error envelope. The
+ * voucher secret is never logged.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `voucher`, when non-null, must be a valid null-terminated C string.
+ * The returned pointer must be freed once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_redeem_voucher(const uint8_t *seed, const char *voucher);
+
+/**
+ * Signed `DELETE /v1/account`. Permanently deletes the wallet's
+ * subscription server-side. Returns `{"ok":true}` or an error envelope.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_delete(const uint8_t *seed);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,
