@@ -74,6 +74,13 @@ pub struct WarrenTunnelParametersC {
     pub multihop_entry_country: *const c_char,
     /// Optional ISO 3166-1 alpha-2 exit-country hint (null / empty = any).
     pub multihop_exit_country: *const c_char,
+    /// Optional path to the App Group file that persists the multi-hop
+    /// directory anti-rollback high-water mark (highest trusted
+    /// `generation`). Read before verification to reject a stale directory,
+    /// raised after a successful selection. Null disables persistence (the
+    /// gate then only protects within a single connect). Ignored when
+    /// `multihop_directory_json` is null.
+    pub multihop_generation_state_path: *const c_char,
 }
 
 /// Multi-hop entry relay configuration.
@@ -196,6 +203,34 @@ pub type WarrenTunnelEventCallback =
 pub type WarrenTunnelOutboundCallback =
     unsafe extern "C" fn(data: *const u8, len: usize, context: *mut c_void);
 
+/// Exit-allocated IPv4 surfaced to Swift after the multi-hop circuit's
+/// setup-stream returns an `IpAssign` control message. Swift re-applies
+/// `NEPacketTunnelNetworkSettings` with this address so the TUN's source
+/// IP matches what the exit expects, otherwise return traffic is dropped
+/// (the iOS analog of the daemon's `RealTun::reassign_ipv4`).
+///
+/// IPv4-only: the iOS multi-hop path keeps native IPv6 blackholed
+/// (`wants_ipv6 = false`), so no v6 assignment is requested or surfaced.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WarrenTunnelIpAssignC {
+    /// Exit-allocated IPv4 address (network byte order, i.e. octets a.b.c.d).
+    pub ipv4: [u8; 4],
+    /// Subnet prefix length for the allocated address.
+    pub prefix_len: u8,
+    /// Exit-side gateway IPv4 (the exit TUN host).
+    pub gateway_ipv4: [u8; 4],
+}
+
+/// Exit-allocated IP callback signature. Called from a Tokio task on the
+/// warren-tunnel runtime when the multi-hop circuit reports a fresh
+/// `IpAssign`. The Swift side re-applies the tunnel network settings.
+///
+/// `assign` is owned by Rust for the duration of the call; Swift must
+/// copy the fields before returning.
+pub type WarrenTunnelIpAssignCallback =
+    unsafe extern "C" fn(assign: *const WarrenTunnelIpAssignC, context: *mut c_void);
+
 // ---- Return codes shared by all tunnel FFI fns ----
 
 const RC_OK: c_int = 0;
@@ -223,7 +258,8 @@ mod handle_impl {
     //! lazily in [`WarrenTunnelHandleImpl::run`] (TODO C.4.1).
 
     use super::{
-        WarrenTunnelEventCallback, WarrenTunnelOutboundCallback, WarrenTunnelStateC,
+        WarrenTunnelEventCallback, WarrenTunnelIpAssignCallback, WarrenTunnelOutboundCallback,
+        WarrenTunnelStateC,
     };
     use std::ffi::c_void;
     use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
@@ -275,6 +311,10 @@ mod handle_impl {
         /// side immediately after [`super::warren_tunnel_start`] and
         /// before any inbound packet is injected.
         pub outbound_callback: Mutex<Option<CallbackEntry<WarrenTunnelOutboundCallback>>>,
+        /// Registered exit-allocated IP callback. Fired by the multi-hop
+        /// reassign task when the circuit reports a fresh `IpAssign`.
+        /// Optional; the single-hop dev path never fires it.
+        pub ip_assign_callback: Mutex<Option<CallbackEntry<WarrenTunnelIpAssignCallback>>>,
         /// Atomic counters surfaced through
         /// [`super::warren_tunnel_status`]. Atomics avoid contention
         /// with the pump tasks while keeping the status read O(1).
@@ -308,6 +348,7 @@ mod handle_impl {
                 tun: IosTun::new(),
                 event_callback: Mutex::new(None),
                 outbound_callback: Mutex::new(None),
+                ip_assign_callback: Mutex::new(None),
                 state: AtomicU8::new(WarrenTunnelStateC::Disconnected as u8),
                 bytes_in: AtomicU64::new(0),
                 bytes_out: AtomicU64::new(0),
@@ -381,6 +422,30 @@ mod handle_impl {
             }
         }
 
+        /// Fire the exit-allocated IP callback (if registered) so Swift
+        /// re-applies the tunnel network settings with the new address.
+        pub fn fire_ip_assign(
+            &self,
+            ipv4: std::net::Ipv4Addr,
+            prefix_len: u8,
+            gateway: std::net::Ipv4Addr,
+        ) {
+            let assign = super::WarrenTunnelIpAssignC {
+                ipv4: ipv4.octets(),
+                prefix_len,
+                gateway_ipv4: gateway.octets(),
+            };
+            let Ok(cb_entry) = self.ip_assign_callback.lock() else { return };
+            let Some(entry) = cb_entry.as_ref() else { return };
+            // SAFETY: callback + context come from Swift via
+            // `warren_tunnel_set_ip_assign_callback`. Swift owns the
+            // context pointer lifecycle; we just pass it back. The
+            // `assign` pointer is valid for the duration of the call.
+            unsafe {
+                (entry.callback)(&raw const assign, entry.context);
+            }
+        }
+
         /// Snapshot of the current state discriminant.
         pub fn state_snapshot(&self) -> WarrenTunnelStateC {
             match self.state.load(Ordering::Relaxed) {
@@ -401,11 +466,22 @@ mod handle_impl {
 /// supervisor's session watch. The supervisor owns reconnect; the pumps
 /// drop packets while it is mid-reconnect.
 ///
-/// First-cut scope (documented follow-ups, not silently missing): no
-/// periodic directory refresh (the directory is fetched once per connect
-/// by Swift), no exit-allocated IP reassign (the bootstrap address from
-/// the network settings is kept; the daemon's reassign loop is
-/// RealTun-specific), and DAITA is disabled on this path.
+/// Exit-allocated IP reassign is wired: the supervisor + downlink publish
+/// each `IpAssign` onto an `IpAssignChannel`, and a reassign task fires
+/// the registered IP callback so Swift re-applies the tunnel network
+/// settings with the exit address (the iOS analog of the daemon's
+/// `RealTun::reassign_ipv4` loop). IPv4-only, matching `wants_ipv6 =
+/// false`.
+///
+/// DAITA is off on this path by design: the desktop daemon's multi-hop
+/// data plane runs the plain `run_uplink`/`run_downlink` pumps too, so iOS
+/// is structurally identical (DAITA is negotiated only on the single-hop
+/// path on every platform).
+///
+/// In-session directory refresh is driven from Swift (a 30-min timer that
+/// re-fetches, calls `warren_multihop_check_generation`, and reconnects on a
+/// generation advance), so this function selects the circuit once per
+/// (re)connect and the supervisor reconnects to the stable circuit on drops.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn spawn_multi_hop(
     arc: std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
@@ -413,13 +489,12 @@ fn spawn_multi_hop(
     two_hop: bool,
     entry_country: String,
     exit_country: String,
+    generation_state_path: Option<String>,
     signing_key: ed25519_dalek::SigningKey,
 ) {
     use std::sync::atomic::Ordering;
 
-    use warren_client::supervised_pump::{
-        DaitaShared, run_downlink_with_daita, run_uplink_with_daita,
-    };
+    use warren_client::supervised_pump::{IpAssignChannel, run_downlink, run_uplink};
     use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
     let arc_for_task = std::sync::Arc::clone(&arc);
@@ -432,12 +507,22 @@ fn spawn_multi_hop(
             WarrenTunnelEventTagC::EventReconnecting
         });
 
+        // Anti-rollback: read the persisted high-water generation (if a
+        // state path was supplied) so a replayed older-but-signed directory
+        // is rejected. `None`/missing file => 0 => gate open (first connect).
+        let gen_path = generation_state_path.as_ref().map(std::path::PathBuf::from);
+        let min_generation = gen_path
+            .as_deref()
+            .map(crate::warren_multihop_generation::read_high_water)
+            .unwrap_or(0);
+
         let circuit = match crate::warren_multihop_directory::verify_and_select(
             &directory_json,
             two_hop,
             &entry_country,
             &exit_country,
             now_secs(),
+            min_generation,
         ) {
             Ok(Some(circuit)) => circuit,
             Ok(None) => {
@@ -454,11 +539,24 @@ fn spawn_multi_hop(
             }
         };
 
+        // The accepted generation is persisted as the new high-water mark
+        // only AFTER a successful connect (in the state-watch loop below),
+        // never here. Raising it on select alone would let a server-key
+        // compromise serving a validly-signed directory with an inflated
+        // generation (whose nodes never connect) poison the monotonic mark
+        // and permanently reject later legitimate directories.
+        let accepted_generation = circuit.generation;
+
         let Ok(bind_addr) = "0.0.0.0:0".parse::<std::net::SocketAddr>() else {
             arc_for_task.set_state(WarrenTunnelStateC::Failed);
             arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
             return;
         };
+        // The exit allocates a per-wallet sticky IPv4 and announces it via
+        // `IpAssign` on this channel (the supervisor's setup-stream reply
+        // and the downlink pump both publish). The reassign task below
+        // forwards each fresh address to Swift.
+        let ip_assign_channel = IpAssignChannel::new();
         let cfg = SupervisorConfig {
             relay: std::sync::Arc::new(circuit.relay),
             exit_id: circuit.exit.exit_id,
@@ -466,42 +564,88 @@ fn spawn_multi_hop(
             operational_pubkey: circuit.operational_pubkey,
             client_signing: signing_key,
             bind_addr,
+            // GSO is a no-op on Apple platforms (quinn-udp has no UDP GSO on
+            // Darwin, unlike Linux), so this is moot vs the desktop daemon's
+            // `enable_gso: true`; `false` states the effective behavior.
             enable_gso: false,
             use_warren_obfuscation: true,
-            backoff: warren_backoff::Backoff::HANDSHAKE,
+            // 300 ms base / 2 s ceiling, matching the desktop daemon's
+            // override (talpid-warren-tunnel::start_multi_hop). The default
+            // `Backoff::HANDSHAKE` 15 s ceiling overshoots a network-change
+            // recovery: a re-dial parked in a 15 s backoff misses the window
+            // when the link returns, stretching a Wi-Fi/cellular handover.
+            backoff: warren_backoff::Backoff {
+                base: std::time::Duration::from_millis(300),
+                max: std::time::Duration::from_secs(2),
+            },
             on_reconnect: None,
-            ip_assign_channel: None,
+            ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: false,
+            // Single connection on iOS: the NetworkExtension memory cap
+            // (50 MB) leaves no headroom for N bonded Quinn endpoints,
+            // and cellular paths rarely benefit from multi-flow bonding.
+            n_connections: 1,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
-
-        let daita: DaitaShared = std::sync::Arc::new(parking_lot::Mutex::new(
-            warren_tunnel::daita::DaitaState::disabled(),
-        ));
-        let notify = std::sync::Arc::new(tokio::sync::Notify::new());
         let tun = arc_for_task.tun.clone();
 
+        // Plain pumps (no DAITA), structurally identical to the desktop
+        // daemon's multi-hop data plane (`talpid-warren-tunnel::
+        // start_multi_hop` drives `run_uplink`/`run_downlink`). DAITA
+        // shaping is negotiated only on the single-hop path on every
+        // platform, so keeping it off here is a deliberate cross-platform
+        // decision, not a gap. The exit-allocated IP still flows: the
+        // supervisor publishes each setup-stream `IpAssign` on
+        // `ip_assign_channel` (config above), which the reassign task below
+        // forwards to Swift.
         let up_watch = watch.clone();
-        let up_daita = daita.clone();
-        let up_notify = notify.clone();
         let up_tun = tun.clone();
         tokio::spawn(async move {
-            if let Err(e) = run_uplink_with_daita(up_watch, up_tun, up_daita, up_notify).await {
+            if let Err(e) = run_uplink(up_watch, up_tun).await {
                 tracing::error!(error = %e, "multi-hop uplink terminated");
             }
         });
         let dn_watch = watch.clone();
         let dn_tun = tun.clone();
         tokio::spawn(async move {
-            if let Err(e) =
-                run_downlink_with_daita(dn_watch, dn_tun, daita, notify, None).await
-            {
+            if let Err(e) = run_downlink(dn_watch, dn_tun).await {
                 tracing::error!(error = %e, "multi-hop downlink terminated");
             }
         });
         tokio::spawn(async move {
             if let Err(e) = supervisor.run().await {
                 tracing::error!(error = %e, "multi-hop supervisor terminated");
+            }
+        });
+
+        // Reassign task: forward each exit-allocated IPv4 to Swift. Mirrors
+        // the daemon's reassign loop (warren_multihop_tun_client.rs) but,
+        // instead of mutating a RealTun, fires the IP callback so Swift
+        // re-applies the NEPacketTunnelNetworkSettings. Dedups by the last
+        // forwarded address so a sticky reconnect to the same IP is a no-op.
+        //
+        // Subscribe BEFORE the spawn and move only the `Receiver`: a task that
+        // owned an `IpAssignChannel` (sender) clone could never see
+        // `changed()` error and would run for the whole session. With only the
+        // receiver, the task ends when the supervisor drops its sender. Drop
+        // the local channel so the supervisor's clone (in `cfg`) is the only
+        // remaining sender, making teardown deterministic.
+        let mut reassign_rx = ip_assign_channel.subscribe();
+        drop(ip_assign_channel);
+        let reassign_arc = std::sync::Arc::clone(&arc_for_task);
+        tokio::spawn(async move {
+            let mut current: Option<std::net::Ipv4Addr> = None;
+            loop {
+                let cached = *reassign_rx.borrow_and_update();
+                if let Some(spec) = cached
+                    && current != Some(spec.assigned)
+                {
+                    reassign_arc.fire_ip_assign(spec.assigned, spec.prefix_len, spec.gateway);
+                    current = Some(spec.assigned);
+                }
+                if reassign_rx.changed().await.is_err() {
+                    break;
+                }
             }
         });
 
@@ -522,6 +666,15 @@ fn spawn_multi_hop(
                         .connected_at_secs
                         .store(now_secs(), Ordering::Relaxed);
                     arc_for_task.fire_event(WarrenTunnelEventTagC::EventConnected);
+                    // Raise the anti-rollback high-water mark only now that the
+                    // circuit actually connected, so an unusable forged
+                    // directory never poisons the persisted mark.
+                    if let Some(path) = gen_path.as_deref() {
+                        crate::warren_multihop_generation::raise_high_water(
+                            path,
+                            accepted_generation,
+                        );
+                    }
                 }
             } else if arc_for_task.has_connected_once.load(Ordering::Acquire) {
                 arc_for_task.set_state(WarrenTunnelStateC::Reconnecting);
@@ -601,6 +754,8 @@ pub unsafe extern "C" fn warren_tunnel_start(
             let exit_country = unsafe { cstr_to_str(params.multihop_exit_country) }
                 .unwrap_or("")
                 .to_owned();
+            let generation_state_path =
+                unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
 
             let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
                 return std::ptr::null_mut();
@@ -613,6 +768,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 two_hop,
                 entry_country,
                 exit_country,
+                generation_state_path,
                 signing_key,
             );
             let boxed = Box::new(arc);
@@ -1005,6 +1161,47 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
     }
 }
 
+/// Registers a callback invoked when the multi-hop circuit reports a
+/// fresh exit-allocated IPv4 (`IpAssign`). The Swift side re-applies the
+/// `NEPacketTunnelNetworkSettings` with the new address. Replaces any
+/// previously registered callback. Passing a null callback is rejected
+/// (use a no-op from Swift to clear).
+///
+/// Returns `0` on success, `-1` on null handle.
+///
+/// # Safety
+/// Same invariants as [`warren_tunnel_set_event_callback`].
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_tunnel_set_ip_assign_callback(
+    handle: *mut WarrenTunnelHandle,
+    callback: WarrenTunnelIpAssignCallback,
+    context: *mut c_void,
+) -> c_int {
+    if handle.is_null() {
+        return RC_INVALID_INPUT;
+    }
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    {
+        // SAFETY: caller upholds the handle invariant (non-null, live).
+        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+            return RC_INVALID_INPUT;
+        };
+        let Ok(mut slot) = arc.ip_assign_callback.lock() else {
+            return RC_INVALID_INPUT;
+        };
+        *slot = Some(handle_impl::CallbackEntry {
+            callback,
+            context,
+        });
+        RC_OK
+    }
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+    {
+        let _ = (handle, callback, context);
+        RC_TUNNEL_FEATURE_DISABLED
+    }
+}
+
 /// Pushes an inbound IP packet onto the tunnel uplink queue. Called
 /// by Swift after each `NEPacketTunnelFlow.readPackets` completion.
 ///
@@ -1043,6 +1240,53 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
     {
         let _ = (handle, data, len);
         RC_TUNNEL_FEATURE_DISABLED
+    }
+}
+
+/// Verifies a freshly fetched multi-hop directory and returns its trusted
+/// `generation`, or `-1` on any verification / expiry / rollback failure.
+/// Handle-free: used by the Swift periodic-refresh loop to decide whether
+/// the fleet changed (a higher generation than the running session's) and a
+/// re-selection is warranted, without disturbing the live tunnel.
+///
+/// Does NOT raise the persisted anti-rollback high-water mark (it only reads
+/// it for the rollback gate); the mark is raised only on a successful
+/// connect, so a periodic check of an inflated-generation forgery cannot
+/// poison it. `generation_state_path` may be null (gate then reads as 0).
+///
+/// # Safety
+/// `directory_json` must be a valid null-terminated UTF-8 C string.
+/// `generation_state_path`, when non-null, must be a valid null-terminated
+/// UTF-8 C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_multihop_check_generation(
+    directory_json: *const c_char,
+    generation_state_path: *const c_char,
+) -> i64 {
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    {
+        // SAFETY: caller upholds the null-termination + UTF-8 invariant.
+        let Some(json) = (unsafe { cstr_to_str(directory_json) }) else {
+            return -1;
+        };
+        let min_generation = unsafe { cstr_to_str(generation_state_path) }
+            .map(std::path::PathBuf::from)
+            .as_deref()
+            .map(crate::warren_multihop_generation::read_high_water)
+            .unwrap_or(0);
+        match crate::warren_multihop_directory::verify_generation(
+            json,
+            now_secs(),
+            min_generation,
+        ) {
+            Ok(generation) => i64::try_from(generation).unwrap_or(i64::MAX),
+            Err(_) => -1,
+        }
+    }
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+    {
+        let _ = (directory_json, generation_state_path);
+        -1
     }
 }
 

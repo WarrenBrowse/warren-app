@@ -1114,6 +1114,17 @@ impl WarrenTunnelMonitor {
         let pump_spawn_t = Instant::now();
         let pump_handle = runtime.spawn(async move {
             log::info!("{TRACE_PREFIX} pump=running");
+            // QUIC path visibility (cwnd/rtt/loss/datagram buffer headroom),
+            // 5s cadence, self-terminates when the connections close.
+            // Opt-out via WARREN_PATH_PROBE=0; never logs IPs or keys.
+            let _ = match &session_kind {
+                SessionKind::Mono(session) => {
+                    warren_tunnel::spawn_path_probe("client", vec![session.clone_conn()], None)
+                }
+                SessionKind::Multi(multi) => {
+                    warren_tunnel::spawn_path_probe("client", multi.clone_connections(), None)
+                }
+            };
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();
@@ -1355,6 +1366,13 @@ impl WarrenTunnelMonitor {
             on_reconnect: params.on_reconnect.clone(),
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6,
+            // Bonded connections: one QUIC connection is capped at the
+            // per-flow bandwidth share of the client↔relay path (e.g.
+            // ~400 Mbps on a 1 Gbps line whose 8-flow aggregate reaches
+            // ~900). The supervisor bonds n_connections sessions under
+            // one identity (sticky inner IP) and pins flows by 5-tuple
+            // hash, mirroring the single-hop MultiSession.
+            n_connections: usize::from(params.n_connections).max(1),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         // Subscribe to the supervisor's terminal-rejection signal BEFORE
