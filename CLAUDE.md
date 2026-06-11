@@ -72,3 +72,21 @@ A comment must explain the **why** behind a non-obvious choice — never narrate
 - **Restating the next line** in prose.
 
 Write a comment **only** when it carries information the code cannot: a non-obvious invariant, the subtle reason for an unusual choice, or a warning that stops a future agent from reintroducing a known bug. Be very parsimonious — when in doubt, leave it out. When you encounter this kind of noise comment in code you are already editing, delete it.
+
+## Deployment rule: ALWAYS bump versions before redeploying exit nodes
+
+Non-negotiable rule (poka, 2026-06-11). Before ANY redeploy of a warren-exit
+binary to production (warren-exit-1, warren-exit-sin):
+
+1. **Bump** `version` in `[workspace.package]` of `../warren-core/Cargo.toml`
+   FIRST. Without it, two different builds carry the same number and only a
+   SHA-256 hash comparison can tell what runs in prod.
+2. **Commit before building**: never deploy a `-dirty` binary
+   (`git describe` exposes it; `warren-exit --version` prints
+   `git describe (semver)` since 2026-06-11).
+3. **Verify after**: `ssh root@<exit> '/usr/local/bin/warren-exit --version'`
+   must show the new version.
+4. **Canary order**: warren-exit-sin first, then warren-exit-1.
+
+Full procedure: `../warren-core/CLAUDE.md` section "Règles de déploiement des
+exit nodes".
