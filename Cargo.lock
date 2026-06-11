@@ -5314,7 +5314,7 @@ dependencies = [
 
 [[package]]
 name = "quinn"
-version = "0.11.9"
+version = "0.11.10"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -5332,7 +5332,7 @@ dependencies = [
 
 [[package]]
 name = "quinn-proto"
-version = "0.11.13-warren.2"
+version = "0.11.14-warren.3"
 dependencies = [
  "bytes",
  "fastbloom",
@@ -5353,11 +5353,11 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.5.14"
+version = "0.6.1"
 dependencies = [
  "cfg_aliases",
  "libc",
- "once_cell",
+ "log",
  "socket2 0.5.10",
  "tracing",
  "windows-sys 0.59.0",
@@ -8416,7 +8416,6 @@ dependencies = [
  "mullvad-encrypted-dns-proxy",
  "mullvad-logging",
  "mullvad-types",
- "parking_lot",
  "serde_json",
  "shadowsocks",
  "talpid-future",
@@ -8430,6 +8429,7 @@ dependencies = [
  "warren-api-client",
  "warren-backoff",
  "warren-client",
+ "warren-config",
  "warren-identity",
  "warren-multihop",
  "warren-natpmp-client",

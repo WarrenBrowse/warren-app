@@ -174,12 +174,16 @@ unused_macro_rules = "warn"
 ignored = ["prost"]
 
 # Warren consumes the local quinn fork that lives in warren-core
-# (`vendor/quinn-fork/`) for the GSO patch (MAX_TRANSMIT_DATAGRAMS 20→80,
-# MAX_TRANSMIT_SEGMENTS 10→40). Without this patch, downlink throughput
-# drops ~25% on the bench. The fork itself is gitignored in warren-core
-# and seeded via `bench/scripts/setup-quinn-fork.sh`; this path-dep ties
-# warren-app's resolution to it. The required warren-core SHA is pinned
-# in `.warren-core-version` at the repo root.
+# (`vendor/quinn-fork/`). Rebased 2026-06 onto upstream 0.11.x tip +
+# quinn-udp 0.6.1 (quinn 0.11.10 / quinn-proto 0.11.14-warren.3 / quinn-udp
+# 0.6.1): GSO patch (MAX_TRANSMIT_DATAGRAMS 20→80, MAX_TRANSMIT_SEGMENTS
+# 10→40, ~25% more downlink), obfuscation knobs, socket-buffer sizing on
+# unix + windows, the GHSA-6xvm-j4wr-6v98 DoS fix, and the quinn-udp 0.6.1
+# dlsym Apple fast path / per-socket Windows GSO sizing. quinn-udp resolves
+# transitively through the quinn path dep. The fork is gitignored in
+# warren-core and seeded via `bench/scripts/setup-quinn-fork.sh`; this
+# path-dep ties warren-app's resolution to it. The required warren-core SHA
+# is pinned in `.warren-core-version` at the repo root.
 [patch.crates-io]
 quinn = { path = "../warren-core/vendor/quinn-fork/quinn" }
 quinn-proto = { path = "../warren-core/vendor/quinn-fork/quinn-proto" }
