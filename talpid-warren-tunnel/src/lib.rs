@@ -1302,7 +1302,6 @@ impl WarrenTunnelMonitor {
         use std::{sync::Arc, time::Duration};
         use warren_backoff::Backoff;
         use warren_client::{
-            multi_hop::MultiHopClient,
             supervised_pump::{IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
         };
@@ -1400,7 +1399,7 @@ impl WarrenTunnelMonitor {
         // (~150 s) so a permanently-unreachable relay surfaces as a
         // clean Error::Handshake instead of hanging the state machine.
         let initial_wait_bound = Duration::from_secs(150);
-        let initial_client: Arc<MultiHopClient> =
+        let initial_client: Arc<warren_client::bundle::MultiHopBundle> =
             runtime.block_on(async {
                 let deadline = tokio::time::Instant::now() + initial_wait_bound;
                 loop {

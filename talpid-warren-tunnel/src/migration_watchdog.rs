@@ -29,7 +29,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use talpid_routing::RouteManagerHandle;
-use warren_client::multi_hop::MultiHopClient;
+use warren_client::bundle::MultiHopBundle;
 use warren_client::supervisor::SupervisorHandle;
 
 /// Coalescing window for bursts of route events (an interface flap
@@ -278,7 +278,7 @@ pub(crate) async fn run_watchdog<I: WatchdogIo>(io: &mut I) {
 // ── Production IO ────────────────────────────────────────────────────
 
 /// Watch receiver over the supervisor's published session.
-type ClientWatch = tokio::sync::watch::Receiver<Option<Arc<MultiHopClient>>>;
+type ClientWatch = tokio::sync::watch::Receiver<Option<Arc<MultiHopBundle>>>;
 /// Shared single-shot pump error sender (same instance the pumps use).
 type PumpErrorTx = Arc<std::sync::Mutex<Option<tokio::sync::oneshot::Sender<String>>>>;
 
@@ -302,7 +302,7 @@ pub(crate) struct RealWatchdogIo {
 }
 
 impl RealWatchdogIo {
-    fn current_client(&self) -> Option<Arc<MultiHopClient>> {
+    fn current_client(&self) -> Option<Arc<MultiHopBundle>> {
         self.client_rx.borrow().clone()
     }
 }
