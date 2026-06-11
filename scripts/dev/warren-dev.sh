@@ -179,12 +179,17 @@ DAEMON_RUN_FLAGS=("--disable-stdout-timestamps")
 parse_daemon_flags() {
   DAEMON_BUILD_MODE="debug"
   DAEMON_CARGO_FLAGS=()
-  DAEMON_RUN_FLAGS=("--disable-stdout-timestamps")
+  # Default to INFO logging (-v): without it the daemon logs ERROR only,
+  # which leaves the on-disk daemon.log blind to every tunnel state
+  # transition (connect/teardown/pump death are INFO/WARN). The
+  # 2026-06-11 torrent incident was undiagnosable from a default-level
+  # log. Explicit -v/-vv/-vvv flags replace this default.
+  DAEMON_RUN_FLAGS=("--disable-stdout-timestamps" "-v")
 
   while (( $# )); do
     case "$1" in
       --release)     DAEMON_BUILD_MODE="release"; DAEMON_CARGO_FLAGS+=(--release) ;;
-      -v|-vv|-vvv)   DAEMON_RUN_FLAGS+=("$1") ;;
+      -v|-vv|-vvv)   DAEMON_RUN_FLAGS=("--disable-stdout-timestamps" "$1") ;;
       --no-log-file) DAEMON_RUN_FLAGS+=(--disable-log-to-file) ;;
       --)            shift; DAEMON_RUN_FLAGS+=("$@"); break ;;
       *)             die "Unknown daemon flag: $1" ;;
