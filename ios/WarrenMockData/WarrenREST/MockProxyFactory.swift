@@ -18,14 +18,6 @@ public struct MockProxyFactory: ProxyFactoryProtocol {
         APIProxyStub()
     }
 
-    public func createAccountsProxy() -> any RESTAccountHandling {
-        AccountsProxyStub(createAccountResult: .success(.mockValue()))
-    }
-
-    public func createDevicesProxy() -> any DeviceHandling {
-        DevicesProxyStub(deviceResult: .success(Device.mock(publicKey: WireGuard.PrivateKey().publicKey)))
-    }
-
     public static func makeProxyFactory(
         apiTransportProvider: any APITransportProviderProtocol
     ) -> any ProxyFactoryProtocol {

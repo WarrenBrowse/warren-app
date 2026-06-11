@@ -37,8 +37,6 @@ final class TunnelManager: @unchecked Sendable {
     let backgroundTaskProvider: BackgroundTaskProviding
     fileprivate let tunnelStore: any TunnelStoreProtocol
     private let relayCacheTracker: RelayCacheTrackerProtocol
-    private let accountsProxy: RESTAccountHandling
-    private let devicesProxy: DeviceHandling
     private let apiProxy: APIQuerying
 
     private let logger = Logger(label: "TunnelManager")
@@ -67,7 +65,6 @@ final class TunnelManager: @unchecked Sendable {
     private var _tunnelStatus = TunnelStatus()
     private var _lastNEVPNStatus: NEVPNStatus = .invalid
 
-    /// Last processed device check.
     private var lastPacketTunnelKeyRotation: Date?
 
     private var observer: TunnelObserver?
@@ -78,16 +75,12 @@ final class TunnelManager: @unchecked Sendable {
         backgroundTaskProvider: BackgroundTaskProviding,
         tunnelStore: any TunnelStoreProtocol,
         relayCacheTracker: RelayCacheTrackerProtocol,
-        accountsProxy: RESTAccountHandling,
-        devicesProxy: DeviceHandling,
         apiProxy: APIQuerying,
         relaySelector: RelaySelectorProtocol
     ) {
         self.backgroundTaskProvider = backgroundTaskProvider
         self.tunnelStore = tunnelStore
         self.relayCacheTracker = relayCacheTracker
-        self.accountsProxy = accountsProxy
-        self.devicesProxy = devicesProxy
         self.apiProxy = apiProxy
         self.operationQueue.name = "TunnelManager.operationQueue"
         self.operationQueue.underlyingQueue = internalQueue
@@ -305,14 +298,6 @@ final class TunnelManager: @unchecked Sendable {
         }
     }
 
-    func setNewAccount() async throws -> StoredAccountData {
-        try await setAccount(action: .new)!
-    }
-
-    func setExistingAccount(accountNumber: String) async throws -> StoredAccountData {
-        try await setAccount(action: .existing(accountNumber))!
-    }
-
     private func setAccount(
         action: SetAccountAction,
         completionHandler: @escaping @Sendable (Result<StoredAccountData?, Error>) -> Void
@@ -320,8 +305,6 @@ final class TunnelManager: @unchecked Sendable {
         let operation = SetAccountOperation(
             dispatchQueue: internalQueue,
             interactor: TunnelInteractorProxy(self),
-            accountsProxy: accountsProxy,
-            devicesProxy: devicesProxy,
             action: action
         )
 
@@ -348,14 +331,8 @@ final class TunnelManager: @unchecked Sendable {
             MutuallyExclusive(category: OperationCategory.settingsUpdate.category)
         )
 
-        // Unsetting (ie. logging out) or deleting the account should cancel all other
-        // currently ongoing activity.
-        switch action {
-        case .unset, .delete:
-            operationQueue.cancelAllOperations()
-        default:
-            break
-        }
+        // Unsetting (ie. logging out) should cancel all other currently ongoing activity.
+        operationQueue.cancelAllOperations()
 
         operationQueue.addOperation(operation)
     }
@@ -429,10 +406,6 @@ final class TunnelManager: @unchecked Sendable {
 
         operationQueue.addOperation(operation)
         return operation
-    }
-
-    func deleteAccount(accountNumber: String) async throws {
-        _ = try await setAccount(action: .delete(accountNumber))
     }
 
     func updateDeviceData(_ completionHandler: (@Sendable (Error?) -> Void)? = nil) {

@@ -21,8 +21,6 @@ class TunnelManagerTests: XCTestCase {
 
     var application: BackgroundTaskProviding!
     var relayCacheTracker: RelayCacheTrackerStub!
-    var accountProxy: AccountsProxyStub!
-    var devicesProxy: DevicesProxyStub!
     var apiProxy: APIProxyStub!
     var apiContext: MullvadApiContext!
 
@@ -37,9 +35,6 @@ class TunnelManagerTests: XCTestCase {
     override func setUp() async throws {
         application = UIApplicationStub()
         relayCacheTracker = RelayCacheTrackerStub()
-        accountProxy = AccountsProxyStub()
-        devicesProxy = DevicesProxyStub(
-            deviceResult: .success(Device.mock(publicKey: WireGuard.PrivateKey().publicKey)))
         apiProxy = APIProxyStub()
         let shadowsocksLoader = ShadowsocksLoader(
             cache: ShadowsocksConfigurationCacheStub(),
@@ -69,8 +64,6 @@ class TunnelManagerTests: XCTestCase {
     override func tearDown() async throws {
         application = nil
         relayCacheTracker = nil
-        accountProxy = nil
-        devicesProxy = nil
         apiProxy = nil
         tunnelObserver = nil
     }
@@ -80,7 +73,6 @@ class TunnelManagerTests: XCTestCase {
         let blockedExpectation = expectation(description: "Relay constraints aren't satisfied!")
         let connectedExpectation = expectation(description: "Connected!")
 
-        accountProxy.createAccountResult = .success(NewAccountData.mockValue())
 
         let relaySelector = RelaySelectorStub { _ in
             try RelaySelectorStub.unsatisfied().selectRelays(
@@ -93,8 +85,6 @@ class TunnelManagerTests: XCTestCase {
             backgroundTaskProvider: application,
             tunnelStore: TunnelStore(application: application),
             relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountProxy,
-            devicesProxy: devicesProxy,
             apiProxy: apiProxy,
             relaySelector: relaySelector
         )
@@ -134,7 +124,11 @@ class TunnelManagerTests: XCTestCase {
         self.tunnelObserver = tunnelObserver
         tunnelManager.addObserver(tunnelObserver)
 
-        _ = try await tunnelManager.setNewAccount()
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: "5Test",
+            publicKeyHex: "00",
+            persist: true
+        )
 
         XCTAssertTrue(tunnelManager.deviceState.isLoggedIn)
 
@@ -151,7 +145,6 @@ class TunnelManagerTests: XCTestCase {
     func testReconnectingTunnelRefreshesItsStatus() async throws {
         throw XCTSkip("TODO: Fix this flaky test or relieve it of its misery")
 
-        accountProxy.createAccountResult = .success(NewAccountData.mockValue())
 
         let relaySelector = RelaySelectorStub { _ in
             try RelaySelectorStub.nonFallible().selectRelays(
@@ -164,8 +157,6 @@ class TunnelManagerTests: XCTestCase {
             backgroundTaskProvider: application,
             tunnelStore: TunnelStore(application: application),
             relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountProxy,
-            devicesProxy: devicesProxy,
             apiProxy: apiProxy,
             relaySelector: relaySelector
         )
@@ -182,7 +173,11 @@ class TunnelManagerTests: XCTestCase {
 
         SimulatorTunnelProvider.shared.delegate = simulatorTunnelProviderHost
 
-        _ = try await tunnelManager.setNewAccount()
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: "5Test",
+            publicKeyHex: "00",
+            persist: true
+        )
         XCTAssertTrue(tunnelManager.deviceState.isLoggedIn)
 
         let connectedExpectation = expectation(description: "Connected")
@@ -226,7 +221,6 @@ class TunnelManagerTests: XCTestCase {
         var connectedExpectation = expectation(description: "Connected!")
         let disconnectedExpectation = expectation(description: "Disconnected!")
 
-        accountProxy.createAccountResult = .success(NewAccountData.mockValue())
 
         let relaySelector = RelaySelectorStub { _ in
             try RelaySelectorStub.nonFallible().selectRelays(
@@ -239,8 +233,6 @@ class TunnelManagerTests: XCTestCase {
             backgroundTaskProvider: application,
             tunnelStore: TunnelStore(application: application),
             relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountProxy,
-            devicesProxy: devicesProxy,
             apiProxy: apiProxy,
             relaySelector: relaySelector
         )
@@ -268,7 +260,11 @@ class TunnelManagerTests: XCTestCase {
         self.tunnelObserver = tunnelObserver
         tunnelManager.addObserver(tunnelObserver)
 
-        _ = try await tunnelManager.setNewAccount()
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: "5Test",
+            publicKeyHex: "00",
+            persist: true
+        )
 
         XCTAssertTrue(tunnelManager.deviceState.isLoggedIn)
 

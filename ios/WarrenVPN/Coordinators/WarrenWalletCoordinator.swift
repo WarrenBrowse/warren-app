@@ -8,7 +8,7 @@
 //  Coordinator for the Warren wallet onboarding + restore + backup
 //  flows. Follows the Mullvad iOS Coordinator pattern (see
 //  `Routing/Coordinator.swift`) so it composes cleanly with
-//  `ApplicationCoordinator` / `LoginCoordinator` / `WelcomeCoordinator`.
+//  `ApplicationCoordinator` / `WelcomeCoordinator`.
 //
 
 import Routing

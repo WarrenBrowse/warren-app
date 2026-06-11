@@ -43,8 +43,7 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         navigationController.navigationBar.prefersLargeTitles = true
 
         let accountController = AccountViewController(
-            interactor: interactor,
-            errorPresenter: PaymentAlertPresenter(alertContext: self)
+            interactor: interactor
         )
 
         accountController.actionHandler = handleViewControllerAction
@@ -63,37 +62,18 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
             navigateToRedeemVoucher()
         case .navigateToDeleteAccount:
             navigateToDeleteAccount()
-        case .restorePurchasesInfo:
-            showRestorePurchasesInfo()
-        case .showFailedToLoadProducts:
-            showFailToFetchProducts()
-        case .showRestorePurchases:
-            openCheckout()
         case .showPurchaseOptions:
-            openCheckout()
+            didRequestShowInAppPurchase(paymentAction: .purchase)
         }
     }
 
-    /// Opens the Warren Stripe checkout funnel. Aligned with desktop and
-    /// Android: there is no in-app purchase. The user buys a plan on
-    /// `checkout.warrenbrowse.com`, receives a voucher, and redeems it
-    /// in-app (Redeem voucher). The funnel is stateless, so no wallet
-    /// identifier is passed in the URL.
-    private func openCheckout() {
-        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
-        let safari = SFSafariViewController(url: url)
-        safari.preferredBarTintColor = .Warren.navy
-        safari.preferredControlTintColor = .Warren.yellow
-        navigationController.present(safari, animated: true)
-    }
-
-    private func didRequestShowInAppPurchase(
-        paymentAction: PaymentAction
-    ) {
-        guard let accountNumber = interactor.deviceState.accountData?.number else { return }
+    /// Presents the native Apple StoreKit purchase flow. The credit goes
+    /// through warren-api signed with the wallet key; there is no Mullvad
+    /// account number to pass (the backend identifies the wallet from the
+    /// request signature).
+    private func didRequestShowInAppPurchase(paymentAction: PaymentAction) {
         let coordinator = InAppPurchaseCoordinator(
             storePaymentManager: storePaymentManager,
-            accountNumber: accountNumber,
             paymentAction: paymentAction
         )
         coordinator.didFinish = { coordinator in
@@ -103,13 +83,23 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         presentChild(coordinator, animated: true)
     }
 
+    /// Opens the Warren Stripe checkout funnel as a secondary "buy on the
+    /// web" path. The user buys a plan on `checkout.warrenbrowse.com`,
+    /// receives a voucher, and redeems it in-app (Redeem voucher). The
+    /// funnel is stateless, so no wallet identifier is passed in the URL.
+    private func openCheckout() {
+        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
+        let safari = SFSafariViewController(url: url)
+        safari.preferredBarTintColor = .Warren.navy
+        safari.preferredControlTintColor = .Warren.yellow
+        navigationController.present(safari, animated: true)
+    }
+
     private func navigateToRedeemVoucher() {
         let coordinator = ProfileVoucherCoordinator(
             navigationController: CustomNavigationController(),
             interactor: RedeemVoucherInteractor(
-                tunnelManager: interactor.tunnelManager,
-                accountsProxy: interactor.accountsProxy,
-                verifyVoucherAsAccount: false
+                tunnelManager: interactor.tunnelManager
             )
         )
         coordinator.didFinish = { coordinator in
@@ -193,54 +183,5 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         }
 
         alertPresenter.showAlert(presentation: presentation, animated: true)
-    }
-
-    private func showRestorePurchasesInfo() {
-        let message = NSLocalizedString(
-            """
-            You can use the "restore purchases" function to check for any in-app payments \
-            made via Apple services. If there is a payment that has not been credited, it will \
-            add the time to the currently logged in Warren account.
-            """,
-            comment: ""
-        )
-
-        let presentation = AlertPresentation(
-            id: "account-device-info-alert",
-            icon: .info,
-            title: NSLocalizedString("If you haven’t received additional VPN time after purchasing", comment: ""),
-            message: message,
-            buttons: [
-                AlertAction(
-                    title: NSLocalizedString("Got it!", comment: ""),
-                    style: .default
-                )
-            ]
-        )
-
-        let presenter = AlertPresenter(context: self)
-        presenter.showAlert(presentation: presentation, animated: true)
-    }
-
-    func showFailToFetchProducts() {
-        let message = NSLocalizedString(
-            "Failed to load products, please try again",
-            comment: ""
-        )
-
-        let presentation = AlertPresentation(
-            id: "welcome-failed-to-fetch-products-alert",
-            icon: .info,
-            message: message,
-            buttons: [
-                AlertAction(
-                    title: NSLocalizedString("Got it!", comment: ""),
-                    style: .default
-                )
-            ]
-        )
-
-        let presenter = AlertPresenter(context: self)
-        presenter.showAlert(presentation: presentation, animated: true)
     }
 }

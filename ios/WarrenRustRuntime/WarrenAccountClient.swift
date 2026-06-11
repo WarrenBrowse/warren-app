@@ -75,7 +75,7 @@ public enum WarrenAccountClient {
                     return .success(.none)
                 }
                 return .failure(error)
-            case .okVoid:
+            case .okVoid, .okToken:
                 return .failure(.transport("subscription response missing expires_at"))
             }
         }
@@ -98,7 +98,7 @@ public enum WarrenAccountClient {
                 return .success(expiry)
             case let .failure(error):
                 return .failure(error)
-            case .okVoid:
+            case .okVoid, .okToken:
                 return .failure(.transport("voucher response missing expires_at"))
             }
         }
@@ -114,10 +114,57 @@ public enum WarrenAccountClient {
         }
         return parseEnvelope(raw).flatMap { envelope in
             switch envelope {
-            case .okVoid, .okExpiry:
+            case .okVoid, .okExpiry, .okToken:
                 return .success(())
             case let .failure(error):
                 return .failure(error)
+            }
+        }
+    }
+
+    /// Signed `POST /v1/payments/apple/init`. Mints an ephemeral
+    /// payment session bound to the wallet and returns the session UUID
+    /// to pass to StoreKit as the `appAccountToken`. The backend
+    /// resolves that token back to this wallet at check time, so Apple
+    /// never sees the pubkey.
+    public static func storeKitInit(seed: Data) -> Result<String, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
+        let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
+            guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return warren_account_storekit_init(base)
+        }
+        return parseEnvelope(raw).flatMap { envelope in
+            switch envelope {
+            case let .okToken(token):
+                return .success(token)
+            case let .failure(error):
+                return .failure(error)
+            case .okExpiry, .okVoid:
+                return .failure(.transport("storekit init response missing app_account_token"))
+            }
+        }
+    }
+
+    /// Signed `POST /v1/payments/apple/check`. Uploads the StoreKit 2
+    /// signed transaction JWS so the backend can verify it against
+    /// Apple's root CA and credit the wallet. Returns the new expiry.
+    /// The JWS is never logged.
+    public static func storeKitCheck(seed: Data, jws: String) -> Result<Date, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
+        let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
+            guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return jws.withCString { jwsPtr in
+                warren_account_storekit_check(base, jwsPtr)
+            }
+        }
+        return parseEnvelope(raw).flatMap { envelope in
+            switch envelope {
+            case let .okExpiry(expiry):
+                return .success(expiry)
+            case let .failure(error):
+                return .failure(error)
+            case .okToken, .okVoid:
+                return .failure(.transport("storekit check response missing expires_at"))
             }
         }
     }
@@ -127,6 +174,7 @@ public enum WarrenAccountClient {
     /// Parsed shape of the JSON envelope returned by the FFI.
     private enum Envelope {
         case okExpiry(Date)
+        case okToken(String)
         case okVoid
         case failure(WarrenAccountError)
     }
@@ -149,6 +197,9 @@ public enum WarrenAccountClient {
             if let expiresAt = object["expires_at"] as? NSNumber {
                 let date = Date(timeIntervalSince1970: expiresAt.doubleValue)
                 return .success(.okExpiry(date))
+            }
+            if let token = object["app_account_token"] as? String {
+                return .success(.okToken(token))
             }
             return .success(.okVoid)
         }

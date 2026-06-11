@@ -1,16 +1,17 @@
 //
 //  StorePaymentManager.swift
-//  MullvadVPN
+//  WarrenVPN
 //
-//  Created by Jon Petersson on 2025-10-29.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
+import StoreKit
 import WarrenLogging
 import WarrenTypes
-import StoreKit
 
-/// Manager responsible for handling App Store payments and passing StoreKit receipts to the backend.
+/// Manager responsible for handling App Store payments and passing
+/// StoreKit receipts to the Warren backend (warren-api), which credits
+/// the wallet's subscription.
 ///
 /// - Warning: only interact with this object on the main queue.
 final actor StorePaymentManager: @unchecked Sendable {
@@ -20,10 +21,10 @@ final actor StorePaymentManager: @unchecked Sendable {
     private var processedTransactionIds: Set<UInt64> = []
     private var updateListenerTask: Task<Void, Never>?
 
-    /// Designated initializer
+    /// Designated initializer.
     ///
-    /// - Parameters:
-    ///   - interactor: interactor for communicating with API etc.
+    /// - Parameter interactor: bridges StoreKit to warren-api via the
+    ///   wallet.
     init(interactor: StorePaymentManagerInteractor) {
         self.interactor = interactor
     }
@@ -33,9 +34,10 @@ final actor StorePaymentManager: @unchecked Sendable {
         logger.debug("Starting StoreKit transaction listener")
 
         #if !DEBUG
-            // Always clean up non-production transactions immediately. Reason for this is that if there
-            // are any old unfinished sandbox transactions that has spilled over from TestFlight, they
-            // will clog up the pipeline since they can never be finished or removed in production.
+            // Always clean up non-production transactions immediately. If
+            // old unfinished sandbox transactions spilled over from
+            // TestFlight, they would clog the pipeline since they can never
+            // be finished or removed in production.
             await Self.finishOutstandingSandboxAndOldAPITransactions()
         #endif
 
@@ -45,7 +47,6 @@ final actor StorePaymentManager: @unchecked Sendable {
         updateListenerTask = Task { [weak self] in
             guard let self else { return }
 
-            // If the purchase was made out-of-band, we need not upload the receipt.
             for await verification in Transaction.updates {
                 guard await shouldProcessPayment(verification: verification) else {
                     continue
@@ -178,8 +179,8 @@ final actor StorePaymentManager: @unchecked Sendable {
         let result = await interactor.initPayment()
 
         switch result {
-        case .success(let token): return token
-        case .failure(let error): throw error
+        case let .success(token): return token
+        case let .failure(error): throw error
         }
     }
 
@@ -197,8 +198,8 @@ final actor StorePaymentManager: @unchecked Sendable {
         let result = await interactor.checkPayment(jwsRepresentation: verification.jwsRepresentation)
 
         switch result {
-        case .success(): return
-        case .failure(let error): throw error
+        case .success: return
+        case let .failure(error): throw error
         }
     }
 
@@ -218,25 +219,12 @@ final actor StorePaymentManager: @unchecked Sendable {
         }
     }
 
+    /// Refreshes the wallet-backed subscription expiry after a credit so
+    /// the UI reflects the new time. The wallet interactor is the source
+    /// of truth; warren-api returns the new expiry.
     private func updateAccountData() async {
-        guard let accountNumber = await interactor.accountNumber else {
-            return
-        }
-
         logger.debug("Updating account data")
-
-        let result = await interactor.getAccountData(accountNumber: accountNumber)
-
-        switch result {
-        case let .success(accountData):
-            logger.info("Successfully updated account data. New expiry: \(accountData.expiry.safeLogFormatted)")
-            await interactor.updateAccountData(for: accountData)
-
-        case let .failure(error):
-            if !error.isOperationCancellationError {
-                logger.error(error: error, message: "Failed to update account data.")
-            }
-        }
+        await interactor.updateAccountData()
     }
 
     private func transactionHasBeenProcessed(_ verificationResult: VerificationResult<Transaction>) -> Bool {
@@ -262,15 +250,10 @@ final actor StorePaymentManager: @unchecked Sendable {
         _ = processedTransactionIds.insert(transactionId)
     }
 
-    // Returns time added, in seconds.
+    /// Returns time added, in seconds, for a product ID.
     private func timeFromProduct(id: String) -> TimeInterval {
-        let product = StoreSubscription(rawValue: id)
-
-        return switch product {
-        case .thirtyDays: Duration.days(30).timeInterval
-        case .ninetyDays: Duration.days(90).timeInterval
-        case .none: 0
-        }
+        guard let product = StoreSubscription(rawValue: id) else { return 0 }
+        return Duration.days(product.months * 30).timeInterval
     }
 
     private func shouldProcessPayment(verification: VerificationResult<Transaction>) -> Bool {
@@ -289,43 +272,31 @@ final actor StorePaymentManager: @unchecked Sendable {
 
     // MARK: Notifications
 
-    /// Purchase was successful.
     private func didPurchaseMoreTime(outcome: StorePaymentOutcome) {
         logger.debug("Purchase successful")
         notifyObservers(of: .successfulPayment(outcome))
     }
 
-    /// User cancelled purchase before it was completed.
     private func userDidCancel() {
         logger.debug("User cancelled purchase")
         notifyObservers(of: .userCancelled)
     }
 
-    /// Purchase is still pending, transaction may be delivered asynchronously.
     private func didSuspendPurchase() {
         logger.debug("Did suspend purchase")
         notifyObservers(of: .pending)
     }
 
-    /// Handle failure to fetch a payment token
-    ///
-    /// - Parameter error: error thrown by the API client
     private func didFailFetchingToken(error: Error) {
         logger.debug("Did fail fetching token, with error: \(error)")
         notifyObservers(of: .failed(.getPaymentToken(error)))
     }
 
-    /// Handle failure to upload a payment receipt to the API. This transaction should be uploaded again.
-    ///
-    /// - Parameter error: error thrown by the API client
     private func didFailUploadingReceipt() {
         logger.debug("Did fail uploading receipt")
         notifyObservers(of: .failed(.receiptUpload))
     }
 
-    /// Handle failure to verify the payment transaction.
-    ///
-    /// - Parameter error: error thrown by the API client
     private func didFailVerification(
         transaction: Transaction,
         error: VerificationResult<Transaction>.VerificationError
@@ -336,9 +307,6 @@ final actor StorePaymentManager: @unchecked Sendable {
         notifyObservers(of: .failed(.verification(error)))
     }
 
-    /// Handle an error thrown from the Product.purchase call
-    ///
-    /// - Parameter error: the error that was thrown by the Product.purchase call
     private func didFailPurchase(error: Error) {
         let failure: StorePaymentError
         switch error {

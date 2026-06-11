@@ -1,9 +1,8 @@
 //
 //  InAppPurchaseCoordinator.swift
-//  MullvadVPN
+//  WarrenVPN
 //
-//  Created by Mojgan on 2023-07-21.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
 import Routing
@@ -17,7 +16,6 @@ enum PaymentAction {
 final class InAppPurchaseCoordinator: Coordinator, Presentable, Presenting {
     private var controller: InAppPurchaseViewController?
     private let storePaymentManager: StorePaymentManager
-    private let accountNumber: String
     private let paymentAction: PaymentAction
 
     var didFinish: ((InAppPurchaseCoordinator) -> Void)?
@@ -26,9 +24,8 @@ final class InAppPurchaseCoordinator: Coordinator, Presentable, Presenting {
         return controller!
     }
 
-    init(storePaymentManager: StorePaymentManager, accountNumber: String, paymentAction: PaymentAction) {
+    init(storePaymentManager: StorePaymentManager, paymentAction: PaymentAction) {
         self.storePaymentManager = storePaymentManager
-        self.accountNumber = accountNumber
         self.paymentAction = paymentAction
     }
 
@@ -39,7 +36,6 @@ final class InAppPurchaseCoordinator: Coordinator, Presentable, Presenting {
     func start() {
         controller = InAppPurchaseViewController(
             storePaymentManager: storePaymentManager,
-            accountNumber: accountNumber,
             errorPresenter: PaymentAlertPresenter(alertContext: self),
             paymentAction: paymentAction
         )

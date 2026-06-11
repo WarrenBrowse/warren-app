@@ -44,8 +44,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     private let relayCacheTracker: RelayCacheTracker
 
     private let apiProxy: APIQuerying
-    private let devicesProxy: DeviceHandling
-    private let accountsProxy: RESTAccountHandling
     private var tunnelObserver: TunnelObserver?
     private var tunnelStateAccessibilityAnnouncer: TunnelStateAccessibilityAnnouncer?
     private var appPreferences: AppPreferencesDataSource
@@ -67,8 +65,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         storePaymentManager: StorePaymentManager,
         relayCacheTracker: RelayCacheTracker,
         apiProxy: APIQuerying,
-        devicesProxy: DeviceHandling,
-        accountsProxy: RESTAccountHandling,
         outgoingConnectionService: OutgoingConnectionServiceHandling,
         appPreferences: AppPreferencesDataSource,
         accessMethodRepository: AccessMethodRepositoryProtocol,
@@ -80,8 +76,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         self.storePaymentManager = storePaymentManager
         self.relayCacheTracker = relayCacheTracker
         self.apiProxy = apiProxy
-        self.devicesProxy = devicesProxy
-        self.accountsProxy = accountsProxy
         self.appPreferences = appPreferences
         self.outgoingConnectionService = outgoingConnectionService
         self.accessMethodRepository = accessMethodRepository
@@ -392,7 +386,9 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     private func logoutRevokedDevice() {
         Task { [weak self] in
             guard let self else { return }
-            await tunnelManager.unsetAccount()
+            await MainActor.run {
+                WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+            }
             continueFlow(animated: true)
         }
     }
@@ -504,7 +500,6 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     private func presentOutOfTime(animated: Bool, completion: @escaping (Coordinator) -> Void) {
         let coordinator = OutOfTimeCoordinator(
             navigationController: navigationContainer,
-            storePaymentManager: storePaymentManager,
             tunnelManager: tunnelManager
         )
 
@@ -530,9 +525,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
 
         let coordinator = WelcomeCoordinator(
             navigationController: navigationContainer,
-            storePaymentManager: storePaymentManager,
-            tunnelManager: tunnelManager,
-            accountsProxy: accountsProxy
+            tunnelManager: tunnelManager
         )
         coordinator.didFinish = { [weak self] in
             guard let self else { return }
@@ -665,7 +658,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     }
 
     private func presentAccount(animated: Bool, completion: @escaping (Coordinator) -> Void) {
-        let accountInteractor = AccountInteractor(tunnelManager: tunnelManager, accountsProxy: accountsProxy)
+        let accountInteractor = AccountInteractor(tunnelManager: tunnelManager)
 
         let coordinator = AccountCoordinator(
             navigationController: CustomNavigationController(),

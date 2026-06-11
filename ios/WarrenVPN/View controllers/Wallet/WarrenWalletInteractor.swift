@@ -298,6 +298,58 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         }
     }
 
+    /// Mints an Apple StoreKit payment session (signed
+    /// `POST /v1/payments/apple/init`) bound to this wallet and returns
+    /// the session UUID to use as the StoreKit `appAccountToken`. The
+    /// backend resolves that token back to this wallet at check time, so
+    /// Apple never sees the pubkey.
+    public func storeKitInitPayment(
+        completion: @escaping @Sendable (Result<String, WarrenWalletInteractorError>) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.storeKitInit(seed: wallet.seed) {
+            case let .success(token):
+                completion(.success(token))
+            case let .failure(error):
+                self?.logger.error("storekit init failed: \(error)")
+                completion(.failure(.account(error)))
+            }
+        }
+    }
+
+    /// Submits an Apple StoreKit 2 signed transaction JWS (signed
+    /// `POST /v1/payments/apple/check`). The backend verifies the JWS
+    /// against Apple's root CA and credits this wallet's subscription.
+    /// Returns the new expiry. The JWS is never logged.
+    public func submitStoreKitTransaction(
+        jws: String,
+        completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.storeKitCheck(seed: wallet.seed, jws: jws) {
+            case let .success(expiry):
+                completion(.success(expiry))
+            case let .failure(error):
+                self?.logger.error("storekit check failed: \(error)")
+                completion(.failure(.account(error)))
+            }
+        }
+    }
+
     /// Deletes the wallet's subscription server-side (signed
     /// `DELETE /v1/account`). Does NOT touch the local Keychain wallet;
     /// callers wipe the wallet separately via `forgetWallet`.

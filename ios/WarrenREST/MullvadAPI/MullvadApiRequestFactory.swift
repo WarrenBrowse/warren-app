@@ -76,44 +76,6 @@ public struct MullvadApiRequestFactory: Sendable {
                         accountNumber
                     ))
 
-            // Device Proxy
-            case let .getDevice(retryStrategy, accountNumber: accountNumber, identifier):
-                return MullvadApiCancellable(
-                    handle: mullvad_ios_get_device(
-                        apiContext.context,
-                        rawCompletionPointer,
-                        retryStrategy.toRustStrategy(),
-                        accountNumber,
-                        identifier
-                    ))
-
-            case let .getDevices(retryStrategy, accountNumber):
-                return MullvadApiCancellable(
-                    handle: mullvad_ios_get_devices(
-                        apiContext.context,
-                        rawCompletionPointer,
-                        retryStrategy.toRustStrategy(),
-                        accountNumber
-                    ))
-
-            case let .deleteDevice(retryStrategy, accountNumber, identifier):
-                return MullvadApiCancellable(
-                    handle: mullvad_ios_delete_device(
-                        apiContext.context,
-                        rawCompletionPointer,
-                        retryStrategy.toRustStrategy(),
-                        accountNumber,
-                        identifier
-                    ))
-            case let .createDevice(retryStrategy, accountNumber, request):
-                return MullvadApiCancellable(
-                    handle: mullvad_ios_create_device(
-                        apiContext.context,
-                        rawCompletionPointer,
-                        retryStrategy.toRustStrategy(),
-                        accountNumber,
-                        request.publicKey.rawValue.map { $0 }
-                    ))
             case let .checkApiAvailability(retryStrategy, accessMethod):
                 return MullvadApiCancellable(
                     handle: mullvad_ios_api_addrs_available(

@@ -12,23 +12,18 @@ import WarrenTypes
 
 final class RedeemVoucherInteractor: @unchecked Sendable {
     private let tunnelManager: TunnelManager
-    private let accountsProxy: RESTAccountHandling
-    private let shouldVerifyVoucherAsAccount: Bool
 
     private var tasks: [Cancellable] = []
-    private var preferredAccountNumber: String?
 
+    // The logout dialog only ever fired when a redeemed code was recognized as
+    // a Mullvad account number, a path Warren no longer exercises (the wallet
+    // model has no account-number login). These hooks stay so the view layer
+    // compiles, but `showLogoutDialog` is never invoked.
     var showLogoutDialog: (() -> Void)?
     var didLogout: ((String) -> Void)?
 
-    init(
-        tunnelManager: TunnelManager,
-        accountsProxy: RESTAccountHandling,
-        verifyVoucherAsAccount: Bool
-    ) {
+    init(tunnelManager: TunnelManager) {
         self.tunnelManager = tunnelManager
-        self.accountsProxy = accountsProxy
-        self.shouldVerifyVoucherAsAccount = verifyVoucherAsAccount
     }
 
     func redeemVoucher(
@@ -36,48 +31,18 @@ final class RedeemVoucherInteractor: @unchecked Sendable {
         completion: @escaping (@Sendable (Result<REST.SubmitVoucherResponse, Error>) -> Void)
     ) {
         tasks.append(
-            tunnelManager.redeemVoucher(code) { [weak self] result in
-                guard let self else { return }
+            tunnelManager.redeemVoucher(code) { result in
                 completion(result)
-                guard shouldVerifyVoucherAsAccount,
-                    result.error?.isInvalidVoucher ?? false
-                else {
-                    return
-                }
-                verifyVoucherAsAccount(code: code)
             })
     }
 
     func logout() async {
-        guard let accountNumber = preferredAccountNumber else { return }
-        await tunnelManager.unsetAccount()
-        didLogout?(accountNumber)
+        await MainActor.run {
+            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+        }
     }
 
     func cancelAll() {
         tasks.forEach { $0.cancel() }
-    }
-
-    private func verifyVoucherAsAccount(code: String) {
-        let task = accountsProxy.getAccountData(
-            accountNumber: code,
-            retryStrategy: .noRetry
-        ) { [weak self] result in
-            guard let self,
-                case .success = result
-            else {
-                return
-            }
-            showLogoutDialog?()
-            preferredAccountNumber = code
-        }
-
-        tasks.append(task)
-    }
-}
-
-fileprivate extension Error {
-    var isInvalidVoucher: Bool {
-        (self as? REST.Error)?.compareErrorCode(.invalidVoucher) ?? false
     }
 }

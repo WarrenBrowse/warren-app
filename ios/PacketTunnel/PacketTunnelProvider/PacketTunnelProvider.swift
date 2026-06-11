@@ -22,7 +22,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     /// The selected tunnel implementation (Warren Quinn, or GotaTun in debug builds).
     private var implementation: TunnelImplementation!
     private var appMessageHandler: AppMessageHandler!
-    private var deviceChecker: DeviceChecker!
     private var newAppVersionSystemNoticationHandler: NewAppVersionSystemNotificationHandler!
     private let tunnelSettingsUpdater: SettingsUpdater
     private var migrationManager: MigrationManager
@@ -80,14 +79,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
             )
         )
 
-        let proxyFactory = REST.ProxyFactory.makeProxyFactory(
-            apiTransportProvider: apiTransportProvider
-        )
-        let accountsProxy = proxyFactory.createAccountsProxy()
-        let devicesProxy = proxyFactory.createDevicesProxy()
-
-        deviceChecker = DeviceChecker(accountsProxy: accountsProxy, devicesProxy: devicesProxy)
-
         // Warren tunnels via Quinn (`warren-tunnel`). The debug `GotaTun`
         // toggle is an alternate path for local development (no real
         // tunnel traffic, useful for UI/iOS lifecycle smoke tests).
@@ -137,9 +128,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         completionHandler: @escaping @Sendable ((any Error)?) -> Void
     ) {
         let startOptions = parseStartOptions(options ?? [:])
-
-        // Run account and device diagnostics during tunnel startup.
-        startDeviceCheck()
 
         setTunnelNetworkSettings(
             initialTunnelNetworkSettings(),
@@ -260,14 +248,30 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     }
 
     private func initialTunnelNetworkSettings() -> NETunnelNetworkSettings {
+        tunnelNetworkSettings(
+            ipv4Address: LocalNetworkIPs.gatewayAddressIpV4.rawValue,
+            ipv4SubnetMask: "255.255.255.255"
+        )
+    }
+
+    /// Builds the tunnel network settings with the given IPv4 interface
+    /// address. The bootstrap call uses the placeholder
+    /// `LocalNetworkIPs.gatewayAddressIpV4`; the multi-hop reassign path
+    /// (`reapplyWarrenTunnelIPv4`) rebuilds with the exit-allocated
+    /// address so only the IPv4 interface address changes, leaving DNS,
+    /// MTU, the IPv6 blackhole, and the default route identical.
+    private func tunnelNetworkSettings(
+        ipv4Address: String,
+        ipv4SubnetMask: String
+    ) -> NEPacketTunnelNetworkSettings {
         let settings = NEPacketTunnelNetworkSettings(
             tunnelRemoteAddress: "\(IPv4Address.loopback)"
         )
 
         // IPv4 settings
         let ipv4Settings = NEIPv4Settings(
-            addresses: [LocalNetworkIPs.gatewayAddressIpV4.rawValue],
-            subnetMasks: ["255.255.255.255"]
+            addresses: [ipv4Address],
+            subnetMasks: [ipv4SubnetMask]
         )
         ipv4Settings.includedRoutes = [NEIPv4Route.default()]
         settings.ipv4Settings = ipv4Settings
@@ -376,43 +380,44 @@ extension PacketTunnelProvider {
     }
 }
 
-// MARK: - Device check
+// Warren identifies users by wallet pubkey (allowlisted exit-side), not by a
+// Mullvad account or registered device, so the legacy device-check subsystem
+// is gone. Desktop and Android are already aligned.
 
-extension PacketTunnelProvider {
-    private func startDeviceCheck() {
-        // Warren enforces subscription / access exit-side via the wallet
-        // pubkey allowlist; there is no Mullvad account or device to
-        // diagnose client-side. The Mullvad device check queries
-        // account/device endpoints that warren-api does not serve and
-        // would wrongly force a logout, so it is skipped on the Warren
-        // Quinn path. The GotaTun debug path (Mullvad WireGuard) keeps it.
-        guard !(implementation is WarrenQuinnTunnelImplementation) else { return }
-        Task {
-            await startDeviceCheckInner()
+// MARK: - Exit-allocated IP reassign
+
+extension PacketTunnelProvider: WarrenTunnelIPReassigning {
+    /// Re-applies the tunnel settings with the exit-allocated IPv4. The
+    /// Warren multi-hop exit hands each wallet a sticky IPv4 over the
+    /// setup stream; until it is applied the TUN keeps the bootstrap
+    /// placeholder and the exit drops return traffic (the Session N
+    /// "connected but no bytes" bug). Re-applying `NEPacketTunnelNetwork`
+    /// settings is supported mid-session and leaves `packetFlow` valid.
+    func reapplyWarrenTunnelIPv4(address: String, prefixLength: Int) async {
+        let mask = Self.ipv4SubnetMask(prefixLength: prefixLength)
+        let settings = tunnelNetworkSettings(ipv4Address: address, ipv4SubnetMask: mask)
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            setTunnelNetworkSettings(settings) { error in
+                if let error {
+                    self.providerLogger.error(
+                        "Failed to re-apply tunnel settings for exit IP \(address)/\(prefixLength): \(error)"
+                    )
+                } else {
+                    self.providerLogger.debug(
+                        "Re-applied tunnel network settings with exit-allocated IP \(address)/\(prefixLength)"
+                    )
+                }
+                continuation.resume()
+            }
         }
     }
 
-    private func startDeviceCheckInner() async {
-        let result = await deviceChecker.start()
-
-        switch result {
-        case let .failure(error):
-            switch error {
-            case is DeviceCheckError:
-                providerLogger.error("\(error.description) Forcing a log out")
-                implementation.actor.setErrorState(reason: .deviceLoggedOut)
-            default:
-                providerLogger
-                    .error(
-                        "Device check encountered a network error: \(error.description)"
-                    )
-            }
-
-        case let .success(deviceCheck):
-            if let blockedStateReason = deviceCheck.blockedStateReason {
-                providerLogger.error("Entering blocked state after unsuccessful device check: \(blockedStateReason)")
-                implementation.actor.setErrorState(reason: blockedStateReason)
-            }
-        }
+    /// Convert an IPv4 prefix length (0-32) to a dotted-decimal subnet
+    /// mask. Clamps out-of-range inputs to /32 (host route), the safe
+    /// default the bootstrap settings already use.
+    private static func ipv4SubnetMask(prefixLength: Int) -> String {
+        let bits = (0...32).contains(prefixLength) ? prefixLength : 32
+        let mask: UInt32 = bits == 0 ? 0 : ~UInt32(0) << (32 - bits)
+        return "\((mask >> 24) & 0xFF).\((mask >> 16) & 0xFF).\((mask >> 8) & 0xFF).\(mask & 0xFF)"
     }
 }

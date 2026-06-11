@@ -12,7 +12,6 @@ import UIKit
 
 class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeViewControllerDelegate, Poppable {
     let navigationController: RootContainerViewController
-    let storePaymentManager: StorePaymentManager
     let tunnelManager: TunnelManager
 
     nonisolated(unsafe) var didFinishPayment: (@Sendable (OutOfTimeCoordinator) -> Void)?
@@ -26,11 +25,9 @@ class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeVi
 
     init(
         navigationController: RootContainerViewController,
-        storePaymentManager: StorePaymentManager,
         tunnelManager: TunnelManager
     ) {
         self.navigationController = navigationController
-        self.storePaymentManager = storePaymentManager
         self.tunnelManager = tunnelManager
     }
 
@@ -45,8 +42,7 @@ class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeVi
         }
 
         let controller = OutOfTimeViewController(
-            interactor: interactor,
-            errorPresenter: PaymentAlertPresenter(alertContext: self)
+            interactor: interactor
         )
 
         controller.delegate = self
@@ -73,10 +69,7 @@ class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeVi
 
     // MARK: - OutOfTimeViewControllerDelegate
 
-    func didRequestShowInAppPurchase(
-        accountNumber: String,
-        paymentAction: PaymentAction
-    ) {
+    func didRequestOpenCheckout() {
         // Warren has no in-app purchase: the user buys a plan on the Stripe
         // checkout funnel and redeems the voucher in-app, aligned with the
         // account screen and desktop/Android. The funnel is stateless, so no

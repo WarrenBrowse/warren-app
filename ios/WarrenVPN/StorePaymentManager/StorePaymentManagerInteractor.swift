@@ -1,80 +1,81 @@
 //
 //  StorePaymentManagerInteractor.swift
-//  MullvadVPN
+//  WarrenVPN
 //
-//  Created by Jon Petersson on 2025-10-28.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
-import WarrenREST
-import WarrenSettings
-import WarrenTypes
+import Foundation
+import WarrenRustRuntime
 
+/// Bridges the StoreKit payment flow to the Warren wallet backend.
+///
+/// Warren has no Mullvad account number: the identity is the BIP39
+/// wallet. This interactor therefore talks to warren-api through
+/// `WarrenWalletInteractor` (signed requests with the wallet key)
+/// instead of the deleted Mullvad `apiProxy` / `accountProxy`.
+///
+/// - `initPayment()` mints an ephemeral payment session bound to the
+///   wallet (signed `POST /v1/payments/apple/init`) and returns the
+///   session UUID to pass to StoreKit as the `appAccountToken`. The
+///   backend resolves that token back to the wallet at check time, so
+///   Apple never sees the pubkey.
+/// - `checkPayment(jwsRepresentation:)` uploads the StoreKit 2 signed
+///   transaction JWS (signed `POST /v1/payments/apple/check`); the
+///   backend verifies it against Apple's root CA and credits the
+///   wallet's subscription.
 final actor StorePaymentManagerInteractor {
     private let tunnelManager: TunnelManager
-    private(set) var apiProxy: APIQuerying
-    private(set) var accountProxy: RESTAccountHandling
+    private let walletInteractor: WarrenWalletInteractor
 
-    var accountNumber: String? {
-        tunnelManager.deviceState.accountData?.number
-    }
-
-    init(tunnelManager: TunnelManager, apiProxy: APIQuerying, accountProxy: RESTAccountHandling) {
+    init(tunnelManager: TunnelManager, walletInteractor: WarrenWalletInteractor = WarrenWalletInteractor()) {
         self.tunnelManager = tunnelManager
-        self.apiProxy = apiProxy
-        self.accountProxy = accountProxy
+        self.walletInteractor = walletInteractor
     }
 
-    // MARK: Tunnel manager
-
-    func updateAccountData(for account: Account) {
-        guard case .loggedIn(var storedAccountData, let deviceData) = tunnelManager.deviceState else {
-            return
-        }
-
-        storedAccountData.expiry = account.expiry
-        let newDeviceState = DeviceState.loggedIn(storedAccountData, deviceData)
-
-        tunnelManager.setDeviceState(newDeviceState, persist: true)
-    }
-
-    // MARK: API proxy
-
-    func initPayment() async -> Result<UUID, Error> {
-        guard let accountNumber = accountNumber else {
-            return .failure(NSError(domain: "User is not logged in", code: 0))
-        }
-
-        return await withCheckedContinuation { continuation in
-            _ = apiProxy.initStoreKitPayment(
-                accountNumber: accountNumber,
-                retryStrategy: .noRetry,
-            ) { result in
-                continuation.resume(returning: result)
+    /// Refreshes the wallet-backed device-state expiry from warren-api.
+    /// Reuses the same path the subscription fetch and voucher redeem
+    /// already use, so the StoreKit credit surfaces in the UI exactly
+    /// like any other top-up.
+    func updateAccountData() async {
+        await withCheckedContinuation { continuation in
+            tunnelManager.updateAccountData { _ in
+                continuation.resume()
             }
         }
     }
 
+    /// Mints a StoreKit payment token (the `appAccountToken`).
+    func initPayment() async -> Result<UUID, Error> {
+        await withCheckedContinuation { continuation in
+            walletInteractor.storeKitInitPayment { result in
+                switch result {
+                case let .success(token):
+                    if let uuid = UUID(uuidString: token) {
+                        continuation.resume(returning: .success(uuid))
+                    } else {
+                        continuation.resume(
+                            returning: .failure(StorePaymentError.unknown)
+                        )
+                    }
+                case let .failure(error):
+                    continuation.resume(returning: .failure(error))
+                }
+            }
+        }
+    }
+
+    /// Uploads the StoreKit 2 signed transaction JWS so the backend can
+    /// verify it and credit the wallet.
     func checkPayment(jwsRepresentation: String) async -> Result<Void, Error> {
         await withCheckedContinuation { continuation in
-            _ = apiProxy.checkStoreKitPayment(
-                transaction: StoreKitTransaction(transaction: jwsRepresentation),
-                retryStrategy: .purchaseReceiptUpload,
-            ) { result in
-                continuation.resume(returning: result)
-            }
-        }
-    }
-
-    // MARK: Account proxy
-
-    func getAccountData(accountNumber: String) async -> Result<Account, Error> {
-        await withCheckedContinuation { continuation in
-            _ = self.accountProxy.getAccountData(
-                accountNumber: accountNumber,
-                retryStrategy: .default
-            ) { result in
-                continuation.resume(returning: result)
+            walletInteractor.submitStoreKitTransaction(jws: jwsRepresentation) { result in
+                switch result {
+                case .success:
+                    continuation.resume(returning: .success(()))
+                case let .failure(error):
+                    continuation.resume(returning: .failure(error))
+                }
             }
         }
     }

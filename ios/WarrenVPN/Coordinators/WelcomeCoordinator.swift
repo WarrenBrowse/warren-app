@@ -6,15 +6,13 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import WarrenREST
 import Routing
+import SafariServices
 import UIKit
 
 final class WelcomeCoordinator: Coordinator, Poppable, Presenting {
     private let navigationController: RootContainerViewController
-    private let storePaymentManager: StorePaymentManager
     private let tunnelManager: TunnelManager
-    private let accountsProxy: RESTAccountHandling
 
     private var viewController: WelcomeViewController?
 
@@ -27,14 +25,10 @@ final class WelcomeCoordinator: Coordinator, Poppable, Presenting {
 
     init(
         navigationController: RootContainerViewController,
-        storePaymentManager: StorePaymentManager,
-        tunnelManager: TunnelManager,
-        accountsProxy: RESTAccountHandling
+        tunnelManager: TunnelManager
     ) {
         self.navigationController = navigationController
-        self.storePaymentManager = storePaymentManager
         self.tunnelManager = tunnelManager
-        self.accountsProxy = accountsProxy
     }
 
     func start(animated: Bool) {
@@ -137,15 +131,13 @@ extension WelcomeCoordinator: @preconcurrency WelcomeViewControllerDelegate {
     func didRequestToViewPurchaseOptions(
         accountNumber: String
     ) {
-        let coordinator = InAppPurchaseCoordinator(
-            storePaymentManager: storePaymentManager,
-            accountNumber: accountNumber,
-            paymentAction: .purchase
-        )
-        coordinator.didFinish = { coordinator in
-            coordinator.dismiss(animated: true)
-        }
-        coordinator.start()
-        presentChild(coordinator, animated: true)
+        // Warren has no in-app purchase: the user buys a plan on the Stripe
+        // checkout funnel and redeems the voucher in-app, aligned with the
+        // account screen and desktop/Android.
+        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
+        let safari = SFSafariViewController(url: url)
+        safari.preferredBarTintColor = .Warren.navy
+        safari.preferredControlTintColor = .Warren.yellow
+        navigationController.present(safari, animated: true)
     }
 }

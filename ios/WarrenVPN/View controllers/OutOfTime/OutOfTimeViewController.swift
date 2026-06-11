@@ -12,10 +12,7 @@ import Operations
 import UIKit
 
 protocol OutOfTimeViewControllerDelegate: AnyObject, Sendable {
-    func didRequestShowInAppPurchase(
-        accountNumber: String,
-        paymentAction: PaymentAction
-    )
+    func didRequestOpenCheckout()
 }
 
 @MainActor
@@ -43,7 +40,7 @@ class OutOfTimeViewController: UIViewController, RootContainment {
         false
     }
 
-    init(interactor: OutOfTimeInteractor, errorPresenter: PaymentAlertPresenter) {
+    init(interactor: OutOfTimeInteractor) {
         self.interactor = interactor
 
         super.init(nibName: nil, bundle: nil)
@@ -75,10 +72,6 @@ class OutOfTimeViewController: UIViewController, RootContainment {
             action: #selector(requestStoreProducts),
             for: .touchUpInside
         )
-        // Warren has no in-app purchase to restore (payment is the Stripe
-        // checkout funnel + voucher redemption), so the StoreKit restore
-        // button is hidden.
-        contentView.restoreButton.isHidden = true
 
         interactor.didReceiveTunnelStatus = { [weak self] _ in
             Task { @MainActor in
@@ -135,13 +128,7 @@ class OutOfTimeViewController: UIViewController, RootContainment {
     // MARK: - Actions
 
     @objc private func requestStoreProducts() {
-        guard let accountNumber = interactor.deviceState.accountData?.number else {
-            return
-        }
-        delegate?.didRequestShowInAppPurchase(
-            accountNumber: accountNumber,
-            paymentAction: .purchase
-        )
+        delegate?.didRequestOpenCheckout()
     }
 
     @objc private func handleDisconnect(_ sender: Any) {

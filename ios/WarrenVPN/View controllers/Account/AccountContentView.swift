@@ -37,10 +37,6 @@ class AccountContentView: UIView {
         return button
     }()
 
-    let accountDeviceRow: AccountDeviceRow = {
-        AccountDeviceRow()
-    }()
-
     let accountTokenRowView: AccountNumberRow = {
         AccountNumberRow()
     }()
@@ -49,17 +45,11 @@ class AccountContentView: UIView {
         AccountExpiryRow()
     }()
 
-    let restorePurchasesView: RestorePurchasesView = {
-        RestorePurchasesView()
-    }()
-
     lazy var contentStackView: UIStackView = {
         let stackView =
             UIStackView(arrangedSubviews: [
-                accountDeviceRow,
                 accountTokenRowView,
                 accountExpiryRowView,
-                restorePurchasesView,
             ])
         stackView.axis = .vertical
         stackView.spacing = UIMetrics.padding24

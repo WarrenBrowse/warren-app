@@ -52,13 +52,6 @@ class OutOfTimeContentView: UIView {
         return button
     }()
 
-    lazy var restoreButton: AppButton = {
-        let button = AppButton(style: .default)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle(NSLocalizedString("Restore purchases", comment: ""), for: .normal)
-        return button
-    }()
-
     private let scrollView = UIScrollView()
 
     private lazy var topStackView: UIStackView = {
@@ -71,7 +64,7 @@ class OutOfTimeContentView: UIView {
 
     private lazy var bottomStackView: UIStackView = {
         let stackView = UIStackView(
-            arrangedSubviews: [disconnectButton, purchaseButton, restoreButton]
+            arrangedSubviews: [disconnectButton, purchaseButton]
         )
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical

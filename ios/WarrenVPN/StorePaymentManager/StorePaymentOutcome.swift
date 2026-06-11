@@ -1,12 +1,11 @@
 //
 //  StorePaymentOutcome.swift
-//  MullvadVPN
+//  WarrenVPN
 //
-//  Created by Jon Petersson on 2025-10-29.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
-import WarrenREST
+import Foundation
 
 enum StorePaymentOutcome {
     case noTimeAdded
@@ -21,7 +20,7 @@ enum StorePaymentOutcome {
         }
     }
 
-    /// Returns a formatted string for the `timeAdded` interval, i.e "30 days"
+    /// Returns a formatted string for the `timeAdded` interval, e.g. "30 days".
     var formattedTimeAdded: String? {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.day]

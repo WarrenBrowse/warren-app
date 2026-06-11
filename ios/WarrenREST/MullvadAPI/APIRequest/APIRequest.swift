@@ -21,12 +21,6 @@ public enum APIRequest: Codable, Sendable {
     case initStorekitPayment(retryStrategy: REST.RetryStrategy, accountNumber: String)
     case checkStorekitPayment(retryStrategy: REST.RetryStrategy, transaction: StoreKitTransaction)
 
-    // Device Proxy
-    case getDevice(_ retryStrategy: REST.RetryStrategy, accountNumber: String, identifier: String)
-    case getDevices(_ retryStrategy: REST.RetryStrategy, accountNumber: String)
-    case createDevice(_ retryStrategy: REST.RetryStrategy, accountNumber: String, request: CreateDeviceRequest)
-    case deleteDevice(_ retryStrategy: REST.RetryStrategy, accountNumber: String, identifier: String)
-
     var name: String {
         switch self {
         case .getAddressList:
@@ -41,14 +35,6 @@ public enum APIRequest: Codable, Sendable {
             "get-account"
         case .deleteAccount:
             "delete-account"
-        case .getDevice:
-            "get-device"
-        case .getDevices:
-            "get-devices"
-        case .deleteDevice:
-            "delete-device"
-        case .createDevice:
-            "create-device"
         case .initStorekitPayment:
             "init-storekit-payment"
         case .checkStorekitPayment:
@@ -66,10 +52,6 @@ public enum APIRequest: Codable, Sendable {
             let .createAccount(strategy),
             let .getAccount(strategy, _),
             let .deleteAccount(strategy, _),
-            let .createDevice(strategy, _, _),
-            let .getDevice(strategy, _, _),
-            let .getDevices(strategy, _),
-            let .deleteDevice(strategy, _, _),
             let .initStorekitPayment(strategy, _),
             let .checkStorekitPayment(strategy, _),
             let .checkApiAvailability(strategy, _):

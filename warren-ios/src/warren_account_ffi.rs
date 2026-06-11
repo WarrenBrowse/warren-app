@@ -123,6 +123,73 @@ pub unsafe extern "C" fn warren_account_get_subscription(seed: *const u8) -> *mu
     }
 }
 
+/// Signed `POST /v1/payments/apple/init`. Mints an ephemeral payment
+/// session bound to the wallet pubkey and returns the session UUID the
+/// app must pass to StoreKit as the `appAccountToken`. Returns
+/// `{"ok":true,"app_account_token":"<uuid>"}` or an error envelope.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes. The
+/// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_storekit_init(seed: *const u8) -> *mut c_char {
+    // SAFETY: `seed` upholds the documented precondition.
+    let Some(seed) = (unsafe { read_seed(seed) }) else {
+        return err_input_json("null seed");
+    };
+    let signing_key = derive_node_key(&seed);
+    let handle = match crate::warren_ios_runtime() {
+        Ok(handle) => handle,
+        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+    };
+    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+    match handle.block_on(client.init_apple_payment()) {
+        Ok(resp) => {
+            into_cstring(json!({ "ok": true, "app_account_token": resp.app_account_token }).to_string())
+        }
+        Err(error) => err_client_json(&error),
+    }
+}
+
+/// Signed `POST /v1/payments/apple/check`. Uploads the StoreKit 2
+/// signed transaction JWS so the backend can verify it against Apple's
+/// root CA and credit the wallet's subscription. Returns
+/// `{"ok":true,"expires_at":<unix secs>}` or an error envelope. The JWS
+/// is never logged.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes;
+/// `jws`, when non-null, must be a valid null-terminated C string. The
+/// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_storekit_check(
+    seed: *const u8,
+    jws: *const c_char,
+) -> *mut c_char {
+    // SAFETY: `seed` upholds the documented precondition.
+    let Some(seed) = (unsafe { read_seed(seed) }) else {
+        return err_input_json("null seed");
+    };
+    if jws.is_null() {
+        return err_input_json("null jws");
+    }
+    // SAFETY: `jws` is a valid null-terminated C string (precondition).
+    let jws_transaction = match unsafe { CStr::from_ptr(jws) }.to_str() {
+        Ok(s) => s.to_owned(),
+        Err(_) => return err_input_json("jws is not valid UTF-8"),
+    };
+    let signing_key = derive_node_key(&seed);
+    let handle = match crate::warren_ios_runtime() {
+        Ok(handle) => handle,
+        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+    };
+    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+    match handle.block_on(client.check_apple_payment(&jws_transaction)) {
+        Ok(resp) => ok_expiry_json(resp.expires_at),
+        Err(error) => err_client_json(&error),
+    }
+}
+
 /// Unsigned `POST /v1/register`. Binds the wallet pubkey to a new
 /// subscription via a voucher secret. Returns
 /// `{"ok":true,"expires_at":<unix secs>}` or an error envelope. The

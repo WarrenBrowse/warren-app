@@ -29,15 +29,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     private(set) var tunnelStore: TunnelStore!
     nonisolated(unsafe) private(set) var tunnelManager: TunnelManager!
+    nonisolated(unsafe) private(set) var storePaymentManager: StorePaymentManager!
 
     private var proxyFactory: ProxyFactoryProtocol!
     private(set) var apiProxy: APIQuerying!
-    private(set) var accountsProxy: RESTAccountHandling!
-    nonisolated(unsafe) private(set) var devicesProxy: DeviceHandling!
 
     private(set) var addressCacheUpdateScheduler: AddressCacheUpdateScheduler!
     nonisolated(unsafe) private(set) var relayCacheTracker: RelayCacheTracker!
-    nonisolated(unsafe) private(set) var storePaymentManager: StorePaymentManager!
     nonisolated(unsafe) private var apiTransportMonitor: APITransportMonitor!
     private var settingsObserver: TunnelBlockObserver!
     private var migrationManager: MigrationManager!
@@ -156,12 +154,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
         tunnelManager.addObserver(settingsObserver)
 
+        // Warren has no Mullvad account number: the StoreKit credit goes
+        // through warren-api signed with the wallet key (the interactor
+        // talks to WarrenWalletInteractor), NOT the deleted apiProxy /
+        // accountProxy.
         storePaymentManager = StorePaymentManager(
-            interactor: StorePaymentManagerInteractor(
-                tunnelManager: tunnelManager,
-                apiProxy: apiProxy,
-                accountProxy: accountsProxy
-            )
+            interactor: StorePaymentManagerInteractor(tunnelManager: tunnelManager)
         )
 
         let apiRequestFactory = MullvadApiRequestFactory(
@@ -206,8 +204,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             backgroundTaskProvider: backgroundTaskProvider,
             tunnelStore: tunnelStore,
             relayCacheTracker: relayCacheTracker,
-            accountsProxy: accountsProxy,
-            devicesProxy: devicesProxy,
             apiProxy: apiProxy,
             relaySelector: relaySelector
         )
@@ -228,8 +224,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             )
         }
         apiProxy = proxyFactory.createAPIProxy()
-        accountsProxy = proxyFactory.createAccountsProxy()
-        devicesProxy = proxyFactory.createDevicesProxy()
     }
 
     private func setUpSimulatorHost(
@@ -567,19 +561,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             if appHasNeverBeenLaunched {
                 try? SettingsManager.writeSettings(LatestTunnelSettings())
             } else if appWasLaunchedAfterReinstall {
-                if let deviceState = try? SettingsManager.readDeviceState(),
-                    let accountData = deviceState.accountData,
-                    let deviceData = deviceState.deviceData
-                {
-                    _ = self.devicesProxy.deleteDevice(
-                        accountNumber: accountData.number,
-                        identifier: deviceData.identifier,
-                        retryStrategy: .noRetry
-                    ) { _ in
-                        // Do nothing.
-                    }
-                }
-
+                // Warren has no device registry to revoke on reinstall; the
+                // wallet identity lives in the Keychain and the exit only
+                // tracks ephemeral sessions.
                 SettingsManager.resetStore(policy: .all)
                 try? SettingsManager.writeSettings(LatestTunnelSettings())
 

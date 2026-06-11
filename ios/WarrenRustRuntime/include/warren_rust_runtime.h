@@ -176,6 +176,15 @@ typedef struct WarrenTunnelParametersC {
    * Optional ISO 3166-1 alpha-2 exit-country hint (null / empty = any).
    */
   const char *multihop_exit_country;
+  /**
+   * Optional path to the App Group file that persists the multi-hop
+   * directory anti-rollback high-water mark (highest trusted
+   * `generation`). Read before verification to reject a stale directory,
+   * raised after a successful selection. Null disables persistence (the
+   * gate then only protects within a single connect). Ignored when
+   * `multihop_directory_json` is null.
+   */
+  const char *multihop_generation_state_path;
 } WarrenTunnelParametersC;
 
 /**
@@ -244,6 +253,42 @@ typedef void (*WarrenTunnelEventCallback)(const struct WarrenTunnelEventC *event
  * passed at registration time.
  */
 typedef void (*WarrenTunnelOutboundCallback)(const uint8_t *data, uintptr_t len, void *context);
+
+/**
+ * Exit-allocated IPv4 surfaced to Swift after the multi-hop circuit's
+ * setup-stream returns an `IpAssign` control message. Swift re-applies
+ * `NEPacketTunnelNetworkSettings` with this address so the TUN's source
+ * IP matches what the exit expects, otherwise return traffic is dropped
+ * (the iOS analog of the daemon's `RealTun::reassign_ipv4`).
+ *
+ * IPv4-only: the iOS multi-hop path keeps native IPv6 blackholed
+ * (`wants_ipv6 = false`), so no v6 assignment is requested or surfaced.
+ */
+typedef struct WarrenTunnelIpAssignC {
+  /**
+   * Exit-allocated IPv4 address (network byte order, i.e. octets a.b.c.d).
+   */
+  uint8_t ipv4[4];
+  /**
+   * Subnet prefix length for the allocated address.
+   */
+  uint8_t prefix_len;
+  /**
+   * Exit-side gateway IPv4 (the exit TUN host).
+   */
+  uint8_t gateway_ipv4[4];
+} WarrenTunnelIpAssignC;
+
+/**
+ * Exit-allocated IP callback signature. Called from a Tokio task on the
+ * warren-tunnel runtime when the multi-hop circuit reports a fresh
+ * `IpAssign`. The Swift side re-applies the tunnel network settings.
+ *
+ * `assign` is owned by Rust for the duration of the call; Swift must
+ * copy the fields before returning.
+ */
+typedef void (*WarrenTunnelIpAssignCallback)(const struct WarrenTunnelIpAssignC *assign,
+                                             void *context);
 
 typedef struct SwiftApiContext {
   const struct ApiContext *_0;
@@ -426,6 +471,22 @@ int warren_tunnel_set_outbound_callback(struct WarrenTunnelHandle *handle,
                                         void *context);
 
 /**
+ * Registers a callback invoked when the multi-hop circuit reports a
+ * fresh exit-allocated IPv4 (`IpAssign`). The Swift side re-applies the
+ * `NEPacketTunnelNetworkSettings` with the new address. Replaces any
+ * previously registered callback. Passing a null callback is rejected
+ * (use a no-op from Swift to clear).
+ *
+ * Returns `0` on success, `-1` on null handle.
+ *
+ * # Safety
+ * Same invariants as [`warren_tunnel_set_event_callback`].
+ */
+int warren_tunnel_set_ip_assign_callback(struct WarrenTunnelHandle *handle,
+                                         WarrenTunnelIpAssignCallback callback,
+                                         void *context);
+
+/**
  * Pushes an inbound IP packet onto the tunnel uplink queue. Called
  * by Swift after each `NEPacketTunnelFlow.readPackets` completion.
  *
@@ -442,6 +503,26 @@ int warren_tunnel_set_outbound_callback(struct WarrenTunnelHandle *handle,
 int warren_tunnel_inject_inbound_packet(struct WarrenTunnelHandle *handle,
                                         const uint8_t *data,
                                         uintptr_t len);
+
+/**
+ * Verifies a freshly fetched multi-hop directory and returns its trusted
+ * `generation`, or `-1` on any verification / expiry / rollback failure.
+ * Handle-free: used by the Swift periodic-refresh loop to decide whether
+ * the fleet changed (a higher generation than the running session's) and a
+ * re-selection is warranted, without disturbing the live tunnel.
+ *
+ * Does NOT raise the persisted anti-rollback high-water mark (it only reads
+ * it for the rollback gate); the mark is raised only on a successful
+ * connect, so a periodic check of an inflated-generation forgery cannot
+ * poison it. `generation_state_path` may be null (gate then reads as 0).
+ *
+ * # Safety
+ * `directory_json` must be a valid null-terminated UTF-8 C string.
+ * `generation_state_path`, when non-null, must be a valid null-terminated
+ * UTF-8 C string.
+ */
+int64_t warren_multihop_check_generation(const char *directory_json,
+                                         const char *generation_state_path);
 
 /**
  * Generates a new BIP39 mnemonic with `word_count` words (12 or 24).
@@ -553,6 +634,32 @@ int warren_wallet_sign(const uint8_t *seed,
  * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
  */
 char *warren_account_get_subscription(const uint8_t *seed);
+
+/**
+ * Signed `POST /v1/payments/apple/init`. Mints an ephemeral payment
+ * session bound to the wallet pubkey and returns the session UUID the
+ * app must pass to StoreKit as the `appAccountToken`. Returns
+ * `{"ok":true,"app_account_token":"<uuid>"}` or an error envelope.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_storekit_init(const uint8_t *seed);
+
+/**
+ * Signed `POST /v1/payments/apple/check`. Uploads the StoreKit 2
+ * signed transaction JWS so the backend can verify it against Apple's
+ * root CA and credit the wallet's subscription. Returns
+ * `{"ok":true,"expires_at":<unix secs>}` or an error envelope. The JWS
+ * is never logged.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `jws`, when non-null, must be a valid null-terminated C string. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_storekit_check(const uint8_t *seed, const char *jws);
 
 /**
  * Unsigned `POST /v1/register`. Binds the wallet pubkey to a new

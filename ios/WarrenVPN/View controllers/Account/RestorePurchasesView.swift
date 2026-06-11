@@ -1,9 +1,8 @@
 //
 //  RestorePurchasesView.swift
-//  MullvadVPN
+//  WarrenVPN
 //
-//  Created by Jon Petersson on 2024-08-15.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
 import UIKit

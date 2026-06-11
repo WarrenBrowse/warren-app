@@ -8,7 +8,6 @@
 
 import WarrenLogging
 import WarrenSettings
-import StoreKit
 import UIKit
 
 enum AccountViewControllerAction: Sendable {
@@ -16,31 +15,25 @@ enum AccountViewControllerAction: Sendable {
     case logOut
     case navigateToVoucher
     case navigateToDeleteAccount
-    case restorePurchasesInfo
     case showPurchaseOptions
-    case showFailedToLoadProducts
-    case showRestorePurchases
 }
 
 class AccountViewController: UIViewController, @unchecked Sendable {
     typealias ActionHandler = (AccountViewControllerAction) -> Void
 
     private let interactor: AccountInteractor
-    private let errorPresenter: PaymentAlertPresenter
 
     private let contentView: AccountContentView = {
         let contentView = AccountContentView()
         return contentView
     }()
 
-    private var isFetchingProducts = false
     private var paymentState: PaymentState = .none
 
     var actionHandler: ActionHandler?
 
-    init(interactor: AccountInteractor, errorPresenter: PaymentAlertPresenter) {
+    init(interactor: AccountInteractor) {
         self.interactor = interactor
-        self.errorPresenter = errorPresenter
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -70,11 +63,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         contentView.accountTokenRowView.copyAccountNumber = { [weak self] in
             self?.copyAccountToken()
         }
-
-        // Warren has no in-app purchase to restore (payment is the Stripe
-        // checkout funnel + voucher redemption), so the StoreKit
-        // restore-purchases UI is hidden. The stack view collapses it.
-        contentView.restorePurchasesView.isHidden = true
 
         interactor.didReceiveTunnelState = { [weak self] in
             guard let self else { return }
@@ -110,25 +98,11 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         contentView.debugOptionsButton.addTarget(self, action: #selector(showDebugOptions), for: .touchUpInside)
     }
 
-    @MainActor
-    private func setPaymentState(_ newState: PaymentState, animated: Bool) {
-        paymentState = newState
-
-        applyViewState(animated: animated)
-    }
-
-    private func setIsFetchingProducts(_ isFetchingProducts: Bool, animated: Bool = false) {
-        self.isFetchingProducts = isFetchingProducts
-
-        applyViewState(animated: animated)
-    }
-
     private func updateView(from deviceState: DeviceState) {
-        guard case let .loggedIn(accountData, deviceData) = deviceState else {
+        guard case let .loggedIn(accountData, _) = deviceState else {
             return
         }
 
-        contentView.accountDeviceRow.deviceName = deviceData.name
         // Show the Warren wallet SS58 identity in place of the Mullvad
         // account number; fall back to the stored number if unavailable.
         contentView.accountTokenRowView.accountNumber = interactor.walletAddress ?? accountData.number
@@ -139,11 +113,9 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         let isInteractionEnabled = paymentState.allowsViewInteraction
 
         contentView.purchaseButton.isEnabled =
-            !isFetchingProducts
-            && isInteractionEnabled
+            isInteractionEnabled
             && !interactor.tunnelState.isBlockingInternet
         contentView.accountTokenRowView.setButtons(enabled: isInteractionEnabled)
-        contentView.restorePurchasesView.setButtons(enabled: isInteractionEnabled)
         contentView.logoutButton.isEnabled = isInteractionEnabled
         contentView.deleteButton.isEnabled = isInteractionEnabled
         contentView.debugOptionsButton.isEnabled = isInteractionEnabled
@@ -185,48 +157,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         actionHandler?(.showPurchaseOptions)
     }
 
-    @objc private func restorePurchases() {
-        actionHandler?(.showRestorePurchases)
-    }
-
-    // For testing refunds only.
-    @objc private func handleStoreKitRefund() {
-        setPaymentState(.makingRefund, animated: true)
-
-        Task {
-            guard
-                let latestTransactionResult = await Transaction.latest(
-                    for: StoreSubscription.thirtyDays.rawValue
-                ),
-                let windowScene = view.window?.windowScene
-            else { return }
-
-            do {
-                switch latestTransactionResult {
-                case let .verified(transaction):
-                    let refundStatus = try await transaction.beginRefundRequest(in: windowScene)
-
-                    switch refundStatus {
-                    case .success:
-                        print("Refund was successful")
-                        errorPresenter.showAlertForRefund()
-                    case .userCancelled:
-                        print("User cancelled the refund")
-                    @unknown default:
-                        print("Unknown refund result")
-                    }
-                case .unverified:
-                    print("Transaction is unverified")
-                }
-            } catch {
-                print("Error: \(error)")
-                errorPresenter.showAlertForRefundError(error, context: .purchase)
-            }
-
-            setPaymentState(.none, animated: true)
-        }
-    }
-
     @objc func showDebugOptions() {
         let localizedString = NSLocalizedString("Debug options", comment: "")
 
@@ -244,28 +174,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
                 style: .default,
                 handler: { _ in
                     self.redeemVoucher()
-                }
-            )
-        )
-
-        sheetController.addAction(
-            UIAlertAction(
-                title: "Refund last purchase",
-                style: .default,
-                handler: { _ in
-                    self.handleStoreKitRefund()
-                }
-            )
-        )
-
-        sheetController.addAction(
-            UIAlertAction(
-                title: "Finish unfinished sandbox purchases",
-                style: .default,
-                handler: { _ in
-                    Task {
-                        await StorePaymentManager.finishOutstandingSandboxAndOldAPITransactions()
-                    }
                 }
             )
         )

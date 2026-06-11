@@ -1,19 +1,17 @@
 //
-//  SheetViewController.swift
-//  MullvadVPN
+//  InAppPurchaseViewController.swift
+//  WarrenVPN
 //
-//  Created by Steffen Ernst on 2025-01-29.
-//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//  Copyright © 2026 Warren Browse. All rights reserved.
 //
 
-import WarrenLogging
 import StoreKit
 import UIKit
+import WarrenLogging
 
 class InAppPurchaseViewController: UIViewController, StorePaymentObserver {
     private let logger = Logger(label: "InAppPurchaseViewController")
     private let storePaymentManager: StorePaymentManager
-    private let accountNumber: String
     private let paymentAction: PaymentAction
     private let errorPresenter: PaymentAlertPresenter
 
@@ -25,12 +23,10 @@ class InAppPurchaseViewController: UIViewController, StorePaymentObserver {
 
     init(
         storePaymentManager: StorePaymentManager,
-        accountNumber: String,
         errorPresenter: PaymentAlertPresenter,
         paymentAction: PaymentAction
     ) {
         self.storePaymentManager = storePaymentManager
-        self.accountNumber = accountNumber
         self.errorPresenter = errorPresenter
         self.paymentAction = paymentAction
 

@@ -70,8 +70,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
             storePaymentManager: appDelegate.storePaymentManager,
             relayCacheTracker: appDelegate.relayCacheTracker,
             apiProxy: appDelegate.apiProxy,
-            devicesProxy: appDelegate.devicesProxy,
-            accountsProxy: appDelegate.accountsProxy,
             outgoingConnectionService: OutgoingConnectionService(
                 outgoingConnectionProxy: OutgoingConnectionProxy(
                     urlSession: REST.makeURLSession(),

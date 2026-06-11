@@ -14,16 +14,14 @@ import Operations
 
 final class AccountInteractor: Sendable {
     let tunnelManager: TunnelManager
-    let accountsProxy: RESTAccountHandling
 
     nonisolated(unsafe) var didReceiveTunnelState: (() -> Void)?
     nonisolated(unsafe) var didReceiveDeviceState: (@Sendable (DeviceState) -> Void)?
 
     nonisolated(unsafe) private var tunnelObserver: TunnelObserver?
 
-    init(tunnelManager: TunnelManager, accountsProxy: RESTAccountHandling) {
+    init(tunnelManager: TunnelManager) {
         self.tunnelManager = tunnelManager
-        self.accountsProxy = accountsProxy
 
         let tunnelObserver =
             TunnelBlockObserver(
@@ -55,7 +53,6 @@ final class AccountInteractor: Sendable {
     }
 
     func logout() async {
-        await tunnelManager.unsetAccount()
         await MainActor.run {
             WarrenWalletLogout.perform(tunnelManager: tunnelManager)
         }
