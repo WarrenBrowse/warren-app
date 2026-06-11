@@ -605,6 +605,7 @@ fn fetch_relays_or_fallback() -> String {
     // single-endpoint on the Kotlin side until multi-endpoint
     // failover lands).
     let projected: Vec<serde_json::Value> = signed
+        .relays
         .relays()
         .iter()
         .map(|r| {
@@ -746,9 +747,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getSubscription<'
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
         Err(e) => {
             // Do not log the error chain: a 4xx body could echo request
-            // context. The full string still returns to Kotlin via JSON.
+            // context. The structured envelope still returns to Kotlin.
             log::warn!("getSubscription failed");
-            serde_json::json!({"ok": false, "error": e}).to_string()
+            subscription_error_envelope(&e)
         }
     };
     match jnix_env.new_string(json) {
@@ -757,118 +758,84 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getSubscription<'
     }
 }
 
+/// A subscription fetch failure, kept structured so the boundary can
+/// surface a server `status`. A 404 is not a real error: it means "no
+/// subscription bound yet" (a fresh wallet), which Kotlin maps to the Unix
+/// epoch the same way iOS / desktop do.
 #[cfg(target_os = "android")]
-fn get_subscription_inner(mnemonic: &str) -> Result<u64, String> {
-    let runtime = RUNTIME
-        .get()
-        .ok_or_else(|| "initLogger must be called before getSubscription".to_owned())?;
+enum SubscriptionFetchError {
+    /// Failed before reaching the server (runtime / mnemonic): no status.
+    Setup(String),
+    /// The signed request reached the server and it answered non-2xx (or a
+    /// transport error occurred). `ServerStatus` carries the HTTP status.
+    Client(warren_api_client::ClientError),
+}
+
+/// Build the `{"ok":false,...}` envelope, surfacing `status` on a server
+/// non-2xx so Kotlin can distinguish 404 (no subscription) from a real
+/// failure. Mirrors the iOS `err_client_json` (warren-ios account FFI).
+#[cfg(target_os = "android")]
+fn subscription_error_envelope(err: &SubscriptionFetchError) -> String {
+    use warren_api_client::ClientError;
+    match err {
+        SubscriptionFetchError::Client(client_err) => {
+            let mut obj = serde_json::Map::new();
+            obj.insert("ok".to_owned(), serde_json::Value::Bool(false));
+            obj.insert(
+                "error".to_owned(),
+                serde_json::Value::String(format!("get_subscription failed: {client_err}")),
+            );
+            // Surface the HTTP status on a server non-2xx so Kotlin maps 404
+            // (no subscription bound yet) to the epoch, not a hard failure.
+            if let ClientError::ServerStatus { status, .. } = client_err {
+                obj.insert("status".to_owned(), serde_json::json!(status));
+            }
+            serde_json::Value::Object(obj).to_string()
+        }
+        SubscriptionFetchError::Setup(msg) => {
+            serde_json::json!({"ok": false, "error": msg}).to_string()
+        }
+    }
+}
+
+#[cfg(target_os = "android")]
+fn get_subscription_inner(mnemonic: &str) -> Result<u64, SubscriptionFetchError> {
+    let runtime = RUNTIME.get().ok_or_else(|| {
+        SubscriptionFetchError::Setup("initLogger must be called before getSubscription".to_owned())
+    })?;
     let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
-        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+        .map_err(|e| SubscriptionFetchError::Setup(format!("invalid mnemonic: {e}")))?;
     let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
     let resp = runtime
         .block_on(client.get_subscription())
-        .map_err(|e| format!("get_subscription failed: {e}"))?;
+        .map_err(SubscriptionFetchError::Client)?;
     Ok(resp.expires_at)
 }
 
 #[cfg(not(target_os = "android"))]
 #[allow(dead_code)]
-fn get_subscription_inner(_mnemonic: &str) -> Result<u64, String> {
-    Err("getSubscription is Android-only".to_owned())
+fn get_subscription_inner(_mnemonic: &str) -> Result<u64, SubscriptionFetchError> {
+    Err(SubscriptionFetchError::Setup(
+        "getSubscription is Android-only".to_owned(),
+    ))
 }
 
-/// List the wallet's registered devices (signed `GET /v1/devices`).
-/// Returns `{"ok": true, "devices": [{"id","name","created_at"}, ...]}`
-/// or `{"ok": false, "error": "..."}`. The WireGuard key and DNS flags
-/// are intentionally not surfaced to Kotlin.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listDevices<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    mnemonic: JString<'local>,
-) -> jstring {
-    let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
-    let json = match list_devices_inner(&phrase) {
-        Ok(devices) => serde_json::json!({"ok": true, "devices": devices}).to_string(),
-        Err(e) => {
-            log::warn!("listDevices failed");
-            serde_json::json!({"ok": false, "error": e}).to_string()
-        }
-    };
-    match jnix_env.new_string(json) {
-        Ok(s) => s.into_inner() as jstring,
-        Err(_) => std::ptr::null_mut(),
-    }
-}
-
-#[cfg(target_os = "android")]
-fn list_devices_inner(mnemonic: &str) -> Result<Vec<serde_json::Value>, String> {
-    let runtime = RUNTIME
-        .get()
-        .ok_or_else(|| "initLogger must be called before listDevices".to_owned())?;
-    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
-        .map_err(|e| format!("invalid mnemonic: {e}"))?;
-    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
-    let devices = runtime
-        .block_on(client.list_devices())
-        .map_err(|e| format!("list_devices failed: {e}"))?;
-    Ok(devices
-        .into_iter()
-        .map(|d| serde_json::json!({"id": d.id, "name": d.name, "created_at": d.created_at}))
-        .collect())
-}
-
+/// Host-build mirror of the Android enum so the `not(target_os = "android")`
+/// stub above type-checks. Only the `Setup` arm is constructed off-device.
 #[cfg(not(target_os = "android"))]
 #[allow(dead_code)]
-fn list_devices_inner(_mnemonic: &str) -> Result<Vec<serde_json::Value>, String> {
-    Err("listDevices is Android-only".to_owned())
+enum SubscriptionFetchError {
+    Setup(String),
 }
 
-/// Remove a device the wallet owns (signed `DELETE /v1/devices/{id}`).
-/// Returns `{"ok": true}` or `{"ok": false, "error": "..."}`.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_removeDevice<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    mnemonic: JString<'local>,
-    device_id: JString<'local>,
-) -> jstring {
-    let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
-    let id = String::from_java(&jnix_env, device_id);
-    let json = match remove_device_inner(&phrase, &id) {
-        Ok(()) => serde_json::json!({"ok": true}).to_string(),
-        Err(e) => {
-            log::warn!("removeDevice failed");
-            serde_json::json!({"ok": false, "error": e}).to_string()
-        }
-    };
-    match jnix_env.new_string(json) {
-        Ok(s) => s.into_inner() as jstring,
-        Err(_) => std::ptr::null_mut(),
-    }
-}
-
-#[cfg(target_os = "android")]
-fn remove_device_inner(mnemonic: &str, device_id: &str) -> Result<(), String> {
-    let runtime = RUNTIME
-        .get()
-        .ok_or_else(|| "initLogger must be called before removeDevice".to_owned())?;
-    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
-        .map_err(|e| format!("invalid mnemonic: {e}"))?;
-    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
-    runtime
-        .block_on(client.delete_device(device_id))
-        .map_err(|e| format!("delete_device failed: {e}"))?;
-    Ok(())
-}
-
-#[cfg(not(target_os = "android"))]
-#[allow(dead_code)]
-fn remove_device_inner(_mnemonic: &str, _device_id: &str) -> Result<(), String> {
-    Err("removeDevice is Android-only".to_owned())
-}
+// Device list/remove JNI exports were dropped: Warren's identity is the
+// BIP39 wallet (one wallet = one pubkey), not a Mullvad-style per-account
+// device registry. The backend has no `/v1/devices` list/delete endpoint;
+// it only tracks ephemeral self-managed sessions (`/v1/session/open|close`)
+// capped at MAX_DEVICES_PER_ACCOUNT concurrent, freed on disconnect/TTL, so
+// there is nothing for a user to list or revoke. The Kotlin device-management
+// UI was already removed (commit dc5b0b0928); this finishes that on the Rust
+// side. Desktop is on the same login-state-only model.
 
 /// Redeem a subscription voucher (`POST /v1/register`). Binds the wallet
 /// pubkey to a new subscription. The request is unsigned (the pubkey is

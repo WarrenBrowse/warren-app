@@ -200,14 +200,21 @@ internal fun subscriptionLabel(
     nowSecs: Long = System.currentTimeMillis() / 1000,
 ): String = when (outcome) {
     is WarrenSubscriptionOutcome.Success -> {
-        val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
-            .atZone(java.time.ZoneId.systemDefault())
-            .toLocalDate()
-            .toString()
-        if (outcome.expiresAtUnixSecs > nowSecs) {
-            "Subscription active - expires $date"
+        if (outcome.expiresAtUnixSecs <= 0L) {
+            // Epoch expiry is the "no subscription bound yet" sentinel a 404
+            // resolves to (mirrors iOS / desktop); show it as such instead of
+            // a bogus "expired (1970-01-01)" date.
+            "No active subscription."
         } else {
-            "Subscription expired ($date)"
+            val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate()
+                .toString()
+            if (outcome.expiresAtUnixSecs > nowSecs) {
+                "Subscription active - expires $date"
+            } else {
+                "Subscription expired ($date)"
+            }
         }
     }
     WarrenSubscriptionOutcome.AuthorizationDenied -> "Authorization cancelled."

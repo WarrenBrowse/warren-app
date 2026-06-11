@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
@@ -121,6 +122,12 @@ class WarrenSubscriptionUseCase(
             val expiresAt = root["expires_at"]?.jsonPrimitive?.long
                 ?: return WarrenSubscriptionOutcome.Failure("missing expires_at")
             WarrenSubscriptionOutcome.Success(expiresAt)
+        } else if (root["status"]?.jsonPrimitive?.intOrNull == 404) {
+            // A 404 means "no subscription bound yet" (a fresh wallet), not a
+            // failure. Mirror iOS / desktop by resolving it to the Unix epoch
+            // so the UI shows "no active subscription" rather than a fetch
+            // error (the JNI surfaces the HTTP status for exactly this case).
+            WarrenSubscriptionOutcome.Success(0L)
         } else {
             val msg = root["error"]?.jsonPrimitive?.content ?: "fetch failed"
             WarrenSubscriptionOutcome.Failure(msg)

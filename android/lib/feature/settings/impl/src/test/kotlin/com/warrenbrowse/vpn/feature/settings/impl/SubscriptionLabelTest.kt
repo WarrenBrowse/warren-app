@@ -27,6 +27,17 @@ class SubscriptionLabelTest {
     }
 
     @Test
+    fun `no active subscription when expiry is the epoch sentinel (404)`() {
+        // A 404 from the subscription endpoint resolves to epoch (0), which
+        // must read as "no active subscription", not "expired (1970)".
+        val label = subscriptionLabel(
+            WarrenSubscriptionOutcome.Success(expiresAtUnixSecs = 0),
+            nowSecs = 2_000,
+        )
+        assertEquals("No active subscription.", label)
+    }
+
+    @Test
     fun `voucher success renders the new expiry, failures are fixed`() {
         assertTrue(
             voucherLabel(WarrenVoucherOutcome.Success(2_000)).startsWith("Voucher redeemed"),
