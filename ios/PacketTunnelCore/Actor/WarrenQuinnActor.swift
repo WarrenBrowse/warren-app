@@ -64,6 +64,13 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// I/O path so the actor stays unit-testable.
     public var multihopDirectoryJSON: String?
 
+    /// Path to the App Group file persisting the multi-hop directory
+    /// anti-rollback high-water mark (highest trusted `generation`). Set by
+    /// the owning `WarrenQuinnTunnelImplementation` before `start`. Nil in
+    /// tests and on the single-hop dev path; the FFI then keeps the gate
+    /// per-connect only.
+    public var multihopGenerationStatePath: String?
+
     /// 32-byte Ed25519 signing seed derived from the user wallet,
     /// loaded via the cross-process Keychain bridge by the owning
     /// `WarrenQuinnTunnelImplementation` and pushed in via
@@ -263,11 +270,17 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             daitaEnabled ? WarrenDaitaSpec(machineSeedHex: "", padding: 0) : nil
 
         // Multi-hop toggle: 2-hop when the user enabled multi-hop (always /
-        // when-needed), else a 1-hop circuit. Country hints are left empty
-        // (the selector picks by weight); mapping the relay-constraint
-        // locations to country codes is a follow-up.
+        // when-needed), else a 1-hop circuit.
         let multihopState = settings?.tunnelMultihopState
         let twoHop = multihopState?.isAlways == true || multihopState?.isWhenNeeded == true
+
+        let relayConstraints = settings?.relayConstraints ?? RelayConstraints()
+        // Bridge the user's exit-location selection into the multi-hop
+        // exit-country hint the Rust circuit selector reads (mirrors the
+        // daemon's `effective_warren_multi_hop`). Entry is left "any": with a
+        // small fleet the entry is implied by the exit (different-country
+        // rule), and the user's entry default may not host a Warren node.
+        let exitCountry = Self.warrenExitCountryHint(from: relayConstraints)
 
         let config = WarrenTunnelConfig(
             exitPubkey: exit.endpoint.publicKey,
@@ -280,9 +293,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             multihopDirectoryJSON: multihopDirectoryJSON,
             multihopTwoHop: twoHop,
             multihopEntryCountry: "",
-            multihopExitCountry: ""
+            multihopExitCountry: exitCountry,
+            multihopGenerationStatePath: multihopGenerationStatePath
         )
-        let relayConstraints = settings?.relayConstraints ?? RelayConstraints()
         let context = ConnectionContext(
             selectedRelays: selectedRelays,
             relayConstraints: relayConstraints,
@@ -290,6 +303,26 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             isDaitaEnabled: daitaEnabled
         )
         return (config, context)
+    }
+
+    /// Maps the user's exit-location selection to the ISO 3166-1 alpha-2
+    /// country code the multi-hop circuit selector matches against
+    /// `node.country`. Returns "" (any) when the exit location is
+    /// unconstrained or carries no country. Mirrors the daemon's
+    /// `effective_warren_multi_hop` (the country code is the first
+    /// associated value of every `RelayLocation` case).
+    private static func warrenExitCountryHint(from constraints: RelayConstraints) -> String {
+        guard case let .only(selected) = constraints.exitLocations,
+              let first = selected.locations.first
+        else {
+            return ""
+        }
+        switch first {
+        case let .country(code),
+             let .city(code, _),
+             let .hostname(code, _, _):
+            return code
+        }
     }
 
     public func stop() {
@@ -435,9 +468,8 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // Surface the blocked-state reason as an `.error` observed state so
         // the parent `PacketTunnelProvider` chain (BlockedStateErrorMapper ->
         // IPC -> TunnelState.error -> UI) reflects the user-visible cause
-        // (device revoked/logged out, no signal, etc.). Without this a
-        // failed device check (PacketTunnelProvider.startDeviceCheckInner)
-        // would vanish silently.
+        // (no signal, etc.). Without this the blocked reason would vanish
+        // silently.
         logger.info("setErrorState: entering blocked state (reason=\(reason))")
         let nextState: ObservedState = .error(ObservedBlockedState(reason: reason))
         stateLock.lock()

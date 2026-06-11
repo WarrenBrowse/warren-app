@@ -16,12 +16,22 @@
 //! anchor is the baked root pubkey; warren-api cannot forge a node
 //! without the offline operational key the root vouches for.
 //!
-//! Deliberately out of scope for this first cut (follow-ups, documented
-//! so they are not mistaken for done): periodic 30-min directory refresh
-//! + anti-rollback generation high-water mark (the daemon updater does
-//! this; here Swift fetches once per connect), and the server-key pin
-//! (empty here; the root chain is the anchor, the envelope is still
-//! signature-checked for internal consistency).
+//! Anti-rollback: `verify_and_select` takes a `min_generation` and rejects
+//! a directory whose `generation` is below the highest already trusted (a
+//! compromised server replaying an older, validly-signed set). The caller
+//! persists the high-water mark across connects (the FFI keeps it in an App
+//! Group file, since iOS has no long-lived daemon to hold it in memory).
+//!
+//! Defense-in-depth: the directory envelope is signature-checked against the
+//! baked API **server** pin (`warren_config::WARREN_SERVER_PUBKEY_HEX`, the
+//! same value the daemon pins), on top of the root-anchored operational
+//! certificate. Sourced from `warren-config` so it never drifts from the
+//! daemon's pin.
+//!
+//! Periodic refresh: Swift re-fetches every 30 min and calls
+//! [`verify_generation`]; when the trusted generation advances (a fleet
+//! change) it re-applies the fresh directory and reconnects onto a freshly
+//! selected circuit, mirroring the daemon's timer-driven updater.
 
 use ed25519_dalek::VerifyingKey;
 use warren_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
@@ -38,6 +48,10 @@ pub enum SelectError {
     /// The signed directory is past its `expires_at` (replay defense).
     #[error("directory is expired")]
     Expired,
+    /// The signed directory's `generation` is below the high-water mark
+    /// (rollback defense): a validly-signed but stale set being replayed.
+    #[error("directory generation {got} is below the trusted high-water mark {min}")]
+    Rollback { got: u64, min: u64 },
 }
 
 /// Build-time-baked **root** pubkey pin (64-char hex), identical to the
@@ -55,6 +69,10 @@ pub struct SelectedCircuit {
     pub relay: RelayDescriptorSigned,
     pub exit: ExitDescriptorSigned,
     pub operational_pubkey: VerifyingKey,
+    /// The verified directory's monotonic content version. The caller
+    /// raises its persisted high-water mark to this after a successful
+    /// selection (anti-rollback).
+    pub generation: u64,
 }
 
 /// Verifies the signed directory JSON against the baked root pin and
@@ -63,31 +81,80 @@ pub struct SelectedCircuit {
 /// a 1-hop circuit (one node as both relay and exit). Returns `None` when
 /// no node/pair satisfies the rules.
 ///
+/// `min_generation` is the caller's persisted anti-rollback high-water
+/// mark: a verified directory whose `generation` is strictly below it is
+/// rejected. Pass `0` to disable the gate (first connect / no stored mark).
+///
 /// # Errors
 /// [`DirectoryError`] when the JSON does not parse or the trust chain
 /// (envelope signature, operational certificate under the baked root,
-/// per-node attestation) does not verify, or when the signed directory
-/// is past its `expires_at`.
+/// per-node attestation) does not verify; [`SelectError::Expired`] when the
+/// signed directory is past its `expires_at`; [`SelectError::Rollback`]
+/// when its `generation` is below `min_generation`.
 pub fn verify_and_select(
     json: &str,
     two_hop: bool,
     entry_country: &str,
     exit_country: &str,
     now_unix: u64,
+    min_generation: u64,
 ) -> Result<Option<SelectedCircuit>, SelectError> {
-    // Root pin is the anchor (non-empty => operational cert is verified
-    // against the offline root). Server pins empty: the envelope signature
-    // is still checked for internal consistency, and the root chain stops
-    // node forgery regardless.
-    let dir = verify_multihop_directory_any(json, &[], &[WARREN_MULTIHOP_ROOT_PUBKEY_BAKED])?;
-    if dir.is_expired(now_unix) {
-        return Err(SelectError::Expired);
-    }
+    let dir = verify_fresh(json, now_unix, min_generation)?;
     Ok(if two_hop {
         select_two_hop(&dir, entry_country, exit_country)
     } else {
         select_one_hop(&dir, exit_country)
     })
+}
+
+/// Verify the signed directory and return its trusted `generation` without
+/// selecting a circuit. Used by the periodic refresh to decide whether the
+/// fleet changed (a higher generation) and a re-selection is warranted.
+///
+/// Like [`verify_and_select`], this does NOT raise the persisted high-water
+/// mark: that happens only on a successful connect, so a verified-but-unused
+/// directory (e.g. an inflated-generation forgery under a server-key
+/// compromise) cannot poison the mark via a periodic check.
+///
+/// # Errors
+/// Same as [`verify_and_select`] (verification, expiry, rollback).
+pub fn verify_generation(
+    json: &str,
+    now_unix: u64,
+    min_generation: u64,
+) -> Result<u64, SelectError> {
+    Ok(verify_fresh(json, now_unix, min_generation)?.generation)
+}
+
+/// Shared verification prefix: envelope signature + server pin + root-anchored
+/// operational certificate, then expiry and the anti-rollback gate. The
+/// `generation` field is trusted only here, strictly AFTER the signature
+/// verification, so a forged generation cannot clear the gate.
+fn verify_fresh(
+    json: &str,
+    now_unix: u64,
+    min_generation: u64,
+) -> Result<VerifiedMultiHopDirectory, SelectError> {
+    // Root pin is the anchor (operational cert is verified against the
+    // offline root). The server pin is defense-in-depth: the envelope
+    // signature is additionally checked against the baked API server key,
+    // so a compromised server cannot present a validly-rooted directory
+    // signed by a different envelope key.
+    let dir = verify_multihop_directory_any(
+        json,
+        &[warren_config::WARREN_SERVER_PUBKEY_HEX],
+        &[WARREN_MULTIHOP_ROOT_PUBKEY_BAKED],
+    )?;
+    if dir.is_expired(now_unix) {
+        return Err(SelectError::Expired);
+    }
+    if dir.generation < min_generation {
+        return Err(SelectError::Rollback {
+            got: dir.generation,
+            min: min_generation,
+        });
+    }
+    Ok(dir)
 }
 
 /// `true` if the directory spans >= 2 distinct (non-zero) ASNs, in which
@@ -175,6 +242,7 @@ fn circuit_from(dir: &VerifiedMultiHopDirectory, entry_idx: usize, exit_idx: usi
         relay: dir.nodes[entry_idx].relay.clone(),
         exit: dir.nodes[exit_idx].exit.clone(),
         operational_pubkey: dir.operational_pubkey,
+        generation: dir.generation,
     }
 }
 

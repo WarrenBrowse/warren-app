@@ -20,6 +20,11 @@ mod warren_tunnel_ffi;
 // consumed only by the tunnel data plane, so it is gated the same way.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 mod warren_multihop_directory;
+// Persistent anti-rollback high-water mark for the multi-hop directory
+// generation. Backs the iOS tunnel path; also compiled under `test` so its
+// pure std::fs round-trip tests run on the host (`cargo test`).
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+mod warren_multihop_generation;
 #[cfg(any(target_os = "ios", test))]
 mod warren_wallet_ffi;
 

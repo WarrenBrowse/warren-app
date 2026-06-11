@@ -76,10 +76,12 @@ warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client",
 warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
 # Multi-hop supervisor + pump support (the iOS data plane rides the
 # multi-hop wire protocol; see `warren_multihop_directory`). `Backoff`
-# is a `SupervisorConfig` field; `parking_lot::Mutex` wraps the shared
-# `DaitaState` the supervised pumps take (`DaitaShared`).
+# is a `SupervisorConfig` field.
 warren-backoff = { path = "../../warren-core/crates/warren-backoff", optional = true }
-parking_lot = { version = "0.12", optional = true }
+# Canonical baked API server pin (`WARREN_SERVER_PUBKEY_HEX`), reused as
+# the multi-hop directory's server-key pin so the value never drifts from
+# the daemon's. Already in the iOS dep tree via warren-client/-tunnel.
+warren-config = { path = "../../warren-core/crates/warren-config", optional = true }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
 cbindgen = { version = "0.28.0", default-features = false }
@@ -91,7 +93,7 @@ api-override = ["mullvad-api/api-override"]
 # Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
 # has landed, so the iOS Xcode build phase enables this feature. It stays
 # off the crate default so a no-tunnel host build path remains minimal.
-tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol", "dep:warren-backoff", "dep:parking_lot"]
+tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol", "dep:warren-backoff", "dep:warren-config"]
 
 [lints]
 workspace = true

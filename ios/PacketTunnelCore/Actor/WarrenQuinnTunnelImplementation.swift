@@ -27,6 +27,20 @@ import WarrenREST
 import WarrenRustRuntime
 @preconcurrency import NetworkExtension
 
+/// Re-applies the tunnel network settings with an exit-allocated IPv4.
+/// `PacketTunnelProvider` (the concrete `NEPacketTunnelProvider`) conforms
+/// to it; the Warren Quinn implementation calls it when the multi-hop
+/// circuit reports a fresh `IpAssign`, so the TUN source IP matches what
+/// the exit expects (else return traffic is dropped, the Session N bug).
+/// Defined here so `PacketTunnelCore` can drive the reassign without
+/// depending on the `PacketTunnel` target's concrete provider type.
+public protocol WarrenTunnelIPReassigning: AnyObject, Sendable {
+    /// Apply `address`/`prefixLength` as the tunnel's IPv4 interface
+    /// address, keeping all other settings (DNS, MTU, IPv6 blackhole,
+    /// default route) intact.
+    func reapplyWarrenTunnelIPv4(address: String, prefixLength: Int) async
+}
+
 /// Quinn-based tunnel implementation. Replaces
 /// `WireGuardGoTunnelImplementation` for the Warren path. State
 /// transitions are handled internally by `WarrenQuinnActor` ; data
@@ -62,6 +76,22 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// Spawned in `setUp(provider:...)` ; cancelled in deinit.
     private var statsBroadcastTask: Task<Void, Never>?
 
+    /// Background Task that periodically re-fetches the signed multi-hop
+    /// directory and re-selects a fresh circuit when the fleet's
+    /// `generation` advances (the desktop daemon refreshes on a timer;
+    /// iOS otherwise fetches once per connect). Cancelled in `stopTunnel`
+    /// and deinit.
+    private var directoryRefreshTask: Task<Void, Never>?
+
+    /// The trusted directory `generation` the current session was started
+    /// with. A periodic refresh that observes a strictly higher generation
+    /// triggers a re-selection. `-1` until the first fetch.
+    private var lastDirectoryGeneration: Int64 = -1
+
+    /// The relays the session was started with, reused to drive a
+    /// directory-refresh reconnect via `reconnect(to: .preSelected(...))`.
+    private var warrenSelectedRelays: SelectedRelays?
+
     public init() {
         self._actor = WarrenQuinnActor()
         // Best-effort App Group defaults handle. When the bundle is
@@ -90,13 +120,35 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // UserDefaults inside the @Sendable event callback.
         let suiteName = appGroupSuiteName
         let weakActor = _actor
+        // The concrete provider re-applies the tunnel settings when the
+        // exit allocates an IPv4. Single-hop dev providers that do not
+        // conform simply skip the reassign (closure stays nil).
+        let ipAssignCallback: (@Sendable (WarrenTunnelIpAssign) -> Void)?
+        if let reassigner = provider as? WarrenTunnelIPReassigning {
+            // The Rust reassign task fires sequentially and dedups by the last
+            // forwarded address, and the exit's allocation is pubkey-sticky
+            // (the IP does not change across reconnects), so the unstructured
+            // `Task` hop here cannot reorder two *different* addresses in
+            // practice. setTunnelNetworkSettings is itself serialized by the OS.
+            ipAssignCallback = { [weak reassigner] assign in
+                Task {
+                    await reassigner?.reapplyWarrenTunnelIPv4(
+                        address: assign.ipv4,
+                        prefixLength: assign.prefixLength
+                    )
+                }
+            }
+        } else {
+            ipAssignCallback = nil
+        }
         let adapter = WarrenQuinnAdapter(
             packetFlow: provider.packetFlow,
             eventCallback: { event in
                 let defaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
                 Self.broadcastEvent(event, into: defaults)
                 weakActor.applyEvent(event)
-            }
+            },
+            ipAssignCallback: ipAssignCallback
         )
         self.adapter = adapter
         _actor.bindAdapter(adapter)
@@ -124,6 +176,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
 
     deinit {
         statsBroadcastTask?.cancel()
+        directoryRefreshTask?.cancel()
     }
 
     /// Spawn the periodic stats snapshot task that drives
@@ -181,7 +234,26 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // it nil and the FFI falls back to the legacy single-hop path (dev).
         // Done here (async, off the actor) so the actor stays I/O-free and
         // unit-testable.
-        _actor.multihopDirectoryJSON = await Self.fetchMultihopDirectory()
+        let directory = await Self.fetchMultihopDirectory()
+        _actor.multihopDirectoryJSON = directory
+        // Persist the directory anti-rollback high-water mark in the App
+        // Group container so it survives across connects (iOS has no
+        // long-lived daemon to hold it in memory).
+        let statePath = multihopGenerationStatePath()
+        _actor.multihopGenerationStatePath = statePath
+
+        // Record the generation this session starts with + arm the periodic
+        // refresh so a long-lived session picks up a fleet change (a higher
+        // generation) instead of riding a stale circuit until the next manual
+        // reconnect. Steady state (unchanged generation) is a no-op fetch.
+        if let directory {
+            lastDirectoryGeneration = WarrenQuinnAdapter.checkMultihopGeneration(
+                directoryJSON: directory,
+                generationStatePath: statePath
+            ) ?? -1
+        }
+        warrenSelectedRelays = options.selectedRelays
+        startDirectoryRefreshTask(statePath: statePath)
 
         // Forward to the actor ; the actor decides whether to call
         // `adapter.start(config:)` based on the resolved tunnel config
@@ -189,6 +261,61 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // observer like WireGuardGo : the Rust-side event callback
         // drives state transitions through `applyEvent`.
         actor.start(options: options)
+    }
+
+    /// Resolves the App Group container path for the multi-hop directory
+    /// anti-rollback high-water file. Returns nil when the App Group is
+    /// unavailable (unit tests), in which case the FFI keeps the rollback
+    /// gate per-connect only.
+    private func multihopGenerationStatePath() -> String? {
+        guard let suite = appGroupSuiteName,
+              let container = FileManager.default.containerURL(
+                  forSecurityApplicationGroupIdentifier: suite
+              )
+        else {
+            return nil
+        }
+        return container.appendingPathComponent("warren-multihop-generation").path
+    }
+
+    /// Interval between directory refreshes. Matches the desktop daemon's
+    /// 30-minute updater cadence.
+    private static let directoryRefreshInterval: UInt64 = 30 * 60 * 1_000_000_000
+
+    /// Arm the periodic directory-refresh loop. Each tick re-fetches the
+    /// signed directory and, only when its verified `generation` is strictly
+    /// higher than the running session's, re-applies it and reconnects to a
+    /// freshly selected circuit. A failed fetch / verify is a no-op (the live
+    /// tunnel is never torn down on a transient network blip).
+    private func startDirectoryRefreshTask(statePath: String?) {
+        directoryRefreshTask?.cancel()
+        directoryRefreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: Self.directoryRefreshInterval)
+                guard !Task.isCancelled, let self else { return }
+                await self.refreshDirectoryOnce(statePath: statePath)
+            }
+        }
+    }
+
+    private func refreshDirectoryOnce(statePath: String?) async {
+        guard let fresh = await Self.fetchMultihopDirectory(),
+              let freshGeneration = WarrenQuinnAdapter.checkMultihopGeneration(
+                  directoryJSON: fresh,
+                  generationStatePath: statePath
+              )
+        else {
+            return
+        }
+        // Steady state: the fleet did not change, so keep the live circuit.
+        guard freshGeneration > lastDirectoryGeneration else { return }
+        guard let relays = warrenSelectedRelays else { return }
+        logger.info(
+            "Warren multi-hop directory generation advanced (\(lastDirectoryGeneration) -> \(freshGeneration)); re-selecting circuit"
+        )
+        lastDirectoryGeneration = freshGeneration
+        _actor.multihopDirectoryJSON = fresh
+        _actor.reconnect(to: .preSelected(relays), reconnectReason: .connectionLoss)
     }
 
     /// warren-api base URL (mirrors the account FFI's baked endpoint).
@@ -217,6 +344,8 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     }
 
     public func stopTunnel() async {
+        directoryRefreshTask?.cancel()
+        directoryRefreshTask = nil
         actor.stop()
         await actor.waitUntilDisconnected()
     }

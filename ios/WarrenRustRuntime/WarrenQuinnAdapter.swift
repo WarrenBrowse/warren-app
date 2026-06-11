@@ -62,6 +62,10 @@ public struct WarrenTunnelConfig: Sendable {
     public let multihopEntryCountry: String
     /// Optional ISO 3166-1 alpha-2 exit-country hint (empty = any).
     public let multihopExitCountry: String
+    /// Path to the App Group file persisting the multi-hop directory
+    /// anti-rollback high-water mark. When nil the FFI keeps the rollback
+    /// gate per-connect only (no cross-connect persistence).
+    public let multihopGenerationStatePath: String?
 
     public init(
         exitPubkey: Data,
@@ -74,7 +78,8 @@ public struct WarrenTunnelConfig: Sendable {
         multihopDirectoryJSON: String? = nil,
         multihopTwoHop: Bool = false,
         multihopEntryCountry: String = "",
-        multihopExitCountry: String = ""
+        multihopExitCountry: String = "",
+        multihopGenerationStatePath: String? = nil
     ) {
         self.exitPubkey = exitPubkey
         self.exitEndpoint = exitEndpoint
@@ -87,6 +92,7 @@ public struct WarrenTunnelConfig: Sendable {
         self.multihopTwoHop = multihopTwoHop
         self.multihopEntryCountry = multihopEntryCountry
         self.multihopExitCountry = multihopExitCountry
+        self.multihopGenerationStatePath = multihopGenerationStatePath
     }
 }
 
@@ -149,6 +155,19 @@ public enum WarrenTunnelEvent: Sendable {
     case natPmpFailed(reason: String)
 }
 
+/// Exit-allocated IPv4 surfaced by the multi-hop circuit after its
+/// setup-stream returns an `IpAssign`. The consumer re-applies the tunnel
+/// network settings so the TUN source IP matches what the exit expects
+/// (the iOS analog of the daemon's `RealTun::reassign_ipv4`).
+public struct WarrenTunnelIpAssign: Sendable {
+    /// Dotted-decimal exit-allocated IPv4 (e.g. "10.66.0.2").
+    public let ipv4: String
+    /// Subnet prefix length for the allocated address.
+    public let prefixLength: Int
+    /// Dotted-decimal exit-side gateway IPv4.
+    public let gatewayIPv4: String
+}
+
 /// Errors emitted by `WarrenQuinnAdapter`.
 public enum WarrenQuinnAdapterError: Error {
     /// The adapter was never started (`start(config:)` not called).
@@ -192,6 +211,10 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
     // recovered from the FFI context pointer.
     fileprivate let packetFlow: NEPacketTunnelFlow
     fileprivate let eventCallback: @Sendable (WarrenTunnelEvent) -> Void
+    /// Fired when the multi-hop circuit reports a fresh exit-allocated
+    /// IPv4. Nil on the single-hop dev path (and in unit tests), where no
+    /// reassign ever happens.
+    fileprivate let ipAssignCallback: (@Sendable (WarrenTunnelIpAssign) -> Void)?
 
     private let lock = NSLock()
     private var handle: OpaquePointer?
@@ -202,10 +225,12 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
 
     public init(
         packetFlow: NEPacketTunnelFlow,
-        eventCallback: @escaping @Sendable (WarrenTunnelEvent) -> Void
+        eventCallback: @escaping @Sendable (WarrenTunnelEvent) -> Void,
+        ipAssignCallback: (@Sendable (WarrenTunnelIpAssign) -> Void)? = nil
     ) {
         self.packetFlow = packetFlow
         self.eventCallback = eventCallback
+        self.ipAssignCallback = ipAssignCallback
     }
 
     deinit {
@@ -259,6 +284,23 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
             warren_tunnel_stop(tunnelHandle(newHandle))
             retainedSelf.release()
             throw WarrenQuinnAdapterError.ffi(eventStatus)
+        }
+
+        // Exit-allocated IP callback. Registered only when a consumer
+        // wants reassign notifications (the multi-hop path). The bridge
+        // recovers the same retained self-ref; a missing closure is a
+        // no-op inside the bridge, so an FFI failure here is non-fatal.
+        if ipAssignCallback != nil {
+            let ipAssignStatus = warren_tunnel_set_ip_assign_callback(
+                tunnelHandle(newHandle),
+                ipAssignCallbackBridge,
+                retainedSelf.toOpaque()
+            )
+            guard ipAssignStatus == 0 else {
+                warren_tunnel_stop(tunnelHandle(newHandle))
+                retainedSelf.release()
+                throw WarrenQuinnAdapterError.ffi(ipAssignStatus)
+            }
         }
 
         handle = newHandle
@@ -476,21 +518,24 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                             return config.multihopEntryCountry.withCString { entryC in
                                 config.multihopExitCountry.withCString { exitC in
                                     Self.withOptionalCString(config.multihopDirectoryJSON) { dirPtr in
-                                        var parameters = WarrenTunnelParametersC(
-                                            exit_pubkey: exitPubkeyTuple,
-                                            exit_endpoint: exitEndpointC,
-                                            wallet_signing_seed: signingSeedTuple,
-                                            multi_hop_relay: relayPtr,
-                                            daita_spec: daitaPtr,
-                                            nat_pmp_enabled: natPmpFlag,
-                                            bypass_cidrs: bypassBase,
-                                            bypass_cidrs_count: bypassCount,
-                                            multihop_directory_json: dirPtr,
-                                            multihop_two_hop: twoHopFlag,
-                                            multihop_entry_country: entryC,
-                                            multihop_exit_country: exitC
-                                        )
-                                        return warren_tunnel_start(&parameters, -1)
+                                        Self.withOptionalCString(config.multihopGenerationStatePath) { genPtr in
+                                            var parameters = WarrenTunnelParametersC(
+                                                exit_pubkey: exitPubkeyTuple,
+                                                exit_endpoint: exitEndpointC,
+                                                wallet_signing_seed: signingSeedTuple,
+                                                multi_hop_relay: relayPtr,
+                                                daita_spec: daitaPtr,
+                                                nat_pmp_enabled: natPmpFlag,
+                                                bypass_cidrs: bypassBase,
+                                                bypass_cidrs_count: bypassCount,
+                                                multihop_directory_json: dirPtr,
+                                                multihop_two_hop: twoHopFlag,
+                                                multihop_entry_country: entryC,
+                                                multihop_exit_country: exitC,
+                                                multihop_generation_state_path: genPtr
+                                            )
+                                            return warren_tunnel_start(&parameters, -1)
+                                        }
                                     }
                                 }
                             }
@@ -501,6 +546,23 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
 
         guard let raw = handlePtr else { throw WarrenQuinnAdapterError.ffiStartFailed }
         return OpaquePointer(raw)
+    }
+
+    /// Verify a freshly fetched multi-hop directory and return its trusted
+    /// `generation`, or nil on any verification / expiry / rollback failure.
+    /// Handle-free: the periodic refresh uses it to detect a fleet change (a
+    /// higher generation than the running session's) without disturbing the
+    /// live tunnel. Does not raise the persisted high-water mark.
+    public static func checkMultihopGeneration(
+        directoryJSON: String,
+        generationStatePath: String?
+    ) -> Int64? {
+        let result = directoryJSON.withCString { jsonC in
+            withOptionalCString(generationStatePath) { pathC in
+                warren_multihop_check_generation(jsonC, pathC)
+            }
+        }
+        return result >= 0 ? result : nil
     }
 
     /// Pin an optional Swift string as a C string for the duration of
@@ -639,6 +701,33 @@ private let eventCallbackBridge:
         }
         adapter.eventCallback(mapped)
     }
+
+/// Rust → Swift exit-allocated IP callback. Invoked from the multi-hop
+/// reassign task when the circuit reports a fresh `IpAssign`. Marshals
+/// the C struct into [`WarrenTunnelIpAssign`] and forwards to the
+/// user-supplied closure (which re-applies the tunnel network settings).
+///
+/// `assign` is owned by Rust for the duration of the call; the octet
+/// tuples are copied by value into dotted-decimal strings.
+private let ipAssignCallbackBridge:
+    @convention(c) (UnsafePointer<WarrenTunnelIpAssignC>?, UnsafeMutableRawPointer?) -> Void = {
+        assignPtr, contextPtr in
+        guard let assignPtr, let contextPtr else { return }
+        let adapter = Unmanaged<WarrenQuinnAdapter>.fromOpaque(contextPtr).takeUnretainedValue()
+        guard let callback = adapter.ipAssignCallback else { return }
+        let assign = assignPtr.pointee
+        let mapped = WarrenTunnelIpAssign(
+            ipv4: dottedIPv4(assign.ipv4),
+            prefixLength: Int(assign.prefix_len),
+            gatewayIPv4: dottedIPv4(assign.gateway_ipv4)
+        )
+        callback(mapped)
+    }
+
+/// Format a cbindgen `[u8; 4]` tuple as a dotted-decimal IPv4 string.
+private func dottedIPv4(_ octets: (UInt8, UInt8, UInt8, UInt8)) -> String {
+    "\(octets.0).\(octets.1).\(octets.2).\(octets.3)"
+}
 
 /// Cast our typed `OpaquePointer` handle back to the C-bindgen pointer
 /// type. Inverses [`rawTunnelHandle`].

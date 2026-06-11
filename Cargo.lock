@@ -8275,7 +8275,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -8313,7 +8313,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-client"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "async-trait",
  "ed25519-dalek",
@@ -8335,7 +8335,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-types"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
@@ -8345,18 +8345,18 @@ dependencies = [
 
 [[package]]
 name = "warren-backoff"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "rand 0.10.1",
 ]
 
 [[package]]
 name = "warren-buildinfo"
-version = "0.3.0"
+version = "0.3.2"
 
 [[package]]
 name = "warren-client"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "bytes",
@@ -8387,14 +8387,14 @@ dependencies = [
 
 [[package]]
 name = "warren-config"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "warren-identity"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "bip39",
  "ed25519-dalek",
@@ -8483,7 +8483,7 @@ dependencies = [
 
 [[package]]
 name = "warren-killswitch"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "pfctl",
  "thiserror 2.0.18",
@@ -8493,7 +8493,7 @@ dependencies = [
 
 [[package]]
 name = "warren-multihop"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "chacha20poly1305",
  "ed25519-dalek",
@@ -8509,7 +8509,7 @@ dependencies = [
 
 [[package]]
 name = "warren-natpmp-client"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -8523,14 +8523,14 @@ dependencies = [
 
 [[package]]
 name = "warren-natpmp-protocol"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "warren-protocol"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "hex",
  "postcard",
@@ -8541,14 +8541,14 @@ dependencies = [
 
 [[package]]
 name = "warren-ratelimit"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "parking_lot",
 ]
 
 [[package]]
 name = "warren-relay"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -8576,7 +8576,7 @@ dependencies = [
 
 [[package]]
 name = "warren-relay-selector"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "ed25519-dalek",
  "hex",
@@ -8591,7 +8591,7 @@ dependencies = [
 
 [[package]]
 name = "warren-ss58"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "blake2",
  "bs58",
@@ -8600,7 +8600,7 @@ dependencies = [
 
 [[package]]
 name = "warren-tls"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "data-encoding",
  "ed25519-dalek",
@@ -8612,7 +8612,7 @@ dependencies = [
 
 [[package]]
 name = "warren-tunnel"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "bytes",
  "ed25519-dalek",
