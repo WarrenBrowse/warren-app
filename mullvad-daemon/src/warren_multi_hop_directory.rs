@@ -410,6 +410,21 @@ pub async fn fetch_and_verify(
     root_pins: &[String],
     now_unix: u64,
 ) -> Result<VerifiedMultiHopDirectory, Error> {
+    fetch_verify_with_body(http, api_url, server_pins, root_pins, now_unix)
+        .await
+        .map(|(verified, _body)| verified)
+}
+
+/// Like [`fetch_and_verify`] but also returns the raw signed JSON body,
+/// so the caller can persist it for a cold-start disk cache and later
+/// re-verify it from scratch (see [`verify_cached_directory`]).
+async fn fetch_verify_with_body(
+    http: &reqwest::Client,
+    api_url: &str,
+    server_pins: &[String],
+    root_pins: &[String],
+    now_unix: u64,
+) -> Result<(VerifiedMultiHopDirectory, String), Error> {
     let url = format!("{}/v1/multihop/directory", api_url.trim_end_matches('/'));
     let resp = http.get(&url).send().await?;
     let status = resp.status().as_u16();
@@ -423,6 +438,30 @@ pub async fn fetch_and_verify(
     let server_refs: Vec<&str> = server_pins.iter().map(String::as_str).collect();
     let root_refs: Vec<&str> = root_pins.iter().map(String::as_str).collect();
     let verified = verify_multihop_directory_any(&body, &server_refs, &root_refs)?;
+    if verified.is_expired(now_unix) {
+        return Err(Error::Expired);
+    }
+    Ok((verified, body))
+}
+
+/// File name of the on-disk directory cache (sits next to the daemon's
+/// other Warren caches). The stored bytes are the SIGNED API payload, so
+/// loading re-runs the full verification (signature + root pin +
+/// freshness) and a tampered or stale file is rejected exactly like a
+/// hostile server response.
+const DIRECTORY_CACHE_FILE: &str = "warren-multihop-directory.json";
+
+/// Re-verify a cached signed directory body. Same trust path as a live
+/// fetch: a tampered, unsigned, or expired file fails closed.
+fn verify_cached_directory(
+    body: &str,
+    server_pins: &[String],
+    root_pins: &[String],
+    now_unix: u64,
+) -> Result<VerifiedMultiHopDirectory, Error> {
+    let server_refs: Vec<&str> = server_pins.iter().map(String::as_str).collect();
+    let root_refs: Vec<&str> = root_pins.iter().map(String::as_str).collect();
+    let verified = verify_multihop_directory_any(body, &server_refs, &root_refs)?;
     if verified.is_expired(now_unix) {
         return Err(Error::Expired);
     }
@@ -507,6 +546,36 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // (resets on daemon restart, like the boot seed); the sliding
         // server-stamped expiry covers anti-freeze.
         let mut highest_generation: u64 = 0;
+
+        // Cold-start seed: re-verify the on-disk signed directory before the
+        // first network fetch. On a fresh daemon the in-memory cache is
+        // empty, so an immediate connect (reboot, bench) would race the boot
+        // fetch and, once the killswitch blocks DNS, get stuck on "no relay
+        // matches". Seeding from disk gives selection a trusted directory at
+        // t=0; the file is the SIGNED payload, re-verified here, so a
+        // tampered/stale file is rejected (fail-closed). Skipped when
+        // unconfigured (multi-hop disabled).
+        let dir_cache_path = cfg.settings_dir.join(DIRECTORY_CACHE_FILE);
+        if !unconfigured {
+            if let Ok(body) = std::fs::read_to_string(&dir_cache_path) {
+                match verify_cached_directory(&body, &cfg.server_pins, &root_pins, now_unix()) {
+                    Ok(dir) => {
+                        log::info!(
+                            "Warren multi-hop: seeded directory from disk cache \
+                             (generation {})",
+                            dir.generation
+                        );
+                        highest_generation = dir.generation;
+                        cached_dir = Some(dir);
+                    }
+                    Err(e) => log::info!(
+                        "Warren multi-hop: on-disk directory cache unusable ({e}); \
+                         waiting for a live fetch"
+                    ),
+                }
+            }
+        }
+
         let mut ticker = tokio::time::interval(REFRESH_INTERVAL);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         // Whether this pass should hit the network to refresh the directory.
@@ -546,7 +615,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 // ANY fetch/verify failure keep the last verified directory
                 // and select from it.
                 if refresh_due {
-                    match fetch_and_verify(
+                    match fetch_verify_with_body(
                         &http,
                         &cfg.api_url,
                         &cfg.server_pins,
@@ -555,7 +624,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     )
                     .await
                     {
-                        Ok(dir) => {
+                        Ok((dir, body)) => {
                             if dir.generation < highest_generation {
                                 log::warn!(
                                     "Warren multi-hop directory rejected by anti-rollback gate \
@@ -571,6 +640,14 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                          descriptor not vouched by the operational key \
                                          (possible server injection)",
                                         dir.dropped
+                                    );
+                                }
+                                // Persist the signed body for the next
+                                // cold-start seed (best-effort; a write
+                                // failure only costs the boot optimization).
+                                if let Err(e) = std::fs::write(&dir_cache_path, &body) {
+                                    log::debug!(
+                                        "Warren multi-hop: could not write directory cache: {e}"
                                     );
                                 }
                                 cached_dir = Some(dir);
@@ -984,5 +1061,20 @@ mod tests {
         let d = dir(vec![node(&op, 1, "fr", 0, 100)]);
         assert!(assemble(&d, 0, 9, true, true).is_none());
         assert!(assemble(&d, 9, 0, true, true).is_none());
+    }
+
+    #[test]
+    fn cold_start_cache_rejects_untrusted_bodies_fail_closed() {
+        // The cold-start disk seed re-verifies the stored body through the
+        // exact live-fetch trust path. A corrupt, empty, or unsigned file
+        // must fail closed (no directory seeded) rather than be trusted.
+        let server = ["00".repeat(32)];
+        let root = ["11".repeat(32)];
+        for bad in ["", "   ", "not json", "{}", r#"{"nodes":[]}"#] {
+            assert!(
+                verify_cached_directory(bad, &server, &root, 0).is_err(),
+                "untrusted cache body {bad:?} must be rejected (fail-closed)"
+            );
+        }
     }
 }
