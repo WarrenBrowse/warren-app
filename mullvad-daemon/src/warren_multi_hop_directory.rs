@@ -45,6 +45,20 @@ const REFRESH_INTERVAL: Duration = Duration::from_secs(30 * 60);
 /// Per-request network timeout.
 const FETCH_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// First fast-retry delay after a *transport* fetch failure (no network).
+/// The periodic [`REFRESH_INTERVAL`] is far too coarse for the wake case:
+/// right after a sleep/wake the network is unreachable for a few seconds,
+/// the one catch-up tick fails, and the daemon would otherwise sit on a
+/// stale directory for up to 30 min (observed wedge: `no relay matches`
+/// → blocked state until the user manually switches exit). We instead
+/// retry on a short exponential backoff so the directory converges within
+/// ~a minute of connectivity returning.
+const RETRY_BACKOFF_MIN: Duration = Duration::from_secs(15);
+/// Backoff ceiling. Kept well under [`REFRESH_INTERVAL`] so a persistently
+/// unreachable API still re-probes every few minutes (e.g. captive portal
+/// that clears) without hammering it.
+const RETRY_BACKOFF_MAX: Duration = Duration::from_secs(5 * 60);
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("HTTP request failed")]
@@ -489,6 +503,13 @@ pub(crate) struct UpdaterConfig {
     /// override, used as a fallback when the directory API is
     /// unreachable (no network / dev without warren-api).
     pub settings_dir: std::path::PathBuf,
+    /// Connectivity online-edge signal: the daemon bumps this counter on
+    /// every offline→online transition (network reachability restored,
+    /// notably on sleep/wake). The updater forces an immediate directory
+    /// refresh on each bump instead of waiting out the coarse
+    /// [`REFRESH_INTERVAL`] (whose tokio timer does not even advance while
+    /// the host is asleep on macOS). `None` disables the hook (tests).
+    pub online_edge_rx: Option<tokio::sync::watch::Receiver<u64>>,
 }
 
 fn now_unix() -> u64 {
@@ -506,7 +527,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
     let http = reqwest::Client::builder()
         .timeout(FETCH_TIMEOUT)
         .build()
-        .unwrap_or_else(|_| reqwest::Client::new());
+        .expect("reqwest client build failed: invalid TLS backend configuration");
 
     // Resolve the root trust anchor once. `Unconfigured` fails closed:
     // multi-hop is refused so the client never trusts an unpinned,
@@ -576,6 +597,14 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             }
         }
 
+        // Connectivity online-edge receiver (wake hook). Taken out of `cfg`
+        // so the select branch can hold a mutable borrow without fighting
+        // the rest of the config. `online_watch_active` latches off if the
+        // sender is dropped (daemon shutdown) so we never busy-loop on a
+        // closed channel.
+        let mut online_edge_rx = cfg.online_edge_rx.take();
+        let mut online_watch_active = online_edge_rx.is_some();
+
         let mut ticker = tokio::time::interval(REFRESH_INTERVAL);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         // Whether this pass should hit the network to refresh the directory.
@@ -585,6 +614,11 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // slow fetch (FETCH_TIMEOUT). Without this, a transient fetch failure
         // stalls an exit switch for up to 15 s with no visible state change.
         let mut refresh_due = true;
+        // Armed (`Some`) only after a due fetch failed at the transport
+        // level (network unreachable): the next loop pass waits this short
+        // backoff instead of the full [`REFRESH_INTERVAL`], then retries.
+        // Cleared on any successful fetch or non-transport outcome.
+        let mut retry_backoff: Option<Duration> = None;
 
         loop {
             let settings = cfg.settings_rx.borrow().clone();
@@ -652,10 +686,28 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 }
                                 cached_dir = Some(dir);
                             }
+                            // Fresh directory in hand: drop any fast-retry.
+                            retry_backoff = None;
                         }
-                        // Transport-level failures (no/unreachable directory):
-                        // keep the cached directory and re-select from it.
-                        Err(e @ (Error::Http(_) | Error::Status(_) | Error::NotPublished)) => {
+                        // Network unreachable (the post-wake case): keep the
+                        // cached directory but schedule a SHORT retry so we
+                        // converge as soon as connectivity returns instead of
+                        // sitting stale until the next 30 min tick.
+                        Err(e @ Error::Http(_)) => {
+                            let next = retry_backoff
+                                .map_or(RETRY_BACKOFF_MIN, |d| (d * 2).min(RETRY_BACKOFF_MAX));
+                            retry_backoff = Some(next);
+                            log::warn!(
+                                "Warren multi-hop directory fetch failed ({e}); \
+                                 selecting from cached directory, retrying in {}s",
+                                next.as_secs()
+                            );
+                        }
+                        // Server reachable but no/!published directory: not a
+                        // connectivity problem, fast-retry would not help.
+                        // Keep the cached directory and wait for the timer.
+                        Err(e @ (Error::Status(_) | Error::NotPublished)) => {
+                            retry_backoff = None;
                             log::warn!(
                                 "Warren multi-hop directory fetch failed ({e}); \
                                  selecting from cached directory"
@@ -664,6 +716,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         // Verification / freshness failures are SECURITY
                         // failures: never trust the forged answer; keep cache.
                         Err(e @ (Error::Verify(_) | Error::Expired)) => {
+                            retry_backoff = None;
                             log::warn!(
                                 "Warren multi-hop directory failed verification ({e}); \
                                  keeping cached directory"
@@ -708,6 +761,18 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 settings.exit_country,
                                 dir.nodes.len()
                             );
+                            // A directory that momentarily yields no circuit
+                            // (post-wake stale cache, exit just rebooted out of
+                            // the set, transient country filter) must NOT clear
+                            // a working circuit: pushing `None` drops the tunnel
+                            // to legacy single-hop, whose selection then fails
+                            // (`no relay matches`) and blocks ALL traffic. Keep
+                            // the last good circuit and let the fast-retry above
+                            // refresh the directory; a real circuit change still
+                            // applies normally.
+                            if last_circuit.is_some() {
+                                skip_apply = true;
+                            }
                         }
                         c
                     }
@@ -755,11 +820,56 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 }
             }
 
-            // Wake on either the refresh timer or a settings change.
+            // Optional short backoff after a transport fetch failure: re-probe
+            // the network soon instead of waiting the full periodic interval.
+            let retry_tick = async {
+                match retry_backoff {
+                    Some(d) => tokio::time::sleep(d).await,
+                    None => std::future::pending::<()>().await,
+                }
+            }
+            .fuse();
+            // Optional connectivity online-edge wake. Returns `true` on a real
+            // bump, `false` if the sender was dropped (then we stop watching).
+            // `watch_active` is copied by value so the future does not borrow
+            // `online_watch_active`, which the arm body below reassigns.
+            let watch_active = online_watch_active;
+            let online_changed = async {
+                if watch_active
+                    && let Some(rx) = online_edge_rx.as_mut()
+                {
+                    return rx.changed().await.is_ok();
+                }
+                std::future::pending::<bool>().await
+            }
+            .fuse();
+            // These async blocks are `!Unpin`; `select!` needs `Unpin`.
+            futures::pin_mut!(retry_tick, online_changed);
+
+            // Wake on the refresh timer, a fast retry, a connectivity online
+            // edge, or a settings change.
             futures::select! {
                 _ = ticker.tick().fuse() => {
                     // Periodic refresh: do the network fetch next pass.
                     refresh_due = true;
+                }
+                _ = retry_tick => {
+                    // Fast retry after a failed fetch (post-wake convergence).
+                    refresh_due = true;
+                }
+                woke = online_changed => {
+                    if woke {
+                        log::info!(
+                            "Warren multi-hop: connectivity restored; \
+                             refreshing directory now"
+                        );
+                        refresh_due = true;
+                    } else {
+                        // Online-edge sender dropped: keep the periodic timer
+                        // running, stop watching the closed channel.
+                        online_watch_active = false;
+                        refresh_due = false;
+                    }
                 }
                 changed = cfg.settings_rx.changed().fuse() => {
                     if changed.is_err() {

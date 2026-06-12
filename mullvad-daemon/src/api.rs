@@ -166,25 +166,41 @@ pub(crate) fn create_bypass_tx(
 }
 
 /// Forwards the received values from `offline_state_rx` to the [`ApiAvailability`].
+///
+/// `online_edge_tx` is bumped on every offline→online transition so
+/// background fetchers (the Warren multi-hop directory updater and exit
+/// list updater) can force an immediate refresh the moment connectivity
+/// returns, instead of waiting out their coarse periodic timers. This is
+/// the sleep/wake recovery path: after a wake the network is briefly
+/// unreachable and the periodic timers (whose monotonic clock does not
+/// advance during sleep on macOS) would otherwise leave the daemon on a
+/// stale directory for many minutes.
 pub(crate) fn forward_offline_state(
     api_availability: ApiAvailability,
     mut offline_state_rx: mpsc::UnboundedReceiver<Connectivity>,
+    online_edge_tx: tokio::sync::watch::Sender<u64>,
 ) {
     tokio::spawn(async move {
-        let is_offline = offline_state_rx
+        let mut was_offline = offline_state_rx
             .next()
             .await
             .expect("missing initial offline state")
             .is_offline();
         log::info!(
             "Initial offline state - {state}",
-            state = if is_offline { "offline" } else { "online" },
+            state = if was_offline { "offline" } else { "online" },
         );
-        api_availability.set_offline(is_offline);
+        api_availability.set_offline(was_offline);
 
         while let Some(state) = offline_state_rx.next().await {
             log::info!("Detecting changes to offline state - {state:?}");
-            api_availability.set_offline(state.is_offline());
+            let is_offline = state.is_offline();
+            // Offline→online edge: signal the Warren background updaters.
+            if was_offline && !is_offline {
+                online_edge_tx.send_modify(|n| *n = n.wrapping_add(1));
+            }
+            was_offline = is_offline;
+            api_availability.set_offline(is_offline);
         }
     });
 }

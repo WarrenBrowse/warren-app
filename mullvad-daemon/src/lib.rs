@@ -1431,7 +1431,17 @@ impl Daemon {
         .await
         .map_err(Error::TunnelError)?;
 
-        api::forward_offline_state(api_availability.clone(), offline_state_rx);
+        // Connectivity online-edge signal: bumped on every offline→online
+        // transition so the Warren multi-hop directory updater and exit-list
+        // updater force an immediate refresh when connectivity returns
+        // (notably on sleep/wake), instead of sitting on a stale set until
+        // their next coarse periodic tick.
+        let (warren_online_edge_tx, warren_online_edge_rx) = tokio::sync::watch::channel(0u64);
+        api::forward_offline_state(
+            api_availability.clone(),
+            offline_state_rx,
+            warren_online_edge_tx,
+        );
 
         let relay_list_listener = management_interface.notifier().clone();
         let internal_event_tx_clone = internal_event_tx.clone();
@@ -1538,10 +1548,11 @@ impl Daemon {
             // the broadcast push. Without this the GUI's mount-time pull
             // keeps returning the stale (empty in dev) boot view.
             let warren_view_for_updater = Arc::clone(&warren_relay_list_view);
-            // The handle is intentionally dropped: the task keeps running
-            // via its internal keepalive sender (periodic refresh for the
-            // daemon's whole lifetime).
-            let _warren_updater = warren_relay_list_updater::WarrenRelayListUpdater::spawn(
+            // The handle is retained to kick an immediate refresh on the
+            // connectivity online edge (sleep/wake); the task also keeps
+            // itself alive via its internal keepalive sender (periodic
+            // refresh for the daemon's whole lifetime).
+            let warren_updater = warren_relay_list_updater::WarrenRelayListUpdater::spawn(
                 warren_api_url.clone(),
                 &config.cache_dir,
                 warren_server_pubkey.clone(),
@@ -1572,6 +1583,17 @@ impl Daemon {
                     });
                 },
             );
+            // Force an exit-list refresh on every connectivity online edge so
+            // a post-wake reconnect selects from a fresh list rather than the
+            // stale pre-sleep one (single-hop `no relay matches` wedge).
+            let mut warren_updater = warren_updater;
+            let mut online_edge_rx = warren_online_edge_rx.clone();
+            tokio::spawn(async move {
+                while online_edge_rx.changed().await.is_ok() {
+                    log::info!("Warren exit list: connectivity restored; refreshing now");
+                    warren_updater.update().await;
+                }
+            });
         }
 
         // M4.H dynamic multi-hop: a background updater fetches the signed
@@ -1662,6 +1684,7 @@ impl Daemon {
                 parameters_generator: parameters_generator.clone(),
                 request_reconnect,
                 settings_dir: config.settings_dir.clone(),
+                online_edge_rx: Some(warren_online_edge_rx.clone()),
             });
         }
 
