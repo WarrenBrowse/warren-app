@@ -159,6 +159,10 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.onboardingCompletedUnix = ts;
     });
 
+    IpcMainEventChannel.guiSettings.handleSetBackupPending((backupPending: boolean) => {
+      this.guiSettings.backupPending = backupPending;
+    });
+
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
       this.guiSettings.changelogDisplayedForVersion = this.currentVersion.gui;
     });

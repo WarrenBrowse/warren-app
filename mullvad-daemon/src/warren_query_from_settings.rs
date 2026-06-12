@@ -1,9 +1,10 @@
 //! Conversion `mullvad_types::RelaySettings` -> `WarrenRelayQuery`.
 //!
-//! Pure function: no I/O. Maps the Mullvad UI (countries/cities,
-//! custom lists, hostname) onto the Warren filtering grammar (which
-//! only supports `Any`, `Country`, or `(Country, City)` - no
-//! provider, ownership, multihop, obfuscation, nor DAITA).
+//! Maps the Mullvad UI (countries/cities, custom lists, hostname) onto the
+//! Warren filtering grammar (which only supports `Any`, `Country`, or
+//! `(Country, City)` - no provider, ownership, multihop, obfuscation, nor
+//! DAITA). Side-effect-free except for a `warn` log on the custom-list
+//! fallback below.
 //!
 //! Behavior for non-mappable cases:
 //! - `CustomList` (reference to a `CustomListsSettings`) -> fallback
@@ -43,9 +44,17 @@ pub fn relay_settings_to_warren_query(rs: &RelaySettings) -> WarrenRelayQuery {
                 },
             },
             // Mullvad custom lists point to a separate `CustomListsSettings`
-            // - no pure resolution here. Fallback `Any` =
-            // defensive behavior. To be extended when the resolver is wired.
-            Constraint::Only(MullvadLocation::CustomList { .. }) => WarrenLocation::Any,
+            // not resolvable here. Until they are wired into Warren selection,
+            // warn loudly rather than silently widening to every exit, so the
+            // mismatch between the user's choice and the actual circuit is
+            // visible in the logs.
+            Constraint::Only(MullvadLocation::CustomList { .. }) => {
+                log::warn!(
+                    "Warren selection ignores the configured custom list and falls back to \
+                     any exit: custom lists are not yet wired into the Warren relay grammar"
+                );
+                WarrenLocation::Any
+            }
         },
         // The custom tunnel endpoint targets a specific host (IP/port +
         // pubkey) - unrelated to Warren selection based on

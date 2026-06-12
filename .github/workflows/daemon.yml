@@ -8,63 +8,19 @@ on:
 permissions: {}
 
 jobs:
-  prepare-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Use custom container image if specified
-        if: ${{ github.event.inputs.override_container_image != '' }}
-        run:
-          echo "inner_container_image=${{ github.event.inputs.override_container_image }}"
-          >> $GITHUB_ENV
-
-      - name: Use default container image and resolve digest
-        if: ${{ github.event.inputs.override_container_image == '' }}
-        run: echo "inner_container_image=$(cat ./building/linux-container-image.txt)" >> $GITHUB_ENV
-
-    outputs:
-      container_image: ${{ env.inner_container_image }}
-
   build-linux:
-    needs: prepare-linux
     runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.prepare-linux.outputs.container_image }}
-
-    strategy:
-      matrix:
-        rust: [stable, beta, nightly]
-    continue-on-error: true
     steps:
-      # Fix for HOME path overridden by GH runners when building in containers, see:
-      # https://github.com/actions/runner/issues/863
-      - name: Fix HOME path
-        run: echo "HOME=/root" >> $GITHUB_ENV
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout submodules
-        run: |
-          git config --global --add safe.directory '*'
-          git submodule update --init --depth=1 dist-assets/binaries
-
-      # The container image already has rustup and the pinned version of Rust
-      - name: Install Rust toolchain
-        # When running this job for "stable" test against our pinned rust version
-        # instead of the stable channel.
-        # TODO: Improve this so both "stable" and the pinned version are tested if
-        # they differ.
-        if: ${{ matrix.rust != 'stable' }}
-        run: rustup override set ${{ matrix.rust }}
-
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
+      # mullvad-build-env checks out the ../warren-core path-dep target (needed for
+      # `cargo metadata` to resolve) and sets up the toolchain, mirroring the
+      # macOS/Windows jobs below. Without the warren-core checkout this job fails
+      # at `cargo metadata`.
+      - uses: ./.github/actions/mullvad-build-env
         with:
-          add-job-id-key: "false"  # Preserve cache across jobs
-          cache-targets: "false"  # Only cache cargo registry
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Test crates
         run: ci/cargo-ci.sh test --workspace

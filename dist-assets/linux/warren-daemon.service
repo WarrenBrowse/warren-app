@@ -1,4 +1,4 @@
-# Systemd service unit file for the Warren VPN daemon (fork de Mullvad).
+# Systemd service unit file for the Warren VPN daemon (Mullvad fork).
 
 [Unit]
 Description=Warren VPN daemon

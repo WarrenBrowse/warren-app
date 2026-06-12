@@ -58,4 +58,13 @@ export interface IGuiSettingsState {
   // supersede this once exit-quality telemetry graduates from POC to
   // first-class daemon state.
   warrenFailoverEnabled?: boolean;
+
+  // True between minting a fresh Warren identity and the user confirming
+  // they backed up the recovery phrase. The in-session backup gate lives
+  // in renderer redux, but that is lost if the GUI restarts mid-backup,
+  // which would replay the daemon `logged in` state as a fully logged-in
+  // account and strand the user on the main view with an un-backed-up
+  // identity. Persisting the flag lets startup re-route to the
+  // backup-pending state. Cleared once the backup is confirmed.
+  backupPending?: boolean;
 }

@@ -1,21 +1,51 @@
 ---
-# Warren — lightweight CI workflow specific to the `warren-base` branch.
+# Warren: lightweight CI workflow for Warren-specific regressions.
 #
 # Why a workflow distinct from the broader `daemon.yml` / `clippy.yml`:
 # those take ~30-60 min (cross-OS Android + desktop + iOS build).
-# For daily dev on `warren-base` (direct push), we want a fast signal
-# (~5 min) on Warren-specific regressions (toggles, BIP39 identity,
-# Local/Remote backends, Settings UI).
+# This one gives a fast signal (~5 min) on Warren-specific regressions
+# (toggles, BIP39 identity, Local/Remote backends, Settings UI).
 #
-# Trigger: direct push on `warren-base` or PR targeting that branch.
-# Filtered by paths to only run when Warren code changes.
+# Trigger: direct push to `main` / `warren-base` (the normal dev flow here),
+# PRs targeting those branches, plus on-demand dispatch. Kept cheap so it does
+# not burden direct main pushes: it is the only lightweight (~5 min) workflow,
+# is paths-filtered to Warren code, and uses concurrency cancel-in-progress so
+# rapid successive pushes supersede each other (at most one run at a time).
 
 name: Warren checks
 
 on:
-  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
-  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - warren-base
+    paths: &warren_paths
+      - "mullvad-daemon/**"
+      - "mullvad-api/**"
+      - "mullvad-types/**"
+      - "mullvad-management-interface/**"
+      - "mullvad-cli/**"
+      - "talpid-warren-tunnel/**"
+      - "talpid-core/**"
+      - "warren-jni/**"
+      - "warren-ios/**"
+      - "mullvad-management-interface/proto/**"
+      - "desktop/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".warren-core-version"
+      - ".github/workflows/warren-checks.yml"
+      - ".github/actions/mullvad-build-env/**"
+  pull_request:
+    branches:
+      - main
+      - warren-base
+    paths: *warren_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

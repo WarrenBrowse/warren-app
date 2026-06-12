@@ -16,7 +16,7 @@ pub enum Account {
 
     /// Log in on an account
     Login {
-        /// The Mullvad account number to configure the client with
+        /// The Warren account number to configure the client with
         account: Option<String>,
     },
 

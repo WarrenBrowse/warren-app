@@ -71,7 +71,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Checks out the ../warren-core path-dep target so cargo can resolve it,
+      # mirroring clippy-check-desktop above. Without the token cargo fails on
+      # the ../warren-core path-deps.
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          rustup-components: clippy
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
       - name: Clippy check
+        # Crate renamed mullvad-jni -> warren-jni in this fork.
         run: |
-          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package mullvad-jni --no-default-features
-          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package mullvad-jni --all-features
+          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package warren-jni --no-default-features
+          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package warren-jni --all-features

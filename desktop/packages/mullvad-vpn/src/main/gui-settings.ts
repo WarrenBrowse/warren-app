@@ -18,6 +18,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   animateMap: 'boolean',
   onboardingCompletedUnix: 'number',
   warrenFailoverEnabled: 'boolean',
+  backupPending: 'boolean',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -159,6 +160,17 @@ export default class GuiSettings {
 
   get warrenFailoverEnabled(): boolean {
     return this.stateValue.warrenFailoverEnabled ?? true;
+  }
+
+  // Persisted backup gate. Survives a GUI restart so a freshly minted,
+  // un-backed-up identity cannot land on the main view (see the field
+  // doc in gui-settings-state.ts).
+  set backupPending(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, backupPending: newValue });
+  }
+
+  get backupPending(): boolean {
+    return this.stateValue.backupPending ?? false;
   }
 
   public load() {

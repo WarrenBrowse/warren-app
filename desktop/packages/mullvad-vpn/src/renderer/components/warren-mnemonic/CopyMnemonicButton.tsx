@@ -34,20 +34,15 @@ export function CopyMnemonicButton({ mnemonic, ...rest }: CopyMnemonicButtonProp
       await navigator.clipboard.writeText(mnemonic);
       setCopied();
       scheduler.schedule(resetCopied, COPIED_FEEDBACK_DURATION);
-      // Best-effort auto-clear: only wipe the clipboard if it still holds our
-      // mnemonic, so we never clobber something the user copied in between.
+      // Best-effort auto-clear in the main process. The renderer cannot read
+      // the clipboard back (the permission handler only grants
+      // `clipboard-sanitized-write`), so the compare-and-clear has to run in
+      // main, where it only wipes the clipboard if it still holds our mnemonic.
       clearScheduler.schedule(() => {
-        void (async () => {
-          try {
-            const current = await navigator.clipboard.readText();
-            if (current === mnemonic) {
-              await navigator.clipboard.writeText('');
-            }
-          } catch {
-            // Reading/writing the clipboard can fail without focus or
-            // permission; skip rather than blindly wiping unrelated content.
-          }
-        })();
+        window.ipc.app.clearMnemonicFromClipboard(mnemonic).catch((e) => {
+          const err = e as Error;
+          log.error(`Failed to clear mnemonic from clipboard: ${err.message}`);
+        });
       }, CLIPBOARD_CLEAR_DURATION);
     } catch (e) {
       const err = e as Error;

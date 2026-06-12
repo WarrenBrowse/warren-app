@@ -127,10 +127,11 @@ pub(crate) enum CycleOutcome {
 /// session only exists because a full handshake just succeeded.
 fn rx_advanced(base: Option<RxSample>, cur: Option<RxSample>) -> bool {
     match (base, cur) {
-        // Same id but the counter went BACKWARDS: quinn counters are
-        // monotonic within a session, so this is an ABA id collision
-        // with a fresh session (= a handshake succeeded) and counts as
-        // alive.
+        // Same id: any change in the counter proves liveness. Forward
+        // movement is normal RX progress; a backward move can only be an
+        // ABA id collision against a fresh session (counters are monotonic
+        // within one session), which means a handshake just succeeded. Both
+        // count as alive, hence `!=` rather than `>`.
         (Some(b), Some(c)) if b.id == c.id => c.rx_datagrams != b.rx_datagrams,
         (Some(b), Some(c)) => b.id != c.id,
         // No baseline session but one is published now: it was just
@@ -275,7 +276,7 @@ pub(crate) async fn run_watchdog<I: WatchdogIo>(io: &mut I) {
     }
 }
 
-// ── Production IO ────────────────────────────────────────────────────
+// Production IO.
 
 /// Watch receiver over the supervisor's published session.
 type ClientWatch = tokio::sync::watch::Receiver<Option<Arc<MultiHopBundle>>>;
@@ -495,7 +496,12 @@ impl WatchdogIo for RealWatchdogIo {
 
     fn escalate(&mut self, msg: String) {
         log::warn!("Warren migration watchdog: escalating to the state machine: {msg}");
-        if let Some(tx) = self.pump_error_tx.lock().ok().and_then(|mut g| g.take()) {
+        if let Some(tx) = self
+            .pump_error_tx
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .take()
+        {
             let _ = tx.send(msg);
         }
     }

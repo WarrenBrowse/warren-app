@@ -27,10 +27,10 @@ const StyledViewContainer = styled(View.Container)`
 export function AccountView() {
   const history = useHistory();
   const isOffline = useSelector((state) => state.connection.isBlocked);
-  const { updateAccountData, openUrlWithAuth, logout } = useAppContext();
+  const { updateAccountData, openUrl, logout } = useAppContext();
 
   const [buyMore] = useExclusiveTask(async () => {
-    await openUrlWithAuth(urls.purchase);
+    await openUrl(urls.purchase);
   });
 
   // `updateAccountData` rejects when the API returns 404 (= no

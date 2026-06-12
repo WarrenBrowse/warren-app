@@ -180,7 +180,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 .await
                 .map_err(map_voucher_register_error)?;
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
-            let now_secs = Utc::now().timestamp() as u64;
+            let now_secs = u64::try_from(Utc::now().timestamp()).unwrap_or(0);
             let time_added = resp.expires_at.saturating_sub(now_secs);
             Ok(VoucherSubmission {
                 new_expiry,

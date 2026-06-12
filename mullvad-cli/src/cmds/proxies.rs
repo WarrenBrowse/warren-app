@@ -19,7 +19,7 @@ pub struct Socks5LocalAdd {
     pub remote_ip: IpAddr,
     /// The port of the remote peer
     pub remote_port: u16,
-    /// The Mullvad App can not know which transport protocol that the
+    /// The Warren App can not know which transport protocol that the
     /// remote peer accepts, but it needs to know this in order to correctly
     /// exempt the connection traffic in the firewall.
     ///

@@ -5320,7 +5320,7 @@ dependencies = [
  "cfg_aliases",
  "pin-project-lite",
  "quinn-proto",
- "quinn-udp 0.6.1",
+ "quinn-udp",
  "rustc-hash 2.1.2",
  "rustls",
  "socket2 0.6.3",
@@ -5358,19 +5358,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "log",
- "socket2 0.6.3",
- "tracing",
- "windows-sys 0.60.2",
-]
-
-[[package]]
-name = "quinn-udp"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76150b617afc75e6e21ac5f39bc196e80b65415ae48d62dbef8e2519d040ce42"
-dependencies = [
- "cfg_aliases",
- "libc",
+ "parking_lot",
  "socket2 0.6.3",
  "tracing",
  "windows-sys 0.60.2",
@@ -8275,7 +8263,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -8313,7 +8301,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-client"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "async-trait",
  "ed25519-dalek",
@@ -8335,7 +8323,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-types"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
@@ -8345,18 +8333,18 @@ dependencies = [
 
 [[package]]
 name = "warren-backoff"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "rand 0.10.1",
 ]
 
 [[package]]
 name = "warren-buildinfo"
-version = "0.3.10"
+version = "0.3.12"
 
 [[package]]
 name = "warren-client"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "anyhow",
  "bytes",
@@ -8387,14 +8375,14 @@ dependencies = [
 
 [[package]]
 name = "warren-config"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "warren-identity"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "bip39",
  "ed25519-dalek",
@@ -8483,7 +8471,7 @@ dependencies = [
 
 [[package]]
 name = "warren-killswitch"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "pfctl",
  "thiserror 2.0.18",
@@ -8493,7 +8481,7 @@ dependencies = [
 
 [[package]]
 name = "warren-multihop"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "chacha20poly1305",
  "ed25519-dalek",
@@ -8509,7 +8497,7 @@ dependencies = [
 
 [[package]]
 name = "warren-natpmp-client"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "anyhow",
  "clap",
@@ -8523,14 +8511,14 @@ dependencies = [
 
 [[package]]
 name = "warren-natpmp-protocol"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "warren-protocol"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "hex",
  "postcard",
@@ -8541,14 +8529,14 @@ dependencies = [
 
 [[package]]
 name = "warren-ratelimit"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "parking_lot",
 ]
 
 [[package]]
 name = "warren-relay"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "anyhow",
  "axum",
@@ -8576,7 +8564,7 @@ dependencies = [
 
 [[package]]
 name = "warren-relay-selector"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "ed25519-dalek",
  "hex",
@@ -8591,7 +8579,7 @@ dependencies = [
 
 [[package]]
 name = "warren-ss58"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "blake2",
  "bs58",
@@ -8600,7 +8588,7 @@ dependencies = [
 
 [[package]]
 name = "warren-tls"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "data-encoding",
  "ed25519-dalek",
@@ -8612,7 +8600,7 @@ dependencies = [
 
 [[package]]
 name = "warren-tunnel"
-version = "0.3.10"
+version = "0.3.12"
 dependencies = [
  "bytes",
  "ed25519-dalek",
@@ -8623,7 +8611,7 @@ dependencies = [
  "parking_lot",
  "postcard",
  "quinn",
- "quinn-udp 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quinn-udp",
  "rand 0.10.1",
  "rand 0.9.4",
  "serde",

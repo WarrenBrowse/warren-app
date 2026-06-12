@@ -11,7 +11,7 @@ pub const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 #[command(version = mullvad_version::VERSION, about, long_about = None)]
 #[command(propagate_version = true)]
 enum Cli {
-    /// Control and display information about your Mullvad account
+    /// Control and display information about your Warren account
     #[clap(subcommand)]
     Account(account::Account),
 
@@ -66,19 +66,19 @@ enum Cli {
     /// Manage relay and tunnel constraints
     #[clap(subcommand)]
     Relay(relay::Relay),
-    /// Manage Mullvad API access methods.
+    /// Manage Warren API access methods.
     ///
-    /// Access methods are used to connect to the Mullvad API via one of
-    /// Mullvad's bridge servers or a custom proxy (SOCKS5 & Shadowsocks) when
+    /// Access methods are used to connect to the Warren API via one of
+    /// Warren's bridge servers or a custom proxy (SOCKS5 & Shadowsocks) when
     /// and where establishing a direct connection does not work.
     ///
-    /// If the Mullvad daemon is unable to connect to the Mullvad API, it will
+    /// If the Warren daemon is unable to connect to the Warren API, it will
     /// automatically try to use any other configured access method and re-try
     /// the API call. If it succeeds, all subsequent API calls are made using
     /// the new access method. Otherwise it will re-try using yet another access
     /// method.
     ///
-    /// The Mullvad API is used for logging in, accessing the relay list,
+    /// The Warren API is used for logging in, accessing the relay list,
     /// rotating Wireguard keys and more.
     #[clap(subcommand)]
     ApiAccess(api_access::ApiAccess),
@@ -105,7 +105,7 @@ enum Cli {
     #[clap(subcommand)]
     Tunnel(tunnel::Tunnel),
 
-    /// Show information about the current Mullvad version
+    /// Show information about the current Warren version
     /// and available versions
     Version,
 

@@ -86,6 +86,16 @@ function send(email: string, message: string, savedReportId: string): Promise<vo
   });
 }
 
+// The id is always a `randomUUID()` the main process issued (see
+// `collectLogs`), but it crosses the IPC boundary from the renderer
+// before being joined into a filesystem path. Validate it against the
+// canonical UUID shape so a malicious/buggy renderer cannot inject path
+// traversal (e.g. `../../etc/passwd`) into the report path.
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getProblemReportPath(id: string): string {
+  if (!UUID_REGEX.test(id)) {
+    throw new Error('Invalid problem report id');
+  }
   return path.join(app.getPath('temp'), `${id}.log`);
 }

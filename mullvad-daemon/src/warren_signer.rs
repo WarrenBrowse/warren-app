@@ -79,6 +79,14 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
 #[must_use]
 pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     let storage = get_storage(settings_dir);
+    if storage.is_plaintext() {
+        log::warn!(
+            "Warren mnemonic is stored in PLAINTEXT via {} (no OS secret store available): \
+             back up {} carefully and exclude it from automated/cloud backups",
+            storage.backend_name(),
+            settings_dir.join("secrets").display()
+        );
+    }
     let mnemonic = load_or_create_mnemonic_via_storage(&*storage, settings_dir)?;
 
     match warren_identity::seed_from_mnemonic(&mnemonic) {
@@ -256,7 +264,7 @@ fn bootstrap_fresh_mnemonic(
 /// NEVER log `mnemonic`. Only log the fact that a write
 /// succeeded/failed (= audit trail) and the backend name.
 pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()> {
-    // Step 1 - BIP39 validation BEFORE any write.
+    // Validate BIP39 before any write so a bad phrase never overwrites a good one.
     warren_identity::seed_from_mnemonic(mnemonic).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -264,12 +272,11 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
         )
     })?;
 
-    // Step 2 - persist via the active backend.
     let storage = get_storage(settings_dir);
     storage.store(MNEMONIC_KEY, mnemonic.trim().as_bytes())?;
 
-    // Step 3 - clean up any leftover legacy file so we never have
-    // two persistent copies after a successful overwrite.
+    // Remove any leftover legacy file so we never keep two persistent copies
+    // after a successful overwrite.
     let legacy_path = settings_dir.join(MNEMONIC_FILENAME);
     if legacy_path.exists()
         && let Err(e) = std::fs::remove_file(&legacy_path)

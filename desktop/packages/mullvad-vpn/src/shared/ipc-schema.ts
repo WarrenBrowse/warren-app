@@ -178,6 +178,13 @@ export const ipcSchema = {
     showLaunchDaemonSettings: invoke<void, void>(),
     showFullDiskAccessSettings: invoke<void, void>(),
     getPathBaseName: invoke<string, string>(),
+    // Clears the system clipboard, but only if it still holds the
+    // provided value (the just-copied mnemonic). Runs in the main
+    // process where Electron's `clipboard` module bypasses the
+    // renderer permission handler, which only grants
+    // `clipboard-sanitized-write` and so rejects a renderer-side
+    // `readText()`. Returns whether the clipboard was actually cleared.
+    clearMnemonicFromClipboard: invoke<string, boolean>(),
     upgrade: send<void>(),
     upgradeAbort: send<void>(),
     upgradeEvent: notifyRenderer<AppUpgradeEvent>(),
@@ -274,6 +281,11 @@ export const ipcSchema = {
     // Passing `undefined` clears it so the wizard re-runs on the next
     // boot (used by the Settings "Replay onboarding" entry).
     setOnboardingCompletedUnix: send<number | undefined>(),
+    // Persisted backup gate. Set true when a fresh identity is minted
+    // and awaiting recovery-phrase backup, cleared once the backup is
+    // confirmed, so a GUI restart mid-backup can re-route to the
+    // backup-pending state instead of the main view.
+    setBackupPending: send<boolean>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),

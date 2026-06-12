@@ -2,8 +2,11 @@
 name: OSV-Scanner Scheduled Scan
 
 on:
-  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
-  # Kept runnable on-demand via the Actions tab.
+  # A scheduled vulnerability scan does not burden direct pushes to main, so it
+  # stays enabled. It scans committed lockfiles (no warren-core build needed),
+  # so no warren-core token is required here.
+  schedule:
+    - cron: "30 7 * * MON-FRI"
   workflow_dispatch:
 
 permissions: {}

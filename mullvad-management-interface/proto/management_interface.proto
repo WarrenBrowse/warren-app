@@ -56,11 +56,12 @@ service ManagementService {
   rpc SetEnableRecents(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetUserspaceWireguard(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
 
-  // URL persistante du serveur warren-api (consumed par
+  // Persistent URL of the warren-api server (consumed by
   // WarrenRemote{Account,Device}Backend). Format
-  // `http(s)://host:port` sans trailing slash. Empty string → unset
-  // (= None côté Settings, fallback Mullvad upstream). Override via
-  // env var `WARREN_API_URL`. Restart requis pour appliquer.
+  // `http(s)://host:port` without a trailing slash. Empty string means
+  // unset (= None on the Settings side, falls back to Mullvad upstream).
+  // Overridable via the `WARREN_API_URL` env var. A daemon restart is
+  // required to apply the change.
   rpc SetWarrenApiUrl(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
   // Number of parallel QUIC connections for the Warren tunnel.
   // 0 = reset to the compiled default (8). Valid range 1..=16,
@@ -69,21 +70,21 @@ service ManagementService {
   // `WARREN_N_CONNECTIONS` on the daemon takes priority over this
   // setting.
   rpc SetWarrenNConnections(google.protobuf.UInt32Value) returns (google.protobuf.Empty) {}
-  // Retourne la mnémonique BIP39 utilisateur (12 mots) pour permettre
-  // backup user-side via le GUI. Empty string si l'identité n'a
-  // jamais été bootstrappée (= mode Mullvad legacy ou premier boot
-  // avant warren_signer).
-  // **Sensible** : caller GUI doit afficher avec warning safety +
-  // confirmation user explicite. La string retournée est secret
-  // cryptographique, jamais loggée par le daemon (politique no-log).
+  // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
+  // user back it up. Empty string if the identity has never been
+  // bootstrapped (= legacy Mullvad mode or first boot before
+  // warren_signer).
+  // **Sensitive**: the GUI caller must display it with a safety warning
+  // and explicit user confirmation. The returned string is a
+  // cryptographic secret, never logged by the daemon (no-log policy).
   rpc GetWarrenMnemonic(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
-  // Remplace l'identité utilisateur par la mnémonique BIP39 fournie.
-  // **Irréversible** : toute subscription liée à l'identité actuelle
-  // est perdue. Le caller GUI doit afficher une confirmation strong
-  // avant d'appeler. Le daemon doit être restart manuellement après
-  // pour que la nouvelle identité soit prise en compte par le signer
-  // (signing key dérivée au boot uniquement). Le payload est validé
-  // BIP39 avant écriture sur disque (= rejet atomique).
+  // Replaces the user identity with the supplied BIP39 mnemonic.
+  // **Irreversible**: any subscription tied to the current identity is
+  // lost. The GUI caller must display a strong confirmation before
+  // calling. No restart is needed: the daemon hot-swaps the in-memory
+  // signer (reload_signer_from_disk) and triggers an auto-login so the
+  // new identity takes effect in the running process. The payload is
+  // BIP39-validated before being written to disk (= atomic rejection).
   rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
   // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
@@ -813,7 +814,7 @@ message NatPmpStatus {
   optional uint32 external_port = 2;
   // Set when state == MAPPED. The lifetime (seconds) the exit GRANTED
   // for this mapping (after its [60,3600] clamp), captured at the last
-  // Mapped/Renewed event — NOT a live-decreasing "remaining" value. The
+  // Mapped/Renewed event, NOT a live-decreasing "remaining" value. The
   // UI derives the renewal countdown as granted/2 from the wall clock
   // since that event.
   optional uint32 lifetime_granted_secs = 3;

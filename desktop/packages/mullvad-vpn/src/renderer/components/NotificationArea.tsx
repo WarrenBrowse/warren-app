@@ -245,7 +245,7 @@ function NotificationActionWrapper({
   setIsModalOpen,
 }: NotificationActionWrapperProps) {
   const { push } = useHistory();
-  const { openUrlWithAuth, openUrl } = useAppContext();
+  const { openUrl } = useAppContext();
 
   const closeTroubleshootModal = useCallback(() => setIsModalOpen(false), [setIsModalOpen]);
 
@@ -253,11 +253,7 @@ function NotificationActionWrapper({
     if (action) {
       switch (action.type) {
         case 'navigate-external':
-          if (action.link.withAuth) {
-            return openUrlWithAuth(action.link.to);
-          } else {
-            return openUrl(action.link.to);
-          }
+          return openUrl(action.link.to);
         case 'troubleshoot-dialog':
           setIsModalOpen(true);
           break;
@@ -268,7 +264,7 @@ function NotificationActionWrapper({
     }
 
     return Promise.resolve();
-  }, [action, setIsModalOpen, openUrlWithAuth, openUrl]);
+  }, [action, setIsModalOpen, openUrl]);
 
   const goToProblemReport = useCallback(() => {
     closeTroubleshootModal();

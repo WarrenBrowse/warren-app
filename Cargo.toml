@@ -187,6 +187,10 @@ ignored = ["prost"]
 [patch.crates-io]
 quinn = { path = "../warren-core/vendor/quinn-fork/quinn" }
 quinn-proto = { path = "../warren-core/vendor/quinn-fork/quinn-proto" }
+# warren-tunnel/-client/-relay depend on quinn-udp directly (not only through
+# quinn), so without this patch they resolve the unpatched crates.io copy and
+# miss the fork's dlsym Apple fast path and per-socket Windows GSO sizing.
+quinn-udp = { path = "../warren-core/vendor/quinn-fork/quinn-udp" }
 
 [profile.release]
 opt-level = "s"
@@ -199,6 +203,16 @@ quinn.opt-level = 3
 quinn-proto.opt-level = 3
 quinn-udp.opt-level = 3
 ring.opt-level = 3
+# Warren data plane: these crates move every packet, so build them at opt-level
+# 3 even though the workspace default is size-first ("s").
+warren-tunnel.opt-level = 3
+warren-client.opt-level = 3
+warren-relay.opt-level = 3
+warren-multihop.opt-level = 3
+warren-protocol.opt-level = 3
+warren-tls.opt-level = 3
+chacha20poly1305.opt-level = 3
+hpke.opt-level = 3
 
 [profile.release-debuginfo]
 inherits = "release"

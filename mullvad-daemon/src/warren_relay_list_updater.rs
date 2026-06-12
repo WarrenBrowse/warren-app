@@ -73,7 +73,11 @@ fn build_http_client(api_url: &str) -> reqwest::Client {
         // wire - the dedicated endpoint presents the cert without SNI.
         builder = builder.resolve(API_HOST_DEFAULT, addr).tls_sni(false);
     }
-    builder.build().unwrap_or_else(|_| reqwest::Client::new())
+    // expect, not a fallback: reqwest::Client::new() would silently drop the
+    // pinned `.resolve()` + `.tls_sni(false)` above and leak a DNS query + SNI.
+    builder
+        .build()
+        .expect("reqwest client build failed: invalid TLS backend configuration")
 }
 
 /// Pure helper (testable): the pinned `SocketAddr` to dial when `api_url`

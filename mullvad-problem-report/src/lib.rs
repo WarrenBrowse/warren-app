@@ -278,15 +278,20 @@ fn list_logs(
         })
 }
 
-/// Returns the directory where the Mullvad GUI frontend stores its logs.
+/// Returns the directory where the Warren GUI frontend stores its logs.
 /// If the current platform has a separate directory for frontend logs.
+//
+// These paths must match the Electron frontend's resolved `logs` dir, which
+// derives from the app `productName` ("Warren VPN" in
+// desktop/.../package.json). If they drift, problem reports silently omit the
+// GUI logs.
 fn frontend_log_dir() -> Option<Result<PathBuf, LogError>> {
     #[cfg(target_os = "linux")]
     {
         Some(
             dirs::home_dir()
                 .ok_or(LogError::NoHomeDir)
-                .map(|home_dir| home_dir.join(".config/Mullvad VPN/logs")),
+                .map(|home_dir| home_dir.join(".config/Warren VPN/logs")),
         )
     }
     #[cfg(target_os = "macos")]
@@ -294,13 +299,13 @@ fn frontend_log_dir() -> Option<Result<PathBuf, LogError>> {
         Some(
             dirs::home_dir()
                 .ok_or(LogError::NoHomeDir)
-                .map(|home_dir| home_dir.join("Library/Logs/Mullvad VPN")),
+                .map(|home_dir| home_dir.join("Library/Logs/Warren VPN")),
         )
     }
     #[cfg(target_os = "windows")]
     {
         Some(match std::env::var_os("LOCALAPPDATA") {
-            Some(dir) => Ok(Path::new(&dir).join("Mullvad VPN/logs")),
+            Some(dir) => Ok(Path::new(&dir).join("Warren VPN/logs")),
             None => Err(LogError::NoLocalAppDataDir),
         })
     }

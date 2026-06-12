@@ -312,9 +312,7 @@ fn print_error_state(error_state: &ErrorState) {
         cause @ talpid_types::tunnel::ErrorStateCause::NeedFullDiskPermissions => {
             println!("Blocked: {cause}");
             println!();
-            println!(
-                r#"Enable "Full Disk Access" for "Warren VPN" in the macOS system settings:"#
-            );
+            println!(r#"Enable "Full Disk Access" for "Warren VPN" in the macOS system settings:"#);
             println!(
                 r#"open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles""#
             );

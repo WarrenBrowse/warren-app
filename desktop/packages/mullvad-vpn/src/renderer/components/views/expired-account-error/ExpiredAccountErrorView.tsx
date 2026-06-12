@@ -183,7 +183,7 @@ function Content() {
 function ExternalPaymentButton() {
   const { setShowLockdownModeAlert, startPolling } = useExpiredAccountContext();
   const { recoveryAction } = useRecoveryAction();
-  const { openUrlWithAuth } = useAppContext();
+  const { openUrl } = useAppContext();
   const isNewAccount = useIsNewAccount();
 
   const buttonText = isNewAccount
@@ -194,7 +194,7 @@ function ExternalPaymentButton() {
     if (recoveryAction === RecoveryAction.disableLockdownMode) {
       setShowLockdownModeAlert(true);
     } else {
-      await openUrlWithAuth(urls.purchase);
+      await openUrl(urls.purchase);
       // G-5: Start auto-polling after the user opens the payment page.
       startPolling();
     }

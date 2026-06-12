@@ -335,6 +335,10 @@ export default class AppRenderer {
       this.reduxActions.userInterface.setDaemonAllowed(initialState.daemonAllowed);
     }
 
+    // GUI settings must land in redux before the device-state replay so
+    // `handleDeviceEvent` can consult the persisted `backupPending` gate.
+    this.setGuiSettings(initialState.guiSettings);
+
     if (initialState.deviceState) {
       const deviceState = initialState.deviceState;
       this.handleDeviceEvent({ type: deviceState.type, deviceState } as DeviceEvent);
@@ -349,7 +353,6 @@ export default class AppRenderer {
     this.setRelayListPair(initialState.relayList);
     this.setCurrentVersion(initialState.currentVersion);
     this.setUpgradeVersion(initialState.upgradeVersion);
-    this.setGuiSettings(initialState.guiSettings);
     this.storeAutoStart(initialState.autoStart);
     this.setChangelog(initialState.changelog);
     this.setCurrentApiAccessMethod(initialState.currentApiAccessMethod);
@@ -518,6 +521,11 @@ export default class AppRenderer {
   // existing `guiSettings.''` notifyRenderer broadcast.
   public setOnboardingCompletedUnix = (ts: number | undefined): void =>
     IpcRendererEventChannel.guiSettings.setOnboardingCompletedUnix(ts);
+  // Persists the backup gate across GUI restarts (see the field doc in
+  // gui-settings-state.ts). The renderer redux store is kept in sync via
+  // the `guiSettings.''` notifyRenderer broadcast.
+  public setBackupPending = (backupPending: boolean): void =>
+    IpcRendererEventChannel.guiSettings.setBackupPending(backupPending);
   public daemonPrepareRestart = (shutdown: boolean): void => {
     IpcRendererEventChannel.daemon.prepareRestart(shutdown);
   };
@@ -595,7 +603,14 @@ export default class AppRenderer {
       await IpcRendererEventChannel.account.create();
     } catch (e) {
       this.loginState = 'none';
-      actions.account.createAccountFailed(e as Error);
+      // The daemon may have already emitted `logged in` (-> redux
+      // backup-pending) before the `create()` promise rejected. Do not
+      // clobber that with a `failed` state, which would strand a freshly
+      // minted, un-backed-up identity behind an error screen.
+      const status = this.reduxStore.getState().account.status.type;
+      if (status !== 'backup-pending' && status !== 'ok') {
+        actions.account.createAccountFailed(e as Error);
+      }
     }
   };
 
@@ -603,18 +618,8 @@ export default class AppRenderer {
   // completes the new-account login state so navigation proceeds (to the
   // buy-plan / expired screen for a fresh account).
   public finishAccountBackup = (pubkey: WarrenPubKey) => {
+    this.setBackupPending(false);
     this.reduxActions.account.accountCreated(pubkey, new Date().toISOString());
-  };
-
-  public openUrlWithAuth = async (url: Url): Promise<void> => {
-    let token = '';
-    try {
-      token = await IpcRendererEventChannel.account.getWwwAuthToken();
-    } catch (e) {
-      const error = e as Error;
-      log.error(`Failed to get the WWW auth token: ${error.message}`);
-    }
-    void this.openUrl(`${url}?token=${token}`);
   };
 
   public setAllowLan = async (allowLan: boolean) => {
@@ -995,7 +1000,15 @@ export default class AppRenderer {
 
         switch (this.loginState) {
           case 'none':
-            reduxAccount.loggedIn(pubkey);
+            // A GUI restart between account creation and backup confirmation
+            // replays this event with `loginState` 'none'. The persisted
+            // backup gate ensures the un-backed-up identity still holds on
+            // the backup-pending state instead of landing on the main view.
+            if (this.reduxStore.getState().settings.guiSettings.backupPending) {
+              reduxAccount.accountAwaitingBackup(pubkey);
+            } else {
+              reduxAccount.loggedIn(pubkey);
+            }
             break;
           case 'logging in':
             reduxAccount.loggedIn(pubkey);
@@ -1004,6 +1017,7 @@ export default class AppRenderer {
             // The daemon has minted + logged into the new identity, but
             // hold on the login screen until the user backs up their
             // recovery phrase (see `finishAccountBackup`).
+            this.setBackupPending(true);
             reduxAccount.accountAwaitingBackup(pubkey);
             break;
         }
@@ -1011,10 +1025,12 @@ export default class AppRenderer {
       }
       case 'logged out':
         this.loginScheduler.cancel();
+        this.setBackupPending(false);
         reduxAccount.loggedOut();
         break;
       case 'revoked': {
         this.loginScheduler.cancel();
+        this.setBackupPending(false);
         reduxAccount.deviceRevoked();
         break;
       }

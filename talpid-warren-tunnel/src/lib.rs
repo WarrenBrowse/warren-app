@@ -843,7 +843,6 @@ impl WarrenTunnelMonitor {
             }
         );
 
-        // Step 2: TUN config derived from the session.
         let tun_t = Instant::now();
         let tun_config = build_tun_config_for_kind(&session_kind);
         let tun = {
@@ -880,7 +879,7 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Startup event sequence - order is load-bearing (M-1 fix):
+        // Startup event sequence - order is load-bearing:
         //
         // 1. InterfaceUp  - tells the state machine to install the Connecting-state firewall
         //    (allows traffic to the exit only). Emitted BEFORE routing so the firewall fence is up
@@ -1080,7 +1079,7 @@ impl WarrenTunnelMonitor {
         // guard are fully installed. The UI transitions to "Connected"
         // only after the default route already points at the TUN, so
         // there is no window where traffic escapes via the physical NIC.
-        // (M-1 fix: Up was previously emitted before routing.)
+        // Do NOT emit Up before routing: it reopens that leak window.
         log::debug!(
             "{TRACE_PREFIX} T7={}ms phase=up_emit (routes+split-default installed, emit Up)",
             start_t.elapsed().as_millis()
@@ -1213,16 +1212,17 @@ impl WarrenTunnelMonitor {
             }
         });
 
-        // Periodic pump metrics task (every 2s, logs uplink + downlink
-        // counters). Lets a future bench distinguish which direction
+        // Periodic pump metrics task. Lets a bench distinguish which direction
         // stalls (uplink stops but downlink continues -> server-side
-        // `read_datagram` issue; both stop at once -> QUIC connection
-        // closed). The task aborts when teardown aborts the pump.
+        // `read_datagram` issue; both stop at once -> QUIC connection closed).
+        // The task aborts when teardown aborts the pump. 30s cadence keeps prod
+        // log volume bounded; raise transiently via the log reload handle when
+        // diagnosing a stall.
         let metrics_handle = runtime.spawn(async move {
             let mut prev_up = 0u64;
             let mut prev_down = 0u64;
             let tick_start = Instant::now();
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
             interval.tick().await; // skip first immediate tick
             loop {
                 interval.tick().await;
@@ -1525,7 +1525,7 @@ impl WarrenTunnelMonitor {
         let async_device = tun.into_inner();
         let packet_device = MullvadTunPacketDevice::new(async_device);
 
-        // Startup event sequence - order is load-bearing (M-1 fix):
+        // Startup event sequence - order is load-bearing:
         //
         // 1. InterfaceUp  - installs the Connecting-state firewall; emitted BEFORE routing so the
         //    firewall fence is in place before any route change could let traffic escape via the
@@ -1702,7 +1702,7 @@ impl WarrenTunnelMonitor {
         // Emit TunnelEvent::Up now that routes AND the split-default guard
         // are fully installed. The UI transitions to "Connected" only after
         // the default route already points at the TUN.
-        // (M-1 fix: Up was previously emitted before routing on multi-hop.)
+        // Do NOT emit Up before routing: it reopens the physical-NIC leak window.
         log::debug!(
             "{TRACE_PREFIX} T7={}ms phase=up_emit (routes+split-default installed, emit Up, multi-hop)",
             start_t.elapsed().as_millis()
@@ -1731,7 +1731,11 @@ impl WarrenTunnelMonitor {
             if let Err(ref e) = res {
                 let msg = format!("multi-hop uplink: {e:#}");
                 log::warn!("{TRACE_PREFIX} {msg}");
-                if let Some(tx) = pump_error_tx_uplink.lock().ok().and_then(|mut g| g.take()) {
+                if let Some(tx) = pump_error_tx_uplink
+                    .lock()
+                    .unwrap_or_else(|p| p.into_inner())
+                    .take()
+                {
                     let _ = tx.send(msg);
                 }
             }
@@ -1748,8 +1752,8 @@ impl WarrenTunnelMonitor {
                 log::warn!("{TRACE_PREFIX} {msg}");
                 if let Some(tx) = pump_error_tx_downlink
                     .lock()
-                    .ok()
-                    .and_then(|mut g| g.take())
+                    .unwrap_or_else(|p| p.into_inner())
+                    .take()
                 {
                     let _ = tx.send(msg);
                 }
@@ -1823,7 +1827,9 @@ impl WarrenTunnelMonitor {
                             spec.assigned
                         );
                         log::warn!("{TRACE_PREFIX} {msg}");
-                        if let Some(tx) = pump_error_tx.lock().ok().and_then(|mut g| g.take()) {
+                        if let Some(tx) =
+                            pump_error_tx.lock().unwrap_or_else(|p| p.into_inner()).take()
+                        {
                             let _ = tx.send(msg);
                         }
                         return;
@@ -2041,7 +2047,7 @@ impl WarrenTunnelMonitor {
             outcome
         });
 
-        // ── NAT-PMP teardown (the tunnel is now closing) ──────────
+        // NAT-PMP teardown (the tunnel is now closing).
         // Now that the `block_on` returned (external close or pump
         // exit), tear down the NAT-PMP runtime before the routes so
         // its refresh loop stops emitting while the rest of teardown

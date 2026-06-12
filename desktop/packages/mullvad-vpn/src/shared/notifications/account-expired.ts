@@ -36,7 +36,6 @@ export class AccountExpiredNotificationProvider implements SystemNotificationPro
         link: {
           text: messages.pgettext('notifications', 'Buy more'),
           to: urls.purchase,
-          withAuth: true,
         },
       },
     };

@@ -47,7 +47,6 @@ export class CloseToAccountExpiryNotificationProvider
         link: {
           text: messages.pgettext('notifications', 'Buy more'),
           to: urls.purchase,
-          withAuth: true,
         },
       },
     };
@@ -72,7 +71,6 @@ export class CloseToAccountExpiryNotificationProvider
         type: 'navigate-external',
         link: {
           to: urls.purchase,
-          withAuth: true,
         },
       },
     };

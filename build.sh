@@ -127,6 +127,43 @@ function assert_clean_working_directory {
     fi
 }
 
+# Guard against the silent warren-core drift that once shipped a build without
+# the quinn GSO/obfuscation patches: the local ../warren-core checkout must be
+# clean and its HEAD must match the SHA pinned in .warren-core-version.
+function assert_warren_core_pin {
+    local pin_file="$SCRIPT_DIR/.warren-core-version"
+    local core_dir="$SCRIPT_DIR/../warren-core"
+    if [[ ! -f "$pin_file" ]]; then
+        log_error "Missing $pin_file: cannot verify the warren-core pin."
+        exit 1
+    fi
+    if [[ ! -d "$core_dir/.git" ]]; then
+        log_error "warren-core checkout not found at $core_dir."
+        exit 1
+    fi
+    local pinned actual
+    pinned="$(tr -d '[:space:]' < "$pin_file")"
+    actual="$(git -C "$core_dir" rev-parse HEAD)"
+    if [[ -n "$(git -C "$core_dir" status --porcelain)" ]]; then
+        log_error "warren-core working directory is dirty at $core_dir."
+        log_error "Release builds must use the exact pinned warren-core commit."
+        exit 1
+    fi
+    if [[ "$pinned" != "$actual" ]]; then
+        log_error "warren-core HEAD ($actual) does not match the pin in"
+        log_error ".warren-core-version ($pinned). Check out the pinned commit"
+        log_error "or update the pin before building."
+        exit 1
+    fi
+    log_info "warren-core pin verified: $pinned"
+}
+
+if [[ "$OPTIMIZE" == "true" || "$SIGN" == "true" ]]; then
+    # Release/signed builds must embed the exact pinned warren-core (data plane
+    # + quinn fork). Verify before doing the expensive build, not only in CI.
+    assert_warren_core_pin
+fi
+
 if [[ "$SIGN" == "true" ]]; then
     # Refuse to build signed builds on dirty working directories. Prevents release builds
     # from being built from potentially modified code/assets.

@@ -1,5 +1,5 @@
 import { exec, execFile } from 'child_process';
-import { app, nativeTheme, powerMonitor, session, shell, systemPreferences } from 'electron';
+import { app, clipboard, nativeTheme, powerMonitor, session, shell, systemPreferences } from 'electron';
 import fs from 'fs';
 import * as path from 'path';
 import util from 'util';
@@ -1024,6 +1024,15 @@ class ApplicationMain
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),
     );
+    IpcMainEventChannel.app.handleClearMnemonicFromClipboard((mnemonic) => {
+      // Only wipe the clipboard if it still holds our mnemonic, so we
+      // never clobber something the user copied in between.
+      if (clipboard.readText() === mnemonic) {
+        clipboard.clear();
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
+    });
 
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;
@@ -1236,19 +1245,8 @@ class ApplicationMain
   /* eslint-disable @typescript-eslint/member-ordering */
   // NotificationControllerDelagate
   public openApp = () => this.userInterface?.showWindow();
-  public openLink = async (url: string, withAuth?: boolean) => {
-    if (withAuth) {
-      let token = '';
-      try {
-        token = await this.daemonRpc.getWwwAuthToken();
-      } catch (e) {
-        const error = e as Error;
-        log.error(`Failed to get the WWW auth token: ${error.message}`);
-      }
-      return shell.openExternal(`${url}?token=${token}`);
-    } else {
-      return shell.openExternal(url);
-    }
+  public openLink = async (url: string) => {
+    return shell.openExternal(url);
   };
   public openRoute = (route: RoutePath) => {
     void IpcMainEventChannel.app.notifyOpenRoute?.(route);
