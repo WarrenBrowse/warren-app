@@ -30,7 +30,7 @@ the device stays offline until lockdown is turned off.
 
 ## Recovery
 
-The fix is a **local CLI command** — it does **not** require internet access:
+The fix is a **local CLI command**, it does **not** require internet access:
 
 ```sh
 warren lockdown-mode set off

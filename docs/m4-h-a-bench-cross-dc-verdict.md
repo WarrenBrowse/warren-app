@@ -1,4 +1,4 @@
-# Phase M4.H.A — Linux fork E2E validation cross-DC
+# Phase M4.H.A : Linux fork E2E validation cross-DC
 
 > Rapport d'agent autonome. Bench post-Quinn migration warren-app.
 
@@ -10,7 +10,7 @@
 
 ## 1. Verdict
 
-**GO CONDITIONAL** — la migration Quinn warren-app (commits `75319088ec` → `f5c0770319`) ne régresse PAS le fork au niveau code : compile workspace clean, cargo tree propage le `quinn 0.11.9 vendor/quinn-fork` + `quinn-proto 0.11.13-warren.2`, clippy strict zéro warning, tests verts, cross-compile native Linux x86_64 PASS, daemon boot OK avec dérivation pubkey BIP39 alignée. Le bench perf cross-DC reste **non mesurable contre la prod actuelle** : le binaire `warren-exit-1` déployé 2026-05-13 ne complète plus le handshake QUIC avec le daemon-fork compilé sur warren-core HEAD `b522e3c` (timeout côté client, "handshake failed: failed to complete connection" côté serveur). Cause probable = différence d'obfuscation M4.0 ou de profil transport_config entre les deux versions. **Pas un blocker Quinn migration**, c'est une dépendance de redeploy infra.
+**GO CONDITIONAL** : la migration Quinn warren-app (commits `75319088ec` → `f5c0770319`) ne régresse PAS le fork au niveau code : compile workspace clean, cargo tree propage le `quinn 0.11.9 vendor/quinn-fork` + `quinn-proto 0.11.13-warren.2`, clippy strict zéro warning, tests verts, cross-compile native Linux x86_64 PASS, daemon boot OK avec dérivation pubkey BIP39 alignée. Le bench perf cross-DC reste **non mesurable contre la prod actuelle** : le binaire `warren-exit-1` déployé 2026-05-13 ne complète plus le handshake QUIC avec le daemon-fork compilé sur warren-core HEAD `b522e3c` (timeout côté client, "handshake failed: failed to complete connection" côté serveur). Cause probable = différence d'obfuscation M4.0 ou de profil transport_config entre les deux versions. **Pas un blocker Quinn migration**, c'est une dépendance de redeploy infra.
 
 ## 2. Pin bump
 
@@ -94,7 +94,7 @@ Le fork local GSO + obfuscation M4.0 est correctement propagé via `[patch.crate
 
 Link Hetzner cross-DC nbg1↔hel1 : ~1 Gbps per flow, ~2.9 Gbps aggregate, UDP loss < 0.2 %. Plafond bench réseau.
 
-### WARREN (via tunnel) — bench v1 (WARREN_LOCAL_ACCOUNT=0) ET v2 (LOCAL=1 + voucher-allowlisted)
+### WARREN (via tunnel) : bench v1 (WARREN_LOCAL_ACCOUNT=0) ET v2 (LOCAL=1 + voucher-allowlisted)
 
 | Scenario | n | Avg (Mbps) | Note |
 |---|---|---|---|
@@ -161,11 +161,11 @@ Tear-down attesté : `hcloud server list` doit retourner uniquement `warren-exit
 
 ---
 
-## Annexe A — Build natif Linux
+## Annexe A : Build natif Linux
 
 CCX23 nbg1 native build = **5 min 07 s** (cargo build --release -p mullvad-daemon -p mullvad-cli). Bien plus rapide que l'estimation 25-30 min du brief.
 
-## Annexe B — Test pubkey enrollment
+## Annexe B : Test pubkey enrollment
 
 Pour bypasser l'auth chain bloquée (account create factory bug + warren-exit-1 prod allowlist strict 1 pubkey), enrollement test signé admin :
 - `wapi admin-mint-voucher --key admin/admin-signing.key` → voucher `wrn_655e486e...`
@@ -174,11 +174,11 @@ Pour bypasser l'auth chain bloquée (account create factory bug + warren-exit-1 
 - Tear-down : voucher hash `4ca67f5e801fc7d123ecf0f10e17c5ba015369af27941152c935b35c5ec88da7` cancelled + `client-delete-account` (signing key local-only)
 - Mnemonic test = 12-words BIP39 fresh, contenu jamais commité (rule `feedback_warren_no_secrets_in_commits`)
 
-## Annexe C — Next step M4.H.A.bis (proposition)
+## Annexe C : Next step M4.H.A.bis (proposition)
 
 Pour boucler le perf cross-DC ULTIMATE :
 1. Redeployer `warren-exit` sur warren-exit-1 (ou hel1 frais) depuis `warren-core@b522e3c` + restart service.
-2. Re-run `run-bench-v2.sh` (déjà patché LOCAL_ACCOUNT=1) — handshake complète maintenant.
+2. Re-run `run-bench-v2.sh` (déjà patché LOCAL_ACCOUNT=1), handshake complète maintenant.
 3. Attendu : throughput TCP 4-flow sustained 200-350 Mbps cross-DC (corrélé baseline M4.E.C.quint warren-client 409 Mbps, moins overhead state-machine + TUN provider).
 4. Valider RSS stable < +10 MB sur 5 min, 0 stall ≥ 5 s, PMTU ≥ 1280.
 

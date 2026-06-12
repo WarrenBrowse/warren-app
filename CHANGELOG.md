@@ -118,23 +118,22 @@ traffic analysis defense, HTTP/3 obfuscation, NAT-PMP port-forwarding, and non-c
 authentication.
 
 ### Added
-- Multi-hop two-relayed QUIC + HPKE (X25519) — anonymity layer where no single server sees both
+- Multi-hop two-relayed QUIC + HPKE (X25519): anonymity layer where no single server sees both
   the user's IP and the destination, modeled after Apple iCloud Private Relay (RFC 9180).
-- DAITA padding via `maybenot` 2.2.2 framework with Tamaraw and Scrambler default machines —
-  obfuscates traffic timing patterns against passive ML-based fingerprinting.
+- DAITA padding via `maybenot` 2.2.2 framework with Tamaraw and Scrambler default machines: obfuscates traffic timing patterns against passive ML-based fingerprinting.
 - HTTP/3 mimicry baseline obfuscation (ALPN `h3`, SNI `.exits.warrenbrowse.com`, port 443,
-  Initial datagram split >= 1500 B) — always on, no toggle.
-- NAT-PMP port-forwarding for inbound peer connections (qBittorrent, etc.) — restored after
+  Initial datagram split >= 1500 B), always on, no toggle.
+- NAT-PMP port-forwarding for inbound peer connections (qBittorrent, etc.): restored after
   Mullvad and IVPN removed the feature in 2023.
-- Multi-exit automatic failover — if the current exit becomes unreachable, the client transparently
+- Multi-exit automatic failover: if the current exit becomes unreachable, the client transparently
   switches to an alternative in the same country.
-- TOFU pubkey pinning per exit_id — the client refuses to connect if the exit identity changes
+- TOFU pubkey pinning per exit_id: the client refuses to connect if the exit identity changes
   unexpectedly. UI modal lets the user trust the new key, reject, or report.
-- Wallet Ed25519 BIP39 mnemonic authentication — non-custodial, no email, no account number.
+- Wallet Ed25519 BIP39 mnemonic authentication: non-custodial, no email, no account number.
   Generated or imported during first-launch onboarding wizard.
-- `--bypass-cidr` flag (Linux) — preserves SSH inbound when the tunnel is up by excluding CIDR
+- `--bypass-cidr` flag (Linux): preserves SSH inbound when the tunnel is up by excluding CIDR
   ranges from the default route.
-- Sticky multi-hop IPs — exit allocator best-effort keeps the same client IPv4 across reconnects,
+- Sticky multi-hop IPs: exit allocator best-effort keeps the same client IPv4 across reconnects,
   keyed by Ed25519 client pubkey.
 - `DaitaMetrics` (padding fired, blocking begin/end) surfaced in session close logs for
   observability.
@@ -150,7 +149,7 @@ authentication.
 - Update brand and bundle identifiers across all platforms: `net.mullvad.MullvadVPN` ->
   `com.warrenbrowse.vpn` (Android), `net.mullvad.MullvadVPN` -> `com.warrenbrowse.vpn.ios` (iOS),
   `net.mullvad.vpn` -> `com.warrenbrowse.vpn` (Linux/macOS/Windows daemon).
-- Reduce `Backoff::HANDSHAKE` ceiling from 30 s to 15 s — worst-case auto-reconnect under
+- Reduce `Backoff::HANDSHAKE` ceiling from 30 s to 15 s: worst-case auto-reconnect under
   M4.E.D mid-session loss is now under 15 s.
 - Default GUI now ships with the warrenBrowse logo (yellow `#ffd524` on navy `#0a1422`),
   French + English locales prioritized.

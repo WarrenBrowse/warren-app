@@ -1,4 +1,4 @@
-# Warren App — Project Rules for Claude Code
+# Warren App: Project Rules for Claude Code
 
 ## Language policy
 
@@ -6,12 +6,12 @@
 
 **ALL code comments in this repository MUST be written in English.** This applies to every commentable file in the codebase, including but not limited to:
 
-- Rust (`.rs`) — `//`, `///`, `//!`, `/* */`
-- TypeScript / JavaScript (`.ts`, `.tsx`, `.js`, `.jsx`) — `//`, `/* */`, JSDoc `/** */`
+- Rust (`.rs`): `//`, `///`, `//!`, `/* */`
+- TypeScript / JavaScript (`.ts`, `.tsx`, `.js`, `.jsx`): `//`, `/* */`, JSDoc `/** */`
 - Swift (`.swift`), Kotlin (`.kt`), Java (`.java`)
-- Shell scripts (`.sh`, `.bash`, `.zsh`) — `#`
-- TOML (`Cargo.toml`, etc.), YAML (`.yaml`, `.yml`) — `#`
-- Python (`.py`) — `#`, docstrings
+- Shell scripts (`.sh`, `.bash`, `.zsh`): `#`
+- TOML (`Cargo.toml`, etc.), YAML (`.yaml`, `.yml`): `#`
+- Python (`.py`): `#`, docstrings
 - Dockerfile, Makefile, and any other commentable config
 
 This includes:
@@ -44,7 +44,7 @@ If you are about to write a comment in any source/config file (`src/`, `Cargo.to
 
 When you encounter a French comment in code while making unrelated changes, translate it to English as part of the change (opportunistic cleanup). Do not introduce new French comments.
 
-## Typography: never use the em-dash (—)
+## Typography: never use the em-dash
 
 **The em-dash character `—` (U+2014) is BANNED everywhere you author text in this repository.** This is a hard rule, not a stylistic preference. Never type, paste, or generate `—` in:
 
@@ -65,13 +65,13 @@ Do **not** introduce the en-dash `–` (U+2013) as a substitute either; it is th
 
 ## Comment content: no narration, no history
 
-A comment must explain the **why** behind a non-obvious choice — never narrate what the code does, nor record what it used to do. The following are banned:
+A comment must explain the **why** behind a non-obvious choice, never narrate what the code does, nor record what it used to do. The following are banned:
 
-- **Step narration** — comments describing the current step of a task or refactor ("now we update the state", "first parse, then validate", "wire this up"). The code already shows this.
-- **Tombstones of old behavior** — comments documenting what the code did before ("previously this used X", "removed the old Y poller", "this replaces the legacy Z"). That belongs in git history, not in the source. *Exception:* keep one only when you judge it genuinely useful so a future agent does not forget a past mistake — e.g. "do NOT switch back to X here, it caused <known bug>". The point is the warning, not the nostalgia.
+- **Step narration**: comments describing the current step of a task or refactor ("now we update the state", "first parse, then validate", "wire this up"). The code already shows this.
+- **Tombstones of old behavior**: comments documenting what the code did before ("previously this used X", "removed the old Y poller", "this replaces the legacy Z"). That belongs in git history, not in the source. *Exception:* keep one only when you judge it genuinely useful so a future agent does not forget a past mistake, e.g. "do NOT switch back to X here, it caused <known bug>". The point is the warning, not the nostalgia.
 - **Restating the next line** in prose.
 
-Write a comment **only** when it carries information the code cannot: a non-obvious invariant, the subtle reason for an unusual choice, or a warning that stops a future agent from reintroducing a known bug. Be very parsimonious — when in doubt, leave it out. When you encounter this kind of noise comment in code you are already editing, delete it.
+Write a comment **only** when it carries information the code cannot: a non-obvious invariant, the subtle reason for an unusual choice, or a warning that stops a future agent from reintroducing a known bug. Be very parsimonious, when in doubt, leave it out. When you encounter this kind of noise comment in code you are already editing, delete it.
 
 ## Deployment rule: ALWAYS bump versions before redeploying exit nodes
 

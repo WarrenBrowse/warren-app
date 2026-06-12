@@ -1,4 +1,4 @@
-# Warren — fork upstream baseline
+# Warren : fork upstream baseline
 
 > **Document historique (2026-05-06).** Ceci est l'inventaire de reconnaissance
 > pris au moment du clone upstream, AVANT les modifications Warren. Il ne décrit
@@ -33,7 +33,7 @@
 | gRPC codegen | protobuf-compiler | ≥ 3.15 | `brew install protobuf` macOS |
 | Build scripts | bash | ≥ 4.0 | `brew install bash` sur macOS (default 3.2.5 KO) |
 | Electron gRPC | podman | latest | Container pour bindings TypeScript |
-| MSVC | Build Tools | — | Windows only |
+| MSVC | Build Tools | - | Windows only |
 
 ## Inventaire des modifications Warren à venir (cf. `warren-core/docs/03-fork-mullvad.md`)
 
@@ -114,7 +114,7 @@
 ## Décisions actées (2026-05-06)
 
 1. **Hébergement repo** : `github.com/WarrenBrowse/warren-app` (depuis 2026-05-20, M4.H.D migration Gitea → GitHub pour cohérence avec `warren-core` sur `github.com/WarrenBrowse/warren-core` ; ancien remote Gitea `git.p2p.legal/warren/warren-app` conservé comme `backup-gitea` fetch-only en lecture seule)
-2. **Visibilité** : **privé** pendant la phase POC. Public au lancement freemium (GPL-3.0 oblige le source du fork — la visibilité publique sera réactivée à ce moment-là)
+2. **Visibilité** : **privé** pendant la phase POC. Public au lancement freemium (GPL-3.0 oblige le source du fork, la visibilité publique sera réactivée à ce moment-là)
 3. **CI** : workflows séparés du `warren-core`. À adapter : retirer les jobs upstream Mullvad inutiles (tests Android/iOS si on ne ship pas mobile dès POC), ajouter le check `cargo build` Warren-only via le feature flag `tunnel_backend = "iroh"`. Détails à figer en début phase 1
 4. **Cadence merge upstream** : **weekly cherry-pick** de `main` upstream. Branche `warren-base` divergente, on rebase les commits Warren sur le HEAD upstream du jour J chaque semaine (lundi typique). Limites les conflits accumulés vs un freeze long
 
@@ -127,7 +127,7 @@
 - ✅ Inventaire fichiers à toucher (auth wallet + tunnel trait + relay selector + GUI)
 - ✅ Décisions hébergement / CI / cadence merge (cf. § Décisions actées)
 - ✅ Push initial `main` + tag `upstream-baseline-2026-05-06` + branche `warren-base`
-- ⏸ Build green sanity check (deferred — deps externes lourdes : Volta, podman, protobuf, bash 4. À faire au début phase 1)
+- ⏸ Build green sanity check (deferred : deps externes lourdes : Volta, podman, protobuf, bash 4. À faire au début phase 1)
 
 Reconnaissance terminée. Phase 1 amorcée 2026-05-07 (post-bench stab 24h validé `warren-core` shippable).
 

@@ -1,4 +1,4 @@
-# Warren fork — Guide d'usage
+# Warren fork : Guide d'usage
 
 Ce document explique comment fonctionnent les modes Warren ajoutés
 au fork de Mullvad VPN. Pour le contexte produit (pourquoi Warren existe,
@@ -50,16 +50,12 @@ Le mode Warren tunnel nécessite :
 
 ### Modules ajoutés (mullvad-daemon)
 
-- [`warren_signer`](../mullvad-daemon/src/warren_signer.rs) — charge la
+- [`warren_signer`](../mullvad-daemon/src/warren_signer.rs) : charge la
   mnémonique BIP39 et la dérive en `SigningKey` Ed25519 + `WarrenAuthSigner`.
-- [`warren_remote_config`](../mullvad-daemon/src/warren_remote_config.rs) —
-  résolution de l'URL warren-api (env > settings > défaut compilé).
-- [`warren_relay_selector`](../mullvad-daemon/src/warren_relay_selector.rs) —
-  wrapper daemon-side autour de la crate `warren-relay-selector` (pocs).
-- [`warren_tunnel_params`](../mullvad-daemon/src/warren_tunnel_params.rs) —
-  assemble `WarrenTunnelParameters` à partir du selector + signing key.
-- [`device::account_backend`](../mullvad-daemon/src/device/account_backend.rs) —
-  trait `WarrenAccountBackend` + `WarrenRemoteAccountBackend` (warren-api) /
+- [`warren_remote_config`](../mullvad-daemon/src/warren_remote_config.rs) : résolution de l'URL warren-api (env > settings > défaut compilé).
+- [`warren_relay_selector`](../mullvad-daemon/src/warren_relay_selector.rs) : wrapper daemon-side autour de la crate `warren-relay-selector` (pocs).
+- [`warren_tunnel_params`](../mullvad-daemon/src/warren_tunnel_params.rs) : assemble `WarrenTunnelParameters` à partir du selector + signing key.
+- [`device::account_backend`](../mullvad-daemon/src/device/account_backend.rs) : trait `WarrenAccountBackend` + `WarrenRemoteAccountBackend` (warren-api) /
   `RemoteAccountBackend` (fallback legacy).
 
 ### Path connect en mode Warren
@@ -91,7 +87,7 @@ Cette même clé est utilisée pour :
    migrés (cf. `mullvad-api/src/rest.rs::*_or_signed`).
 
 L'exit warren-core supporte une **allowlist** optionnelle (`ExitBindOpts.allowlist`)
-qui restreint les pubkeys autorisées au handshake — pour les déploiements
+qui restreint les pubkeys autorisées au handshake, pour les déploiements
 multi-tenants. Cf. [`crates/warren-tunnel/src/exit.rs`](../../warren-core/crates/warren-tunnel/src/exit.rs).
 
 ## Validation locale
@@ -107,7 +103,7 @@ cd ../warren-core
 
 ## État du fork (mai 2026)
 
-- ✅ Phase 1.A : Backend tunnel Warren (`BackendParams::Warren`) — unique mode
+- ✅ Phase 1.A : Backend tunnel Warren (`BackendParams::Warren`) : unique mode
 - ✅ Phase 2.B/C/D : Identité Warren (mnémonique → SigningKey + WarrenPubKey)
 - ✅ Phase 3 : GUI rebrand cosmétique
 - ✅ Phase 4 : Relay selector + state machine wiring
@@ -118,12 +114,12 @@ cd ../warren-core
 - ✅ Le tunnel Warren QUIC est devenu l'unique mode tunnel (toggle
   `warren_mode` supprimé).
 - ✅ Compte/device toujours servis par warren-api (mode compte local
-  supprimé — plus de stub « 99 ans »).
+  supprimé, plus de stub « 99 ans »).
 
 ### Reste à livrer
 
-- **warren-api server** (côté pocs) — backend qui remplace `api.mullvad.net`
+- **warren-api server** (côté pocs) : backend qui remplace `api.mullvad.net`
   pour la production multi-tenant.
-- **Distribution `warren-relays.json` signée** — endpoint signé OU
+- **Distribution `warren-relays.json` signée** : endpoint signé OU
   baked-in dans le binaire.
 - **Bench Hetzner end-to-end** du daemon fork.

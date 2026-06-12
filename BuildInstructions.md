@@ -1,7 +1,7 @@
 These are instructions on how to build the app on desktop platforms. See the
 [readme](./README.md#building-the-app) for help building on other platforms.
 
-# Pré-requis Warren fork — repo voisin `warren-core/`
+# Pré-requis Warren fork : repo voisin `warren-core/`
 
 > ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
 
@@ -47,7 +47,7 @@ cd warren-app && git submodule update --init
 
 Les path-deps sont déclarés dans :
 
-- [`Cargo.toml`](Cargo.toml) (workspace root — pas de `[patch.crates-io]`,
+- [`Cargo.toml`](Cargo.toml) (workspace root : pas de `[patch.crates-io]`,
   les path-deps sont posés au niveau crate)
 - [`mullvad-daemon/Cargo.toml`](mullvad-daemon/Cargo.toml) (`warren-config`,
   `warren-identity`, `warren-relay-selector`, `warren-api-client`,
@@ -131,7 +131,7 @@ sudo apt install gcc libdbus-1-dev
 sudo apt install rpm
 ```
 
-#### Warren fork — extra deps Linux (F4 fork audit)
+#### Warren fork : extra deps Linux (F4 fork audit)
 
 Le fork Warren ajoute des dépendances natives au-delà des
 besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :

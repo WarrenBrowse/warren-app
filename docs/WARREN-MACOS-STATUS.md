@@ -1,4 +1,4 @@
-# Warren macOS — état, diagnostic, et chantiers prod
+# Warren macOS : état, diagnostic, et chantiers prod
 
 > Mis à jour : 2026-05-31 (v1.0.4). Document de référence sur l'état réel
 > du client Warren sur macOS, la cascade de bugs diagnostiquée pendant la
@@ -182,7 +182,7 @@ Workaround manuel sur un build non corrigé (v1.0.3) : après connexion,
    réactiver le backend Keychain et retirer `WARREN_USE_PLAINTEXT_STORAGE`.
 4. **Routage macOS** : désormais **validé** sur vrai Mac (utun + split
    default + IP exit confirmée). À garder sous surveillance (le code
-   n'émettait pas d'erreur si l'install des routes échouait — voir
+   n'émettait pas d'erreur si l'install des routes échouait, voir
    `talpid-warren-tunnel/src/lib.rs`, l'event `Up` est émis même si
    `add_routes` / `DefaultRouteSplitGuard::install` échouent en silence ;
    à durcir : passer en erreur visible plutôt que « connecté mais sans net »).
@@ -192,7 +192,7 @@ Workaround manuel sur un build non corrigé (v1.0.3) : après connexion,
 Daemon = LaunchDaemon root `com.warrenbrowse.vpn.daemon`, logs dans
 `/var/log/warren-vpn/daemon.log`, settings dans `/etc/warren-vpn/`.
 
-1. **Stockage plaintext** (sinon `-25308`) — env du LaunchDaemon :
+1. **Stockage plaintext** (sinon `-25308`), env du LaunchDaemon :
    `WARREN_USE_PLAINTEXT_STORAGE=1` (déjà injecté par le postinstall v1.0.3).
 2. **Identité enrôlée** : poser la mnemonic dev (déjà enrôlée sur l'exit)
    dans `/etc/warren-vpn/secrets/warren_mnemonic.txt` (`0600 root`).
@@ -218,7 +218,7 @@ Daemon = LaunchDaemon root `com.warrenbrowse.vpn.daemon`, logs dans
 
 ---
 
-## Audit 2026-05-31 — DNS loop fix + leak-tightness review
+## Audit 2026-05-31 : DNS loop fix + leak-tightness review
 
 ### Root cause "connecté mais pas d'internet" (macOS)
 
@@ -269,13 +269,13 @@ que l'état Connected).
 
 ### Findings
 
-1. **Leak-checker faux positif — CORRIGÉ (fix #4)** : `mullvad_leak_checker`
+1. **Leak-checker faux positif, CORRIGÉ (fix #4)** : `mullvad_leak_checker`
    faisait un traceroute vers l'endpoint exit sur l'interface physique
    (`leak_checker/mod.rs`). Le transport QUIC userspace de Warren sort
    légitimement sur en0 pour joindre l'exit → le traceroute atteint le
    routeur LAN (1er hop) → `Network leak detected! Please contact Warren
    support` à **chaque** connexion. **Jamais une fuite de trafic user** (le
-   pare-feu bloque tout le reste — c'est l'enforcement réel). Fix :
+   pare-feu bloque tout le reste, c'est l'enforcement réel). Fix :
    `leak_test_applies_to(tunnel_type)` skippe le test pour
    `TunnelType::Warren` (le test reste actif pour WireGuard). Le pare-feu
    kill-switch n'est PAS touché. 2 tests TDD.
@@ -287,7 +287,7 @@ que l'état Connected).
    (`firewall/mod.rs:70`). Aucune fuite DNS, ni en défaut ni en custom
    public. RAS.
 3. **`enable_ipv6` stocké** : le défaut corrigé ne s'applique qu'aux
-   nouvelles installs. Les installs existantes gardent leur valeur — l'user
+   nouvelles installs. Les installs existantes gardent leur valeur, l'user
    doit toggler "Enable IPv6" OFF (ou réinstaller) pour fermer la fuite.
 
 ### À valider en live (1 test propre, auto-disconnect 30s)

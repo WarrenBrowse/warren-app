@@ -1,4 +1,4 @@
-# Phase M4.H.A.bis — Redeploy warren-exit-1 + re-bench cross-DC
+# Phase M4.H.A.bis : Redeploy warren-exit-1 + re-bench cross-DC
 
 > Rapport agent autonome. Suit M4.H.A (GO CONDITIONAL).
 
@@ -87,7 +87,7 @@ Bench tenté 2 fois (avant restart re-seed + après). Mêmes résultats : REF ba
 | WARREN tunnel TCP 4-flow | 5 | **0** | 0 | 0 | 0 | N/A |
 | WARREN tunnel TCP 4-flow DL | 5 | **0** | 0 | 0 | 0 | N/A |
 | WARREN tunnel UDP 1G | 5 | **0** | 0 | 0 | 0 | 0.00 |
-| Sustained TCP 4-flow 300 s | 1 | **0** | — | — | — | — |
+| Sustained TCP 4-flow 300 s | 1 | **0** | - | - | - | - |
 
 Daemon log côté nbg1 client final : `Warren handshake failed: QUIC stream error: read SetupAck: read error: connection lost` (retries en boucle, daemon entre BLOCKED). RSS warren-daemon stable 72096 → 72192 KB sur 300s (daemon en retry loop, ~96 KB delta). 0 stalls, 0 decode_failures, 0 replay_rejects (jamais atteint datagram path).
 

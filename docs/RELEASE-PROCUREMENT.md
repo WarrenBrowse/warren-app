@@ -1,8 +1,8 @@
-# Warren VPN — Beta Release Procurement Guide
+# Warren VPN: Beta Release Procurement Guide
 
 Consolidated procurement guide for signing certificates and external accounts required by `.github/workflows/release.yml` to produce signed installers on all 5 target platforms (Linux, macOS, Windows, iOS, Android).
 
-Without these credentials the CI still builds unsigned artifacts (skip-if-no-secrets logic) — useful for dry-runs — but the resulting binaries are not distributable to end users.
+Without these credentials the CI still builds unsigned artifacts (skip-if-no-secrets logic), useful for dry-runs, but the resulting binaries are not distributable to end users.
 
 ## Estimated annual cost
 
@@ -15,11 +15,11 @@ Without these credentials the CI still builds unsigned artifacts (skip-if-no-sec
 
 Cost considered for the first year, baseline beta launch: **~400-500 EUR**.
 
-## Linux — no signing required
+## Linux: no signing required
 
 Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksums published in GitHub Release). The CI auto-builds Linux artifacts without any procurement.
 
-## macOS — Apple Developer Program
+## macOS: Apple Developer Program
 
 1. Subscribe to https://developer.apple.com/programs/ as an organization (warrenBrowse SRL or holcommOn SAS). Cost: 99 USD/year.
 2. Once enrolled, generate two signing keys and certificates following `docs/macos-signing.md`:
@@ -41,12 +41,12 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
    ```
 
 5. Required secrets:
-    - `WARREN_CSC_LINK_MACOS` — base64 of `.p12` Developer ID Application
-    - `WARREN_CSC_KEY_PASSWORD_MACOS` — passphrase of the `.p12`
-    - `WARREN_NOTARIZE_KEYCHAIN` — keychain path (default `~/Library/Keychains/login.keychain-db`)
-    - `WARREN_NOTARIZE_KEYCHAIN_PROFILE` — notarytool profile name (`warren-notary` above)
+    - `WARREN_CSC_LINK_MACOS`: base64 of `.p12` Developer ID Application
+    - `WARREN_CSC_KEY_PASSWORD_MACOS`: passphrase of the `.p12`
+    - `WARREN_NOTARIZE_KEYCHAIN`: keychain path (default `~/Library/Keychains/login.keychain-db`)
+    - `WARREN_NOTARIZE_KEYCHAIN_PROFILE`: notarytool profile name (`warren-notary` above)
 
-## Windows — Authenticode OV (or EV) certificate
+## Windows: Authenticode OV (or EV) certificate
 
 1. Purchase an OV (Organization Validation) code-signing certificate from a recognized CA. Recommended vendors:
     - SSL.com (~280 EUR/year, fast OV validation)
@@ -61,12 +61,12 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
    ```
 
 5. Required secrets:
-    - `WARREN_CSC_LINK_WIN` — base64 of the `.pfx`
-    - `WARREN_CSC_KEY_PASSWORD_WIN` — passphrase
+    - `WARREN_CSC_LINK_WIN`: base64 of the `.pfx`
+    - `WARREN_CSC_KEY_PASSWORD_WIN`: passphrase
 
 > Note: EV certificates (~600-1000 EUR/year) provide instant SmartScreen reputation but require a hardware token (USB key) which is incompatible with cloud CI. Skip unless distributing outside GitHub Releases.
 
-## iOS — TestFlight + App Store Connect
+## iOS: TestFlight + App Store Connect
 
 1. Apple Developer Program enrollment (same as macOS, can share the 99 USD/year fee).
 2. In Xcode, create an "iOS Distribution" certificate and matching provisioning profile for `com.warrenbrowse.vpn.ios`:
@@ -88,15 +88,15 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
    ```
 
 7. Required secrets:
-    - `IOS_DISTRIBUTION_CERT_BASE64` — base64 of `.p12`
-    - `IOS_DISTRIBUTION_PASSWORD` — passphrase
-    - `IOS_PROVISIONING_PROFILE_BASE64` — base64 of `.mobileprovision`
-    - `APPSTORECONNECT_API_KEY_BASE64` — base64 of `.p8`
-    - `APPSTORECONNECT_API_KEY_ID` — key id (e.g. `ABCD123XYZ`)
-    - `APPSTORECONNECT_API_ISSUER_ID` — issuer id (UUID shown next to the key)
-    - `APPLE_DEVELOPER_TEAM_ID` — 10-char team id
+    - `IOS_DISTRIBUTION_CERT_BASE64`: base64 of `.p12`
+    - `IOS_DISTRIBUTION_PASSWORD`: passphrase
+    - `IOS_PROVISIONING_PROFILE_BASE64`: base64 of `.mobileprovision`
+    - `APPSTORECONNECT_API_KEY_BASE64`: base64 of `.p8`
+    - `APPSTORECONNECT_API_KEY_ID`: key id (e.g. `ABCD123XYZ`)
+    - `APPSTORECONNECT_API_ISSUER_ID`: issuer id (UUID shown next to the key)
+    - `APPLE_DEVELOPER_TEAM_ID`: 10-char team id
 
-## Android — Upload keystore + Play Console
+## Android: Upload keystore + Play Console
 
 1. Subscribe to https://play.google.com/console (25 USD one-time, individual or organization).
 2. Generate an upload keystore (RSA 4096, 25-year validity):
@@ -129,17 +129,17 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
    ```
 
 7. Required secrets:
-    - `ANDROID_KEYSTORE_BASE64` — base64 of `.keystore`
-    - `ANDROID_KEYSTORE_PASSWORD` — keystore passphrase
-    - `ANDROID_KEY_ALIAS` — `warren-upload`
-    - `ANDROID_KEY_PASSWORD` — key passphrase (often same as keystore)
-    - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64` — base64 of service account JSON
+    - `ANDROID_KEYSTORE_BASE64`: base64 of `.keystore`
+    - `ANDROID_KEYSTORE_PASSWORD`: keystore passphrase
+    - `ANDROID_KEY_ALIAS`: `warren-upload`
+    - `ANDROID_KEY_PASSWORD`: key passphrase (often same as keystore)
+    - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64`: base64 of service account JSON
 
 ## Warren-core read-only token
 
 Already required for path-dep checkout in CI:
 
-- `WARREN_CORE_RO_TOKEN` — GitHub PAT with `repo:read` scope on `WarrenBrowse/warren-core`. Generate at https://github.com/settings/tokens.
+- `WARREN_CORE_RO_TOKEN`: GitHub PAT with `repo:read` scope on `WarrenBrowse/warren-core`. Generate at https://github.com/settings/tokens.
 
 ## Verification after procurement
 

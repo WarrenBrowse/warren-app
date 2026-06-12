@@ -1,4 +1,4 @@
-# Warren VPN — Release Runbook
+# Warren VPN: Release Runbook
 
 How to tag, push, and publish a Warren VPN release.
 
