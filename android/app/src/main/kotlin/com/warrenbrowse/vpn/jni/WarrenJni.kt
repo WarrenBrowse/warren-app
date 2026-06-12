@@ -1,5 +1,7 @@
 package com.warrenbrowse.vpn.jni
 
+import android.net.VpnService
+
 // Kotlin facade over the `warren-jni` Rust library.
 //
 // All external functions resolve to symbols of the form
@@ -80,6 +82,11 @@ object WarrenJni {
     /**
      * Start a Warren Quinn tunnel on the supplied TUN file descriptor.
      *
+     * @param vpnService the owning `VpnService`. Its `protect(int)` is
+     *  called on the tunnel's own UDP socket so that socket bypasses the
+     *  VPN routes (binds to the underlying physical network). Without it
+     *  the handshake packets loop back into the TUN and never reach the
+     *  exit.
      * @param tunFd raw fd duplicated from `VpnService.Builder.establish()`
      * @param mnemonic BIP39 mnemonic used to derive the wallet `SigningKey`
      *  that authenticates the QUIC handshake. Passed per-call so the secret
@@ -91,7 +98,12 @@ object WarrenJni {
      *  also thrown). Long-running connect + handshake happens
      *  asynchronously; poll [getTunnelStatus] for transitions.
      */
-    external fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int
+    external fun connectTunnel(
+        vpnService: VpnService,
+        tunFd: Int,
+        mnemonic: String,
+        configJson: String,
+    ): Int
 
     /** Stop the active tunnel. No-op if none is running. */
     external fun disconnectTunnel()

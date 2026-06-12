@@ -97,7 +97,12 @@ class WarrenQuinnAdapter(
         }
         activeFd = fd
 
-        val rc = WarrenJni.connectTunnel(fd.detachFd(), mnemonic, Json.encodeToString(config))
+        val rc = WarrenJni.connectTunnel(
+            vpnService,
+            fd.detachFd(),
+            mnemonic,
+            Json.encodeToString(config),
+        )
         if (rc != 0) {
             onSessionDown(config, "connectTunnel returned $rc")
             return@withLock
@@ -245,23 +250,35 @@ class WarrenQuinnAdapter(
         activeFd?.close()
         activeFd = null
         _natPmpStatus.value = NATPMP_IDLE
-        if (config.lockdownMode && !userInitiatedDisconnect) {
-            // The blackhole stays up regardless, so traffic never leaks. The
-            // only question is whether to keep retrying. Once the tunnel is
-            // flapping (too many drops in a short window), stop scheduling
-            // reconnects and park in a flap state so the user can act; the
-            // network callback is still registered, so a genuine handover
-            // (or a user reconnect) resumes the normal flow.
-            if (flapDetector.recordDrop(SystemClock.elapsedRealtime())) {
+        if (userInitiatedDisconnect) {
+            unregisterNetworkCallback()
+            _state.value = WarrenTunnelState.Failed(reason)
+            return
+        }
+        // An unexpected drop always fails closed FIRST: we put up the
+        // blackhole interface and retry, regardless of the kill-switch
+        // setting, so traffic never leaks to the physical network while the
+        // tunnel recovers. This is the Mullvad model: an active tunnel that
+        // drops blocks, it does not leak. The kill-switch setting only
+        // decides the resting state once recovery has clearly failed.
+        if (flapDetector.recordDrop(SystemClock.elapsedRealtime())) {
+            if (config.lockdownMode) {
+                // Kill switch on: stay blocked (parked) until the user acts.
+                // The network callback stays registered so a genuine handover
+                // or a user reconnect resumes the normal flow.
                 Logger.w("WarrenQuinnAdapter: tunnel flapping, parking ($reason)")
                 enterBlockingMode(config, reason, flapping = true)
             } else {
-                enterBlockingMode(config, reason)
-                scheduleLockdownReconnect(config)
+                // Kill switch off: recovery has failed, release traffic so the
+                // user is not stranded offline.
+                Logger.w("WarrenQuinnAdapter: tunnel flapping, releasing ($reason)")
+                exitBlockingMode()
+                unregisterNetworkCallback()
+                _state.value = WarrenTunnelState.Failed(reason)
             }
         } else {
-            unregisterNetworkCallback()
-            _state.value = WarrenTunnelState.Failed(reason)
+            enterBlockingMode(config, reason)
+            scheduleDropReconnect(config)
         }
     }
 
@@ -295,13 +312,13 @@ class WarrenQuinnAdapter(
     }
 
     /**
-     * After a lockdown drop, retry the real tunnel once the grace period
+     * After an unexpected drop, retry the real tunnel once the grace period
      * elapses. The blackhole interface stays up until [connect] confirms a
      * new tunnel (it calls [exitBlockingMode] on success), so there is no
      * leak window between attempts. Repeated failures re-enter blocking via
      * [onSessionDown], forming a bounded retry loop.
      */
-    private fun scheduleLockdownReconnect(config: WarrenTunnelConfig) {
+    private fun scheduleDropReconnect(config: WarrenTunnelConfig) {
         val mnemonic = activeMnemonic ?: return
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
@@ -386,6 +403,21 @@ class WarrenQuinnAdapter(
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
             _state.value = WarrenTunnelState.Reconnecting
+            // Establish the blackhole interface BEFORE tearing the tunnel
+            // down so traffic stays captured across the whole reconnect gap.
+            // VpnService.Builder.establish() atomically replaces the live
+            // tunnel interface, so there is never a window without a TUN (the
+            // previous code closed the interface then slept, exposing traffic
+            // to the physical network for the grace period). The blackhole is
+            // torn down by connect() -> exitBlockingMode() on success.
+            if (blockingFd == null) {
+                val fd = applyPlan(planTunInterface(config, blocking = true))
+                if (fd != null) {
+                    blockingFd = fd
+                } else {
+                    Logger.w("scheduleHandoverReconnect: blackhole establish failed; brief leak possible")
+                }
+            }
             // Stop polling BEFORE the intentional teardown so the status
             // loop does not observe the DISCONNECTED transition and trip
             // the kill switch (this is an expected handover, not a drop).

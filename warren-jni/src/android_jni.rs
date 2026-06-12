@@ -36,7 +36,7 @@ use jnix::{
     FromJava, JnixEnv,
     jni::{
         JNIEnv,
-        objects::{JClass, JObject, JString},
+        objects::{JClass, JObject, JString, JValue},
         sys::{jbyteArray, jint, jstring},
     },
 };
@@ -356,6 +356,7 @@ fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
+    vpn_service: JObject<'local>,
     tun_fd: jint,
     mnemonic: JString<'local>,
     config_json: JString<'local>,
@@ -426,6 +427,19 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         // mnemonic_zeroing is dropped (and zeroized) here.
         drop(mnemonic_zeroing);
 
+        // Register the VpnService socket protector before the session can
+        // bind its Quinn socket. Without this the tunnel's own UDP socket is
+        // routed into the TUN it creates (a loop) and the handshake never
+        // leaves the device. The protector attaches the calling tokio thread
+        // to the JVM and invokes `VpnService.protect(int)`.
+        match register_socket_protector(&jnix_env, vpn_service) {
+            Ok(()) => {}
+            Err(e) => {
+                let _ = jnix_env.throw(format!("failed to install socket protector: {e}"));
+                return -1;
+            }
+        }
+
         let (cancel_tx, cancel_rx) = oneshot::channel();
         // Reset status to Connecting before spawning so the Kotlin side can
         // poll it deterministically right after this JNI returns.
@@ -447,10 +461,53 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     }
     #[cfg(not(feature = "tunnel"))]
     {
-        let _ = (tun_fd, mnemonic, config_str);
+        let _ = (vpn_service, tun_fd, mnemonic, config_str);
         let _ = jnix_env.throw("warren-jni built without the `tunnel` feature");
         -1
     }
+}
+
+/// Installs the process-wide [`warren_tunnel::socket_protect`] protector
+/// backed by `VpnService.protect`. The protector captures the JVM handle
+/// and a global ref to the service so the tunnel's Quinn socket can be
+/// protected from any tokio worker thread: it attaches that thread to the
+/// JVM and calls `VpnService.protect(int)` on the fd, returning the
+/// boolean result. Re-registered per connect so it tracks the current
+/// service instance.
+#[cfg(feature = "tunnel")]
+fn register_socket_protector(
+    env: &JnixEnv<'_>,
+    vpn_service: JObject<'_>,
+) -> Result<(), jnix::jni::errors::Error> {
+    use std::os::fd::RawFd;
+    use std::sync::Arc;
+
+    let vm = env.get_java_vm()?;
+    let service_ref = env.new_global_ref(vpn_service)?;
+    let protector: warren_tunnel::socket_protect::SocketProtector =
+        Arc::new(move |fd: RawFd| -> bool {
+            let guard = match vm.attach_current_thread() {
+                Ok(g) => g,
+                Err(e) => {
+                    log::error!("socket protect: attach_current_thread failed: {e}");
+                    return false;
+                }
+            };
+            match guard.call_method(
+                service_ref.as_obj(),
+                "protect",
+                "(I)Z",
+                &[JValue::Int(fd as jint)],
+            ) {
+                Ok(v) => v.z().unwrap_or(false),
+                Err(e) => {
+                    log::error!("VpnService.protect call failed: {e}");
+                    false
+                }
+            }
+        });
+    warren_tunnel::socket_protect::set_protector(protector);
+    Ok(())
 }
 
 /// Stop the active tunnel. No-op if none is running.
