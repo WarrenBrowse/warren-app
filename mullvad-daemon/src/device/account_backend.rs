@@ -169,16 +169,67 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         let client = self.client.clone();
         let pubkey_ss58 = client.pubkey_ss58();
         Box::pin(async move {
+            // App-initiated purchase (doc 35): the GUI polls this same
+            // entry point with the 32-hex wpid it generated before
+            // opening the checkout site. A wpid can never collide with
+            // a voucher (16 Crockford-32 chars after normalization),
+            // so the shape fully determines the path: pull the queued
+            // secret from the API first, then redeem it as usual.
+            let voucher = match as_wpid(&voucher) {
+                Some(wpid) => match client
+                    .pull_pending_voucher(&wpid)
+                    .await
+                    .map_err(map_client_error)?
+                {
+                    Some(secret) => secret,
+                    // Webhook not landed yet (or id expired). Surface
+                    // the legacy INVALID_VOUCHER code so the GUI poll
+                    // treats it as "not ready, try again".
+                    None => {
+                        return Err(rest::Error::ApiError(
+                            rest::StatusCode::NOT_FOUND,
+                            mullvad_api::INVALID_VOUCHER.to_owned(),
+                        ));
+                    }
+                },
+                None => voucher,
+            };
+
             let req = warren_api_client::RegisterAccountRequest {
                 pubkey_ss58: warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
                     .map_err(|_| rest::Error::Aborted)?,
                 voucher_secret: voucher,
                 referral_code: None,
             };
-            let resp = client
-                .register_with_voucher(&req)
-                .await
-                .map_err(map_voucher_register_error)?;
+            // The pull above consumed the single-use mapping: a
+            // transient register failure here would burn the paid
+            // voucher. Retry transport-level failures a few times
+            // before giving up (server-side 4xx are final).
+            let mut resp = None;
+            let mut last_err = None;
+            for attempt in 0u32..3 {
+                if attempt > 0 {
+                    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                }
+                match client.register_with_voucher(&req).await {
+                    Ok(r) => {
+                        resp = Some(r);
+                        break;
+                    }
+                    Err(e @ warren_api_client::ClientError::ServerStatus { .. }) => {
+                        return Err(map_voucher_register_error(e));
+                    }
+                    Err(e) => last_err = Some(e),
+                }
+            }
+            let resp = match resp {
+                Some(r) => r,
+                None => {
+                    return Err(map_voucher_register_error(
+                        last_err.expect("loop ran at least once without success"),
+                    ));
+                }
+            };
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
             let now_secs = u64::try_from(Utc::now().timestamp()).unwrap_or(0);
             let time_added = resp.expires_at.saturating_sub(now_secs);
@@ -187,6 +238,19 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 time_added,
             })
         })
+    }
+}
+
+/// Detect the warren purchase id shape: exactly 32 ASCII hex chars
+/// (after trimming), normalized to lowercase. Mirrors
+/// `warren_api::providers::normalize_wpid`. Anything else is treated
+/// as a regular voucher secret.
+fn as_wpid(input: &str) -> Option<String> {
+    let trimmed = input.trim();
+    if trimmed.len() == 32 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        Some(trimmed.to_ascii_lowercase())
+    } else {
+        None
     }
 }
 
@@ -425,6 +489,109 @@ mod tests {
                 assert_eq!(code.as_u16(), 404);
             }
             other => panic!("expected ApiError(404, _), got {other:?}"),
+        }
+    }
+
+    // ===================================================================
+    // App-initiated purchase path (doc 35): submit_voucher with a wpid
+    // pulls the queued secret from GET /v1/checkout/{wpid}/voucher
+    // before redeeming it through POST /v1/register.
+    // ===================================================================
+
+    #[test]
+    fn as_wpid_accepts_only_32_hex_chars() {
+        assert_eq!(
+            super::as_wpid("0123456789ABCDEF0123456789abcdef").as_deref(),
+            Some("0123456789abcdef0123456789abcdef"),
+            "32 hex chars (any case, trimmed) are a wpid, lowercased"
+        );
+        assert_eq!(
+            super::as_wpid("  0123456789abcdef0123456789abcdef\n").as_deref(),
+            Some("0123456789abcdef0123456789abcdef")
+        );
+        // Voucher display and raw forms must NOT be mistaken for wpids.
+        assert!(super::as_wpid("ABCD-EFGH-JKMN-PQRS").is_none());
+        assert!(super::as_wpid("ABCDEFGHJKMNPQRS").is_none());
+        assert!(super::as_wpid("").is_none());
+        assert!(super::as_wpid("0123456789abcdef0123456789abcdeg").is_none());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_submit_voucher_with_wpid_pulls_and_redeems() {
+        let (api_url, state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[65u8; 32]);
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+
+        // Simulate the webhook outcome: a minted voucher whose secret
+        // is queued under the app-chosen wpid.
+        let (secret, hash) = warren_api::generate_voucher_secret();
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        assert!(
+            state
+                .vouchers
+                .create(hash, 30 * 86_400, warren_api::PaymentMethod::Card, now)
+        );
+        let wpid = "00112233445566778899aabbccddeeff";
+        state.pending_vouchers.put(wpid, &secret, now + 600);
+
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+        let submission = backend
+            .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
+            .await
+            .expect("wpid pull + redeem must succeed");
+        assert!(
+            submission.time_added >= 30 * 86_400 - 60,
+            "credited time must reflect the voucher duration, got {}",
+            submission.time_added
+        );
+        assert!(
+            state.subscriptions.get_expiry(&pubkey_ss58).is_some(),
+            "subscription must exist after the wpid flow"
+        );
+
+        // The mapping is single-use: a second poll on the same wpid
+        // reports INVALID_VOUCHER (the GUI stops polling on success,
+        // so this only happens on a replay).
+        let err = backend
+            .submit_voucher(pubkey_ss58, wpid.to_owned())
+            .await
+            .expect_err("second pull must fail");
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 404);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_submit_voucher_with_unready_wpid_maps_invalid_voucher() {
+        // Polling case: the webhook has not landed yet, so the pull
+        // 404s. The GUI maps INVALID_VOUCHER to "keep polling".
+        let (api_url, _state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[66u8; 32]);
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+
+        let err = backend
+            .submit_voucher(
+                pubkey_ss58,
+                "ffeeddccbbaa99887766554433221100".to_owned(),
+            )
+            .await
+            .expect_err("unready wpid must fail");
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 404);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
         }
     }
 

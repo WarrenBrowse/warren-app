@@ -11,7 +11,6 @@ import {
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
@@ -183,7 +182,7 @@ function Content() {
 function ExternalPaymentButton() {
   const { setShowLockdownModeAlert, startPolling } = useExpiredAccountContext();
   const { recoveryAction } = useRecoveryAction();
-  const { openUrl } = useAppContext();
+  const { buyCredit } = useAppContext();
   const isNewAccount = useIsNewAccount();
 
   const buttonText = isNewAccount
@@ -194,8 +193,12 @@ function ExternalPaymentButton() {
     if (recoveryAction === RecoveryAction.disableLockdownMode) {
       setShowLockdownModeAlert(true);
     } else {
-      await openUrl(urls.purchase);
-      // G-5: Start auto-polling after the user opens the payment page.
+      // Opens the checkout bound to a fresh purchase id and starts the
+      // auto-redeem poll (doc 35): the credit lands without the user
+      // copying any voucher.
+      await buyCredit();
+      // G-5: Also auto-poll the account data as a safety net (covers a
+      // credit applied through any other path).
       startPolling();
     }
   });

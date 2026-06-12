@@ -10,7 +10,7 @@ import {
   ILinuxSplitTunnelingApplication,
   ISplitTunnelingApplication,
 } from '../shared/application-types';
-import { Url } from '../shared/constants';
+import { Url, urls } from '../shared/constants';
 import {
   AccessMethodSetting,
   CustomProxy,
@@ -128,6 +128,11 @@ export default class AppRenderer {
 
   private loginScheduler = new Scheduler();
   private expiryScheduler = new Scheduler();
+
+  // App-initiated purchase poll state (see buyCredit).
+  private purchasePollTimer?: ReturnType<typeof setInterval>;
+  private purchasePollDeadline = 0;
+  private purchasePollInFlight = false;
 
   constructor() {
     log.addOutput(new ConsoleOutput(LogLevel.debug));
@@ -444,6 +449,34 @@ export default class AppRenderer {
   public setWarrenMnemonic = (mnemonic: string) =>
     IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
+
+  // App-initiated purchase flow (warren-core doc 35): generate a random
+  // 128-bit purchase id (wpid), open the checkout site bound to it, and
+  // poll submitVoucher with the wpid. The daemon recognizes the 32-hex
+  // shape, pulls the voucher the payment webhook queued under that id,
+  // and redeems it: the user never copies a code, and neither Stripe
+  // nor the checkout site ever learn the account pubkey. The poll lives
+  // on the AppRenderer (not in a view hook) so it survives navigation
+  // while the user pays in the browser.
+  public buyCredit = async (): Promise<void> => {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const wpid = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+
+    await this.openUrl(`${urls.purchase}?pid=${wpid}`);
+
+    if (this.purchasePollTimer) {
+      clearInterval(this.purchasePollTimer);
+    }
+    // Generous window: the user still has to fill the payment form.
+    // Past the deadline the manual paths (voucher redemption, "I've
+    // completed payment") remain available.
+    this.purchasePollDeadline = Date.now() + 10 * 60 * 1000;
+    this.purchasePollTimer = setInterval(() => {
+      void this.purchasePollOnce(wpid);
+    }, 5_000);
+  };
+
   public updateAccountData = () => IpcRendererEventChannel.account.updateData();
   public connectTunnel = () => IpcRendererEventChannel.tunnel.connect();
   public disconnectTunnel = (source: DisconnectSource) =>
@@ -1207,4 +1240,39 @@ export default class AppRenderer {
 
     return coordinates;
   }
+
+  private purchasePollOnce = async (wpid: string): Promise<void> => {
+    if (this.purchasePollInFlight) {
+      return;
+    }
+    if (Date.now() > this.purchasePollDeadline) {
+      this.stopPurchasePoll();
+      return;
+    }
+    this.purchasePollInFlight = true;
+    try {
+      const response = await this.submitVoucher(wpid);
+      // 'invalid' means the payment webhook has not landed yet and
+      // 'error' is transient (offline, API hiccup): keep polling.
+      // 'success' credits the account (the main process refreshes the
+      // account data, redux flips to time_added and the app navigates
+      // on its own); 'already_used' means the single-use mapping was
+      // already consumed, nothing more to pull.
+      if (response.type === 'success' || response.type === 'already_used') {
+        this.stopPurchasePoll();
+      }
+    } catch (e) {
+      const error = e as Error;
+      log.error(`Purchase poll failed: ${error.message}`);
+    } finally {
+      this.purchasePollInFlight = false;
+    }
+  };
+
+  private stopPurchasePoll = (): void => {
+    if (this.purchasePollTimer) {
+      clearInterval(this.purchasePollTimer);
+      this.purchasePollTimer = undefined;
+    }
+  };
 }

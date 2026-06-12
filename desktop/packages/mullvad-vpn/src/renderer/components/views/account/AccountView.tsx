@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
@@ -27,10 +26,12 @@ const StyledViewContainer = styled(View.Container)`
 export function AccountView() {
   const history = useHistory();
   const isOffline = useSelector((state) => state.connection.isBlocked);
-  const { updateAccountData, openUrl, logout } = useAppContext();
+  const { updateAccountData, logout, buyCredit } = useAppContext();
 
+  // Opens the checkout bound to a fresh purchase id; the credit is
+  // pulled and redeemed automatically by the poll (doc 35).
   const [buyMore] = useExclusiveTask(async () => {
-    await openUrl(urls.purchase);
+    await buyCredit();
   });
 
   // `updateAccountData` rejects when the API returns 404 (= no

@@ -8378,6 +8378,7 @@ name = "warren-config"
 version = "0.3.12"
 dependencies = [
  "thiserror 2.0.18",
+ "tracing",
 ]
 
 [[package]]
