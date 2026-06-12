@@ -134,6 +134,17 @@ impl State {
 
     /// Merge `new_state` set by the OS with a previous `prev_state`, but ignore any service whose
     /// addresses are `ignore_addresses`.
+    ///
+    /// A captured `Some` original is never downgraded by a `None`/absent
+    /// reading: configd makes the per-service DNS keys flicker while it
+    /// recomputes the network state (utun removal, primary-service flap), and
+    /// `reset()` re-merges one last snapshot right in that window. Trusting
+    /// the flicker used to clobber the primary interface's backup, so the
+    /// restore deleted its real DNS and the host was left resolver-less until
+    /// the next DHCP lease/RA rewrote it (minutes on Ethernet, ~30 s on WiFi;
+    /// live incident 2026-06-12). A retained-but-stale entry is the lesser
+    /// evil: `State:` keys are configd-owned and get rewritten by the next
+    /// lease anyway.
     fn merge_states(
         new_state: &HashMap<ServicePath, Option<DnsSettings>>,
         mut prev_state: HashMap<ServicePath, Option<DnsSettings>>,
@@ -149,6 +160,13 @@ impl State {
                     let settings = old_entry.unwrap_or_else(|| Some(settings.to_owned()));
                     modified_state.insert(path.to_owned(), settings);
                 }
+                // A None reading while a Some original is on file: keep the
+                // original (see the function doc; this is the teardown
+                // flicker that broke DNS restore).
+                None if matches!(old_entry, Some(Some(_))) => {
+                    let original = old_entry.expect("matched Some above");
+                    modified_state.insert(path.to_owned(), original);
+                }
                 // Otherwise, save the new settings
                 settings => {
                     let servers = settings
@@ -161,8 +179,17 @@ impl State {
             }
         }
 
-        for path in prev_state.keys() {
-            log::debug!("DNS removed for {path}");
+        // Services whose keys vanished from this snapshot: retain their Some
+        // backups instead of dropping them (same flicker as above). If the
+        // service is truly gone, restoring its key at reset just writes an
+        // orphan entry that configd ignores.
+        for (path, settings) in prev_state {
+            if settings.is_some() {
+                log::debug!("Retaining DNS backup for vanished service {path}");
+                modified_state.insert(path, settings);
+            } else {
+                log::debug!("DNS removed for {path}");
+            }
         }
 
         modified_state
@@ -830,9 +857,11 @@ mod test {
         assert_eq!(merged_state, expect_state);
     }
 
-    /// Services not specified in the new state should be removed from the backed up state
+    /// Services with a `Some` backup that vanish from a snapshot are RETAINED
+    /// (configd key flicker at teardown must not clobber the backup); only
+    /// `None` entries are dropped.
     #[test]
-    fn test_backup_remove_dns_config() {
+    fn test_backup_retains_vanished_services() {
         let prev_state = HashMap::from([
             (
                 "a".to_owned(),
@@ -853,12 +882,49 @@ mod test {
             ("c".to_owned(), None),
         ]);
         let new_state = HashMap::from([("c".to_owned(), None)]);
-        let expected_state = new_state.clone();
+        let mut expected_state = prev_state.clone();
+        expected_state.insert("c".to_owned(), None);
 
         let desired_addresses: BTreeSet<SocketAddr> = ["10.64.0.1:53".parse().unwrap()].into();
 
         let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
 
+        assert_eq!(merged_state, expected_state);
+    }
+
+    /// Regression test for the 2026-06-12 incident: at tunnel teardown,
+    /// configd transiently hides the primary service's DNS key (absent from
+    /// the snapshot) or reads it as `None`. The captured originals must
+    /// survive that snapshot, otherwise `reset()` deletes the primary
+    /// interface's real DNS and the host is left resolver-less until the next
+    /// DHCP lease (minutes on Ethernet).
+    #[test]
+    fn test_backup_survives_teardown_flicker() {
+        let en0_original = Some(DnsSettings::from_server_addresses(
+            &["fd0f:ee:b0::1".to_owned()],
+            "en0".to_owned(),
+            DNS_PORT,
+        ));
+        let en1_original = Some(DnsSettings::from_server_addresses(
+            &["fd0f:ee:b0::1".to_owned()],
+            "en1".to_owned(),
+            DNS_PORT,
+        ));
+        let prev_state = HashMap::from([
+            ("State:/Network/Service/EN0/DNS".to_owned(), en0_original.clone()),
+            ("State:/Network/Service/EN1/DNS".to_owned(), en1_original.clone()),
+        ]);
+        // Mid-teardown snapshot: en0's key is gone entirely, en1's reads None.
+        let new_state = HashMap::from([("State:/Network/Service/EN1/DNS".to_owned(), None)]);
+
+        let desired_addresses: BTreeSet<SocketAddr> = ["10.64.0.1:53".parse().unwrap()].into();
+
+        let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
+
+        let expected_state = HashMap::from([
+            ("State:/Network/Service/EN0/DNS".to_owned(), en0_original),
+            ("State:/Network/Service/EN1/DNS".to_owned(), en1_original),
+        ]);
         assert_eq!(merged_state, expected_state);
     }
 
