@@ -62,6 +62,7 @@ import { getNavigationBase } from './lib/functions/navigation-base';
 import History from './lib/history';
 import { loadTranslations } from './lib/load-translations';
 import IpcOutput from './lib/logging';
+import { shortenWarrenPubKey } from './lib/pubkey';
 import accountActions from './redux/account/actions';
 import { appUpgradeActions } from './redux/app-upgrade/actions';
 import connectionActions from './redux/connection/actions';
@@ -463,7 +464,18 @@ export default class AppRenderer {
     crypto.getRandomValues(bytes);
     const wpid = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 
-    await this.openUrl(`${urls.purchase}?pid=${wpid}`);
+    // Reassurance chip: the checkout landing shows a short, NON-reversible
+    // form of the account address ("paiement pour wb…"). It rides in the
+    // URL FRAGMENT, which the browser never sends to our server, never
+    // logs, and which the site reads only on its Stripe-free landing page
+    // (doc 35). We pass the already-shortened form, never the full key, so
+    // even the client-side site code only ever sees the truncation.
+    const pubkey = this.reduxStore.getState().account.pubkey;
+    const acctFragment = pubkey
+      ? `#acct=${encodeURIComponent(shortenWarrenPubKey(pubkey))}`
+      : '';
+
+    await this.openUrl(`${urls.purchase}?pid=${wpid}${acctFragment}`);
 
     if (this.purchasePollTimer) {
       clearInterval(this.purchasePollTimer);
