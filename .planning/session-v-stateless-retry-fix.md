@@ -1,6 +1,6 @@
-# Session V — Loopback test helpers loop over StatelessRetryIssued
+# Session V, Loopback test helpers loop over StatelessRetryIssued
 
-> Status : **GO ULTIMATE** — full warren-tunnel test suite green post-fix
+> Status : **GO ULTIMATE**, full warren-tunnel test suite green post-fix
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process only, "hors bench" respecté)
 > §0.0 INVIOLABLE git respecté. Production warren-exit-1 + warren-backend-api intacts.
@@ -9,7 +9,7 @@
 
 ## TL;DR
 
-Session N+ added `incoming.retry()` for stateless retry on un-validated remotes (AUDIT-2026-05-21 P1 Phase3.19, prod-side defence against UDP source spoofing). The accept loop in `serve_forever` already swallows the `StatelessRetryIssued` marker and continues; but the in-process **test helpers** `accept_one_handshake_for_test`, `accept_and_capture_one_datagram`, `echo_one_datagram_with` didn't — they returned the marker as an error, leaving loopback test clients (whose first packet always lands on an unvalidated remote address) hitting a spurious `connect timeout` after the retry token round-trip.
+Session N+ added `incoming.retry()` for stateless retry on un-validated remotes (AUDIT-2026-05-21 P1 Phase3.19, prod-side defence against UDP source spoofing). The accept loop in `serve_forever` already swallows the `StatelessRetryIssued` marker and continues; but the in-process **test helpers** `accept_one_handshake_for_test`, `accept_and_capture_one_datagram`, `echo_one_datagram_with` didn't, they returned the marker as an error, leaving loopback test clients (whose first packet always lands on an unvalidated remote address) hitting a spurious `connect timeout` after the retry token round-trip.
 
 Session V routes all three helpers through a new private `handshake_only_retrying` async fn that loops silently over `StatelessRetryIssued` (with the same 30 s outer timeout as before) so they now mirror production behaviour.
 
@@ -31,10 +31,10 @@ Root cause for all three : `incoming.remote_address_validated()` returns `false`
 
 `crates/warren-tunnel/src/exit.rs` :
 
-- New private `async fn handshake_only_retrying(&self) -> Result<(quinn::Connection, WarrenPubkey)>` — wraps `handshake_only` in a retry loop bounded by the same 30 s outer deadline. Returns on first non-retry result (success or other error); silently continues on `StatelessRetryIssued`.
+- New private `async fn handshake_only_retrying(&self) -> Result<(quinn::Connection, WarrenPubkey)>`, wraps `handshake_only` in a retry loop bounded by the same 30 s outer deadline. Returns on first non-retry result (success or other error); silently continues on `StatelessRetryIssued`.
 - `accept_one_handshake_for_test`, `accept_and_capture_one_datagram`, `echo_one_datagram_with` now call `handshake_only_retrying` instead of `handshake_only`.
 
-Production code paths (`serve_forever`, `accept_one`) are unchanged — the retry-loop logic was already in their accept loops.
+Production code paths (`serve_forever`, `accept_one`) are unchanged, the retry-loop logic was already in their accept loops.
 
 ---
 
@@ -64,6 +64,6 @@ Production code paths (`serve_forever`, `accept_one`) are unchanged — the retr
 
 ## Next steps (hors bench)
 
-1. **Pump-side blocking enforcement** : queue real packets during `BlockOutgoing` window (full Tamaraw "block + pad" defense property — currently `bypass: true` lets real packets through alongside padding).
+1. **Pump-side blocking enforcement** : queue real packets during `BlockOutgoing` window (full Tamaraw "block + pad" defense property, currently `bypass: true` lets real packets through alongside padding).
 2. **Multi-hop IP negotiation v1 multi-client** : replace POC `10.66.0.2/24` hardcoded in `run_multi_hop_with_tun`.
 3. **DAITA UI/docs announce** : surface defense status in desktop UI + landing page.

@@ -2839,7 +2839,7 @@ Czy chcesz usunąć zapisany numer konta?</target>
       </trans-unit>
       <trans-unit id="Valid range: %d - %d" xml:space="preserve" approved="yes">
         <source>Valid range: %1$d - %2$d</source>
-        <target state="final">Prawidłowy zakres: %1$d – %2$d</target>
+        <target state="final">Prawidłowy zakres: %1$d-%2$d</target>
         <note/>
       </trans-unit>
       <trans-unit id="Valid ranges: %@" xml:space="preserve" approved="yes">

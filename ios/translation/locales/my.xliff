@@ -82,7 +82,7 @@
       </trans-unit>
       <trans-unit id="**Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans.**" xml:space="preserve" approved="yes">
         <source>**Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans.**</source>
-        <target state="final">**သတိပြုရန်—ယင်းသည် ကွန်ရက်အသုံးပြုမှုကို တိုးမြှင့်စေပြီး၊ အမြန်နှုန်း၊ နောက်ကျမှုနှင့် မိုဘိုင်းဘက်ထရီအသုံးစွဲမှုတို့အပေါ် ဆိုးကျိုးများ ဖြစ်စေနိုင်ပါသည်။ ကန့်သတ်မှုရှိသော မိုဘိုင်းပလန်များတွင် သတိထား၍ အသုံးပြုပါ။**</target>
+        <target state="final">**သတိပြုရန်, ယင်းသည် ကွန်ရက်အသုံးပြုမှုကို တိုးမြှင့်စေပြီး၊ အမြန်နှုန်း၊ နောက်ကျမှုနှင့် မိုဘိုင်းဘက်ထရီအသုံးစွဲမှုတို့အပေါ် ဆိုးကျိုးများ ဖြစ်စေနိုင်ပါသည်။ ကန့်သတ်မှုရှိသော မိုဘိုင်းပလန်များတွင် သတိထား၍ အသုံးပြုပါ။**</target>
         <note/>
       </trans-unit>
       <trans-unit id="**Tap here** to see what’s new" xml:space="preserve" approved="yes">

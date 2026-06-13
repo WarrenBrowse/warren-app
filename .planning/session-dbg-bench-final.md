@@ -1,6 +1,6 @@
-# Session DBG — Root cause + full bench (IP nego v1 + DAITA)
+# Session DBG, Root cause + full bench (IP nego v1 + DAITA)
 
-> Status : **GO ULTIMATE** — false alarm cleared, full throughput bench delivered, AE.3 limitation surfaced
+> Status : **GO ULTIMATE**, false alarm cleared, full throughput bench delivered, AE.3 limitation surfaced
 > Date : 2026-05-22
 > Cost réel : ~0.03 EUR (3 ccx13 × ~1h)
 
@@ -10,8 +10,8 @@
 
 | # | Finding | Severity |
 |---|---|---|
-| 1 | **"Exit silent-fail post-restart" was a FALSE ALARM** — `warren-bench-multihop` is documented (in its own source code header) to plateau at `frame_rx=0` when the exit runs `--use-tun` instead of `serve_multihop_echo`. Not a bug. | False alarm, no fix needed |
-| 2 | **AE.5.X TUN reassign FUNCTIONAL** on real Hetzner cross-DC — `warren-multihop-tun-client` reassigns from `10.66.0.99/16` to `10.66.0.2/24` on IpAssign reception. Cross-tunnel ping 4.6 ms RTT. | ✅ Validated |
+| 1 | **"Exit silent-fail post-restart" was a FALSE ALARM**, `warren-bench-multihop` is documented (in its own source code header) to plateau at `frame_rx=0` when the exit runs `--use-tun` instead of `serve_multihop_echo`. Not a bug. | False alarm, no fix needed |
+| 2 | **AE.5.X TUN reassign FUNCTIONAL** on real Hetzner cross-DC, `warren-multihop-tun-client` reassigns from `10.66.0.99/16` to `10.66.0.2/24` on IpAssign reception. Cross-tunnel ping 4.6 ms RTT. | ✅ Validated |
 | 3 | **AE.3 v1 limitation surfaces in DAITA-on path** : the 30 s reassign_task timeout fires before the first IpAssign arrives when the supervisor reconnects mid-handshake. Once reassign has timed out, subsequent reconnects don't re-arm it. Same limitation I documented in AE memory, just observable in practice. | Known v1 limit |
 
 ## Bench results (post-AE wave)
@@ -61,7 +61,7 @@ The 14.6 % DAITA-on overhead is **under the 15 % target** stated by past plannin
 9. First ping `10.66.0.1` failed (TUN not yet reassigned). Waited a couple seconds.
 10. `journalctl -u warren-exit` on exit : `ip-nego: IpAssign emitted on reverse direction assigned=10.66.0.2 gateway=10.66.0.1 prefix_len=24`.
 11. Client log : `TUN reassigned to exit-allocated address 10.66.0.2/24 (gateway 10.66.0.1)`. `ip addr show warren0` confirms.
-12. Ping `10.66.0.1` succeeds — `rtt 4.6 ms` cross-DC.
+12. Ping `10.66.0.1` succeeds, `rtt 4.6 ms` cross-DC.
 
 ### nftables gap
 
@@ -98,7 +98,7 @@ For DAITA-on prod, two fixes are clean :
 
 **(b) Exit-side conn-pubkey memory** : exit allocator keyed on client Ed25519 pubkey instead of Quinn `stable_id`, so reconnects from the same client get the same IP. Client uses the FIRST IpAssign forever.
 
-Option (a) is simpler — purely client-side. Option (b) is cleaner — symmetric to "user identity stable across reconnects".
+Option (a) is simpler, purely client-side. Option (b) is cleaner, symmetric to "user identity stable across reconnects".
 
 ---
 
@@ -118,9 +118,9 @@ Unchanged from AE.5.X : `5f0bdec`. The DBG session produced **no warren-core cod
 
 ## Next steps (recommended priority)
 
-1. **AF production deploy** — pin `5f0bdec` on warren-exit-1. DAITA UI toggle is already wired (per upstream Mullvad), so users can enable DAITA at any time post-deploy. Default is DAITA off, perf-first.
-2. **AE.3 v1.1** — reassign_task multi-attempt OR exit-side pubkey-keyed allocator (option a or b above). 1 session autonomous.
-3. **nftables update on AF deploy** — when adding `--multihop-subnet`, also update the input chain to allow TCP forwarding to in-tunnel services if Warren ships any (currently none — only DNS:53 on warren0 + the QUIC datagram path). Confirm with poka.
+1. **AF production deploy**, pin `5f0bdec` on warren-exit-1. DAITA UI toggle is already wired (per upstream Mullvad), so users can enable DAITA at any time post-deploy. Default is DAITA off, perf-first.
+2. **AE.3 v1.1**, reassign_task multi-attempt OR exit-side pubkey-keyed allocator (option a or b above). 1 session autonomous.
+3. **nftables update on AF deploy**, when adding `--multihop-subnet`, also update the input chain to allow TCP forwarding to in-tunnel services if Warren ships any (currently none, only DNS:53 on warren0 + the QUIC datagram path). Confirm with poka.
 
 ---
 

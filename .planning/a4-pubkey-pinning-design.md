@@ -1,4 +1,4 @@
-# A.4 — Pinning pubkey exit (TOFU) — design doc
+# A.4, Pinning pubkey exit (TOFU), design doc
 
 > Session A.4 design blueprint, written 2026-05-20.
 > Author: autonomous agent under poka direction.
@@ -32,8 +32,8 @@ This document is the cross-repo blueprint.
 ### Today (/v1, 2026-05-20)
 
 `WarrenRelay` (`warren-core::warren-relay-selector::relay.rs`) carries:
-- `endpoint_id: WarrenPubkey` — **= the Ed25519 pubkey itself**
-- `endpoint_addr: WarrenExitAddr` — UDP candidates
+- `endpoint_id: WarrenPubkey`, **= the Ed25519 pubkey itself**
+- `endpoint_addr: WarrenExitAddr`, UDP candidates
 - `location: Location { country_code, city }`
 - `weight: u64`
 - `active: bool`
@@ -60,29 +60,29 @@ Available candidates:
 Only a dedicated stable `exit_id` field gives both properties at once.
 Pinning keyed by the pubkey itself is **tautological** (a `BTreeMap`
 keyed on pubkey hex can only return entries whose pubkey hex matches
-the lookup key — mismatch detection is impossible by construction).
+the lookup key, mismatch detection is impossible by construction).
 
 ### Recommended change (warren-core + warren-backend-api)
 
 Add an explicit `exit_id: [u8; 16]` field to:
 
-1. **warren-protocol** — extend the wire schema for `exit-info.json`
+1. **warren-protocol**, extend the wire schema for `exit-info.json`
    to include `exit_id` (signed by the relay-list authority alongside
    the pubkey and addresses). 16 random bytes generated once by the
    operator at exit deployment, stored in the exit's local config,
    persisted through pubkey rotations.
-2. **warren-relay-selector** — accept `exit_id` in `WarrenRelay::new`
+2. **warren-relay-selector**, accept `exit_id` in `WarrenRelay::new`
    + expose it via `WarrenRelay::exit_id()`. Make it the new selection
    identity (replace `endpoint_id` as the "stable" notion).
-3. **warren-multihop** — already has `ExitId`; align name + size.
-4. **warren-backend-api** — assign + serve `exit_id` per relay in the
+3. **warren-multihop**, already has `ExitId`; align name + size.
+4. **warren-backend-api**, assign + serve `exit_id` per relay in the
    signed relay-list response. (Operator infra, out of agent scope per
    memory rule "JAMAIS toucher warren-backend-api".)
-5. **mullvad-daemon (warren-app)** — read `exit_id` from the selected
+5. **mullvad-daemon (warren-app)**, read `exit_id` from the selected
    relay and use it as the pin lookup key (see §3 below).
 
 The change is /v1 wire-extending. poka's directive on A.4 was
-"hors considération breaking change" — so an explicit /v2 bump is not
+"hors considération breaking change", so an explicit /v2 bump is not
 required if backward-compat is handled via `#[serde(default)]` on
 client decoders (older clients ignore the field, newer clients enforce
 the pin when present).
@@ -173,7 +173,7 @@ One new notification event:
 
 ### 2.4 UI
 
-- `WarrenPubKeyWarning.tsx` — modal triggered on
+- `WarrenPubKeyWarning.tsx`, modal triggered on
   `WarrenPubkeyMismatchDetected` event. Three CTAs:
   1. **Trust new key** → invoke `TrustNewExitKey` RPC, reconnect.
   2. **Reject (disconnect)** → close modal, daemon stays disconnected.
@@ -209,19 +209,19 @@ correlation, which is already public via the signed relay-list.
 
 ## 3. What ships in the A.4 scaffold (this session)
 
-**Mullvad-types settings storage** — `WarrenPinnedExitPubkeys` +
+**Mullvad-types settings storage**, `WarrenPinnedExitPubkeys` +
   `WarrenPinnedExitPubkey` + `Settings.warren_pinned_exit_pubkeys`
   field + default initializer. Settings round-trip serde + the
   field never gRPC-syncs back (daemon-internal). ✅
 
-**Daemon error variant** — `tunnel::Error::WarrenPubkeyPinMismatch`
+**Daemon error variant**, `tunnel::Error::WarrenPubkeyPinMismatch`
   with `exit_id_hex` / `pinned` / `observed` payload. Plumbing in
   place for the verify hook even though that hook is not wired in
   this session (would be tautological without `exit_id`). ✅
 
-**Design doc** — this file. ✅
+**Design doc**, this file. ✅
 
-**Tests** — serde round-trip + default value for the new settings
+**Tests**, serde round-trip + default value for the new settings
   type. Not the 6/6 brief criteria (those test mismatch detection,
   which is unreachable until exit_id lands). ✅ partial.
 

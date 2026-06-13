@@ -1,6 +1,6 @@
-# Session AE.5 — Hetzner cross-DC bench (IP nego v1 production validation)
+# Session AE.5, Hetzner cross-DC bench (IP nego v1 production validation)
 
-> Status : **GO PARTIEL** — wire format validated end-to-end, critical deadlock bug FOUND + FIXED, throughput characterization deferred.
+> Status : **GO PARTIEL**, wire format validated end-to-end, critical deadlock bug FOUND + FIXED, throughput characterization deferred.
 > Date : 2026-05-22
 > Cost réel : ~0.03 EUR (3 ccx13 × ~1h)
 
@@ -10,7 +10,7 @@
 
 The bench delivered **two critical findings** :
 
-1. **CRITICAL : production deadlock bug in AE.2 `tracing::info!` macro** — fixed in commit `fb5ddf2` and validated in the live binary on Hetzner. Without this fix the exit binary hangs immediately after `dns_forwarder: started` and never reaches `serve_multihop_with_tun_and_daita`. **This bug was invisible in all unit + integration tests because `parking_lot::Mutex::lock()` doesn't deadlock when the macro is run in single-threaded test contexts that drop the first guard fast enough; only the production binary on Linux with debug-info stripping exhibits the consistent hang.**
+1. **CRITICAL : production deadlock bug in AE.2 `tracing::info!` macro**, fixed in commit `fb5ddf2` and validated in the live binary on Hetzner. Without this fix the exit binary hangs immediately after `dns_forwarder: started` and never reaches `serve_multihop_with_tun_and_daita`. **This bug was invisible in all unit + integration tests because `parking_lot::Mutex::lock()` doesn't deadlock when the macro is run in single-threaded test contexts that drop the first guard fast enough; only the production binary on Linux with debug-info stripping exhibits the consistent hang.**
 2. **IP nego v1 wire format validated end-to-end** : exit logs show `ip-nego: IpAssign emitted on reverse direction assigned=10.66.0.2 gateway=10.66.0.1 prefix_len=24`, and client `warren-bench-multihop` reports `frame_rx_datagram=1` confirming the reverse control frame arrived intact through the Hetzner cross-DC pipeline (FSN1 → NBG1 → NBG1).
 
 Full throughput characterization (iperf3 cross-tunnel under DAITA on/off, comparison to Session R 5.6 % overhead) is **deferred** because the throughput-test path uses `warren-multihop-tun-client` (a separate POC binary) where AE.3's `IpAssignSlot` + reassign task is **not wired** (only the main `warren-client` binary has the AE.3 plumbing). Without the slot-driven reassign the TUN keeps its hardcoded `10.66.0.99/16` and the client/exit IP mismatch on the inner subnet drops pings before iperf3 can start.
@@ -31,7 +31,7 @@ Cross-built binaries from warren-core pin `c773927` (Session AE.4 tip), then pat
 
 ---
 
-## Critical finding #1 — AE.2 deadlock bug
+## Critical finding #1, AE.2 deadlock bug
 
 ### Symptom
 
@@ -47,7 +47,7 @@ dns_forwarder: started listen=10.66.0.1:53 upstream=9.9.9.9:53
 # <-- hangs here; no further logs, no panic, no exit code, PID alive
 ```
 
-The expected next log line — `multihop IP allocator ready (Session AE.2) subnet=10.66.0.0/24 gateway=10.66.0.1 capacity=253` — never fires. The Quinn endpoint is bound (UDP socket open) but `serve_multihop_with_tun_and_daita` is never called, so the accept loop never runs and no client conn is processed.
+The expected next log line, `multihop IP allocator ready (Session AE.2) subnet=10.66.0.0/24 gateway=10.66.0.1 capacity=253`, never fires. The Quinn endpoint is bound (UDP socket open) but `serve_multihop_with_tun_and_daita` is never called, so the accept loop never runs and no client conn is processed.
 
 ### Root cause
 
@@ -62,7 +62,7 @@ tracing::info!(
 );
 ```
 
-Rust's temporary lifetime rules keep both `MutexGuard` temporaries alive until the **end of the statement** (the closing `)` + `;` of the macro). `parking_lot::Mutex::lock()` is **not reentrant** — the second lock attempt on the same `Arc<Mutex<_>>` from the same thread parks forever.
+Rust's temporary lifetime rules keep both `MutexGuard` temporaries alive until the **end of the statement** (the closing `)` + `;` of the macro). `parking_lot::Mutex::lock()` is **not reentrant**, the second lock attempt on the same `Arc<Mutex<_>>` from the same thread parks forever.
 
 The macro's expression-level evaluation order is left-to-right ; the first guard is acquired and held while the second `.lock()` is evaluated.
 
@@ -93,7 +93,7 @@ tracing::info!(
 );
 ```
 
-Validated immediately by `sudo systemctl restart warren-exit` + journalctl — the expected line :
+Validated immediately by `sudo systemctl restart warren-exit` + journalctl, the expected line :
 
 ```text
 2026-05-22T09:56:06.820211Z  INFO warren_exit: multihop IP allocator ready (Session AE.2) subnet=10.66.0.0/24 gateway=10.66.0.1 capacity=253
@@ -109,7 +109,7 @@ now fires reliably.
 
 ---
 
-## Critical finding #2 — IP nego v1 wire format end-to-end validated
+## Critical finding #2, IP nego v1 wire format end-to-end validated
 
 After the deadlock fix, a fresh `warren-bench-multihop --duration 15` run from the client produced :
 

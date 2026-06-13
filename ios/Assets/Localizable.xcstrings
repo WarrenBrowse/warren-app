@@ -67727,7 +67727,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gültiger Bereich: %1$d–%2$d"
+            "value": "Gültiger Bereich: %1$d-%2$d"
           }
         },
         "en": {
@@ -67745,7 +67745,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kelvolliset portit: %1$d–%2$d"
+            "value": "Kelvolliset portit: %1$d-%2$d"
           }
         },
         "fr": {
@@ -67781,7 +67781,7 @@
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gyldig område: %1$d–%2$d"
+            "value": "Gyldig område: %1$d-%2$d"
           }
         },
         "nl": {
@@ -67793,7 +67793,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prawidłowy zakres: %1$d – %2$d"
+            "value": "Prawidłowy zakres: %1$d-%2$d"
           }
         },
         "pt": {
@@ -67805,13 +67805,13 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диапазон значений: %1$d–%2$d"
+            "value": "Диапазон значений: %1$d-%2$d"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Giltigt intervall: %1$d–%2$d"
+            "value": "Giltigt intervall: %1$d-%2$d"
           }
         },
         "th": {
@@ -67829,7 +67829,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Допустимий діапазон: %1$d–%2$d"
+            "value": "Допустимий діапазон: %1$d-%2$d"
           }
         },
         "zh-Hans": {
@@ -69235,7 +69235,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Varoitus: haittaohjelmien estotoiminto ei ole virustorjuntaohjelma, eikä sitä pidä käyttää sellaisena – kyseessä on vain ylimääräinen suojauskerros."
+            "value": "Varoitus: haittaohjelmien estotoiminto ei ole virustorjuntaohjelma, eikä sitä pidä käyttää sellaisena, kyseessä on vain ylimääräinen suojauskerros."
           }
         },
         "fr": {

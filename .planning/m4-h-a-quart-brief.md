@@ -245,7 +245,7 @@ Warren-core :
 - TDD strict RED → GREEN → REFACTOR (cf. CLAUDE.md §1)
 - /v1 constantes IMMUABLES (escalade pour /v2)
 - Pas d'unsafe (forbid)
-- Pas d'em-dash `—`
+- Pas d'em-dash `, `
 - Pas de step-tracking comments (`// M4.H.A.quart.x` interdit)
 - Tests pertinents (cf. `feedback_tests_pertinents`)
 - Pas de TODO laissés (delete, fix, ou convert doc/issue)
@@ -342,7 +342,7 @@ Caveats M4.H.A persistants à traiter plus tard :
 
 Warren-app :
 - `warren_m4h_a_quart_delivered.md` créé
-- Index MEMORY.md : `- [M4.H.A.quart delivered](warren_m4h_a_quart_delivered.md) — <verdict> + SHA fix warren-core + bench cross-DC final`
+- Index MEMORY.md : `- [M4.H.A.quart delivered](warren_m4h_a_quart_delivered.md), <verdict> + SHA fix warren-core + bench cross-DC final`
 
 Warren-core :
 - Update `warren_exit_api_silent_poll_fail.md` → RÉSOLU + SHA + cross-ref test régression

@@ -1,4 +1,4 @@
-# Session C iOS fork — Follow-up brief outlines (C.3 deep + C.5 + C.6 + C.7)
+# Session C iOS fork, Follow-up brief outlines (C.3 deep + C.5 + C.6 + C.7)
 
 Consolidated outline for the remaining sub-phases of Session C iOS fork.
 Each section is intended to be expanded into a dedicated brief
@@ -13,7 +13,7 @@ when the corresponding sub-phase is scheduled.
 
 ---
 
-## Session C.3.deep — Replace mullvad-api with warren-api-client (3-5 days)
+## Session C.3.deep, Replace mullvad-api with warren-api-client (3-5 days)
 
 ### Scope
 
@@ -73,7 +73,7 @@ Migrate the 16 source files in `warren-ios/src/api_client/` from the
 
 ---
 
-## Session C.5 — UI Swift wallet Ed25519 mnemonic auth (5-7 days)
+## Session C.5, UI Swift wallet Ed25519 mnemonic auth (5-7 days)
 
 ### Scope
 
@@ -141,7 +141,7 @@ Total : ~1200 new Swift lines.
 
 ---
 
-## Session C.6 — Multi-hop + DAITA + NAT-PMP UI parity (5-7 days)
+## Session C.6, Multi-hop + DAITA + NAT-PMP UI parity (5-7 days)
 
 ### Scope
 
@@ -193,7 +193,7 @@ Settings UserDefaults (read by SettingsReader in C.4):
 
 - DAITA default **OFF** (per memory `warren_daita_doctrine_v1` and the
   bench finding `pump_*_with_daita` instable cross-DC sustained from
-  Session F — UI must clearly indicate DAITA is experimental)
+  Session F, UI must clearly indicate DAITA is experimental)
 - Multi-hop default **OFF** (UX overhead, opt-in)
 - Obfuscation **always-on** (M4.0 baseline, no toggle)
 - NAT-PMP **OFF** by default (avoids unexpected port exposure)
@@ -208,7 +208,7 @@ Settings UserDefaults (read by SettingsReader in C.4):
 
 ---
 
-## Session C.7 — Build TestFlight + smoke iOS simulator (3-5 days)
+## Session C.7, Build TestFlight + smoke iOS simulator (3-5 days)
 
 ### Scope
 
@@ -301,11 +301,11 @@ C.5 5-7 + C.6 5-7 + C.7 3-5, with C.3.deep parallel to C.4 ⇒ effectively
 
 ## References
 
-- `.planning/session-c-ios-fork-brief.md` — original Session C brief
-- `.planning/session-c-report.md` — Session C C.1+C.2+C.3-skeleton report
-- `.planning/c4-packet-tunnel-provider-quinn-design.md` — C.4 detailed design
-- `.planning/session-c2-modules-migration-plan.md` — C.2 module rebrand plan
-- Memory `warren_session_c_c1_c2_c3_skeleton_delivered` — context of this session
-- Memory `warren_session_b_delivered` — desktop wizard pattern (5-step)
-- Memory `warren_daita_doctrine_v1` — DAITA OFF by default
-- Memory `warren_session_f_delivered` — `pump_*_with_daita` instability finding (warren-core M5.B.1.X)
+- `.planning/session-c-ios-fork-brief.md`, original Session C brief
+- `.planning/session-c-report.md`, Session C C.1+C.2+C.3-skeleton report
+- `.planning/c4-packet-tunnel-provider-quinn-design.md`, C.4 detailed design
+- `.planning/session-c2-modules-migration-plan.md`, C.2 module rebrand plan
+- Memory `warren_session_c_c1_c2_c3_skeleton_delivered`, context of this session
+- Memory `warren_session_b_delivered`, desktop wizard pattern (5-step)
+- Memory `warren_daita_doctrine_v1`, DAITA OFF by default
+- Memory `warren_session_f_delivered`, `pump_*_with_daita` instability finding (warren-core M5.B.1.X)

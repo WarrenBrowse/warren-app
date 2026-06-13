@@ -1,11 +1,11 @@
-# Design — Multi-hop dynamique, fleet unifié dual-rôle (annuaire signé hors-ligne)
+# Design, Multi-hop dynamique, fleet unifié dual-rôle (annuaire signé hors-ligne)
 
 > Design cross-repo (warren-core + warren-app). Objectif : **chaque nœud
 > Warren est exit ET relai, par défaut, toujours.** Un seul fleet. Le
 > client obtient l'annuaire signé **dynamiquement** (zéro
 > `warren-multihop.json` manuel) et choisit deux nœuds distincts (entrée
 > + sortie). Clé opérationnelle **jamais en ligne** (modèle annuaire /
-> directory-authority). Statut : DESIGN — à exécuter après validation.
+> directory-authority). Statut : DESIGN, à exécuter après validation.
 
 ---
 
@@ -28,7 +28,7 @@
   *par circuit*, pas par nœud. Exactement le modèle Tor (un nœud peut être
   entrée pour un circuit et sortie pour un autre).
 - Le rôle qu'un nœud joue sur une connexion donnée est déjà signalé par
-  l'**opaque type byte du premier datagram** (`docs/19:76-78`) — donc un
+  l'**opaque type byte du premier datagram** (`docs/19:76-78`), donc un
   seul serveur QUIC par nœud gère les deux rôles nativement.
 
 ---
@@ -46,7 +46,7 @@ La propriété d'unlinkability tient à **une seule règle de sélection** :
   (voit l'IP de B).
 - Un nœud ne détient que **sa propre** clé HPKE, jamais celle des autres.
   Donc pour un circuit donné il est soit aveugle-forward, soit
-  déchiffreur — **jamais les deux**. La défense en profondeur
+  déchiffreur, **jamais les deux**. La défense en profondeur
   « le relai ne tient pas la clé » est préservée *par circuit*.
 
 Limite déjà assumée (`docs/19:211-215`) : un adversaire passif global, ou
@@ -124,7 +124,7 @@ struct SignedMultiHopDirectory {
 ```
 
 > Futur /v2 possible : fusionner relay+exit en un seul `NodeDescriptor`
-> signé une fois. Hors scope — on réutilise le /v1 tel quel.
+> signé une fois. Hors scope, on réutilise le /v1 tel quel.
 
 ### Endpoints warren-api (calqués sur le roster)
 
@@ -137,7 +137,7 @@ struct SignedMultiHopDirectory {
 
 ## 4. Changements par composant (simplifié vs design précédent)
 
-### C1 — warren-exit DEVIENT un nœud dual-rôle
+### C1, warren-exit DEVIENT un nœud dual-rôle
 - **Embarque le forwarder relai** : `warren-exit` dépend de `warren-relay`
   en lib et lance aussi le chemin entrée (forward aveugle C1→C2). Le même
   serveur QUIC sert les deux rôles via l'opaque type byte du 1er datagram
@@ -145,32 +145,32 @@ struct SignedMultiHopDirectory {
 - **Publie sa clé HPKE** `exit_x25519_multihop_pubkey` au heartbeat
   (`RegisterExitRequest`), liée à son identité ed25519 authentifiée.
 - L'allowlist des exits vers qui forwarder = **l'annuaire lui-même**
-  (chaque nœud fetch le directory) — plus de TOML statique.
+  (chaque nœud fetch le directory), plus de TOML statique.
 
-### C2 — warren-api-types
+### C2, warren-api-types
 - `RegisterExitRequest` : `+ exit_x25519_multihop_pubkey_hex: Option<String>`
   (`#[serde(default)]`, non-breaking).
 - `+ NodeEntry`, `+ SignedMultiHopDirectory`.
 
-### C3 — warren-api
+### C3, warren-api
 - `ExitRecord` : `+ exit_ed25519_pubkey`, `+ exit_x25519_multihop_pubkey`.
 - `register_exit` : stocke la clé HPKE.
 - `+ list_multihop_directory` (calqué `list_exit_roster`) `+
   admin_set_multihop_directory` (calqué `admin_set_roster`).
 - (Enveloppe signée serveur au GET, comme `/v1/exits`.)
 
-### C4 — warren-wapi : mint hors-ligne
+### C4, warren-wapi : mint hors-ligne
 - `admin-publish-multihop-directory` : lit le fleet actif (exits + leurs
   clés HPKE désormais publiées), minte pour **chaque nœud** son couple
   {relay, exit} descripteurs avec la clé opérationnelle hors-ligne,
   assemble + signe l'annuaire, `POST` à l'API.
 
-### C5 — warren-multihop
+### C5, warren-multihop
 - `+ verify_multihop_directory(root_pin, server_pin, body)` (enchaîne
   enveloppe → cert → descripteurs). Tests PKI : tamper enveloppe/cert/
   descripteur, expired, rollback.
 
-### C6 — daemon (warren-app) : le client
+### C6, daemon (warren-app) : le client
 - `+ warren_multi_hop_updater.rs` (calqué `warren_relay_list_updater.rs`) :
   fetch `GET /v1/multihop/directory`, vérifie, cache atomique, anti-rollback.
 - **Sélection** : tire 2 nœuds **distincts** du pool (entrée + sortie),
@@ -184,7 +184,7 @@ struct SignedMultiHopDirectory {
 - `warren_multi_hop.rs` (loader fichier) rétrogradé en override dev.
 - **`entry_country`/`exit_country` enfin consommés.**
 
-### ~~C7 relay séparé~~ — SUPPRIMÉ
+### ~~C7 relay séparé~~, SUPPRIMÉ
 Plus d'infra relai distincte ni d'updater relai séparé. Chaque nœud =
 exit + relai et fetch le même annuaire. Le fleet unifié élimine ce
 composant entier.
@@ -203,7 +203,7 @@ composant entier.
 
 > Étape 7 (forwarder dans l'exit) peut précéder le bench ; tant qu'elle
 > n'est pas faite, le fleet a les descripteurs mais les nœuds ne
-> forwardent pas encore — donc 1→6 = chaîne client complète, 7 = active
+> forwardent pas encore, donc 1→6 = chaîne client complète, 7 = active
 > le dual-rôle data-plane.
 
 ---
@@ -217,7 +217,7 @@ composant entier.
    `WARREN_MULTIHOP_ROOT_PUBKEY` (pattern pin serveur / roster existant).
 4. **Diversité entrée/sortie** : **pays différent OBLIGATOIRE**. **AS
    différent exigé seulement si le fleet contient ≥ 2 AS**, sinon fallback
-   (warning log) — sans ce fallback, un fleet mono-hébergeur (ex. tout
+   (warning log), sans ce fallback, un fleet mono-hébergeur (ex. tout
    Hetzner) ne pourrait jamais monter de circuit. La sélection annote
    chaque nœud de son ASN (dérivé de l'IP ou champ fleet) pour appliquer
    la règle.
@@ -236,7 +236,7 @@ composant entier.
 - **C5** `warren-multihop::operational_cert` (cert root→op, 5 tests) + `warren-relay-selector::multihop_directory` (sign/verify chaîné, 10 tests).
 - **C6** daemon : `warren_multi_hop_directory` (fetch+verify+select+assemble+updater) ; toggle piloté via watch channel ; reconnexion à chaud ; 10 tests.
 
-**Audit sécurité (security-auditor) — findings traités :**
+**Audit sécurité (security-auditor), findings traités :**
 - ✅ **C1-audit (Critical, anti-rollback)** : high-water mark `highest_generation` côté client ; un annuaire de génération inférieure est rejeté (garde le circuit courant).
 - ✅ **H1 (fail-open TOFU)** : `RootPinMode` explicite. Pin absent/garbage = `Unconfigured` → multi-hop **désactivé (fail-closed)** + warn ; TOFU exige `WARREN_MULTIHOP_ROOT_PUBKEY=INSECURE_TOFU` (warn fort).
 - ✅ **L2** : fallback fichier local **uniquement** sur erreur transport (Http/Status/NotPublished) ; un échec de vérif (`Verify`/`Expired`) ne rescue jamais via fichier non signé et ne vide pas le circuit courant.
@@ -244,14 +244,14 @@ composant entier.
 - ✅ **M2** : `assemble` défensif (`.get()` → `Option`, plus de panic d'index).
 - ✅ Vérif d'enveloppe : le préimage serveur couvre `operational_pubkey_hex` + `operational_cert_hex` + `nodes` + `generation` + `expires_at` → pas de swap de descripteur/cert sans casser la chaîne (confirmé par l'audit).
 
-**Durcissement /v2 — ✅ FAIT (H2 + M4) :**
+**Durcissement /v2, ✅ FAIT (H2 + M4) :**
 - Annuaire **v2** (`MULTIHOP_DIRECTORY_VERSION = 2`) : chaque `NodeEntry`
   porte une **attestation opérationnelle** (`attestation_hex`,
   `warren_multihop::{sign,verify}_node_attestation`, contexte
   `WARREN_PKI_OPERATIONAL_NODE_V1`) liant `node_id || exit_ed25519 ||
   asn || country` sous la clé **opérationnelle hors-ligne**.
   → **H2** : la diversité pays/AS devient **cryptographique** (un
-  warren-api compromis ne peut plus relabeller la géo — test
+  warren-api compromis ne peut plus relabeller la géo, test
   `node_with_relabeled_geo_is_dropped`). → **M4** : l'identité Ed25519
   RPC de l'exit est signée (plus de redirection du pin TLS de sortie).
   Vérifié par `node_fully_vouched` (relay + exit + attestation) ; un
@@ -269,7 +269,7 @@ composant entier.
 - **Refresh périodique** de l'annuaire côté relai dual-rôle (fetch au
   boot pour l'instant).
 
-## 7bis. C7 — forwarder dual-rôle (data-plane) : ✅ IMPLÉMENTÉ
+## 7bis. C7, forwarder dual-rôle (data-plane) : ✅ IMPLÉMENTÉ
 
 Modèle retenu (le plus sûr, zéro modif du data-plane qui marche) : le nœud
 `warren-exit` fait tourner **en plus** le forwarder `warren-relay` (déjà
@@ -279,15 +279,15 @@ endpoint d'entrée ; le descripteur exit annonce l'adresse de terminaison.
 
 Contrainte de cycle résolue : `warren-relay` dépend de `warren-tunnel`
 (pas l'inverse), donc la composition vit dans `warren-exit` (qui dépend
-des deux) — `warren-tunnel` n'est pas touché.
+des deux), `warren-tunnel` n'est pas touché.
 
 Livré :
-- `warren-exit/src/dual_role.rs::run_relay_forwarder` — boucle d'accept
+- `warren-exit/src/dual_role.rs::run_relay_forwarder`, boucle d'accept
   réutilisant verbatim `warren-relay` (`RelayServer`, `ExitConnPool`,
   `extract_dispatched_exit`, `forward_session`, `RelayMetrics`). Smoke
   test (bind + shutdown propre).
 - Pool d'exits **sourcé de l'annuaire signé vérifié** (chaque
-  `ExitDescriptorSigned` est op-vérifié avant tout dial) — un warren-api
+  `ExitDescriptorSigned` est op-vérifié avant tout dial), un warren-api
   compromis ne peut pas pointer le forwarder vers un exit rogue.
 - `warren-api-client::get_multihop_directory` (GET public).
 - Flag `warren-exit --dual-role-relay-listen <addr>` + `spawn_dual_role_relay`
@@ -297,7 +297,7 @@ La correction du forwarding est couverte par les tests e2e de
 `warren-relay` (`relay_e2e_local.rs`, fonctions identiques) + le smoke
 test du wrapper. **Validation restante = bench multi-nœuds réel** (2
 nœuds Hetzner : client → nœud B entrée → nœud D sortie, IP de sortie ≠
-IP d'entrée) — infra, pas code.
+IP d'entrée), infra, pas code.
 
 Caveats : refresh périodique de l'annuaire côté relai (fetch au boot pour
 l'instant) + convention d'endpoint relai (adresse dédiée à annoncer dans
@@ -308,7 +308,7 @@ le descripteur relai au mint) = finitions ops documentées.
 Cocher le toggle → le daemon fetch l'annuaire signé, le vérifie
 (root→opérationnelle→descripteurs + fraîcheur), tire **2 nœuds distincts**
 du fleet, assemble `MultiHopConfig`, reconnecte ; le trafic entre par le
-node B et **sort par le node D** (egress ≠ IP d'entrée) — **sans aucun
+node B et **sort par le node D** (egress ≠ IP d'entrée), **sans aucun
 fichier manuel**, clé opérationnelle **jamais en ligne**. Vérifiable :
 `warren status` montre entrée+sortie distinctes, IP publique = node D ≠
 node B, logs `session_kind=MultiHop`.

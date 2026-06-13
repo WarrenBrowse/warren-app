@@ -350,4 +350,4 @@ Memory à créer :
   (warren-exit ne peut être redeployé sans co-deploy warren-backend-api).
 
 Index `MEMORY.md` warren-app :
-`- [M4.H.A.ter delivered](warren_m4h_a_ter_delivered.md) — <verdict> burn-down 2-node + fresh deploy HEAD + cross-DC bench`
+`- [M4.H.A.ter delivered](warren_m4h_a_ter_delivered.md), <verdict> burn-down 2-node + fresh deploy HEAD + cross-DC bench`

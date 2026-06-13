@@ -1,6 +1,6 @@
-# Session U — Default pool coverage gate + non-blocking machine audit
+# Session U, Default pool coverage gate + non-blocking machine audit
 
-> Status : **GO ULTIMATE (in-process)** — Session T's BlockingBegin/End wiring confirmed coverage for both blocking pool entries (Tamaraw + Scrambler); the three non-blocking entries audited and proven not to need additional event wiring
+> Status : **GO ULTIMATE (in-process)**, Session T's BlockingBegin/End wiring confirmed coverage for both blocking pool entries (Tamaraw + Scrambler); the three non-blocking entries audited and proven not to need additional event wiring
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process only, zero Hetzner spend per user request "hors bench")
 > §0.0 INVIOLABLE git respecté. Production warren-exit-1 + warren-backend-api intacts.
@@ -15,8 +15,8 @@ Session T closed Tamaraw's BlockingBegin wiring gap. Session U audits the rest o
 - **Scrambler** (`scrambler_server`) does use `Action::BlockOutgoing` + `Event::BlockingBegin`, so Session T's wiring path is exercised by Scrambler too.
 
 Added coverage tests :
-1. `all_default_pool_entries_build_a_valid_config` — sanity check that every named entry materialises a non-empty `DaitaConfig` (5/5).
-2. `scrambler_server_fires_padding_through_blocking_begin_wiring` — 5 s simulated trace proves Scrambler emits ≥ 1 padding action through Session T's `BlockingBegin/End` machinery. If Session T regresses, this fires alongside the existing Tamaraw cadence test.
+1. `all_default_pool_entries_build_a_valid_config`, sanity check that every named entry materialises a non-empty `DaitaConfig` (5/5).
+2. `scrambler_server_fires_padding_through_blocking_begin_wiring`, 5 s simulated trace proves Scrambler emits ≥ 1 padding action through Session T's `BlockingBegin/End` machinery. If Session T regresses, this fires alongside the existing Tamaraw cadence test.
 
 `netflow` + `interspace_server` are intentionally NOT asserted strictly (they have legitimate slow / stimulus-dependent cadences : NetFlow 1.5-9.5 s padding interval, Interspace requires sustained burst patterns) and instead rely on the `multi_hop_e2e_with_daita` / `pump_with_supervisor_daita` end-to-end pump tests for behavioural validation.
 
@@ -25,12 +25,12 @@ Added coverage tests :
 ## Code livré (commit warren-core `067d21c`)
 
 ### `crates/warren-tunnel/src/daita_pool.rs`
-- New `pub fn pick_named<R>(&self, name: &str, rng: &mut R) -> Option<DaitaConfig>` — deterministic per-entry config builder (the random `pick` path is unsuitable for per-entry regression tests).
+- New `pub fn pick_named<R>(&self, name: &str, rng: &mut R) -> Option<DaitaConfig>`, deterministic per-entry config builder (the random `pick` path is unsuitable for per-entry regression tests).
 
 ### `crates/warren-tunnel/tests/daita_pool_full_coverage.rs` (NEW, +120 LOC)
 - `drive_and_count` helper : runs a 1 ms drain cadence with `NormalSent + TunnelSent` events every 50 ms, returns total padding actions drained.
-- `all_default_pool_entries_build_a_valid_config` — iterates every `entry_names()` entry, builds via `pick_named`, asserts `is_enabled() && !machine_specs.is_empty()`.
-- `scrambler_server_fires_padding_through_blocking_begin_wiring` — pins Scrambler specifically, asserts ≥ 1 padding in 5 s of simulated traffic.
+- `all_default_pool_entries_build_a_valid_config`, iterates every `entry_names()` entry, builds via `pick_named`, asserts `is_enabled() && !machine_specs.is_empty()`.
+- `scrambler_server_fires_padding_through_blocking_begin_wiring`, pins Scrambler specifically, asserts ≥ 1 padding in 5 s of simulated traffic.
 
 ---
 
@@ -44,7 +44,7 @@ Added coverage tests :
 | `interspace_server` | `SendPadding` only | `Normal*`, `Padding*`, `Tunnel*` | ✅ all events wired |
 | `scrambler_server` | `BlockOutgoing` + `SendPadding` | `Normal*`, `Padding*`, `BlockingBegin`, `LimitReached` | ✅ Session T |
 
-The framework-fired events `LimitReached` and `CounterZero` are emitted internally by maybenot when a state's `limit` / `counter` distribution hits zero — they don't require Warren-side wiring.
+The framework-fired events `LimitReached` and `CounterZero` are emitted internally by maybenot when a state's `limit` / `counter` distribution hits zero, they don't require Warren-side wiring.
 
 ---
 
@@ -70,8 +70,8 @@ The framework-fired events `LimitReached` and `CounterZero` are emitted internal
 
 ## Caveats restants
 
-- ⚠️ Pump-side blocking enforcement still pending — Warren emits real packets during the BlockOutgoing window (Tamaraw/Scrambler cadence correct via `bypass: true` but full "block + pad" defense property requires pump-side queuing of real packets, a separate scope).
-- ⚠️ `daita_sustained_stress` + `d3_allowlist_dynamic` Quinn handshake test flakiness pre-existing (`StatelessRetryIssued`) — not Session U scope.
+- ⚠️ Pump-side blocking enforcement still pending, Warren emits real packets during the BlockOutgoing window (Tamaraw/Scrambler cadence correct via `bypass: true` but full "block + pad" defense property requires pump-side queuing of real packets, a separate scope).
+- ⚠️ `daita_sustained_stress` + `d3_allowlist_dynamic` Quinn handshake test flakiness pre-existing (`StatelessRetryIssued`), not Session U scope.
 - ⚠️ Hetzner re-bench to remeasure overhead under functional Tamaraw cadence (post Sessions S/T/U fix stack) deferred per user "hors bench" instruction. Code ready for the bench whenever ops cycle is scheduled.
 
 ---

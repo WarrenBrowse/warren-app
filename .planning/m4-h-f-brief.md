@@ -435,7 +435,7 @@ Ship readiness check post-M4.H.F :
 Warren-app :
 - Create `warren_m4h_f_delivered.md`
 - Update source-of-truth orchestrateur
-- Index MEMORY.md : `- [M4.H.F delivered](warren_m4h_f_delivered.md) — <verdict> NAT-PMP port-forwarding différenciateur produit (vs Mullvad/IVPN abandon 2023)`
+- Index MEMORY.md : `- [M4.H.F delivered](warren_m4h_f_delivered.md), <verdict> NAT-PMP port-forwarding différenciateur produit (vs Mullvad/IVPN abandon 2023)`
 
 Warren-core :
 - Si M4.H.F.0 push : update memory warren-core si pertinent

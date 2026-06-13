@@ -1,4 +1,4 @@
-# Session iOS-Cleanup — 434 strings i18n + PacketTunnelActor + SVG logo
+# Session iOS-Cleanup, 434 strings i18n + PacketTunnelActor + SVG logo
 
 > Brief d'agent autonome warren-app iOS surface.
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -15,16 +15,16 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **iOS-Cleanup.1 — Setup worktree** (~30 min)
-2. **iOS-Cleanup.2 — Localizable.xcstrings bulk-replace 434 strings (FR+EN focus, autres langs deferred)** (~2-3j)
-3. **iOS-Cleanup.3 — Full SVG Warren logo paths (header + launch + AppIcon)** (~1j)
-4. **iOS-Cleanup.4 — C.4.5 Warren-native PacketTunnelActor live tunnel** (~3-4j)
-5. **iOS-Cleanup.5 — Smoke iOS simulator E2E live tunnel** (~0.5-1j)
-6. **iOS-Cleanup.6 — Rapport + cleanup** (~0.5j)
+1. **iOS-Cleanup.1, Setup worktree** (~30 min)
+2. **iOS-Cleanup.2, Localizable.xcstrings bulk-replace 434 strings (FR+EN focus, autres langs deferred)** (~2-3j)
+3. **iOS-Cleanup.3, Full SVG Warren logo paths (header + launch + AppIcon)** (~1j)
+4. **iOS-Cleanup.4, C.4.5 Warren-native PacketTunnelActor live tunnel** (~3-4j)
+5. **iOS-Cleanup.5, Smoke iOS simulator E2E live tunnel** (~0.5-1j)
+6. **iOS-Cleanup.6, Rapport + cleanup** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard.
 
@@ -75,7 +75,7 @@ ls ios/MullvadVPN/Assets/AppIcon.appiconset/
 
 ---
 
-## 2. iOS-Cleanup.2 — Localizable.xcstrings bulk-replace 434 strings (~2-3j)
+## 2. iOS-Cleanup.2, Localizable.xcstrings bulk-replace 434 strings (~2-3j)
 
 ### Scope
 
@@ -104,7 +104,7 @@ ls ios/MullvadVPN/Assets/AppIcon.appiconset/
 
 ---
 
-## 3. iOS-Cleanup.3 — Full SVG Warren logo paths (~1j)
+## 3. iOS-Cleanup.3, Full SVG Warren logo paths (~1j)
 
 ### Scope
 
@@ -131,7 +131,7 @@ ls ios/MullvadVPN/Assets/AppIcon.appiconset/
 
 ---
 
-## 4. iOS-Cleanup.4 — C.4.5 Warren-native PacketTunnelActor live tunnel (~3-4j)
+## 4. iOS-Cleanup.4, C.4.5 Warren-native PacketTunnelActor live tunnel (~3-4j)
 
 ### Scope
 
@@ -170,7 +170,7 @@ Session C continuation phase 6 a livré PacketTunnelProvider stub (compile-green
 
 ---
 
-## 5. iOS-Cleanup.5 — Smoke iOS simulator E2E live tunnel (~0.5-1j)
+## 5. iOS-Cleanup.5, Smoke iOS simulator E2E live tunnel (~0.5-1j)
 
 ### Scope
 
@@ -191,7 +191,7 @@ Session C continuation phase 6 a livré PacketTunnelProvider stub (compile-green
 
 ---
 
-## 6. iOS-Cleanup.6 — Rapport + cleanup (~0.5j)
+## 6. iOS-Cleanup.6, Rapport + cleanup (~0.5j)
 
 ### Scope
 

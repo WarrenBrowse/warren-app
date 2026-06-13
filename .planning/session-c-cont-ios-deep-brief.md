@@ -1,4 +1,4 @@
-# Session C-continuation — iOS C.3 deep + C.4-C.7
+# Session C-continuation, iOS C.3 deep + C.4-C.7
 
 > Brief d'agent autonome warren-app + warren-core path-deps.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy + §0.6 WORKTREE SÉPARÉ OBLIGATOIRE.
@@ -16,16 +16,16 @@
 
 Sous-phases restantes (séquentielles autonomes) :
 
-1. **C-cont.1 — Setup worktree warren-app dédié iOS** (~30 min)
-2. **C.3 deep — FFI rewrite warren-ios crate + cargo build iOS targets** (~5-7j)
-3. **C.4 — PacketTunnelProvider Quinn (replace WireGuardAdapter)** (~10-14j)
-4. **C.5 — UI Swift wallet Ed25519 BIP39** (~5-7j)
-5. **C.6 — Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j, dépend Session G livré)
-6. **C.7 — Build TestFlight + smoke iOS simulator** (~3-5j)
+1. **C-cont.1, Setup worktree warren-app dédié iOS** (~30 min)
+2. **C.3 deep, FFI rewrite warren-ios crate + cargo build iOS targets** (~5-7j)
+3. **C.4, PacketTunnelProvider Quinn (replace WireGuardAdapter)** (~10-14j)
+4. **C.5, UI Swift wallet Ed25519 BIP39** (~5-7j)
+5. **C.6, Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j, dépend Session G livré)
+6. **C.7, Build TestFlight + smoke iOS simulator** (~3-5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver fichiers modified/untracked. Incident M4.H.F = 5 fichiers WIP poka perdus.
 
@@ -88,7 +88,7 @@ cat /Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-app/memory/wa
 
 ---
 
-## C-cont.1 — Setup worktree (~30 min)
+## C-cont.1, Setup worktree (~30 min)
 
 Cf. §0.6.
 
@@ -100,7 +100,7 @@ Cf. §0.6.
 
 ---
 
-## C.3 deep — FFI rewrite warren-ios crate + cargo build iOS targets (~5-7j)
+## C.3 deep, FFI rewrite warren-ios crate + cargo build iOS targets (~5-7j)
 
 ### Contexte
 
@@ -150,7 +150,7 @@ Session C livré skeleton C.3 (crate `warren-ios` renamed + Swift `WarrenRustRun
 
 ---
 
-## C.4 — PacketTunnelProvider Quinn (replace WireGuardAdapter) (~10-14j)
+## C.4, PacketTunnelProvider Quinn (replace WireGuardAdapter) (~10-14j)
 
 Phase la plus complexe. Cf. brief original Session C §C.4 pour scope détaillé. Résumé :
 
@@ -177,7 +177,7 @@ Phase la plus complexe. Cf. brief original Session C §C.4 pour scope détaillé
 
 ---
 
-## C.5 — UI Swift wallet Ed25519 BIP39 (~5-7j)
+## C.5, UI Swift wallet Ed25519 BIP39 (~5-7j)
 
 Cf. brief original Session C §C.5. Résumé :
 
@@ -198,7 +198,7 @@ Cf. brief original Session C §C.5. Résumé :
 
 ---
 
-## C.6 — Multi-hop + DAITA + NAT-PMP UI parity (~5-7j, dépend Session G)
+## C.6, Multi-hop + DAITA + NAT-PMP UI parity (~5-7j, dépend Session G)
 
 ⚠️ **DÉPENDANCE STRICTE** : Session G `pump_with_daita` stability fix LIVRÉ + verdict GO ULTIMATE avant attaquer C.6 DAITA UI. Sinon DAITA UI iOS = feature non-shippable (bug prod connu Session F).
 
@@ -226,7 +226,7 @@ Cf. brief original Session C §C.6. Résumé :
 
 ---
 
-## C.7 — Build TestFlight + smoke iOS simulator (~3-5j)
+## C.7, Build TestFlight + smoke iOS simulator (~3-5j)
 
 Cf. brief original Session C §C.7. Résumé :
 

@@ -1,4 +1,4 @@
-# Session Beta-Release-Prep — procurement docs + CI verify + tagging procedure
+# Session Beta-Release-Prep, procurement docs + CI verify + tagging procedure
 
 > Brief d'agent autonome warren-app + warren-core + warrenbrowse-site.
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -16,18 +16,18 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **Beta.1 — Setup worktree** (~30 min)
-2. **Beta.2 — Verify CI release.yml secrets matrix + skip-if-no-secrets logic** (~0.5j)
-3. **Beta.3 — Procurement guide consolidé docs/RELEASE-PROCUREMENT.md** (~0.5j)
-4. **Beta.4 — Pre-tag verify script `scripts/release/verify-beta.sh`** (~0.5j)
-5. **Beta.5 — Release notes template + CHANGELOG.md** (~0.5j)
-6. **Beta.6 — Tagging procedure runbook docs/RUNBOOK-RELEASE.md** (~0.5j)
-7. **Beta.7 — Test dry-run sans tag (workflow_dispatch manuel)** (~0.5j)
-8. **Beta.8 — Rapport + cleanup** (~0.5j)
+1. **Beta.1, Setup worktree** (~30 min)
+2. **Beta.2, Verify CI release.yml secrets matrix + skip-if-no-secrets logic** (~0.5j)
+3. **Beta.3, Procurement guide consolidé docs/RELEASE-PROCUREMENT.md** (~0.5j)
+4. **Beta.4, Pre-tag verify script `scripts/release/verify-beta.sh`** (~0.5j)
+5. **Beta.5, Release notes template + CHANGELOG.md** (~0.5j)
+6. **Beta.6, Tagging procedure runbook docs/RUNBOOK-RELEASE.md** (~0.5j)
+7. **Beta.7, Test dry-run sans tag (workflow_dispatch manuel)** (~0.5j)
+8. **Beta.8, Rapport + cleanup** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver fichiers modified/untracked.
 
@@ -75,7 +75,7 @@ ls .github/workflows/
 
 ---
 
-## 2. Beta.2 — Verify CI release.yml secrets matrix + skip-if-no-secrets (~0.5j)
+## 2. Beta.2, Verify CI release.yml secrets matrix + skip-if-no-secrets (~0.5j)
 
 ### Scope
 
@@ -100,14 +100,14 @@ ls .github/workflows/
 
 ---
 
-## 3. Beta.3 — Procurement guide consolidé docs/RELEASE-PROCUREMENT.md (~0.5j)
+## 3. Beta.3, Procurement guide consolidé docs/RELEASE-PROCUREMENT.md (~0.5j)
 
 ### Scope
 
 Document unique récap de tous les achats/setup poka :
 
 ```markdown
-# Warren Beta Release — Procurement Guide
+# Warren Beta Release, Procurement Guide
 
 ## Costs annuels estimés
 - Apple Developer Program: 99 USD/an (iOS TestFlight + macOS notarization)
@@ -135,7 +135,7 @@ Concatène docs/24-CODE-SIGNING.md + session-d7-play-store.md + nouveau content 
 
 ---
 
-## 4. Beta.4 — Pre-tag verify script `scripts/release/verify-beta.sh` (~0.5j)
+## 4. Beta.4, Pre-tag verify script `scripts/release/verify-beta.sh` (~0.5j)
 
 ### Scope
 
@@ -163,7 +163,7 @@ Output : matrix PASS/FAIL + bloquants listés.
 
 ---
 
-## 5. Beta.5 — Release notes template + CHANGELOG.md (~0.5j)
+## 5. Beta.5, Release notes template + CHANGELOG.md (~0.5j)
 
 ### Scope
 
@@ -185,7 +185,7 @@ Output : matrix PASS/FAIL + bloquants listés.
 
 ---
 
-## 6. Beta.6 — Tagging procedure runbook docs/RUNBOOK-RELEASE.md (~0.5j)
+## 6. Beta.6, Tagging procedure runbook docs/RUNBOOK-RELEASE.md (~0.5j)
 
 ### Scope
 
@@ -193,7 +193,7 @@ Output : matrix PASS/FAIL + bloquants listés.
 # Warren Release Runbook
 
 ## Pre-tag checklist
-1. Run scripts/release/verify-beta.sh — must PASS green
+1. Run scripts/release/verify-beta.sh, must PASS green
 2. Update CHANGELOG.md + commit + push
 3. Procurement vérifié (secrets in GitHub Actions)
 4. Pin warren-core matches HEAD
@@ -219,7 +219,7 @@ git push origin v0.1.0-beta.1
 
 ---
 
-## 7. Beta.7 — Test dry-run sans tag (workflow_dispatch manuel) (~0.5j)
+## 7. Beta.7, Test dry-run sans tag (workflow_dispatch manuel) (~0.5j)
 
 ### Scope
 
@@ -242,7 +242,7 @@ git push origin v0.1.0-beta.1
 
 ---
 
-## 8. Beta.8 — Rapport + cleanup (~0.5j)
+## 8. Beta.8, Rapport + cleanup (~0.5j)
 
 ### Scope
 

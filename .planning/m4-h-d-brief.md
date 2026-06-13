@@ -454,7 +454,7 @@ Warren-app :
 - Create `warren_m4h_d_delivered.md`
 - Update source-of-truth orchestrateur (`project_warren_app_state_
   post_m4hd.md` ou section ajoutée)
-- Index MEMORY.md : `- [M4.H.D delivered](warren_m4h_d_delivered.md) — <verdict> migration GitHub + build pipeline + CI release`
+- Index MEMORY.md : `- [M4.H.D delivered](warren_m4h_d_delivered.md), <verdict> migration GitHub + build pipeline + CI release`
 
 Warren-app + warren-core cohérence :
 - Vérifier que `.warren-core-version` est correctement référencé par

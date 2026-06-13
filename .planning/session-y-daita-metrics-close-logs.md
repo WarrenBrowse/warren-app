@@ -1,6 +1,6 @@
-# Session Y — DaitaMetrics surfaced in production close logs
+# Session Y, DaitaMetrics surfaced in production close logs
 
-> Status : **GO ULTIMATE** — small observability follow-up to Session X
+> Status : **GO ULTIMATE**, small observability follow-up to Session X
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process only)
 
@@ -19,7 +19,7 @@ The DAITA-disabled path is a strict alias of `serve_one_connection_with_tun` (ze
 
 ## Motivation
 
-- Per-task `5 s` reports (Session P / R) reset every report and are noisy in the on-going log stream — useful for live diagnosis, less useful for post-hoc per-session aggregation.
+- Per-task `5 s` reports (Session P / R) reset every report and are noisy in the on-going log stream, useful for live diagnosis, less useful for post-hoc per-session aggregation.
 - `DaitaMetrics` is the queryable per-session snapshot ; surfacing it on close gives ops a single grep-able line per session/conn with the full emission profile.
 - Cheap : one `parking_lot::Mutex::lock` + one `Instant::elapsed` on a path that is already shutting down.
 
@@ -83,13 +83,13 @@ Per-conn scope (one line per multi-hop conn accepted by the exit), not per-serve
 
 `.warren-core-version` : `d1d5297` (Session X) → `0e3e9f8` (Session Y).
 
-Commit warren-app : `acdc675d86 chore(pin): warren-core 0e3e9f8 (Session Y — DaitaMetrics surfaced in close logs)`.
+Commit warren-app : `acdc675d86 chore(pin): warren-core 0e3e9f8 (Session Y, DaitaMetrics surfaced in close logs)`.
 
 ---
 
 ## Doctrine
 
-- §0.0 INVIOLABLE git respecté — primary repo working tree never touched (poka's WIP intact).
+- §0.0 INVIOLABLE git respecté, primary repo working tree never touched (poka's WIP intact).
 - §0.5 plein mandat : targeted observability addition only; no architectural extension.
 - §0.6 worktree `../warren-core-session-y` used end-to-end; pushed to origin/main via `git push origin HEAD:main` from inside the worktree; worktree removed after the pin bump.
 
@@ -97,7 +97,7 @@ Commit warren-app : `acdc675d86 chore(pin): warren-core 0e3e9f8 (Session Y — D
 
 ## Caveats restants (inchangés depuis Session X)
 
-- Pump-side blocking enforcement still future scope (significant architectural decision — only relevant for DAITA-opt-in users).
+- Pump-side blocking enforcement still future scope (significant architectural decision, only relevant for DAITA-opt-in users).
 - Multi-hop IP negotiation v1 multi-client still TODO (POC `10.66.0.2/24` hardcoded).
 - Hetzner re-bench post Sessions S/T/U/X still deferred per user "hors bench".
 - DAITA UI toggle in desktop Electron settings still TODO (product decision : DAITA is opt-in per user clarification).

@@ -159,7 +159,7 @@ gh repo list WarrenBrowse --limit 5
 ### M4.H.H.0 - Bootstrap repo + stack
 
 1. `gh auth switch --user poka-IT` puis verify access.
-2. `gh repo create WarrenBrowse/warrenbrowse-site --public --description "Warren VPN — Privacy-first, full-QUIC, port-forwarding restored" --license AGPL-3.0` (ou MIT selon préférence agent, AGPL-3.0 recommandé pour cohérence avec ethos privacy/open warren).
+2. `gh repo create WarrenBrowse/warrenbrowse-site --public --description "Warren VPN, Privacy-first, full-QUIC, port-forwarding restored" --license AGPL-3.0` (ou MIT selon préférence agent, AGPL-3.0 recommandé pour cohérence avec ethos privacy/open warren).
 3. **NB : public** car site marketing. Vs warren-app private POC.
 4. Clone local `/Users/poka/dev/warrenBros/warrenbrowse-site/`.
 5. Initialize Astro project :
@@ -447,7 +447,7 @@ Phases futures éventuelles :
 
 Warren-app memory dir (orchestrateur acte la nouvelle prop) :
 - Create `warren_m4h_h_delivered.md`
-- Index MEMORY.md : `- [M4.H.H delivered](warren_m4h_h_delivered.md) — <verdict> warrenbrowse.com Astro static site 10+ pages FR+EN comparatif 5 concurrents + Cloudflare Pages deploy`
+- Index MEMORY.md : `- [M4.H.H delivered](warren_m4h_h_delivered.md), <verdict> warrenbrowse.com Astro static site 10+ pages FR+EN comparatif 5 concurrents + Cloudflare Pages deploy`
 - Optional reference memory : `warren_site_repo.md` pour cross-ref
   vers le nouveau repo warrenbrowse-site
 

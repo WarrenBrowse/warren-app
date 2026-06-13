@@ -1,4 +1,4 @@
-# Session J — Multi-hop TUN pump (M4.E.X partial) + multi-hop DAITA scaffolding — RAPPORT FINAL
+# Session J, Multi-hop TUN pump (M4.E.X partial) + multi-hop DAITA scaffolding, RAPPORT FINAL
 
 > Status : **GO PARTIEL (scaffolding livré, full main.rs wiring deferred M5.B.X)**
 > Date : 2026-05-21
@@ -11,7 +11,7 @@
 
 Session J livre les **building blocks pour DAITA multi-hop** : module `multi_hop_pump.rs` warren-client avec `pump_multi_hop_bidirectional` + `pump_multi_hop_bidirectional_with_daita` (mirror de `warren_tunnel::pump_bidirectional_with_daita` mais sur l'abstraction `WarrenPumpHandle`).
 
-**Decision §0.5 — full main.rs --use-tun wiring SKIPPED** : la stack multi-hop HPKE n'a pas d'équivalent SetupAck pour négocier le tunnel IP. Sans mécanisme d'allocation IP, wirer `run_multi_hop --use-tun` requiert un design décision sur l'IP negotiation = M5.B.X scope expansion. L'infrastructure `supervised_pump.rs` (`run_uplink_with_daita` + `run_downlink_with_daita`) existe déjà et reste prête pour usage production une fois l'IP negotiation landed.
+**Decision §0.5, full main.rs --use-tun wiring SKIPPED** : la stack multi-hop HPKE n'a pas d'équivalent SetupAck pour négocier le tunnel IP. Sans mécanisme d'allocation IP, wirer `run_multi_hop --use-tun` requiert un design décision sur l'IP negotiation = M5.B.X scope expansion. L'infrastructure `supervised_pump.rs` (`run_uplink_with_daita` + `run_downlink_with_daita`) existe déjà et reste prête pour usage production une fois l'IP negotiation landed.
 
 **Livré (warren-core 26487b4 push origin/main)** :
 1. `WarrenPumpHandle::pump_send_daita_dummy` extension trait + impl pour MultiHopClient (route vers `send_daita_padding`)
@@ -77,7 +77,7 @@ Pre-existing test failures (multi_hop_pmtu_regression + full_e2e_both_binaries) 
 
 ---
 
-## J.3 SKIPPED §0.5 — main.rs --use-tun wiring
+## J.3 SKIPPED §0.5, main.rs --use-tun wiring
 
 ### Decision
 
@@ -127,7 +127,7 @@ Mon module Session J = **alternative simple** pour tests + scaffolding. Pour pro
 | Tests cargo clippy CLEAN | ✅ |
 | Production wiring main.rs | ⏭️ M5.B.X (IP negotiation dep) |
 
-**Verdict global : GO PARTIEL** — scaffolding livré, défense multi-hop DAITA possible via `multi_hop_pump.rs` direct OR via `supervised_pump.rs` (production-grade). Production main.rs wiring reporté M5.B.X.
+**Verdict global : GO PARTIEL**, scaffolding livré, défense multi-hop DAITA possible via `multi_hop_pump.rs` direct OR via `supervised_pump.rs` (production-grade). Production main.rs wiring reporté M5.B.X.
 
 ---
 

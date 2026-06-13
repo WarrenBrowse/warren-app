@@ -1,4 +1,4 @@
-# Session D-continuation — Android D.4-D.7 + fix tun_rs Android backend
+# Session D-continuation, Android D.4-D.7 + fix tun_rs Android backend
 
 > Brief d'agent autonome warren-app + warren-core.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy + §0.6 WORKTREE SÉPARÉ OBLIGATOIRE.
@@ -16,16 +16,16 @@
 
 Sous-phases restantes (séquentielles autonomes) :
 
-1. **D-cont.1 — Setup worktree warren-app dédié Android** (~30 min)
-2. **D-cont.2 — Fix tun_rs Android backend OR custom PacketDevice** (~3-5j, blocker D.4)
-3. **D.4 — VpnService Quinn full rewrite** (~10-14j)
-4. **D.5 — UI Compose wallet Ed25519 BIP39** (~5-7j)
-5. **D.6 — Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j, dépend Session G)
-6. **D.7 — Build APK signed + smoke Android emulator + Play Store internal-test** (~3-5j)
+1. **D-cont.1, Setup worktree warren-app dédié Android** (~30 min)
+2. **D-cont.2, Fix tun_rs Android backend OR custom PacketDevice** (~3-5j, blocker D.4)
+3. **D.4, VpnService Quinn full rewrite** (~10-14j)
+4. **D.5, UI Compose wallet Ed25519 BIP39** (~5-7j)
+5. **D.6, Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j, dépend Session G)
+6. **D.7, Build APK signed + smoke Android emulator + Play Store internal-test** (~3-5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Submodule `android/rust-android-gradle-plugin` peut nécessiter init (additif, non destructif).
 
@@ -96,7 +96,7 @@ cat /Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-app/memory/wa
 
 ---
 
-## D-cont.1 — Setup worktree Android (~30 min)
+## D-cont.1, Setup worktree Android (~30 min)
 
 Cf. §0.6.
 
@@ -108,7 +108,7 @@ Cf. §0.6.
 
 ---
 
-## D-cont.2 — Fix tun_rs Android backend OR custom PacketDevice (~3-5j)
+## D-cont.2, Fix tun_rs Android backend OR custom PacketDevice (~3-5j)
 
 ### Contexte
 
@@ -120,21 +120,21 @@ Sans ce fix, D.4 VpnService Quinn ne peut pas alimenter le tunnel warren-core. W
 
 3 stratégies possibles, à arbitrer §0.5 :
 
-**Stratégie A — Contribute upstream tun_rs** :
+**Stratégie A, Contribute upstream tun_rs** :
 - Implémenter `tun_rs::AsyncDevice::from_fd_android` upstream
 - PR vers `tun-rs-rs/tun-rs`
 - Wait merge + release tun_rs 2.9
 - Update warren-core dep
 - **Risque** : timing upstream merge incontrôlable (~semaines)
 
-**Stratégie B — Fork local tun_rs** :
+**Stratégie B, Fork local tun_rs** :
 - Fork `tun_rs` dans `vendor/tun-rs-android/` ou submodule
 - Implémenter backend Android : `VpnService.Builder().establish()` → ParcelFileDescriptor → fd → OwnedFd
 - Wire Quinn UDP socket sur ce fd
 - warren-core dep vers fork local
 - **Risque** : maintenance burden fork
 
-**Stratégie C — Custom Warren impl, bypass tun_rs** :
+**Stratégie C, Custom Warren impl, bypass tun_rs** :
 - warren-tunnel ajoute `#[cfg(target_os = "android")]` PacketDevice impl direct
 - Pas de `tun_rs` Android, juste tokio I/O sur `OwnedFd` du ParcelFileDescriptor
 - Reuse pattern Mullvad Android (déjà fait pour WireGuard upstream, à porter pour Quinn UDP)
@@ -159,7 +159,7 @@ Recommandation : **Stratégie C** (custom impl, alignement Mullvad WG pattern). 
 
 ---
 
-## D.4 — VpnService Quinn full rewrite (~10-14j)
+## D.4, VpnService Quinn full rewrite (~10-14j)
 
 Phase la plus complexe. Cf. brief original Session D §D.4 pour scope détaillé. Résumé :
 
@@ -182,7 +182,7 @@ Phase la plus complexe. Cf. brief original Session D §D.4 pour scope détaillé
 
 ---
 
-## D.5 — UI Compose wallet Ed25519 BIP39 (~5-7j)
+## D.5, UI Compose wallet Ed25519 BIP39 (~5-7j)
 
 Cf. brief original Session D §D.5. Résumé :
 
@@ -204,7 +204,7 @@ Cf. brief original Session D §D.5. Résumé :
 
 ---
 
-## D.6 — Multi-hop + DAITA + NAT-PMP UI parity (~5-7j, dépend Session G)
+## D.6, Multi-hop + DAITA + NAT-PMP UI parity (~5-7j, dépend Session G)
 
 ⚠️ **DÉPENDANCE STRICTE** : Session G livré GO ULTIMATE avant D.6 DAITA UI. Sinon DAITA Android = feature non-shippable.
 
@@ -232,7 +232,7 @@ Cf. brief original Session D §D.6. Résumé :
 
 ---
 
-## D.7 — Build APK signed + smoke Android emulator + Play Store internal-test (~3-5j)
+## D.7, Build APK signed + smoke Android emulator + Play Store internal-test (~3-5j)
 
 Cf. brief original Session D §D.7. Résumé :
 

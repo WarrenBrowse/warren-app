@@ -12,7 +12,7 @@ UI Electron multi-hop livré.
 
 **Objectif** : éliminer 4 caveats accumulés M4.H.A → C avant
 M4.H.D build pipeline :
-1. **M4.H.E.1** : reconnect cache wiring (caveat M4.H.C.X) — UX
+1. **M4.H.E.1** : reconnect cache wiring (caveat M4.H.C.X), UX
    bug shipping blocker
 2. **M4.H.E.2** : daemon-fork `account create` Remote LOCAL=0 factory
    bug (caveat M4.H.A)
@@ -380,7 +380,7 @@ Warren-app :
 - Create `warren_m4h_e_delivered.md`
 - Update source-of-truth orchestrateur (`project_warren_app_state_
   post_m4hc.md` post-add section M4.H.E ou create post_m4he.md)
-- Index MEMORY.md : `- [M4.H.E delivered](warren_m4h_e_delivered.md) — <verdict> 4 caveats fixés avant M4.H.D build pipeline`
+- Index MEMORY.md : `- [M4.H.E delivered](warren_m4h_e_delivered.md), <verdict> 4 caveats fixés avant M4.H.D build pipeline`
 
 Warren-core :
 - Si M4.H.E.3 patch warren-core : update memory si pertinent

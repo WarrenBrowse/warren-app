@@ -1,4 +1,4 @@
-# Session H — A.4 UI follow-up (modal + gRPC + persistance + multi-hop pinning + forensic)
+# Session H, A.4 UI follow-up (modal + gRPC + persistance + multi-hop pinning + forensic)
 
 > Brief d'agent autonome warren-app (surface principale) + warren-core (mineur si nécessaire).
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **H.1 — Setup worktree warren-app dédié** (~30 min)
-2. **H.2 — UI modal Electron `WarrenPubKeyWarning.tsx` + i18n** (~1-1.5j)
-3. **H.3 — gRPC `TrustNewExitKey` + `ResetPinnedExitKeys` RPCs** (~1j)
-4. **H.4 — Persistance settings.json depuis verify hook (channel consumer)** (~0.5-1j)
-5. **H.5 — Multi-hop pubkey pinning (design + impl si court)** (~0.5-1j)
-6. **H.6 — Forensic country/city blank-on-insert fix** (~0.5j)
-7. **H.7 — Tests E2E + rapport + memory** (~0.5j)
+1. **H.1, Setup worktree warren-app dédié** (~30 min)
+2. **H.2, UI modal Electron `WarrenPubKeyWarning.tsx` + i18n** (~1-1.5j)
+3. **H.3, gRPC `TrustNewExitKey` + `ResetPinnedExitKeys` RPCs** (~1j)
+4. **H.4, Persistance settings.json depuis verify hook (channel consumer)** (~0.5-1j)
+5. **H.5, Multi-hop pubkey pinning (design + impl si court)** (~0.5-1j)
+6. **H.6, Forensic country/city blank-on-insert fix** (~0.5j)
+7. **H.7, Tests E2E + rapport + memory** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver fichiers modified/untracked. Violation = scope error CRITIQUE.
 
@@ -43,10 +43,10 @@ Escalade `AskUserQuestion` SEULEMENT si :
 5. **Spécifique session H** : si multi-hop pubkey pinning (H.5) demande refactor cross-repo majeur (> 2-3j seul), escalader pour décision split en session séparée vs continuer
 
 Décisions tactiques agent autorisées :
-- UI modal placement : modal overlay full-screen vs banner top vs floating notification — recommandation modal overlay (force user attention pour security event)
+- UI modal placement : modal overlay full-screen vs banner top vs floating notification, recommandation modal overlay (force user attention pour security event)
 - gRPC RPC payload format : `TrustNewExitKey(exit_id, new_pubkey)` vs flexible (Tonic message)
 - Persistance schema : ajouter dans settings.json existant (Mullvad pattern) vs sqlite warren-tunnel cache (Session A.4 storage)
-- Multi-hop pinning : par exit only OR par (entry, exit) tuple — recommandation par exit only (entry rotation autorisée sans warning)
+- Multi-hop pinning : par exit only OR par (entry, exit) tuple, recommandation par exit only (entry rotation autorisée sans warning)
 - Forensic country/city : SQLite COALESCE vs default values, choix idiomatique
 
 ---
@@ -100,7 +100,7 @@ cat .planning/a4-pubkey-pinning-design.md
 
 ---
 
-## H.1 — Setup worktree warren-app dédié (~30 min)
+## H.1, Setup worktree warren-app dédié (~30 min)
 
 Cf. §0.6. Worktree créé.
 
@@ -112,7 +112,7 @@ Cf. §0.6. Worktree créé.
 
 ---
 
-## H.2 — UI modal Electron `WarrenPubKeyWarning.tsx` + i18n (~1-1.5j)
+## H.2, UI modal Electron `WarrenPubKeyWarning.tsx` + i18n (~1-1.5j)
 
 ### Scope H.2
 
@@ -122,9 +122,9 @@ Cf. §0.6. Worktree créé.
    - Body : "The Warren exit server you previously trusted has a different cryptographic identity now. This may indicate a legitimate server key rotation OR a man-in-the-middle attack."
    - Details collapsible : exit_id (hex truncated 8 chars + tooltip full), pubkey old (truncated) + pubkey new (truncated), first_seen + last_seen timestamps
    - 3 CTAs :
-     - **"Trust new key"** — primary action, calls gRPC TrustNewExitKey, dismiss modal, retry connect
-     - **"Reject (disconnect)"** — secondary, dismiss modal + remain disconnected
-     - **"Report to Warren"** — tertiary, POST /v1/incidents/pubkey-mismatch (déjà câblé Session E) + dismiss + remain disconnected
+     - **"Trust new key"**, primary action, calls gRPC TrustNewExitKey, dismiss modal, retry connect
+     - **"Reject (disconnect)"**, secondary, dismiss modal + remain disconnected
+     - **"Report to Warren"**, tertiary, POST /v1/incidents/pubkey-mismatch (déjà câblé Session E) + dismiss + remain disconnected
 2. **H.2.2** Trigger logic : composant écoute WarrenStatus update via Redux/Context. Si `WarrenStatus.pubkey_mismatch_pending: Option<{exit_id, old_pubkey, new_pubkey}>` set, monter le modal. Surface via gRPC streaming Updates (existant Session B M4.H.C).
 3. **H.2.3** i18n FR + EN strings dans `desktop/packages/mullvad-vpn/locales/{en,fr}/messages.po` :
    - "Server identity changed" / "Identité du serveur changée"
@@ -154,7 +154,7 @@ Cf. §0.6. Worktree créé.
 
 ---
 
-## H.3 — gRPC `TrustNewExitKey` + `ResetPinnedExitKeys` RPCs (~1j)
+## H.3, gRPC `TrustNewExitKey` + `ResetPinnedExitKeys` RPCs (~1j)
 
 ### Scope H.3
 
@@ -188,7 +188,7 @@ Cf. §0.6. Worktree créé.
 
 ---
 
-## H.4 — Persistance settings.json depuis verify hook (channel consumer) (~0.5-1j)
+## H.4, Persistance settings.json depuis verify hook (channel consumer) (~0.5-1j)
 
 ### Scope H.4
 
@@ -219,7 +219,7 @@ Le verify hook Session E crée un channel `mpsc::Sender<PubkeyEvent>` mais aucun
 
 ---
 
-## H.5 — Multi-hop pubkey pinning (design + impl si court) (~0.5-1j)
+## H.5, Multi-hop pubkey pinning (design + impl si court) (~0.5-1j)
 
 ### Scope H.5
 
@@ -245,7 +245,7 @@ Session E pinning : single-hop exit pubkey only. Multi-hop = pas câblé.
 
 ---
 
-## H.6 — Forensic country/city blank-on-insert fix (~0.5j)
+## H.6, Forensic country/city blank-on-insert fix (~0.5j)
 
 ### Scope H.6
 
@@ -267,7 +267,7 @@ Mentionné Session E §4.3 caveat 5. Lors du POST `/v1/incidents/pubkey-mismatch
 
 ---
 
-## H.7 — Tests E2E + rapport + memory (~0.5j)
+## H.7, Tests E2E + rapport + memory (~0.5j)
 
 ### Scope H.7
 

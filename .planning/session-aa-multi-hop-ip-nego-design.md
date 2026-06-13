@@ -1,6 +1,6 @@
-# Session AA — Multi-hop IP negotiation v1 (design)
+# Session AA, Multi-hop IP negotiation v1 (design)
 
-> Status : **DESIGN — implementation deferred to Sessions AB+**
+> Status : **DESIGN, implementation deferred to Sessions AB+**
 > Date : 2026-05-22
 > Cost réel : **0 EUR**
 
@@ -59,9 +59,9 @@ Rationale : `0xC0` is outside any valid IP version nibble and is not the DAITA d
   marker  version
 ```
 
-- `0xC0` — fixed prefix; receivers MUST drop the frame as malformed if the version byte is missing.
-- `0x01` — control protocol version. Mismatched versions = drop with `tracing::warn!`. Bumped only on breaking wire changes; backward-compat additions go inside the postcard struct via Serde's optional fields.
-- Postcard payload — `WarrenControlMessage` enum.
+- `0xC0`, fixed prefix; receivers MUST drop the frame as malformed if the version byte is missing.
+- `0x01`, control protocol version. Mismatched versions = drop with `tracing::warn!`. Bumped only on breaking wire changes; backward-compat additions go inside the postcard struct via Serde's optional fields.
+- Postcard payload, `WarrenControlMessage` enum.
 
 ### `WarrenControlMessage` enum (v1)
 
@@ -158,7 +158,7 @@ New ordered startup :
 6. Spawn supervisor's uplink/downlink pumps (existing path, but TUN now uses the negotiated IP).
 7. Wait for shutdown.
 
-Bounded by a `tokio::time::timeout(Duration::from_secs(5), ...)` on the IpAssign wait — if exit doesn't answer in 5 s, error out and let supervisor reconnect.
+Bounded by a `tokio::time::timeout(Duration::from_secs(5), ...)` on the IpAssign wait, if exit doesn't answer in 5 s, error out and let supervisor reconnect.
 
 ### Pump-side handling of control messages
 
@@ -173,13 +173,13 @@ match plaintext.first() {
 }
 ```
 
-In v1, control messages are only sent *during startup* — after the initial IpAssign, neither side emits a `0xC0` plaintext. But the rx dispatch is permanent so future control extensions (per-session DAITA spec, MTU renegotiation, etc.) can land without touching the dispatch logic.
+In v1, control messages are only sent *during startup*, after the initial IpAssign, neither side emits a `0xC0` plaintext. But the rx dispatch is permanent so future control extensions (per-session DAITA spec, MTU renegotiation, etc.) can land without touching the dispatch logic.
 
 ---
 
 ## Test surface (per session)
 
-### Session AB — Wire format + encode/decode
+### Session AB, Wire format + encode/decode
 
 - `crates/warren-multihop/tests/control_message_v1.rs` :
   - Round-trip each `WarrenControlMessage` variant through `encode_control` / `try_decode_control`.
@@ -187,20 +187,20 @@ In v1, control messages are only sent *during startup* — after the initial IpA
   - Pass-through : non-`0xC0` prefix returns `Ok(None)`.
   - Reject truncated postcard payload.
 
-### Session AC — Allocator
+### Session AC, Allocator
 
 - `crates/warren-exit/tests/ip_pool_basic.rs` :
   - Allocate up to subnet capacity then expect `None` on overflow.
   - Release returns the IP to the free queue.
   - Gateway IP never allocated.
 
-### Session AD — End-to-end pump integration
+### Session AD, End-to-end pump integration
 
 - `crates/warren-exit/tests/multihop_tun_with_ip_nego.rs` :
   - Spawn 2 simulated clients against one exit, assert they get distinct IPs.
   - Assert the first frame from each client is an `IpRequest`, the first reverse frame is an `IpAssign`.
 
-### Session AE — Production wire-up
+### Session AE, Production wire-up
 
 - `warren-client::main::run_multi_hop_with_tun` : reorder + TUN-after-IpAssign.
 - `warren-exit::main` : allocator surface, CLI flags.
@@ -211,9 +211,9 @@ In v1, control messages are only sent *during startup* — after the initial IpA
 ## Risks + open questions
 
 1. **TUN creation timing on Linux / macOS** : `RealTun::create_with_ipv4_mtu` issues blocking syscalls (`ioctl SIOCSIFADDR`, route install). Moving TUN creation *after* QUIC handshake adds latency to first packet. Mitigation : create TUN with a placeholder IP `0.0.0.0/0` immediately, then reconfigure via `ip addr add` after IpAssign. Need a `RealTun::reassign_ipv4` method.
-2. **Supervisor reconnect semantics** : `MultiHopSupervisor` currently swaps `Connection`s under the watch channel without re-negotiating IP. After AA, every fresh `Connection` MUST trigger a new IpRequest/IpAssign round-trip, and the client TUN MUST be reconfigured if the exit allocates a different IP. Alternative : exit-side persistence by client pubkey (stickiness) — out of v1.
-3. **HPKE session reset on rekey** : when the client rotates `encapsulated_key`, the exit's `SessionCache` may reuse the IP from the prior session or allocate fresh. v1 keeps it simple — IP follows the QUIC `Connection`, not the HPKE session, and rekey within a single QUIC conn does not trigger IpRequest.
-4. **Control plaintext under DAITA** : DAITA dummies are still 0xFF on the wire. Control messages (0xC0) are real packets that count as `NormalSent`/`NormalRecv` in the maybenot framework. Acceptable v1 — DAITA observers see exactly 2 small "real packets" at handshake (the IP exchange), which is indistinguishable from any other tiny IP packet (e.g. a TCP SYN).
+2. **Supervisor reconnect semantics** : `MultiHopSupervisor` currently swaps `Connection`s under the watch channel without re-negotiating IP. After AA, every fresh `Connection` MUST trigger a new IpRequest/IpAssign round-trip, and the client TUN MUST be reconfigured if the exit allocates a different IP. Alternative : exit-side persistence by client pubkey (stickiness), out of v1.
+3. **HPKE session reset on rekey** : when the client rotates `encapsulated_key`, the exit's `SessionCache` may reuse the IP from the prior session or allocate fresh. v1 keeps it simple, IP follows the QUIC `Connection`, not the HPKE session, and rekey within a single QUIC conn does not trigger IpRequest.
+4. **Control plaintext under DAITA** : DAITA dummies are still 0xFF on the wire. Control messages (0xC0) are real packets that count as `NormalSent`/`NormalRecv` in the maybenot framework. Acceptable v1, DAITA observers see exactly 2 small "real packets" at handshake (the IP exchange), which is indistinguishable from any other tiny IP packet (e.g. a TCP SYN).
 
 ---
 
@@ -232,9 +232,9 @@ In v1, control messages are only sent *during startup* — after the initial IpA
 
 ## Doctrine
 
-- §0.0 INVIOLABLE git respecté — no destructive working-tree commands used.
-- §0.5 plein mandat — Session AA scope strictly bounded to design (no production code touched).
-- §0.6 worktree — not used for this session (design-only markdown lives in `warren-app/.planning/`).
+- §0.0 INVIOLABLE git respecté, no destructive working-tree commands used.
+- §0.5 plein mandat, Session AA scope strictly bounded to design (no production code touched).
+- §0.6 worktree, not used for this session (design-only markdown lives in `warren-app/.planning/`).
 
 ---
 

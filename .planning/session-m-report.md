@@ -1,6 +1,6 @@
-# Session M — warren-exit binary wiring multi-hop DAITA + bench aborted
+# Session M, warren-exit binary wiring multi-hop DAITA + bench aborted
 
-> Status : **GO PARTIEL — wiring binary livré, bench full multi-hop deferred (poka-driven)**
+> Status : **GO PARTIEL, wiring binary livré, bench full multi-hop deferred (poka-driven)**
 > Date : 2026-05-21
 > Cost réel : **~0.003 EUR** (3 ccx13 nodes × ~5 min transient, cleanup done)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. §0.6 worktree séparé respecté.
@@ -11,7 +11,7 @@
 
 Session M visait la **bench Hetzner cross-DC consolidée multi-hop full DAITA** pour fermer B.1.8 caveat empiriquement.
 
-**Pivot §0.5 — bench aborted** après pré-flight infra. Justification :
+**Pivot §0.5, bench aborted** après pré-flight infra. Justification :
 - Orchestration 3-node (client + relay + exit) avec descriptor signing + key generation + TUN config 3-way + cross-DC routing + iperf3 measurement est substantielle (~1-2h focused work)
 - Cross-compile 3 binaires (chemin gold path Session F mais plus de scope ici)
 - Risk de session-long focus + multiples failure modes mid-orchestration
@@ -60,7 +60,7 @@ Cohérent avec :
 
 ---
 
-## Bench deferred — orchestration outline pour poka
+## Bench deferred, orchestration outline pour poka
 
 Si poka exécute la bench ulterieurement (cost ~0.05-0.10 EUR, 1-2h wallclock) :
 
@@ -129,7 +129,7 @@ hcloud --context warren server delete warren-bench-client warren-bench-relay war
 | Bench iperf3 5 min | ⏭️ DEFERRED |
 | B.1.8 caveat closing | ⏸️ pending bench execution |
 
-**Verdict global : GO PARTIEL** — la pièce code manquante pour le binary warren-exit multi-hop DAITA est livrée. La bench orchestration reste ops task séparée, idéalement poka-driven avec full focus.
+**Verdict global : GO PARTIEL**, la pièce code manquante pour le binary warren-exit multi-hop DAITA est livrée. La bench orchestration reste ops task séparée, idéalement poka-driven avec full focus.
 
 ---
 

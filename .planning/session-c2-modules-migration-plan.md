@@ -1,4 +1,4 @@
-# Session C.2 — Swift packages rebrand migration plan
+# Session C.2, Swift packages rebrand migration plan
 
 Plan d'exécution pour la sous-phase C.2 du brief Session C iOS fork.
 Référence : `.planning/session-c-ios-fork-brief.md` §C.2.
@@ -45,16 +45,16 @@ Référence : `.planning/session-c-ios-fork-brief.md` §C.2.
 
 Le rebrand d'un module modifie les `import` chez tous ses importateurs. En commençant par les modules feuilles (peu d'importateurs, dépend de peu de choses), on minimise les cascades.
 
-1. **MullvadRustRuntimeTests** (~3 importers, isolé) — proof of pattern
+1. **MullvadRustRuntimeTests** (~3 importers, isolé), proof of pattern
 2. **MullvadRESTTests** (~5 importers)
 3. **MullvadVPNUITests** (~50 importers, UI tests isolated)
 4. **MullvadMockData** (24 importers, dépend de MullvadTypes uniquement)
 5. **MullvadLogging** (68 importers, dépend de MullvadTypes + swift-log)
-6. **MullvadRustRuntime** (33 importers, lien C.3 vers warren-ios crate — peut être différé jusqu'à C.3 pour éviter double migration)
+6. **MullvadRustRuntime** (33 importers, lien C.3 vers warren-ios crate, peut être différé jusqu'à C.3 pour éviter double migration)
 7. **MullvadREST** (94 importers)
 8. **MullvadSettings** (172 importers)
-9. **MullvadTypes** (305 importers — racine, en dernier)
-10. **MullvadVPN** (host app — en dernier, après tous ses dependencies)
+9. **MullvadTypes** (305 importers, racine, en dernier)
+10. **MullvadVPN** (host app, en dernier, après tous ses dependencies)
 11. **MullvadVPNTests** (host tests, avec MullvadVPN)
 
 ---
@@ -125,7 +125,7 @@ Pour chaque module `MullvadX` à rebrand en `WarrenX` :
 - Vérifier xcodebuild après chaque commit.
 
 ### Risque 4 : Race condition avec autres agents (Session D Android, etc.)
-**Cause** : cf. memory `feedback_parallel_agents_same_worktree` — `git add` capture les modifs d'autres agents sur le même working tree.
+**Cause** : cf. memory `feedback_parallel_agents_same_worktree`, `git add` capture les modifs d'autres agents sur le même working tree.
 
 **Mitigation** :
 - Lancer Session C.2 sur un worktree séparé : `git worktree add ../warren-app-ios-c2 main`.

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────────
-# Warren VPN — Development launcher
+# Warren VPN, Development launcher
 # Cross-platform (macOS / Linux), robust signal handling
 #
 # Usage:
@@ -51,7 +51,7 @@ die()   { err "$@"; exit 1; }
 # Dependency checks
 # ─────────────────────────────────────────────────────────────────────
 require_cmd() {
-  command -v "$1" >/dev/null 2>&1 || die "'$1' not found in PATH — install it first"
+  command -v "$1" >/dev/null 2>&1 || die "'$1' not found in PATH, install it first"
 }
 
 check_daemon_deps() {
@@ -166,7 +166,7 @@ dns_is_loopback() {
 snapshot_dns() {
   is_macos || return 0
   if dns_is_loopback; then
-    warn "System DNS already points at a loopback resolver — skipping snapshot"
+    warn "System DNS already points at a loopback resolver, skipping snapshot"
     return 0
   fi
   : > "$DNS_SNAPSHOT_FILE"
@@ -202,7 +202,7 @@ restore_dns_snapshot() {
 restore_dns_if_leaked() {
   is_macos || return 0
   if dns_is_loopback; then
-    warn "Stale loopback DNS detected (daemon exited without restoring it) — repairing"
+    warn "Stale loopback DNS detected (daemon exited without restoring it), repairing"
     restore_dns_snapshot
   fi
 }
@@ -247,7 +247,7 @@ build_daemon() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# stop — kill daemon tracked by PID file
+# stop, kill daemon tracked by PID file
 # ─────────────────────────────────────────────────────────────────────
 stop_daemon() {
   local pid
@@ -268,7 +268,7 @@ stop_daemon() {
   done
 
   if pid_alive "$pid"; then
-    warn "Daemon did not exit after 5 s — sending SIGKILL"
+    warn "Daemon did not exit after 5 s, sending SIGKILL"
     sudo kill -KILL "$pid" 2>/dev/null || true
   fi
 
@@ -281,7 +281,7 @@ stop_daemon() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# daemon — build + run in foreground (standalone, exec-replaces shell)
+# daemon, build + run in foreground (standalone, exec-replaces shell)
 # ─────────────────────────────────────────────────────────────────────
 start_daemon_foreground() {
   parse_daemon_flags "$@"
@@ -312,7 +312,7 @@ start_daemon_foreground() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# app — Electron with Vite hot-reload (standalone, exec-replaces shell)
+# app, Electron with Vite hot-reload (standalone, exec-replaces shell)
 # ─────────────────────────────────────────────────────────────────────
 start_app() {
   check_app_deps
@@ -333,7 +333,7 @@ start_app() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# both — daemon (background) + app (foreground), unified lifecycle
+# both, daemon (background) + app (foreground), unified lifecycle
 # ─────────────────────────────────────────────────────────────────────
 cleanup_both() {
   (( CLEANUP_DONE )) && return
@@ -357,7 +357,7 @@ cleanup_both() {
       sleep 0.5; (( i++ ))
     done
     if pid_alive "$APP_PID"; then
-      warn "App did not exit after 4 s — forcing"
+      warn "App did not exit after 4 s, forcing"
       kill_tree "$APP_PID" KILL
     fi
     wait "$APP_PID" 2>/dev/null || true
@@ -386,7 +386,7 @@ start_both() {
 
   # ── Start daemon in background, log to file ──
   if pid_alive "$(read_pid_file)"; then
-    warn "Daemon already running (PID $(read_pid_file)) — reusing"
+    warn "Daemon already running (PID $(read_pid_file)), reusing"
   else
     : > "$DAEMON_LOG"
     # See `start_daemon_foreground` for the rationale behind
@@ -398,7 +398,7 @@ start_both() {
 
     sleep 1
     if ! pid_alive "$DAEMON_PID"; then
-      err "Daemon exited immediately — last 20 lines:"
+      err "Daemon exited immediately, last 20 lines:"
       tail -20 "$DAEMON_LOG" >&2
       exit 1
     fi
@@ -431,7 +431,7 @@ show_status() {
   local pid
   pid="$(read_pid_file)"
 
-  printf "${C_BOLD}Warren VPN — dev status${C_RESET}\n"
+  printf "${C_BOLD}Warren VPN, dev status${C_RESET}\n"
   echo ""
 
   if [[ -n "$pid" ]] && pid_alive "$pid"; then
@@ -458,7 +458,7 @@ show_status() {
 # ─────────────────────────────────────────────────────────────────────
 usage() {
   cat <<EOF
-${C_BOLD}Warren VPN — Development launcher${C_RESET}
+${C_BOLD}Warren VPN, Development launcher${C_RESET}
 
 ${C_GREEN}Usage:${C_RESET}
   $(basename "$0") <command> [options]

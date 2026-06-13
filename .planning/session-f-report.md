@@ -1,6 +1,6 @@
-# Session F — B.1.8 bench Hetzner DAITA overhead — RAPPORT FINAL
+# Session F, B.1.8 bench Hetzner DAITA overhead, RAPPORT FINAL
 
-> Status : **VERDICT MIXTE — B.1.8 caveat session B NOT closed**
+> Status : **VERDICT MIXTE, B.1.8 caveat session B NOT closed**
 > Date : 2026-05-21
 > Cost réel : ~0.015 EUR (2× ccx13 × ~50 min)
 > Coût cap brief : 0.30 EUR (target 0.05)
@@ -24,8 +24,8 @@ Session F ne **ferme pas** le caveat B.1.8 (bench DAITA overhead Hetzner cross-D
 
 ## Architecture bench déployée
 
-- **warren-bench-exit** : Hetzner ccx13 (2 dedicated CPU / 8 GB RAM) — `fsn1-dc14` (Falkenstein) — IP `138.199.236.149`
-- **warren-bench-client** : Hetzner ccx13 — `nbg1-dc3` (Nuremberg) — IP `5.75.142.187`
+- **warren-bench-exit** : Hetzner ccx13 (2 dedicated CPU / 8 GB RAM), `fsn1-dc14` (Falkenstein), IP `138.199.236.149`
+- **warren-bench-client** : Hetzner ccx13, `nbg1-dc3` (Nuremberg), IP `5.75.142.187`
 - **Cross-DC** : FSN1 ↔ NBG1, RTT TUN ~3.4 ms (cf. ping post-handshake)
 - **Binaires** : warren-core HEAD `ba819cf+` cross-compile cross-rs/x86_64-unknown-linux-gnu (1m 08s)
 - **warren-exit flags** : `--bind-addr <IP>:443 --tun-name warren0 --pool-cidr 10.66.0.0/16 --use-tun --enable-ipv6 --enable-natpmp --natpmp-backend nftables --enable-daita --allow-anonymous-clients --mnemonic-file ...`
@@ -46,7 +46,7 @@ Session F ne **ferme pas** le caveat B.1.8 (bench DAITA overhead Hetzner cross-D
 | F.4a | TCP -P4 DAITA ON num-conns 4 | **402** | 783K | 3 intervals 0 Mbps mid-bench |
 | F.4b | TCP -P4 DAITA ON num-conns 1 | 613 | 1.57M | Mid-bench stalls |
 | F.4c | TCP -P4 DAITA ON num-conns 8 | 1106 | 529K | Peaks 1787 Mbps, 3 intervals 0 |
-| F.4d | UDP 200M cap DAITA ON num-conns 4 | **ERROR** | — | iperf3 socket EAGAIN, 8 pump warns / 5 min |
+| F.4d | UDP 200M cap DAITA ON num-conns 4 | **ERROR** | - | iperf3 socket EAGAIN, 8 pump warns / 5 min |
 
 ### CPU / RSS samples (5s intervals)
 - **DAITA OFF** : client CPU avg 12% / RSS 22 MB. exit CPU avg 43% / RSS 35 MB.
@@ -91,7 +91,7 @@ Recommandation : **NE PAS escalader pour tuning machine spec maybenot**. La spec
 ## Recommandations pour M5.B.1.X (warren-core)
 
 1. **Reproduire localement** : ajouter un test integ multi_conn_daita.rs avec sustained 5 min in-process + 200 Mbps simulated throughput (vs 30s actuel). Voir si la stall apparaît hors cross-DC.
-2. **Inspecter pump_multi_bidirectional_with_daita** triple-task model : la task downlink fait `conn.read_datagram()` — vérifier si Quinn datagram queue saturation ou idle timeout sur conn sub-handle peut provoquer le read error.
+2. **Inspecter pump_multi_bidirectional_with_daita** triple-task model : la task downlink fait `conn.read_datagram()`, vérifier si Quinn datagram queue saturation ou idle timeout sur conn sub-handle peut provoquer le read error.
 3. **DAITA + Quinn keepalive** : confirmer que les DAITA dummy packets refreshent bien `path.last_received` côté Quinn (sinon idle timeout 180s peut hit avant que le dummy "compte"). Memory `warren_daita_groundwork` warren-core a peut-être la doc.
 4. **Cross-DC sustained UDP 200M rate-cap test** : ajouter à `bench/scenarios/` un scénario rate-capped (vs saturation TCP -P4) pour valider future fix.
 
@@ -120,7 +120,7 @@ Recommandation : **NE PAS escalader pour tuning machine spec maybenot**. La spec
 ## Cleanup F.6
 
 - Nodes Hetzner deleted : `warren-bench-client`, `warren-bench-exit`
-- Production préservés : `warren-exit-1` (HEL1, 130669355), `warren-backend-api` (HEL1, 130671274) — INTACTS
+- Production préservés : `warren-exit-1` (HEL1, 130669355), `warren-backend-api` (HEL1, 130671274), INTACTS
 - Local : `.warren-exits/warren-bench-exit.mnemonic` créé (32 bytes, kept gitignored)
 - Cost réel Hetzner : ~50 min × 2 ccx13 × 0.012 €/h = **0.020 EUR** (cap 0.30, target 0.05 OK)
 
@@ -129,13 +129,13 @@ Recommandation : **NE PAS escalader pour tuning machine spec maybenot**. La spec
 ## Memory updates
 
 - warren-app : `warren_session_f_delivered.md` (nouveau memory, ce rapport) + update MEMORY.md
-- warren-app MEMORY.md ligne B.1.8 : update statut « OPEN — découvre pump stability bug » (vs « pending poka hcloud »)
+- warren-app MEMORY.md ligne B.1.8 : update statut « OPEN, découvre pump stability bug » (vs « pending poka hcloud »)
 - warren-core (recommandé, hors scope ici) : nouveau memory `warren_daita_pump_stability_bug.md` documentant le finding
 
 ---
 
 ## Verdict GO/NO-GO session F
 
-**GO PARTIAL** — la session F atteint un finding actionable (cause root caveat B.1.8) mais n'achève pas l'objectif principal (mesure overhead). Le caveat B.1.8 reste **OPEN** avec scope précisé : investigation pump warren-core requise. Le différenciateur produit DAITA reste **fonctionnellement validé** par les integ tests session B (in-process), mais le claim « ≤ 15% overhead bandwidth cross-DC » reste **non-empiriquement validé sur la stack production**.
+**GO PARTIAL**, la session F atteint un finding actionable (cause root caveat B.1.8) mais n'achève pas l'objectif principal (mesure overhead). Le caveat B.1.8 reste **OPEN** avec scope précisé : investigation pump warren-core requise. Le différenciateur produit DAITA reste **fonctionnellement validé** par les integ tests session B (in-process), mais le claim « ≤ 15% overhead bandwidth cross-DC » reste **non-empiriquement validé sur la stack production**.
 
 Doctrine §0.0 + §0.5 + §0.6 respectée. Aucune commande destructive. Cost cap respecté.

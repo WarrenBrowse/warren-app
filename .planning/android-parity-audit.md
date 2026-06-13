@@ -1,13 +1,13 @@
-# Audit de parité Android — Warren VPN
+# Audit de parité Android, Warren VPN
 
 **Date** : 2026-05-29
 
 ## Résumé exécutif
 
-Cet audit compare 10 clusters de fonctionnalités entre Warren desktop (référence) et Warren Android. Le constat est sévère : **aucun cluster n'est à pleine parité**. La répartition est la suivante — **0 à parité complète**, **0 réduit (parité fonctionnelle moindre mais cohérente)**, **7 partiels** (dns, ipv6, port-forwarding, multihop, account-keys, subscription-payment, onboarding, relay-lists-recents-fine, branding-assets — soit 8 partiels en comptant branding-assets), et **2 absents** (killswitch, failover). Trois clusters P0 concentrent les risques de fuite vie privée les plus critiques :
+Cet audit compare 10 clusters de fonctionnalités entre Warren desktop (référence) et Warren Android. Le constat est sévère : **aucun cluster n'est à pleine parité**. La répartition est la suivante, **0 à parité complète**, **0 réduit (parité fonctionnelle moindre mais cohérente)**, **7 partiels** (dns, ipv6, port-forwarding, multihop, account-keys, subscription-payment, onboarding, relay-lists-recents-fine, branding-assets, soit 8 partiels en comptant branding-assets), et **2 absents** (killswitch, failover). Trois clusters P0 concentrent les risques de fuite vie privée les plus critiques :
 
 - **Killswitch / lockdown (absent)** : Android ne pose aucune règle de pare-feu lors d'une chute du tunnel. Tout le trafic peut fuiter pendant la fenêtre où le tunnel est tombé sans que l'utilisateur le sache. La délégation totale au paramètre système « always-on VPN » de l'OS laisse l'app sans aucune garantie applicative.
-- **IPv6 (partiel — fuite active)** : la route `::/0` est posée en dur quelle que soit la préférence utilisateur. Sur un réseau IPv6, tout le trafic IPv6 est tunnelé sans contrôle ; pire, il n'existe aucun toggle pour le désactiver côté client, et `warren-jni` ignore totalement `enableIpv6`.
+- **IPv6 (partiel, fuite active)** : la route `::/0` est posée en dur quelle que soit la préférence utilisateur. Sur un réseau IPv6, tout le trafic IPv6 est tunnelé sans contrôle ; pire, il n'existe aucun toggle pour le désactiver côté client, et `warren-jni` ignore totalement `enableIpv6`.
 - **DNS (partiel)** : les modèles existent mais ne sont câblés nulle part. `addDnsServer()` n'est jamais appelé, aucun écran ne pilote le DNS, et le blocage de contenu (pubs/trackers/malware) repose entièrement sur le côté exit qui doit être documenté et vérifié.
 
 Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de pays, gestion de compte/devices absente, paiement/abonnement totalement absent, onboarding réduit à 2 écrans, listes/recents/obfuscation fine partielles, failover absent) représentent un déficit fonctionnel majeur mais sans fuite directe. Le seul cluster P2 (branding-assets / « Reconnect now ») est mineur.
@@ -16,23 +16,23 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 | Feature | Priorité | Desktop (profondeur) | Android (état) | Sévérité écart | Estimation |
 |---------|----------|----------------------|----------------|----------------|------------|
-| killswitch (lockdown / always-on) | P0 | Riche — toggle lockdown, notif « BLOCKING INTERNET », état `lockedDown` | Absent | Critique | XL |
-| dns (blocage contenu + DNS custom) | P0 | Riche — 6 toggles de blocage + DNS custom | Partiel (modèle seul, zéro câblage) | Critique | L |
-| ipv6 (toggle activation) | P0 | Complet — toggle persistant, affichage IPv6 | Partiel (route `::/0` en dur, fuite) | Critique | M |
-| port-forwarding (NAT-PMP avancé) | P1 | Riche — protocole, port préféré, statut + compte à rebours | Partiel (bool seul) | Majeur | L |
-| multihop (pays entrée/sortie) | P1 | Riche — toggle + pays entrée/sortie ISO | Partiel (bool seul) | Majeur | XL |
-| failover (bascule auto exit) | P1 | Complet — toggle + bannière « EXIT SWITCHED » | Absent | Majeur | L |
-| account-keys (devices, clés) | P1 | Riche — mnémonique, devices, suppression | Partiel (wallet seul) | Critique | L |
-| subscription-payment (abo, voucher) | P1 | Riche — voucher Crockford-32, expiry, achat | Absent | Critique | XL |
-| onboarding (wizard 5 étapes) | P1 | Complet — 5 étapes + détection 1er lancement | Partiel (2 écrans wallet) | Majeur | L |
-| relay-lists-recents-fine | P1 | Riche — listes custom, recents, obfuscation 6+ méthodes | Partiel (4 bools) | Majeur | XL |
+| killswitch (lockdown / always-on) | P0 | Riche, toggle lockdown, notif « BLOCKING INTERNET », état `lockedDown` | Absent | Critique | XL |
+| dns (blocage contenu + DNS custom) | P0 | Riche, 6 toggles de blocage + DNS custom | Partiel (modèle seul, zéro câblage) | Critique | L |
+| ipv6 (toggle activation) | P0 | Complet, toggle persistant, affichage IPv6 | Partiel (route `::/0` en dur, fuite) | Critique | M |
+| port-forwarding (NAT-PMP avancé) | P1 | Riche, protocole, port préféré, statut + compte à rebours | Partiel (bool seul) | Majeur | L |
+| multihop (pays entrée/sortie) | P1 | Riche, toggle + pays entrée/sortie ISO | Partiel (bool seul) | Majeur | XL |
+| failover (bascule auto exit) | P1 | Complet, toggle + bannière « EXIT SWITCHED » | Absent | Majeur | L |
+| account-keys (devices, clés) | P1 | Riche, mnémonique, devices, suppression | Partiel (wallet seul) | Critique | L |
+| subscription-payment (abo, voucher) | P1 | Riche, voucher Crockford-32, expiry, achat | Absent | Critique | XL |
+| onboarding (wizard 5 étapes) | P1 | Complet, 5 étapes + détection 1er lancement | Partiel (2 écrans wallet) | Majeur | L |
+| relay-lists-recents-fine | P1 | Riche, listes custom, recents, obfuscation 6+ méthodes | Partiel (4 bools) | Majeur | XL |
 | branding-assets (« Reconnect now ») | P2 | Bouton reconnect persistant | Partiel (affordance absente) | Mineur | M |
 
 ---
 
 ## Détail par feature
 
-### killswitch (lockdown / always-on) — P0 — Critique
+### killswitch (lockdown / always-on), P0, Critique
 
 **Desktop (profondeur + preuves)** : implémentation complète d'un mode lockdown (toggle booléen dans `ISettings`) qui bloque tout trafic à la déconnexion. UI dédiée avec bouton d'info distinguant Kill Switch et Lockdown Mode ; système de notification « BLOCKING INTERNET » ; champ `lockedDown: boolean` dans `TunnelState` ; Kill Switch désactivé en dur ; RPC `setLockdownMode`.
 - `desktop/packages/mullvad-vpn/src/shared/daemon-rpc-types.ts:253` (FeatureIndicator.lockdownMode)
@@ -93,9 +93,9 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### dns (blocage contenu + DNS custom) — P0 — Critique
+### dns (blocage contenu + DNS custom), P0, Critique
 
-**Desktop (profondeur + preuves)** : système DNS à deux niveaux — 6 toggles de blocage de contenu (pubs, trackers, malware, contenu adulte, jeux d'argent, réseaux sociaux) via `DefaultDnsOptions`, plus adresses DNS custom via `CustomDnsOptions`. Bascule `default` / `custom`, UI complète.
+**Desktop (profondeur + preuves)** : système DNS à deux niveaux, 6 toggles de blocage de contenu (pubs, trackers, malware, contenu adulte, jeux d'argent, réseaux sociaux) via `DefaultDnsOptions`, plus adresses DNS custom via `CustomDnsOptions`. Bascule `default` / `custom`, UI complète.
 - `desktop/packages/mullvad-vpn/src/shared/daemon-rpc-types.ts:418-431`
 - `desktop/packages/mullvad-vpn/src/renderer/components/views/vpn-settings/VpnSettingsView.tsx:63-64`
 - `desktop/packages/mullvad-vpn/src/renderer/features/dns/components/block-ads-switch/BlockAdsSwitch.tsx:1-27`
@@ -132,7 +132,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 **Estimation** : L.
 
 **Risques** :
-- DNS VpnService (`addDnsServer`) est de niveau système, modifiable par d'autres apps ; documenter que le blocage de contenu n'est pas garanti au niveau TUN — Warren s'appuie sur le filtrage exit-side.
+- DNS VpnService (`addDnsServer`) est de niveau système, modifiable par d'autres apps ; documenter que le blocage de contenu n'est pas garanti au niveau TUN, Warren s'appuie sur le filtrage exit-side.
 - Validation des adresses DNS custom : rejeter formats IP/port invalides avant sérialisation (sinon crash `connectTunnel` ou tunnel dégradé).
 - Persistance liste `InetAddress` : encodeur/décodeur JSON kotlinx-serialization ; risque de mismatch avec desktop (protobuf Go) pour l'import de config.
 - **D.4 follow-up** : le filtrage DNS exit-side doit être documenté et câblé ; sinon les toggles s'affichent activés sans effet.
@@ -143,7 +143,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### ipv6 (toggle activation) — P0 — Critique
+### ipv6 (toggle activation), P0, Critique
 
 **Desktop (profondeur + preuves)** : contrôle complet via toggle persistant (`enableIpv6`, défaut `false`), backé Redux, RPC `setEnableIpv6()`, affichage des adresses IPv4 et IPv6 dans les détails de connexion.
 - `desktop/packages/mullvad-vpn/src/renderer/features/tunnel/components/enable-ipv6-switch/EnableIpv6Switch.tsx:10-26`
@@ -154,7 +154,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 - `desktop/packages/mullvad-vpn/src/main/default-settings.ts:37`
 - `desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/connection-details/ConnectionDetails.tsx:108-112`
 
-**Android (état + preuves)** : **partiel — fuite active**. Couche modèle seule (`TunnelOptions.kt:11` définit `enableIpv6`). Aucune UI. Le builder VpnService route **toujours** IPv4 (`0.0.0.0/0`) ET IPv6 (`::/0`) en dur. `WarrenTunnelConfig` n'a aucun champ `enableIpv6`, le builder ne le lit/passe jamais.
+**Android (état + preuves)** : **partiel, fuite active**. Couche modèle seule (`TunnelOptions.kt:11` définit `enableIpv6`). Aucune UI. Le builder VpnService route **toujours** IPv4 (`0.0.0.0/0`) ET IPv6 (`::/0`) en dur. `WarrenTunnelConfig` n'a aucun champ `enableIpv6`, le builder ne le lit/passe jamais.
 - `android/lib/model/src/main/kotlin/com/warrenbrowse/vpn/lib/model/TunnelOptions.kt:11`
 - `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenQuinnAdapter.kt:162,164`
 - `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt:14-36`
@@ -196,7 +196,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### port-forwarding (NAT-PMP avancé) — P1 — Majeur
+### port-forwarding (NAT-PMP avancé), P1, Majeur
 
 **Desktop (profondeur + preuves)** : riche. `PortForwardingSettingsView` superpose toggle on/off, panneau avancé (protocole TCP/UDP, port externe préféré avec auto-fallback, validation [49152,65535], reconfig live sans reconnexion) et statut (machine à états 5 branches : off, attente tunnel, requesting, mapped + compte à rebours mm:ss au renouvellement à lifetime/2, failed avec raison traduite). `lifetimeSecs` persisté, clampé [60,3600]s.
 - `desktop/packages/mullvad-vpn/src/renderer/components/views/port-forwarding-settings/PortForwardingSettingsView.tsx:30-73`
@@ -204,14 +204,14 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 - `desktop/packages/mullvad-vpn/src/renderer/features/port-forwarding/components/port-forwarding-status/PortForwardingStatus.tsx:34-141,150-185`
 - `desktop/packages/mullvad-vpn/src/shared/daemon-rpc-types.ts:542-587`
 
-**Android (état + preuves)** : **partiel** — toggle booléen minimal seulement. Un Switch « NAT-PMP port forwarding » ; pas de sélecteur de protocole, ni saisie de port, ni statut. `assignedNatPmpPort: Int?` existe sur `Connected` mais n'apparaît que dans le texte d'état (`describe()`), pas de panneau dédié.
+**Android (état + preuves)** : **partiel**, toggle booléen minimal seulement. Un Switch « NAT-PMP port forwarding » ; pas de sélecteur de protocole, ni saisie de port, ni statut. `assignedNatPmpPort: Int?` existe sur `Connected` mais n'apparaît que dans le texte d'état (`describe()`), pas de panneau dédié.
 - `android/lib/feature/settings/impl/src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenTunnelSettingsScreen.kt:93-98`
 - `android/lib/repository/src/main/kotlin/com/warrenbrowse/vpn/lib/repository/WarrenLocalSettingsRepository.kt:34-35,57-60`
 - `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt:22`
 - `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelState.kt:13-19`
 - `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenQuinnStateProxy.kt:57`
 
-**Support warren-core / warren-jni** : **partiel**. `warren-natpmp-client` est complet (MapProto TCP/UDP, `NatPmpMapping`, boucle de refresh avec `NatPmpEvent` Mapped/Renewed/Failed + `NatPmpFailureReason`). Mais le wrapper JNI **code en dur** `MapProtocol::Udp`, `internal_port=0`, `lifetime=3600s` — sans lire protocole/port/lifetime depuis la config.
+**Support warren-core / warren-jni** : **partiel**. `warren-natpmp-client` est complet (MapProto TCP/UDP, `NatPmpMapping`, boucle de refresh avec `NatPmpEvent` Mapped/Renewed/Failed + `NatPmpFailureReason`). Mais le wrapper JNI **code en dur** `MapProtocol::Udp`, `internal_port=0`, `lifetime=3600s`, sans lire protocole/port/lifetime depuis la config.
 - `warren-core/crates/warren-natpmp-client/src/lib.rs`
 - `warren-core/crates/warren-natpmp-client/src/refresh.rs`
 - `warren-app/warren-jni/src/tunnel.rs:62,270-304`
@@ -248,15 +248,15 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### multihop (pays entrée/sortie) — P1 — Majeur
+### multihop (pays entrée/sortie), P1, Majeur
 
-**Desktop (profondeur + preuves)** : panneau multihop riche — toggle (opt-in, OFF par défaut), `entryCountry` et `exitCountry` (ISO 3166 alpha-2, vide=auto), plus `hpkeEpochRotationMs` persisté mais non exposé. Pickers = saisies texte simples (M4.H.C.X follow-up). gRPC `setWarrenMultiHopSettings()` persiste, redémarrage daemon requis.
+**Desktop (profondeur + preuves)** : panneau multihop riche, toggle (opt-in, OFF par défaut), `entryCountry` et `exitCountry` (ISO 3166 alpha-2, vide=auto), plus `hpkeEpochRotationMs` persisté mais non exposé. Pickers = saisies texte simples (M4.H.C.X follow-up). gRPC `setWarrenMultiHopSettings()` persiste, redémarrage daemon requis.
 - `desktop/.../warren-multi-hop-settings/WarrenMultiHopSettingsView.tsx:1-96`
 - `desktop/.../warren-multi-hop/components/warren-multi-hop-country-pickers/WarrenMultiHopCountryPickers.tsx:1-90`
 - `desktop/.../warren-multi-hop/hooks/use-warren-multi-hop.ts:1-52`
 - `desktop/.../shared/daemon-rpc-types.ts` (WarrenMultiHopSettings)
 
-**Android (état + preuves)** : **partiel** — toggle bool seul. Pas de champ `entryCountry`/`exitCountry`. Picker de pays EXIT seulement (`selectedExitId`). `entryHop` contient relayPubkeyHex + endpoint (pas de code pays), construit par logique de fallback du catalogue. `hpkeEpochRotationMs` totalement absent.
+**Android (état + preuves)** : **partiel**, toggle bool seul. Pas de champ `entryCountry`/`exitCountry`. Picker de pays EXIT seulement (`selectedExitId`). `entryHop` contient relayPubkeyHex + endpoint (pas de code pays), construit par logique de fallback du catalogue. `hpkeEpochRotationMs` totalement absent.
 - `android/.../WarrenTunnelSettingsScreen.kt:100-112`
 - `android/.../WarrenLocalSettingsRepository.kt:37-38, 62-65`
 - `android/.../WarrenTunnelConfig.kt:15-36`
@@ -281,7 +281,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 3. `WarrenTunnelSettingsScreen` : saisies conditionnelles entrée/sortie.
 4. Enrichir le builder : lire les pays et les passer à la sélection de relais (fallback = auto si null).
 5. Désérialiseur Rust : ajouter les champs (inutilisés, D.4).
-6. Rust : intégration `warren-relay-selector` (phase 2 ou //) — vérifier le support du filtrage pays.
+6. Rust : intégration `warren-relay-selector` (phase 2 ou //), vérifier le support du filtrage pays.
 7. Tests : persistance, e2e sélection manuelle, fallback auto.
 8. (Optionnel phase 2) UI picker modal par pays backé relay-list.
 
@@ -298,7 +298,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### failover (bascule auto exit) — P1 — Majeur
+### failover (bascule auto exit), P1, Majeur
 
 **Desktop (profondeur + preuves)** : implémentation complète. Toggle `WarrenFailoverSwitch` (effet immédiat, sans redémarrage daemon, défaut `true`), bannière in-app « EXIT SWITCHED » quand `failoverCount > acknowledgedCount`. Réglage GUI-only ; le daemon gère le failover via `select_failover_alternative` (préférence même-pays).
 - `desktop/.../warren-mode/components/WarrenFailoverSwitch.tsx:1-25`
@@ -351,9 +351,9 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### account-keys (devices, clés) — P1 — Critique
+### account-keys (devices, clés), P1, Critique
 
-**Desktop (profondeur + preuves)** : système de compte multi-vues — `KeysView` (révélation mnémonique destructive + confirmation + copie + restauration 12/24 mots), `AccountView` (nom de device, clé publique, expiry, boutons Buy/Redeem/Backup/Logout), `ManageDevicesView` (liste devices, device courant surligné, date de création, suppression non-courants), dialogues de confirmation/erreur. RPC : `getWarrenMnemonic`, `setWarrenMnemonic`, `listDevices`, `removeDevice`.
+**Desktop (profondeur + preuves)** : système de compte multi-vues, `KeysView` (révélation mnémonique destructive + confirmation + copie + restauration 12/24 mots), `AccountView` (nom de device, clé publique, expiry, boutons Buy/Redeem/Backup/Logout), `ManageDevicesView` (liste devices, device courant surligné, date de création, suppression non-courants), dialogues de confirmation/erreur. RPC : `getWarrenMnemonic`, `setWarrenMnemonic`, `listDevices`, `removeDevice`.
 - `desktop/.../views/keys/KeysView.tsx:30-158`
 - `desktop/.../views/keys/RestoreMnemonicView.tsx:27-147`
 - `desktop/.../views/account/AccountView.tsx:26-131`
@@ -361,7 +361,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 - `desktop/.../device-list-item/DeviceListItem.tsx:59-65`
 - `desktop/.../shared/daemon-rpc-types.ts:459-468`
 
-**Android (état + preuves)** : **partiel** — wallet-only, sans info compte ni gestion devices. Onboarding wallet (création/restauration, backup blur+reveal sans CTA copie) + révélation en réglages (biométrie → mnémonique). Pas de section compte (expiry, crédit, devices, suppression). `WarrenJni` n'expose que des primitives wallet (generateMnemonic, importMnemonic, mnemonicPubkeyHex, signCanonicalRequest). `AccountRepository`/`DeviceRepository` morts (null/no-op).
+**Android (état + preuves)** : **partiel**, wallet-only, sans info compte ni gestion devices. Onboarding wallet (création/restauration, backup blur+reveal sans CTA copie) + révélation en réglages (biométrie → mnémonique). Pas de section compte (expiry, crédit, devices, suppression). `WarrenJni` n'expose que des primitives wallet (generateMnemonic, importMnemonic, mnemonicPubkeyHex, signCanonicalRequest). `AccountRepository`/`DeviceRepository` morts (null/no-op).
 - `android/.../login/impl/WarrenWalletLoginScreen.kt:42-123`
 - `android/.../login/impl/WarrenWalletBackupScreen.kt:40-90`
 - `android/.../settings/impl/WarrenWalletSettingsSection.kt:49-190`
@@ -403,9 +403,9 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### subscription-payment (abo, voucher) — P1 — Critique
+### subscription-payment (abo, voucher), P1, Critique
 
-**Desktop (profondeur + preuves)** : 3 surfaces — `OnboardingSubscriptionView` (lien externe pricing + vérification manuelle via `updateAccountData()`/`submitVoucher`, auto-poll 10s/2min), `AccountView` (expiry, Buy more credit, Redeem voucher Crockford-32 `XXXX-XXXX-XXXX-XXXX`), vue compte expiré avec compte à rebours. RPC `submitVoucher -> VoucherResponse`. Pas de Play Billing.
+**Desktop (profondeur + preuves)** : 3 surfaces, `OnboardingSubscriptionView` (lien externe pricing + vérification manuelle via `updateAccountData()`/`submitVoucher`, auto-poll 10s/2min), `AccountView` (expiry, Buy more credit, Redeem voucher Crockford-32 `XXXX-XXXX-XXXX-XXXX`), vue compte expiré avec compte à rebours. RPC `submitVoucher -> VoucherResponse`. Pas de Play Billing.
 - `desktop/.../views/onboarding/OnboardingSubscriptionView.tsx:14-190`
 - `desktop/.../components/RedeemVoucher.tsx:24-363`
 - `desktop/.../views/account/AccountView.tsx:26-131`
@@ -456,7 +456,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### onboarding (wizard 5 étapes) — P1 — Majeur
+### onboarding (wizard 5 étapes), P1, Majeur
 
 **Desktop (profondeur + preuves)** : wizard 5 étapes avec détection 1er lancement persistante et replay. (1) Welcome, (2) Wallet (generate/import BIP39, blur+reveal, pas de copie), (3) Subscription (lien externe + auto-poll), (4) Preferences (Multi-hop OFF, DAITA OFF, obfuscation ON), (5) Done (persiste `onboardingCompletedUnix`). Détection : `onboardingCompletedUnix === undefined` → onboarding ; défini → main. Replay depuis Settings.
 - `desktop/.../views/onboarding/OnboardingWelcomeView.tsx:9-23`
@@ -466,7 +466,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 - `desktop/.../views/onboarding/OnboardingDoneView.tsx:10-15`
 - `desktop/.../shared/routes.ts:44-53`
 
-**Android (état + preuves)** : **partiel** — 2 écrans wallet seulement. Splash route : Privacy → Wallet absent → Wallet (login/generate/import) → backup → Connect. Manque : Welcome, Subscription (aucun gate avant Connect), Preferences (réglages post-onboarding seulement), Done (aucun marqueur de complétion, détection 1er lancement faible). Splash route directement Wallet→Connect.
+**Android (état + preuves)** : **partiel**, 2 écrans wallet seulement. Splash route : Privacy → Wallet absent → Wallet (login/generate/import) → backup → Connect. Manque : Welcome, Subscription (aucun gate avant Connect), Preferences (réglages post-onboarding seulement), Done (aucun marqueur de complétion, détection 1er lancement faible). Splash route directement Wallet→Connect.
 - `android/app/.../screen/splash/SplashViewModel.kt:14-53`
 - `android/.../login/impl/navigation/WarrenWalletEntryProvider.kt:36-63`
 - `android/.../login/impl/WarrenWalletLoginScreen.kt:25-123`
@@ -505,7 +505,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### relay-lists-recents-fine — P1 — Majeur
+### relay-lists-recents-fine, P1, Majeur
 
 **Desktop (profondeur + preuves)** : riche et complet. Listes custom (create/edit/delete/add/remove), recents (singlehop + multihop, toggle enable/disable), DAITA 2 toggles (global + « direct only » avec modale d'avertissement), obfuscation 6+ méthodes (auto/off/udp2tcp/shadowsocks/quic/lwo/wireGuardPort) avec réglages fins ; M4.0 HTTP/3 mimicry auto en mode Warren ; relay overrides (IP-in/IPv6-in par hostname).
 - `desktop/.../custom-lists/components/custom-list-menu/CustomListMenu.tsx:35-83`
@@ -518,7 +518,7 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 - `desktop/.../views/anti-censorship/AntiCensorshipView.tsx:15-22, 42-43, 83-99`
 - `desktop/.../shared/daemon-rpc-types.ts:509, 779-783`
 
-**Android (état + preuves)** : **partiel** — contrôles toggle de base, lacunes sévères. 4 toggles bool (daita, natPmp, multiHop, obfuscationM40, sans options fines). Picker exit unique. Pas de listes custom (supprimées D.4 step 45). Composants recents définis mais orphelins. Obfuscation booléenne (M4.0), pas de picker multi-méthodes.
+**Android (état + preuves)** : **partiel**, contrôles toggle de base, lacunes sévères. 4 toggles bool (daita, natPmp, multiHop, obfuscationM40, sans options fines). Picker exit unique. Pas de listes custom (supprimées D.4 step 45). Composants recents définis mais orphelins. Obfuscation booléenne (M4.0), pas de picker multi-méthodes.
 - `android/.../WarrenTunnelSettingsScreen.kt:49-120`
 - `android/.../WarrenLocationPickerScreen.kt:46-96`
 - `android/.../WarrenLocalSettingsRepository.kt:31-50`
@@ -561,9 +561,9 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ---
 
-### branding-assets (« Reconnect now ») — P2 — Mineur
+### branding-assets (« Reconnect now »), P2, Mineur
 
-**Desktop (profondeur + preuves)** : `ReconnectButton` toujours visible quand connecté dans le panneau de sélection ; pas de dialogue « Reconnect now » — action directe.
+**Desktop (profondeur + preuves)** : `ReconnectButton` toujours visible quand connecté dans le panneau de sélection ; pas de dialogue « Reconnect now », action directe.
 - `desktop/.../select-location-buttons/components/reconnect-button/ReconnectButton.tsx`
 
 **Android (état + preuves)** : **partiel**. 4 toggles mais aucune affordance « Reconnect now ». Commentaire ligne 46-47 : « D.4 step 9 will add a "Reconnect now" affordance ». Affiche seulement « Changes apply on next connect ». Le bouton reconnect existe dans `ConnectScreen` mais n'est pas déclenché par un changement de réglage.
@@ -602,27 +602,27 @@ Les clusters P1 (port-forwarding réduit à un bool, multihop sans sélection de
 
 ## Plan d'implémentation ordonné
 
-### P0 — Sécurité / fuites vie privée (à traiter en premier)
+### P0, Sécurité / fuites vie privée (à traiter en premier)
 
-1. **ipv6 (M)** — Le plus rapide à corriger et fuite active immédiate. Le routage `::/0` en dur tunnele tout l'IPv6 sans contrôle. Câbler le toggle de bout en bout (config → repo → builder → route conditionnelle → JNI). Aucune dépendance bloquante.
-2. **killswitch / lockdown (XL)** — Risque de fuite le plus grave (fenêtre de fuite à la chute du tunnel). Dépend de la pose de pare-feu Android (mécanisme à valider) ; capacités `warren-killswitch` existantes mais non câblées sur Android. À mener en parallèle de l'ipv6 mais avec une attention forte sur l'atomicité install-avant-Failed.
-3. **dns (L)** — Modèle déjà présent ; câbler config/repo/UI + `addDnsServer`. Dépend de la confirmation/câblage du filtrage exit-side (D.4) pour le blocage de contenu.
+1. **ipv6 (M)**, Le plus rapide à corriger et fuite active immédiate. Le routage `::/0` en dur tunnele tout l'IPv6 sans contrôle. Câbler le toggle de bout en bout (config → repo → builder → route conditionnelle → JNI). Aucune dépendance bloquante.
+2. **killswitch / lockdown (XL)**, Risque de fuite le plus grave (fenêtre de fuite à la chute du tunnel). Dépend de la pose de pare-feu Android (mécanisme à valider) ; capacités `warren-killswitch` existantes mais non câblées sur Android. À mener en parallèle de l'ipv6 mais avec une attention forte sur l'atomicité install-avant-Failed.
+3. **dns (L)**, Modèle déjà présent ; câbler config/repo/UI + `addDnsServer`. Dépend de la confirmation/câblage du filtrage exit-side (D.4) pour le blocage de contenu.
 
 Ces trois clusters partagent tous une extension du **schéma `WarrenTunnelConfig` (Kotlin ↔ Rust)** : grouper les ajouts de champs (lockdown_mode, dns, enable_ipv6) dans une même passe pour limiter les allers-retours de synchronisation serde.
 
-### P1 — Parité fonctionnelle
+### P1, Parité fonctionnelle
 
-4. **failover (L)** — Logique Rust complète ; vérifier d'abord que `ClientConfig` accepte `failover_enabled`, puis câbler repo/config/UI + compteur d'événements JNI. Dépendance : surface JNI du compteur (coordination warren-tunnel).
-5. **account-keys (L)** — Préalable à subscription-payment (devices + clés). Dépend de l'audit `/v1/devices` (remove) + exposition JNI de `warren-api-client`.
-6. **subscription-payment (XL)** — **Décision produit bloquante** (voucher in-app vs paiements mobiles) avant tout code. Dépend de la surface JNI compte (partage avec account-keys) et du backend `warren-api` (déjà mature).
-7. **onboarding (L)** — Dépend de subscription-payment (étape Subscription du wizard) et réutilise les écrans Preferences existants. À séquencer après le choix du gate abonnement.
-8. **port-forwarding (L)** — Indépendant ; étend NAT-PMP (config + repo + UI + callback JNI). Réutilise le pattern d'affordance reconnect de branding-assets.
-9. **multihop (XL)** — Dépend d'un spike `warren-relay-selector` (support filtrage pays). Option B (Kotlin-side) pour phase 1, refactor Rust phase 2.
-10. **relay-lists-recents-fine (XL)** — Le plus large ; dépend du support Rust des 6+ méthodes d'obfuscation et du filtre DAITA direct-only. À fractionner en sous-livraisons (listes custom / recents / obfuscation fine / relay overrides).
+4. **failover (L)**, Logique Rust complète ; vérifier d'abord que `ClientConfig` accepte `failover_enabled`, puis câbler repo/config/UI + compteur d'événements JNI. Dépendance : surface JNI du compteur (coordination warren-tunnel).
+5. **account-keys (L)**, Préalable à subscription-payment (devices + clés). Dépend de l'audit `/v1/devices` (remove) + exposition JNI de `warren-api-client`.
+6. **subscription-payment (XL)**, **Décision produit bloquante** (voucher in-app vs paiements mobiles) avant tout code. Dépend de la surface JNI compte (partage avec account-keys) et du backend `warren-api` (déjà mature).
+7. **onboarding (L)**, Dépend de subscription-payment (étape Subscription du wizard) et réutilise les écrans Preferences existants. À séquencer après le choix du gate abonnement.
+8. **port-forwarding (L)**, Indépendant ; étend NAT-PMP (config + repo + UI + callback JNI). Réutilise le pattern d'affordance reconnect de branding-assets.
+9. **multihop (XL)**, Dépend d'un spike `warren-relay-selector` (support filtrage pays). Option B (Kotlin-side) pour phase 1, refactor Rust phase 2.
+10. **relay-lists-recents-fine (XL)**, Le plus large ; dépend du support Rust des 6+ méthodes d'obfuscation et du filtre DAITA direct-only. À fractionner en sous-livraisons (listes custom / recents / obfuscation fine / relay overrides).
 
-### P2 — Confort
+### P2, Confort
 
-11. **branding-assets / « Reconnect now » (M)** — Aucune dépendance Rust ; pur UI Android. À livrer en même temps que le premier cluster P1 qui modifie un toggle pendant connexion (port-forwarding) pour mutualiser l'affordance reconnect.
+11. **branding-assets / « Reconnect now » (M)**, Aucune dépendance Rust ; pur UI Android. À livrer en même temps que le premier cluster P1 qui modifie un toggle pendant connexion (port-forwarding) pour mutualiser l'affordance reconnect.
 
 **Dépendances clés** : extension partagée du schéma `WarrenTunnelConfig` (P0) → account-keys précède subscription-payment → subscription-payment précède onboarding → spike relay-selector débloque multihop et le filtre DAITA direct-only de relay-lists.
 
@@ -706,4 +706,4 @@ Ces trois clusters partagent tous une extension du **schéma `WarrenTunnelConfig
 
 - **Build / CI** : iOS est désactivé par défaut (commit récent `4b01da87`) ; les modifications partagées de warren-core doivent rester buildables pour desktop + Android sans casser la matrice CI. Les ajouts de dépendances (Play Billing, StoreKit) impactent les pipelines de release Android/iOS et la conformité store (commission 30%, vérification de reçu). **Mitigation** : compiler les nouveaux champs Rust avec `#[expect(dead_code)]` jusqu'au câblage complet, fractionner les XL (multihop, relay-lists, subscription) en sous-livraisons CI-vertes.
 
-- **Anti-corrélation / secrétisation (paiement)** : transverse au cluster paiement mais avec impact sécurité global — ne jamais transmettre la pubkey à Apple/Google, ne jamais logger voucher_secret/purchase_token/JWS. **Mitigation** : impls `Debug` redactées côté Kotlin/JNI, sessions de paiement éphémères UUID-keyed, gate d'idempotence backend.
+- **Anti-corrélation / secrétisation (paiement)** : transverse au cluster paiement mais avec impact sécurité global, ne jamais transmettre la pubkey à Apple/Google, ne jamais logger voucher_secret/purchase_token/JWS. **Mitigation** : impls `Debug` redactées côté Kotlin/JNI, sessions de paiement éphémères UUID-keyed, gate d'idempotence backend.

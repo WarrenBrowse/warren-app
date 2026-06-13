@@ -1,4 +1,4 @@
-# Session C — iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE + C.4/C.5/C.6 scaffolds + Wallet/Settings integration)
+# Session C, iOS fork rapport (partiel, C.1 + C.2 + C.3 DONE + C.4/C.5/C.6 scaffolds + Wallet/Settings integration)
 
 **Date** : 2026-05-21
 **Agent** : Claude Opus 4.7 (1M context)
@@ -10,7 +10,7 @@
 
 ## Verdict global
 
-**GO PARTIEL** — C.1 + C.2 + C.3 (skeleton + deep step 1 + real warren_wallet_ffi) +
+**GO PARTIEL**, C.1 + C.2 + C.3 (skeleton + deep step 1 + real warren_wallet_ffi) +
 C.4 design + C.4 Rust C ABI scaffold + Swift WarrenQuinnAdapter + **C.5 production-
 ready Wallet flow (Coordinator + Interactor + 3 ViewControllers + 3 SwiftUI views +
 Keychain) wired to real FFI** + **C.6 5 SwiftUI views with i18n FR/EN** + pbxproj target
@@ -22,7 +22,7 @@ new files ; remaining build issues are pre-existing WireGuardKit framework confl
 C.4 will resolve).
 
 Reprise via briefs séparés `Session C.3.deep`, `Session C.4` (design doc + Swift scaffold
-déjà rédigés), `Session C.5`, `Session C.6`, `Session C.7` — cf.
+déjà rédigés), `Session C.5`, `Session C.6`, `Session C.7`, cf.
 `.planning/session-c-followup-briefs.md` pour scope + effort + dépendances par sous-phase.
 Estimé restant : 12-24 jours wall-clock en sériel (C.3.deep peut tourner en parallèle de
 C.4 ; les scaffolds Swift accélèrent C.4/C.5/C.6 implementation d'~1-2j chacun).
@@ -37,7 +37,7 @@ d'un stub local Package.swift).
 
 ---
 
-## C.1 — Rebrand Xcode project + bundle IDs ✅ GO
+## C.1, Rebrand Xcode project + bundle IDs ✅ GO
 
 ### Livré
 
@@ -67,7 +67,7 @@ d'un stub local Package.swift).
 1. **App icon + launch screen Warren-branded** : skipped, placeholder Mullvad assets conservés. Besoin asset design SVG/PNG (W jaune `#ffd524` sur navy `#0a1422`, cohérent warrenbrowse.com + desktop).
 2. **`DEVELOPMENT_TEAM = XXXXXXXXXX`** : placeholder, à remplacer par le vrai Apple Developer Team ID Warren (10 chars alphanumériques) avant tout build signing-enabled.
 3. **`signingCertificate = "Apple Distribution: Warren Browse"`** dans `ExportOptions.plist` : nom placeholder, à aligner avec le certificat Apple Distribution réel quand provisionné.
-4. **Targets / packages Swift conservent leurs noms originaux (`MullvadVPN`, `MullvadREST`, …)** : leur rename est en C.2, le PRODUCT_BUNDLE_IDENTIFIER hardcoded dans pbxproj reste `$(APPLICATION_IDENTIFIER).MullvadREST` etc. — cohérent avec le découpage C.1/C.2 du brief.
+4. **Targets / packages Swift conservent leurs noms originaux (`MullvadVPN`, `MullvadREST`, …)** : leur rename est en C.2, le PRODUCT_BUNDLE_IDENTIFIER hardcoded dans pbxproj reste `$(APPLICATION_IDENTIFIER).MullvadREST` etc., cohérent avec le découpage C.1/C.2 du brief.
 5. **Race condition Session D agent** : pendant cette session, l'agent autonome Session D (Android rebrand) tournait sur le même working tree. Session D a inadvertamment absorbé mon `git mv` staged (xcodeproj rename + wireguard-apple stub) dans son commit `d90954ca7c feat(android): D.2 rebrand Kotlin namespace`. Le commit message ne reflète pas le contenu iOS inclus, mais le code est correct. À documenter pour futurs rebases. Recommandation : sessions cross-platform (iOS + Android) doivent tourner séquentielles ou sur worktrees séparées.
 
 ### Critères GO C.1 (du brief)
@@ -76,13 +76,13 @@ d'un stub local Package.swift).
 - ✅ 4 bundle IDs cohérents (app + PacketTunnel + Tests + variantes)
 - ✅ App Group + Display Name configurés Warren
 - ❌ App Icon Warren (placeholder Mullvad conservé, asset design pending)
-- ✅ Build target `WarrenVPN` PASS — limité à `xcodebuild -list` ; build complet bloqué par WireGuardKit imports résiduels (scope C.4)
+- ✅ Build target `WarrenVPN` PASS, limité à `xcodebuild -list` ; build complet bloqué par WireGuardKit imports résiduels (scope C.4)
 
 **Verdict C.1 : GO (avec 2 caveats assets visuels + 1 caveat TEAM_ID, tous prévus comme escalations poka dans le brief §0.5)**
 
 ---
 
-## C.2 — Rebrand Swift packages ✅ GO (8 modules cette session)
+## C.2, Rebrand Swift packages ✅ GO (8 modules cette session)
 
 ### Livré
 
@@ -126,11 +126,11 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 
 ### Caveats C.2
 
-1. **Tests target builds non-vérifiés** : `xcodebuild -list` PASS confirme l'arbre de targets/schemes, mais `xcodebuild build -scheme WarrenVPN` ne PASS pas (WireGuardKit*.framework refs résiduelles dans pbxproj + .swift files PostQuantum dépendent de WireGuardKit API absentes — scope C.4 retire ces deps proprement).
+1. **Tests target builds non-vérifiés** : `xcodebuild -list` PASS confirme l'arbre de targets/schemes, mais `xcodebuild build -scheme WarrenVPN` ne PASS pas (WireGuardKit*.framework refs résiduelles dans pbxproj + .swift files PostQuantum dépendent de WireGuardKit API absentes, scope C.4 retire ces deps proprement).
 2. **File-level header comments `Copyright © 2026 Mullvad VPN AB`** : non sed (cosmétique, ~hundreds .swift files). À nettoyer en C.2.bis ou opportuniste lors C.4-C.6.
 3. **Types `MullvadFoo` Warren-specific dans le code Swift** (ex: `MullvadEndpoint`, `MullvadApiContext`, etc.) : non renommés. Représentent l'API publique des modules ; rename = source de churn. Recommandé en C.6 ou plus tard quand le scope sera plus mûr.
 
-## C.3 skeleton + deep step 1 — DONE (deep step 2 différé)
+## C.3 skeleton + deep step 1, DONE (deep step 2 différé)
 
 ### Livré
 
@@ -175,7 +175,7 @@ Cleanup pass intermédiaire pour mettre à jour les références stale dans `War
 
 Total estimé deep work C.3 : 5-8j wall-clock.
 
-## C.4 Swift scaffold — DONE (FFI implementation différé)
+## C.4 Swift scaffold, DONE (FFI implementation différé)
 
 ### Livré
 
@@ -193,7 +193,7 @@ Total estimé deep work C.3 : 5-8j wall-clock.
 
 Total C.4 restant estimé : 8-12j (3-4j scaffold + 5-8j integration/test).
 
-## C.5 Swift scaffold — DONE (Coordinator + 5 ViewControllers différés)
+## C.5 Swift scaffold, DONE (Coordinator + 5 ViewControllers différés)
 
 ### Livré
 
@@ -216,7 +216,7 @@ Total C.4 restant estimé : 8-12j (3-4j scaffold + 5-8j integration/test).
 
 Total C.5 restant estimé : 4-6j (vs original 5-7j ; scaffolds save ~1j).
 
-## C.6 Swift scaffold (partial) — DONE (DAITA + NAT-PMP + Failover banner différés)
+## C.6 Swift scaffold (partial), DONE (DAITA + NAT-PMP + Failover banner différés)
 
 ### Livré
 
@@ -235,7 +235,7 @@ Total C.5 restant estimé : 4-6j (vs original 5-7j ; scaffolds save ~1j).
 
 Total C.6 restant estimé : 3-5j (vs original 5-7j ; scaffolds save ~2j).
 
-## C.7 — NOT STARTED
+## C.7, NOT STARTED
 
 | Sous-phase | Effort estimé brief | Statut | Raison |
 |------------|---------------------|--------|--------|
@@ -254,7 +254,7 @@ Total C.6 restant estimé : 3-5j (vs original 5-7j ; scaffolds save ~2j).
    - Renommer les Tests packages d'abord (n'affectent pas le build production)
    - Renommer les modules feuilles (`MullvadLogging`, `MullvadMockData`) avant les modules dépendants (`MullvadVPN` app)
    - Vérifier xcodebuild -list après chaque rename
-4. **C.3 nécessite préparation Rust** : avant attaquer le crate, vérifier que `rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios` PASS sur la machine cible. Cbindgen + cargo-lipo doivent être installés. La chaîne de build iOS Rust est différente Linux/macOS — fragile en CI.
+4. **C.3 nécessite préparation Rust** : avant attaquer le crate, vérifier que `rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios` PASS sur la machine cible. Cbindgen + cargo-lipo doivent être installés. La chaîne de build iOS Rust est différente Linux/macOS, fragile en CI.
 5. **C.4 réellement la phase risque** : 10-14j est probablement sous-estimé. NetworkExtension iOS a beaucoup d'invariants subtils (Wi-Fi → cellular handover, App Group event broadcast, killswitch via "Disconnect on Demand"). Tester sur device réel iPhone obligatoire (simulator ne reproduit pas tous les comportements network).
 6. **C.5-C.6 UI Swift** : faisable mais long, parité desktop M5 oblige à porter ~10 écrans + flows. Considérer SwiftUI vs UIKit hybride (Mullvad iOS est UIKit-heavy, Warren peut moderniser progressivement).
 7. **C.7 TestFlight upload** : strict prerequisite = Apple Developer account Warren actif + Distribution certificate `.p12` + provisioning profile. Sinon build PASS local mais upload bloqué.

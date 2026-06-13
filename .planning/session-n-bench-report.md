@@ -1,6 +1,6 @@
-# Session N — Hetzner bench multi-hop consolidé + finding critique DAITA path
+# Session N, Hetzner bench multi-hop consolidé + finding critique DAITA path
 
-> Status : **GO PARTIEL** — baseline DAITA OFF mesuré, DAITA ON révèle bug critique
+> Status : **GO PARTIEL**, baseline DAITA OFF mesuré, DAITA ON révèle bug critique
 > Date : 2026-05-21
 > Cost réel : **~0.02 EUR** (3 ccx13 nodes ~30 min, cap brief 0.10 ✓)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. §0.6 worktree skipped (warren-core working dir clean, no parallel work).
@@ -11,7 +11,7 @@
 
 Bench cross-DC consolidé multi-hop FSN1 → NBG1 → NBG1 livré la pièce manquante par rapport à Session M (qui a abort pré-orchestration). 3 ccx13 Hetzner nodes provisionnés via gold-path `provision-warren-{exit,relay,client}.sh`, binaires cross-compilés rafraîchis (warren-client + warren-exit pre-Session-K.2/M stales remplacés).
 
-**Verdict B.1.8** : `overhead ≤ 15%` ne peut **PAS** être validé empiriquement — DAITA-on multi-hop `--use-tun` path révèle un **bug critique latent** : tunnel "session established" mais **0 paquet IP réel ne traverse**, dans les deux directions, qu'on active DAITA client-side, exit-side, ou les deux. Le bug n'est PAS couvert par les tests Session K/L (loopback mpsc only, structural validation insuffisante).
+**Verdict B.1.8** : `overhead ≤ 15%` ne peut **PAS** être validé empiriquement, DAITA-on multi-hop `--use-tun` path révèle un **bug critique latent** : tunnel "session established" mais **0 paquet IP réel ne traverse**, dans les deux directions, qu'on active DAITA client-side, exit-side, ou les deux. Le bug n'est PAS couvert par les tests Session K/L (loopback mpsc only, structural validation insuffisante).
 
 **Baseline DAITA OFF** : 262 Mbps TCP cross-DC 4 flows 5 min, full multi-hop client→relay→exit. Confirms pipeline structure works at scale ; bug isolé à la 3-task pump model + supervised_pump quand DAITA actif.
 
@@ -50,7 +50,7 @@ throughput_mbps  : 262
 bytes            : 9.82 GB
 duration_s       : 300.03
 per-stream       : 64 / 78 / 54 / 64 Mbps
-retransmits      : 135k–182k per stream
+retransmits      : 135k, 182k per stream
 ```
 
 Cohérent avec attentes multi-hop QUIC cross-DC BBR :
@@ -59,7 +59,7 @@ Cohérent avec attentes multi-hop QUIC cross-DC BBR :
 - BBR + 4ms RTT + multi-hop encrypt/decrypt path = CPU-bound ~70-80% utilization
 - Retransmits high mais cohérents avec BBR aggressive probing cross-DC
 
-### DAITA ON — BLOQUÉ par bug critique
+### DAITA ON, BLOQUÉ par bug critique
 
 **Symptome reproductible 100%** : tunnel "session established" mais 0 paquet réel ne flow.
 
@@ -71,8 +71,8 @@ Cohérent avec attentes multi-hop QUIC cross-DC BBR :
 | client ON, exit OFF | ✓ | ✗ 100% loss | timeout |
 
 **Diagnostic** :
-- Logs client : "multi-hop session established" + "multi-hop DAITA active (... machines=N)" — handshake OK
-- Logs exit : "multihop DAITA active: serve_multihop_with_tun_and_daita with curated pool pick" — wiring Session M honoré
+- Logs client : "multi-hop session established" + "multi-hop DAITA active (... machines=N)", handshake OK
+- Logs exit : "multihop DAITA active: serve_multihop_with_tun_and_daita with curated pool pick", wiring Session M honoré
 - Logs exit : ZERO warning/error pendant pass DAITA
 - tcpdump exit warren0 pendant client ping : **0 paquet reçu** sur 5s
 - Le bug bloque dans les **deux** directions (no upstream/downstream)
@@ -125,7 +125,7 @@ Aligns multi-hop CLI semantics with single-hop (où `--enable-daita` honored par
 
 Validé : `cargo clippy --release -p warren-client -- -D warnings` PASS.
 
-**Note** : ce patch n'est PAS la cause du bug findng — le bug existait pré-patch (DAITA toujours ON sur multi-hop --use-tun + bug). Le patch a juste rendu possible la mesure baseline DAITA-OFF pour isoler.
+**Note** : ce patch n'est PAS la cause du bug findng, le bug existait pré-patch (DAITA toujours ON sur multi-hop --use-tun + bug). Le patch a juste rendu possible la mesure baseline DAITA-OFF pour isoler.
 
 ---
 
@@ -141,13 +141,13 @@ Validé : `cargo clippy --release -p warren-client -- -D warnings` PASS.
 2. **CRITICAL BUG** : DAITA-on multi-hop `--use-tun` path produces tunnel mais 0 throughput. **Bloque tout déploiement DAITA en production multi-hop**.
 3. **Production warren-exit-1 redeploy** : SAFE en single-hop DAITA (Session I tested intra-process E2E + Session F bench cross-DC 4 cas), mais **NE PAS activer --enable-daita en mode multi-hop** jusqu'au fix bug Session N finding.
 4. Universal dummy filter (Session I.4) cross-network behavior pas validé empiriquement (peut être contributing factor).
-5. Multi-hop IP negotiation v1 hardcoded mono-client (10.66.0.2/24) — non-bench-blocking mais needed for multi-client v1.
+5. Multi-hop IP negotiation v1 hardcoded mono-client (10.66.0.2/24), non-bench-blocking mais needed for multi-client v1.
 
 ---
 
 ## Next steps recommandés
 
-**M5.C.X — debug DAITA multi-hop critical path** :
+**M5.C.X, debug DAITA multi-hop critical path** :
 - Repro local : warren-client --multi-hop --use-tun avec real TUN + DAITA, no network (loopback exit on same host) → isolate bug to source code, not network
 - Add integration test `multi_hop_real_data_with_daita.rs` qui mesure RX bytes côté exit pendant 1s de ping uplink → catch ce bug avant prod
 - Bisect : revert Session L Notify ? revert Session I.4 universal filter ? revert Session K.5 Notify ? identifier le commit qui introduit le bug
@@ -172,4 +172,4 @@ Validé : `cargo clippy --release -p warren-client -- -D warnings` PASS.
 
 - **§0.0 INVIOLABLE** : zero destructive git command. Source patch via Edit tool + cargo commit additif.
 - **§0.5 plein mandat** : autonomous bench full orchestration exécuté, abort §0.5 NOT appliqué (vs Session M qui abort pré-orchestration). Source patch additif validé (clippy strict), opportune amélioration découverte mid-bench.
-- **§0.6 worktree** : skipped justified — warren-core working dir clean at HEAD `8779843`, no parallel poka work, single-purpose ops bench. WIP poka warren-app + warren-core intacts.
+- **§0.6 worktree** : skipped justified, warren-core working dir clean at HEAD `8779843`, no parallel poka work, single-purpose ops bench. WIP poka warren-app + warren-core intacts.

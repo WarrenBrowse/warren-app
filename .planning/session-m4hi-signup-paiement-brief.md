@@ -1,4 +1,4 @@
-# Session M4.H.I — Signup flow + tunnel paiement (#3)
+# Session M4.H.I, Signup flow + tunnel paiement (#3)
 
 > Brief d'agent autonome warren-core (warren-api) + warren-app (desktop) + warrenbrowse-site (frontend).
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -16,19 +16,19 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **M4.H.I.1 — Setup worktree multi-repo + décision provider paiement** (~1j)
-2. **M4.H.I.2 — Backend warren-api subscription store + checkout webhook handlers** (~5-7j)
-3. **M4.H.I.3 — BTCPay self-host integration (Monero + BTC + Lightning)** (~3-5j)
-4. **M4.H.I.4 — Stripe integration (carte EU)** (~2-3j)
-5. **M4.H.I.5 — Cash by mail handler (Mullvad-style)** (~1-2j)
-6. **M4.H.I.6 — Frontend signup form Astro (warrenbrowse-site)** (~3-5j)
-7. **M4.H.I.7 — Frontend checkout flow + redirect provider** (~2-3j)
-8. **M4.H.I.8 — Account dashboard mini (renewal + expiry)** (~1-2j)
-9. **M4.H.I.9 — Tests E2E cross-stack + rapport** (~2-3j)
+1. **M4.H.I.1, Setup worktree multi-repo + décision provider paiement** (~1j)
+2. **M4.H.I.2, Backend warren-api subscription store + checkout webhook handlers** (~5-7j)
+3. **M4.H.I.3, BTCPay self-host integration (Monero + BTC + Lightning)** (~3-5j)
+4. **M4.H.I.4, Stripe integration (carte EU)** (~2-3j)
+5. **M4.H.I.5, Cash by mail handler (Mullvad-style)** (~1-2j)
+6. **M4.H.I.6, Frontend signup form Astro (warrenbrowse-site)** (~3-5j)
+7. **M4.H.I.7, Frontend checkout flow + redirect provider** (~2-3j)
+8. **M4.H.I.8, Account dashboard mini (renewal + expiry)** (~1-2j)
+9. **M4.H.I.9, Tests E2E cross-stack + rapport** (~2-3j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard.
 
@@ -41,8 +41,8 @@ Plein mandat. Escalade SEULEMENT si :
 2. Coût > 0.50 EUR (allocation augmentée pour cette session, BTCPay micro-payment tests)
 3. Breaking change /v1 wire format warren-core
 4. Signing key prod touchée
-5. **Spécifique M4.H.I — DÉCISIONS BUSINESS POKA** :
-   - Provider final (BTCPay self-host ? Stripe ? Cash by mail uniquement ?) — escalade obligatoire avant M4.H.I.3
+5. **Spécifique M4.H.I, DÉCISIONS BUSINESS POKA** :
+   - Provider final (BTCPay self-host ? Stripe ? Cash by mail uniquement ?), escalade obligatoire avant M4.H.I.3
    - Pricing exact (placeholders site = 7.99/6.67/5.99 EUR, à confirmer poka)
    - KYC requirements (recommendation : aucun pour anonymous payment, email opt-in pour invoice+recovery)
    - Refund period (14j légal EU minimum)
@@ -98,7 +98,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 2. M4.H.I.1 — Setup worktree + décision provider paiement (~1j)
+## 2. M4.H.I.1, Setup worktree + décision provider paiement (~1j)
 
 ### Scope
 
@@ -120,7 +120,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 3. M4.H.I.2 — Backend warren-api subscription store + webhook handlers (~5-7j)
+## 3. M4.H.I.2, Backend warren-api subscription store + webhook handlers (~5-7j)
 
 ### Scope
 
@@ -165,7 +165,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 4. M4.H.I.3 — BTCPay self-host integration (~3-5j)
+## 4. M4.H.I.3, BTCPay self-host integration (~3-5j)
 
 ### Scope
 
@@ -189,7 +189,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 5. M4.H.I.4 — Stripe integration (~2-3j)
+## 5. M4.H.I.4, Stripe integration (~2-3j)
 
 ### Scope
 
@@ -211,7 +211,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 6. M4.H.I.5 — Cash by mail handler (~1-2j)
+## 6. M4.H.I.5, Cash by mail handler (~1-2j)
 
 ### Scope
 
@@ -228,7 +228,7 @@ cat /Users/poka/dev/warrenBros/warrenbrowse-site/src/pages/pricing.astro
 
 ---
 
-## 7. M4.H.I.6 — Frontend signup form Astro (~3-5j)
+## 7. M4.H.I.6, Frontend signup form Astro (~3-5j)
 
 ### Scope
 
@@ -257,7 +257,7 @@ warrenbrowse-site (Astro 5) :
 
 ---
 
-## 8. M4.H.I.7 — Frontend checkout flow + redirect provider (~2-3j)
+## 8. M4.H.I.7, Frontend checkout flow + redirect provider (~2-3j)
 
 ### Scope
 
@@ -273,7 +273,7 @@ warrenbrowse-site (Astro 5) :
 
 ---
 
-## 9. M4.H.I.8 — Account dashboard mini (~1-2j)
+## 9. M4.H.I.8, Account dashboard mini (~1-2j)
 
 ### Scope
 
@@ -290,7 +290,7 @@ Warren desktop app Electron : nouveau view `AccountView.tsx`
 
 ---
 
-## 10. M4.H.I.9 — Tests E2E cross-stack + rapport (~2-3j)
+## 10. M4.H.I.9, Tests E2E cross-stack + rapport (~2-3j)
 
 ### Scope
 

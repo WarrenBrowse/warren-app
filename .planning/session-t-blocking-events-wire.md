@@ -1,6 +1,6 @@
-# Session T — BlockingBegin / BlockingEnd event wiring (Tamaraw + Scrambler cadence restored)
+# Session T, BlockingBegin / BlockingEnd event wiring (Tamaraw + Scrambler cadence restored)
 
-> Status : **GO ULTIMATE** — architectural gap from Session S closed in-process
+> Status : **GO ULTIMATE**, architectural gap from Session S closed in-process
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process source + tests only)
 > §0.0 INVIOLABLE git respecté. Production warren-exit-1 + warren-backend-api intacts.
@@ -22,8 +22,8 @@ Cadence test (`daita_pool_pick_cadence.rs::tamaraw_fires_padding_at_expected_cad
 ### `crates/warren-tunnel/src/daita.rs`
 
 1. **New `DaitaEvent` variants** :
-   - `BlockingBegin { machine: MachineId }` — fired by `drain_expired` right after a `BlockOutgoing` action timer expires.
-   - `BlockingEnd` — fired by `drain_expired` when any machine's `block_end_at` instant is reached (`TriggerEvent::BlockingEnd` carries no payload in maybenot, so one event covers all unblocking machines simultaneously).
+   - `BlockingBegin { machine: MachineId }`, fired by `drain_expired` right after a `BlockOutgoing` action timer expires.
+   - `BlockingEnd`, fired by `drain_expired` when any machine's `block_end_at` instant is reached (`TriggerEvent::BlockingEnd` carries no payload in maybenot, so one event covers all unblocking machines simultaneously).
 2. **New `TimerKind` private enum** : disambiguates the two action-timer kinds (`Padding` vs `Block { duration }`) so `drain_expired` can route correctly.
 3. **`MachineTimers` extended** : adds `action_kind: Option<TimerKind>` and `block_end_at: Option<Instant>` to the per-machine struct.
 4. **`apply_action` updated** : stores `TimerKind::Padding` for `SendPadding` and `TimerKind::Block { duration }` for `BlockOutgoing`. `Cancel` clears the kind alongside the timer.
@@ -53,9 +53,9 @@ The pre-existing flakiness of `daita_sustained_stress::daita_pump_survives_5s_*`
 
 ## Hetzner re-bench expectation
 
-The Session R cross-DC bench measured 5.6 % overhead under a **substantially-disabled** Tamaraw (Session S finding). Post-Session-T the same bench would measure DAITA overhead under a **functional** Tamaraw / Scrambler — expected to be higher because real padding is now firing at the documented cadence (~200 pkt/s for Tamaraw, ~250 pkt/s for Scrambler).
+The Session R cross-DC bench measured 5.6 % overhead under a **substantially-disabled** Tamaraw (Session S finding). Post-Session-T the same bench would measure DAITA overhead under a **functional** Tamaraw / Scrambler, expected to be higher because real padding is now firing at the documented cadence (~200 pkt/s for Tamaraw, ~250 pkt/s for Scrambler).
 
-Production warren-exit-1 redeploy with pin `5d0e8a1` is safe (the fix only fires more events; it doesn't change wire format or QUIC config). The cross-DC bench to remeasure overhead is a Session U+ ops task — code is ready, just needs the 3 ccx13 nodes + ~30 min.
+Production warren-exit-1 redeploy with pin `5d0e8a1` is safe (the fix only fires more events; it doesn't change wire format or QUIC config). The cross-DC bench to remeasure overhead is a Session U+ ops task, code is ready, just needs the 3 ccx13 nodes + ~30 min.
 
 ---
 
@@ -76,7 +76,7 @@ Push warren-app pin bump deferred to a follow-up commit in this session.
 ## Next steps Session U+
 
 1. **Hetzner re-bench** with pin `5d0e8a1` to measure REAL DAITA overhead under functional Tamaraw cadence (Session R 5.6 % was under disabled defense). Cost ~0.02 EUR.
-2. **Audit other static machines** (`SimpleNetFlow`, `Front`, `InterspaceServer`) to confirm they don't need additional event wiring — they're non-blocking but may have internal events Warren's DaitaState doesn't yet wire.
-3. **Fix Quinn handshake test flakiness** (`StatelessRetryIssued`) in `daita_sustained_stress.rs` and `d3_allowlist_dynamic.rs` — pre-existing, blocks confidence on full DAITA suite green.
+2. **Audit other static machines** (`SimpleNetFlow`, `Front`, `InterspaceServer`) to confirm they don't need additional event wiring, they're non-blocking but may have internal events Warren's DaitaState doesn't yet wire.
+3. **Fix Quinn handshake test flakiness** (`StatelessRetryIssued`) in `daita_sustained_stress.rs` and `d3_allowlist_dynamic.rs`, pre-existing, blocks confidence on full DAITA suite green.
 4. **Multi-hop IP negotiation v1 multi-client** (replace POC `10.66.0.2/24`).
 5. **(Future) pump-side blocking enforcement** : actually delay outbound real packets while `BlockOutgoing` is active. Currently Warren still emits real packets even during the BlockOutgoing window (Tamaraw / Scrambler still get the cadence right because of `bypass: true`, but the full "block + pad" defense property requires pump-side enforcement).

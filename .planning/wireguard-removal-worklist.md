@@ -13,12 +13,12 @@
 **ANSWER: NO.**
 
 **Evidence:**
-- `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/tunnel.rs` lines 453–570: `produce_warren_tunnel_params()` constructs `WarrenTunnelParameters` using only:
+- `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/tunnel.rs` lines 453-570: `produce_warren_tunnel_params()` constructs `WarrenTunnelParameters` using only:
   - Warren signing key (Ed25519 from BIP39 mnemonic, wallet identity)
   - Relay selector output (exit descriptor with Ed25519 pubkey)
   - Multi-hop config (relay descriptors)
   - No WireGuard key generation, no device pubkey lookup, no WG PSK derivation
-- `/Users/poka/dev/warrenBros/warren-app/talpid-warren-tunnel/src/lib.rs` lines 1–100: `WarrenTunnelMonitor` and `WarrenTunnelParameters` only carry Ed25519 material
+- `/Users/poka/dev/warrenBros/warren-app/talpid-warren-tunnel/src/lib.rs` lines 1-100: `WarrenTunnelMonitor` and `WarrenTunnelParameters` only carry Ed25519 material
 - The DAITA constant-packet-size feature and quantum-resistant PSK exchange both happen via Warren's QUIC negotiation, not WireGuard device keys
 - iOS: `WarrenQuinnTunnelImplementation.swift` and `GotaTunTunnelImplementation.swift` only reference ephemeral peer exchange and Quinn tunneling; no device pubkey lookup on the hot path
 
@@ -53,7 +53,7 @@
   - `.swiftpm/` directory (Xcode build cache)
   - `build/` directory (build artifacts)
   - **NO** `Sources/WireGuardKitGo` or any Swift/C source
-- `/Users/poka/dev/warrenBros/warren-app/ios/build-wireguard-go.sh` lines 14–22: **Early-exit check that skips the Go bridge build if `wireguard-apple/Sources/WireGuardKitGo` is missing.** Script explicitly says "Warren: stub wireguard-apple".
+- `/Users/poka/dev/warrenBros/warren-app/ios/build-wireguard-go.sh` lines 14-22: **Early-exit check that skips the Go bridge build if `wireguard-apple/Sources/WireGuardKitGo` is missing.** Script explicitly says "Warren: stub wireguard-apple".
 - iOS project files (Xcode pbxproj) have been scrubbed of WireGuardKit dependencies
 - iOS tunnel implementation is 100% Quinn-based:
   - `PacketTunnelCore/Actor/WarrenQuinnTunnelImplementation.swift`
@@ -66,12 +66,12 @@
 
 ## Bucket 1: Truly Dead WG Artifacts (Removal Safe Without Device Decision)
 
-### Removable Immediately — Zero Impact on Tunnel or Device Model
+### Removable Immediately, Zero Impact on Tunnel or Device Model
 
 | File Path | Lines | Description | Removal Notes |
 |-----------|-------|-------------|----------------|
 | `/Users/poka/dev/warrenBros/warren-app/ios/build-wireguard-go.sh` | All (85 lines) | Xcode build script for legacy Go bridge; early-exits when stub detected | Remove entirely; no references from Xcode pbxproj |
-| `/Users/poka/dev/warrenBros/warren-app/ios/wireguard-apple/` | – | Empty submodule stub; only `.swiftpm/` and `build/` directories | Remove `.gitmodules` entry and submodule directory |
+| `/Users/poka/dev/warrenBros/warren-app/ios/wireguard-apple/` | - | Empty submodule stub; only `.swiftpm/` and `build/` directories | Remove `.gitmodules` entry and submodule directory |
 | `/Users/poka/dev/warrenBros/warren-app/talpid-types/Cargo.toml` | 1 line: `wireguard-go = []` | Feature flag for legacy Go bridge (Windows userspace) | Remove feature flag; no active references in code |
 
 **Total Bucket 1 Removal:** ~85 lines; self-contained; no other code imports these.
@@ -86,8 +86,8 @@
 
 | File Path | Lines | Description | Impact |
 |-----------|-------|-------------|--------|
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/device.rs` | 1–172 | `Device` struct (id, name, pubkey:WireGuard::PublicKey, hijack_dns, created) | **DECISION-CRITICAL**: If Device is removed, this file disappears; if kept, pubkey field must be removed or stubbed |
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/wireguard.rs` | 1–275 | `WireguardData`, `PublicKey`, `PrivateKey`, `RotationInterval`, `TunnelOptions` | Keep `TunnelOptions` (still used by Quinn for MTU/DAITA/QuantumResistant); remove `WireguardData`, `PublicKey` if Device is removed |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/device.rs` | 1-172 | `Device` struct (id, name, pubkey:WireGuard::PublicKey, hijack_dns, created) | **DECISION-CRITICAL**: If Device is removed, this file disappears; if kept, pubkey field must be removed or stubbed |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/wireguard.rs` | 1-275 | `WireguardData`, `PublicKey`, `PrivateKey`, `RotationInterval`, `TunnelOptions` | Keep `TunnelOptions` (still used by Quinn for MTU/DAITA/QuantumResistant); remove `WireguardData`, `PublicKey` if Device is removed |
 | `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/lib.rs` | (lines with `pub use wireguard`, `pub use device`) | Re-exports of WG types and Device | Prune if removing Device model |
 
 **Subtotal: ~500 LOC** (Rust types only; vanishes if Device goes away)
@@ -96,7 +96,7 @@
 
 | File Path | Lines | Description | Impact |
 |-----------|-------|-------------|--------|
-| `/Users/poka/dev/warrenBros/warren-core/crates/warren-api-types/src/lib.rs` | 820–865 | `Device` struct with `wg_pubkey_hex: String`, `RotateDeviceWgKeyRequest` | Wire contract; must be kept for API compat **OR** redesigned without WG fields |
+| `/Users/poka/dev/warrenBros/warren-core/crates/warren-api-types/src/lib.rs` | 820-865 | `Device` struct with `wg_pubkey_hex: String`, `RotateDeviceWgKeyRequest` | Wire contract; must be kept for API compat **OR** redesigned without WG fields |
 
 **Subtotal: ~50 LOC** (API types; affects gRPC wire format)
 
@@ -108,10 +108,10 @@
 
 | File Path | Lines | Description | Removal Impact |
 |-----------|-------|-------------|-----------------|
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/mod.rs` | 1–1729 | `PrivateAccountAndDevice`, `PrivateDeviceState`, `DeviceService`, `AccountManager`, device caching, validation logic | **CORE DEVICE STATE MACHINE**: Remove if Device goes away; refactor to wallet-only identity if Device is kept |
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/device_backend.rs` | 1–899 | `WarrenDeviceBackend` trait, `RemoteDeviceBackend` (wraps warren-api), `LocalDeviceBackend` (in-memory POC) | Implement methods: `create(wg_pubkey)`, `replace_wg_key()`, `get()`, `list()`, `remove()` — all tied to WG key lifecycle |
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/service.rs` | 1–696 | Device service, validation, caching, device rotation scheduler | Tied to WG key rotation intervals and device check threshold (`WG_DEVICE_CHECK_THRESHOLD = 3`) |
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/api.rs` | 1–213 | REST proxy wrapper for `/v1/devices/*` endpoints | Removed wholesale if Device model goes away |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/mod.rs` | 1-1729 | `PrivateAccountAndDevice`, `PrivateDeviceState`, `DeviceService`, `AccountManager`, device caching, validation logic | **CORE DEVICE STATE MACHINE**: Remove if Device goes away; refactor to wallet-only identity if Device is kept |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/device_backend.rs` | 1-899 | `WarrenDeviceBackend` trait, `RemoteDeviceBackend` (wraps warren-api), `LocalDeviceBackend` (in-memory POC) | Implement methods: `create(wg_pubkey)`, `replace_wg_key()`, `get()`, `list()`, `remove()`, all tied to WG key lifecycle |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/service.rs` | 1-696 | Device service, validation, caching, device rotation scheduler | Tied to WG key rotation intervals and device check threshold (`WG_DEVICE_CHECK_THRESHOLD = 3`) |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/api.rs` | 1-213 | REST proxy wrapper for `/v1/devices/*` endpoints | Removed wholesale if Device model goes away |
 
 **Subtotal: ~3,500 LOC** (Daemon infrastructure; removed/refactored if Device is eliminated)
 
@@ -119,7 +119,7 @@
 
 | File Path | Lines | Description | Removal Impact |
 |-----------|-------|-------------|-----------------|
-| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/warren_device_bootstrap.rs` | 1–299 | Device registration + WG key derivation on first login (Phase 2.B.2) | Removed if Device is removed; refactored if kept but WG is stripped |
+| `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/warren_device_bootstrap.rs` | 1-299 | Device registration + WG key derivation on first login (Phase 2.B.2) | Removed if Device is removed; refactored if kept but WG is stripped |
 
 **Subtotal: ~300 LOC** (Device bootstrap; vanishes if model is eliminated)
 
@@ -131,7 +131,7 @@
 
 | File Path | Lines | Description | Removal Impact |
 |-----------|-------|-------------|-----------------|
-| `/Users/poka/dev/warrenBros/warren-core/crates/warren-api/src/devices.rs` | 1–350+ (approx) | `DeviceStore` trait, `InMemoryDeviceStore`, device registration/rotation logic keyed on `wg_pubkey_hex` + `owner_pubkey_ss58` | HTTP handlers for `POST /v1/devices`, `GET /v1/devices/{id}`, `PUT /v1/devices/{id}` (rotate WG key) — all removed if Device is eliminated |
+| `/Users/poka/dev/warrenBros/warren-core/crates/warren-api/src/devices.rs` | 1-350+ (approx) | `DeviceStore` trait, `InMemoryDeviceStore`, device registration/rotation logic keyed on `wg_pubkey_hex` + `owner_pubkey_ss58` | HTTP handlers for `POST /v1/devices`, `GET /v1/devices/{id}`, `PUT /v1/devices/{id}` (rotate WG key), all removed if Device is eliminated |
 
 **Subtotal: ~350 LOC** (Backend device store; removed if Device is removed)
 
@@ -146,28 +146,28 @@
 | `desktop/packages/mullvad-vpn/src/main/daemon-rpc.ts` | (WireGuard constraints, device type defs) | gRPC type definitions mirroring `mullvad_daemon.management_interface` | Prune if Device model is removed |
 | `desktop/packages/mullvad-vpn/src/renderer/components/views/` | (device list, settings UI) | Device display UI; **user-facing only**, never called by tunnel state machine | Removed if Device is removed; kept/redesigned if Device is kept |
 
-**Subtotal: ~100–200 LOC** (UI only; removable without affecting tunnel)
+**Subtotal: ~100-200 LOC** (UI only; removable without affecting tunnel)
 
 #### Android (Kotlin)
 
 | File Path | Lines | Description | Removal Impact |
 |-----------|-------|-------------|-----------------|
-| `android/lib/model/src/main/kotlin/.../WireguardConstraints.kt` | 1–12 | Data class for tunnel constraints; minimal | Remove if Device is removed |
+| `android/lib/model/src/main/kotlin/.../WireguardConstraints.kt` | 1-12 | Data class for tunnel constraints; minimal | Remove if Device is removed |
 | `android/lib/repository/src/main/kotlin/.../WarrenConnectSurface.kt` | (device-related) | Device management repository | Remove if Device is removed |
 | `android/lib/ui/tag/src/main/kotlin/.../TestTagConstants.kt` | (device test tags) | Test tags for device UI | Remove if Device is removed |
 
-**Subtotal: ~50–100 LOC** (Android model/UI; removable)
+**Subtotal: ~50-100 LOC** (Android model/UI; removable)
 
 #### iOS (Swift)
 
 | File Path | Lines | Description | Removal Impact |
 |-----------|-------|-------------|-----------------|
-| `ios/WarrenRustRuntime/WireGuardKey.swift` | 1–59 | Key generation/derivation (reimplemented on CryptoKit after dropping Rust FFI) | Remove if Device/WG keys are no longer needed |
-| `ios/WarrenTypes/WireGuardKey.swift` | 1–251 | `WireGuard.PrivateKey`, `WireGuard.PublicKey`, `WireGuard.PreSharedKey` structs | Remove if WG keys are obsolete |
-| `ios/WarrenSettings/StoredWgKeyData.swift` | 1–38 | `StoredWgKeyData` (persisted WG key + rotation metadata) | Remove if Device/WG keys are removed |
+| `ios/WarrenRustRuntime/WireGuardKey.swift` | 1-59 | Key generation/derivation (reimplemented on CryptoKit after dropping Rust FFI) | Remove if Device/WG keys are no longer needed |
+| `ios/WarrenTypes/WireGuardKey.swift` | 1-251 | `WireGuard.PrivateKey`, `WireGuard.PublicKey`, `WireGuard.PreSharedKey` structs | Remove if WG keys are obsolete |
+| `ios/WarrenSettings/StoredWgKeyData.swift` | 1-38 | `StoredWgKeyData` (persisted WG key + rotation metadata) | Remove if Device/WG keys are removed |
 | `ios/WarrenSettings/StoredDeviceData.swift` | (device name, WG key) | Device metadata persistence | Remove if Device is removed |
-| `ios/WarrenSettings/TunnelSettingsV*.swift` (V1–V8) | ~700 LOC total | Settings migration chain; some versions carry WG key fields | May need migration bump if Device/WG keys are removed (add V9 migration) |
-| `ios/WarrenSettings/WireGuardObfuscationSettings.swift` | 1–224 | WG-specific obfuscation settings (legacy; Quinn path uses different obfuscation) | **CAUTION**: May still have live references; check if Quinn tunneling reads this |
+| `ios/WarrenSettings/TunnelSettingsV*.swift` (V1, V8) | ~700 LOC total | Settings migration chain; some versions carry WG key fields | May need migration bump if Device/WG keys are removed (add V9 migration) |
+| `ios/WarrenSettings/WireGuardObfuscationSettings.swift` | 1-224 | WG-specific obfuscation settings (legacy; Quinn path uses different obfuscation) | **CAUTION**: May still have live references; check if Quinn tunneling reads this |
 | `ios/WarrenVPN/TunnelManager/WgKeyRotation.swift` | (device key rotation timer) | Device WG key rotation scheduling | Remove if Device is removed |
 | `ios/WarrenVPN/View controllers/DeviceList/DeviceManaging.swift` | (device list UI) | Device list view controller | Remove if Device is removed |
 
@@ -175,7 +175,7 @@
 
 ---
 
-## Bucket 3: Heritage/Comments (Keep — Not Removal Targets)
+## Bucket 3: Heritage/Comments (Keep, Not Removal Targets)
 
 | File / Context | Content | Reason to Keep |
 |----------------|---------|-----------------|
@@ -264,23 +264,23 @@ warren-core
 ### Bucket 1: Dead Artifacts (Remove Immediately)
 
 #### `/Users/poka/dev/warrenBros/warren-app/ios/build-wireguard-go.sh`
-- **Lines:** 1–85
+- **Lines:** 1-85
 - **Content:** Xcode ExternalBuildSystem target script; builds `wireguard-apple/Sources/WireGuardKitGo` (Go WireGuard bridge)
-- **Status:** **DEAD** — Early-exit on line 22 if `WireGuardKitGo` missing; no Xcode pbxproj rule invokes this anymore
+- **Status:** **DEAD**, Early-exit on line 22 if `WireGuardKitGo` missing; no Xcode pbxproj rule invokes this anymore
 - **Removal:** Delete file entirely; no imports/calls
 - **Bucket:** 1
 
 #### `/Users/poka/dev/warrenBros/warren-app/ios/wireguard-apple/` (submodule)
 - **Lines:** N/A (directory)
 - **Content:** Empty stub; only contains `.swiftpm/` and `build/` caches
-- **Status:** **DEAD** — No source code; submodule entry in `.gitmodules` points to a historical GitHub repo
+- **Status:** **DEAD**, No source code; submodule entry in `.gitmodules` points to a historical GitHub repo
 - **Removal:** Remove `.gitmodules` entry + delete directory
 - **Bucket:** 1
 
 #### `/Users/poka/dev/warrenBros/warren-app/talpid-types/Cargo.toml` (line with `wireguard-go = []`)
 - **Lines:** 1 feature flag
-- **Content:** `wireguard-go = []` — Feature gate for legacy userspace WireGuard on Windows
-- **Status:** **DEAD** — Feature is not referenced in any `#[cfg(...)]` conditional; Windows now uses GotaTun/Quinn
+- **Content:** `wireguard-go = []`, Feature gate for legacy userspace WireGuard on Windows
+- **Status:** **DEAD**, Feature is not referenced in any `#[cfg(...)]` conditional; Windows now uses GotaTun/Quinn
 - **Removal:** Delete feature flag line; verify no build breaks with `cargo build --all-features`
 - **Bucket:** 1
 
@@ -289,7 +289,7 @@ warren-core
 ### Bucket 2A: Core Device Types (Decision-Dependent)
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/device.rs`
-- **Lines:** 1–172
+- **Lines:** 1-172
 - **Structs:** 
   - `Device { id, name, pubkey: PublicKey, hijack_dns, created }`
   - `DeviceState { LoggedIn(WarrenIdentity), LoggedOut, Revoked }`
@@ -302,26 +302,26 @@ warren-core
 - **Bucket:** 2A
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-types/src/wireguard.rs`
-- **Lines:** 1–275
+- **Lines:** 1-275
 - **Structs:**
-  - Lines 90–107: `WireguardData { private_key, addresses, created }`
-  - Lines 136–217: `PublicKey` (x25519 wrapper)
-  - Lines 141–167: `PrivateKey` (x25519 wrapper)
-  - Lines 220–260: `TunnelOptions { mtu, quantum_resistant, daita, userspace, rotation_interval }`
+  - Lines 90-107: `WireguardData { private_key, addresses, created }`
+  - Lines 136-217: `PublicKey` (x25519 wrapper)
+  - Lines 141-167: `PrivateKey` (x25519 wrapper)
+  - Lines 220-260: `TunnelOptions { mtu, quantum_resistant, daita, userspace, rotation_interval }`
 - **Status:** 
-  - `PublicKey`, `PrivateKey`, `WireguardData`: Device-only (removal: delete lines 90–217)
-  - `TunnelOptions`, `QuantumResistantState`, `DaitaSettings`: **STILL USED by Quinn tunnel** for MTU/DAITA/QR settings (keep lines 16–260)
-  - `RotationInterval`: Device-only (removal: delete lines 136–217)
+  - `PublicKey`, `PrivateKey`, `WireguardData`: Device-only (removal: delete lines 90-217)
+  - `TunnelOptions`, `QuantumResistantState`, `DaitaSettings`: **STILL USED by Quinn tunnel** for MTU/DAITA/QR settings (keep lines 16-260)
+  - `RotationInterval`: Device-only (removal: delete lines 136-217)
 - **Removal Scenario:**
   - **Option A/B:** Keep only `TunnelOptions`, `QuantumResistantState`, `DaitaSettings`, `RotationInterval` (if keeping Device but stripping WG keys, remove `RotationInterval` too); delete `PublicKey`, `PrivateKey`, `WireguardData`
   - **Option C:** No change
 - **Bucket:** 2A
 
 #### `/Users/poka/dev/warrenBros/warren-core/crates/warren-api-types/src/lib.rs` (Device struct)
-- **Lines:** ~820–865
+- **Lines:** ~820-865
 - **Structs:**
-  - Lines 826–840: `RotateDeviceWgKeyRequest { wg_pubkey_hex: String }`
-  - Lines 836–852: `Device { id, name, wg_pubkey_hex, hijack_dns, created_at }`
+  - Lines 826-840: `RotateDeviceWgKeyRequest { wg_pubkey_hex: String }`
+  - Lines 836-852: `Device { id, name, wg_pubkey_hex, hijack_dns, created_at }`
 - **Wire Format:** These are HTTP request/response DTOs; changing them requires API versioning or backward-compat shim
 - **Removal Scenario:**
   - **Option A:** Delete both structs; redesign endpoints to not accept/return WG key material
@@ -334,11 +334,11 @@ warren-core
 ### Bucket 2B: Daemon Backend (Decision-Dependent, ~3,800 LOC)
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/mod.rs`
-- **Lines:** 1–1,729
+- **Lines:** 1-1,729
 - **Key Types/Functions:**
-  - Lines 119–145: `PrivateDeviceState { LoggedIn(PrivateAccountAndDevice), LoggedOut, Revoked }`
-  - Lines 150–173: `PrivateAccountAndDevice { device, wg_data: WireguardData, ... }`
-  - Lines 214–: `DeviceService` (manages device CRUD + WG rotation)
+  - Lines 119-145: `PrivateDeviceState { LoggedIn(PrivateAccountAndDevice), LoggedOut, Revoked }`
+  - Lines 150-173: `PrivateAccountAndDevice { device, wg_data: WireguardData, ... }`
+  - Lines 214, : `DeviceService` (manages device CRUD + WG rotation)
   - Lines 600+: `AccountManager` (top-level orchestrator; manages account + device state together)
 - **Coupling:** Every login creates a `PrivateAccountAndDevice` which holds a `WireguardData`; every reconnect fetches the device to validate WG key is still valid
 - **Removal Impact:**
@@ -348,7 +348,7 @@ warren-core
 - **Bucket:** 2B
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/device_backend.rs`
-- **Lines:** 1–899
+- **Lines:** 1-899
 - **Trait:** `WarrenDeviceBackend` with 5 methods:
   - `create(account, pubkey: WgPublicKey) -> (Device, AssociatedAddresses)`
   - `get(account, id) -> Device`
@@ -365,10 +365,10 @@ warren-core
 - **Bucket:** 2B
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/service.rs`
-- **Lines:** 1–696
+- **Lines:** 1-696
 - **Key Logic:**
-  - Device validation cache (lines ~100–150)
-  - WireGuard key rotation scheduler (lines ~300–400)
+  - Device validation cache (lines ~100-150)
+  - WireGuard key rotation scheduler (lines ~300-400)
   - Device check threshold (`WG_DEVICE_CHECK_THRESHOLD = 3` on line 73)
   - `DeviceService` state machine
 - **Removal Impact:**
@@ -378,7 +378,7 @@ warren-core
 - **Bucket:** 2B
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/device/api.rs`
-- **Lines:** 1–213
+- **Lines:** 1-213
 - **Content:** REST proxy wrapper (`DevicesProxy`); forwards calls to warren-api `/v1/devices/*` endpoints
 - **Removal Impact:**
   - **Option A:** Delete entire file; remove REST client
@@ -387,11 +387,11 @@ warren-core
 - **Bucket:** 2B
 
 #### `/Users/poka/dev/warrenBros/warren-app/mullvad-daemon/src/warren_device_bootstrap.rs`
-- **Lines:** 1–299
+- **Lines:** 1-299
 - **Content:** Device registration + WG key generation on first login (Phase 2.B.2)
   - Line ~50: Call `mullvad-management-interface` gRPC `create_device` with generated WG pubkey
-  - Lines ~100–200: WG key generation via FFI/JNI/Swift
-  - Lines ~250–299: Device ID derivation + caching
+  - Lines ~100-200: WG key generation via FFI/JNI/Swift
+  - Lines ~250-299: Device ID derivation + caching
 - **Removal Impact:**
   - **Option A:** Delete entire file; fold login directly into account manager
   - **Option B:** Refactor to register device without WG key (use wallet pubkey + empty/stub WG field)
@@ -411,16 +411,16 @@ warren-core
 ### Bucket 2C: Warren-Core Backend (Decision-Dependent, ~350 LOC)
 
 #### `/Users/poka/dev/warrenBros/warren-core/crates/warren-api/src/devices.rs`
-- **Lines:** 1–350+ (estimated)
+- **Lines:** 1-350+ (estimated)
 - **Key Components:**
-  - Lines ~25–38: `compute_device_id(wg_pubkey_hex, owner_pubkey_ss58)` function
-  - Lines ~50–104: `DeviceStore` trait (abstract CRUD)
-  - Lines ~106–209: `InMemoryDeviceStore` implementation
+  - Lines ~25-38: `compute_device_id(wg_pubkey_hex, owner_pubkey_ss58)` function
+  - Lines ~50-104: `DeviceStore` trait (abstract CRUD)
+  - Lines ~106-209: `InMemoryDeviceStore` implementation
   - Trait methods:
     - `register(owner, wg_pubkey_hex, ...) -> Device`
     - `replace_wg_key(owner, id, new_wg_pubkey_hex) -> bool`
     - Others: `get_for_owner`, `list_for_owner`, `remove_for_owner`
-  - Tests (~211–350+): idempotency, cross-tenant checks, key rotation
+  - Tests (~211-350+): idempotency, cross-tenant checks, key rotation
 - **Removal Impact:**
   - **Option A:** Delete entire file; remove `/v1/devices` HTTP handlers
   - **Option B:** Refactor to remove `wg_pubkey_hex` from device ID computation; remove `replace_wg_key` method; update tests
@@ -430,11 +430,11 @@ warren-core
 #### Warren-API HTTP handlers (implied in warren-api crate)
 - **Lines:** (Not shown; typically in a `handlers/` module or inline in router)
 - **Endpoints:**
-  - `POST /v1/devices` (register) — accepts `wg_pubkey_hex`
-  - `GET /v1/devices` (list) — returns `Device[]`
-  - `GET /v1/devices/{id}` (fetch) — returns `Device`
-  - `DELETE /v1/devices/{id}` (remove) — ownership check
-  - `PUT /v1/devices/{id}` (rotate WG key) — accepts `RotateDeviceWgKeyRequest`
+  - `POST /v1/devices` (register), accepts `wg_pubkey_hex`
+  - `GET /v1/devices` (list), returns `Device[]`
+  - `GET /v1/devices/{id}` (fetch), returns `Device`
+  - `DELETE /v1/devices/{id}` (remove), ownership check
+  - `PUT /v1/devices/{id}` (rotate WG key), accepts `RotateDeviceWgKeyRequest`
 - **Removal Impact:**
   - **Option A:** Delete `/v1/devices` endpoints; may break clients expecting device list (gRPC daemon, UIs)
   - **Option B:** Redesign endpoints; `POST /v1/devices` no longer accepts WG key; `PUT` endpoint deleted
@@ -447,7 +447,7 @@ warren-core
 
 #### Desktop / TypeScript
 - **Files:** `daemon-rpc.ts`, `grpc-type-conversions.ts`, device list/settings views
-- **Lines:** ~100–200 across files
+- **Lines:** ~100-200 across files
 - **Content:** gRPC type stubs mirroring `mullvad_daemon.management_interface`; device list UI
 - **Removal Scenario (Option A):** Remove device type definitions; delete device list view
 - **Removal Scenario (Option B):** Update type defs to remove `pubkey` field; keep device list UI
@@ -455,21 +455,21 @@ warren-core
 
 #### Android / Kotlin
 - **Files:** `WireguardConstraints.kt`, device repository, test helpers
-- **Lines:** ~50–100
+- **Lines:** ~50-100
 - **Content:** Data class for tunnel constraints; device repository interface
 - **Removal Scenario (Option A/B):** Remove WireguardConstraints or refactor to drop WG-specific fields
 - **Bucket:** 2D
 
 #### iOS / Swift
 - **Files (Key):**
-  - `ios/WarrenRustRuntime/WireGuardKey.swift` (59 lines) — Key generation wrapper
-  - `ios/WarrenTypes/WireGuardKey.swift` (251 lines) — Key struct definitions
-  - `ios/WarrenSettings/StoredWgKeyData.swift` (38 lines) — Persisted key + rotation metadata
-  - `ios/WarrenSettings/StoredDeviceData.swift` — Device metadata
-  - `ios/WarrenSettings/TunnelSettingsV*.swift` (V1–V8) (~700 LOC) — Settings migration chain
-  - `ios/WarrenSettings/WireGuardObfuscationSettings.swift` (224 lines) — Legacy WG obfuscation config
-  - `ios/WarrenVPN/TunnelManager/WgKeyRotation.swift` — Device key rotation timer
-  - `ios/WarrenVPN/View controllers/DeviceList/DeviceManaging.swift` — Device list UI
+  - `ios/WarrenRustRuntime/WireGuardKey.swift` (59 lines), Key generation wrapper
+  - `ios/WarrenTypes/WireGuardKey.swift` (251 lines), Key struct definitions
+  - `ios/WarrenSettings/StoredWgKeyData.swift` (38 lines), Persisted key + rotation metadata
+  - `ios/WarrenSettings/StoredDeviceData.swift`, Device metadata
+  - `ios/WarrenSettings/TunnelSettingsV*.swift` (V1, V8) (~700 LOC), Settings migration chain
+  - `ios/WarrenSettings/WireGuardObfuscationSettings.swift` (224 lines), Legacy WG obfuscation config
+  - `ios/WarrenVPN/TunnelManager/WgKeyRotation.swift`, Device key rotation timer
+  - `ios/WarrenVPN/View controllers/DeviceList/DeviceManaging.swift`, Device list UI
 - **Lines:** ~1,200+ total
 - **Removal Scenario (Option A):** Delete all WG-related files + device UI; add V9 settings migration
 - **Removal Scenario (Option B):** Keep device UI; delete `WireGuardKey.swift`, `StoredWgKeyData.swift`, `WgKeyRotation.swift`; refactor `TunnelSettingsV*` to ignore WG fields
@@ -481,7 +481,7 @@ warren-core
 
 | File / Line Range | Content | Classification |
 |-------------------|---------|-----------------|
-| `talpid-warren-tunnel/src/lib.rs:1–30` (comments) | Heritage notes on DAITA/routing naming from Mullvad WireGuard | KEEP: Architectural context |
+| `talpid-warren-tunnel/src/lib.rs:1-30` (comments) | Heritage notes on DAITA/routing naming from Mullvad WireGuard | KEEP: Architectural context |
 | `mullvad-types/src/relay_constraints.rs` | Constraint enums with `Protocol::WireGuard` variant | KEEP: Relay model still supports WG-only constraints (legacy relays) |
 | `mullvad-daemon/src/lib.rs` (comments on device validation) | "mirror of Mullvad device abstraction" | KEEP: Migration history |
 
@@ -519,7 +519,7 @@ warren-core
 2. Android: remove device repository; delete constraint types
 3. iOS: delete all `WireGuardKey*.swift` files; delete `StoredWgKeyData.swift`; delete device UI; add settings migration V9
 
-**Estimated Effort:** 3–4 weeks (high risk due to state machine refactor; requires thorough testing of login/logout paths)
+**Estimated Effort:** 3-4 weeks (high risk due to state machine refactor; requires thorough testing of login/logout paths)
 
 ---
 
@@ -552,7 +552,7 @@ warren-core
 4. Android: remove WG-specific constraint UI
 5. Desktop: remove key rotation UI; keep device list
 
-**Estimated Effort:** 2–3 weeks (lower risk; Device state machine mostly survives; refactoring is surgical)
+**Estimated Effort:** 2-3 weeks (lower risk; Device state machine mostly survives; refactoring is surgical)
 
 ---
 
@@ -588,7 +588,7 @@ warren-core
    - No key rotation UI present
 
 4. **Settings Persistence**
-   - iOS: settings migrations V1–V8 still load; V9 (if added) correctly ignores WG key fields
+   - iOS: settings migrations V1, V8 still load; V9 (if added) correctly ignores WG key fields
    - Desktop/Android: settings still serialize/deserialize correctly
 
 5. **API Contract (Option B Only)**
@@ -628,7 +628,7 @@ warren-core
   - Test surface is smaller than Option A
   - API wire format can be versioned (add `v2` endpoints) if needed
   - Settings migration is straightforward (V9 ignores WG fields)
-  - ~2–3 week effort vs. 3–4 weeks for Option A
+  - ~2-3 week effort vs. 3-4 weeks for Option A
 
 - **If immediate quick-win needed:** Option C first (~30 min), then tackle Option B in next phase
 

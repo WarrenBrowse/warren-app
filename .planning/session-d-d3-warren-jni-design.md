@@ -1,4 +1,4 @@
-# D.3 — `warren-jni` crate design
+# D.3, `warren-jni` crate design
 
 Companion document to the D.3 commit. Captures the architectural shift away
 from upstream `mullvad-jni`, the deferred work items, and the Android-target

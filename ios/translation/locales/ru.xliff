@@ -1047,7 +1047,7 @@
       </trans-unit>
       <trans-unit id="Failed to load products, please try again" xml:space="preserve" approved="yes">
         <source>Failed to load products, please try again</source>
-        <target state="final">Не удалось загрузить продукты — повторите попытку</target>
+        <target state="final">Не удалось загрузить продукты, повторите попытку</target>
         <note/>
       </trans-unit>
       <trans-unit id="Failed to reach Mullvad servers to initiate purchase" xml:space="preserve" approved="yes">
@@ -2569,12 +2569,12 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="The selected WireGuard port is not supported, please change it under **VPN settings**." xml:space="preserve" approved="yes">
         <source>The selected WireGuard port is not supported, please change it under **VPN settings**.</source>
-        <target state="final">Выбранный порт wireGuard не поддерживается — измените его в **настройках VPN**.</target>
+        <target state="final">Выбранный порт wireGuard не поддерживается, измените его в **настройках VPN**.</target>
         <note/>
       </trans-unit>
       <trans-unit id="The selected obfuscation port is not supported, please change it under **VPN settings**." xml:space="preserve" approved="yes">
         <source>The selected obfuscation port is not supported, please change it under **VPN settings**.</source>
-        <target state="final">Выбранный порт обфускации не поддерживается — измените его в **настройках VPN**.</target>
+        <target state="final">Выбранный порт обфускации не поддерживается, измените его в **настройках VPN**.</target>
         <note from="auto-generated">Description of an in-app notification that appears when the selected obfuscation port is not supported.</note>
       </trans-unit>
       <trans-unit id="The version of settings stored on device is unrecognized.Settings will be reset to defaults and the device will be logged out." xml:space="preserve" approved="yes">
@@ -2589,7 +2589,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="This can be useful if the API is censored but Mullvad’s bridge servers are not." xml:space="preserve" approved="yes">
         <source>This can be useful if the API is censored but Mullvad’s bridge servers are not.</source>
-        <target state="final">Это может быть полезно, если API подвергается цензуре, а серверы-мосты Mullvad — нет.</target>
+        <target state="final">Это может быть полезно, если API подвергается цензуре, а серверы-мосты Mullvad, нет.</target>
         <note/>
       </trans-unit>
       <trans-unit id="This can be useful when you are not affected by censorship." xml:space="preserve" approved="yes">
@@ -2839,7 +2839,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="Valid range: %d - %d" xml:space="preserve" approved="yes">
         <source>Valid range: %1$d - %2$d</source>
-        <target state="final">Диапазон значений: %1$d–%2$d</target>
+        <target state="final">Диапазон значений: %1$d-%2$d</target>
         <note/>
       </trans-unit>
       <trans-unit id="Valid ranges: %@" xml:space="preserve" approved="yes">
@@ -2889,7 +2889,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection." xml:space="preserve" approved="yes">
         <source>Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection.</source>
-        <target state="final">Внимание! Блокировщик вредоносного ПО — это просто дополнительный уровень защиты, а не антивирус.</target>
+        <target state="final">Внимание! Блокировщик вредоносного ПО, это просто дополнительный уровень защиты, а не антивирус.</target>
         <note/>
       </trans-unit>
       <trans-unit id="Warsaw" xml:space="preserve" approved="yes">

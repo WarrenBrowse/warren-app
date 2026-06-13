@@ -1,4 +1,4 @@
-# Session D — Android fork Mullvad → Warren VPN mobile
+# Session D, Android fork Mullvad → Warren VPN mobile
 
 > Brief d'agent autonome cross-repo warren-core + warren-app.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **D.1 — Rebrand Gradle + applicationId** (~2-3j)
-2. **D.2 — Rebrand Kotlin namespace + package** (~3-5j)
-3. **D.3 — `mullvad-jni` → `warren-jni` crate + wire warren-core** (~5-7j)
-4. **D.4 — VpnService Quinn (replace WireGuard tunnel)** (~10-14j)
-5. **D.5 — UI Compose adapt wallet Ed25519 mnemonic auth** (~5-7j)
-6. **D.6 — Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j)
-7. **D.7 — Build APK signed + smoke Android emulator** (~3-5j)
+1. **D.1, Rebrand Gradle + applicationId** (~2-3j)
+2. **D.2, Rebrand Kotlin namespace + package** (~3-5j)
+3. **D.3, `mullvad-jni` → `warren-jni` crate + wire warren-core** (~5-7j)
+4. **D.4, VpnService Quinn (replace WireGuard tunnel)** (~10-14j)
+5. **D.5, UI Compose adapt wallet Ed25519 mnemonic auth** (~5-7j)
+6. **D.6, Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j)
+7. **D.7, Build APK signed + smoke Android emulator** (~3-5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver fichiers modified ou untracked. Submodule `android/rust-android-gradle-plugin` peut nécessiter init (`git submodule update --init android/rust-android-gradle-plugin`), c'est OK (additif, pas destructif).
 
@@ -45,7 +45,7 @@ Escalade `AskUserQuestion` SEULEMENT si :
 5. **Spécifique session D** : si tu détectes que mullvad-daemon Rust path (consumed par mullvad-jni) a une surface trop grosse à rebrand intégralement, escalade pour stratégie (rebrand complet vs Warren-specific subset)
 
 Décisions tactiques agent autorisées :
-- Min SDK : 26 (Android 8.0) ou 28 (9.0) — recommandation 26, marché Android étendu
+- Min SDK : 26 (Android 8.0) ou 28 (9.0), recommandation 26, marché Android étendu
 - Target SDK : latest stable (34/35)
 - Build system : Gradle (déjà installé, pas changer pour Bazel)
 - App flavors : drop `devmole`, `stagemole`, `leakcanary` Mullvad-specific, garder `dev` + `release`
@@ -85,7 +85,7 @@ Si Android SDK/NDK pas configuré : escalade pour `ANDROID_HOME` + `NDK_HOME` en
 
 ---
 
-## D.1 — Rebrand Gradle + applicationId (~2-3j)
+## D.1, Rebrand Gradle + applicationId (~2-3j)
 
 ### Scope D.1
 
@@ -115,7 +115,7 @@ Si Android SDK/NDK pas configuré : escalade pour `ANDROID_HOME` + `NDK_HOME` en
 
 ---
 
-## D.2 — Rebrand Kotlin namespace + package (~3-5j)
+## D.2, Rebrand Kotlin namespace + package (~3-5j)
 
 ### Scope D.2
 
@@ -142,7 +142,7 @@ Si Android SDK/NDK pas configuré : escalade pour `ANDROID_HOME` + `NDK_HOME` en
 
 ---
 
-## D.3 — `mullvad-jni` → `warren-jni` crate + wire warren-core (~5-7j)
+## D.3, `mullvad-jni` → `warren-jni` crate + wire warren-core (~5-7j)
 
 ### Scope D.3
 
@@ -176,7 +176,7 @@ Si Android SDK/NDK pas configuré : escalade pour `ANDROID_HOME` + `NDK_HOME` en
 
 ---
 
-## D.4 — VpnService Quinn (replace WireGuard tunnel) (~10-14j)
+## D.4, VpnService Quinn (replace WireGuard tunnel) (~10-14j)
 
 ### Scope D.4
 
@@ -217,7 +217,7 @@ C'est la sous-phase la plus complexe. Android VpnService doit :
 
 ---
 
-## D.5 — UI Compose adapt wallet Ed25519 mnemonic auth (~5-7j)
+## D.5, UI Compose adapt wallet Ed25519 mnemonic auth (~5-7j)
 
 ### Scope D.5
 
@@ -246,7 +246,7 @@ C'est la sous-phase la plus complexe. Android VpnService doit :
 
 ---
 
-## D.6 — Multi-hop + DAITA + NAT-PMP UI parity (~5-7j)
+## D.6, Multi-hop + DAITA + NAT-PMP UI parity (~5-7j)
 
 ### Scope D.6
 
@@ -270,7 +270,7 @@ Parité avec desktop M4.H.C + session B + iOS C.6 :
 
 ---
 
-## D.7 — Build APK signed + smoke Android emulator (~3-5j)
+## D.7, Build APK signed + smoke Android emulator (~3-5j)
 
 ### Scope D.7
 
@@ -381,7 +381,7 @@ Verdict GO PARTIEL acceptable si :
 
 ## 7. Memory updates attendus
 
-- `warren_session_d_delivered.md` — verdict + caveats par sous-phase
+- `warren_session_d_delivered.md`, verdict + caveats par sous-phase
 - Update `MEMORY.md` index
 - Memory dédié si feature mobile non-triviale (ex: `warren_android_vpnservice_adapter.md`)
 

@@ -146,7 +146,7 @@ final class WarrenWalletTests: XCTestCase {
     }
 
     /// `publicKeyAddress` is a Warren SS58 address: `wb`-prefixed,
-    /// 47–49 chars, base58 charset. Computed by the Rust SS58 codec
+    /// 47-49 chars, base58 charset. Computed by the Rust SS58 codec
     /// (`warren_wallet_pubkey_ss58`).
     func test_publicKeyAddress_isWarrenSS58Address() throws {
         let wallet = try WarrenWallet.generate()

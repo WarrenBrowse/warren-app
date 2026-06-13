@@ -1,4 +1,4 @@
-# Session D.7 — APK build/sign + Play Store internal-test upload
+# Session D.7, APK build/sign + Play Store internal-test upload
 
 D.4 step 65 scaffold pour la sortie Play Store interne. Cette procédure
 n'est pas automatisable dans une session Claude Code (signing keys

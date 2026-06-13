@@ -1,4 +1,4 @@
-# Session D — Android fork — Rapport final (GO PARTIEL D.1-D.3, design D.4-D.7)
+# Session D, Android fork, Rapport final (GO PARTIEL D.1-D.3, design D.4-D.7)
 
 > Verdict honnête : **GO PARTIEL livré**. D.1-D.3 = code production-ready
 > pushé. D.4-D.7 = design docs détaillés + scaffolds compilants. La
@@ -18,7 +18,7 @@
 Branche : `main`. Pas de cherry-pick, pas de force-push, §0.0 INVIOLABLE
 respecté de bout en bout.
 
-## 2. D.1 — Rebrand Gradle + applicationId ✓ (commit d152ed5c45)
+## 2. D.1, Rebrand Gradle + applicationId ✓ (commit d152ed5c45)
 
 Critères GO brief :
 - ✓ `applicationId` + `namespace` = `com.warrenbrowse.vpn`
@@ -42,7 +42,7 @@ Critères GO brief :
 Caveat : `local.properties` créé localement (gitignored) pour pointer
 vers `~/Library/Android/sdk` + `ndk/29.0.13113456`.
 
-## 3. D.2 — Rebrand Kotlin namespace ✓ (commit d90954ca7c)
+## 3. D.2, Rebrand Kotlin namespace ✓ (commit d90954ca7c)
 
 Stats :
 - 1311 fichiers modifiés
@@ -76,7 +76,7 @@ hot-path warren-jni `cargo check --target aarch64-linux-android` PASS
 valide la chaîne native; la chaîne Kotlin est validée à terme par
 `./gradlew app:compileOssProdDebugKotlin` au début de D.4.
 
-## 4. D.3 — `warren-jni` crate ✓ (commit e33a542e70)
+## 4. D.3, `warren-jni` crate ✓ (commit e33a542e70)
 
 Brief D.3.1 ✓ : `mullvad-jni` -> `warren-jni` via `git mv` + workspace
 member updated.
@@ -123,7 +123,7 @@ warren-core (cf. design doc Section 5). Cross-repo change, scope D.4.
 
 Design doc complet : `.planning/session-d-d3-warren-jni-design.md`.
 
-## 5. D.4 -> D.7 — Design + scaffolds ✗ (commit ed80e1baca)
+## 5. D.4 -> D.7, Design + scaffolds ✗ (commit ed80e1baca)
 
 Pas d'implémentation runtime livrée. À la place :
 
@@ -318,7 +318,7 @@ Pin warren-core suivi : `8b0e34` → `30a7e3c` (Session G DAITA) → `d59fd15`
 5. NAT-PMP wiring via `warren_natpmp_client` (cfg-gated, lifetime + port surface)
 6. `WarrenVpnService` rewrite : drop `managementService.start()` + `ConnectionProxy` (dead at runtime), wire WarrenQuinnAdapter direct
 7. Drop `lib/talpid/` module entirely
-8. AndroidKeystoreWalletRepository impl (D.5 building block — interface ready)
+8. AndroidKeystoreWalletRepository impl (D.5 building block, interface ready)
 
 D.5 / D.6 / D.7 estimations restent inchangées.
 
@@ -346,7 +346,7 @@ Continuation batch enchaînée après le breakthrough D.4 step 2 :
 ### Architecture maintenant en place côté Android
 
 ```
-WarrenVpnService (TalpidVpnService subclass — legacy, guarded)
+WarrenVpnService (TalpidVpnService subclass, legacy, guarded)
     +-- WarrenQuinnAdapter (D.4)
     |     +-- VpnService.Builder.establish() -> ParcelFileDescriptor
     |     +-- WarrenJni.connectTunnel(fd, mnemonic, configJson)
@@ -370,7 +370,7 @@ Compose UI scaffolds (D.5) :
 
 ### Reste D.4 step 6+ / D.5 step 2+ / D.6 / D.7
 
-- D.4 step 6 : drop `managementService` + `ConnectionProxy` from WarrenVpnService entirely (architectural rewrite — needs WarrenQuinnAdapter wired from onStartCommand intents)
+- D.4 step 6 : drop `managementService` + `ConnectionProxy` from WarrenVpnService entirely (architectural rewrite, needs WarrenQuinnAdapter wired from onStartCommand intents)
 - D.4 step 7 : entry hop wiring via `warren_multihop::MultiHopClient`
 - D.4 step 8 : DAITA spec wiring (`SetupAck.daita_spec` → `pump_bidirectional_with_daita`)
 - D.4 step 9 : NAT-PMP wiring (`warren_natpmp_client`)

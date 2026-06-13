@@ -1,6 +1,6 @@
-# Session R — DAITA multi-hop FIXED + B.1.8 closed
+# Session R, DAITA multi-hop FIXED + B.1.8 closed
 
-> Status : **GO ULTIMATE** — bug Session N corrigé, B.1.8 caveat fermé empirique
+> Status : **GO ULTIMATE**, bug Session N corrigé, B.1.8 caveat fermé empirique
 > Date : 2026-05-22
 > Cost réel : **~0.02 EUR** (3 ccx13 ~30 min)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. Production warren-exit-1 intact.
@@ -143,5 +143,5 @@ Session P commit `0106b8d` AND Session R commit `f8f2d59` BOTH pushed to origin/
 1. Poka redeploy warren-exit-1 production avec pin `f8f2d59` (multi-hop DAITA now functional)
 2. Activate `--enable-daita` in production warren-exit-1 systemd unit
 3. UI / docs update : DAITA multi-hop available
-4. Investigate slow Tamaraw rate (sent_padding=4 over 25s vs expected 200/s) — possibly maybenot `p=5000` is in different unit than expected, or DaitaPool's pick gave a non-Tamaraw machine
+4. Investigate slow Tamaraw rate (sent_padding=4 over 25s vs expected 200/s), possibly maybenot `p=5000` is in different unit than expected, or DaitaPool's pick gave a non-Tamaraw machine
 5. Multi-hop IP negotiation v1 multi-client (replace mono POC `10.66.0.2/24`)

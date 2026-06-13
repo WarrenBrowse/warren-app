@@ -1,8 +1,8 @@
-# Session P — DAITA debug Round 2 : 3-process test + production instrumentation
+# Session P, DAITA debug Round 2 : 3-process test + production instrumentation
 
-> Status : **GO PARTIEL** — bug Session N confirmé real-network only, instrumentation production déployable
+> Status : **GO PARTIEL**, bug Session N confirmé real-network only, instrumentation production déployable
 > Date : 2026-05-21
-> Cost réel : **0 EUR** (in-process only, push warren-core local only — poka 14 commits stack en attente)
+> Cost réel : **0 EUR** (in-process only, push warren-core local only, poka 14 commits stack en attente)
 
 ---
 
@@ -56,7 +56,7 @@ rx_task report  datagrams=X decode_errs=Y exit_id_mismatches=Z session_errs=A op
 - `decode_errs` : décodage frame fail (silent continue)
 - `exit_id_mismatches` : exit_id wrong (silent continue, dispatch error)
 - `session_errs` : ExitSession::new fail (silent continue)
-- `open_errs` : HPKE open fail (silent continue — **MOST suspicious for Session N**)
+- `open_errs` : HPKE open fail (silent continue, **MOST suspicious for Session N**)
 - `dummies` : `is_daita_dummy(plaintext)` true (filtered)
 - `to_tun` : real packets forwarded to TUN
 
@@ -103,9 +103,9 @@ downlink_with_daita report  recvd=X dummies=Y to_tun=Z
 | supervised_pump uplink starves real packets | ❌ DISPROVEN (Session O test) |
 | Exit serve drops real packets | ❌ DISPROVEN (Session O test) |
 | **Relay + DAITA combo bug** | ❌ DISPROVEN (Session P test 3-process pipeline PASS) |
-| **Real Linux TUN cadence under DAITA** | ⏭ NOT TESTABLE in-process — needs Linux host |
-| **Quinn max_datagram_size adaptation** | ⏭ NOT TESTABLE in-process — needs cross-DC RTT |
-| **Kernel rp_filter / nft on warren0** | ⏭ NOT TESTABLE in-process — needs real kernel |
+| **Real Linux TUN cadence under DAITA** | ⏭ NOT TESTABLE in-process, needs Linux host |
+| **Quinn max_datagram_size adaptation** | ⏭ NOT TESTABLE in-process, needs cross-DC RTT |
+| **Kernel rp_filter / nft on warren0** | ⏭ NOT TESTABLE in-process, needs real kernel |
 | **MTU 1280 + sealing overhead > Quinn negotiated max** | ⏭ NEEDS bench with INFO logs to confirm |
 | **Session.open() failures sous dummy interleaving** | ⏭ NEEDS bench (open_errs counter will reveal) |
 
@@ -114,7 +114,7 @@ downlink_with_daita report  recvd=X dummies=Y to_tun=Z
 ## Pin warren-app
 
 - Session O pin : `5ee1c4d` (poussé origin/main)
-- Session P pin : **NON BUMPÉ** — warren-core HEAD `0106b8d` est local-only (poka a 14 commits AUDIT non-pushés au-dessus de mon Session O `5ee1c4d`, mon Session P `0106b8d` est par-dessus). Push différé.
+- Session P pin : **NON BUMPÉ**, warren-core HEAD `0106b8d` est local-only (poka a 14 commits AUDIT non-pushés au-dessus de mon Session O `5ee1c4d`, mon Session P `0106b8d` est par-dessus). Push différé.
 
 ---
 
@@ -127,7 +127,7 @@ downlink_with_daita report  recvd=X dummies=Y to_tun=Z
    - Si exit rx_task `to_tun` = 0 mais `dummies` > 0 → real packets filtrés OR jamais arrivés
    - Si exit tx_task `from_tun` = 0 → kernel ne génère pas reply ICMP (suspect: rp_filter, nft drop, routing)
    - Si client uplink `too_large` >> 0 → MTU issue (TUN 1280 + sealing > Quinn negotiated)
-   - Si client downlink `dummies` >> 0 mais `to_tun` = 0 → tout est dummy (cohérent avec exit rx_task tout dummies — pas de real packets cross-network)
+   - Si client downlink `dummies` >> 0 mais `to_tun` = 0 → tout est dummy (cohérent avec exit rx_task tout dummies, pas de real packets cross-network)
 4. **Fix ciblé** basé sur le finding, puis rerun bench
 
 Cost cap Session Q : ~0.05 EUR.

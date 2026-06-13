@@ -1,4 +1,4 @@
-# Session H — A.4 UI follow-up — RAPPORT
+# Session H, A.4 UI follow-up, RAPPORT
 
 > Date d'exécution : 2026-05-21
 > Auteur : agent autonome sous direction poka
@@ -24,7 +24,7 @@
 
 ---
 
-## 1. H.1 — Setup worktree warren-app dédié
+## 1. H.1, Setup worktree warren-app dédié
 
 Worktree créé sur la branche dédiée `session-h-a4-ui` (fork de `main` post-Session E à `6e2c50828d`).
 
@@ -32,7 +32,7 @@ Sources Session E + design A.4 lues. Cleanup en fin de session via `git worktree
 
 ---
 
-## 2. H.2 — UI modal `WarrenPubKeyWarning.tsx` + i18n
+## 2. H.2, UI modal `WarrenPubKeyWarning.tsx` + i18n
 
 ### 2.1 Livrables
 
@@ -59,12 +59,12 @@ Sources Session E + design A.4 lues. Cleanup en fin de session via `git worktree
 
 - Modal overlay vs banner : retenu **modal overlay** (force user attention pour security event).
 - Truncation pubkey : 8 hex chars head + 8 tail (recognizable, fits le layout).
-- 3 CTAs ordonnés `Trust new key` (success) / `Report to Warren` (primary) / `Reject` (destructive) — Reject mapped sur `close` ESC.
+- 3 CTAs ordonnés `Trust new key` (success) / `Report to Warren` (primary) / `Reject` (destructive), Reject mapped sur `close` ESC.
 - Composant lit `state.settings.warrenStatus?.pubkeyMismatchPending` (steady state `null`) ; le reducer existant `UPDATE_WARREN_STATUS` passe le nouveau champ automatiquement.
 
 ---
 
-## 3. H.3 — gRPC RPCs livrés
+## 3. H.3, gRPC RPCs livrés
 
 ### 3.1 Proto extension (`mullvad-management-interface/proto/management_interface.proto`)
 
@@ -107,7 +107,7 @@ Fichiers `dist/management_interface_*` mis à jour cross-repo (modifs trackées 
 
 ---
 
-## 4. H.4 — Persistance settings.json (consumer task)
+## 4. H.4, Persistance settings.json (consumer task)
 
 ### 4.1 Architecture
 
@@ -149,7 +149,7 @@ verify hook (tunnel.rs)
 
 ---
 
-## 5. H.5 — Multi-hop pubkey pinning
+## 5. H.5, Multi-hop pubkey pinning
 
 ### 5.1 Verdict architectural
 
@@ -176,7 +176,7 @@ Implémentation triviale (~30 lignes diff sur le verify hook) puisque la fonctio
 
 ---
 
-## 6. H.6 — Forensic country/city blank-on-insert fix
+## 6. H.6, Forensic country/city blank-on-insert fix
 
 ### 6.1 Threading
 
@@ -207,7 +207,7 @@ Le multi-hop path (verify hook gauche multi-hop) **n'a pas** de location thread�
 
 ---
 
-## 7. H.7 — Tests E2E + rapport
+## 7. H.7, Tests E2E + rapport
 
 ### 7.1 Tests cross-workspace
 
@@ -234,13 +234,13 @@ Les tests unitaires couvrent les 7 critères E2E du brief :
 
 ### 7.3 Caveats reportés follow-up
 
-**C1 — Multi-hop forensic country/city blank** : `ExitDescriptorSigned` ne ship pas de `Location` aujourd'hui. Le pin TOFU multi-hop insert avec country/city vides. Cf. § 6.4.
+**C1, Multi-hop forensic country/city blank** : `ExitDescriptorSigned` ne ship pas de `Location` aujourd'hui. Le pin TOFU multi-hop insert avec country/city vides. Cf. § 6.4.
 
-**C2 — String extraction i18n locales/fr/messages.po** : les nouveaux messages `pgettext('warren-pubkey-warning', ...)` sont définis dans le code mais n'ont pas encore été extraits dans les `.po` files (script `update-translations` requis pour pousser vers les translators). Render-time fallback : les strings anglaises s'affichent jusqu'à l'extraction + traduction FR.
+**C2, String extraction i18n locales/fr/messages.po** : les nouveaux messages `pgettext('warren-pubkey-warning', ...)` sont définis dans le code mais n'ont pas encore été extraits dans les `.po` files (script `update-translations` requis pour pousser vers les translators). Render-time fallback : les strings anglaises s'affichent jusqu'à l'extraction + traduction FR.
 
-**C3 — Touche A11y avancée** : focus trap dans le modal compte sur `ModalAlert` qui utilise `BackAction` (ESC). Pas de tests automatisés du focus trap (le code reuse le pattern Mullvad qui est éprouvé).
+**C3, Touche A11y avancée** : focus trap dans le modal compte sur `ModalAlert` qui utilise `BackAction` (ESC). Pas de tests automatisés du focus trap (le code reuse le pattern Mullvad qui est éprouvé).
 
-**C4 — Bindings cross-worktree sync** : les fichiers `dist/management_interface_*` régénérés ont été copiés dans le main worktree pour que tsc résolve. Pas idéal long-terme ; à reset à la merge (les bindings live dans le repo, donc le commit final aura les bons fichiers).
+**C4, Bindings cross-worktree sync** : les fichiers `dist/management_interface_*` régénérés ont été copiés dans le main worktree pour que tsc résolve. Pas idéal long-terme ; à reset à la merge (les bindings live dans le repo, donc le commit final aura les bons fichiers).
 
 ### 7.4 Doctrine
 
@@ -266,7 +266,7 @@ Les tests unitaires couvrent les 7 critères E2E du brief :
 
 - H.1 → H.7 livrés.
 - 581 tests cargo workspace + 13 tests vitest renderer PASS.
-- 4 RPCs gRPC ajoutés (TrustNewExitKey, ResetPinnedExitKeys, DismissPubkeyMismatch, ReportPubkeyMismatch) — non-breaking additif.
+- 4 RPCs gRPC ajoutés (TrustNewExitKey, ResetPinnedExitKeys, DismissPubkeyMismatch, ReportPubkeyMismatch), non-breaking additif.
 - Persistance settings.json fonctionnelle (consumer task câblé, 5 variants WarrenPinUpdate routés).
 - Multi-hop pubkey pinning livré (cross-path single-hop + multi-hop).
 - Forensic country/city threadé pour single-hop (multi-hop déféré follow-up trivial).

@@ -1,4 +1,4 @@
-# Session C — iOS fork Mullvad → Warren VPN mobile
+# Session C, iOS fork Mullvad → Warren VPN mobile
 
 > Brief d'agent autonome cross-repo warren-core + warren-app.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **C.1 — Rebrand Xcode project + bundle IDs** (~3-5j)
-2. **C.2 — Rebrand 15 Swift packages** (~5-7j)
-3. **C.3 — `mullvad-ios` → `warren-ios` crate + wire warren-core** (~7-10j)
-4. **C.4 — PacketTunnelProvider Quinn (replace WireGuardAdapter)** (~10-14j)
-5. **C.5 — UI Swift adapt wallet Ed25519 mnemonic auth** (~5-7j)
-6. **C.6 — Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j)
-7. **C.7 — Build TestFlight + smoke iOS simulator** (~3-5j)
+1. **C.1, Rebrand Xcode project + bundle IDs** (~3-5j)
+2. **C.2, Rebrand 15 Swift packages** (~5-7j)
+3. **C.3, `mullvad-ios` → `warren-ios` crate + wire warren-core** (~7-10j)
+4. **C.4, PacketTunnelProvider Quinn (replace WireGuardAdapter)** (~10-14j)
+5. **C.5, UI Swift adapt wallet Ed25519 mnemonic auth** (~5-7j)
+6. **C.6, Multi-hop + DAITA + NAT-PMP UI parity** (~5-7j)
+7. **C.7, Build TestFlight + smoke iOS simulator** (~3-5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard (`git stash`, `git checkout <path>`, `git restore`, `git reset --hard`, `git clean` interdits). Préserver tout fichier modified ou untracked. Si état inattendu : escalader sans toucher au tree.
 
@@ -52,7 +52,7 @@ Décisions tactiques agent autorisées :
 - Logo iOS = SVG generate from `desktop/packages/mullvad-vpn/graphics/icon.svg` (taupe Warren rebrand R1) ou placeholder W jaune navy si conversion bloquée
 - Localizable.xcstrings : FR + EN minimum, autres locales Mullvad → migrer tel quel
 - TestFlight invite-only beta channel par défaut
-- Targeting iOS 16+ (vs iOS 15 Mullvad) pour réduire surface compat — escalade si tu vises plus bas
+- Targeting iOS 16+ (vs iOS 15 Mullvad) pour réduire surface compat, escalade si tu vises plus bas
 
 ---
 
@@ -87,7 +87,7 @@ Si Xcode pas installé : escalade. Si non-macOS : skip C.7 build TestFlight, liv
 
 ---
 
-## C.1 — Rebrand Xcode project + bundle IDs (~3-5j)
+## C.1, Rebrand Xcode project + bundle IDs (~3-5j)
 
 ### Scope C.1
 
@@ -120,7 +120,7 @@ Si Xcode pas installé : escalade. Si non-macOS : skip C.7 build TestFlight, liv
 
 ---
 
-## C.2 — Rebrand 15 Swift packages (~5-7j)
+## C.2, Rebrand 15 Swift packages (~5-7j)
 
 ### Scope C.2
 
@@ -168,7 +168,7 @@ Pour chaque package :
 
 ---
 
-## C.3 — `mullvad-ios` → `warren-ios` crate + wire warren-core (~7-10j)
+## C.3, `mullvad-ios` → `warren-ios` crate + wire warren-core (~7-10j)
 
 ### Scope C.3
 
@@ -202,7 +202,7 @@ Pour chaque package :
 
 ---
 
-## C.4 — PacketTunnelProvider Quinn (replace WireGuardAdapter) (~10-14j)
+## C.4, PacketTunnelProvider Quinn (replace WireGuardAdapter) (~10-14j)
 
 ### Scope C.4
 
@@ -242,7 +242,7 @@ C'est la sous-phase la plus complexe. NetworkExtension iOS PacketTunnelProvider 
 
 ---
 
-## C.5 — UI Swift adapt wallet Ed25519 mnemonic auth (~5-7j)
+## C.5, UI Swift adapt wallet Ed25519 mnemonic auth (~5-7j)
 
 ### Scope C.5
 
@@ -277,7 +277,7 @@ Mullvad iOS auth = account number 16 digits. Warren iOS auth = wallet Ed25519 + 
 
 ---
 
-## C.6 — Multi-hop + DAITA + NAT-PMP UI parity (~5-7j)
+## C.6, Multi-hop + DAITA + NAT-PMP UI parity (~5-7j)
 
 ### Scope C.6
 
@@ -307,7 +307,7 @@ Parité avec desktop M4.H.C + session B :
 
 ---
 
-## C.7 — Build TestFlight + smoke iOS simulator (~3-5j)
+## C.7, Build TestFlight + smoke iOS simulator (~3-5j)
 
 ### Scope C.7
 
@@ -415,7 +415,7 @@ Verdict NO-GO si Xcode build refuse de compiler malgré §0.5 autonomy exhausted
 
 ## 7. Memory updates attendus
 
-- `warren_session_c_delivered.md` — verdict + caveats par sous-phase
+- `warren_session_c_delivered.md`, verdict + caveats par sous-phase
 - Update `MEMORY.md` index
 - Memory dédié si feature mobile non-triviale (ex: `warren_ios_packettunnel_adapter.md`)
 

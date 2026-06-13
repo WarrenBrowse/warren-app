@@ -450,4 +450,4 @@ Warren-app :
 - Update `project_warren_app_state_post_m4hb.md` → renommer en
   `project_warren_app_state_post_m4hc.md` OU ajouter section
   "post-M4.H.C UI exposed"
-- Index MEMORY.md : `- [M4.H.C delivered](warren_m4h_c_delivered.md) — <verdict> UI Electron Warren multi-hop + reconnect + killswitch + obfuscation indicator`
+- Index MEMORY.md : `- [M4.H.C delivered](warren_m4h_c_delivered.md), <verdict> UI Electron Warren multi-hop + reconnect + killswitch + obfuscation indicator`

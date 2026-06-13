@@ -457,7 +457,7 @@ Caveats M4.H.A.X persistants :
 
 Warren-app :
 - Create `warren_m4h_b_delivered.md`
-- Update MEMORY.md : `- [M4.H.B delivered](warren_m4h_b_delivered.md) — <verdict> + stack M4.E.D câblée + bench single/multi/auto-reconnect`
+- Update MEMORY.md : `- [M4.H.B delivered](warren_m4h_b_delivered.md), <verdict> + stack M4.E.D câblée + bench single/multi/auto-reconnect`
 
 Warren-core (si cross-repo fix push) :
 - Update memory si fix poussé sur warren-core (ex. wapi VAL1/2)

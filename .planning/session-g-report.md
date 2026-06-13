@@ -1,8 +1,8 @@
-# Session G — warren-core DAITA pump production wiring — RAPPORT FINAL
+# Session G, warren-core DAITA pump production wiring, RAPPORT FINAL
 
 > Status : **GO ULTIMATE (pivot diagnostic)**
 > Date : 2026-05-21
-> Cost réel : **0.00 EUR** (G.6 Hetzner skip — in-process G.5 solidly PASS)
+> Cost réel : **0.00 EUR** (G.6 Hetzner skip, in-process G.5 solidly PASS)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. §0.6 worktree séparé respecté.
 
 ---
@@ -25,7 +25,7 @@ Session G livre le déblocage DAITA prod desktop + mobile, mais **pas via le fix
 - Exit-side : ne pump pas DAITA encore (downlink exit → client non-défendu). Acceptable v1 (parité Mullvad v1 historique). Follow-up M5.B.1.X documenté.
 
 **Caveat** :
-- Exit-side dummies reçus du client passent à travers `pump_quic_to_tun` (sans filtre) et atteignent le TUN exit. Linux TUN kernel rejette silencieusement les paquets non-IP (first byte 0xFF) — pas d'erreur fatale mais CPU/syscall gaspillé. Fix exit-side dummy filter ou exit-side full DAITA wiring = follow-up M5.B.1.X (effort ~2-3j car nécessite server-side MultiSession aggregation + shared DaitaState per session).
+- Exit-side dummies reçus du client passent à travers `pump_quic_to_tun` (sans filtre) et atteignent le TUN exit. Linux TUN kernel rejette silencieusement les paquets non-IP (first byte 0xFF), pas d'erreur fatale mais CPU/syscall gaspillé. Fix exit-side dummy filter ou exit-side full DAITA wiring = follow-up M5.B.1.X (effort ~2-3j car nécessite server-side MultiSession aggregation + shared DaitaState per session).
 
 ---
 
@@ -79,7 +79,7 @@ let pump = match pump_kind {
 
 ## Test integration sustained stress
 
-`crates/warren-tunnel/tests/daita_sustained_stress.rs` — 4 scénarios :
+`crates/warren-tunnel/tests/daita_sustained_stress.rs`, 4 scénarios :
 
 | Test | Duration | PPS/dir | Conns | Status |
 |---|---:|---:|---:|---|
@@ -123,10 +123,10 @@ Bursts de 8 WARN simultanés à intervalles ~6-10 min sur ~50 min de bench.
 
 | Hypothèse brief G.4 | Verdict session G |
 |---|---|
-| **A — Lock contention parking_lot::Mutex sync/async** | Non confirmé : pump survit 5 min @ 10k pps/dir avec 4 conns + 200 pps padding sur 2-core Mac dev box. Contention restera <60k locks/sec, parking_lot supporte. |
-| **B — Timer task starvation** | Non confirmé : Tamaraw 200 padding pkt/s dummies fired sans backpressure observable. |
-| **C — Downlink read_datagram timeout vs DAITA wakeup** | Non applicable : le pump DAITA n'était même pas appelé en prod session F. Quinn idle timeout 180s avec keep-alive 20s ne devrait pas se trigger sur stack non-DAITA. |
-| **D — DAITA dummies overflow** | Non applicable : pas de dummies émis en session F. |
+| **A, Lock contention parking_lot::Mutex sync/async** | Non confirmé : pump survit 5 min @ 10k pps/dir avec 4 conns + 200 pps padding sur 2-core Mac dev box. Contention restera <60k locks/sec, parking_lot supporte. |
+| **B, Timer task starvation** | Non confirmé : Tamaraw 200 padding pkt/s dummies fired sans backpressure observable. |
+| **C, Downlink read_datagram timeout vs DAITA wakeup** | Non applicable : le pump DAITA n'était même pas appelé en prod session F. Quinn idle timeout 180s avec keep-alive 20s ne devrait pas se trigger sur stack non-DAITA. |
+| **D, DAITA dummies overflow** | Non applicable : pas de dummies émis en session F. |
 
 **Hypothèse non listée mais validée** : "DAITA pump est implémenté mais pas appelé en prod". Le `dead code` est la vraie root cause. Fix : wirer le dispatch (1 fichier, 30 LOC).
 
@@ -138,7 +138,7 @@ Bursts de 8 WARN simultanés à intervalles ~6-10 min sur ~50 min de bench.
 |---|---|
 | G.1 worktree warren-core dédié | ✅ `../warren-core-pump-fix` branch `session-g-pump-fix` |
 | G.2 reproduction in-process | ✅ Test sustained stress reproduit l'environnement DAITA actif |
-| G.3 instrumentation tracing | ⏭️ SKIPPED — pump stable, pas de deadlock à tracer |
+| G.3 instrumentation tracing | ⏭️ SKIPPED, pump stable, pas de deadlock à tracer |
 | G.4 root cause + fix candidat | ✅ Root cause = dead-code wiring (pas pump bug). Fix = wire pump dispatch. |
 | G.5 regression tests sustained 5 min | ✅ `daita_sustained_stress.rs` 4 cas, `cargo test -- --ignored` PASS |
 | G.6 re-bench Hetzner | ⏭️ SKIPPED (in-process G.5 solidly PASS, cost cap respect) |
@@ -205,4 +205,4 @@ Issues identifiés mais hors scope session G :
 - Worktree warren-core-pump-fix : à supprimer en fin de session
 - vendor symlink : à supprimer avec le worktree (was local convenience, gitignored)
 
-Doctrine §0.0 + §0.5 + §0.6 respectée. Aucune commande destructive. WIP poka warren-app + warren-core préservés intacts. Cost cap (0.30 EUR) largement respecté (0.00 EUR — pas de Hetzner).
+Doctrine §0.0 + §0.5 + §0.6 respectée. Aucune commande destructive. WIP poka warren-app + warren-core préservés intacts. Cost cap (0.30 EUR) largement respecté (0.00 EUR, pas de Hetzner).

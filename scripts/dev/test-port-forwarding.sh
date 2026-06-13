@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# test-port-forwarding.sh — Deep end-to-end test for an inbound port
+# test-port-forwarding.sh, Deep end-to-end test for an inbound port
 # forward (e.g. Warren NAT-PMP) from the public internet to this host.
 #
 # Mechanism
@@ -10,8 +10,8 @@
 # to a listener on THIS machine. So the test needs two things:
 #
 #   1. A local listener bound here on the forwarded (internal) port.
-#   2. An external vantage point — a host that is NOT routed through this
-#      machine's tunnel — to fire the probe. We reach it over SSH and run
+#   2. An external vantage point, a host that is NOT routed through this
+#      machine's tunnel, to fire the probe. We reach it over SSH and run
 #      a tiny ephemeral Python prober there (nothing is left behind).
 #
 # The prober sends N probes to <target-ip>:<external-port>; the local
@@ -30,7 +30,7 @@
 #
 # Portability: bash 3.2+ (macOS) and bash 4+/5 (Linux). The actual I/O is
 # done in Python 3 (present on both sides) so behaviour is identical
-# across platforms — far more reliable than juggling BSD vs. GNU `nc`.
+# across platforms, far more reliable than juggling BSD vs. GNU `nc`.
 #
 # Security: SSH runs in BatchMode (never hangs on a password prompt),
 # temp files live in a 0700 mktemp dir, inputs are validated before use,
@@ -82,7 +82,7 @@ die()  { err "$@"; exit 1; }
 # ─────────────────────────────────────────────────────────────────────
 usage() {
   cat <<EOF
-${C_BOLD}$PROG${C_RST} — deep end-to-end test for an inbound port forward
+${C_BOLD}$PROG${C_RST}, deep end-to-end test for an inbound port forward
 
 ${C_GRN}Usage:${C_RST}
   $PROG --port <PORT> --proto <udp|tcp> --ssh <user@host> [options]
@@ -194,7 +194,7 @@ if [ -n "$SSH_TARGET" ]; then
   esac
 fi
 [ -n "$SSH_HOST" ] || { usage; echo; die "--ssh user@host (or --ssh-host) is required"; }
-[ -n "$SSH_USER" ] || die "SSH user missing — use --ssh user@host or --ssh-user"
+[ -n "$SSH_USER" ] || die "SSH user missing, use --ssh user@host or --ssh-user"
 is_port "$SSH_PORT" || die "--ssh-port must be 1..65535"
 SSH_DEST="${SSH_USER}@${SSH_HOST}"
 
@@ -207,7 +207,7 @@ if [ "$DO_CAPTURE" = "1" ] && [ -z "$IFACE" ]; then
 fi
 
 if [ "$LISTEN_PORT" -lt 1024 ] && [ "$(id -u)" -ne 0 ]; then
-  warn "Listening on privileged port $LISTEN_PORT may require root — bind may fail."
+  warn "Listening on privileged port $LISTEN_PORT may require root, bind may fail."
 fi
 
 # ─────────────────────────────────────────────────────────────────────
@@ -444,7 +444,7 @@ if [ -z "$TARGET_IP" ]; then
   if TARGET_IP="$(detect_egress_ip)"; then
     ok "Egress IP: $TARGET_IP  (the prober will target this)"
   else
-    die "Could not auto-detect egress IP — pass --target-ip <exit public IP>"
+    die "Could not auto-detect egress IP, pass --target-ip <exit public IP>"
   fi
 fi
 
@@ -464,7 +464,7 @@ REMOTE_PREFLIGHT="$(ssh "${SSH_OPTS[@]}" "$SSH_DEST" \
   die "SSH to $SSH_DEST failed: $REMOTE_PREFLIGHT"
 case "$REMOTE_PREFLIGHT" in
   *PY_OK*) ok "Reachable; python3 present on $SSH_HOST" ;;
-  *)       die "python3 not found on $SSH_HOST — required for the prober" ;;
+  *)       die "python3 not found on $SSH_HOST, required for the prober" ;;
 esac
 
 if [ "$SSH_HOST" = "$TARGET_IP" ]; then
@@ -520,8 +520,8 @@ if [ "$VERBOSE" = "1" ]; then
   info "remote: python3 - $PROTO $TARGET_IP $EXTERNAL_PORT $COUNT $PROBE_TIMEOUT $PROBE_INTERVAL $PAYLOAD_SIZE $RUN_ID"
 fi
 
-# Remote args are all validated tokens (proto/ip/ints/hex) — no shell
-# metacharacters — so passing them on the ssh command line is safe.
+# Remote args are all validated tokens (proto/ip/ints/hex), no shell
+# metacharacters, so passing them on the ssh command line is safe.
 ssh "${SSH_OPTS[@]}" "$SSH_DEST" \
     python3 - "$PROTO" "$TARGET_IP" "$EXTERNAL_PORT" "$COUNT" \
               "$PROBE_TIMEOUT" "$PROBE_INTERVAL" "$PAYLOAD_SIZE" "$RUN_ID" \
@@ -629,20 +629,20 @@ fi
 echo
 RC=0
 if [ "$INBOUND" -ge "$COUNT" ] && [ "$P_ECHO" -ge "$COUNT" ] && [ "$P_PLOK" -ge "$COUNT" ]; then
-  printf "  %s%sVERDICT: PASS%s — port forwarding fully operational (bidirectional).\n" "$C_BOLD" "$C_GRN" "$C_RST"
+  printf "  %s%sVERDICT: PASS%s, port forwarding fully operational (bidirectional).\n" "$C_BOLD" "$C_GRN" "$C_RST"
   RC=0
 elif [ "$INBOUND" -gt 0 ] && [ "$P_ECHO" -eq 0 ]; then
-  printf "  %s%sVERDICT: PARTIAL%s — inbound forwarding WORKS, but the return path is broken.\n" "$C_BOLD" "$C_YEL" "$C_RST"
+  printf "  %s%sVERDICT: PARTIAL%s, inbound forwarding WORKS, but the return path is broken.\n" "$C_BOLD" "$C_YEL" "$C_RST"
   echo  "    Hints: client-side egress firewall dropping replies, or the exit is"
   echo  "    not conntrack-restoring the reply path. The forward itself is fine."
   RC=2
 elif [ "$INBOUND" -gt 0 ]; then
-  printf "  %s%sVERDICT: PARTIAL%s — some probes lost (%s/%s inbound, %s/%s echoed).\n" \
+  printf "  %s%sVERDICT: PARTIAL%s, some probes lost (%s/%s inbound, %s/%s echoed).\n" \
          "$C_BOLD" "$C_YEL" "$C_RST" "$INBOUND" "$COUNT" "$P_ECHO" "$COUNT"
   echo  "    Hints: UDP loss/congestion, or RTT > --timeout. Retry with -c higher / -w larger."
   RC=2
 else
-  printf "  %s%sVERDICT: FAIL%s — no probe reached the local listener.\n" "$C_BOLD" "$C_RED" "$C_RST"
+  printf "  %s%sVERDICT: FAIL%s, no probe reached the local listener.\n" "$C_BOLD" "$C_RED" "$C_RST"
   echo  "    Check, in order:"
   echo  "      • Is port forwarding actually enabled & MAPPED right now?"
   echo  "      • Does --external-port match the port GRANTED by the exit (may differ"

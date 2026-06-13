@@ -1,6 +1,6 @@
-# Session X — DaitaMetrics per-session counters
+# Session X, DaitaMetrics per-session counters
 
-> Status : **GO ULTIMATE** — production observability surface
+> Status : **GO ULTIMATE**, production observability surface
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process only)
 
@@ -11,9 +11,9 @@
 Per-session counters on `DaitaState` so production loggers + in-process regression tests can query the actual DAITA emission profile without scraping every per-task counter snapshot.
 
 Three counters tracked :
-- `padding_fired` — `SendPadding`-kind action timers drained (= dummies the pump caller emits)
-- `blocking_begins` — `BlockOutgoing`-kind action timers drained (= state-1 → state-2 transitions for Tamaraw / Scrambler)
-- `blocking_ends` — `block_end_at` instants elapsed (= `BlockingEnd` events fired back into the framework)
+- `padding_fired`, `SendPadding`-kind action timers drained (= dummies the pump caller emits)
+- `blocking_begins`, `BlockOutgoing`-kind action timers drained (= state-1 → state-2 transitions for Tamaraw / Scrambler)
+- `blocking_ends`, `block_end_at` instants elapsed (= `BlockingEnd` events fired back into the framework)
 
 ---
 

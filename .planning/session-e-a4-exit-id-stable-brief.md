@@ -1,4 +1,4 @@
-# Session E — A.4 follow-up : exit_id stable cross-repo (débloquer pinning pubkey)
+# Session E, A.4 follow-up : exit_id stable cross-repo (débloquer pinning pubkey)
 
 > Brief d'agent autonome cross-repo warren-core + warren-app + warren-backend-api.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy.
@@ -17,15 +17,15 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **E.1 — Design confirmation + escalade breaking /v1** (~0.5j)
-2. **E.2 — warren-core wire format /v1 ajoute `exit_id`** (~1-1.5j)
-3. **E.3 — warren-backend-api génère + persiste `exit_id`** (~1j)
-4. **E.4 — warren-app consume + cabler verify hook A.4 + UI activation** (~1-1.5j)
-5. **E.5 — Tests cross-repo E2E + rapport** (~0.5j)
+1. **E.1, Design confirmation + escalade breaking /v1** (~0.5j)
+2. **E.2, warren-core wire format /v1 ajoute `exit_id`** (~1-1.5j)
+3. **E.3, warren-backend-api génère + persiste `exit_id`** (~1j)
+4. **E.4, warren-app consume + cabler verify hook A.4 + UI activation** (~1-1.5j)
+5. **E.5, Tests cross-repo E2E + rapport** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver tout fichier modified ou untracked. Idem warren-backend-api repo (sous /Users/poka/dev/warrenBros/warren-core, branche main, working tree).
 
@@ -45,9 +45,9 @@ Escalade `AskUserQuestion` SEULEMENT si :
 5. Si refresher loop / contract mismatch silencieux warren-exit (cf. M4.H.A.ter bug refresher loop découvert) ré-apparaît post-deploy → diagnostic + escalation
 
 Décisions tactiques agent autorisées :
-- Format `exit_id` (UUID v4 vs ULID vs `<country>-<seq>`) — recommandation UUID v4
-- Génération côté backend (auto à register-exit) vs configuration explicite (admin set) — recommandation auto-gen
-- Migration : auto-générer `exit_id` pour les exits déjà register (filler retroactif via UPDATE SQLite) vs forcer re-register chaque exit — recommandation auto-gen migration script
+- Format `exit_id` (UUID v4 vs ULID vs `<country>-<seq>`), recommandation UUID v4
+- Génération côté backend (auto à register-exit) vs configuration explicite (admin set), recommandation auto-gen
+- Migration : auto-générer `exit_id` pour les exits déjà register (filler retroactif via UPDATE SQLite) vs forcer re-register chaque exit, recommandation auto-gen migration script
 - Exposition dans /v1/exits : tous les fields actuels + `exit_id` (additif non-breaking si client tolère unknown fields JSON)
 - TTL pinning warren-app : par défaut illimité (manual reset Settings) vs rotate quarter
 
@@ -78,7 +78,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/a4-pubkey-pinning-design.md
 
 ---
 
-## E.1 — Design confirmation + escalade breaking /v1 (~0.5j)
+## E.1, Design confirmation + escalade breaking /v1 (~0.5j)
 
 ### Scope E.1
 
@@ -106,7 +106,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/a4-pubkey-pinning-design.md
 
 ---
 
-## E.2 — warren-core wire format /v1 ajoute `exit_id` (~1-1.5j)
+## E.2, warren-core wire format /v1 ajoute `exit_id` (~1-1.5j)
 
 ### Scope E.2
 
@@ -137,7 +137,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/a4-pubkey-pinning-design.md
 
 ---
 
-## E.3 — warren-backend-api génère + persiste `exit_id` (~1j)
+## E.3, warren-backend-api génère + persiste `exit_id` (~1j)
 
 ### Scope E.3
 
@@ -166,7 +166,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/a4-pubkey-pinning-design.md
 
 ---
 
-## E.4 — warren-app consume + cabler verify hook A.4 + UI activation (~1-1.5j)
+## E.4, warren-app consume + cabler verify hook A.4 + UI activation (~1-1.5j)
 
 ### Scope E.4
 
@@ -204,7 +204,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/a4-pubkey-pinning-design.md
 
 ---
 
-## E.5 — Tests cross-repo E2E + rapport (~0.5j)
+## E.5, Tests cross-repo E2E + rapport (~0.5j)
 
 ### Scope E.5
 
@@ -305,7 +305,7 @@ Verdict NO-GO si breaking /v1 ne peut être résolu sans coordination prod warre
 ## 7. Memory updates attendus
 
 À ajouter dans warren-app memory :
-- `warren_session_e_delivered.md` — verdict + scope + caveats
+- `warren_session_e_delivered.md`, verdict + scope + caveats
 - Update `MEMORY.md` index
 
 À ajouter dans warren-core memory si redeploy warren-backend-api :

@@ -248,7 +248,7 @@
 ## Key Assumptions
 
 1. **Network prefix 13295** is locked (Substrate naming standard for Warren; immutable once deployed).
-2. **Underlying Ed25519 key is unchanged** — only the string representation changes.
+2. **Underlying Ed25519 key is unchanged**, only the string representation changes.
 3. **Log privacy** (truncation to 8 chars) may need to account for SS58 length (≈50 chars vs 64 hex).
 4. **Backward compatibility window** required before sunsetting hex support (estimated 1-2 release cycles).
 5. **Exit/relay pubkeys** (Category C) use separate deployment / signing pipeline; coordinate separately.

@@ -1,4 +1,4 @@
-# Session A — Cross-platform parity report (final)
+# Session A, Cross-platform parity report (final)
 
 > Status: **A.1+A.2+A.3 GO ULTIMATE**, A.4 **scaffold + design doc GO partial** (verify hook + UI + endpoint deferred pending warren-core `exit_id` field landing).
 
@@ -9,7 +9,7 @@ this session - all wiring stayed warren-app side).
 
 ---
 
-## A.1 — macOS daemon wiring + smoke E2E — DELIVERED (GO)
+## A.1, macOS daemon wiring + smoke E2E, DELIVERED (GO)
 
 ### Stack câblée
 
@@ -41,7 +41,7 @@ Live sudo + launchctl + exit prod smoke not driven by the autonomous agent. Stag
 
 ---
 
-## A.2 — Windows daemon wiring + smoke E2E — DELIVERED (GO)
+## A.2, Windows daemon wiring + smoke E2E, DELIVERED (GO)
 
 ### Stack câblée
 
@@ -64,7 +64,7 @@ Host = macOS arm64; no Windows VM nor xwin/msvc target installed locally. Brief 
 
 ---
 
-## A.3 — Auto-update prod-grade — DELIVERED (GO)
+## A.3, Auto-update prod-grade, DELIVERED (GO)
 
 ### Stack câblée
 
@@ -98,7 +98,7 @@ Host = macOS arm64; no Windows VM nor xwin/msvc target installed locally. Brief 
 
 ---
 
-## A.4 — Pinning pubkey exit TOFU + UI — SCAFFOLD + DESIGN DOC (GO partial)
+## A.4, Pinning pubkey exit TOFU + UI, SCAFFOLD + DESIGN DOC (GO partial)
 
 ### Architectural discovery
 
@@ -162,7 +162,7 @@ warren-core + warren-backend-api signed relay-list.
 
 ---
 
-## Critères GO ULTIMATE Session A — Status
+## Critères GO ULTIMATE Session A, Status
 
 - ✅ A.1 GO (code + tests + clippy + fmt + smoke-build 26/26; live Mac smoke deferred to poka).
 - ✅ A.2 GO (code + tests + clippy + fmt + smoke-build 26/26; live Windows smoke deferred to CI / poka VM).

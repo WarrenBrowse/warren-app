@@ -155,7 +155,7 @@ mod tests {
         let phrase = generate_mnemonic();
         let addr = pubkey_ss58_from_mnemonic(&phrase).unwrap();
         assert!(addr.starts_with("wb"), "expected a wb… address, got {addr}");
-        // 47–49 base58 chars for a 32-byte account with a 2-byte prefix.
+        // 47-49 base58 chars for a 32-byte account with a 2-byte prefix.
         assert!((47..=49).contains(&addr.len()), "unexpected length: {addr}");
     }
 

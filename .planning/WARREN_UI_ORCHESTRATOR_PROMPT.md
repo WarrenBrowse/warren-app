@@ -192,7 +192,7 @@ Lance des Read multiples en parallèle dans un seul message.
     concurrents
   - `feedback_warren_hetzner_bench_ops_gotchas.md` : pre-flight bench
     Hetzner si applicable (WARREN_SSH_KEY=pokash + cleanup /tmp)
-  - `feedback_no_em_dash.md` : caractère `—` banni
+  - `feedback_no_em_dash.md` : caractère `, ` banni
   - `feedback_no_step_tracking_comments.md` : pas de `// M4.X.Y` dans
     le code
   - `feedback_comments_english_no_phase_chatter.md` : commentaires en
@@ -419,7 +419,7 @@ demander alternative à poka. Cf. memory `warren_no_cure53_audit.md`.
   `feedback_no_step_tracking_comments.md`).
 - **Pas de TODO/FIXME laissés** : delete si stale, fix si trivial, sinon
   convert en doc/issue (cf. `feedback_handle_todos_properly.md`).
-- **Caractère `—` (em-dash) banni partout** dans code, comments, docs,
+- **Caractère `, ` (em-dash) banni partout** dans code, comments, docs,
   chat. Remplacer par `,` `-` `.` `:` ou rien selon contexte (cf.
   `feedback_no_em_dash.md`).
 - **Tests pertinents non creux** : doivent prouver un comportement, pas
@@ -475,7 +475,7 @@ Format fichier memory : frontmatter YAML + body markdown avec
 `**Why:**` et `**How to apply:**` lines.
 
 Indexer toute nouvelle memory dans `MEMORY.md` :
-`- [Title](file.md) — one-line hook`
+`- [Title](file.md), one-line hook`
 
 ---
 

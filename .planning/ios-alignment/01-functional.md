@@ -1,4 +1,4 @@
-# iOS Warren Tunnel — Functional Completeness & Parity Audit
+# iOS Warren Tunnel, Functional Completeness & Parity Audit
 
 Scope: `ios/PacketTunnel`, `ios/PacketTunnelCore`, `ios/WarrenRustRuntime`, `ios/WarrenVPN`.
 Reference targets: Android `WarrenQuinnAdapter.kt` + `WarrenTunInterfacePlan.kt` + `WarrenTunnelConfig.kt`; desktop daemon.
@@ -36,87 +36,87 @@ Wallet / account / voucher / subscription / support-report / relay-list: **prese
 
 ## Detail
 
-### F1 — BLOCKER: iOS TUN sets no DNS servers (DNS leak)
+### F1, BLOCKER: iOS TUN sets no DNS servers (DNS leak)
 
-`PacketTunnelProvider.initialTunnelNetworkSettings()` (`ios/PacketTunnel/PacketTunnelProvider/PacketTunnelProvider.swift:263-285`) builds `NEPacketTunnelNetworkSettings` with `ipv4Settings`/`ipv6Settings` and default routes but **never sets `settings.dnsSettings`**. There is a correct pattern in the codebase — `TunnelInterfaceSettings.asTunnelSettings()` (`ios/PacketTunnelCore/Actor/Protocols/TunnelAdapterProtocol.swift:63-76`) sets `NEDNSSettings(servers:)` + `matchDomains = [""]` — but it belongs to the **unused** WireGuard adapter path (`TunnelAdapterProtocol` is referenced only by `PacketTunnelActor`/`PacketTunnelActorReducer`, not by the Warren path). Android forces an in-tunnel resolver (`WarrenTunInterfacePlan.kt:104,205-214`, default `10.66.0.1`) so DNS can never leak. On iOS, with no `dnsSettings`, the system keeps using the underlying network's resolver → **plaintext DNS leak outside the tunnel**.
+`PacketTunnelProvider.initialTunnelNetworkSettings()` (`ios/PacketTunnel/PacketTunnelProvider/PacketTunnelProvider.swift:263-285`) builds `NEPacketTunnelNetworkSettings` with `ipv4Settings`/`ipv6Settings` and default routes but **never sets `settings.dnsSettings`**. There is a correct pattern in the codebase, `TunnelInterfaceSettings.asTunnelSettings()` (`ios/PacketTunnelCore/Actor/Protocols/TunnelAdapterProtocol.swift:63-76`) sets `NEDNSSettings(servers:)` + `matchDomains = [""]`, but it belongs to the **unused** WireGuard adapter path (`TunnelAdapterProtocol` is referenced only by `PacketTunnelActor`/`PacketTunnelActorReducer`, not by the Warren path). Android forces an in-tunnel resolver (`WarrenTunInterfacePlan.kt:104,205-214`, default `10.66.0.1`) so DNS can never leak. On iOS, with no `dnsSettings`, the system keeps using the underlying network's resolver → **plaintext DNS leak outside the tunnel**.
 **Action:** In the Warren path, set `settings.dnsSettings = NEDNSSettings(servers:[...])` with `matchDomains=[""]`, sourced from the resolved DNS config (custom servers or the exit forwarder), mirroring `resolveDnsServers` in `WarrenTunInterfacePlan.kt`.
 
-### F2 — BLOCKER: No kill-switch / lockdown blocking interface on tunnel drop
+### F2, BLOCKER: No kill-switch / lockdown blocking interface on tunnel drop
 
 Android's adapter keeps a blackhole `blockingFd` up when the tunnel drops under lockdown (`WarrenQuinnAdapter.kt:71-74,244-295`, plan at `WarrenTunInterfacePlan.kt:88-102`) and only tears it down once a new tunnel is confirmed (`exitBlockingMode` after a successful connect). iOS `WarrenQuinnActor` has **no blocking-interface concept at all**: on a Rust-side disconnect it just fires `applyEvent(.disconnected)` (`WarrenQuinnActor.swift:143-148,229-243`) and the NEPacketTunnelProvider can return traffic to the physical interface. There is no flap detector, no lockdown reconnect loop, no fail-closed behaviour.
 **Action:** Implement a fail-closed path: keep `setTunnelNetworkSettings` with a full-capture / no-DNS "blocking" config installed on unexpected drop (NE keeps routing into the dead tunnel = drop), gated by a Warren lockdown setting; add flap detection + bounded reconnect mirroring `onSessionDown`/`scheduleLockdownReconnect`.
 
-### F3 — BLOCKER: `setErrorState` is a no-op
+### F3, BLOCKER: `setErrorState` is a no-op
 
 `WarrenQuinnActor.setErrorState(reason:)` (`ios/PacketTunnelCore/Actor/WarrenQuinnActor.swift:326-331`) only logs. The blocked-state plumbing is otherwise complete and waiting: `PacketTunnelProvider.startDeviceCheckInner()` calls `implementation.actor.setErrorState(reason:)` on a failed device check (`PacketTunnelProvider.swift:345,356`); `BlockedStateErrorMapper` (`BlockedStateErrorMapper.swift:18-77`) maps real errors to `BlockedStateReason`; `TunnelManager` reads `observedState.blockedState` to drive UI (`ios/WarrenVPN/TunnelManager/TunnelManager.swift:873`) and `TunnelState` has a `.error(BlockedStateReason)` case (`ios/WarrenVPN/TunnelManager/TunnelState.swift:90,127-128`). Because the actor never transitions to `ObservedState.error(...)`, none of this can ever fire on the Warren path.
 **Action:** In `setErrorState`, set `currentState = .error(ObservedBlockedState(reason:...))`, yield it on `observedStatesContinuation`, and engage the F2 blocking interface (revoked wallet / no relays / offline should fail closed).
 
-### F4 — BLOCKER: Connected state never reported to UI
+### F4, BLOCKER: Connected state never reported to UI
 
-`WarrenQuinnActor.applyEvent` maps `.connected`/`.reconnecting`/`.failover` → `ObservedState.initial` (`WarrenQuinnActor.swift:138-149`), with an explicit `C.4.3.Z TODO` admitting it lacks the `ObservedConnectionState` payload. `ObservedState.initial` has nil `connectionState` (`ios/PacketTunnelCore/Actor/ObservedState+Extensions.swift:34-47`). The main app derives the entire connection UI (relay name, IP, attempt count, key rotation, reachability) from `observedState.connectionState` (`TunnelManager.swift:225,470,582,876`). Result: even when the Quinn tunnel is genuinely up, the app cannot show "Connected" with details — it shows the equivalent of "initial/connecting".
+`WarrenQuinnActor.applyEvent` maps `.connected`/`.reconnecting`/`.failover` → `ObservedState.initial` (`WarrenQuinnActor.swift:138-149`), with an explicit `C.4.3.Z TODO` admitting it lacks the `ObservedConnectionState` payload. `ObservedState.initial` has nil `connectionState` (`ios/PacketTunnelCore/Actor/ObservedState+Extensions.swift:34-47`). The main app derives the entire connection UI (relay name, IP, attempt count, key rotation, reachability) from `observedState.connectionState` (`TunnelManager.swift:225,470,582,876`). Result: even when the Quinn tunnel is genuinely up, the app cannot show "Connected" with details, it shows the equivalent of "initial/connecting".
 **Action:** Have `WarrenQuinnTunnelImplementation.startStatsBroadcastTask` (or the event callback) build an `ObservedConnectionState` (selected relay + assigned IP + endpoint) and push `ObservedState.connected(...)`/`.connecting(...)`/`.reconnecting(...)` into the actor.
 
-### F5 — HIGH: IPv6 always routed, no blackhole choice
+### F5, HIGH: IPv6 always routed, no blackhole choice
 
 `PacketTunnelProvider.swift:277-282` unconditionally assigns `gatewayAddressIpV6` + `NEIPv6Route.default()`. Android assigns a v6 address only when `enableIpv6` is true and otherwise installs `::/0` with **no** v6 address to blackhole stray IPv6 (`WarrenTunInterfacePlan.kt:79-84,119-123`, default `enableIpv6=false` per `WarrenTunnelConfig.kt:36`). iOS assigns an address regardless, so the leak-control posture differs from Android/desktop default.
 **Action:** Make the v6 address assignment conditional on a Warren IPv6 setting; keep `::/0` as a route to blackhole when disabled.
 
-### F6 — HIGH: DNS config never marshaled to tunnel
+### F6, HIGH: DNS config never marshaled to tunnel
 
 `WarrenTunnelConfig` (Swift, `WarrenQuinnAdapter.swift:31-68`) and the FFI struct (`warren_rust_runtime.h:121-156`) have **no DNS field at all**. The actor never reads `dnsSettings` from settings for the Warren path. Android carries a full `DnsConfig` (custom servers + 6 content-blocking flags, `WarrenTunnelConfig.kt:82-98`).
 **Action:** Add DNS to the Swift config + (eventually) FFI, or at minimum apply DNS at the NE layer (F1). Content-blocking flags need to reach the exit (FFI/config extension).
 
-### F7 — HIGH: Routing hardcoded; no allow-LAN split
+### F7, HIGH: Routing hardcoded; no allow-LAN split
 
 Routes are static `0.0.0.0/0` + `::/0` (`PacketTunnelProvider.swift:273,281`). No allow-LAN RFC1918/link-local exclusion exists (Android `ipv4RoutesExcluding` + re-add of exit DNS /32, `WarrenTunInterfacePlan.kt:111-123,144-168`). `bypassCidrs` is also dropped (see F9).
 **Action:** Compute routes from settings (allow-LAN + bypass CIDRs) at `initialTunnelNetworkSettings` time.
 
-### F8 / F9 — HIGH: NAT-PMP and bypass CIDRs hardcoded off
+### F8 / F9, HIGH: NAT-PMP and bypass CIDRs hardcoded off
 
-`WarrenQuinnActor.start` hardcodes `natPmpEnabled: false` ("deferred (needs V9 schema)") and `bypassCidrs: []` ("settings-driven, deferred") at `WarrenQuinnActor.swift:216-217`. Grep confirms **no `natPmp`/`bypassCidr` keys anywhere in `WarrenSettings`/`WarrenTypes`**. The FFI fully supports both (`warren_rust_runtime.h:146-155`) and the Swift marshaling pins them (`WarrenQuinnAdapter.swift:397-398,428-453`) — only the settings schema + UI + the `start()` wiring are missing. Android exposes both (`WarrenTunnelConfig.kt:21-29`).
+`WarrenQuinnActor.start` hardcodes `natPmpEnabled: false` ("deferred (needs V9 schema)") and `bypassCidrs: []` ("settings-driven, deferred") at `WarrenQuinnActor.swift:216-217`. Grep confirms **no `natPmp`/`bypassCidr` keys anywhere in `WarrenSettings`/`WarrenTypes`**. The FFI fully supports both (`warren_rust_runtime.h:146-155`) and the Swift marshaling pins them (`WarrenQuinnAdapter.swift:397-398,428-453`), only the settings schema + UI + the `start()` wiring are missing. Android exposes both (`WarrenTunnelConfig.kt:21-29`).
 **Action:** Add a settings schema version (V9) with NAT-PMP + bypass-CIDR fields, UI, and read them in `start()`.
 
-### F10 — HIGH: relay-change reconnect is a no-op
+### F10, HIGH: relay-change reconnect is a no-op
 
 `WarrenQuinnActor.reconnect(to:reconnectReason:)` (`WarrenQuinnActor.swift:313-317`) logs `"reconnect called (C.4.3 scaffold no-op)"`. This is the path the main app drives via IPC (`TunnelManager.reconnectTunnel` → `tunnel.reconnectTunnel(to:)`, `TunnelManager.swift:214-234`) for "select new relay" / location change. The only working reconnect is the same-relay `adapter.reconnect()` triggered on network-path satisfied (`WarrenQuinnActor.swift:294-311`). Changing exit/entry relay from the UI does nothing.
 **Action:** Implement `reconnect(to:)`: re-marshal the new `selectedRelays` into a `WarrenTunnelConfig`, `adapter.stop()` then `adapter.start(newConfig)`.
 
-### F11 — MED: DAITA spec is presence-only
+### F11, MED: DAITA spec is presence-only
 
-`WarrenQuinnActor.swift:201-208` builds `WarrenDaitaSpec(machineSeedHex: "", padding: 0)` whenever DAITA is enabled — the comment notes only presence matters (exit picks the machine via SetupAck). Functionally this is a boolean and matches the documented design, but it diverges from Android which carries `padding_machine` + `normalize_packets` (`WarrenTunnelConfig.kt:67-71`). Low functional risk given the exit-selects model, but no client-side machine pinning.
+`WarrenQuinnActor.swift:201-208` builds `WarrenDaitaSpec(machineSeedHex: "", padding: 0)` whenever DAITA is enabled, the comment notes only presence matters (exit picks the machine via SetupAck). Functionally this is a boolean and matches the documented design, but it diverges from Android which carries `padding_machine` + `normalize_packets` (`WarrenTunnelConfig.kt:67-71`). Low functional risk given the exit-selects model, but no client-side machine pinning.
 **Action:** Acceptable for now; revisit if client-side machine selection is desired for parity.
 
-### F12 — MED: obfuscation indicator dead
+### F12, MED: obfuscation indicator dead
 
-`WarrenAppGroupEvents` publishes `obfuscationActive` read from `WarrenAppGroupKey.obfuscationActive` (`ios/WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift:43,86-89`), but the producer `WarrenQuinnTunnelImplementation.broadcastEvent` (`WarrenQuinnTunnelImplementation.swift:211-225`) has no branch that writes that key — only failover + NAT-PMP keys are written. The obfuscation indicator is therefore always false.
+`WarrenAppGroupEvents` publishes `obfuscationActive` read from `WarrenAppGroupKey.obfuscationActive` (`ios/WarrenVPN/View controllers/Tunnel/WarrenAppGroupEvents.swift:43,86-89`), but the producer `WarrenQuinnTunnelImplementation.broadcastEvent` (`WarrenQuinnTunnelImplementation.swift:211-225`) has no branch that writes that key, only failover + NAT-PMP keys are written. The obfuscation indicator is therefore always false.
 **Action:** Write `obfuscationActive` from the connect/event path (M4.0 HTTP/3 mimicry is always-on per `TunnelObfuscationTypes.swift:77`, so it may simply be set true while connected).
 
-### F13 — MED: MTU not set on Warren path
+### F13, MED: MTU not set on Warren path
 
 The Warren `initialTunnelNetworkSettings` never sets `settings.mtu`. Only the unused `TunnelInterfaceSettings.asTunnelSettings()` sets `mtu = 1280` (`TunnelAdapterProtocol.swift:70`). Android clamps a config-driven MTU into `[576, 1280]` (`WarrenTunInterfacePlan.kt:131-138`). iOS leaves MTU at the system default, which may exceed the Warren QUIC floor and black-hole oversized encapsulated packets.
 **Action:** Set `settings.mtu = 1280` (or config-driven, clamped) on the Warren network settings.
 
-### F14 — MED: sleep/wake correctness depends on Rust pause/resume
+### F14, MED: sleep/wake correctness depends on Rust pause/resume
 
 `onSleep`/`onWake` (`WarrenQuinnActor.swift:270-291`) call `adapter.pause()`/`resume()` → `warren_tunnel_pause/resume`. The header documents these as inbound-pump pause only (`warren_rust_runtime.h:326-347`). If the peer idle-times-out during suspension, the actor has no explicit resume-or-reconnect decision (comment hand-waves "reconnect on next packet attempt"). Not verifiable from Swift; flagged for runtime validation.
 **Action:** Validate on-device that a long background suspension resumes or cleanly reconnects; add an explicit reconnect-on-wake fallback if not.
 
-### F15 / F16 — MED: event taxonomy loss
+### F15 / F16, MED: event taxonomy loss
 
 `applyEvent` collapses `connecting`/`reconnecting`/`failover` into `.initial` (`WarrenQuinnActor.swift:140-149`) (subset of F4). Separately, the Swift event bridge (`WarrenQuinnAdapter.swift:560-580`) has cases for `EventConnected/Disconnected/Reconnecting/Failover/NatPmp*` but **no case for `EventConnecting` (=7)** defined in the header (`warren_rust_runtime.h:34-42`); it hits `default: return` and is silently dropped, so the "first attempt vs recovering" distinction the FFI intends is lost.
 **Action:** Add an `EventConnecting` case to the bridge and a corresponding `WarrenTunnelEvent.connecting`; map to `ObservedState.connecting(...)`.
 
-### F17 — LOW: no Warren lockdown-mode setting
+### F17, LOW: no Warren lockdown-mode setting
 
 iOS surfaces `includeAllNetworks` (Mullvad's lockdown-ish concept; UI under `ios/WarrenVPN/Coordinators/Settings/IncludeAllNetworks/`) but nothing feeds a Warren kill-switch. With F2 unimplemented there is no consumer anyway.
 **Action:** Add a Warren lockdown setting and wire it to the F2 blocking interface.
 
-### F18 — LOW: no NAT-PMP status read on iOS
+### F18, LOW: no NAT-PMP status read on iOS
 
 Android polls `WarrenJni.getNatPmpStatus()` (`WarrenQuinnAdapter.kt:145`) for a live mapping/idle JSON. iOS has only transient `natPmp*` events (`WarrenQuinnAdapter.swift:567-577`); no `warren_tunnel_natpmp_status` FFI exists in the header. UI can show a port on the mapped event but cannot poll current state.
 **Action:** Add a status FFI or persist the last event into App Group for steady-state display.
 
-### F19 — LOW: silent start failure when wallet/relays missing
+### F19, LOW: silent start failure when wallet/relays missing
 
 `WarrenQuinnTunnelImplementation.setUp` logs and continues if the wallet cannot be loaded (`WarrenQuinnTunnelImplementation.swift:117-127`); `WarrenQuinnActor.start` then logs+returns on missing seed/adapter/relays (`WarrenQuinnActor.swift:170-181`) without any `setErrorState`. Combined with F3/F4, a tunnel that fails to start shows no error to the user.
 **Action:** Call `setErrorState(.deviceLoggedOut)`/appropriate reason on missing wallet, and a relay-selection reason on missing `selectedRelays`.
@@ -144,10 +144,10 @@ Android polls `WarrenJni.getNatPmpStatus()` (`WarrenQuinnAdapter.kt:145`) for a 
 
 The Warren FFI (`warren_rust_runtime.h`) exposes: `warren_tunnel_start/stop/pause/resume/reconnect/status`, `set_event_callback`, `set_outbound_callback`, `inject_inbound_packet`, and wallet helpers (`generate_mnemonic`, `seed_from_mnemonic`, `derive_pubkey`, `pubkey_ss58`, `sign`). Events: Connected/Disconnected/Reconnecting/Connecting/Failover/NatPmp{Mapped,Renewed,Failed}.
 Missing vs Android JNI surface:
-- **NAT-PMP status read** — Android `getNatPmpStatus()` polled; no `warren_tunnel_natpmp_status` (F18).
-- **Blocked-state / lockdown** — no FFI; handled host-side on Android, absent on iOS (F2).
-- **`EventConnecting`** — defined in header but not consumed by Swift (F16).
-- **DNS / allow-LAN / IPv6 / MTU** — these are host-side (NE layer) on iOS by design, but currently unimplemented at that layer (F1/F5/F6/F7/F13).
+- **NAT-PMP status read**, Android `getNatPmpStatus()` polled; no `warren_tunnel_natpmp_status` (F18).
+- **Blocked-state / lockdown**, no FFI; handled host-side on Android, absent on iOS (F2).
+- **`EventConnecting`**, defined in header but not consumed by Swift (F16).
+- **DNS / allow-LAN / IPv6 / MTU**, these are host-side (NE layer) on iOS by design, but currently unimplemented at that layer (F1/F5/F6/F7/F13).
 
 ## Reconnection / handover / kill-switch: iOS vs Android
 

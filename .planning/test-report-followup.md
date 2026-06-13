@@ -11,7 +11,7 @@ kill-switch OK) ; **3 régressions** sur les fonctions périphériques (F1/F2/F3
 
 ---
 
-## F1 — Split tunnel non fonctionnel → **CORRIGÉ (code) + à valider on-device**
+## F1, Split tunnel non fonctionnel → **CORRIGÉ (code) + à valider on-device**
 
 ### Cause racine (corrigée après investigation)
 
@@ -53,7 +53,7 @@ Lancer `.planning/warren-net-diagnostic.sh` (lecture seule) connecté :
 
 ---
 
-## F2 — Content-blocking DNS casse toute résolution → **CORRIGÉ côté exit (warren-core), à valider on-device**
+## F2, Content-blocking DNS casse toute résolution → **CORRIGÉ côté exit (warren-core), à valider on-device**
 
 ### Diagnostic (comparaison upstream)
 
@@ -83,7 +83,7 @@ Lancer `.planning/warren-net-diagnostic.sh` (lecture seule) connecté :
 - Builder de script **pur + tests** (6/6 OK hôte) ; exécution `nft -f -` Linux-only.
 
 **Caveat** : le filtrage **par catégorie** (ads vs trackers vs …) n'est pas
-implémenté — toutes les adresses `100.64.0.x` résolvent identiquement pour
+implémenté, toutes les adresses `100.64.0.x` résolvent identiquement pour
 l'instant. Vraie parité = blocklists curées côté exit (travail futur).
 
 ### Validation on-device restante
@@ -94,7 +94,7 @@ Connecté à l'exit patché, avec un filtre activé côté client :
 
 ---
 
-## F3 — `warren mode off` → relais inutilisable + risque de lock-out → **en cours ailleurs + garde-fou produit à décider**
+## F3, `warren mode off` → relais inutilisable + risque de lock-out → **en cours ailleurs + garde-fou produit à décider**
 
 - Le toggle `warren mode` est **en cours de suppression** par l'agent parallèle
   (`warren_mode.rs` supprimé, champ proto `reserved 15`, composants UI
@@ -118,13 +118,13 @@ Documenter la procédure de déblocage dans la doc utilisateur.
 
 ## Observations déjà actées (rien à faire)
 
-- **AppArmor** : profil non requis (système 3.0.8 < 4.0) — décision : ne pas l'installer.
+- **AppArmor** : profil non requis (système 3.0.8 < 4.0), décision : ne pas l'installer.
 - **Artefact script 1.2.1.1** : endpoints à défi Cloudflare (`ifconfig.co`)
   remplacés par `ipify`/`icanhazip` (texte brut).
 
 ---
 
-## Runbook — tests on-device restants (sudo / reboot / serveur distant)
+## Runbook, tests on-device restants (sudo / reboot / serveur distant)
 
 T1 kill-switch sur crash · **T2 inspection `nft`/`ip rule` (→ `warren-net-diagnostic.sh`)** ·
 T3 fuite en transition · T4 fuite DNS capture · T5 early-boot · T6 diag Iroh on/off

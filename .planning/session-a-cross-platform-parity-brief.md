@@ -1,4 +1,4 @@
-# Session A — Cross-platform parity (macOS + Windows) + Auto-update + Pinning pubkey exit
+# Session A, Cross-platform parity (macOS + Windows) + Auto-update + Pinning pubkey exit
 
 > Brief d'agent autonome cross-repo warren-core + warren-app.
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy.
@@ -16,14 +16,14 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **A.1 — macOS daemon wiring + smoke E2E** (~2-3j)
-2. **A.2 — Windows daemon wiring + smoke E2E** (~3-5j)
-3. **A.3 — Auto-update mechanism prod-grade** (~2-3j)
-4. **A.4 — Pinning pubkey exit client-side (TOFU + UI warning)** (~2-3j)
+1. **A.1, macOS daemon wiring + smoke E2E** (~2-3j)
+2. **A.2, Windows daemon wiring + smoke E2E** (~3-5j)
+3. **A.3, Auto-update mechanism prod-grade** (~2-3j)
+4. **A.4, Pinning pubkey exit client-side (TOFU + UI warning)** (~2-3j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Quelle que soit la situation (test, recovery, "voir si ça compile", diagnostic, expérimentation), tu ne dois JAMAIS exécuter :
 
@@ -74,7 +74,7 @@ git status                                  # main HEAD 583581dae5+ (wip wiregua
 git remote -v                                # origin = github.com/WarrenBrowse/warren-app
 git fetch origin && git log --oneline origin/main..HEAD || true
 cd /Users/poka/dev/warrenBros/warren-core
-git status                                  # 1 file modified d3_allowlist_dynamic.rs — préserver
+git status                                  # 1 file modified d3_allowlist_dynamic.rs, préserver
 git log --oneline -3                        # HEAD 478a5f5+ (audit dedae7a wired)
 ```
 
@@ -92,7 +92,7 @@ Si HEAD inattendu : escalade (cf. §0.0, surtout pas de checkout).
 
 ---
 
-## A.1 — macOS daemon wiring + smoke E2E (~2-3j)
+## A.1, macOS daemon wiring + smoke E2E (~2-3j)
 
 ### Contexte
 
@@ -102,11 +102,11 @@ Mullvad upstream macOS : `mullvad-daemon/src/macos.rs` + `mullvad-daemon/src/mac
 
 ### Scope A.1
 
-1. **A.1.1 — Wire `talpid-warren-tunnel` macOS** : compile + connecte sur Mac réel (ou VM macOS si Mac physique inaccessible). Le tunnel doit utiliser `default_route_split_macos::DefaultRouteSplitGuard::install` quand `bypass_cidrs` est vide + exit_ip set. Conditional compilation `#[cfg(target_os = "macos")]` pattern existant Linux.
+1. **A.1.1, Wire `talpid-warren-tunnel` macOS** : compile + connecte sur Mac réel (ou VM macOS si Mac physique inaccessible). Le tunnel doit utiliser `default_route_split_macos::DefaultRouteSplitGuard::install` quand `bypass_cidrs` est vide + exit_ip set. Conditional compilation `#[cfg(target_os = "macos")]` pattern existant Linux.
 
-2. **A.1.2 — pfctl killswitch** : vérifier que `talpid-core/src/firewall/macos.rs` (existant Mullvad) coexiste correctement avec `default_route_split_macos`. Le pfctl killswitch doit autoriser explicitement le socket Warren client → exit (port 7000 par défaut, ou le port négocié). Pattern Mullvad existant pour WireGuard à adapter.
+2. **A.1.2, pfctl killswitch** : vérifier que `talpid-core/src/firewall/macos.rs` (existant Mullvad) coexiste correctement avec `default_route_split_macos`. Le pfctl killswitch doit autoriser explicitement le socket Warren client → exit (port 7000 par défaut, ou le port négocié). Pattern Mullvad existant pour WireGuard à adapter.
 
-3. **A.1.3 — Smoke E2E Mac** :
+3. **A.1.3, Smoke E2E Mac** :
    - `cargo build --release` warren-app sur Mac OK
    - `mullvad-daemon` launch via `launchctl` OK (LaunchDaemon plist Warren-branded)
    - UI Electron connect/disconnect sur exit FR Hetzner prod (warren-exit-1)
@@ -117,7 +117,7 @@ Mullvad upstream macOS : `mullvad-daemon/src/macos.rs` + `mullvad-daemon/src/mac
    - NAT-PMP qBittorrent : ouvrir port, telnet depuis l'extérieur (vérifie M4.H.F)
    - Suspend/resume Mac : connexion auto-reconnect (vérifie M4.E.D)
 
-4. **A.1.4 — Tests TDD A.1** :
+4. **A.1.4, Tests TDD A.1** :
    - Test intégration `talpid-warren-tunnel` Mac : install/uninstall DefaultRouteSplitGuard sans panic
    - Smoke unit test `mullvad-daemon/src/macos.rs` : pas de régression Mullvad upstream
    - Si nouveau code Warren-specific Mac path, tests `#[cfg(target_os = "macos")]` requis
@@ -137,7 +137,7 @@ Mullvad upstream macOS : `mullvad-daemon/src/macos.rs` + `mullvad-daemon/src/mac
 
 ---
 
-## A.2 — Windows daemon wiring + smoke E2E (~3-5j)
+## A.2, Windows daemon wiring + smoke E2E (~3-5j)
 
 ### Contexte
 
@@ -147,15 +147,15 @@ Mullvad upstream Windows : `mullvad-daemon/src/*` (cross-OS) + `talpid-core/src/
 
 ### Scope A.2
 
-1. **A.2.1 — Wire `talpid-warren-tunnel` Windows** : compile + connecte sur Windows réel (VM Windows si pas de machine physique dispo). Tunnel utilise `default_route_split_windows::DefaultRouteSplitGuard::install` quand approprié. Conditional compilation `#[cfg(target_os = "windows")]`.
+1. **A.2.1, Wire `talpid-warren-tunnel` Windows** : compile + connecte sur Windows réel (VM Windows si pas de machine physique dispo). Tunnel utilise `default_route_split_windows::DefaultRouteSplitGuard::install` quand approprié. Conditional compilation `#[cfg(target_os = "windows")]`.
 
-2. **A.2.2 — WinTUN driver integration** : vérifier que le driver WinTUN signé (présent Mullvad upstream) crée bien l'interface tun avant que `default_route_split_windows` n'essaie de pointer `0.0.0.0/1` dessus. Race condition possible : driver loading async + route install. Pattern Mullvad gère déjà ça pour WireGuard, adapter pour Warren.
+2. **A.2.2, WinTUN driver integration** : vérifier que le driver WinTUN signé (présent Mullvad upstream) crée bien l'interface tun avant que `default_route_split_windows` n'essaie de pointer `0.0.0.0/1` dessus. Race condition possible : driver loading async + route install. Pattern Mullvad gère déjà ça pour WireGuard, adapter pour Warren.
 
-3. **A.2.3 — WFP killswitch** : `talpid-core/src/firewall/windows/` existant Mullvad doit coexister avec les routes Warren. WFP filtre par binaire (Warren client.exe → exit IP autorisé, tout autre process bloqué hors tunnel).
+3. **A.2.3, WFP killswitch** : `talpid-core/src/firewall/windows/` existant Mullvad doit coexister avec les routes Warren. WFP filtre par binaire (Warren client.exe → exit IP autorisé, tout autre process bloqué hors tunnel).
 
-4. **A.2.4 — Windows service** : `mullvad-daemon` doit s'installer comme service Windows (`sc create`) avec start mode Auto. Pattern Mullvad existant → rebrand `warren-vpn-daemon` (cf. M4.H.D rebrand WARREN_CSC_*).
+4. **A.2.4, Windows service** : `mullvad-daemon` doit s'installer comme service Windows (`sc create`) avec start mode Auto. Pattern Mullvad existant → rebrand `warren-vpn-daemon` (cf. M4.H.D rebrand WARREN_CSC_*).
 
-5. **A.2.5 — Smoke E2E Windows** :
+5. **A.2.5, Smoke E2E Windows** :
    - `cargo build --release --target x86_64-pc-windows-msvc` (cross OU build Windows natif) PASS
    - Installer NSIS Warren-branded (M4.H.D pipeline) génère MSI/EXE sur Windows VM
    - Service Warren install + start OK
@@ -166,9 +166,9 @@ Mullvad upstream Windows : `mullvad-daemon/src/*` (cross-OS) + `talpid-core/src/
    - SSH inbound préservé `--bypass-cidr 192.168.0.0/16`
    - Suspend/resume Windows : connexion auto-reconnect
    - Service auto-start après reboot Windows
-   - **PAS de NAT-PMP test Windows** (UPnP est l'alternative Windows, hors scope ce brief — différer M5)
+   - **PAS de NAT-PMP test Windows** (UPnP est l'alternative Windows, hors scope ce brief, différer M5)
 
-6. **A.2.6 — Tests TDD A.2** :
+6. **A.2.6, Tests TDD A.2** :
    - Test intégration `talpid-warren-tunnel` Windows : install/uninstall DefaultRouteSplitGuard sans panic
    - Smoke unit test no-regression Mullvad upstream Windows path
    - Tests `#[cfg(target_os = "windows")]` pour code Warren-specific Windows
@@ -190,7 +190,7 @@ Mullvad upstream Windows : `mullvad-daemon/src/*` (cross-OS) + `talpid-core/src/
 
 ---
 
-## A.3 — Auto-update mechanism prod-grade (~2-3j)
+## A.3, Auto-update mechanism prod-grade (~2-3j)
 
 ### Contexte
 
@@ -198,17 +198,17 @@ Mullvad upstream a déjà un crate `mullvad-update` complet (présent warren-app
 
 ### Scope A.3
 
-1. **A.3.1 — URL update server Warren** : configurer `mullvad-update` pour pointer vers `https://updates.warrenbrowse.com/` (ou GitHub Releases API `https://api.github.com/repos/WarrenBrowse/warren-app/releases` selon décision tactique agent). Pattern Mullvad : `MULLVAD_API_URL` env var équivalent → `WARREN_UPDATE_URL` env var.
+1. **A.3.1, URL update server Warren** : configurer `mullvad-update` pour pointer vers `https://updates.warrenbrowse.com/` (ou GitHub Releases API `https://api.github.com/repos/WarrenBrowse/warren-app/releases` selon décision tactique agent). Pattern Mullvad : `MULLVAD_API_URL` env var équivalent → `WARREN_UPDATE_URL` env var.
 
-2. **A.3.2 — Signature verification** : `mullvad-update` vérifie signature Ed25519 sur version manifest. Régénérer ou réutiliser la signing key Warren existante (M4.H.D `WARREN_CSC_*` ne touche PAS le canal updates, c'est une key séparée pour le manifest). Si key updates Warren pas encore générée → escalade poka (case 4 escalation: signing key prod).
+2. **A.3.2, Signature verification** : `mullvad-update` vérifie signature Ed25519 sur version manifest. Régénérer ou réutiliser la signing key Warren existante (M4.H.D `WARREN_CSC_*` ne touche PAS le canal updates, c'est une key séparée pour le manifest). Si key updates Warren pas encore générée → escalade poka (case 4 escalation: signing key prod).
 
-3. **A.3.3 — Version manifest format** : `mullvad-update` consomme un JSON `{ "version": "1.0.0-beta.1", "url": "...", "signature": "..." }`. Adapter pour structure Warren-side (GitHub Releases vs self-hosted CDN).
+3. **A.3.3, Version manifest format** : `mullvad-update` consomme un JSON `{ "version": "1.0.0-beta.1", "url": "...", "signature": "..." }`. Adapter pour structure Warren-side (GitHub Releases vs self-hosted CDN).
 
-4. **A.3.4 — UI banner** : composant Electron `UpdateBanner.tsx` (présent upstream Mullvad) doit afficher Warren-branded copy ("Warren VPN 1.0.1 available" → CTA "Update now" / "Later"). i18n FR + EN. Skip si pas de release available.
+4. **A.3.4, UI banner** : composant Electron `UpdateBanner.tsx` (présent upstream Mullvad) doit afficher Warren-branded copy ("Warren VPN 1.0.1 available" → CTA "Update now" / "Later"). i18n FR + EN. Skip si pas de release available.
 
-5. **A.3.5 — Channel beta vs stable** : décision tactique. Recommandation = single channel `beta` jusqu'à 1.0 stable, puis stable + beta. Document dans `.planning/session-a-report.md` §A.3.
+5. **A.3.5, Channel beta vs stable** : décision tactique. Recommandation = single channel `beta` jusqu'à 1.0 stable, puis stable + beta. Document dans `.planning/session-a-report.md` §A.3.
 
-6. **A.3.6 — Tests TDD A.3** :
+6. **A.3.6, Tests TDD A.3** :
    - Mock update server returns version manifest valide → UI banner appears
    - Manifest signature invalide → no banner + log warning
    - Network error → no banner, retry exponential backoff
@@ -230,7 +230,7 @@ Mullvad upstream a déjà un crate `mullvad-update` complet (présent warren-app
 
 ---
 
-## A.4 — Pinning pubkey exit client-side (TOFU + UI warning) (~2-3j)
+## A.4, Pinning pubkey exit client-side (TOFU + UI warning) (~2-3j)
 
 ### Contexte
 
@@ -238,17 +238,17 @@ Audit H.E.5/6/7 warren-core a identifié : client doit pinner pubkey exit après
 
 ### Scope A.4
 
-1. **A.4.1 — TOFU pinning storage** : ajouter persistance pubkey exit pinned dans cache warren-tunnel (sqlite ou config file). Schema : `{ exit_id, pubkey_ed25519, first_seen_unix, last_seen_unix }`. Décision tactique agent : sqlite (warren-tunnel a déjà sqlite via warren-api-client) vs flat config (JSON dans config dir Warren).
+1. **A.4.1, TOFU pinning storage** : ajouter persistance pubkey exit pinned dans cache warren-tunnel (sqlite ou config file). Schema : `{ exit_id, pubkey_ed25519, first_seen_unix, last_seen_unix }`. Décision tactique agent : sqlite (warren-tunnel a déjà sqlite via warren-api-client) vs flat config (JSON dans config dir Warren).
 
-2. **A.4.2 — Verification on connect** : à chaque connect, comparer pubkey exit reçue (signed handshake) avec pubkey pinned. Si match → OK silencieux. Si pas pinned → store + OK silencieux (TOFU). **Si mismatch → REFUSE connect + emit event UI**.
+2. **A.4.2, Verification on connect** : à chaque connect, comparer pubkey exit reçue (signed handshake) avec pubkey pinned. Si match → OK silencieux. Si pas pinned → store + OK silencieux (TOFU). **Si mismatch → REFUSE connect + emit event UI**.
 
-3. **A.4.3 — UI warning** : composant `WarrenPubKeyWarning.tsx` Electron + i18n FR+EN. Affiche modal warning "L'identité du serveur Warren a changé. Cela peut indiquer une attaque ou une mise à jour légitime du serveur." + 3 CTA : "Trust new key (continue)" / "Reject (disconnect)" / "Report to Warren". `WarrenPubKeyLabel.tsx` existant à étendre.
+3. **A.4.3, UI warning** : composant `WarrenPubKeyWarning.tsx` Electron + i18n FR+EN. Affiche modal warning "L'identité du serveur Warren a changé. Cela peut indiquer une attaque ou une mise à jour légitime du serveur." + 3 CTA : "Trust new key (continue)" / "Reject (disconnect)" / "Report to Warren". `WarrenPubKeyLabel.tsx` existant à étendre.
 
-4. **A.4.4 — Override mechanism** : si user "Trust new key" → unpin ancienne + pin nouvelle. Logger l'event pour forensics. Si "Report" → POST `/v1/incidents/pubkey-mismatch` warren-api (endpoint à ajouter, simple log côté backend).
+4. **A.4.4, Override mechanism** : si user "Trust new key" → unpin ancienne + pin nouvelle. Logger l'event pour forensics. Si "Report" → POST `/v1/incidents/pubkey-mismatch` warren-api (endpoint à ajouter, simple log côté backend).
 
-5. **A.4.5 — Settings reset** : Settings → "Reset pinned exit keys" CTA pour user qui veut clear toutes les pinning (changement de wallet, etc.). Confirmation modal.
+5. **A.4.5, Settings reset** : Settings → "Reset pinned exit keys" CTA pour user qui veut clear toutes les pinning (changement de wallet, etc.). Confirmation modal.
 
-6. **A.4.6 — Tests TDD A.4** :
+6. **A.4.6, Tests TDD A.4** :
    - First connect → pubkey pinned, no warning
    - Re-connect same exit → match, no warning
    - Connect different exit → new pubkey pinned (per exit_id distinct)
@@ -281,7 +281,7 @@ Audit H.E.5/6/7 warren-core a identifié : client doit pinner pubkey exit après
 - `crates/warren-client/src/default_route_split_windows.rs` (port Win existant)
 - `crates/warren-client/src/default_route_split.rs` (Linux ref + dispatch)
 - `crates/warren-tunnel/src/client.rs` (handshake reception)
-- `crates/warren-tunnel/src/allowlist.rs` (cf. dirty file `d3_allowlist_dynamic.rs` test — préserver)
+- `crates/warren-tunnel/src/allowlist.rs` (cf. dirty file `d3_allowlist_dynamic.rs` test, préserver)
 - `crates/warren-tunnel/src/exit.rs` (exit state + pubkey reception)
 
 ### warren-app
@@ -388,7 +388,7 @@ Verdict NO-GO uniquement si fix prouvé impossible (rare, après §0.5 autonomy 
 
 L'agent doit ajouter à `/Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-app/memory/` :
 
-- `warren_session_a_delivered.md` — verdict global + caveats par sous-phase
+- `warren_session_a_delivered.md`, verdict global + caveats par sous-phase
 - Update `MEMORY.md` index
 
 Et côté `/Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-core/memory/` si nouveaux commits warren-core :
@@ -399,6 +399,6 @@ Et côté `/Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-core/m
 
 ## 8. Commencer maintenant
 
-Lis ce brief en entier, puis lis les sources §3 en parallèle, puis attaque A.1.1. Ne demande pas confirmation pour démarrer, ne propose pas de plan d'exécution préalable — exécute directement. Tu as plein mandat §0.5. Pousse warren-core + warren-app au fil de l'eau, ne batch pas tout en fin de session.
+Lis ce brief en entier, puis lis les sources §3 en parallèle, puis attaque A.1.1. Ne demande pas confirmation pour démarrer, ne propose pas de plan d'exécution préalable, exécute directement. Tu as plein mandat §0.5. Pousse warren-core + warren-app au fil de l'eau, ne batch pas tout en fin de session.
 
 Bonne route.

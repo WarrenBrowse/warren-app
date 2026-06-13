@@ -1,4 +1,4 @@
-# Session K — Multi-hop DAITA full wiring (exit-side + client-side --use-tun) — RAPPORT FINAL
+# Session K, Multi-hop DAITA full wiring (exit-side + client-side --use-tun), RAPPORT FINAL
 
 > Status : **GO ULTIMATE (multi-hop DAITA functional, Hetzner bench deferred)**
 > Date : 2026-05-21
@@ -13,10 +13,10 @@ Session K complète le scope **DAITA totally end-to-end** :
 1. **Exit-side multi-hop DAITA wired** (K.1) : `serve_multihop_with_tun_and_daita` variant + 3-task pump (rx + tx + timer) avec shared `Arc<Mutex<DaitaState>>`.
 2. **Client-side multi-hop --use-tun wired** (K.2) : `run_multi_hop --use-tun` lifted bail. TUN hardcoded mono-client POC + `MultiHopSupervisor` + `supervised_pump::run_uplink_with_daita + run_downlink_with_daita` + hardcoded DaitaPool client-side.
 3. **Multi-hop DAITA integ tests** (K.3) : 2 tests loopback `multihop_tun_with_daita.rs` PASS (Tamaraw forced → dummies émis bidir, disabled-path = strict alias).
-4. **Bug fix critique** : warren-tunnel `pump_multi_bidirectional_with_daita` timer task **avait un bug 3600s sleep** — events RX/TX scheduled action timers mais timer task ne se réveillait jamais avant 1 heure. Production DAITA Session G était **non-fonctionnelle pour l'émission de dummies**. Fix appliqué via `tokio::sync::Notify` pattern : RX + TX notifient timer task qui se ré-arme sur next_timer rapproché.
+4. **Bug fix critique** : warren-tunnel `pump_multi_bidirectional_with_daita` timer task **avait un bug 3600s sleep**, events RX/TX scheduled action timers mais timer task ne se réveillait jamais avant 1 heure. Production DAITA Session G était **non-fonctionnelle pour l'émission de dummies**. Fix appliqué via `tokio::sync::Notify` pattern : RX + TX notifient timer task qui se ré-arme sur next_timer rapproché.
 
 **Decision §0.5** :
-- K.4 Hetzner cross-DC bench DEFERRED — ops task séparée (~30 min wall-clock + provisioning 3-node + cost ~0.05-0.10 EUR). Code-level validation (cargo test + clippy + integration tests) suffit pour Session K. Bench validation = exécution dédiée quand bande passante ops.
+- K.4 Hetzner cross-DC bench DEFERRED, ops task séparée (~30 min wall-clock + provisioning 3-node + cost ~0.05-0.10 EUR). Code-level validation (cargo test + clippy + integration tests) suffit pour Session K. Bench validation = exécution dédiée quand bande passante ops.
 - Multi-hop IP negotiation = mono-client hardcoded `10.66.0.2/24` (v1 POC). Proper IP negotiation = M5.B.X scope (extension in-band ou warren-api endpoint).
 
 **Commits warren-core (push origin/main fast-forward)** :
@@ -37,7 +37,7 @@ Session K complète le scope **DAITA totally end-to-end** :
   - **TX task** : tun.recv → DaitaEvent::NormalSent + TunnelSent + notify_one() → seal_response → encode_frame → Quinn send_datagram
   - **Timer task** : `tokio::select! { sleep_until(next_timer) | state_changed.notified() }` → if sleep fired, drain_expired + emit dummies via current ExitSession.seal_response with 0xFF marker
 - Shared `Arc<parking_lot::Mutex<DaitaState>>` + `Arc<tokio::sync::Notify>` + `Arc<Mutex<Option<(Arc<ExitSession>, u32)>>>` (current session) + `Arc<AtomicU64>` (reverse_seq) across the 3 tasks
-- Dummy plaintext sized to `conn.max_datagram_size() - 96` (HPKE + wire overhead) capped at 1184 bytes — prevents seal+encode > Quinn datagram cap (which would silently fail and kill the timer task).
+- Dummy plaintext sized to `conn.max_datagram_size() - 96` (HPKE + wire overhead) capped at 1184 bytes, prevents seal+encode > Quinn datagram cap (which would silently fail and kill the timer task).
 
 ### Decision §0.5
 
@@ -52,7 +52,7 @@ Multi-hop DAITA config **passed by caller** (Option<DaitaConfig>) rather than Da
 **`crates/warren-client/src/main.rs`** :
 - Lifted `bail!` at line 1093 ("--multi-hop with --use-tun is not yet wired")
 - New `run_multi_hop_with_tun` async helper :
-  - Creates `RealTun::create_with_ipv4_mtu(10.66.0.2, 24, 1280)` — mono-client POC IP
+  - Creates `RealTun::create_with_ipv4_mtu(10.66.0.2, 24, 1280)`, mono-client POC IP
   - Picks DAITA spec via `DaitaPool::default_pool().pick(&mut rand_v9::rng())` at startup
   - Builds `DaitaShared = Arc<parking_lot::Mutex<DaitaState>>`
   - Constructs `SupervisorConfig` from CLI args (relay + exit_desc + signing key + bind_addr + GSO + obfuscation + backoff)
@@ -126,8 +126,8 @@ Added `tokio::sync::Notify` shared across the 3 tasks :
 - Timer task `select! { sleep_until(next_timer) | state_changed.notified() }` → on notify, `continue` loop, re-read next_timer
 
 This applies to :
-- `pump_multi_bidirectional_with_daita_inner` (warren-tunnel) — fixed
-- `serve_one_connection_with_tun_and_daita` (warren-exit, my K.1) — already fixed in K.1
+- `pump_multi_bidirectional_with_daita_inner` (warren-tunnel), fixed
+- `serve_one_connection_with_tun_and_daita` (warren-exit, my K.1), already fixed in K.1
 
 ### Verification
 

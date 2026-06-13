@@ -1,4 +1,4 @@
-# Session Rate-Limiting — Per-pubkey rate-limiting client-side (#12)
+# Session Rate-Limiting, Per-pubkey rate-limiting client-side (#12)
 
 > Brief d'agent autonome warren-core + warren-app.
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -14,16 +14,16 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **RL.1 — Setup worktree** (~30 min)
-2. **RL.2 — Design + spec algorithm** (~0.5j)
-3. **RL.3 — Token bucket per-pubkey warren-exit** (~1j)
-4. **RL.4 — Wire dans accept loop warren-tunnel exit** (~0.5j)
-5. **RL.5 — Tests + bench micro impact** (~0.5j)
-6. **RL.6 — Rapport + cleanup** (~0.5j)
+1. **RL.1, Setup worktree** (~30 min)
+2. **RL.2, Design + spec algorithm** (~0.5j)
+3. **RL.3, Token bucket per-pubkey warren-exit** (~1j)
+4. **RL.4, Wire dans accept loop warren-tunnel exit** (~0.5j)
+5. **RL.5, Tests + bench micro impact** (~0.5j)
+6. **RL.6, Rapport + cleanup** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard.
 
@@ -71,7 +71,7 @@ ls crates/warren-ratelimit/  # crate déjà présent (audit M4.H.E.4)
 
 ---
 
-## 2. RL.2 — Design + spec algorithm (~0.5j)
+## 2. RL.2, Design + spec algorithm (~0.5j)
 
 ### Scope
 
@@ -94,11 +94,11 @@ Trade-offs documentés :
 
 ---
 
-## 3. RL.3 — Token bucket per-pubkey warren-exit (~1j)
+## 3. RL.3, Token bucket per-pubkey warren-exit (~1j)
 
 ### Scope
 
-1. Crate `warren-ratelimit` existant (cf. M4.H.E.4 audit) — vérifier si déjà adaptable
+1. Crate `warren-ratelimit` existant (cf. M4.H.E.4 audit), vérifier si déjà adaptable
 2. Nouveau module ou extension : `warren-ratelimit::PerPubkeyBucket`
 3. API :
    ```rust
@@ -129,7 +129,7 @@ Trade-offs documentés :
 
 ---
 
-## 4. RL.4 — Wire dans accept loop warren-tunnel exit (~0.5j)
+## 4. RL.4, Wire dans accept loop warren-tunnel exit (~0.5j)
 
 ### Scope
 
@@ -151,7 +151,7 @@ Trade-offs documentés :
 
 ---
 
-## 5. RL.5 — Tests + bench micro impact (~0.5j)
+## 5. RL.5, Tests + bench micro impact (~0.5j)
 
 ### Scope
 
@@ -169,7 +169,7 @@ Trade-offs documentés :
 
 ---
 
-## 6. RL.6 — Rapport + cleanup (~0.5j)
+## 6. RL.6, Rapport + cleanup (~0.5j)
 
 ### Scope
 

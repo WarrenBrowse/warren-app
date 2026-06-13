@@ -1,4 +1,4 @@
-# Session G — warren-core `pump_with_daita` stability fix
+# Session G, warren-core `pump_with_daita` stability fix
 
 > Brief d'agent autonome warren-core (surface principale) + warren-app (pin bump).
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **G.1 — Setup worktree warren-core dédié** (~30 min)
-2. **G.2 — Reproduction in-process avec netem RTT sim** (~1j)
-3. **G.3 — Instrumentation tracing downlink task** (~0.5j)
-4. **G.4 — Diagnostic root cause + fix candidat** (~1-2j)
-5. **G.5 — Regression tests sustained 5 min** (~0.5j)
-6. **G.6 — Re-bench Hetzner cross-DC validation (optionnel)** (~0.5j)
-7. **G.7 — Rapport + memory + commit + push** (~30 min)
+1. **G.1, Setup worktree warren-core dédié** (~30 min)
+2. **G.2, Reproduction in-process avec netem RTT sim** (~1j)
+3. **G.3, Instrumentation tracing downlink task** (~0.5j)
+4. **G.4, Diagnostic root cause + fix candidat** (~1-2j)
+5. **G.5, Regression tests sustained 5 min** (~0.5j)
+6. **G.6, Re-bench Hetzner cross-DC validation (optionnel)** (~0.5j)
+7. **G.7, Rapport + memory + commit + push** (~30 min)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard (interdit : `git stash`, `git checkout <path>`, `git restore`, `git reset --hard`, `git clean`). Préserver tout fichier modified ou untracked warren-core + warren-app. Submodules warren-core preserved.
 
@@ -40,7 +40,7 @@ Cf. memory `feedback_agent_full_autonomy_no_timid_rollback`. Plein mandat.
 Escalade `AskUserQuestion` SEULEMENT si :
 1. Secret leak
 2. Coût Hetzner > 0.30 EUR (G.6 re-bench optionnel, cap ~0.10)
-3. Breaking change /v1 wire format (le fix ne devrait PAS être wire-breaking — escalade si tu détectes nécessité)
+3. Breaking change /v1 wire format (le fix ne devrait PAS être wire-breaking, escalade si tu détectes nécessité)
 4. Signing key prod
 5. **Spécifique session G** : si root cause identifié nécessite refactor architectural majeur du pump (vs fix tactique), escalade pour validation archi avant push (effort > 5j)
 
@@ -106,7 +106,7 @@ cat /Users/poka/.claude/projects/-Users-poka-dev-warrenBros-warren-core/memory/w
 
 ---
 
-## G.1 — Setup worktree warren-core dédié (~30 min)
+## G.1, Setup worktree warren-core dédié (~30 min)
 
 Cf. §0.6. Worktree créé. Confirmer HEAD warren-core = `8b0e345+`.
 
@@ -118,7 +118,7 @@ Cf. §0.6. Worktree créé. Confirmer HEAD warren-core = `8b0e345+`.
 
 ---
 
-## G.2 — Reproduction in-process avec netem RTT sim (~1j)
+## G.2, Reproduction in-process avec netem RTT sim (~1j)
 
 ### Scope G.2
 
@@ -153,7 +153,7 @@ Reproduire le bug Session F en environnement controllé. Le bug se manifeste cro
 
 ---
 
-## G.3 — Instrumentation tracing downlink task (~0.5j)
+## G.3, Instrumentation tracing downlink task (~0.5j)
 
 ### Scope G.3
 
@@ -188,30 +188,30 @@ Ajouter visibilité dans le pump pour identifier où le deadlock/timeout se prod
 
 ---
 
-## G.4 — Diagnostic root cause + fix candidat (~1-2j)
+## G.4, Diagnostic root cause + fix candidat (~1-2j)
 
 ### Scope G.4
 
 Sur la base de G.3, implémenter fix candidat. Hypothèses prioritaires (à valider G.3) :
 
-**Hypothèse A — Lock contention sync vs async** :
+**Hypothèse A, Lock contention sync vs async** :
 - `Arc<parking_lot::Mutex<DaitaState>>` est sync (cf. memory B.1)
 - Sustained 200 Mbps = ~20k packets/sec = 20k lock acquisitions/sec
 - Si critical section non-triviale (HashMap lookup + state update), saturation possible sur certains workloads
 - **Fix candidat** : `Arc<tokio::sync::Mutex<DaitaState>>` async-aware + reduce critical section, ou `Arc<RwLock>` si read-heavy
 
-**Hypothèse B — Timer task starvation** :
+**Hypothèse B, Timer task starvation** :
 - Timer task fait `sleep_until(next_timer) → drain_expired → multi_send_drop_too_large`
 - Si drain_expired générer 100+ dummies en un seul drain, multi_send_drop_too_large peut bloquer (channel full, backpressure)
 - **Fix candidat** : batch + yield, ou tokio::spawn detached send
 
-**Hypothèse C — Downlink read_datagram timeout vs DAITA wakeup** :
+**Hypothèse C, Downlink read_datagram timeout vs DAITA wakeup** :
 - N downlink tasks, chacune `loop { conn.read_datagram().await }`
 - DAITA dummies sortent via uplink/timer, pas downlink
 - Si downlink Quinn datagram_recv interne timeout (Quinn 0.11 default ? config max_idle_timeout 180s post M4.E.C.quint), erreur surface ici
 - **Fix candidat** : verifier Quinn datagram_recv error handling, distinguer "transient timeout" (continue) vs "real disconnect" (propagate)
 
-**Hypothèse D — DAITA dummies overflow** :
+**Hypothèse D, DAITA dummies overflow** :
 - Si machine spec preset Mullvad v2 génère padding > capacity datagram channel Quinn
 - Backpressure cascade
 - **Fix candidat** : rate-limit Action::InjectPadding ou bounded queue
@@ -234,7 +234,7 @@ Sur la base de G.3, implémenter fix candidat. Hypothèses prioritaires (à vali
 
 ---
 
-## G.5 — Regression tests sustained 5 min (~0.5j)
+## G.5, Regression tests sustained 5 min (~0.5j)
 
 ### Scope G.5
 
@@ -253,7 +253,7 @@ Garantir non-régression future :
 
 ---
 
-## G.6 — Re-bench Hetzner cross-DC validation (optionnel) (~0.5j)
+## G.6, Re-bench Hetzner cross-DC validation (optionnel) (~0.5j)
 
 ### Scope G.6
 
@@ -283,7 +283,7 @@ Valider que le fix tient en conditions réelles cross-DC Hetzner :
 
 ---
 
-## G.7 — Rapport + memory + commit + push (~30 min)
+## G.7, Rapport + memory + commit + push (~30 min)
 
 ### Scope G.7
 
@@ -383,11 +383,11 @@ Verdict NO-GO si refactor archi major > 5j requis (escalation case 5).
 ## 7. Memory updates attendus
 
 À ajouter dans warren-core memory :
-- `warren_pump_daita_stability_fix.md` — root cause + patch + regression test
+- `warren_pump_daita_stability_fix.md`, root cause + patch + regression test
 - Update warren-core MEMORY.md
 
 À ajouter dans warren-app memory :
-- `warren_session_g_delivered.md` — verdict + caveats
+- `warren_session_g_delivered.md`, verdict + caveats
 - Update warren-app MEMORY.md
 
 ---

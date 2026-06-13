@@ -1,4 +1,4 @@
-# Session Latitude-Bench — Paired bare-metal bench validation (#19)
+# Session Latitude-Bench, Paired bare-metal bench validation (#19)
 
 > Brief d'agent autonome warren-core bench scripts + Latitude.sh.
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **Lat.1 — Setup worktree warren-core** (~30 min)
-2. **Lat.2 — Provisioning 2 nodes Latitude.sh paired** (~1h)
-3. **Lat.3 — Deploy warren-tunnel client + warren-exit + warren-relay** (~1h)
-4. **Lat.4 — Bench baseline + DAITA OFF (5 min sustained iperf3)** (~30 min)
-5. **Lat.5 — Bench multi-hop + DAITA ON (5 min sustained)** (~30 min)
-6. **Lat.6 — Comparaison Hetzner ccx13 vs Latitude.sh bare-metal** (~30 min)
-7. **Lat.7 — Cleanup + rapport + memory** (~30 min)
+1. **Lat.1, Setup worktree warren-core** (~30 min)
+2. **Lat.2, Provisioning 2 nodes Latitude.sh paired** (~1h)
+3. **Lat.3, Deploy warren-tunnel client + warren-exit + warren-relay** (~1h)
+4. **Lat.4, Bench baseline + DAITA OFF (5 min sustained iperf3)** (~30 min)
+5. **Lat.5, Bench multi-hop + DAITA ON (5 min sustained)** (~30 min)
+6. **Lat.6, Comparaison Hetzner ccx13 vs Latitude.sh bare-metal** (~30 min)
+7. **Lat.7, Cleanup + rapport + memory** (~30 min)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard.
 
@@ -76,7 +76,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/session-ae5-hetzner-ip-nego-
 
 ---
 
-## 2. Lat.2 — Provisioning 2 nodes Latitude.sh paired (~1h)
+## 2. Lat.2, Provisioning 2 nodes Latitude.sh paired (~1h)
 
 ### Scope
 
@@ -101,7 +101,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/session-ae5-hetzner-ip-nego-
 
 ---
 
-## 3. Lat.3 — Deploy warren-tunnel client + warren-exit + warren-relay (~1h)
+## 3. Lat.3, Deploy warren-tunnel client + warren-exit + warren-relay (~1h)
 
 ### Scope
 
@@ -125,7 +125,7 @@ cat /Users/poka/dev/warrenBros/warren-app/.planning/session-ae5-hetzner-ip-nego-
 
 ---
 
-## 4. Lat.4 — Bench baseline + DAITA OFF (5 min sustained) (~30 min)
+## 4. Lat.4, Bench baseline + DAITA OFF (5 min sustained) (~30 min)
 
 ### Scope
 
@@ -145,7 +145,7 @@ ssh root@<client_ip> "iperf3 -c 10.66.0.1 -B 10.66.0.2 -p 5201 -t 300 -P 4 -J > 
 
 ---
 
-## 5. Lat.5 — Bench multi-hop + DAITA ON (5 min sustained) (~30 min)
+## 5. Lat.5, Bench multi-hop + DAITA ON (5 min sustained) (~30 min)
 
 ### Scope
 
@@ -158,7 +158,7 @@ Same setup, `WARREN_DAITA=1`. Mesure overhead bandwidth + CPU% + RSS.
 
 ---
 
-## 6. Lat.6 — Comparaison Hetzner ccx13 vs Latitude.sh bare-metal (~30 min)
+## 6. Lat.6, Comparaison Hetzner ccx13 vs Latitude.sh bare-metal (~30 min)
 
 ### Scope
 
@@ -182,7 +182,7 @@ Verdict : si bare-metal ≥ 2x cloud → pitch produit "Warren full-speed sur ba
 
 ---
 
-## 7. Lat.7 — Cleanup + rapport + memory (~30 min)
+## 7. Lat.7, Cleanup + rapport + memory (~30 min)
 
 ### Scope
 

@@ -1,4 +1,4 @@
-# Session E — A.4 follow-up : exit_id stable cross-repo — RAPPORT
+# Session E, A.4 follow-up : exit_id stable cross-repo, RAPPORT
 
 > Date d'exécution : 2026-05-21
 > Auteur : agent autonome sous direction poka
@@ -21,7 +21,7 @@ Cible §0.5 autonomie **respectée** (escalade poka unique via AskUserQuestion s
 
 ---
 
-## 1. E.1 — Design confirmation + escalade
+## 1. E.1, Design confirmation + escalade
 
 ### 1.1 Verdict breaking /v1
 
@@ -32,7 +32,7 @@ L'analyse de `warren-relay-selector::signed::verify_signed_relay_list` a confirm
 
 Pas de chemin de compat additif possible (l'option `#[serde(default, skip_serializing_if = "Option::is_none")]` ne suffit pas dès que le backend populate exit_id, ce que la phase de migration impose).
 
-### 1.2 Escalade poka — choix retenu
+### 1.2 Escalade poka, choix retenu
 
 `AskUserQuestion` posée avec 3 options :
 - (A) Bump SIGNED_VERSION 2 → 3 schema rotation propre, parallèle v2/v3 backend, transition lourde
@@ -47,7 +47,7 @@ Pas de chemin de compat additif possible (l'option `#[serde(default, skip_serial
 
 ---
 
-## 2. E.2 — warren-core wire format `exit_id`
+## 2. E.2, warren-core wire format `exit_id`
 
 ### 2.1 Livrables
 
@@ -72,18 +72,18 @@ Pas de chemin de compat additif possible (l'option `#[serde(default, skip_serial
 
 ### 2.3 Commit
 
-`feat(protocol): v3 signed relay list adds mandatory exit_id (Session E.2 breaking)` — `37c5243be3f0a5a769a6460536b6a89c129123b7` — push origin/main warren-core.
+`feat(protocol): v3 signed relay list adds mandatory exit_id (Session E.2 breaking)`, `37c5243be3f0a5a769a6460536b6a89c129123b7`, push origin/main warren-core.
 
 ---
 
-## 3. E.3 — warren-backend-api dev redeploy
+## 3. E.3, warren-backend-api dev redeploy
 
 ### 3.1 Architecture finale
 
 L'autorité du `exit_id` vit côté **exit binary** (`warren-exit`) qui auto-génère et persiste dans `<state_dir>/exit_id`. Le serveur (`warren-api`) :
 1. Stocke le `exit_id` reçu dans son `InMemoryExitRegistry` ;
 2. Préserve la valeur cross-heartbeats (jamais regénérée tant que la ligne existe) ;
-3. Fallback uuid v4 server-generated UNIQUEMENT si l'exit pré-fix (legacy binary) ne supplie pas le champ — la valeur reste alors stable in-process mais perdrait après warren-api restart ;
+3. Fallback uuid v4 server-generated UNIQUEMENT si l'exit pré-fix (legacy binary) ne supplie pas le champ, la valeur reste alors stable in-process mais perdrait après warren-api restart ;
 4. Propage dans la signed `relays.json` v3.
 
 Cette architecture évite une migration SQLite : la persistence cross-restart est portée par l'exit lui-même. C'est un écart **assumé** par rapport à E.3.2 du brief (qui suggérait SQLite côté serveur) mais plus robuste : un warren-api restart ne perd jamais la valeur si l'exit continue à heartbeater.
@@ -99,7 +99,7 @@ Cette architecture évite une migration SQLite : la persistence cross-restart es
 7. **Restart warren-api** (clears in-memory v4 fallback). Next heartbeat (T+~30s) propage `2921abad...` depuis warren-exit-1 persistent file.
 8. **Smoke final** `https://api.warrenbrowse.com/v1/exits` retourne `exit_id: "2921abad869e94064b56cf48c8da3631"` STABLE.
 
-### 3.3 Régression M4.H.A.ter refresher loop — NON reproduite
+### 3.3 Régression M4.H.A.ter refresher loop, NON reproduite
 
 warren-exit-1 logs post-redeploy : `allowlist refresher spawned (strict mode) ... refresh_secs=30 grace_secs=300` ; aucun ERROR/WARN sur allowlist polling ; warren-api log clean. Le bug refresher loop découvert en M4.H.A.ter (silent fail-closed) ne réapparaît pas avec ce HEAD.
 
@@ -109,7 +109,7 @@ Aucun nouveau VPS provisionné. Build cross-compile + 2 redeploys ~0 EUR (les VP
 
 ---
 
-## 4. E.4 — warren-app consume + cabler verify hook A.4
+## 4. E.4, warren-app consume + cabler verify hook A.4
 
 ### 4.1 Livrables
 
@@ -141,24 +141,24 @@ Aucun nouveau VPS provisionné. Build cross-compile + 2 redeploys ~0 EUR (les VP
 
 ### 4.3 Caveats documentés (follow-up cycle)
 
-**C1 — UI modal `WarrenPubKeyWarning.tsx` non implémentée** : le scaffold mentionné dans le design doc §2.4 n'a pas été ajouté dans cette session. Le daemon retourne `Error::WarrenPubkeyPinMismatch { exit_id_hex, pinned, observed }` qui se traduit déjà en `ParameterGenerationError::NoMatchingRelay` côté state machine → UI affichera "no relay match" actuellement, pas le modal CTAs (Trust new key / Reject / Report). À ajouter : (a) nouvelle gRPC notification `WarrenPubkeyMismatchDetected` ; (b) composant Electron React avec i18n FR+EN ; (c) bouton Settings → "Reset pinned exit keys".
+**C1, UI modal `WarrenPubKeyWarning.tsx` non implémentée** : le scaffold mentionné dans le design doc §2.4 n'a pas été ajouté dans cette session. Le daemon retourne `Error::WarrenPubkeyPinMismatch { exit_id_hex, pinned, observed }` qui se traduit déjà en `ParameterGenerationError::NoMatchingRelay` côté state machine → UI affichera "no relay match" actuellement, pas le modal CTAs (Trust new key / Reject / Report). À ajouter : (a) nouvelle gRPC notification `WarrenPubkeyMismatchDetected` ; (b) composant Electron React avec i18n FR+EN ; (c) bouton Settings → "Reset pinned exit keys".
 
-**C2 — gRPC RPCs `TrustNewExitKey` + `ResetPinnedExitKeys` non implémentés** : les RPCs mentionnées dans le design doc §2.3 sont à wirer pour permettre à l'utilisateur d'accepter une rotation légitime ou de purger toute la table. Sans ces RPCs, l'utilisateur ne peut pas débloquer un mismatch sans éditer manuellement `settings.json`.
+**C2, gRPC RPCs `TrustNewExitKey` + `ResetPinnedExitKeys` non implémentés** : les RPCs mentionnées dans le design doc §2.3 sont à wirer pour permettre à l'utilisateur d'accepter une rotation légitime ou de purger toute la table. Sans ces RPCs, l'utilisateur ne peut pas débloquer un mismatch sans éditer manuellement `settings.json`.
 
-**C3 — Persistance settings.json depuis le verify hook non câblée** : le channel `warren_pin_update_tx` existe et émet bien des `WarrenPinUpdate::PinNewExit` / `BumpLastSeen` mais aucun consumer ne wire encore l'écriture vers `SettingsPersister`. Conséquence : les pins TOFU établis dans une session daemon survivent à un set_settings (sync depuis disk) MAIS pas à un daemon restart. La détection de substitution attaque RESTE EFFECTIVE dans une même session (= une rotation pubkey serveur entre deux connects dans la même session daemon est attrapée par le hook). À ajouter : tâche tokio dans `mullvad_daemon::lib.rs` qui consomme la mpsc + appelle `SettingsPersister::update().warren_pinned_exit_pubkeys = ...`.
+**C3, Persistance settings.json depuis le verify hook non câblée** : le channel `warren_pin_update_tx` existe et émet bien des `WarrenPinUpdate::PinNewExit` / `BumpLastSeen` mais aucun consumer ne wire encore l'écriture vers `SettingsPersister`. Conséquence : les pins TOFU établis dans une session daemon survivent à un set_settings (sync depuis disk) MAIS pas à un daemon restart. La détection de substitution attaque RESTE EFFECTIVE dans une même session (= une rotation pubkey serveur entre deux connects dans la même session daemon est attrapée par le hook). À ajouter : tâche tokio dans `mullvad_daemon::lib.rs` qui consomme la mpsc + appelle `SettingsPersister::update().warren_pinned_exit_pubkeys = ...`.
 
-**C4 — Multi-hop pubkey pinning : non couvert** : le verify hook skip la branche `params.multi_hop.is_some()`. Justification : sur multi-hop, le client échange HPKE avec l'exit à travers un relay, donc le pubkey exit n'est pas observé sur la TLS RPK handshake de la même façon. Le pinning multi-hop demande un wire path différent (probablement vérifier `MultiHopExitDescriptor.exit_ed25519_pubkey` post-signature-verify) qui est à designer dans un cycle futur.
+**C4, Multi-hop pubkey pinning : non couvert** : le verify hook skip la branche `params.multi_hop.is_some()`. Justification : sur multi-hop, le client échange HPKE avec l'exit à travers un relay, donc le pubkey exit n'est pas observé sur la TLS RPK handshake de la même façon. Le pinning multi-hop demande un wire path différent (probablement vérifier `MultiHopExitDescriptor.exit_ed25519_pubkey` post-signature-verify) qui est à designer dans un cycle futur.
 
-**C5 — Forensic fields (country_code, city) blank-on-insert** : le verify hook insère TOFU pin avec `country_code: ""` + `city: ""`. La `WarrenSelection` ne porte pas ces champs aujourd'hui ; pour les wirer il faudrait threader `WarrenRelay::location()` jusqu'à `produce_warren_tunnel_params`. C'est un petit follow-up qui enrichira les rapports `/v1/incidents/pubkey-mismatch` mais n'affecte pas la sécurité du mismatch gate (la `pubkey_hex` comparison reste suffisante).
+**C5, Forensic fields (country_code, city) blank-on-insert** : le verify hook insère TOFU pin avec `country_code: ""` + `city: ""`. La `WarrenSelection` ne porte pas ces champs aujourd'hui ; pour les wirer il faudrait threader `WarrenRelay::location()` jusqu'à `produce_warren_tunnel_params`. C'est un petit follow-up qui enrichira les rapports `/v1/incidents/pubkey-mismatch` mais n'affecte pas la sécurité du mismatch gate (la `pubkey_hex` comparison reste suffisante).
 
 ### 4.4 Commits
 
-- warren-app : `feat(daemon): activate A.4 TOFU pubkey-pinning verify hook on exit_id (Session E.4)` — push origin/main.
-- warren-core : `feat(api): /v1/incidents/pubkey-mismatch log-only endpoint for A.4 telemetry (Session E.4)` — `8b0e345` push origin/main.
+- warren-app : `feat(daemon): activate A.4 TOFU pubkey-pinning verify hook on exit_id (Session E.4)`, push origin/main.
+- warren-core : `feat(api): /v1/incidents/pubkey-mismatch log-only endpoint for A.4 telemetry (Session E.4)`, `8b0e345` push origin/main.
 
 ---
 
-## 5. E.5 — Tests E2E + rapport
+## 5. E.5, Tests E2E + rapport
 
 ### 5.1 Tests E2E cross-repo
 
@@ -193,7 +193,7 @@ Aucun nouveau VPS provisionné. Build cross-compile + 2 redeploys ~0 EUR (les VP
 - Smoke prod : signed v3 + exit_id stable + incidents endpoint mounted.
 - §0.0 INVIOLABLE git RESPECTÉ (aucune commande destructive).
 - §0.5 autonomie RESPECTÉE (escalade poka UNIQUE sur case 3 breaking).
-- 4 caveats follow-up clairement documentés (UI modal / gRPC RPCs / persistance / multi-hop / forensic fields) — aucun n'invalide la primitive sécurité du verify hook actif daemon-side.
+- 4 caveats follow-up clairement documentés (UI modal / gRPC RPCs / persistance / multi-hop / forensic fields), aucun n'invalide la primitive sécurité du verify hook actif daemon-side.
 
 Le différenciateur sécurité Warren "détection de substitution d'exit" sort de l'état dormant : à partir du prochain build local de mullvad-daemon, une rotation pubkey sous le même `exit_id` est attrapée par le hook et refuse le connect avec `Error::WarrenPubkeyPinMismatch`. La complétion UI (modal + RPCs) reste à câbler dans un cycle de scope UI-frontend dédié.
 

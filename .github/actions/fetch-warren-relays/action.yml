@@ -9,7 +9,7 @@ description: >
   refreshed at runtime.
 
   Robustness: a fetch failure (API down / offline runner) is a WARNING, not a
-  failure — the client ships without a baked list and fetches on first launch.
+  failure, the client ships without a baked list and fetches on first launch.
   A successfully fetched but signature-INVALID list FAILS the build (never bake
   an unverifiable bootstrap).
 

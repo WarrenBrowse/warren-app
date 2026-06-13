@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Warren VPN — pre-tag verification script.
+# Warren VPN, pre-tag verification script.
 #
 # Run this BEFORE pushing a v*.*.* tag. The script runs every check that
 # `.github/workflows/release.yml` would catch but on the local machine, so the
@@ -61,7 +61,7 @@ run_or_record() {
 section "Working tree state"
 
 if [[ -n "$(git status --porcelain)" ]]; then
-    record_fail "working tree not clean — commit or stash changes before tagging"
+    record_fail "working tree not clean, commit or stash changes before tagging"
     git status --short
 else
     record_pass "working tree clean"
@@ -183,7 +183,7 @@ fi
 section "Summary"
 
 if [[ ${#FAILURES[@]} -eq 0 ]]; then
-    green "ALL CHECKS PASSED — ready to tag"
+    green "ALL CHECKS PASSED, ready to tag"
     exit 0
 else
     red "FAILURES: ${#FAILURES[@]}"

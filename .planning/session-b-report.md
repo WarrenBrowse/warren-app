@@ -281,7 +281,7 @@ DAITA variant, multi-conn session DaitaSpec sharing).
 
 1. ✅ PROTOCOL_VERSION 2→3 + Setup.daita_support + SetupAck.daita_spec (3bb941d)
 2. ✅ DaitaPool 5 machines + wire ExitListener + `--enable-daita` exit CLI (cba67e3)
-3. ✅ DaitaState sync driver (timer wheels per machine) — foundation for pump (cc53d82)
+3. ✅ DaitaState sync driver (timer wheels per machine), foundation for pump (cc53d82)
 4. ✅ ClientTunnel.with_daita() + `--enable-daita` client CLI (73f20e1)
 
 ### Tier 1 - terminer B.1 (priorité haute)

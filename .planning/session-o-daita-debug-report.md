@@ -1,6 +1,6 @@
-# Session O — DAITA multi-hop debug + regression gates
+# Session O, DAITA multi-hop debug + regression gates
 
-> Status : **GO PARTIEL** — regression gates added, root cause Session N bug not isolated
+> Status : **GO PARTIEL**, regression gates added, root cause Session N bug not isolated
 > Date : 2026-05-21
 > Cost réel : **0 EUR** (in-process only, zero Hetzner spend)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. §0.6 worktree skipped (no parallel work, ops cleanup-only Session N pin then test-add).
@@ -11,8 +11,8 @@
 
 Session N empirical bench surfaced a critical bug: DAITA-on multi-hop `--use-tun` produces "tunnel established" but **0 throughput**. Session O attempted in-process reproduction across two angles:
 
-1. **Exit side** (`multihop_tun_with_daita_data_flow.rs`) : runs `serve_multihop_with_tun_and_daita` against a fake client + Tamaraw config + sealed real packets. **PASSES** — exit forwards real client uplink packets to its TUN.
-2. **Client side** (`pump_with_supervisor_daita.rs`) : runs full MultiHopSupervisor + `run_uplink_with_daita` + `run_downlink_with_daita` against a fake relay-as-exit + Tamaraw config + real IPv4-shaped payloads. **PASSES** — supervised pump round-trips real packets.
+1. **Exit side** (`multihop_tun_with_daita_data_flow.rs`) : runs `serve_multihop_with_tun_and_daita` against a fake client + Tamaraw config + sealed real packets. **PASSES**, exit forwards real client uplink packets to its TUN.
+2. **Client side** (`pump_with_supervisor_daita.rs`) : runs full MultiHopSupervisor + `run_uplink_with_daita` + `run_downlink_with_daita` against a fake relay-as-exit + Tamaraw config + real IPv4-shaped payloads. **PASSES**, supervised pump round-trips real packets.
 
 **Both new regression gates pass in-process.** Real bench failure must originate from **system-integration** (relay + exit + Linux TUN + DAITA combined), not from any of the isolated subsystems above.
 
@@ -53,14 +53,14 @@ The bench symptom = 100% packet loss bidirectionnal under DAITA. The hypotheses:
 
 | Hypothesis | Verdict |
 |---|---|
-| Universal dummy filter drops IPv4 packets (first nibble = 4 ≠ dummy) | **DISPROVEN** — filter logic correct, IPv4 always nibble 4 |
-| Client supervised_pump uplink starves real packets vs DAITA timer | **DISPROVEN** in-process — round-trip works |
-| Exit serve_multihop_with_tun_and_daita drops real packets when DAITA on | **DISPROVEN** in-process — real packets reach FakeTun |
+| Universal dummy filter drops IPv4 packets (first nibble = 4 ≠ dummy) | **DISPROVEN**, filter logic correct, IPv4 always nibble 4 |
+| Client supervised_pump uplink starves real packets vs DAITA timer | **DISPROVEN** in-process, round-trip works |
+| Exit serve_multihop_with_tun_and_daita drops real packets when DAITA on | **DISPROVEN** in-process, real packets reach FakeTun |
 | Relay forwards DAITA dummies different than baseline | **NOT TESTED** in-process (would need 3-process pipeline + DAITA) |
-| Real Linux TUN behaves differently than FakeTun under DAITA cadence | **NOT TESTED** — requires Linux host |
-| Quinn `max_datagram_size` shrinks for relay→exit hop under sustained dummy stream | **NOT TESTED** — needs production trace |
-| Kernel rp_filter / nft drops ICMP reply path on exit warren0 | **NOT TESTED** — needs production trace |
-| QUIC connection state degrades under high-rate DAITA dummies (BBR estimator confused?) | **NOT TESTED** — needs production trace |
+| Real Linux TUN behaves differently than FakeTun under DAITA cadence | **NOT TESTED**, requires Linux host |
+| Quinn `max_datagram_size` shrinks for relay→exit hop under sustained dummy stream | **NOT TESTED**, needs production trace |
+| Kernel rp_filter / nft drops ICMP reply path on exit warren0 | **NOT TESTED**, needs production trace |
+| QUIC connection state degrades under high-rate DAITA dummies (BBR estimator confused?) | **NOT TESTED**, needs production trace |
 
 **Conclusion** : the bug is in the **system-integration** layer (multi-hop relay + DAITA dummies + real Linux TUN), not in any subsystem tested in isolation.
 

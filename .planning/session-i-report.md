@@ -1,4 +1,4 @@
-# Session I — DAITA exit-side wiring + dummy filter cross-cutting — RAPPORT FINAL
+# Session I, DAITA exit-side wiring + dummy filter cross-cutting, RAPPORT FINAL
 
 > Status : **GO ULTIMATE (delivered, multi-hop + bench deferred per scope-alignment)**
 > Date : 2026-05-21
@@ -27,7 +27,7 @@ Session I livre la **défense DAITA bidirectionnelle complète** côté warren-c
 
 ---
 
-## I.1 PIVOT §0.5 — per-conn DAITA over per-session aggregation
+## I.1 PIVOT §0.5, per-conn DAITA over per-session aggregation
 
 ### Decision
 
@@ -121,7 +121,7 @@ Exercises **production** code paths :
 
 ---
 
-## I.3 SKIPPED §0.5 — multi-hop DAITA pending M4.E.X
+## I.3 SKIPPED §0.5, multi-hop DAITA pending M4.E.X
 
 ### Decision
 
@@ -140,7 +140,7 @@ Wrap `WarrenPumpHandle` in a `MultihopDaitaSink` decorator that intercepts pump_
 
 ---
 
-## I.6 DEFERRED §0.5 — Hetzner cross-DC bench
+## I.6 DEFERRED §0.5, Hetzner cross-DC bench
 
 ### Decision
 

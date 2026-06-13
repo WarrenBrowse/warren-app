@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Warren VPN — read-only network diagnostic (Linux).
+# Warren VPN, read-only network diagnostic (Linux).
 #
 # Purpose: confirm the F1 split-tunnel fix on-device and surface the F2
 # DNS state, mapping to runbook test T2 of TEST-REPORT.pdf.
@@ -94,7 +94,7 @@ if have curl; then
   run curl -s --max-time 8 https://api.ipify.org
 fi
 
-hr "Split-tunnel egress probe (F1) — run manually"
+hr "Split-tunnel egress probe (F1), run manually"
 cat <<'NOTE'
 To confirm F1 end to end, with an excluded process (needs the daemon's
 split-tunnel exclusion mechanism, i.e. the `mullvad-exclude`/`warren-exclude`

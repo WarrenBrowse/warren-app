@@ -525,7 +525,7 @@ mod tests {
         let nonce = h.get(HEADER_NONCE).expect("nonce present");
 
         // Pubkey header is now a Warren SS58 address (`wb…`), variable
-        // length (47–49 chars), not a fixed 64-hex string.
+        // length (47-49 chars), not a fixed 64-hex string.
         let pk_str = pk.to_str().unwrap();
         assert!(pk_str.starts_with("wb"), "pubkey header must be a wb… address");
         assert!(ss58::decode(pk_str).is_ok(), "pubkey header must decode as SS58");

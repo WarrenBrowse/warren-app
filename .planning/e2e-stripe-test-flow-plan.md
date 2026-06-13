@@ -1,4 +1,4 @@
-# Plan stratégique — Test E2E du flow d'achat forfait Warren (Stripe test mode)
+# Plan stratégique, Test E2E du flow d'achat forfait Warren (Stripe test mode)
 
 > Objectif : tester de bout en bout, depuis un onboarding vierge, l'achat d'un
 > forfait Warren via Stripe (cartes de test 4242), l'obtention du voucher, et
@@ -73,7 +73,7 @@ Le mode **test vs prod** est déterminé par DEUX leviers indépendants mais ali
   voucher). Les events test sont de toute façon signés avec le `whsec` de
   l'endpoint test, donc défense en profondeur.
 
-## 2. Phase A — Backend : toggle test/prod via env var (warren-core)
+## 2. Phase A, Backend : toggle test/prod via env var (warren-core)
 
 **Fichiers** : `crates/warren-api/src/providers/stripe.rs`, `config.rs`.
 
@@ -98,7 +98,7 @@ Le mode **test vs prod** est déterminé par DEUX leviers indépendants mais ali
 
 **Critère GO A** : `cargo test -p warren-api` GREEN + clippy clean.
 
-## 3. Phase B — Tunnel de paiement `warren-checkout` (SvelteKit SSR)
+## 3. Phase B, Tunnel de paiement `warren-checkout` (SvelteKit SSR)
 
 **Nouveau dossier** : `warrenBros/warren-checkout/` (SvelteKit + adapter-node +
 TS + Tailwind, Stripe node SDK).
@@ -126,7 +126,7 @@ a11y (labels, focus). Design aligné Warren (réutiliser tokens/couleurs du site
 **Critère GO B** : `npm run build` OK ; `/pricing` → Checkout test → `/success`
 affiche un voucher récupéré du backend local.
 
-## 4. Phase C — Orchestration locale e2e
+## 4. Phase C, Orchestration locale e2e
 
 **Fichier** : `warren-core/scripts/dev-e2e-stripe.sh` (+ `warren-api.test.toml`).
 
@@ -147,7 +147,7 @@ décline 4000 0000 0000 0002, 3DS 4000 0025 0000 3155).
 
 **Critère GO C** : un seul script amène toute la stack test debout.
 
-## 5. Phase D — Walkthrough E2E + automatisation
+## 5. Phase D, Walkthrough E2E + automatisation
 
 1. Walkthrough manuel documenté (`warren-checkout/E2E.md`) : onboarding vierge →
    générer wallet → "View plans" → checkout 4242 → voucher → coller dans app →

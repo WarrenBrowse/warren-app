@@ -76,7 +76,7 @@ DAEMON_PLIST=$(cat <<-EOM
                   are unsigned / ad-hoc (no stable Apple Developer ID),
                   so the hash changes every release and the daemon hits
                   errSecInteractionNotAllowed (-25308) when reading an
-                  item written by a previous build — losing the user's
+                  item written by a previous build, losing the user's
                   identity on every upgrade and breaking the tunnel. A
                   0600 root file is binary-independent and appropriate
                   for a root daemon. REMOVE this once the app ships with

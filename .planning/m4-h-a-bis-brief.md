@@ -214,7 +214,7 @@ Si SSH fail ou HEAD warren-core insuffisant : STOP, escalade poka.
 
 ### Code
 
-- Pas d'em-dash `—`, anglais comments, conventional commits subject-only,
+- Pas d'em-dash `, `, anglais comments, conventional commits subject-only,
   pas de Co-Authored-By Claude (cf. règles globales warren).
 
 ### Git
@@ -310,4 +310,4 @@ Inclure : verdict, SHA warren-core deployé, throughput cross-DC réel,
 état warren-exit-1 prod post-redeploy, caveats résiduels.
 
 Index MEMORY.md :
-`- [M4.H.A.bis delivered](warren_m4h_a_bis_delivered.md) — verdict cross-DC post-warren-exit redeploy <SHA> <verdict>`
+`- [M4.H.A.bis delivered](warren_m4h_a_bis_delivered.md), verdict cross-DC post-warren-exit redeploy <SHA> <verdict>`

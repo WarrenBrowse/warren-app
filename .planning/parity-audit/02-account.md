@@ -1,8 +1,8 @@
-# Parity Audit 02 — Account lifecycle, subscription, devices, payment/voucher
+# Parity Audit 02, Account lifecycle, subscription, devices, payment/voucher
 
 Reference: **Electron** (`desktop/packages/mullvad-vpn/`). Targets: **Android** (`android/`), **iOS** (`ios/WarrenVPN`).
 
-Mobile uses a Warren BIP39/Ed25519 wallet (12-word mnemonic) instead of a Mullvad account number — expected. The point of this audit is whether the *user-facing* account features reach parity regardless of that backend difference.
+Mobile uses a Warren BIP39/Ed25519 wallet (12-word mnemonic) instead of a Mullvad account number, expected. The point of this audit is whether the *user-facing* account features reach parity regardless of that backend difference.
 
 ## TL;DR
 
@@ -28,33 +28,33 @@ Mobile uses a Warren BIP39/Ed25519 wallet (12-word mnemonic) instead of a Mullva
 | Remove / revoke device | Via DeviceList (per-device remove) | Per-row "Remove" → `/v1/devices` delete | Per-device deletion in DeviceManagement | OK (function), P2 (AND UX) | AND `WarrenWalletSettingsScreen.kt:171-192`; iOS `DeviceManagementContentView.swift:92` |
 | Max-devices / "too many devices" handling | TooManyDevicesView (5-device cap, remove-to-continue) | **None** (Warren device cap UX absent) | DeviceManagement "Continue with login" path retained | P1 (AND) | EL `views/too-many-devices/TooManyDevicesView.tsx`; iOS `DeviceManagementContentView.swift:64` |
 | Device-revoked screen | DeviceRevokedView ("Device is inactive", go to login) | DeviceRevokedScreen + ViewModel present | RevokedDeviceView present | OK | EL `views/device-revoked/DeviceRevokedView.tsx`; AND `feature/home/impl/devicerevoked/*`; iOS `RevokedDevice/*` |
-| Out-of-time / expired blocked screen | ExpiredAccountErrorView (welcome vs out-of-time, buy/voucher, lockdown alert, auto-poll) | **None** for Warren subscription | OutOfTimeViewController ("Out of time", **Add time StoreKit + Restore purchases**) — Mullvad model | P0 (AND), P1 (iOS) | EL `views/expired-account-error/ExpiredAccountErrorView.tsx`; iOS `OutOfTime/OutOfTimeContentView.swift:46-60` |
+| Out-of-time / expired blocked screen | ExpiredAccountErrorView (welcome vs out-of-time, buy/voucher, lockdown alert, auto-poll) | **None** for Warren subscription | OutOfTimeViewController ("Out of time", **Add time StoreKit + Restore purchases**), Mullvad model | P0 (AND), P1 (iOS) | EL `views/expired-account-error/ExpiredAccountErrorView.tsx`; iOS `OutOfTime/OutOfTimeContentView.swift:46-60` |
 | Payment-completed polling / "I've completed payment" | Yes (10s poll 2 min + manual check) | None | None (StoreKit handles its own flow) | P1 (AND) | EL `ExpiredAccountErrorView.tsx:237-278,351-374` |
 | Logout | Account "Log out" (destructive) | Legacy `logout()` is a **no-op stub**; wallet "Erase wallet" is the real teardown | "Log out" button → LoginCoordinator | P1 (AND) | EL `views/account/AccountView.tsx:117`; AND `AccountRepository.kt:26`,`WarrenWalletSettingsSection.kt:152-189`; iOS `AccountViewController.swift:175` |
 | Wallet teardown semantics on logout | Logout = daemon logout (keeps mnemonic restorable) | "Erase wallet" confirm dialog (separate from logout) | Wallet erase VC (`WarrenWalletEraseViewController`) separate from logout | P1 (consistency) | AND `WarrenWalletSettingsSection.kt:169-189`; iOS `WarrenWalletEraseViewController.swift` |
-| Delete account | (not in Warren account view — wallet model) | None | "Delete account" button (Mullvad AccountDeletion flow) | P1 (iOS) | iOS `AccountContentView.swift:33-38`,`AccountDeletion/*` — Mullvad concept, no Warren equivalent backend |
-| Restore purchases | N/A (no IAP) | N/A | RestorePurchasesView + flow (Mullvad StoreKit) | P1 (iOS) | iOS `AccountContentView.swift:52`,`AccountViewController.swift:195` — vestigial Mullvad |
+| Delete account | (not in Warren account view, wallet model) | None | "Delete account" button (Mullvad AccountDeletion flow) | P1 (iOS) | iOS `AccountContentView.swift:33-38`,`AccountDeletion/*`, Mullvad concept, no Warren equivalent backend |
+| Restore purchases | N/A (no IAP) | N/A | RestorePurchasesView + flow (Mullvad StoreKit) | P1 (iOS) | iOS `AccountContentView.swift:52`,`AccountViewController.swift:195`, vestigial Mullvad |
 | Account-expiry notification (soon-to-expire) | Yes (redux account.expiry + StateTriggeredNavigation) | **No** AccountExpiry InAppNotification variant exists | AccountExpiry in-app + system notification providers (Mullvad-fed) | P1 (AND), P2 (iOS) | EL `StateTriggeredNavigation.tsx`; AND `lib/model/.../InAppNotification.kt:14-43` (no expiry variant); iOS `Notifications/.../AccountExpiry*.swift` |
-| Login screen identity model | Pubkey hex input + account history dropdown + create | Wallet-only (no number/pubkey entry — by design) | **Mullvad account-number text field** ("Don't have an account number?") | P1 (iOS) | EL `views/login/LoginView.tsx:390-436`; iOS `LoginContentView.swift:81`,`LoginViewController.swift` |
+| Login screen identity model | Pubkey hex input + account history dropdown + create | Wallet-only (no number/pubkey entry, by design) | **Mullvad account-number text field** ("Don't have an account number?") | P1 (iOS) | EL `views/login/LoginView.tsx:390-436`; iOS `LoginContentView.swift:81`,`LoginViewController.swift` |
 
 ## Top gaps (priority order)
 
-**P0 — must fix before parity**
+**P0, must fix before parity**
 1. **iOS account screen is still pure Mullvad.** `AccountViewController`/`AccountContentView` show a Mullvad *account number* (not the wallet pubkey), offer **StoreKit "Add time"** + restore purchases + delete account, and read expiry from `deviceState.accountData?.expiry` rather than the Warren `/v1/subscription` backend. The Warren wallet exists in onboarding/settings but the account/subscription/voucher surface was never re-pointed at it. (`AccountViewController.swift:141,170,191`, `AccountContentView.swift:19-38`)
-2. **iOS voucher redemption is DEBUG-only.** The full `RedeemVoucher` UI is reachable only through the `#if DEBUG` "Debug options" action sheet — no production entry point. (`AccountViewController.swift:237-256`)
+2. **iOS voucher redemption is DEBUG-only.** The full `RedeemVoucher` UI is reachable only through the `#if DEBUG` "Debug options" action sheet, no production entry point. (`AccountViewController.swift:237-256`)
 3. **Android has no real account/subscription home.** All Warren subscription/voucher/device functionality lives in a dev scaffold (`WarrenWalletSettingsScreen`) with hardcoded English strings, inline status text, no expiry/time-remaining UX, **no buy-credit link**, and **no out-of-time/expired blocked screen**. The legacy `AccountRepository` is a dead stub emitting `null`. (`WarrenWalletSettingsScreen.kt`, `AccountRepository.kt:14-27`)
 4. **Android has no out-of-time/expired UX and no expiry notification.** No `ExpiredAccountErrorView` equivalent; `InAppNotification` has no AccountExpiry variant. A user whose subscription lapses gets no in-app signal or recovery screen. (`InAppNotification.kt:14-43`)
 
-**P1 — significant UX gaps**
+**P1, significant UX gaps**
 5. Android: no max-devices / "too many devices" UX; no payment-completed polling; logout is a no-op (only "Erase wallet" tears down).
 6. iOS: vestigial Mullvad concepts (delete account, restore purchases, account-number login) confuse the Warren wallet model and should be removed or re-mapped.
 7. Both mobile platforms lack a clear "Buy/manage subscription" link from the account surface comparable to Electron's `Buy more credit`. (iOS onboarding has a `warrenbrowse.com/pricing` SFSafari link but it is not on the account screen.)
 
-**P2 — polish**
+**P2, polish**
 8. Android wallet create/import/backup and device/voucher screens use hardcoded English strings (no string resources / i18n).
 9. Android device list lacks names-vs-current-device affordances and created-date formatting parity with Electron/iOS.
 
 ## Notes / caveats
 - The WarrenWalletCoordinator IS wired on iOS (OnboardingWizard generate/import + Settings backup/erase/identity), so wallet *identity* parity is reasonable; the gap is entirely on the **account/subscription/payment surface** still being Mullvad-shaped.
-- Android's backend depth (signed JNI calls to `/v1/subscription`, `/v1/register`, `/v1/devices`) is real and matches what the audit prompt stated — the deficiency is purely presentation/UX (dev scaffold, no notifications, no expired flow), not plumbing.
+- Android's backend depth (signed JNI calls to `/v1/subscription`, `/v1/register`, `/v1/devices`) is real and matches what the audit prompt stated, the deficiency is purely presentation/UX (dev scaffold, no notifications, no expired flow), not plumbing.
 - No source files were modified during this audit.

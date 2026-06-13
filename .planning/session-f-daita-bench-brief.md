@@ -1,4 +1,4 @@
-# Session F — B.1.8 bench Hetzner DAITA overhead
+# Session F, B.1.8 bench Hetzner DAITA overhead
 
 > Brief d'agent autonome warren-core (bench scripts) + warren-app (consume résultat).
 > Doctrine §0.0 INVIOLABLE destructive git + §0.5 full autonomy.
@@ -17,16 +17,16 @@
 
 Sous-phases (séquentielles autonomes) :
 
-1. **F.1 — Pre-flight checklist + provisioning Hetzner cross-DC FR** (~1-2h)
-2. **F.2 — Deploy warren-tunnel client + warren-exit + warren-relay** (~1h)
-3. **F.3 — Bench baseline DAITA OFF (5 min sustained)** (~30 min)
-4. **F.4 — Bench DAITA ON (5 min sustained)** (~30 min)
-5. **F.5 — Analyse overhead + verdict** (~30 min)
-6. **F.6 — Cleanup nodes + rapport** (~30 min)
+1. **F.1, Pre-flight checklist + provisioning Hetzner cross-DC FR** (~1-2h)
+2. **F.2, Deploy warren-tunnel client + warren-exit + warren-relay** (~1h)
+3. **F.3, Bench baseline DAITA OFF (5 min sustained)** (~30 min)
+4. **F.4, Bench DAITA ON (5 min sustained)** (~30 min)
+5. **F.5, Analyse overhead + verdict** (~30 min)
+6. **F.6, Cleanup nodes + rapport** (~30 min)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver tout fichier modified ou untracked warren-core + warren-app. Si état inattendu : escalader.
 
@@ -47,7 +47,7 @@ Escalade `AskUserQuestion` SEULEMENT si :
 
 Décisions tactiques agent autorisées :
 - Type machine Hetzner : CX31 recommandé (~CPU 2-core, RAM 8 GB, suffisant pour Quinn 800 Mbps)
-- DC cross-DC pair : FSN1 (Falkenstein DE) + NBG1 (Nuremberg DE) — proche, ~10-20 ms RTT. Ou FSN1 + HEL1 (Helsinki) si plus représentatif marché FR. Recommandation FSN1+NBG1 d'abord (faster bench).
+- DC cross-DC pair : FSN1 (Falkenstein DE) + NBG1 (Nuremberg DE), proche, ~10-20 ms RTT. Ou FSN1 + HEL1 (Helsinki) si plus représentatif marché FR. Recommandation FSN1+NBG1 d'abord (faster bench).
 - Réutiliser nodes existants si présents (`hcloud server list --context warren`) vs fresh provision, à l'agent de juger
 - Duration bench : 5 min sustained par direction (DAITA OFF / DAITA ON), pas plus (coût + cohérence M4.E references)
 - Bench tool : `warren_bench_multihop` (warren-core/bench, existing) ou `warren_client_bench` (single-hop). Recommandation multi-hop pour exercer pre-HPKE padding M5.B.1.5
@@ -90,7 +90,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.1 — Pre-flight checklist + provisioning Hetzner cross-DC FR (~1-2h)
+## F.1, Pre-flight checklist + provisioning Hetzner cross-DC FR (~1-2h)
 
 ### Scope F.1
 
@@ -123,7 +123,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.2 — Deploy warren-tunnel client + warren-exit + warren-relay (~1h)
+## F.2, Deploy warren-tunnel client + warren-exit + warren-relay (~1h)
 
 ### Scope F.2
 
@@ -160,7 +160,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.3 — Bench baseline DAITA OFF (5 min sustained) (~30 min)
+## F.3, Bench baseline DAITA OFF (5 min sustained) (~30 min)
 
 ### Scope F.3
 
@@ -194,7 +194,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.4 — Bench DAITA ON (5 min sustained) (~30 min)
+## F.4, Bench DAITA ON (5 min sustained) (~30 min)
 
 ### Scope F.4
 
@@ -224,7 +224,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.5 — Analyse overhead + verdict (~30 min)
+## F.5, Analyse overhead + verdict (~30 min)
 
 ### Scope F.5
 
@@ -254,7 +254,7 @@ Lire memory `feedback_warren_hetzner_bench_ops_gotchas` pour gotchas :
 
 ---
 
-## F.6 — Cleanup nodes + rapport (~30 min)
+## F.6, Cleanup nodes + rapport (~30 min)
 
 ### Scope F.6
 
@@ -360,7 +360,7 @@ Escalation NO-GO si overhead > 25%.
 ## 7. Memory updates attendus
 
 À ajouter dans warren-core memory :
-- `warren_daita_bench_v1.md` — metrics DAITA OFF baseline + DAITA ON + overhead % + DC pair + machine spec preset Mullvad v2 + verdict
+- `warren_daita_bench_v1.md`, metrics DAITA OFF baseline + DAITA ON + overhead % + DC pair + machine spec preset Mullvad v2 + verdict
 - Update index MEMORY.md
 
 À ajouter dans warren-app memory :

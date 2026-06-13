@@ -1,4 +1,4 @@
-# Session Account-Dashboard — Desktop subscription dashboard (#8)
+# Session Account-Dashboard, Desktop subscription dashboard (#8)
 
 > Brief d'agent autonome warren-app desktop Electron.
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -8,23 +8,23 @@
 **Coût Hetzner** : 0 EUR.
 **Pré-conditions** :
 - warren-app `main` HEAD `eced6c8613+`
-- **Session M4.H.I livrée** (subscription store + endpoints + signup tunnel) — bloquant strict
-- M4.H.I.8 mini-dashboard livré déjà (renewal + expiry minimal) — cette session le finalise/étend
+- **Session M4.H.I livrée** (subscription store + endpoints + signup tunnel), bloquant strict
+- M4.H.I.8 mini-dashboard livré déjà (renewal + expiry minimal), cette session le finalise/étend
 
 **Objectif** : finaliser dashboard subscription Electron desktop : status complet + payment history + renewal CTA + invoice/receipt links + voucher redemption + email opt-in management.
 
 Sous-phases (séquentielles autonomes) :
 
-1. **Acc.1 — Setup worktree** (~30 min)
-2. **Acc.2 — gRPC endpoints subscription detail + payment history** (~1j)
-3. **Acc.3 — UI AccountDashboard.tsx Electron étendu** (~1-2j)
-4. **Acc.4 — Voucher redemption flow** (~0.5-1j)
-5. **Acc.5 — Email opt-in management + invoice download** (~0.5j)
-6. **Acc.6 — Tests + rapport + cleanup** (~0.5j)
+1. **Acc.1, Setup worktree** (~30 min)
+2. **Acc.2, gRPC endpoints subscription detail + payment history** (~1j)
+3. **Acc.3, UI AccountDashboard.tsx Electron étendu** (~1-2j)
+4. **Acc.4, Voucher redemption flow** (~0.5-1j)
+5. **Acc.5, Email opt-in management + invoice download** (~0.5j)
+6. **Acc.6, Tests + rapport + cleanup** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard.
 
@@ -78,7 +78,7 @@ find desktop/packages/mullvad-vpn/src/renderer/components -name '*ccount*' | hea
 
 ---
 
-## 2. Acc.2 — gRPC endpoints subscription detail + payment history (~1j)
+## 2. Acc.2, gRPC endpoints subscription detail + payment history (~1j)
 
 ### Scope
 
@@ -100,7 +100,7 @@ find desktop/packages/mullvad-vpn/src/renderer/components -name '*ccount*' | hea
 
 ---
 
-## 3. Acc.3 — UI AccountDashboard.tsx Electron étendu (~1-2j)
+## 3. Acc.3, UI AccountDashboard.tsx Electron étendu (~1-2j)
 
 ### Scope
 
@@ -123,7 +123,7 @@ find desktop/packages/mullvad-vpn/src/renderer/components -name '*ccount*' | hea
 
 ---
 
-## 4. Acc.4 — Voucher redemption flow (~0.5-1j)
+## 4. Acc.4, Voucher redemption flow (~0.5-1j)
 
 ### Scope
 
@@ -157,7 +157,7 @@ Si système voucher existant warren-api (vs cash code M4.H.I.5) :
 
 ---
 
-## 5. Acc.5 — Email opt-in management + invoice download (~0.5j)
+## 5. Acc.5, Email opt-in management + invoice download (~0.5j)
 
 ### Scope
 
@@ -172,7 +172,7 @@ Si système voucher existant warren-api (vs cash code M4.H.I.5) :
 
 ---
 
-## 6. Acc.6 — Tests + rapport + cleanup (~0.5j)
+## 6. Acc.6, Tests + rapport + cleanup (~0.5j)
 
 ### Scope
 

@@ -1,6 +1,6 @@
-# Session Q — Instrumented bench reveals Quinn datagram silent drop
+# Session Q, Instrumented bench reveals Quinn datagram silent drop
 
-> Status : **GO ULTIMATE** — root cause Session N bug isolated to Quinn client-side datagram pipeline
+> Status : **GO ULTIMATE**, root cause Session N bug isolated to Quinn client-side datagram pipeline
 > Date : 2026-05-22 (started 2026-05-21 evening UTC)
 > Cost réel : **~0.02 EUR** (3 ccx13 ~30 min)
 > §0.0 INVIOLABLE git respecté. §0.5 plein mandat exercé. Production warren-exit-1 + warren-backend-api intacts.
@@ -43,7 +43,7 @@ Bench Hetzner cross-DC reprovisionné identique Session N + binaires Session P (
 
 Striking pattern : **`sent_padding` ceases incrementing after ~13 s** (locked at 324, expected ~200/s × 60s = 12000 with Tamaraw p=5ms). `sent_real` still increments (39 over 60s = 0.65/s = ping rate).
 
-This means `client.send_daita_padding()` (which internally calls `client.send(dummy)`) stops returning `Ok(())` after ~13s. The DAITA timer task keeps firing but each `send_daita_padding()` errs (silently — `tracing::trace!`).
+This means `client.send_daita_padding()` (which internally calls `client.send(dummy)`) stops returning `Ok(())` after ~13s. The DAITA timer task keeps firing but each `send_daita_padding()` errs (silently, `tracing::trace!`).
 
 Cross-checking the Quinn datagram source code (`vendor/quinn-fork/quinn-proto/src/connection/datagrams.rs::send`) :
 
@@ -127,8 +127,8 @@ The bug surface is **DAITA-induced 200/s constant-rate dummy injection into a Qu
 
 ## Caveats restants
 
-- B.1.8 caveat reste OPEN — overhead measurement impossible jusqu'au fix Quinn datagram pipeline
-- CRITICAL bug DAITA multi-hop reste actif en production — **NE PAS activer `--enable-daita` multi-hop sur warren-exit-1** jusqu'au fix Session R
+- B.1.8 caveat reste OPEN, overhead measurement impossible jusqu'au fix Quinn datagram pipeline
+- CRITICAL bug DAITA multi-hop reste actif en production, **NE PAS activer `--enable-daita` multi-hop sur warren-exit-1** jusqu'au fix Session R
 - Session R must validate fix with re-bench (cost ~0.02 EUR) before declaring B.1.8 closed
 
 ---

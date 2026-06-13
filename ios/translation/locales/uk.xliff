@@ -2589,7 +2589,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="This can be useful if the API is censored but Mullvad’s bridge servers are not." xml:space="preserve" approved="yes">
         <source>This can be useful if the API is censored but Mullvad’s bridge servers are not.</source>
-        <target state="final">Це може бути корисно, якщо API піддається цензурі, а сервери-мости Mullvad — ні.</target>
+        <target state="final">Це може бути корисно, якщо API піддається цензурі, а сервери-мости Mullvad, ні.</target>
         <note/>
       </trans-unit>
       <trans-unit id="This can be useful when you are not affected by censorship." xml:space="preserve" approved="yes">
@@ -2839,7 +2839,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="Valid range: %d - %d" xml:space="preserve" approved="yes">
         <source>Valid range: %1$d - %2$d</source>
-        <target state="final">Допустимий діапазон: %1$d–%2$d</target>
+        <target state="final">Допустимий діапазон: %1$d-%2$d</target>
         <note/>
       </trans-unit>
       <trans-unit id="Valid ranges: %@" xml:space="preserve" approved="yes">
@@ -2889,7 +2889,7 @@ Do you want to remove the saved account number?</source>
       </trans-unit>
       <trans-unit id="Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection." xml:space="preserve" approved="yes">
         <source>Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection.</source>
-        <target state="final">Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий — це лише додатковий рівень захисту.</target>
+        <target state="final">Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий, це лише додатковий рівень захисту.</target>
         <note/>
       </trans-unit>
       <trans-unit id="Warsaw" xml:space="preserve" approved="yes">
@@ -3037,7 +3037,7 @@ We strongly believe in retaining as little data as possible because we want you 
 
 У деяких ситуаціях, указаних у нашій політиці конфіденційності, ми можемо обробляти персональні дані, які ви вирішили нам надіслати, наприклад, написавши нам лист.
 
-Наша позиція — зберігати мінімум даних, щоб гарантувати вашу анонімність.</target>
+Наша позиція, зберігати мінімум даних, щоб гарантувати вашу анонімність.</target>
         <note/>
       </trans-unit>
       <trans-unit id="You have no more VPN time left on this account. " xml:space="preserve" approved="yes">

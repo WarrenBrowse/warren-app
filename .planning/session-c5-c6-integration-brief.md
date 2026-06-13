@@ -1,4 +1,4 @@
-# Session C.5 / C.6 — Integration brief (ApplicationCoordinator + Settings)
+# Session C.5 / C.6, Integration brief (ApplicationCoordinator + Settings)
 
 Wire-in steps for the production-ready Warren wallet flow + Warren settings
 views into the existing iOS app shell. The components themselves are already
@@ -16,7 +16,7 @@ required after each edit).
 ## 1. Add `hasCompletedWarrenOnboarding` to `AppPreferences`
 
 `ios/WarrenVPN/Storage/AppPreferences.swift` (or wherever `AppPreferencesDataSource`
-lives — search for `isShownOnboarding` to find the file).
+lives, search for `isShownOnboarding` to find the file).
 
 Add the flag mirroring the existing `isShownOnboarding`/`isAgreedToTermsOfService`
 pattern :
@@ -46,14 +46,14 @@ case warrenOnboarding
 ```
 
 Add to the route group switch (search `case .tos:` for the modal grouping
-attribute — `warrenOnboarding` should be in the same `.primary` group as
+attribute, `warrenOnboarding` should be in the same `.primary` group as
 `.tos`).
 
 ---
 
 ## 3. Wire `evaluateNextRoutes()` in `ApplicationCoordinator.swift`
 
-`ios/WarrenVPN/Coordinators/ApplicationCoordinator.swift` — `evaluateNextRoutes()`
+`ios/WarrenVPN/Coordinators/ApplicationCoordinator.swift`, `evaluateNextRoutes()`
 (line ~339 in the post-C.2 file).
 
 **Before** (after C.2 rebrand) :
@@ -91,7 +91,7 @@ private func evaluateNextRoutes() -> [AppRoute] {
 
 ## 4. Add the presenter
 
-`ApplicationCoordinator.swift` — add next to `presentTOS(animated:completion:)`
+`ApplicationCoordinator.swift`, add next to `presentTOS(animated:completion:)`
 (line ~382) :
 
 ```swift
@@ -191,7 +191,7 @@ Add the corresponding cases to the `SettingsRoute` (or equivalent) enum.
 ## 7. Wire the Failover banner
 
 `ios/WarrenVPN/View controllers/Tunnel/TunnelViewController.swift` (or the
-connection-details parent) — observe App Group UserDefaults keys written
+connection-details parent), observe App Group UserDefaults keys written
 by `PacketTunnelProvider.broadcastEvent` (cf.
 `.planning/c4-packet-tunnel-provider-quinn-design.md` §2.3) :
 
@@ -261,8 +261,8 @@ After each edit :
 
 ## 11. References
 
-- `.planning/session-c-report.md` — C.5/C.6 components inventory
-- `.planning/c4-packet-tunnel-provider-quinn-design.md` — App Group event keys
-- `.planning/session-c-followup-briefs.md` — remaining sub-phases
-- Memory `warren_session_c_c1_delivered` — full session context
-- Memory `warren_session_h_delivered` — analogous Electron WarrenPubKeyWarning wire-in pattern
+- `.planning/session-c-report.md`, C.5/C.6 components inventory
+- `.planning/c4-packet-tunnel-provider-quinn-design.md`, App Group event keys
+- `.planning/session-c-followup-briefs.md`, remaining sub-phases
+- Memory `warren_session_c_c1_delivered`, full session context
+- Memory `warren_session_h_delivered`, analogous Electron WarrenPubKeyWarning wire-in pattern

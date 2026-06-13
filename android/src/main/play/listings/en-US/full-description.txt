@@ -1,4 +1,4 @@
-Free the internet from data collection with Mullvad VPN – a service that helps keep your online activity, identity, and location private. Only €5/month.
+Free the internet from data collection with Mullvad VPN, a service that helps keep your online activity, identity, and location private. Only €5/month.
 
 <b>Get started</b>
 
@@ -6,9 +6,9 @@ Free the internet from data collection with Mullvad VPN – a service that helps
 2. Create an account.
 3. Add time to your account via our website or vouchers.
 
-To make sure to block third-party cookies and other tracking technologies – use Mullvad VPN together with Mullvad Browser (free of charge).
+To make sure to block third-party cookies and other tracking technologies, use Mullvad VPN together with Mullvad Browser (free of charge).
 
-<b>ANONYMOUS ACCOUNTS – NO ACTIVITY LOGS</b>
+<b>ANONYMOUS ACCOUNTS, NO ACTIVITY LOGS</b>
 &#8226;&#8195;Creating an account requires no personal info - not even an email address.
 &#8226;&#8195;We keep no activity logs.
 &#8226;&#8195;We offer the possibility to pay anonymously with cash or cryptocurrency.

@@ -1,4 +1,4 @@
-# C.4 PacketTunnelProvider Quinn design — iOS NetworkExtension over warren-tunnel
+# C.4 PacketTunnelProvider Quinn design, iOS NetworkExtension over warren-tunnel
 
 Design document for sub-phase C.4 of Session C iOS fork brief. Replaces the
 upstream Mullvad WireGuardAdapter pattern with a Warren Quinn-based packet
@@ -13,25 +13,25 @@ broadcasting, killswitch via Disconnect on Demand).
 ### C.4.0 delivered (2026-05-21)
 
 - `warren-core::IosTun` (`warren-core/crates/warren-tunnel/src/ios_tun.rs`,
-  157 LOC) — `PacketDevice` impl bridging `NEPacketTunnelFlow` via
+  157 LOC), `PacketDevice` impl bridging `NEPacketTunnelFlow` via
   symmetric inbound/outbound mpsc channels (no raw fd, no unsafe). 5
   host unit tests cover round-trip + clone-shared-channels + try_recv
   empty.
-- `warren-ios::warren_tunnel_ffi` refactor — Box<Arc<WarrenTunnelHandleImpl>>
+- `warren-ios::warren_tunnel_ffi` refactor, Box<Arc<WarrenTunnelHandleImpl>>
   lifecycle, multi-thread Tokio runtime, IosTun ownership, spawned
   outbound dispatcher draining `IosTun::next_outbound`, atomic state
   counters surfaced via `warren_tunnel_status`.
 - 3 new FFI entry points :
-  - `warren_tunnel_inject_inbound_packet(handle, data, len)` — Swift →
+  - `warren_tunnel_inject_inbound_packet(handle, data, len)`, Swift →
     Rust uplink push (consumed by `readPackets` loop).
-  - `warren_tunnel_set_outbound_callback(handle, cb, ctx)` — registers
+  - `warren_tunnel_set_outbound_callback(handle, cb, ctx)`, registers
     plain-C-fn-pointer downlink callback (Rust dispatcher → Swift
     `writePackets`).
-  - `warren_tunnel_set_event_callback(handle, cb, ctx)` — registers
+  - `warren_tunnel_set_event_callback(handle, cb, ctx)`, registers
     tagged-event callback (Connected / Disconnected / Reconnecting /
     Failover / NatPmp*).
 - Swift `WarrenQuinnAdapter` (`ios/WarrenRustRuntime/WarrenQuinnAdapter.swift`,
-  390 LOC) — final class (not actor for callback ergonomics),
+  390 LOC), final class (not actor for callback ergonomics),
   `Unmanaged.passRetained` self-ref as FFI context, `@convention(c)`
   `outboundCallback` and `eventCallbackBridge` mapping C → Swift enum
   variants, inbound `Task` looping on `packetFlow.readPackets`, IPv4/IPv6
@@ -54,7 +54,7 @@ fixes :
   dependency entirely (C.4.4 path).
 - **`WireGuardGoBridge` Legacy Target** invokes
   `build-wireguard-go.sh` which `make`s
-  `wireguard-apple/Sources/WireGuardKitGo` — directory absent in the
+  `wireguard-apple/Sources/WireGuardKitGo`, directory absent in the
   Warren stub `wireguard-apple` submodule. **Fix applied** : early-skip
   in `build-wireguard-go.sh` when the directory is missing.
 - **`WarrenMockData/{MullvadREST,MullvadTypes}` directories** kept
@@ -78,7 +78,7 @@ and now fails on deeper C.2 rebrand incompleteness :
   continuation, commit on origin/main). Sed-bulk-replaced 5 module name
   patterns (`MullvadREST/Types/Settings/Logging/RustRuntime` →
   `Warren*`) across 58 .swift files. `MullvadVPN` + `MullvadApi*` class
-  names preserved (intentional — non-module-name refs). The previous
+  names preserved (intentional, non-module-name refs). The previous
   704 number was over-counted ; once filtered to actual module-name
   imports + qualified refs, the real footprint was 58 files.
 - **`WarrenLogging` cannot resolve module `Logging`** (provided by
@@ -651,6 +651,6 @@ fall back to reconnect-on-path-change (already wired via
 - `warren-backoff` crate : `warren-core/crates/warren-backoff/src/lib.rs` (HANDSHAKE backoff = 15s, cf. M4.H.G)
 - Session B memory : DAITA v2 multi-conn E2E (`pump_multi_bidirectional_with_daita`), failover (`select_failover_alternative_for_attempt`, `report_exit_down`)
 - Session E memory : exit_id stable 16-byte cross-repo (TOFU pubkey pinning A.4)
-- Session F memory : `pump_*_with_daita` instable cross-DC sustained (warren-core M5.B.1.X open) — may affect C.4 multi-hop+DAITA testing
+- Session F memory : `pump_*_with_daita` instable cross-DC sustained (warren-core M5.B.1.X open), may affect C.4 multi-hop+DAITA testing
 - Upstream Mullvad PacketTunnelProvider : `ios/PacketTunnel/PacketTunnelProvider/PacketTunnelProvider.swift`
 - Apple NetworkExtension framework documentation : https://developer.apple.com/documentation/networkextension/nepackettunnelprovider

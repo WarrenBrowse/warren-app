@@ -1,4 +1,4 @@
-# Session H — DAITA full delivery (exit-side + multi-hop + defense in depth + bench)
+# Session H, DAITA full delivery (exit-side + multi-hop + defense in depth + bench)
 
 > Brief autonome warren-core (surface principale) + warren-app (pin bump).
 > Doctrine §0.0 INVIOLABLE git + §0.5 plein mandat + §0.6 worktree séparé obligatoire.
@@ -15,17 +15,17 @@
 
 Sous-phases (séquentielles) :
 
-1. **H.1 — Exit-side aggregation infra** (~2j)
-2. **H.2 — Wire exit-side `pump_multi_bidirectional_with_daita`** (~1j)
-3. **H.3 — Multi-hop DAITA client-side wiring** (~2j)
-4. **H.4 — Dummy filter defense-in-depth cross-cutting** (~0.5j)
-5. **H.5 — Integration tests end-to-end** (~1j)
-6. **H.6 — Hetzner cross-DC bench full DAITA** (~0.5j)
-7. **H.7 — Rapport + memory + commit + push + cleanup** (~0.5j)
+1. **H.1, Exit-side aggregation infra** (~2j)
+2. **H.2, Wire exit-side `pump_multi_bidirectional_with_daita`** (~1j)
+3. **H.3, Multi-hop DAITA client-side wiring** (~2j)
+4. **H.4, Dummy filter defense-in-depth cross-cutting** (~0.5j)
+5. **H.5, Integration tests end-to-end** (~1j)
+6. **H.6, Hetzner cross-DC bench full DAITA** (~0.5j)
+7. **H.7, Rapport + memory + commit + push + cleanup** (~0.5j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver WIP poka warren-app + warren-core. Submodules warren-core preserved. Vendor symlink session G nettoyé.
 
@@ -41,10 +41,10 @@ Plein mandat. Escalade `AskUserQuestion` SEULEMENT si :
 5. **Spécifique H** : si exit-side aggregation nécessite breaking change protocole (e.g. nouveau frame Setup) ou refactor pump architecture, escalade pour validation archi
 
 Décisions tactiques agent autorisées (déjà arrêtées) :
-- Exit-side DaitaState **per-session** (1 par Ed25519 identity, shared across N conns) — aligned avec `daita_spec` per session existant
-- Multi-hop DAITA v1 = **client-only** (defense uplink) — exit-side multi-hop = follow-up M5.B.2
+- Exit-side DaitaState **per-session** (1 par Ed25519 identity, shared across N conns), aligned avec `daita_spec` per session existant
+- Multi-hop DAITA v1 = **client-only** (defense uplink), exit-side multi-hop = follow-up M5.B.2
 - Dummy filter `pump_quic_to_tun` cross-cutting : casse le test contract intentionnel, remplacement test
-- Bench H.6 stack production binaire (`warren-client --enable-daita --use-tun --num-conns N`) — pas le binaire bench-only
+- Bench H.6 stack production binaire (`warren-client --enable-daita --use-tun --num-conns N`), pas le binaire bench-only
 
 ---
 
@@ -63,7 +63,7 @@ Tous les commits + push depuis ce worktree. Cleanup en fin de session.
 
 ---
 
-## H.1 — Exit-side aggregation infra (~2j)
+## H.1, Exit-side aggregation infra (~2j)
 
 ### Scope H.1
 
@@ -83,14 +83,14 @@ Construire l'analog server-side de `MultiSession` côté client : agréger N con
 
 ---
 
-## H.2 — Wire exit-side `pump_multi_bidirectional_with_daita` (~1j)
+## H.2, Wire exit-side `pump_multi_bidirectional_with_daita` (~1j)
 
 ### Scope H.2
 
 Refactor `accept_forever_with_tun` pour utiliser ServerMultiSession :
 
 1. **H.2.1** Sur primary handshake : créer ServerMultiSession avec 1 conn + DaitaState from daita_spec, spawn pump_multi_bidirectional_with_daita
-2. **H.2.2** Sur secondary handshake : push conn into ServerMultiSession, spawn additional downlink task (pump_multi_bidirectional_with_daita exposes N conns at spawn time — donc soit on attend tous les N avant de spawn, soit on étend l'API)
+2. **H.2.2** Sur secondary handshake : push conn into ServerMultiSession, spawn additional downlink task (pump_multi_bidirectional_with_daita exposes N conns at spawn time, donc soit on attend tous les N avant de spawn, soit on étend l'API)
 3. **H.2.3** Decision tactique : attendre N=total_connections avant de spawn pump (timeout limité)
 4. **H.2.4** Rate-limit compat : la couche per-identity bucket reste fonctionnelle (apply_to chaque conn ou décoder dans le pump shared)
 5. **H.2.5** Tests : exit délivre dummies en plus des paquets réels, downlink défense active
@@ -104,7 +104,7 @@ Refactor `accept_forever_with_tun` pour utiliser ServerMultiSession :
 
 ---
 
-## H.3 — Multi-hop DAITA client-side wiring (~2j)
+## H.3, Multi-hop DAITA client-side wiring (~2j)
 
 ### Scope H.3
 
@@ -123,14 +123,14 @@ Activer DAITA dans le path multi-hop `run_multi_hop` / `MultiHopClient`.
 
 ---
 
-## H.4 — Dummy filter defense-in-depth (~0.5j)
+## H.4, Dummy filter defense-in-depth (~0.5j)
 
 ### Scope H.4
 
-Ajouter `is_daita_dummy` filter dans les pumps non-DAITA (cas où sender DAITA mais receiver disabled — défense robuste).
+Ajouter `is_daita_dummy` filter dans les pumps non-DAITA (cas où sender DAITA mais receiver disabled, défense robuste).
 
 1. **H.4.1** Modifier `pump_quic_to_tun` + `pump_quic_to_tun_rate_limited` : filter dummies avant tun.send
-2. **H.4.2** Revisiter test contract `pump_multi_with_daita_disabled_still_filters_dummy_first_byte` — soit invert l'assertion, soit supprimer (le nouveau comportement = filter universel)
+2. **H.4.2** Revisiter test contract `pump_multi_with_daita_disabled_still_filters_dummy_first_byte`, soit invert l'assertion, soit supprimer (le nouveau comportement = filter universel)
 3. **H.4.3** Doc le contract change dans pump.rs module doc
 
 ### Critères GO H.4
@@ -140,7 +140,7 @@ Ajouter `is_daita_dummy` filter dans les pumps non-DAITA (cas où sender DAITA m
 
 ---
 
-## H.5 — Integration tests end-to-end (~1j)
+## H.5, Integration tests end-to-end (~1j)
 
 ### Scope H.5
 
@@ -157,7 +157,7 @@ Vérifier que le system complet fonctionne :
 
 ---
 
-## H.6 — Hetzner cross-DC bench full DAITA (~0.5j) (cost cap 0.10 EUR)
+## H.6, Hetzner cross-DC bench full DAITA (~0.5j) (cost cap 0.10 EUR)
 
 ### Scope H.6
 
@@ -185,7 +185,7 @@ Valider empiriquement en production conditions :
 
 ---
 
-## H.7 — Rapport + memory + commit + push + cleanup (~0.5j)
+## H.7, Rapport + memory + commit + push + cleanup (~0.5j)
 
 ### Scope H.7
 

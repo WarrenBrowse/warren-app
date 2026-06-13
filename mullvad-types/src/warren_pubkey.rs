@@ -4,7 +4,7 @@
 //!
 //! **Format**: a Warren **SS58 address** (Substrate/Polkadot address
 //! format, network prefix [`WARREN_SS58_PREFIX`] = `13295`). Every
-//! address is 47–49 characters and starts with `wb` (Warren Browse),
+//! address is 47-49 characters and starts with `wb` (Warren Browse),
 //! e.g. `wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB`. Any other
 //! shape is rejected at construction (`parse, don't validate`).
 //!

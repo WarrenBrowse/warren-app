@@ -1,6 +1,6 @@
-# Session W — `--daita-machine` CLI flag for deterministic pool pick
+# Session W, `--daita-machine` CLI flag for deterministic pool pick
 
-> Status : **GO ULTIMATE** — bench / ops debug surface added
+> Status : **GO ULTIMATE**, bench / ops debug surface added
 > Date : 2026-05-22
 > Cost réel : **0 EUR** (in-process only)
 > §0.0 INVIOLABLE git respecté. Production warren-exit-1 + warren-backend-api intacts.
@@ -80,6 +80,6 @@ warren-exit --multihop --enable-daita --daita-machine bogus ...
 
 ## Next steps (hors bench)
 
-1. **Pump-side blocking enforcement** : queue real packets during `BlockOutgoing` window (full Tamaraw "block + pad" defense property — `bypass: true` currently lets real packets through alongside padding). Architecture decision required : product tradeoff between defense quality and throughput ceiling (Tamaraw caps to ~200 pkt/s → ~2 Mbps).
+1. **Pump-side blocking enforcement** : queue real packets during `BlockOutgoing` window (full Tamaraw "block + pad" defense property, `bypass: true` currently lets real packets through alongside padding). Architecture decision required : product tradeoff between defense quality and throughput ceiling (Tamaraw caps to ~200 pkt/s → ~2 Mbps).
 2. **Multi-hop IP negotiation v1 multi-client** : replace POC `10.66.0.2/24` hardcoded in `run_multi_hop_with_tun`. Requires HPKE-sealed Setup/SetupAck-equivalent over the multi-hop datagram channel.
 3. **DAITA UI/docs announce** : surface defense status (active machine, padding emit counters) in desktop UI + landing page.

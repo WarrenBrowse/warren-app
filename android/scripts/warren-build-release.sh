@@ -25,7 +25,7 @@
 #   AAB : app/build/outputs/bundle/prodRelease/app-prod-release.aab
 #
 # Play Store internal-test upload procedure (manual, requires Google
-# Play Console access — cannot be automated from a fresh checkout):
+# Play Console access, cannot be automated from a fresh checkout):
 #   1. Open https://play.google.com/console -> Warren VPN -> Testing
 #      -> Internal testing.
 #   2. "Create new release". Upload the .aab from the path above.

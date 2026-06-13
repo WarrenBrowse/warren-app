@@ -169,7 +169,7 @@ Si `git status` non-clean ou HEAD inattendu : STOP, escalade poka.
 
 - Tous commentaires nouveaux en anglais (cf. `feedback_english_only_comments.md` warren-app).
 - Pas de step-tracking dans le code (`// M4.H.A.x` interdit).
-- Pas d'em-dash `—` n'importe où (chat, commit, code, docs).
+- Pas d'em-dash `, ` n'importe où (chat, commit, code, docs).
 - Pas de TODO laissé sans traitement (delete, fix, ou convert en doc).
 - Pas d'`unwrap()` / `expect()` en prod sans `# Panics` documenté.
 - Pas de `unsafe` (forbid global Warren).
@@ -271,4 +271,4 @@ Format frontmatter YAML + body. Inclure :
 - Pointeur `[[warren-m4e-delivered]]` (cross-repo memory warren-core)
 
 Indexer dans `MEMORY.md` warren-app :
-`- [M4.H.A delivered](warren_m4h_a_delivered.md) — verdict Linux fork E2E + SHA pin + caveats`
+`- [M4.H.A delivered](warren_m4h_a_delivered.md), verdict Linux fork E2E + SHA pin + caveats`

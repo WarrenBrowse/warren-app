@@ -1,4 +1,4 @@
-# Session P1-Hardening — Audit residus P1 + pre-prod GA hardening
+# Session P1-Hardening, Audit residus P1 + pre-prod GA hardening
 
 > Brief d'agent autonome warren-core (surface principale) + warren-app (mineur).
 > Doctrine §0.0 INVIOLABLE + §0.5 full autonomy + §0.6 worktree séparé obligatoire.
@@ -15,19 +15,19 @@
 
 Sous-phases (séquentielles autonomes, par priorité descendante) :
 
-1. **P1.0 — Setup worktree warren-core + warren-app dédiés** (~30 min)
-2. **P1.1 — Phase 2 résidus : /metrics Prometheus + root CancellationToken warren-exit** (~3-5j)
-3. **P1.2 — Sécurité P1 résidus (6 items)** (~5-7j)
-4. **P1.3 — Architecture P1 résidus (7 items)** (~5-7j)
-5. **P1.4 — Qualité Rust P1 résidus (~11 items)** (~7-10j)
-6. **P1.5 — Tests P1 ciblés (9 items)** (~3-5j)
-7. **P1.6 — Performance P1 (2 items)** (~2-3j)
-8. **P1.7 — Production readiness P1 (résidus 17 items)** (~7-10j)
-9. **P1.8 — Rapport final + memory + cleanup** (~1j)
+1. **P1.0, Setup worktree warren-core + warren-app dédiés** (~30 min)
+2. **P1.1, Phase 2 résidus : /metrics Prometheus + root CancellationToken warren-exit** (~3-5j)
+3. **P1.2, Sécurité P1 résidus (6 items)** (~5-7j)
+4. **P1.3, Architecture P1 résidus (7 items)** (~5-7j)
+5. **P1.4, Qualité Rust P1 résidus (~11 items)** (~7-10j)
+6. **P1.5, Tests P1 ciblés (9 items)** (~3-5j)
+7. **P1.6, Performance P1 (2 items)** (~2-3j)
+8. **P1.7, Production readiness P1 (résidus 17 items)** (~7-10j)
+9. **P1.8, Rapport final + memory + cleanup** (~1j)
 
 ---
 
-## 0.0 INVIOLABLE — pas de commande git destructive
+## 0.0 INVIOLABLE, pas de commande git destructive
 
 Cf. doctrine standard. Préserver fichiers modified/untracked.
 
@@ -89,7 +89,7 @@ Lire en parallèle `warren_audit_2026_05_21.md` + `warren_phase5_external_blocke
 
 ## 2. Items P1 à attaquer (extraits docs/AUDIT-2026-05-21.md §1-§7)
 
-### P1.2 — Sécurité (6 items)
+### P1.2, Sécurité (6 items)
 
 1. **bind explicite** : warren-api bind `0.0.0.0` vs `127.0.0.1` config explicite
 2. **legacy SNI** : drop legacy SNI patterns inutiles dans warren-tls
@@ -98,7 +98,7 @@ Lire en parallèle `warren_audit_2026_05_21.md` + `warren_phase5_external_blocke
 5. **DAITA `Box::leak`** : warren-tunnel daita.rs supprimer leak intentionnel + lifecycle propre
 6. **TLS resolver expect** : warren-tls expect → unwrap_or_else avec context
 
-### P1.3 — Architecture (7 items)
+### P1.3, Architecture (7 items)
 
 1. **ExitId dual** : nettoyage cross-crates post-Session E (verifier pas de duplication ExitId)
 2. **TUNNEL_IDLE_TIMEOUT mort** : code mort warren-tunnel à supprimer
@@ -108,9 +108,9 @@ Lire en parallèle `warren_audit_2026_05_21.md` + `warren_phase5_external_blocke
 6. **fdwa stale** : code `fdwa` (firewall daita?) potentiellement stale à audit/clean
 7. **E2E CI gap** : test E2E warren-client + warren-exit pas dans CI matrix
 
-### P1.4 — Qualité Rust (11 items)
+### P1.4, Qualité Rust (11 items)
 
-1. **lock-across-await** ios_tun + real_tun (cf. Session 5.B `IosTun::pair()` déjà fait — vérifier real_tun reste)
+1. **lock-across-await** ios_tun + real_tun (cf. Session 5.B `IosTun::pair()` déjà fait, vérifier real_tun reste)
 2. **clone ciphertext multihop** : warren-multihop hot path, Bytes::clone OK mais audit
 3. **format!/clone pump** : warren-tunnel pump hot path allocations
 4. **thiserror erase** : `#[error(...)]` strings sans `{}` génèrent code mort
@@ -122,7 +122,7 @@ Lire en parallèle `warren_audit_2026_05_21.md` + `warren_phase5_external_blocke
 10. **clippy nursery opt-in** : activer warnings nursery selectifs
 11. **pedantic clippy gradual** : activer pedantic groups via #[allow] explicite
 
-### P1.5 — Tests (9 items ciblés)
+### P1.5, Tests (9 items ciblés)
 
 1. **proptest natpmp-protocol malformed packets** : DÉJÀ FAIT Phase 4 fea1eeb (vérifier)
 2. **warren-tls ALPN mismatch test** : DÉJÀ FAIT Phase 3 (vérifier)
@@ -134,12 +134,12 @@ Lire en parallèle `warren_audit_2026_05_21.md` + `warren_phase5_external_blocke
 8. **warren-relay-selector property test** : geo filter + weight selection invariants
 9. **warren-natpmp-server allocator monotonic** : DÉJÀ FAIT 47e5f9f
 
-### P1.6 — Performance (2 items)
+### P1.6, Performance (2 items)
 
 1. **PGO build profile** : DÉJÀ FAIT Phase 5 (257721b pgo-gen/pgo-use + docs/27)
 2. **Quinn datagram buffer 8MiB recv + 4MiB send** : DÉJÀ FAIT Phase 5 (aa0627c)
 
-### P1.7 — Production readiness (résidus 17 items)
+### P1.7, Production readiness (résidus 17 items)
 
 1. **`/metrics` Prometheus** : warren-api expose Prometheus text-exposition (skeleton d5224ad fait, finir)
 2. **root CancellationToken unifié warren-exit** : shutdown propre cross-tasks

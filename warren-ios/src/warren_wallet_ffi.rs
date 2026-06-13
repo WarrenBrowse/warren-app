@@ -354,7 +354,7 @@ mod tests {
     }
 
     /// `warren_wallet_pubkey_ss58` must return a Warren SS58 address:
-    /// a `wb`-prefixed base58 string of 47–49 characters.
+    /// a `wb`-prefixed base58 string of 47-49 characters.
     #[test]
     fn pubkey_ss58_returns_wb_prefixed_address() {
         let seed = test_seed();

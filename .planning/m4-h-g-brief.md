@@ -359,7 +359,7 @@ dans une mini-phase ultérieure ou intégrée à une future itération.
 
 Warren-app :
 - Create `warren_m4h_g_delivered.md`
-- Index MEMORY.md : `- [M4.H.G delivered](warren_m4h_g_delivered.md) — <verdict> --bypass-cidr SSH inbound + Backoff tune 15s sub-cap`
+- Index MEMORY.md : `- [M4.H.G delivered](warren_m4h_g_delivered.md), <verdict> --bypass-cidr SSH inbound + Backoff tune 15s sub-cap`
 
 Warren-core (si commits push) :
 - Update memory si pertinent (`warren-client_bypass_cidr.md` ou
