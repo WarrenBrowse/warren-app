@@ -779,12 +779,39 @@ impl ParametersGenerator {
         // persisted setting > compiled default). Mirrors the
         // post-assemble wiring of `enable_daita`.
         params.n_connections = warren_tunnel_params::resolve_n_connections(n_connections_setting);
-        // Forward the IPv6 opt-in onto the Setup-frame features bitmask.
-        // Both single-hop and multi-hop now carry v6 (multi-hop via the
-        // control `/v2` IpRequestV2/IpAssignV2, cf. docs/31). When the exit
-        // cannot serve v6 it answers v4-only and the firewall keeps native
-        // IPv6 blocked. Mirrors the post-assemble wiring of `enable_daita`.
-        params.features = warren_tunnel_params::features_for(enable_ipv6);
+        // Forward the IPv6 opt-in onto the Setup-frame features bitmask,
+        // but only when the selected exit attests working IPv6 egress.
+        // A v4-only exit that receives the IPV6 feature allocates an
+        // in-tunnel v6 the client routes ::/0 into, yet cannot egress
+        // it: every v6 packet is silently dropped (FDC incident,
+        // 2026-06-12). Gating here connects such an exit v4-only; the
+        // firewall keeps native v6 blocked (no leak, no blackhole).
+        // The capability is carried per-relay in the signed list
+        // (`WarrenRelay::ipv6_egress`); resolve it for the exit we are
+        // about to dial (multi-hop via the descriptor's exit_id,
+        // single-hop via `params.exit_id`). Unknown exit (descriptor
+        // out-of-band of the cached list) => treat as no egress, the
+        // safe direction. Mirrors the post-assemble wiring of
+        // `enable_daita`.
+        let exit_attests_ipv6_egress = inner
+            .warren_relay_selector
+            .as_ref()
+            .and_then(|sel| {
+                let exit_id = params.multi_hop.as_ref().map_or(params.exit_id, |mh| {
+                    talpid_warren_tunnel::RelayExitId::from_bytes(*mh.exit.exit_id.as_bytes())
+                });
+                sel.relay_by_exit_id(&exit_id)
+            })
+            .is_some_and(warren_relay_selector::WarrenRelay::ipv6_egress);
+        if enable_ipv6 && !exit_attests_ipv6_egress {
+            log::info!(
+                "Warren: IPv6 is enabled but the selected exit does not attest IPv6 \
+                 egress; connecting IPv4-only to avoid blackholing in-tunnel IPv6"
+            );
+        }
+        let negotiate_ipv6 =
+            warren_tunnel_params::negotiate_in_tunnel_ipv6(enable_ipv6, exit_attests_ipv6_egress);
+        params.features = warren_tunnel_params::features_for(negotiate_ipv6);
         // Wire the multi-hop reconnect observer that bumps the
         // daemon-side WarrenStatusCache so the Electron UI
         // `reconnect_count` row advances on every successful reconnect.

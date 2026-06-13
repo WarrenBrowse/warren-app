@@ -812,6 +812,7 @@ mod tests {
                 city: "Stockholm".to_owned(),
                 weight: 100,
                 active: true,
+                ipv6_egress: false,
             }],
             server_key,
             generation,
