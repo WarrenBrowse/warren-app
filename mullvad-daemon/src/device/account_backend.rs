@@ -129,6 +129,16 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 #[derive(Clone)]
 pub struct WarrenRemoteAccountBackend {
     client: Arc<warren_api_client::WarrenApiClient>,
+    /// Secrets pulled from `GET /v1/checkout/{wpid}/voucher` whose
+    /// `POST /v1/register` has not succeeded yet, keyed by wpid. The
+    /// pull consumes the server-side single-use mapping, so a register
+    /// failure (API briefly down) would otherwise burn a PAID voucher:
+    /// the GUI keeps polling the same wpid, and this cache lets every
+    /// subsequent poll retry the register with the already-pulled
+    /// secret instead of 404-ing forever. In-memory only: a daemon
+    /// crash inside that window still loses the secret (accepted
+    /// residual, doc 35 section 7).
+    pulled_unregistered: Arc<std::sync::Mutex<std::collections::HashMap<String, String>>>,
 }
 
 impl WarrenRemoteAccountBackend {
@@ -139,6 +149,7 @@ impl WarrenRemoteAccountBackend {
     pub fn new(client: warren_api_client::WarrenApiClient) -> Self {
         Self {
             client: Arc::new(client),
+            pulled_unregistered: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
         }
     }
 }
@@ -168,6 +179,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
         let client = self.client.clone();
         let pubkey_ss58 = client.pubkey_ss58();
+        let pulled_unregistered = self.pulled_unregistered.clone();
         Box::pin(async move {
             // App-initiated purchase (doc 35): the GUI polls this same
             // entry point with the 32-hex wpid it generated before
@@ -175,23 +187,40 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // a voucher (16 Crockford-32 chars after normalization),
             // so the shape fully determines the path: pull the queued
             // secret from the API first, then redeem it as usual.
-            let voucher = match as_wpid(&voucher) {
-                Some(wpid) => match client
-                    .pull_pending_voucher(&wpid)
-                    .await
-                    .map_err(map_client_error)?
-                {
-                    Some(secret) => secret,
-                    // Webhook not landed yet (or id expired). Surface
-                    // the legacy INVALID_VOUCHER code so the GUI poll
-                    // treats it as "not ready, try again".
-                    None => {
-                        return Err(rest::Error::ApiError(
-                            rest::StatusCode::NOT_FOUND,
-                            mullvad_api::INVALID_VOUCHER.to_owned(),
-                        ));
+            let wpid = as_wpid(&voucher);
+            let voucher = match &wpid {
+                Some(wpid) => {
+                    // A previous poll may have pulled the secret and
+                    // then failed the register: the server-side
+                    // mapping is consumed, the cache is the only copy.
+                    let cached = pulled_unregistered.lock().expect("not poisoned").get(wpid).cloned();
+                    match cached {
+                        Some(secret) => secret,
+                        None => match client
+                            .pull_pending_voucher(wpid)
+                            .await
+                            .map_err(map_client_error)?
+                        {
+                            Some(secret) => {
+                                pulled_unregistered
+                                    .lock()
+                                    .expect("not poisoned")
+                                    .insert(wpid.clone(), secret.clone());
+                                secret
+                            }
+                            // Webhook not landed yet (or id expired).
+                            // Surface the legacy INVALID_VOUCHER code so
+                            // the GUI poll treats it as "not ready, try
+                            // again".
+                            None => {
+                                return Err(rest::Error::ApiError(
+                                    rest::StatusCode::NOT_FOUND,
+                                    mullvad_api::INVALID_VOUCHER.to_owned(),
+                                ));
+                            }
+                        },
                     }
-                },
+                }
                 None => voucher,
             };
 
@@ -204,7 +233,9 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // The pull above consumed the single-use mapping: a
             // transient register failure here would burn the paid
             // voucher. Retry transport-level failures a few times
-            // before giving up (server-side 4xx are final).
+            // before giving up (server-side 4xx are final); on a
+            // pulled wpid the cache above lets the NEXT GUI poll keep
+            // retrying the register even after these retries fail.
             let mut resp = None;
             let mut last_err = None;
             for attempt in 0u32..3 {
@@ -217,6 +248,13 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                         break;
                     }
                     Err(e @ warren_api_client::ClientError::ServerStatus { .. }) => {
+                        // Final server-side verdict. AlreadyRedeemed on a
+                        // cached secret means a previous attempt DID land
+                        // server-side: drop the cache entry so the poll
+                        // stops replaying it.
+                        if let Some(wpid) = &wpid {
+                            pulled_unregistered.lock().expect("not poisoned").remove(wpid);
+                        }
                         return Err(map_voucher_register_error(e));
                     }
                     Err(e) => last_err = Some(e),
@@ -225,11 +263,16 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             let resp = match resp {
                 Some(r) => r,
                 None => {
+                    // Transport still down: keep the cached secret (if
+                    // any) so the next poll retries the register.
                     return Err(map_voucher_register_error(
                         last_err.expect("loop ran at least once without success"),
                     ));
                 }
             };
+            if let Some(wpid) = &wpid {
+                pulled_unregistered.lock().expect("not poisoned").remove(wpid);
+            }
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
             let now_secs = u64::try_from(Utc::now().timestamp()).unwrap_or(0);
             let time_added = resp.expires_at.saturating_sub(now_secs);
@@ -566,6 +609,60 @@ mod tests {
                 assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
             }
             other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_wpid_cache_drops_on_final_server_verdict() {
+        // The pulled-secret cache must not replay a secret the server
+        // has definitively rejected: a ServerStatus outcome clears the
+        // entry, and the next poll goes back to the pull path (404 ->
+        // INVALID_VOUCHER), not an infinite replay of the dead secret.
+        let (api_url, state) = spawn_warren_api().await;
+        let key = SigningKey::from_bytes(&[67u8; 32]);
+        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+
+        // Pending entry WITHOUT a matching voucher row: the pull
+        // succeeds (secret cached) but the register 400s (final).
+        let (secret, _hash) = warren_api::generate_voucher_secret();
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let wpid = "aaaabbbbccccdddd0000111122223333";
+        state.pending_vouchers.put(wpid, &secret, now + 600);
+
+        let client = WarrenApiClient::new(api_url, key);
+        let backend = WarrenRemoteAccountBackend::new(client);
+
+        let err = backend
+            .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
+            .await
+            .expect_err("register of an unknown voucher must fail");
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 400);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(400, INVALID_VOUCHER), got {other:?}"),
+        }
+        assert!(
+            backend
+                .pulled_unregistered
+                .lock()
+                .expect("not poisoned")
+                .is_empty(),
+            "final server verdict must clear the cached secret"
+        );
+
+        // Next poll: pull path again, mapping already consumed -> 404.
+        let err = backend
+            .submit_voucher(pubkey_ss58, wpid.to_owned())
+            .await
+            .expect_err("consumed mapping must 404");
+        match err {
+            rest::Error::ApiError(code, _) => assert_eq!(code.as_u16(), 404),
+            other => panic!("expected ApiError(404, _), got {other:?}"),
         }
     }
 
