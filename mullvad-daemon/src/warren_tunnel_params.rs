@@ -103,6 +103,22 @@ pub fn features_for(enable_ipv6: bool) -> u32 {
     features
 }
 
+/// Whether to negotiate in-tunnel IPv6 for this tunnel: only when the
+/// user enabled IPv6 AND the selected exit attests working IPv6
+/// egress.
+///
+/// Negotiating v6 against an exit that cannot egress it blackholes
+/// every client v6 packet - the client routes `::/0` into the tunnel
+/// and nothing returns (observed on a v4-only exit, 2026-06-12). When
+/// the exit lacks egress we connect v4-only and the firewall keeps
+/// native IPv6 blocked (no leak, no blackhole). The egress capability
+/// is carried per-relay in the signed list (`WarrenRelay::ipv6_egress`,
+/// attested by the exit's startup probe).
+#[must_use]
+pub fn negotiate_in_tunnel_ipv6(enable_ipv6: bool, exit_attests_ipv6_egress: bool) -> bool {
+    enable_ipv6 && exit_attests_ipv6_egress
+}
+
 /// Assembles a full [`WarrenTunnelParameters`] for the given
 /// `retry_attempt`.
 ///
@@ -296,6 +312,27 @@ mod tests {
         assert_eq!(resolve_n_connections_from(Some("0"), Some(4)), 4);
         assert_eq!(resolve_n_connections_from(Some("64"), Some(4)), 4);
         assert_eq!(resolve_n_connections_from(Some(""), None), 8);
+    }
+
+    #[test]
+    fn in_tunnel_ipv6_negotiated_only_when_exit_attests_egress() {
+        // Blackhole guard (FDC incident, 2026-06-12): a v4-only exit
+        // that gets the IPV6 feature allocates an in-tunnel v6 the
+        // client routes ::/0 into, but the exit cannot egress it, so
+        // every v6 packet is dropped with no error. The client must
+        // negotiate v6 ONLY when the selected exit attests egress.
+        assert!(
+            negotiate_in_tunnel_ipv6(true, true),
+            "user wants v6 + exit egresses v6 => negotiate"
+        );
+        assert!(
+            !negotiate_in_tunnel_ipv6(true, false),
+            "user wants v6 but exit cannot egress => v4-only (no blackhole)"
+        );
+        assert!(
+            !negotiate_in_tunnel_ipv6(false, true),
+            "user disabled v6 => never negotiate, even if the exit could"
+        );
     }
 
     #[test]
