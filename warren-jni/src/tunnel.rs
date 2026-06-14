@@ -41,7 +41,8 @@ pub struct WarrenTunnelConfig {
     pub exit_endpoint: String,
     #[expect(dead_code, reason = "config field for D.4 step 3+ wiring")]
     pub wallet_pubkey_hex: Option<String>,
-    #[expect(dead_code, reason = "entry-hop wiring tracked under D.4 multi-hop scope")]
+    // Read by the wire-contract test; dead in production until multi-hop lands.
+    #[cfg_attr(not(test), expect(dead_code, reason = "entry-hop wiring tracked under D.4 multi-hop scope"))]
     pub entry_hop: Option<serde_json::Value>,
     /// Client-side toggle: when present we opt the handshake into DAITA via
     /// `ClientTunnel::with_daita(true)`. The exit decides whether to honour
@@ -72,19 +73,19 @@ pub struct WarrenTunnelConfig {
     /// here so the schema stays in sync and future client-side IPv6
     /// filtering can read it. `#[serde(default)]` keeps older payloads valid.
     #[serde(default)]
-    #[expect(dead_code, reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up")]
+    #[cfg_attr(not(test), expect(dead_code, reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up"))]
     pub enable_ipv6: Option<bool>,
     /// App-level kill switch. Enforced Android-side (the adapter keeps a
     /// blackhole interface up when the tunnel drops). Accepted here for
     /// schema parity.
     #[serde(default)]
-    #[expect(dead_code, reason = "lockdown enforced Android-side via blackhole interface")]
+    #[cfg_attr(not(test), expect(dead_code, reason = "lockdown enforced Android-side via blackhole interface"))]
     pub lockdown_mode: Option<bool>,
     /// DNS options. DNS routing into the tunnel is enforced Android-side via
     /// `VpnService.Builder.addDnsServer`; content-blocking flags are honoured
     /// by the exit DNS forwarder. Accepted here for schema parity.
     #[serde(default)]
-    #[expect(dead_code, reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up")]
+    #[cfg_attr(not(test), expect(dead_code, reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up"))]
     pub dns: Option<serde_json::Value>,
 }
 
