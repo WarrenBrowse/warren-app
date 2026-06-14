@@ -41,8 +41,9 @@ pub struct WarrenTunnelConfig {
     pub exit_endpoint: String,
     #[expect(dead_code, reason = "config field for D.4 step 3+ wiring")]
     pub wallet_pubkey_hex: Option<String>,
-    // Read by the wire-contract test; dead in production until multi-hop lands.
-    #[cfg_attr(not(test), expect(dead_code, reason = "entry-hop wiring tracked under D.4 multi-hop scope"))]
+    /// Multi-hop entry relay hint. When present, `run_session` routes through
+    /// `MultiHopClient` (see `run_multi_hop_session`); the value carries an
+    /// optional `relay_pubkey_hex` to prefer a specific entry relay.
     pub entry_hop: Option<serde_json::Value>,
     /// Client-side toggle: when present we opt the handshake into DAITA via
     /// `ClientTunnel::with_daita(true)`. The exit decides whether to honour
@@ -153,6 +154,20 @@ pub async fn run_session(
 
     let signing = signing_key;
 
+    // Multi-hop path: when the client opted into a separate entry relay we
+    // route through `warren_client::MultiHopClient` (HPKE to the exit via the
+    // entry relay). Fail closed - never silently downgrade an opted-in
+    // multi-hop request to single-hop, that would be a privacy downgrade.
+    //
+    // NOTE: this path is wired and compiles, but the Kotlin builder does not
+    // populate `entry_hop` yet (single-hop only ships today). Activate it by
+    // setting `entryHop` in `WarrenTunnelConfigBuilder` AFTER on-device
+    // verification of the multi-hop data plane.
+    if config.entry_hop.is_some() {
+        run_multi_hop_session(tun, signing, config, status, cancel_rx).await;
+        return;
+    }
+
     let exit_pubkey = match WarrenPubkey::from_hex(&config.exit_pubkey_hex) {
         Ok(p) => p,
         Err(e) => {
@@ -254,6 +269,173 @@ pub async fn run_session(
                 } else {
                     log::info!("pump_bidirectional exited cleanly");
                 }
+            }
+        }
+    }
+
+    status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+}
+
+/// Warren multi-hop directory root signing key (baked pin). Mirrors
+/// `mullvad-daemon::warren_multi_hop_directory::WARREN_MULTIHOP_ROOT_PUBKEY_BAKED`.
+/// The directory envelope must chain to this root in addition to the server pin.
+const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
+    "33cd9279ad06d1ee884235e763b876fa70598094944bdcfb82375bd9aaa67b08";
+
+/// Drive a multi-hop tunnel (entry relay -> exit) from start to teardown.
+///
+/// Mirrors the desktop reference (`talpid-warren-tunnel::start_multi_hop`) but
+/// without the auto-reconnect supervisor: a single `MultiHopClient` for one
+/// entry/exit pair, pumped against the Android TUN. Selection uses the signed
+/// multi-hop directory (`GET /v1/multihop/directory`), the only source of the
+/// signed relay descriptor, the exit X25519 HPKE key, and the operational
+/// trust anchor (none of which the `/v1/exits` list carries).
+async fn run_multi_hop_session(
+    tun: AndroidTun,
+    signing: SigningKey,
+    config: WarrenTunnelConfig,
+    status: &'static AtomicI32,
+    cancel_rx: oneshot::Receiver<()>,
+) {
+    use std::sync::Arc;
+
+    let want_exit = match WarrenPubkey::from_hex(&config.exit_pubkey_hex) {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("multi-hop: invalid exit pubkey: {e}");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+    // Optional preferred entry relay (ed25519), from the Kotlin entry_hop hint.
+    let want_entry = config
+        .entry_hop
+        .as_ref()
+        .and_then(|v| v.get("relay_pubkey_hex"))
+        .and_then(|v| v.as_str())
+        .and_then(|s| WarrenPubkey::from_hex(s).ok());
+
+    // Fetch + verify the signed multi-hop directory.
+    let client = warren_api_client::WarrenApiClient::new_unsigned(
+        crate::android_jni::PROD_API_URL.to_owned(),
+    );
+    let raw = match client.get_multihop_directory().await {
+        Ok(Some(s)) => s,
+        Ok(None) => {
+            log::error!("multi-hop: no directory published (404); failing closed");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+        Err(e) => {
+            log::error!("multi-hop: directory fetch failed: {e}");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+    let server_pins: Vec<&str> = crate::android_jni::PROD_SERVER_PUBKEY_HEX
+        .into_iter()
+        .collect();
+    let dir = match warren_relay_selector::verify_multihop_directory_any(
+        &raw,
+        &server_pins,
+        &[WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
+    ) {
+        Ok(d) => d,
+        Err(e) => {
+            log::error!("multi-hop: directory verify failed: {e}");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+
+    // Select the exit node (must match the chosen exit) and a distinct entry
+    // node (the entry relay must differ from the exit's node).
+    let exit_node = match dir
+        .nodes
+        .iter()
+        .find(|n| WarrenPubkey::from_bytes(n.exit.exit_ed25519_pubkey) == want_exit)
+    {
+        Some(n) => n,
+        None => {
+            log::error!("multi-hop: chosen exit not in directory; failing closed");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+    let entry_node = match dir
+        .nodes
+        .iter()
+        .filter(|n| n.relay.relay_id != exit_node.relay.relay_id)
+        .find(|n| {
+            want_entry
+                .as_ref()
+                .is_none_or(|w| WarrenPubkey::from_bytes(n.relay.relay_ed25519_pubkey) == *w)
+        })
+        .or_else(|| {
+            dir.nodes
+                .iter()
+                .find(|n| n.relay.relay_id != exit_node.relay.relay_id)
+        }) {
+        Some(n) => n,
+        None => {
+            log::error!("multi-hop: no distinct entry relay available; failing closed");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+
+    let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
+    log::info!(
+        "multi-hop connect: entry {} -> exit {} (daita_requested={})",
+        entry_node.relay.endpoint,
+        config.exit_pubkey_hex,
+        config.daita.is_some(),
+    );
+    let mh = match warren_client::multi_hop::MultiHopClient::connect_with_warren_obfuscation(
+        &entry_node.relay,
+        exit_node.exit.exit_id,
+        &exit_node.exit.exit_x25519_multihop_pubkey,
+        &dir.operational_pubkey,
+        &signing,
+        bind_addr,
+        /* enable_gso */ false,
+    )
+    .await
+    {
+        Ok(c) => c,
+        Err(e) => {
+            log::error!("multi-hop connect failed: {e}");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+
+    // HPKE session setup + IP negotiation over the control stream. Required
+    // before the data plane carries packets (the exit allocates the inner IP).
+    if let Err(e) = mh.setup_over_stream(Some(&signing), /* wants_ipv6 */ false).await {
+        log::error!("multi-hop setup_over_stream failed: {e}");
+        status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+        return;
+    }
+
+    log::info!("multi-hop tunnel up");
+    status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
+
+    // DAITA over multi-hop is a follow-up (driven by a locally built
+    // DaitaState, not a per-session spec); first cut uses the plain pump.
+    if config.daita.is_some() {
+        log::info!("multi-hop: DAITA requested but not yet wired for multi-hop; plain pump");
+    }
+    let pump = Arc::new(mh);
+    tokio::select! {
+        _ = cancel_rx => {
+            log::info!("multi-hop tunnel cancelled by Kotlin");
+        }
+        result = warren_client::multi_hop_pump::pump_multi_hop_bidirectional(pump, tun) => {
+            if let Err(e) = result {
+                log::error!("pump_multi_hop_bidirectional exited with error: {e}");
+            } else {
+                log::info!("pump_multi_hop_bidirectional exited cleanly");
             }
         }
     }

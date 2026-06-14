@@ -592,7 +592,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
 /// Production warren-api base URL. The Android build does NOT support
 /// `--api-override` runtime switching (that path is gated behind the
 /// `api-override` Cargo feature for dev/staging builds only).
-const PROD_API_URL: &str = "https://api.warrenbrowse.com";
+pub(crate) const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 
 /// Production server signing pubkey hex (64 lowercase chars). The
 /// signed relay list MUST be signed by this key; any other pubkey is
@@ -610,7 +610,7 @@ const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 /// Rotation procedure: bump this constant, push a new app build,
 /// THEN swap the seed file on the server. Doing it in the reverse
 /// order locks existing clients out of `/v1/exits` until they update.
-const PROD_SERVER_PUBKEY_HEX: Option<&str> =
+pub(crate) const PROD_SERVER_PUBKEY_HEX: Option<&str> =
     Some("4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e");
 
 /// Hardcoded fallback used when the live fetch fails. Schema lined up
