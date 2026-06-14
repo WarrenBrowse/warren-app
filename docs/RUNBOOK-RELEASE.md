@@ -2,6 +2,10 @@
 
 How to tag, push, and publish a Warren VPN release.
 
+For how the in-app auto-update and forced-update system works (signing, hosting,
+the `minimum_supported_version` lever, Android/iOS plan), see
+`docs/AUTO-UPDATE.md`.
+
 ## Pre-tag checklist
 
 Run the verification script:
@@ -58,6 +62,7 @@ This triggers `.github/workflows/release.yml`. The workflow:
 3. Uploads the signed iOS `.ipa` to TestFlight via `xcrun altool`.
 4. Uploads the signed Android `.aab` to Google Play internal-test track via `r0adkll/upload-google-play`.
 5. Aggregates all artifacts and publishes a **draft** GitHub Release with SHA-256 checksums.
+6. `publish-update-metadata`: generates the per-platform signed update manifests, signs them with `WARREN_UPDATE_SIGNING_KEY`, and `scp`s them to the update host. No-op when that secret is unset. See `docs/AUTO-UPDATE.md`.
 
 Monitor the run live at https://github.com/WarrenBrowse/warren-app/actions.
 
@@ -86,12 +91,31 @@ After the CI run completes:
 
 If uploads fail (e.g. version code conflict, missing privacy nutrition labels), the error appears in the corresponding workflow log. Fix and re-tag with `v0.1.0-beta.2`.
 
-## Update warrenbrowse-site
+## Update warrenbrowse-site (download page only)
+
+This is the human-facing download page, served from Cloudflare Pages. It is
+**separate** from the auto-update manifests (those are signed JSON served from
+`api.warrenbrowse.com/updates/`, published automatically by CI; see
+`docs/AUTO-UPDATE.md`). Do not confuse the two.
 
 Once the release is public:
 
 1. Update `warrenbrowse-site/src/pages/download.astro` and `warrenbrowse-site/src/pages/fr/download.astro` with the new release URLs and SHA-256 checksums.
 2. Commit and push to deploy via Cloudflare Pages.
+
+## Auto-update manifests
+
+The `publish-update-metadata` job publishes the signed update manifests
+automatically. Two things to remember at release time:
+
+1. **Publish the draft GitHub Release** (above) so the installer asset URLs in
+   the manifests resolve; until then in-app downloads 404.
+2. To **force** an update for this release, set the repo variable
+   `WARREN_UPDATE_MIN_VERSION` before tagging (clients below it are hard-blocked
+   by the forced-update screen). Leave it unset for a normal, optional update.
+
+First-time setup of the signing key, secrets, and the update host is documented
+in `docs/AUTO-UPDATE.md`.
 
 ## Rollback procedure
 

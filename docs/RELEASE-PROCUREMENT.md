@@ -141,6 +141,31 @@ Already required for path-dep checkout in CI:
 
 - `WARREN_CORE_RO_TOKEN`: GitHub PAT with `repo:read` scope on `WarrenBrowse/warren-core`. Generate at https://github.com/settings/tokens.
 
+## Auto-update: signing key + manifest host
+
+Powers in-app updates and the forced-update screen. Full setup and rationale in
+`docs/AUTO-UPDATE.md`; this is the procurement summary.
+
+1. Generate a dedicated, offline ed25519 key (NOT the relay/admin key):
+   ```sh
+   cargo run -p mullvad-release -- generate-key   # prints Secret key + Public key
+   ```
+   Put the **Public key** in `mullvad-update/warren-trusted-metadata-signing-pubkeys` (committed).
+2. One-time prep of the update host (Hetzner/Caddy, Let's Encrypt): create
+   `/srv/warren-updates/desktop` owned by `warren`, add a CI deploy SSH key, and
+   `docker compose up -d caddy`. See `docs/AUTO-UPDATE.md`.
+3. Required secrets:
+    - `WARREN_UPDATE_SIGNING_KEY`: the ed25519 **secret** (hex)
+    - `WARREN_UPDATES_SSH_KEY`: CI deploy private key for `warren@<host>`
+    - `WARREN_UPDATES_SSH_USER`: `warren`
+    - `WARREN_UPDATES_SSH_HOST`: `api.warrenbrowse.com` (or the VPS IP)
+    - `WARREN_UPDATES_SSH_PATH`: `/srv/warren-updates/desktop`
+4. Optional repo **variable** (not a secret): `WARREN_UPDATE_MIN_VERSION` to
+   hard-block clients below a version.
+
+Without `WARREN_UPDATE_SIGNING_KEY` the manifests are not published (the job is
+a no-op), so the app simply never detects updates.
+
 ## Verification after procurement
 
 After all secrets are wired, run a dry-run via the manual trigger:
@@ -160,7 +185,8 @@ If a sign step still skips, double-check the secret name spelling (GitHub is cas
 - [ ] Windows OV `.pfx` certificate
 - [ ] iOS Distribution certificate + provisioning profile + App Store Connect API key
 - [ ] Android upload keystore + Google Play service account
-- [ ] All 18 secrets configured on `WarrenBrowse/warren-app`
+- [ ] Auto-update: dedicated ed25519 signing key (pubkey committed, secret in CI) + update-host SSH secrets (`docs/AUTO-UPDATE.md`)
+- [ ] All required secrets configured on `WarrenBrowse/warren-app`
 - [ ] Dry-run via `gh workflow run release.yml` succeeds on all 5 platforms
 - [ ] Internal-test groups created in TestFlight + Play Console with at least 1 tester email
 
