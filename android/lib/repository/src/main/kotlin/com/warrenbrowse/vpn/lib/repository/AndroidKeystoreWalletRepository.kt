@@ -75,22 +75,26 @@ class AndroidKeystoreWalletRepository(
 
     private val lock = Mutex()
 
-    override suspend fun createWallet(): Mnemonic = lock.withLock {
-        withContext(Dispatchers.IO) {
-            val phrase = jni.generateMnemonic()
-            check(phrase.isNotEmpty()) { "WarrenJniBridge.generateMnemonic returned empty string" }
-            val mnemonic = Mnemonic(phrase)
-            persist(mnemonic)
-            mnemonic
-        }
+    override suspend fun createWallet(authorizer: SensitiveOpAuthorizer?): Mnemonic = lock.withLock {
+        val phrase = withContext(Dispatchers.IO) { jni.generateMnemonic() }
+        check(phrase.isNotEmpty()) { "WarrenJniBridge.generateMnemonic returned empty string" }
+        val mnemonic = Mnemonic(phrase)
+        // persist() may run a biometric CryptoObject prompt (HARDWARE_AUTH),
+        // which must NOT be on the IO dispatcher, so it is called outside
+        // withContext(IO); the heavy JNI/crypto bits inside it offload to IO.
+        persist(mnemonic, authorizer = authorizer)
+        mnemonic
     }
 
-    override suspend fun importWallet(mnemonic: Mnemonic): WalletAddress = lock.withLock {
-        withContext(Dispatchers.IO) {
-            val address = mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
-            persist(mnemonic, address)
-            WalletAddress(address)
+    override suspend fun importWallet(
+        mnemonic: Mnemonic,
+        authorizer: SensitiveOpAuthorizer?,
+    ): WalletAddress = lock.withLock {
+        val address = withContext(Dispatchers.IO) {
+            mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
         }
+        persist(mnemonic, address, authorizer)
+        WalletAddress(address)
     }
 
     override suspend fun unlock(
@@ -164,9 +168,26 @@ class AndroidKeystoreWalletRepository(
         }
     }
 
-    private fun persist(mnemonic: Mnemonic, pubkeySs58: String? = null) {
+    private suspend fun persist(
+        mnemonic: Mnemonic,
+        pubkeySs58: String? = null,
+        authorizer: SensitiveOpAuthorizer? = null,
+    ) {
         val cipher = Cipher.getInstance(TRANSFORMATION).apply {
             init(Cipher.ENCRYPT_MODE, getOrCreateMasterKey())
+        }
+        // When the master key requires per-use auth (HARDWARE_AUTH), the
+        // ENCRYPT cipher must be authorised through a CryptoObject prompt
+        // before doFinal, exactly like the decrypt path in unlock(). The
+        // prompt is a suspend call that runs on the caller's dispatcher (NOT
+        // Dispatchers.IO). With the flag off it is a plain encrypt, unchanged.
+        val encryptCipher = if (HARDWARE_AUTH && authorizer is CipherAuthorizer) {
+            authorizer.authorizeCipher(cipher, "Confirm to secure your Warren wallet")
+                ?: throw WalletAuthorizationDeniedException(
+                    "User declined or device cannot authenticate"
+                )
+        } else {
+            cipher
         }
         // Use `useAsString` so the temporary cleartext-bytes
         // intermediate dies at the lambda boundary. The CharArray
@@ -174,11 +195,13 @@ class AndroidKeystoreWalletRepository(
         // NOT close it here - the caller may still need it for the
         // immediate connect/signing path).
         val ciphertext = mnemonic.useAsString { phrase ->
-            cipher.doFinal(phrase.toByteArray(Charsets.UTF_8))
+            encryptCipher.doFinal(phrase.toByteArray(Charsets.UTF_8))
         }
-        val iv = cipher.iv
+        val iv = encryptCipher.iv
 
-        val address = pubkeySs58 ?: mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
+        val address = pubkeySs58 ?: withContext(Dispatchers.IO) {
+            mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
+        }
 
         prefs.edit()
             .putString(KEY_CIPHERTEXT, Base64.encodeToString(ciphertext, Base64.NO_WRAP))
@@ -291,12 +314,13 @@ class AndroidKeystoreWalletRepository(
         const val TRANSFORMATION = "AES/GCM/NoPadding"
 
         // Hardware-bound, per-use auth on the master key (defence-in-depth on
-        // top of the app-layer unlock() gate). OFF by default: the unlock()
-        // decrypt path is wired (CryptoObject), but turning this on also makes
-        // the ENCRYPT at create/import require a CryptoObject prompt, which is
-        // NOT wired yet (createWallet/importWallet take no authorizer). Enable
-        // ONLY after wiring + on-device verification of the encrypt path, or
-        // new-wallet creation will fail with UserNotAuthenticatedException.
+        // top of the app-layer unlock() gate). Both the DECRYPT (unlock) and
+        // ENCRYPT (create/import) paths are wired via CryptoObject prompts, so
+        // flipping this to `true` is the only step to enable it. Kept OFF until
+        // ON-DEVICE verification: enabling it makes wallet creation require a
+        // biometric prompt, and an unverified CryptoObject flow could block
+        // wallet creation/unlock. Existing wallets keep their old non-auth key
+        // (getKey returns it); only newly created keys become auth-required.
         const val HARDWARE_AUTH = false
     }
 }

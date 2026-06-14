@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import kotlinx.coroutines.channels.Channel
@@ -39,10 +40,10 @@ class WarrenWalletViewModel(
     private val _events = Channel<WarrenWalletEvent>(Channel.BUFFERED)
     val events: Flow<WarrenWalletEvent> = _events.receiveAsFlow()
 
-    fun createWallet() {
+    fun createWallet(authorizer: SensitiveOpAuthorizer? = null) {
         viewModelScope.launch {
             try {
-                val mnemonic = walletRepository.createWallet()
+                val mnemonic = walletRepository.createWallet(authorizer)
                 _events.send(WarrenWalletEvent.BackupGeneratedMnemonic(mnemonic))
             } catch (e: Exception) {
                 Logger.w(throwable = e) { "wallet creation failed" }
@@ -51,7 +52,7 @@ class WarrenWalletViewModel(
         }
     }
 
-    fun importWallet(phrase: String) {
+    fun importWallet(phrase: String, authorizer: SensitiveOpAuthorizer? = null) {
         viewModelScope.launch {
             val mnemonic = try {
                 Mnemonic(phrase)
@@ -66,7 +67,7 @@ class WarrenWalletViewModel(
             // user-typed phrase lingered on the heap until GC.
             mnemonic.use { m ->
                 try {
-                    walletRepository.importWallet(m)
+                    walletRepository.importWallet(m, authorizer)
                     _events.send(WarrenWalletEvent.WalletReady)
                 } catch (e: Exception) {
                     Logger.w(throwable = e) { "wallet import failed" }

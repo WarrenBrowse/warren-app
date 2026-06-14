@@ -29,15 +29,23 @@ interface WalletRepository {
      * [WalletState.Ready] with the derived pubkey. Returns the mnemonic
      * exactly once so the UI can prompt the user to back it up; subsequent
      * reads must go through [unlock].
+     *
+     * [authorizer] is only consulted when hardware-bound keystore auth is
+     * enabled (a `CipherAuthorizer` then authorises the encrypt CryptoObject);
+     * `null` keeps the current no-prompt-at-create behaviour.
      */
-    suspend fun createWallet(): Mnemonic
+    suspend fun createWallet(authorizer: SensitiveOpAuthorizer? = null): Mnemonic
 
     /**
      * Import an existing 12 / 24-word BIP39 mnemonic, persist it, and
      * transition `state` to [WalletState.Ready]. Returns the derived pubkey
      * for the caller to confirm against (e.g. server-side wallet binding).
+     * See [createWallet] for [authorizer].
      */
-    suspend fun importWallet(mnemonic: Mnemonic): WalletAddress
+    suspend fun importWallet(
+        mnemonic: Mnemonic,
+        authorizer: SensitiveOpAuthorizer? = null,
+    ): WalletAddress
 
     /**
      * Decrypt the persisted mnemonic just-in-time. The repository invokes

@@ -16,9 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
 import org.koin.androidx.compose.koinViewModel
 
@@ -46,6 +49,12 @@ fun WarrenWalletLoginScreen(
     vm: WarrenWalletViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+
+    // Used only when hardware-bound keystore auth is enabled: the encrypt step
+    // at wallet create/import is gated by a CryptoObject prompt. With the flag
+    // off the authorizer is ignored, so no prompt appears at creation.
+    val activity = LocalContext.current as FragmentActivity
+    val authorizer = remember(activity) { BiometricPromptAuthorizer(activity) }
 
     var importMode by remember { mutableStateOf(false) }
     var importPhrase by remember { mutableStateOf("") }
@@ -92,7 +101,7 @@ fun WarrenWalletLoginScreen(
                 Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
             Button(
-                onClick = { vm.importWallet(importPhrase) },
+                onClick = { vm.importWallet(importPhrase, authorizer) },
                 enabled = importPhrase.isNotBlank(),
             ) {
                 Text(text = "Restore wallet")
@@ -104,7 +113,7 @@ fun WarrenWalletLoginScreen(
             inlineError?.let { msg ->
                 Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
-            Button(onClick = { vm.createWallet() }) {
+            Button(onClick = { vm.createWallet(authorizer) }) {
                 Text(text = "Generate recovery phrase")
             }
             OutlinedButton(onClick = { importMode = true }) {
