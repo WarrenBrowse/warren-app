@@ -177,11 +177,11 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
     val localSettings = koinInject<WarrenLocalSettingsRepository>()
     val cachedExpiry by localSettings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
-    val subscriptionWarning = remember(cachedExpiry) { connectExpiryWarning(cachedExpiry) }
+    val context = LocalContext.current
+    val subscriptionWarning =
+        remember(cachedExpiry) { connectExpiryWarning(context, cachedExpiry) }
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
-
-    val context = LocalContext.current
 
     val warrenScope = rememberCoroutineScope()
     // Route the user-initiated Connect button through the Warren Quinn
@@ -539,14 +539,20 @@ private fun SubscriptionWarningBar(text: String, onClick: () -> Unit) {
  * Only nags within a week of expiry so the bar doesn't show all the time.
  */
 internal fun connectExpiryWarning(
+    context: android.content.Context,
     expiryUnixSecs: Long,
     nowSecs: Long = System.currentTimeMillis() / 1000,
 ): String? = when {
     expiryUnixSecs <= 0L -> null
-    expiryUnixSecs <= nowSecs -> "Your subscription has expired. Tap to renew."
+    expiryUnixSecs <= nowSecs ->
+        context.getString(R.string.connect_subscription_expired)
     expiryUnixSecs - nowSecs <= 7L * 86_400 -> {
         val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400
-        "Your subscription expires in $days day${if (days == 1L) "" else "s"}. Tap to renew."
+        if (days == 1L) {
+            context.getString(R.string.connect_subscription_expires_in_day, days)
+        } else {
+            context.getString(R.string.connect_subscription_expires_in_days, days)
+        }
     }
     else -> null
 }
@@ -856,7 +862,10 @@ fun GeoIpLocation.toLatLong() =
 
 private fun PrepareError.OtherLegacyAlwaysOnVpn.toMessage(resources: Resources) =
     resources
-        .getString(R.string.always_on_vpn_error_notification_content, "Legacy app")
+        .getString(
+            R.string.always_on_vpn_error_notification_content,
+            resources.getString(R.string.connect_legacy_app_name),
+        )
         .removeHtmlTags()
 
 private fun PrepareError.OtherAlwaysOnApp.toMessage(resources: Resources) =

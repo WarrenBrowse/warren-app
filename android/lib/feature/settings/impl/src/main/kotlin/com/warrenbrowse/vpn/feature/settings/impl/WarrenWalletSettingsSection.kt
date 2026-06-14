@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
@@ -30,6 +31,7 @@ import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import kotlinx.coroutines.launch
 
 /**
@@ -66,6 +68,11 @@ fun WarrenWalletSettingsSection(
     var viewError by remember { mutableStateOf<String?>(null) }
     var copyHint by remember { mutableStateOf<String?>(null) }
 
+    val viewPhraseReason = stringResource(R.string.wallet_biometric_view_phrase_reason)
+    val pubkeyCopiedHint = stringResource(R.string.wallet_settings_pubkey_copied)
+    val authRequiredError = stringResource(R.string.wallet_settings_auth_required_view_phrase)
+    val unableToReadPrefix = stringResource(R.string.wallet_settings_unable_to_read)
+
     LaunchedEffect(state) {
         if (state is WalletState.Absent) {
             // Wallet erased elsewhere - clear any cached reveal.
@@ -75,7 +82,7 @@ fun WarrenWalletSettingsSection(
 
     Column(modifier = modifier.fillMaxWidth().padding(16.dp)) {
         Text(
-            text = "Wallet",
+            text = stringResource(R.string.wallet_settings_section),
             style = MaterialTheme.typography.titleMedium,
         )
 
@@ -89,27 +96,27 @@ fun WarrenWalletSettingsSection(
                 val full = s.pubkey.value
                 val truncated = full.shortWarrenAddress()
                 Text(
-                    text = "Pubkey: $truncated  (tap to copy)",
+                    text = stringResource(R.string.wallet_settings_pubkey_tap_to_copy, truncated),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp, bottom = 8.dp)
                         .clickable {
                             clipboard.setText(AnnotatedString(full))
-                            copyHint = "Pubkey copied to clipboard"
+                            copyHint = pubkeyCopiedHint
                         },
                 )
             }
             WalletState.Locked -> {
                 Text(
-                    text = "Wallet locked. Authenticate to view.",
+                    text = stringResource(R.string.wallet_settings_locked_hint),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                 )
             }
             WalletState.Absent -> {
                 Text(
-                    text = "No wallet on this device.",
+                    text = stringResource(R.string.wallet_settings_absent_hint),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                 )
@@ -137,32 +144,34 @@ fun WarrenWalletSettingsSection(
                         val authorizer = BiometricPromptAuthorizer(activity)
                         viewMnemonic = walletRepository.unlock(
                             authorizer = authorizer,
-                            reason = "Confirm to view your recovery phrase",
+                            reason = viewPhraseReason,
                         )
                         viewError = null
                     } catch (e: WalletAuthorizationDeniedException) {
-                        viewError = "Authentication required to view your recovery phrase"
+                        viewError = authRequiredError
                     } catch (e: Exception) {
                         Logger.w(throwable = e) { "wallet unlock failed" }
-                        viewError = "Unable to read wallet: ${e.message}"
+                        viewError = "$unableToReadPrefix ${e.message}"
                     }
                 }
             },
-        ) { Text("View recovery phrase") }
+        ) { Text(stringResource(R.string.wallet_settings_view_phrase)) }
 
         OutlinedButton(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             onClick = { confirmErase = true },
-        ) { Text("Erase wallet") }
+        ) { Text(stringResource(R.string.wallet_settings_erase)) }
     }
 
     viewMnemonic?.let { mnemonic ->
         AlertDialog(
             onDismissRequest = { viewMnemonic = null },
-            title = { Text("Your recovery phrase") },
+            title = { Text(stringResource(R.string.wallet_settings_recovery_phrase_title)) },
             text = { MnemonicDisplay(phrase = mnemonic.phrase) },
             confirmButton = {
-                TextButton(onClick = { viewMnemonic = null }) { Text("Done") }
+                TextButton(onClick = { viewMnemonic = null }) {
+                    Text(stringResource(R.string.wallet_settings_done))
+                }
             },
         )
     }
@@ -170,21 +179,20 @@ fun WarrenWalletSettingsSection(
     if (confirmErase) {
         AlertDialog(
             onDismissRequest = { confirmErase = false },
-            title = { Text("Erase this wallet?") },
+            title = { Text(stringResource(R.string.wallet_settings_erase_confirm_title)) },
             text = {
-                Text(
-                    "This cannot be undone. You will need your recovery phrase to access " +
-                        "this account again."
-                )
+                Text(stringResource(R.string.wallet_settings_erase_confirm_description))
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmErase = false
                     scope.launch { walletRepository.erase() }
-                }) { Text("Erase") }
+                }) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmErase = false }) { Text("Cancel") }
+                TextButton(onClick = { confirmErase = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             },
         )
     }

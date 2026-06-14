@@ -199,7 +199,7 @@ private fun LazyListScope.content(
     // (Warren's identity model = the wallet, not a Mullvad account).
     itemWithDivider {
         NavigationListItem(
-            title = "Wallet",
+            title = stringResource(id = R.string.wallet_settings_section),
             onClick = onWalletClick,
             position = Position.Top,
         )
@@ -207,7 +207,7 @@ private fun LazyListScope.content(
     // Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
     itemWithDivider {
         NavigationListItem(
-            title = "Warren tunnel",
+            title = stringResource(id = R.string.settings_warren_tunnel),
             onClick = onWarrenTunnelClick,
             position = Position.Bottom,
         )

@@ -17,12 +17,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -78,14 +80,14 @@ fun WarrenWalletLoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Warren VPN",
+            text = stringResource(R.string.wallet_login_title),
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
             text = if (importMode) {
-                "Enter your 12-word recovery phrase"
+                stringResource(R.string.wallet_login_import_prompt)
             } else {
-                "Create a new wallet or restore from an existing recovery phrase"
+                stringResource(R.string.wallet_login_subtitle)
             },
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -104,20 +106,20 @@ fun WarrenWalletLoginScreen(
                 onClick = { vm.importWallet(importPhrase, authorizer) },
                 enabled = importPhrase.isNotBlank(),
             ) {
-                Text(text = "Restore wallet")
+                Text(text = stringResource(R.string.wallet_import_cta))
             }
             OutlinedButton(onClick = { importMode = false; inlineError = null }) {
-                Text(text = "Back")
+                Text(text = stringResource(R.string.back))
             }
         } else {
             inlineError?.let { msg ->
                 Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
             Button(onClick = { vm.createWallet(authorizer) }) {
-                Text(text = "Generate recovery phrase")
+                Text(text = stringResource(R.string.wallet_create_cta))
             }
             OutlinedButton(onClick = { importMode = true }) {
-                Text(text = "Restore from recovery phrase")
+                Text(text = stringResource(R.string.wallet_import_title))
             }
         }
 

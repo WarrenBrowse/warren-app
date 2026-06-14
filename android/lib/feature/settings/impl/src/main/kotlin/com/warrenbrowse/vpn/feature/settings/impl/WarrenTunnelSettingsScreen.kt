@@ -18,6 +18,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.compose.koinInject
 
 /**
@@ -87,7 +90,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val customDnsEnabled = dnsState == WarrenLocalSettingsRepository.DNS_STATE_CUSTOM
 
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Warren tunnel",
+        appBarTitle = stringResource(R.string.tunnel_settings_title),
         navigationIcon = {
             NavigateBackIconButton(onNavigateBack = {
                 navigator.goBackUntil(SettingsNavKey)
@@ -104,7 +107,7 @@ fun WarrenTunnelSettings(navigator: Navigator) {
         ) {
             // Live tunnel state, sourced from WarrenQuinnStateProxy.
             Text(
-                text = "Tunnel: $tunnelState",
+                text = stringResource(R.string.tunnel_state_line, tunnelState),
                 style = MaterialTheme.typography.titleSmall,
                 color = when {
                     tunnelState.startsWith("Connected") -> Color(0xFF2E7D32)
@@ -125,44 +128,40 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        text = "Changes apply on next connect.",
+                        text = stringResource(R.string.tunnel_changes_apply_next_connect),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedButton(onClick = { reconnectInvoker.reconnect() }) {
-                        Text("Reconnect now")
+                        Text(stringResource(R.string.tunnel_reconnect_now))
                     }
                 }
             } else {
                 Text(
-                    text = "Changes apply on next connect.",
+                    text = stringResource(R.string.tunnel_changes_apply_next_connect),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
 
-            SectionLabel("Privacy")
+            SectionLabel(stringResource(R.string.privacy_disclaimer_title))
 
             ToggleRow(
-                title = "Kill switch (lockdown)",
-                subtitle = "Block all traffic if the tunnel drops, instead of " +
-                    "falling back to the unprotected network.",
+                title = stringResource(R.string.tunnel_kill_switch_title),
+                subtitle = stringResource(R.string.tunnel_kill_switch_subtitle),
                 value = lockdown,
                 onValueChange = repo::setLockdownMode,
             )
 
             ToggleRow(
-                title = "Enable IPv6",
-                subtitle = "Route IPv6 through the tunnel. When off, IPv6 is " +
-                    "blocked to prevent leaks.",
+                title = stringResource(R.string.tunnel_ipv6_title),
+                subtitle = stringResource(R.string.tunnel_ipv6_subtitle),
                 value = ipv6,
                 onValueChange = repo::setIpv6Enabled,
             )
 
             ToggleRow(
-                title = "Local network sharing",
-                subtitle = "Reach devices on your local network (printers, NAS, " +
-                    "casting) directly while everything else stays tunnelled. " +
-                    "Disabled while the kill switch is blocking.",
+                title = stringResource(R.string.tunnel_local_network_title),
+                subtitle = stringResource(R.string.tunnel_local_network_subtitle),
                 value = allowLan,
                 onValueChange = repo::setAllowLan,
             )
@@ -173,12 +172,11 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             )
 
             HorizontalDivider()
-            SectionLabel("DNS")
+            SectionLabel(stringResource(R.string.tunnel_dns_section))
 
             ToggleRow(
-                title = "Use custom DNS",
-                subtitle = "Send DNS queries to your own resolvers instead of " +
-                    "the Warren exit resolver. DNS always stays inside the tunnel.",
+                title = stringResource(R.string.tunnel_use_custom_dns_title),
+                subtitle = stringResource(R.string.tunnel_use_custom_dns_subtitle),
                 value = customDnsEnabled,
                 onValueChange = { useCustom ->
                     repo.setDnsState(
@@ -201,30 +199,30 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             }
 
             Text(
-                text = "Content blocking (applied by the Warren exit resolver):",
+                text = stringResource(R.string.tunnel_content_blocking_header),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            ToggleRow("Block ads", "", blockAds, repo::setBlockAds)
-            ToggleRow("Block trackers", "", blockTrackers, repo::setBlockTrackers)
-            ToggleRow("Block malware", "", blockMalware, repo::setBlockMalware)
-            ToggleRow("Block adult content", "", blockAdult, repo::setBlockAdultContent)
-            ToggleRow("Block gambling", "", blockGambling, repo::setBlockGambling)
-            ToggleRow("Block social media", "", blockSocial, repo::setBlockSocialMedia)
+            ToggleRow(stringResource(R.string.tunnel_block_ads), "", blockAds, repo::setBlockAds)
+            ToggleRow(stringResource(R.string.tunnel_block_trackers), "", blockTrackers, repo::setBlockTrackers)
+            ToggleRow(stringResource(R.string.tunnel_block_malware), "", blockMalware, repo::setBlockMalware)
+            ToggleRow(stringResource(R.string.tunnel_block_adult_content), "", blockAdult, repo::setBlockAdultContent)
+            ToggleRow(stringResource(R.string.tunnel_block_gambling), "", blockGambling, repo::setBlockGambling)
+            ToggleRow(stringResource(R.string.tunnel_block_social_media), "", blockSocial, repo::setBlockSocialMedia)
 
             HorizontalDivider()
-            SectionLabel("Tunnel")
+            SectionLabel(stringResource(R.string.tunnel_section))
 
             ToggleRow(
-                title = "DAITA padding",
-                subtitle = "Tamaraw padding machine (constant-rate, anti-fingerprint).",
+                title = stringResource(R.string.tunnel_daita_padding_title),
+                subtitle = stringResource(R.string.tunnel_daita_padding_subtitle),
                 value = daita,
                 onValueChange = repo::setDaitaEnabled,
             )
 
             ToggleRow(
-                title = "NAT-PMP port forwarding",
-                subtitle = "Request a stable external port from the exit (BitTorrent, hosting).",
+                title = stringResource(R.string.tunnel_natpmp_title),
+                subtitle = stringResource(R.string.tunnel_natpmp_subtitle),
                 value = natPmp,
                 onValueChange = repo::setNatPmpEnabled,
             )
@@ -237,12 +235,12 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     onExternalPortChange = repo::setNatPmpExternalPort,
                     lifetimeSecs = natPmpLifetime,
                     onLifetimeChange = repo::setNatPmpLifetimeSecs,
-                    statusLabel = natPmpStatusLabel(natPmpStatusJson),
+                    statusLabel = natPmpStatusLabel(LocalContext.current, natPmpStatusJson),
                 )
             }
 
             CountryField(
-                label = "Exit country (ISO code, blank = automatic)",
+                label = stringResource(R.string.tunnel_exit_country_label),
                 initial = exitCountry.orEmpty(),
                 onCommit = repo::setExitCountry,
             )
@@ -250,27 +248,25 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             MultiHopIndicator()
 
             HorizontalDivider()
-            SectionLabel("Anti-censorship")
+            SectionLabel(stringResource(R.string.tunnel_anti_censorship_section))
             ObfuscationIndicator()
 
             HorizontalDivider()
-            SectionLabel("Exit key pinning")
+            SectionLabel(stringResource(R.string.tunnel_exit_key_pinning_section))
             Text(
-                text = "Warren pins each exit's key on first use and refuses to " +
-                    "connect if it changes. Reset the pins only if you expect a " +
-                    "legitimate key rotation; the next connect re-pins.",
+                text = stringResource(R.string.tunnel_exit_key_pinning_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { repo.resetExitKeyPins() },
-            ) { Text("Reset pinned exit keys") }
+            ) { Text(stringResource(R.string.tunnel_reset_pinned_keys)) }
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { navigator.navigate(WarrenLocationPickerNavKey) },
-            ) { Text("Exit relay…") }
+            ) { Text(stringResource(R.string.tunnel_exit_relay)) }
         }
     }
 }
@@ -288,14 +284,11 @@ fun WarrenTunnelSettings(navigator: Navigator) {
 @Composable
 private fun MultiHopIndicator() {
     Text(
-        text = "Multi-hop is not available on Android yet.",
+        text = stringResource(R.string.tunnel_multihop_title),
         style = MaterialTheme.typography.titleSmall,
     )
     Text(
-        text = "Multi-hop routes traffic through a separate entry relay so the exit " +
-            "never sees your IP. It is available on the Warren desktop app. The " +
-            "Android tunnel currently connects single-hop, so no multi-hop " +
-            "indicator is shown while connected.",
+        text = stringResource(R.string.tunnel_multihop_desc),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -304,20 +297,16 @@ private fun MultiHopIndicator() {
 @Composable
 private fun ObfuscationIndicator() {
     Text(
-        text = "HTTP/3 mimicry obfuscation is always-on for Warren tunnels.",
+        text = stringResource(R.string.tunnel_obfuscation_title),
         style = MaterialTheme.typography.titleSmall,
     )
     Text(
-        text = "Warren tunnels masquerade as standard browser HTTP/3 traffic: " +
-            "ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This " +
-            "is not togglable because disabling it would make Warren clients " +
-            "immediately recognisable on the network.",
+        text = stringResource(R.string.tunnel_obfuscation_desc),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     Text(
-        text = "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) " +
-            "do not apply to Warren tunnels.",
+        text = stringResource(R.string.tunnel_obfuscation_legacy),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -338,9 +327,15 @@ private fun MtuField(mtu: Int, onCommit: (Int) -> Unit) {
             text.toIntOrNull()?.let(onCommit)
         },
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("MTU") },
+        label = { Text(stringResource(R.string.mtu)) },
         placeholder = {
-            Text("${WarrenLocalSettingsRepository.MTU_MIN}-${WarrenLocalSettingsRepository.MTU_MAX}")
+            Text(
+                stringResource(
+                    R.string.tunnel_mtu_range,
+                    WarrenLocalSettingsRepository.MTU_MIN,
+                    WarrenLocalSettingsRepository.MTU_MAX,
+                ),
+            )
         },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -369,8 +364,8 @@ private fun CustomDnsField(initial: String, onCommit: (String) -> Unit) {
             onCommit(it)
         },
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("Resolver addresses (comma-separated)") },
-        placeholder = { Text("e.g. 9.9.9.9, 149.112.112.112") },
+        label = { Text(stringResource(R.string.tunnel_resolver_addresses_label)) },
+        placeholder = { Text(stringResource(R.string.tunnel_resolver_addresses_hint)) },
         singleLine = false,
     )
 }
@@ -396,17 +391,17 @@ private fun PortForwardingAdvanced(
             color = MaterialTheme.colorScheme.primary,
         )
 
-        Text("Protocol", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.tunnel_protocol_label), style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = protocol == "udp",
                 onClick = { onProtocolChange("udp") },
-                label = { Text("UDP") },
+                label = { Text(stringResource(R.string.udp)) },
             )
             FilterChip(
                 selected = protocol == "tcp",
                 onClick = { onProtocolChange("tcp") },
-                label = { Text("TCP") },
+                label = { Text(stringResource(R.string.tcp)) },
             )
         }
 
@@ -418,17 +413,17 @@ private fun PortForwardingAdvanced(
                 onExternalPortChange(portText.toIntOrNull() ?: 0)
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Preferred external port (blank = automatic)") },
-            placeholder = { Text("49152-65535") },
+            label = { Text(stringResource(R.string.tunnel_preferred_port_label)) },
+            placeholder = { Text(stringResource(R.string.tunnel_preferred_port_hint)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
 
-        Text("Mapping lifetime", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.tunnel_mapping_lifetime_label), style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LifetimeChip("1 h", 3_600, lifetimeSecs, onLifetimeChange)
-            LifetimeChip("6 h", 21_600, lifetimeSecs, onLifetimeChange)
-            LifetimeChip("24 h", 86_400, lifetimeSecs, onLifetimeChange)
+            LifetimeChip(stringResource(R.string.tunnel_lifetime_1h), 3_600, lifetimeSecs, onLifetimeChange)
+            LifetimeChip(stringResource(R.string.tunnel_lifetime_6h), 21_600, lifetimeSecs, onLifetimeChange)
+            LifetimeChip(stringResource(R.string.tunnel_lifetime_24h), 86_400, lifetimeSecs, onLifetimeChange)
         }
     }
 }
@@ -448,20 +443,29 @@ private fun LifetimeChip(label: String, seconds: Int, selected: Int, onSelect: (
  * as a human-readable line. Parsed without a JSON dependency since the
  * payload is a small flat object.
  */
-internal fun natPmpStatusLabel(json: String): String =
+internal fun natPmpStatusLabel(context: android.content.Context, json: String): String =
     when (jsonField(json, "state") ?: "idle") {
         "mapped" -> buildString {
-            append("Status: mapped")
-            jsonField(json, "external_port")?.let { append(" - external port $it") }
-            jsonField(json, "lifetime_secs")?.let { append(" (lifetime ${it}s)") }
+            append(context.getString(R.string.tunnel_natpmp_status_mapped))
+            jsonField(json, "external_port")?.let {
+                append(context.getString(R.string.tunnel_natpmp_status_mapped_port, it))
+            }
+            jsonField(json, "lifetime_secs")?.let {
+                append(context.getString(R.string.tunnel_natpmp_status_mapped_lifetime, it))
+            }
         }
-        "requesting" -> "Status: requesting a port…"
+        "requesting" -> context.getString(R.string.tunnel_natpmp_status_requesting)
         "rate_limited" ->
-            "Status: rate-limited" +
-                (jsonField(json, "retry_after_secs")?.let { " - retry in ${it}s" } ?: "")
+            context.getString(R.string.tunnel_natpmp_status_rate_limited) +
+                (jsonField(json, "retry_after_secs")?.let {
+                    context.getString(R.string.tunnel_natpmp_status_rate_limited_retry, it)
+                } ?: "")
         "failed" ->
-            "Status: failed" + (jsonField(json, "reason")?.let { " - $it" } ?: "")
-        else -> "Status: idle (no active mapping)"
+            context.getString(R.string.tunnel_natpmp_status_failed) +
+                (jsonField(json, "reason")?.let {
+                    context.getString(R.string.tunnel_natpmp_status_failed_reason, it)
+                } ?: "")
+        else -> context.getString(R.string.tunnel_natpmp_status_idle)
     }
 
 /** Extract a flat JSON string/number value by key, unquoted, or null. */
@@ -482,7 +486,7 @@ private fun CountryField(label: String, initial: String, onCommit: (String?) -> 
         },
         modifier = Modifier.fillMaxWidth(),
         label = { Text(label) },
-        placeholder = { Text("e.g. DE, FR, US") },
+        placeholder = { Text(stringResource(R.string.tunnel_exit_country_hint)) },
         singleLine = true,
     )
 }

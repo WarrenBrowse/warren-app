@@ -11,9 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -62,12 +64,11 @@ fun WarrenWalletBackupScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "Write down your recovery phrase",
+                text = stringResource(R.string.wallet_backup_title),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = "Anyone with these 12 words can access your account. " +
-                    "Never share them or store them online.",
+                text = stringResource(R.string.wallet_backup_warning),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
             )
@@ -75,15 +76,13 @@ fun WarrenWalletBackupScreen(
             MnemonicDisplay(phrase = mnemonic.phrase)
 
             Text(
-                text = "Warren does not provide a 'copy to clipboard' button on " +
-                    "purpose - clipboard contents leak to other apps. Use pen " +
-                    "and paper, or an offline password manager.",
+                text = stringResource(R.string.wallet_backup_clipboard_note),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Start,
             )
 
             Button(onClick = onConfirmed) {
-                Text(text = "I have written it down")
+                Text(text = stringResource(R.string.wallet_backup_confirm_cta))
             }
         }
     }

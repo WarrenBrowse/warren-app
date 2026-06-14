@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
@@ -35,6 +36,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.compose.koinInject
 
 /**
@@ -68,7 +70,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
     }
 
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Exit relay",
+        appBarTitle = stringResource(R.string.location_exit_relay_title),
         navigationIcon = {
             NavigateBackIconButton(onNavigateBack = {
                 navigator.goBackUntil(SettingsNavKey)
@@ -81,7 +83,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
         ) {
             if (relays.isEmpty()) {
                 Text(
-                    text = "No relays available. The Warren API is unreachable or the catalogue is empty.",
+                    text = stringResource(R.string.location_no_relays_available),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
@@ -90,7 +92,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Search country, city or address") },
+                    label = { Text(stringResource(R.string.location_search_hint)) },
                     singleLine = true,
                 )
 
@@ -107,12 +109,12 @@ fun WarrenLocationPicker(navigator: Navigator) {
 
                 if (filtered.isEmpty()) {
                     Text(
-                        text = "No exits match \"$trimmed\".",
+                        text = stringResource(R.string.location_no_exits_match, trimmed),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 } else {
                     Text(
-                        text = "Tap to select. Tap again to clear (auto-pick the first active exit).",
+                        text = stringResource(R.string.location_tap_to_select_hint),
                         style = MaterialTheme.typography.bodySmall,
                     )
 
@@ -125,13 +127,13 @@ fun WarrenLocationPicker(navigator: Navigator) {
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
-                                text = "Remember recent exits",
+                                text = stringResource(R.string.location_remember_recent_exits),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                             )
                             if (recentsEnabled && recentExitIds.isNotEmpty()) {
                                 TextButton(onClick = { settings.clearRecentExits() }) {
-                                    Text("Clear")
+                                    Text(stringResource(R.string.location_clear))
                                 }
                             }
                             Switch(
@@ -160,7 +162,9 @@ fun WarrenLocationPicker(navigator: Navigator) {
                         .groupBy { it.country }
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (recentRelays.isNotEmpty()) {
-                            item(key = "header-recents") { SectionHeader("Recents") }
+                            item(key = "header-recents") {
+                                SectionHeader(stringResource(R.string.location_recents))
+                            }
                             items(recentRelays, key = { "recent-${it.exitId}" }) { relay ->
                                 RelayRow(
                                     relay = relay,
@@ -196,7 +200,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
                         }
                         byCountry.forEach { (country, countryRelays) ->
                             item(key = "header-$country") {
-                                SectionHeader(country.ifBlank { "Unknown" })
+                                SectionHeader(country.ifBlank { stringResource(R.string.location_unknown_country) })
                             }
                             items(countryRelays, key = { it.exitId }) { relay ->
                                 RelayRow(
@@ -247,7 +251,7 @@ private fun CustomListHeader(name: String, onDelete: () -> Unit) {
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = onDelete) { Text("Delete list") }
+        TextButton(onClick = onDelete) { Text(stringResource(R.string.location_delete_list)) }
     }
 }
 
@@ -288,24 +292,24 @@ private fun RelayRow(
                 )
                 if (selected) {
                     Text(
-                        text = "Selected",
+                        text = stringResource(R.string.location_selected),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF2E7D32),
                     )
                 }
                 if (!relay.active) {
                     Text(
-                        text = "Inactive",
+                        text = stringResource(R.string.location_inactive),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
             onRemoveFromList?.let {
-                TextButton(onClick = it) { Text("Remove") }
+                TextButton(onClick = it) { Text(stringResource(R.string.remove_button)) }
             }
             onAddToList?.let {
-                TextButton(onClick = it) { Text("Add to list") }
+                TextButton(onClick = it) { Text(stringResource(R.string.location_add_to_list)) }
             }
         }
     }
@@ -324,7 +328,7 @@ private fun AddToListDialog(
     var newName by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add to list") },
+        title = { Text(stringResource(R.string.location_add_to_list)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listNames.forEach { name ->
@@ -337,7 +341,7 @@ private fun AddToListDialog(
                     value = newName,
                     onValueChange = { newName = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("New list name") },
+                    label = { Text(stringResource(R.string.location_new_list_name)) },
                     singleLine = true,
                 )
             }
@@ -346,10 +350,10 @@ private fun AddToListDialog(
             TextButton(
                 enabled = newName.isNotBlank(),
                 onClick = { onPick(newName.trim()) },
-            ) { Text("Create & add") }
+            ) { Text(stringResource(R.string.location_create_and_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
 }

@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,6 +37,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -72,8 +74,13 @@ fun WarrenWalletSettings(navigator: Navigator) {
     var subscriptionStatus by remember { mutableStateOf<String?>(null) }
     var voucherInput by remember { mutableStateOf("") }
 
+    val checkingSubscriptionStatus = stringResource(R.string.subscription_checking)
+    val redeemingVoucherStatus = stringResource(R.string.subscription_redeeming_voucher)
+    val connectingStatus = stringResource(R.string.wallet_settings_connecting)
+    val connectFailedPrefix = stringResource(R.string.wallet_settings_connect_failed)
+
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Wallet",
+        appBarTitle = stringResource(R.string.wallet_settings_section),
         navigationIcon = {
             NavigateBackIconButton(onNavigateBack = {
                 navigator.goBackUntil(SettingsNavKey)
@@ -91,7 +98,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
 
             // Proactive status from the last-known cached expiry - shown
             // immediately, without a fresh biometric-gated request.
-            cachedSubscriptionLabel(cachedExpiry)?.let { msg ->
+            cachedSubscriptionLabel(activity, cachedExpiry)?.let { msg ->
                 Text(
                     text = msg,
                     style = MaterialTheme.typography.titleSmall,
@@ -109,15 +116,15 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onClick = {
                     scope.launch {
-                        subscriptionStatus = "Checking subscription…"
+                        subscriptionStatus = checkingSubscriptionStatus
                         val outcome = subscriptionInvoker.fetch(activity)
                         if (outcome is WarrenSubscriptionOutcome.Success) {
                             settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
                         }
-                        subscriptionStatus = subscriptionLabel(outcome)
+                        subscriptionStatus = subscriptionLabel(activity, outcome)
                     }
                 },
-            ) { Text("Check subscription") }
+            ) { Text(stringResource(R.string.subscription_check)) }
 
             subscriptionStatus?.let { msg ->
                 Text(
@@ -134,7 +141,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
-            ) { Text("Get subscription") }
+            ) { Text(stringResource(R.string.subscription_get)) }
 
             // Voucher redemption (Crockford-32). The server normalizes the
             // dashed / raw form, so the input is sent verbatim.
@@ -142,7 +149,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 value = voucherInput,
                 onValueChange = { voucherInput = it.uppercase() },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                label = { Text("Voucher code") },
+                label = { Text(stringResource(R.string.subscription_voucher_code_label)) },
                 placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
                 singleLine = true,
             )
@@ -152,16 +159,16 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 onClick = {
                     val code = voucherInput.trim()
                     scope.launch {
-                        subscriptionStatus = "Redeeming voucher…"
+                        subscriptionStatus = redeemingVoucherStatus
                         val outcome = subscriptionInvoker.redeemVoucher(activity, code)
                         if (outcome is WarrenVoucherOutcome.Success) {
                             voucherInput = ""
                             settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
                         }
-                        subscriptionStatus = voucherLabel(outcome)
+                        subscriptionStatus = voucherLabel(activity, outcome)
                     }
                 },
-            ) { Text("Redeem voucher") }
+            ) { Text(stringResource(R.string.subscription_redeem_voucher)) }
 
             // Test button: dispatch end-to-end Quinn connect via the
             // app-side use-case. Surfaces the result as inline text;
@@ -171,17 +178,17 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onClick = {
                     scope.launch {
-                        connectStatus = "Connecting..."
+                        connectStatus = connectingStatus
                         val message = try {
                             quinnConnect.connect(activity)
                         } catch (e: Exception) {
                             Logger.e(throwable = e) { "Warren Connect invocation failed" }
-                            "Connect failed: ${e.message}"
+                            "$connectFailedPrefix ${e.message}"
                         }
                         connectStatus = message
                     }
                 },
-            ) { Text("Warren Connect (test)") }
+            ) { Text(stringResource(R.string.wallet_settings_connect_test)) }
 
             connectStatus?.let { msg ->
                 LaunchedEffect(msg) { Logger.i("Warren Connect status: $msg") }
@@ -195,7 +202,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
             // Live Quinn tunnel state mirrored via WarrenQuinnStateProxy.
             // Refreshes every time the service-side adapter transitions.
             Text(
-                text = "Tunnel state: $tunnelState",
+                text = stringResource(R.string.wallet_settings_tunnel_state, tunnelState),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -208,6 +215,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
  * failure message is intentionally not surfaced (it is loggable only).
  */
 internal fun subscriptionLabel(
+    context: android.content.Context,
     outcome: WarrenSubscriptionOutcome,
     nowSecs: Long = System.currentTimeMillis() / 1000,
 ): String = when (outcome) {
@@ -216,36 +224,45 @@ internal fun subscriptionLabel(
             // Epoch expiry is the "no subscription bound yet" sentinel a 404
             // resolves to (mirrors iOS / desktop); show it as such instead of
             // a bogus "expired (1970-01-01)" date.
-            "No active subscription."
+            context.getString(R.string.subscription_none_active)
         } else {
             val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
                 .atZone(java.time.ZoneId.systemDefault())
                 .toLocalDate()
                 .toString()
             if (outcome.expiresAtUnixSecs > nowSecs) {
-                "Subscription active - expires $date"
+                context.getString(R.string.subscription_active_expires, date)
             } else {
-                "Subscription expired ($date)"
+                context.getString(R.string.subscription_expired, date)
             }
         }
     }
-    WarrenSubscriptionOutcome.AuthorizationDenied -> "Authorization cancelled."
-    WarrenSubscriptionOutcome.WalletNotReady -> "Set up your wallet first."
-    is WarrenSubscriptionOutcome.Failure -> "Couldn't fetch subscription status."
+    WarrenSubscriptionOutcome.AuthorizationDenied ->
+        context.getString(R.string.subscription_authorization_cancelled)
+    WarrenSubscriptionOutcome.WalletNotReady ->
+        context.getString(R.string.subscription_wallet_not_ready)
+    is WarrenSubscriptionOutcome.Failure ->
+        context.getString(R.string.subscription_fetch_failed)
 }
 
 /** Render a [WarrenVoucherOutcome] as a user-facing line. */
-internal fun voucherLabel(outcome: WarrenVoucherOutcome): String = when (outcome) {
+internal fun voucherLabel(
+    context: android.content.Context,
+    outcome: WarrenVoucherOutcome,
+): String = when (outcome) {
     is WarrenVoucherOutcome.Success -> {
         val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
             .atZone(java.time.ZoneId.systemDefault())
             .toLocalDate()
             .toString()
-        "Voucher redeemed - subscription expires $date"
+        context.getString(R.string.subscription_voucher_redeemed, date)
     }
-    WarrenVoucherOutcome.AuthorizationDenied -> "Authorization cancelled."
-    WarrenVoucherOutcome.WalletNotReady -> "Set up your wallet first."
-    is WarrenVoucherOutcome.Failure -> "Couldn't redeem voucher. Check the code and try again."
+    WarrenVoucherOutcome.AuthorizationDenied ->
+        context.getString(R.string.subscription_authorization_cancelled)
+    WarrenVoucherOutcome.WalletNotReady ->
+        context.getString(R.string.subscription_wallet_not_ready)
+    is WarrenVoucherOutcome.Failure ->
+        context.getString(R.string.subscription_voucher_redeem_failed)
 }
 
 /**
@@ -255,6 +272,7 @@ internal fun voucherLabel(outcome: WarrenVoucherOutcome): String = when (outcome
  * the tunnel stops working.
  */
 internal fun cachedSubscriptionLabel(
+    context: android.content.Context,
     expiryUnixSecs: Long,
     nowSecs: Long = System.currentTimeMillis() / 1000,
 ): String? {
@@ -264,12 +282,17 @@ internal fun cachedSubscriptionLabel(
         .toLocalDate()
         .toString()
     return when {
-        expiryUnixSecs <= nowSecs -> "Subscription expired on $date"
+        expiryUnixSecs <= nowSecs ->
+            context.getString(R.string.subscription_expired_on, date)
         expiryUnixSecs - nowSecs <= WARN_WINDOW_SECS -> {
             val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400 // ceil to whole days
-            "Subscription expires in $days day${if (days == 1L) "" else "s"} ($date)"
+            if (days == 1L) {
+                context.getString(R.string.subscription_expires_in_day, days, date)
+            } else {
+                context.getString(R.string.subscription_expires_in_days, days, date)
+            }
         }
-        else -> "Subscription active - expires $date"
+        else -> context.getString(R.string.subscription_active_expires, date)
     }
 }
 

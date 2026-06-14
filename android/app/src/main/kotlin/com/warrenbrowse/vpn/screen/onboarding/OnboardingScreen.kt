@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
@@ -48,28 +49,27 @@ fun OnboardingScreen(navigator: Navigator) {
             modifier = Modifier.size(96.dp).padding(top = 24.dp),
         )
         Text(
-            text = "Welcome to Warren",
+            text = stringResource(R.string.onboarding_welcome_title),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = "A fast, private VPN built on the Warren QUIC tunnel. Your " +
-                "identity is a wallet you alone control - no email, no account number.",
+            text = stringResource(R.string.onboarding_welcome_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         ValueProp(
-            title = "Always-on obfuscation",
-            body = "Your traffic looks like ordinary HTTPS browsing (HTTP/3 mimicry).",
+            title = stringResource(R.string.onboarding_prop_obfuscation_title),
+            body = stringResource(R.string.onboarding_prop_obfuscation_body),
         )
         ValueProp(
-            title = "No logs, no tracking",
-            body = "We can't tie traffic to you - there's no account identity to log.",
+            title = stringResource(R.string.onboarding_prop_no_logs_title),
+            body = stringResource(R.string.onboarding_prop_no_logs_body),
         )
         ValueProp(
-            title = "You hold the keys",
-            body = "A 12-word recovery phrase is your only credential. Back it up safely.",
+            title = stringResource(R.string.onboarding_prop_keys_title),
+            body = stringResource(R.string.onboarding_prop_keys_body),
         )
 
         Button(
@@ -78,7 +78,7 @@ fun OnboardingScreen(navigator: Navigator) {
                 settings.setOnboardingCompleted(true)
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
             },
-        ) { Text("Get started") }
+        ) { Text(stringResource(R.string.onboarding_get_started)) }
     }
 }
 
