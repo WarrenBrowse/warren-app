@@ -53,7 +53,6 @@ class WarrenQuinnStateProxyTest {
                 assignedNatPmpPort = null,
                 multiHop = false,
                 daita = false,
-                obfuscationM40 = false,
             )
         )
         // M4.0 HTTP/3 mimicry is always-on for Warren tunnels, so the
@@ -70,7 +69,6 @@ class WarrenQuinnStateProxyTest {
                 assignedNatPmpPort = 51234,
                 multiHop = true,
                 daita = true,
-                obfuscationM40 = true,
             )
         )
         val label = proxy.state.value

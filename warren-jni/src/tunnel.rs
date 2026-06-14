@@ -50,8 +50,6 @@ pub struct WarrenTunnelConfig {
     /// `pump_bidirectional_with_daita`. If the exit declines (no pool
     /// configured) we fall back to a plain pump - no error.
     pub daita: Option<serde_json::Value>,
-    #[expect(dead_code, reason = "Android does not surface bypass-CIDR routing yet (D.4 follow-up)")]
-    pub bypass_cidrs: Option<Vec<String>>,
     /// Client opt-in for the NAT-PMP refresh loop. When `Some(true)`
     /// the session spawns a `warren_natpmp_client::spawn_refresh_loop_from_addr`
     /// after the handshake completes, binding the UDP socket to the
@@ -69,12 +67,6 @@ pub struct WarrenTunnelConfig {
     /// Requested mapping lifetime in seconds (gateway may cap it).
     #[serde(default)]
     pub nat_pmp_lifetime_secs: Option<u32>,
-    #[expect(
-        dead_code,
-        reason = "M4.0 obfuscation lives at the QUIC transport layer (warren-tunnel transport_config); \
-                  the client-side toggle is currently configured at warren-exit deploy time, not per-session"
-    )]
-    pub obfuscation_m40: Option<bool>,
     /// Whether IPv6 is carried through the tunnel. Enforced Android-side at
     /// the `VpnService.Builder` layer (route + address selection); accepted
     /// here so the schema stays in sync and future client-side IPv6
@@ -399,12 +391,10 @@ mod tests {
             "relay_endpoint": "5.6.7.8:443"
         },
         "daita": {"padding_machine": "tamaraw", "normalize_packets": false},
-        "bypass_cidrs": ["10.0.0.0/8"],
         "nat_pmp_enabled": true,
         "nat_pmp_protocol": "tcp",
         "nat_pmp_external_port": 51820,
         "nat_pmp_lifetime_secs": 21600,
-        "obfuscation_m40": true,
         "enable_ipv6": true,
         "lockdown_mode": true,
         "dns": {

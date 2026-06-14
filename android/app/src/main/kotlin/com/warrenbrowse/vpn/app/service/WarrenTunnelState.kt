@@ -15,7 +15,6 @@ sealed class WarrenTunnelState {
         val assignedNatPmpPort: Int?,
         val multiHop: Boolean,
         val daita: Boolean,
-        val obfuscationM40: Boolean,
         // "host:port" literals from the active WarrenTunnelConfig, surfaced
         // to the main connection card via WarrenConnectedInfo. Default to
         // empty/null so callers that don't have the config (e.g. the
@@ -51,7 +50,6 @@ sealed class WarrenTunnelState {
                 assignedNatPmpPort = null,
                 multiHop = false,
                 daita = false,
-                obfuscationM40 = false,
             )
             3 -> Reconnecting
             else -> Failed("native status code $code")

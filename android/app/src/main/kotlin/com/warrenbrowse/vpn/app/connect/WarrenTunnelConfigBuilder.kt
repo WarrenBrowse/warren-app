@@ -29,7 +29,6 @@ class WarrenTunnelConfigBuilder(
     fun build(walletPubkey: WalletAddress): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
-        val obfuscationM40 = localSettings.obfuscationM40.value
         val ipv6Enabled = localSettings.ipv6Enabled.value
         val lockdownMode = localSettings.lockdownMode.value
         val allowLan = localSettings.allowLan.value
@@ -69,12 +68,10 @@ class WarrenTunnelConfigBuilder(
                     normalizePackets = true,
                 )
             } else null,
-            bypassCidrs = emptyList(),
             natPmpEnabled = natPmpEnabled,
             natPmpProtocol = localSettings.natPmpProtocol.value,
             natPmpExternalPort = localSettings.natPmpExternalPort.value,
             natPmpLifetimeSecs = localSettings.natPmpLifetimeSecs.value,
-            obfuscationM40 = obfuscationM40,
             enableIpv6 = ipv6Enabled,
             lockdownMode = lockdownMode,
             dns = buildDnsConfig(),

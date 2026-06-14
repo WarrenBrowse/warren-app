@@ -30,7 +30,6 @@ class WarrenTunnelConfigBuilderTest {
         daita: Boolean = false,
         natPmp: Boolean = false,
         multiHop: Boolean = false,
-        obfuscation: Boolean = false,
         selectedExitId: String? = null,
         entryCountry: String? = null,
         exitCountry: String? = null,
@@ -56,7 +55,6 @@ class WarrenTunnelConfigBuilderTest {
         every { repo.natPmpExternalPort } returns MutableStateFlow(natPmpExternalPort)
         every { repo.natPmpLifetimeSecs } returns MutableStateFlow(natPmpLifetimeSecs)
         every { repo.multiHopEnabled } returns MutableStateFlow(multiHop)
-        every { repo.obfuscationM40 } returns MutableStateFlow(obfuscation)
         every { repo.selectedExitId } returns MutableStateFlow(selectedExitId)
         every { repo.entryCountry } returns MutableStateFlow(entryCountry)
         every { repo.exitCountry } returns MutableStateFlow(exitCountry)
@@ -88,7 +86,6 @@ class WarrenTunnelConfigBuilderTest {
         assertNull(config.entryHop)
         assertNull(config.daita)
         assertFalse(config.natPmpEnabled)
-        assertFalse(config.obfuscationM40)
         assertEquals(pubkey.value, config.walletPubkeyHex)
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
     }
@@ -118,13 +115,6 @@ class WarrenTunnelConfigBuilderTest {
         val builder = WarrenTunnelConfigBuilder(mockRepo(natPmp = true), mockCatalog())
         val config = builder.build(pubkey)!!
         assertTrue(config.natPmpEnabled)
-    }
-
-    @Test
-    fun `obfuscation toggle flows through`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(obfuscation = true), mockCatalog())
-        val config = builder.build(pubkey)!!
-        assertTrue(config.obfuscationM40)
     }
 
     @Test
@@ -287,7 +277,7 @@ class WarrenTunnelConfigBuilderTest {
     @Test
     fun `all flags on produces a fully-populated config`() {
         val builder = WarrenTunnelConfigBuilder(
-            mockRepo(daita = true, natPmp = true, multiHop = true, obfuscation = true),
+            mockRepo(daita = true, natPmp = true, multiHop = true),
             mockCatalog(),
         )
         val config = builder.build(pubkey)!!
@@ -295,7 +285,6 @@ class WarrenTunnelConfigBuilderTest {
         assertNull(config.entryHop)
         assertNotNull(config.daita)
         assertTrue(config.natPmpEnabled)
-        assertTrue(config.obfuscationM40)
         assertEquals(pubkey.value, config.walletPubkeyHex)
     }
 }

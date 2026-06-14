@@ -38,14 +38,12 @@ class WarrenLocalSettingsRepositoryTest {
         every { mockPrefs.getBoolean("daita_enabled", false) } returns true
         every { mockPrefs.getBoolean("nat_pmp_enabled", false) } returns false
         every { mockPrefs.getBoolean("multi_hop_enabled", false) } returns true
-        every { mockPrefs.getBoolean("obfuscation_m40", false) } returns false
 
         val repo = WarrenLocalSettingsRepository(mockContext)
 
         assertTrue(repo.daitaEnabled.value)
         assertFalse(repo.natPmpEnabled.value)
         assertTrue(repo.multiHopEnabled.value)
-        assertFalse(repo.obfuscationM40.value)
     }
 
     @Test
@@ -80,17 +78,6 @@ class WarrenLocalSettingsRepositoryTest {
 
         assertFalse(repo.multiHopEnabled.value)
         verify { mockEditor.putBoolean("multi_hop_enabled", false) }
-    }
-
-    @Test
-    fun `setObfuscationM40 writes through to prefs and updates state`() {
-        every { mockPrefs.getBoolean(any(), any()) } returns false
-        val repo = WarrenLocalSettingsRepository(mockContext)
-
-        repo.setObfuscationM40(true)
-
-        assertTrue(repo.obfuscationM40.value)
-        verify { mockEditor.putBoolean("obfuscation_m40", true) }
     }
 
     @Test

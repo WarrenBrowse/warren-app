@@ -47,6 +47,9 @@ object WarrenTunDefaults {
      */
     const val EXIT_DNS_RESOLVER = "10.66.0.1"
 
+    // Largest usable TUN MTU for the Warren QUIC tunnel and the default. The
+    // QUIC datagram path cannot carry more, so this doubles as the ceiling the
+    // user-configurable MTU is clamped to (the user may only lower it).
     const val MTU = 1280
 }
 
@@ -127,15 +130,17 @@ fun planTunInterface(
         addresses = addresses,
         routes = routes,
         dnsServers = dnsServers,
-        // Clamp defensively: never above the Warren QUIC floor (raising it
+        // Clamp defensively: never above the Warren QUIC ceiling (raising it
         // risks black-holing oversized encapsulated packets), never below a
-        // usable minimum.
-        mtu = config.mtu.coerceIn(MIN_MTU, WarrenTunDefaults.MTU),
+        // usable minimum. This caps to the ceiling, so the MTU can only be
+        // lowered, never raised.
+        mtu = config.mtu.coerceIn(MIN_MTU, MAX_MTU),
         blocking = false,
     )
 }
 
 private const val MIN_MTU = 576
+private const val MAX_MTU = WarrenTunDefaults.MTU
 
 /**
  * RFC1918 private ranges + link-local, excluded from the TUN routes when

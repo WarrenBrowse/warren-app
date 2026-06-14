@@ -57,9 +57,6 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _exitCountry = MutableStateFlow(prefs.getString(KEY_EXIT_COUNTRY, null))
     val exitCountry: StateFlow<String?> = _exitCountry.asStateFlow()
 
-    private val _obfuscationM40 = MutableStateFlow(prefs.getBoolean(KEY_OBFUSCATION_M40, false))
-    val obfuscationM40: StateFlow<Boolean> = _obfuscationM40.asStateFlow()
-
     // --- Privacy-leak controls (P0) ---
 
     /** Route IPv6 through the tunnel. `false` (default) blackholes IPv6. */
@@ -195,11 +192,6 @@ class WarrenLocalSettingsRepository(context: Context) {
         if (normalized == null) editor.remove(key) else editor.putString(key, normalized)
         editor.apply()
         flow.value = normalized
-    }
-
-    fun setObfuscationM40(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_OBFUSCATION_M40, enabled).apply()
-        _obfuscationM40.value = enabled
     }
 
     /**
@@ -354,7 +346,6 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_MULTI_HOP_ENABLED = "multi_hop_enabled"
         private const val KEY_ENTRY_COUNTRY = "entry_country"
         private const val KEY_EXIT_COUNTRY = "exit_country"
-        private const val KEY_OBFUSCATION_M40 = "obfuscation_m40"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
         private const val KEY_RECENT_EXIT_IDS = "recent_exit_ids"
     private const val KEY_RECENTS_ENABLED = "recents_enabled"

@@ -241,14 +241,8 @@ class WarrenQuinnAdapter(
         _state.value = WarrenTunnelState.Disconnected
     }
 
-    private fun buildTunInterface(config: WarrenTunnelConfig): ParcelFileDescriptor? {
-        config.bypassCidrs.forEach { cidr ->
-            // TODO: translate CIDR -> addDisallowedApplication or
-            //   excludeRoute depending on payload shape.
-            Logger.d("WarrenQuinnAdapter: bypass CIDR pending $cidr")
-        }
-        return applyPlan(planTunInterface(config))
-    }
+    private fun buildTunInterface(config: WarrenTunnelConfig): ParcelFileDescriptor? =
+        applyPlan(planTunInterface(config))
 
     /**
      * Apply a [WarrenTunInterfacePlan] to a fresh `VpnService.Builder` and
@@ -480,7 +474,6 @@ class WarrenQuinnAdapter(
                     assignedNatPmpPort = null,
                     multiHop = config.entryHop != null,
                     daita = config.daita != null,
-                    obfuscationM40 = config.obfuscationM40,
                     exitEndpointHost = config.exitEndpoint,
                     entryEndpointHost = config.entryHop?.relayEndpoint,
                 )
