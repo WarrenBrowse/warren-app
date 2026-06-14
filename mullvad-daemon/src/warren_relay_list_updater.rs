@@ -772,7 +772,9 @@ mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
     use warren_relay_selector::warren_types::{ExitId, WarrenPubkey};
-    use warren_relay_selector::{JsonRelay, sign_relay_list};
+    use warren_relay_selector::{
+        JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
+    };
 
     /// Far-future expiry so default fixtures are never "expired".
     const FAR_FUTURE: u64 = 4_000_000_000;
@@ -814,15 +816,29 @@ mod tests {
     ) -> String {
         let relay_pubkey_hex = hex::encode(WarrenPubkey::from_bytes([seed; 32]).as_bytes());
         let signed = sign_relay_list(
-            vec![JsonRelay {
-                endpoint_id: relay_pubkey_hex,
+            vec![JsonNode {
+                id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([seed; 16]),
-                ip_addrs: vec!["198.51.100.1:51820".to_owned()],
-                country: "se".to_owned(),
-                city: "Stockholm".to_owned(),
+                multihop_pubkey: None,
+                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
+                location: JsonLocation {
+                    country: "se".to_owned(),
+                    city: "Stockholm".to_owned(),
+                },
                 weight: 100,
                 active: true,
-                ipv6_egress: false,
+                endpoints: vec![JsonEndpoint {
+                    addr: "198.51.100.1".to_owned(),
+                    family: "ipv4".to_owned(),
+                    ingress: true,
+                    egress: true,
+                    listeners: vec![JsonListener {
+                        port: 51820,
+                        transport: "quic".to_owned(),
+                        alpn: "h3".to_owned(),
+                    }],
+                    geoip: None,
+                }],
             }],
             server_key,
             generation,

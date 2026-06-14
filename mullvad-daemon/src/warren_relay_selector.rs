@@ -67,6 +67,12 @@ pub struct WarrenSelection {
     pub country_code: String,
     /// Session H.6: free-form city label captured at selection time.
     pub city: String,
+
+    /// ALPN tokens advertised by the selected exit's v6 ingress
+    /// listeners (preference order). Threaded into the tunnel params so
+    /// the client offers the exit-driven ALPN instead of a hardcoded
+    /// constant. Empty keeps the `ALPN_H3` default.
+    pub alpns: Vec<String>,
 }
 
 impl From<&WarrenRelay> for WarrenSelection {
@@ -77,6 +83,7 @@ impl From<&WarrenRelay> for WarrenSelection {
             endpoint_addr: relay.endpoint_addr().clone(),
             country_code: relay.location().country_code().to_owned(),
             city: relay.location().city().to_owned(),
+            alpns: relay.dial_alpns(),
         }
     }
 }
@@ -243,7 +250,7 @@ impl DaemonWarrenRelaySelector {
 
 #[cfg(test)]
 mod tests {
-    use warren_relay_selector::{Location, LocationConstraint, WarrenRelay};
+    use warren_relay_selector::{Endpoint, Listener, Location, LocationConstraint, Role, WarrenRelay};
 
     use super::*;
 
@@ -252,12 +259,18 @@ mod tests {
     }
 
     fn relay(seed: u8, country: &str, addr_str: &str) -> WarrenRelay {
-        let id = endpoint_id(seed);
-        let addr = WarrenExitAddr::new(id).with_ip_addr(addr_str.parse().unwrap());
+        let socket: std::net::SocketAddr = addr_str.parse().unwrap();
         WarrenRelay::new(
-            id,
+            endpoint_id(seed),
             ExitId::from_bytes([seed; 16]),
-            addr,
+            vec![Endpoint::new(
+                socket.ip(),
+                true,
+                true,
+                vec![Listener::new(socket.port(), "quic", "h3")],
+                None,
+            )],
+            vec![Role::Entry, Role::Relay, Role::Exit],
             Location::new(country, "_"),
             100,
             true,
@@ -379,7 +392,9 @@ mod tests {
         // the order of v2 fields, this test (and any existing
         // installation) breaks -> `/v3` rotation mandatory.
         use ed25519_dalek::SigningKey;
-        use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
+        use warren_relay_selector::{
+            JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode, sign_relay_list,
+        };
 
         let dir = isolated_tempdir();
 
@@ -389,15 +404,29 @@ mod tests {
         let relay_pubkey_hex = hex::encode(relay_pubkey.as_bytes());
 
         let signed = sign_relay_list(
-            vec![SignedJsonRelay {
-                endpoint_id: relay_pubkey_hex,
+            vec![SignedJsonNode {
+                id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe1; 16]),
-                ip_addrs: vec!["198.51.100.1:51820".to_owned()],
-                country: "se".to_owned(),
-                city: "Stockholm".to_owned(),
+                multihop_pubkey: None,
+                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
+                location: JsonLocation {
+                    country: "se".to_owned(),
+                    city: "Stockholm".to_owned(),
+                },
                 weight: 100,
                 active: true,
-                ipv6_egress: false,
+                endpoints: vec![JsonEndpoint {
+                    addr: "198.51.100.1".to_owned(),
+                    family: "ipv4".to_owned(),
+                    ingress: true,
+                    egress: true,
+                    listeners: vec![JsonListener {
+                        port: 51820,
+                        transport: "quic".to_owned(),
+                        alpn: "h3".to_owned(),
+                    }],
+                    geoip: None,
+                }],
             }],
             &server_key,
             1,
@@ -424,22 +453,38 @@ mod tests {
         // tunnel remains impossible rather than connecting to an
         // attacker).
         use ed25519_dalek::SigningKey;
-        use warren_relay_selector::{JsonRelay as SignedJsonRelay, sign_relay_list};
+        use warren_relay_selector::{
+            JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode, sign_relay_list,
+        };
 
         let dir = isolated_tempdir();
         let server_key = SigningKey::from_bytes(&[0xab; 32]);
         let relay_pubkey_hex = hex::encode(WarrenPubkey::from_bytes([5u8; 32]).as_bytes());
 
         let mut signed = sign_relay_list(
-            vec![SignedJsonRelay {
-                endpoint_id: relay_pubkey_hex,
+            vec![SignedJsonNode {
+                id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe2; 16]),
-                ip_addrs: vec!["198.51.100.1:51820".to_owned()],
-                country: "se".to_owned(),
-                city: "Stockholm".to_owned(),
+                multihop_pubkey: None,
+                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
+                location: JsonLocation {
+                    country: "se".to_owned(),
+                    city: "Stockholm".to_owned(),
+                },
                 weight: 100,
                 active: true,
-                ipv6_egress: false,
+                endpoints: vec![JsonEndpoint {
+                    addr: "198.51.100.1".to_owned(),
+                    family: "ipv4".to_owned(),
+                    ingress: true,
+                    egress: true,
+                    listeners: vec![JsonListener {
+                        port: 51820,
+                        transport: "quic".to_owned(),
+                        alpn: "h3".to_owned(),
+                    }],
+                    geoip: None,
+                }],
             }],
             &server_key,
             1,
@@ -448,7 +493,7 @@ mod tests {
         );
         // Tamper the port (= MITM re-routing to its relay) without
         // re-signing.
-        signed.relays[0].ip_addrs = vec!["198.51.100.1:9999".to_owned()];
+        signed.nodes[0].endpoints[0].addr = "198.51.100.2".to_owned();
         let json = serde_json::to_string(&signed).expect("serialize tampered");
         std::fs::write(dir.join(WARREN_RELAYS_FILENAME), &json).expect("write");
 

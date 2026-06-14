@@ -533,7 +533,6 @@ impl ParametersGenerator {
             .read()
             .expect("signing-key RwLock poisoned")
             .clone();
-        let query = relay_settings_to_warren_query(&inner.relay_settings);
         let multi_hop = inner.warren_multi_hop.clone();
         let nat_pmp = inner.warren_nat_pmp.clone();
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
@@ -542,8 +541,13 @@ impl ParametersGenerator {
         // IPv6 dual-stack opt-in (Mullvad `tunnel_options.generic.enable_ipv6`,
         // default false). Forwarded onto `params.features` post-assemble
         // (single-hop only). When off, the exit allocates no v6 and the
-        // firewall blocks native IPv6 - no leak.
+        // firewall blocks native IPv6 - no leak. It also filters the server
+        // list to exits that attest v6 egress (require_ipv6_egress).
         let enable_ipv6 = inner.tunnel_options.generic.enable_ipv6;
+        // The query filters the list by location AND by endpoint family:
+        // "Device IP version" -> IpAvailability, "In-tunnel IPv6" ->
+        // require_ipv6_egress.
+        let query = relay_settings_to_warren_query(&inner.relay_settings, enable_ipv6);
         // M5.B.2 multi-exit failover: when this is a retry and we
         // remember which exit was used on the failed attempt, ask the
         // selector to skip it. The failover selector falls back to
@@ -789,8 +793,9 @@ impl ParametersGenerator {
         // it: every v6 packet is silently dropped (FDC incident,
         // 2026-06-12). Gating here connects such an exit v4-only; the
         // firewall keeps native v6 blocked (no leak, no blackhole).
-        // The capability is carried per-relay in the signed list
-        // (`WarrenRelay::ipv6_egress`); resolve it for the exit we are
+        // The capability is derived per-node from the v6 list's
+        // per-endpoint egress flags (`WarrenRelay::egress_v6`); resolve it
+        // for the exit we are
         // about to dial (multi-hop via the descriptor's exit_id,
         // single-hop via `params.exit_id`). Unknown exit (descriptor
         // out-of-band of the cached list) => treat as no egress, the
@@ -805,7 +810,7 @@ impl ParametersGenerator {
                 });
                 sel.relay_by_exit_id(&exit_id)
             })
-            .is_some_and(warren_relay_selector::WarrenRelay::ipv6_egress);
+            .is_some_and(warren_relay_selector::WarrenRelay::egress_v6);
         if enable_ipv6 && !exit_attests_ipv6_egress {
             log::info!(
                 "Warren: IPv6 is enabled but the selected exit does not attest IPv6 \

@@ -148,6 +148,13 @@ pub struct WarrenTunnelParameters {
     /// Combinable via OR: `IPV6`, `PORT_FORWARD`, ...
     pub features: u32,
 
+    /// ALPN protocols (as bytes) offered in the QUIC/TLS handshake, in
+    /// preference order, sourced from the selected exit's v6 listener(s).
+    /// Empty falls back to the `ALPN_H3` default inside
+    /// [`warren_tunnel::ClientTunnel`]. Single-hop only; the multi-hop
+    /// path negotiates ALPN from its own signed relay descriptor.
+    pub alpn_protocols: Vec<Vec<u8>>,
+
     /// Multi-hop configuration. `None` (default) selects the legacy
     /// single-hop path through [`warren_tunnel::ClientTunnel`]; `Some`
     /// dispatches to a multi-hop session driven by
@@ -777,6 +784,7 @@ impl WarrenTunnelMonitor {
         let n_conns = params.n_connections;
         let features = params.features;
         let enable_daita = params.enable_daita;
+        let alpn_protocols = params.alpn_protocols.clone();
         let mut event_hook = args.event_hook;
 
         // Detect the outbound source IP (eth0 / wlan0) used to reach
@@ -812,6 +820,7 @@ impl WarrenTunnelMonitor {
         let session_kind = runtime.block_on(async move {
             let mut client = ClientTunnel::with_signing_key(&signing)
                 .with_features(features)
+                .with_alpn_protocols(alpn_protocols)
                 .with_daita(enable_daita)
                 // Stable per-install device id: every reconnect/retry reuses
                 // ONE device lease, so the account never trips the v2 device
@@ -3006,6 +3015,7 @@ mod tests {
             n_connections: 2,
             features: 0x1,
             multi_hop: None,
+            alpn_protocols: Vec::new(),
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
@@ -3040,6 +3050,7 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: None,
+            alpn_protocols: Vec::new(),
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
@@ -3097,6 +3108,7 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: Some(mh),
+            alpn_protocols: Vec::new(),
             on_reconnect: None,
             nat_pmp: None,
             nat_pmp_observer: None,
@@ -3144,6 +3156,7 @@ mod tests {
             n_connections: 1,
             features: 0,
             multi_hop: None,
+            alpn_protocols: Vec::new(),
             on_reconnect: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,

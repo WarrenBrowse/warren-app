@@ -110,8 +110,8 @@ pub fn features_for(enable_ipv6: bool) -> u32 {
 /// and nothing returns (observed on a v4-only exit, 2026-06-12). When
 /// the exit lacks egress we connect v4-only and the firewall keeps
 /// native IPv6 blocked (no leak, no blackhole). The egress capability
-/// is carried per-relay in the signed list (`WarrenRelay::ipv6_egress`,
-/// attested by the exit's startup probe).
+/// is derived per-node from the signed list (`WarrenRelay::egress_v6`,
+/// from the exit's probed per-endpoint egress flags).
 #[must_use]
 pub fn negotiate_in_tunnel_ipv6(enable_ipv6: bool, exit_attests_ipv6_egress: bool) -> bool {
     enable_ipv6 && exit_attests_ipv6_egress
@@ -142,6 +142,11 @@ pub fn assemble_for_attempt(
     bypass_cidrs: Vec<BypassCidr>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
+    let alpn_protocols = selection
+        .alpns
+        .iter()
+        .map(|a| a.clone().into_bytes())
+        .collect();
     Ok(WarrenTunnelParameters {
         exit_addr: selection.endpoint_addr,
         exit_id: selection.exit_id,
@@ -150,6 +155,7 @@ pub fn assemble_for_attempt(
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
+        alpn_protocols,
         multi_hop,
         // The reconnect observer is wired by the caller
         // (`ParametersGenerator::produce_warren_tunnel_params`) after
@@ -228,6 +234,11 @@ pub fn assemble_failover_for_attempt(
         selector
             .inner()
             .select_failover_alternative_for_attempt(query, excluded, retry_attempt)?;
+    let alpn_protocols = alternative
+        .dial_alpns()
+        .into_iter()
+        .map(String::into_bytes)
+        .collect();
     Ok(WarrenTunnelParameters {
         exit_addr: alternative.endpoint_addr().clone(),
         exit_id: alternative.exit_id(),
@@ -236,6 +247,7 @@ pub fn assemble_failover_for_attempt(
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
         features: DEFAULT_FEATURES,
+        alpn_protocols,
         multi_hop,
         on_reconnect: None,
         nat_pmp,
@@ -249,8 +261,10 @@ pub fn assemble_failover_for_attempt(
 #[cfg(test)]
 mod tests {
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
-    use warren_relay_selector::{Location, LocationConstraint, WarrenRelay, WarrenRelayList};
+    use warren_relay_selector::warren_types::WarrenPubkey;
+    use warren_relay_selector::{
+        Endpoint, Listener, Location, LocationConstraint, Role, WarrenRelay, WarrenRelayList,
+    };
 
     use super::*;
 
@@ -260,12 +274,17 @@ mod tests {
     }
 
     fn fixture_relay(seed: u8, country: &str) -> WarrenRelay {
-        let id = WarrenPubkey::from_bytes([seed; 32]);
-        let addr = WarrenExitAddr::new(id).with_ip_addr("198.51.100.1:51820".parse().unwrap());
         WarrenRelay::new(
-            id,
+            WarrenPubkey::from_bytes([seed; 32]),
             warren_relay_selector::warren_types::ExitId::from_bytes([seed; 16]),
-            addr,
+            vec![Endpoint::new(
+                "198.51.100.1".parse().unwrap(),
+                true,
+                true,
+                vec![Listener::new(51820, "quic", "h3")],
+                None,
+            )],
+            vec![Role::Entry, Role::Relay, Role::Exit],
             Location::new(country, "_"),
             100,
             true,

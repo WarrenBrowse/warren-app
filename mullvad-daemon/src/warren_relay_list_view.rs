@@ -270,18 +270,23 @@ pub(crate) fn country_display_name_pub(code: &str) -> String {
 mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::warren_types::{WarrenExitAddr, WarrenPubkey};
-    use warren_relay_selector::{Location as WLocation, WarrenRelay};
+    use warren_relay_selector::warren_types::WarrenPubkey;
+    use warren_relay_selector::{Endpoint, Listener, Location as WLocation, Role, WarrenRelay};
 
     fn make_warren_relay(country: &str, city: &str, ipv4: &str, byte_seed: u8) -> WarrenRelay {
         let sk = SigningKey::from_bytes(&[byte_seed; 32]);
         let endpoint_id = WarrenPubkey::from_bytes(sk.verifying_key().to_bytes());
-        let socket: SocketAddr = format!("{}:51820", ipv4).parse().unwrap();
-        let endpoint_addr = WarrenExitAddr::new(endpoint_id).with_ip_addr(socket);
         WarrenRelay::new(
             endpoint_id,
             warren_relay_selector::warren_types::ExitId::from_bytes([byte_seed; 16]),
-            endpoint_addr,
+            vec![Endpoint::new(
+                ipv4.parse().unwrap(),
+                true,
+                true,
+                vec![Listener::new(51820, "quic", "h3")],
+                None,
+            )],
+            vec![Role::Entry, Role::Relay, Role::Exit],
             WLocation::new(country, city),
             100,
             true,
