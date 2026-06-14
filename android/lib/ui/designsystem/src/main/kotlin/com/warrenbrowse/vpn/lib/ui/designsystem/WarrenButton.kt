@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
@@ -32,6 +34,10 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.errorDisabled
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.theme.color.primaryDisabled
 import com.warrenbrowse.vpn.lib.ui.theme.color.tertiaryDisabled
+
+// Warren buttons use a 4dp corner radius to match the desktop (Electron) app,
+// instead of the Material3 default fully-rounded pill shape.
+private val WarrenButtonShape = RoundedCornerShape(4.dp)
 
 @Preview
 @Composable
@@ -187,6 +193,7 @@ fun PrimaryTextButton(
         onClick = onClick,
         modifier = modifier.wrapContentHeight().width(IntrinsicSize.Max),
         colors = colors,
+        shape = WarrenButtonShape,
         enabled = isEnabled,
         contentPadding =
             if (hasIcon) {
@@ -230,6 +237,7 @@ fun NegativeOutlinedButton(
         onClick = onClick,
         modifier = modifier.wrapContentHeight().width(IntrinsicSize.Max),
         colors = colors,
+        shape = WarrenButtonShape,
         enabled = !isLoading && isEnabled,
         border = border,
         contentPadding =
@@ -264,6 +272,7 @@ private fun BaseButton(
     Button(
         onClick = onClick,
         colors = colors,
+        shape = WarrenButtonShape,
         enabled = isEnabled,
         contentPadding =
             if (hasIcon) {
@@ -295,7 +304,9 @@ fun SmallPrimaryButton(
             disabledContainerColor = MaterialTheme.colorScheme.primaryDisabled,
         ),
 ) {
-    Button(onClick = onClick, modifier = modifier, colors = colors) { Text(text = text) }
+    Button(onClick = onClick, modifier = modifier, colors = colors, shape = WarrenButtonShape) {
+        Text(text = text)
+    }
 }
 
 @Composable
