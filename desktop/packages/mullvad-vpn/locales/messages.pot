@@ -938,6 +938,10 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr ""
 
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr ""
+
 #. Label displayed when an unknown error occurred
 msgctxt "app-upgrade-view"
 msgid "Unknown error occurred. Please try again or send a problem report."
@@ -947,6 +951,11 @@ msgstr ""
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
+msgstr ""
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
 msgstr ""
 
 #. Label displayed when an error occurred due to the installer failed verification
@@ -1913,6 +1922,10 @@ msgctxt "notifications"
 msgid "Your device is offline. The tunnel will automatically connect once your device is back online."
 msgstr ""
 
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr ""
+
 #. The in-app banner which is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version."
@@ -1929,6 +1942,10 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "applying…"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2663,15 +2680,7 @@ msgid "Auto-connect"
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr ""
-
-msgctxt "vpn-settings-view"
 msgid "Automatically connect to a server when the app launches."
-msgstr ""
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
 msgstr ""
 
 #. This is displayed when the custom DNS setting is turned on which makes the block
@@ -2840,10 +2849,6 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr ""
 
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr ""
-
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
@@ -2892,18 +2897,6 @@ msgstr ""
 
 msgctxt "warren-mnemonic"
 msgid "Copy to clipboard"
-msgstr ""
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr ""
-
-msgctxt "warren-multi-hop-view"
-msgid "Entry country"
-msgstr ""
-
-msgctxt "warren-multi-hop-view"
-msgid "Exit country"
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
