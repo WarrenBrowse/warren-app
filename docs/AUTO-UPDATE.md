@@ -298,10 +298,18 @@ the Mullvad `id1488466513`).
 ### Next steps
 
 - [x] CI emits + signs `android.json` / `ios.json` (server side).
-- [ ] Android: replace the `AppVersionInfoRepository` stub with a signed fetch;
-      add the forced-update Compose gate; embed the update pubkey.
+- [x] Android client wired (commit `ee8c0e6633`): `mullvad-update` gained the
+      public `is_current_version_supported` + `MetaRepositoryPlatform::Android`;
+      `warren-jni` exports `checkVersionSupported` (fetch + ed25519-verify +
+      min-version, fail-open); `AppVersionInfoRepository` calls it off the main
+      thread; a forced-update Compose gate (`UnsupportedVersionScreen`) replaces
+      the UI in `WarrenApp` when unsupported. **Not yet build-tested** (android
+      cross-compile needs the NDK; Kotlin needs a gradle build).
+- [ ] Build + device-test the Android wiring; confirm the gate + banner with a
+      manifest whose `minimum_supported_version` is above the installed version.
 - [ ] iOS (when it ships): signed version-check + "unsupported" provider +
-      forced-update SwiftUI gate + App Store redirect with Warren's app id.
+      forced-update SwiftUI gate + App Store redirect with Warren's app id
+      (currently hardcoded to Mullvad's `id1488466513`).
 - [ ] Optional: a direct-APK installer entry in `android.json` for sideloaded
       Android builds (full in-app update via `PackageInstaller`).
 
