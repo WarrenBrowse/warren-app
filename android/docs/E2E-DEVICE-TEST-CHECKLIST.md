@@ -115,10 +115,11 @@ Validation :
 
 ## 5. Nettoyage / dette (optionnel)
 
-- [ ] Corriger les 4 tests `WarrenDisconnectUseCaseTest` /
+- [x] Corriger les 4 tests `WarrenDisconnectUseCaseTest` /
       `WarrenReconnectUseCaseTest` (echec `Method setAction in
-      android.content.Intent not mocked`, PRE-EXISTANT) pour repasser la suite
-      `:app` au vert (Robolectric ou mock d'Intent).
+      android.content.Intent not mocked`, PRE-EXISTANT) : FAIT via
+      `mockkConstructor(Intent::class)` + stub de `setAction`. La suite `:app`
+      passe desormais entierement au vert.
 - [ ] Faire tourner les tests Rust `parse_config` (warren-jni `tunnel.rs`) sur
       emulateur android (ici seulement type-checkes ; le test Kotlin
       `WarrenTunnelConfigSerializationTest` execute deja la vraie serialisation).
