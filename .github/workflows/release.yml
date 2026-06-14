@@ -589,7 +589,7 @@ jobs:
         run: |
           mkdir -p signed
           signer=target/release/mullvad-version-metadata
-          for platform in macos windows linux; do
+          for platform in macos windows linux android ios; do
             [ -f "unsigned/${platform}.json" ] || continue
             # The key is passed on argv: the runner is ephemeral and single-tenant
             # and GitHub masks the value in logs.
@@ -605,7 +605,7 @@ jobs:
           install -m 600 /dev/null "$key"
           printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
           scp -i "$key" -o StrictHostKeyChecking=accept-new \
-            signed/macos.json signed/windows.json signed/linux.json \
+            signed/*.json \
             "${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}:${WARREN_UPDATES_SSH_PATH}/"
           rm -f "$key"
 

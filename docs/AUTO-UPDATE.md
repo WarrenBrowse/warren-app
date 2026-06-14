@@ -85,7 +85,13 @@ running.
 To force an update, set the repo variable `WARREN_UPDATE_MIN_VERSION` (see
 below) so the next published manifest declares the new floor. It is graduated:
 a normal release with no floor bump only shows the soft "update available"
-notification.
+notification. Manage that variable with the helper:
+
+```sh
+scripts/release/set-update-min-version.sh            # show current value
+scripts/release/set-update-min-version.sh 1.2.0      # block clients below 1.2.0
+scripts/release/set-update-min-version.sh --unset    # back to optional updates
+```
 
 ## Signing key
 
@@ -234,79 +240,70 @@ see "update available" but the download 404s.
 
 ## Bringing Android and iOS into the same flow
 
-The **server side is fully reusable**: the same CI job, the same ed25519 signing
-key, the same Caddy `/updates/` host, and the same "signed JSON manifest"
-principle. Only the **client** differs, and mobile stores constrain what is
-possible.
+The **server side is reused as-is** and is **already wired**: the CI emits and
+signs `android.json` and `ios.json` next to the desktop manifests (same job,
+same ed25519 key, same Caddy `/updates/` host). They use the same installer-less
+`Response` shape as the Linux manifest, i.e. the latest version + changelog +
+`minimum_supported_version` (mobile never self-downloads an installer; the store
+performs the update). What remains is **client** work, and mobile stores
+constrain what is possible.
 
-### Shared mobile manifest
+### What already exists in the Warren mobile apps
 
-Emit `android.json` and `ios.json` next to the desktop manifests, signed with
-the **same key**. The desktop `Response` schema is arch-keyed for desktop
-installers and is a poor fit for phones, so mobile uses a **simpler shape**
-(to be finalised with the mobile clients), e.g.:
+**Android** is ~90% wired (inherited from Mullvad, intact) but the data source is
+stubbed:
 
-```jsonc
-{
-  "metadata_version": 7,
-  "metadata_expiry": "2026-12-14T00:00:00Z",
-  "minimum_supported_version": "1.2.0",
-  "latest": {
-    "version": "1.3.0",
-    "url": "https://github.com/.../WarrenVPN-1.3.0.apk",   // android direct-APK only
-    "sha256": "…",                                          // android direct-APK only
-    "store_url": "https://apps.apple.com/app/idXXXXXXX"     // ios / play deep link
-  }
-}
-```
+- Model `VersionInfo(currentVersion, isSupported)` —
+  `android/lib/model/.../VersionInfo.kt`.
+- Notification + UI: `InAppNotification.UnsupportedVersion`, the banner
+  (`lib/ui/component/.../NotificationData.kt`) with an "open store" action, and
+  `VersionNotificationUseCase` (emits when `!isSupported`). Gated by
+  `ENABLE_IN_APP_VERSION_NOTIFICATIONS` (currently `true`).
+- Store routing already done: `ResolveAppListingUseCaseImpl` →
+  `market://details?id=...` when installed from a store, else
+  `https://warrenbrowse.com/download`.
+- **Stub to replace:** `AppVersionInfoRepository` hardcodes `isSupported = true`
+  (its own comment: "poll warren-api `/v1/version` is planned").
 
-`ci/build-version-metadata.py` gains `android` / `ios` outputs; the signing and
-upload steps already loop over platforms.
+**iOS** only has a *soft* path:
 
-### Android
+- `WarrenREST/ApiHandlers/AppVersionService.swift` polls the **iTunes Lookup API**
+  every 24h and shows a "Update available" banner
+  (`NewAppVersionInAppNotificationProvider.swift`) that opens the App Store.
+- No "unsupported / forced" concept exists.
+- Caveat: the App Store id in `ApplicationCoordinator.swift`
+  (`itms-apps://...id1488466513`) is **Mullvad's**, not Warren's; iOS is disabled
+  in CI (no Apple Developer account, no Warren App Store listing yet).
 
-Two distribution channels, two behaviours:
+### Android wiring (the testable one)
 
-- **Play Store (AAB):** Google performs the actual update. The manifest is used
-  only as a **min-version gate** — block clients below
-  `minimum_supported_version` with a blocking Compose screen that deep-links to
-  the Play listing.
-- **Direct APK (sideload / direct download):** full in-app update, mirroring
-  desktop. Fetch `android.json`, verify the ed25519 signature, compare versions,
-  download the APK from the GitHub Release, verify its SHA-256, and launch the
-  package installer (`ACTION_INSTALL_PACKAGE` / `PackageInstaller`, needs
-  `REQUEST_INSTALL_PACKAGES`). Forced update = the same blocking Compose screen.
+Point `AppVersionInfoRepository` at `https://api.warrenbrowse.com/updates/desktop/android.json`
+(LE-pinned host), verify the ed25519 signature against the embedded update
+pubkey (`0f684b…`), and compute `isSupported = current >= minimum_supported_version`.
+That immediately lights up the existing banner + store deep-link. For the
+**forced** case add a non-dismissible Compose gate (mirroring the desktop
+`BlockingUpdateGate`) shown when `!isSupported`, with a single "Update" action
+to the store. ed25519 verification in Kotlin via Tink/BouncyCastle, or a small
+shared Rust verifier over JNI.
 
-Client work is Kotlin in the Android app. ed25519 verification can use Tink /
-BouncyCastle, or reuse a small shared Rust verifier over JNI; either way the
-**same public key** is embedded. Note Android is currently a parity work in
-progress.
+### iOS wiring (blocked on an Apple account)
 
-### iOS
+Add a signed version-check against `ios.json` (verify, then
+`isSupported = current >= minimum_supported_version`), a new "unsupported"
+notification provider, and a non-dismissible SwiftUI gate for the forced case
+whose only action opens the App Store. No in-app install (Apple policy). Blocked
+until Warren has an Apple Developer account + its own App Store listing (replace
+the Mullvad `id1488466513`).
 
-iOS apps can only be updated through the **App Store** (or TestFlight); Apple
-does not permit self-hosted installers. So the manifest is used for
-**version-check + forced-update gating only**:
+### Next steps
 
-- Fetch `ios.json`, verify the signature.
-- If `current < minimum_supported_version`, show a non-dismissible SwiftUI
-  screen whose only action opens the App Store (`itms-apps://` / the
-  `store_url`).
-- No in-app download or install.
-
-iOS is currently **disabled** in CI (no Apple Developer account yet; see
-`release.yml`), so this is forward-looking.
-
-### Next steps (not yet implemented)
-
-- [ ] Finalise the mobile manifest schema with the Android/iOS clients.
-- [ ] Extend `ci/build-version-metadata.py` to emit signed `android.json` /
-      `ios.json`.
-- [ ] Android: in-app updater + forced-update Compose screen (direct-APK) and/or
-      Play min-version gate.
-- [ ] iOS: signed version-check + forced-update SwiftUI screen + App Store
-      redirect (once iOS ships).
-- [ ] Embed the update pubkey in the Android and iOS apps.
+- [x] CI emits + signs `android.json` / `ios.json` (server side).
+- [ ] Android: replace the `AppVersionInfoRepository` stub with a signed fetch;
+      add the forced-update Compose gate; embed the update pubkey.
+- [ ] iOS (when it ships): signed version-check + "unsupported" provider +
+      forced-update SwiftUI gate + App Store redirect with Warren's app id.
+- [ ] Optional: a direct-APK installer entry in `android.json` for sideloaded
+      Android builds (full in-app update via `PackageInstaller`).
 
 ## Operational notes
 

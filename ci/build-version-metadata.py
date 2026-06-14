@@ -184,6 +184,13 @@ def main() -> int:
         "windows": windows_installers(release_dir, args.version, args.repo, args.tag),
         # Linux: installer-less release (the daemon's allow_empty path).
         "linux": [],
+        # Mobile: store-installed, so the OS store performs the actual update.
+        # The manifest only carries the latest version + minimum_supported_version
+        # so the app can show "update available" / hard-block and deep-link to the
+        # store. No installer to self-download here (a direct-APK installer entry
+        # could be added later for sideloaded Android builds).
+        "android": [],
+        "ios": [],
     }
 
     for platform, installers in platforms.items():
