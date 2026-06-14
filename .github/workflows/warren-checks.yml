@@ -61,6 +61,10 @@ jobs:
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          # This job runs `cargo fmt --check` in addition to clippy, so the
+          # toolchain needs the rustfmt component (the action installs only
+          # clippy by default).
+          rustup-components: clippy rustfmt
 
       - name: cargo fmt --check (Warren scope)
         # Gate fmt in addition to clippy/test to avoid style drifts
