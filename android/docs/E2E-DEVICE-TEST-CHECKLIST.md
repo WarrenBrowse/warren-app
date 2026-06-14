@@ -26,11 +26,11 @@
       Kotlin + packaging passe de bout en bout.
 - [ ] PREREQUIS BUILD (env) : le plugin rust-android lance `python` au link
       (`linker-wrapper.sh`). Sur macOS recent seul `python3` existe -> le build
-      echoue avec `python: command not found` (exit 127). Fix au choix :
-      - rapide / local : un shim `python` -> `python3` sur le PATH ;
-      - propre / equipe : ajouter `pythonCommand = "python3"` dans le bloc
-        `cargo { }` de `android/app/build.gradle.kts` (ou `rust.pythonCommand`
-        dans `gradle.properties`). NON commite (decision infra a valider).
+      echoue avec `python: command not found` (exit 127). Fix DEJA documente
+      dans `BuildInstructions.macos.md` : ajouter
+      `rust.pythonCommand=/opt/homebrew/bin/python3` a `android/local.properties`
+      (gitignore, par dev). Verifier que cette ligne est presente sur la
+      machine de build.
 - [ ] Installer l'APK sur le device.
 
 ## 1. CRITIQUE : le connect single-hop fonctionne ?
