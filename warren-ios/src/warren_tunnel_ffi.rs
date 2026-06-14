@@ -20,9 +20,9 @@
 //! - All other entry points cast the raw pointer back to `&mut Impl`
 //!   without taking ownership.
 
-use std::ffi::c_void;
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 use std::ffi::CStr;
+use std::ffi::c_void;
 use std::os::raw::{c_char, c_int};
 
 /// Opaque handle representing an active Warren tunnel. Created by
@@ -121,7 +121,10 @@ pub struct WarrenDaitaSpecC {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(
     not(feature = "tunnel"),
-    expect(dead_code, reason = "FFI surface ; only constructed on tunnel feature path")
+    expect(
+        dead_code,
+        reason = "FFI surface ; only constructed on tunnel feature path"
+    )
 )]
 pub enum WarrenTunnelStateC {
     Disconnected = 0,
@@ -149,7 +152,10 @@ pub struct WarrenTunnelStatusC {
 /// wired (C.4.1).
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[expect(dead_code, reason = "FFI surface ; Failover + NatPmp* variants wired in C.4.1.X")]
+#[expect(
+    dead_code,
+    reason = "FFI surface ; Failover + NatPmp* variants wired in C.4.1.X"
+)]
 #[expect(
     clippy::enum_variant_names,
     reason = "The `Event` prefix is required: C does not scope enum names, so unprefixed variants would collide with WarrenTunnelStateC across the FFI boundary."
@@ -248,11 +254,17 @@ const RC_INVALID_INPUT: c_int = -1;
 // sentinel instead). `cfg_attr(...expect(dead_code))` triggers the
 // expectation exactly on the path where the lint fires, leaving the
 // `tunnel` path free of suppression noise.
-#[cfg_attr(not(all(target_os = "ios", feature = "tunnel")), expect(dead_code, reason = "feature-conditional"))]
+#[cfg_attr(
+    not(all(target_os = "ios", feature = "tunnel")),
+    expect(dead_code, reason = "feature-conditional")
+)]
 const RC_NOT_CONNECTED: c_int = -3;
 // RC_TUNNEL_FEATURE_DISABLED is the mirror of RC_NOT_CONNECTED for the
 // `not(tunnel)` path ; on the `tunnel` path it is dead code.
-#[cfg_attr(all(target_os = "ios", feature = "tunnel"), expect(dead_code, reason = "feature-conditional"))]
+#[cfg_attr(
+    all(target_os = "ios", feature = "tunnel"),
+    expect(dead_code, reason = "feature-conditional")
+)]
 const RC_TUNNEL_FEATURE_DISABLED: c_int = -10;
 
 // ---- Handle implementation (feature-gated) ----
@@ -270,7 +282,7 @@ mod handle_impl {
         WarrenTunnelStateC,
     };
     use std::ffi::c_void;
-    use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, AtomicU64, Ordering};
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime;
     use warren_tunnel::IosTun;
@@ -384,7 +396,10 @@ mod handle_impl {
 
         /// Take (and clear) any recorded pin-mismatch payload.
         pub fn take_pin_mismatch(&self) -> Option<String> {
-            self.pin_mismatch.lock().ok().and_then(|mut slot| slot.take())
+            self.pin_mismatch
+                .lock()
+                .ok()
+                .and_then(|mut slot| slot.take())
         }
 
         /// Spawn the outbound dispatcher task on the handle's runtime.
@@ -440,8 +455,12 @@ mod handle_impl {
                 data_nat_pmp_lifetime_seconds: 0,
                 data_nat_pmp_failure_reason: std::ptr::null(),
             };
-            let Ok(cb_entry) = self.event_callback.lock() else { return };
-            let Some(entry) = cb_entry.as_ref() else { return };
+            let Ok(cb_entry) = self.event_callback.lock() else {
+                return;
+            };
+            let Some(entry) = cb_entry.as_ref() else {
+                return;
+            };
             // SAFETY: callback + context come from Swift via
             // `warren_tunnel_set_event_callback`. Swift owns the
             // context pointer lifecycle ; we just pass it back. The
@@ -464,8 +483,12 @@ mod handle_impl {
                 prefix_len,
                 gateway_ipv4: gateway.octets(),
             };
-            let Ok(cb_entry) = self.ip_assign_callback.lock() else { return };
-            let Some(entry) = cb_entry.as_ref() else { return };
+            let Ok(cb_entry) = self.ip_assign_callback.lock() else {
+                return;
+            };
+            let Some(entry) = cb_entry.as_ref() else {
+                return;
+            };
             // SAFETY: callback + context come from Swift via
             // `warren_tunnel_set_ip_assign_callback`. Swift owns the
             // context pointer lifecycle; we just pass it back. The
@@ -803,8 +826,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
 
         // Build the WarrenExitAddr (pubkey + reachable transports).
         let exit_pubkey = warren_protocol::WarrenPubkey::from_bytes(params.exit_pubkey);
-        let exit_target =
-            warren_protocol::WarrenExitAddr::from_ip_addrs(exit_pubkey, [exit_addr]);
+        let exit_target = warren_protocol::WarrenExitAddr::from_ip_addrs(exit_pubkey, [exit_addr]);
 
         // Wallet signing key from the Ed25519 seed bytes. Zeroize on
         // drop is provided by `ed25519-dalek` via the `zeroize` feature
@@ -830,8 +852,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
             // SAFETY: `params.pin_store_path` is null or a valid
             // null-terminated C string (caller precondition).
-            let pin_store_path =
-                unsafe { cstr_to_str(params.pin_store_path) }.map(str::to_owned);
+            let pin_store_path = unsafe { cstr_to_str(params.pin_store_path) }.map(str::to_owned);
 
             let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
                 return std::ptr::null_mut();
@@ -1118,8 +1139,9 @@ pub unsafe extern "C" fn warren_tunnel_status(
         // `clone_arc_from_raw` returns None only on null, which the
         // outer `if handle.is_null()` already excluded, so unwrap is
         // unreachable in practice.
-        let arc = unsafe { clone_arc_from_raw(handle) }
-            .unwrap_or_else(|| unreachable!("handle non-null but clone_arc_from_raw returned None"));
+        let arc = unsafe { clone_arc_from_raw(handle) }.unwrap_or_else(|| {
+            unreachable!("handle non-null but clone_arc_from_raw returned None")
+        });
         let state = arc.state_snapshot();
         let connected_at = arc
             .connected_at_secs
@@ -1134,7 +1156,9 @@ pub unsafe extern "C" fn warren_tunnel_status(
             bytes_in: arc.bytes_in.load(std::sync::atomic::Ordering::Relaxed),
             bytes_out: arc.bytes_out.load(std::sync::atomic::Ordering::Relaxed),
             connected_duration_seconds: duration,
-            failover_count: arc.failover_count.load(std::sync::atomic::Ordering::Relaxed),
+            failover_count: arc
+                .failover_count
+                .load(std::sync::atomic::Ordering::Relaxed),
         }
     };
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -1186,10 +1210,7 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
         let Ok(mut slot) = arc.event_callback.lock() else {
             return RC_INVALID_INPUT;
         };
-        *slot = Some(handle_impl::CallbackEntry {
-            callback,
-            context,
-        });
+        *slot = Some(handle_impl::CallbackEntry { callback, context });
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -1225,10 +1246,7 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
         let Ok(mut slot) = arc.outbound_callback.lock() else {
             return RC_INVALID_INPUT;
         };
-        *slot = Some(handle_impl::CallbackEntry {
-            callback,
-            context,
-        });
+        *slot = Some(handle_impl::CallbackEntry { callback, context });
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -1266,10 +1284,7 @@ pub unsafe extern "C" fn warren_tunnel_set_ip_assign_callback(
         let Ok(mut slot) = arc.ip_assign_callback.lock() else {
             return RC_INVALID_INPUT;
         };
-        *slot = Some(handle_impl::CallbackEntry {
-            callback,
-            context,
-        });
+        *slot = Some(handle_impl::CallbackEntry { callback, context });
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -1351,11 +1366,8 @@ pub unsafe extern "C" fn warren_multihop_check_generation(
             .as_deref()
             .map(crate::warren_multihop_generation::read_high_water)
             .unwrap_or(0);
-        match crate::warren_multihop_directory::verify_generation(
-            json,
-            now_secs(),
-            min_generation,
-        ) {
+        match crate::warren_multihop_directory::verify_generation(json, now_secs(), min_generation)
+        {
             Ok(generation) => i64::try_from(generation).unwrap_or(i64::MAX),
             Err(_) => -1,
         }
@@ -1587,7 +1599,10 @@ mod tests {
         // The original raw pointer is still valid (ref-count 1).
         // SAFETY: `raw` came from `Arc::into_raw` above and is still live (ref-count 1).
         let recovered = unsafe { Arc::from_raw(raw) };
-        assert_eq!(*recovered, 42, "original arc must still be valid after clone drops");
+        assert_eq!(
+            *recovered, 42,
+            "original arc must still be valid after clone drops"
+        );
         // `recovered` drops here, freeing the allocation exactly once.
     }
 
@@ -1620,10 +1635,8 @@ mod tests {
         fn assert_send_sync<T: Send + Sync>() {}
         // `extern "C" fn(*const super::WarrenTunnelEventC, *mut std::ffi::c_void)`
         // is the concrete type used for `event_callback` entries.
-        type EventCb = unsafe extern "C" fn(
-            *const super::WarrenTunnelEventC,
-            *mut std::ffi::c_void,
-        );
+        type EventCb =
+            unsafe extern "C" fn(*const super::WarrenTunnelEventC, *mut std::ffi::c_void);
         assert_send_sync::<super::handle_impl::CallbackEntry<EventCb>>();
 
         // Outbound callback type.

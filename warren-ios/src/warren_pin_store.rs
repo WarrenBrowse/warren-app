@@ -188,7 +188,10 @@ mod tests {
         assert_eq!(t.entries.get(ID_A).unwrap().first_seen_unix, 100);
 
         // Same key later => Match, last_seen bumped, first_seen untouched.
-        assert_eq!(pin_verify(&mut t, ID_A, KEY_1, "FR", 200), PinOutcome::Match);
+        assert_eq!(
+            pin_verify(&mut t, ID_A, KEY_1, "FR", 200),
+            PinOutcome::Match
+        );
         assert_eq!(t.entries.get(ID_A).unwrap().first_seen_unix, 100);
         assert_eq!(t.entries.get(ID_A).unwrap().last_seen_unix, 200);
 
@@ -239,7 +242,10 @@ mod tests {
 
         // After trusting, the new key matches.
         let mut t2 = load(&path);
-        assert_eq!(pin_verify(&mut t2, ID_A, KEY_2, "FR", 30), PinOutcome::Match);
+        assert_eq!(
+            pin_verify(&mut t2, ID_A, KEY_2, "FR", 30),
+            PinOutcome::Match
+        );
 
         // Reset drops everything and reports the count.
         assert_eq!(reset(&path), 1);

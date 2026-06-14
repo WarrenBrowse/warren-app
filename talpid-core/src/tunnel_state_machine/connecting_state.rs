@@ -47,8 +47,7 @@ const MAX_ATTEMPT_CREATE_TUN: u32 = 4;
 /// drop into a stable, cancelable `ErrorState` instead (fail-closed: the
 /// kill-switch still blocks, but the churn stops). Self-cleaning - a
 /// stable connection emits no close events, so the window ages out.
-static RECENT_RECONNECTS: LazyLock<Mutex<Vec<Instant>>> =
-    LazyLock::new(|| Mutex::new(Vec::new()));
+static RECENT_RECONNECTS: LazyLock<Mutex<Vec<Instant>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 /// Max reconnect laps tolerated within [`FLAP_WINDOW`] before the loop is
 /// broken to a stable blocked state. Six laps in 25 s (~one every 4 s) is

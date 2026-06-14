@@ -526,7 +526,10 @@ mod tests {
         // The signer must produce a valid Warren SS58 address (`wb…`):
         let pk = signer.pubkey_ss58();
         assert!(pk.starts_with("wb"), "expected a wb… address, got {pk}");
-        assert!((47..=49).contains(&pk.len()), "unexpected SS58 length: {pk}");
+        assert!(
+            (47..=49).contains(&pk.len()),
+            "unexpected SS58 length: {pk}"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -599,7 +602,10 @@ mod tests {
 
         let phrase = generate_and_store_mnemonic(&dir).expect("must mint an identity");
         let word_count = phrase.split_whitespace().count();
-        assert_eq!(word_count, 12, "a fresh Warren identity is a 12-word phrase");
+        assert_eq!(
+            word_count, 12,
+            "a fresh Warren identity is a 12-word phrase"
+        );
 
         // The minted phrase must be the one retrievable from the vault.
         let stored = get_warren_mnemonic(&dir).expect("vault holds the new phrase");
@@ -617,7 +623,11 @@ mod tests {
         let first = generate_and_store_mnemonic(&dir).expect("first create");
         let first_pk = {
             let seed = warren_identity::seed_from_mnemonic(&first).expect("seed 1");
-            hex::encode(warren_identity::derive_node_key(&seed).verifying_key().as_bytes())
+            hex::encode(
+                warren_identity::derive_node_key(&seed)
+                    .verifying_key()
+                    .as_bytes(),
+            )
         };
 
         let second = generate_and_store_mnemonic(&dir).expect("second create");
@@ -628,9 +638,16 @@ mod tests {
         );
         let second_pk = {
             let seed = warren_identity::seed_from_mnemonic(&second).expect("seed 2");
-            hex::encode(warren_identity::derive_node_key(&seed).verifying_key().as_bytes())
+            hex::encode(
+                warren_identity::derive_node_key(&seed)
+                    .verifying_key()
+                    .as_bytes(),
+            )
         };
-        assert_ne!(first_pk, second_pk, "distinct phrases must yield distinct pubkeys");
+        assert_ne!(
+            first_pk, second_pk,
+            "distinct phrases must yield distinct pubkeys"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -639,7 +656,10 @@ mod tests {
     fn clear_warren_mnemonic_erases_identity_and_is_idempotent() {
         let dir = isolated_tempdir();
         let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
-        assert!(get_warren_mnemonic(&dir).is_some(), "identity present before clear");
+        assert!(
+            get_warren_mnemonic(&dir).is_some(),
+            "identity present before clear"
+        );
 
         clear_warren_mnemonic(&dir).expect("clear must succeed");
         assert!(

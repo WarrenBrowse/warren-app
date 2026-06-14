@@ -148,7 +148,9 @@ impl TryFrom<proto::nat_pmp_settings::Rule> for mullvad_types::settings::WarrenN
         let protocol = nat_pmp_proto_from_i32(value.protocol)?;
         let suggested_external_port =
             u16::try_from(value.suggested_external_port).map_err(|_| {
-                FromProtobufTypeError::invalid_argument("NatPmpRule.suggested_external_port > 65535")
+                FromProtobufTypeError::invalid_argument(
+                    "NatPmpRule.suggested_external_port > 65535",
+                )
             })?;
         let internal_port = u16::try_from(value.internal_port).map_err(|_| {
             FromProtobufTypeError::invalid_argument("NatPmpRule.internal_port > 65535")
@@ -246,7 +248,9 @@ impl From<&mullvad_types::settings::TunnelOptions> for proto::TunnelOptions {
         proto::TunnelOptions {
             mtu: options.wireguard.mtu.map(u32::from),
             rotation_interval: None,
-            quantum_resistant: Some(proto::QuantumResistantState::from(options.wireguard.quantum_resistant)),
+            quantum_resistant: Some(proto::QuantumResistantState::from(
+                options.wireguard.quantum_resistant,
+            )),
             #[cfg(daita)]
             daita: Some(proto::DaitaSettings::from(options.wireguard.daita.clone())),
             #[cfg(not(daita))]
@@ -350,9 +354,7 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             warren_n_connections: match settings.warren_n_connections {
                 0 => None,
                 n => Some(u8::try_from(n).map_err(|_| {
-                    FromProtobufTypeError::invalid_argument(
-                        "warren_n_connections out of u8 range",
-                    )
+                    FromProtobufTypeError::invalid_argument("warren_n_connections out of u8 range")
                 })?),
             },
             warren_multi_hop: settings

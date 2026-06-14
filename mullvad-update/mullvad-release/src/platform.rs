@@ -86,9 +86,7 @@ impl Platform {
         match self {
             Platform::Windows => Artifacts {
                 x86_artifacts: vec![artifacts_dir.join(format!("WarrenVPN-{version}_x64.exe"))],
-                arm64_artifacts: vec![
-                    artifacts_dir.join(format!("WarrenVPN-{version}_arm64.exe")),
-                ],
+                arm64_artifacts: vec![artifacts_dir.join(format!("WarrenVPN-{version}_arm64.exe"))],
             },
             Platform::Linux => Artifacts {
                 x86_artifacts: vec![],

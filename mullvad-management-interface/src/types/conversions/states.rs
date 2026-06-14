@@ -238,8 +238,9 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                                     i32::from(GenerationError::WarrenPubkeyMismatch)
                                 }
                             }
-                            } else if let talpid_tunnel::ErrorStateCause::WarrenPubkeyMismatch { .. } =
-                                error_state.cause()
+                            } else if let talpid_tunnel::ErrorStateCause::WarrenPubkeyMismatch {
+                                ..
+                            } = error_state.cause()
                             {
                                 // WarrenPubkeyMismatch lives both as a
                                 // ParameterGenerationError and as a top-level

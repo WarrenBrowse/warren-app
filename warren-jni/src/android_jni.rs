@@ -406,8 +406,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         let runtime = match RUNTIME.get() {
             Some(rt) => rt,
             None => {
-                let _ = jnix_env
-                    .throw("initLogger() must be called before connectTunnel()");
+                let _ = jnix_env.throw("initLogger() must be called before connectTunnel()");
                 return -1;
             }
         };
@@ -645,10 +644,8 @@ fn fetch_relays_or_fallback() -> String {
         }
     };
 
-    let signed = match warren_relay_selector::verify_signed_relay_list(
-        &raw,
-        PROD_SERVER_PUBKEY_HEX,
-    ) {
+    let signed = match warren_relay_selector::verify_signed_relay_list(&raw, PROD_SERVER_PUBKEY_HEX)
+    {
         Ok(s) => s,
         Err(_) => {
             log::warn!("listRelays: signature verify failed; returning fallback");

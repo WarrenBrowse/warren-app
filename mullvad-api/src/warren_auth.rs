@@ -283,7 +283,8 @@ impl WarrenAuthSigner {
 
         map.insert(
             HEADER_PUBKEY,
-            http::HeaderValue::from_str(&headers.pubkey_ss58).map_err(|_| invalid(HEADER_PUBKEY))?,
+            http::HeaderValue::from_str(&headers.pubkey_ss58)
+                .map_err(|_| invalid(HEADER_PUBKEY))?,
         );
         map.insert(
             HEADER_SIGNATURE,
@@ -324,7 +325,9 @@ mod tests {
         let decoded = ss58::decode(&addr).expect("signer pubkey must be valid SS58");
         assert_eq!(
             decoded,
-            SigningKey::from_bytes(&[7u8; 32]).verifying_key().to_bytes()
+            SigningKey::from_bytes(&[7u8; 32])
+                .verifying_key()
+                .to_bytes()
         );
     }
 
@@ -527,8 +530,14 @@ mod tests {
         // Pubkey header is now a Warren SS58 address (`wb…`), variable
         // length (47-49 chars), not a fixed 64-hex string.
         let pk_str = pk.to_str().unwrap();
-        assert!(pk_str.starts_with("wb"), "pubkey header must be a wb… address");
-        assert!(ss58::decode(pk_str).is_ok(), "pubkey header must decode as SS58");
+        assert!(
+            pk_str.starts_with("wb"),
+            "pubkey header must be a wb… address"
+        );
+        assert!(
+            ss58::decode(pk_str).is_ok(),
+            "pubkey header must decode as SS58"
+        );
         assert_eq!(sig.to_str().unwrap().len(), 128);
         assert_eq!(nonce.to_str().unwrap().len(), 32);
         // Timestamp must be a valid decimal u64.
@@ -647,14 +656,12 @@ mod tests {
     fn replace_signing_key_swaps_identity_in_place() {
         let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
         let old_pubkey = signer.pubkey_ss58();
-        let old_sig =
-            signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
+        let old_sig = signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
 
         signer.replace_signing_key(SigningKey::from_bytes(&[42u8; 32]));
 
         let new_pubkey = signer.pubkey_ss58();
-        let new_sig =
-            signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
+        let new_sig = signer.sign_request_at("GET", "/v1/x", b"", 1_700_000_000, [0u8; 16]);
 
         assert_ne!(
             old_pubkey, new_pubkey,
@@ -699,7 +706,11 @@ mod tests {
         );
         assert_eq!(
             signer.pubkey_ss58(),
-            ss58::encode(&SigningKey::from_bytes(&[11u8; 32]).verifying_key().to_bytes())
+            ss58::encode(
+                &SigningKey::from_bytes(&[11u8; 32])
+                    .verifying_key()
+                    .to_bytes()
+            )
         );
     }
 }

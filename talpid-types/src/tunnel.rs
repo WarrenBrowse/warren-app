@@ -343,9 +343,8 @@ mod tests {
             pinned: "p1".to_string(),
             observed: "p2".to_string(),
         };
-        let no_relay = ErrorStateCause::TunnelParameterError(
-            ParameterGenerationError::NoMatchingRelay,
-        );
+        let no_relay =
+            ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay);
         // They must not be equal (the discriminants must differ).
         // PartialEq is not derived; compare via Display instead.
         let mismatch_msg = format!("{mismatch}");

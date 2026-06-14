@@ -21,10 +21,10 @@ impl TryFrom<proto::DeviceState> for mullvad_types::device::DeviceState {
                 let pubkey =
                     mullvad_types::warren_pubkey::WarrenPubKey::from_str(&account.account_number)
                         .map_err(|_| {
-                            FromProtobufTypeError::invalid_argument(
-                                "account_number must be a valid Warren SS58 address (wb…)",
-                            )
-                        })?;
+                        FromProtobufTypeError::invalid_argument(
+                            "account_number must be a valid Warren SS58 address (wb…)",
+                        )
+                    })?;
                 Ok(mullvad_types::device::DeviceState::LoggedIn(
                     mullvad_types::warren_identity::WarrenIdentity { pubkey },
                 ))
@@ -106,9 +106,9 @@ impl From<proto::device_event::Cause> for mullvad_types::device::DeviceEventCaus
             proto::device_event::Cause::Revoked => MullvadEvent::Revoked,
             // The `Updated` and `RotatedKey` proto causes have no domain
             // equivalent; treat them as a login-state refresh.
-            proto::device_event::Cause::Updated
-            | proto::device_event::Cause::RotatedKey => MullvadEvent::LoggedIn,
+            proto::device_event::Cause::Updated | proto::device_event::Cause::RotatedKey => {
+                MullvadEvent::LoggedIn
+            }
         }
     }
 }
-

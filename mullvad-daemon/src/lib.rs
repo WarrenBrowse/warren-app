@@ -58,6 +58,11 @@ pub mod warren_multi_hop_mode;
 /// (filtering on the warren-relay-selector side). Maps country/city, fallback
 /// `Any` for unsupported cases (custom lists, custom endpoint).
 pub mod warren_query_from_settings;
+/// Periodic + on-startup updater that refreshes the signed Warren exit
+/// list from `GET {warren_api_url}/v1/exits` (ETag conditional GET,
+/// signature-verified before caching, atomic cache write, hot-swap into
+/// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
+pub mod warren_relay_list_updater;
 /// Mullvad-format `RelayList` view of a `WarrenRelayList`. Allows the
 /// Electron GUI to consume the Warren exits via its existing
 /// country/city selector.
@@ -67,11 +72,6 @@ pub mod warren_relay_list_view;
 /// `WarrenRelayList` from `cache_dir`, selects the endpoint
 /// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
-/// Periodic + on-startup updater that refreshes the signed Warren exit
-/// list from `GET {warren_api_url}/v1/exits` (ETag conditional GET,
-/// signature-verified before caching, atomic cache write, hot-swap into
-/// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
-pub mod warren_relay_list_updater;
 /// Phase #4 - resolution of `WarrenApiConfig` (warren-api URL + signing key)
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
@@ -1046,7 +1046,9 @@ impl Daemon {
         // propagates to every consumer without a daemon restart, instead
         // of leaving frozen per-consumer copies signing as the old/erased
         // identity.
-        let warren_shared_key = warren_signer_for_daemon.as_ref().map(|signer| signer.shared());
+        let warren_shared_key = warren_signer_for_daemon
+            .as_ref()
+            .map(|signer| signer.shared());
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
@@ -1283,11 +1285,10 @@ impl Daemon {
         // so the pull RPC (`on_get_relay_locations`) and the broadcast
         // closure (`on_relay_list_update`) always read the *current* list
         // rather than a stale boot snapshot.
-        let warren_relay_list_view: Arc<Mutex<Option<RelayList>>> = Arc::new(Mutex::new(
-            warren_relay_selector
-                .as_ref()
-                .map(|sel| warren_relay_list_view::to_mullvad_relay_list(sel.list())),
-        ));
+        let warren_relay_list_view: Arc<Mutex<Option<RelayList>>> =
+            Arc::new(Mutex::new(warren_relay_selector.as_ref().map(|sel| {
+                warren_relay_list_view::to_mullvad_relay_list(sel.list())
+            })));
 
         // M5.B.4: forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
@@ -2460,11 +2461,7 @@ impl Daemon {
     async fn handle_device_event(&mut self, event: AccountEvent) {
         match &event {
             AccountEvent::Device(PrivateDeviceEvent::Login(pubkey)) => {
-                if let Err(error) = self
-                    .account_history
-                    .set(pubkey.as_str().to_owned())
-                    .await
-                {
+                if let Err(error) = self.account_history.set(pubkey.as_str().to_owned()).await {
                     log::error!(
                         "{}",
                         error.display_chain_with_msg("Failed to update account history")
@@ -2712,17 +2709,20 @@ impl Daemon {
                 // Both steps are synchronous keychain/DPAPI I/O, so run
                 // them off the async executor to avoid stalling a worker
                 // thread on a slow vault.
-                let new_pubkey_bytes = tokio::task::spawn_blocking(move || -> io::Result<[u8; 32]> {
-                    warren_signer::generate_and_store_mnemonic(&settings_dir)?;
-                    warren_signer::reload_signer_from_disk(&signer, &settings_dir).ok_or_else(|| {
-                        io::Error::other(
-                            "freshly generated mnemonic failed to reload into the signer",
+                let new_pubkey_bytes =
+                    tokio::task::spawn_blocking(move || -> io::Result<[u8; 32]> {
+                        warren_signer::generate_and_store_mnemonic(&settings_dir)?;
+                        warren_signer::reload_signer_from_disk(&signer, &settings_dir).ok_or_else(
+                            || {
+                                io::Error::other(
+                                    "freshly generated mnemonic failed to reload into the signer",
+                                )
+                            },
                         )
                     })
-                })
-                .await
-                .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
-                .map_err(Error::WarrenIdentityError)?;
+                    .await
+                    .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
+                    .map_err(Error::WarrenIdentityError)?;
 
                 let token =
                     mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes)
@@ -3583,7 +3583,6 @@ impl Daemon {
         }
     }
 
-
     /// Persists `Settings::warren_api_url`. Restart required to
     /// apply (the daemon resolves the URL at boot in `Daemon::start`,
     /// it does not re-check Settings at runtime). Empty string -> `None`
@@ -3667,7 +3666,9 @@ impl Daemon {
         if let Err(ref e) = result {
             log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
         } else {
-            log::info!("Warren multi-hop persisted: {display_value} (applied live by the directory updater)");
+            log::info!(
+                "Warren multi-hop persisted: {display_value} (applied live by the directory updater)"
+            );
         }
         Self::oneshot_send(tx, result, "set_warren_multi_hop_settings response");
     }

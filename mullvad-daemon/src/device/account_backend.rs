@@ -193,7 +193,11 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                     // A previous poll may have pulled the secret and
                     // then failed the register: the server-side
                     // mapping is consumed, the cache is the only copy.
-                    let cached = pulled_unregistered.lock().expect("not poisoned").get(wpid).cloned();
+                    let cached = pulled_unregistered
+                        .lock()
+                        .expect("not poisoned")
+                        .get(wpid)
+                        .cloned();
                     match cached {
                         Some(secret) => secret,
                         None => match client
@@ -253,7 +257,10 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                         // server-side: drop the cache entry so the poll
                         // stops replaying it.
                         if let Some(wpid) = &wpid {
-                            pulled_unregistered.lock().expect("not poisoned").remove(wpid);
+                            pulled_unregistered
+                                .lock()
+                                .expect("not poisoned")
+                                .remove(wpid);
                         }
                         return Err(map_voucher_register_error(e));
                     }
@@ -271,7 +278,10 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 }
             };
             if let Some(wpid) = &wpid {
-                pulled_unregistered.lock().expect("not poisoned").remove(wpid);
+                pulled_unregistered
+                    .lock()
+                    .expect("not poisoned")
+                    .remove(wpid);
             }
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
             let now_secs = u64::try_from(Utc::now().timestamp()).unwrap_or(0);
@@ -677,10 +687,7 @@ mod tests {
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
-            .submit_voucher(
-                pubkey_ss58,
-                "ffeeddccbbaa99887766554433221100".to_owned(),
-            )
+            .submit_voucher(pubkey_ss58, "ffeeddccbbaa99887766554433221100".to_owned())
             .await
             .expect_err("unready wpid must fail");
         match err {

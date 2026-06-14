@@ -33,8 +33,13 @@ use warren_relay_selector::{
 /// set for F3 key rotation) into the slice the `_any` verifiers take.
 /// Empty/`None` → empty (TOFU).
 fn split_pins(pin: Option<&str>) -> Vec<&str> {
-    pin.map(|p| p.split(',').map(str::trim).filter(|s| !s.is_empty()).collect())
-        .unwrap_or_default()
+    pin.map(|p| {
+        p.split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .collect()
+    })
+    .unwrap_or_default()
 }
 
 use crate::warren_relay_selector::WARREN_RELAYS_FILENAME;
@@ -801,7 +806,12 @@ mod tests {
         signed_body_full(server_key, seed, 1, FAR_FUTURE)
     }
 
-    fn signed_body_full(server_key: &SigningKey, seed: u8, generation: u64, expires_at: u64) -> String {
+    fn signed_body_full(
+        server_key: &SigningKey,
+        seed: u8,
+        generation: u64,
+        expires_at: u64,
+    ) -> String {
         let relay_pubkey_hex = hex::encode(WarrenPubkey::from_bytes([seed; 32]).as_bytes());
         let signed = sign_relay_list(
             vec![JsonRelay {
@@ -823,8 +833,11 @@ mod tests {
     }
 
     fn verified_of(server_key: &SigningKey, generation: u64, expires_at: u64) -> VerifiedRelayList {
-        verify_signed_relay_list_any(&signed_body_full(server_key, 5, generation, expires_at), &[])
-            .expect("must verify")
+        verify_signed_relay_list_any(
+            &signed_body_full(server_key, 5, generation, expires_at),
+            &[],
+        )
+        .expect("must verify")
     }
 
     fn pubkey_hex(key: &SigningKey) -> String {
@@ -850,7 +863,10 @@ mod tests {
                 raw,
             } => {
                 assert_eq!(verified.relays.len(), 1, "one relay parsed");
-                assert_eq!(verified.generation, 1, "generation surfaced for freshness gate");
+                assert_eq!(
+                    verified.generation, 1,
+                    "generation surfaced for freshness gate"
+                );
                 assert_eq!(etag.as_deref(), Some("W/\"9\""));
                 assert_eq!(raw, body, "raw body preserved verbatim for caching");
             }
@@ -893,10 +909,7 @@ mod tests {
         let dir = isolated_tempdir();
         let path = dir.join(WARREN_RELAYS_FILENAME);
         write_cache_atomic(&path, "hello-signed-list").expect("write ok");
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            "hello-signed-list"
-        );
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "hello-signed-list");
         // No leftover temp file.
         assert!(
             !path.with_extension("json.tmp").exists(),
@@ -940,7 +953,10 @@ mod tests {
         assert_eq!(list.relays.len(), 1);
         let seed9 = WarrenPubkey::from_bytes([9; 32]);
         assert!(
-            list.relays.relays().iter().any(|r| r.endpoint_id() == seed9),
+            list.relays
+                .relays()
+                .iter()
+                .any(|r| r.endpoint_id() == seed9),
             "newer cache (seed 9) must win over baked resource (seed 7)"
         );
         let _ = std::fs::remove_dir_all(&cache);

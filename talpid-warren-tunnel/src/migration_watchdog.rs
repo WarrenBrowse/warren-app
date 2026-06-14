@@ -452,9 +452,7 @@ impl WatchdogIo for RealWatchdogIo {
         // v6-dialed relay keeps a v6 source. Bind wildcard so the OS
         // picks the source per packet from the current routing table.
         let bind: std::net::SocketAddr = match client.local_addr() {
-            Ok(std::net::SocketAddr::V6(_)) => {
-                (std::net::Ipv6Addr::UNSPECIFIED, 0).into()
-            }
+            Ok(std::net::SocketAddr::V6(_)) => (std::net::Ipv6Addr::UNSPECIFIED, 0).into(),
             _ => (std::net::Ipv4Addr::UNSPECIFIED, 0).into(),
         };
         match std::net::UdpSocket::bind(bind) {
@@ -462,7 +460,9 @@ impl WatchdogIo for RealWatchdogIo {
                 if let Err(e) = client.rebind(sock) {
                     log::debug!("watchdog: endpoint rebind failed: {e}");
                 } else {
-                    log::info!("Warren migration watchdog: rebound QUIC endpoint to a fresh socket");
+                    log::info!(
+                        "Warren migration watchdog: rebound QUIC endpoint to a fresh socket"
+                    );
                 }
             }
             Err(e) => log::debug!("watchdog: fresh migration socket bind failed: {e}"),

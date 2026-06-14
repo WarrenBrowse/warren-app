@@ -1060,7 +1060,9 @@ impl ManagementService for ManagementServiceImpl {
         _request: Request<AccountNumber>,
     ) -> ServiceResult<types::DeviceList> {
         log::debug!("list_devices");
-        Ok(Response::new(types::DeviceList { devices: Vec::new() }))
+        Ok(Response::new(types::DeviceList {
+            devices: Vec::new(),
+        }))
     }
 
     async fn remove_device(&self, _request: Request<types::DeviceRemoval>) -> ServiceResult<()> {

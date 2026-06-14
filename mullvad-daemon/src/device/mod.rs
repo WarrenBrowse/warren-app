@@ -342,8 +342,11 @@ impl AccountManager {
         //    (legacy Mullvad upstream path).
         let account_backend: std::sync::Arc<dyn WarrenAccountBackend> =
             if let Some(cfg) = warren_api_config {
-                let client =
-                    warren_api_client::WarrenApiClient::new_shared(cfg.url, Vec::new(), cfg.signing_key);
+                let client = warren_api_client::WarrenApiClient::new_shared(
+                    cfg.url,
+                    Vec::new(),
+                    cfg.signing_key,
+                );
                 std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
             } else {
                 std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
@@ -452,7 +455,11 @@ impl AccountManager {
         let create_submission = move || {
             let pubkey = self.data.pubkey().ok_or(Error::NoDevice)?.clone();
             let warren_identity_service = self.warren_identity_service.clone();
-            Ok(async move { warren_identity_service.submit_voucher(pubkey, voucher).await })
+            Ok(async move {
+                warren_identity_service
+                    .submit_voucher(pubkey, voucher)
+                    .await
+            })
         };
 
         match create_submission() {

@@ -853,7 +853,10 @@ mod interface_exists_tests {
     fn loopback_is_present_and_bogus_index_is_absent() {
         // lo0 always exists; resolve its real index rather than assuming 1.
         let lo = nix::net::if_::if_nametoindex("lo0").expect("lo0 must exist");
-        assert!(interface_exists(lo as u16), "lo0 (index {lo}) must be present");
+        assert!(
+            interface_exists(lo as u16),
+            "lo0 (index {lo}) must be present"
+        );
         // An index far beyond any plausible interface count is absent.
         assert!(!interface_exists(u16::MAX));
     }

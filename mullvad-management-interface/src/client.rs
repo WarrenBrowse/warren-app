@@ -5,12 +5,8 @@ use futures::{Stream, StreamExt};
 #[cfg(all(daita, not(target_os = "android")))]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
-    access_method::AccessMethodSetting,
-    device::DeviceEvent,
-    relay_list::RelayList,
-    settings::Settings,
-    states::TunnelState,
-    version::AppVersionInfo,
+    access_method::AccessMethodSetting, device::DeviceEvent, relay_list::RelayList,
+    settings::Settings, states::TunnelState, version::AppVersionInfo,
 };
 #[cfg(not(target_os = "android"))]
 use mullvad_types::{
@@ -72,13 +68,11 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::Device(event) => DeviceEvent::try_from(event)
                 .map(DaemonEvent::Device)
                 .map_err(Error::InvalidResponse),
-            types::daemon_event::Event::RemoveDevice(_event) => {
-                Err(Error::InvalidResponse(
-                    types::FromProtobufTypeError::invalid_argument(
-                        "RemoveDevice events are not supported",
-                    ),
-                ))
-            }
+            types::daemon_event::Event::RemoveDevice(_event) => Err(Error::InvalidResponse(
+                types::FromProtobufTypeError::invalid_argument(
+                    "RemoveDevice events are not supported",
+                ),
+            )),
             types::daemon_event::Event::NewAccessMethod(event) => {
                 AccessMethodSetting::try_from(event)
                     .map(DaemonEvent::NewAccessMethod)

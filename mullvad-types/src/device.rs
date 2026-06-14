@@ -84,5 +84,4 @@ mod tests {
         assert!(!DeviceState::LoggedOut.is_logged_in());
         assert!(!DeviceState::Revoked.is_logged_in());
     }
-
 }

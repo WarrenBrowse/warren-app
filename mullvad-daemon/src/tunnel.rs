@@ -731,8 +731,11 @@ impl ParametersGenerator {
                 last_pubkey,
             ) {
                 tokio::spawn(async move {
-                    let client =
-                        warren_api_client::WarrenApiClient::new_shared(api_url, Vec::new(), signing_key);
+                    let client = warren_api_client::WarrenApiClient::new_shared(
+                        api_url,
+                        Vec::new(),
+                        signing_key,
+                    );
                     let hex_pubkey = hex::encode(excluded.as_bytes());
                     let exit_pubkey_hex =
                         match warren_api_client::PubkeyHex::try_from(hex_pubkey.as_str()) {

@@ -74,19 +74,37 @@ pub struct WarrenTunnelConfig {
     /// here so the schema stays in sync and future client-side IPv6
     /// filtering can read it. `#[serde(default)]` keeps older payloads valid.
     #[serde(default)]
-    #[cfg_attr(not(test), expect(dead_code, reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up"))]
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up"
+        )
+    )]
     pub enable_ipv6: Option<bool>,
     /// App-level kill switch. Enforced Android-side (the adapter keeps a
     /// blackhole interface up when the tunnel drops). Accepted here for
     /// schema parity.
     #[serde(default)]
-    #[cfg_attr(not(test), expect(dead_code, reason = "lockdown enforced Android-side via blackhole interface"))]
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "lockdown enforced Android-side via blackhole interface"
+        )
+    )]
     pub lockdown_mode: Option<bool>,
     /// DNS options. DNS routing into the tunnel is enforced Android-side via
     /// `VpnService.Builder.addDnsServer`; content-blocking flags are honoured
     /// by the exit DNS forwarder. Accepted here for schema parity.
     #[serde(default)]
-    #[cfg_attr(not(test), expect(dead_code, reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up"))]
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up"
+        )
+    )]
     pub dns: Option<serde_json::Value>,
 }
 
@@ -192,7 +210,9 @@ pub async fn run_session(
 
     log::info!(
         "Quinn connect: {} via {} (daita_requested={})",
-        exit_socket, config.exit_pubkey_hex, daita_requested
+        exit_socket,
+        config.exit_pubkey_hex,
+        daita_requested
     );
     let session = match client.connect(target).await {
         Ok(s) => s,
@@ -412,7 +432,10 @@ async fn run_multi_hop_session(
 
     // HPKE session setup + IP negotiation over the control stream. Required
     // before the data plane carries packets (the exit allocates the inner IP).
-    if let Err(e) = mh.setup_over_stream(Some(&signing), /* wants_ipv6 */ false).await {
+    if let Err(e) = mh
+        .setup_over_stream(Some(&signing), /* wants_ipv6 */ false)
+        .await
+    {
         log::error!("multi-hop setup_over_stream failed: {e}");
         status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
         return;
@@ -492,8 +515,7 @@ fn maybe_spawn_nat_pmp(
     // suggested external port comes from the user (0 = gateway picks).
     let suggested_external_port = config.nat_pmp_external_port.unwrap_or(0);
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
-    let (tx, mut rx) =
-        tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
     let refresh = warren_natpmp_client::spawn_refresh_loop_from_addr(
         server,
         proto,
@@ -514,9 +536,7 @@ fn maybe_spawn_nat_pmp(
             }
         }
     });
-    log::info!(
-        "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})"
-    );
+    log::info!("NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})");
     Some(NatPmpGuard { refresh, drain })
 }
 
@@ -617,7 +637,8 @@ mod tests {
     fn android_only_keys_are_accepted_and_ignored() {
         // `allow_lan` and `mtu` are enforced Android-side and absent from the
         // Rust struct; parsing must not fail on them (no deny_unknown_fields).
-        let json = r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443","allow_lan":true,"mtu":1200}"#;
+        let json =
+            r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443","allow_lan":true,"mtu":1200}"#;
         assert!(parse_config(json).is_ok());
     }
 

@@ -271,7 +271,9 @@ mod tests {
         // sign-out (`delete`) must remove it, not just the final file.
         let dir = isolated_tempdir();
         let storage = PlaintextStorage::new(&dir);
-        storage.store("warren_mnemonic", b"secret phrase").expect("write");
+        storage
+            .store("warren_mnemonic", b"secret phrase")
+            .expect("write");
 
         let secrets = dir.join(SECRETS_SUBDIR);
         let stale = secrets.join(".warren_mnemonic.txt.tmp.123.456");
@@ -280,7 +282,10 @@ mod tests {
 
         storage.delete("warren_mnemonic").expect("delete");
 
-        assert!(!stale.exists(), "stale plaintext tempfile must be swept on delete");
+        assert!(
+            !stale.exists(),
+            "stale plaintext tempfile must be swept on delete"
+        );
         assert!(storage.load("warren_mnemonic").expect("load ok").is_none());
 
         let _ = fs::remove_dir_all(&dir);

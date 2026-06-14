@@ -254,7 +254,10 @@ fn build_incoming(
                     gid: c.gid(),
                     pid: c.pid(),
                 });
-                Ok(StreamBox { inner: stream, creds })
+                Ok(StreamBox {
+                    inner: stream,
+                    creds,
+                })
             }
             Err(e) => Err(e),
         };

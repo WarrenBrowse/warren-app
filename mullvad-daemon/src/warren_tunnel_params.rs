@@ -54,9 +54,7 @@ fn resolve_n_connections_from(env: Option<&str>, setting: Option<u8>) -> u8 {
     if let Some(raw) = env {
         match raw.trim().parse::<u8>() {
             Ok(n) if N_CONNECTIONS_RANGE.contains(&n) => {
-                log::warn!(
-                    "{N_CONNECTIONS_ENV}={n} overrides the persisted n_connections setting"
-                );
+                log::warn!("{N_CONNECTIONS_ENV}={n} overrides the persisted n_connections setting");
                 return n;
             }
             _ => log::warn!(

@@ -225,7 +225,12 @@ fn weighted_pick_pair(dir: &VerifiedMultiHopDirectory, pairs: &[(usize, usize)])
     ranked.sort_by(|a, b| {
         weight(b)
             .cmp(&weight(a))
-            .then_with(|| dir.nodes[a.0].relay.relay_id.cmp(&dir.nodes[b.0].relay.relay_id))
+            .then_with(|| {
+                dir.nodes[a.0]
+                    .relay
+                    .relay_id
+                    .cmp(&dir.nodes[b.0].relay.relay_id)
+            })
             .then_with(|| {
                 dir.nodes[a.1]
                     .exit
@@ -237,7 +242,11 @@ fn weighted_pick_pair(dir: &VerifiedMultiHopDirectory, pairs: &[(usize, usize)])
     ranked[0]
 }
 
-fn circuit_from(dir: &VerifiedMultiHopDirectory, entry_idx: usize, exit_idx: usize) -> SelectedCircuit {
+fn circuit_from(
+    dir: &VerifiedMultiHopDirectory,
+    entry_idx: usize,
+    exit_idx: usize,
+) -> SelectedCircuit {
     SelectedCircuit {
         relay: dir.nodes[entry_idx].relay.clone(),
         exit: dir.nodes[exit_idx].exit.clone(),

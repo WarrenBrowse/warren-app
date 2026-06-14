@@ -65,7 +65,6 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
     reqwest::Certificate::from_pem(CERT_BYTES).expect("invalid cert")
 });
 
-
 /// Pubkeys used to verify metadata from the Warren update channel
 /// (production target).
 ///

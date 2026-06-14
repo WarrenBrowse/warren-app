@@ -119,13 +119,8 @@ pub fn sign_canonical_request(
     nonce_hex: &str,
     body_hash_hex: &str,
 ) -> Result<[u8; 64], WalletError> {
-    let msg = warren_identity::auth::canonical_message(
-        method,
-        path,
-        timestamp,
-        nonce_hex,
-        body_hash_hex,
-    );
+    let msg =
+        warren_identity::auth::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
     sign_message(mnemonic, msg.as_bytes())
 }
 
@@ -234,16 +229,11 @@ mod tests {
 
         // Reconstruct the canonical message exactly as warren-identity
         // builds it, then verify against the pubkey.
-        let expected = warren_identity::auth::canonical_message(
-            "GET",
-            "/v1/exits",
-            42,
-            "abcd1234",
-            "ff00",
+        let expected =
+            warren_identity::auth::canonical_message("GET", "/v1/exits", 42, "abcd1234", "ff00");
+        pubkey.verify(expected.as_bytes(), &sig).expect(
+            "canonical-request signature must verify against the warren-identity-built message",
         );
-        pubkey
-            .verify(expected.as_bytes(), &sig)
-            .expect("canonical-request signature must verify against the warren-identity-built message");
     }
 
     /// Wire vector: a fixed mnemonic must always derive the same pubkey.
@@ -251,8 +241,7 @@ mod tests {
     #[test]
     fn fixed_mnemonic_derives_stable_pubkey() {
         // Official BIP39 all-zero-entropy test vector (12 words).
-        const PHRASE: &str =
-            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        const PHRASE: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let pubkey = pubkey_from_mnemonic(PHRASE).unwrap();
         // The hex below was computed via this function on warren-core
         // `8b0e345` (the pinned SHA at the time of this test landing). If

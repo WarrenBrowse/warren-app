@@ -690,8 +690,8 @@ mod test {
     use super::{DNS_PORT, DnsSettings, State, loopback_resolver_is_live};
     use std::{
         collections::{BTreeSet, HashMap},
-        net::{IpAddr, Ipv4Addr, UdpSocket},
         net::SocketAddr,
+        net::{IpAddr, Ipv4Addr, UdpSocket},
     };
 
     #[test]
@@ -700,7 +700,8 @@ mod test {
         // override whose resolver is still answering - that is exactly how a
         // coexisting Mullvad app's live resolver (a non-canonical 127/8
         // address) got wiped, killing all DNS on daemon start.
-        let live = UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind live");
+        let live =
+            UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind live");
         let live_addr = live.local_addr().expect("live addr");
         assert!(
             loopback_resolver_is_live(live_addr.ip(), live_addr.port()),
@@ -911,8 +912,14 @@ mod test {
             DNS_PORT,
         ));
         let prev_state = HashMap::from([
-            ("State:/Network/Service/EN0/DNS".to_owned(), en0_original.clone()),
-            ("State:/Network/Service/EN1/DNS".to_owned(), en1_original.clone()),
+            (
+                "State:/Network/Service/EN0/DNS".to_owned(),
+                en0_original.clone(),
+            ),
+            (
+                "State:/Network/Service/EN1/DNS".to_owned(),
+                en1_original.clone(),
+            ),
         ]);
         // Mid-teardown snapshot: en0's key is gone entirely, en1's reads None.
         let new_state = HashMap::from([("State:/Network/Service/EN1/DNS".to_owned(), None)]);

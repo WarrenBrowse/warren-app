@@ -623,9 +623,7 @@ impl TunnelState for ConnectedState {
             }
             EventResult::OfflineGraceExpired => {
                 if shared_values.connectivity.is_offline() {
-                    log::info!(
-                        "Offline persisted past the {OFFLINE_GRACE:?} grace; blocking"
-                    );
+                    log::info!("Offline persisted past the {OFFLINE_GRACE:?} grace; blocking");
                     self.disconnect(
                         shared_values,
                         AfterDisconnect::Block(ErrorStateCause::IsOffline),

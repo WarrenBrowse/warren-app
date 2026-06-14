@@ -299,10 +299,7 @@ fn pick_two_hop_circuit(
 /// the same reconnect loop fixed for the 1-hop path. A stable pick means the
 /// updater only reconnects on a real change. Do NOT reintroduce per-call
 /// randomness here.
-fn weighted_pick_pair(
-    dir: &VerifiedMultiHopDirectory,
-    pairs: &[(usize, usize)],
-) -> (usize, usize) {
+fn weighted_pick_pair(dir: &VerifiedMultiHopDirectory, pairs: &[(usize, usize)]) -> (usize, usize) {
     let weight = |&(i, j): &(usize, usize)| {
         dir.nodes[i]
             .weight
@@ -395,16 +392,13 @@ pub fn select_one_hop_circuit(
     // change. Do NOT reintroduce per-call randomness here.
     let mut ranked = candidates;
     ranked.sort_by(|&a, &b| {
-        dir.nodes[b]
-            .weight
-            .cmp(&dir.nodes[a].weight)
-            .then_with(|| {
-                dir.nodes[a]
-                    .exit
-                    .exit_id
-                    .as_bytes()
-                    .cmp(dir.nodes[b].exit.exit_id.as_bytes())
-            })
+        dir.nodes[b].weight.cmp(&dir.nodes[a].weight).then_with(|| {
+            dir.nodes[a]
+                .exit
+                .exit_id
+                .as_bytes()
+                .cmp(dir.nodes[b].exit.exit_id.as_bytes())
+        })
     });
     let idx = ranked[0];
     assemble(dir, idx, idx, enable_gso, use_warren_obfuscation)
@@ -835,9 +829,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             // `online_watch_active`, which the arm body below reassigns.
             let watch_active = online_watch_active;
             let online_changed = async {
-                if watch_active
-                    && let Some(rx) = online_edge_rx.as_mut()
-                {
+                if watch_active && let Some(rx) = online_edge_rx.as_mut() {
                     return rx.changed().await.is_ok();
                 }
                 std::future::pending::<bool>().await
@@ -1034,8 +1026,14 @@ mod tests {
         // No env, no baked pin → Unconfigured (fail closed), NOT TOFU.
         assert_eq!(root_pin_mode_from(None, ""), RootPinMode::Unconfigured);
         // Whitespace / garbage env with no usable pin → Unconfigured.
-        assert_eq!(root_pin_mode_from(Some("   "), ""), RootPinMode::Unconfigured);
-        assert_eq!(root_pin_mode_from(Some(",, ,"), ""), RootPinMode::Unconfigured);
+        assert_eq!(
+            root_pin_mode_from(Some("   "), ""),
+            RootPinMode::Unconfigured
+        );
+        assert_eq!(
+            root_pin_mode_from(Some(",, ,"), ""),
+            RootPinMode::Unconfigured
+        );
     }
 
     #[test]
@@ -1080,8 +1078,7 @@ mod tests {
         // the SAME circuit (no churn), despite multiple valid alternatives.
         let mut cur = first;
         for _ in 0..50 {
-            let next =
-                pick_two_hop_circuit(&d, "", "", true, true, Some(&cur)).expect("circuit");
+            let next = pick_two_hop_circuit(&d, "", "", true, true, Some(&cur)).expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "circuit must stick");
             cur = next;
         }
@@ -1101,9 +1098,12 @@ mod tests {
         let current = assemble(&d, fr_idx, de_idx, true, true).unwrap();
         // User pins exit to SG → the DE-exit circuit is no longer valid, so
         // the sticky pick must move to an SG-exit circuit deterministically.
-        let picked = pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current))
-            .expect("sg circuit");
-        assert_eq!(picked.exit.exit_id.as_bytes(), d.nodes[2].exit.exit_id.as_bytes());
+        let picked =
+            pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current)).expect("sg circuit");
+        assert_eq!(
+            picked.exit.exit_id.as_bytes(),
+            d.nodes[2].exit.exit_id.as_bytes()
+        );
     }
 
     #[test]
@@ -1149,12 +1149,8 @@ mod tests {
         // stickiness path (current = None here), so it guards the fallback
         // itself.
         let op = op_key();
-        let d = dir(vec![
-            node(&op, 1, "de", 0, 100),
-            node(&op, 2, "sg", 0, 100),
-        ]);
-        let first =
-            circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
+        let d = dir(vec![node(&op, 1, "de", 0, 100), node(&op, 2, "sg", 0, 100)]);
+        let first = circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
         for _ in 0..50 {
             let again =
                 circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));

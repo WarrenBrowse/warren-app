@@ -1485,7 +1485,10 @@ impl WarrenTunnelMonitor {
                     spec.gateway,
                     spec.assigned_v6.is_some()
                 );
-                (spec.assigned, if wants_ipv6 { spec.assigned_v6 } else { None })
+                (
+                    spec.assigned,
+                    if wants_ipv6 { spec.assigned_v6 } else { None },
+                )
             }
             None => {
                 log::info!(
@@ -1608,7 +1611,10 @@ impl WarrenTunnelMonitor {
                      Relay traffic may transiently self-nest through the tun."
                 ),
             }
-            match route_manager.add_routes(defaults.into_iter().collect()).await {
+            match route_manager
+                .add_routes(defaults.into_iter().collect())
+                .await
+            {
                 Ok(()) => log::info!(
                     "Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})"
                 ),
@@ -1827,8 +1833,10 @@ impl WarrenTunnelMonitor {
                             spec.assigned
                         );
                         log::warn!("{TRACE_PREFIX} {msg}");
-                        if let Some(tx) =
-                            pump_error_tx.lock().unwrap_or_else(|p| p.into_inner()).take()
+                        if let Some(tx) = pump_error_tx
+                            .lock()
+                            .unwrap_or_else(|p| p.into_inner())
+                            .take()
                         {
                             let _ = tx.send(msg);
                         }
@@ -1943,9 +1951,8 @@ impl WarrenTunnelMonitor {
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
-        let mut supervisor_fatal_rx: Option<
-            tokio::sync::watch::Receiver<Option<RejectionReason>>,
-        > = None;
+        let mut supervisor_fatal_rx: Option<tokio::sync::watch::Receiver<Option<RejectionReason>>> =
+            None;
         let (pump_error_rx, handles) = match backend {
             MonitorBackend::SingleHop {
                 pump_handle,
@@ -2970,7 +2977,10 @@ mod tests {
         // (fail-closed, no leak) while leaving the state cancelable and
         // letting the tunnel self-heal once the allowlist syncs. Promoting
         // this to a fatal error would strand a just-subscribed user.
-        for reason in [RejectionReason::NotAllowlisted, RejectionReason::IpExhausted] {
+        for reason in [
+            RejectionReason::NotAllowlisted,
+            RejectionReason::IpExhausted,
+        ] {
             let err = reject_error(reason);
             assert!(
                 matches!(err, Error::BackendTransient(_)),
@@ -3252,7 +3262,9 @@ mod tests {
         assert!(cfg.addresses.contains(&IpAddr::V6(v6)));
         assert_eq!(
             cfg.ipv6_gateway,
-            Some(std::net::Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 1)),
+            Some(std::net::Ipv6Addr::new(
+                0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 1
+            )),
             "dual-stack multi-hop must pin the v6 gateway to fdcc:f:1::1"
         );
     }

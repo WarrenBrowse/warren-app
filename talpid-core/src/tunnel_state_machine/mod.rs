@@ -1037,7 +1037,10 @@ mod connectivity_debounce_tests {
         let (off_state_tx, _off_state_rx) = mpsc::unbounded::<Connectivity>();
 
         let task = tokio::spawn(run_connectivity_debounce(
-            offline_rx, weak, off_state_tx, settle,
+            offline_rx,
+            weak,
+            off_state_tx,
+            settle,
         ));
 
         // Offline must be forwarded immediately, without waiting for the
@@ -1053,7 +1056,9 @@ mod connectivity_debounce_tests {
         // A burst of online edges arriving within the settle window must
         // NOT each forward; only the last one, once the link settles.
         for _ in 0..4 {
-            offline_tx.unbounded_send(Connectivity::PresumeOnline).unwrap();
+            offline_tx
+                .unbounded_send(Connectivity::PresumeOnline)
+                .unwrap();
             tokio::task::yield_now().await;
             // Each new edge re-arms the window; well under `settle`.
             tokio::time::advance(Duration::from_millis(400)).await;
