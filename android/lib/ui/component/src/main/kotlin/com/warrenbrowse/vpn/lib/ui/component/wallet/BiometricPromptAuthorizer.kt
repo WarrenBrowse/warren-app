@@ -1,7 +1,9 @@
 package com.warrenbrowse.vpn.lib.ui.component.wallet
 
 import androidx.fragment.app.FragmentActivity
+import com.warrenbrowse.vpn.lib.model.wallet.CipherAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
+import javax.crypto.Cipher
 
 /**
  * Concrete [SensitiveOpAuthorizer] backed by Android `BiometricPrompt`.
@@ -28,7 +30,7 @@ class BiometricPromptAuthorizer(
     private val activity: FragmentActivity,
     private val title: String = "Warren wallet",
     private val negativeButton: String = "Cancel",
-) : SensitiveOpAuthorizer {
+) : SensitiveOpAuthorizer, CipherAuthorizer {
 
     override suspend fun authorize(reason: String): Boolean {
         return when (val result = promptBiometric(activity, title, reason, negativeButton)) {
@@ -43,4 +45,7 @@ class BiometricPromptAuthorizer(
             }
         }
     }
+
+    override suspend fun authorizeCipher(cipher: Cipher, reason: String): Cipher? =
+        promptBiometricForCipher(activity, title, reason, negativeButton, cipher)
 }

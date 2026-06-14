@@ -2,10 +2,12 @@ package com.warrenbrowse.vpn.lib.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.lib.model.wallet.CipherAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
@@ -99,6 +101,23 @@ class AndroidKeystoreWalletRepository(
         // credential prompt. The repository never owns the prompt UI -
         // the `authorizer` is supplied by the UI layer (typically
         // `lib/ui/component/wallet/BiometricGate.promptBiometric`).
+        if (HARDWARE_AUTH && authorizer is CipherAuthorizer) {
+            // Hardware-bound path: the Keystore key requires per-use auth, so
+            // the decrypt Cipher itself is authorized through a CryptoObject
+            // prompt; an in-process caller cannot doFinal without it. The
+            // prompt must run on the main thread, so it stays OUT of the IO
+            // dispatcher; only the doFinal is offloaded.
+            val cipher = buildDecryptCipherOrNull()
+                ?: throw IllegalStateException(
+                    "no wallet on disk - call createWallet/importWallet first"
+                )
+            val authed = authorizer.authorizeCipher(cipher, reason)
+                ?: throw WalletAuthorizationDeniedException(
+                    "User declined or device cannot authenticate"
+                )
+            val chars = withContext(Dispatchers.IO) { finishDecrypt(authed) }
+            return@withLock Mnemonic.fromCharArrayOwning(chars)
+        }
         if (!authorizer.authorize(reason)) {
             throw WalletAuthorizationDeniedException(
                 "User declined or device cannot authenticate"
@@ -181,13 +200,36 @@ class AndroidKeystoreWalletRepository(
      * which owns its zero-on-close lifecycle.
      */
     private fun decryptMnemonic(): CharArray? {
-        val ciphertextB64 = prefs.getString(KEY_CIPHERTEXT, null) ?: return null
+        val cipher = buildDecryptCipherOrNull() ?: return null
+        return finishDecrypt(cipher)
+    }
+
+    /**
+     * Build a DECRYPT-mode [Cipher] initialised with the stored IV, or `null`
+     * when no wallet is on disk. When the master key requires user auth
+     * ([HARDWARE_AUTH]) the returned cipher is NOT yet usable: it must first
+     * be authorised via a `CryptoObject` prompt ([CipherAuthorizer]) before
+     * [finishDecrypt] can `doFinal`.
+     */
+    private fun buildDecryptCipherOrNull(): Cipher? {
         val ivB64 = prefs.getString(KEY_IV, null) ?: return null
-        val ciphertext = Base64.decode(ciphertextB64, Base64.NO_WRAP)
+        if (prefs.getString(KEY_CIPHERTEXT, null) == null) return null
         val iv = Base64.decode(ivB64, Base64.NO_WRAP)
-        val cipher = Cipher.getInstance(TRANSFORMATION).apply {
+        return Cipher.getInstance(TRANSFORMATION).apply {
             init(Cipher.DECRYPT_MODE, getOrCreateMasterKey(), GCMParameterSpec(GCM_TAG_BITS, iv))
         }
+    }
+
+    /**
+     * Decrypt the persisted ciphertext with an (already authorised, if the key
+     * requires it) [cipher] into a freshly allocated [CharArray], zeroing the
+     * byte intermediate. The caller owns the array's zero-on-close lifecycle.
+     */
+    private fun finishDecrypt(cipher: Cipher): CharArray {
+        val ciphertextB64 = requireNotNull(prefs.getString(KEY_CIPHERTEXT, null)) {
+            "ciphertext vanished between cipher build and decrypt"
+        }
+        val ciphertext = Base64.decode(ciphertextB64, Base64.NO_WRAP)
         val plaintext = cipher.doFinal(ciphertext)
         try {
             val decoded = Charsets.UTF_8.decode(java.nio.ByteBuffer.wrap(plaintext))
@@ -208,20 +250,31 @@ class AndroidKeystoreWalletRepository(
         ks.getKey(KEY_ALIAS, null)?.let { return it as SecretKey }
 
         val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
-        val spec = KeyGenParameterSpec.Builder(
+        val builder = KeyGenParameterSpec.Builder(
             KEY_ALIAS,
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
         )
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(KEY_SIZE_BITS)
-            // Decryption is gated at the app layer (unlock() requires the
-            // BiometricPrompt authorizer). Hardware-enforcing it here with
-            // setUserAuthenticationRequired(true) needs a CryptoObject-bound
-            // prompt and would also gate encrypt (create/import); tracked as a
-            // follow-up, see the class doc.
-            .build()
-        gen.init(spec)
+        if (HARDWARE_AUTH) {
+            // Hardware-enforce a fresh user authentication for EVERY use of the
+            // key: the crypto op must be bound to a BiometricPrompt.CryptoObject
+            // (see unlock()'s hardware path), so an in-process caller cannot use
+            // the cipher by calling doFinal directly. On API 30+ a timeout of 0
+            // means per-use; pre-30, setUserAuthenticationRequired(true) alone
+            // already means per-use via CryptoObject.
+            builder.setUserAuthenticationRequired(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                builder.setUserAuthenticationParameters(
+                    0,
+                    KeyProperties.AUTH_BIOMETRIC_STRONG,
+                )
+            }
+        }
+        // Decryption is also gated at the app layer (unlock() requires the
+        // BiometricPrompt authorizer) regardless of HARDWARE_AUTH.
+        gen.init(builder.build())
         return gen.generateKey()
     }
 
@@ -236,5 +289,14 @@ class AndroidKeystoreWalletRepository(
         const val KEY_SIZE_BITS = 256
         const val GCM_TAG_BITS = 128
         const val TRANSFORMATION = "AES/GCM/NoPadding"
+
+        // Hardware-bound, per-use auth on the master key (defence-in-depth on
+        // top of the app-layer unlock() gate). OFF by default: the unlock()
+        // decrypt path is wired (CryptoObject), but turning this on also makes
+        // the ENCRYPT at create/import require a CryptoObject prompt, which is
+        // NOT wired yet (createWallet/importWallet take no authorizer). Enable
+        // ONLY after wiring + on-device verification of the encrypt path, or
+        // new-wallet creation will fail with UserNotAuthenticatedException.
+        const val HARDWARE_AUTH = false
     }
 }

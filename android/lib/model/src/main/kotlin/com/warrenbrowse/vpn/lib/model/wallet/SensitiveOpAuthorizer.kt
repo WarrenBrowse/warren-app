@@ -28,3 +28,23 @@ fun interface SensitiveOpAuthorizer {
 object AlwaysAuthorize : SensitiveOpAuthorizer {
     override suspend fun authorize(reason: String): Boolean = true
 }
+
+/**
+ * Authorizes a [javax.crypto.Cipher] against a hardware-bound
+ * `BiometricPrompt.CryptoObject`, returning the same cipher once the Keystore
+ * op is authorized at the secure boundary (or `null` if the user cancels /
+ * hardware is unavailable). This is what an auth-required Keystore key
+ * (`setUserAuthenticationRequired(true)`) needs: the crypto op itself is
+ * gated, not just a separate boolean prompt, so an in-process caller cannot
+ * use the cipher without a fresh user authentication.
+ *
+ * Separate from [SensitiveOpAuthorizer] so existing boolean-gate callers stay
+ * unchanged; the Keystore repository uses this only when hardware-bound auth
+ * is enabled.
+ */
+interface CipherAuthorizer {
+    suspend fun authorizeCipher(
+        cipher: javax.crypto.Cipher,
+        reason: String,
+    ): javax.crypto.Cipher?
+}
