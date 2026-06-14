@@ -1,7 +1,10 @@
 import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
-import { WarrenMultiHopSetting } from '../../../features/warren-multi-hop';
+import {
+  WarrenMultiHopCountryPickers,
+  WarrenMultiHopSetting,
+} from '../../../features/warren-multi-hop';
 import { Image, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
@@ -57,6 +60,7 @@ export function WarrenMultiHopSettingsView() {
                     </Text>
                   </FlexColumn>
                   <WarrenMultiHopSetting />
+                  <WarrenMultiHopCountryPickers />
                 </FlexColumn>
               </View.Container>
             </View.Content>

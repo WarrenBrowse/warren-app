@@ -32,9 +32,24 @@ export function useWarrenMultiHop() {
     [setWarrenMultiHop, warrenMultiHop],
   );
 
+  // ISO 3166 alpha-2 country codes (lowercase, '' = auto-pick from the
+  // relay list) for the entry / exit hop. Surfaced by the relay-list
+  // driven country pickers.
+  const setEntryCountry = React.useCallback(
+    (entryCountry: string) => setWarrenMultiHop({ ...warrenMultiHop, entryCountry }),
+    [setWarrenMultiHop, warrenMultiHop],
+  );
+
+  const setExitCountry = React.useCallback(
+    (exitCountry: string) => setWarrenMultiHop({ ...warrenMultiHop, exitCountry }),
+    [setWarrenMultiHop, warrenMultiHop],
+  );
+
   return {
     warrenMultiHop,
     setWarrenMultiHop,
     setEnabled,
+    setEntryCountry,
+    setExitCountry,
   };
 }

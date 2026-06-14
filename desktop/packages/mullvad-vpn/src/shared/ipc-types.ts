@@ -34,13 +34,12 @@ export type ScrollToAnchorId =
   | 'warren-api-url-setting'
   // Anchors for the Warren multi-hop view (M4.H.C).
   | 'warren-multi-hop-setting'
-  | 'warren-multi-hop-country-pickers'
+  | 'warren-multi-hop-entry-country'
+  | 'warren-multi-hop-exit-country'
   // Anchors for the Warren status display (reconnect_count + age,
   // obfuscation indicator).
   | 'warren-status-reconnect'
   | 'warren-obfuscation-indicator'
-  // Anchor for the multi-exit auto-failover toggle (M5.B.2).
-  | 'warren-failover-setting'
   // Anchor for the port-forwarding toggle row.
   | 'port-forwarding-setting'
   // Anchor for the port-forwarding advanced controls (protocol +

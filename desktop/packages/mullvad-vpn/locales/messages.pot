@@ -2900,6 +2900,14 @@ msgid "Copy to clipboard"
 msgstr ""
 
 msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
 msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
 msgstr ""
 

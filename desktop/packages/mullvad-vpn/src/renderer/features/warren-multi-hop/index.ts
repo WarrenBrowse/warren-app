@@ -1,2 +1,6 @@
-export { WarrenMultiHopSwitch, WarrenMultiHopSetting } from './components';
+export {
+  WarrenMultiHopSwitch,
+  WarrenMultiHopSetting,
+  WarrenMultiHopCountryPickers,
+} from './components';
 export { useWarrenMultiHop } from './hooks';
