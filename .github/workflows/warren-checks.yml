@@ -116,6 +116,15 @@ jobs:
         working-directory: desktop
         run: npm ci
 
+      # mullvad-vpn imports types from the sibling workspace packages
+      # `windows-utils` and `nseventforwarder`, whose `.d.cts` are emitted
+      # by their own `build-typescript` (pure tsc, no native build) into
+      # `lib/`. Without this, `tsc --noEmit` fails with TS2307 (cannot find
+      # module) on those imports.
+      - name: Build workspace package types
+        working-directory: desktop
+        run: npm run build-typescript -w windows-utils -w nseventforwarder
+
       - name: TypeScript type-check
         # Includes the manual TS Phase H patches for the gRPC bindings.
         # Will regen automatically once we have executed the
