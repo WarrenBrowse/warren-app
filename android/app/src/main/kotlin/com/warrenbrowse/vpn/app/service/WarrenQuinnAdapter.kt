@@ -9,6 +9,7 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -58,7 +59,12 @@ class WarrenQuinnAdapter(
     val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
 
     private var activeConfig: WarrenTunnelConfig? = null
-    private var activeMnemonic: String? = null
+    // Held as a zeroizable [Mnemonic] (CharArray-backed), NOT a String: the
+    // recovery phrase must not linger as a long-lived immutable String on the
+    // JVM heap for the whole session (a heap dump would extract it verbatim).
+    // The adapter owns this instance and wipes it via close() on teardown.
+    // Do NOT switch this back to a String, it would defeat zeroization.
+    private var activeMnemonic: Mnemonic? = null
     private var activeFd: ParcelFileDescriptor? = null
     private var statusPollJob: Job? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -77,19 +83,29 @@ class WarrenQuinnAdapter(
     // a network that is clearly down. Reset on a real connect + user teardown.
     private val flapDetector = FlapDetector()
 
-    suspend fun connect(config: WarrenTunnelConfig, mnemonic: String) = lock.withLock {
+    /**
+     * Establish a Quinn session. Ownership of [mnemonic] transfers to the
+     * adapter, which holds it (zeroizable) for the session so the reconnect /
+     * handover paths can re-derive the SigningKey without re-prompting
+     * BiometricPrompt, and wipes it via close() on teardown. Internal
+     * reconnect paths pass the already-owned mnemonic back in (same instance),
+     * which is reused rather than re-stored.
+     */
+    suspend fun connect(config: WarrenTunnelConfig, mnemonic: Mnemonic) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
             Logger.w("WarrenQuinnAdapter: connect() called while not disconnected")
+            // Never zero the session's own mnemonic; only wipe a foreign one
+            // that we are refusing to take ownership of.
+            if (mnemonic !== activeMnemonic) mnemonic.close()
             return@withLock
         }
         _state.value = WarrenTunnelState.Connecting
         userInitiatedDisconnect = false
         activeConfig = config
-        // Hold the mnemonic in memory only for the duration of the active
-        // session, so the reconnect-on-handover path can re-derive the
-        // SigningKey without going back to the wallet repository (which
-        // would re-trigger BiometricPrompt mid-handover - bad UX).
-        activeMnemonic = mnemonic
+        if (mnemonic !== activeMnemonic) {
+            activeMnemonic?.close()
+            activeMnemonic = mnemonic
+        }
 
         val fd = buildTunInterface(config) ?: run {
             onSessionDown(config, "VpnService.Builder.establish() returned null")
@@ -97,12 +113,23 @@ class WarrenQuinnAdapter(
         }
         activeFd = fd
 
-        val rc = WarrenJni.connectTunnel(
-            vpnService,
-            fd.detachFd(),
-            mnemonic,
-            Json.encodeToString(config),
-        )
+        val rc = try {
+            mnemonic.useAsString { phrase ->
+                WarrenJni.connectTunnel(
+                    vpnService,
+                    fd.detachFd(),
+                    phrase,
+                    Json.encodeToString(config),
+                )
+            }
+        } catch (e: IllegalStateException) {
+            // The cached mnemonic was wiped between scheduling and this
+            // (re)connect, e.g. a user disconnect raced an automatic retry.
+            // Fail closed instead of crashing the VPN service.
+            Logger.w(throwable = e) { "connect: mnemonic unavailable, aborting" }
+            onSessionDown(config, "mnemonic unavailable")
+            return@withLock
+        }
         if (rc != 0) {
             onSessionDown(config, "connectTunnel returned $rc")
             return@withLock
@@ -177,12 +204,27 @@ class WarrenQuinnAdapter(
             Logger.w("WarrenQuinnAdapter: reconnect() called without an active session")
             return
         }
-        disconnect()
+        lock.withLock { teardownLocked() }
+        // Reuse the same owned Mnemonic instance (connect() detects identity
+        // and does not re-store or wipe it).
         connect(config, mnemonic)
     }
 
     suspend fun disconnect() = lock.withLock {
-        // User-requested teardown: release traffic instead of engaging the
+        teardownLocked()
+        // User teardown is terminal: wipe the cached mnemonic.
+        activeMnemonic?.close()
+        activeMnemonic = null
+    }
+
+    /**
+     * Tear down the active session (cancel polling, drop the JNI tunnel and
+     * TUN fd, clear the blackhole) and return to [WarrenTunnelState.Disconnected].
+     * Must be called holding [lock]. Does NOT wipe [activeMnemonic] so the
+     * reconnect path can reuse it; the public [disconnect] wipes it after.
+     */
+    private fun teardownLocked() {
+        // Intentional teardown: release traffic instead of engaging the
         // kill switch.
         userInitiatedDisconnect = true
         flapDetector.reset()
@@ -196,7 +238,6 @@ class WarrenQuinnAdapter(
         activeFd = null
         exitBlockingMode()
         activeConfig = null
-        activeMnemonic = null
         lastNetwork = null
         _natPmpStatus.value = NATPMP_IDLE
         _state.value = WarrenTunnelState.Disconnected
@@ -252,6 +293,8 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         if (userInitiatedDisconnect) {
             unregisterNetworkCallback()
+            activeMnemonic?.close()
+            activeMnemonic = null
             _state.value = WarrenTunnelState.Failed(reason)
             return
         }
@@ -274,6 +317,8 @@ class WarrenQuinnAdapter(
                 Logger.w("WarrenQuinnAdapter: tunnel flapping, releasing ($reason)")
                 exitBlockingMode()
                 unregisterNetworkCallback()
+                activeMnemonic?.close()
+                activeMnemonic = null
                 _state.value = WarrenTunnelState.Failed(reason)
             }
         } else {
