@@ -8,6 +8,26 @@
 import Foundation
 import WarrenRustRuntime
 
+/// The slice of `WarrenWalletInteractor` that
+/// `StorePaymentManagerInteractor` drives. Extracted as a protocol so the
+/// interactor can be unit-tested against a mock without standing up the
+/// real wallet Keychain + warren-api round-trip (mirrors the
+/// `WarrenQuinnAdapting` seam in WarrenRustRuntime).
+protocol WarrenWalletStoreKitInteracting: Sendable {
+    func storeKitInitPayment(
+        completion: @escaping @Sendable (Result<String, WarrenWalletInteractorError>) -> Void
+    )
+    func submitStoreKitTransaction(
+        jws: String,
+        completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
+    )
+}
+
+/// `WarrenWalletInteractor` already implements both methods with these
+/// exact signatures; the empty conformance just exposes them through the
+/// seam.
+extension WarrenWalletInteractor: WarrenWalletStoreKitInteracting {}
+
 /// Bridges the StoreKit payment flow to the Warren wallet backend.
 ///
 /// Warren has no Mullvad account number: the identity is the BIP39
@@ -26,9 +46,12 @@ import WarrenRustRuntime
 ///   wallet's subscription.
 final actor StorePaymentManagerInteractor {
     private let tunnelManager: TunnelManager
-    private let walletInteractor: WarrenWalletInteractor
+    private let walletInteractor: any WarrenWalletStoreKitInteracting
 
-    init(tunnelManager: TunnelManager, walletInteractor: WarrenWalletInteractor = WarrenWalletInteractor()) {
+    init(
+        tunnelManager: TunnelManager,
+        walletInteractor: any WarrenWalletStoreKitInteracting = WarrenWalletInteractor()
+    ) {
         self.tunnelManager = tunnelManager
         self.walletInteractor = walletInteractor
     }

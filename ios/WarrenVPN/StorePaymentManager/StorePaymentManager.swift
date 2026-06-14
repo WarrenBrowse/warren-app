@@ -13,8 +13,9 @@ import WarrenTypes
 /// StoreKit receipts to the Warren backend (warren-api), which credits
 /// the wallet's subscription.
 ///
-/// - Warning: only interact with this object on the main queue.
-final actor StorePaymentManager: @unchecked Sendable {
+/// Actor isolation serializes all access; callers interact via `await`
+/// from any executor. Observers are notified on the main actor.
+final actor StorePaymentManager {
     private let logger = Logger(label: "StorePaymentManager")
     private var observerList = ObserverList<StorePaymentObserver>()
     private let interactor: StorePaymentManagerInteractor
@@ -100,7 +101,11 @@ final actor StorePaymentManager: @unchecked Sendable {
         case .pending:
             didSuspendPurchase()
         @unknown default:
-            fatalError("Unhandled purchase result \(result)")
+            // A future StoreKit PurchaseResult case must not crash a
+            // user who has just paid: degrade to a generic failure so the
+            // UI can recover instead of hitting fatalError post-charge.
+            logger.error("Unhandled purchase result: \(result)")
+            notifyObservers(of: .failed(.unknown))
         }
     }
 
