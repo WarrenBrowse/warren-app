@@ -4,11 +4,18 @@ import android.content.Context
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import io.mockk.MockKAnswerScope
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
+
+// getString(int, vararg Any) delivers its format args as a single Array in
+// invocation.args[1] (mockk does not flatten varargs); fall back to flattened
+// args defensively.
+private fun MockKAnswerScope<String, *>.fmtArgs(): List<Any?> =
+    (invocation.args.getOrNull(1) as? Array<*>)?.toList() ?: invocation.args.drop(1)
 
 class SubscriptionLabelTest {
 
@@ -26,17 +33,17 @@ class SubscriptionLabelTest {
         every { getString(R.string.subscription_voucher_redeem_failed) } returns
             "Couldn't redeem voucher. Check the code and try again."
         every { getString(eq(R.string.subscription_active_expires), any()) } answers
-            { "Subscription active - expires ${arg<Any>(1)}" }
+            { "Subscription active - expires ${fmtArgs()[0]}" }
         every { getString(eq(R.string.subscription_expired), any()) } answers
-            { "Subscription expired (${arg<Any>(1)})" }
+            { "Subscription expired (${fmtArgs()[0]})" }
         every { getString(eq(R.string.subscription_voucher_redeemed), any()) } answers
-            { "Voucher redeemed - subscription expires ${arg<Any>(1)}" }
+            { "Voucher redeemed - subscription expires ${fmtArgs()[0]}" }
         every { getString(eq(R.string.subscription_expired_on), any()) } answers
-            { "Subscription expired on ${arg<Any>(1)}" }
+            { "Subscription expired on ${fmtArgs()[0]}" }
         every { getString(eq(R.string.subscription_expires_in_day), any(), any()) } answers
-            { "Subscription expires in ${arg<Any>(1)} day (${arg<Any>(2)})" }
+            { "Subscription expires in ${fmtArgs()[0]} day (${fmtArgs()[1]})" }
         every { getString(eq(R.string.subscription_expires_in_days), any(), any()) } answers
-            { "Subscription expires in ${arg<Any>(1)} days (${arg<Any>(2)})" }
+            { "Subscription expires in ${fmtArgs()[0]} days (${fmtArgs()[1]})" }
     }
 
     @Test
