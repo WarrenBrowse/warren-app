@@ -1,5 +1,13 @@
 import { exec, execFile } from 'child_process';
-import { app, clipboard, nativeTheme, powerMonitor, session, shell, systemPreferences } from 'electron';
+import {
+  app,
+  clipboard,
+  nativeTheme,
+  powerMonitor,
+  session,
+  shell,
+  systemPreferences,
+} from 'electron';
 import fs from 'fs';
 import * as path from 'path';
 import util from 'util';

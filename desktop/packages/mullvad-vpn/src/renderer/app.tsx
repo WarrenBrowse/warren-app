@@ -475,9 +475,7 @@ export default class AppRenderer {
     // (doc 35). We pass the already-shortened form, never the full key, so
     // even the client-side site code only ever sees the truncation.
     const pubkey = this.reduxStore.getState().account.pubkey;
-    const acctFragment = pubkey
-      ? `#acct=${encodeURIComponent(shortenWarrenPubKey(pubkey))}`
-      : '';
+    const acctFragment = pubkey ? `#acct=${encodeURIComponent(shortenWarrenPubKey(pubkey))}` : '';
 
     await this.openUrl(`${urls.purchase}?pid=${wpid}${acctFragment}`);
 
