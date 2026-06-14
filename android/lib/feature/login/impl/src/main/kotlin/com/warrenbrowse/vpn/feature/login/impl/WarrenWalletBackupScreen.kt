@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
+import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -26,7 +28,9 @@ import org.koin.androidx.compose.koinViewModel
  *
  * Renders the cleartext phrase via `MnemonicDisplay` (blur+reveal, no copy
  * CTA) plus a single confirmation button. The user is expected to write the
- * phrase down on paper before tapping `I have written it down`.
+ * phrase down on paper before tapping `I have written it down`. The top bar
+ * exposes a back affordance (returns to the login choice) mirroring the
+ * desktop AppNavigationHeader.
  *
  * The mnemonic is held by [WarrenWalletBackupViewModel], a
  * NavBackStackEntry-scoped ViewModel that consumes the
@@ -38,6 +42,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun WarrenWalletBackupScreen(
     onConfirmed: () -> Unit,
+    onNavigateBack: () -> Unit,
     onProcessRestoreFailure: () -> Unit,
     modifier: Modifier = Modifier,
     vm: WarrenWalletBackupViewModel = koinViewModel(),
@@ -51,42 +56,44 @@ fun WarrenWalletBackupScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = Dimens.sideMargin,
-                end = Dimens.sideMargin,
-                top = Dimens.screenTopMargin,
-                bottom = Dimens.screenBottomMargin,
-            ),
-        verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
-    ) {
-        Text(
-            text = stringResource(R.string.wallet_backup_title),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = stringResource(R.string.wallet_backup_warning),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-        )
+    ScaffoldWithSmallTopBar(
+        modifier = modifier,
+        appBarTitle = stringResource(R.string.wallet_backup_title),
+        navigationIcon = { NavigateBackIconButton(onNavigateBack = onNavigateBack) },
+    ) { scaffoldModifier ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(scaffoldModifier)
+                .background(MaterialTheme.colorScheme.surface)
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = Dimens.sideMargin,
+                    end = Dimens.sideMargin,
+                    top = Dimens.screenTopMargin,
+                    bottom = Dimens.screenBottomMargin,
+                ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
+        ) {
+            Text(
+                text = stringResource(R.string.wallet_backup_warning),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
 
-        MnemonicDisplay(phrase = mnemonic.phrase)
+            MnemonicDisplay(phrase = mnemonic.phrase)
 
-        Text(
-            text = stringResource(R.string.wallet_backup_clipboard_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+            Text(
+                text = stringResource(R.string.wallet_backup_clipboard_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
-        VariantButton(
-            modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-            onClick = onConfirmed,
-            text = stringResource(R.string.wallet_backup_confirm_cta),
-        )
+            VariantButton(
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
+                onClick = onConfirmed,
+                text = stringResource(R.string.wallet_backup_confirm_cta),
+            )
+        }
     }
 }

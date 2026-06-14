@@ -51,6 +51,12 @@ fun EntryProviderScope<NavKey2>.walletEntry(navigator: Navigator) {
             onConfirmed = {
                 navigator.navigate(ConnectNavKey, clearBackStack = true)
             },
+            onNavigateBack = {
+                // Return to the create-or-restore choice. The freshly generated
+                // mnemonic is abandoned (the user can regenerate); the cache
+                // slot is overwritten on the next create.
+                navigator.goBack()
+            },
             onProcessRestoreFailure = {
                 // The MnemonicCache slot was empty (process kill or
                 // out-of-band drain). Navigate back to the wallet

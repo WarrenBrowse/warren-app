@@ -1,13 +1,11 @@
 package com.warrenbrowse.vpn.feature.login.impl
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -21,13 +19,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
@@ -38,8 +35,9 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * D.5 wallet entry-point screen. Mirrors the desktop login UX: the Warren
- * mark, a short intro, then two full-width choices.
+ * D.5 wallet entry-point screen. Mirrors the desktop login UX: the Warren mark
+ * sits in the top bar (like the desktop AppMainHeader), then a short intro and
+ * two full-width choices.
  *
  *   - `Generate recovery phrase` (positive/green CTA) emits
  *     `BackupGeneratedMnemonic` so the host NavController routes to
@@ -81,115 +79,117 @@ fun WarrenWalletLoginScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = Dimens.sideMargin,
-                end = Dimens.sideMargin,
-                top = Dimens.screenTopMargin,
-                bottom = Dimens.screenBottomMargin,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo_icon),
-            contentDescription = null,
-            modifier = Modifier.size(96.dp).padding(top = Dimens.mediumPadding),
-        )
-
-        if (importMode) {
-            Text(
-                text = stringResource(R.string.wallet_import_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = stringResource(R.string.wallet_login_import_prompt),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-
-            MnemonicInput(
-                onPhraseChange = { phrase ->
-                    importPhrase = phrase
-                    inlineError = null
-                },
-            )
-            inlineError?.let { msg ->
+    ScaffoldWithTopBar(
+        modifier = modifier,
+        topBarColor = MaterialTheme.colorScheme.surface,
+        onSettingsClicked = null,
+        onAccountClicked = null,
+    ) { pv ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(pv)
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = Dimens.sideMargin,
+                    end = Dimens.sideMargin,
+                    top = Dimens.screenTopMargin,
+                    bottom = Dimens.screenBottomMargin,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
+        ) {
+            if (importMode) {
                 Text(
-                    text = msg,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
-            ) {
-                VariantButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { vm.importWallet(importPhrase, authorizer) },
-                    text = stringResource(R.string.wallet_import_cta),
-                    isEnabled = importPhrase.isNotBlank(),
-                )
-                PrimaryTextButton(
-                    onClick = { importMode = false; inlineError = null },
-                    text = stringResource(R.string.back),
-                )
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.onboarding_welcome_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = stringResource(R.string.wallet_login_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            inlineError?.let { msg ->
-                Text(
-                    text = msg,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
-            ) {
-                VariantButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { vm.createWallet(authorizer) },
-                    text = stringResource(R.string.wallet_create_cta),
-                )
-                PrimaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { importMode = true },
                     text = stringResource(R.string.wallet_import_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
                 )
-            }
-        }
+                Text(
+                    text = stringResource(R.string.wallet_login_import_prompt),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
 
-        // `state` is observed so the host can react if the wallet gets
-        // persisted out-of-band (e.g. import succeeded just before a config
-        // change recomposed us). The ViewModel emits a `WalletReady` event in
-        // that path too, so navigation stays event-driven.
-        @Suppress("UNUSED_EXPRESSION") state
+                MnemonicInput(
+                    onPhraseChange = { phrase ->
+                        importPhrase = phrase
+                        inlineError = null
+                    },
+                )
+                inlineError?.let { msg ->
+                    Text(
+                        text = msg,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
+                ) {
+                    VariantButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { vm.importWallet(importPhrase, authorizer) },
+                        text = stringResource(R.string.wallet_import_cta),
+                        isEnabled = importPhrase.isNotBlank(),
+                    )
+                    PrimaryTextButton(
+                        onClick = { importMode = false; inlineError = null },
+                        text = stringResource(R.string.back),
+                    )
+                }
+            } else {
+                Text(
+                    text = stringResource(R.string.onboarding_welcome_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(R.string.wallet_login_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                inlineError?.let { msg ->
+                    Text(
+                        text = msg,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
+                ) {
+                    VariantButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { vm.createWallet(authorizer) },
+                        text = stringResource(R.string.wallet_create_cta),
+                    )
+                    PrimaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { importMode = true },
+                        text = stringResource(R.string.wallet_import_title),
+                    )
+                }
+            }
+
+            // `state` is observed so the host can react if the wallet gets
+            // persisted out-of-band (e.g. import succeeded just before a config
+            // change recomposed us). The ViewModel emits a `WalletReady` event
+            // in that path too, so navigation stays event-driven.
+            @Suppress("UNUSED_EXPRESSION") state
+        }
     }
 }
