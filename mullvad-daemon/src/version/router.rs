@@ -206,35 +206,41 @@ impl State {
 
 /// Spawn the version router task.
 ///
-/// The Mullvad version check is never performed: Warren is the only mode
-/// and uses GitHub Releases for updates, not Mullvad's CDN. Contacting
-/// `api.mullvad.net` from a Warren client would leak user existence to
-/// Mullvad infrastructure.
-///
-/// The router still accepts `GetLatestVersion` requests (returning a
-/// placeholder "no update" response so the UI is satisfied) but it never
-/// spawns a `VersionUpdater` task pointing at Mullvad servers.
+/// The router fetches signed version metadata from the Warren update channel
+/// (never `api.mullvad.net`): the installer URLs and signing keys are
+/// Warren's, configured in `mullvad-update`. The background poller that does
+/// the fetching is [`spawn_version_updater`](super::check::spawn_version_updater);
+/// the router multiplexes its results to `GetLatestVersion` requesters and the
+/// daemon.
 #[cfg_attr(not(in_app_upgrade), expect(unused_variables))]
 pub(crate) fn spawn_version_router(
     cache_dir: PathBuf,
     version_event_sender: DaemonEventSender<AppVersionInfo>,
     beta_program: bool,
+    rollout_threshold_seed: Option<u32>,
     app_upgrade_broadcast: AppUpgradeBroadcast,
 ) -> VersionRouterHandle {
     let (tx, rx) = mpsc::unbounded();
 
     tokio::spawn(async move {
-        // The sender is kept alive (never used) so `new_version_rx` stays
-        // open but permanently empty - Warren never emits Mullvad version
-        // events.
-        let (_new_version_tx, new_version_rx) = mpsc::unbounded();
+        let (new_version_tx, new_version_rx) = mpsc::unbounded();
         let (refresh_version_check_tx, refresh_version_check_rx) = mpsc::unbounded();
 
-        // The Mullvad version updater is never spawned (Warren uses GitHub
-        // Releases). Dropping the receiver leaves the router as a no-op
-        // responder for `GetLatestVersion`.
-        log::info!("Mullvad version updater disabled (Warren uses GitHub Releases)");
-        drop(refresh_version_check_rx);
+        // The poller verifies the metadata signature and anti-rollback counter
+        // before feeding `VersionCache` updates back here. On Android no update
+        // channel exists, so the channels stay empty and the router only
+        // responds to `GetLatestVersion` with "no version".
+        #[cfg(not(target_os = "android"))]
+        super::check::spawn_version_updater(
+            rollout_threshold_seed,
+            new_version_tx,
+            refresh_version_check_rx,
+        );
+        #[cfg(target_os = "android")]
+        {
+            drop(new_version_tx);
+            drop(refresh_version_check_rx);
+        }
 
         VersionRouter {
             daemon_rx: rx,
@@ -640,9 +646,10 @@ fn recommended_version_upgrade(
     }
 }
 
-/// Verifies that the version router behaves correctly (empty new_version
-/// channel, no Mullvad API contact) - the Mullvad version updater is never
-/// spawned on the Warren fork.
+/// Verifies that the version router stays silent until the updater actually
+/// delivers metadata: with no `VersionCache` ever received (offline, or before
+/// the first successful fetch) the router must not emit a spurious version
+/// event to the daemon.
 #[cfg(all(test, not(in_app_upgrade)))]
 mod no_updater_tests {
     use futures::StreamExt;
@@ -652,12 +659,12 @@ mod no_updater_tests {
 
     use super::{Message, State, VersionRouter};
 
-    /// Regression: no version event should be sent to the daemon on startup -
-    /// the `new_version_rx` channel is permanently empty because no version
-    /// updater is ever spawned.
+    /// Regression: no version event should be sent to the daemon while the
+    /// `new_version_rx` channel is empty (the updater has not produced a
+    /// `VersionCache` yet, e.g. the client is offline).
     ///
     /// We construct a router whose `new_version_rx` is immediately closed
-    /// (sender dropped), mirroring what `spawn_version_router` does, and verify
+    /// (sender dropped), standing in for "updater produced nothing", and verify
     /// that the router never emits a version event.
     #[tokio::test]
     async fn router_does_not_emit_version_events() {
@@ -694,7 +701,7 @@ mod no_updater_tests {
         // No version event should have been emitted.
         assert!(
             version_event_receiver.next().await.is_none(),
-            "expected no version event when no updater is spawned"
+            "expected no version event before any metadata is received"
         );
     }
 }

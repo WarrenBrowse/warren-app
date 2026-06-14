@@ -50,6 +50,7 @@ import { LogLevel } from '../shared/logging-types';
 import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 import AppRouter from './components/AppRouter';
+import { BlockingUpdateGate } from './components/BlockingUpdateGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import { KeyboardNavigation } from './components/keyboard-navigation';
 import Lang from './components/Lang';
@@ -429,7 +430,9 @@ export default class AppRenderer {
                       <ModalContainer>
                         <KeyboardNavigation>
                           <MotionConfig reducedMotion="user">
-                            <AppRouter />
+                            <BlockingUpdateGate>
+                              <AppRouter />
+                            </BlockingUpdateGate>
                           </MotionConfig>
                         </KeyboardNavigation>
                         <WarrenPubKeyWarning />

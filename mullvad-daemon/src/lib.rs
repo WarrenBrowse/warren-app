@@ -1517,14 +1517,15 @@ impl Daemon {
             });
         });
 
-        // The Mullvad version updater is never spawned (Warren uses
-        // GitHub Releases), so no rollout threshold needs to be computed
-        // here. The rollout seed is generated lazily on demand by
-        // `on_get_rollout_threshold`.
+        // The version router polls the Warren update channel for signed
+        // metadata. The persisted rollout seed (if any) places this client at
+        // a stable position in staged rollouts; when absent the poller only
+        // surfaces fully rolled-out releases.
         let version_handle = version::router::spawn_version_router(
             config.cache_dir.clone(),
             internal_event_tx.to_specialized_sender(),
             settings.show_beta_releases,
+            settings.rollout_threshold_seed,
             app_upgrade_broadcast,
         );
 

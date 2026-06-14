@@ -4,24 +4,18 @@
 # Ed25519 verifying key. Comments start with `#`. Trailing whitespace is
 # stripped per `parse_keys` in `src/defaults.rs`.
 #
-# === PLACEHOLDER (pending Warren key generation by poka) ===========
+# This key can ship an installer to every user, so it is the highest-
+# privilege key in the system. It is dedicated to app updates and was
+# generated/kept OFFLINE. Do NOT reuse the relay/admin signing key
+# (online, and its lineage was burned once:
+# `admin/admin-signing.key.BURNED-committed-do-not-use`).
 #
-# The pubkey below is the upstream `mullvad-update/test-pubkey` value
-# repurposed as a Warren placeholder so the `Vec1<VerifyingKey>`
-# LazyLock initialiser has at least one valid key to deserialise. Any
-# real Warren update manifest signed by an actual production privkey
-# will fail verification under this placeholder, which is the safe-by-
-# default outcome until the real key lands here.
+# The matching Ed25519 secret is stored OFFLINE by poka and as the CI
+# secret `WARREN_UPDATE_SIGNING_KEY` (used by `release.yml` to sign every
+# published `*.json` manifest). A `warren-vpn` daemon shipped with this
+# trust file accepts manifests signed by the key below and rejects all
+# others (fail-closed).
 #
-# To deploy real Warren updates:
-#   1. poka generates an Ed25519 keypair offline (privkey kept secret).
-#   2. The 32-byte pubkey is encoded to hex and replaces the line below.
-#   3. CI release workflow signs every published `latest.json` /
-#      `*.json` manifest with the matching privkey.
-#   4. A `warren-vpn` daemon shipped with the new pubkey trust file
-#      will accept the signed manifest and surface the update banner.
-#
-# Multiple production keys may be listed once a key-rotation policy is
-# defined (mirror upstream Mullvad's 5-developer-key scheme if desired).
-# Until then, only this placeholder is parsed.
-BB4EF63FFDCC6BD5A19C30CD23B9DE03099407A04463418F17AE338B98AA09D4
+# Key rotation: add the new pubkey on its own line (both are then trusted
+# during the overlap), ship a release, then drop the retired line.
+0f684bb245acd5a684c467ccc9b92bb5daa2252ef12e89a68583b806ea2560a0

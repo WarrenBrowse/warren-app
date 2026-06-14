@@ -8,7 +8,9 @@ license.workspace = true
 
 [[bin]]
 name = "mullvad-version-metadata"
-required-features = ["sign"]
+# `sign` brings the key generation + clap CLI; `client` brings the tokio runtime
+# the bin's async main + fs I/O need. Both are required to build it.
+required-features = ["sign", "client"]
 
 [dependencies]
 anyhow = { workspace = true }

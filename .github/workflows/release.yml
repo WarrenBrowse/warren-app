@@ -28,6 +28,23 @@
 #     Windows Authenticode certificate (.pfx base64-encoded) and its password.
 #     The .pfx is imported into the Windows cert store and the thumbprint is
 #     resolved at runtime, then signtool references that thumbprint.
+#
+#   WARREN_UPDATE_SIGNING_KEY  (publish-update-metadata)
+#     Dedicated, offline-generated Ed25519 secret (hex) that signs the
+#     auto-update manifests. Its public key must match
+#     `mullvad-update/warren-trusted-metadata-signing-pubkeys`. Generate with
+#     `cargo run -p mullvad-release -- generate-key`. NEVER reuse the
+#     relay/admin signing key. When unset, update metadata is not published.
+#
+#   WARREN_UPDATES_SSH_KEY / _HOST / _USER / _PATH  (publish-update-metadata)
+#     SSH private key + target for scp'ing the signed `*.json` manifests to the
+#     update host (served at https://warrenbrowse.com/updates/desktop/). When
+#     unset, the signed manifests are only attached as a run artifact.
+#
+# Optional repository variable:
+#   WARREN_UPDATE_MIN_VERSION
+#     If set, becomes the manifest `minimum_supported_version`: clients older
+#     than this are hard-blocked by the forced-update screen until they update.
 
 name: Release
 
@@ -495,3 +512,108 @@ jobs:
             --notes-file CHANGELOG.md \
             --draft \
             release-files/*
+
+  publish-update-metadata:
+    name: Sign + publish update metadata
+    needs: [publish-release]
+    runs-on: ubuntu-22.04
+    # Signs the per-platform version manifests and serves them so existing apps
+    # detect the new release. Gated on a signing key being present: without it
+    # the whole step is a no-op (same opt-in philosophy as the build signing).
+    #
+    # The installer URLs inside the manifest point at the GitHub Release assets,
+    # which only resolve once the DRAFT release created above is published.
+    # Publish the GitHub Release before (or together with) flipping these
+    # manifests live, otherwise clients see "update available" but the download
+    # 404s. The forced-update floor is the repo variable WARREN_UPDATE_MIN_VERSION.
+    if: >-
+      !cancelled() &&
+      needs.publish-release.result == 'success'
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+      WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+      WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
+      WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
+      WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
+      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
+      WARREN_UPDATE_METADATA_BASE: https://warrenbrowse.com/updates/desktop
+      WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+    steps:
+      - name: Skip if no signing key
+        if: env.WARREN_UPDATE_SIGNING_KEY == ''
+        run: echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; skipping update metadata publish."
+
+      - name: Checkout repository
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: actions/checkout@v4
+
+      - name: Set up build env (Rust + warren-core)
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Download installers from the release
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-files
+          gh release download "$TAG_NAME" --dir release-files --pattern 'WarrenVPN-*'
+          ls -lh release-files
+
+      - name: Build the metadata signer
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: cargo build --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
+
+      - name: Generate unsigned metadata
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          version="${TAG_NAME#v}"
+          python3 ci/build-version-metadata.py \
+            --tag "$TAG_NAME" \
+            --version "$version" \
+            --release-dir release-files \
+            --repo "$GITHUB_REPOSITORY" \
+            --changelog CHANGELOG.md \
+            --metadata-base-url "$WARREN_UPDATE_METADATA_BASE" \
+            --out-dir unsigned \
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            ${WARREN_UPDATE_MIN_VERSION:+--min-version "$WARREN_UPDATE_MIN_VERSION"}
+
+      - name: Sign metadata
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          mkdir -p signed
+          signer=target/release/mullvad-version-metadata
+          for platform in macos windows linux; do
+            [ -f "unsigned/${platform}.json" ] || continue
+            # The key is passed on argv: the runner is ephemeral and single-tenant
+            # and GitHub masks the value in logs.
+            "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
+              > "signed/${platform}.json"
+          done
+          ls -lh signed
+
+      - name: Upload metadata to the update host
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          key="$RUNNER_TEMP/updates_ssh_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            signed/macos.json signed/windows.json signed/linux.json \
+            "${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}:${WARREN_UPDATES_SSH_PATH}/"
+          rm -f "$key"
+
+      - name: Warn when upload is skipped
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY == ''
+        run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded (see the update-metadata artifact)."
+
+      - name: Attach signed metadata to the run (audit + manual upload fallback)
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-metadata
+          path: signed/*.json
+          if-no-files-found: warn

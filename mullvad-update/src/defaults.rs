@@ -3,33 +3,31 @@
 //! The releases/metadata URLs resolve at runtime through
 //! [`releases_url`] / [`metadata_url`], which honour the
 //! `WARREN_UPDATE_URL` / `WARREN_METADATA_URL` env vars and otherwise
-//! fall back to the Warren GitHub Releases defaults below.
+//! fall back to the Warren defaults below.
 
 use crate::format::key::VerifyingKey;
 use std::sync::LazyLock;
 use vec1::Vec1;
 
-/// Warren-branded default for the releases API. Points at the GitHub
-/// Releases API surface of the Warren binary repo. The CI release
-/// workflow (`release.yml`, M4.H.D matrix windows/macos/ubuntu) attaches
-/// the signed installer artifacts to a tagged release whose JSON the
-/// `mullvad-update` client consumes through this URL.
+/// Warren-branded default for the signed version metadata. The version
+/// router fetches `{this}/{platform}.json` (`macos.json` / `windows.json`
+/// / `linux.json`), each an Ed25519-signed manifest produced by the CI
+/// release workflow (`release.yml`). The installer URLs *inside* each
+/// manifest may point anywhere (e.g. GitHub Releases assets); only the
+/// manifest itself is served from here, and its signature is what is
+/// trusted, not the host.
 ///
 /// Override at runtime via the `WARREN_UPDATE_URL` env var.
 #[cfg(feature = "client")]
-pub const WARREN_RELEASES_URL: &str =
-    "https://api.github.com/repos/WarrenBrowse/warren-app/releases/";
+pub const WARREN_RELEASES_URL: &str = "https://warrenbrowse.com/updates/desktop";
 
-/// Warren-branded default for the version metadata repository. Mirrors
-/// [`WARREN_RELEASES_URL`] but for the static-JSON manifest path served
-/// off the same GitHub Releases tag (the CI workflow uploads
-/// `windows.json` / `linux.json` / `macos.json` + `latest.json`
-/// alongside the binaries).
+/// Warren-branded default for the unsigned `latest.json` pointer file,
+/// served alongside the signed per-platform manifests
+/// ([`WARREN_RELEASES_URL`]).
 ///
 /// Override at runtime via the `WARREN_METADATA_URL` env var.
 #[cfg(feature = "client")]
-pub const WARREN_METADATA_URL: &str =
-    "https://github.com/WarrenBrowse/warren-app/releases/latest/download/";
+pub const WARREN_METADATA_URL: &str = "https://warrenbrowse.com/updates/desktop";
 
 /// Returns the effective releases-API URL: env var override
 /// (`WARREN_UPDATE_URL`) when set + non-empty, else
@@ -66,12 +64,13 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
 /// Pubkeys used to verify metadata from the Warren update channel
 /// (production target).
 ///
-/// **Status**: the file `warren-trusted-metadata-signing-pubkeys` ships
-/// a documented placeholder pubkey until the operator (poka) generates
-/// the real Warren Ed25519 update-signing key. A real-key swap is a
-/// single-file edit; the runtime code path here does not need to change.
-/// Updates signed by any other key fail verification and the daemon
-/// reports `app-upgrade-error`.
+/// This key signs app-update manifests, i.e. it can ship a new installer
+/// to every user. It is a dedicated, offline-generated key used for
+/// nothing else, NOT the relay/admin signing key (which is online and has
+/// a known-burned lineage). See `warren-trusted-metadata-signing-pubkeys`
+/// for the trusted pubkey(s) and the rotation procedure. Updates signed by
+/// any other key fail verification and the daemon reports
+/// `app-upgrade-error` (fail-closed).
 pub static TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
     LazyLock::new(|| parse_keys(include_str!("../warren-trusted-metadata-signing-pubkeys")));
 
@@ -144,8 +143,8 @@ mod warren_default_tests {
                 "Warren default URL must not include 'mullvad', got {got}"
             );
             assert!(
-                got.contains("WarrenBrowse/warren-app"),
-                "Warren default URL must point at the GitHub Releases repo, got {got}"
+                got.contains("warrenbrowse.com"),
+                "Warren default URL must point at the Warren update host, got {got}"
             );
         });
     }
@@ -179,7 +178,7 @@ mod warren_default_tests {
             let got = metadata_url();
             assert_eq!(got, WARREN_METADATA_URL);
             assert!(!got.contains("mullvad"));
-            assert!(got.contains("WarrenBrowse/warren-app"));
+            assert!(got.contains("warrenbrowse.com"));
         });
     }
 
