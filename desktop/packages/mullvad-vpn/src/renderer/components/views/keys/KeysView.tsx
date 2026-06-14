@@ -36,6 +36,7 @@ export function KeysView() {
   const [error, setError] = useState<string | null>(null);
 
   const onReveal = useCallback(async () => {
+    setError(null);
     try {
       const m = await getWarrenMnemonic();
       if (!m) {
@@ -102,7 +103,7 @@ export function KeysView() {
                     </Text>
                   )}
 
-                  {!revealed && !error && (
+                  {!revealed && (
                     <Button variant="destructive" onClick={onReveal}>
                       <Button.Text>{messages.pgettext('keys-view', 'Reveal mnemonic')}</Button.Text>
                     </Button>
