@@ -23,7 +23,8 @@
         "LoggedInWithTimeUITestCase",
         "LoggedInWithoutTimeUITestCase",
         "LoggedOutUITestCase",
-        "ScreenshotTests"
+        "ScreenshotTests",
+        "WalletFlowUITestCase"
       ],
       "target" : {
         "containerPath" : "container:WarrenVPN.xcodeproj",

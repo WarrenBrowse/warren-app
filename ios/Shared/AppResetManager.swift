@@ -85,6 +85,13 @@ final class AppResetManager {
         SettingsManager.resetStore(policy: policy.toSettingsResetPolicy)
         if policy.shouldReset(.settings) {
             tunnelManager.updateSettings([.reset])
+            // The BIP39 wallet is the Warren identity (the old Mullvad
+            // account number's replacement), so wipe it alongside the
+            // settings store. Without this, a wallet provisioned by a
+            // prior UI test run would persist in the Keychain and the
+            // app would route straight to .main instead of the login
+            // chooser, making wallet-flow UI tests non-deterministic.
+            try? WarrenWalletKeychain.delete()
         }
     }
 
@@ -94,6 +101,13 @@ final class AppResetManager {
         let keysToRemove: Set<UITestAppPreferencesKey> = policy.resolvedKeys()
         for key in keysToRemove {
             defaults.removeObject(forKey: key.rawValue)
+        }
+        // Pre-seed (set to true) AFTER the reset so a test can express a
+        // state the reset-only policy cannot (e.g. onboarding already
+        // complete). UITest preference keys share their raw values with
+        // `AppStorageKey`, so writing the raw value is what the app reads.
+        for key in launchArguments.appPreferencesSeed {
+            defaults.set(true, forKey: key.rawValue)
         }
         defaults.synchronize()
     }

@@ -16,14 +16,14 @@ import XCTest
 
 
 final class WarrenAppGroupKeyTests: XCTestCase {
-    /// All 4 declared keys are present in `allCases`. Adding a 5th
-    /// key without updating consumers (WarrenAppGroupEvents observer +
+    /// All declared keys are present in `allCases`. Adding a key
+    /// without updating consumers (WarrenAppGroupEvents observer +
     /// WarrenQuinnTunnelImplementation.broadcastEvent) is a bug ; this
     /// test fails fast so the omission is caught at build time.
     func test_allCases_includesAllExpectedKeys() {
         let cases = WarrenAppGroupKey.allCases
-        XCTAssertEqual(cases.count, 9, "Add the new key to consumers before expanding allCases")
-        // Event surfaces (PacketTunnel extension → main app observer).
+        XCTAssertEqual(cases.count, 11, "Add the new key to consumers before expanding allCases")
+        // Event surfaces (PacketTunnel extension to main app observer).
         XCTAssertTrue(cases.contains(.lastFailoverExit))
         XCTAssertTrue(cases.contains(.lastFailoverAt))
         XCTAssertTrue(cases.contains(.obfuscationActive))
@@ -34,6 +34,9 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         XCTAssertTrue(cases.contains(.connectedDurationSeconds))
         XCTAssertTrue(cases.contains(.failoverCount))
         XCTAssertTrue(cases.contains(.stateLabel))
+        // Exit-pubkey TOFU mismatch surface (WarrenPubKeyWarning alert).
+        XCTAssertTrue(cases.contains(.pinMismatch))
+        XCTAssertTrue(cases.contains(.pinMismatchAt))
     }
 
     /// Raw values follow the `WarrenTunnel.<field>` convention so they

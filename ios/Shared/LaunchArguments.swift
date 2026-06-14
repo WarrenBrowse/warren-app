@@ -47,6 +47,14 @@ public struct LaunchArguments: Codable, Taggable, Sendable {
 
     /// Controls which UserDefaults-backed app preferences are reset at app launch during UI tests.
     public var appPreferencesResetPolicy: UITestAppPreferencesPolicy = .none
+
+    /// Boolean app preferences to SET to `true` at app launch during UI tests,
+    /// applied AFTER `appPreferencesResetPolicy`. The reset policy can only
+    /// clear keys; this pre-seeds the ones a test needs already on (e.g.
+    /// `hasCompletedWarrenOnboarding` so the app routes to the wallet login
+    /// chooser instead of replaying the onboarding wizard). Only meaningful
+    /// for `Bool`-backed keys.
+    public var appPreferencesSeed: Set<UITestAppPreferencesKey> = []
 }
 
 public extension ProcessInfo {

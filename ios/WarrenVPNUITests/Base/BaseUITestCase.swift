@@ -186,6 +186,11 @@ class BaseUITestCase: XCTestCase {
     /// Controls which UserDefaults preferences are reset before launching the app in a UI test.
     class var appPreferencesPolicy: UITestAppPreferencesPolicy { .none }
 
+    /// Boolean app preferences to pre-seed (set true) at launch, applied after
+    /// the reset policy. Lets a test reach a state reset alone cannot (e.g.
+    /// `.hasCompletedWarrenOnboarding` to land on the wallet login chooser).
+    class var appPreferencesSeed: Set<UITestAppPreferencesKey> { [] }
+
     class var executableTarget: MullvadExecutableTarget { .uiTests }
 
     /// Test level setup
@@ -197,7 +202,8 @@ class BaseUITestCase: XCTestCase {
             areAnimationsDisabled: true,
             authenticationState: Self.authenticationState,
             settingsResetPolicy: Self.settingsResetPolicy,
-            appPreferencesResetPolicy: Self.appPreferencesPolicy
+            appPreferencesResetPolicy: Self.appPreferencesPolicy,
+            appPreferencesSeed: Self.appPreferencesSeed
         ).toJSON()
         app.launchEnvironment[LaunchArguments.tag] = argumentsJsonString
         app.launch()

@@ -14,8 +14,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
-        "AccountTests\/testLogin()",
-        "AccountTests\/testLoginWithIncorrectAccountNumber()"
+        "WalletFlowTests\/testLoginChooserExposesCreateAndRestore()"
       ],
       "target" : {
         "containerPath" : "container:WarrenVPN.xcodeproj",

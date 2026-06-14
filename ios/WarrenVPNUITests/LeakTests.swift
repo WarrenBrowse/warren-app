@@ -19,10 +19,24 @@ class LeakTests: LoggedInWithTimeUITestCase {
 
     /// Send UDP traffic to a host, connect to relay and make sure - while connected to relay -
     /// that no leaked traffic went directly to the host
+    ///
+    /// DECISION (2026-06-14): kept skipped. The assertion itself is sound for the
+    /// Warren tunnel (no direct traffic to the target while connected), but it is
+    /// expected to FAIL by design unless the tunnel is started with
+    /// includeAllNetworks = true. On iOS, sockets opened BEFORE the packet tunnel
+    /// comes up keep their original route and bypass the tunnel until
+    /// includeAllNetworks forces all flows through it. This is a platform routing
+    /// property, not a Warren-vs-Mullvad difference, so removing the skip would turn
+    /// a real iOS limitation into a red test. To re-enable, start the tunnel with
+    /// includeAllNetworks enabled (Settings -> Include all networks) before the
+    /// connect step, then assert no leak. That requires a live sim + backend, so it
+    /// stays skipped here.
     func testConnectionStartedBeforeTunnelShouldNotLeakOutside() throws {
         let skipReason = """
             Connections started before the packet tunnel will leak as long as
             includeAllNetworks is not set to true when starting the tunnel.
+            Re-enable only after starting the Warren tunnel with includeAllNetworks
+            enabled (see the DECISION note above this test).
             """
         try XCTSkipIf(true, skipReason)
         let targetIPAddress = Networking.getAlwaysReachableIPAddress()

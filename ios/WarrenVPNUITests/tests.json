@@ -1,27 +1,22 @@
 {
     "tests": {
         "nightly": [
-            "AccountTests",
+            "WalletFlowTests",
             "ConnectivityTests",
             "CustomListsTests",
             "LeakTests",
-            "RelayTests",
-            "PaymentTests"
+            "RelayTests"
         ],
         "pr-merge-to-main": [
-            "AccountTests/testLogin",
-            "AccountTests/testCreateAccount",
-            "RelayTests",
-            "PaymentTests"
+            "WalletFlowTests",
+            "RelayTests"
         ],
         "api-tests": [
-            "AccountTests"
+            "WalletFlowTests"
         ],
         "pr-opened": [
-            "AccountTests/testLogin",
-            "AccountTests/testCreateAccount",
-            "RelayTests",
-            "PaymentTests"
+            "WalletFlowTests",
+            "RelayTests"
         ]
     }
 }
