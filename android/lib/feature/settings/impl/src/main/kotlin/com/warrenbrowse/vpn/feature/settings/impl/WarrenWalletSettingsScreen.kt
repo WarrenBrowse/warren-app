@@ -19,10 +19,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
@@ -64,6 +66,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val cachedExpiry by settings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
+    val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
     var connectStatus by remember { mutableStateOf<String?>(null) }
     var subscriptionStatus by remember { mutableStateOf<String?>(null) }
@@ -123,6 +126,15 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
+
+            // Buy / extend a subscription via the hosted Stripe checkout
+            // funnel (mirrors the desktop "Buy more credit" button). Opens in
+            // the browser; the redeem-voucher field below covers the offline /
+            // gift path.
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
+            ) { Text("Get subscription") }
 
             // Voucher redemption (Crockford-32). The server normalizes the
             // dashed / raw form, so the input is sent verbatim.
@@ -262,4 +274,7 @@ internal fun cachedSubscriptionLabel(
 }
 
 private const val WARN_WINDOW_SECS = 7L * 86_400
+
+// Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
+private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
 
