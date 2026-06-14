@@ -3,10 +3,34 @@
   "strings": {
     "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En decentraliseret VPN med non-custodial wallet-godkendelse, altid aktiv HTTP/3-mimik og valgfri multihop-routing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein dezentrales VPN mit non-custodial Wallet-Authentifizierung, stets aktiver HTTP/3-Nachahmung und optionalem Multihop-Routing."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A decentralized VPN with non-custodial wallet authentication, always-on HTTP/3 mimicry, and optional multi-hop routing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una VPN descentralizada con autenticación mediante monedero no custodial, imitación de HTTP/3 siempre activa y enrutamiento multisalto opcional."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hajautettu VPN, jossa on non-custodial-lompakkotodennus, aina päällä oleva HTTP/3-jäljittely ja valinnainen multihop-reititys."
           }
         },
         "fr": {
@@ -14,15 +38,129 @@
             "state": "translated",
             "value": "Un VPN décentralisé avec authentification par portefeuille non-custodial, mimétisme HTTP/3 toujours actif et routage multi-hop optionnel."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una VPN decentralizzata con autenticazione tramite wallet non custodial, mimica HTTP/3 sempre attiva e instradamento multi-hop opzionale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非カストディアルなウォレット認証、常時オンのHTTP/3擬態、オプションのマルチホップルーティングを備えた分散型VPN。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비수탁형 지갑 인증, 상시 작동하는 HTTP/3 모방, 선택적 멀티홉 라우팅을 갖춘 분산형 VPN입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non-custodial wallet အတည်ပြုခြင်း၊ အမြဲဖွင့်ထားသော HTTP/3 အတုယူခြင်းနှင့် ရွေးချယ်နိုင်သော multihop လမ်းကြောင်းသတ်မှတ်ခြင်းပါဝင်သည့် ဗဟိုချုပ်ကိုင်မှုကင်းသော VPN တစ်ခု။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En desentralisert VPN med non-custodial lommebok-autentisering, alltid aktiv HTTP/3-etterligning og valgfri multihopp-ruting."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een gedecentraliseerde VPN met non-custodial wallet-authenticatie, altijd actieve HTTP/3-nabootsing en optionele multihop-routering."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdecentralizowana sieć VPN z uwierzytelnianiem portfela non-custodial, stale aktywnym naśladowaniem HTTP/3 i opcjonalnym routingiem wieloprzeskokowym."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma VPN descentralizada com autenticação por carteira não custodial, imitação de HTTP/3 sempre ativa e encaminhamento multihop opcional."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Децентрализованный VPN с аутентификацией через некастодиальный кошелек, постоянной имитацией HTTP/3 и опциональной многократной маршрутизацией."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En decentraliserad VPN med non-custodial plånboksautentisering, alltid aktiv HTTP/3-imitation och valfri multihopp-routing."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN แบบกระจายศูนย์ที่มีการยืนยันตัวตนด้วยกระเป๋าเงินแบบ non-custodial การเลียนแบบ HTTP/3 ที่เปิดใช้งานตลอดเวลา และการกำหนดเส้นทางแบบมัลติฮอปที่เลือกได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non-custodial cüzdan kimlik doğrulaması, her zaman açık HTTP/3 taklidi ve isteğe bağlı çoklu geçiş yönlendirmesi sunan merkeziyetsiz bir VPN."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Децентралізований VPN з автентифікацією через некастодіальний гаманець, постійною імітацією HTTP/3 та додатковою багатоперехідною маршрутизацією."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一款去中心化 VPN，采用非托管钱包身份验证、始终开启的 HTTP/3 模拟以及可选的多跳路由。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一款去中心化 VPN，採用非託管錢包身分驗證、始終開啟的 HTTP/3 模擬以及可選的多點跳躍路由。"
+          }
         }
       }
     },
     "Activate your subscription": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivér dit abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement aktivieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Activate your subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active su suscripción"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivoi tilauksesi"
           }
         },
         "fr": {
@@ -30,15 +168,129 @@
             "state": "translated",
             "value": "Activer votre abonnement"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva il tuo abbonamento"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを有効にする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구독 활성화"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်စာရင်းသွင်းမှုကို စတင်အသုံးပြုပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiver abonnementet ditt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activeer je abonnement"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktywuj subskrypcję"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative a sua subscrição"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активировать подписку"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivera din prenumeration"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้งานการสมัครสมาชิกของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aboneliğinizi etkinleştirin"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активуйте підписку"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "激活您的订阅"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用您的訂閱"
+          }
         }
       }
     },
     "Adds an entry relay before your exit. Extra latency for harder traffic correlation.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilføjer et indgangsrelæ før dit udgangsrelæ. Ekstra forsinkelse for at gøre trafikkorrelation sværere."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fügt vor Ihrem Ausgang ein Eingangsrelais hinzu. Zusätzliche Latenz für schwerere Traffic-Korrelation."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Adds an entry relay before your exit. Extra latency for harder traffic correlation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade un relé de entrada antes de su salida. Latencia adicional para dificultar la correlación de tráfico."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lisää sisääntulorelen ennen ulostuloasi. Lisäviivettä vaikeuttamaan liikenteen korrelointia."
           }
         },
         "fr": {
@@ -46,15 +298,129 @@
             "state": "translated",
             "value": "Ajoute un relais d'entrée avant la sortie. Latence supplémentaire pour rendre la corrélation de trafic plus difficile."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunge un relè di ingresso prima della tua uscita. Latenza extra per rendere più difficile la correlazione del traffico."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口の前に入口リレーを追加します。トラフィックの相関分析を困難にするため遅延が増えます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 앞에 입구 릴레이를 추가합니다. 트래픽 상관 분석을 더 어렵게 만드는 대신 지연이 늘어납니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ထွက်ပေါက်မတိုင်မီ ဝင်ပေါက်ရီလေးတစ်ခု ထည့်ပေးသည်။ ထရက်ဖစ်ဆက်စပ်မှုကို ပိုခက်ခဲစေရန် နှောင့်နှေးချိန် ပိုများသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legger til et inngangsrelé før utgangen din. Ekstra forsinkelse for vanskeligere trafikk-korrelasjon."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voegt een ingangsrelais toe vóór je uitgang. Extra latentie voor moeilijkere verkeerscorrelatie."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaje przekaźnik wejściowy przed punktem wyjściowym. Dodatkowe opóźnienie utrudniające korelację ruchu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adiciona um relé de entrada antes da sua saída. Latência adicional para dificultar a correlação de tráfego."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавляет входной ретранслятор перед выходным. Дополнительная задержка ради усложнения корреляции трафика."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lägger till ett ingångsrelä före din utgång. Extra fördröjning för svårare trafikkorrelation."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เพิ่มรีเลย์ทางเข้าก่อนทางออกของคุณ มีความหน่วงเพิ่มขึ้นเพื่อให้การเชื่อมโยงทราฟฟิกทำได้ยากขึ้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkışınızdan önce bir giriş aktarıcısı ekler. Trafik ilişkilendirmesini zorlaştırmak için ekstra gecikme oluşur."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додає вхідний ретранслятор перед вашим виходом. Додаткова затримка ускладнює кореляцію трафіку."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在您的出口前增加一个入口中继。会增加延迟，以提高流量关联分析的难度。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在您的出口前增加一個入口中繼。會增加延遲，以提高流量關聯分析的難度。"
+          }
         }
       }
     },
     "Always on. Makes VPN traffic indistinguishable from regular HTTPS.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altid aktiv. Gør VPN-trafik umulig at skelne fra almindelig HTTPS."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer aktiv. Macht VPN-Traffic von normalem HTTPS ununterscheidbar."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Always on. Makes VPN traffic indistinguishable from regular HTTPS."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siempre activo. Hace que el tráfico VPN sea indistinguible del HTTPS normal."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aina päällä. Tekee VPN-liikenteestä erottamattoman tavallisesta HTTPS:stä."
           }
         },
         "fr": {
@@ -62,15 +428,129 @@
             "state": "translated",
             "value": "Toujours actif. Rend le trafic VPN indissociable d'un HTTPS classique."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sempre attivo. Rende il traffico VPN indistinguibile dal normale HTTPS."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常時オン。VPNトラフィックを通常のHTTPSと見分けがつかなくします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항상 켜져 있습니다. VPN 트래픽을 일반 HTTPS와 구별할 수 없게 만듭니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အမြဲဖွင့်ထားသည်။ VPN ထရက်ဖစ်ကို ပုံမှန် HTTPS နှင့် ခွဲခြားမရစေပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alltid aktiv. Gjør VPN-trafikk umulig å skille fra vanlig HTTPS."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altijd actief. Maakt VPN-verkeer niet te onderscheiden van gewoon HTTPS."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zawsze aktywne. Sprawia, że ruch VPN jest nieodróżnialny od zwykłego HTTPS."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sempre ativo. Torna o tráfego VPN indistinguível do HTTPS normal."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всегда включено. Делает VPN-трафик неотличимым от обычного HTTPS."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alltid aktiv. Gör VPN-trafik omöjlig att skilja från vanlig HTTPS."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้งานตลอดเวลา ทำให้ทราฟฟิก VPN แยกไม่ออกจาก HTTPS ทั่วไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her zaman açık. VPN trafiğini normal HTTPS'den ayırt edilemez hale getirir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завжди увімкнено. Робить VPN-трафік невідрізнюваним від звичайного HTTPS."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "始终开启。让 VPN 流量与普通 HTTPS 无法区分。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "始終開啟。讓 VPN 流量與普通 HTTPS 無法區分。"
+          }
         }
       }
     },
     "Continue": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsæt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortfahren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Continue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jatka"
           }
         },
         "fr": {
@@ -78,15 +558,129 @@
             "state": "translated",
             "value": "Continuer"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続行"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계속"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆက်လုပ်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsett"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontynuuj"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsätt"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ดำเนินการต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam et"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продовжити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繼續"
+          }
         }
       }
     },
     "DAITA traffic shaping": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-trafikformning"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-Traffic-Shaping"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "DAITA traffic shaping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelado de tráfico DAITA"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-liikenteen muotoilu"
           }
         },
         "fr": {
@@ -94,15 +688,129 @@
             "state": "translated",
             "value": "Modelage de trafic DAITA"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellazione del traffico DAITA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITAトラフィックシェーピング"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 트래픽 셰이핑"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA ထရက်ဖစ်ပုံဖော်ခြင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-trafikkforming"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-verkeersvorming"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kształtowanie ruchu DAITA"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelação de tráfego DAITA"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Формирование трафика DAITA"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA-trafikformning"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การปรับแต่งทราฟฟิก DAITA"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA trafik şekillendirme"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Формування трафіку DAITA"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 流量整形"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 流量整形"
+          }
         }
       }
     },
     "Defense against AI-guided traffic analysis. ~10% bandwidth overhead.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forsvar mod AI-styret trafikanalyse. ~10 % båndbredde-overhead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schutz vor KI-gesteuerter Traffic-Analyse. ~10 % Bandbreiten-Overhead."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Defense against AI-guided traffic analysis. ~10% bandwidth overhead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defensa contra el análisis de tráfico guiado por IA. ~10 % de sobrecarga de ancho de banda."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suoja tekoälyohjattua liikenneanalyysiä vastaan. ~10 %:n kaistanleveyden lisäkuorma."
           }
         },
         "fr": {
@@ -110,15 +818,129 @@
             "state": "translated",
             "value": "Défense contre l'analyse de trafic guidée par IA. ~10 % de surcharge de bande passante."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Difesa contro l'analisi del traffico guidata dall'IA. ~10% di overhead di banda."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI主導のトラフィック分析に対する防御。帯域幅オーバーヘッドは約10%。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 기반 트래픽 분석에 대한 방어. 대역폭 오버헤드 약 10%."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI ဦးဆောင်သော ထရက်ဖစ်ခွဲခြမ်းစိတ်ဖြာမှုကို ကာကွယ်ခြင်း။ ဘန်းဝစ်ဒ် ~10% ပိုသုံးသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forsvar mot KI-styrt trafikkanalyse. ~10 % båndbredde-overhead."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verdediging tegen AI-gestuurde verkeersanalyse. ~10% bandbreedte-overhead."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ochrona przed analizą ruchu sterowaną przez SI. ~10% narzutu przepustowości."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defesa contra a análise de tráfego orientada por IA. ~10% de sobrecarga de largura de banda."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита от анализа трафика с помощью ИИ. Дополнительная нагрузка на канал ~10%."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skydd mot AI-styrd trafikanalys. ~10 % bandbreddsbelastning."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การป้องกันการวิเคราะห์ทราฟฟิกที่ขับเคลื่อนด้วย AI มีโอเวอร์เฮดแบนด์วิดท์ประมาณ 10%"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapay zeka güdümlü trafik analizine karşı savunma. ~%10 bant genişliği ek yükü."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захист від аналізу трафіку за допомогою ШІ. Додаткове навантаження на канал ~10%."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防御 AI 驱动的流量分析。约 10% 的带宽开销。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防禦 AI 驅動的流量分析。約 10% 的頻寬開銷。"
+          }
         }
       }
     },
     "Generate new wallet": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generér ny wallet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Wallet erstellen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Generate new wallet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generar nuevo monedero"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luo uusi lompakko"
           }
         },
         "fr": {
@@ -126,15 +948,129 @@
             "state": "translated",
             "value": "Générer un nouveau portefeuille"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genera nuovo wallet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいウォレットを生成"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 지갑 생성"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wallet အသစ်ထုတ်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generer ny lommebok"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe wallet genereren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wygeneruj nowy portfel"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerar nova carteira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создать новый кошелек"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skapa ny plånbok"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สร้างกระเป๋าเงินใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni cüzdan oluştur"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Створити новий гаманець"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生成新钱包"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "產生新錢包"
+          }
         }
       }
     },
     "Get started": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom i gang"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loslegen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Get started"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comenzar"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aloita"
           }
         },
         "fr": {
@@ -142,15 +1078,129 @@
             "state": "translated",
             "value": "Commencer"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inizia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はじめる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작하기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စတင်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom i gang"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan de slag"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozpocznij"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Começar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начать"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom igång"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เริ่มต้นใช้งาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlayın"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Почати"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始使用"
+          }
         }
       }
     },
     "HTTP/3 mimicry": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-mimik"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-Nachahmung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "HTTP/3 mimicry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitación de HTTP/3"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-jäljittely"
           }
         },
         "fr": {
@@ -158,15 +1208,129 @@
             "state": "translated",
             "value": "Mimétisme HTTP/3"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mimica HTTP/3"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3擬態"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 모방"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 အတုယူခြင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-etterligning"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-nabootsing"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naśladowanie HTTP/3"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitação de HTTP/3"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имитация HTTP/3"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-imitation"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเลียนแบบ HTTP/3"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 taklidi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Імітація HTTP/3"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模拟"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模擬"
+          }
         }
       }
     },
     "I already have a recovery phrase": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeg har allerede en gendannelsessætning"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe bereits eine Wiederherstellungsphrase"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "I already have a recovery phrase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya tengo una frase de recuperación"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minulla on jo palautuslause"
           }
         },
         "fr": {
@@ -174,15 +1338,129 @@
             "state": "translated",
             "value": "J'ai déjà une phrase de récupération"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ho già una frase di recupero"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すでにリカバリーフレーズを持っている"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미 복구 문구가 있습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကျွန်ုပ်တွင် ပြန်လည်ရယူရေးစကားစုတစ်ခု ရှိပြီးသား"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeg har allerede en gjenopprettingsfrase"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik heb al een herstelzin"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mam już frazę odzyskiwania"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já tenho uma frase de recuperação"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У меня уже есть фраза восстановления"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jag har redan en återställningsfras"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ฉันมีวลีกู้คืนอยู่แล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaten bir kurtarma ifadem var"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У мене вже є фраза відновлення"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已经有恢复短语"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已經有復原片語"
+          }
         }
       }
     },
     "Launch Warren": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Warren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren starten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Launch Warren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käynnistä Warren"
           }
         },
         "fr": {
@@ -190,15 +1468,129 @@
             "state": "translated",
             "value": "Lancer Warren"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia Warren"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenを起動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 실행"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ကို စတင်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Warren"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren starten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uruchom Warren"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar o Warren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запустить Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starta Warren"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด Warren"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren'ı başlat"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запустити Warren"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动 Warren"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟動 Warren"
+          }
         }
       }
     },
     "Maybe later": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Måske senere"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vielleicht später"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Maybe later"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quizás más tarde"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ehkä myöhemmin"
           }
         },
         "fr": {
@@ -206,15 +1598,129 @@
             "state": "translated",
             "value": "Plus tard"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forse più tardi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後で"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "နောက်မှ ဖြစ်နိုင်သည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanskje senere"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Misschien later"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Może później"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talvez mais tarde"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Может быть, позже"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanske senare"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไว้ภายหลัง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belki sonra"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Можливо, пізніше"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍後再說"
+          }
         }
       }
     },
     "Multi-hop routing": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop-routing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop-Routing"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Multi-hop routing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enrutamiento multisalto"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop-reititys"
           }
         },
         "fr": {
@@ -222,15 +1728,129 @@
             "state": "translated",
             "value": "Routage multi-hop"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instradamento multi-hop"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マルチホップルーティング"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멀티홉 라우팅"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop လမ်းကြောင်းသတ်မှတ်ခြင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihopp-ruting"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop-routering"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routing wieloprzeskokowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encaminhamento multihop"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Многократная маршрутизация"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihopp-routing"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การกำหนดเส้นทางแบบมัลติฮอป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çoklu geçiş yönlendirmesi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Багатоперехідна маршрутизація"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多跳路由"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多點跳躍路由"
+          }
         }
       }
     },
     "Open warrenbrowse.com": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åbn warrenbrowse.com"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com öffnen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Open warrenbrowse.com"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir warrenbrowse.com"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avaa warrenbrowse.com"
           }
         },
         "fr": {
@@ -238,15 +1858,129 @@
             "state": "translated",
             "value": "Ouvrir warrenbrowse.com"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri warrenbrowse.com"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com 열기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com ကို ဖွင့်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne warrenbrowse.com"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com openen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz warrenbrowse.com"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir warrenbrowse.com"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть warrenbrowse.com"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öppna warrenbrowse.com"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด warrenbrowse.com"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "warrenbrowse.com'u aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити warrenbrowse.com"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 warrenbrowse.com"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 warrenbrowse.com"
+          }
         }
       }
     },
     "Pick your defaults. You can change these anytime in Settings.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vælg dine standardindstillinger. Du kan ændre dem når som helst under Indstillinger."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie Ihre Standardeinstellungen. Sie können diese jederzeit in den Einstellungen ändern."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pick your defaults. You can change these anytime in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elija sus valores predeterminados. Puede cambiarlos en cualquier momento en Ajustes."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valitse oletusasetuksesi. Voit muuttaa niitä milloin tahansa Asetuksista."
           }
         },
         "fr": {
@@ -254,15 +1988,129 @@
             "state": "translated",
             "value": "Choisissez vos préférences par défaut. Vous pouvez les modifier à tout moment dans les Paramètres."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli le tue impostazioni predefinite. Puoi modificarle in qualsiasi momento in Impostazioni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既定値を選択してください。設定でいつでも変更できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본값을 선택하세요. 설정에서 언제든지 변경할 수 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်မူရင်းတန်ဖိုးများကို ရွေးချယ်ပါ။ ၎င်းတို့ကို ဆက်တင်များတွင် အချိန်မရွေး ပြောင်းလဲနိုင်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg standardinnstillingene dine. Du kan endre dem når som helst under Innstillinger."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies je standaardinstellingen. Je kunt deze op elk moment wijzigen in Instellingen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz ustawienia domyślne. Możesz je zmienić w dowolnym momencie w Ustawieniach."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha as suas predefinições. Pode alterá-las a qualquer momento nas Definições."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите параметры по умолчанию. Их можно изменить в любой момент в Настройках."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Välj dina standardinställningar. Du kan ändra dem när som helst under Inställningar."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เลือกค่าเริ่มต้นของคุณ คุณสามารถเปลี่ยนค่าเหล่านี้ได้ทุกเมื่อในการตั้งค่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılanlarınızı seçin. Bunları Ayarlar'dan istediğiniz zaman değiştirebilirsiniz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виберіть налаштування за замовчуванням. Ви можете змінити їх будь-коли в Налаштуваннях."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择您的默认设置。您可以随时在设置中更改这些选项。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇您的預設值。您可以隨時在設定中變更這些選項。"
+          }
         }
       }
     },
     "Privacy preferences": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indstillinger for privatliv"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datenschutzeinstellungen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Privacy preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencias de privacidad"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yksityisyysasetukset"
           }
         },
         "fr": {
@@ -270,15 +2118,129 @@
             "state": "translated",
             "value": "Préférences de confidentialité"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferenze sulla privacy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシー設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보 보호 환경설정"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကိုယ်ရေးကိုယ်တာ ဦးစားပေးချက်များ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personverninnstillinger"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacyvoorkeuren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencje prywatności"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferências de privacidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки конфиденциальности"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekretessinställningar"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การตั้งค่าความเป็นส่วนตัว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik tercihleri"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Параметри конфіденційності"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私偏好设置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隱私偏好設定"
+          }
         }
       }
     },
     "Step %lld of %lld": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trin %1$lld af %2$lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schritt %1$lld von %2$lld"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Step %lld of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %1$lld de %2$lld"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaihe %1$lld / %2$lld"
           }
         },
         "fr": {
@@ -286,15 +2248,129 @@
             "state": "translated",
             "value": "Étape %1$lld sur %2$lld"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passaggio %1$lld di %2$lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステップ %1$lld / %2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld단계 중 %1$lld단계"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အဆင့် %2$lld ခုအနက် %1$lld"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trinn %1$lld av %2$lld"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stap %1$lld van %2$lld"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krok %1$lld z %2$lld"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passo %1$lld de %2$lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаг %1$lld из %2$lld"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steg %1$lld av %2$lld"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ขั้นตอนที่ %1$lld จาก %2$lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld adımdan %1$lld. adım"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крок %1$lld з %2$lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %1$lld 步，共 %2$lld 步"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %1$lld 步，共 %2$lld 步"
+          }
         }
       }
     },
     "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnementer betales i privatlivsbevarende valutaer på warrenbrowse.com. Din wallet-pubkey er den eneste identifikator, som Warren-netværket ser. Ingen e-mail eller kontonummer kræves."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements werden auf warrenbrowse.com mit datenschutzfreundlichen Währungen bezahlt. Ihr Wallet-Pubkey ist die einzige Kennung, die das Warren-Netzwerk sieht. Keine E-Mail-Adresse oder Kontonummer erforderlich."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Subscriptions are paid in privacy-preserving currencies on warrenbrowse.com. Your wallet pubkey is the only identifier the Warren network sees; no email or account number required."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las suscripciones se pagan en monedas que preservan la privacidad en warrenbrowse.com. La clave pública de su monedero es el único identificador que ve la red Warren. No se requiere correo electrónico ni número de cuenta."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilaukset maksetaan yksityisyyttä suojaavilla valuutoilla osoitteessa warrenbrowse.com. Lompakkosi julkinen avain on ainoa tunniste, jonka Warren-verkko näkee. Sähköpostia tai tilinumeroa ei tarvita."
           }
         },
         "fr": {
@@ -302,15 +2378,129 @@
             "state": "translated",
             "value": "Les abonnements sont payés en monnaies respectueuses de la vie privée sur warrenbrowse.com. Votre clé publique de portefeuille est le seul identifiant que voit le réseau Warren ; aucun e-mail ni numéro de compte requis."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli abbonamenti si pagano in valute che tutelano la privacy su warrenbrowse.com. La chiave pubblica del tuo wallet è l'unico identificatore visto dalla rete Warren. Non sono richiesti email o numero di account."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションは warrenbrowse.com でプライバシー保護通貨で支払います。Warrenネットワークが認識する識別子はウォレットの公開鍵のみです。メールアドレスやアカウント番号は不要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구독료는 warrenbrowse.com에서 프라이버시 보호 통화로 결제합니다. 지갑 공개 키가 Warren 네트워크가 보는 유일한 식별자입니다. 이메일이나 계정 번호는 필요하지 않습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စာရင်းသွင်းမှုများကို warrenbrowse.com တွင် ကိုယ်ရေးကိုယ်တာ ကာကွယ်သည့်ငွေကြေးများဖြင့် ပေးချေသည်။ Warren ကွန်ရက်မြင်သည့် တစ်ခုတည်းသော သတ်မှတ်ချက်မှာ သင့် wallet pubkey ဖြစ်သည်။ အီးမေးလ် သို့မဟုတ် အကောင့်နံပါတ် မလိုအပ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnementer betales i personvernbevarende valutaer på warrenbrowse.com. Lommebokens pubkey er den eneste identifikatoren Warren-nettverket ser. Ingen e-post eller kontonummer kreves."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnementen worden op warrenbrowse.com betaald in privacyvriendelijke valuta's. De pubkey van je wallet is de enige identificatie die het Warren-netwerk ziet. Geen e-mailadres of accountnummer vereist."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subskrypcje są opłacane w walutach chroniących prywatność na warrenbrowse.com. Klucz publiczny portfela to jedyny identyfikator, który widzi sieć Warren. Adres e-mail ani numer konta nie są wymagane."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As subscrições são pagas em moedas que preservam a privacidade em warrenbrowse.com. A chave pública da sua carteira é o único identificador que a rede Warren vê. Não é necessário e-mail nem número de conta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подписки оплачиваются валютами, сохраняющими конфиденциальность, на warrenbrowse.com. Открытый ключ вашего кошелька, это единственный идентификатор, который видит сеть Warren. Электронная почта и номер счета не требуются."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prenumerationer betalas i integritetsbevarande valutor på warrenbrowse.com. Din plånboks pubkey är den enda identifierare som Warren-nätverket ser. Ingen e-post eller kontonummer krävs."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การสมัครสมาชิกชำระเป็นสกุลเงินที่รักษาความเป็นส่วนตัวบน warrenbrowse.com คีย์สาธารณะของกระเป๋าเงินของคุณเป็นตัวระบุเพียงอย่างเดียวที่เครือข่าย Warren เห็น ไม่ต้องใช้อีเมลหรือหมายเลขบัญชี"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonelikler warrenbrowse.com üzerinde gizliliği koruyan para birimleriyle ödenir. Cüzdanınızın açık anahtarı, Warren ağının gördüğü tek tanımlayıcıdır. E-posta veya hesap numarası gerekmez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підписки оплачуються валютами, що зберігають конфіденційність, на warrenbrowse.com. Публічний ключ вашого гаманця, це єдиний ідентифікатор, який бачить мережа Warren. Електронна пошта чи номер рахунку не потрібні."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "订阅在 warrenbrowse.com 上使用保护隐私的货币支付。您的钱包公钥是 Warren 网络看到的唯一标识符，无需电子邮件或账号。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "訂閱在 warrenbrowse.com 上使用保護隱私的貨幣支付。您的錢包公鑰是 Warren 網路看到的唯一識別碼，無需電子郵件或帳號。"
+          }
         }
       }
     },
     "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryk på Start Warren for at oprette forbindelse til netværket. Din wallet forbliver i din Secure Enclave. Ingen Warren-server ser nogensinde din private nøgle."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippen Sie auf „Warren starten“, um sich mit dem Netzwerk zu verbinden. Ihre Wallet bleibt in Ihrer Secure Enclave. Kein Warren-Server sieht jemals Ihren privaten Schlüssel."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tap Launch Warren to connect to the network. Your wallet stays in your secure enclave; no Warren server ever sees your private key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque Iniciar Warren para conectarse a la red. Su monedero permanece en su Secure Enclave. Ningún servidor de Warren ve nunca su clave privada."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yhdistä verkkoon napauttamalla Käynnistä Warren. Lompakkosi pysyy Secure Enclavessasi. Mikään Warren-palvelin ei koskaan näe yksityistä avaintasi."
           }
         },
         "fr": {
@@ -318,15 +2508,129 @@
             "state": "translated",
             "value": "Appuyez sur Lancer Warren pour vous connecter au réseau. Votre portefeuille reste dans votre Secure Enclave ; aucun serveur Warren ne voit votre clé privée."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca Avvia Warren per connetterti alla rete. Il tuo wallet rimane nella tua Secure Enclave. Nessun server Warren vede mai la tua chiave privata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「Warrenを起動」をタップしてネットワークに接続します。ウォレットはSecure Enclave内に保持されます。Warrenサーバーがあなたの秘密鍵を見ることはありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네트워크에 연결하려면 Warren 실행을 누르세요. 지갑은 Secure Enclave에 보관됩니다. 어떤 Warren 서버도 개인 키를 볼 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကွန်ရက်သို့ ချိတ်ဆက်ရန် Warren ကို စတင်ရန် ကို တို့ပါ။ သင့် wallet သည် သင့် Secure Enclave အတွင်း ရှိနေသည်။ မည်သည့် Warren ဆာဗာမျှ သင့်ကိုယ်ပိုင်သော့ကို မမြင်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk på Start Warren for å koble til nettverket. Lommeboken din forblir i Secure Enclave. Ingen Warren-server ser noen gang den private nøkkelen din."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op Warren starten om verbinding te maken met het netwerk. Je wallet blijft in je Secure Enclave. Geen enkele Warren-server ziet ooit je privésleutel."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naciśnij Uruchom Warren, aby połączyć się z siecią. Twój portfel pozostaje w Secure Enclave. Żaden serwer Warren nigdy nie widzi Twojego klucza prywatnego."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque em Iniciar o Warren para se ligar à rede. A sua carteira permanece na sua Secure Enclave. Nenhum servidor Warren vê alguma vez a sua chave privada."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите «Запустить Warren», чтобы подключиться к сети. Ваш кошелек остается в Secure Enclave. Ни один сервер Warren никогда не видит ваш закрытый ключ."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck på Starta Warren för att ansluta till nätverket. Din plånbok stannar i din Secure Enclave. Ingen Warren-server ser någonsin din privata nyckel."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แตะ เปิด Warren เพื่อเชื่อมต่อกับเครือข่าย กระเป๋าเงินของคุณยังคงอยู่ใน Secure Enclave ของคุณ ไม่มีเซิร์ฟเวอร์ Warren ใดเห็นคีย์ส่วนตัวของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağa bağlanmak için Warren'ı başlat'a dokunun. Cüzdanınız Secure Enclave'inizde kalır. Hiçbir Warren sunucusu özel anahtarınızı görmez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть «Запустити Warren», щоб підключитися до мережі. Ваш гаманець залишається у вашому Secure Enclave. Жоден сервер Warren ніколи не бачить ваш приватний ключ."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按启动 Warren 以连接到网络。您的钱包保留在您的 Secure Enclave 中，任何 Warren 服务器都无法看到您的私钥。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點按啟動 Warren 以連線到網路。您的錢包保留在您的 Secure Enclave 中，任何 Warren 伺服器都無法看到您的私鑰。"
+          }
         }
       }
     },
     "Wallet ready": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet klar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet bereit"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Wallet ready"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monedero listo"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lompakko valmis"
           }
         },
         "fr": {
@@ -334,15 +2638,129 @@
             "state": "translated",
             "value": "Portefeuille prêt"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet pronto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウォレットの準備完了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지갑 준비 완료"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wallet အဆင်သင့်ဖြစ်ပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lommebok klar"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wallet gereed"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portfel gotowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carteira pronta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кошелек готов"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plånbok klar"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กระเป๋าเงินพร้อมแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cüzdan hazır"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гаманець готовий"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钱包已就绪"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錢包已就緒"
+          }
         }
       }
     },
     "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren bruger en non-custodial Ed25519-wallet, der er afledt af en gendannelsessætning på 12 ord. Du alene har nøglerne, og du kan gendanne dit abonnement på enhver enhed med den samme sætning."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren verwendet eine non-custodial Ed25519-Wallet, die aus einer 12-Wort-Wiederherstellungsphrase abgeleitet wird. Nur Sie besitzen die Schlüssel und können Ihr Abonnement mit derselben Phrase auf jedem Gerät wiederherstellen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Warren uses a non-custodial Ed25519 wallet derived from a 12-word recovery phrase. You alone hold the keys, and you can restore your subscription on any device using the same phrase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren utiliza un monedero Ed25519 no custodial derivado de una frase de recuperación de 12 palabras. Solo usted posee las claves y puede restaurar su suscripción en cualquier dispositivo con la misma frase."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren käyttää non-custodial Ed25519-lompakkoa, joka johdetaan 12 sanan palautuslauseesta. Vain sinä hallitset avaimia ja voit palauttaa tilauksesi millä tahansa laitteella samalla lauseella."
           }
         },
         "fr": {
@@ -350,15 +2768,129 @@
             "state": "translated",
             "value": "Warren utilise un portefeuille Ed25519 non-custodial dérivé d'une phrase de récupération de 12 mots. Vous seul détenez les clés et pouvez restaurer votre abonnement sur n'importe quel appareil avec la même phrase."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren utilizza un wallet Ed25519 non custodial derivato da una frase di recupero di 12 parole. Solo tu detieni le chiavi e puoi ripristinare il tuo abbonamento su qualsiasi dispositivo usando la stessa frase."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenは、12語のリカバリーフレーズから派生する非カストディアルなEd25519ウォレットを使用します。鍵を保持するのはあなただけで、同じフレーズを使えばどのデバイスでもサブスクリプションを復元できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren은 12단어 복구 문구에서 파생된 비수탁형 Ed25519 지갑을 사용합니다. 키는 오직 사용자만 보유하며, 동일한 문구로 어떤 기기에서든 구독을 복원할 수 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren သည် စကားလုံး 12 လုံးပါ ပြန်လည်ရယူရေးစကားစုမှ ဆင်းသက်လာသော non-custodial Ed25519 wallet ကို အသုံးပြုသည်။ သော့များကို သင်တစ်ဦးတည်းသာ ပိုင်ဆိုင်ပြီး တူညီသောစကားစုကို အသုံးပြုကာ မည်သည့်စက်တွင်မဆို သင့်စာရင်းသွင်းမှုကို ပြန်လည်ရယူနိုင်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren bruker en non-custodial Ed25519-lommebok som er avledet fra en gjenopprettingsfrase på 12 ord. Du alene har nøklene, og du kan gjenopprette abonnementet ditt på en hvilken som helst enhet med den samme frasen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren gebruikt een non-custodial Ed25519-wallet die is afgeleid van een herstelzin van 12 woorden. Alleen jij hebt de sleutels, en je kunt je abonnement op elk apparaat herstellen met dezelfde zin."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren używa portfela non-custodial Ed25519 wyprowadzonego z 12-wyrazowej frazy odzyskiwania. Tylko Ty posiadasz klucze i możesz przywrócić subskrypcję na dowolnym urządzeniu, używając tej samej frazy."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Warren utiliza uma carteira Ed25519 não custodial derivada de uma frase de recuperação de 12 palavras. Só você detém as chaves e pode restaurar a sua subscrição em qualquer dispositivo com a mesma frase."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren использует некастодиальный кошелек Ed25519, производный от фразы восстановления из 12 слов. Только вы владеете ключами и можете восстановить подписку на любом устройстве с помощью той же фразы."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren använder en non-custodial Ed25519-plånbok som härleds från en återställningsfras på 12 ord. Endast du har nycklarna och kan återställa din prenumeration på vilken enhet som helst med samma fras."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ใช้กระเป๋าเงิน Ed25519 แบบ non-custodial ที่ได้มาจากวลีกู้คืน 12 คำ คุณเท่านั้นที่ถือกุญแจ และคุณสามารถกู้คืนการสมัครสมาชิกบนอุปกรณ์ใดก็ได้ด้วยวลีเดียวกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren, 12 kelimelik bir kurtarma ifadesinden türetilen non-custodial bir Ed25519 cüzdanı kullanır. Anahtarları yalnızca siz tutarsınız ve aynı ifadeyi kullanarak aboneliğinizi herhangi bir cihazda geri yükleyebilirsiniz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren використовує некастодіальний гаманець Ed25519, похідний від фрази відновлення з 12 слів. Лише ви володієте ключами та можете відновити підписку на будь-якому пристрої за допомогою тієї самої фрази."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 使用从 12 个单词恢复短语派生的非托管 Ed25519 钱包。只有您持有密钥，并且可以使用相同的短语在任何设备上恢复您的订阅。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 使用從 12 個單字復原片語衍生的非託管 Ed25519 錢包。只有您持有金鑰，並且可以使用相同的片語在任何裝置上復原您的訂閱。"
+          }
         }
       }
     },
     "Welcome to Warren VPN": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velkommen til Warren VPN"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Warren VPN"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Welcome to Warren VPN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenido a Warren VPN"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tervetuloa Warren VPN:ään"
           }
         },
         "fr": {
@@ -366,15 +2898,129 @@
             "state": "translated",
             "value": "Bienvenue dans Warren VPN"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benvenuto su Warren VPN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPNへようこそ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN에 오신 것을 환영합니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN မှ ကြိုဆိုပါသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velkommen til Warren VPN"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welkom bij Warren VPN"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Witamy w Warren VPN"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bem-vindo ao Warren VPN"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добро пожаловать в Warren VPN"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Välkommen till Warren VPN"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยินดีต้อนรับสู่ Warren VPN"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN'e hoş geldiniz"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ласкаво просимо до Warren VPN"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "欢迎使用 Warren VPN"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "歡迎使用 Warren VPN"
+          }
         }
       }
     },
     "You're all set": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alt er klar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bereit"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You're all set"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo listo"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaikki valmista"
           }
         },
         "fr": {
@@ -382,21 +3028,225 @@
             "state": "translated",
             "value": "Tout est prêt"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È tutto pronto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "準備完了です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 준비가 끝났습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အားလုံး အဆင်သင့်ဖြစ်ပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alt er klart"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je bent helemaal klaar"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystko gotowe"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Está tudo pronto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все готово"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allt är klart"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พร้อมแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her şey hazır"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе готово"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一切准备就绪"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一切準備就緒"
+          }
         }
       }
     },
     "Your Warren wallet": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din Warren-wallet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Warren-Wallet"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Your Warren wallet"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su monedero Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren-lompakkosi"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Votre portefeuille Warren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo wallet Warren"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのWarrenウォレット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 Warren 지갑"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့် Warren wallet"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din Warren-lommebok"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je Warren-wallet"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój portfel Warren"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sua carteira Warren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш кошелек Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din Warren-plånbok"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กระเป๋าเงิน Warren ของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren cüzdanınız"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш гаманець Warren"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 Warren 钱包"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 Warren 錢包"
           }
         }
       }
