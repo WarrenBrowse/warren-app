@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import styled from 'styled-components';
 
-import { WarrenPubkeyMismatch } from '../../../../shared/daemon-rpc-types';
+import { TrustNewExitKeyOutcome, WarrenPubkeyMismatch } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { useAppContext } from '../../../context';
@@ -27,17 +27,28 @@ export function WarrenPubKeyWarning() {
   const pending = useSelector((state) => state.settings.warrenStatus?.pubkeyMismatchPending);
   const { trustNewExitKey, dismissPubkeyMismatch, reportPubkeyMismatch } = useAppContext();
   const [busy, setBusy] = useState(false);
+  // Error surfaced when "Trust new key" fails. On success the daemon
+  // clears `pubkeyMismatchPending` and the modal unmounts; on failure it
+  // does NOT clear it, so without this the modal would sit open with no
+  // feedback on a security-sensitive choice.
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const handleTrust = useCallback(async () => {
     if (!pending) {
       return;
     }
     setBusy(true);
+    setError(undefined);
     try {
-      await trustNewExitKey({
+      const outcome = await trustNewExitKey({
         exitIdHex: pending.exitIdHex,
         newPubkeyHex: pending.observedPubkeyHex,
       });
+      if (outcome.result !== 'ok') {
+        setError(trustFailureMessage(outcome));
+      }
+    } catch {
+      setError(trustFailureMessage());
     } finally {
       setBusy(false);
     }
@@ -45,6 +56,7 @@ export function WarrenPubKeyWarning() {
 
   const handleReject = useCallback(async () => {
     setBusy(true);
+    setError(undefined);
     try {
       await dismissPubkeyMismatch();
     } finally {
@@ -57,6 +69,7 @@ export function WarrenPubKeyWarning() {
       return;
     }
     setBusy(true);
+    setError(undefined);
     try {
       await reportPubkeyMismatch(pending);
     } finally {
@@ -114,6 +127,11 @@ export function WarrenPubKeyWarning() {
       ]}
       close={handleReject}>
       {pending && <PubKeyWarningDetails pending={pending} />}
+      {error && (
+        <ErrorText role="alert" aria-live="assertive">
+          {error}
+        </ErrorText>
+      )}
       <BusyStatusRegion role="status" aria-live="polite">
         {busy
           ? messages.pgettext('warren-pubkey-warning', 'Processing your choice, please wait.')
@@ -121,6 +139,31 @@ export function WarrenPubKeyWarning() {
       </BusyStatusRegion>
     </ModalAlert>
   );
+}
+
+// Maps a non-ok TrustNewExitKey outcome to a user-facing reason. Called
+// only on failure; a missing/unknown outcome falls back to the generic
+// message.
+function trustFailureMessage(outcome?: TrustNewExitKeyOutcome): string {
+  switch (outcome?.result) {
+    case 'exit-not-found':
+      return messages.pgettext(
+        'warren-pubkey-warning',
+        'Could not find that exit server anymore. Try reconnecting.',
+      );
+    case 'pubkey-mismatch':
+      return messages.pgettext(
+        'warren-pubkey-warning',
+        'The key changed again before it could be trusted. Review the new key and try again.',
+      );
+    case 'io-error':
+      return messages.pgettext(
+        'warren-pubkey-warning',
+        'Could not save the new key. Please try again.',
+      );
+    default:
+      return messages.pgettext('warren-pubkey-warning', 'Could not trust the new key.');
+  }
 }
 
 interface DetailsProps {
@@ -188,6 +231,16 @@ function PubKeyWarningDetails({ pending }: DetailsProps) {
     </DetailsContainer>
   );
 }
+
+// Visible error shown when trusting the new key fails (the daemon does
+// not clear the pending mismatch in that case, so the modal stays open).
+const ErrorText = styled.span({
+  display: 'block',
+  marginTop: '12px',
+  color: colors.red,
+  fontSize: '13px',
+  lineHeight: 1.4,
+});
 
 // Polite ARIA live region that announces the busy state to assistive
 // tech while a CTA is in flight. The visible UI shows the disabled

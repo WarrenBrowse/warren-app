@@ -3040,6 +3040,18 @@ msgid "Your Warren wallet"
 msgstr ""
 
 msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
 msgstr ""
 
@@ -3077,6 +3089,10 @@ msgstr ""
 
 msgctxt "warren-pubkey-warning"
 msgid "Server identity changed"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr ""
 
 msgctxt "warren-pubkey-warning"
