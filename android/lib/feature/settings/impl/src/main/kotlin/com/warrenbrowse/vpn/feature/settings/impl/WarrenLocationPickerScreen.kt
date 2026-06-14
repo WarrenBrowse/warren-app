@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +56,9 @@ fun WarrenLocationPicker(navigator: Navigator) {
     val selectedExitId by settings.selectedExitId.collectAsStateWithLifecycle()
     val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
     val recentsEnabled by settings.recentsEnabled.collectAsStateWithLifecycle()
+    val customLists by settings.customLists.collectAsStateWithLifecycle()
+    // The exit the user is currently adding to a custom list, if any.
+    var addToListFor by remember { mutableStateOf<WarrenRelaySummary?>(null) }
 
     // RelayProvider.list() is synchronous (in-memory today); produceState
     // resolves a fresh list on every recomposition so a future async
@@ -162,7 +166,32 @@ fun WarrenLocationPicker(navigator: Navigator) {
                                     relay = relay,
                                     selected = relay.exitId == selectedExitId,
                                     onClick = { onSelect(relay) },
+                                    onAddToList = { addToListFor = relay },
                                 )
+                            }
+                        }
+                        // Custom lists (desktop parity): only while not searching,
+                        // each under its own header with the member exits.
+                        if (trimmed.isEmpty()) {
+                            customLists.forEach { (listName, exitIds) ->
+                                val listRelays =
+                                    exitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
+                                item(key = "customhdr-$listName") {
+                                    CustomListHeader(
+                                        name = listName,
+                                        onDelete = { settings.deleteCustomList(listName) },
+                                    )
+                                }
+                                items(listRelays, key = { "custom-$listName-${it.exitId}" }) { relay ->
+                                    RelayRow(
+                                        relay = relay,
+                                        selected = relay.exitId == selectedExitId,
+                                        onClick = { onSelect(relay) },
+                                        onRemoveFromList = {
+                                            settings.removeExitFromCustomList(listName, relay.exitId)
+                                        },
+                                    )
+                                }
                             }
                         }
                         byCountry.forEach { (country, countryRelays) ->
@@ -174,6 +203,7 @@ fun WarrenLocationPicker(navigator: Navigator) {
                                     relay = relay,
                                     selected = relay.exitId == selectedExitId,
                                     onClick = { onSelect(relay) },
+                                    onAddToList = { addToListFor = relay },
                                 )
                             }
                         }
@@ -181,6 +211,17 @@ fun WarrenLocationPicker(navigator: Navigator) {
                 }
             }
         }
+    }
+
+    addToListFor?.let { relay ->
+        AddToListDialog(
+            listNames = customLists.keys.toList(),
+            onDismiss = { addToListFor = null },
+            onPick = { listName ->
+                settings.addExitToCustomList(listName, relay.exitId)
+                addToListFor = null
+            },
+        )
     }
 }
 
@@ -195,10 +236,28 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
+private fun CustomListHeader(name: String, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onDelete) { Text("Delete list") }
+    }
+}
+
+@Composable
 private fun RelayRow(
     relay: WarrenRelaySummary,
     selected: Boolean,
     onClick: () -> Unit,
+    onAddToList: (() -> Unit)? = null,
+    onRemoveFromList: (() -> Unit)? = null,
 ) {
     val rowAlpha = if (relay.active) 1.0f else 0.5f
     Card(
@@ -212,31 +271,85 @@ private fun RelayRow(
             },
         ),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = "${relay.country} • ${relay.city}",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = rowAlpha),
-            )
-            Text(
-                text = relay.endpoint,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
-            )
-            if (selected) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Selected",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF2E7D32),
+                    text = "${relay.country} • ${relay.city}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = rowAlpha),
                 )
+                Text(
+                    text = relay.endpoint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
+                )
+                if (selected) {
+                    Text(
+                        text = "Selected",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF2E7D32),
+                    )
+                }
+                if (!relay.active) {
+                    Text(
+                        text = "Inactive",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
-            if (!relay.active) {
-                Text(
-                    text = "Inactive",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+            onRemoveFromList?.let {
+                TextButton(onClick = it) { Text("Remove") }
+            }
+            onAddToList?.let {
+                TextButton(onClick = it) { Text("Add to list") }
             }
         }
     }
+}
+
+/**
+ * Dialog to add an exit to a custom list: pick an existing list or type a new
+ * name. Creating a list with an exit in one step mirrors the desktop flow.
+ */
+@Composable
+private fun AddToListDialog(
+    listNames: List<String>,
+    onDismiss: () -> Unit,
+    onPick: (String) -> Unit,
+) {
+    var newName by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add to list") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                listNames.forEach { name ->
+                    TextButton(
+                        onClick = { onPick(name) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(name) }
+                }
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("New list name") },
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = newName.isNotBlank(),
+                onClick = { onPick(newName.trim()) },
+            ) { Text("Create & add") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
 }

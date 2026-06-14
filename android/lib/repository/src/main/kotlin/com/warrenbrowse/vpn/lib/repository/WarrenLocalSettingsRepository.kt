@@ -143,6 +143,16 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _recentsEnabled = MutableStateFlow(prefs.getBoolean(KEY_RECENTS_ENABLED, true))
     val recentsEnabled: StateFlow<Boolean> = _recentsEnabled.asStateFlow()
 
+    /**
+     * User-defined custom lists of exits (desktop "custom lists" parity):
+     * name -> ordered exit ids. Surfaced at the top of the location picker so
+     * users can group favourite exits. Persisted as a [String] set of names
+     * plus one delimited string per list, so no serialization plugin is
+     * needed in this module.
+     */
+    private val _customLists = MutableStateFlow(readCustomLists())
+    val customLists: StateFlow<Map<String, List<String>>> = _customLists.asStateFlow()
+
     fun setDaitaEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DAITA_ENABLED, enabled).apply()
         _daitaEnabled.value = enabled
@@ -243,6 +253,72 @@ class WarrenLocalSettingsRepository(context: Context) {
             ?.map { it.trim() }
             ?.filter { it.isNotEmpty() }
             ?: emptyList()
+
+    /** Create an empty custom list. No-op if blank or already present. */
+    fun createCustomList(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        val names = customListNames()
+        if (!names.add(trimmed)) return
+        prefs.edit().putStringSet(KEY_CUSTOM_LIST_NAMES, names).apply()
+        _customLists.value = readCustomLists()
+    }
+
+    /** Delete a custom list and its members. No-op if the list is unknown. */
+    fun deleteCustomList(name: String) {
+        val names = customListNames()
+        if (!names.remove(name)) return
+        prefs.edit()
+            .putStringSet(KEY_CUSTOM_LIST_NAMES, names)
+            .remove(customListKey(name))
+            .apply()
+        _customLists.value = readCustomLists()
+    }
+
+    /**
+     * Add an exit to a custom list (creating the list if needed), keeping
+     * insertion order and de-duplicating.
+     */
+    fun addExitToCustomList(name: String, exitId: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty() || exitId.isEmpty()) return
+        val names = customListNames()
+        names.add(trimmed)
+        val current = _customLists.value[trimmed].orEmpty()
+        if (exitId in current) return
+        val updated = current + exitId
+        prefs.edit()
+            .putStringSet(KEY_CUSTOM_LIST_NAMES, names)
+            .putString(customListKey(trimmed), updated.joinToString(RECENT_DELIMITER))
+            .apply()
+        _customLists.value = readCustomLists()
+    }
+
+    /** Remove an exit from a custom list. No-op if absent. */
+    fun removeExitFromCustomList(name: String, exitId: String) {
+        val current = _customLists.value[name] ?: return
+        if (exitId !in current) return
+        val updated = current.filter { it != exitId }
+        prefs.edit()
+            .putString(customListKey(name), updated.joinToString(RECENT_DELIMITER))
+            .apply()
+        _customLists.value = readCustomLists()
+    }
+
+    // Defensive copy: the set returned by getStringSet must not be mutated.
+    private fun customListNames(): MutableSet<String> =
+        prefs.getStringSet(KEY_CUSTOM_LIST_NAMES, emptySet()).orEmpty().toMutableSet()
+
+    private fun customListKey(name: String): String = KEY_CUSTOM_LIST_PREFIX + name
+
+    private fun readCustomLists(): Map<String, List<String>> =
+        customListNames().sorted().associateWith { name ->
+            prefs.getString(customListKey(name), null)
+                ?.split(RECENT_DELIMITER)
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                ?: emptyList()
+        }
 
     fun setIpv6Enabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_IPV6_ENABLED, enabled).apply()
@@ -348,8 +424,10 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_EXIT_COUNTRY = "exit_country"
         private const val KEY_SELECTED_EXIT_ID = "selected_exit_id"
         private const val KEY_RECENT_EXIT_IDS = "recent_exit_ids"
-    private const val KEY_RECENTS_ENABLED = "recents_enabled"
+        private const val KEY_RECENTS_ENABLED = "recents_enabled"
         private const val RECENT_DELIMITER = ","
+        private const val KEY_CUSTOM_LIST_NAMES = "custom_list_names"
+        private const val KEY_CUSTOM_LIST_PREFIX = "custom_list_exits_"
         private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"

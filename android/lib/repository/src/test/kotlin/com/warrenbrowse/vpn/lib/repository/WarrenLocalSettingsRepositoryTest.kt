@@ -294,6 +294,56 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `custom lists CRUD round-trips through prefs`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        // Stateful fake for the StringSet (names) + per-list delimited strings.
+        val names = linkedSetOf<String>()
+        val lists = mutableMapOf<String, String>()
+        every { mockPrefs.getStringSet("custom_list_names", any()) } answers { names.toSet() }
+        every { mockEditor.putStringSet("custom_list_names", any()) } answers {
+            names.clear()
+            names.addAll(secondArg<Set<String>?>().orEmpty())
+            mockEditor
+        }
+        every {
+            mockPrefs.getString(match<String> { it.startsWith("custom_list_exits_") }, any())
+        } answers { lists[firstArg()] }
+        every {
+            mockEditor.putString(match<String> { it.startsWith("custom_list_exits_") }, any())
+        } answers {
+            lists[firstArg()] = secondArg()
+            mockEditor
+        }
+        every {
+            mockEditor.remove(match<String> { it.startsWith("custom_list_exits_") })
+        } answers {
+            lists.remove(firstArg())
+            mockEditor
+        }
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+        assertEquals(emptyMap<String, List<String>>(), repo.customLists.value)
+
+        repo.createCustomList("Streaming")
+        assertEquals(mapOf("Streaming" to emptyList<String>()), repo.customLists.value)
+
+        repo.addExitToCustomList("Streaming", "exit-a")
+        repo.addExitToCustomList("Streaming", "exit-b")
+        repo.addExitToCustomList("Streaming", "exit-a") // duplicate ignored
+        assertEquals(listOf("exit-a", "exit-b"), repo.customLists.value["Streaming"])
+
+        // Adding to an unknown list creates it.
+        repo.addExitToCustomList("Work", "exit-c")
+        assertEquals(listOf("exit-c"), repo.customLists.value["Work"])
+
+        repo.removeExitFromCustomList("Streaming", "exit-a")
+        assertEquals(listOf("exit-b"), repo.customLists.value["Streaming"])
+
+        repo.deleteCustomList("Streaming")
+        assertEquals(setOf("Work"), repo.customLists.value.keys)
+    }
+
+    @Test
     fun `flows emit current value to new collectors`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)
