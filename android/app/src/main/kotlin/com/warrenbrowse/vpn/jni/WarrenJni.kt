@@ -196,4 +196,22 @@ object WarrenJni {
      * and ship the report with `redactedLogs = ""`.
      */
     external fun collectReport(): String
+
+    /**
+     * Return whether the running app version is still supported (allowed to
+     * keep running). `1` = supported, `0` = must force-update.
+     *
+     * Fetches the signed `android.json` update manifest from the
+     * Let's-Encrypt-pinned host, verifies its Ed25519 signature against the
+     * embedded trusted pubkey, then applies the shared
+     * `minimum_supported_version` rule (same verifier as the desktop app).
+     *
+     * Fail-open: any transient failure (network, signature, unparseable
+     * version, runtime not ready) returns `1` so a flaky network never locks
+     * the user out. Blocks the calling thread on a network fetch, so it must
+     * be invoked off the main thread.
+     *
+     * @param currentVersion the running app version string (`BuildConfig.VERSION_NAME`).
+     */
+    external fun checkVersionSupported(currentVersion: String): Int
 }

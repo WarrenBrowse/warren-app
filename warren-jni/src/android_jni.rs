@@ -693,6 +693,70 @@ fn fetch_relays_or_fallback() -> String {
     FALLBACK_RELAYS_JSON.to_owned()
 }
 
+// ---------------------------------------------------------------------------
+// App version check (signed update manifest)
+// ---------------------------------------------------------------------------
+
+/// Return whether the running app version is still supported, i.e. allowed to
+/// keep running. `1` = supported, `0` = must force-update.
+///
+/// The Kotlin side feeds this into `VersionInfo.isSupported`, which drives the
+/// "unsupported version" banner (deep-linking to the store) and the forced-update
+/// gate. This reuses the exact desktop verifier (`mullvad-update`): it fetches
+/// `android.json` over the Let's-Encrypt-pinned host, verifies the ed25519
+/// signature against the embedded trusted pubkey, then applies the shared
+/// `minimum_supported_version` rule (`is_current_version_supported`).
+///
+/// Fail-open: any transient failure (runtime not ready, unparseable version,
+/// network, signature) returns `1` so a flaky network never locks the user out.
+/// Only a successfully verified manifest can mark the running version
+/// unsupported.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_checkVersionSupported<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    current_version: JString<'local>,
+) -> jint {
+    let jnix_env = JnixEnv::from(env);
+    let current = String::from_java(&jnix_env, current_version);
+    if check_app_version_supported(&current) {
+        1
+    } else {
+        0
+    }
+}
+
+fn check_app_version_supported(current_version: &str) -> bool {
+    use mullvad_update::api::{HttpVersionInfoProvider, MetaRepositoryPlatform};
+    use mullvad_update::version::{MIN_VERIFY_METADATA_VERSION, is_current_version_supported};
+
+    let runtime = match RUNTIME.get() {
+        Some(rt) => rt,
+        None => {
+            log::warn!("checkVersionSupported called before initLogger; assuming supported");
+            return true;
+        }
+    };
+    let current: mullvad_version::Version = match current_version.parse() {
+        Ok(version) => version,
+        Err(err) => {
+            log::warn!("checkVersionSupported: unparseable version '{current_version}': {err}");
+            return true;
+        }
+    };
+    let response = match runtime.block_on(HttpVersionInfoProvider::get_versions_for_platform(
+        MetaRepositoryPlatform::Android,
+        MIN_VERIFY_METADATA_VERSION,
+    )) {
+        Ok(response) => response,
+        Err(_) => {
+            log::warn!("checkVersionSupported: manifest fetch/verify failed; assuming supported");
+            return true;
+        }
+    };
+    is_current_version_supported(&current, &response.signed)
+}
+
 /// Submit a problem report (D.6). Called by the Android
 /// `ProblemReportRepository` once the user taps "Send". The Kotlin
 /// side passes:

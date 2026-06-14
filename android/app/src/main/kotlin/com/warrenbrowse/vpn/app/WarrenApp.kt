@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -57,15 +58,18 @@ import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEnt
 import com.warrenbrowse.vpn.feature.problemreport.impl.navigation.problemReportEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
+import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
 import com.warrenbrowse.vpn.screen.navigation.onboardingEntry
 import com.warrenbrowse.vpn.screen.navigation.privacyDisclaimerEntry
 import com.warrenbrowse.vpn.screen.navigation.splashEntry
+import com.warrenbrowse.vpn.screen.unsupportedversion.UnsupportedVersionBlocked
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionState
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -92,6 +96,12 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     }
 
     val warrenAppViewModel = koinViewModel<WarrenAppViewModel>()
+
+    // Forced-update gate: when the signed update manifest reports the running
+    // version is no longer supported, replace the whole UI with the blocking
+    // screen (the tunnel is left untouched).
+    val appVersionInfoRepository = koinInject<AppVersionInfoRepository>()
+    val appVersionInfo = appVersionInfoRepository.versionInfo.collectAsState().value
 
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
@@ -128,7 +138,9 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         splitTunnelingEntry(nav3)
     }
 
-    SharedTransitionLayout {
+    if (!appVersionInfo.isSupported) {
+        UnsupportedVersionBlocked()
+    } else SharedTransitionLayout {
         CompositionLocalProvider(LocalSharedTransitionScope provides this@SharedTransitionLayout) {
             CompositionLocalProvider(LocalResultStore provides resultStore) {
                 NavDisplay(

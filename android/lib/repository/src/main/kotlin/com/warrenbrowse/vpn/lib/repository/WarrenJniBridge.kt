@@ -40,4 +40,12 @@ interface WarrenJniBridge {
      * treat the empty case as "no logs available".
      */
     fun collectReport(): String
+
+    /**
+     * Return whether the running [currentVersion] is still supported, based on
+     * the signed `android.json` update manifest (Ed25519-verified). `true` =
+     * supported, `false` = must force-update. Fail-open on any error. Blocks on
+     * a network fetch, so callers must invoke it off the main thread.
+     */
+    fun checkVersionSupported(currentVersion: String): Boolean
 }

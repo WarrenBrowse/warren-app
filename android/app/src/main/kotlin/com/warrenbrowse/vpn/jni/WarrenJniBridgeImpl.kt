@@ -18,4 +18,7 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.mnemonicPubkeySs58(mnemonic)
 
     override fun collectReport(): String = WarrenJni.collectReport()
+
+    override fun checkVersionSupported(currentVersion: String): Boolean =
+        WarrenJni.checkVersionSupported(currentVersion) == 1
 }

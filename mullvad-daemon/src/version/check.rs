@@ -185,16 +185,7 @@ fn current_version_is_supported(
     current_version: &Version,
     response: &mullvad_update::format::response::Response,
 ) -> bool {
-    use mullvad_update::version::is_version_supported;
-
-    if current_version.is_dev() {
-        return true;
-    }
-
-    match response.minimum_supported_version.as_ref() {
-        Some(minimum) => current_version >= minimum,
-        None => is_version_supported(current_version.clone(), response),
-    }
+    mullvad_update::version::is_current_version_supported(current_version, response)
 }
 
 /// Map the detected native CPU architecture to the metadata architecture enum.

@@ -52,6 +52,12 @@ serde_json = { workspace = true }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 
+# Signed app-update manifest fetch + ed25519 verification, reused as-is from the
+# desktop path so the mobile version check applies the exact same verified rule
+# (Android-only: it pulls reqwest; the host build only compiles the stub).
+mullvad-update = { path = "../mullvad-update", features = ["client"] }
+mullvad-version = { path = "../mullvad-version" }
+
 # Platform metadata still useful for ApiEndpoint user-agent strings; kept from upstream.
 talpid-platform-metadata = { path = "../talpid-platform-metadata" }
 talpid-types = { path = "../talpid-types" }

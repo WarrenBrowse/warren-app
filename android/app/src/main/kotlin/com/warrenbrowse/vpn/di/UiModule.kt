@@ -110,7 +110,7 @@ val uiModule = module {
 
     single { ChangelogDataProvider(get()) }
 
-    single { AppVersionInfoRepository(get()) }
+    single { AppVersionInfoRepository(get(), get()) }
 
     // View models
     viewModel { params -> ChangelogViewModel(navArgs = params.get(), get(), get()) }

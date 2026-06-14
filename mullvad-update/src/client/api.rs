@@ -20,6 +20,8 @@ pub enum MetaRepositoryPlatform {
     Windows,
     Linux,
     Macos,
+    Android,
+    Ios,
 }
 
 impl MetaRepositoryPlatform {
@@ -29,6 +31,8 @@ impl MetaRepositoryPlatform {
             target_os = "windows" => { Some(Self::Windows) }
             target_os = "linux"   => { Some(Self::Linux) }
             target_os = "macos"   => { Some(Self::Macos) }
+            target_os = "android" => { Some(Self::Android) }
+            target_os = "ios"     => { Some(Self::Ios) }
             _ => { None }
         }
     }
@@ -47,6 +51,8 @@ impl MetaRepositoryPlatform {
             MetaRepositoryPlatform::Windows => "windows.json",
             MetaRepositoryPlatform::Linux => "linux.json",
             MetaRepositoryPlatform::Macos => "macos.json",
+            MetaRepositoryPlatform::Android => "android.json",
+            MetaRepositoryPlatform::Ios => "ios.json",
         }
     }
 }
