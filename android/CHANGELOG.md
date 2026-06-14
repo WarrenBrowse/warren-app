@@ -27,12 +27,18 @@ Line wrap the file at 100 chars.                                              Th
 - Add custom location lists to the exit picker (create a list, add/remove exits, delete).
 - Pin each exit's public key on first use and refuse to connect if it changes; add a
   "Reset pinned exit keys" action in tunnel settings to accept a legitimate key rotation.
+- Add Romanian as a new language in the app.
 
 ### Changed
 - Optimize LWO performance. The throughput is around 3 times higher in our benchmarks.
 - Replace the non-functional multi-hop toggle with a read-only indicator: multi-hop is
   available on the desktop app and the Android tunnel connects single-hop for now.
 - Include native logs in problem reports so they are more useful for diagnostics.
+- Translate the wallet, onboarding, and tunnel settings screens into every supported
+  language; previously these Warren screens were only shown in English.
+
+### Fixed
+- Show the Warren wordmark in the app header instead of the Mullvad one.
 
 
 ## [android/2026.4-beta2] - 2026-04-14
