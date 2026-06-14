@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.service
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -57,6 +58,12 @@ data class WarrenTunnelConfig(
     // the default is the Warren QUIC floor. Android-side only (sets
     // VpnService.Builder.setMtu); the Rust side ignores this unknown field.
     @SerialName("mtu") val mtu: Int = 1280,
+    // The selected exit's stable id, used ONLY in-process for the trust-on-
+    // first-use key check (WarrenConnectUseCase) before the config is encoded.
+    // @Transient on purpose: the Rust side has no use for it. The check runs
+    // before serialization, so this is read in-process and intentionally NOT
+    // sent over the wire. Do NOT make it @SerialName (it is not a tunnel knob).
+    @Transient val exitId: String? = null,
 ) {
     @Serializable
     data class EntryHop(

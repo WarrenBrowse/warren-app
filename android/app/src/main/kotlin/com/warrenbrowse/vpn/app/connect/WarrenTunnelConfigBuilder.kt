@@ -60,6 +60,7 @@ class WarrenTunnelConfigBuilder(
         return WarrenTunnelConfig(
             exitPubkeyHex = exit.exitPubkeyHex,
             exitEndpoint = exit.endpoint,
+            exitId = exit.exitId,
             walletPubkeyHex = walletPubkey.value,
             entryHop = null,
             daita = if (daitaEnabled) {

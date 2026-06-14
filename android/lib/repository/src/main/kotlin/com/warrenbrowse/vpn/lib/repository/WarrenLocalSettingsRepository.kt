@@ -6,6 +6,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/** Trust-on-first-use verdict for an exit's pinned public key. */
+sealed interface ExitKeyVerdict {
+    /** No key pinned yet for this exit; the caller should pin the current one. */
+    data object FirstSeen : ExitKeyVerdict
+
+    /** The presented key matches the pin. */
+    data object Match : ExitKeyVerdict
+
+    /** The presented key differs from the [pinned] one; fail closed. */
+    data class Mismatch(val pinned: String) : ExitKeyVerdict
+}
+
 /**
  * Warren-side tunnel settings, persisted via [SharedPreferences].
  *
@@ -254,6 +266,46 @@ class WarrenLocalSettingsRepository(context: Context) {
             ?.filter { it.isNotEmpty() }
             ?: emptyList()
 
+    /**
+     * Trust-on-first-use verdict for an exit's public key (desktop
+     * "pubkey pinning" parity). The first key seen for an [exitId] is the
+     * pin; a later connect with a different key for the same exit is a
+     * [ExitKeyVerdict.Mismatch] (operator key rotation or, defence-in-depth,
+     * a compromised directory). Callers fail closed on a mismatch.
+     */
+    fun exitKeyVerdict(exitId: String, pubkeyHex: String): ExitKeyVerdict {
+        if (exitId.isEmpty() || pubkeyHex.isEmpty()) return ExitKeyVerdict.Match
+        val pinned = prefs.getString(pinKey(exitId), null) ?: return ExitKeyVerdict.FirstSeen
+        return if (pinned == pubkeyHex) {
+            ExitKeyVerdict.Match
+        } else {
+            ExitKeyVerdict.Mismatch(pinned)
+        }
+    }
+
+    /** Pin (or re-pin, on explicit trust) an exit's key. */
+    fun trustExitKey(exitId: String, pubkeyHex: String) {
+        if (exitId.isEmpty() || pubkeyHex.isEmpty()) return
+        val ids = pinnedExitIds()
+        ids.add(exitId)
+        prefs.edit()
+            .putStringSet(KEY_PINNED_EXIT_IDS, ids)
+            .putString(pinKey(exitId), pubkeyHex)
+            .apply()
+    }
+
+    /** Forget every pinned exit key (desktop "Reset pinned exit keys"). */
+    fun resetExitKeyPins() {
+        val editor = prefs.edit()
+        pinnedExitIds().forEach { editor.remove(pinKey(it)) }
+        editor.remove(KEY_PINNED_EXIT_IDS).apply()
+    }
+
+    private fun pinnedExitIds(): MutableSet<String> =
+        prefs.getStringSet(KEY_PINNED_EXIT_IDS, emptySet()).orEmpty().toMutableSet()
+
+    private fun pinKey(exitId: String): String = KEY_EXIT_PIN_PREFIX + exitId
+
     /** Create an empty custom list. No-op if blank or already present. */
     fun createCustomList(name: String) {
         val trimmed = name.trim()
@@ -428,6 +480,8 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val RECENT_DELIMITER = ","
         private const val KEY_CUSTOM_LIST_NAMES = "custom_list_names"
         private const val KEY_CUSTOM_LIST_PREFIX = "custom_list_exits_"
+        private const val KEY_PINNED_EXIT_IDS = "pinned_exit_ids"
+        private const val KEY_EXIT_PIN_PREFIX = "exit_pin_"
         private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"

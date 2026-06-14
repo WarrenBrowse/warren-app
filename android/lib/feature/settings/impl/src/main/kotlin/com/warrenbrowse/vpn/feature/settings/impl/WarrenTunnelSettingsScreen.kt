@@ -253,6 +253,20 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             SectionLabel("Anti-censorship")
             ObfuscationIndicator()
 
+            HorizontalDivider()
+            SectionLabel("Exit key pinning")
+            Text(
+                text = "Warren pins each exit's key on first use and refuses to " +
+                    "connect if it changes. Reset the pins only if you expect a " +
+                    "legitimate key rotation; the next connect re-pins.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { repo.resetExitKeyPins() },
+            ) { Text("Reset pinned exit keys") }
+
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { navigator.navigate(WarrenLocationPickerNavKey) },

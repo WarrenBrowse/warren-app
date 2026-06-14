@@ -344,6 +344,52 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `exit key pinning is trust-on-first-use with mismatch detection`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        val ids = linkedSetOf<String>()
+        val strings = mutableMapOf<String, String>()
+        every { mockPrefs.getStringSet("pinned_exit_ids", any()) } answers { ids.toSet() }
+        every { mockEditor.putStringSet("pinned_exit_ids", any()) } answers {
+            ids.clear()
+            ids.addAll(secondArg<Set<String>?>().orEmpty())
+            mockEditor
+        }
+        every {
+            mockPrefs.getString(match<String> { it.startsWith("exit_pin_") }, any())
+        } answers { strings[firstArg()] }
+        every {
+            mockEditor.putString(match<String> { it.startsWith("exit_pin_") }, any())
+        } answers {
+            strings[firstArg()] = secondArg()
+            mockEditor
+        }
+        every {
+            mockEditor.remove(match<String> { it.startsWith("exit_pin_") || it == "pinned_exit_ids" })
+        } answers {
+            val key = firstArg<String>()
+            if (key == "pinned_exit_ids") ids.clear() else strings.remove(key)
+            mockEditor
+        }
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        // First connect to an exit: no pin yet.
+        assertEquals(ExitKeyVerdict.FirstSeen, repo.exitKeyVerdict("exit-1", "key-a"))
+
+        // Pin it, then the same key matches.
+        repo.trustExitKey("exit-1", "key-a")
+        assertEquals(ExitKeyVerdict.Match, repo.exitKeyVerdict("exit-1", "key-a"))
+
+        // A different key for the same exit is a mismatch carrying the pin.
+        val verdict = repo.exitKeyVerdict("exit-1", "key-b")
+        assertTrue(verdict is ExitKeyVerdict.Mismatch && verdict.pinned == "key-a")
+
+        // Reset clears the pins -> back to first-use.
+        repo.resetExitKeyPins()
+        assertEquals(ExitKeyVerdict.FirstSeen, repo.exitKeyVerdict("exit-1", "key-a"))
+    }
+
+    @Test
     fun `flows emit current value to new collectors`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)
