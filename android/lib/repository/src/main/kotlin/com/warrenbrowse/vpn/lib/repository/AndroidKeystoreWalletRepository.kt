@@ -44,14 +44,21 @@ import kotlinx.coroutines.withContext
  * Keystore: encrypt / decrypt operations happen inside the secure
  * subsystem (hardware-backed on devices that support it).
  *
- * D.5 deferred items (documented as TODO inline):
- *   - `BiometricPrompt` gating around [unlock] + [createWallet] backup
- *     view (currently no biometric gate - any caller in the same
- *     process can decrypt the mnemonic).
+ * Biometric gating: every cleartext read goes through [unlock], which
+ * requires the app-supplied [SensitiveOpAuthorizer] (a `BiometricPrompt`
+ * in production) to succeed first; [decryptMnemonic] is private and has no
+ * other caller. So the mnemonic cannot be decrypted without a user
+ * authentication at the application layer.
+ *
+ * Remaining hardening (deferred):
+ *   - Hardware-enforced auth via `setUserAuthenticationRequired(true)` on
+ *     the master key spec, so an in-process caller cannot use the Cipher
+ *     directly to bypass [unlock]. This needs a `CryptoObject`-bound
+ *     `BiometricPrompt` (the op authorized at the Keystore boundary, not a
+ *     separate boolean prompt) and changes the create/import flow (encrypt
+ *     would also require a recent auth), so it is tracked as its own task.
  *   - Tamper-evidence: a MAC over `(pubkey_ss58, ciphertext, iv)` so a
  *     swapped-out wallet file is detected at boot.
- *   - `setUserAuthenticationRequired(true)` on the master key spec once
- *     BiometricPrompt is in place.
  */
 class AndroidKeystoreWalletRepository(
     context: Context,
@@ -208,9 +215,11 @@ class AndroidKeystoreWalletRepository(
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(KEY_SIZE_BITS)
-            // TODO: setUserAuthenticationRequired(true) +
-            //   setUserAuthenticationParameters once BiometricPrompt is
-            //   wired. Until then any caller in this process can decrypt.
+            // Decryption is gated at the app layer (unlock() requires the
+            // BiometricPrompt authorizer). Hardware-enforcing it here with
+            // setUserAuthenticationRequired(true) needs a CryptoObject-bound
+            // prompt and would also gate encrypt (create/import); tracked as a
+            // follow-up, see the class doc.
             .build()
         gen.init(spec)
         return gen.generateKey()
