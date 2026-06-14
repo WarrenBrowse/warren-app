@@ -17,9 +17,14 @@ use vec1::Vec1;
 /// manifest itself is served from here, and its signature is what is
 /// trusted, not the host.
 ///
+/// Served from the Hetzner/Caddy host (Let's Encrypt cert, ISRG Root X1),
+/// which is what [`PINNED_CERTIFICATE`] pins, so the fetch validates. Do NOT
+/// move this to the Cloudflare-fronted `warrenbrowse.com`: that serves a
+/// Cloudflare cert and the pin would reject the TLS handshake.
+///
 /// Override at runtime via the `WARREN_UPDATE_URL` env var.
 #[cfg(feature = "client")]
-pub const WARREN_RELEASES_URL: &str = "https://warrenbrowse.com/updates/desktop";
+pub const WARREN_RELEASES_URL: &str = "https://api.warrenbrowse.com/updates/desktop";
 
 /// Warren-branded default for the unsigned `latest.json` pointer file,
 /// served alongside the signed per-platform manifests
@@ -27,7 +32,7 @@ pub const WARREN_RELEASES_URL: &str = "https://warrenbrowse.com/updates/desktop"
 ///
 /// Override at runtime via the `WARREN_METADATA_URL` env var.
 #[cfg(feature = "client")]
-pub const WARREN_METADATA_URL: &str = "https://warrenbrowse.com/updates/desktop";
+pub const WARREN_METADATA_URL: &str = "https://api.warrenbrowse.com/updates/desktop";
 
 /// Returns the effective releases-API URL: env var override
 /// (`WARREN_UPDATE_URL`) when set + non-empty, else
