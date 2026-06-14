@@ -219,10 +219,7 @@ private fun LazyListScope.content(
             DaitaListItem(isDaitaEnabled = state.isDaitaEnabled, onDaitaClick = onDaitaClick)
         }
         itemWithDivider {
-            MultihopCell(
-                isMultihopEnabled = state.multihopEnabled,
-                onMultihopClick = onMultihopClick,
-            )
+            MultihopCell(onMultihopClick = onMultihopClick)
         }
         itemWithDivider {
             NavigationListItem(
@@ -346,18 +343,14 @@ private fun DaitaListItem(isDaitaEnabled: Boolean, onDaitaClick: () -> Unit) {
 }
 
 @Composable
-private fun MultihopCell(isMultihopEnabled: Boolean, onMultihopClick: () -> Unit) {
-    val title = stringResource(id = R.string.multihop)
+private fun MultihopCell(onMultihopClick: () -> Unit) {
+    // Multi-hop is not wired on Android (single-hop tunnel only); the cell
+    // always reads "off" and tapping it opens the tunnel settings, which
+    // explain that multi-hop is desktop-only for now. Keep the cell so the
+    // settings layout stays aligned with upstream for future wiring.
     NavigationListItem(
-        title = title,
-        subtitle =
-            stringResource(
-                if (isMultihopEnabled) {
-                    R.string.on
-                } else {
-                    R.string.off
-                }
-            ),
+        title = stringResource(id = R.string.multihop),
+        subtitle = stringResource(R.string.off),
         onClick = onMultihopClick,
         position = Position.Middle,
         testTag = MULTIHOP_CELL_TEST_TAG,

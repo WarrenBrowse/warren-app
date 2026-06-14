@@ -69,8 +69,6 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val natPmpProtocol by repo.natPmpProtocol.collectAsStateWithLifecycle()
     val natPmpExternalPort by repo.natPmpExternalPort.collectAsStateWithLifecycle()
     val natPmpLifetime by repo.natPmpLifetimeSecs.collectAsStateWithLifecycle()
-    val multiHop by repo.multiHopEnabled.collectAsStateWithLifecycle()
-    val entryCountry by repo.entryCountry.collectAsStateWithLifecycle()
     val exitCountry by repo.exitCountry.collectAsStateWithLifecycle()
     val lockdown by repo.lockdownMode.collectAsStateWithLifecycle()
     val ipv6 by repo.ipv6Enabled.collectAsStateWithLifecycle()
@@ -243,30 +241,13 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 )
             }
 
-            ToggleRow(
-                title = "Multi-hop entry",
-                subtitle = "Route via a separate entry relay before the exit (slower, more private).",
-                value = multiHop,
-                onValueChange = repo::setMultiHopEnabled,
+            CountryField(
+                label = "Exit country (ISO code, blank = automatic)",
+                initial = exitCountry.orEmpty(),
+                onCommit = repo::setExitCountry,
             )
 
-            if (multiHop) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    CountryField(
-                        label = "Entry country (ISO code, blank = automatic)",
-                        initial = entryCountry.orEmpty(),
-                        onCommit = repo::setEntryCountry,
-                    )
-                    CountryField(
-                        label = "Exit country (ISO code, blank = automatic)",
-                        initial = exitCountry.orEmpty(),
-                        onCommit = repo::setExitCountry,
-                    )
-                }
-            }
+            MultiHopIndicator()
 
             HorizontalDivider()
             SectionLabel("Anti-censorship")
@@ -290,6 +271,22 @@ fun WarrenTunnelSettings(navigator: Navigator) {
  * not apply to Warren tunnels, so no picker is shown - this mirrors the
  * desktop anti-censorship view.
  */
+@Composable
+private fun MultiHopIndicator() {
+    Text(
+        text = "Multi-hop is not available on Android yet.",
+        style = MaterialTheme.typography.titleSmall,
+    )
+    Text(
+        text = "Multi-hop routes traffic through a separate entry relay so the exit " +
+            "never sees your IP. It is available on the Warren desktop app. The " +
+            "Android tunnel currently connects single-hop, so no multi-hop " +
+            "indicator is shown while connected.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
 @Composable
 private fun ObfuscationIndicator() {
     Text(

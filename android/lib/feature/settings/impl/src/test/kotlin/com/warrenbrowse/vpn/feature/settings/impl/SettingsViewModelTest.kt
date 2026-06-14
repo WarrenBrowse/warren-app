@@ -31,7 +31,6 @@ class SettingsViewModelTest {
     private val mockAppVersionInfoRepository: AppVersionInfoRepository = mockk()
 
     private val walletStateFlow = MutableStateFlow<WalletState>(WalletState.Absent)
-    private val multiHopFlow = MutableStateFlow(false)
     private val daitaFlow = MutableStateFlow(false)
     private val versionInfo =
         MutableStateFlow(VersionInfo(currentVersion = "", isSupported = false))
@@ -41,7 +40,6 @@ class SettingsViewModelTest {
     @BeforeEach
     fun setup() {
         every { mockWalletRepository.state } returns walletStateFlow
-        every { mockWarrenLocalSettings.multiHopEnabled } returns multiHopFlow
         every { mockWarrenLocalSettings.daitaEnabled } returns daitaFlow
         every { mockAppVersionInfoRepository.versionInfo } returns versionInfo
 
@@ -90,17 +88,6 @@ class SettingsViewModelTest {
             val item = awaitItem()
             assertIs<Lc.Content<SettingsUiState>>(item)
             assertEquals(true, item.value.isSupportedVersion)
-        }
-    }
-
-    @Test
-    fun `multi-hop toggle flows from WarrenLocalSettings`() = runTest {
-        multiHopFlow.value = true
-
-        viewModel.uiState.test {
-            val item = awaitItem()
-            assertIs<Lc.Content<SettingsUiState>>(item)
-            assertEquals(true, item.value.multihopEnabled)
         }
     }
 

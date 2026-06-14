@@ -25,15 +25,13 @@ class SettingsViewModel(
     val uiState: StateFlow<Lc<Unit, SettingsUiState>> =
         combine(
                 walletRepository.state,
-                warrenLocalSettings.multiHopEnabled,
                 warrenLocalSettings.daitaEnabled,
                 appVersionInfoRepository.versionInfo,
-            ) { walletState, multihop, daita, versionInfo ->
+            ) { walletState, daita, versionInfo ->
                 SettingsUiState(
                         isLoggedIn = walletState is WalletState.Ready,
                         appVersion = versionInfo.currentVersion,
                         isSupportedVersion = versionInfo.isSupported,
-                        multihopEnabled = multihop,
                         isDaitaEnabled = daita,
                         isPlayBuild = isPlayBuild,
                     )

@@ -104,12 +104,13 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `multi-hop on injects an entry hop`() {
+    fun `multi-hop never injects an entry hop (single-hop only on Android)`() {
+        // warren-jni run_session dials single-hop and ignores entry_hop, so the
+        // builder must never populate it (no false multi-hop privacy promise).
         val builder = WarrenTunnelConfigBuilder(mockRepo(multiHop = true), mockCatalog())
         val config = builder.build(pubkey)!!
 
-        assertNotNull(config.entryHop)
-        assertTrue(config.entryHop?.relayEndpoint?.isNotEmpty() == true)
+        assertNull(config.entryHop)
     }
 
     @Test
@@ -185,7 +186,7 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `multi-hop entry country picks a distinct entry relay in that country`() {
+    fun `multi-hop entry country does not populate an entry hop`() {
         val fr = sampleRelay.copy(
             exitId = "ffffffffffffffffffffffffffffffff",
             exitPubkeyHex = "f".repeat(64),
@@ -196,9 +197,10 @@ class WarrenTunnelConfigBuilderTest {
             mockRepo(multiHop = true, entryCountry = "FR"),
             mockCatalog(listOf(sampleRelay, fr)),
         ).build(pubkey)!!
-        // Exit defaults to first active (DE sample); entry is the FR relay.
+        // Exit defaults to first active (DE sample); entry hop stays null since
+        // multi-hop is not wired on Android.
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
-        assertEquals(fr.exitPubkeyHex, config.entryHop?.relayPubkeyHex)
+        assertNull(config.entryHop)
     }
 
     @Test
@@ -290,7 +292,7 @@ class WarrenTunnelConfigBuilderTest {
         )
         val config = builder.build(pubkey)!!
 
-        assertNotNull(config.entryHop)
+        assertNull(config.entryHop)
         assertNotNull(config.daita)
         assertTrue(config.natPmpEnabled)
         assertTrue(config.obfuscationM40)

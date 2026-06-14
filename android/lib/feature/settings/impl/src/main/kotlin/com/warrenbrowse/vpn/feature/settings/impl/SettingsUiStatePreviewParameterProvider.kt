@@ -15,7 +15,6 @@ class SettingsUiStatePreviewParameterProvider :
                     isSupportedVersion = true,
                     isDaitaEnabled = true,
                     isPlayBuild = true,
-                    multihopEnabled = false,
                 )
                 .toLc(),
             SettingsUiState(
@@ -24,7 +23,6 @@ class SettingsUiStatePreviewParameterProvider :
                     isSupportedVersion = false,
                     isDaitaEnabled = false,
                     isPlayBuild = false,
-                    multihopEnabled = false,
                 )
                 .toLc(),
         )

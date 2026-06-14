@@ -6,5 +6,4 @@ data class SettingsUiState(
     val isSupportedVersion: Boolean,
     val isDaitaEnabled: Boolean,
     val isPlayBuild: Boolean,
-    val multihopEnabled: Boolean,
 )

@@ -29,7 +29,6 @@ class WarrenTunnelConfigBuilder(
     fun build(walletPubkey: WalletAddress): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
-        val multiHopEnabled = localSettings.multiHopEnabled.value
         val obfuscationM40 = localSettings.obfuscationM40.value
         val ipv6Enabled = localSettings.ipv6Enabled.value
         val lockdownMode = localSettings.lockdownMode.value
@@ -38,7 +37,6 @@ class WarrenTunnelConfigBuilder(
         val relays = relayCatalog.listRelays()
         val selectedExitId = localSettings.selectedExitId.value
         val exitCountry = localSettings.exitCountry.value
-        val entryCountry = localSettings.entryCountry.value
 
         // Exit precedence: explicit picker > preferred country > first active.
         val exit = relays
@@ -50,28 +48,21 @@ class WarrenTunnelConfigBuilder(
                 return null
             }
 
-        // Multi-hop picks a distinct entry relay (different exit_id than the
-        // chosen exit). With a single-entry catalogue there is no distinct
-        // entry to pick, so the multi-hop toggle is honoured by sending the
-        // same relay as entry; the exit still negotiates the multi-hop hop the
-        // same way.
-        val entryRelay = if (multiHopEnabled) {
-            val distinct = relays.filter { it.active && it.exitId != exit.exitId }
-            entryCountry?.let { c -> distinct.firstOrNull { it.country.equals(c, ignoreCase = true) } }
-                ?: distinct.firstOrNull()
-                ?: exit
-        } else null
-
+        // Multi-hop is NOT wired on Android: warren-jni `run_session` dials the
+        // exit single-hop via `ClientTunnel::connect` and never reads
+        // `entry_hop` (tunnel.rs marks it dead_code). Real multi-hop needs the
+        // `warren_client::MultiHopSupervisor` path (signed entry+exit HPKE
+        // descriptors + `pump_multi_hop_bidirectional`), as on desktop via
+        // `talpid-warren-tunnel::start_multi_hop`. Until that JNI integration
+        // lands we always send `entry_hop = null` so the connection card never
+        // advertises a multi-hop privacy guarantee the data plane does not
+        // provide. Do NOT reintroduce a populated entry_hop here without wiring
+        // the supervisor, it would be a false privacy promise.
         return WarrenTunnelConfig(
             exitPubkeyHex = exit.exitPubkeyHex,
             exitEndpoint = exit.endpoint,
             walletPubkeyHex = walletPubkey.value,
-            entryHop = entryRelay?.let { hop ->
-                WarrenTunnelConfig.EntryHop(
-                    relayPubkeyHex = hop.exitPubkeyHex,
-                    relayEndpoint = hop.endpoint,
-                )
-            },
+            entryHop = null,
             daita = if (daitaEnabled) {
                 WarrenTunnelConfig.DaitaSpec(
                     paddingMachine = DEFAULT_DAITA_MACHINE,

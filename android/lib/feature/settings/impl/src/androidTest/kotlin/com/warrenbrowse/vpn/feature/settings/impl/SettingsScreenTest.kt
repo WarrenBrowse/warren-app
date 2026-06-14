@@ -61,7 +61,6 @@ class SettingsScreenTest {
                         isLoggedIn = true,
                         isSupportedVersion = true,
                         isPlayBuild = false,
-                        multihopEnabled = false,
                         isDaitaEnabled = false,
                     )
                     .toLc()
@@ -84,7 +83,6 @@ class SettingsScreenTest {
                         isLoggedIn = false,
                         isSupportedVersion = true,
                         isPlayBuild = false,
-                        multihopEnabled = false,
                         isDaitaEnabled = false,
                     )
                     .toLc()
