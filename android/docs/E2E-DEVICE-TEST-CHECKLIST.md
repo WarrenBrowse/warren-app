@@ -20,10 +20,17 @@
       mais la CI checkout warren-core au SHA pin. Bumper le pin vers un commit
       warren-core qui inclut `6bb7287` une fois le workstream concurrent
       stabilisé.
-- [ ] Builder un APK debug complet (pas seulement `compileKotlin`/`cargo
-      check`) : `cd android && ./gradlew :app:assembleProdDebug`. Cela
-      cross-compile `warren-jni` via le NDK et package le `.so`. Confirmer que
-      le build passe de bout en bout.
+- [x] Builder un APK debug complet : `./gradlew :app:assembleProdDebug`.
+      VALIDE : `app-prod-debug.apk` (~105 Mo) avec `libwarren_jni.so` pour les
+      4 ABIs (arm64-v8a, armeabi-v7a, x86, x86_64). Le cross-compile Rust NDK +
+      Kotlin + packaging passe de bout en bout.
+- [ ] PREREQUIS BUILD (env) : le plugin rust-android lance `python` au link
+      (`linker-wrapper.sh`). Sur macOS recent seul `python3` existe -> le build
+      echoue avec `python: command not found` (exit 127). Fix au choix :
+      - rapide / local : un shim `python` -> `python3` sur le PATH ;
+      - propre / equipe : ajouter `pythonCommand = "python3"` dans le bloc
+        `cargo { }` de `android/app/build.gradle.kts` (ou `rust.pythonCommand`
+        dans `gradle.properties`). NON commite (decision infra a valider).
 - [ ] Installer l'APK sur le device.
 
 ## 1. CRITIQUE : le connect single-hop fonctionne ?
@@ -73,17 +80,14 @@ Validation :
 
 ## 3. Activer et valider le keystore hardware (CryptoObject)
 
-Le chemin decrypt est cable (`AndroidKeystoreWalletRepository.unlock` branche
-hardware) ; il reste le chemin encrypt et le flip du flag.
+Les chemins decrypt (`unlock`) ET encrypt (`createWallet`/`importWallet` via
+`WarrenWalletLoginScreen` -> `WarrenWalletViewModel` -> repo) sont desormais
+cables (CryptoObject). Il ne reste que le flip du flag + la validation device.
 
 Activation :
 
-- [ ] Cabler un `CipherAuthorizer` dans `createWallet` / `importWallet` pour le
-      chemin ENCRYPT (aujourd'hui ils ne prennent pas d'authorizer). Mirroir du
-      chemin decrypt : construire le `Cipher` en mode ENCRYPT, l'autoriser via
-      `authorizeCipher` (CryptoObject), puis `doFinal`. Cela impose un prompt
-      biometrique a la creation/import de wallet.
 - [ ] Passer `HARDWARE_AUTH = true` dans `AndroidKeystoreWalletRepository`.
+      C'est le SEUL changement de code requis ; tout le reste est cable.
 
 Validation :
 
