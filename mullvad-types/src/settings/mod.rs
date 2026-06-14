@@ -484,13 +484,13 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             relay_settings: RelaySettings::Normal(RelayConstraints {
-                location: Constraint::Only(LocationConstraint::Location(
-                    GeographicLocationConstraint::Country("se".to_owned()),
-                )),
+                // Keep this `Any`: a specific country default has no match in
+                // Warren's exit inventory and renders as "Unknown" in the
+                // selector. `Any` ("Automatic") matches how Warren actually
+                // picks exits via the multi-hop directory.
+                location: Constraint::Any,
                 wireguard_constraints: WireguardConstraints {
-                    entry_location: Constraint::Only(LocationConstraint::Location(
-                        GeographicLocationConstraint::Country("se".to_owned()),
-                    )),
+                    entry_location: Constraint::Any,
                     ..Default::default()
                 },
                 ..Default::default()
