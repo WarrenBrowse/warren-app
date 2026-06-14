@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.compose.koinInject
 
@@ -72,13 +72,14 @@ fun OnboardingScreen(navigator: Navigator) {
             body = stringResource(R.string.onboarding_prop_keys_body),
         )
 
-        Button(
+        VariantButton(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             onClick = {
                 settings.setOnboardingCompleted(true)
                 navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
             },
-        ) { Text(stringResource(R.string.onboarding_get_started)) }
+            text = stringResource(R.string.onboarding_get_started),
+        )
     }
 }
 

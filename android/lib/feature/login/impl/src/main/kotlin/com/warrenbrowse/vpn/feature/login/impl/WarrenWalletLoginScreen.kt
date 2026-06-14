@@ -1,12 +1,16 @@
 package com.warrenbrowse.vpn.feature.login.impl
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,31 +21,36 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * D.5 wallet entry-point screen.
+ * D.5 wallet entry-point screen. Mirrors the desktop login UX: the Warren
+ * mark, a short intro, then two full-width choices.
  *
- * On first launch with no persisted wallet, the user is offered two
- * branches:
- *   - `Generate recovery phrase` -> emit `BackupGeneratedMnemonic` so
- *     the host NavController routes to `WarrenWalletBackupScreen`.
- *   - `Restore from recovery phrase` -> inline `MnemonicInput` for the
- *     12-word phrase, then `WarrenWalletViewModel.importWallet`, which
- *     emits `WalletReady` on success.
+ *   - `Generate recovery phrase` (positive/green CTA) emits
+ *     `BackupGeneratedMnemonic` so the host NavController routes to
+ *     `WarrenWalletBackupScreen`.
+ *   - `Restore from recovery phrase` (primary/blue) opens an inline
+ *     `MnemonicInput` for the 12-word phrase, then
+ *     `WarrenWalletViewModel.importWallet`, which emits `WalletReady` on
+ *     success.
  *
- * The ViewModel owns the repository interaction and one-shot event
- * dispatch (Channel) so re-emission on config change does not
- * re-navigate. Navigation routing itself is owned by the app NavGraph;
- * this screen only forwards events.
+ * The ViewModel owns the repository interaction and one-shot event dispatch
+ * (Channel) so re-emission on config change does not re-navigate.
  */
 @Composable
 fun WarrenWalletLoginScreen(
@@ -75,24 +84,37 @@ fun WarrenWalletLoginScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .background(MaterialTheme.colorScheme.surface)
+            .verticalScroll(rememberScrollState())
+            .padding(
+                start = Dimens.sideMargin,
+                end = Dimens.sideMargin,
+                top = Dimens.screenTopMargin,
+                bottom = Dimens.screenBottomMargin,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
     ) {
-        Text(
-            text = stringResource(R.string.wallet_login_title),
-            style = MaterialTheme.typography.headlineMedium,
-        )
-        Text(
-            text = if (importMode) {
-                stringResource(R.string.wallet_login_import_prompt)
-            } else {
-                stringResource(R.string.wallet_login_subtitle)
-            },
-            style = MaterialTheme.typography.bodyMedium,
+        Image(
+            painter = painterResource(id = R.drawable.logo_icon),
+            contentDescription = null,
+            modifier = Modifier.size(96.dp).padding(top = Dimens.mediumPadding),
         )
 
         if (importMode) {
+            Text(
+                text = stringResource(R.string.wallet_import_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.wallet_login_import_prompt),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
             MnemonicInput(
                 onPhraseChange = { phrase ->
                     importPhrase = phrase
@@ -100,35 +122,74 @@ fun WarrenWalletLoginScreen(
                 },
             )
             inlineError?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
             }
-            Button(
-                onClick = { vm.importWallet(importPhrase, authorizer) },
-                enabled = importPhrase.isNotBlank(),
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
             ) {
-                Text(text = stringResource(R.string.wallet_import_cta))
-            }
-            OutlinedButton(onClick = { importMode = false; inlineError = null }) {
-                Text(text = stringResource(R.string.back))
+                VariantButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { vm.importWallet(importPhrase, authorizer) },
+                    text = stringResource(R.string.wallet_import_cta),
+                    isEnabled = importPhrase.isNotBlank(),
+                )
+                PrimaryTextButton(
+                    onClick = { importMode = false; inlineError = null },
+                    text = stringResource(R.string.back),
+                )
             }
         } else {
+            Text(
+                text = stringResource(R.string.onboarding_welcome_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.wallet_login_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
             inlineError?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
             }
-            Button(onClick = { vm.createWallet(authorizer) }) {
-                Text(text = stringResource(R.string.wallet_create_cta))
-            }
-            OutlinedButton(onClick = { importMode = true }) {
-                Text(text = stringResource(R.string.wallet_import_title))
+
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
+            ) {
+                VariantButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { vm.createWallet(authorizer) },
+                    text = stringResource(R.string.wallet_create_cta),
+                )
+                PrimaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { importMode = true },
+                    text = stringResource(R.string.wallet_import_title),
+                )
             }
         }
 
-        // `state` is observed so the host can still react if the wallet
-        // gets persisted out-of-band (e.g. import succeeded just before
-        // a config change re-composed us). The ViewModel emits a
-        // `WalletReady` event in that path too, so navigation is event-
-        // driven; the observation here just keeps the recomposition
-        // model honest.
+        // `state` is observed so the host can react if the wallet gets
+        // persisted out-of-band (e.g. import succeeded just before a config
+        // change recomposed us). The ViewModel emits a `WalletReady` event in
+        // that path too, so navigation stays event-driven.
         @Suppress("UNUSED_EXPRESSION") state
     }
 }

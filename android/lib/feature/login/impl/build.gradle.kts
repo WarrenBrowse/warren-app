@@ -20,6 +20,8 @@ dependencies {
     // lib/ui/component and WalletState from lib/model.
     implementation(projects.lib.model)
     implementation(projects.lib.ui.component)
+    implementation(projects.lib.ui.designsystem)
+    implementation(projects.lib.ui.theme)
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)
