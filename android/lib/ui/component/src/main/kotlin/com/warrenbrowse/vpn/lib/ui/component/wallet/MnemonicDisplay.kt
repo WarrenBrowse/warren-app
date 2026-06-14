@@ -20,18 +20,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.resource.R
 
 /**
- * Read-only display of a BIP39 mnemonic, blurred by default. The user
- * taps to reveal - per the D.5 brief Warren omits a "copy mnemonic" CTA
- * to defeat clipboard-scraping malware, so we make the reveal action
- * intentional and observable.
+ * Read-only display of a BIP39 mnemonic.
  *
- * The mnemonic is rendered as a 6x2 grid of word cards (or 8x3 for
- * 24-word variant) matching `MnemonicInput`'s layout so the user can
- * visually correlate the backup view with the input field.
+ * By default the phrase is blurred and the user taps to reveal (defeats
+ * clipboard-scraping/over-the-shoulder leaks). Pass [alwaysRevealed] = true to
+ * show it unblurred from the start (the backup screen, which mirrors the
+ * desktop where the phrase is always visible alongside a copy action).
+ *
+ * The mnemonic is rendered as a 6x2 grid of word cards (or 8x3 for the 24-word
+ * variant) matching `MnemonicInput`'s layout so the user can visually correlate
+ * the backup view with the input field.
  *
  * Caller responsibilities:
  *   - The `phrase` parameter is the cleartext mnemonic and must only be
@@ -45,24 +49,30 @@ import androidx.compose.ui.unit.dp
 fun MnemonicDisplay(
     phrase: String,
     modifier: Modifier = Modifier,
+    alwaysRevealed: Boolean = false,
 ) {
     val words = remember(phrase) { phrase.trim().split(' ') }
-    var revealed by remember { mutableStateOf(false) }
+    var revealed by remember { mutableStateOf(alwaysRevealed) }
 
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = if (revealed) "Tap any word to hide" else "Tap to reveal",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (!alwaysRevealed) {
+            Text(
+                text = stringResource(
+                    if (revealed) R.string.wallet_mnemonic_hide_hint
+                    else R.string.wallet_mnemonic_reveal_hint
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { revealed = !revealed },
+                .then(if (alwaysRevealed) Modifier else Modifier.clickable { revealed = !revealed }),
         ) {
             Column(
                 modifier = Modifier
