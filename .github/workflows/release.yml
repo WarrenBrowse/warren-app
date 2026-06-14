@@ -39,8 +39,8 @@
 #   WARREN_UPDATES_SSH_KEY / _HOST / _USER / _PATH  (publish-update-metadata)
 #     SSH private key + target for scp'ing the signed `*.json` manifests to the
 #     Hetzner/Caddy host that serves them (Let's Encrypt cert, matching the
-#     client pin) at https://api.warrenbrowse.com/updates/desktop/. Typical
-#     values: _USER=warren, _HOST=api.warrenbrowse.com (or the VPS IP),
+#     client pin) at https://api.warrenbrowse.com/updates/desktop/. Values:
+#     _USER=warren-deploy, _HOST=204.168.244.76 (the API VPS IP),
 #     _PATH=/srv/warren-updates/desktop. When unset, the signed manifests are
 #     only attached as a run artifact.
 #

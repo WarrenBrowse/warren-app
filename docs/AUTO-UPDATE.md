@@ -118,33 +118,61 @@ a Cloudflare cert; serving manifests from there would fail the TLS pin. (The
 manifests are ed25519-signed, so TLS is only defense-in-depth, but a failed pin
 means no updates at all.)
 
-- Caddy route: `warren-core/infra/docker/Caddyfile`, the `{$WARREN_API_DOMAIN}`
-  vhost, `handle_path /updates/*` → `file_server` rooted at `/srv/updates`.
-- Volume: `warren-core/infra/docker/docker-compose.yml` mounts host
-  `/srv/warren-updates` → container `/srv/updates:ro`.
+- Source of truth: `warren-core/infra/docker/Caddyfile` (the `{$WARREN_API_DOMAIN}`
+  vhost gains `handle_path /updates/*` → `file_server` rooted at `/srv/updates`)
+  and `docker-compose.yml` (mounts host `/srv/warren-updates` →
+  `/srv/updates:ro`).
+- **Live prod reality:** the API host (`warren-backend-api`, Hetzner hel1,
+  `204.168.244.76`) runs the stack with **docker compose**, but from a
+  hand-managed directory `/srv/warren/` (NOT the repo, NOT a git clone; files
+  are deployed by `update-prod.sh` with `.bak.<ts>` backups before each change).
+  The live compose is `/srv/warren/compose.prod.yml` and the live config is
+  `/srv/warren/Caddyfile`. SSH access is **`root@204.168.244.76`** (there is no
+  `warren` user; the docs under `warren-core` that show `warren@<ip>` are
+  outdated). So applying this change in prod means editing those two files in
+  `/srv/warren/` and recreating only the caddy container.
 - Override at runtime with the `WARREN_UPDATE_URL` / `WARREN_METADATA_URL` env
   vars (staging mirrors, local testing).
 
-### One-time VPS setup
+### One-time host setup
+
+Run on the API host (`ssh root@204.168.244.76`). A dedicated unprivileged
+`warren-deploy` user owns the manifest dir so CI never logs in as root.
 
 ```sh
-# On the Hetzner API host:
-ssh warren@api.warrenbrowse.com
-sudo mkdir -p /srv/warren-updates/desktop
-sudo chown -R warren:warren /srv/warren-updates
+# 1. Dedicated deploy user + the served directory.
+adduser --system --group --home /srv/warren-updates --shell /usr/sbin/nologin warren-deploy
+mkdir -p /srv/warren-updates/desktop
+chown -R warren-deploy:warren-deploy /srv/warren-updates
 
-# A dedicated CI deploy key (do not reuse a personal key):
-ssh-keygen -t ed25519 -f warren-updates-deploy -C "ci-updates-deploy" -N ""
-ssh-copy-id -i warren-updates-deploy.pub warren@api.warrenbrowse.com
-# -> private key content goes into the WARREN_UPDATES_SSH_KEY secret.
+# 2. Authorize a dedicated CI deploy key (generate it offline, NOT a personal key):
+#    ssh-keygen -t ed25519 -f warren-updates-deploy -C ci-updates-deploy -N ""
+mkdir -p /srv/warren-updates/.ssh
+echo 'ssh-ed25519 AAAA...ci-updates-deploy' > /srv/warren-updates/.ssh/authorized_keys
+chown -R warren-deploy:warren-deploy /srv/warren-updates/.ssh
+chmod 700 /srv/warren-updates/.ssh && chmod 600 /srv/warren-updates/.ssh/authorized_keys
+#    -> the private key goes into the WARREN_UPDATES_SSH_KEY secret.
 
-# Redeploy Caddy so the /updates route + the mount take effect:
-cd <warren-core infra/docker on the host> && docker compose up -d caddy
+# 3. Add the Caddy route + the mount, then recreate only caddy (~seconds blip).
+cd /srv/warren
+cp Caddyfile Caddyfile.bak.$(date +%s)
+cp compose.prod.yml compose.prod.yml.bak.$(date +%s)
+#    - add `handle_path /updates/*` to the {$WARREN_API_DOMAIN} vhost
+#      (wrap the existing `reverse_proxy warren-api:8080` in `handle { }`)
+#    - add `- /srv/warren-updates:/srv/updates:ro` to the caddy service volumes
+docker run --rm -v /srv/warren/Caddyfile:/etc/caddy/Caddyfile:ro caddy:2.8-alpine \
+    caddy validate --config /etc/caddy/Caddyfile      # sanity-check before applying
+docker compose -f compose.prod.yml up -d caddy
 
-# Verify:
-echo '{"ok":true}' | sudo -u warren tee /srv/warren-updates/desktop/test.json
-curl https://api.warrenbrowse.com/updates/desktop/test.json   # -> {"ok":true}
+# 4. Verify.
+curl -fsS https://api.warrenbrowse.com/healthz                       # API still up
+echo '{"ok":true}' > /srv/warren-updates/desktop/test.json
+curl -fsS https://api.warrenbrowse.com/updates/desktop/test.json     # -> {"ok":true}
+rm /srv/warren-updates/desktop/test.json
 ```
+
+Rollback if anything is off: restore the `.bak.<ts>` files and
+`docker compose -f compose.prod.yml up -d caddy` again.
 
 ## CI: publishing signed manifests
 
@@ -175,10 +203,10 @@ GitHub repo **secrets**
 | Secret | Value |
 | --- | --- |
 | `WARREN_UPDATE_SIGNING_KEY` | the dedicated ed25519 secret (hex) |
-| `WARREN_UPDATES_SSH_USER` | `warren` |
-| `WARREN_UPDATES_SSH_HOST` | `api.warrenbrowse.com` (or the VPS IP) |
+| `WARREN_UPDATES_SSH_USER` | `warren-deploy` |
+| `WARREN_UPDATES_SSH_HOST` | `204.168.244.76` (the API VPS IP; `api.warrenbrowse.com` resolves to it, the IP avoids any future DNS/proxy surprise) |
 | `WARREN_UPDATES_SSH_PATH` | `/srv/warren-updates/desktop` |
-| `WARREN_UPDATES_SSH_KEY` | the CI deploy private key |
+| `WARREN_UPDATES_SSH_KEY` | the CI deploy private key (the `warren-deploy` key) |
 
 GitHub repo **variable**
 (https://github.com/WarrenBrowse/warren-app/settings/variables/actions):
