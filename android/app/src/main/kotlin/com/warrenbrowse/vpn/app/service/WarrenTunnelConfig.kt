@@ -2,6 +2,8 @@ package com.warrenbrowse.vpn.app.service
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 // JSON payload handed to `WarrenJni.connectTunnel`. Lives in this module
 // rather than `lib/model` because the Rust side reads it via `serde_json`
@@ -97,3 +99,17 @@ data class WarrenTunnelConfig(
         }
     }
 }
+
+/**
+ * Serialise to the JSON wire form handed to `WarrenJni.connectTunnel` and
+ * read by the Rust `parse_config`. Defined here (in the main source set,
+ * where the kotlinx-serialization compiler plugin is applied) so callers and
+ * tests share one encode path; the generated serializer is not resolvable
+ * from the unit-test source set.
+ */
+fun WarrenTunnelConfig.toWireJson(): String = Json.encodeToString(this)
+
+/** Inverse of [toWireJson]; parses the wire form back into a config. */
+fun warrenTunnelConfigFromWireJson(json: String): WarrenTunnelConfig =
+    Json.decodeFromString(json)
+

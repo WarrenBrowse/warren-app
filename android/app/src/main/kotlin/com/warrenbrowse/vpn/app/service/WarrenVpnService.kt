@@ -12,7 +12,6 @@ import arrow.atomic.AtomicInt
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
@@ -195,7 +194,7 @@ class WarrenVpnService : LifecycleVpnService() {
                     }
                     else -> {
                         val config = try {
-                            Json.decodeFromString<WarrenTunnelConfig>(configJson)
+                            warrenTunnelConfigFromWireJson(configJson)
                         } catch (e: Exception) {
                             Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
                             null

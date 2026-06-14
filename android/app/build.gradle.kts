@@ -22,6 +22,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.kotlin.parcelize)
+    // Required so the @Serializable WarrenTunnelConfig gets a generated
+    // serializer; without it Json.encodeToString/decodeFromString throw
+    // "Serializer not found" at runtime when (de)serialising the tunnel config.
+    alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.compose)
     alias(libs.plugins.baselineprofile)

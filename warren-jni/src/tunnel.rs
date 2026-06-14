@@ -380,3 +380,88 @@ fn natpmp_event_json(event: &warren_natpmp_client::NatPmpEvent) -> Option<String
     };
     Some(json.to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::parse_config;
+
+    // The exact JSON the Kotlin `WarrenTunnelConfig.toWireJson()` produces for
+    // a fully-populated config. Kept in sync with
+    // `WarrenTunnelConfigSerializationTest` on the Android side: both pin the
+    // same wire contract so a `@SerialName` / serde field-name drift fails
+    // loudly on at least one side (neither uses `deny_unknown_fields`).
+    const FULL_WIRE_JSON: &str = r#"{
+        "exit_pubkey_hex": "abababababababababababababababababababababababababababababababab",
+        "exit_endpoint": "1.2.3.4:443",
+        "wallet_pubkey_hex": "wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB",
+        "entry_hop": {
+            "relay_pubkey_hex": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+            "relay_endpoint": "5.6.7.8:443"
+        },
+        "daita": {"padding_machine": "tamaraw", "normalize_packets": false},
+        "bypass_cidrs": ["10.0.0.0/8"],
+        "nat_pmp_enabled": true,
+        "nat_pmp_protocol": "tcp",
+        "nat_pmp_external_port": 51820,
+        "nat_pmp_lifetime_secs": 21600,
+        "obfuscation_m40": true,
+        "enable_ipv6": true,
+        "lockdown_mode": true,
+        "dns": {
+            "state": "custom",
+            "custom_servers": ["9.9.9.9"],
+            "block_ads": true,
+            "block_trackers": true,
+            "block_malware": true,
+            "block_adult_content": true,
+            "block_gambling": true,
+            "block_social_media": true
+        },
+        "allow_lan": true,
+        "mtu": 1200
+    }"#;
+
+    #[test]
+    fn parses_full_kotlin_wire_payload() {
+        let cfg = parse_config(FULL_WIRE_JSON).expect("full payload must parse");
+        assert_eq!(
+            cfg.exit_pubkey_hex,
+            "abababababababababababababababababababababababababababababababab"
+        );
+        assert_eq!(cfg.exit_endpoint, "1.2.3.4:443");
+        assert!(cfg.entry_hop.is_some());
+        assert!(cfg.daita.is_some());
+        assert_eq!(cfg.nat_pmp_enabled, Some(true));
+        assert_eq!(cfg.nat_pmp_protocol.as_deref(), Some("tcp"));
+        assert_eq!(cfg.nat_pmp_external_port, Some(51820));
+        assert_eq!(cfg.nat_pmp_lifetime_secs, Some(21600));
+        assert_eq!(cfg.enable_ipv6, Some(true));
+        assert_eq!(cfg.lockdown_mode, Some(true));
+        assert!(cfg.dns.is_some());
+    }
+
+    #[test]
+    fn android_only_keys_are_accepted_and_ignored() {
+        // `allow_lan` and `mtu` are enforced Android-side and absent from the
+        // Rust struct; parsing must not fail on them (no deny_unknown_fields).
+        let json = r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443","allow_lan":true,"mtu":1200}"#;
+        assert!(parse_config(json).is_ok());
+    }
+
+    #[test]
+    fn minimal_payload_defaults_optional_fields() {
+        let json = r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443"}"#;
+        let cfg = parse_config(json).expect("minimal payload must parse");
+        assert!(cfg.entry_hop.is_none());
+        assert!(cfg.daita.is_none());
+        assert_eq!(cfg.nat_pmp_enabled, None);
+        assert_eq!(cfg.nat_pmp_protocol, None);
+    }
+
+    #[test]
+    fn missing_required_field_is_an_error() {
+        // Drop `exit_pubkey_hex`: serde must reject (the field has no default).
+        let json = r#"{"exit_endpoint":"1.2.3.4:443"}"#;
+        assert!(parse_config(json).is_err());
+    }
+}

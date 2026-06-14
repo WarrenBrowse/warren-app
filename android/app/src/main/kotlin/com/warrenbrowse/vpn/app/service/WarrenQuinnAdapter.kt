@@ -22,8 +22,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 // Owns the Warren Quinn tunnel lifecycle for a given `WarrenVpnService`
 // instance. Sits between the Android `VpnService` API and the Rust JNI:
@@ -119,7 +117,7 @@ class WarrenQuinnAdapter(
                     vpnService,
                     fd.detachFd(),
                     phrase,
-                    Json.encodeToString(config),
+                    config.toWireJson(),
                 )
             }
         } catch (e: IllegalStateException) {
@@ -291,39 +289,31 @@ class WarrenQuinnAdapter(
         activeFd?.close()
         activeFd = null
         _natPmpStatus.value = NATPMP_IDLE
-        if (userInitiatedDisconnect) {
-            unregisterNetworkCallback()
-            activeMnemonic?.close()
-            activeMnemonic = null
-            _state.value = WarrenTunnelState.Failed(reason)
-            return
-        }
-        // An unexpected drop always fails closed FIRST: we put up the
-        // blackhole interface and retry, regardless of the kill-switch
-        // setting, so traffic never leaks to the physical network while the
-        // tunnel recovers. This is the Mullvad model: an active tunnel that
-        // drops blocks, it does not leak. The kill-switch setting only
-        // decides the resting state once recovery has clearly failed.
-        if (flapDetector.recordDrop(SystemClock.elapsedRealtime())) {
-            if (config.lockdownMode) {
-                // Kill switch on: stay blocked (parked) until the user acts.
-                // The network callback stays registered so a genuine handover
-                // or a user reconnect resumes the normal flow.
-                Logger.w("WarrenQuinnAdapter: tunnel flapping, parking ($reason)")
-                enterBlockingMode(config, reason, flapping = true)
-            } else {
-                // Kill switch off: recovery has failed, release traffic so the
-                // user is not stranded offline.
-                Logger.w("WarrenQuinnAdapter: tunnel flapping, releasing ($reason)")
+        // Only an unexpected drop counts as a flap; a user teardown must not
+        // record one. The blackhole-up-FIRST behaviour (block, then retry) is
+        // the Mullvad fail-closed model and lives in KillSwitchPolicy.
+        val flapping =
+            !userInitiatedDisconnect && flapDetector.recordDrop(SystemClock.elapsedRealtime())
+        when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, config.lockdownMode)) {
+            KillSwitchAction.RELEASE -> {
+                Logger.w("WarrenQuinnAdapter: releasing traffic ($reason)")
                 exitBlockingMode()
                 unregisterNetworkCallback()
                 activeMnemonic?.close()
                 activeMnemonic = null
                 _state.value = WarrenTunnelState.Failed(reason)
             }
-        } else {
-            enterBlockingMode(config, reason)
-            scheduleDropReconnect(config)
+            KillSwitchAction.PARK -> {
+                // Kill switch on and flapping: stay blocked until the user
+                // acts. The network callback stays registered so a genuine
+                // handover or a user reconnect resumes the normal flow.
+                Logger.w("WarrenQuinnAdapter: tunnel flapping, parking ($reason)")
+                enterBlockingMode(config, reason, flapping = true)
+            }
+            KillSwitchAction.BLOCK_AND_RETRY -> {
+                enterBlockingMode(config, reason)
+                scheduleDropReconnect(config)
+            }
         }
     }
 
