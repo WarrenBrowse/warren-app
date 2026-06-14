@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hasExpired } from '../../../../shared/account-expiry';
-import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
@@ -22,7 +21,7 @@ import { OnboardingLayout } from './components';
 // active subscription, an inline error is shown.
 export function OnboardingSubscriptionView() {
   const { push } = useHistory();
-  const { updateAccountData, openUrl } = useAppContext();
+  const { updateAccountData, buyCredit } = useAppContext();
   const accountExpiry = useSelector((state) => state.account.expiry);
 
   const [checking, setChecking] = useState(false);
@@ -100,10 +99,13 @@ export function OnboardingSubscriptionView() {
   }, [verifySubscription]);
 
   const handleOpenPricing = useCallback(() => {
-    void openUrl(urls.pricing);
+    // Use the wpid auto-credit flow (warren-core doc 35): buyCredit mints a
+    // purchase id, opens the checkout bound to it, and polls submitVoucher
+    // on the AppRenderer so the credit lands without manual voucher entry.
+    void buyCredit();
 
-    // Start auto-polling every 10s for 2 minutes after the user opens
-    // the external payment page.
+    // Local UI poll: refresh account data so the expiry-watch effect below
+    // auto-advances onboarding once the purchase is credited.
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
     }
@@ -123,7 +125,7 @@ export function OnboardingSubscriptionView() {
         log.error(`Auto-poll subscription check failed: ${err.message}`);
       });
     }, 10_000);
-  }, [openUrl, updateAccountData]);
+  }, [buyCredit, updateAccountData]);
 
   const handleCheckAgain = useCallback(() => {
     void verifySubscription();

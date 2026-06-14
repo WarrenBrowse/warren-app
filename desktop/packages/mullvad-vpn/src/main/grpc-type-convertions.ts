@@ -65,6 +65,7 @@ import {
   WarrenStatus,
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
+import log from '../shared/logging';
 import { parseChangelog } from './changelog';
 
 export class ResponseParseError extends Error {
@@ -289,13 +290,21 @@ function convertFromTunnelStateError(state: grpcTypes.ErrorState.AsObject): Erro
         ...baseError,
         cause: ErrorStateCause.warrenTunnelFlapping,
       };
-    // These are only ever created on Android
+    // Android-only causes, plus any cause a newer daemon adds before the
+    // gRPC bindings are regenerated. Never expected on desktop; degrade to
+    // a generic error state instead of throwing, which would crash the
+    // whole tunnel-state conversion and surface as a stream error.
     case grpcTypes.ErrorState.Cause.INVALID_DNS_SERVERS:
     case grpcTypes.ErrorState.Cause.NOT_PREPARED:
     case grpcTypes.ErrorState.Cause.OTHER_ALWAYS_ON_APP:
     case grpcTypes.ErrorState.Cause.OTHER_LEGACY_ALWAYS_ON_VPN:
     case grpcTypes.ErrorState.Cause.INVALID_IPV6_CONFIG:
-      throw new Error('Unsupported error state cause: ' + state.cause);
+    default:
+      log.warn('Unsupported error state cause: ' + state.cause);
+      return {
+        ...baseError,
+        cause: ErrorStateCause.startTunnelError,
+      };
   }
 }
 
@@ -359,15 +368,7 @@ function convertFromTunnelStateRelayInfo(
         tunnelType: convertFromTunnelType(
           (state.tunnelEndpoint as Record<string, unknown>).tunnelType as number | undefined,
         ),
-        obfuscationEndpoint:
-          state.tunnelEndpoint.obfuscation &&
-          state.tunnelEndpoint.obfuscation.single &&
-          state.tunnelEndpoint.obfuscation.single.endpoint &&
-          // TODO: Handle multiplexer?
-          convertFromObfuscationEndpoint(
-            state.tunnelEndpoint.obfuscation.single.obfuscationType,
-            state.tunnelEndpoint.obfuscation.single.endpoint,
-          ),
+        obfuscationEndpoint: convertFromObfuscationInfo(state.tunnelEndpoint.obfuscation),
         entryEndpoint:
           state.tunnelEndpoint.entryEndpoint &&
           convertFromEntryEndpoint(state.tunnelEndpoint.entryEndpoint),
@@ -427,10 +428,33 @@ function convertFromFeatureIndicator(
   }
 }
 
+// Resolve the obfuscation endpoint shown in the connection panel from the
+// daemon's ObfuscationInfo (single OR multiplexed). For the multiplex case
+// the UI shows one badge, so the first obfuscator is taken as the
+// representative endpoint. Returns undefined when no obfuscation is active.
+function convertFromObfuscationInfo(
+  obfuscation: grpcTypes.ObfuscationInfo.AsObject | undefined,
+): IObfuscationEndpoint | undefined {
+  if (obfuscation?.single?.endpoint) {
+    return convertFromObfuscationEndpoint(
+      obfuscation.single.obfuscationType,
+      obfuscation.single.endpoint,
+    );
+  }
+  const firstMultiplexed = obfuscation?.multiple?.obfuscatorsList?.[0];
+  if (firstMultiplexed?.endpoint) {
+    return convertFromObfuscationEndpoint(
+      firstMultiplexed.obfuscationType,
+      firstMultiplexed.endpoint,
+    );
+  }
+  return undefined;
+}
+
 function convertFromObfuscationEndpoint(
   obfuscationType: grpcTypes.ObfuscationEndpoint.ObfuscationType,
   obfuscationEndpoint: grpcTypes.Endpoint.AsObject,
-): IObfuscationEndpoint {
+): IObfuscationEndpoint | undefined {
   let translatedType: EndpointObfuscationType;
   switch (obfuscationType) {
     case grpcTypes.ObfuscationEndpoint.ObfuscationType.UDP2TCP:
@@ -446,7 +470,10 @@ function convertFromObfuscationEndpoint(
       translatedType = 'lwo';
       break;
     default:
-      throw new Error('unsupported obfuscation protocol');
+      // Unknown type from a newer daemon than the bindings: drop the badge
+      // rather than throwing and crashing the tunnel-state conversion.
+      log.warn('Unsupported obfuscation protocol: ' + obfuscationType);
+      return undefined;
   }
 
   return {
@@ -484,13 +511,6 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   // means the daemon is a pre-M4.H.C build and we fall back to OFF.
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
-  // Multi-exit auto-failover (M5.B.2). The proto does not carry this
-  // field yet (the daemon implements failover unconditionally). The
-  // GUI persists the toggle via GuiSettings and merges it in
-  // main/index.ts:setSettings() before notifying the renderer. The
-  // default here is a fallback for the initial snapshot before the
-  // merge runs.
-  const warrenFailover = { enabled: true };
   return {
     ...settings.toObject(),
     relaySettings,
@@ -504,7 +524,6 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     warrenApiUrl,
     warrenMultiHop,
     warrenNatPmp,
-    warrenFailover,
   };
 }
 
@@ -658,8 +677,9 @@ function convertFromNatPmpMappingState(
         errorMessage: mapping.getErrorMessage() ?? '',
         errorReason: convertFromNatPmpErrorReason(mapping.getErrorReason()),
       };
-    case grpcTypes.NatPmpStatus.State.REQUESTING:
     case grpcTypes.NatPmpStatus.State.DISABLED:
+      return { state: 'disabled' };
+    case grpcTypes.NatPmpStatus.State.REQUESTING:
     default:
       return { state: 'requesting' };
   }

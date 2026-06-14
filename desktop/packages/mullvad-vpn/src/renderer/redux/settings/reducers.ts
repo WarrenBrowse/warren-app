@@ -20,7 +20,6 @@ import {
   RelayLocation,
   RelayOverride,
   RelayProtocol,
-  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
@@ -105,10 +104,6 @@ export interface ISettingsReduxState {
   // rate-limit countdown anchors to this (see IUpdateNatPmpStatusAction)
   // so a stale snapshot self-expires instead of re-flashing on mount.
   natPmpStatusReceivedAt?: number;
-  // Persistent multi-exit auto-failover toggle (M5.B.2). Default ON.
-  // M5.B.1 DAITA is plumbed through Mullvad upstream's
-  // `wireguard.daita.enabled` rather than a Warren-specific field.
-  warrenFailover: WarrenFailoverSettings;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -172,13 +167,6 @@ const initialState: ISettingsReduxState = {
   },
   natPmpStatus: undefined,
   natPmpStatusReceivedAt: undefined,
-  // M5.B.2 multi-exit failover: ON by default. Differentiator vs
-  // Mullvad/IVPN (which require manual reconnect on exit-down).
-  // M5.B.1 DAITA toggle = Mullvad upstream `wireguard.daita.enabled`
-  // (no Warren-specific slice).
-  warrenFailover: {
-    enabled: true,
-  },
   wireguard: {
     quantumResistant: true,
   },
@@ -264,12 +252,6 @@ export default function (
       return {
         ...state,
         warrenMultiHop: action.warrenMultiHop,
-      };
-
-    case 'UPDATE_WARREN_FAILOVER':
-      return {
-        ...state,
-        warrenFailover: action.warrenFailover,
       };
 
     case 'UPDATE_WARREN_STATUS':

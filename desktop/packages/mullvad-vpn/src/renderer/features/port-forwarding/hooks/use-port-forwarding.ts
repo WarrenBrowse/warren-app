@@ -61,13 +61,6 @@ export function usePortForwarding() {
     [pushUpdate],
   );
 
-  const setLifetimeSecs = React.useCallback(
-    async (lifetimeSecs: number) => {
-      await pushUpdate({ lifetimeSecs });
-    },
-    [pushUpdate],
-  );
-
   // Write the rule list as the source of truth and zero the legacy
   // single-port fields so a future read prefers `rules`.
   const setRules = React.useCallback(
@@ -113,7 +106,6 @@ export function usePortForwarding() {
     mappings: status.mappings,
     statusReceivedAt,
     setEnabled,
-    setLifetimeSecs,
     setRules,
     addRule,
     updateRule,

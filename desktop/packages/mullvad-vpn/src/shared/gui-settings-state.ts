@@ -50,15 +50,6 @@ export interface IGuiSettingsState {
   // boot logic.
   onboardingCompletedUnix?: number;
 
-  // M5.B.2 multi-exit auto-failover toggle. The daemon implements
-  // failover unconditionally; this GUI-only flag governs whether the
-  // failover notification toast is surfaced and whether the settings
-  // panel shows the toggle as ON. Default true (= ON). Persisted in
-  // gui_settings.json (no proto field). A future proto field can
-  // supersede this once exit-quality telemetry graduates from POC to
-  // first-class daemon state.
-  warrenFailoverEnabled?: boolean;
-
   // True between minting a fresh Warren identity and the user confirming
   // they backed up the recovery phrase. The in-session backup gate lives
   // in renderer redux, but that is lost if the GUI restarts mid-backup,

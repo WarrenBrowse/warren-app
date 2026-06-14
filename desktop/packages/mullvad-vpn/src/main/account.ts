@@ -70,7 +70,6 @@ export default class Account {
   public registerIpcListeners() {
     IpcMainEventChannel.account.handleCreate(() => this.createNewAccount());
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
-    IpcMainEventChannel.account.handleGetWwwAuthToken(() => this.daemonRpc.getWwwAuthToken());
     IpcMainEventChannel.account.handleGetWarrenMnemonic(() => this.daemonRpc.getWarrenMnemonic());
     IpcMainEventChannel.account.handleSetWarrenMnemonic((mnemonic: string) =>
       this.daemonRpc.setWarrenMnemonic(mnemonic),

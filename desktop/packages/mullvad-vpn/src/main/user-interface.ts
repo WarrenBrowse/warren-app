@@ -708,7 +708,7 @@ export default class UserInterface implements WindowControllerDelegate {
       },
       { type: 'separator' },
       {
-        id: 'disconnect',
+        id: 'disconnect-and-quit',
         label:
           tunnelState.state === 'disconnected'
             ? messages.gettext('Quit')

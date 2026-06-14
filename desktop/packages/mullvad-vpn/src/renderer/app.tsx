@@ -32,7 +32,6 @@ import {
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
-  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -386,6 +385,8 @@ export default class AppRenderer {
       );
     }
 
+    this.reduxActions.settings.setSplitTunnelingSupported(initialState.splitTunnelingSupported);
+
     this.updateLocation();
 
     if (initialState.navigationHistory) {
@@ -694,18 +695,6 @@ export default class AppRenderer {
     actions.settings.updateWarrenMultiHop(settings);
   };
 
-  // Warren multi-exit auto-failover toggle (M5.B.2). GUI-only: the
-  // daemon implements failover unconditionally; this flag controls
-  // whether the failover notification toast is shown and whether the
-  // settings panel renders the toggle as ON. No daemon restart needed
-  // (the value is persisted in gui_settings.json and applied
-  // immediately to the redux store).
-  public setWarrenFailover = async (settings: WarrenFailoverSettings) => {
-    const actions = this.reduxActions;
-    await IpcRendererEventChannel.settings.setWarrenFailover(settings);
-    actions.settings.updateWarrenFailover(settings);
-  };
-
   // Session H A.4: trust the new pubkey for the given `exitIdHex`,
   // replacing the pinned baseline. The daemon clears
   // `WarrenStatus.pubkeyMismatchPending` on success so the modal
@@ -983,7 +972,6 @@ export default class AppRenderer {
     reduxSettings.updateAllowLan(newSettings.allowLan);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
-    reduxSettings.updateWarrenFailover(newSettings.warrenFailover);
     reduxSettings.updateNatPmpSettings(newSettings.warrenNatPmp);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);

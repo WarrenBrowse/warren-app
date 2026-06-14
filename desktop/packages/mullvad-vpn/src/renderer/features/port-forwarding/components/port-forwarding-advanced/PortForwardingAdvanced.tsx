@@ -428,6 +428,12 @@ function RuleStatus({ mapping }: { mapping: NatPmpMapping | undefined }) {
           {natPmpShortFailure(status.errorReason)}
         </Text>
       );
+    case 'disabled':
+      return (
+        <Text variant="labelTiny" color="whiteAlpha60">
+          {messages.pgettext('port-forwarding-view', 'disabled')}
+        </Text>
+      );
     case 'requesting':
     default:
       return (

@@ -27,7 +27,6 @@ import {
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
-  WarrenFailoverSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -80,6 +79,11 @@ export interface IAppStateSnapshot {
   guiSettings: IGuiSettingsState;
   translations: ITranslations;
   splitTunnelingApplications?: ISplitTunnelingApplication[];
+  // Whether the daemon/platform supports split tunneling at all. Part of
+  // the initial snapshot so the renderer has a deterministic value at
+  // boot (the `notifyIsSupported` push alone races a window that opens
+  // after the daemon already bootstrapped).
+  splitTunnelingSupported: boolean;
   macOsScrollbarVisibility?: MacOsScrollbarVisibility;
   changelog: IChangelog;
   navigationHistory?: IHistoryObject;
@@ -224,11 +228,6 @@ export const ipcSchema = {
     setWarrenApiUrl: invoke<string, void>(),
     // Warren multi-hop settings (M4.E.D). Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
-    // Warren multi-exit failover toggle (M5.B.2). Picked up on the
-    // next tunnel reconnect (no restart needed). M5.B.1 DAITA toggle
-    // reuses Mullvad upstream's `setEnableDaita` rather than
-    // introducing a dedicated Warren-side switch.
-    setWarrenFailover: invoke<WarrenFailoverSettings, void>(),
     // Warren NAT-PMP port-forwarding settings. Daemon picks up the
     // new value on the NEXT tunnel reconnect (no restart needed).
     setNatPmpSettings: invoke<NatPmpSettings, void>(),
@@ -292,7 +291,6 @@ export const ipcSchema = {
     device: notifyRenderer<DeviceEvent>(),
     create: invoke<void, string>(),
     logout: invoke<LogoutSource, void>(),
-    getWwwAuthToken: invoke<void, string>(),
     // Returns the BIP39 mnemonic (12 words) so the user can back it
     // up. Empty string if the identity has never been bootstrapped.
     // The renderer caller must display it with a safety warning and

@@ -518,6 +518,17 @@ class ApplicationMain
     }
   };
 
+  // The app-list retriever only exists on macOS/Windows. Linux uses the
+  // separate `linuxSplitTunneling` module and never calls the shared
+  // `splitTunneling.*` channels, so reaching this on Linux is a bug:
+  // fail loudly instead of dereferencing undefined.
+  private get splitTunnelingApi(): ISplitTunnelingAppListRetriever {
+    if (!this.splitTunneling) {
+      throw new Error('Split tunneling app-list API is unavailable on this platform');
+    }
+    return this.splitTunneling;
+  }
+
   private onSuspend = () => {
     log.info('Suspend event received, disconnecting from daemon');
     if (this.daemonEventListener) {
@@ -884,13 +895,7 @@ class ApplicationMain
       this.version.setLatestVersion(this.version.upgradeVersion);
     }
 
-    // Override warrenFailover from the GUI-persisted toggle (no proto
-    // field exists yet, so convertFromSettings defaults to ON).
-    const mergedSettings: ISettings = {
-      ...newSettings,
-      warrenFailover: { enabled: this.settings.gui.warrenFailoverEnabled },
-    };
-    IpcMainEventChannel.settings.notify?.(mergedSettings);
+    IpcMainEventChannel.settings.notify?.(newSettings);
 
     void this.updateSplitTunnelingApplications(newSettings.splitTunnel.appsList);
   }
@@ -920,10 +925,7 @@ class ApplicationMain
       accountData: this.account.accountData,
       accountHistory: this.account.accountHistory,
       tunnelState: this.tunnelState.tunnelState,
-      settings: {
-        ...this.settings.all,
-        warrenFailover: { enabled: this.settings.gui.warrenFailoverEnabled },
-      },
+      settings: this.settings.all,
       isPerformingPostUpgrade: this.isPerformingPostUpgrade,
       daemonAllowed: this.daemonAllowed,
       deviceState: this.account.deviceState,
@@ -933,6 +935,7 @@ class ApplicationMain
       guiSettings: this.settings.gui.state,
       translations: this.translations,
       splitTunnelingApplications: this.splitTunnelingApplications,
+      splitTunnelingSupported: this.splitTunnelingSupported,
       macOsScrollbarVisibility: this.macOsScrollbarVisibility,
       changelog: this.changelog ?? [],
       navigationHistory: this.navigationHistory,
@@ -970,7 +973,7 @@ class ApplicationMain
       return this.linuxSplitTunneling!.getApplications(this.locale);
     });
     IpcMainEventChannel.splitTunneling.handleGetApplications((updateCaches: boolean) => {
-      return this.splitTunneling!.getApplications(updateCaches);
+      return this.splitTunnelingApi.getApplications(updateCaches);
     });
     IpcMainEventChannel.linuxSplitTunneling.handleLaunchApplication((application) => {
       return this.linuxSplitTunneling!.launchApplication(application);
@@ -985,12 +988,12 @@ class ApplicationMain
       if (typeof application === 'string') {
         let executablePath;
         try {
-          executablePath = await this.splitTunneling!.resolveExecutablePath(application);
+          executablePath = await this.splitTunnelingApi.resolveExecutablePath(application);
         } catch {
           return;
         }
         this.settings.gui.addBrowsedForSplitTunnelingApplications(executablePath);
-        await this.splitTunneling!.addApplicationPathToCache(application);
+        await this.splitTunnelingApi.addApplicationPathToCache(application);
         await this.daemonRpc.addSplitTunnelingApplication(executablePath);
       } else {
         await this.daemonRpc.addSplitTunnelingApplication(application.absolutepath);
@@ -1003,7 +1006,7 @@ class ApplicationMain
     });
     IpcMainEventChannel.splitTunneling.handleForgetManuallyAddedApplication((application) => {
       this.settings.gui.deleteBrowsedForSplitTunnelingApplications(application.absolutepath);
-      this.splitTunneling!.removeApplicationFromCache(application);
+      this.splitTunnelingApi.removeApplicationFromCache(application);
       return Promise.resolve();
     });
     IpcMainEventChannel.splitTunneling.handleGetSupported(() => {

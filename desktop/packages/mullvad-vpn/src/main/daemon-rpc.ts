@@ -251,11 +251,6 @@ export class DaemonRpc extends GrpcClient {
     }
   }
 
-  public async getWwwAuthToken(): Promise<string> {
-    const response = await this.callEmpty<StringValue>(this.client.getWwwAuthToken);
-    return response.getValue();
-  }
-
   /**
    * Returns the BIP39 mnemonic (12 words) so the user can back it up.
    * Empty string if the identity has never been bootstrapped. The

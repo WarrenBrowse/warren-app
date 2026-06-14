@@ -135,6 +135,7 @@ class ApplicationMain {
       guiSettings: this.guiSettings,
       translations: this.translations,
       splitTunnelingApplications: [],
+      splitTunnelingSupported: true,
       macOsScrollbarVisibility: MacOsScrollbarVisibility.whenScrolling,
       changelog: [],
       navigationHistory: undefined,

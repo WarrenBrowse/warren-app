@@ -32,21 +32,9 @@ export function useWarrenMultiHop() {
     [setWarrenMultiHop, warrenMultiHop],
   );
 
-  const setEntryCountry = React.useCallback(
-    (entryCountry: string) => setWarrenMultiHop({ ...warrenMultiHop, entryCountry }),
-    [setWarrenMultiHop, warrenMultiHop],
-  );
-
-  const setExitCountry = React.useCallback(
-    (exitCountry: string) => setWarrenMultiHop({ ...warrenMultiHop, exitCountry }),
-    [setWarrenMultiHop, warrenMultiHop],
-  );
-
   return {
     warrenMultiHop,
     setWarrenMultiHop,
     setEnabled,
-    setEntryCountry,
-    setExitCountry,
   };
 }
