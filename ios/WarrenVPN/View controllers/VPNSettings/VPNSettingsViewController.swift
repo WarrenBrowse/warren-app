@@ -6,6 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
+import WarrenRustRuntime
 import WarrenSettings
 import SwiftUI
 import UIKit
@@ -159,6 +160,99 @@ extension VPNSettingsViewController: @preconcurrency VPNSettingsDataSourceDelega
 
     func showIPOverrides() {
         delegate?.showIPOverrides()
+    }
+
+    /// Path to the App Group exit-pubkey TOFU pin table written by the
+    /// tunnel extension (sibling of the multi-hop generation file).
+    private var pinStorePath: String {
+        ApplicationConfiguration.containerURL.appendingPathComponent("warren-exit-pins.json").path
+    }
+
+    func showResetPinnedExitKeys() {
+        let presentation = AlertPresentation(
+            id: "warren-reset-pinned-exit-keys-confirm",
+            icon: .warning,
+            title: NSLocalizedString(
+                "Reset pinned exit keys?",
+                tableName: "Settings",
+                comment: "Title of the confirmation alert before clearing the exit-pubkey TOFU pin table."
+            ),
+            message: NSLocalizedString(
+                "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use). Until the new pins are established, an exit substitution would not be flagged on the first reconnect.",
+                tableName: "Settings",
+                comment: "Body of the confirmation alert before clearing the exit-pubkey TOFU pin table."
+            ),
+            buttons: [
+                AlertAction(
+                    title: NSLocalizedString(
+                        "Reset all",
+                        tableName: "Settings",
+                        comment: "Button confirming the reset of the exit-pubkey TOFU pin table."
+                    ),
+                    style: .destructive,
+                    handler: { [weak self] in
+                        self?.performResetPinnedExitKeys()
+                    }
+                ),
+                AlertAction(
+                    title: NSLocalizedString("Cancel", comment: ""),
+                    style: .default
+                ),
+            ]
+        )
+        alertPresenter.showAlert(presentation: presentation, animated: true)
+    }
+
+    private func performResetPinnedExitKeys() {
+        let dropped = WarrenQuinnAdapter.pinReset(pinStorePath: pinStorePath)
+        let presentation: AlertPresentation
+        if dropped >= 0 {
+            presentation = AlertPresentation(
+                id: "warren-reset-pinned-exit-keys-result",
+                icon: .info,
+                title: NSLocalizedString(
+                    "Pin table cleared",
+                    tableName: "Settings",
+                    comment: "Title of the success alert after clearing the exit-pubkey TOFU pin table."
+                ),
+                message: String(
+                    format: NSLocalizedString(
+                        "Dropped %d pinned exit key entries.",
+                        tableName: "Settings",
+                        comment: "Body of the success alert. %d is the number of pin entries dropped."
+                    ),
+                    dropped
+                ),
+                buttons: [
+                    AlertAction(
+                        title: NSLocalizedString("OK", comment: ""),
+                        style: .default
+                    )
+                ]
+            )
+        } else {
+            presentation = AlertPresentation(
+                id: "warren-reset-pinned-exit-keys-error",
+                icon: .alert,
+                title: NSLocalizedString(
+                    "Reset failed",
+                    tableName: "Settings",
+                    comment: "Title of the failure alert when the exit-pubkey TOFU pin table could not be cleared."
+                ),
+                message: NSLocalizedString(
+                    "The pinned exit keys could not be cleared.",
+                    tableName: "Settings",
+                    comment: "Body of the failure alert when the exit-pubkey TOFU pin table could not be cleared."
+                ),
+                buttons: [
+                    AlertAction(
+                        title: NSLocalizedString("OK", comment: ""),
+                        style: .default
+                    )
+                ]
+            )
+        }
+        alertPresenter.showAlert(presentation: presentation, animated: true)
     }
 
     private func showUDPOverTCPObfuscationSettings() {

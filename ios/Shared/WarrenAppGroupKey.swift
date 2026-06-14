@@ -63,4 +63,16 @@ public enum WarrenAppGroupKey: String, CaseIterable {
     /// ("Connected" / "Reconnecting" / "Disconnected"). Populated by
     /// `WarrenQuinnTunnelImplementation` on every state transition.
     case stateLabel = "WarrenTunnel.stateLabel"
+
+    /// `String`. JSON payload of the last exit-pubkey TOFU mismatch
+    /// (`{"exitId","observed","pinned","country"}`) the tunnel extension
+    /// recorded on a fail-closed connect. Drives the main app's
+    /// `WarrenPubKeyWarningPresenter` alert. Cf.
+    /// `WarrenQuinnAdapter.takePinMismatch`.
+    case pinMismatch = "WarrenTunnel.pinMismatch"
+
+    /// `Date`. Time the [`pinMismatch`] payload was recorded. Combined
+    /// with the payload to drive a freshness window so a stale mismatch
+    /// from a previous session does not re-trigger the alert on launch.
+    case pinMismatchAt = "WarrenTunnel.pinMismatchAt"
 }

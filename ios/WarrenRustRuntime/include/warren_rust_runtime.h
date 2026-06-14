@@ -185,6 +185,16 @@ typedef struct WarrenTunnelParametersC {
    * `multihop_directory_json` is null.
    */
   const char *multihop_generation_state_path;
+  /**
+   * Optional path to the App Group file that persists the exit-pubkey
+   * trust-on-first-use (TOFU) pin table. When non-null, the selected
+   * exit's Ed25519 pubkey is checked against the pin for its `exit_id`
+   * before connecting: a mismatch fails the connection closed and is
+   * surfaced via `warren_tunnel_take_pin_mismatch` for the user to trust
+   * or reject. Null disables pinning. Ignored on the legacy single-hop
+   * path (the production fleet is multi-hop only).
+   */
+  const char *pin_store_path;
 } WarrenTunnelParametersC;
 
 /**
@@ -523,6 +533,45 @@ int warren_tunnel_inject_inbound_packet(struct WarrenTunnelHandle *handle,
  */
 int64_t warren_multihop_check_generation(const char *directory_json,
                                          const char *generation_state_path);
+
+/**
+ * Take (and clear) the JSON details of the last exit-pubkey TOFU mismatch
+ * recorded on `handle`, if any. Returns a heap C string
+ * `{"exit_id","observed","pinned","country"}` the caller MUST free via
+ * `warren_wallet_free_mnemonic`, or null when there is no pending mismatch.
+ * Swift calls this after a connection failure to decide whether to present
+ * the Trust / Report / Reject alert.
+ *
+ * # Safety
+ * `handle` must be null or a live pointer returned by
+ * [`warren_tunnel_start`] and not yet stopped.
+ */
+char *warren_tunnel_take_pin_mismatch(struct WarrenTunnelHandle *handle);
+
+/**
+ * Trust a (possibly new) exit pubkey for `exit_id`, overwriting any
+ * existing pin in the App Group store at `pin_store_path`. Called when the
+ * user accepts a mismatch ("Trust new key") or to pre-seed a pin. All
+ * string args are null-terminated hex / UTF-8. Returns 0 on success,
+ * -1 on invalid input.
+ *
+ * # Safety
+ * Each non-null pointer must be a valid null-terminated C string.
+ */
+int warren_pin_trust(const char *pin_store_path,
+                     const char *exit_id_hex,
+                     const char *pubkey_hex,
+                     const char *country_code);
+
+/**
+ * Clear all exit-pubkey pins in the App Group store at `pin_store_path`.
+ * Backs the Settings "Reset pinned exit keys" action. Returns the number
+ * of pins dropped (>= 0), or -1 on invalid input.
+ *
+ * # Safety
+ * `pin_store_path` must be a valid null-terminated C string.
+ */
+int64_t warren_pin_reset(const char *pin_store_path);
 
 /**
  * Generates a new BIP39 mnemonic with `word_count` words (12 or 24).

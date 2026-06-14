@@ -56,6 +56,12 @@ public enum AccessibilityIdentifier: Equatable {
     case closeSelectLocationButton
     case settingsButton
     case startUsingTheAppButton
+    // Wallet (BIP39) identity flow.
+    case walletCreateButton
+    case walletRestoreButton
+    case walletMnemonicConfirmButton
+    case walletMnemonicCopyButton
+    case walletMnemonicRestoreSubmitButton
     case problemReportAppLogsButton
     case problemReportSendButton
     case relayStatusCollapseButton
@@ -179,6 +185,9 @@ public enum AccessibilityIdentifier: Equatable {
     case problemReportSubmittedView
     case revokedDeviceView
     case welcomeView
+    case walletLoginView
+    case walletMnemonicDisplayView
+    case walletMnemonicInputView
     case setUpAccountCompletedView
     case deleteAccountView
     case settingsContainerView
@@ -230,6 +239,7 @@ public enum AccessibilityIdentifier: Equatable {
     case localNetworkSharing
     case dnsSettings
     case ipOverrides
+    case resetPinnedExitKeys
     case wireGuardCustomPort
     case wireGuardObfuscationAutomatic
     case wireGuardObfuscationPort

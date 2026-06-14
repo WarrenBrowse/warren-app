@@ -143,9 +143,17 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         }
         let adapter = WarrenQuinnAdapter(
             packetFlow: provider.packetFlow,
-            eventCallback: { event in
+            eventCallback: { [weak self] event in
                 let defaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
                 Self.broadcastEvent(event, into: defaults)
+                // A TOFU pin mismatch fails the connection closed, so it
+                // arrives as a `.disconnected` event. Drain the recorded
+                // mismatch (if any) and broadcast it so the main app can
+                // present the Trust / Report / Reject alert.
+                if case .disconnected = event,
+                   let mismatch = self?.adapter?.takePinMismatch() {
+                    Self.broadcastPinMismatch(mismatch, into: defaults)
+                }
                 weakActor.applyEvent(event)
             },
             ipAssignCallback: ipAssignCallback
@@ -241,6 +249,11 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // long-lived daemon to hold it in memory).
         let statePath = multihopGenerationStatePath()
         _actor.multihopGenerationStatePath = statePath
+        // Activate exit-pubkey TOFU pinning: the FFI enforces the pin from
+        // this App Group file and fails the connection closed on a
+        // mismatch (surfaced to the user via the pin-mismatch App Group
+        // event below).
+        _actor.pinStorePath = pinStorePath()
 
         // Record the generation this session starts with + arm the periodic
         // refresh so a long-lived session picks up a fleet change (a higher
@@ -276,6 +289,21 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             return nil
         }
         return container.appendingPathComponent("warren-multihop-generation").path
+    }
+
+    /// Resolves the App Group container path for the exit-pubkey TOFU pin
+    /// table (sibling of the multi-hop generation file). Returns nil when
+    /// the App Group is unavailable (unit tests), in which case pinning is
+    /// off.
+    private func pinStorePath() -> String? {
+        guard let suite = appGroupSuiteName,
+              let container = FileManager.default.containerURL(
+                  forSecurityApplicationGroupIdentifier: suite
+              )
+        else {
+            return nil
+        }
+        return container.appendingPathComponent("warren-exit-pins.json").path
     }
 
     /// Interval between directory refreshes. Matches the desktop daemon's
@@ -378,5 +406,23 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             // observedStates AsyncStream, not via App Group keys.
             break
         }
+    }
+
+    /// Mirror an exit-pubkey TOFU mismatch into the App Group `UserDefaults`
+    /// keys consumed by `WarrenPubKeyWarningPresenter` in the main-app
+    /// process. Writes the JSON payload + a timestamp for the freshness
+    /// window. A nil `defaults` (unit tests) is a no-op.
+    private static func broadcastPinMismatch(
+        _ mismatch: WarrenPinMismatch,
+        into defaults: UserDefaults?
+    ) {
+        guard let defaults else { return }
+        guard let data = try? JSONEncoder().encode(mismatch),
+              let json = String(data: data, encoding: .utf8)
+        else {
+            return
+        }
+        defaults.set(json, forKey: WarrenAppGroupKey.pinMismatch.rawValue)
+        defaults.set(Date(), forKey: WarrenAppGroupKey.pinMismatchAt.rawValue)
     }
 }

@@ -26,12 +26,15 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         case wireGuardObfuscationPort
         case quantumResistance
         case ipVersion
+        case resetPinnedExitKeys
 
         var reusableViewClass: AnyClass {
             switch self {
             case .dnsSettings:
                 return SettingsCell.self
             case .ipOverrides:
+                return SettingsCell.self
+            case .resetPinnedExitKeys:
                 return SettingsCell.self
             case .wireGuardPort:
                 return SelectableSettingsCell.self
@@ -85,6 +88,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         case ipVersionAutomatic
         case ipVersionIPv4
         case ipVersionIPv6
+        case resetPinnedExitKeys
 
         static var wireGuardPorts: [Item] {
             let defaultPorts = VPNSettingsViewModel.defaultWireGuardPorts.map {
@@ -144,6 +148,8 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
                 .ipVersionIPv4
             case .ipVersionIPv6:
                 .ipVersionIPv6
+            case .resetPinnedExitKeys:
+                .resetPinnedExitKeys
             }
         }
 
@@ -165,6 +171,8 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
                 .quantumResistance
             case .ipVersionAutomatic, .ipVersionIPv4, .ipVersionIPv6:
                 .ipVersion
+            case .resetPinnedExitKeys:
+                .resetPinnedExitKeys
             }
         }
     }
@@ -325,6 +333,10 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
             tableView.deselectRow(at: indexPath, animated: false)
             delegate?.showIPOverrides()
 
+        case .resetPinnedExitKeys:
+            tableView.deselectRow(at: indexPath, animated: false)
+            delegate?.showResetPinnedExitKeys()
+
         case let .wireGuardPort(port):
             viewModel.setWireGuardPort(port)
 
@@ -447,7 +459,9 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         let sectionIdentifier = snapshot().sectionIdentifiers[indexPath.section]
 
         return switch sectionIdentifier {
-        case .privacyAndSecurity: false
+        // The privacy-and-security section is non-interactive except for the
+        // "Reset pinned exit keys" action row, which must be tappable.
+        case .privacyAndSecurity: itemIdentifier(for: indexPath) == .resetPinnedExitKeys
         default: true
         }
     }
@@ -503,6 +517,9 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         }
         if snapshot.sectionIdentifiers.contains(.ipOverrides) {
             snapshot.appendItems([.ipOverrides], toSection: .ipOverrides)
+        }
+        if snapshot.sectionIdentifiers.contains(.privacyAndSecurity) {
+            snapshot.appendItems([.resetPinnedExitKeys], toSection: .privacyAndSecurity)
         }
 
         if onlyShowSection == .wireGuardObfuscation {

@@ -17,6 +17,7 @@
 
 import Combine
 import Foundation
+import WarrenRustRuntime
 
 // `WarrenAppGroupKey` lives in `Shared/WarrenAppGroupKey.swift` so the
 // PacketTunnel extension (producer) and the main app (consumer) share
@@ -34,6 +35,23 @@ public struct WarrenFailoverEvent: Equatable {
     }
 }
 
+/// An exit-pubkey TOFU mismatch surfaced from the tunnel extension. The
+/// connection already failed closed; this drives the Trust / Report /
+/// Reject alert in the main app.
+public struct WarrenPinMismatchEvent: Equatable {
+    public let mismatch: WarrenPinMismatch
+    public let occurredAt: Date
+
+    /// Fresh within the last 2 minutes. A pin mismatch is a security
+    /// decision the user should make promptly, but the window is wider
+    /// than the failover banner's because the alert is modal (the user may
+    /// need a moment to read it) and we do not want a stale mismatch from a
+    /// previous session re-surfacing on launch.
+    public var isFresh: Bool {
+        Date().timeIntervalSince(occurredAt) < 120
+    }
+}
+
 /// Bridge between the tunnel extension's App Group UserDefaults writes
 /// and SwiftUI/UIKit consumers in the main app. Owns no UI state - just
 /// surfaces decoded events.
@@ -41,6 +59,7 @@ public struct WarrenFailoverEvent: Equatable {
 public final class WarrenAppGroupEvents: ObservableObject {
     @Published public private(set) var lastFailover: WarrenFailoverEvent?
     @Published public private(set) var obfuscationActive: Bool = false
+    @Published public private(set) var lastPinMismatch: WarrenPinMismatchEvent?
 
     private let defaults: UserDefaults?
     private var observer: NSObjectProtocol?
@@ -86,6 +105,30 @@ public final class WarrenAppGroupEvents: ObservableObject {
         let obfActive = defaults.bool(forKey: WarrenAppGroupKey.obfuscationActive.rawValue)
         if obfActive != obfuscationActive {
             obfuscationActive = obfActive
+        }
+
+        if let json = defaults.string(forKey: WarrenAppGroupKey.pinMismatch.rawValue),
+            let date = defaults.object(forKey: WarrenAppGroupKey.pinMismatchAt.rawValue) as? Date,
+            let data = json.data(using: .utf8),
+            let mismatch = try? JSONDecoder().decode(WarrenPinMismatch.self, from: data)
+        {
+            let event = WarrenPinMismatchEvent(mismatch: mismatch, occurredAt: date)
+            if event != lastPinMismatch {
+                lastPinMismatch = event
+            }
+        } else if lastPinMismatch != nil {
+            lastPinMismatch = nil
+        }
+    }
+
+    /// Clear the persisted pin-mismatch payload so the alert does not
+    /// re-surface (called after the user resolves it: Trust / Report /
+    /// Reject). Leaves the failover/obfuscation keys untouched.
+    public func clearPinMismatch() {
+        defaults?.removeObject(forKey: WarrenAppGroupKey.pinMismatch.rawValue)
+        defaults?.removeObject(forKey: WarrenAppGroupKey.pinMismatchAt.rawValue)
+        if lastPinMismatch != nil {
+            lastPinMismatch = nil
         }
     }
 }

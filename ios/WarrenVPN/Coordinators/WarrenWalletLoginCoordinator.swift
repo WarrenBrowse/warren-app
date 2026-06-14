@@ -124,6 +124,7 @@ private struct WarrenWalletLoginView: View {
                         .cornerRadius(12)
                 }
                 .accessibilityAddTraits(.isButton)
+                .accessibilityIdentifier(AccessibilityIdentifier.walletCreateButton.asString)
 
                 Button(action: onRestore) {
                     Text(String(localized: "I already have a recovery phrase", table: "Onboarding"))
@@ -137,11 +138,17 @@ private struct WarrenWalletLoginView: View {
                         )
                 }
                 .accessibilityAddTraits(.isButton)
+                .accessibilityIdentifier(AccessibilityIdentifier.walletRestoreButton.asString)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.Warren.navy.ignoresSafeArea())
+        // NOTE: do NOT put an accessibilityIdentifier on this container.
+        // In SwiftUI a container identifier propagates to every descendant
+        // and clobbers the per-button ids below (walletCreateButton /
+        // walletRestoreButton), which UI tests query directly. The chooser
+        // is detected by the presence of the create button instead.
     }
 }

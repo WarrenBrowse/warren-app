@@ -57,6 +57,7 @@ public struct WarrenMnemonicDisplayView: View {
                 .foregroundColor(.Warren.yellow)
             }
             .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier(AccessibilityIdentifier.walletMnemonicCopyButton.asString)
             Button(action: onConfirmed) {
                 Text(String(localized: "I have written them down", table: "Wallet"))
                     .font(.warrenSmallSemiBold)
@@ -66,9 +67,13 @@ public struct WarrenMnemonicDisplayView: View {
                     .foregroundColor(.black)
                     .cornerRadius(10)
             }
+            .accessibilityIdentifier(AccessibilityIdentifier.walletMnemonicConfirmButton.asString)
         }
         .padding()
         .background(Color.Warren.navy)
+        // No container identifier: it would propagate to and clobber the
+        // copy/confirm button ids below. UI tests detect this screen via
+        // the confirm button.
     }
 
     private var words: [String] {

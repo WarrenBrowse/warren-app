@@ -66,6 +66,11 @@ public struct WarrenTunnelConfig: Sendable {
     /// anti-rollback high-water mark. When nil the FFI keeps the rollback
     /// gate per-connect only (no cross-connect persistence).
     public let multihopGenerationStatePath: String?
+    /// Path to the App Group file persisting the exit-pubkey TOFU pin
+    /// table. When non-nil the FFI enforces the pin and fails the
+    /// connection closed on a mismatch (the mismatch is then queryable via
+    /// [`WarrenQuinnAdapter.takePinMismatch`]). When nil pinning is off.
+    public let pinStorePath: String?
 
     public init(
         exitPubkey: Data,
@@ -79,7 +84,8 @@ public struct WarrenTunnelConfig: Sendable {
         multihopTwoHop: Bool = false,
         multihopEntryCountry: String = "",
         multihopExitCountry: String = "",
-        multihopGenerationStatePath: String? = nil
+        multihopGenerationStatePath: String? = nil,
+        pinStorePath: String? = nil
     ) {
         self.exitPubkey = exitPubkey
         self.exitEndpoint = exitEndpoint
@@ -93,6 +99,39 @@ public struct WarrenTunnelConfig: Sendable {
         self.multihopEntryCountry = multihopEntryCountry
         self.multihopExitCountry = multihopExitCountry
         self.multihopGenerationStatePath = multihopGenerationStatePath
+        self.pinStorePath = pinStorePath
+    }
+}
+
+/// Details of the last exit-pubkey TOFU mismatch recorded by the tunnel.
+/// Decoded from the JSON returned by `warren_tunnel_take_pin_mismatch`.
+/// Mirrors the desktop `WarrenPubkeyMismatch` daemon-rpc type. All hex
+/// fields are lowercase 64-char Ed25519 representations.
+public struct WarrenPinMismatch: Codable, Equatable, Sendable {
+    /// Hex exit identifier the mismatch was observed for.
+    public let exitId: String
+    /// Hex of the pubkey the exit served on this connect (the new key).
+    public let observed: String
+    /// Hex of the pubkey previously pinned for `exitId`.
+    public let pinned: String
+    /// ISO 3166-1 alpha-2 country code of the exit, or "" when unknown.
+    public let country: String
+
+    // The Rust FFI emits snake_case keys (`exit_id`); the other three
+    // already match. Encoding round-trips through the same keys so the
+    // App Group payload the extension writes decodes in the main app.
+    private enum CodingKeys: String, CodingKey {
+        case exitId = "exit_id"
+        case observed
+        case pinned
+        case country
+    }
+
+    public init(exitId: String, observed: String, pinned: String, country: String) {
+        self.exitId = exitId
+        self.observed = observed
+        self.pinned = pinned
+        self.country = country
     }
 }
 
@@ -181,6 +220,10 @@ public enum WarrenQuinnAdapterError: Error {
     /// FFI returned a non-zero return code from one of the entry
     /// points. Wraps the raw `c_int` for diagnostics.
     case ffi(Int32)
+    /// A fixed-size key field had the wrong length. Marshalling refuses to
+    /// silently truncate or zero-pad crypto key material, which would
+    /// produce a wrong identity with no error.
+    case invalidKeyLength(field: String, expected: Int, actual: Int)
 }
 
 /// High-level Swift facade over the warren-tunnel / warren-ios FFI.
@@ -400,6 +443,28 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         )
     }
 
+    /// Take (and clear) the details of the last exit-pubkey TOFU mismatch
+    /// recorded on the live handle, or nil when none is pending. A TOFU
+    /// mismatch surfaces as a connection failure (the Rust side fails
+    /// closed), so the consumer calls this on a failed connect to decide
+    /// whether to present the Trust / Report / Reject alert.
+    ///
+    /// Returns nil when the tunnel was never started, when there is no
+    /// pending mismatch, or when the JSON cannot be decoded.
+    public func takePinMismatch() -> WarrenPinMismatch? {
+        lock.lock()
+        let h = handle
+        lock.unlock()
+        guard let h else { return nil }
+        guard let raw = warren_tunnel_take_pin_mismatch(rawTunnelHandle(h)) else { return nil }
+        // The returned heap string is freed via the type-agnostic free
+        // routine the account/wallet FFIs use for their C strings.
+        defer { warren_wallet_free_mnemonic(raw) }
+        let json = String(cString: raw)
+        guard let data = json.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(WarrenPinMismatch.self, from: data)
+    }
+
     // MARK: - Internal: inbound pump
 
     /// Read packets from `NEPacketTunnelFlow` in a loop and push each
@@ -435,6 +500,19 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
 
     // MARK: - Internal: marshalling
 
+    /// Returns `data` as a `count`-byte array, throwing
+    /// `invalidKeyLength` if the length differs. Crypto key material must
+    /// not be silently truncated or zero-padded: a wrong-length key would
+    /// otherwise yield a silently wrong identity instead of a clear error.
+    private static func fixedKeyBytes(_ data: Data, count: Int, field: String) throws -> [UInt8] {
+        guard data.count == count else {
+            throw WarrenQuinnAdapterError.invalidKeyLength(
+                field: field, expected: count, actual: data.count
+            )
+        }
+        return [UInt8](data)
+    }
+
     /// Marshal a Swift `WarrenTunnelConfig` to its C representation
     /// and call `warren_tunnel_start`. All pointers in the C struct
     /// are valid only for the duration of the call ; the FFI must
@@ -456,12 +534,11 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
     ///    `multiHopRelay` field is unused on that path.
     fileprivate static func callTunnelStart(config: WarrenTunnelConfig) throws -> OpaquePointer
     {
-        var exitPubkeyBytes = [UInt8](repeating: 0, count: 32)
-        config.exitPubkey.copyBytes(to: &exitPubkeyBytes, count: min(32, config.exitPubkey.count))
-        var signingSeedBytes = [UInt8](repeating: 0, count: 32)
-        config.walletSigningKey.copyBytes(
-            to: &signingSeedBytes,
-            count: min(32, config.walletSigningKey.count)
+        let exitPubkeyBytes = try Self.fixedKeyBytes(
+            config.exitPubkey, count: 32, field: "exitPubkey"
+        )
+        var signingSeedBytes = try Self.fixedKeyBytes(
+            config.walletSigningKey, count: 32, field: "walletSigningKey"
         )
         defer {
             // Wipe sensitive material before returning. The FFI has
@@ -494,10 +571,11 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         let relayPubkeyTuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
             UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
             UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
-            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)? = config.multiHopRelay
+            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)? = try config.multiHopRelay
             .map { relay in
-                var bytes = [UInt8](repeating: 0, count: 32)
-                relay.pubkey.copyBytes(to: &bytes, count: min(32, relay.pubkey.count))
+                let bytes = try Self.fixedKeyBytes(
+                    relay.pubkey, count: 32, field: "multiHopRelay.pubkey"
+                )
                 return tupleFrom32(bytes)
             }
 
@@ -519,22 +597,25 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                                 config.multihopExitCountry.withCString { exitC in
                                     Self.withOptionalCString(config.multihopDirectoryJSON) { dirPtr in
                                         Self.withOptionalCString(config.multihopGenerationStatePath) { genPtr in
-                                            var parameters = WarrenTunnelParametersC(
-                                                exit_pubkey: exitPubkeyTuple,
-                                                exit_endpoint: exitEndpointC,
-                                                wallet_signing_seed: signingSeedTuple,
-                                                multi_hop_relay: relayPtr,
-                                                daita_spec: daitaPtr,
-                                                nat_pmp_enabled: natPmpFlag,
-                                                bypass_cidrs: bypassBase,
-                                                bypass_cidrs_count: bypassCount,
-                                                multihop_directory_json: dirPtr,
-                                                multihop_two_hop: twoHopFlag,
-                                                multihop_entry_country: entryC,
-                                                multihop_exit_country: exitC,
-                                                multihop_generation_state_path: genPtr
-                                            )
-                                            return warren_tunnel_start(&parameters, -1)
+                                            Self.withOptionalCString(config.pinStorePath) { pinPtr in
+                                                var parameters = WarrenTunnelParametersC(
+                                                    exit_pubkey: exitPubkeyTuple,
+                                                    exit_endpoint: exitEndpointC,
+                                                    wallet_signing_seed: signingSeedTuple,
+                                                    multi_hop_relay: relayPtr,
+                                                    daita_spec: daitaPtr,
+                                                    nat_pmp_enabled: natPmpFlag,
+                                                    bypass_cidrs: bypassBase,
+                                                    bypass_cidrs_count: bypassCount,
+                                                    multihop_directory_json: dirPtr,
+                                                    multihop_two_hop: twoHopFlag,
+                                                    multihop_entry_country: entryC,
+                                                    multihop_exit_country: exitC,
+                                                    multihop_generation_state_path: genPtr,
+                                                    pin_store_path: pinPtr
+                                                )
+                                                return warren_tunnel_start(&parameters, -1)
+                                            }
                                         }
                                     }
                                 }
@@ -563,6 +644,39 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
             }
         }
         return result >= 0 ? result : nil
+    }
+
+    /// Trust a (possibly new) exit pubkey for `exitIdHex`, overwriting any
+    /// existing pin in the App Group store at `pinStorePath`. Called when
+    /// the user accepts a TOFU mismatch ("Trust new key"). Handle-free: it
+    /// mutates the on-disk store, not the live session. Returns true on
+    /// success, false on invalid input.
+    public static func pinTrust(
+        pinStorePath: String,
+        exitIdHex: String,
+        pubkeyHex: String,
+        country: String
+    ) -> Bool {
+        let result = pinStorePath.withCString { pathC in
+            exitIdHex.withCString { exitC in
+                pubkeyHex.withCString { pubkeyC in
+                    country.withCString { countryC in
+                        warren_pin_trust(pathC, exitC, pubkeyC, countryC)
+                    }
+                }
+            }
+        }
+        return result == 0
+    }
+
+    /// Clear all exit-pubkey pins in the App Group store at
+    /// `pinStorePath`. Backs the Settings "Reset pinned exit keys" action.
+    /// Returns the number of pins dropped (>= 0), or -1 on invalid input.
+    public static func pinReset(pinStorePath: String) -> Int {
+        let result = pinStorePath.withCString { pathC in
+            warren_pin_reset(pathC)
+        }
+        return Int(result)
     }
 
     /// Pin an optional Swift string as a C string for the duration of

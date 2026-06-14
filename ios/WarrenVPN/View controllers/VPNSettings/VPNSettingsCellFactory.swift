@@ -55,6 +55,18 @@ final class VPNSettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
 
+        case .resetPinnedExitKeys:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = NSLocalizedString(
+                "Reset pinned exit keys",
+                tableName: "Settings",
+                comment: "Settings row that clears the exit-pubkey TOFU pin table."
+            )
+
+            cell.disclosureType = .none
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+
         case let .wireGuardPort(port):
             guard let cell = cell as? SelectableSettingsCell else { return }
 

@@ -71,6 +71,12 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// per-connect only.
     public var multihopGenerationStatePath: String?
 
+    /// Path to the App Group file persisting the exit-pubkey TOFU pin
+    /// table. Set by the owning `WarrenQuinnTunnelImplementation` before
+    /// `start`. When non-nil the FFI enforces the pin and fails closed on a
+    /// mismatch. Nil in tests (pinning off).
+    public var pinStorePath: String?
+
     /// 32-byte Ed25519 signing seed derived from the user wallet,
     /// loaded via the cross-process Keychain bridge by the owning
     /// `WarrenQuinnTunnelImplementation` and pushed in via
@@ -294,7 +300,8 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             multihopTwoHop: twoHop,
             multihopEntryCountry: "",
             multihopExitCountry: exitCountry,
-            multihopGenerationStatePath: multihopGenerationStatePath
+            multihopGenerationStatePath: multihopGenerationStatePath,
+            pinStorePath: pinStorePath
         )
         let context = ConnectionContext(
             selectedRelays: selectedRelays,

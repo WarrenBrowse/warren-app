@@ -57,10 +57,14 @@ public struct WarrenMnemonicInputView: View {
                         .cornerRadius(10)
                 }
                 .disabled(!allWordsValid)
+                .accessibilityIdentifier(AccessibilityIdentifier.walletMnemonicRestoreSubmitButton.asString)
             }
         }
         .padding()
         .background(Color.Warren.navy)
+        // No container identifier: it would propagate to and clobber the
+        // per-word field ids and the restore button id below. UI tests
+        // detect this screen via the first word field.
     }
 
     @ViewBuilder
@@ -86,6 +90,9 @@ public struct WarrenMnemonicInputView: View {
             ))
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled(true)
+            // Per-cell identifier so UI tests can target a specific word
+            // field (e.g. paste the full phrase into the first cell).
+            .accessibilityIdentifier("walletMnemonicWordField_\(index)")
             .padding(8)
             .background(
                 RoundedRectangle(cornerRadius: 6)

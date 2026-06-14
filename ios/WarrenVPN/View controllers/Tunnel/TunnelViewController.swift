@@ -10,6 +10,7 @@ import Combine
 import MapKit
 import WarrenLogging
 import WarrenREST
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import SwiftUI
@@ -34,6 +35,14 @@ class TunnelViewController: UIViewController, RootContainment {
     private var failoverCancellable: Combine.AnyCancellable?
     private var failoverHideTask: Task<Void, Never>?
     private var lastShownFailoverDate: Date?
+
+    // Warren exit-pubkey TOFU mismatch surface. The tunnel extension fails
+    // the connection closed when an exit serves a pubkey that differs from
+    // the locally pinned one and broadcasts the mismatch through the App
+    // Group; here we present the Trust / Report / Reject alert.
+    private var pinMismatchCancellable: Combine.AnyCancellable?
+    private var lastShownPinMismatchDate: Date?
+    private var pinMismatchAlertController: AlertViewController?
 
     var shouldShowSelectLocationPicker: (() -> Void)?
     var shouldShowCancelTunnelAlert: (() -> Void)?
@@ -160,6 +169,7 @@ class TunnelViewController: UIViewController, RootContainment {
         addConnectionView()
         updateMap(animated: false)
         subscribeToFailoverEvents()
+        subscribeToPinMismatchEvents()
     }
 
     func setMainContentHidden(_ isHidden: Bool, animated: Bool) {
@@ -339,5 +349,134 @@ class TunnelViewController: UIViewController, RootContainment {
             cleanup()
         }
         failoverBannerController = nil
+    }
+
+    // MARK: - Warren exit-pubkey TOFU mismatch
+
+    private func subscribeToPinMismatchEvents() {
+        pinMismatchCancellable = appGroupEvents.$lastPinMismatch
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] event in
+                guard let self, let event, event.isFresh else { return }
+                // Skip an event we already surfaced this VC lifetime (the
+                // UserDefaults observer can re-fire on unrelated changes).
+                if let last = self.lastShownPinMismatchDate, last == event.occurredAt {
+                    return
+                }
+                self.lastShownPinMismatchDate = event.occurredAt
+                self.showPinMismatchAlert(event.mismatch)
+            }
+    }
+
+    /// Path to the App Group exit-pubkey TOFU pin table written by the
+    /// tunnel extension (sibling of the multi-hop generation file).
+    private var pinStorePath: String {
+        ApplicationConfiguration.containerURL.appendingPathComponent("warren-exit-pins.json").path
+    }
+
+    private func showPinMismatchAlert(_ mismatch: WarrenPinMismatch) {
+        // Avoid stacking duplicate alerts if one is already up.
+        guard pinMismatchAlertController == nil else { return }
+
+        let title = NSLocalizedString(
+            "Server identity changed",
+            tableName: "Settings",
+            comment: "Title of the alert shown when a Warren exit serves a different exit pubkey than the one previously pinned."
+        )
+        let messageLines = [
+            NSLocalizedString(
+                "The Warren exit server you previously trusted now presents a different cryptographic identity.",
+                tableName: "Settings",
+                comment: "First line of the exit-pubkey mismatch alert body."
+            ),
+            NSLocalizedString(
+                "This usually means the operator rotated the key, but it can also indicate that the server has been replaced. Refuse if you did not expect a change.",
+                tableName: "Settings",
+                comment: "Second line of the exit-pubkey mismatch alert body."
+            ),
+        ]
+
+        let presentation = AlertPresentation(
+            id: "warren-pubkey-mismatch-alert",
+            icon: .warning,
+            title: title,
+            message: messageLines.joined(separator: "\n\n"),
+            buttons: [
+                AlertAction(
+                    title: NSLocalizedString(
+                        "Trust new key",
+                        tableName: "Settings",
+                        comment: "Button that pins the newly observed exit pubkey and reconnects."
+                    ),
+                    style: .default,
+                    handler: { [weak self] in
+                        self?.handlePinMismatchTrust(mismatch)
+                    }
+                ),
+                AlertAction(
+                    title: NSLocalizedString(
+                        "Report to Warren",
+                        tableName: "Settings",
+                        comment: "Button that opens the support page to report a suspicious exit-pubkey change."
+                    ),
+                    style: .default,
+                    handler: { [weak self] in
+                        self?.handlePinMismatchReport()
+                    }
+                ),
+                AlertAction(
+                    title: NSLocalizedString(
+                        "Reject (disconnect)",
+                        tableName: "Settings",
+                        comment: "Button that dismisses the mismatch alert and stays disconnected."
+                    ),
+                    style: .destructive,
+                    handler: { [weak self] in
+                        self?.handlePinMismatchReject()
+                    }
+                ),
+            ]
+        )
+
+        let alert = AlertViewController(presentation: presentation)
+        alert.onDismiss = { [weak self] in
+            self?.pinMismatchAlertController = nil
+        }
+        pinMismatchAlertController = alert
+        present(alert, animated: true)
+    }
+
+    private func dismissPinMismatchAlert() {
+        appGroupEvents.clearPinMismatch()
+        pinMismatchAlertController?.dismiss(animated: true)
+        pinMismatchAlertController = nil
+    }
+
+    private func handlePinMismatchTrust(_ mismatch: WarrenPinMismatch) {
+        let trusted = WarrenQuinnAdapter.pinTrust(
+            pinStorePath: pinStorePath,
+            exitIdHex: mismatch.exitId,
+            pubkeyHex: mismatch.observed,
+            country: mismatch.country
+        )
+        if !trusted {
+            logger.error("Failed to trust new exit pubkey for exit \(mismatch.exitId)")
+        }
+        dismissPinMismatchAlert()
+        // The tunnel failed closed; reconnect now that the new key is
+        // pinned. Keep the same relay selection (no new relay).
+        interactor.reconnectTunnel(selectNewRelay: false)
+    }
+
+    private func handlePinMismatchReport() {
+        let language = Bundle.preferredLocalizations(from: ["en"]).first ?? "en"
+        UIApplication.shared.open(ApplicationConfiguration.faqAndGuidesURL(for: language))
+        // Reporting does not trust the key; stay disconnected.
+        dismissPinMismatchAlert()
+    }
+
+    private func handlePinMismatchReject() {
+        // The tunnel already failed closed; just clear the pending mismatch.
+        dismissPinMismatchAlert()
     }
 }
