@@ -87,6 +87,12 @@
             "value": "País"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Țară"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -212,6 +218,12 @@
           }
         },
         "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "DAITA"
@@ -347,6 +359,12 @@
             "value": "O DAITA é experimental e pode degradar o débito em ligações de grande largura de banda."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA este experimental și poate reduce debitul pe conexiunile cu lățime de bandă mare."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -475,6 +493,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Defesa contra a análise de tráfego orientada por IA. Emite tráfego de cobertura a uma taxa constante para tornar as suas sessões VPN indistinguíveis para os observadores da rede. Adiciona ~10% de sobrecarga de largura de banda."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apărare împotriva analizei traficului ghidate de inteligența artificială. Emite trafic de acoperire la rată constantă pentru a face sesiunile VPN imposibil de distins pentru observatorii rețelei. Adaugă un consum suplimentar de bandă de aproximativ 10%."
           }
         },
         "ru": {
@@ -607,6 +631,12 @@
             "value": "Dispensar"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Închide"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -653,16 +683,130 @@
     },
     "Dropped %d pinned exit key entries.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjernede %d fastgjorte udgangsnøgleposter."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d angeheftete Ausgangsschlüssel-Einträge entfernt."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Dropped %d pinned exit key entries."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron %d entradas de claves de salida fijadas."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poistettiin %d kiinnitettyä ulosmenoavainta."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "%d entrées de clés de sortie épinglées supprimées."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminate %d voci di chiavi di uscita fissate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件の固定されたエグジットキーのエントリーを削除しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키 항목 %d개를 삭제했습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီး %d ခုကို ဖယ်ရှားလိုက်ပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjernet %d festede utgangsnøkkeloppføringer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d vastgezette exit-sleutelvermeldingen verwijderd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunięto %d przypiętych wpisów kluczy wyjściowych."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foram removidas %d entradas de chaves de saída fixadas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S-au eliminat %d intrări de chei de ieșire fixate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалено закреплённых записей ключей выхода: %d."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tog bort %d fästa utgångsnyckelposter."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลบรายการคีย์ทางออกที่ปักหมุดไว้แล้ว %d รายการ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sabitlenmiş çıkış anahtarı kaydı kaldırıldı."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除 %d 条已固定的出口密钥记录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已捨棄 %d 個已固定的出口金鑰項目。"
           }
         }
       }
@@ -751,6 +895,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ativar o DAITA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează DAITA"
           }
         },
         "ru": {
@@ -883,6 +1033,12 @@
             "value": "Ativar multihop"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează Multihop"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1011,6 +1167,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ativar reencaminhamento de portas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează redirecționarea porturilor"
           }
         },
         "ru": {
@@ -1143,6 +1305,12 @@
             "value": "Relé de entrada"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de intrare"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1189,16 +1357,130 @@
     },
     "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use). Until the new pins are established, an exit substitution would not be flagged on the first reconnect.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hver Warren-udgang, du tidligere har oprettet forbindelse til, vil blive fastgjort igen ved næste forbindelse (Trust On First Use). Indtil de nye fastgørelser er etableret, vil en udskiftning af udgang ikke blive markeret ved den første genoprettelse af forbindelsen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Warren-Ausgang, mit dem du zuvor verbunden warst, wird bei der nächsten Verbindung erneut angeheftet (Trust On First Use). Bis die neuen Anheftungen eingerichtet sind, würde ein Austausch des Ausgangs bei der ersten erneuten Verbindung nicht gemeldet."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use). Until the new pins are established, an exit substitution would not be flagged on the first reconnect."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada salida de Warren a la que te conectaste anteriormente se volverá a fijar en la próxima conexión (Trust On First Use). Hasta que se establezcan las nuevas fijaciones, una sustitución de salida no se marcaría en la primera reconexión."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jokainen aiemmin käyttämäsi Warren-ulosmenopalvelin kiinnitetään uudelleen seuraavalla yhteydellä (Trust On First Use). Ennen kuin uudet kiinnitykset on muodostettu, ulosmenopalvelimen vaihtoa ei merkitä ensimmäisellä uudelleenyhdistyksellä."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Chaque sortie Warren à laquelle vous vous êtes déjà connecté sera réépinglée lors de la prochaine connexion (confiance à la première utilisation). Tant que les nouveaux épinglages ne sont pas établis, une substitution de sortie ne serait pas signalée lors de la première reconnexion."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni uscita Warren a cui ti sei connesso in precedenza verrà nuovamente fissata alla connessione successiva (Trust On First Use). Finché le nuove chiavi fissate non saranno stabilite, una sostituzione dell'uscita non verrebbe segnalata alla prima riconnessione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前に接続したすべてのWarrenエグジットは、次回の接続時に再度固定されます（Trust On First Use）。新しい固定が確立されるまでは、最初の再接続でエグジットの差し替えが検出されません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전에 연결했던 모든 Warren 출구는 다음 연결 시 다시 고정됩니다(Trust On First Use). 새 고정이 설정되기 전까지는 첫 재연결 시 출구가 교체되어도 표시되지 않습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင်ယခင်က ချိတ်ဆက်ခဲ့သော Warren ထွက်ပေါက်တိုင်းကို နောက်ချိတ်ဆက်မှုတွင် ပြန်လည်ပင်ထားမည်ဖြစ်သည် (Trust On First Use)။ ပင်အသစ်များ မတည်ဆောက်ရသေးမီ၊ ပထမဆုံး ပြန်လည်ချိတ်ဆက်မှုတွင် ထွက်ပေါက်အစားထိုးမှုကို အချက်ပေးဖော်ပြမည် မဟုတ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hver Warren-utgang du tidligere har koblet til, blir festet på nytt ved neste tilkobling (Trust On First Use). Inntil de nye festene er etablert, vil en bytting av utgang ikke bli flagget ved den første gjentilkoblingen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke Warren-exit waarmee je eerder verbinding hebt gemaakt, wordt bij de volgende verbinding opnieuw vastgezet (Trust On First Use). Totdat de nieuwe pins zijn vastgelegd, wordt een vervanging van een exit bij de eerste herverbinding niet gemarkeerd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Każdy serwer wyjściowy Warren, z którym wcześniej się łączyłeś, zostanie ponownie przypięty przy następnym połączeniu (Trust On First Use). Dopóki nowe przypięcia nie zostaną ustanowione, podmiana serwera wyjściowego nie zostanie zasygnalizowana przy pierwszym ponownym połączeniu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada saída Warren à qual se ligou anteriormente será novamente fixada na próxima ligação (Trust On First Use). Até que as novas fixações sejam estabelecidas, uma substituição de saída não seria assinalada na primeira reconexão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiecare ieșire Warren la care te-ai conectat anterior va fi fixată din nou la următoarea conexiune (Trust On First Use). Până la stabilirea noilor fixări, o substituire a ieșirii nu ar fi semnalată la prima reconectare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждый сервер выхода Warren, к которому вы ранее подключались, будет повторно закреплён при следующем подключении (Trust On First Use). Пока новые закрепления не установлены, подмена сервера выхода не будет обнаружена при первом повторном подключении."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varje Warren-utgång som du tidigare anslutit till kommer att fästas på nytt vid nästa anslutning (Trust On First Use). Tills de nya fästningarna är etablerade flaggas inte ett utgångsbyte vid den första återanslutningen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์ทางออก Warren ทุกแห่งที่คุณเคยเชื่อมต่อจะถูกปักหมุดใหม่ในการเชื่อมต่อครั้งถัดไป (Trust On First Use) จนกว่าการปักหมุดใหม่จะเสร็จสมบูรณ์ การแทนที่เซิร์ฟเวอร์ทางออกจะไม่ถูกแจ้งเตือนในการเชื่อมต่อใหม่ครั้งแรก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha önce bağlandığınız her Warren çıkışı, bir sonraki bağlantıda yeniden sabitlenir (Trust On First Use). Yeni sabitlemeler oluşana kadar, bir çıkış değişikliği ilk yeniden bağlanmada işaretlenmez."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你之前连接过的每个 Warren 出口都将在下次连接时重新固定（Trust On First Use）。在建立新的固定之前，首次重新连接时不会标记出口被替换的情况。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你先前連接過的每個 Warren 出口都會在下次連線時重新固定（Trust On First Use）。在建立新的固定金鑰之前，首次重新連線時不會標記出口被替換的情況。"
           }
         }
       }
@@ -1287,6 +1569,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Relé de saída"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de ieșire"
           }
         },
         "ru": {
@@ -1419,6 +1707,12 @@
             "value": "Porta externa"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port extern"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1547,6 +1841,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Porta reencaminhada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port redirecționat"
           }
         },
         "ru": {
@@ -1679,6 +1979,12 @@
             "value": "Imitação de HTTP/3 ativa"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitarea HTTP/3 este activă"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1807,6 +2113,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A imitação de HTTP/3 está ativa. O tráfego é indistinguível do HTTPS normal."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitarea HTTP/3 este activă. Traficul este imposibil de distins de traficul HTTPS obișnuit."
           }
         },
         "ru": {
@@ -1939,6 +2251,12 @@
             "value": "Multihop"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1985,16 +2303,130 @@
     },
     "Pin table cleared": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fastgørelsestabel ryddet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anheftungstabelle geleert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pin table cleared"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabla de fijaciones borrada"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiinnitystaulukko tyhjennetty"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Table d'épinglage effacée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabella delle chiavi fissate cancellata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定テーブルをクリアしました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 테이블이 지워졌습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ဇယားကို ရှင်းလင်းပြီးပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Festetabell tømt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pintabel gewist"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabela przypięć wyczyszczona"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabela de fixações limpa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabelul de fixări a fost golit"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таблица закреплений очищена"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fästtabellen rensad"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ล้างตารางการปักหมุดแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitleme tablosu temizlendi"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定列表已清空"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清除固定金鑰表"
           }
         }
       }
@@ -2083,6 +2515,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reencaminhamento de portas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redirecționarea porturilor"
           }
         },
         "ru": {
@@ -2215,6 +2653,12 @@
             "value": "Religado através de %@. O seu tráfego permaneceu protegido."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectat prin %@. Traficul tău a rămas protejat."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2261,16 +2705,130 @@
     },
     "Reject (disconnect)": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afvis (afbryd forbindelse)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablehnen (trennen)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reject (disconnect)"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazar (desconectar)"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hylkää (katkaise yhteys)"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Refuser (déconnexion)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rifiuta (disconnetti)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒否（切断）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "거부(연결 끊기)"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ငြင်းပယ်ပါ (ချိတ်ဆက်မှုဖြတ်ပါ)"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvis (koble fra)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weigeren (verbinding verbreken)"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odrzuć (rozłącz)"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejeitar (desligar)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respinge (deconectează)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклонить (отключиться)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisa (koppla bort)"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปฏิเสธ (ตัดการเชื่อมต่อ)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddet (bağlantıyı kes)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒绝（断开连接）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒絕（中斷連線）"
           }
         }
       }
@@ -2361,6 +2919,12 @@
             "value": "Renova em"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se reînnoiește în"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2407,16 +2971,130 @@
     },
     "Report to Warren": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapportér til Warren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An Warren melden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Report to Warren"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar a Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilmoita Warrenille"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Signaler à Warren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala a Warren"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenに報告"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren에 신고"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren သို့ တိုင်ကြားပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapporter til Warren"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapporteren aan Warren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś do Warren"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar à Warren"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează către Warren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сообщить в Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapportera till Warren"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานไปยัง Warren"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren'a bildir"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向 Warren 报告"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報給 Warren"
           }
         }
       }
@@ -2507,6 +3185,12 @@
             "value": "Solicita uma porta externa ao relé de saída do Warren através de NAT-PMP, para que as aplicações ponto a ponto (BitTorrent, videochamadas, serviços autoalojados) possam receber ligações de entrada."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicită un port extern de la releul de ieșire Warren prin NAT-PMP, astfel încât aplicațiile peer-to-peer (BitTorrent, apeluri video, servicii găzduite local) să poată primi conexiuni de intrare."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2553,10 +3237,34 @@
     },
     "Reset all": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil alt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle zurücksetzen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reset all"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer todo"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaa kaikki"
           }
         },
         "fr": {
@@ -2564,15 +3272,129 @@
             "state": "translated",
             "value": "Tout réinitialiser"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimposta tutto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてリセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 재설정"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အားလုံးကို ပြန်လည်သတ်မှတ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill alt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles resetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetuj wszystko"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor tudo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează tot"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить всё"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställ alla"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตทั้งหมด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü sıfırla"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部重置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部重設"
+          }
         }
       }
     },
     "Reset failed": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstilling mislykkedes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen fehlgeschlagen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reset failed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error al restablecer"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaus epäonnistui"
           }
         },
         "fr": {
@@ -2580,15 +3402,129 @@
             "state": "translated",
             "value": "Échec de la réinitialisation"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimpostazione non riuscita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リセットに失敗しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재설정 실패"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပြန်လည်သတ်မှတ်ခြင်း မအောင်မြင်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestilling mislyktes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetten mislukt"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetowanie nie powiodło się"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reposição falhou"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetarea a eșuat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось выполнить сброс"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställningen misslyckades"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตไม่สำเร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıfırlama başarısız oldu"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置失败"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重設失敗"
+          }
         }
       }
     },
     "Reset pinned exit keys": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil fastgjorte udgangsnøgler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angeheftete Ausgangsschlüssel zurücksetzen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reset pinned exit keys"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer claves de salida fijadas"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaa kiinnitetyt ulosmenoavaimet"
           }
         },
         "fr": {
@@ -2596,21 +3532,225 @@
             "state": "translated",
             "value": "Réinitialiser les clés de sortie épinglées"
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimposta le chiavi di uscita fissate"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをリセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키 재설정"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ပြန်လည်သတ်မှတ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill festede utgangsnøkler"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastgezette exit-sleutels resetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetuj przypięte klucze wyjściowe"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor chaves de saída fixadas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează cheile de ieșire fixate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить закреплённые ключи выхода"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställ fästa utgångsnycklar"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตคีย์ทางออกที่ปักหมุดไว้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarlarını sıfırla"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置已固定的出口密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重設已固定的出口金鑰"
+          }
         }
       }
     },
     "Reset pinned exit keys?": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil fastgjorte udgangsnøgler?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angeheftete Ausgangsschlüssel zurücksetzen?"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reset pinned exit keys?"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Restablecer las claves de salida fijadas?"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollataanko kiinnitetyt ulosmenoavaimet?"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Réinitialiser les clés de sortie épinglées ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimpostare le chiavi di uscita fissate?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをリセットしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키를 재설정하시겠습니까?"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ပြန်လည်သတ်မှတ်မလား။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestille festede utgangsnøkler?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastgezette exit-sleutels resetten?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetować przypięte klucze wyjściowe?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor as chaves de saída fixadas?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetezi cheile de ieșire fixate?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить закреплённые ключи выхода?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställa fästa utgångsnycklar?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตคีย์ทางออกที่ปักหมุดไว้หรือไม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarları sıfırlansın mı?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置已固定的出口密钥？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要重設已固定的出口金鑰嗎？"
           }
         }
       }
@@ -2701,6 +3841,12 @@
             "value": "Encaminha o tráfego através de um relé de entrada antes do relé de saída. Adiciona latência (~30-50 ms) e sobrecarga de largura de banda. Desativado por predefinição."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direcționează traficul printr-un releu de intrare înainte de releul de ieșire. Adaugă latență (aproximativ 30-50 ms) și consum suplimentar de bandă. Dezactivat implicit."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2747,16 +3893,130 @@
     },
     "Server identity changed": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentitet ændret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentität geändert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Server identity changed"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La identidad del servidor ha cambiado"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palvelimen identiteetti muuttui"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Identité du serveur modifiée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'identità del server è cambiata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーの識別情報が変更されました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 신원이 변경됨"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆာဗာ၏ အထောက်အထား ပြောင်းလဲသွားပါသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentitet endret"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentiteit gewijzigd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tożsamość serwera uległa zmianie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A identidade do servidor mudou"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identitatea serverului s-a schimbat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Идентификатор сервера изменился"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentiteten har ändrats"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อัตลักษณ์ของเซิร์ฟเวอร์เปลี่ยนแปลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu kimliği değişti"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器身份已更改"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器身分已變更"
           }
         }
       }
@@ -2847,6 +4107,12 @@
             "value": "Relé de saída alterado"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de ieșire schimbat"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2893,16 +4159,130 @@
     },
     "The Warren exit server you previously trusted now presents a different cryptographic identity.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den Warren-udgangsserver, du tidligere stolede på, præsenterer nu en anden kryptografisk identitet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Warren-Ausgangsserver, dem du zuvor vertraut hast, weist nun eine andere kryptografische Identität auf."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The Warren exit server you previously trusted now presents a different cryptographic identity."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor de salida de Warren en el que confiabas anteriormente ahora presenta una identidad criptográfica diferente."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aiemmin luottamasi Warren-ulosmenopalvelin esittää nyt eri kryptografisen identiteetin."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Le serveur de sortie Warren auquel vous faisiez confiance présente désormais une identité cryptographique différente."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server di uscita Warren di cui ti fidavi in precedenza presenta ora un'identità crittografica diversa."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前に信頼したWarrenエグジットサーバーが、現在は異なる暗号学的識別情報を提示しています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전에 신뢰했던 Warren 출구 서버가 이제 다른 암호화 신원을 제시합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင်ယခင်က ယုံကြည်ခဲ့သော Warren ထွက်ပေါက်ဆာဗာသည် ယခု မတူညီသော cryptographic အထောက်အထားကို ပြသနေပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren-utgangsserveren du tidligere stolte på, presenterer nå en annen kryptografisk identitet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De Warren-exitserver die je eerder vertrouwde, presenteert nu een andere cryptografische identiteit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer wyjściowy Warren, któremu wcześniej ufałeś, prezentuje teraz inną tożsamość kryptograficzną."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor de saída Warren em que confiou anteriormente apresenta agora uma identidade criptográfica diferente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverul de ieșire Warren în care aveai încredere anterior prezintă acum o identitate criptografică diferită."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер выхода Warren, которому вы ранее доверяли, теперь предъявляет другой криптографический идентификатор."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren-utgångsservern som du tidigare litade på presenterar nu en annan kryptografisk identitet."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์ทางออก Warren ที่คุณเคยเชื่อถือ ตอนนี้แสดงอัตลักษณ์ทางการเข้ารหัสที่แตกต่างออกไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha önce güvendiğiniz Warren çıkış sunucusu artık farklı bir kriptografik kimlik sunuyor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你之前信任的 Warren 出口服务器现在呈现了不同的加密身份。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你先前信任的 Warren 出口伺服器現在出示了不同的加密身分。"
           }
         }
       }
@@ -2993,6 +4373,12 @@
             "value": "O relé de saída determina a sua localização aparente perante os sites."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releul de ieșire determină locația ta aparentă pentru site-urile web."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -3039,10 +4425,34 @@
     },
     "The pinned exit keys could not be cleared.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De fastgjorte udgangsnøgler kunne ikke ryddes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die angehefteten Ausgangsschlüssel konnten nicht gelöscht werden."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The pinned exit keys could not be cleared."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron borrar las claves de salida fijadas."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiinnitettyjä ulosmenoavaimia ei voitu tyhjentää."
           }
         },
         "fr": {
@@ -3050,15 +4460,129 @@
             "state": "translated",
             "value": "Les clés de sortie épinglées n'ont pas pu être effacées."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile cancellare le chiavi di uscita fissate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをクリアできませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키를 지울 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ရှင်းလင်း၍ မရပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De festede utgangsnøklene kunne ikke tømmes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De vastgezette exit-sleutels konden niet worden gewist."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wyczyścić przypiętych kluczy wyjściowych."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível limpar as chaves de saída fixadas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheile de ieșire fixate nu au putut fi golite."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось очистить закреплённые ключи выхода."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De fästa utgångsnycklarna kunde inte rensas."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถล้างคีย์ทางออกที่ปักหมุดไว้ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarları temizlenemedi."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法清除已固定的出口密钥。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法清除已固定的出口金鑰。"
+          }
         }
       }
     },
     "This usually means the operator rotated the key, but it can also indicate that the server has been replaced. Refuse if you did not expect a change.": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyder normalt, at operatøren har udskiftet nøglen, men det kan også indikere, at serveren er blevet udskiftet. Afvis, hvis du ikke forventede en ændring."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das bedeutet in der Regel, dass der Betreiber den Schlüssel gewechselt hat, kann aber auch darauf hindeuten, dass der Server ausgetauscht wurde. Lehne ab, wenn du keine Änderung erwartet hast."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This usually means the operator rotated the key, but it can also indicate that the server has been replaced. Refuse if you did not expect a change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente esto significa que el operador rotó la clave, pero también puede indicar que el servidor ha sido reemplazado. Recházalo si no esperabas un cambio."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avaimen, mutta se voi myös viitata siihen, että palvelin on korvattu. Hylkää, jos et odottanut muutosta."
           }
         },
         "fr": {
@@ -3066,21 +4590,225 @@
             "state": "translated",
             "value": "Cela signifie généralement que l'opérateur a renouvelé la clé, mais cela peut aussi indiquer que le serveur a été remplacé. Refusez si vous n'attendiez pas de changement."
           }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di solito ciò significa che l'operatore ha ruotato la chiave, ma può anche indicare che il server è stato sostituito. Rifiuta se non ti aspettavi un cambiamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これは通常、運営者がキーをローテーションしたことを意味しますが、サーバーが差し替えられた可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이는 보통 운영자가 키를 교체했음을 의미하지만, 서버가 교체되었음을 나타낼 수도 있습니다. 변경을 예상하지 못했다면 거부하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအရာသည် များသောအားဖြင့် အော်ပရေတာက ကီးကို လှည့်လဲထားကြောင်း ဆိုလိုသော်လည်း၊ ဆာဗာကို အစားထိုးထားကြောင်းကိုလည်း ညွှန်ပြနိုင်ပါသည်။ ပြောင်းလဲမှုကို သင်မမျှော်လင့်ထားပါက ငြင်းပယ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyr vanligvis at operatøren har rotert nøkkelen, men det kan også tyde på at serveren er blitt erstattet. Avvis hvis du ikke ventet en endring."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit betekent meestal dat de operator de sleutel heeft geroteerd, maar het kan ook aangeven dat de server is vervangen. Weiger als je geen wijziging verwachtte."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwykle oznacza to, że operator zmienił klucz, ale może to również wskazywać, że serwer został podmieniony. Odmów, jeśli nie spodziewałeś się zmiany."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente, isto significa que o operador rodou a chave, mas também pode indicar que o servidor foi substituído. Recuse se não estava à espera de uma alteração."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De obicei, acest lucru înseamnă că operatorul a rotit cheia, dar poate indica și faptul că serverul a fost înlocuit. Refuză dacă nu te așteptai la o schimbare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно это означает, что оператор сменил ключ, но также может указывать на то, что сервер был заменён. Откажитесь, если вы не ожидали изменения."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detta betyder vanligtvis att operatören roterade nyckeln, men det kan också tyda på att servern har bytts ut. Avvisa om du inte förväntade dig en ändring."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเวียนคีย์ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกเปลี่ยนใหม่ได้เช่นกัน ปฏิเสธหากคุณไม่ได้คาดหมายว่าจะมีการเปลี่ยนแปลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu genellikle operatörün anahtarı değiştirdiği anlamına gelir, ancak sunucunun değiştirilmiş olabileceğini de gösterebilir. Bir değişiklik beklemiyorduysanız reddedin."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这通常意味着运营方轮换了密钥，但也可能表明该服务器已被替换。如果你并未预期会发生更改，请予以拒绝。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這通常表示營運者輪換了金鑰，但也可能代表伺服器已被替換。如果你並未預期會有變更，請拒絕。"
+          }
         }
       }
     },
     "Trust new key": {
       "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stol på ny nøgle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuem Schlüssel vertrauen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Trust new key"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar en la nueva clave"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luota uuteen avaimeen"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Faire confiance à la nouvelle clé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fidati della nuova chiave"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいキーを信頼する"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 키 신뢰"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကီးအသစ်ကို ယုံကြည်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stol på ny nøkkel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe sleutel vertrouwen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaufaj nowemu kluczowi"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar na nova chave"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acordă încredere noii chei"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доверять новому ключу"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lita på den nya nyckeln"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เชื่อถือคีย์ใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtara güven"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任新密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任新金鑰"
           }
         }
       }
@@ -3169,6 +4897,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "VPN religada através de %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN reconectat prin %@"
           }
         },
         "ru": {
@@ -3299,6 +5033,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O seu tráfego VPN é indistinguível da navegação HTTPS normal."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traficul tău VPN este imposibil de distins de navigarea HTTPS obișnuită."
           }
         },
         "ru": {

@@ -87,6 +87,12 @@
             "value": "Qualquer pessoa com acesso a estas palavras pode recuperar a sua carteira Warren."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oricine are acces la aceste cuvinte îți poate recupera portofelul Warren."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -215,6 +221,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulează"
           }
         },
         "ru": {
@@ -347,6 +359,12 @@
             "value": "Não é possível mostrar a frase"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fraza nu poate fi dezvăluită"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -475,6 +493,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fechar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Închide"
           }
         },
         "ru": {
@@ -607,6 +631,12 @@
             "value": "Introduza as suas 12 palavras de recuperação"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu cele 12 cuvinte de recuperare"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -735,6 +765,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível gerar uma nova frase de recuperação. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generarea unei noi fraze de recuperare a eșuat. Încearcă din nou."
           }
         },
         "ru": {
@@ -867,6 +903,12 @@
             "value": "Não foi possível ler a carteira a partir do armazenamento seguro."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citirea portofelului din stocarea securizată a eșuat."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -995,6 +1037,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível guardar a carteira em segurança. Certifique-se de que o seu dispositivo está desbloqueado e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stocarea securizată a portofelului a eșuat. Asigură-te că dispozitivul este deblocat și încearcă din nou."
           }
         },
         "ru": {
@@ -1127,6 +1175,12 @@
             "value": "Anotei-as"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le-am notat"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1255,6 +1309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualmente não existe nenhuma carteira configurada neste dispositivo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe acest dispozitiv nu este configurat în prezent niciun portofel."
           }
         },
         "ru": {
@@ -1387,6 +1447,12 @@
             "value": "Atualmente não existe nenhuma carteira configurada neste dispositivo. Gere ou importe uma primeiro."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe acest dispozitiv nu este configurat în prezent niciun portofel. Generează sau importă mai întâi unul."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1512,6 +1578,12 @@
           }
         },
         "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "OK"
@@ -1647,6 +1719,12 @@
             "value": "Mantenha premido para mostrar. Não faça captura de ecrã."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apasă și ține apăsat pentru a dezvălui. Nu face capturi de ecran."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1775,6 +1853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frase de recuperação"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frază de recuperare"
           }
         },
         "ru": {
@@ -1907,6 +1991,12 @@
             "value": "Falha no restauro"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurarea a eșuat"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2035,6 +2125,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restaurar carteira"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurează portofelul"
           }
         },
         "ru": {
@@ -2167,6 +2263,12 @@
             "value": "Mostrar a frase de recuperação da sua carteira Warren"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezvăluie fraza de recuperare pentru portofelul tău Warren"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2295,6 +2397,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A frase de recuperação é inválida."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fraza de recuperare nu este validă."
           }
         },
         "ru": {
@@ -2427,6 +2535,12 @@
             "value": "A frase de recuperação é inválida. Verifique cada palavra na lista de palavras BIP39 e tente novamente."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fraza de recuperare nu este validă. Verifică fiecare cuvânt în lista de cuvinte BIP39 și încearcă din nou."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2555,6 +2669,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tentar novamente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încearcă din nou"
           }
         },
         "ru": {
@@ -2687,6 +2807,12 @@
             "value": "Ocorreu um erro inesperado."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A apărut o eroare neașteptată."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2815,6 +2941,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ocorreu um erro inesperado ao restaurar a sua carteira."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A apărut o eroare neașteptată la restaurarea portofelului tău."
           }
         },
         "ru": {
@@ -2947,6 +3079,12 @@
             "value": "Falha na criação da carteira"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crearea portofelului a eșuat"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -3077,6 +3215,12 @@
             "value": "Anote-as em papel e guarde-as num local seguro. Qualquer pessoa com acesso a estas palavras pode recuperar a sua carteira Warren."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notează-le pe hârtie și păstrează-le într-un loc sigur. Oricine are acces la aceste cuvinte îți poate recupera portofelul Warren."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -3205,6 +3349,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "As suas 12 palavras de recuperação"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cele 12 cuvinte de recuperare ale tale"
           }
         },
         "ru": {

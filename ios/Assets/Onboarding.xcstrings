@@ -87,6 +87,12 @@
             "value": "Uma VPN descentralizada com autenticação por carteira não custodial, imitação de HTTP/3 sempre ativa e encaminhamento multihop opcional."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un VPN descentralizat cu autentificare prin portofel non-custodial, imitare HTTP/3 mereu activă și rutare Multihop opțională."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -215,6 +221,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ative a sua subscrição"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează-ți abonamentul"
           }
         },
         "ru": {
@@ -347,6 +359,12 @@
             "value": "Adiciona um relé de entrada antes da sua saída. Latência adicional para dificultar a correlação de tráfego."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă un releu de intrare înainte de ieșirea ta. Latență suplimentară pentru o corelare mai dificilă a traficului."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -475,6 +493,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sempre ativo. Torna o tráfego VPN indistinguível do HTTPS normal."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mereu activă. Face traficul VPN imposibil de distins de traficul HTTPS obișnuit."
           }
         },
         "ru": {
@@ -607,6 +631,12 @@
             "value": "Continuar"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuă"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -735,6 +765,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modelação de tráfego DAITA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelarea traficului DAITA"
           }
         },
         "ru": {
@@ -867,6 +903,12 @@
             "value": "Defesa contra a análise de tráfego orientada por IA. ~10% de sobrecarga de largura de banda."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apărare împotriva analizei traficului ghidate de inteligența artificială. Consum suplimentar de bandă de aproximativ 10%."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -995,6 +1037,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerar nova carteira"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generează un portofel nou"
           }
         },
         "ru": {
@@ -1127,6 +1175,12 @@
             "value": "Começar"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începe"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1255,6 +1309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imitação de HTTP/3"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitare HTTP/3"
           }
         },
         "ru": {
@@ -1387,6 +1447,12 @@
             "value": "Já tenho uma frase de recuperação"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am deja o frază de recuperare"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1515,6 +1581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciar o Warren"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lansează Warren"
           }
         },
         "ru": {
@@ -1647,6 +1719,12 @@
             "value": "Talvez mais tarde"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poate mai târziu"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -1775,6 +1853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encaminhamento multihop"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rutare Multihop"
           }
         },
         "ru": {
@@ -1907,6 +1991,12 @@
             "value": "Abrir warrenbrowse.com"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide warrenbrowse.com"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2035,6 +2125,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha as suas predefinições. Pode alterá-las a qualquer momento nas Definições."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alege-ți valorile implicite. Le poți modifica oricând în Setări."
           }
         },
         "ru": {
@@ -2167,6 +2263,12 @@
             "value": "Preferências de privacidade"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferințe de confidențialitate"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2295,6 +2397,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Passo %1$lld de %2$lld"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasul %lld din %lld"
           }
         },
         "ru": {
@@ -2427,6 +2535,12 @@
             "value": "As subscrições são pagas em moedas que preservam a privacidade em warrenbrowse.com. A chave pública da sua carteira é o único identificador que a rede Warren vê. Não é necessário e-mail nem número de conta."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonamentele se plătesc în monede care protejează confidențialitatea pe warrenbrowse.com. Cheia publică a portofelului tău este singurul identificator pe care îl vede rețeaua Warren; nu este necesar niciun e-mail sau număr de cont."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2555,6 +2669,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toque em Iniciar o Warren para se ligar à rede. A sua carteira permanece na sua Secure Enclave. Nenhum servidor Warren vê alguma vez a sua chave privada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apasă pe Lansează Warren pentru a te conecta la rețea. Portofelul tău rămâne în enclava securizată; niciun server Warren nu îți vede vreodată cheia privată."
           }
         },
         "ru": {
@@ -2687,6 +2807,12 @@
             "value": "Carteira pronta"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portofelul este pregătit"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -2815,6 +2941,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Warren utiliza uma carteira Ed25519 não custodial derivada de uma frase de recuperação de 12 palavras. Só você detém as chaves e pode restaurar a sua subscrição em qualquer dispositivo com a mesma frase."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren folosește un portofel non-custodial Ed25519 derivat dintr-o frază de recuperare de 12 cuvinte. Doar tu deții cheile și îți poți restaura abonamentul pe orice dispozitiv folosind aceeași frază."
           }
         },
         "ru": {
@@ -2947,6 +3079,12 @@
             "value": "Bem-vindo ao Warren VPN"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bun venit la Warren VPN"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -3077,6 +3215,12 @@
             "value": "Está tudo pronto"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totul este gata"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -3205,6 +3349,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A sua carteira Warren"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portofelul tău Warren"
           }
         },
         "ru": {

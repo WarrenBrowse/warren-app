@@ -81,6 +81,12 @@
             "value": "Desative “%@” ou desligue antes de atualizar para não perder a ligação de rede."
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivează „%@” sau deconectează-te înainte de actualizare pentru a nu pierde conectivitatea la rețea."
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -205,6 +211,12 @@
             "value": "Forçar todas as aplicações"
           }
         },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forțează toate aplicațiile"
+          }
+        },
         "ru": {
           "stringUnit": {
             "state": "translated",
@@ -327,6 +339,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualização disponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizare disponibilă"
           }
         },
         "ru": {
