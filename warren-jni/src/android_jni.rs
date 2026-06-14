@@ -167,10 +167,10 @@ fn init_log_file(_log_dir: &Path) -> Result<(), String> {
             .with_max_level(log::LevelFilter::Debug)
             .with_tag("WarrenJni"),
     );
-    // TODO (D.4): also wire a file appender writing to
-    // <log_dir>/warren.log with rotation, so problem reports can ship
-    // the last N MB of native logs without relying on logcat ring
-    // buffer persistence.
+    // Problem reports read native logs on demand via `collectReport`
+    // (logcat dump of our own tag). A future enhancement could add a
+    // rotating file appender at <log_dir>/warren.log for retention beyond
+    // the logcat ring buffer, but that is not required for reports to work.
     Ok(())
 }
 
@@ -949,24 +949,45 @@ fn redeem_voucher_inner(_mnemonic: &str, _voucher_secret: &str) -> Result<u64, S
     Err("redeemVoucher is Android-only".to_owned())
 }
 
-/// Collect a redacted log bundle from the in-process logger ring
-/// buffer. D.6: the current implementation returns an empty string
-/// because Android `init_log_file` only bridges `log` -> logcat; a
-/// future iteration wires a file appender at
-/// `<files_dir>/warren.log` with rotation and reads the latest N
-/// bytes. Until that lands, the Kotlin side can still ship the
-/// user_message via `sendProblemReport` with empty logs.
+/// Collect a log bundle for a problem report by dumping THIS app's own
+/// logcat for the `WarrenJni` tag. This is read on demand (only when the
+/// user files a report), so it never touches the boot-critical logger
+/// init. An app can read its own UID's logs without `READ_LOGS`, and the
+/// codebase never logs secrets (mnemonics / keys are redacted at the
+/// boundary), so the dump is safe to ship. Returns an empty string when
+/// logcat is unavailable; the Kotlin side already handles that shape.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_collectReport(
     env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) -> jstring {
-    // Empty string = "logs not available" sentinel (the Kotlin side
-    // already handles the user-unchecked-include-logs path with the
-    // same shape).
-    match env.new_string("") {
+    let logs = collect_native_logs();
+    match env.new_string(&logs) {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Dump the last lines of this process's own logcat for the `WarrenJni`
+/// tag. `-d` dumps and exits (non-blocking); `-t` caps the line count so
+/// the bundle stays bounded; `WarrenJni:V *:S` keeps only our tag. Any
+/// failure degrades to whatever was captured (or empty), never a panic.
+fn collect_native_logs() -> String {
+    const MAX_LINES: &str = "4000";
+    match std::process::Command::new("logcat")
+        .args(["-d", "-v", "time", "-t", MAX_LINES, "WarrenJni:V", "*:S"])
+        .output()
+    {
+        Ok(out) => {
+            if !out.status.success() {
+                log::warn!("collectReport: logcat exited non-zero");
+            }
+            String::from_utf8_lossy(&out.stdout).into_owned()
+        }
+        Err(_) => {
+            log::warn!("collectReport: logcat unavailable");
+            String::new()
+        }
     }
 }
 
