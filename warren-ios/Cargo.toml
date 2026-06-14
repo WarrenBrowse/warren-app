@@ -31,6 +31,11 @@ zeroize = { workspace = true }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
+# Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and its
+# pure-logic host tests build off the iOS target too. serde_json was iOS-only
+# before; it now also backs the pin store's JSON persistence on host tests.
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 futures = { workspace = true }
@@ -46,7 +51,6 @@ mullvad-api = { path = "../mullvad-api", default-features = false }
 mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-logging = { path = "../mullvad-logging" }
 mullvad-types = { path = "../mullvad-types" }
-serde_json = { workspace = true }
 shadowsocks = { workspace = true }
 talpid-future = { path = "../talpid-future" }
 # Note: talpid-platform-metadata lacks an iOS backend ; it only ships

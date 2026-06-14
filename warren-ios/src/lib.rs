@@ -25,6 +25,11 @@ mod warren_multihop_directory;
 // pure std::fs round-trip tests run on the host (`cargo test`).
 #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
 mod warren_multihop_generation;
+// Trust-on-first-use store for exit Ed25519 pubkeys. Pure logic + JSON
+// persistence; compiled under `test` so its round-trip + verdict tests run
+// on the host, and on iOS where the tunnel FFI enforces the pin on connect.
+#[cfg(any(target_os = "ios", test))]
+mod warren_pin_store;
 #[cfg(any(target_os = "ios", test))]
 mod warren_wallet_ffi;
 
@@ -93,4 +98,17 @@ unsafe fn get_string(ptr: *const c_char) -> String {
     // Safety: See function doc comment.
     let cstr = unsafe { CStr::from_ptr(ptr) };
     cstr.to_str().map(ToOwned::to_owned).unwrap_or_default()
+}
+
+/// Runs an FFI body under `catch_unwind` so a panic fails closed by
+/// returning `sentinel` instead of unwinding across the C ABI, which is
+/// undefined behaviour. Used at Warren `extern "C"` entry points whose
+/// bodies do non-trivial work (network, serde) where a future regression
+/// could panic.
+#[cfg(target_os = "ios")]
+pub(crate) fn ffi_guard<R>(sentinel: R, body: impl FnOnce() -> R) -> R {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(body)) {
+        Ok(value) => value,
+        Err(_) => sentinel,
+    }
 }

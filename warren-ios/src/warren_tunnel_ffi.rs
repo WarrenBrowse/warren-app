@@ -81,6 +81,14 @@ pub struct WarrenTunnelParametersC {
     /// gate then only protects within a single connect). Ignored when
     /// `multihop_directory_json` is null.
     pub multihop_generation_state_path: *const c_char,
+    /// Optional path to the App Group file that persists the exit-pubkey
+    /// trust-on-first-use (TOFU) pin table. When non-null, the selected
+    /// exit's Ed25519 pubkey is checked against the pin for its `exit_id`
+    /// before connecting: a mismatch fails the connection closed and is
+    /// surfaced via `warren_tunnel_take_pin_mismatch` for the user to trust
+    /// or reject. Null disables pinning. Ignored on the legacy single-hop
+    /// path (the production fleet is multi-hop only).
+    pub pin_store_path: *const c_char,
 }
 
 /// Multi-hop entry relay configuration.
@@ -328,6 +336,12 @@ mod handle_impl {
         /// `EventConnecting` (first attempt) or `EventReconnecting`
         /// (subsequent attempts after a drop).
         pub has_connected_once: AtomicBool,
+        /// Holds the JSON details of an exit-pubkey TOFU mismatch when the
+        /// connect failed closed because the selected exit presented a
+        /// pubkey differing from the stored pin. Swift drains it via
+        /// `warren_tunnel_take_pin_mismatch` after a failure to decide
+        /// whether to show the Trust / Report / Reject alert.
+        pub pin_mismatch: Mutex<Option<String>>,
     }
 
     impl WarrenTunnelHandleImpl {
@@ -355,7 +369,22 @@ mod handle_impl {
                 connected_at_secs: AtomicU64::new(0),
                 failover_count: AtomicU32::new(0),
                 has_connected_once: AtomicBool::new(false),
+                pin_mismatch: Mutex::new(None),
             })
+        }
+
+        /// Record a TOFU pin-mismatch JSON payload (drained by Swift via
+        /// `warren_tunnel_take_pin_mismatch`). Lock poisoning is treated as
+        /// non-fatal: a failed record only loses the (advisory) UI prompt.
+        pub fn set_pin_mismatch(&self, json: String) {
+            if let Ok(mut slot) = self.pin_mismatch.lock() {
+                *slot = Some(json);
+            }
+        }
+
+        /// Take (and clear) any recorded pin-mismatch payload.
+        pub fn take_pin_mismatch(&self) -> Option<String> {
+            self.pin_mismatch.lock().ok().and_then(|mut slot| slot.take())
         }
 
         /// Spawn the outbound dispatcher task on the handle's runtime.
@@ -490,6 +519,7 @@ fn spawn_multi_hop(
     entry_country: String,
     exit_country: String,
     generation_state_path: Option<String>,
+    pin_store_path: Option<String>,
     signing_key: ed25519_dalek::SigningKey,
 ) {
     use std::sync::atomic::Ordering;
@@ -538,6 +568,48 @@ fn spawn_multi_hop(
                 return;
             }
         };
+
+        // Exit-pubkey TOFU pin check. The exit's `exit_ed25519_pubkey` (its
+        // QUIC TLS RPK identity) is NOT covered by the /v1 directory
+        // signature, while its `exit_id` (16-byte routing tag) is. So pin the
+        // observed RPK against the signed, stable exit_id: a later key swap
+        // under the same exit_id (a compromised exit) is detected here and the
+        // connection fails closed until the user trusts the new key. Mirrors
+        // the desktop daemon's `warren_pin_verify` hook.
+        if let Some(path) = pin_store_path.as_deref() {
+            let path = std::path::Path::new(path);
+            let exit_id_hex = hex::encode(circuit.exit.exit_id.as_bytes());
+            let observed_hex = hex::encode(circuit.exit.exit_ed25519_pubkey);
+            let mut table = crate::warren_pin_store::load(path);
+            match crate::warren_pin_store::pin_verify(
+                &mut table,
+                &exit_id_hex,
+                &observed_hex,
+                &exit_country,
+                now_secs(),
+            ) {
+                crate::warren_pin_store::PinOutcome::Mismatch { pinned } => {
+                    tracing::error!(
+                        exit_id = %exit_id_hex,
+                        "Warren exit pubkey TOFU mismatch; failing closed"
+                    );
+                    let payload = serde_json::json!({
+                        "exit_id": exit_id_hex,
+                        "observed": observed_hex,
+                        "pinned": pinned,
+                        "country": exit_country,
+                    })
+                    .to_string();
+                    arc_for_task.set_pin_mismatch(payload);
+                    arc_for_task.set_state(WarrenTunnelStateC::Failed);
+                    arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+                    return;
+                }
+                // FirstSeen (TOFU insert) or Match (last_seen bumped): persist
+                // the updated table and proceed with the connection.
+                _ => crate::warren_pin_store::store(path, &table),
+            }
+        }
 
         // The accepted generation is persisted as the new high-water mark
         // only AFTER a successful connect (in the state-watch loop below),
@@ -756,6 +828,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 .to_owned();
             let generation_state_path =
                 unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
+            // SAFETY: `params.pin_store_path` is null or a valid
+            // null-terminated C string (caller precondition).
+            let pin_store_path =
+                unsafe { cstr_to_str(params.pin_store_path) }.map(str::to_owned);
 
             let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
                 return std::ptr::null_mut();
@@ -769,6 +845,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 entry_country,
                 exit_country,
                 generation_state_path,
+                pin_store_path,
                 signing_key,
             );
             let boxed = Box::new(arc);
@@ -1286,6 +1363,115 @@ pub unsafe extern "C" fn warren_multihop_check_generation(
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
         let _ = (directory_json, generation_state_path);
+        -1
+    }
+}
+
+/// Take (and clear) the JSON details of the last exit-pubkey TOFU mismatch
+/// recorded on `handle`, if any. Returns a heap C string
+/// `{"exit_id","observed","pinned","country"}` the caller MUST free via
+/// `warren_wallet_free_mnemonic`, or null when there is no pending mismatch.
+/// Swift calls this after a connection failure to decide whether to present
+/// the Trust / Report / Reject alert.
+///
+/// # Safety
+/// `handle` must be null or a live pointer returned by
+/// [`warren_tunnel_start`] and not yet stopped.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_tunnel_take_pin_mismatch(
+    handle: *mut WarrenTunnelHandle,
+) -> *mut c_char {
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    {
+        if handle.is_null() {
+            return std::ptr::null_mut();
+        }
+        // SAFETY: caller upholds the handle invariant (non-null, live).
+        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+            return std::ptr::null_mut();
+        };
+        match arc.take_pin_mismatch() {
+            Some(json) => match std::ffi::CString::new(json) {
+                Ok(c) => c.into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            },
+            None => std::ptr::null_mut(),
+        }
+    }
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+    {
+        let _ = handle;
+        std::ptr::null_mut()
+    }
+}
+
+/// Trust a (possibly new) exit pubkey for `exit_id`, overwriting any
+/// existing pin in the App Group store at `pin_store_path`. Called when the
+/// user accepts a mismatch ("Trust new key") or to pre-seed a pin. All
+/// string args are null-terminated hex / UTF-8. Returns 0 on success,
+/// -1 on invalid input.
+///
+/// # Safety
+/// Each non-null pointer must be a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_pin_trust(
+    pin_store_path: *const c_char,
+    exit_id_hex: *const c_char,
+    pubkey_hex: *const c_char,
+    country_code: *const c_char,
+) -> c_int {
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    {
+        // SAFETY: each pointer is null or a valid null-terminated C string
+        // (caller precondition); `cstr_to_str` returns None on null.
+        let (path, exit_id, pubkey, country) = unsafe {
+            (
+                cstr_to_str(pin_store_path),
+                cstr_to_str(exit_id_hex),
+                cstr_to_str(pubkey_hex),
+                cstr_to_str(country_code),
+            )
+        };
+        let (Some(path), Some(exit_id), Some(pubkey)) = (path, exit_id, pubkey) else {
+            return RC_INVALID_INPUT;
+        };
+        let country = country.unwrap_or("");
+        crate::warren_pin_store::trust(
+            std::path::Path::new(path),
+            exit_id,
+            pubkey,
+            country,
+            now_secs(),
+        );
+        RC_OK
+    }
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+    {
+        let _ = (pin_store_path, exit_id_hex, pubkey_hex, country_code);
+        RC_INVALID_INPUT
+    }
+}
+
+/// Clear all exit-pubkey pins in the App Group store at `pin_store_path`.
+/// Backs the Settings "Reset pinned exit keys" action. Returns the number
+/// of pins dropped (>= 0), or -1 on invalid input.
+///
+/// # Safety
+/// `pin_store_path` must be a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_pin_reset(pin_store_path: *const c_char) -> i64 {
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    {
+        // SAFETY: caller upholds the null-termination + UTF-8 invariant.
+        let Some(path) = (unsafe { cstr_to_str(pin_store_path) }) else {
+            return -1;
+        };
+        i64::try_from(crate::warren_pin_store::reset(std::path::Path::new(path)))
+            .unwrap_or(i64::MAX)
+    }
+    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+    {
+        let _ = pin_store_path;
         -1
     }
 }

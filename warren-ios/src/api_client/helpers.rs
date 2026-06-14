@@ -56,7 +56,12 @@ pub unsafe extern "C" fn new_shadowsocks_access_method_setting(
 
     let password = unsafe { get_string(c_password) };
     let cipher = unsafe { get_string(c_cipher) };
-    let cipher = ShadowsocksCipher::new(&cipher).unwrap();
+    // A caller-supplied cipher name must not panic the FFI: an unknown
+    // name fails closed with a null return instead of unwinding across
+    // the C ABI.
+    let Ok(cipher) = ShadowsocksCipher::new(&cipher) else {
+        return std::ptr::null();
+    };
 
     let shadowsocks_configuration = Shadowsocks {
         endpoint,

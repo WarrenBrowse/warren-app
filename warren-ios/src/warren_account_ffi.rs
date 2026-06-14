@@ -107,20 +107,22 @@ fn err_client_json(err: &ClientError) -> *mut c_char {
 /// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_account_get_subscription(seed: *const u8) -> *mut c_char {
-    // SAFETY: `seed` upholds the documented precondition.
-    let Some(seed) = (unsafe { read_seed(seed) }) else {
-        return err_input_json("null seed");
-    };
-    let signing_key = derive_node_key(&seed);
-    let handle = match crate::warren_ios_runtime() {
-        Ok(handle) => handle,
-        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
-    };
-    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
-    match handle.block_on(client.get_subscription()) {
-        Ok(resp) => ok_expiry_json(resp.expires_at),
-        Err(error) => err_client_json(&error),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        let signing_key = derive_node_key(&seed);
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        match handle.block_on(client.get_subscription()) {
+            Ok(resp) => ok_expiry_json(resp.expires_at),
+            Err(error) => err_client_json(&error),
+        }
+    })
 }
 
 /// Signed `POST /v1/payments/apple/init`. Mints an ephemeral payment
@@ -133,22 +135,24 @@ pub unsafe extern "C" fn warren_account_get_subscription(seed: *const u8) -> *mu
 /// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_account_storekit_init(seed: *const u8) -> *mut c_char {
-    // SAFETY: `seed` upholds the documented precondition.
-    let Some(seed) = (unsafe { read_seed(seed) }) else {
-        return err_input_json("null seed");
-    };
-    let signing_key = derive_node_key(&seed);
-    let handle = match crate::warren_ios_runtime() {
-        Ok(handle) => handle,
-        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
-    };
-    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
-    match handle.block_on(client.init_apple_payment()) {
-        Ok(resp) => {
-            into_cstring(json!({ "ok": true, "app_account_token": resp.app_account_token }).to_string())
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        let signing_key = derive_node_key(&seed);
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        match handle.block_on(client.init_apple_payment()) {
+            Ok(resp) => into_cstring(
+                json!({ "ok": true, "app_account_token": resp.app_account_token }).to_string(),
+            ),
+            Err(error) => err_client_json(&error),
         }
-        Err(error) => err_client_json(&error),
-    }
+    })
 }
 
 /// Signed `POST /v1/payments/apple/check`. Uploads the StoreKit 2
@@ -166,28 +170,30 @@ pub unsafe extern "C" fn warren_account_storekit_check(
     seed: *const u8,
     jws: *const c_char,
 ) -> *mut c_char {
-    // SAFETY: `seed` upholds the documented precondition.
-    let Some(seed) = (unsafe { read_seed(seed) }) else {
-        return err_input_json("null seed");
-    };
-    if jws.is_null() {
-        return err_input_json("null jws");
-    }
-    // SAFETY: `jws` is a valid null-terminated C string (precondition).
-    let jws_transaction = match unsafe { CStr::from_ptr(jws) }.to_str() {
-        Ok(s) => s.to_owned(),
-        Err(_) => return err_input_json("jws is not valid UTF-8"),
-    };
-    let signing_key = derive_node_key(&seed);
-    let handle = match crate::warren_ios_runtime() {
-        Ok(handle) => handle,
-        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
-    };
-    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
-    match handle.block_on(client.check_apple_payment(&jws_transaction)) {
-        Ok(resp) => ok_expiry_json(resp.expires_at),
-        Err(error) => err_client_json(&error),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        if jws.is_null() {
+            return err_input_json("null jws");
+        }
+        // SAFETY: `jws` is a valid null-terminated C string (precondition).
+        let jws_transaction = match unsafe { CStr::from_ptr(jws) }.to_str() {
+            Ok(s) => s.to_owned(),
+            Err(_) => return err_input_json("jws is not valid UTF-8"),
+        };
+        let signing_key = derive_node_key(&seed);
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        match handle.block_on(client.check_apple_payment(&jws_transaction)) {
+            Ok(resp) => ok_expiry_json(resp.expires_at),
+            Err(error) => err_client_json(&error),
+        }
+    })
 }
 
 /// Unsigned `POST /v1/register`. Binds the wallet pubkey to a new
@@ -205,40 +211,42 @@ pub unsafe extern "C" fn warren_account_redeem_voucher(
     seed: *const u8,
     voucher: *const c_char,
 ) -> *mut c_char {
-    // SAFETY: `seed` upholds the documented precondition.
-    let Some(seed) = (unsafe { read_seed(seed) }) else {
-        return err_input_json("null seed");
-    };
-    if voucher.is_null() {
-        return err_input_json("null voucher");
-    }
-    // SAFETY: `voucher` is a valid null-terminated C string (precondition).
-    let voucher_secret = match unsafe { CStr::from_ptr(voucher) }.to_str() {
-        Ok(s) => s.to_owned(),
-        Err(_) => return err_input_json("voucher is not valid UTF-8"),
-    };
-    // The pubkey travels in the request body (the endpoint is unsigned),
-    // so we derive only the SS58 address, never sending a signature.
-    let signing_key = derive_node_key(&seed);
-    let address = ss58::encode(&signing_key.verifying_key().to_bytes());
-    let pubkey_ss58 = match PubkeySs58::try_from(address.as_str()) {
-        Ok(pubkey) => pubkey,
-        Err(error) => return err_input_json(&format!("invalid pubkey: {error}")),
-    };
-    let handle = match crate::warren_ios_runtime() {
-        Ok(handle) => handle,
-        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
-    };
-    let client = WarrenApiClient::new_unsigned(WARREN_API_URL.to_owned());
-    let req = RegisterAccountRequest {
-        pubkey_ss58,
-        voucher_secret,
-        referral_code: None,
-    };
-    match handle.block_on(client.register_with_voucher(&req)) {
-        Ok(resp) => ok_expiry_json(resp.expires_at),
-        Err(error) => err_client_json(&error),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        if voucher.is_null() {
+            return err_input_json("null voucher");
+        }
+        // SAFETY: `voucher` is a valid null-terminated C string (precondition).
+        let voucher_secret = match unsafe { CStr::from_ptr(voucher) }.to_str() {
+            Ok(s) => s.to_owned(),
+            Err(_) => return err_input_json("voucher is not valid UTF-8"),
+        };
+        // The pubkey travels in the request body (the endpoint is unsigned),
+        // so we derive only the SS58 address, never sending a signature.
+        let signing_key = derive_node_key(&seed);
+        let address = ss58::encode(&signing_key.verifying_key().to_bytes());
+        let pubkey_ss58 = match PubkeySs58::try_from(address.as_str()) {
+            Ok(pubkey) => pubkey,
+            Err(error) => return err_input_json(&format!("invalid pubkey: {error}")),
+        };
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new_unsigned(WARREN_API_URL.to_owned());
+        let req = RegisterAccountRequest {
+            pubkey_ss58,
+            voucher_secret,
+            referral_code: None,
+        };
+        match handle.block_on(client.register_with_voucher(&req)) {
+            Ok(resp) => ok_expiry_json(resp.expires_at),
+            Err(error) => err_client_json(&error),
+        }
+    })
 }
 
 /// Signed `DELETE /v1/account`. Permanently deletes the wallet's
@@ -249,18 +257,20 @@ pub unsafe extern "C" fn warren_account_redeem_voucher(
 /// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_account_delete(seed: *const u8) -> *mut c_char {
-    // SAFETY: `seed` upholds the documented precondition.
-    let Some(seed) = (unsafe { read_seed(seed) }) else {
-        return err_input_json("null seed");
-    };
-    let signing_key = derive_node_key(&seed);
-    let handle = match crate::warren_ios_runtime() {
-        Ok(handle) => handle,
-        Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
-    };
-    let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
-    match handle.block_on(client.delete_account()) {
-        Ok(()) => into_cstring(json!({ "ok": true }).to_string()),
-        Err(error) => err_client_json(&error),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        let signing_key = derive_node_key(&seed);
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        match handle.block_on(client.delete_account()) {
+            Ok(()) => into_cstring(json!({ "ok": true }).to_string()),
+            Err(error) => err_client_json(&error),
+        }
+    })
 }
