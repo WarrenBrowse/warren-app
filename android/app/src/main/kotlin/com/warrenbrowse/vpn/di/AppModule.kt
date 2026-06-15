@@ -116,7 +116,7 @@ val appModule = module {
         WarrenSupportReportInvoker::class
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
-    single { WarrenSubscriptionUseCase(walletRepository = get()) } bind
+    single { WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get()) } bind
         WarrenSubscriptionInvoker::class
 
     single { LocaleRepository(get()) }

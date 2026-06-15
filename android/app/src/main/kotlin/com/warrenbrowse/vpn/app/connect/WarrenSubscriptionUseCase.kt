@@ -6,12 +6,16 @@ import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
@@ -32,7 +36,14 @@ import kotlinx.serialization.json.long
  */
 class WarrenSubscriptionUseCase(
     private val walletRepository: WalletRepository,
+    private val localSettings: WarrenLocalSettingsRepository,
 ) : WarrenSubscriptionInvoker {
+
+    // App-scoped (not tied to any screen) so the purchase poll survives the
+    // user navigating away while they pay in the browser, mirroring the desktop
+    // poll that lives on the AppRenderer. On the main dispatcher because the
+    // unlock step shows a BiometricPrompt.
+    private val pollScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome {
         // A Locked wallet is fine: unlock() decrypts from disk regardless of
@@ -118,47 +129,50 @@ class WarrenSubscriptionUseCase(
      * The decrypted mnemonic is held for the poll window so we don't re-prompt
      * on every attempt, then zeroed when the poll ends.
      */
-    override suspend fun pollPurchase(
+    override fun startPurchasePoll(
         activity: FragmentActivity,
         wpid: String,
         intervalMs: Long,
         deadlineMs: Long,
-    ): WarrenVoucherOutcome {
-        if (walletRepository.state.value is WalletState.Absent) {
-            return WarrenVoucherOutcome.WalletNotReady
-        }
-        val mnemonic = try {
-            walletRepository.unlock(
-                authorizer = BiometricPromptAuthorizer(activity),
-                reason = "Confirm to credit your purchase",
-            )
-        } catch (e: WalletAuthorizationDeniedException) {
-            return WarrenVoucherOutcome.AuthorizationDenied
-        } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: unlock failed" }
-            return WarrenVoucherOutcome.Failure(e.message ?: "wallet unlock failed")
-        }
-
-        // try/finally (not use {}) so we can suspend on delay() between attempts
-        // while still zeroing the mnemonic when the poll completes or is cancelled.
-        return try {
-            val deadline = System.currentTimeMillis() + deadlineMs
-            var last: WarrenVoucherOutcome = WarrenVoucherOutcome.Failure("not credited yet")
-            while (System.currentTimeMillis() < deadline) {
-                val outcome = withContext(Dispatchers.IO) {
-                    try {
-                        parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, wpid))
-                    } catch (e: Exception) {
-                        WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
-                    }
-                }
-                if (outcome is WarrenVoucherOutcome.Success) return outcome
-                last = outcome
-                delay(intervalMs)
+    ) {
+        pollScope.launch {
+            if (walletRepository.state.value is WalletState.Absent) return@launch
+            val mnemonic = try {
+                walletRepository.unlock(
+                    authorizer = BiometricPromptAuthorizer(activity),
+                    reason = "Confirm to credit your purchase",
+                )
+            } catch (e: WalletAuthorizationDeniedException) {
+                return@launch
+            } catch (e: Exception) {
+                Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: unlock failed" }
+                return@launch
             }
-            last
-        } finally {
-            mnemonic.close()
+
+            // try/finally (not use {}) so delay() can suspend between attempts
+            // while still zeroing the mnemonic when the poll ends or is cancelled.
+            try {
+                val deadline = System.currentTimeMillis() + deadlineMs
+                while (System.currentTimeMillis() < deadline) {
+                    val outcome = withContext(Dispatchers.IO) {
+                        try {
+                            parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, wpid))
+                        } catch (e: Exception) {
+                            WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
+                        }
+                    }
+                    if (outcome is WarrenVoucherOutcome.Success) {
+                        // Write the credited expiry to the shared StateFlow so
+                        // every screen observing it (account "Paid until", the
+                        // home header "Time left") refreshes automatically.
+                        localSettings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                        return@launch
+                    }
+                    delay(intervalMs)
+                }
+            } finally {
+                mnemonic.close()
+            }
         }
     }
 

@@ -292,6 +292,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 state = state,
                 snackbarHostState = snackbarHostState,
                 subscriptionWarning = subscriptionWarning,
+                accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
                 onDisconnectClick = { warrenDisconnect.disconnect() },
                 onReconnectClick = { warrenReconnect.reconnect() },
                 onConnectClick = onWarrenConnectClick,
@@ -344,6 +345,7 @@ fun ConnectScreen(
     state: ConnectUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     subscriptionWarning: String? = null,
+    accountTimeLeft: String? = null,
     onDisconnectClick: () -> Unit,
     onReconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
@@ -406,6 +408,7 @@ fun ConnectScreen(
             iconTintColor = state.tunnelState.iconTintColor(),
             onSettingsClicked = onSettingsClick,
             onAccountClicked = onAccountClick,
+            accountTimeLeft = accountTimeLeft,
             snackbarHostState = snackbarHostState,
         ) {
             content(it)
@@ -555,6 +558,26 @@ internal fun connectExpiryWarning(
         }
     }
     else -> null
+}
+
+/**
+ * The remaining subscription time for the home header ("Time left: N days"),
+ * mirroring the desktop AppMainHeaderTimeLeft. Hidden when there is no
+ * subscription, when expired, and within the last 7 days, where the dedicated
+ * [connectExpiryWarning] banner surfaces the remaining time instead (same
+ * behaviour as upstream/desktop).
+ */
+internal fun accountTimeLeftLabel(
+    context: android.content.Context,
+    expiryUnixSecs: Long,
+    nowSecs: Long = System.currentTimeMillis() / 1000,
+): String? = when {
+    expiryUnixSecs <= 0L -> null
+    expiryUnixSecs - nowSecs <= 7L * 86_400 -> null
+    else -> {
+        val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400
+        context.getString(R.string.account_time_left, days)
+    }
 }
 
 @Composable

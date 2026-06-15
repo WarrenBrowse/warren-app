@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">Tempo restante: %1$d dias</string>
     <string name="account_public_key">Chave pública</string>
     <string name="account_paid_until">Pago até</string>
     <string name="account_credit_has_expired">Não tem mais Tempo de VPN restante nesta conta.</string>

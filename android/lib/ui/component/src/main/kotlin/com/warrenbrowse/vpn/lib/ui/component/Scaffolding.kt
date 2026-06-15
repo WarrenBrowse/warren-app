@@ -25,6 +25,7 @@ fun ScaffoldWithTopBar(
     onSettingsClicked: (() -> Unit)?,
     onAccountClicked: (() -> Unit)?,
     isIconAndLogoVisible: Boolean = true,
+    accountTimeLeft: String? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     enabled: Boolean = true,
     content: @Composable (PaddingValues) -> Unit,
@@ -38,6 +39,7 @@ fun ScaffoldWithTopBar(
                 onSettingsClicked = onSettingsClicked,
                 onAccountClicked = onAccountClicked,
                 isIconAndLogoVisible = isIconAndLogoVisible,
+                accountTimeLeft = accountTimeLeft,
                 enabled = enabled,
             )
         },

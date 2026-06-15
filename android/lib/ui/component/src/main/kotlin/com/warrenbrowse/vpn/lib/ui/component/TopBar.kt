@@ -100,6 +100,7 @@ fun WarrenTopBar(
     enabled: Boolean = true,
     iconTintColor: Color,
     isIconAndLogoVisible: Boolean = true,
+    accountTimeLeft: String? = null,
 ) {
     TopAppBar(
         modifier = modifier.testTag(TOP_BAR_TEST_TAG),
@@ -142,6 +143,15 @@ fun WarrenTopBar(
             }
         },
         actions = {
+            if (accountTimeLeft != null) {
+                Text(
+                    text = accountTimeLeft,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = iconTintColor,
+                    maxLines = 1,
+                    modifier = Modifier.padding(end = Dimens.smallPadding),
+                )
+            }
             if (onAccountClicked != null) {
                 IconButton(
                     modifier = Modifier.testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),

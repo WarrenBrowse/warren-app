@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">زمان باقیمانده : %1$d روز</string>
     <string name="account_public_key">کلید عمومی</string>
     <string name="account_paid_until">پرداخت شده تا</string>
     <string name="account_credit_has_expired">شما هیچگونه زمان VPN باقیمانده دیگری در این حساب ندارید.</string>

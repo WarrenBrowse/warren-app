@@ -184,18 +184,12 @@ fun WarrenWalletSettings(navigator: Navigator) {
                                     pubkey.shortWarrenAddress(), "UTF-8",
                                 )
                                 uriHandler.safeOpenUri("$CHECKOUT_URL?pid=$wpid#acct=$acct")
-                                subscriptionStatus = redeemingVoucherStatus
-                                scope.launch {
-                                    val outcome = subscriptionInvoker.pollPurchase(activity, wpid)
-                                    if (outcome is WarrenVoucherOutcome.Success) {
-                                        settings.setCachedSubscriptionExpiry(
-                                            outcome.expiresAtUnixSecs,
-                                        )
-                                        subscriptionStatus = null
-                                    } else {
-                                        subscriptionStatus = voucherLabel(activity, outcome)
-                                    }
-                                }
+                                // Fire-and-forget: the poll runs app-scoped and
+                                // writes the credited expiry to the shared
+                                // StateFlow, so "Paid until" here and the home
+                                // header "Time left" refresh on their own, even
+                                // if the user has navigated away.
+                                subscriptionInvoker.startPurchasePoll(activity, wpid)
                             },
                             text = stringResource(R.string.subscription_get),
                             textDecoration = TextDecoration.Underline,

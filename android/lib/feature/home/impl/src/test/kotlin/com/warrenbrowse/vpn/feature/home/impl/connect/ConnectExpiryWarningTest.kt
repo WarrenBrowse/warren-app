@@ -30,6 +30,26 @@ class ConnectExpiryWarningTest {
             { "Your subscription expires in ${fmtArgs()[0]} day. Tap to renew." }
         every { getString(eq(R.string.connect_subscription_expires_in_days), any()) } answers
             { "Your subscription expires in ${fmtArgs()[0]} days. Tap to renew." }
+        every { getString(eq(R.string.account_time_left), any()) } answers
+            { "Time left: ${fmtArgs()[0]} days" }
+    }
+
+    @Test
+    fun `no time-left header when expiry unknown`() {
+        assertNull(accountTimeLeftLabel(context, 0L, nowSecs = now))
+    }
+
+    @Test
+    fun `no time-left header within the last week (banner covers it)`() {
+        assertNull(accountTimeLeftLabel(context, now + 3 * 86_400, nowSecs = now))
+    }
+
+    @Test
+    fun `time-left header shows day count when comfortably active`() {
+        assertEquals(
+            "Time left: 30 days",
+            accountTimeLeftLabel(context, now + 30 * 86_400, nowSecs = now),
+        )
     }
 
     @Test

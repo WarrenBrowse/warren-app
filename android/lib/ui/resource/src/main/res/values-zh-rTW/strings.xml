@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">剩餘時間：%1$d 天</string>
     <string name="account_public_key">公鑰</string>
     <string name="account_paid_until">支付至</string>
     <string name="account_credit_has_expired">您這個帳戶已經沒有剩餘的 VPN 時間了。</string>

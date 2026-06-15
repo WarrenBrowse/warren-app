@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">남은 시간: %1$d일</string>
     <string name="account_public_key">공개 키</string>
     <string name="account_paid_until">유효 기간</string>
     <string name="account_credit_has_expired">이 계정에 더 이상 VPN 시간이 없습니다.</string>

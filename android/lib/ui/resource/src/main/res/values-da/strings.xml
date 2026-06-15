@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">Resterende tid: %1$d dage</string>
     <string name="account_public_key">Offentlig nøgle</string>
     <string name="account_paid_until">Betalt indtil</string>
     <string name="account_credit_has_expired">Du har ikke mere VPN-tid tilbage på denne konto.</string>

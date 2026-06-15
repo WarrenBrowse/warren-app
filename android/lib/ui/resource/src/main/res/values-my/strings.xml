@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">ကျန်ရှိချိန် - %1$d ရက်</string>
     <string name="account_public_key">အများသုံးသော့</string>
     <string name="account_paid_until">ဖော်ပြပါအထိ ပေးချေထားပြီး</string>
     <string name="account_credit_has_expired">ဤအကောင့်တွင် နောက်ထပ် VPN သုံးနိုင်ချိန် မကျန်တော့ပါ။</string>

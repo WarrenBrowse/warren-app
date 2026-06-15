@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">Залишилось часу: %1$d днів</string>
     <string name="account_public_key">Відкритий ключ</string>
     <string name="account_paid_until">Оплачено до</string>
     <string name="account_credit_has_expired">На балансі облікового запису не залишилося часу для використання VPN.</string>

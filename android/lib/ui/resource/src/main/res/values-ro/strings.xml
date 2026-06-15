@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">Timp rămas: %1$d zile</string>
     <string name="account_public_key">Cheie publică</string>
     <string name="account_paid_until">Plătit până la</string>
     <string name="disconnecting">Se deconectează...</string>

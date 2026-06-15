@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_time_left">Aikaa jäljellä: %1$d päivää</string>
     <string name="account_public_key">Julkinen avain</string>
     <string name="account_paid_until">Maksu ennen</string>
     <string name="account_credit_has_expired">Sinulla ei ole enempää VPN-aikaa jäljellä tällä tilillä.</string>
