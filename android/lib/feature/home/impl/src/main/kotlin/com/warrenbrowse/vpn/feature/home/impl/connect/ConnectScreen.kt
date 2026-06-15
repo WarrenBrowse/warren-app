@@ -112,6 +112,7 @@ import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.LatLong
 import com.warrenbrowse.vpn.lib.model.Latitude
 import com.warrenbrowse.vpn.lib.model.Longitude
+import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
@@ -202,6 +203,24 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         rememberLauncherForActivityResult(CreateVpnProfile()) {
             connectViewModel.createVpnProfileResult(it)
         }
+
+    // The Connect button must hold the system VPN consent before dispatching.
+    // If it is missing, request it (the granted result re-dispatches the
+    // connect via createVpnProfileResult -> RequestWarrenConnect); otherwise
+    // connect straight away. Without this, VpnService.establish() returns null
+    // and Connect silently does nothing.
+    val onConnectButtonClick: () -> Unit = {
+        context.prepareVpnSafe().fold(
+            ifLeft = { error ->
+                when (error) {
+                    is PrepareError.NotPrepared -> createVpnProfile.launch(error.prepareIntent)
+                    else ->
+                        co.touchlab.kermit.Logger.w { "VPN prepare blocked: $error" }
+                }
+            },
+            ifRight = { onWarrenConnectClick() },
+        )
+    }
 
     val uriHandler = LocalUriHandler.current
     val resources = LocalResources.current
@@ -295,7 +314,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
                 onDisconnectClick = { warrenDisconnect.disconnect() },
                 onReconnectClick = { warrenReconnect.reconnect() },
-                onConnectClick = onWarrenConnectClick,
+                onConnectClick = onConnectButtonClick,
             onCancelClick = connectViewModel::onCancelClick,
             onSwitchLocationClick =
                 // Switch location routes to the Warren picker (consumes

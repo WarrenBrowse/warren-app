@@ -38,9 +38,9 @@ class WarrenSendProblemReportUseCase(
         userMessage: String,
         redactedLogs: String,
     ): WarrenSupportReportOutcome {
-        val state = walletRepository.state.value
-        if (state !is WalletState.Ready) {
-            Logger.w("WarrenSendProblemReportUseCase: wallet not Ready (state=$state)")
+        // Locked is fine: unlock() decrypts from disk. Only Absent blocks.
+        if (walletRepository.state.value is WalletState.Absent) {
+            Logger.w("WarrenSendProblemReportUseCase: no wallet on device")
             return WarrenSupportReportOutcome.WalletNotReady
         }
 

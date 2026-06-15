@@ -67,10 +67,17 @@ class WarrenConnectUseCase(
         }
 
     suspend fun invoke(activity: FragmentActivity): Outcome {
-        val state = walletRepository.state.value
-        if (state !is WalletState.Ready) {
-            Logger.w("WarrenConnectUseCase: wallet not Ready (state=$state)")
-            return Outcome.WalletNotReady
+        // The pubkey (public, used to address the relay config) is available
+        // whether the wallet is Locked at rest or transiently Ready; only Absent
+        // blocks. Gating on Ready alone made Connect a no-op at rest, since the
+        // resting state is Locked (Ready only happens right after create/import).
+        val pubkey = when (val state = walletRepository.state.value) {
+            is WalletState.Ready -> state.pubkey
+            is WalletState.Locked -> state.pubkey
+            WalletState.Absent -> {
+                Logger.w("WarrenConnectUseCase: no wallet on device")
+                return Outcome.WalletNotReady
+            }
         }
 
         val authorizer = BiometricPromptAuthorizer(activity)
@@ -86,7 +93,7 @@ class WarrenConnectUseCase(
             return Outcome.Failure(e.message ?: "wallet unlock failed")
         }
 
-        val built = configBuilder.build(state.pubkey) ?: run {
+        val built = configBuilder.build(pubkey) ?: run {
             Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
             return Outcome.Failure("No relay available")
         }
