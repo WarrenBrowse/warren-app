@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +26,8 @@ import androidx.core.app.ActivityCompat.finishAffinity
 import androidx.core.net.toUri
 import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.feature.applisting.api.ResolveAppListingUseCase
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.screen.nodaemon.getActivity
@@ -95,18 +95,16 @@ private fun UnsupportedVersionContent(onUpdate: () -> Unit, onQuit: () -> Unit) 
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = Dimens.mediumPadding),
             )
-            Button(
+            VariantButton(
                 onClick = onUpdate,
+                text = stringResource(id = R.string.update_now),
                 modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-            ) {
-                Text(text = stringResource(id = R.string.update_now))
-            }
-            OutlinedButton(
+            )
+            PrimaryButton(
                 onClick = onQuit,
+                text = stringResource(id = R.string.quit),
                 modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-            ) {
-                Text(text = stringResource(id = R.string.quit))
-            }
+            )
         }
     }
 }
