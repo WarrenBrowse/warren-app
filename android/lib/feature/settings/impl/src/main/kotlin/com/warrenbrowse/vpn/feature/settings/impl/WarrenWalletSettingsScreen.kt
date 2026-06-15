@@ -41,6 +41,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
@@ -277,7 +278,14 @@ fun WarrenWalletSettings(navigator: Navigator) {
             confirmButton = {
                 TextButton(onClick = {
                     confirmErase = false
-                    scope.launch { walletRepository.erase() }
+                    scope.launch {
+                        walletRepository.erase()
+                        // Sign-out: route back to the wallet login screen,
+                        // clearing the stack (mirrors Mullvad logout ->
+                        // NavigateToLogin). Without this the user is stranded on
+                        // an empty account screen after erasing.
+                        navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                    }
                 }) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }
             },
             dismissButton = {

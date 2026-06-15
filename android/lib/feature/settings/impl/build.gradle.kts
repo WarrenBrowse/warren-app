@@ -12,6 +12,8 @@ dependencies {
     // D.4 step 34: anticensorship.api dep dropped.
     // D.4 step 33: apiaccess.api dep dropped (NavKey unused).
     implementation(projects.lib.feature.appearance.api)
+    // Wallet erase routes back to the login screen (WarrenWalletNavKey).
+    implementation(projects.lib.feature.login.api)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.autoconnect.api)
     // D.4 step 32: daita.api + multihop.api deps dropped (NavKeys

@@ -46,8 +46,14 @@ suspend fun promptBiometric(
     reason: String,
     negativeButton: String = "Cancel",
 ): BiometricResult {
-    val canAuthenticate = BiometricManager.from(activity)
-        .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+    // Allow the device PIN / pattern / password as a fallback alongside strong
+    // biometrics: a user with no enrolled fingerprint/face must still be able to
+    // unlock their wallet (view recovery phrase, sign to connect). Without this
+    // fallback such a device is permanently locked out of its own wallet.
+    val allowed =
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+    val canAuthenticate = BiometricManager.from(activity).canAuthenticate(allowed)
     if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
         return BiometricResult.Unavailable(canAuthenticate)
     }
@@ -74,11 +80,12 @@ suspend fun promptBiometric(
                 }
             },
         )
+        // When DEVICE_CREDENTIAL is allowed a negative button MUST NOT be set
+        // (BiometricPrompt throws): the system provides its own cancel control.
         val info = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(reason)
-            .setNegativeButtonText(negativeButton)
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            .setAllowedAuthenticators(allowed)
             .build()
 
         cont.invokeOnCancellation {
