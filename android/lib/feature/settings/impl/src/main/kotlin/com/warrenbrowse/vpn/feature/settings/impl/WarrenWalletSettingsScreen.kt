@@ -44,6 +44,7 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -142,7 +143,9 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 AccountRow(label = stringResource(R.string.account_public_key)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = pubkey,
+                            // Short form (wb…XXXX) for display; the copy action
+                            // still yields the full address.
+                            text = pubkey.shortWarrenAddress(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
@@ -169,7 +172,31 @@ fun WarrenWalletSettings(navigator: Navigator) {
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         PrimaryTextButton(
-                            onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
+                            onClick = {
+                                // App-initiated purchase (doc 35): mint a random
+                                // wpid, open the checkout bound to it (short
+                                // pubkey rides in the fragment for the landing
+                                // page only, never sent to the server), then
+                                // poll the signed redeem so the credit lands
+                                // automatically, like desktop buyCredit.
+                                val wpid = newPurchaseId()
+                                val acct = java.net.URLEncoder.encode(
+                                    pubkey.shortWarrenAddress(), "UTF-8",
+                                )
+                                uriHandler.safeOpenUri("$CHECKOUT_URL?pid=$wpid#acct=$acct")
+                                subscriptionStatus = redeemingVoucherStatus
+                                scope.launch {
+                                    val outcome = subscriptionInvoker.pollPurchase(activity, wpid)
+                                    if (outcome is WarrenVoucherOutcome.Success) {
+                                        settings.setCachedSubscriptionExpiry(
+                                            outcome.expiresAtUnixSecs,
+                                        )
+                                        subscriptionStatus = null
+                                    } else {
+                                        subscriptionStatus = voucherLabel(activity, outcome)
+                                    }
+                                }
+                            },
                             text = stringResource(R.string.subscription_get),
                             textDecoration = TextDecoration.Underline,
                         )
@@ -409,3 +436,10 @@ private const val WARN_WINDOW_SECS = 7L * 86_400
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
 private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
+
+/** Random 128-bit purchase id (wpid) as 32 lowercase hex chars (doc 35). */
+private fun newPurchaseId(): String {
+    val bytes = ByteArray(16)
+    java.security.SecureRandom().nextBytes(bytes)
+    return bytes.joinToString("") { "%02x".format(it) }
+}

@@ -204,6 +204,20 @@ interface WarrenSubscriptionInvoker {
 
     /** Redeem a Crockford-32 voucher and bind it to the wallet. */
     suspend fun redeemVoucher(activity: FragmentActivity, voucher: String): WarrenVoucherOutcome
+
+    /**
+     * Auto-credit an app-initiated purchase (warren-core doc 35): unlock once,
+     * then poll the signed redeem of the 32-hex purchase id [wpid] until the
+     * payment is credited (Success) or [deadlineMs] elapses. Suspends for the
+     * whole poll window; the caller runs it in a scope that survives the
+     * browser round-trip.
+     */
+    suspend fun pollPurchase(
+        activity: FragmentActivity,
+        wpid: String,
+        intervalMs: Long = 5_000,
+        deadlineMs: Long = 10 * 60 * 1000,
+    ): WarrenVoucherOutcome
 }
 
 interface WarrenSupportReportInvoker {

@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
@@ -34,9 +35,12 @@ class WarrenSubscriptionUseCase(
 ) : WarrenSubscriptionInvoker {
 
     override suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome {
-        val state = walletRepository.state.value
-        if (state !is WalletState.Ready) {
-            Logger.w("WarrenSubscriptionUseCase: wallet not Ready (state=$state)")
+        // A Locked wallet is fine: unlock() decrypts from disk regardless of
+        // state. Only Absent (no wallet) blocks the signed request. (Gating on
+        // Ready alone broke fetch/redeem at rest, since the resting state is
+        // Locked and only becomes Ready transiently right after create/import.)
+        if (walletRepository.state.value is WalletState.Absent) {
+            Logger.w("WarrenSubscriptionUseCase: no wallet on device")
             return WarrenSubscriptionOutcome.WalletNotReady
         }
 
@@ -72,9 +76,8 @@ class WarrenSubscriptionUseCase(
         activity: FragmentActivity,
         voucher: String,
     ): WarrenVoucherOutcome {
-        val state = walletRepository.state.value
-        if (state !is WalletState.Ready) {
-            Logger.w("WarrenSubscriptionUseCase.redeem: wallet not Ready (state=$state)")
+        if (walletRepository.state.value is WalletState.Absent) {
+            Logger.w("WarrenSubscriptionUseCase.redeem: no wallet on device")
             return WarrenVoucherOutcome.WalletNotReady
         }
         val mnemonic = try {
@@ -97,22 +100,79 @@ class WarrenSubscriptionUseCase(
                     Logger.e(throwable = e) { "WarrenJni.redeemVoucher threw" }
                     return@use WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
                 }
-                try {
-                    val root = Json.parseToJsonElement(rawJson).jsonObject
-                    if (root["ok"]?.jsonPrimitive?.boolean == true) {
-                        val expiresAt = root["expires_at"]?.jsonPrimitive?.long
-                            ?: return@use WarrenVoucherOutcome.Failure("missing expires_at")
-                        WarrenVoucherOutcome.Success(expiresAt)
-                    } else {
-                        WarrenVoucherOutcome.Failure(
-                            root["error"]?.jsonPrimitive?.content ?: "redeem failed",
-                        )
-                    }
-                } catch (e: Exception) {
-                    WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
-                }
+                parseVoucherJson(rawJson)
             }
         }
+    }
+
+    /**
+     * App-initiated purchase auto-credit (warren-core doc 35), the Android
+     * counterpart of the desktop `buyCredit` poll. The caller opens the
+     * checkout bound to a random 32-hex purchase id (wpid); here we unlock the
+     * wallet ONCE (single biometric/credential prompt) and then poll the signed
+     * `redeemVoucher(wpid)` every [intervalMs] until the payment webhook has
+     * queued the voucher under that id (Success) or [deadlineMs] elapses. The
+     * signed call is what binds the payment to this wallet; the daemon never
+     * learns the pubkey from the checkout URL.
+     *
+     * The decrypted mnemonic is held for the poll window so we don't re-prompt
+     * on every attempt, then zeroed when the poll ends.
+     */
+    override suspend fun pollPurchase(
+        activity: FragmentActivity,
+        wpid: String,
+        intervalMs: Long,
+        deadlineMs: Long,
+    ): WarrenVoucherOutcome {
+        if (walletRepository.state.value is WalletState.Absent) {
+            return WarrenVoucherOutcome.WalletNotReady
+        }
+        val mnemonic = try {
+            walletRepository.unlock(
+                authorizer = BiometricPromptAuthorizer(activity),
+                reason = "Confirm to credit your purchase",
+            )
+        } catch (e: WalletAuthorizationDeniedException) {
+            return WarrenVoucherOutcome.AuthorizationDenied
+        } catch (e: Exception) {
+            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: unlock failed" }
+            return WarrenVoucherOutcome.Failure(e.message ?: "wallet unlock failed")
+        }
+
+        // try/finally (not use {}) so we can suspend on delay() between attempts
+        // while still zeroing the mnemonic when the poll completes or is cancelled.
+        return try {
+            val deadline = System.currentTimeMillis() + deadlineMs
+            var last: WarrenVoucherOutcome = WarrenVoucherOutcome.Failure("not credited yet")
+            while (System.currentTimeMillis() < deadline) {
+                val outcome = withContext(Dispatchers.IO) {
+                    try {
+                        parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, wpid))
+                    } catch (e: Exception) {
+                        WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
+                    }
+                }
+                if (outcome is WarrenVoucherOutcome.Success) return outcome
+                last = outcome
+                delay(intervalMs)
+            }
+            last
+        } finally {
+            mnemonic.close()
+        }
+    }
+
+    private fun parseVoucherJson(rawJson: String): WarrenVoucherOutcome = try {
+        val root = Json.parseToJsonElement(rawJson).jsonObject
+        if (root["ok"]?.jsonPrimitive?.boolean == true) {
+            val expiresAt = root["expires_at"]?.jsonPrimitive?.long
+                ?: return WarrenVoucherOutcome.Failure("missing expires_at")
+            WarrenVoucherOutcome.Success(expiresAt)
+        } else {
+            WarrenVoucherOutcome.Failure(root["error"]?.jsonPrimitive?.content ?: "redeem failed")
+        }
+    } catch (e: Exception) {
+        WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
     }
 
     private fun parseOutcome(rawJson: String): WarrenSubscriptionOutcome = try {
