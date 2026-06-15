@@ -118,6 +118,8 @@ import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
@@ -215,6 +217,23 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     }
     val copyPubkey = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
     val pubkeyCopiedMsg = stringResource(R.string.wallet_settings_pubkey_copied)
+
+    // Selected-exit label for the Switch-location button (desktop UX): while
+    // disconnected the button shows the chosen exit ("Automatic" when none is
+    // pinned), and "Switch location" once connecting/connected.
+    val relayProvider = koinInject<WarrenRelayProvider>()
+    val selectedExitId by localSettings.selectedExitId.collectAsStateWithLifecycle()
+    // list() is synchronous (in-memory); resolving it with remember avoids the
+    // one-frame "Automatic" flash a produceState initial value would cause.
+    val relays: List<WarrenRelaySummary> = remember { relayProvider.list() }
+    val automaticLabel = stringResource(R.string.automatic)
+    val selectedLocationTitle = when {
+        state.tunnelState !is TunnelState.Disconnected -> null
+        selectedExitId == null -> automaticLabel
+        else ->
+            relays.firstOrNull { it.exitId == selectedExitId }
+                ?.let { it.city.ifBlank { it.country } } ?: automaticLabel
+    }
 
     val createVpnProfile =
         rememberLauncherForActivityResult(CreateVpnProfile()) {
@@ -325,7 +344,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides animatedVisibilityScope) {
         androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
             ConnectScreen(
-                state = state,
+                state = state.copy(selectedRelayItemTitle = selectedLocationTitle),
                 snackbarHostState = snackbarHostState,
                 subscriptionWarning = subscriptionWarning,
                 accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
