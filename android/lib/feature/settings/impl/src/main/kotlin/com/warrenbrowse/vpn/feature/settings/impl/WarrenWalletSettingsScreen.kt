@@ -1,17 +1,25 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,137 +33,128 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
+import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
-import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
+import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
+import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * D.5 wallet settings host screen. Wraps [WarrenWalletSettingsSection]
- * inside the standard settings scaffold and threads the host
- * [FragmentActivity] required by `BiometricPrompt`.
+ * Warren account view, mirroring the desktop (Electron) `AccountView`: an
+ * identity block (public key + paid-until) on top, and the account actions
+ * (buy credit, redeem voucher, reveal recovery phrase, erase wallet) below,
+ * all rendered with the shared design-system buttons.
  *
- * Reached via [com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey]
- * from the main Settings screen ("Wallet" entry).
+ * Reached from the Connect header account icon and from the Settings "Wallet"
+ * entry. The back affordance pops a single entry so it works from either
+ * origin.
  *
- * Hosts a "Warren Connect (test)" button that
- * dispatches the end-to-end Quinn connect flow via the
- * `WarrenQuinnConnectInvoker` interface (registered in app/AppModule
- * pointing at `WarrenConnectUseCase`). The button lives here, behind
- * the wallet settings, so we can exercise the connect path without
- * having to refactor the main Connect button's wiring across the
- * lib/feature/home boundary.
+ * The recovery-phrase reveal is biometric-gated and ephemeral: the cleartext
+ * lives only inside the reveal dialog's Compose state and is dropped on
+ * dismissal. Erasing the wallet requires an explicit confirmation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WarrenWalletSettings(navigator: Navigator) {
     val activity = LocalContext.current as FragmentActivity
     val walletRepository = koinInject<WalletRepository>()
-    val quinnConnect = koinInject<WarrenQuinnConnectInvoker>()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val cachedExpiry by settings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
-    val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
-    val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
-    var connectStatus by remember { mutableStateOf<String?>(null) }
-    var subscriptionStatus by remember { mutableStateOf<String?>(null) }
-    var voucherInput by remember { mutableStateOf("") }
 
-    val checkingSubscriptionStatus = stringResource(R.string.subscription_checking)
+    val state by walletRepository.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val copyToClipboard = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
+
+    var voucherInput by remember { mutableStateOf("") }
+    var subscriptionStatus by remember { mutableStateOf<String?>(null) }
+    var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
+    var viewError by remember { mutableStateOf<String?>(null) }
+    var confirmErase by remember { mutableStateOf(false) }
+
     val redeemingVoucherStatus = stringResource(R.string.subscription_redeeming_voucher)
-    val connectingStatus = stringResource(R.string.wallet_settings_connecting)
-    val connectFailedPrefix = stringResource(R.string.wallet_settings_connect_failed)
+    val viewPhraseReason = stringResource(R.string.wallet_biometric_view_phrase_reason)
+    val authRequiredError = stringResource(R.string.wallet_settings_auth_required_view_phrase)
+    val unableToReadPrefix = stringResource(R.string.wallet_settings_unable_to_read)
+    val pubkeyCopiedHint = stringResource(R.string.wallet_settings_pubkey_copied)
 
     ScaffoldWithSmallTopBar(
-        appBarTitle = stringResource(R.string.wallet_settings_section),
-        navigationIcon = {
-            NavigateBackIconButton(onNavigateBack = {
-                navigator.goBackUntil(SettingsNavKey)
-            })
-        },
+        appBarTitle = stringResource(R.string.settings_account),
+        navigationIcon = { NavigateBackIconButton(onNavigateBack = { navigator.goBack() }) },
+        snackbarHostState = snackbarHostState,
     ) { modifier ->
         Column(
-            modifier = Modifier.fillMaxSize().then(modifier),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(modifier)
+                .background(MaterialTheme.colorScheme.surface)
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = Dimens.sideMargin,
+                    end = Dimens.sideMargin,
+                    top = Dimens.screenTopMargin,
+                    bottom = Dimens.screenBottomMargin,
+                ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
         ) {
-            WarrenWalletSettingsSection(
-                activity = activity,
-                walletRepository = walletRepository,
+            // Identity block: public key (tap to copy) + paid-until status.
+            IdentityCard(
+                state = state,
+                expiryLabel = cachedSubscriptionLabel(activity, cachedExpiry),
+                onCopyPubkey = { full -> copyToClipboard(full, pubkeyCopiedHint) },
             )
 
-            // Proactive status from the last-known cached expiry - shown
-            // immediately, without a fresh biometric-gated request.
-            cachedSubscriptionLabel(activity, cachedExpiry)?.let { msg ->
-                Text(
-                    text = msg,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (cachedExpiry <= System.currentTimeMillis() / 1000) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+            viewError?.let { msg ->
+                Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
-
-            // Subscription status: biometric-gated signed GET /v1/subscription.
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                onClick = {
-                    scope.launch {
-                        subscriptionStatus = checkingSubscriptionStatus
-                        val outcome = subscriptionInvoker.fetch(activity)
-                        if (outcome is WarrenSubscriptionOutcome.Success) {
-                            settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
-                        }
-                        subscriptionStatus = subscriptionLabel(activity, outcome)
-                    }
-                },
-            ) { Text(stringResource(R.string.subscription_check)) }
-
             subscriptionStatus?.let { msg ->
                 Text(
                     text = msg,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
 
-            // Buy / extend a subscription via the hosted Stripe checkout
-            // funnel (mirrors the desktop "Buy more credit" button). Opens in
-            // the browser; the redeem-voucher field below covers the offline /
-            // gift path.
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            // Buy / extend credit via the hosted Stripe funnel (matches the
+            // desktop "Buy more credit"). The auto-credit poll picks up the
+            // purchase and refreshes the cached expiry (doc 35).
+            VariantButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
-            ) { Text(stringResource(R.string.subscription_get)) }
+                text = stringResource(R.string.subscription_get),
+            )
 
-            // Voucher redemption (Crockford-32). The server normalizes the
-            // dashed / raw form, so the input is sent verbatim.
             OutlinedTextField(
                 value = voucherInput,
                 onValueChange = { voucherInput = it.uppercase() },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.subscription_voucher_code_label)) },
                 placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
                 singleLine = true,
             )
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                enabled = voucherInput.isNotBlank(),
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                isEnabled = voucherInput.isNotBlank(),
                 onClick = {
                     val code = voucherInput.trim()
                     scope.launch {
@@ -168,44 +167,121 @@ fun WarrenWalletSettings(navigator: Navigator) {
                         subscriptionStatus = voucherLabel(activity, outcome)
                     }
                 },
-            ) { Text(stringResource(R.string.subscription_redeem_voucher)) }
+                text = stringResource(R.string.subscription_redeem_voucher),
+            )
 
-            // Test button: dispatch end-to-end Quinn connect via the
-            // app-side use-case. Surfaces the result as inline text;
-            // a Snackbar would be nicer once the Connect button proper
-            // gets wired in lib/feature/home/impl.
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     scope.launch {
-                        connectStatus = connectingStatus
-                        val message = try {
-                            quinnConnect.connect(activity)
+                        try {
+                            val authorizer = BiometricPromptAuthorizer(activity)
+                            viewMnemonic = walletRepository.unlock(
+                                authorizer = authorizer,
+                                reason = viewPhraseReason,
+                            )
+                            viewError = null
+                        } catch (e: WalletAuthorizationDeniedException) {
+                            viewError = authRequiredError
                         } catch (e: Exception) {
-                            Logger.e(throwable = e) { "Warren Connect invocation failed" }
-                            "$connectFailedPrefix ${e.message}"
+                            Logger.w(throwable = e) { "wallet unlock failed" }
+                            viewError = "$unableToReadPrefix ${e.message}"
                         }
-                        connectStatus = message
                     }
                 },
-            ) { Text(stringResource(R.string.wallet_settings_connect_test)) }
+                text = stringResource(R.string.wallet_settings_view_phrase),
+            )
 
-            connectStatus?.let { msg ->
-                LaunchedEffect(msg) { Logger.i("Warren Connect status: $msg") }
-                Text(
-                    text = msg,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+            NegativeButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { confirmErase = true },
+                text = stringResource(R.string.wallet_settings_erase),
+            )
+        }
+    }
+
+    viewMnemonic?.let { mnemonic ->
+        AlertDialog(
+            onDismissRequest = { viewMnemonic = null },
+            title = { Text(stringResource(R.string.wallet_settings_recovery_phrase_title)) },
+            text = { MnemonicDisplay(phrase = mnemonic.phrase, alwaysRevealed = true) },
+            confirmButton = {
+                TextButton(onClick = { viewMnemonic = null }) {
+                    Text(stringResource(R.string.wallet_settings_done))
+                }
+            },
+        )
+    }
+
+    if (confirmErase) {
+        AlertDialog(
+            onDismissRequest = { confirmErase = false },
+            title = { Text(stringResource(R.string.wallet_settings_erase_confirm_title)) },
+            text = { Text(stringResource(R.string.wallet_settings_erase_confirm_description)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmErase = false
+                    scope.launch { walletRepository.erase() }
+                }) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmErase = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+}
+
+/**
+ * The identity block: a card showing the public key (tap to copy) and the
+ * paid-until status, or a hint line when the wallet is locked or absent.
+ */
+@Composable
+private fun IdentityCard(
+    state: WalletState,
+    expiryLabel: String?,
+    onCopyPubkey: (String) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(4.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(Dimens.mediumPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+        ) {
+            when (state) {
+                is WalletState.Ready -> {
+                    val full = state.pubkey.value
+                    Text(
+                        text = stringResource(
+                            R.string.wallet_settings_pubkey_tap_to_copy,
+                            full.shortWarrenAddress(),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth().clickable { onCopyPubkey(full) },
+                    )
+                    Text(
+                        text = expiryLabel
+                            ?: stringResource(R.string.subscription_none_active),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                WalletState.Locked -> Text(
+                    text = stringResource(R.string.wallet_settings_locked_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                WalletState.Absent -> Text(
+                    text = stringResource(R.string.wallet_settings_absent_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
-            // Live Quinn tunnel state mirrored via WarrenQuinnStateProxy.
-            // Refreshes every time the service-side adapter transitions.
-            Text(
-                text = stringResource(R.string.wallet_settings_tunnel_state, tunnelState),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
         }
     }
 }
@@ -300,4 +376,3 @@ private const val WARN_WINDOW_SECS = 7L * 86_400
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
 private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
-
