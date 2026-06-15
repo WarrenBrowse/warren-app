@@ -85,11 +85,14 @@ fun SwitchLocationButton(
 
             Button(
                 onClick = onSwitchLocation,
+                // 4dp square corners to match the Connect button (design-system
+                // WarrenButtonShape). When split with the reconnect button only
+                // the outer (start) corners are rounded; the inner edge is square.
                 shape =
                     if (isReconnectButtonEnabled) {
-                        RoundedCornerShape(bottomStartPercent = 50, topStartPercent = 50)
+                        RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp)
                     } else {
-                        ButtonDefaults.shape
+                        RoundedCornerShape(4.dp)
                     },
                 colors =
                     ButtonDefaults.buttonColors(
@@ -132,7 +135,7 @@ fun SwitchLocationButton(
 
             if (isReconnectButtonEnabled) {
                 FilledIconButton(
-                    shape = RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50),
+                    shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp),
                     colors =
                         IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
