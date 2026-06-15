@@ -11,11 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalContext
@@ -28,10 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
@@ -39,25 +34,30 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.ListHeader
+import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.SmallPrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenSwitch
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.compose.koinInject
 
 /**
  * Warren-specific tunnel settings host screen. Surfaces the Warren toggles
  * read by [WarrenTunnelConfigBuilder] at connect time:
- *   - Privacy: kill switch (lockdown), IPv6, DNS
- *   - DAITA padding (Tamaraw)
- *   - NAT-PMP port forwarding
- *   - Multi-hop entry relay
+ *   - Privacy: kill switch (lockdown), IPv6, local network, MTU
+ *   - DNS: custom resolvers + content blocking
+ *   - DAITA padding (Tamaraw), NAT-PMP port forwarding, exit country, multi-hop
  *   - Anti-censorship (read-only: M4.0 HTTP/3 mimicry is always-on)
+ *   - Exit key pinning reset
  *
- * Reached via [com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey]
- * from the main Settings screen ("Warren tunnel" entry). The switches
- * write through [WarrenLocalSettingsRepository] so the change is
- * persisted and picked up on the next connect.
- *
- * Changes here only take effect on the next connect attempt; the running
- * session is not torn down.
+ * The layout mirrors the upstream Mullvad VPN settings UX: section headers and
+ * grouped rounded toggle cells from the shared design system. Changes here
+ * only take effect on the next connect; an explicit "Reconnect now" is offered
+ * while connected.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,19 +91,15 @@ fun WarrenTunnelSettings(navigator: Navigator) {
 
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(R.string.tunnel_settings_title),
-        navigationIcon = {
-            NavigateBackIconButton(onNavigateBack = {
-                navigator.goBackUntil(SettingsNavKey)
-            })
-        },
+        navigationIcon = { NavigateBackIconButton(onNavigateBack = { navigator.goBack() }) },
     ) { modifier ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .then(modifier)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = Dimens.sideMargin, vertical = Dimens.mediumPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.listItemDivider),
         ) {
             // Live tunnel state, sourced from WarrenQuinnStateProxy.
             Text(
@@ -120,21 +116,21 @@ fun WarrenTunnelSettings(navigator: Navigator) {
             // connect, so offer an explicit "Reconnect now" affordance that
             // tears down and re-establishes the tunnel with the new config
             // (reusing the cached mnemonic - no biometric re-prompt).
-            val isConnected = tunnelState.startsWith("Connected")
-            if (isConnected) {
+            if (tunnelState.startsWith("Connected")) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
                 ) {
                     Text(
                         text = stringResource(R.string.tunnel_changes_apply_next_connect),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
-                    OutlinedButton(onClick = { reconnectInvoker.reconnect() }) {
-                        Text(stringResource(R.string.tunnel_reconnect_now))
-                    }
+                    SmallPrimaryButton(
+                        onClick = { reconnectInvoker.reconnect() },
+                        text = stringResource(R.string.tunnel_reconnect_now),
+                    )
                 }
             } else {
                 Text(
@@ -143,38 +139,35 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 )
             }
 
-            SectionLabel(stringResource(R.string.privacy_disclaimer_title))
+            SectionHeader(stringResource(R.string.privacy_disclaimer_title))
 
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_kill_switch_title),
                 subtitle = stringResource(R.string.tunnel_kill_switch_subtitle),
                 value = lockdown,
                 onValueChange = repo::setLockdownMode,
+                position = Position.Top,
             )
-
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_ipv6_title),
                 subtitle = stringResource(R.string.tunnel_ipv6_subtitle),
                 value = ipv6,
                 onValueChange = repo::setIpv6Enabled,
+                position = Position.Middle,
             )
-
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_local_network_title),
                 subtitle = stringResource(R.string.tunnel_local_network_subtitle),
                 value = allowLan,
                 onValueChange = repo::setAllowLan,
+                position = Position.Bottom,
             )
 
-            MtuField(
-                mtu = tunnelMtu,
-                onCommit = repo::setTunnelMtu,
-            )
+            MtuField(mtu = tunnelMtu, onCommit = repo::setTunnelMtu)
 
-            HorizontalDivider()
-            SectionLabel(stringResource(R.string.tunnel_dns_section))
+            SectionHeader(stringResource(R.string.tunnel_dns_section))
 
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_use_custom_dns_title),
                 subtitle = stringResource(R.string.tunnel_use_custom_dns_subtitle),
                 value = customDnsEnabled,
@@ -187,14 +180,13 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                         },
                     )
                 },
+                position = Position.Single,
             )
 
             if (customDnsEnabled) {
                 CustomDnsField(
                     initial = customDns.joinToString(", "),
-                    onCommit = { raw ->
-                        repo.setCustomDnsServers(raw.split(',', '\n'))
-                    },
+                    onCommit = { raw -> repo.setCustomDnsServers(raw.split(',', '\n')) },
                 )
             }
 
@@ -202,29 +194,31 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 text = stringResource(R.string.tunnel_content_blocking_header),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Dimens.smallPadding),
             )
-            ToggleRow(stringResource(R.string.tunnel_block_ads), "", blockAds, repo::setBlockAds)
-            ToggleRow(stringResource(R.string.tunnel_block_trackers), "", blockTrackers, repo::setBlockTrackers)
-            ToggleRow(stringResource(R.string.tunnel_block_malware), "", blockMalware, repo::setBlockMalware)
-            ToggleRow(stringResource(R.string.tunnel_block_adult_content), "", blockAdult, repo::setBlockAdultContent)
-            ToggleRow(stringResource(R.string.tunnel_block_gambling), "", blockGambling, repo::setBlockGambling)
-            ToggleRow(stringResource(R.string.tunnel_block_social_media), "", blockSocial, repo::setBlockSocialMedia)
+            ToggleCell(stringResource(R.string.tunnel_block_ads), "", blockAds, repo::setBlockAds, Position.Top)
+            ToggleCell(stringResource(R.string.tunnel_block_trackers), "", blockTrackers, repo::setBlockTrackers, Position.Middle)
+            ToggleCell(stringResource(R.string.tunnel_block_malware), "", blockMalware, repo::setBlockMalware, Position.Middle)
+            ToggleCell(stringResource(R.string.tunnel_block_adult_content), "", blockAdult, repo::setBlockAdultContent, Position.Middle)
+            ToggleCell(stringResource(R.string.tunnel_block_gambling), "", blockGambling, repo::setBlockGambling, Position.Middle)
+            ToggleCell(stringResource(R.string.tunnel_block_social_media), "", blockSocial, repo::setBlockSocialMedia, Position.Bottom)
 
-            HorizontalDivider()
-            SectionLabel(stringResource(R.string.tunnel_section))
+            SectionHeader(stringResource(R.string.tunnel_section))
 
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_daita_padding_title),
                 subtitle = stringResource(R.string.tunnel_daita_padding_subtitle),
                 value = daita,
                 onValueChange = repo::setDaitaEnabled,
+                position = Position.Single,
             )
 
-            ToggleRow(
+            ToggleCell(
                 title = stringResource(R.string.tunnel_natpmp_title),
                 subtitle = stringResource(R.string.tunnel_natpmp_subtitle),
                 value = natPmp,
                 onValueChange = repo::setNatPmpEnabled,
+                position = Position.Single,
             )
 
             if (natPmp) {
@@ -247,69 +241,75 @@ fun WarrenTunnelSettings(navigator: Navigator) {
 
             MultiHopIndicator()
 
-            HorizontalDivider()
-            SectionLabel(stringResource(R.string.tunnel_anti_censorship_section))
+            SectionHeader(stringResource(R.string.tunnel_anti_censorship_section))
             ObfuscationIndicator()
 
-            HorizontalDivider()
-            SectionLabel(stringResource(R.string.tunnel_exit_key_pinning_section))
+            SectionHeader(stringResource(R.string.tunnel_exit_key_pinning_section))
             Text(
                 text = stringResource(R.string.tunnel_exit_key_pinning_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
+            NegativeButton(
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
                 onClick = { repo.resetExitKeyPins() },
-            ) { Text(stringResource(R.string.tunnel_reset_pinned_keys)) }
+                text = stringResource(R.string.tunnel_reset_pinned_keys),
+            )
 
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
                 onClick = { navigator.navigate(WarrenLocationPickerNavKey) },
-            ) { Text(stringResource(R.string.tunnel_exit_relay)) }
+                text = stringResource(R.string.tunnel_exit_relay),
+            )
         }
     }
 }
 
 /**
- * Read-only anti-censorship status. Warren tunnels run warren-core's QUIC
- * transport, which masquerades as standard browser HTTP/3 traffic (ALPN h3,
- * SNI warrenbrowse.com, Initial-packet split, UDP/443). This M4.0 mimicry is
- * always-on and not togglable: disabling it would make Warren clients
- * immediately recognisable on the network. The legacy Mullvad obfuscation
- * methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do
- * not apply to Warren tunnels, so no picker is shown - this mirrors the
- * desktop anti-censorship view.
+ * Read-only multi-hop status. Warren currently routes single-hop through the
+ * selected exit; multi-hop entry selection is not user-configurable here.
  */
 @Composable
 private fun MultiHopIndicator() {
-    Text(
-        text = stringResource(R.string.tunnel_multihop_title),
-        style = MaterialTheme.typography.titleSmall,
-    )
-    Text(
-        text = stringResource(R.string.tunnel_multihop_desc),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Column(modifier = Modifier.padding(top = Dimens.smallPadding)) {
+        Text(
+            text = stringResource(R.string.tunnel_multihop_title),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = stringResource(R.string.tunnel_multihop_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
+/**
+ * Read-only anti-censorship status. Warren tunnels masquerade as standard
+ * browser HTTP/3 traffic (ALPN h3, SNI warrenbrowse.com, UDP/443). This M4.0
+ * mimicry is always-on and not togglable: disabling it would make Warren
+ * clients immediately recognisable on the network. The legacy Mullvad
+ * obfuscation methods are WireGuard-only and do not apply, so no picker is
+ * shown, mirroring the desktop anti-censorship view.
+ */
 @Composable
 private fun ObfuscationIndicator() {
-    Text(
-        text = stringResource(R.string.tunnel_obfuscation_title),
-        style = MaterialTheme.typography.titleSmall,
-    )
-    Text(
-        text = stringResource(R.string.tunnel_obfuscation_desc),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Text(
-        text = stringResource(R.string.tunnel_obfuscation_legacy),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Column {
+        Text(
+            text = stringResource(R.string.tunnel_obfuscation_title),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = stringResource(R.string.tunnel_obfuscation_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = stringResource(R.string.tunnel_obfuscation_legacy),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 /**
@@ -326,7 +326,7 @@ private fun MtuField(mtu: Int, onCommit: (Int) -> Unit) {
             text = it.filter(Char::isDigit).take(4)
             text.toIntOrNull()?.let(onCommit)
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
         label = { Text(stringResource(R.string.mtu)) },
         placeholder = {
             Text(
@@ -342,13 +342,10 @@ private fun MtuField(mtu: Int, onCommit: (Int) -> Unit) {
     )
 }
 
+/** Section header matching the upstream relay-list style (label + divider). */
 @Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-    )
+private fun SectionHeader(text: String) {
+    ListHeader(modifier = Modifier.padding(top = Dimens.mediumPadding), text = text)
 }
 
 @Composable
@@ -363,7 +360,7 @@ private fun CustomDnsField(initial: String, onCommit: (String) -> Unit) {
             text = it
             onCommit(it)
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
         label = { Text(stringResource(R.string.tunnel_resolver_addresses_label)) },
         placeholder = { Text(stringResource(R.string.tunnel_resolver_addresses_hint)) },
         singleLine = false,
@@ -382,8 +379,8 @@ private fun PortForwardingAdvanced(
     statusLabel: String,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = Dimens.mediumPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
     ) {
         Text(
             text = statusLabel,
@@ -392,7 +389,7 @@ private fun PortForwardingAdvanced(
         )
 
         Text(stringResource(R.string.tunnel_protocol_label), style = MaterialTheme.typography.bodySmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
             FilterChip(
                 selected = protocol == "udp",
                 onClick = { onProtocolChange("udp") },
@@ -420,7 +417,7 @@ private fun PortForwardingAdvanced(
         )
 
         Text(stringResource(R.string.tunnel_mapping_lifetime_label), style = MaterialTheme.typography.bodySmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
             LifetimeChip(stringResource(R.string.tunnel_lifetime_1h), 3_600, lifetimeSecs, onLifetimeChange)
             LifetimeChip(stringResource(R.string.tunnel_lifetime_6h), 21_600, lifetimeSecs, onLifetimeChange)
             LifetimeChip(stringResource(R.string.tunnel_lifetime_24h), 86_400, lifetimeSecs, onLifetimeChange)
@@ -484,35 +481,51 @@ private fun CountryField(label: String, initial: String, onCommit: (String?) -> 
             text = it.filter(Char::isLetter).take(2).uppercase()
             onCommit(text.ifBlank { null })
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
         label = { Text(label) },
         placeholder = { Text(stringResource(R.string.tunnel_exit_country_hint)) },
         singleLine = true,
     )
 }
 
+/**
+ * A single settings toggle styled as an upstream Mullvad list cell: title (+
+ * optional subtitle) with a trailing switch, rounded into a block via
+ * [position]. Tapping anywhere on the row flips the switch.
+ */
 @Composable
-private fun ToggleRow(
+private fun ToggleCell(
     title: String,
     subtitle: String,
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
+    position: Position,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.titleSmall)
-            if (subtitle.isNotEmpty()) {
+    WarrenListItem(
+        position = position,
+        onClick = { onValueChange(!value) },
+        content = {
+            Column(modifier = Modifier.align(Alignment.CenterStart)) {
                 Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
+                if (subtitle.isNotEmpty()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-        }
-        Switch(checked = value, onCheckedChange = onValueChange)
-    }
+        },
+        trailingContent = {
+            WarrenSwitch(
+                modifier = Modifier.align(Alignment.Center),
+                checked = value,
+                onCheckedChange = onValueChange,
+            )
+        },
+    )
 }
