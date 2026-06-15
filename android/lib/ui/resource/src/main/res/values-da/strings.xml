@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Offentlig nøgle</string>
+    <string name="account_paid_until">Betalt indtil</string>
     <string name="account_credit_has_expired">Du har ikke mere VPN-tid tilbage på denne konto.</string>
     <string name="add">Tilføj</string>
     <string name="agree_and_continue">Accepter og fortsæt</string>

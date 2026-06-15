@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Genel anahtar</string>
+    <string name="account_paid_until">Şu tarihe kadar ödendi:</string>
     <string name="account_credit_has_expired">Bu hesap için artık VPN süreniz kalmadı.</string>
     <string name="add">Ekle</string>
     <string name="agree_and_continue">Kabul et ve devam et</string>

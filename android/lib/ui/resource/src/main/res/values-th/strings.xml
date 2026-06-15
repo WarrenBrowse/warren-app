@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">กุญแจสาธารณะ</string>
+    <string name="account_paid_until">ชำระเงินแล้วจนถึง</string>
     <string name="account_credit_has_expired">คุณไม่มีเวลาใช้งาน VPN เหลืออยู่ในบัญชีนี้แล้ว</string>
     <string name="add">เพิ่ม</string>
     <string name="agree_and_continue">ยอมรับและดำเนินการต่อ</string>

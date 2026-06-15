@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Openbare sleutel</string>
+    <string name="account_paid_until">Betaald tot</string>
     <string name="account_credit_has_expired">U hebt geen VPN-tijd meer op dit account.</string>
     <string name="add">Toevoegen</string>
     <string name="agree_and_continue">Akkoord en doorgaan</string>

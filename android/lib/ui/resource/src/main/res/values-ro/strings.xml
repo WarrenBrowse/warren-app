@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Cheie publică</string>
+    <string name="account_paid_until">Plătit până la</string>
     <string name="disconnecting">Se deconectează...</string>
     <string name="blocking">Se blochează...</string>
     <string name="critical_error">Eroare critică (este necesară atenția dvs.)</string>

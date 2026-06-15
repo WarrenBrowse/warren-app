@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Открытый ключ</string>
+    <string name="account_paid_until">Оплачено до</string>
     <string name="account_credit_has_expired">На этой учетной записи времени VPN не осталось.</string>
     <string name="add">Добавить</string>
     <string name="agree_and_continue">Согласиться и продолжить</string>

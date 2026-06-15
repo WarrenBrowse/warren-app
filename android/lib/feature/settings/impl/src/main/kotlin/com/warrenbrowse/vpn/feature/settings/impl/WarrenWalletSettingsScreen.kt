@@ -1,21 +1,25 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,11 +29,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
@@ -38,7 +43,6 @@ import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
-import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -49,27 +53,29 @@ import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
-import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeOutlinedButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
-import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * Warren account view, mirroring the desktop (Electron) `AccountView`: an
- * identity block (public key + paid-until) on top, and the account actions
- * (buy credit, redeem voucher, reveal recovery phrase, erase wallet) below,
- * all rendered with the shared design-system buttons.
+ * Warren account screen, mirroring the upstream Mullvad Android `AccountScreen`:
+ * labelled identity rows at the top (public key, paid-until) over a [Spacer]
+ * that pushes the destructive action to the bottom of the screen.
  *
- * Reached from the Connect header account icon and from the Settings "Wallet"
- * entry. The back affordance pops a single entry so it works from either
- * origin.
+ * Warren replaces the Mullvad account-number identity with the BIP39 wallet:
+ *   - "Public key" row (the account identity, public, copyable).
+ *   - "Paid until" row + an inline "Get subscription" action (the Warren
+ *     equivalent of Mullvad's "Add time"; opens the hosted checkout).
+ *   - a voucher row (Warren feature).
+ *   - "View recovery phrase" (biometric-gated reveal) and "Erase wallet"
+ *     (the destructive sign-out, styled like Mullvad's outlined "Log out").
  *
- * The recovery-phrase reveal is biometric-gated and ephemeral: the cleartext
- * lives only inside the reveal dialog's Compose state and is dropped on
- * dismissal. Erasing the wallet requires an explicit confirmation.
+ * The public key is shown whether the wallet is locked or unlocked: it is not
+ * a secret. Only revealing the recovery phrase requires an unlock.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,6 +103,16 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val authRequiredError = stringResource(R.string.wallet_settings_auth_required_view_phrase)
     val unableToReadPrefix = stringResource(R.string.wallet_settings_unable_to_read)
     val pubkeyCopiedHint = stringResource(R.string.wallet_settings_pubkey_copied)
+    val noSubscription = stringResource(R.string.subscription_none_active)
+
+    // The public key is the account identity and is always available (locked or
+    // ready); only Absent has no identity.
+    val pubkey = when (val s = state) {
+        is WalletState.Ready -> s.pubkey.value
+        is WalletState.Locked -> s.pubkey.value
+        WalletState.Absent -> null
+    }
+    val paidUntil = remember(cachedExpiry) { expiryDateOrNull(cachedExpiry) }
 
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(R.string.settings_account),
@@ -107,71 +123,111 @@ fun WarrenWalletSettings(navigator: Navigator) {
             modifier = Modifier
                 .fillMaxSize()
                 .then(modifier)
-                .background(MaterialTheme.colorScheme.surface)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    start = Dimens.sideMargin,
-                    end = Dimens.sideMargin,
-                    top = Dimens.screenTopMargin,
-                    bottom = Dimens.screenBottomMargin,
-                ),
-            verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
+                .padding(horizontal = Dimens.sideMargin)
+                .padding(top = Dimens.screenTopMargin, bottom = Dimens.screenBottomMargin),
         ) {
-            // Identity block: public key (tap to copy) + paid-until status.
-            IdentityCard(
-                state = state,
-                expiryLabel = cachedSubscriptionLabel(activity, cachedExpiry),
-                onCopyPubkey = { full -> copyToClipboard(full, pubkeyCopiedHint) },
-            )
+            if (pubkey == null) {
+                Text(
+                    text = stringResource(R.string.wallet_settings_absent_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.accountRowSpacing)) {
+                // Public key (account identity): public, copyable.
+                AccountRow(label = stringResource(R.string.account_public_key)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = pubkey,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { copyToClipboard(pubkey, pubkeyCopiedHint) }) {
+                            Icon(
+                                imageVector = Icons.Rounded.ContentCopy,
+                                contentDescription = stringResource(R.string.copy),
+                            )
+                        }
+                    }
+                }
+
+                // Paid until + inline "Get subscription" (Warren's "Add time").
+                AccountRow(label = stringResource(R.string.account_paid_until)) {
+                    Row(
+                        modifier = Modifier.heightIn(min = Dimens.accountRowMinHeight),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = paidUntil ?: noSubscription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        PrimaryTextButton(
+                            onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
+                            text = stringResource(R.string.subscription_get),
+                            textDecoration = TextDecoration.Underline,
+                        )
+                    }
+                }
+
+                // Voucher redemption (Warren feature).
+                AccountRow(label = stringResource(R.string.subscription_voucher_code_label)) {
+                    OutlinedTextField(
+                        value = voucherInput,
+                        onValueChange = { voucherInput = it.uppercase() },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
+                        singleLine = true,
+                    )
+                    subscriptionStatus?.let { msg ->
+                        Text(
+                            text = msg,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = Dimens.smallPadding),
+                        )
+                    }
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        PrimaryTextButton(
+                            onClick = {
+                                val code = voucherInput.trim()
+                                scope.launch {
+                                    subscriptionStatus = redeemingVoucherStatus
+                                    val outcome = subscriptionInvoker.redeemVoucher(activity, code)
+                                    if (outcome is WarrenVoucherOutcome.Success) {
+                                        voucherInput = ""
+                                        settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                                    }
+                                    subscriptionStatus = voucherLabel(activity, outcome)
+                                }
+                            },
+                            text = stringResource(R.string.subscription_redeem_voucher),
+                            textDecoration = TextDecoration.Underline,
+                            isEnabled = voucherInput.isNotBlank(),
+                        )
+                    }
+                }
+            }
 
             viewError?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
-            }
-            subscriptionStatus?.let { msg ->
                 Text(
                     text = msg,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = Dimens.smallPadding),
                 )
             }
 
-            // Buy / extend credit via the hosted Stripe funnel (matches the
-            // desktop "Buy more credit"). The auto-credit poll picks up the
-            // purchase and refreshes the cached expiry (doc 35).
-            VariantButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { uriHandler.safeOpenUri(CHECKOUT_URL) },
-                text = stringResource(R.string.subscription_get),
-            )
-
-            OutlinedTextField(
-                value = voucherInput,
-                onValueChange = { voucherInput = it.uppercase() },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.subscription_voucher_code_label)) },
-                placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
-                singleLine = true,
-            )
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                isEnabled = voucherInput.isNotBlank(),
-                onClick = {
-                    val code = voucherInput.trim()
-                    scope.launch {
-                        subscriptionStatus = redeemingVoucherStatus
-                        val outcome = subscriptionInvoker.redeemVoucher(activity, code)
-                        if (outcome is WarrenVoucherOutcome.Success) {
-                            voucherInput = ""
-                            settings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
-                        }
-                        subscriptionStatus = voucherLabel(activity, outcome)
-                    }
-                },
-                text = stringResource(R.string.subscription_redeem_voucher),
-            )
+            Spacer(modifier = Modifier.weight(1f).heightIn(min = Dimens.mediumPadding))
 
             PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
                 onClick = {
                     scope.launch {
                         try {
@@ -192,8 +248,8 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 text = stringResource(R.string.wallet_settings_view_phrase),
             )
 
-            NegativeButton(
-                modifier = Modifier.fillMaxWidth(),
+            NegativeOutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
                 onClick = { confirmErase = true },
                 text = stringResource(R.string.wallet_settings_erase),
             )
@@ -233,58 +289,26 @@ fun WarrenWalletSettings(navigator: Navigator) {
     }
 }
 
-/**
- * The identity block: a card showing the public key (tap to copy) and the
- * paid-until status, or a hint line when the wallet is locked or absent.
- */
+/** A labelled account row: a small caption label above its value content. */
 @Composable
-private fun IdentityCard(
-    state: WalletState,
-    expiryLabel: String?,
-    onCopyPubkey: (String) -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(4.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.mediumPadding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
-        ) {
-            // The public key is the account identity and is always shown (it is
-            // not a secret), whether the wallet is locked or unlocked, mirroring
-            // the desktop "Public key" / "Paid until" rows. Only Absent has no
-            // identity to display.
-            val pubkey = when (state) {
-                is WalletState.Ready -> state.pubkey.value
-                is WalletState.Locked -> state.pubkey.value
-                WalletState.Absent -> null
-            }
-            if (pubkey == null) {
-                Text(
-                    text = stringResource(R.string.wallet_settings_absent_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                Text(
-                    text = stringResource(
-                        R.string.wallet_settings_pubkey_tap_to_copy,
-                        pubkey.shortWarrenAddress(),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().clickable { onCopyPubkey(pubkey) },
-                )
-                Text(
-                    text = expiryLabel ?: stringResource(R.string.subscription_none_active),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
+private fun AccountRow(label: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        content()
     }
+}
+
+/** Format a unix-seconds expiry as a local date, or null when unset. */
+private fun expiryDateOrNull(expiryUnixSecs: Long): String? {
+    if (expiryUnixSecs <= 0L) return null
+    return java.time.Instant.ofEpochSecond(expiryUnixSecs)
+        .atZone(java.time.ZoneId.systemDefault())
+        .toLocalDate()
+        .toString()
 }
 
 /**

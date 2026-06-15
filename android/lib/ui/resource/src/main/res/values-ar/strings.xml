@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">المفتاح العام</string>
+    <string name="account_paid_until">مدفوع حتى</string>
     <string name="account_credit_has_expired">لم يتبقَّ لديك أي وقت لاستخدام شبكة VPN على هذا الحساب.</string>
     <string name="add">إضافة</string>
     <string name="agree_and_continue">الموافقة والمتابعة</string>

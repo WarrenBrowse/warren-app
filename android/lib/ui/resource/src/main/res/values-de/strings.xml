@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">Öffentlicher Schlüssel</string>
+    <string name="account_paid_until">Bezahlt bis</string>
     <string name="account_credit_has_expired">Sie haben keine VPN-Zeit mehr auf diesem Konto.</string>
     <string name="add">Hinzufügen</string>
     <string name="agree_and_continue">Akzeptieren und weiter</string>

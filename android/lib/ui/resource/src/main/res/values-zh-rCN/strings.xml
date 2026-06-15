@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">公钥</string>
+    <string name="account_paid_until">到期时间</string>
     <string name="account_credit_has_expired">此帐户没有更多的 VPN 时间了。</string>
     <string name="add">添加</string>
     <string name="agree_and_continue">同意并继续</string>

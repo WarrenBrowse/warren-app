@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account_public_key">公開鍵</string>
+    <string name="account_paid_until">次の日時まで支払い済み</string>
     <string name="account_credit_has_expired">このアカウントには、もう残っているVPN時間がありません。</string>
     <string name="add">追加</string>
     <string name="agree_and_continue">同意して続行</string>
