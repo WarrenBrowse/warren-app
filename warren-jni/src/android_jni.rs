@@ -384,17 +384,6 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
             return -1;
         }
-        // SAFETY: Kotlin passes a freshly `detachFd()`-ed fd whose ownership
-        // is now transferred to us. The fd is closed when AndroidTun drops.
-        let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(tun_fd) };
-        let tun = match warren_tunnel::AndroidTun::from_fd(owned) {
-            Ok(t) => t,
-            Err(e) => {
-                let _ = jnix_env.throw(format!("AndroidTun::from_fd failed: {e}"));
-                return -1;
-            }
-        };
-
         let config = match crate::tunnel::parse_config(&config_str) {
             Ok(c) => c,
             Err(e) => {
@@ -408,6 +397,26 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             None => {
                 let _ = jnix_env.throw("initLogger() must be called before connectTunnel()");
                 return -1;
+            }
+        };
+
+        // SAFETY: Kotlin passes a freshly `detachFd()`-ed fd whose ownership
+        // is now transferred to us. The fd is closed when AndroidTun drops.
+        let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(tun_fd) };
+        // `AndroidTun::from_fd` registers the fd with tokio's reactor through
+        // `AsyncFd::new`, which panics ("there is no reactor running, must be
+        // called from the context of a Tokio 1.x runtime") unless a runtime is
+        // entered on the current thread. The JNI thread is not a runtime
+        // worker, so enter the shared RUNTIME for the registration. Do NOT move
+        // from_fd back before this guard, it crashes the whole process.
+        let tun = {
+            let _runtime_guard = runtime.enter();
+            match warren_tunnel::AndroidTun::from_fd(owned) {
+                Ok(t) => t,
+                Err(e) => {
+                    let _ = jnix_env.throw(format!("AndroidTun::from_fd failed: {e}"));
+                    return -1;
+                }
             }
         };
 
