@@ -29,7 +29,10 @@ class SettingsViewModel(
                 appVersionInfoRepository.versionInfo,
             ) { walletState, daita, versionInfo ->
                 SettingsUiState(
-                        isLoggedIn = walletState is WalletState.Ready,
+                        // Logged in = a wallet exists, whether locked at rest or
+                        // transiently unlocked (Ready). Gating on Ready alone
+                        // would read as logged-out at rest.
+                        isLoggedIn = walletState !is WalletState.Absent,
                         appVersion = versionInfo.currentVersion,
                         isSupportedVersion = versionInfo.isSupported,
                         isDaitaEnabled = daita,

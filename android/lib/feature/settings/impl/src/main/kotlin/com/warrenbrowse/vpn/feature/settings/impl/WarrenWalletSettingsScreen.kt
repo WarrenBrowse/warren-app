@@ -252,34 +252,35 @@ private fun IdentityCard(
             modifier = Modifier.fillMaxWidth().padding(Dimens.mediumPadding),
             verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
         ) {
-            when (state) {
-                is WalletState.Ready -> {
-                    val full = state.pubkey.value
-                    Text(
-                        text = stringResource(
-                            R.string.wallet_settings_pubkey_tap_to_copy,
-                            full.shortWarrenAddress(),
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().clickable { onCopyPubkey(full) },
-                    )
-                    Text(
-                        text = expiryLabel
-                            ?: stringResource(R.string.subscription_none_active),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                WalletState.Locked -> Text(
-                    text = stringResource(R.string.wallet_settings_locked_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                WalletState.Absent -> Text(
+            // The public key is the account identity and is always shown (it is
+            // not a secret), whether the wallet is locked or unlocked, mirroring
+            // the desktop "Public key" / "Paid until" rows. Only Absent has no
+            // identity to display.
+            val pubkey = when (state) {
+                is WalletState.Ready -> state.pubkey.value
+                is WalletState.Locked -> state.pubkey.value
+                WalletState.Absent -> null
+            }
+            if (pubkey == null) {
+                Text(
                     text = stringResource(R.string.wallet_settings_absent_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    text = stringResource(
+                        R.string.wallet_settings_pubkey_tap_to_copy,
+                        pubkey.shortWarrenAddress(),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().clickable { onCopyPubkey(pubkey) },
+                )
+                Text(
+                    text = expiryLabel ?: stringResource(R.string.subscription_none_active),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

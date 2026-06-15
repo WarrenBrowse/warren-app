@@ -11,11 +11,14 @@ sealed interface WalletState {
     data object Absent : WalletState
 
     /**
-     * Wallet locked behind a biometric / device-credential prompt. The
-     * mnemonic is on disk encrypted by Android Keystore but has not yet
-     * been decrypted for this session.
+     * Wallet present but the mnemonic is still encrypted at rest (Android
+     * Keystore): it has not been decrypted for this session. This is the
+     * normal resting state. The [pubkey] is the user's PUBLIC Warren address,
+     * persisted in cleartext and safe to display without authentication (it is
+     * the account identity, like the desktop "Public key" row); only revealing
+     * the recovery phrase or signing requires an unlock.
      */
-    data object Locked : WalletState
+    data class Locked(val pubkey: WalletAddress) : WalletState
 
     /**
      * Wallet decrypted and ready. The `Mnemonic` is held in memory only

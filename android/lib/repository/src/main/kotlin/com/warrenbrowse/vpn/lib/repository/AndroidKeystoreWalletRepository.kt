@@ -157,11 +157,10 @@ class AndroidKeystoreWalletRepository(
     private fun loadInitialState(): WalletState {
         val address = prefs.getString(KEY_PUBKEY_SS58, null) ?: return WalletState.Absent
         return try {
-            WalletState.Locked.also {
-                // We don't decrypt at boot - UI must call `unlock()` to
-                // get the cleartext mnemonic for a signing operation.
-                @Suppress("UNUSED_EXPRESSION") WalletAddress(address)
-            }
+            // The pubkey is public and persisted in cleartext, so it is carried
+            // on the locked state for display (account identity). We do NOT
+            // decrypt the mnemonic at boot; that still needs an unlock().
+            WalletState.Locked(WalletAddress(address))
         } catch (e: IllegalArgumentException) {
             Logger.w(throwable = e) { "persisted address is malformed; treating wallet as absent" }
             WalletState.Absent

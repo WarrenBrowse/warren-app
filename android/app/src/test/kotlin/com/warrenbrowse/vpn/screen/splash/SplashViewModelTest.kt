@@ -102,7 +102,12 @@ class SplashViewModelTest {
         // Locked = wallet persisted but unlock not yet performed. The
         // splash decision tree routes to Connect; the Connect button
         // triggers the unlock when the user taps it.
-        val vm = makeVm(privacyAccepted = true, walletState = WalletState.Locked)
+        val vm = makeVm(
+            privacyAccepted = true,
+            walletState = WalletState.Locked(
+                WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB"),
+            ),
+        )
         val side = vm.uiSideEffect.first()
         assertEquals(SplashUiSideEffect.NavigateToConnect, side)
     }
