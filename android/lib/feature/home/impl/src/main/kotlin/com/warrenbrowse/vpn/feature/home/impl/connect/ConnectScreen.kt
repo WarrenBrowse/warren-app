@@ -112,8 +112,12 @@ import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.LatLong
 import com.warrenbrowse.vpn.lib.model.Latitude
 import com.warrenbrowse.vpn.lib.model.Longitude
+import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.PrepareError
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
@@ -198,6 +202,19 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Account identity for the header second row (desktop AppMainHeader): the
+    // public key is public, shown short with a copy action whether the wallet
+    // is locked or ready.
+    val walletRepository = koinInject<WalletRepository>()
+    val walletState by walletRepository.state.collectAsStateWithLifecycle()
+    val fullPubkey = when (val s = walletState) {
+        is WalletState.Ready -> s.pubkey.value
+        is WalletState.Locked -> s.pubkey.value
+        WalletState.Absent -> null
+    }
+    val copyPubkey = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
+    val pubkeyCopiedMsg = stringResource(R.string.wallet_settings_pubkey_copied)
 
     val createVpnProfile =
         rememberLauncherForActivityResult(CreateVpnProfile()) {
@@ -312,6 +329,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 snackbarHostState = snackbarHostState,
                 subscriptionWarning = subscriptionWarning,
                 accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
+                accountShortPubkey = fullPubkey?.shortWarrenAddress(),
+                onCopyPubkey = fullPubkey?.let { full -> { copyPubkey(full, pubkeyCopiedMsg) } },
                 onDisconnectClick = { warrenDisconnect.disconnect() },
                 onReconnectClick = { warrenReconnect.reconnect() },
                 onConnectClick = onConnectButtonClick,
@@ -365,6 +384,8 @@ fun ConnectScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     subscriptionWarning: String? = null,
     accountTimeLeft: String? = null,
+    accountShortPubkey: String? = null,
+    onCopyPubkey: (() -> Unit)? = null,
     onDisconnectClick: () -> Unit,
     onReconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
@@ -427,7 +448,9 @@ fun ConnectScreen(
             iconTintColor = state.tunnelState.iconTintColor(),
             onSettingsClicked = onSettingsClick,
             onAccountClicked = onAccountClick,
+            accountShortPubkey = accountShortPubkey,
             accountTimeLeft = accountTimeLeft,
+            onCopyPubkey = onCopyPubkey,
             snackbarHostState = snackbarHostState,
         ) {
             content(it)

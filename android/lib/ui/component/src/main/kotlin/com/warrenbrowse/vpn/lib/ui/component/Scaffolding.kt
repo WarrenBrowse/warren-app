@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,9 @@ fun ScaffoldWithTopBar(
     onSettingsClicked: (() -> Unit)?,
     onAccountClicked: (() -> Unit)?,
     isIconAndLogoVisible: Boolean = true,
+    accountShortPubkey: String? = null,
     accountTimeLeft: String? = null,
+    onCopyPubkey: (() -> Unit)? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     enabled: Boolean = true,
     content: @Composable (PaddingValues) -> Unit,
@@ -33,15 +36,26 @@ fun ScaffoldWithTopBar(
     Scaffold(
         modifier = modifier,
         topBar = {
-            WarrenTopBar(
-                containerColor = topBarColor,
-                iconTintColor = iconTintColor,
-                onSettingsClicked = onSettingsClicked,
-                onAccountClicked = onAccountClicked,
-                isIconAndLogoVisible = isIconAndLogoVisible,
-                accountTimeLeft = accountTimeLeft,
-                enabled = enabled,
-            )
+            Column {
+                WarrenTopBar(
+                    containerColor = topBarColor,
+                    iconTintColor = iconTintColor,
+                    onSettingsClicked = onSettingsClicked,
+                    onAccountClicked = onAccountClicked,
+                    isIconAndLogoVisible = isIconAndLogoVisible,
+                    enabled = enabled,
+                )
+                // Desktop AppMainHeader second row: pubkey (copyable) + time left.
+                if (accountShortPubkey != null || accountTimeLeft != null) {
+                    WarrenMainHeaderSubRow(
+                        containerColor = topBarColor,
+                        tintColor = iconTintColor,
+                        shortPubkey = accountShortPubkey,
+                        timeLeft = accountTimeLeft,
+                        onCopyPubkey = onCopyPubkey,
+                    )
+                }
+            }
         },
         snackbarHost = {
             SnackbarHost(

@@ -3,14 +3,18 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -100,7 +104,6 @@ fun WarrenTopBar(
     enabled: Boolean = true,
     iconTintColor: Color,
     isIconAndLogoVisible: Boolean = true,
-    accountTimeLeft: String? = null,
 ) {
     TopAppBar(
         modifier = modifier.testTag(TOP_BAR_TEST_TAG),
@@ -143,15 +146,6 @@ fun WarrenTopBar(
             }
         },
         actions = {
-            if (accountTimeLeft != null) {
-                Text(
-                    text = accountTimeLeft,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = iconTintColor,
-                    maxLines = 1,
-                    modifier = Modifier.padding(end = Dimens.smallPadding),
-                )
-            }
             if (onAccountClicked != null) {
                 IconButton(
                     modifier = Modifier.testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),
@@ -207,3 +201,57 @@ fun WarrenSmallTopBar(
     )
 }
 
+
+/**
+ * Second header row for the home screen, reproducing the desktop AppMainHeader:
+ * the short public key with a copy action on the left, and the remaining
+ * subscription time on the right, both over the same header background.
+ */
+@Composable
+fun WarrenMainHeaderSubRow(
+    containerColor: Color,
+    tintColor: Color,
+    shortPubkey: String?,
+    timeLeft: String?,
+    onCopyPubkey: (() -> Unit)?,
+) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(containerColor)
+                .padding(
+                    start = Dimens.mediumPadding,
+                    end = Dimens.smallPadding,
+                    bottom = Dimens.smallPadding,
+                ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (shortPubkey != null) {
+            Text(
+                text = shortPubkey,
+                style = MaterialTheme.typography.labelMedium,
+                color = tintColor,
+                maxLines = 1,
+            )
+            if (onCopyPubkey != null) {
+                IconButton(onClick = onCopyPubkey, modifier = Modifier.size(Dimens.mediumPadding * 2)) {
+                    Icon(
+                        imageVector = Icons.Rounded.ContentCopy,
+                        contentDescription = stringResource(R.string.copy),
+                        tint = tintColor,
+                        modifier = Modifier.size(Dimens.mediumPadding),
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        if (timeLeft != null) {
+            Text(
+                text = timeLeft,
+                style = MaterialTheme.typography.labelMedium,
+                color = tintColor,
+                maxLines = 1,
+            )
+        }
+    }
+}
