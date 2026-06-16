@@ -259,8 +259,8 @@
     <string name="tunnel_exit_key_pinning_desc">Warren pins each exit\'s key on first use and refuses to connect if it changes. Reset the pins only if you expect a legitimate key rotation; the next connect re-pins.</string>
     <string name="tunnel_reset_pinned_keys">Reset pinned exit keys</string>
     <string name="tunnel_exit_relay">Exit relay…</string>
-    <string name="tunnel_multihop_title">Multi-hop is not available on Android yet.</string>
-    <string name="tunnel_multihop_desc">Multi-hop routes traffic through a separate entry relay so the exit never sees your IP. It is available on the Warren desktop app. The Android tunnel currently connects single-hop, so no multi-hop indicator is shown while connected.</string>
+    <string name="tunnel_multihop_title">Multi-hop is always on.</string>
+    <string name="tunnel_multihop_desc">Multi-hop routes traffic through a separate entry relay so the exit never sees your IP. Warren on Android always connects multi-hop: a distinct entry relay forwards your traffic to the chosen exit, so the "Multihop" indicator is shown while connected.</string>
     <string name="tunnel_obfuscation_title">HTTP/3 mimicry obfuscation is always-on for Warren tunnels.</string>
     <string name="tunnel_obfuscation_desc">Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable because disabling it would make Warren clients immediately recognisable on the network.</string>
     <string name="tunnel_obfuscation_legacy">Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to Warren tunnels.</string>

@@ -20,6 +20,12 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 class WarrenTunnelConfigBuilder(
     private val localSettings: WarrenLocalSettingsRepository,
     private val relayCatalog: RelayCatalog,
+    // Injectable so the builder stays unit-testable without the native lib.
+    // Production binds the JNI prefetch (signed multi-hop directory, fetched on
+    // the physical network before the TUN is up); tests pass a stub. Wrapped in
+    // a lambda (not a `::` reference) so constructing the builder never triggers
+    // WarrenJni's static loadLibrary in a JVM test.
+    private val fetchMultihopDirectory: () -> String = { WarrenJni.fetchMultihopDirectory() },
 ) {
 
     /**
@@ -63,7 +69,7 @@ class WarrenTunnelConfigBuilder(
         // BEFORE the VpnService TUN is established. warren-jni verifies + uses
         // this blob in run_multi_hop_session; fetching it there (post-TUN) would
         // route the request into the half-open tunnel and blackhole it.
-        val multihopDirectory = WarrenJni.fetchMultihopDirectory()
+        val multihopDirectory = fetchMultihopDirectory()
         if (multihopDirectory.isEmpty()) {
             Logger.e("WarrenTunnelConfigBuilder: multi-hop directory fetch returned empty")
             return null

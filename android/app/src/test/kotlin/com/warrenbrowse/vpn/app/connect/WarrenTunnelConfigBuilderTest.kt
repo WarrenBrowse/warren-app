@@ -78,12 +78,25 @@ class WarrenTunnelConfigBuilderTest {
         return catalog
     }
 
+    // Construct the builder with a stub multi-hop directory fetch so the unit
+    // tests never touch the native WarrenJni (which would fail to load its lib
+    // in the JVM). The stub is non-empty so build() does not short-circuit.
+    private fun cfgBuilder(
+        repo: WarrenLocalSettingsRepository,
+        catalog: RelayCatalog,
+    ) = WarrenTunnelConfigBuilder(repo, catalog) { STUB_DIRECTORY }
+
+    private val STUB_DIRECTORY = "stub-multihop-directory"
+
     @Test
-    fun `default config has no entry hop and no daita`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog())
+    fun `default config requests multi-hop (empty entry hop) and no daita`() {
+        val builder = cfgBuilder(mockRepo(), mockCatalog())
         val config = builder.build(pubkey)!!
 
-        assertNull(config.entryHop)
+        // Android always connects multi-hop: an empty entry_hop flips warren-jni
+        // to auto-select a distinct entry relay (the fleet is multihop-only).
+        assertNotNull(config.entryHop)
+        assertNull(config.entryHop?.relayPubkeyHex)
         assertNull(config.daita)
         assertFalse(config.natPmpEnabled)
         assertEquals(pubkey.value, config.walletPubkeyHex)
@@ -92,7 +105,7 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `daita on injects a Tamaraw spec`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(daita = true), mockCatalog())
+        val builder = cfgBuilder(mockRepo(daita = true), mockCatalog())
         val config = builder.build(pubkey)!!
 
         assertNotNull(config.daita)
@@ -101,25 +114,29 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `multi-hop never injects an entry hop (single-hop only on Android)`() {
-        // warren-jni run_session dials single-hop and ignores entry_hop, so the
-        // builder must never populate it (no false multi-hop privacy promise).
-        val builder = WarrenTunnelConfigBuilder(mockRepo(multiHop = true), mockCatalog())
+    fun `builder always injects an empty entry hop to trigger multi-hop`() {
+        // The fleet runs --multihop-only, so warren-jni routes through
+        // run_multi_hop_session: a present-but-empty entry_hop is what flips it
+        // to multi-hop (auto entry selection). It must never carry a pinned
+        // entry pubkey from the builder (auto-select stays the contract).
+        val builder = cfgBuilder(mockRepo(multiHop = true), mockCatalog())
         val config = builder.build(pubkey)!!
 
-        assertNull(config.entryHop)
+        assertNotNull(config.entryHop)
+        assertNull(config.entryHop?.relayPubkeyHex)
+        assertNull(config.entryHop?.relayEndpoint)
     }
 
     @Test
     fun `nat pmp toggle flows through`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(natPmp = true), mockCatalog())
+        val builder = cfgBuilder(mockRepo(natPmp = true), mockCatalog())
         val config = builder.build(pubkey)!!
         assertTrue(config.natPmpEnabled)
     }
 
     @Test
     fun `empty catalogue yields null config`() {
-        val builder = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog(emptyList()))
+        val builder = cfgBuilder(mockRepo(), mockCatalog(emptyList()))
         assertNull(builder.build(pubkey))
     }
 
@@ -130,7 +147,7 @@ class WarrenTunnelConfigBuilderTest {
             exitPubkeyHex = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             endpoint = "warren-exit-2.warren.brown:443",
         )
-        val builder = WarrenTunnelConfigBuilder(
+        val builder = cfgBuilder(
             mockRepo(selectedExitId = otherRelay.exitId),
             mockCatalog(listOf(sampleRelay, otherRelay)),
         )
@@ -142,7 +159,7 @@ class WarrenTunnelConfigBuilderTest {
     @Test
     fun `selectedExitId falls back when target is inactive`() {
         val inactive = sampleRelay.copy(exitId = "deadbeefdeadbeefdeadbeefdeadbeef", active = false)
-        val builder = WarrenTunnelConfigBuilder(
+        val builder = cfgBuilder(
             mockRepo(selectedExitId = inactive.exitId),
             mockCatalog(listOf(sampleRelay, inactive)),
         )
@@ -159,7 +176,7 @@ class WarrenTunnelConfigBuilderTest {
             endpoint = "warren-exit-fr.warren.brown:443",
             country = "FR",
         )
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(exitCountry = "FR"),
             mockCatalog(listOf(sampleRelay, fr)),
         ).build(pubkey)!!
@@ -168,7 +185,7 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `exit country falls back to first active when no relay matches`() {
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(exitCountry = "JP"),
             mockCatalog(listOf(sampleRelay)),
         ).build(pubkey)!!
@@ -176,26 +193,27 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `multi-hop entry country does not populate an entry hop`() {
+    fun `entry country does not pin the entry hop (warren-jni auto-selects)`() {
         val fr = sampleRelay.copy(
             exitId = "ffffffffffffffffffffffffffffffff",
             exitPubkeyHex = "f".repeat(64),
             endpoint = "warren-exit-fr.warren.brown:443",
             country = "FR",
         )
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(multiHop = true, entryCountry = "FR"),
             mockCatalog(listOf(sampleRelay, fr)),
         ).build(pubkey)!!
-        // Exit defaults to first active (DE sample); entry hop stays null since
-        // multi-hop is not wired on Android.
+        // Exit defaults to first active (DE sample); the entry hop is present
+        // but unpinned (warren-jni picks a distinct entry from the directory).
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
-        assertNull(config.entryHop)
+        assertNotNull(config.entryHop)
+        assertNull(config.entryHop?.relayPubkeyHex)
     }
 
     @Test
     fun `nat-pmp parameters flow through to the config`() {
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(natPmp = true, natPmpProtocol = "tcp", natPmpExternalPort = 51820, natPmpLifetimeSecs = 21600),
             mockCatalog(),
         ).build(pubkey)!!
@@ -207,7 +225,7 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `nat-pmp defaults are udp auto-port one-hour`() {
-        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        val config = cfgBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
         assertEquals("udp", config.natPmpProtocol)
         assertEquals(0, config.natPmpExternalPort)
         assertEquals(3600, config.natPmpLifetimeSecs)
@@ -215,14 +233,14 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `ipv6 and lockdown default to the leak-safe values`() {
-        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        val config = cfgBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
         assertFalse(config.enableIpv6)
         assertFalse(config.lockdownMode)
     }
 
     @Test
     fun `ipv6 and lockdown toggles flow through`() {
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(ipv6 = true, lockdown = true),
             mockCatalog(),
         ).build(pubkey)!!
@@ -232,8 +250,8 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `allow lan defaults off and flows through when enabled`() {
-        assertFalse(WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!.allowLan)
-        val config = WarrenTunnelConfigBuilder(
+        assertFalse(cfgBuilder(mockRepo(), mockCatalog()).build(pubkey)!!.allowLan)
+        val config = cfgBuilder(
             mockRepo(allowLan = true),
             mockCatalog(),
         ).build(pubkey)!!
@@ -242,13 +260,13 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `dns is null in default mode with no content blocking`() {
-        val config = WarrenTunnelConfigBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
+        val config = cfgBuilder(mockRepo(), mockCatalog()).build(pubkey)!!
         assertNull(config.dns)
     }
 
     @Test
     fun `custom dns servers flow into the config`() {
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(
                 dnsState = WarrenLocalSettingsRepository.DNS_STATE_CUSTOM,
                 customDns = listOf("9.9.9.9", "149.112.112.112"),
@@ -262,7 +280,7 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `content blocking flags produce a default-mode dns config`() {
-        val config = WarrenTunnelConfigBuilder(
+        val config = cfgBuilder(
             mockRepo(blockAds = true, blockMalware = true),
             mockCatalog(),
         ).build(pubkey)!!
@@ -276,13 +294,13 @@ class WarrenTunnelConfigBuilderTest {
 
     @Test
     fun `all flags on produces a fully-populated config`() {
-        val builder = WarrenTunnelConfigBuilder(
+        val builder = cfgBuilder(
             mockRepo(daita = true, natPmp = true, multiHop = true),
             mockCatalog(),
         )
         val config = builder.build(pubkey)!!
 
-        assertNull(config.entryHop)
+        assertNotNull(config.entryHop)
         assertNotNull(config.daita)
         assertTrue(config.natPmpEnabled)
         assertEquals(pubkey.value, config.walletPubkeyHex)
