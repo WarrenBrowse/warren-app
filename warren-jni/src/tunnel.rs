@@ -45,6 +45,12 @@ pub struct WarrenTunnelConfig {
     /// `MultiHopClient` (see `run_multi_hop_session`); the value carries an
     /// optional `relay_pubkey_hex` to prefer a specific entry relay.
     pub entry_hop: Option<serde_json::Value>,
+    /// Raw signed multi-hop directory, fetched by Kotlin BEFORE the TUN is
+    /// established (so the request egresses the physical network). When present
+    /// `run_multi_hop_session` verifies + uses it instead of fetching the
+    /// directory itself, which would be blackholed by the half-open tunnel.
+    #[serde(default)]
+    pub multihop_directory_raw: Option<String>,
     /// Client-side toggle: when present we opt the handshake into DAITA via
     /// `ClientTunnel::with_daita(true)`. The exit decides whether to honour
     /// the request by shipping a `SetupAck::daita_spec`; if it does, we
@@ -335,19 +341,17 @@ async fn run_multi_hop_session(
         .and_then(|v| v.as_str())
         .and_then(|s| WarrenPubkey::from_hex(s).ok());
 
-    // Fetch + verify the signed multi-hop directory.
-    let client = warren_api_client::WarrenApiClient::new_unsigned(
-        crate::android_jni::PROD_API_URL.to_owned(),
-    );
-    let raw = match client.get_multihop_directory().await {
-        Ok(Some(s)) => s,
-        Ok(None) => {
-            log::error!("multi-hop: no directory published (404); failing closed");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
-            return;
-        }
-        Err(e) => {
-            log::error!("multi-hop: directory fetch failed: {e}");
+    // Verify + use the signed multi-hop directory. It MUST be supplied by the
+    // caller (Kotlin fetches it pre-TUN via WarrenJni.fetchMultihopDirectory):
+    // fetching here, after the TUN is up, would route the request into the
+    // half-open tunnel and blackhole it. Fail closed if it is missing.
+    let raw = match config.multihop_directory_raw.as_deref() {
+        Some(raw) if !raw.is_empty() => raw.to_owned(),
+        _ => {
+            log::error!(
+                "multi-hop: no directory supplied in config (Kotlin must prefetch it pre-TUN); \
+                 failing closed"
+            );
             status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
             return;
         }

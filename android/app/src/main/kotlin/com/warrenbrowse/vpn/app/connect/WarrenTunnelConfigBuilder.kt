@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.app.connect
 
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -47,22 +48,34 @@ class WarrenTunnelConfigBuilder(
                 return null
             }
 
-        // Multi-hop is NOT wired on Android: warren-jni `run_session` dials the
-        // exit single-hop via `ClientTunnel::connect` and never reads
-        // `entry_hop` (tunnel.rs marks it dead_code). Real multi-hop needs the
-        // `warren_client::MultiHopSupervisor` path (signed entry+exit HPKE
-        // descriptors + `pump_multi_hop_bidirectional`), as on desktop via
-        // `talpid-warren-tunnel::start_multi_hop`. Until that JNI integration
-        // lands we always send `entry_hop = null` so the connection card never
-        // advertises a multi-hop privacy guarantee the data plane does not
-        // provide. Do NOT reintroduce a populated entry_hop here without wiring
-        // the supervisor, it would be a false privacy promise.
+        // Always multi-hop: the production exit fleet runs the unified `:443`
+        // dispatcher (`warren-exit --multihop`), which ONLY accepts a
+        // `WarrenMultihopFrame` (exit_id + setup) as the first frame. A
+        // single-hop `ClientTunnel::connect` sends a bare `Setup`, which the
+        // dispatcher cannot decode and silently drops (the client then sees
+        // "read SetupAck: connection lost"). So we trigger warren-jni's
+        // `run_multi_hop_session` by sending a present-but-empty `entry_hop`:
+        // it fetches the signed multi-hop directory, locates this exit, and
+        // auto-selects a distinct entry relay (HPKE entry -> exit), mirroring
+        // the desktop `talpid-warren-tunnel::start_multi_hop`. This IS a real
+        // multi-hop data plane, so advertising multi-hop is honest.
+        // Prefetch the signed multi-hop directory here, on the physical network,
+        // BEFORE the VpnService TUN is established. warren-jni verifies + uses
+        // this blob in run_multi_hop_session; fetching it there (post-TUN) would
+        // route the request into the half-open tunnel and blackhole it.
+        val multihopDirectory = WarrenJni.fetchMultihopDirectory()
+        if (multihopDirectory.isEmpty()) {
+            Logger.e("WarrenTunnelConfigBuilder: multi-hop directory fetch returned empty")
+            return null
+        }
+
         return WarrenTunnelConfig(
             exitPubkeyHex = exit.exitPubkeyHex,
             exitEndpoint = exit.endpoint,
             exitId = exit.exitId,
             walletPubkeyHex = walletPubkey.value,
-            entryHop = null,
+            entryHop = WarrenTunnelConfig.EntryHop(),
+            multihopDirectoryRaw = multihopDirectory,
             daita = if (daitaEnabled) {
                 WarrenTunnelConfig.DaitaSpec(
                     paddingMachine = DEFAULT_DAITA_MACHINE,

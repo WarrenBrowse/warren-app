@@ -147,6 +147,19 @@ object WarrenJni {
     external fun listRelays(): String
 
     /**
+     * Fetch the raw signed multi-hop directory (`GET /v1/multihop/directory`)
+     * as its verbatim JSON string, or an empty string on any network failure.
+     *
+     * Called from the connect flow BEFORE the VpnService TUN is established, so
+     * the fetch egresses the physical network (a fetch issued after the TUN is
+     * up would be captured by the half-open tunnel and blackholed). The raw
+     * blob is handed to warren-jni `run_multi_hop_session` via the tunnel
+     * config; the signature/version are verified Rust-side there, so passing
+     * the unverified blob through the config carries no trust.
+     */
+    external fun fetchMultihopDirectory(): String
+
+    /**
      * Fetch the wallet's subscription status via a signed
      * `GET /v1/subscription`. The [mnemonic] derives the signing key at
      * the JNI boundary and is not retained.

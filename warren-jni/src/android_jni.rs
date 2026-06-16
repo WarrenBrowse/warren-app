@@ -597,6 +597,54 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
     }
 }
 
+/// Fetch the raw signed multi-hop directory (`GET /v1/multihop/directory`) and
+/// return its verbatim JSON, or an empty string on any failure.
+///
+/// Called from Kotlin BEFORE the VpnService TUN is established so the request
+/// egresses the physical network. A fetch issued from inside the tunnel
+/// session (after the TUN is up) is captured by the half-open tunnel and
+/// blackholed - which is exactly why `run_multi_hop_session` must NOT fetch
+/// this itself but receive the blob through the tunnel config. The blob's
+/// signature + version are verified Rust-side in `run_multi_hop_session`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDirectory(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    let raw = fetch_multihop_directory_raw();
+    match env.new_string(raw) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Raw signed multi-hop directory, or empty string on failure.
+#[cfg(target_os = "android")]
+fn fetch_multihop_directory_raw() -> String {
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("fetchMultihopDirectory called before initLogger; returning empty");
+        return String::new();
+    };
+    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
+    match runtime.block_on(client.get_multihop_directory()) {
+        Ok(Some(raw)) => raw,
+        Ok(None) => {
+            log::warn!("fetchMultihopDirectory: no directory published (404)");
+            String::new()
+        }
+        Err(e) => {
+            log::warn!("fetchMultihopDirectory: fetch failed: {e}");
+            String::new()
+        }
+    }
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn fetch_multihop_directory_raw() -> String {
+    String::new()
+}
+
 /// Production warren-api base URL. The Android build does NOT support
 /// `--api-override` runtime switching (that path is gated behind the
 /// `api-override` Cargo feature for dev/staging builds only).

@@ -20,6 +20,11 @@ data class WarrenTunnelConfig(
     @SerialName("exit_endpoint") val exitEndpoint: String,
     @SerialName("wallet_pubkey_hex") val walletPubkeyHex: String,
     @SerialName("entry_hop") val entryHop: EntryHop? = null,
+    // Raw signed multi-hop directory, prefetched Kotlin-side (pre-TUN) and
+    // handed to warren-jni so `run_multi_hop_session` verifies + uses it
+    // without issuing its own fetch (which would be blackholed by the
+    // half-open tunnel). `null` only when multi-hop is not in play.
+    @SerialName("multihop_directory_raw") val multihopDirectoryRaw: String? = null,
     @SerialName("daita") val daita: DaitaSpec? = null,
     @SerialName("nat_pmp_enabled") val natPmpEnabled: Boolean = false,
     // NAT-PMP / port-forwarding parameters. Honoured by the refresh loop in
@@ -65,10 +70,18 @@ data class WarrenTunnelConfig(
     // sent over the wire. Do NOT make it @SerialName (it is not a tunnel knob).
     @Transient val exitId: String? = null,
 ) {
+    // Both fields optional: an EntryHop with no `relayPubkeyHex` requests the
+    // multi-hop path with AUTO entry selection. warren-jni `run_multi_hop_session`
+    // fetches the signed multi-hop directory itself, picks the exit by
+    // `exitPubkeyHex`, and auto-selects a distinct entry relay; it only reads
+    // `relay_pubkey_hex` as an OPTIONAL preferred-entry hint and never needs
+    // `relay_endpoint` (the entry endpoint comes from the directory). Sending an
+    // empty `entry_hop: {}` is what flips warren-jni from the (now defunct)
+    // single-hop path to multi-hop.
     @Serializable
     data class EntryHop(
-        @SerialName("relay_pubkey_hex") val relayPubkeyHex: String,
-        @SerialName("relay_endpoint") val relayEndpoint: String,
+        @SerialName("relay_pubkey_hex") val relayPubkeyHex: String? = null,
+        @SerialName("relay_endpoint") val relayEndpoint: String? = null,
     )
 
     @Serializable
