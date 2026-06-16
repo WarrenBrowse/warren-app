@@ -195,6 +195,63 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
+    fun `content blocking maps to the exit's encoded 100_64_0_x resolver`() {
+        fun blocking(
+            ads: Boolean = false,
+            trackers: Boolean = false,
+            malware: Boolean = false,
+            adult: Boolean = false,
+            gambling: Boolean = false,
+            social: Boolean = false,
+        ) = WarrenTunnelConfig.DnsConfig(
+            state = WarrenTunnelConfig.DnsConfig.STATE_DEFAULT,
+            blockAds = ads,
+            blockTrackers = trackers,
+            blockMalware = malware,
+            blockAdultContent = adult,
+            blockGambling = gambling,
+            blockSocialMedia = social,
+        )
+        // No blockers => vanilla exit forwarder.
+        assertEquals(
+            listOf(WarrenTunDefaults.EXIT_DNS_RESOLVER),
+            planTunInterface(config(dns = blocking())).dnsServers,
+        )
+        // ads=1
+        assertEquals(listOf("100.64.0.1"), planTunInterface(config(dns = blocking(ads = true))).dnsServers)
+        // ads(1)+trackers(2)=3
+        assertEquals(
+            listOf("100.64.0.3"),
+            planTunInterface(config(dns = blocking(ads = true, trackers = true))).dnsServers,
+        )
+        // all six = 1+2+4+8+16+32 = 63
+        assertEquals(
+            listOf("100.64.0.63"),
+            planTunInterface(
+                config(
+                    dns = blocking(
+                        ads = true, trackers = true, malware = true,
+                        adult = true, gambling = true, social = true,
+                    ),
+                ),
+            ).dnsServers,
+        )
+        // Custom DNS still wins over content blocking.
+        assertEquals(
+            listOf("9.9.9.9"),
+            planTunInterface(
+                config(
+                    dns = WarrenTunnelConfig.DnsConfig(
+                        state = WarrenTunnelConfig.DnsConfig.STATE_CUSTOM,
+                        customServers = listOf("9.9.9.9"),
+                        blockAds = true,
+                    ),
+                ),
+            ).dnsServers,
+        )
+    }
+
+    @Test
     fun `ipv6 raises the mtu floor to 1280 (a smaller v6 mtu makes establish throw)`() {
         // With IPv6 a sub-1280 MTU is invalid (RFC 8200 minimum link MTU);
         // the plan must clamp up so VpnService.Builder.establish() does not

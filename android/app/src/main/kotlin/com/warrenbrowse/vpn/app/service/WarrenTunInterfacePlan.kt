@@ -108,13 +108,16 @@ fun planTunInterface(
 
     // IPv4 capture. By default the whole internet (0.0.0.0/0) is tunnelled.
     // With "allow LAN", the RFC1918 / link-local ranges are excluded so LAN
-    // hosts are reachable directly; the Warren exit DNS forwarder
-    // (10.66.0.1, inside 10/8) is re-added as a /32 so DNS still travels
-    // through the tunnel and never leaks to the LAN resolver.
+    // hosts are reachable directly; the in-tunnel resolver(s) (the exit
+    // forwarder 10.66.0.1, inside 10/8, or a content-blocking 100.64.0.x) are
+    // re-added as /32 routes so DNS still travels through the tunnel and never
+    // leaks to the LAN resolver.
     val ipv4Routes =
         if (config.allowLan) {
             ipv4RoutesExcluding(LAN_EXCLUDED_IPV4) +
-                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.EXIT_DNS_RESOLVER, 32)
+                dnsServers
+                    .filter { !it.contains(':') }
+                    .map { WarrenTunInterfacePlan.TunCidr(it, 32) }
         } else {
             listOf(WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0))
         }
@@ -220,8 +223,36 @@ private fun resolveDnsServers(dns: WarrenTunnelConfig.DnsConfig?): List<String> 
         // forwarder rather than leaving DNS unset (which would leak to the
         // LAN resolver).
     }
+    // Default mode with content blocking on: point DNS at the exit's encoded
+    // per-category resolver (100.64.0.<mask>), which serves the blocklists.
+    // Mirrors mullvad-daemon::dns::addresses_from_options; the exit owns
+    // 100.64.0.x (warren-exit main.rs). No blockers => the vanilla forwarder.
+    if (dns != null && dns.state == WarrenTunnelConfig.DnsConfig.STATE_DEFAULT) {
+        val mask = contentBlockingMask(dns)
+        if (mask != 0) return listOf("$DNS_BLOCKING_IP_PREFIX$mask")
+    }
     return listOf(WarrenTunDefaults.EXIT_DNS_RESOLVER)
 }
+
+/**
+ * OR-together the enabled content-blocking categories into the last byte of
+ * the `100.64.0.x` resolver address. Bit layout matches the exit and the
+ * desktop daemon: ads=1, trackers=2, malware=4, adult=8, gambling=16,
+ * social=32.
+ */
+private fun contentBlockingMask(dns: WarrenTunnelConfig.DnsConfig): Int {
+    var mask = 0
+    if (dns.blockAds) mask = mask or 0x01
+    if (dns.blockTrackers) mask = mask or 0x02
+    if (dns.blockMalware) mask = mask or 0x04
+    if (dns.blockAdultContent) mask = mask or 0x08
+    if (dns.blockGambling) mask = mask or 0x10
+    if (dns.blockSocialMedia) mask = mask or 0x20
+    return mask
+}
+
+/** Base of the exit's per-category blocking resolver range (100.64.0.0/24). */
+private const val DNS_BLOCKING_IP_PREFIX = "100.64.0."
 
 /**
  * Minimal IPv4/IPv6 literal validation. Rejects empty, host:port and
