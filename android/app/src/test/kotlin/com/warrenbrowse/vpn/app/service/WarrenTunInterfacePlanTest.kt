@@ -195,6 +195,17 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
+    fun `ipv6 raises the mtu floor to 1280 (a smaller v6 mtu makes establish throw)`() {
+        // With IPv6 a sub-1280 MTU is invalid (RFC 8200 minimum link MTU);
+        // the plan must clamp up so VpnService.Builder.establish() does not
+        // reject the interface with "Cannot set address".
+        assertEquals(1280, planTunInterface(config(enableIpv6 = true, mtu = 1100)).mtu)
+        assertEquals(1280, planTunInterface(config(enableIpv6 = true, mtu = 576)).mtu)
+        // IPv6 off keeps the lower floor.
+        assertEquals(1100, planTunInterface(config(enableIpv6 = false, mtu = 1100)).mtu)
+    }
+
+    @Test
     fun `ipv4RoutesExcluding produces a minimal complement that omits the excluded block`() {
         val routes = ipv4RoutesExcluding(
             listOf(WarrenTunInterfacePlan.TunCidr("10.0.0.0", 8)),

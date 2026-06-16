@@ -19,15 +19,16 @@
 
 #![cfg(all(target_os = "android", feature = "tunnel"))]
 
-use std::net::{Ipv4Addr, SocketAddr};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::Instant;
 
-/// Tunnel-inner IPv4 the Android `VpnService` interface is configured with.
-/// Mirrors `WarrenTunDefaults.IPV4_ADDRESS` in
+/// Tunnel-inner addresses the Android `VpnService` interface is configured
+/// with. Mirror `WarrenTunDefaults.IPV4_ADDRESS` / `IPV6_ADDRESS` in
 /// `app/.../service/WarrenTunInterfacePlan.kt`; the multi-hop data plane NATs
-/// this to the exit-assigned address (see [`run_multi_hop_session`]).
+/// these to the exit-assigned addresses (see [`run_multi_hop_session`]).
 const LOCAL_TUN_IPV4: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
+const LOCAL_TUN_IPV6: Ipv6Addr = Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
 
 use ed25519_dalek::SigningKey;
 use serde::Deserialize;
@@ -445,10 +446,12 @@ async fn run_multi_hop_session(
     // The reply is the HPKE-sealed `IpAssign`; we MUST learn the allocated
     // IPv4 because the exit drops every uplink packet whose source is not that
     // address (anti-spoof gate in `warren_exit_core::multihop`).
-    let assign_reply = match mh
-        .setup_over_stream(Some(&signing), /* wants_ipv6 */ false)
-        .await
-    {
+    // Request a dual-stack v6 only when the user enabled IPv6 (the Kotlin TUN
+    // plan assigns the local v6 address under the same flag). The exit MAY
+    // still decline (ipv6=None in the reply); we then stay v4-only and v6 is
+    // blackholed, never leaked.
+    let wants_ipv6 = config.enable_ipv6.unwrap_or(false);
+    let assign_reply = match mh.setup_over_stream(Some(&signing), wants_ipv6).await {
         Ok(reply) => reply,
         Err(e) => {
             log::error!("multi-hop setup_over_stream failed: {e}");
@@ -457,11 +460,12 @@ async fn run_multi_hop_session(
         }
     };
 
-    // Decode the exit-allocated inner IPv4. Fail closed if it is missing or
-    // malformed: without it the data plane would be silently blackholed.
-    let assigned_ipv4 = match warren_multihop::try_decode_control(&assign_reply) {
-        Ok(Some(warren_multihop::WarrenControlMessage::IpAssign { ipv4, .. })) => {
-            std::net::Ipv4Addr::from(ipv4)
+    // Decode the exit-allocated inner addresses. Fail closed if the IPv4 is
+    // missing or malformed: without it the data plane would be silently
+    // blackholed. The IPv6 is optional (the exit's capability echo).
+    let (assigned_ipv4, assigned_ipv6) = match warren_multihop::try_decode_control(&assign_reply) {
+        Ok(Some(warren_multihop::WarrenControlMessage::IpAssign { ipv4, ipv6, .. })) => {
+            (Ipv4Addr::from(ipv4), ipv6.map(Ipv6Addr::from))
         }
         other => {
             log::error!("multi-hop: expected IpAssign reply, got {other:?}; failing closed");
@@ -470,14 +474,18 @@ async fn run_multi_hop_session(
         }
     };
 
-    log::info!("multi-hop tunnel up (assigned inner ipv4={assigned_ipv4})");
+    log::info!(
+        "multi-hop tunnel up (assigned inner ipv4={assigned_ipv4} ipv6={assigned_ipv6:?})"
+    );
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
 
-    // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4 (set in Kotlin and
-    // immutable after establish()), so wrap it in a 1:1 NAT that presents the
-    // exit-assigned source on uplink and restores LOCAL_TUN_IPV4 on downlink.
-    // This is the Android equivalent of the desktop's RealTun::reassign_ipv4.
-    let tun = crate::remap_tun::RemapTun::new(tun, LOCAL_TUN_IPV4, assigned_ipv4);
+    // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4/IPV6 (set in Kotlin
+    // and immutable after establish()), so wrap it in a 1:1 NAT that presents
+    // the exit-assigned source on uplink and restores the local address on
+    // downlink. The v6 remap is active only when the exit granted v6 (else v6
+    // stays blackholed). Android equivalent of the desktop RealTun::reassign_*.
+    let v6_pair = assigned_ipv6.map(|a| (LOCAL_TUN_IPV6, a));
+    let tun = crate::remap_tun::RemapTun::new(tun, LOCAL_TUN_IPV4, assigned_ipv4, v6_pair);
 
     // DAITA over multi-hop is a follow-up (driven by a locally built
     // DaitaState, not a per-session spec); first cut uses the plain pump.

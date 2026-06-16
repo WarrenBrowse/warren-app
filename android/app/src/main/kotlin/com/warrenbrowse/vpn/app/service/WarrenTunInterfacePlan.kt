@@ -133,14 +133,19 @@ fun planTunInterface(
         // Clamp defensively: never above the Warren QUIC ceiling (raising it
         // risks black-holing oversized encapsulated packets), never below a
         // usable minimum. This caps to the ceiling, so the MTU can only be
-        // lowered, never raised.
-        mtu = config.mtu.coerceIn(MIN_MTU, MAX_MTU),
+        // lowered, never raised. When IPv6 is enabled the floor is raised to
+        // the IPv6 minimum link MTU (1280): a smaller MTU with a v6 address
+        // makes VpnService.Builder.establish() throw "Cannot set address".
+        mtu = config.mtu.coerceIn(if (config.enableIpv6) IPV6_MIN_MTU else MIN_MTU, MAX_MTU),
         blocking = false,
     )
 }
 
 private const val MIN_MTU = 576
 private const val MAX_MTU = WarrenTunDefaults.MTU
+
+/** IPv6 minimum link MTU (RFC 8200). VpnService rejects a v6 address below it. */
+private const val IPV6_MIN_MTU = 1280
 
 /**
  * RFC1918 private ranges + link-local, excluded from the TUN routes when

@@ -267,7 +267,13 @@ class WarrenQuinnAdapter(
         val builder = vpnService.Builder()
             .setSession(plan.session)
             .setMtu(plan.mtu)
-        plan.addresses.forEach { builder.addAddress(it.address, it.prefixLength) }
+        plan.addresses.forEach {
+            try {
+                builder.addAddress(it.address, it.prefixLength)
+            } catch (e: IllegalArgumentException) {
+                Logger.w(throwable = e) { "skipping invalid address ${it.address}/${it.prefixLength}" }
+            }
+        }
         plan.routes.forEach {
             try {
                 builder.addRoute(it.address, it.prefixLength)
@@ -282,7 +288,17 @@ class WarrenQuinnAdapter(
                 Logger.w(throwable = e) { "skipping invalid DNS server $it" }
             }
         }
-        return builder.establish()
+        // establish() validates the full config in the system process and
+        // throws IllegalArgumentException ("Cannot set address") on a rejected
+        // combination (e.g. an IPv6 address with MTU < the 1280 v6 minimum).
+        // Fail closed by returning null - the caller routes that into
+        // onSessionDown - instead of letting it crash the VpnService.
+        return try {
+            builder.establish()
+        } catch (e: IllegalArgumentException) {
+            Logger.e(throwable = e) { "VpnService.Builder.establish() rejected the plan" }
+            null
+        }
     }
 
     /**
