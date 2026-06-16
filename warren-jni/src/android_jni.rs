@@ -621,21 +621,43 @@ pub(crate) const PROD_API_URL: &str = "https://api.warrenbrowse.com";
 pub(crate) const PROD_SERVER_PUBKEY_HEX: Option<&str> =
     Some("4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e");
 
-/// Hardcoded fallback used when the live fetch fails. Schema lined up
-/// with the Kotlin `RelayInfo` data class. `exit_id` + `exit_pubkey_hex`
-/// are 32-char (16-byte) operator-assigned identifiers, NOT Ed25519
-/// pubkeys (which would be 64-char).
-const FALLBACK_RELAYS_JSON: &str = r#"[{"exit_id":"2921abad869e94064b56cf48c8da3631","exit_pubkey_hex":"2921abad869e94064b56cf48c8da3631","endpoint":"warren-exit-1.warren.brown:443","country":"DE","city":"Falkenstein","active":true,"weight":100}]"#;
+/// Empty relay catalogue. Returned when no relay list is available (the live
+/// fetch failed AND nothing was cached yet). An empty list makes the connect
+/// flow fail closed and honestly ("No relay available") instead of handing the
+/// tunnel a non-connectable placeholder. Do NOT replace this with a hardcoded
+/// relay carrying a fake `exit_pubkey_hex`: a 16-byte operator id is not a
+/// 32-byte pubkey, so the tunnel rejects it with "invalid exit pubkey" and the
+/// app wedges in a misleading BLOCKED state.
+const EMPTY_RELAYS_JSON: &str = "[]";
+
+/// Last successfully fetched + verified relay list, already projected to the
+/// Kotlin schema. Reused when a later fetch fails (e.g. the kill-switch is
+/// blocking the network during a reconnect, so `GET /v1/exits` cannot land):
+/// returning the last good list keeps the real 64-hex exit pubkeys instead of
+/// falling back to nothing. In-memory only; empty until the first success.
+#[cfg(target_os = "android")]
+static LAST_GOOD_RELAYS: Mutex<Option<String>> = Mutex::new(None);
+
+/// The cached relay list if a previous fetch ever succeeded, else an empty
+/// catalogue. Never a non-connectable placeholder.
+#[cfg(target_os = "android")]
+fn cached_relays_or_empty() -> String {
+    LAST_GOOD_RELAYS
+        .lock()
+        .clone()
+        .unwrap_or_else(|| EMPTY_RELAYS_JSON.to_owned())
+}
 
 /// Fetch + verify the signed relay list, projecting the result to the
-/// Kotlin-side JSON shape. Returns the fallback on any error.
+/// Kotlin-side JSON shape. On any error returns the last good list (if any),
+/// else an empty catalogue.
 #[cfg(target_os = "android")]
 fn fetch_relays_or_fallback() -> String {
     let runtime = match RUNTIME.get() {
         Some(rt) => rt,
         None => {
-            log::warn!("listRelays called before initLogger; returning fallback");
-            return FALLBACK_RELAYS_JSON.to_owned();
+            log::warn!("listRelays called before initLogger; returning cached/empty");
+            return cached_relays_or_empty();
         }
     };
 
@@ -648,8 +670,8 @@ fn fetch_relays_or_fallback() -> String {
     let raw = match runtime.block_on(client.list_exits()) {
         Ok(s) => s,
         Err(_) => {
-            log::warn!("listRelays: GET /v1/exits failed; returning fallback");
-            return FALLBACK_RELAYS_JSON.to_owned();
+            log::warn!("listRelays: GET /v1/exits failed; returning cached/empty");
+            return cached_relays_or_empty();
         }
     };
 
@@ -657,8 +679,8 @@ fn fetch_relays_or_fallback() -> String {
     {
         Ok(s) => s,
         Err(_) => {
-            log::warn!("listRelays: signature verify failed; returning fallback");
-            return FALLBACK_RELAYS_JSON.to_owned();
+            log::warn!("listRelays: signature verify failed; returning cached/empty");
+            return cached_relays_or_empty();
         }
     };
 
@@ -690,13 +712,22 @@ fn fetch_relays_or_fallback() -> String {
         })
         .collect();
 
-    serde_json::to_string(&projected).unwrap_or_else(|_| FALLBACK_RELAYS_JSON.to_owned())
+    match serde_json::to_string(&projected) {
+        Ok(json) => {
+            // Cache the freshly verified list so a later fetch failure (e.g. a
+            // reconnect while the kill-switch blocks the network) can reuse the
+            // real exit pubkeys instead of falling back to an empty catalogue.
+            *LAST_GOOD_RELAYS.lock() = Some(json.clone());
+            json
+        }
+        Err(_) => cached_relays_or_empty(),
+    }
 }
 
 #[cfg(not(target_os = "android"))]
 #[allow(dead_code)]
 fn fetch_relays_or_fallback() -> String {
-    FALLBACK_RELAYS_JSON.to_owned()
+    EMPTY_RELAYS_JSON.to_owned()
 }
 
 // ---------------------------------------------------------------------------
