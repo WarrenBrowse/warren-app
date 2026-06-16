@@ -254,8 +254,8 @@
     <string name="tunnel_exit_key_pinning_desc">Warren épingle la clé de chaque sortie à la première utilisation et refuse de se connecter si elle change. Réinitialisez les épinglages uniquement si vous attendez une rotation de clé légitime ; la prochaine connexion réépinglera.</string>
     <string name="tunnel_reset_pinned_keys">Réinitialiser les clés de sortie épinglées</string>
     <string name="tunnel_exit_relay">Relais de sortie…</string>
-    <string name="tunnel_multihop_title">Le multi-saut n\'est pas encore disponible sur Android.</string>
-    <string name="tunnel_multihop_desc">Le multi-saut achemine le trafic via un relais d\'entrée séparé pour que la sortie ne voie jamais votre IP. Il est disponible sur l\'application de bureau Warren. Le tunnel Android se connecte actuellement en saut unique, aucun indicateur multi-saut n\'est donc affiché lors de la connexion.</string>
+    <string name="tunnel_multihop_title">Le multi-saut est toujours actif.</string>
+    <string name="tunnel_multihop_desc">Le multi-saut achemine le trafic via un relais d\'entrée séparé pour que la sortie ne voie jamais votre IP. Warren sur Android se connecte toujours en multi-saut : un relais d\'entrée distinct transmet votre trafic vers la sortie choisie, l\'indicateur « Multihop » est donc affiché lors de la connexion.</string>
     <string name="tunnel_obfuscation_title">L\'obfuscation par mimétisme HTTP/3 est toujours active pour les tunnels Warren.</string>
     <string name="tunnel_obfuscation_desc">Les tunnels Warren se font passer pour du trafic navigateur HTTP/3 standard : ALPN h3, SNI warrenbrowse.com, fractionnement du paquet Initial, UDP/443. Ce n\'est pas désactivable car le désactiver rendrait les clients Warren immédiatement reconnaissables sur le réseau.</string>
     <string name="tunnel_obfuscation_legacy">Les anciennes méthodes d\'obfuscation (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s\'appliquent pas aux tunnels Warren.</string>
