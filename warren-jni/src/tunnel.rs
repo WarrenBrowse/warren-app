@@ -31,11 +31,13 @@ const LOCAL_TUN_IPV4: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
 const LOCAL_TUN_IPV6: Ipv6Addr = Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
 
 use ed25519_dalek::SigningKey;
+use rand_v9::SeedableRng;
 use serde::Deserialize;
 use tokio::sync::oneshot;
 use warren_protocol::{WarrenExitAddr, WarrenPubkey};
 use warren_tunnel::{
-    AndroidTun, ClientTunnel, DaitaState, pump_bidirectional, pump_bidirectional_with_daita,
+    AndroidTun, ClientTunnel, DaitaPool, DaitaState, pump_bidirectional,
+    pump_bidirectional_with_daita,
 };
 
 /// JSON config parsed from the Kotlin side. Field names mirror
@@ -487,26 +489,71 @@ async fn run_multi_hop_session(
     let v6_pair = assigned_ipv6.map(|a| (LOCAL_TUN_IPV6, a));
     let tun = crate::remap_tun::RemapTun::new(tun, LOCAL_TUN_IPV4, assigned_ipv4, v6_pair);
 
-    // DAITA over multi-hop is a follow-up (driven by a locally built
-    // DaitaState, not a per-session spec); first cut uses the plain pump.
-    if config.daita.is_some() {
-        log::info!("multi-hop: DAITA requested but not yet wired for multi-hop; plain pump");
-    }
+    // NAT-PMP over multi-hop: bind the refresh socket to LOCAL_TUN_IPV4 so the
+    // request routes through the tunnel (RemapTun rewrites it to the assigned
+    // source) to the exit gateway. Guard lives until this task returns.
+    let _nat_pmp_guard = maybe_spawn_nat_pmp(&config, LOCAL_TUN_IPV4);
+
+    // DAITA over multi-hop: build a local DaitaState from the curated pool
+    // (the exit accepts + emits 0xFF dummy frames on the multi-hop path) and
+    // run the DAITA-aware pump. The plain pump is used when DAITA is off or the
+    // requested machine is unknown.
+    let daita_state = build_multihop_daita_state(&config);
     let pump = Arc::new(mh);
-    tokio::select! {
+    let pump_result = tokio::select! {
         _ = cancel_rx => {
             log::info!("multi-hop tunnel cancelled by Kotlin");
+            Ok(())
         }
-        result = warren_client::multi_hop_pump::pump_multi_hop_bidirectional(pump, tun) => {
-            if let Err(e) = result {
-                log::error!("pump_multi_hop_bidirectional exited with error: {e}");
-            } else {
-                log::info!("pump_multi_hop_bidirectional exited cleanly");
-            }
-        }
+        result = warren_client::multi_hop_pump::pump_multi_hop_bidirectional_with_daita(
+            pump, tun, daita_state,
+        ) => result,
+    };
+    if let Err(e) = pump_result {
+        log::error!("multi-hop pump exited with error: {e}");
+    } else {
+        log::info!("multi-hop pump exited cleanly");
     }
 
     status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+}
+
+/// Build the DAITA state for the multi-hop pump from the client config.
+///
+/// Returns [`DaitaState::disabled`] when DAITA is off or the requested padding
+/// machine is not in the curated pool (logged loudly with the valid names).
+/// The exit accepts and emits the `0xFF` dummy frames on the multi-hop path
+/// (`warren_exit_core::multihop` drops uplink dummies and pads the downlink),
+/// so a client-built state is a real defense, not just local noise.
+fn build_multihop_daita_state(config: &WarrenTunnelConfig) -> DaitaState {
+    let Some(daita) = config.daita.as_ref() else {
+        return DaitaState::disabled();
+    };
+    let machine = daita
+        .get("padding_machine")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("tamaraw");
+    let pool = DaitaPool::default_pool();
+    let mut rng = rand_v9::rngs::StdRng::from_os_rng();
+    match pool.pick_named(machine, &mut rng) {
+        Some(cfg) => match DaitaState::from_config(&cfg, Instant::now()) {
+            Ok(state) => {
+                log::info!("multi-hop DAITA enabled (machine={machine})");
+                state
+            }
+            Err(e) => {
+                log::error!("multi-hop DAITA state init failed: {e}; plain pump");
+                DaitaState::disabled()
+            }
+        },
+        None => {
+            log::error!(
+                "multi-hop: unknown DAITA machine {machine:?} (valid: {:?}); plain pump",
+                pool.entry_names()
+            );
+            DaitaState::disabled()
+        }
+    }
 }
 
 /// Parse the JSON config blob handed in by the Kotlin caller.
@@ -541,13 +588,18 @@ impl Drop for NatPmpGuard {
 
 fn maybe_spawn_nat_pmp(
     config: &WarrenTunnelConfig,
-    assigned_ipv4: std::net::Ipv4Addr,
+    bind_ipv4: std::net::Ipv4Addr,
 ) -> Option<NatPmpGuard> {
     if !config.nat_pmp_enabled.unwrap_or(false) {
         return None;
     }
     let server = warren_natpmp_client::default_server_addr();
-    let bind_addr = std::net::IpAddr::V4(assigned_ipv4);
+    // Bind the refresh socket to the TUN's own inner IPv4 so the request
+    // egresses through the tunnel (to the exit gateway 10.66.0.1:5351), not the
+    // underlying Wi-Fi/mobile interface. On the multi-hop path this is
+    // LOCAL_TUN_IPV4 (the address the Android interface actually holds); the
+    // RemapTun then rewrites it to the exit-assigned source, same as data.
+    let bind_addr = std::net::IpAddr::V4(bind_ipv4);
     // Map the client-selected protocol; default to UDP for unknown values.
     let proto = match config.nat_pmp_protocol.as_deref() {
         Some("tcp") | Some("TCP") => warren_natpmp_client::MapProtocol::Tcp,
