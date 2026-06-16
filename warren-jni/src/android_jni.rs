@@ -982,7 +982,14 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     let json = match redeem_voucher_inner(&phrase, &voucher_secret) {
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
         Err(e) => {
-            log::warn!("redeemVoucher failed");
+            // "purchase pending" is the expected steady state of a purchase poll
+            // (webhook not landed yet), not a failure: keep it at debug so the
+            // 5s poll does not spam warnings for the whole 10-minute window.
+            if e == "purchase pending" {
+                log::debug!("redeemVoucher: purchase pending");
+            } else {
+                log::warn!("redeemVoucher failed");
+            }
             serde_json::json!({"ok": false, "error": e}).to_string()
         }
     };
@@ -992,8 +999,41 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     }
 }
 
+/// Detect the Warren purchase id shape: exactly 32 ASCII hex chars (after
+/// trimming), lowercased. Mirrors the desktop daemon's `as_wpid` and
+/// `warren_api::providers::normalize_wpid`. Anything else is a regular voucher
+/// secret, so the shape alone fully determines the redeem path.
 #[cfg(target_os = "android")]
-fn redeem_voucher_inner(mnemonic: &str, voucher_secret: &str) -> Result<u64, String> {
+fn as_wpid(input: &str) -> Option<String> {
+    let trimmed = input.trim();
+    if trimmed.len() == 32 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        Some(trimmed.to_ascii_lowercase())
+    } else {
+        None
+    }
+}
+
+/// Voucher secrets pulled from `GET /v1/checkout/{wpid}/voucher` whose
+/// `POST /v1/register` has not landed yet, keyed by wpid. The pull consumes
+/// the server-side single-use mapping, so without this a transient register
+/// failure would burn a PAID voucher: every subsequent poll would re-pull and
+/// 404 forever. In-memory only (mirrors the desktop daemon's
+/// `pulled_unregistered`; a process death inside that window loses the secret,
+/// accepted residual per doc 35).
+#[cfg(target_os = "android")]
+static PULLED_UNREGISTERED: Mutex<std::collections::BTreeMap<String, String>> =
+    Mutex::new(std::collections::BTreeMap::new());
+
+/// Redeem a voucher OR claim an app-initiated purchase (doc 35).
+///
+/// Mirrors the desktop daemon's `submit_voucher`: a 32-hex purchase id (wpid)
+/// is NOT a voucher, so we first pull the secret the payment webhook queued
+/// under it (`GET /v1/checkout/{wpid}/voucher`), then redeem that secret via
+/// `POST /v1/register`. A regular voucher (any other shape) is redeemed
+/// directly. A wpid whose webhook has not landed yet surfaces `purchase
+/// pending` so the Kotlin poll keeps trying within its own deadline.
+#[cfg(target_os = "android")]
+fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, String> {
     let runtime = RUNTIME
         .get()
         .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
@@ -1002,15 +1042,74 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_secret: &str) -> Result<u64, Str
     let pubkey = warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
     let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
-    let req = warren_api_client::RegisterAccountRequest {
-        pubkey_ss58: pubkey,
-        voucher_secret: voucher_secret.to_owned(),
-        referral_code: None,
-    };
-    let resp = runtime
-        .block_on(client.register_with_voucher(&req))
-        .map_err(|e| format!("register failed: {e}"))?;
-    Ok(resp.expires_at)
+    let wpid = as_wpid(voucher_or_wpid);
+
+    runtime.block_on(async move {
+        let voucher_secret = match &wpid {
+            Some(wpid) => {
+                // A previous poll may have pulled the secret then failed the
+                // register: the server mapping is single-use, so this cache is
+                // the only remaining copy of a paid voucher. Reuse before pull.
+                let cached = PULLED_UNREGISTERED.lock().get(wpid).cloned();
+                match cached {
+                    Some(secret) => secret,
+                    None => match client
+                        .pull_pending_voucher(wpid)
+                        .await
+                        .map_err(|e| format!("pull pending voucher failed: {e}"))?
+                    {
+                        Some(secret) => {
+                            PULLED_UNREGISTERED
+                                .lock()
+                                .insert(wpid.clone(), secret.clone());
+                            secret
+                        }
+                        // Webhook not landed yet (or id expired): keep polling.
+                        None => return Err("purchase pending".to_owned()),
+                    },
+                }
+            }
+            None => voucher_or_wpid.to_owned(),
+        };
+
+        let req = warren_api_client::RegisterAccountRequest {
+            pubkey_ss58: pubkey,
+            voucher_secret,
+            referral_code: None,
+        };
+        // The pull consumed the single-use mapping, so a transient register
+        // failure would burn the paid voucher: retry transport errors a few
+        // times (a server 4xx is final). On a pulled wpid the cache lets the
+        // next poll keep retrying the register even past these attempts.
+        let mut last_err = None;
+        for attempt in 0u32..3 {
+            if attempt > 0 {
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            }
+            match client.register_with_voucher(&req).await {
+                Ok(resp) => {
+                    if let Some(wpid) = &wpid {
+                        PULLED_UNREGISTERED.lock().remove(wpid);
+                    }
+                    return Ok(resp.expires_at);
+                }
+                Err(e @ warren_api_client::ClientError::ServerStatus { .. }) => {
+                    // Final server verdict (e.g. already-redeemed means a prior
+                    // attempt landed): drop the cache so the poll stops replaying.
+                    if let Some(wpid) = &wpid {
+                        PULLED_UNREGISTERED.lock().remove(wpid);
+                    }
+                    return Err(format!("register failed: {e}"));
+                }
+                Err(e) => last_err = Some(e),
+            }
+        }
+        // Transport still down: keep the cached secret for the next poll.
+        Err(format!(
+            "register failed: {}",
+            last_err.expect("loop ran at least once")
+        ))
+    })
 }
 
 #[cfg(not(target_os = "android"))]
