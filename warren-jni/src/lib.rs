@@ -14,6 +14,10 @@ pub mod wallet;
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod tunnel;
 
+// The IPv4 remap helpers are pure byte manipulation (host-testable); only the
+// `PacketDevice` impl inside is Android-gated.
+mod remap_tun;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

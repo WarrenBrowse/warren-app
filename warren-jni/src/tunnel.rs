@@ -19,9 +19,15 @@
 
 #![cfg(all(target_os = "android", feature = "tunnel"))]
 
-use std::net::SocketAddr;
+use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::Instant;
+
+/// Tunnel-inner IPv4 the Android `VpnService` interface is configured with.
+/// Mirrors `WarrenTunDefaults.IPV4_ADDRESS` in
+/// `app/.../service/WarrenTunInterfacePlan.kt`; the multi-hop data plane NATs
+/// this to the exit-assigned address (see [`run_multi_hop_session`]).
+const LOCAL_TUN_IPV4: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
 
 use ed25519_dalek::SigningKey;
 use serde::Deserialize;
@@ -436,17 +442,42 @@ async fn run_multi_hop_session(
 
     // HPKE session setup + IP negotiation over the control stream. Required
     // before the data plane carries packets (the exit allocates the inner IP).
-    if let Err(e) = mh
+    // The reply is the HPKE-sealed `IpAssign`; we MUST learn the allocated
+    // IPv4 because the exit drops every uplink packet whose source is not that
+    // address (anti-spoof gate in `warren_exit_core::multihop`).
+    let assign_reply = match mh
         .setup_over_stream(Some(&signing), /* wants_ipv6 */ false)
         .await
     {
-        log::error!("multi-hop setup_over_stream failed: {e}");
-        status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
-        return;
-    }
+        Ok(reply) => reply,
+        Err(e) => {
+            log::error!("multi-hop setup_over_stream failed: {e}");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
 
-    log::info!("multi-hop tunnel up");
+    // Decode the exit-allocated inner IPv4. Fail closed if it is missing or
+    // malformed: without it the data plane would be silently blackholed.
+    let assigned_ipv4 = match warren_multihop::try_decode_control(&assign_reply) {
+        Ok(Some(warren_multihop::WarrenControlMessage::IpAssign { ipv4, .. })) => {
+            std::net::Ipv4Addr::from(ipv4)
+        }
+        other => {
+            log::error!("multi-hop: expected IpAssign reply, got {other:?}; failing closed");
+            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            return;
+        }
+    };
+
+    log::info!("multi-hop tunnel up (assigned inner ipv4={assigned_ipv4})");
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
+
+    // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4 (set in Kotlin and
+    // immutable after establish()), so wrap it in a 1:1 NAT that presents the
+    // exit-assigned source on uplink and restores LOCAL_TUN_IPV4 on downlink.
+    // This is the Android equivalent of the desktop's RealTun::reassign_ipv4.
+    let tun = crate::remap_tun::RemapTun::new(tun, LOCAL_TUN_IPV4, assigned_ipv4);
 
     // DAITA over multi-hop is a follow-up (driven by a locally built
     // DaitaState, not a per-session spec); first cut uses the plain pump.
