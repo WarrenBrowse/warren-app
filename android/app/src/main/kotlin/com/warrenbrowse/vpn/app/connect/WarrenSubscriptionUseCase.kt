@@ -4,13 +4,11 @@ import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
-import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
-import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,8 +26,8 @@ import kotlinx.serialization.json.long
  * Fetches the wallet's subscription status (signed `GET /v1/subscription`).
  *
  * Mirrors [WarrenSendProblemReportUseCase]:
- *   1. Require wallet [WalletState.Ready].
- *   2. Unlock via biometric prompt to obtain the mnemonic.
+ *   1. Require a wallet on device (only Absent blocks).
+ *   2. Read the mnemonic silently (routine signing, no prompt).
  *   3. Hand the mnemonic to `WarrenJni.getSubscription`, which signs the
  *      request with the wallet pubkey and GETs `/v1/subscription`.
  *   4. Parse the JSON response into [WarrenSubscriptionOutcome].
@@ -55,17 +53,12 @@ class WarrenSubscriptionUseCase(
             return WarrenSubscriptionOutcome.WalletNotReady
         }
 
-        val authorizer = BiometricPromptAuthorizer(activity)
+        // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
         val mnemonic = try {
-            walletRepository.unlock(
-                authorizer = authorizer,
-                reason = "Check your subscription",
-            )
-        } catch (e: WalletAuthorizationDeniedException) {
-            return WarrenSubscriptionOutcome.AuthorizationDenied
+            walletRepository.readMnemonic()
         } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenSubscriptionUseCase: unlock failed" }
-            return WarrenSubscriptionOutcome.Failure(e.message ?: "wallet unlock failed")
+            Logger.e(throwable = e) { "WarrenSubscriptionUseCase: mnemonic read failed" }
+            return WarrenSubscriptionOutcome.Failure(e.message ?: "wallet read failed")
         }
 
         return withContext(Dispatchers.IO) {
@@ -92,15 +85,10 @@ class WarrenSubscriptionUseCase(
             return WarrenVoucherOutcome.WalletNotReady
         }
         val mnemonic = try {
-            walletRepository.unlock(
-                authorizer = BiometricPromptAuthorizer(activity),
-                reason = "Redeem your voucher",
-            )
-        } catch (e: WalletAuthorizationDeniedException) {
-            return WarrenVoucherOutcome.AuthorizationDenied
+            walletRepository.readMnemonic()
         } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.redeem: unlock failed" }
-            return WarrenVoucherOutcome.Failure(e.message ?: "wallet unlock failed")
+            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.redeem: mnemonic read failed" }
+            return WarrenVoucherOutcome.Failure(e.message ?: "wallet read failed")
         }
 
         return withContext(Dispatchers.IO) {
@@ -119,15 +107,15 @@ class WarrenSubscriptionUseCase(
     /**
      * App-initiated purchase auto-credit (warren-core doc 35), the Android
      * counterpart of the desktop `buyCredit` poll. The caller opens the
-     * checkout bound to a random 32-hex purchase id (wpid); here we unlock the
-     * wallet ONCE (single biometric/credential prompt) and then poll the signed
-     * `redeemVoucher(wpid)` every [intervalMs] until the payment webhook has
-     * queued the voucher under that id (Success) or [deadlineMs] elapses. The
-     * signed call is what binds the payment to this wallet; the daemon never
-     * learns the pubkey from the checkout URL.
+     * checkout bound to a random 32-hex purchase id (wpid); here we read the
+     * mnemonic silently (no prompt) and poll the signed `redeemVoucher(wpid)`
+     * every [intervalMs] until the payment webhook has queued the voucher under
+     * that id (Success) or [deadlineMs] elapses. The signed call is what binds
+     * the payment to this wallet; the daemon never learns the pubkey from the
+     * checkout URL.
      *
-     * The decrypted mnemonic is held for the poll window so we don't re-prompt
-     * on every attempt, then zeroed when the poll ends.
+     * The decrypted mnemonic is held for the poll window, then zeroed when the
+     * poll ends.
      */
     override fun startPurchasePoll(
         activity: FragmentActivity,
@@ -137,15 +125,11 @@ class WarrenSubscriptionUseCase(
     ) {
         pollScope.launch {
             if (walletRepository.state.value is WalletState.Absent) return@launch
+            // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
             val mnemonic = try {
-                walletRepository.unlock(
-                    authorizer = BiometricPromptAuthorizer(activity),
-                    reason = "Confirm to credit your purchase",
-                )
-            } catch (e: WalletAuthorizationDeniedException) {
-                return@launch
+                walletRepository.readMnemonic()
             } catch (e: Exception) {
-                Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: unlock failed" }
+                Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: mnemonic read failed" }
                 return@launch
             }
 

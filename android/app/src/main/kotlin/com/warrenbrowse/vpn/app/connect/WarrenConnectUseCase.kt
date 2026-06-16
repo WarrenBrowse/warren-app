@@ -10,30 +10,23 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
-import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.ExitKeyVerdict
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.app.service.toWireJson
-import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 
 /**
  * End-to-end Warren connect orchestrator.
  *
  * Flow:
- *   1. Require wallet in [WalletState.Ready]; refuse otherwise (UI should
- *      route the user to the wallet onboarding instead of calling us).
- *   2. Resolve the mnemonic via [WalletRepository.unlock] gated by a
- *      [BiometricPromptAuthorizer] bound to the supplied [FragmentActivity].
+ *   1. Require a wallet on device (Locked or Ready); refuse only when Absent
+ *      (UI should route the user to onboarding instead of calling us).
+ *   2. Resolve the mnemonic via [WalletRepository.readMnemonic] (silent: a
+ *      routine signing op shows no biometric/PIN prompt).
  *   3. Build the [com.warrenbrowse.vpn.app.service.WarrenTunnelConfig]
  *      from current settings (today: hardcoded warren-exit-1).
  *   4. Stash the mnemonic in [MnemonicCache] and start [WarrenVpnService]
  *      with `KEY_WARREN_CONNECT_QUINN_ACTION` + the JSON-encoded config.
- *
- * The use-case is intentionally Activity-coupled (takes a FragmentActivity
- * rather than a Context) because [BiometricPromptAuthorizer] needs a
- * fragment host. Callers from a Composable retrieve the activity via
- * `LocalContext.current as FragmentActivity`.
  */
 class WarrenConnectUseCase(
     private val walletRepository: WalletRepository,
@@ -80,17 +73,15 @@ class WarrenConnectUseCase(
             }
         }
 
-        val authorizer = BiometricPromptAuthorizer(activity)
+        // Routine signing: read the mnemonic silently (no biometric/PIN prompt).
+        // The key is app-bound, the secret is never shown, and this matches the
+        // desktop daemon that holds the key in memory. The prompt is reserved
+        // for revealing the recovery phrase on screen.
         val mnemonic = try {
-            walletRepository.unlock(
-                authorizer = authorizer,
-                reason = "Connect to Warren VPN",
-            )
-        } catch (e: WalletAuthorizationDeniedException) {
-            return Outcome.AuthorizationDenied
+            walletRepository.readMnemonic()
         } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenConnectUseCase: unlock failed" }
-            return Outcome.Failure(e.message ?: "wallet unlock failed")
+            Logger.e(throwable = e) { "WarrenConnectUseCase: mnemonic read failed" }
+            return Outcome.Failure(e.message ?: "wallet read failed")
         }
 
         val built = configBuilder.build(pubkey) ?: run {

@@ -63,6 +63,20 @@ interface WalletRepository {
     ): Mnemonic
 
     /**
+     * Decrypt the persisted mnemonic WITHOUT a user-authentication prompt, for
+     * routine in-process signing (connect, subscription, purchase auto-credit,
+     * support report). The Keystore master key is app-bound and, with
+     * hardware-enforced per-use auth off, needs no prompt to decrypt: only this
+     * app can use the key, so reading the secret silently matches the desktop
+     * daemon that keeps the key in memory. The biometric/PIN gate stays on
+     * [unlock], which is reserved for revealing the phrase on screen.
+     *
+     * Like [unlock], the returned `Mnemonic` must NOT be stored long-term.
+     * Throws if no wallet is on disk.
+     */
+    suspend fun readMnemonic(): Mnemonic
+
+    /**
      * Erase the persisted wallet. Irreversible; the user is expected to
      * have backed up the mnemonic if they want to recover the same wallet
      * later via [importWallet].

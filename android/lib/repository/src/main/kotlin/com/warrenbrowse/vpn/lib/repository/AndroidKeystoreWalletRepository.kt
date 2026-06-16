@@ -139,6 +139,23 @@ class AndroidKeystoreWalletRepository(
         }
     }
 
+    override suspend fun readMnemonic(): Mnemonic = lock.withLock {
+        // Silent path: no authorizer, no prompt. Valid only while the master
+        // key is not hardware-auth-bound; if HARDWARE_AUTH is ever enabled the
+        // decrypt doFinal would need a CryptoObject prompt, so route through
+        // unlock() instead. The check makes that invariant explicit.
+        check(!HARDWARE_AUTH) {
+            "readMnemonic cannot decrypt a hardware-auth key; use unlock() with a CryptoObject prompt"
+        }
+        withContext(Dispatchers.IO) {
+            val chars = decryptMnemonic()
+                ?: throw IllegalStateException(
+                    "no wallet on disk - call createWallet/importWallet first"
+                )
+            Mnemonic.fromCharArrayOwning(chars)
+        }
+    }
+
     override suspend fun erase() = lock.withLock {
         withContext(Dispatchers.IO) {
             prefs.edit().clear().apply()

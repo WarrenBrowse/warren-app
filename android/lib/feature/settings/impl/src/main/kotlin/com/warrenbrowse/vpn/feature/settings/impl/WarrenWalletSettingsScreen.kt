@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
@@ -99,6 +100,24 @@ fun WarrenWalletSettings(navigator: Navigator) {
     var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
     var viewError by remember { mutableStateOf<String?>(null) }
     var confirmErase by remember { mutableStateOf(false) }
+    // wpid awaiting its redeem poll: set when the user opens the checkout, then
+    // consumed on the next return to the app (see LifecycleResumeEffect below).
+    var pendingPurchaseWpid by remember { mutableStateOf<String?>(null) }
+
+    // Defer the signed redeem poll (and its biometric unlock) until the user
+    // comes back from the browser after paying. Triggering it at tap time would
+    // prompt for biometrics before payment and hold the decrypted mnemonic
+    // while the user is away on the checkout page; resuming with a pending wpid
+    // keeps the prompt meaningful ("confirm to credit") and the order aligned
+    // with the desktop buyCredit flow. The guard makes the initial ON_RESUME
+    // (entering the screen, no pending wpid) a no-op.
+    LifecycleResumeEffect(Unit) {
+        pendingPurchaseWpid?.let { wpid ->
+            pendingPurchaseWpid = null
+            subscriptionInvoker.startPurchasePoll(activity, wpid)
+        }
+        onPauseOrDispose {}
+    }
 
     val redeemingVoucherStatus = stringResource(R.string.subscription_redeeming_voucher)
     val viewPhraseReason = stringResource(R.string.wallet_biometric_view_phrase_reason)
@@ -174,22 +193,19 @@ fun WarrenWalletSettings(navigator: Navigator) {
                         PrimaryTextButton(
                             onClick = {
                                 // App-initiated purchase (doc 35): mint a random
-                                // wpid, open the checkout bound to it (short
+                                // wpid and open the checkout bound to it (short
                                 // pubkey rides in the fragment for the landing
-                                // page only, never sent to the server), then
-                                // poll the signed redeem so the credit lands
-                                // automatically, like desktop buyCredit.
+                                // page only, never sent to the server). The
+                                // signed redeem poll is armed here but only fires
+                                // when the user returns to the app (see the
+                                // LifecycleResumeEffect), so the unlock prompt
+                                // appears after payment, not before.
                                 val wpid = newPurchaseId()
                                 val acct = java.net.URLEncoder.encode(
                                     pubkey.shortWarrenAddress(), "UTF-8",
                                 )
+                                pendingPurchaseWpid = wpid
                                 uriHandler.safeOpenUri("$CHECKOUT_URL?pid=$wpid#acct=$acct")
-                                // Fire-and-forget: the poll runs app-scoped and
-                                // writes the credited expiry to the shared
-                                // StateFlow, so "Paid until" here and the home
-                                // header "Time left" refresh on their own, even
-                                // if the user has navigated away.
-                                subscriptionInvoker.startPurchasePoll(activity, wpid)
                             },
                             text = stringResource(R.string.subscription_get),
                             textDecoration = TextDecoration.Underline,
