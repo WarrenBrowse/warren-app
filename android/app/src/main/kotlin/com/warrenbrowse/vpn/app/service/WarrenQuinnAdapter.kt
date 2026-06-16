@@ -105,6 +105,13 @@ class WarrenQuinnAdapter(
             activeMnemonic = mnemonic
         }
 
+        // Ensure the native side holds no stale tunnel before establishing a
+        // new one. On a session drop/block the Quinn task dies but the native
+        // ACTIVE_TUNNEL slot is cleared only by disconnectTunnel(), so a
+        // reconnect would otherwise hit "Tunnel already running". Idempotent:
+        // a no-op on the first connect (slot empty).
+        WarrenJni.disconnectTunnel()
+
         val fd = buildTunInterface(config) ?: run {
             onSessionDown(config, "VpnService.Builder.establish() returned null")
             return@withLock
@@ -126,6 +133,13 @@ class WarrenQuinnAdapter(
             // Fail closed instead of crashing the VPN service.
             Logger.w(throwable = e) { "connect: mnemonic unavailable, aborting" }
             onSessionDown(config, "mnemonic unavailable")
+            return@withLock
+        } catch (e: RuntimeException) {
+            // Any other native-thrown error (e.g. a residual "Tunnel already
+            // running" from a state desync). Fail closed into onSessionDown
+            // rather than let an uncaught exception crash the VpnService.
+            Logger.w(throwable = e) { "connect: native connectTunnel threw, aborting" }
+            onSessionDown(config, e.message ?: "connectTunnel threw")
             return@withLock
         }
         if (rc != 0) {
