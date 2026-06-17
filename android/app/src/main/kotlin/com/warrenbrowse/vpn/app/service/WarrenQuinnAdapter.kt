@@ -310,8 +310,12 @@ class WarrenQuinnAdapter(
      * [WarrenTunnelState.Failed] and release traffic.
      */
     private fun onSessionDown(config: WarrenTunnelConfig, reason: String) {
-        activeFd?.close()
-        activeFd = null
+        // CRITICAL (fail-closed): do NOT close activeFd here. Closing the only
+        // TUN before a replacement is up opens a leak window (and a permanent
+        // leak if the replacement fails to establish). The TUN is closed only
+        // once a successor interface is confirmed up (enterBlockingMode) or the
+        // user explicitly released traffic (RELEASE below). An active TUN whose
+        // pump has died still drops everything, so keeping it is leak-safe.
         _natPmpStatus.value = NATPMP_IDLE
         // Only an unexpected drop counts as a flap; a user teardown must not
         // record one. The blackhole-up-FIRST behaviour (block, then retry) is
@@ -320,7 +324,12 @@ class WarrenQuinnAdapter(
             !userInitiatedDisconnect && flapDetector.recordDrop(SystemClock.elapsedRealtime())
         when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, config.lockdownMode)) {
             KillSwitchAction.RELEASE -> {
+                // The user asked to release traffic: now it is safe to drop the
+                // TUN (this is the only path that returns traffic to the bare
+                // network, and only on explicit intent).
                 Logger.w("WarrenQuinnAdapter: releasing traffic ($reason)")
+                activeFd?.close()
+                activeFd = null
                 exitBlockingMode()
                 unregisterNetworkCallback()
                 activeMnemonic?.close()
@@ -345,6 +354,13 @@ class WarrenQuinnAdapter(
      * Establish (or keep) a kill-switch blackhole interface that captures
      * all traffic but pumps nothing, so it is dropped instead of leaking to
      * the physical network. Must be called holding [lock].
+     *
+     * Fail-closed ordering: the blackhole is established BEFORE the stale
+     * active TUN is closed (on Android `establish()` atomically replaces the
+     * current interface, so there is never a window with no TUN). If the
+     * blackhole cannot be established, the existing active TUN is KEPT (its
+     * pump is dead, so it already drops everything) rather than torn down,
+     * so traffic still cannot leak.
      */
     private fun enterBlockingMode(
         config: WarrenTunnelConfig,
@@ -354,11 +370,23 @@ class WarrenQuinnAdapter(
         if (blockingFd == null) {
             val fd = applyPlan(planTunInterface(config, blocking = true))
             if (fd == null) {
-                Logger.e("WarrenQuinnAdapter: failed to establish blocking interface; traffic may leak")
-                _state.value = WarrenTunnelState.Failed(reason)
+                // Could not stand up the dedicated blackhole. Keep whatever
+                // interface is currently up (the active TUN with a dead pump)
+                // as the fail-closed blackhole - do NOT close it. Traffic stays
+                // captured and dropped; we are still blocked, never leaking.
+                Logger.e(
+                    "WarrenQuinnAdapter: blackhole establish failed; keeping current " +
+                        "interface as fail-closed blackhole ($reason)"
+                )
+                _state.value = WarrenTunnelState.Blocking(reason, flapping)
                 return
             }
             blockingFd = fd
+            // The blackhole atomically replaced the active interface; the old
+            // active fd is now stale, so close it (the interface itself stays
+            // up as the blackhole).
+            activeFd?.close()
+            activeFd = null
             Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
         }
         _state.value = WarrenTunnelState.Blocking(reason, flapping)

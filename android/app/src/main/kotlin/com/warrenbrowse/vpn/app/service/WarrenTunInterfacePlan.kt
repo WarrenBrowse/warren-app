@@ -284,5 +284,12 @@ private fun isValidIpv6(v: String): Boolean {
     return hextets.all { it.length <= 4 && it.all { c -> c.isDigit() || c.lowercaseChar() in 'a'..'f' } }
 }
 
+// One constant VpnService session name for every interface (active OR
+// blackhole). The name is just the OS-level identity of the VPN app; encoding
+// transient state into it made the Android NetworkAgent label go stale (it
+// kept showing "(blocking)" after recovery, because establish() does not
+// reliably refresh the session string). The real active/blocking state is
+// carried by WarrenTunnelState (app UI) + the persistent notification, never
+// by this string. The `blocking` boolean on the plan stays the discriminator.
 private const val ACTIVE_SESSION = "Warren VPN"
-private const val BLOCKING_SESSION = "Warren VPN (blocking)"
+private const val BLOCKING_SESSION = ACTIVE_SESSION

@@ -221,6 +221,8 @@ private fun ErrorStateCause.errorMessageId(): String =
         is ErrorStateCause.StartTunnelError -> stringResource(R.string.start_tunnel_error)
         is ErrorStateCause.WarrenTunnelFlapping ->
             stringResource(R.string.warren_tunnel_flapping)
+        is ErrorStateCause.WarrenKillSwitchActive ->
+            stringResource(R.string.warren_kill_switch_active)
         is ErrorStateCause.IsOffline -> stringResource(R.string.is_offline)
         is ErrorStateCause.TunnelParameterError -> stringResource(error.errorMessageId())
         is ErrorStateCause.NotPrepared ->

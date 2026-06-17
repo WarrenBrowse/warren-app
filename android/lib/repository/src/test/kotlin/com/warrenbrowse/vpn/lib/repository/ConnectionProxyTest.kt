@@ -51,10 +51,15 @@ class ConnectionProxyTest {
     }
 
     @Test
-    fun `a non-flapping Blocking carries the generic firewall cause`() = runTest {
-        val state = mapped(WarrenConnectedInfo.Blocking("kill switch")) as TunnelState.Error
-        assertTrue(state.errorState.cause is ErrorStateCause.FirewallPolicyError.Generic)
-    }
+    fun `a non-flapping Blocking carries the kill-switch-active cause (not a firewall error)`() =
+        runTest {
+            val state = mapped(WarrenConnectedInfo.Blocking("kill switch")) as TunnelState.Error
+            // The kill switch succeeded in blocking; it must NOT be reported as
+            // a FirewallPolicyError (which means the firewall could not be
+            // applied and tells the user to send a problem report).
+            assertTrue(state.errorState.cause is ErrorStateCause.WarrenKillSwitchActive)
+            assertTrue(state.errorState.isBlocking)
+        }
 
     @Test
     fun `a flapping Blocking stays blocking but carries the flap cause`() = runTest {

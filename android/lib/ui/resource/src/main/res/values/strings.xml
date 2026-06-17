@@ -77,6 +77,7 @@
     <string name="start_tunnel_error">Unable to start tunnel connection. Please send a problem report.</string>
     <string name="warren_tunnel_flapping_title">Unstable network</string>
     <string name="warren_tunnel_flapping">Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled.</string>
+    <string name="warren_kill_switch_active">The kill switch is keeping your traffic blocked while the tunnel is down. Your connection is protected; it will resume automatically once the tunnel is back.</string>
     <string name="vpn_permission_denied_error">VPN permission was denied or another app has \"Always-on VPN\" enabled</string>
     <string name="no_matching_relay">No servers match your settings, try changing server or other settings.</string>
     <string name="custom_tunnel_host_resolution_error">Unable to resolve host of custom tunnel. Try changing your settings.</string>

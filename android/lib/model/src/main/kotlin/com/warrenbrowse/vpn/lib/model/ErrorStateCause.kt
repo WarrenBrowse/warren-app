@@ -29,6 +29,15 @@ sealed class ErrorStateCause {
      */
     data object WarrenTunnelFlapping : ErrorStateCause()
 
+    /**
+     * The kill switch (lockdown) is intentionally blocking traffic because the
+     * tunnel is down. This is the protective state working as designed, NOT a
+     * failure: do not map it to [FirewallPolicyError] (which means the OS
+     * firewall could not be applied and tells the user to send a problem
+     * report). The block succeeded; the message just informs the user.
+     */
+    data object WarrenKillSwitchActive : ErrorStateCause()
+
     data class TunnelParameterError(val error: ParameterGenerationError) : ErrorStateCause()
 
     data object IsOffline : ErrorStateCause()
