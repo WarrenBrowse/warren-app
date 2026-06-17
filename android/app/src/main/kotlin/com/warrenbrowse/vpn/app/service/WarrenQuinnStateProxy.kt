@@ -82,8 +82,8 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
             daita = daita,
             assignedNatPmpPort = assignedNatPmpPort,
         )
-        is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason)
-        is WarrenTunnelState.Blocking -> WarrenConnectedInfo.Blocking(reason, flapping)
+        is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason, expired)
+        is WarrenTunnelState.Blocking -> WarrenConnectedInfo.Blocking(reason, flapping, expired)
     }
 
     private fun WarrenTunnelState.describe(): String = when (this) {

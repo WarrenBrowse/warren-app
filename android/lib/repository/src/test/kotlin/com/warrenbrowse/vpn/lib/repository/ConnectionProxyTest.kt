@@ -72,6 +72,28 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `an expired Blocking stays blocking but carries the expired-account cause`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Blocking("expired", expired = true)) as TunnelState.Error
+        // Kill switch still engaged (no leak)...
+        assertTrue(state.errorState.isBlocking)
+        // ...and the user sees an actionable "subscription expired" auth error.
+        val cause = state.errorState.cause
+        assertTrue(cause is ErrorStateCause.AuthFailed)
+        assertTrue((cause as ErrorStateCause.AuthFailed).isCausedByExpiredAccount())
+    }
+
+    @Test
+    fun `an expired Failed is a non-blocking expired-account error`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Failed("expired", expired = true)) as TunnelState.Error
+        assertFalse(state.errorState.isBlocking)
+        val cause = state.errorState.cause
+        assertTrue(cause is ErrorStateCause.AuthFailed)
+        assertTrue((cause as ErrorStateCause.AuthFailed).isCausedByExpiredAccount())
+    }
+
+    @Test
     fun `Connected single-hop with DAITA exposes real endpoint and DAITA + QUIC chips`() = runTest {
         val state = mapped(
             WarrenConnectedInfo.Connected(

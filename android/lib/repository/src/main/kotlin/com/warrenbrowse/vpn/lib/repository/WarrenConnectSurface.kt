@@ -49,8 +49,12 @@ sealed interface WarrenConnectedInfo {
         val assignedNatPmpPort: Int?,
     ) : WarrenConnectedInfo
 
-    /** Tunnel failed (no kill switch). Surfaced as a non-blocking error. */
-    data class Failed(val reason: String) : WarrenConnectedInfo
+    /**
+     * Tunnel failed (no kill switch). Surfaced as a non-blocking error.
+     * [expired] is set when the exit refused the account (lapsed / revoked
+     * subscription), so the card shows a "subscription expired" error.
+     */
+    data class Failed(val reason: String, val expired: Boolean = false) : WarrenConnectedInfo
 
     /**
      * Tunnel down but the kill switch (lockdown) is keeping a blocking
@@ -61,10 +65,15 @@ sealed interface WarrenConnectedInfo {
      * giving up after too many drops in a short window (network flapping):
      * the kill switch stays up but the loop stopped, so the error reads as a
      * flap rather than a generic firewall block.
+     *
+     * [expired] is set when the block is the result of the exit refusing
+     * the account (lapsed / revoked subscription): the kill switch stays up
+     * but the error reads as "subscription expired" rather than a flap.
      */
     data class Blocking(
         val reason: String,
         val flapping: Boolean = false,
+        val expired: Boolean = false,
     ) : WarrenConnectedInfo
 }
 

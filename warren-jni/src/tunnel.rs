@@ -134,6 +134,13 @@ pub enum SessionStatus {
     Connected = 2,
     #[expect(dead_code, reason = "config field for D.4 step 3+ wiring")]
     Reconnecting = 3,
+    /// The exit refused the setup with a policy rejection
+    /// (`WarrenControlMessage::Rejected`): the account is not authorized,
+    /// i.e. the subscription has lapsed or was revoked. Distinct from
+    /// `Disconnected` so the Kotlin layer can surface "subscription
+    /// expired" and STOP the reconnect loop (retrying cannot recover an
+    /// unauthorized account until it is renewed).
+    Unauthorized = 4,
 }
 
 /// Errors surfaced from the synchronous JNI entry path. Currently only
@@ -468,6 +475,15 @@ async fn run_multi_hop_session(
     let (assigned_ipv4, assigned_ipv6) = match warren_multihop::try_decode_control(&assign_reply) {
         Ok(Some(warren_multihop::WarrenControlMessage::IpAssign { ipv4, ipv6, .. })) => {
             (Ipv4Addr::from(ipv4), ipv6.map(Ipv6Addr::from))
+        }
+        // The exit policy-rejected this setup (not authorized): surface a
+        // distinct Unauthorized status so Kotlin shows "subscription
+        // expired" and stops retrying, instead of a generic disconnect +
+        // reconnect storm that keeps hitting the same rejection.
+        Ok(Some(warren_multihop::WarrenControlMessage::Rejected)) => {
+            log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
+            status.store(SessionStatus::Unauthorized as i32, Ordering::SeqCst);
+            return;
         }
         other => {
             log::error!("multi-hop: expected IpAssign reply, got {other:?}; failing closed");

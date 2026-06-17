@@ -23,7 +23,14 @@ sealed class WarrenTunnelState {
         val entryEndpointHost: String? = null,
     ) : WarrenTunnelState()
     data object Reconnecting : WarrenTunnelState()
-    data class Failed(val reason: String) : WarrenTunnelState()
+
+    /**
+     * Tunnel failed (no kill switch). [expired] is set when the exit
+     * refused the setup because the account is not authorized (lapsed /
+     * revoked subscription), so the UI shows a "subscription expired"
+     * message instead of a generic error and the reconnect loop stops.
+     */
+    data class Failed(val reason: String, val expired: Boolean = false) : WarrenTunnelState()
 
     /**
      * The tunnel is down but the kill switch (lockdown mode) is keeping a
@@ -35,10 +42,16 @@ sealed class WarrenTunnelState {
      * many drops in a short window: the blackhole stays up but no further
      * reconnect is scheduled, so the error reads as an unstable network
      * rather than a generic block.
+     *
+     * [expired] is set when the block is the result of the exit refusing
+     * the account (lapsed / revoked subscription): the kill switch stays
+     * up (fail-closed) but the message reads as "subscription expired" and
+     * no reconnect is scheduled (retrying cannot recover until renewal).
      */
     data class Blocking(
         val reason: String,
         val flapping: Boolean = false,
+        val expired: Boolean = false,
     ) : WarrenTunnelState()
 
     companion object {
@@ -52,6 +65,7 @@ sealed class WarrenTunnelState {
                 daita = false,
             )
             3 -> Reconnecting
+            4 -> Failed("subscription expired", expired = true)
             else -> Failed("native status code $code")
         }
     }

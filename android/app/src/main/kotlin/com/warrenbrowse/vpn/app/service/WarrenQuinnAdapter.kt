@@ -179,6 +179,20 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
+                    if (code == STATUS_UNAUTHORIZED) {
+                        // Terminal: the exit refused the account (lapsed /
+                        // revoked subscription). Retrying cannot recover it,
+                        // so engage the kill switch per lockdown policy but
+                        // stop the reconnect loop and surface "expired".
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else {
+                                onSessionExpired(sessionConfig)
+                            }
+                        }
+                        break
+                    }
                     // A real connection settles the network: forget prior
                     // drops so a later isolated drop is not mistaken for the
                     // tail of an earlier flap.
@@ -366,6 +380,7 @@ class WarrenQuinnAdapter(
         config: WarrenTunnelConfig,
         reason: String,
         flapping: Boolean = false,
+        expired: Boolean = false,
     ) {
         if (blockingFd == null) {
             val fd = applyPlan(planTunInterface(config, blocking = true))
@@ -378,7 +393,7 @@ class WarrenQuinnAdapter(
                     "WarrenQuinnAdapter: blackhole establish failed; keeping current " +
                         "interface as fail-closed blackhole ($reason)"
                 )
-                _state.value = WarrenTunnelState.Blocking(reason, flapping)
+                _state.value = WarrenTunnelState.Blocking(reason, flapping, expired)
                 return
             }
             blockingFd = fd
@@ -389,7 +404,34 @@ class WarrenQuinnAdapter(
             activeFd = null
             Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
         }
-        _state.value = WarrenTunnelState.Blocking(reason, flapping)
+        _state.value = WarrenTunnelState.Blocking(reason, flapping, expired)
+    }
+
+    /**
+     * Handle the exit refusing the account (lapsed / revoked subscription).
+     * Must be called holding [lock]. Unlike [onSessionDown] this NEVER
+     * schedules a reconnect: retrying the same unauthorized account just
+     * re-hits the rejection (a reconnect storm). Under lockdown the kill
+     * switch stays engaged (fail-closed, no leak) with an "expired" cause;
+     * without lockdown, traffic is released and a non-blocking expired error
+     * is surfaced. The user recovers by renewing then reconnecting.
+     */
+    private fun onSessionExpired(config: WarrenTunnelConfig) {
+        _natPmpStatus.value = NATPMP_IDLE
+        flapDetector.reset()
+        if (config.lockdownMode) {
+            Logger.w("WarrenQuinnAdapter: account unauthorized; blocking (subscription expired)")
+            enterBlockingMode(config, "subscription expired", flapping = false, expired = true)
+        } else {
+            Logger.w("WarrenQuinnAdapter: account unauthorized; releasing (subscription expired)")
+            activeFd?.close()
+            activeFd = null
+            exitBlockingMode()
+            unregisterNetworkCallback()
+            activeMnemonic?.close()
+            activeMnemonic = null
+            _state.value = WarrenTunnelState.Failed("subscription expired", expired = true)
+        }
     }
 
     /** Tear down the kill-switch blackhole interface, if any. */
@@ -536,6 +578,7 @@ class WarrenQuinnAdapter(
                     entryEndpointHost = config.entryHop?.relayEndpoint,
                 )
             STATUS_RECONNECTING -> WarrenTunnelState.Reconnecting
+            STATUS_UNAUTHORIZED -> WarrenTunnelState.Failed("subscription expired", expired = true)
             else -> WarrenTunnelState.Failed("native status code $code")
         }
 
@@ -544,6 +587,10 @@ class WarrenQuinnAdapter(
         const val STATUS_CONNECTING = 1
         const val STATUS_CONNECTED = 2
         const val STATUS_RECONNECTING = 3
+
+        // The exit refused the setup (not authorized: lapsed / revoked
+        // subscription). Mirrors `warren_jni::tunnel::SessionStatus::Unauthorized`.
+        const val STATUS_UNAUTHORIZED = 4
         const val STATUS_POLL_INTERVAL_MS = 250L
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
 

@@ -5,6 +5,7 @@ import arrow.core.right
 import java.net.InetSocketAddress
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.warrenbrowse.vpn.lib.model.AuthFailedError
 import com.warrenbrowse.vpn.lib.model.ConnectError
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.Endpoint
@@ -53,22 +54,35 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                     )
                 is WarrenConnectedInfo.Failed ->
                     TunnelState.Error(
-                        ErrorState(cause = ErrorStateCause.StartTunnelError, isBlocking = false),
+                        ErrorState(
+                            // An expired/revoked subscription is an auth
+                            // failure (actionable: renew), not a generic tunnel
+                            // start error.
+                            cause = if (info.expired) {
+                                ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
+                            } else {
+                                ErrorStateCause.StartTunnelError
+                            },
+                            isBlocking = false,
+                        ),
                     )
                 is WarrenConnectedInfo.Blocking ->
                     TunnelState.Error(
                         ErrorState(
                             // The kill switch is up either way (isBlocking) and
                             // the block SUCCEEDED - this is the protective state
-                            // working, not a failure. A flap surfaces the
-                            // unstable-network cause; otherwise the dedicated
-                            // kill-switch-active cause (NOT FirewallPolicyError,
-                            // which means the firewall could not be applied and
-                            // wrongly tells the user to send a problem report).
-                            cause = if (info.flapping) {
-                                ErrorStateCause.WarrenTunnelFlapping
-                            } else {
-                                ErrorStateCause.WarrenKillSwitchActive
+                            // working, not a failure. An expired account
+                            // surfaces the actionable "subscription expired"
+                            // cause; a flap surfaces the unstable-network cause;
+                            // otherwise the dedicated kill-switch-active cause
+                            // (NOT FirewallPolicyError, which means the firewall
+                            // could not be applied and wrongly tells the user to
+                            // send a problem report).
+                            cause = when {
+                                info.expired ->
+                                    ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
+                                info.flapping -> ErrorStateCause.WarrenTunnelFlapping
+                                else -> ErrorStateCause.WarrenKillSwitchActive
                             },
                             isBlocking = true,
                         ),
