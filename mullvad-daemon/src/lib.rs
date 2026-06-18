@@ -1675,8 +1675,16 @@ impl Daemon {
                 internal_event_tx.to_specialized_sender();
             let request_reconnect: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
                 let tx = reconnect_event_tx.clone();
-                let (otx, _orx) = oneshot::channel();
-                let _ = tx.send(DaemonCommand::Reconnect(otx));
+                let (otx, orx) = oneshot::channel();
+                if tx.send(DaemonCommand::Reconnect(otx)).is_ok() {
+                    // Keep the receiver alive until `on_reconnect` replies,
+                    // mirroring `schedule_reconnect`. Dropping it makes the
+                    // reply send fail and log a spurious "Unable to send
+                    // reconnect issued to the daemon command sender".
+                    tokio::spawn(async move {
+                        let _ = orx.await;
+                    });
+                }
             });
             warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
                 api_url: warren_api_url.clone(),
