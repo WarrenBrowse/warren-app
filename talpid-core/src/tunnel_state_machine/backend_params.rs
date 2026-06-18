@@ -27,8 +27,12 @@ pub(crate) struct WarrenBackendInfo {
 
 impl WarrenBackendInfo {
     pub fn from_params(p: &WarrenTunnelParameters) -> Self {
+        // `mh.exit.endpoint` is `None` when the directory was served by the
+        // censorship-minimized client path (Phase 2): the client dials the
+        // entry relay, never the exit, so the exit egress IP is redacted.
+        // The display fallback in `warren_tunnel_endpoint` handles `None`.
         let (relay_endpoint, exit_endpoint) = match &p.multi_hop {
-            Some(mh) => (Some(mh.relay.endpoint), Some(mh.exit.endpoint)),
+            Some(mh) => (Some(mh.relay.endpoint), mh.exit.endpoint),
             None => (None, None),
         };
         Self {

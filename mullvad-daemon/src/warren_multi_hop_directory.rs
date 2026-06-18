@@ -917,7 +917,7 @@ mod tests {
                 exit_id,
                 exit_ed25519_pubkey: relay_ed,
                 exit_x25519_multihop_pubkey: exit_x,
-                endpoint,
+                endpoint: Some(endpoint),
                 signature: exit_sig,
                 dns_disabled: false,
             },

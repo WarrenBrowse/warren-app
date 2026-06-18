@@ -518,7 +518,7 @@ mod tests {
                 exit_id: ExitId::from_bytes([0xb1; 16]),
                 exit_ed25519_pubkey: [0xb2; 32],
                 exit_x25519_multihop_pubkey: [0xb3; 32],
-                endpoint: "198.51.100.20:443".parse().unwrap(),
+                endpoint: Some("198.51.100.20:443".parse().unwrap()),
                 signature: [0xb4; 64],
                 dns_disabled: false,
             },
