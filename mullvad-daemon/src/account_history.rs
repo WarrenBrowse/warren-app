@@ -1,6 +1,6 @@
 use mullvad_types::account::AccountNumber;
-use regex::Regex;
-use std::{path::Path, sync::LazyLock};
+use mullvad_types::warren_pubkey::WarrenPubKey;
+use std::{path::Path, str::FromStr};
 use talpid_types::ErrorExt;
 use tokio::{
     fs,
@@ -31,14 +31,22 @@ pub struct AccountHistory {
     number: Option<AccountNumber>,
 }
 
-/// Accepts both the legacy Mullvad numeric account number (digits
-/// only) and the Warren pubkey format (64-character lowercase
-/// hex `WarrenPubKey::Display`). The latter is what `set_warren_mnemonic`
-/// and auto-login persist into `account-history.json` since Phase 2,
-/// and refusing to parse it would surface a spurious "Failed to parse
-/// account history" warning at every boot.
-static ACCOUNT_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^([0-9]+|[0-9a-fA-F]{64})$").unwrap());
+/// Returns `true` if `token` is a recognised account-history entry.
+///
+/// Warren persists the account number as a `WarrenPubKey` SS58 address
+/// (`wb…`, 47-49 base58 chars); that is the only format written today.
+/// The legacy upstream numeric account number is still accepted so a
+/// pre-fork history file migrates cleanly. The empty string is handled
+/// by callers, not here.
+///
+/// Do NOT narrow this back to a fixed-width hex rule: `WarrenPubKey`'s
+/// real representation is a base58 SS58 address, and a `[0-9a-fA-F]{64}`
+/// regex rejected every live account, resetting account-history.json on
+/// every boot.
+pub(crate) fn is_known_account_number(token: &str) -> bool {
+    WarrenPubKey::from_str(token).is_ok()
+        || (!token.is_empty() && token.bytes().all(|b| b.is_ascii_digit()))
+}
 
 impl AccountHistory {
     pub async fn new(
@@ -69,7 +77,7 @@ impl AccountHistory {
         let mut buffer = String::new();
         let (number, should_save): (Option<AccountNumber>, bool) =
             match reader.read_to_string(&mut buffer).await {
-                Ok(_) if ACCOUNT_REGEX.is_match(buffer.trim()) => {
+                Ok(_) if is_known_account_number(buffer.trim()) => {
                     // Trim trailing newline/whitespace before storing.
                     (Some(buffer.trim().to_string()), false)
                 }
@@ -77,10 +85,9 @@ impl AccountHistory {
                 Ok(_) | Err(_) => {
                     // Not a fatal condition: we fall back to
                     // `current_number` (= whatever device.json says is
-                    // active) and rewrite the file on save. The
-                    // pre-Phase-2 format (numeric `AccountNumber`) and
-                    // the Phase-2 format (64-char hex `WarrenPubKey`)
-                    // are both accepted by `ACCOUNT_REGEX`, so this
+                    // active) and rewrite the file on save. Both the
+                    // Warren SS58 pubkey and the legacy numeric account
+                    // number pass `is_known_account_number`, so this
                     // branch only fires on a genuinely garbled file -
                     // worth logging at INFO rather than WARN since the
                     // recovery is silent and automatic.

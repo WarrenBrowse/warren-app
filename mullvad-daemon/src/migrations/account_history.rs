@@ -1,8 +1,7 @@
 use super::{Error, Result};
 use mullvad_types::account::AccountNumber;
-use regex::Regex;
 use serde::Deserialize;
-use std::{path::Path, sync::LazyLock};
+use std::path::Path;
 use talpid_types::ErrorExt;
 use tokio::{
     fs::{self, File},
@@ -15,15 +14,6 @@ use tokio::{
 // ======================================================
 
 const ACCOUNT_HISTORY_FILE: &str = "account-history.json";
-
-/// Same recognition rule as `crate::account_history::ACCOUNT_REGEX`:
-/// accepts both the upstream Mullvad numeric account number and the
-/// Warren-fork 64-character hex pubkey (`WarrenPubKey::Display`).
-/// Pre-Warren `is_format_v3` would treat a pubkey-formatted file as
-/// "needs migration from v2/v1" and surface a spurious
-/// `Error::ParseHistory` at every boot.
-static ACCOUNT_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^([0-9]+|[0-9a-fA-F]{64})$").unwrap());
 
 pub async fn migrate_location(old_dir: &Path, new_dir: &Path) {
     let old_path = old_dir.join(ACCOUNT_HISTORY_FILE);
@@ -94,7 +84,7 @@ fn migrate_formats_inner(
 
 fn is_format_v3(bytes: &[u8]) -> bool {
     match std::str::from_utf8(bytes) {
-        Ok(token) => token.is_empty() || ACCOUNT_REGEX.is_match(token),
+        Ok(token) => token.is_empty() || crate::account_history::is_known_account_number(token),
         Err(_) => false,
     }
 }
@@ -177,6 +167,10 @@ mod test {
 ]"#;
     pub const ACCOUNT_HISTORY_V2_EMPTY: &str = r#"[]"#;
     pub const ACCOUNT_HISTORY_V3: &str = r#"123456"#;
+    /// A real Warren SS58 account number (`wb…`, 49 chars) - the format
+    /// actually persisted today. Must be recognised as v3 (no migration),
+    /// otherwise account-history.json is reset on every boot.
+    pub const ACCOUNT_HISTORY_WARREN: &str = "wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB";
 
     pub const OLD_SETTINGS: &str = r#"
 {
@@ -340,6 +334,7 @@ mod test {
         assert!(!super::is_format_v3(ACCOUNT_HISTORY_V1.as_bytes()));
         assert!(!super::is_format_v3(ACCOUNT_HISTORY_V2.as_bytes()));
         assert!(super::is_format_v3(ACCOUNT_HISTORY_V3.as_bytes()));
+        assert!(super::is_format_v3(ACCOUNT_HISTORY_WARREN.as_bytes()));
     }
 
     #[test]
