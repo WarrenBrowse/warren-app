@@ -4,16 +4,15 @@ import styled from 'styled-components';
 
 import { closeToExpiry, formatRemainingTime, hasExpired } from '../../../../shared/account-expiry';
 import { messages } from '../../../../shared/gettext';
-import { Flex, FootnoteMini } from '../../../lib/components';
+import { FootnoteMini } from '../../../lib/components';
 import { useInterval } from '../../../lib/hooks';
 import { useSelector } from '../../../redux/store';
 
 const StyledTimeLeftLabel = styled(FootnoteMini)({
+  // Hug the right edge of the header row even when the left-hand pubkey slot
+  // is empty (single child under justify-content: space-between).
+  marginLeft: 'auto',
   whiteSpace: 'nowrap',
-});
-
-const StyledFlex = styled(Flex)({
-  width: '100%',
 });
 
 // Warren has no per-device concept (removed in the Option A3 refactor), so
@@ -42,18 +41,16 @@ export const AppMainHeaderTimeLeft = () => {
   }
 
   return (
-    <StyledFlex justifyContent="flex-end" margin={{ top: 'tiny' }}>
-      <StyledTimeLeftLabel color="whiteAlpha80">
-        {sprintf(
-          // TRANSLATORS: Label in the main header showing the remaining
-          // TRANSLATORS: subscription time.
-          // TRANSLATORS: Available placeholders:
-          // TRANSLATORS: %(timeLeft)s - the remaining time, e.g. "29 days"
-          messages.pgettext('device-management', 'Time left: %(timeLeft)s'),
-          { timeLeft },
-        )}
-      </StyledTimeLeftLabel>
-    </StyledFlex>
+    <StyledTimeLeftLabel color="whiteAlpha80">
+      {sprintf(
+        // TRANSLATORS: Label in the main header showing the remaining
+        // TRANSLATORS: subscription time.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(timeLeft)s - the remaining time, e.g. "29 days"
+        messages.pgettext('device-management', 'Time left: %(timeLeft)s'),
+        { timeLeft },
+      )}
+    </StyledTimeLeftLabel>
   );
 };
 

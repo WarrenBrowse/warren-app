@@ -4,6 +4,7 @@ import { useSelector } from '../../redux/store';
 import { InitialFocus } from '../initial-focus';
 import {
   AppMainHeaderBarAccountButton,
+  AppMainHeaderPubKey,
   AppMainHeaderSettingsButton,
   AppMainHeaderTimeLeft,
 } from './components';
@@ -43,7 +44,8 @@ const AppMainHeader = ({
         </Flex>
       </Flex>
       {size == '2' && (
-        <Flex alignItems="flex-end">
+        <Flex justifyContent="space-between" alignItems="flex-end" margin={{ top: 'tiny' }}>
+          <AppMainHeaderPubKey />
           <AppMainHeaderTimeLeft />
         </Flex>
       )}
