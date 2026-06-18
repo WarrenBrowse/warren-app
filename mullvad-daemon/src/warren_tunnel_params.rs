@@ -263,7 +263,7 @@ mod tests {
     use ed25519_dalek::SigningKey;
     use warren_relay_selector::warren_types::WarrenPubkey;
     use warren_relay_selector::{
-        Endpoint, Listener, Location, LocationConstraint, Role, WarrenRelay, WarrenRelayList,
+        Addr, Ingress, Listener, Location, LocationConstraint, WarrenRelay, WarrenRelayList,
     };
 
     use super::*;
@@ -274,20 +274,18 @@ mod tests {
     }
 
     fn fixture_relay(seed: u8, country: &str) -> WarrenRelay {
-        WarrenRelay::new(
+        WarrenRelay::from_public(
             WarrenPubkey::from_bytes([seed; 32]),
             warren_relay_selector::warren_types::ExitId::from_bytes([seed; 16]),
-            vec![Endpoint::new(
-                "198.51.100.1".parse().unwrap(),
-                true,
-                true,
-                vec![Listener::new(51820, "quic", "h3")],
-                None,
-            )],
-            vec![Role::Entry, Role::Relay, Role::Exit],
             Location::new(country, "_"),
             100,
             true,
+            vec![Ingress::new(
+                Addr::new("198.51.100.1".parse().unwrap(), None),
+                vec![Listener::new(51820, "quic", "h3")],
+            )],
+            true,
+            false,
         )
     }
 

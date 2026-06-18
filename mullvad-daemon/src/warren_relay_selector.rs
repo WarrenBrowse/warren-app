@@ -250,7 +250,9 @@ impl DaemonWarrenRelaySelector {
 
 #[cfg(test)]
 mod tests {
-    use warren_relay_selector::{Endpoint, Listener, Location, LocationConstraint, Role, WarrenRelay};
+    use warren_relay_selector::{
+        Addr, Ingress, Listener, Location, LocationConstraint, WarrenRelay,
+    };
 
     use super::*;
 
@@ -260,20 +262,19 @@ mod tests {
 
     fn relay(seed: u8, country: &str, addr_str: &str) -> WarrenRelay {
         let socket: std::net::SocketAddr = addr_str.parse().unwrap();
-        WarrenRelay::new(
+        let v6 = socket.is_ipv6();
+        WarrenRelay::from_public(
             endpoint_id(seed),
             ExitId::from_bytes([seed; 16]),
-            vec![Endpoint::new(
-                socket.ip(),
-                true,
-                true,
-                vec![Listener::new(socket.port(), "quic", "h3")],
-                None,
-            )],
-            vec![Role::Entry, Role::Relay, Role::Exit],
             Location::new(country, "_"),
             100,
             true,
+            vec![Ingress::new(
+                Addr::new(socket.ip(), None),
+                vec![Listener::new(socket.port(), "quic", "h3")],
+            )],
+            !v6,
+            v6,
         )
     }
 
@@ -393,7 +394,8 @@ mod tests {
         // installation) breaks -> `/v3` rotation mandatory.
         use ed25519_dalek::SigningKey;
         use warren_relay_selector::{
-            JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode, sign_relay_list,
+            JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode,
+            sign_relay_list,
         };
 
         let dir = isolated_tempdir();
@@ -407,25 +409,24 @@ mod tests {
             vec![SignedJsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe1; 16]),
-                multihop_pubkey: None,
-                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
                 },
                 weight: 100,
                 active: true,
+                egress: JsonEgress {
+                    ipv4: true,
+                    ipv6: false,
+                },
                 endpoints: vec![JsonEndpoint {
                     addr: "198.51.100.1".to_owned(),
                     family: "ipv4".to_owned(),
-                    ingress: true,
-                    egress: true,
                     listeners: vec![JsonListener {
                         port: 51820,
                         transport: "quic".to_owned(),
                         alpn: "h3".to_owned(),
                     }],
-                    geoip: None,
                 }],
             }],
             &server_key,
@@ -454,7 +455,8 @@ mod tests {
         // attacker).
         use ed25519_dalek::SigningKey;
         use warren_relay_selector::{
-            JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode, sign_relay_list,
+            JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode,
+            sign_relay_list,
         };
 
         let dir = isolated_tempdir();
@@ -465,25 +467,24 @@ mod tests {
             vec![SignedJsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe2; 16]),
-                multihop_pubkey: None,
-                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
                 },
                 weight: 100,
                 active: true,
+                egress: JsonEgress {
+                    ipv4: true,
+                    ipv6: false,
+                },
                 endpoints: vec![JsonEndpoint {
                     addr: "198.51.100.1".to_owned(),
                     family: "ipv4".to_owned(),
-                    ingress: true,
-                    egress: true,
                     listeners: vec![JsonListener {
                         port: 51820,
                         transport: "quic".to_owned(),
                         alpn: "h3".to_owned(),
                     }],
-                    geoip: None,
                 }],
             }],
             &server_key,

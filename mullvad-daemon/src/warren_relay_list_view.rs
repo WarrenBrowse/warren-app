@@ -271,25 +271,23 @@ mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
     use warren_relay_selector::warren_types::WarrenPubkey;
-    use warren_relay_selector::{Endpoint, Listener, Location as WLocation, Role, WarrenRelay};
+    use warren_relay_selector::{Addr, Ingress, Listener, Location as WLocation, WarrenRelay};
 
     fn make_warren_relay(country: &str, city: &str, ipv4: &str, byte_seed: u8) -> WarrenRelay {
         let sk = SigningKey::from_bytes(&[byte_seed; 32]);
         let endpoint_id = WarrenPubkey::from_bytes(sk.verifying_key().to_bytes());
-        WarrenRelay::new(
+        WarrenRelay::from_public(
             endpoint_id,
             warren_relay_selector::warren_types::ExitId::from_bytes([byte_seed; 16]),
-            vec![Endpoint::new(
-                ipv4.parse().unwrap(),
-                true,
-                true,
-                vec![Listener::new(51820, "quic", "h3")],
-                None,
-            )],
-            vec![Role::Entry, Role::Relay, Role::Exit],
             WLocation::new(country, city),
             100,
             true,
+            vec![Ingress::new(
+                Addr::new(ipv4.parse().unwrap(), None),
+                vec![Listener::new(51820, "quic", "h3")],
+            )],
+            true,
+            false,
         )
     }
 

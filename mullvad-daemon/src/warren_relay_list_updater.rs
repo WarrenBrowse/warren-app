@@ -773,7 +773,7 @@ mod tests {
     use ed25519_dalek::SigningKey;
     use warren_relay_selector::warren_types::{ExitId, WarrenPubkey};
     use warren_relay_selector::{
-        JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
+        JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
     };
 
     /// Far-future expiry so default fixtures are never "expired".
@@ -819,25 +819,24 @@ mod tests {
             vec![JsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([seed; 16]),
-                multihop_pubkey: None,
-                roles: vec!["entry".to_owned(), "relay".to_owned(), "exit".to_owned()],
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
                 },
                 weight: 100,
                 active: true,
+                egress: JsonEgress {
+                    ipv4: true,
+                    ipv6: false,
+                },
                 endpoints: vec![JsonEndpoint {
                     addr: "198.51.100.1".to_owned(),
                     family: "ipv4".to_owned(),
-                    ingress: true,
-                    egress: true,
                     listeners: vec![JsonListener {
                         port: 51820,
                         transport: "quic".to_owned(),
                         alpn: "h3".to_owned(),
                     }],
-                    geoip: None,
                 }],
             }],
             server_key,
