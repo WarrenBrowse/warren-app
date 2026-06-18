@@ -116,6 +116,10 @@ pub fn load_from_settings_dir(settings_dir: &Path) -> Result<Option<MultiHopConf
         relay: parsed.relay,
         exit: parsed.exit,
         operational_pubkey,
+        // Manual config file carries no directory geo; the daemon falls
+        // back to the single-hop relay-list lookup for the location label.
+        exit_country: String::new(),
+        exit_city: String::new(),
         enable_gso: parsed.enable_gso,
         use_warren_obfuscation: parsed.use_warren_obfuscation,
     }))

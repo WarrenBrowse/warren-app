@@ -615,17 +615,27 @@ impl ParametersGenerator {
         {
             let exit_id =
                 talpid_warren_tunnel::RelayExitId::from_bytes(*multi_hop.exit.exit_id.as_bytes());
-            let (mh_country, mh_city) = inner
-                .warren_relay_selector
-                .as_ref()
-                .and_then(|sel| sel.relay_by_exit_id(&exit_id))
-                .map(|r| {
-                    (
-                        r.location().country_code().to_owned(),
-                        r.location().city().to_owned(),
-                    )
-                })
-                .unwrap_or_default();
+            // Prefer the exit hop's geo carried from the signed+attested
+            // directory `NodeEntry` (`assemble`): it is authoritative and
+            // works for exit-only nodes, which are absent from the
+            // single-hop relay list and whose egress IP is redacted. Fall
+            // back to the single-hop relay-list lookup only for the manual
+            // config path (which carries no directory geo).
+            let (mh_country, mh_city) = if !multi_hop.exit_country.is_empty() {
+                (multi_hop.exit_country.clone(), multi_hop.exit_city.clone())
+            } else {
+                inner
+                    .warren_relay_selector
+                    .as_ref()
+                    .and_then(|sel| sel.relay_by_exit_id(&exit_id))
+                    .map(|r| {
+                        (
+                            r.location().country_code().to_owned(),
+                            r.location().city().to_owned(),
+                        )
+                    })
+                    .unwrap_or_default()
+            };
             (
                 exit_id.to_hex(),
                 hex::encode(multi_hop.exit.exit_ed25519_pubkey),

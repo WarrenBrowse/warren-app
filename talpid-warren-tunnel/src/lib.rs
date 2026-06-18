@@ -463,6 +463,17 @@ pub struct MultiHopConfig {
     /// descriptor signatures. Out-of-band trust anchor for the
     /// multi-hop pool.
     pub operational_pubkey: VerifyingKey,
+    /// ISO 3166-1 alpha-2 country code of the EXIT hop, taken from the
+    /// signed+attested directory `NodeEntry`. Authoritative for the GUI
+    /// location label: the exit egress IP is redacted from the client
+    /// directory (Phase 2), and an exit-only node is absent from the
+    /// single-hop list, so the daemon cannot recover the exit geo from
+    /// the IP or the relay list. Empty for the manual-config path (the
+    /// caller then falls back to the single-hop relay-list lookup).
+    pub exit_country: String,
+    /// City of the EXIT hop (free form), from the directory `NodeEntry`.
+    /// Empty for the manual-config path.
+    pub exit_city: String,
     /// Enable UDP segmentation offload (GSO) on the multi-hop QUIC
     /// transport. Recommended on physical NICs, disable on virtio
     /// (Hetzner Cloud / KVM guests) and on macOS where GSO is not
@@ -485,6 +496,8 @@ impl std::fmt::Debug for MultiHopConfig {
             .field("relay", &"<redacted>")
             .field("exit", &"<redacted>")
             .field("operational_pubkey", &"<redacted>")
+            .field("exit_country", &self.exit_country)
+            .field("exit_city", &self.exit_city)
             .field("enable_gso", &self.enable_gso)
             .field("use_warren_obfuscation", &self.use_warren_obfuscation)
             .finish()
@@ -3096,6 +3109,8 @@ mod tests {
                 dns_disabled: false,
             },
             operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
+            exit_country: "se".to_owned(),
+            exit_city: "Stockholm".to_owned(),
             enable_gso: true,
             use_warren_obfuscation: true,
         };
@@ -3305,6 +3320,8 @@ mod tests {
                 dns_disabled: false,
             },
             operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
+            exit_country: "se".to_owned(),
+            exit_city: "Stockholm".to_owned(),
             enable_gso: false,
             use_warren_obfuscation: true,
         };

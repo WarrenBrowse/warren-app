@@ -523,6 +523,8 @@ mod tests {
                 dns_disabled: false,
             },
             operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
+            exit_country: "fr".to_owned(),
+            exit_city: "Paris".to_owned(),
             enable_gso: false,
             use_warren_obfuscation: true,
         };

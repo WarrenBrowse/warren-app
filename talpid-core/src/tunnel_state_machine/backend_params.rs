@@ -121,7 +121,10 @@ impl BackendParams {
 fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
     use std::net::{IpAddr, Ipv4Addr};
 
+    let unspecified = || SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
     let (endpoint_addr, entry_endpoint) = match (info.exit_endpoint, info.relay_endpoint) {
+        // Multi-hop with a disclosed exit IP (manual-config path): show it,
+        // entry = relay.
         (Some(exit_ep), Some(relay_ep)) => (
             exit_ep,
             Some(Endpoint::from_socket_address(
@@ -129,11 +132,20 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
                 TransportProtocol::Udp,
             )),
         ),
+        // Multi-hop with a REDACTED exit IP (Phase 2): the client never
+        // learns the exit IP, so leave the exit endpoint unspecified (NOT a
+        // misleading single-hop candidate) and show the entry relay as the
+        // dialed peer. The GUI labels the exit by country/city, not by IP.
+        (None, Some(relay_ep)) => (
+            unspecified(),
+            Some(Endpoint::from_socket_address(
+                relay_ep,
+                TransportProtocol::Udp,
+            )),
+        ),
+        // Single-hop: endpoint = first exit candidate.
         _ => (
-            info.exit_candidates
-                .first()
-                .copied()
-                .unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0)),
+            info.exit_candidates.first().copied().unwrap_or_else(unspecified),
             None,
         ),
     };
@@ -304,6 +316,33 @@ mod tests {
             entry.address,
             "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
             "`entry_endpoint` must surface the relay descriptor endpoint"
+        );
+    }
+
+    #[test]
+    fn warren_multi_hop_with_redacted_exit_shows_relay_entry_and_unspecified_exit() {
+        // Phase 2: the client-facing directory redacts the exit egress IP,
+        // so `exit_endpoint` is `None` in multi-hop. The tunnel endpoint
+        // must NOT fall back to a misleading single-hop candidate IP: it
+        // shows the entry relay as the dialed peer and leaves the exit
+        // address unspecified (the GUI labels the exit by country/city).
+        let mut info = fixture_warren(&["203.0.113.99:443"]); // a single-hop candidate
+        info.relay_endpoint = Some("198.51.100.10:443".parse().unwrap());
+        info.exit_endpoint = None; // redacted
+        let backend = BackendParams::Warren(info);
+
+        let te = backend.get_tunnel_endpoint();
+        assert!(
+            te.endpoint.address.ip().is_unspecified() && te.endpoint.address.port() == 0,
+            "redacted multi-hop must not surface the single-hop candidate as the exit",
+        );
+        let entry = te
+            .entry_endpoint
+            .expect("multi-hop must still publish the entry relay endpoint");
+        assert_eq!(
+            entry.address,
+            "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
+            "entry_endpoint must surface the relay the client actually dials",
         );
     }
 

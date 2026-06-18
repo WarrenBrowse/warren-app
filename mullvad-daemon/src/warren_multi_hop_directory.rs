@@ -209,10 +209,17 @@ pub(crate) fn assemble(
     enable_gso: bool,
     use_warren_obfuscation: bool,
 ) -> Option<MultiHopConfig> {
+    let exit_node = dir.nodes.get(exit_idx)?;
     Some(MultiHopConfig {
         relay: dir.nodes.get(entry_idx)?.relay.clone(),
-        exit: dir.nodes.get(exit_idx)?.exit.clone(),
+        exit: exit_node.exit.clone(),
         operational_pubkey: dir.operational_pubkey,
+        // Carry the exit hop's attested geo from the directory: the exit
+        // egress IP is redacted (Phase 2) and an exit-only node is absent
+        // from the single-hop list, so this is the only place the daemon
+        // can learn the exit's country/city for the GUI location label.
+        exit_country: exit_node.country.clone(),
+        exit_city: exit_node.city.clone(),
         enable_gso,
         use_warren_obfuscation,
     })
