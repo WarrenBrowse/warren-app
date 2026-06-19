@@ -207,10 +207,10 @@ ring.opt-level = 3
 # 3 even though the workspace default is size-first ("s").
 warren-tunnel.opt-level = 3
 warren-client.opt-level = 3
-warren-relay.opt-level = 3
-warren-multihop.opt-level = 3
-warren-protocol.opt-level = 3
-warren-tls.opt-level = 3
+warrenguard-relay.opt-level = 3
+warrenguard-multihop.opt-level = 3
+warrenguard-wire.opt-level = 3
+warrenguard-tls.opt-level = 3
 chacha20poly1305.opt-level = 3
 hpke.opt-level = 3
 

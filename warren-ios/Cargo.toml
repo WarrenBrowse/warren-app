@@ -74,7 +74,7 @@ warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = tr
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
 warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
 warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
-# Direct dep on `warren-protocol` for `WarrenExitAddr` + `WarrenPubkey`
+# Direct dep on `warrenguard-wire` for `WarrenExitAddr` + `WarrenPubkey`
 # types passed to `warren_tunnel::ClientTunnel::connect`. Optional so
 # the no-tunnel build path stays minimal.
 warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }

@@ -24,7 +24,7 @@ tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
 
 [dev-dependencies]
 # Test fixtures for `BackendParams::Warren` use deterministic Ed25519
-# seeds + warren-protocol newtypes (WarrenPubkey / WarrenExitAddr).
+# seeds + warrenguard-wire newtypes (WarrenPubkey / WarrenExitAddr).
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true }
 test-log = "0.2.17"
