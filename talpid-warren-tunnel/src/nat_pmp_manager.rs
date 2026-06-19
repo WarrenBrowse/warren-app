@@ -457,7 +457,9 @@ mod tests {
                     Err(_) => return,
                 };
                 let lifetime = match warrenguard_natpmp_protocol::parse_request(&buf[..n]) {
-                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
+                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => {
+                        lifetime_secs
+                    }
                     _ => continue,
                 };
                 // Encode the requested lifetime into the granted

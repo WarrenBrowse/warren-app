@@ -85,7 +85,12 @@ impl<T: PacketDevice + Clone> PacketDevice for RemapTun<T> {
         match ip_version(packet) {
             Some(4) if packet.get(16..20) == Some(&self.assigned_v4[..]) => {
                 let mut pkt = packet.to_vec();
-                rewrite_v4(&mut pkt, Field::Destination, &self.assigned_v4, &self.local_v4);
+                rewrite_v4(
+                    &mut pkt,
+                    Field::Destination,
+                    &self.assigned_v4,
+                    &self.local_v4,
+                );
                 self.inner.send(&pkt).await
             }
             Some(6) => match &self.v6 {
@@ -119,10 +124,7 @@ enum Field {
 
 /// IP version nibble (4 or 6), or `None` if the packet is too short.
 // Used only by the Android-gated `PacketDevice` impl; dead on the host test build.
-#[cfg_attr(
-    not(all(target_os = "android", feature = "tunnel")),
-    allow(dead_code)
-)]
+#[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
 fn ip_version(packet: &[u8]) -> Option<u8> {
     packet.first().map(|b| b >> 4)
 }
@@ -380,7 +382,12 @@ mod tests {
         let assigned: [u8; 16] = [
             0xfd, 0xcc, 0, 0x0f, 0, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x02,
         ];
-        let mut p = udp6_packet(local, [0x20, 1, 0x48, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x88, 0x88]);
+        let mut p = udp6_packet(
+            local,
+            [
+                0x20, 1, 0x48, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x88, 0x88,
+            ],
+        );
         rewrite_v6(&mut p, Field::Source, &local, &assigned);
         assert_eq!(&p[8..24], &assigned);
         assert_eq!(
@@ -396,7 +403,12 @@ mod tests {
         let assigned: [u8; 16] = [
             0xfd, 0xcc, 0, 0x0f, 0, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x02,
         ];
-        let mut p = udp6_packet([0x20, 1, 0x48, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x88, 0x88], assigned);
+        let mut p = udp6_packet(
+            [
+                0x20, 1, 0x48, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x88, 0x88,
+            ],
+            assigned,
+        );
         rewrite_v6(&mut p, Field::Destination, &assigned, &local);
         assert_eq!(&p[24..40], &local);
         assert_eq!(u16::from_be_bytes([p[46], p[47]]), udp6_csum(&p));

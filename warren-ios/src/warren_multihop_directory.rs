@@ -34,10 +34,10 @@
 //! selected circuit, mirroring the daemon's timer-driven updater.
 
 use ed25519_dalek::VerifyingKey;
-use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 use warren_relay_selector::{
     DirectoryError, VerifiedMultiHopDirectory, verify_multihop_directory_any,
 };
+use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 
 /// Failure to verify + select a circuit from a fetched directory.
 #[derive(Debug, thiserror::Error)]

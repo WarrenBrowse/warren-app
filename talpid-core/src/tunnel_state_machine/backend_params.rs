@@ -145,7 +145,10 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
         ),
         // Single-hop: endpoint = first exit candidate.
         _ => (
-            info.exit_candidates.first().copied().unwrap_or_else(unspecified),
+            info.exit_candidates
+                .first()
+                .copied()
+                .unwrap_or_else(unspecified),
             None,
         ),
     };

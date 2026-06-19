@@ -889,11 +889,11 @@ mod tests {
     use std::net::SocketAddr;
 
     use ed25519_dalek::{Signer, SigningKey};
+    use warren_relay_selector::NodeEntry;
     use warrenguard_multihop::{
         ExitDescriptorSigned, ExitId, RelayDescriptorSigned, exit_descriptor_signing_payload,
         relay_descriptor_signing_payload, sign_node_attestation,
     };
-    use warren_relay_selector::NodeEntry;
 
     use super::*;
 

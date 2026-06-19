@@ -46,6 +46,10 @@ pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
+use warren_tunnel::{
+    ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
+    pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
+};
 /// Re-export of the single-hop stable exit identifier from
 /// warrenguard-wire. Pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
@@ -59,10 +63,6 @@ pub use warrenguard_wire::ExitId as RelayExitId;
 /// `warrenguard-wire` dependency.
 pub use warrenguard_wire::features;
 use warrenguard_wire::{WarrenExitAddr, WarrenTransportAddr};
-use warren_tunnel::{
-    ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
-    pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
-};
 
 mod adapter;
 mod device_id;
@@ -1319,11 +1319,11 @@ impl WarrenTunnelMonitor {
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
         use std::{sync::Arc, time::Duration};
-        use warrenguard_backoff::Backoff;
         use warren_client::{
             supervised_pump::{IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
         };
+        use warrenguard_backoff::Backoff;
 
         let start_t = Instant::now();
         log::debug!(
@@ -3906,7 +3906,9 @@ mod tests {
                     Err(_) => return,
                 };
                 let lifetime = match parse_request(&buf[..n]) {
-                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
+                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => {
+                        lifetime_secs
+                    }
                     _ => continue,
                 };
                 let external_port = if lifetime == 0 {

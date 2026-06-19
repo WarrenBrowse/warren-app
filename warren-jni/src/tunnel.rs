@@ -34,11 +34,11 @@ use ed25519_dalek::SigningKey;
 use rand_v9::SeedableRng;
 use serde::Deserialize;
 use tokio::sync::oneshot;
-use warrenguard_wire::{WarrenExitAddr, WarrenPubkey};
 use warren_tunnel::{
     AndroidTun, ClientTunnel, DaitaPool, DaitaState, pump_bidirectional,
     pump_bidirectional_with_daita,
 };
+use warrenguard_wire::{WarrenExitAddr, WarrenPubkey};
 
 /// JSON config parsed from the Kotlin side. Field names mirror
 /// `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt`.
@@ -472,29 +472,28 @@ async fn run_multi_hop_session(
     // Decode the exit-allocated inner addresses. Fail closed if the IPv4 is
     // missing or malformed: without it the data plane would be silently
     // blackholed. The IPv6 is optional (the exit's capability echo).
-    let (assigned_ipv4, assigned_ipv6) = match warrenguard_multihop::try_decode_control(&assign_reply) {
-        Ok(Some(warrenguard_multihop::WarrenControlMessage::IpAssign { ipv4, ipv6, .. })) => {
-            (Ipv4Addr::from(ipv4), ipv6.map(Ipv6Addr::from))
-        }
-        // The exit policy-rejected this setup (not authorized): surface a
-        // distinct Unauthorized status so Kotlin shows "subscription
-        // expired" and stops retrying, instead of a generic disconnect +
-        // reconnect storm that keeps hitting the same rejection.
-        Ok(Some(warrenguard_multihop::WarrenControlMessage::Rejected)) => {
-            log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
-            status.store(SessionStatus::Unauthorized as i32, Ordering::SeqCst);
-            return;
-        }
-        other => {
-            log::error!("multi-hop: expected IpAssign reply, got {other:?}; failing closed");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
-            return;
-        }
-    };
+    let (assigned_ipv4, assigned_ipv6) =
+        match warrenguard_multihop::try_decode_control(&assign_reply) {
+            Ok(Some(warrenguard_multihop::WarrenControlMessage::IpAssign {
+                ipv4, ipv6, ..
+            })) => (Ipv4Addr::from(ipv4), ipv6.map(Ipv6Addr::from)),
+            // The exit policy-rejected this setup (not authorized): surface a
+            // distinct Unauthorized status so Kotlin shows "subscription
+            // expired" and stops retrying, instead of a generic disconnect +
+            // reconnect storm that keeps hitting the same rejection.
+            Ok(Some(warrenguard_multihop::WarrenControlMessage::Rejected)) => {
+                log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
+                status.store(SessionStatus::Unauthorized as i32, Ordering::SeqCst);
+                return;
+            }
+            other => {
+                log::error!("multi-hop: expected IpAssign reply, got {other:?}; failing closed");
+                status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+                return;
+            }
+        };
 
-    log::info!(
-        "multi-hop tunnel up (assigned inner ipv4={assigned_ipv4} ipv6={assigned_ipv6:?})"
-    );
+    log::info!("multi-hop tunnel up (assigned inner ipv4={assigned_ipv4} ipv6={assigned_ipv6:?})");
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
 
     // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4/IPV6 (set in Kotlin
@@ -626,7 +625,8 @@ fn maybe_spawn_nat_pmp(
     // suggested external port comes from the user (0 = gateway picks).
     let suggested_external_port = config.nat_pmp_external_port.unwrap_or(0);
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
+    let (tx, mut rx) =
+        tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
     let refresh = warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
         server,
         proto,
