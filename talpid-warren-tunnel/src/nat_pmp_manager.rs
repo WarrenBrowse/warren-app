@@ -23,7 +23,7 @@ use std::sync::Arc;
 
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use warren_natpmp_client::{RefreshLoopHandle, spawn_refresh_loop_from_addr};
+use warrenguard_natpmp_client::{RefreshLoopHandle, spawn_refresh_loop_from_addr};
 
 use crate::NatPmpConfig;
 
@@ -31,7 +31,7 @@ use crate::NatPmpConfig;
 // `warren-natpmp-client` directly. The forwarding observer signature is
 // `Fn(NatPmpEvent)`; the daemon wraps a `WarrenStatusCache` and pushes
 // each event into the cache for the Electron UI status stream.
-pub use warren_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
+pub use warrenguard_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
 
 /// Observer invoked from the forwarding task for every event emitted by
 /// the inner refresh loop. The daemon-side wiring sets this to a
@@ -267,7 +267,7 @@ mod tests {
     use std::sync::Mutex;
     use std::time::Duration;
     use tokio::net::UdpSocket;
-    use warren_natpmp_protocol::{MapProto, ResultCode, serialize_response};
+    use warrenguard_natpmp_protocol::{MapProto, ResultCode, serialize_response};
 
     /// Sets up a tiny UDP stub that responds to every datagram with a
     /// Map response carrying the supplied lifetime + external port.
@@ -281,7 +281,7 @@ mod tests {
                     Ok(v) => v,
                     Err(_) => return,
                 };
-                let resp = serialize_response(&warren_natpmp_protocol::Response::Map {
+                let resp = serialize_response(&warrenguard_natpmp_protocol::Response::Map {
                     proto: MapProto::Udp,
                     result_code: ResultCode::Success,
                     epoch_secs: 0,
@@ -402,7 +402,7 @@ mod tests {
         tokio::spawn(async move {
             let mut buf = [0u8; 64];
             if let Ok((_, peer)) = sock.recv_from(&mut buf).await {
-                let resp = serialize_response(&warren_natpmp_protocol::Response::Map {
+                let resp = serialize_response(&warrenguard_natpmp_protocol::Response::Map {
                     proto: MapProto::Udp,
                     result_code: ResultCode::OutOfResources,
                     epoch_secs: 0,
@@ -456,8 +456,8 @@ mod tests {
                     Ok(v) => v,
                     Err(_) => return,
                 };
-                let lifetime = match warren_natpmp_protocol::parse_request(&buf[..n]) {
-                    Ok(warren_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
+                let lifetime = match warrenguard_natpmp_protocol::parse_request(&buf[..n]) {
+                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
                     _ => continue,
                 };
                 // Encode the requested lifetime into the granted
@@ -469,7 +469,7 @@ mod tests {
                     // Still echo a Success(0) so the client's
                     // release() future completes promptly instead
                     // of timing out.
-                    let resp = serialize_response(&warren_natpmp_protocol::Response::Map {
+                    let resp = serialize_response(&warrenguard_natpmp_protocol::Response::Map {
                         proto: MapProto::Udp,
                         result_code: ResultCode::Success,
                         epoch_secs: 0,
@@ -481,7 +481,7 @@ mod tests {
                     let _ = sock.send_to(&resp, peer).await;
                     continue;
                 }
-                let resp = serialize_response(&warren_natpmp_protocol::Response::Map {
+                let resp = serialize_response(&warrenguard_natpmp_protocol::Response::Map {
                     proto: MapProto::Udp,
                     result_code: ResultCode::Success,
                     epoch_secs: 0,

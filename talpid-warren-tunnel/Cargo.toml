@@ -44,23 +44,23 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # submodule under `vendor/warren-core/` then to a private cargo registry
 # (see docs/warren-app-quinn-migration-plan.md § "Sharing strategy").
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel" }
-warren-protocol = { path = "../../warren-core/crates/warren-protocol" }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
 # NAT-PMP client + RFC 6886 wire types. The client crate exposes the
 # `refresh_loop` helper consumed by `mullvad-daemon::warren_nat_pmp` to
 # keep the exit-side mapping alive. The protocol crate is pulled
 # transitively but also re-exported here so daemon code references
 # `talpid_warren_tunnel::NatPmpProto` without depending on warren-core
 # directly.
-warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client" }
-warren-natpmp-protocol = { path = "../../warren-core/crates/warren-natpmp-protocol" }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client" }
+warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-natpmp-protocol" }
 # Multi-hop stack (M4.B/C/D/E.D) consumed by the dispatcher in
 # `lib.rs` to spin up a `MultiHopSupervisor`-driven session when the
 # user opts into multi-hop. Single-hop dispatch keeps using
 # `warren_tunnel::ClientTunnel` directly.
-warren-multihop = { path = "../../warren-core/crates/warren-multihop" }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
 warren-client = { path = "../../warren-core/crates/warren-client" }
-warren-relay = { path = "../../warren-core/crates/warren-relay" }
-warren-backoff = { path = "../../warren-core/crates/warren-backoff" }
+warrenguard-relay = { path = "../../warrenguard/crates/warrenguard-relay" }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
 warren-config = { path = "../../warren-core/crates/warren-config" }
 
 # Stable per-install device identifier for the v2 device cap. Persisted

@@ -3,7 +3,7 @@
 // Spawned from `Java_..._connectTunnel`. Owns the async lifecycle:
 //
 //   1. Derives the wallet `SigningKey` from the supplied mnemonic.
-//   2. Builds a [`warren_protocol::WarrenExitAddr`] from the JSON config
+//   2. Builds a [`warrenguard_wire::WarrenExitAddr`] from the JSON config
 //      (exit pubkey hex + UDP endpoint).
 //   3. Calls `ClientTunnel::with_signing_key(...).connect(addr).await`,
 //      which performs the QUIC dial + `Setup` / `SetupAck` handshake.
@@ -34,7 +34,7 @@ use ed25519_dalek::SigningKey;
 use rand_v9::SeedableRng;
 use serde::Deserialize;
 use tokio::sync::oneshot;
-use warren_protocol::{WarrenExitAddr, WarrenPubkey};
+use warrenguard_wire::{WarrenExitAddr, WarrenPubkey};
 use warren_tunnel::{
     AndroidTun, ClientTunnel, DaitaPool, DaitaState, pump_bidirectional,
     pump_bidirectional_with_daita,
@@ -68,7 +68,7 @@ pub struct WarrenTunnelConfig {
     /// configured) we fall back to a plain pump - no error.
     pub daita: Option<serde_json::Value>,
     /// Client opt-in for the NAT-PMP refresh loop. When `Some(true)`
-    /// the session spawns a `warren_natpmp_client::spawn_refresh_loop_from_addr`
+    /// the session spawns a `warrenguard_natpmp_client::spawn_refresh_loop_from_addr`
     /// after the handshake completes, binding the UDP socket to the
     /// assigned tunnel inner IPv4 so the request egresses through the
     /// tunnel (and not the underlying mobile-data / Wi-Fi interface).
@@ -472,15 +472,15 @@ async fn run_multi_hop_session(
     // Decode the exit-allocated inner addresses. Fail closed if the IPv4 is
     // missing or malformed: without it the data plane would be silently
     // blackholed. The IPv6 is optional (the exit's capability echo).
-    let (assigned_ipv4, assigned_ipv6) = match warren_multihop::try_decode_control(&assign_reply) {
-        Ok(Some(warren_multihop::WarrenControlMessage::IpAssign { ipv4, ipv6, .. })) => {
+    let (assigned_ipv4, assigned_ipv6) = match warrenguard_multihop::try_decode_control(&assign_reply) {
+        Ok(Some(warrenguard_multihop::WarrenControlMessage::IpAssign { ipv4, ipv6, .. })) => {
             (Ipv4Addr::from(ipv4), ipv6.map(Ipv6Addr::from))
         }
         // The exit policy-rejected this setup (not authorized): surface a
         // distinct Unauthorized status so Kotlin shows "subscription
         // expired" and stops retrying, instead of a generic disconnect +
         // reconnect storm that keeps hitting the same rejection.
-        Ok(Some(warren_multihop::WarrenControlMessage::Rejected)) => {
+        Ok(Some(warrenguard_multihop::WarrenControlMessage::Rejected)) => {
             log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
             status.store(SessionStatus::Unauthorized as i32, Ordering::SeqCst);
             return;
@@ -583,7 +583,7 @@ pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> 
 /// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
 /// config.
 struct NatPmpGuard {
-    refresh: warren_natpmp_client::RefreshLoopHandle,
+    refresh: warrenguard_natpmp_client::RefreshLoopHandle,
     drain: tokio::task::JoinHandle<()>,
 }
 
@@ -609,7 +609,7 @@ fn maybe_spawn_nat_pmp(
     if !config.nat_pmp_enabled.unwrap_or(false) {
         return None;
     }
-    let server = warren_natpmp_client::default_server_addr();
+    let server = warrenguard_natpmp_client::default_server_addr();
     // Bind the refresh socket to the TUN's own inner IPv4 so the request
     // egresses through the tunnel (to the exit gateway 10.66.0.1:5351), not the
     // underlying Wi-Fi/mobile interface. On the multi-hop path this is
@@ -618,16 +618,16 @@ fn maybe_spawn_nat_pmp(
     let bind_addr = std::net::IpAddr::V4(bind_ipv4);
     // Map the client-selected protocol; default to UDP for unknown values.
     let proto = match config.nat_pmp_protocol.as_deref() {
-        Some("tcp") | Some("TCP") => warren_natpmp_client::MapProtocol::Tcp,
-        _ => warren_natpmp_client::MapProtocol::Udp,
+        Some("tcp") | Some("TCP") => warrenguard_natpmp_client::MapProtocol::Tcp,
+        _ => warrenguard_natpmp_client::MapProtocol::Udp,
     };
     // The internal port is informative only on the PCP/NAT-PMP wire; the
     // client does not own a specific local port, so request 0. The
     // suggested external port comes from the user (0 = gateway picks).
     let suggested_external_port = config.nat_pmp_external_port.unwrap_or(0);
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<warren_natpmp_client::NatPmpEvent>();
-    let refresh = warren_natpmp_client::spawn_refresh_loop_from_addr(
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
+    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
         server,
         proto,
         0,
@@ -651,14 +651,14 @@ fn maybe_spawn_nat_pmp(
     Some(NatPmpGuard { refresh, drain })
 }
 
-/// Project a [`warren_natpmp_client::NatPmpEvent`] to the JSON status
+/// Project a [`warrenguard_natpmp_client::NatPmpEvent`] to the JSON status
 /// shape polled by Kotlin's `getNatPmpStatus()`. Returns `None` for
 /// events that do not change the user-visible state (e.g. `Cancelled`,
 /// where teardown already resets the status). The `Failed` variant only
 /// surfaces the stable `reason` category, never the raw error string, so
 /// no diagnostic detail leaks across the JNI boundary.
-fn natpmp_event_json(event: &warren_natpmp_client::NatPmpEvent) -> Option<String> {
-    use warren_natpmp_client::NatPmpEvent;
+fn natpmp_event_json(event: &warrenguard_natpmp_client::NatPmpEvent) -> Option<String> {
+    use warrenguard_natpmp_client::NatPmpEvent;
     let json = match event {
         NatPmpEvent::Mapped {
             external_port,

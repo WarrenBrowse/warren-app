@@ -126,7 +126,7 @@ warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector
 # config loader. Direct dep is preferred over a re-export through
 # `talpid-warren-tunnel`: the loader is a daemon concern that should
 # not pull verifier logic into the tunnel adapter crate.
-warren-multihop = { path = "../../warren-core/crates/warren-multihop" }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
 # Signed HTTP client for warren-api (consumed by
 # `WarrenRemoteAccountBackend` + `WarrenRemoteDeviceBackend` to replace
 # `mullvad_api::AccountsProxy/DevicesProxy` when

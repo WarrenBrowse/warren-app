@@ -18,7 +18,7 @@ use std::path::Path;
 use ed25519_dalek::VerifyingKey;
 use serde::Deserialize;
 use talpid_warren_tunnel::{MultiHopConfig, MultiHopExitDescriptor, MultiHopRelayDescriptor};
-use warren_multihop::{
+use warrenguard_multihop::{
     ExitPkiError, RelayPkiError, verify_exit_descriptor, verify_relay_descriptor,
 };
 
@@ -130,7 +130,7 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use ed25519_dalek::{Signer, SigningKey};
-    use warren_multihop::{
+    use warrenguard_multihop::{
         ExitId, exit_descriptor_signing_payload, relay_descriptor_signing_payload,
     };
 

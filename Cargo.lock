@@ -3749,8 +3749,8 @@ dependencies = [
  "warren-api-client",
  "warren-config",
  "warren-identity",
- "warren-multihop",
  "warren-relay-selector",
+ "warrenguard-multihop",
  "winapi",
  "windows 0.62.2",
  "windows-service",
@@ -6865,7 +6865,7 @@ dependencies = [
  "tokio",
  "tun 0.5.5",
  "typed-builder",
- "warren-protocol",
+ "warrenguard-wire",
  "widestring",
  "windows 0.58.0",
  "windows-service",
@@ -7039,15 +7039,15 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tun 0.8.7",
- "warren-backoff",
  "warren-client",
  "warren-config",
- "warren-multihop",
- "warren-natpmp-client",
- "warren-natpmp-protocol",
- "warren-protocol",
- "warren-relay",
  "warren-tunnel",
+ "warrenguard-backoff",
+ "warrenguard-multihop",
+ "warrenguard-natpmp-client",
+ "warrenguard-natpmp-protocol",
+ "warrenguard-relay",
+ "warrenguard-wire",
 ]
 
 [[package]]
@@ -8284,7 +8284,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -8312,18 +8312,18 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "warren-api-types",
- "warren-buildinfo",
  "warren-config",
  "warren-identity",
- "warren-protocol",
- "warren-ratelimit",
  "warren-relay-selector",
+ "warrenguard-buildinfo",
+ "warrenguard-ratelimit",
+ "warrenguard-wire",
  "zeroize",
 ]
 
 [[package]]
 name = "warren-api-client"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
  "async-trait",
  "ed25519-dalek",
@@ -8345,28 +8345,17 @@ dependencies = [
 
 [[package]]
 name = "warren-api-types"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
  "warren-identity",
- "warren-protocol",
+ "warrenguard-wire",
 ]
-
-[[package]]
-name = "warren-backoff"
-version = "0.3.20"
-dependencies = [
- "rand 0.10.1",
-]
-
-[[package]]
-name = "warren-buildinfo"
-version = "0.3.20"
 
 [[package]]
 name = "warren-client"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
  "anyhow",
  "bytes",
@@ -8385,41 +8374,37 @@ dependencies = [
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
- "warren-backoff",
  "warren-config",
  "warren-identity",
- "warren-killswitch",
- "warren-multihop",
- "warren-protocol",
- "warren-tls",
  "warren-tunnel",
+ "warrenguard-backoff",
+ "warrenguard-killswitch-os",
+ "warrenguard-multihop",
+ "warrenguard-tls",
+ "warrenguard-wire",
 ]
 
 [[package]]
 name = "warren-config"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
- "thiserror 2.0.18",
- "tracing",
+ "warrenguard-config",
 ]
 
 [[package]]
 name = "warren-identity"
-version = "0.3.20"
+version = "0.3.21"
 dependencies = [
- "bip39",
  "ed25519-dalek",
  "hex",
- "hkdf",
  "keyring",
  "parking_lot",
  "serde",
  "sha2",
  "thiserror 2.0.18",
- "tracing",
  "warren-config",
  "warren-ss58",
- "zeroize",
+ "warrenguard-identity",
 ]
 
 [[package]]
@@ -8452,15 +8437,15 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "warren-api-client",
- "warren-backoff",
  "warren-client",
  "warren-config",
  "warren-identity",
- "warren-multihop",
- "warren-natpmp-client",
- "warren-protocol",
  "warren-relay-selector",
  "warren-tunnel",
+ "warrenguard-backoff",
+ "warrenguard-multihop",
+ "warrenguard-natpmp-client",
+ "warrenguard-wire",
  "zeroize",
 ]
 
@@ -8488,17 +8473,97 @@ dependencies = [
  "warren-api-client",
  "warren-client",
  "warren-identity",
- "warren-multihop",
- "warren-natpmp-client",
- "warren-protocol",
  "warren-relay-selector",
  "warren-tunnel",
+ "warrenguard-multihop",
+ "warrenguard-natpmp-client",
+ "warrenguard-wire",
  "zeroize",
 ]
 
 [[package]]
-name = "warren-killswitch"
-version = "0.3.20"
+name = "warren-relay-selector"
+version = "0.3.21"
+dependencies = [
+ "ed25519-dalek",
+ "hex",
+ "rand 0.10.1",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "warren-ss58",
+ "warrenguard-multihop",
+ "warrenguard-wire",
+]
+
+[[package]]
+name = "warren-ss58"
+version = "0.3.21"
+dependencies = [
+ "blake2",
+ "bs58",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "warren-tunnel"
+version = "0.3.21"
+dependencies = [
+ "warrenguard-daita",
+ "warrenguard-pump",
+ "warrenguard-server",
+ "warrenguard-transport",
+ "warrenguard-transport-core",
+]
+
+[[package]]
+name = "warrenguard-backoff"
+version = "0.1.0"
+dependencies = [
+ "rand 0.10.1",
+]
+
+[[package]]
+name = "warrenguard-buildinfo"
+version = "0.1.0"
+
+[[package]]
+name = "warrenguard-config"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
+name = "warrenguard-daita"
+version = "0.1.0"
+dependencies = [
+ "maybenot",
+ "maybenot-machines",
+ "rand 0.9.4",
+ "thiserror 2.0.18",
+ "warrenguard-wire",
+]
+
+[[package]]
+name = "warrenguard-identity"
+version = "0.1.0"
+dependencies = [
+ "bip39",
+ "ed25519-dalek",
+ "hex",
+ "hkdf",
+ "sha2",
+ "thiserror 2.0.18",
+ "tracing",
+ "warrenguard-config",
+ "zeroize",
+]
+
+[[package]]
+name = "warrenguard-killswitch-os"
+version = "0.1.0"
 dependencies = [
  "pfctl",
  "thiserror 2.0.18",
@@ -8507,8 +8572,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "warren-multihop"
-version = "0.3.20"
+name = "warrenguard-multihop"
+version = "0.1.0"
 dependencies = [
  "chacha20poly1305",
  "ed25519-dalek",
@@ -8518,13 +8583,13 @@ dependencies = [
  "rand_core 0.9.5",
  "serde",
  "thiserror 2.0.18",
- "warren-protocol",
+ "warrenguard-wire",
  "zeroize",
 ]
 
 [[package]]
-name = "warren-natpmp-client"
-version = "0.3.20"
+name = "warrenguard-natpmp-client"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -8532,125 +8597,141 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "warren-config",
- "warren-natpmp-protocol",
+ "warrenguard-config",
+ "warrenguard-natpmp-protocol",
 ]
 
 [[package]]
-name = "warren-natpmp-protocol"
-version = "0.3.20"
+name = "warrenguard-natpmp-protocol"
+version = "0.1.0"
 dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
-name = "warren-protocol"
-version = "0.3.20"
+name = "warrenguard-pump"
+version = "0.1.0"
 dependencies = [
- "hex",
- "postcard",
- "serde",
- "subtle",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "warren-ratelimit"
-version = "0.3.20"
-dependencies = [
- "parking_lot",
-]
-
-[[package]]
-name = "warren-relay"
-version = "0.3.20"
-dependencies = [
- "anyhow",
- "axum",
  "bytes",
- "clap",
- "ed25519-dalek",
- "hex",
- "mimalloc",
  "parking_lot",
  "quinn",
- "rand_core 0.9.5",
+ "tokio",
+ "tracing",
+ "warrenguard-config",
+ "warrenguard-daita",
+ "warrenguard-ratelimit",
+ "warrenguard-transport-core",
+ "warrenguard-wire",
+]
+
+[[package]]
+name = "warrenguard-ratelimit"
+version = "0.1.0"
+dependencies = [
+ "parking_lot",
+]
+
+[[package]]
+name = "warrenguard-relay"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "ed25519-dalek",
+ "hex",
+ "parking_lot",
+ "quinn",
  "serde",
  "thiserror 2.0.18",
  "tokio",
- "tokio-util 0.7.18",
  "toml 0.8.23",
  "tracing",
- "tracing-subscriber",
- "warren-config",
- "warren-multihop",
- "warren-ratelimit",
- "warren-tls",
- "warren-tunnel",
+ "warrenguard-config",
+ "warrenguard-multihop",
+ "warrenguard-tls",
+ "warrenguard-transport-core",
 ]
 
 [[package]]
-name = "warren-relay-selector"
-version = "0.3.20"
+name = "warrenguard-server"
+version = "0.1.0"
 dependencies = [
+ "bytes",
  "ed25519-dalek",
  "hex",
+ "parking_lot",
+ "quinn",
  "rand 0.10.1",
+ "rand 0.9.4",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
- "warren-multihop",
- "warren-protocol",
- "warren-ss58",
+ "tokio",
+ "tracing",
+ "warrenguard-config",
+ "warrenguard-daita",
+ "warrenguard-pump",
+ "warrenguard-ratelimit",
+ "warrenguard-tls",
+ "warrenguard-transport-core",
+ "warrenguard-wire",
 ]
 
 [[package]]
-name = "warren-ss58"
-version = "0.3.20"
-dependencies = [
- "blake2",
- "bs58",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "warren-tls"
-version = "0.3.20"
+name = "warrenguard-tls"
+version = "0.1.0"
 dependencies = [
  "data-encoding",
  "ed25519-dalek",
  "quinn",
  "rustls",
  "thiserror 2.0.18",
- "warren-protocol",
+ "warrenguard-wire",
 ]
 
 [[package]]
-name = "warren-tunnel"
-version = "0.3.20"
+name = "warrenguard-transport"
+version = "0.1.0"
 dependencies = [
  "bytes",
  "ed25519-dalek",
- "hex",
- "maybenot",
- "maybenot-machines",
  "nix 0.31.2",
- "parking_lot",
  "postcard",
  "quinn",
  "quinn-udp",
  "rand 0.10.1",
- "rand 0.9.4",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
  "tokio",
  "tracing",
  "tun-rs",
- "warren-config",
- "warren-protocol",
- "warren-ratelimit",
- "warren-tls",
+ "warrenguard-config",
+ "warrenguard-pump",
+ "warrenguard-tls",
+ "warrenguard-transport-core",
+ "warrenguard-wire",
+]
+
+[[package]]
+name = "warrenguard-transport-core"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "parking_lot",
+ "quinn",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "warrenguard-config",
+ "warrenguard-daita",
+ "warrenguard-wire",
+]
+
+[[package]]
+name = "warrenguard-wire"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "postcard",
+ "serde",
+ "subtle",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

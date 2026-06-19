@@ -72,16 +72,16 @@ tracing-subscriber = { workspace = true }
 # longer depends on a tun-rs iOS backend.
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
-warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
-warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
 # Direct dep on `warren-protocol` for `WarrenExitAddr` + `WarrenPubkey`
 # types passed to `warren_tunnel::ClientTunnel::connect`. Optional so
 # the no-tunnel build path stays minimal.
-warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
 # Multi-hop supervisor + pump support (the iOS data plane rides the
 # multi-hop wire protocol; see `warren_multihop_directory`). `Backoff`
 # is a `SupervisorConfig` field.
-warren-backoff = { path = "../../warren-core/crates/warren-backoff", optional = true }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff", optional = true }
 # Canonical baked API server pin (`WARREN_SERVER_PUBKEY_HEX`), reused as
 # the multi-hop directory's server-key pin so the value never drifts from
 # the daemon's. Already in the iOS dep tree via warren-client/-tunnel.
@@ -97,7 +97,7 @@ api-override = ["mullvad-api/api-override"]
 # Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
 # has landed, so the iOS Xcode build phase enables this feature. It stays
 # off the crate default so a no-tunnel host build path remains minimal.
-tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warren-multihop", "dep:warren-natpmp-client", "dep:warren-protocol", "dep:warren-backoff", "dep:warren-config"]
+tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff", "dep:warren-config"]
 
 [lints]
 workspace = true

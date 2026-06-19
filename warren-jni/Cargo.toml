@@ -66,10 +66,10 @@ talpid-types = { path = "../talpid-types" }
 # Warren-tunnel ships an `AndroidTun` PacketDevice impl since warren-core
 # `d59fd15` (cf. `crates/warren-tunnel/src/android_tun.rs`).
 warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
-warren-protocol = { path = "../../warren-core/crates/warren-protocol", optional = true }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
 warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
-warren-multihop = { path = "../../warren-core/crates/warren-multihop", optional = true }
-warren-natpmp-client = { path = "../../warren-core/crates/warren-natpmp-client", optional = true }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
 # Aliased rand 0.9 (matching `warren-tunnel`'s `rand_v9`) so the DAITA pool
 # pick's `Rng + RngCore` trait bounds line up; used only to seed a local
 # DaitaState for the multi-hop DAITA pump.
@@ -83,10 +83,10 @@ api-override = []
 # `d59fd15+` ships `warren_tunnel::AndroidTun` (wraps the VpnService TUN fd).
 tunnel = [
   "dep:warren-tunnel",
-  "dep:warren-protocol",
+  "dep:warrenguard-wire",
   "dep:warren-client",
-  "dep:warren-multihop",
-  "dep:warren-natpmp-client",
+  "dep:warrenguard-multihop",
+  "dep:warrenguard-natpmp-client",
   "dep:rand_v9",
 ]
 

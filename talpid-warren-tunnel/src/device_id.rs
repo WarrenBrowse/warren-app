@@ -21,7 +21,7 @@
 
 use std::{path::Path, sync::OnceLock};
 
-use warren_protocol::DEVICE_ID_LEN;
+use warrenguard_wire::DEVICE_ID_LEN;
 
 static DEVICE_ID: OnceLock<[u8; DEVICE_ID_LEN]> = OnceLock::new();
 

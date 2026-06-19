@@ -26,11 +26,11 @@ use talpid_tunnel::{
     tun_provider::{Tun, TunConfig},
 };
 use talpid_types::net::AllowedTunnelTraffic;
-use warren_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
+use warrenguard_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warren-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
-pub use warren_multihop::{
+pub use warrenguard_multihop::{
     ExitDescriptorSigned as MultiHopExitDescriptor, ExitId,
     RelayDescriptorSigned as MultiHopRelayDescriptor,
 };
@@ -40,7 +40,7 @@ pub use warren_multihop::{
 // path-dep of this one (so the type lives in this binary's symbol
 // table) and is also referenced explicitly by the daemon-side
 // `warren_nat_pmp` module.
-pub use warren_natpmp_protocol::MapProto as NatPmpProto;
+pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 // IPv4 CIDR descriptor used by the daemon-side `--bypass-cidr`
 // settings plumbing. Re-exported so callers (mullvad-daemon, gRPC
 // conversions, settings persistence) consume one canonical type
@@ -50,15 +50,15 @@ pub use warren_client::bypass_cidr::BypassCidr;
 /// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
 /// distinguishable from an exit-substitution attack.
-pub use warren_protocol::ExitId as RelayExitId;
+pub use warrenguard_wire::ExitId as RelayExitId;
 /// Re-export of the `Setup`-frame feature bitmask constants
 /// (`features::IPV6`, `PORT_FORWARD`, ...) so daemon-side callers that
 /// only depend on `talpid-warren-tunnel` (e.g.
 /// `mullvad_daemon::warren_tunnel_params`) can OR them into
 /// [`WarrenTunnelParameters::features`] without taking a direct
 /// `warren-protocol` dependency.
-pub use warren_protocol::features;
-use warren_protocol::{WarrenExitAddr, WarrenTransportAddr};
+pub use warrenguard_wire::features;
+use warrenguard_wire::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
     pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
@@ -144,7 +144,7 @@ pub struct WarrenTunnelParameters {
     pub n_connections: u8,
 
     /// Client feature bitmask advertised in the `Setup` frame
-    /// (cf. `warren_protocol::features`). `0` = IPv4 baseline.
+    /// (cf. `warrenguard_wire::features`). `0` = IPv4 baseline.
     /// Combinable via OR: `IPV6`, `PORT_FORWARD`, ...
     pub features: u32,
 
@@ -1175,7 +1175,7 @@ impl WarrenTunnelMonitor {
                                     log::error!(
                                         "{TRACE_PREFIX} pump=daita_spec_invalid err=\"{e:#}\""
                                     );
-                                    Err(e)
+                                    Err(e.into())
                                 }
                             }
                         }
@@ -1211,7 +1211,7 @@ impl WarrenTunnelMonitor {
                                     log::error!(
                                         "{TRACE_PREFIX} pump=daita_spec_invalid err=\"{e:#}\""
                                     );
-                                    Err(e)
+                                    Err(e.into())
                                 }
                             }
                         }
@@ -1322,7 +1322,7 @@ impl WarrenTunnelMonitor {
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
         use std::{sync::Arc, time::Duration};
-        use warren_backoff::Backoff;
+        use warrenguard_backoff::Backoff;
         use warren_client::{
             supervised_pump::{IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
@@ -2258,7 +2258,7 @@ fn spawn_nat_pmp_runtime(
             };
         }
     };
-    let server = warren_natpmp_client::default_server_addr();
+    let server = warrenguard_natpmp_client::default_server_addr();
     let bind_addr = None;
 
     // Legacy path: no live-reconfig control channel. Spawn one manager
@@ -2957,7 +2957,7 @@ fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use warren_protocol::WarrenPubkey;
+    use warrenguard_wire::WarrenPubkey;
 
     #[test]
     fn multi_hop_bind_addr_is_always_wildcard() {
@@ -3101,7 +3101,7 @@ mod tests {
                 signature: [0xcc; 64],
             },
             exit: ExitDescriptorSigned {
-                exit_id: warren_multihop::ExitId::from_bytes([0xdd; 16]),
+                exit_id: warrenguard_multihop::ExitId::from_bytes([0xdd; 16]),
                 exit_ed25519_pubkey: [0xee; 32],
                 exit_x25519_multihop_pubkey: [0xff; 32],
                 endpoint: Some("192.0.2.20:443".parse().unwrap()),
@@ -3312,7 +3312,7 @@ mod tests {
                 signature: [0xcc; 64],
             },
             exit: ExitDescriptorSigned {
-                exit_id: warren_multihop::ExitId::from_bytes([0xdd; 16]),
+                exit_id: warrenguard_multihop::ExitId::from_bytes([0xdd; 16]),
                 exit_ed25519_pubkey: [0xee; 32],
                 exit_x25519_multihop_pubkey: [0xff; 32],
                 endpoint: Some("192.0.2.20:443".parse().unwrap()),
@@ -3889,7 +3889,7 @@ mod tests {
         time::Duration,
     };
     use tokio::net::UdpSocket;
-    use warren_natpmp_protocol::{
+    use warrenguard_natpmp_protocol::{
         MapProto, Response as NatPmpResponse, ResultCode, parse_request, serialize_response,
     };
 
@@ -3909,7 +3909,7 @@ mod tests {
                     Err(_) => return,
                 };
                 let lifetime = match parse_request(&buf[..n]) {
-                    Ok(warren_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
+                    Ok(warrenguard_natpmp_protocol::Request::Map { lifetime_secs, .. }) => lifetime_secs,
                     _ => continue,
                 };
                 let external_port = if lifetime == 0 {

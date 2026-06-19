@@ -156,8 +156,8 @@ impl DaemonWarrenRelaySelector {
     /// entry. Used by the multi-hop verify hook to recover the
     /// operator-curated `Location` for the exit identified by
     /// `MultiHopConfig::exit::exit_id`. The 16-byte representation is
-    /// canonical across both sides (`warren_multihop::session::ExitId`
-    /// and `warren_protocol::ExitId` share the same byte layout).
+    /// canonical across both sides (`warrenguard_multihop::session::ExitId`
+    /// and `warrenguard_wire::ExitId` share the same byte layout).
     #[must_use]
     pub fn relay_by_exit_id(&self, exit_id: &ExitId) -> Option<&WarrenRelay> {
         self.list.relays().iter().find(|r| r.exit_id() == *exit_id)

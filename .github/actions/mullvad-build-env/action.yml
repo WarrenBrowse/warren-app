@@ -29,9 +29,17 @@ inputs:
     required: false
   skip-warren-core:
     description: >-
-      Set to 'true' to skip checking out warren-core. Only safe for jobs that
-      do not invoke cargo (e.g., shellcheck, yamllint).
+      Set to 'true' to skip checking out the sibling repos (warren-core +
+      warrenguard). Only safe for jobs that do not invoke cargo (e.g.,
+      shellcheck, yamllint).
     default: "false"
+    required: false
+  engine-token:
+    description: >-
+      PAT with read access to WarrenBrowse/warrenguard (the AGPL engine repo
+      that warren-core's keepers and the app's tunnel crates path-dep). Defaults
+      to warren-core-token, which is broad enough to cover both repos.
+    default: "${{ inputs.warren-core-token }}"
     required: false
 runs:
   using: "composite"
@@ -63,6 +71,32 @@ runs:
         # workspace [patch.crates-io] quinn/quinn-proto/quinn-udp entries. Regenerate
         # it (clones quinn 0.11.9 + applies Warren GSO/obfuscation patches) before cargo.
         ( cd "$dest" && ./bench/scripts/setup-quinn-fork.sh )
+
+    - name: Read pinned warrenguard SHA
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token != '' }}
+      id: warrenguard-pin
+      shell: bash
+      run: echo "sha=$(cat .warrenguard-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warrenguard (sibling engine repo, path-dep target)
+      # The AGPL engine lives in its own repo; warren-core's keeper crates and
+      # the app's tunnel crates path-dep ../warrenguard/crates/*. Same sibling
+      # clone pattern as warren-core. No quinn-fork setup here: the app builds
+      # the engine against warren-core's patched quinn via the workspace
+      # [patch.crates-io], so warrenguard's own gitignored vendor/ is not needed.
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token != '' }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token }}
+        WARRENGUARD_SHA: ${{ steps.warrenguard-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warrenguard"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warrenguard.git" "$dest"
+        git -C "$dest" checkout --detach "$WARRENGUARD_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warrenguard.git"
 
     - name: Warn if warren-core checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}

@@ -669,7 +669,7 @@ fn spawn_multi_hop(
             // `Backoff::HANDSHAKE` 15 s ceiling overshoots a network-change
             // recovery: a re-dial parked in a 15 s backoff misses the window
             // when the link returns, stretching a Wi-Fi/cellular handover.
-            backoff: warren_backoff::Backoff {
+            backoff: warrenguard_backoff::Backoff {
                 base: std::time::Duration::from_millis(300),
                 max: std::time::Duration::from_secs(2),
             },
@@ -825,8 +825,8 @@ pub unsafe extern "C" fn warren_tunnel_start(
         };
 
         // Build the WarrenExitAddr (pubkey + reachable transports).
-        let exit_pubkey = warren_protocol::WarrenPubkey::from_bytes(params.exit_pubkey);
-        let exit_target = warren_protocol::WarrenExitAddr::from_ip_addrs(exit_pubkey, [exit_addr]);
+        let exit_pubkey = warrenguard_wire::WarrenPubkey::from_bytes(params.exit_pubkey);
+        let exit_target = warrenguard_wire::WarrenExitAddr::from_ip_addrs(exit_pubkey, [exit_addr]);
 
         // Wallet signing key from the Ed25519 seed bytes. Zeroize on
         // drop is provided by `ed25519-dalek` via the `zeroize` feature
@@ -1079,7 +1079,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
 }
 
 /// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
-/// Uses `warren_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
+/// Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
 ///
 /// Returns `0` on success, `-3` if the tunnel is not connected.
 ///
