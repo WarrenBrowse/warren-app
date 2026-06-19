@@ -4,7 +4,7 @@
 // without an iOS cross-compilation toolchain - their deps (bip39,
 // ed25519-dalek, warren-identity, zeroize, std) are all cross-platform.
 #![cfg(any(target_os = "ios", test))]
-// AUDIT_COMPLET.md M-4: the blanket
+// The blanket
 // `#![allow(clippy::undocumented_unsafe_blocks)]` was removed.
 // The single current `unsafe` site (`get_string` below) carries an
 // explicit `// Safety:` comment; any future `unsafe` block added in
@@ -16,7 +16,7 @@
 #[cfg(any(target_os = "ios", test))]
 mod warren_tunnel_ffi;
 // Multi-hop directory verification + circuit selection. Needs the
-// warren-multihop descriptor types pulled by the `tunnel` feature, and is
+// warrenguard-multihop descriptor types pulled by the `tunnel` feature, and is
 // consumed only by the tunnel data plane, so it is gated the same way.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 mod warren_multihop_directory;

@@ -60,7 +60,7 @@ const MNEMONIC_KEY: &str = "warren_mnemonic";
 ///
 /// Returns `None` (with a `log::warn!`) if the mnemonic cannot be
 /// loaded or derived, to allow the daemon to continue in classic
-/// Mullvad mode during the Phase 2 transition.
+/// Mullvad mode.
 #[must_use]
 pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner>> {
     let signing_key = load_or_create_signing_key(settings_dir)?;
@@ -243,7 +243,7 @@ fn bootstrap_fresh_mnemonic(
 /// validation is performed BEFORE any write (= atomic rejection
 /// without disturbing the existing identity).
 ///
-/// **Use case**: identity restore from the GUI (= C.1.d ImportMnemonicView).
+/// **Use case**: identity restore from the GUI (ImportMnemonicView).
 /// The GUI caller MUST display a strong confirmation before calling,
 /// because the previous identity (and the subscription tied to it)
 /// is IRREVERSIBLY replaced. The caller in
@@ -430,7 +430,7 @@ pub fn reload_signer_from_disk(signer: &WarrenAuthSigner, settings_dir: &Path) -
 /// - the storage backend is inaccessible (= broken Keychain, missing
 ///   DPAPI, FS error).
 ///
-/// Used by the gRPC `GetWarrenMnemonic` (C.1) handler to allow the
+/// Used by the gRPC `GetWarrenMnemonic` handler to allow the
 /// Electron GUI to display the mnemonic in cleartext so the user can
 /// back it up.
 ///

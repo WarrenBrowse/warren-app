@@ -52,7 +52,7 @@ pub mod warren_multi_hop;
 /// the manual `warren-multihop.json` as the production source.
 pub mod warren_multi_hop_directory;
 /// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
-/// (POC switch - no UI/CLI toggle for now, M4.H.C scope).
+/// (POC switch - no UI/CLI toggle for now).
 pub mod warren_multi_hop_mode;
 /// Conversion `RelaySettings` (Mullvad UI) -> `WarrenRelayQuery`
 /// (filtering on the warren-relay-selector side). Maps country/city, fallback
@@ -424,7 +424,7 @@ pub enum DaemonCommand {
         ResponseTx<(), settings::Error>,
         mullvad_types::settings::WarrenNatPmpSettings,
     ),
-    /// Session H A.4: replace the pinned key for `exit_id_hex` with
+    /// Replace the pinned key for `exit_id_hex` with
     /// `new_pubkey_hex` (user accepted a key rotation from the modal).
     /// The daemon clears `WarrenStatusCache.pubkey_mismatch_pending`
     /// on success so the modal unmounts.
@@ -433,14 +433,14 @@ pub enum DaemonCommand {
         exit_id_hex: String,
         new_pubkey_hex: String,
     },
-    /// Session H A.4: clear the entire TOFU pin table. Returns the
+    /// Clear the entire TOFU pin table. Returns the
     /// number of dropped entries.
     ResetPinnedExitKeys(oneshot::Sender<u32>),
-    /// Session H A.4: dismiss the pending mismatch flag without
+    /// Dismiss the pending mismatch flag without
     /// changing the pinned key. The user stays disconnected; a
     /// subsequent connect attempt would re-trigger the modal.
     DismissPubkeyMismatch(oneshot::Sender<()>),
-    /// Session H A.4: best-effort POST to
+    /// Best-effort POST to
     /// `/v1/incidents/pubkey-mismatch`. The daemon clears the
     /// mismatch flag regardless of the network outcome.
     ReportPubkeyMismatch {
@@ -652,7 +652,7 @@ pub(crate) enum InternalDaemonEvent {
     ExcludedPathsEvent(ExcludedPathsUpdate, oneshot::Sender<Result<(), Error>>),
     /// A network leak was detected.
     LeakDetected(LeakInfo),
-    /// Session H A.4: TOFU pubkey-pinning verify-hook event consumed by
+    /// TOFU pubkey-pinning verify-hook event consumed by
     /// the daemon main loop. Routes pin inserts / bumps / mismatches /
     /// trust replacements / resets to the on-disk settings.json and
     /// (for mismatches) to the live `WarrenStatusCache`.
@@ -1290,7 +1290,7 @@ impl Daemon {
                 warren_relay_list_view::to_mullvad_relay_list(sel.list())
             })));
 
-        // M5.B.4: forward the resolved warren-api URL so the
+        // Forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
         // exit-down report.
         let warren_api_url_for_params: Option<String> = Some(warren_api_url.clone());
@@ -1304,7 +1304,7 @@ impl Daemon {
             warren_status_cache.clone(),
             warren_api_url_for_params,
         );
-        // M5.B.1: snapshot the persisted DAITA opt-in onto the
+        // Snapshot the persisted DAITA opt-in onto the
         // parameters generator at boot. Without this, the first
         // tunnel connect after a daemon restart would always go out
         // DAITA-off even when the user had previously toggled it on.
@@ -1345,7 +1345,7 @@ impl Daemon {
             let _ = param_gen_tx.unbounded_send(settings.tunnel_options.clone());
         });
 
-        // Session H A.4: wire the verify-hook channel into the daemon
+        // Wire the verify-hook channel into the daemon
         // main loop. Every TOFU pin event (insert / bump / mismatch /
         // trust / reset) is forwarded as an `InternalDaemonEvent` so
         // the daemon's `handle_event` can persist it through
@@ -1598,7 +1598,7 @@ impl Daemon {
             });
         }
 
-        // M4.H dynamic multi-hop: a background updater fetches the signed
+        // Dynamic multi-hop: a background updater fetches the signed
         // directory from warren-api, verifies the full trust chain
         // (server envelope -> pinned root cert -> operational descriptors),
         // selects a 2-distinct-node circuit honoring the user's country
@@ -1897,7 +1897,7 @@ impl Daemon {
         should_stop
     }
 
-    /// Session H A.4: route a verify-hook event to (a) the live
+    /// Route a verify-hook event to (a) the live
     /// `WarrenStatusCache` so the UI modal can mount on mismatch and
     /// (b) the on-disk settings.json so the TOFU pin table survives a
     /// daemon restart. The fields on `Settings::warren_pinned_exit_pubkeys`
@@ -3704,7 +3704,7 @@ impl Daemon {
         if let Err(ref e) = result {
             log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
         } else {
-            // Push the live value to the parameters generator. M5.D.x:
+            // Push the live value to the parameters generator:
             // the generator now fans the value to every active tunnel
             // via a watch channel, and the in-tunnel controller task
             // calls `NatPmpManager::reconfigure` (or release+drop, or
@@ -3738,11 +3738,11 @@ impl Daemon {
         Self::oneshot_send(tx, result, "set_nat_pmp_settings response");
     }
 
-    /// Session H A.4: forward the trust event to the parameters
+    /// Forward the trust event to the parameters
     /// generator (replaces the in-memory pin) AND clear the
     /// WarrenStatus.pubkey_mismatch_pending flag so the UI modal
     /// unmounts. Persistence to settings.json is wired through the
-    /// existing `warren_pin_update_tx` consumer task (Session H.4).
+    /// existing `warren_pin_update_tx` consumer task.
     async fn on_trust_new_exit_key(
         &mut self,
         tx: oneshot::Sender<tunnel::TrustNewExitKeyOutcome>,
@@ -3762,7 +3762,7 @@ impl Daemon {
         Self::oneshot_send(tx, outcome, "trust_new_exit_key response");
     }
 
-    /// Session H A.4: clears the entire in-memory pin table and the
+    /// Clears the entire in-memory pin table and the
     /// pending mismatch flag, then signals the persistence consumer
     /// to wipe the on-disk copy.
     async fn on_reset_pinned_exit_keys(&mut self, tx: oneshot::Sender<u32>) {
@@ -3772,7 +3772,7 @@ impl Daemon {
         Self::oneshot_send(tx, count, "reset_pinned_exit_keys response");
     }
 
-    /// Session H A.4: clears the pending mismatch flag without
+    /// Clears the pending mismatch flag without
     /// touching the pinned key (= the user picked Reject from the
     /// modal). A subsequent connect would re-emit the mismatch.
     fn on_dismiss_pubkey_mismatch(&mut self, tx: oneshot::Sender<()>) {
@@ -3781,7 +3781,7 @@ impl Daemon {
         Self::oneshot_send(tx, (), "dismiss_pubkey_mismatch response");
     }
 
-    /// Session H A.4: forensic report to warren-api. Best-effort:
+    /// Forensic report to warren-api. Best-effort:
     /// the mismatch flag is cleared regardless of the network
     /// outcome so the UI does not stay stuck on a transient
     /// network failure.
@@ -3825,7 +3825,7 @@ impl Daemon {
         Self::oneshot_send(tx, (), "report_pubkey_mismatch response");
     }
 
-    /// Accessor for the warren-api URL used by Session H A.4 forensic
+    /// Accessor for the warren-api URL used by the pubkey-mismatch forensic
     /// reports. Mirrors the resolution path used by
     /// `warren_api_url_for_params` at boot.
     fn warren_api_url_for_incidents(&self) -> Option<String> {
@@ -4063,9 +4063,9 @@ impl Daemon {
                     return; // DAITA is not supported for custom relays
                 }
 
-                // M5.B.1: mirror the toggle onto the Warren-side
+                // Mirror the toggle onto the Warren-side
                 // parameters generator so the next reconnect picks up
-                // `Setup.daita_support = value` on the warren-protocol
+                // `Setup.daita_support = value` on the warrenguard-wire
                 // v3 handshake. Single UI surface drives both
                 // backends (WireGuard upstream + Quinn Warren).
                 self.parameters_generator
@@ -4136,7 +4136,7 @@ impl Daemon {
         {
             Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_daita_settings response");
-                // M5.B.1: same mirror as `on_set_daita_enabled`. The
+                // Same mirror as `on_set_daita_enabled`. The
                 // struct-update path can also flip `enabled`, so we
                 // forward the new value here too.
                 self.parameters_generator

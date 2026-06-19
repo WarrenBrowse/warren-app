@@ -125,7 +125,7 @@ struct InnerParametersGenerator {
     /// [`ParametersGenerator::set_warren_bypass_cidrs`] once a UI or
     /// settings file lands the values.
     warren_bypass_cidrs: Vec<talpid_warren_tunnel::BypassCidr>,
-    /// M5.B.1 DAITA v2 toggle, mirroring Mullvad upstream
+    /// DAITA v2 toggle, mirroring Mullvad upstream
     /// `wireguard.daita.enabled`. Forwarded verbatim onto
     /// [`talpid_warren_tunnel::WarrenTunnelParameters::enable_daita`].
     /// Mutated at runtime when the Settings handler observes a change
@@ -139,7 +139,7 @@ struct InnerParametersGenerator {
     /// parameter-production time and forwarded onto
     /// [`talpid_warren_tunnel::WarrenTunnelParameters::n_connections`].
     warren_n_connections: Option<u8>,
-    /// M5.B.2 multi-exit auto-failover: pubkey of the most recently
+    /// Multi-exit auto-failover: pubkey of the most recently
     /// assembled Warren exit. The state machine increments
     /// `retry_attempt` after every connection failure; on the next
     /// `produce_warren_tunnel_params(retry_attempt > 0)`, the
@@ -148,7 +148,7 @@ struct InnerParametersGenerator {
     /// excludes the previously failed pubkey. `None` on the very
     /// first attempt after a daemon boot.
     warren_last_exit_pubkey: Option<warren_relay_selector::warren_types::WarrenPubkey>,
-    /// M5.B.4 warren-api URL forwarded from `lib.rs` boot. Used
+    /// Warren-api URL forwarded from `lib.rs` boot. Used
     /// fire-and-forget to POST `/v1/incidents/exit-down` whenever
     /// `assemble_failover_for_attempt` is dispatched, so the
     /// operator can investigate persistent exit outages through
@@ -156,7 +156,7 @@ struct InnerParametersGenerator {
     /// suppressed (e.g. the user has not configured warren_api_url
     /// or the daemon runs in pure Mullvad mode).
     warren_api_url: Option<String>,
-    /// Session A.4 TOFU pubkey-pinning table, keyed by `exit_id` hex.
+    /// TOFU pubkey-pinning table, keyed by `exit_id` hex.
     /// Refreshed from `Settings::warren_pinned_exit_pubkeys` on every
     /// `set_settings` call. The verify hook in
     /// `produce_warren_tunnel_params` reads + mutates this in-memory
@@ -203,7 +203,7 @@ struct InnerParametersGenerator {
     nat_pmp_control_tx: tokio::sync::watch::Sender<Option<talpid_warren_tunnel::NatPmpConfig>>,
 }
 
-/// Update message produced by the Session A.4 verify hook and
+/// Update message produced by the verify hook and
 /// consumed by the daemon-side settings flush task. The in-memory pin
 /// table is authoritative within one daemon lifetime: the channel
 /// only needs a subscriber to make the table survive daemon restarts
@@ -224,7 +224,7 @@ pub enum WarrenPinUpdate {
     /// stored value: bump `last_seen_unix` so the UI can surface
     /// staleness ("last connected N days ago").
     BumpLastSeen { exit_id_hex: String, now_unix: u64 },
-    /// Session H A.4: verify hook refused a connect because the
+    /// Verify hook refused a connect because the
     /// observed Ed25519 pubkey diverges from the locally pinned
     /// baseline. The consumer relays this to the UI through the
     /// WarrenStatusCache (sets `pubkey_mismatch_pending`).
@@ -235,7 +235,7 @@ pub enum WarrenPinUpdate {
         country_code: String,
         city: String,
     },
-    /// Session H A.4: user accepted a key rotation through the gRPC
+    /// User accepted a key rotation through the gRPC
     /// `TrustNewExitKey` RPC. Replaces the pinned key and bumps
     /// `first_seen` so the audit trail records the explicit trust
     /// event.
@@ -244,13 +244,13 @@ pub enum WarrenPinUpdate {
         new_pubkey_hex: String,
         now_unix: u64,
     },
-    /// Session H A.4: user invoked `ResetPinnedExitKeys` from the UI.
+    /// User invoked `ResetPinnedExitKeys` from the UI.
     /// The consumer drops every entry from the table and persists
     /// the empty state to disk.
     ResetAll,
 }
 
-/// Session H A.4: outcome of the gRPC `TrustNewExitKey` RPC. Mirrors
+/// Outcome of the gRPC `TrustNewExitKey` RPC. Mirrors
 /// the proto enum so the management interface layer can map 1:1.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TrustNewExitKeyOutcome {
@@ -309,7 +309,7 @@ impl ParametersGenerator {
         })))
     }
 
-    /// Wire the channel that forwards Session A.4 verify-hook events
+    /// Wire the channel that forwards verify-hook events
     /// (TOFU pin insert, last-seen bump, mismatch, trust, reset) to
     /// the daemon-side settings flush task. Called once at boot;
     /// subsequent calls override the previous sender. Pass `None`
@@ -321,7 +321,7 @@ impl ParametersGenerator {
         self.0.lock().await.warren_pin_update_tx = tx;
     }
 
-    /// Session H A.4: outcome of `trust_new_exit_key` consumed by the
+    /// Outcome of `trust_new_exit_key` consumed by the
     /// gRPC handler. The detailed variants let the UI surface a
     /// matching error message ("exit not found", "no pin to update").
     pub async fn trust_new_exit_key(
@@ -351,7 +351,7 @@ impl ParametersGenerator {
         TrustNewExitKeyOutcome::Ok
     }
 
-    /// Session H A.4: borrow the signing key used by the daemon for
+    /// Borrow the signing key used by the daemon for
     /// signing forensic incident reports. Returns `None` if Warren
     /// mode is off / the BIP39 identity was never bootstrapped.
     pub async fn warren_signing_key_for_incidents(&self) -> Option<SigningKey> {
@@ -365,7 +365,7 @@ impl ParametersGenerator {
             .map(|k| k.read().expect("signing-key RwLock poisoned").clone())
     }
 
-    /// Session H A.4: clear every entry from the in-memory pin table.
+    /// Clear every entry from the in-memory pin table.
     /// Returns the number of entries that were dropped so the gRPC
     /// handler can surface "Cleared N pinned keys" to the UI.
     pub async fn reset_pinned_exit_keys(&self) -> u32 {
@@ -383,7 +383,7 @@ impl ParametersGenerator {
     /// in-flight tunnels keep their current routing until reconnect.
     #[expect(
         dead_code,
-        reason = "M4.H.G ships the daemon-side plumbing only; the gRPC + UI \
+        reason = "This ships the daemon-side plumbing only; the gRPC + UI \
                   call site lands in a follow-up phase. Keep the setter public \
                   so that follow-up does not have to re-traverse this file."
     )]
@@ -396,7 +396,7 @@ impl ParametersGenerator {
     /// state even when no tunnel has been generated yet.
     #[expect(
         dead_code,
-        reason = "M4.H.G ships the daemon-side plumbing only; the gRPC + UI \
+        reason = "This ships the daemon-side plumbing only; the gRPC + UI \
                   call site lands in a follow-up phase. Keep the getter public \
                   so that follow-up does not have to re-traverse this file."
     )]
@@ -406,7 +406,7 @@ impl ParametersGenerator {
 
     /// Sets the user's NAT-PMP preference.
     ///
-    /// **Live reconfig** (M5.D.x): the value is also pushed onto an
+    /// **Live reconfig**: the value is also pushed onto an
     /// internal `tokio::sync::watch` channel. Every active tunnel
     /// holds a receiver clone via
     /// [`WarrenTunnelParameters::nat_pmp_control_rx`]; the
@@ -445,7 +445,7 @@ impl ParametersGenerator {
         inner.warren_relay_selector = Some(selector);
     }
 
-    /// Sets the user's DAITA v2 preference (M5.B.1). Mirrors Mullvad
+    /// Sets the user's DAITA v2 preference. Mirrors Mullvad
     /// upstream's `wireguard.daita.enabled`. The next call to
     /// [`Self::produce_warren_tunnel_params`] forwards the flag onto
     /// `WarrenTunnelParameters.enable_daita`. In-flight tunnels keep
@@ -474,7 +474,7 @@ impl ParametersGenerator {
         self.0.lock().await.warren_n_connections = n;
     }
 
-    /// Sets the user's Warren multi-hop config (M4.H.C). `Some(cfg)`
+    /// Sets the user's Warren multi-hop config. `Some(cfg)`
     /// turns the next tunnel (re)connect into a two-relay HPKE
     /// multi-hop path; `None` keeps it single-hop. The signed
     /// descriptor pair in `cfg` is loaded from
@@ -548,7 +548,7 @@ impl ParametersGenerator {
         // "Device IP version" -> IpAvailability, "In-tunnel IPv6" ->
         // require_ipv6_egress.
         let query = relay_settings_to_warren_query(&inner.relay_settings, enable_ipv6);
-        // M5.B.2 multi-exit failover: when this is a retry and we
+        // Multi-exit failover: when this is a retry and we
         // remember which exit was used on the failed attempt, ask the
         // selector to skip it. The failover selector falls back to
         // any same-country alternative first, then global. On the
@@ -579,10 +579,10 @@ impl ParametersGenerator {
             )
         };
         let mut params = assemble_result?;
-        // Session A.4 + Session H.5: TOFU pubkey-pinning verify hook,
+        // TOFU pubkey-pinning verify hook,
         // active on both the single-hop and the multi-hop paths.
         //
-        // Pin key: the 16-byte stable `exit_id` (cf. Session E). A
+        // Pin key: the 16-byte stable `exit_id`. A
         // legitimate Ed25519 rotation under the same `exit_id` flags
         // as a mismatch (pinned pubkey diverges from the observed
         // one); a wholesale new exit deployment surfaces as a fresh
@@ -597,12 +597,12 @@ impl ParametersGenerator {
         //    `exit_id` comes from the same descriptor so a single
         //    table covers both paths.
         //
-        // Session H.5 doctrine: pin by exit-only (not by entry+exit
+        // Doctrine: pin by exit-only (not by entry+exit
         // tuple) - entry rotation is operator-authorised and the
         // entry pubkey only secures the cleartext header, not the
         // payload encryption. Adversarial entry swap is a low-severity
         // event compared to exit substitution.
-        // Session H caveat C1: on the multi-hop path, the
+        // On the multi-hop path, the
         // `params.country_code/city` carries the SELECTION-side relay
         // location (the single-hop fallback assembly), which can be
         // unrelated to the multi-hop exit. Resolve the forensic
@@ -672,7 +672,7 @@ impl ParametersGenerator {
                             exit_id_hex: exit_id_hex.clone(),
                             pinned_pubkey_hex: pinned.clone(),
                             observed_pubkey_hex: observed_pubkey_hex.clone(),
-                            // Session H caveat C1: forensic context
+                            // Forensic context
                             // resolved above (`country_code` / `city`
                             // locals). Single-hop carries the
                             // selection-side location; multi-hop
@@ -699,7 +699,7 @@ impl ParametersGenerator {
                             // `inner.last_warren_location` after the
                             // pin-update fan-out completes.
                             pubkey_hex: observed_pubkey_hex.clone(),
-                            // Session H.6 + caveat C1: forensic
+                            // Forensic
                             // context resolved above
                             // (`country_code` / `city` locals).
                             // Single-hop carries the
@@ -723,14 +723,14 @@ impl ParametersGenerator {
                 }
             }
         }
-        // M5.B.2: bump the failover counter as soon as the failover
+        // Bump the failover counter as soon as the failover
         // assembly succeeds (a fresh exit was picked, distinct from
         // the memoized one). The UI toast layer observes increments
         // via the watch channel and surfaces "Switched to <country>"
         // for ~5 seconds. The reconnect counter is updated separately
         // on a successful reconnect by the multi-hop supervisor.
         //
-        // M5.B.4: post a fire-and-forget exit-down report to
+        // Post a fire-and-forget exit-down report to
         // `warren-api` so the operator can correlate persistent
         // outages through `GET /v1/admin/exits/health`. The report
         // is forensically anonymous (cf. `incidents.rs` privacy
@@ -783,13 +783,13 @@ impl ParametersGenerator {
             }
         }
         // Memo the freshly-picked exit pubkey so the next retry can
-        // exclude it (M5.B.2 failover loop). The pubkey lives in
+        // exclude it (failover loop). The pubkey lives in
         // `WarrenExitAddr::id`.
         inner.warren_last_exit_pubkey = Some(params.exit_addr.id);
-        // M5.B.1: forward the DAITA opt-in onto the params. The flag is
+        // Forward the DAITA opt-in onto the params. The flag is
         // driven by Mullvad upstream's `wireguard.daita.enabled` toggle
         // so the user surface stays a single switch even though the
-        // wire path differs (Quinn + warren-protocol v3 here vs
+        // wire path differs (Quinn + warrenguard-wire v3 here vs
         // WireGuard + maybenot-ffi in the upstream backend).
         params.enable_daita = enable_daita;
         // Resolve the parallel-connection count (env var override >
@@ -851,7 +851,7 @@ impl ParametersGenerator {
         // to a later `set_warren_nat_pmp(Some(cfg)) where cfg.enabled
         // == true` push without requiring a tunnel reconnect.
         //
-        // Before M5.D.x we gated this on `cfg.enabled` - which meant
+        // Previously we gated this on `cfg.enabled` - which meant
         // that a user starting the tunnel with NAT-PMP off and then
         // toggling it on saw NO controller spawned (observer was
         // None → `spawn_nat_pmp_runtime` short-circuited → no
@@ -900,7 +900,7 @@ impl ParametersGenerator {
             entry_hostname: None,
             obfuscator_hostname: None,
         });
-        // M5.D.x live-reconfig wiring: hand a receiver clone to the
+        // Live-reconfig wiring: hand a receiver clone to the
         // tunnel so its controller task can react to subsequent
         // `set_warren_nat_pmp` pushes without requiring a reconnect.
         params.nat_pmp_control_rx = Some(inner.nat_pmp_control_tx.subscribe());
@@ -917,7 +917,7 @@ impl ParametersGenerator {
         let mut inner = self.0.lock().await;
         inner.relay_settings = settings.relay_settings.clone();
         inner.relay_selector.set_config(&settings);
-        // Session A.4: rehydrate the in-memory pin table from the
+        // Rehydrate the in-memory pin table from the
         // persisted settings snapshot. Merging strategy: the on-disk
         // table is authoritative when it carries an entry, otherwise
         // any in-memory pin that the verify hook minted since the
@@ -1035,7 +1035,7 @@ impl From<Error> for ParameterGenerationError {
     }
 }
 
-/// Outcome of the Session A.4 pubkey-pinning verify hook.
+/// Outcome of the pubkey-pinning verify hook.
 #[derive(Debug, PartialEq, Eq)]
 enum WarrenPinOutcome {
     /// First time seeing this `exit_id`: the pin table was updated
@@ -1054,7 +1054,7 @@ enum WarrenPinOutcome {
     },
 }
 
-/// Apply the Session A.4 pubkey-pinning policy to an in-memory pin
+/// Apply the pubkey-pinning policy to an in-memory pin
 /// table. Pure function on a mutable `WarrenPinnedExitPubkeys`
 /// reference so it tests trivially without a daemon harness.
 ///
@@ -1064,7 +1064,7 @@ enum WarrenPinOutcome {
 /// lowercase hex. `now_unix` is the wall-clock seconds the caller
 /// captured at the start of the connection attempt.
 ///
-/// Session H.6: `country_code` and `city` are the forensic snapshot
+/// `country_code` and `city` are the forensic snapshot
 /// captured at TOFU time. On a `FirstSeen` insert they are recorded
 /// alongside the pubkey so future mismatch reports can surface a
 /// user-readable location. On `Match` and `Mismatch` they are
@@ -1265,7 +1265,7 @@ mod warren_pin_tests {
 
     #[test]
     fn first_seen_records_forensic_country_city_from_caller() {
-        // Session H.6: the verify hook now receives the forensic
+        // The verify hook now receives the forensic
         // snapshot from `WarrenSelection::country_code/city` (threaded
         // through `WarrenTunnelParameters`). The TOFU insert records
         // it alongside the pubkey so a later mismatch report can
@@ -1319,7 +1319,7 @@ mod warren_pin_tests {
 
     #[test]
     fn multi_hop_path_pins_against_exit_descriptor_id_and_ed25519() {
-        // Session H.5: the multi-hop path uses the descriptor's
+        // The multi-hop path uses the descriptor's
         // `exit_id` (operator-signed) and `exit_ed25519_pubkey` (TLS
         // RPK identity advertised by the operational signer) as the
         // pin key/value. Since the table is keyed by `exit_id_hex`

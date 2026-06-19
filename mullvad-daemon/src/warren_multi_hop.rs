@@ -1,6 +1,6 @@
 //! Daemon-side loader for the Warren multi-hop config.
 //!
-//! For M4.H.B the daemon does not yet fetch signed multi-hop
+//! For now the daemon does not yet fetch signed multi-hop
 //! descriptors from `warren-backend-api`; they are minted out-of-band by
 //! the ops operator (`wapi admin-mint-relay-descriptor` /
 //! `wapi admin-mint-exit-descriptor`) and dropped in
@@ -9,7 +9,7 @@
 //! and returns a [`MultiHopConfig`] ready to be embedded in a
 //! [`talpid_warren_tunnel::WarrenTunnelParameters`].
 //!
-//! Future revisions (M4.H.C+) will replace the file loader with a
+//! Future revisions will replace the file loader with a
 //! periodic fetch against a yet-to-be-added `warren-backend-api`
 //! endpoint. The file path stays valid as a developer-side override.
 

@@ -131,12 +131,18 @@ mirror.
 
 ### Warren crates consumed via `path`
 
-Several Warren crates live in the sibling repo [`warren-core/`](../warren-core/) and are referenced
-by path (see `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml)): `warren-identity`, `warren-tunnel`,
-`warren-natpmp-{server,client}`, `warren-killswitch`, `warren-ratelimit`, `warren-protocol`,
-`warren-config`, `warren-relay-selector`. The workspace crate
-[`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine and these POC
-crates.
+The fork pulls Warren crates by path from two sibling repos:
+
+- Control-plane + tunnel crates from [`warren-core/`](../warren-core/): `warren-identity`,
+  `warren-tunnel`, `warren-client`, `warren-config`, `warren-relay-selector`, `warren-api`,
+  `warren-api-client`. The checkout SHA is pinned in [`.warren-core-version`](.warren-core-version).
+- Data-plane engine crates from [`warrenguard/`](../warrenguard/): `warrenguard-wire`,
+  `warrenguard-multihop`, `warrenguard-relay`, `warrenguard-natpmp-client`,
+  `warrenguard-natpmp-protocol`, `warrenguard-backoff`. The checkout SHA is pinned in
+  [`.warrenguard-version`](.warrenguard-version).
+
+The workspace crate [`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine
+and these crates. The quinn fork is consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml).
 
 ## Building the app
 

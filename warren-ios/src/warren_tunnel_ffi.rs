@@ -10,8 +10,8 @@
 //! returns null / sentinel error codes. With the feature ON the FFI
 //! allocates a [`WarrenTunnelHandleImpl`] holding the Tokio runtime,
 //! the [`IosTun`] bridge (cf. `warren-tunnel::IosTun`) and the event
-//! callback registration. The Quinn connection itself is wired in C.4.1
-//! (cf. `.planning/c4-packet-tunnel-provider-quinn-design.md` §3-§4).
+//! callback registration. The Quinn connection itself is wired in
+//! the packet-tunnel-provider data plane.
 //!
 //! The handle lifecycle:
 //! - `warren_tunnel_start` boxes the impl, returns the raw pointer.
@@ -55,7 +55,7 @@ pub struct WarrenTunnelParametersC {
     /// 1 enables NAT-PMP port forwarding through the tunnel ; 0 disables.
     pub nat_pmp_enabled: u8,
     /// Pointer to an array of null-terminated UTF-8 CIDRs to bypass
-    /// (see M4.H.G `--bypass-cidr`). Length given by `bypass_cidrs_count`.
+    /// (see `--bypass-cidr`). Length given by `bypass_cidrs_count`.
     pub bypass_cidrs: *const *const c_char,
     /// Number of entries in `bypass_cidrs`.
     pub bypass_cidrs_count: u32,
@@ -102,8 +102,7 @@ pub struct WarrenRelayConfigC {
     pub country_code: *const c_char,
 }
 
-/// DAITA defensive shaping spec (cf. memory `warren_session_b_delivered`
-/// M5.B.1 / `warren_daita_doctrine_v1`).
+/// DAITA defensive shaping spec (cf. `warren_daita_doctrine_v1`).
 #[repr(C)]
 pub struct WarrenDaitaSpecC {
     /// 32-byte Maybenot machine seed.
@@ -114,7 +113,7 @@ pub struct WarrenDaitaSpecC {
 
 /// Tunnel state enum surfaced via `warren_tunnel_status`. Variants
 /// other than `Disconnected` are constructed by the warren-tunnel
-/// dispatcher once the Quinn connection task is wired (C.4.1). On the
+/// dispatcher once the Quinn connection task is wired. On the
 /// `not(tunnel)` feature path the enum has no constructor at all,
 /// hence the `cfg_attr(expect)` suppression scoped to that path.
 #[repr(C)]
@@ -143,18 +142,18 @@ pub struct WarrenTunnelStatusC {
     /// Seconds since the current connection was established. 0 when
     /// `state != Connected`.
     pub connected_duration_seconds: u64,
-    /// Cumulative failover count this session (cf. M5.B.2).
+    /// Cumulative failover count this session.
     pub failover_count: u32,
 }
 
 /// Event tag for the variant union below. Variants are constructed by
 /// the warren-tunnel dispatcher once the Quinn connection task is
-/// wired (C.4.1).
+/// wired.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[expect(
     dead_code,
-    reason = "FFI surface ; Failover + NatPmp* variants wired in C.4.1.X"
+    reason = "FFI surface ; Failover + NatPmp* variants wired in a follow-up"
 )]
 #[expect(
     clippy::enum_variant_names,
@@ -275,7 +274,7 @@ mod handle_impl {
     //!
     //! Owns the Tokio runtime + [`warren_tunnel::IosTun`] bridge +
     //! callback registration. The Quinn connection task is spawned
-    //! lazily in [`WarrenTunnelHandleImpl::run`] (TODO C.4.1).
+    //! lazily in [`WarrenTunnelHandleImpl::run`].
 
     use super::{
         WarrenTunnelEventCallback, WarrenTunnelIpAssignCallback, WarrenTunnelOutboundCallback,
@@ -873,14 +872,13 @@ pub unsafe extern "C" fn warren_tunnel_start(
             return Box::into_raw(boxed) as *mut WarrenTunnelHandle;
         }
 
-        // C.4.1 wire-up : single-hop only on this first pass. The
-        // multi-hop + DAITA bug flagged in memory `warren_session_n`
-        // was resolved by Session R (warren-core `f8f2d59`, B.1.8
-        // caveat closed at 5.6% overhead) ; the marshalling for
+        // Wire-up: single-hop only on this first pass. The
+        // multi-hop + DAITA overhead caveat was closed at 5.6%
+        // overhead; the marshalling for
         // multi-hop relay + DAITA spec is already in place Swift-side
-        // (cf. C.4.2 `withMultiHopRelayPinned` + `withDaitaPinned`)
+        // (`withMultiHopRelayPinned` + `withDaitaPinned`)
         // and the Rust dispatcher can now safely consume them in a
-        // C.4.1.X follow-up (route to `warren_client::run_multi_hop`
+        // follow-up (route to `warren_client::run_multi_hop`
         // + `pump_bidirectional_with_daita`). Leaving them ignored
         // here keeps this first wire-up scope-minimal.
         let _ = params.multi_hop_relay;
@@ -1031,7 +1029,7 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
-        // C.4.1.Z TODO: signal a pause to the running pump (e.g. via
+        // TODO: signal a pause to the running pump (e.g. via
         // an `AtomicBool` flag the pump consults each iteration, or
         // an mpsc oneshot). For now, just record the state transition
         // so Swift consumers see Reconnecting → Connected on resume.
@@ -1063,7 +1061,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
-        // Mirror of `pause`. C.4.1.Z TODO: actually un-set the pause
+        // Mirror of `pause`. TODO: actually un-set the pause
         // flag the pump consults.
         if arc.state_snapshot() == WarrenTunnelStateC::Reconnecting {
             arc.set_state(WarrenTunnelStateC::Connected);
@@ -1079,7 +1077,7 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
 }
 
 /// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
-/// Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
+/// Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s).
 ///
 /// Returns `0` on success, `-3` if the tunnel is not connected.
 ///
@@ -1099,7 +1097,7 @@ pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle
         if arc.state_snapshot() == WarrenTunnelStateC::Disconnected {
             return RC_NOT_CONNECTED;
         }
-        // TODO C.4.1 signal the warren-tunnel reconnect future.
+        // TODO: signal the warren-tunnel reconnect future.
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]

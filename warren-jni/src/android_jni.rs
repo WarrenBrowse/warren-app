@@ -10,17 +10,16 @@
 //   - canonical-request Ed25519 signing for `X-Warren-*` API auth
 //   - Quinn tunnel start / stop driven by Kotlin once a TUN fd is granted
 //   - relay-selector queries via warren-relay-selector
-//   - optional NAT-PMP port-forwarding via warren-natpmp-client
+//   - optional NAT-PMP port-forwarding via warrenguard-natpmp-client
 //
 // All JNI exports follow the
 // `Java_com_warrenbrowse_vpn_jni_WarrenJni_<method>` naming convention
 // dictated by the Kotlin `WarrenJni` companion object (`android/lib/...`).
 //
-// NOTE (D.3 scope): wallet primitives (`generateMnemonic`,
+// NOTE: wallet primitives (`generateMnemonic`,
 // `importMnemonic`, `signRequest`) call into real warren-identity code via
 // the pure-rust [`crate::wallet`] module - those work today and are
-// covered by host tests. The tunnel lifecycle JNI exports remain stubs;
-// see `.planning/session-d-d3-warren-jni-design.md` for the D.4 plan.
+// covered by host tests. The tunnel lifecycle JNI exports remain stubs.
 
 use std::{
     path::{Path, PathBuf},
@@ -46,13 +45,13 @@ use tokio::sync::oneshot;
 // Error / runtime state
 // ---------------------------------------------------------------------------
 
-// Native-side error taxonomy reserved for the D.4 tunnel lifecycle work.
+// Native-side error taxonomy reserved for the tunnel lifecycle work.
 // Variants are unused until the connectTunnel body actually produces them;
 // keeping the enum here documents the surface the JNI callers should expect
 // to receive via `throw`. The `expect` form (rather than `allow`) makes
 // `cargo clippy -D warnings` fail loudly the day a variant goes from "still
 // unused" to "wrongly removed".
-#[expect(dead_code, reason = "D.4 tunnel lifecycle work in progress")]
+#[expect(dead_code, reason = "tunnel lifecycle work in progress")]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Failed to initialize logging: {0}")]
@@ -181,7 +180,7 @@ fn init_log_file(_log_dir: &Path) -> Result<(), String> {
 /// Generate a fresh 12-word BIP39 English mnemonic. Returns the phrase as a
 /// space-separated UTF-8 string. The mnemonic is **never persisted by Rust** -
 /// the Kotlin caller is responsible for storing it via Android Keystore /
-/// EncryptedSharedPreferences (D.5).
+/// EncryptedSharedPreferences.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_generateMnemonic(
     env: JNIEnv<'_>,
@@ -339,7 +338,7 @@ fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
 }
 
 // ---------------------------------------------------------------------------
-// Tunnel lifecycle (warren-tunnel + warren-multihop)
+// Tunnel lifecycle (warren-tunnel + warrenguard-multihop)
 // ---------------------------------------------------------------------------
 
 /// Start a Warren Quinn tunnel.
@@ -842,7 +841,7 @@ fn check_app_version_supported(current_version: &str) -> bool {
     is_current_version_supported(&current, &response.signed)
 }
 
-/// Submit a problem report (D.6). Called by the Android
+/// Submit a problem report. Called by the Android
 /// `ProblemReportRepository` once the user taps "Send". The Kotlin
 /// side passes:
 ///   - `mnemonic`: BIP39 phrase to derive the signing key.

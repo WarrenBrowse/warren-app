@@ -51,7 +51,7 @@ pub struct WarrenSelection {
     pub endpoint_id: WarrenPubkey,
 
     /// Operator-assigned 16-byte stable identifier for this exit
-    /// (signed v3 relay-list field). The Session A.4 TOFU pubkey
+    /// (signed v3 relay-list field). The TOFU pubkey
     /// pinning verify hook keys its lookup on this value so a
     /// legitimate Ed25519 rotation stays detectable across reconnects.
     pub exit_id: ExitId,
@@ -59,13 +59,13 @@ pub struct WarrenSelection {
     /// Candidate addresses of the exit (UDP IPv4/IPv6).
     pub endpoint_addr: WarrenExitAddr,
 
-    /// Session H.6: forensic snapshot threaded through to the TOFU
+    /// Forensic snapshot threaded through to the TOFU
     /// pin so the renderer modal + `/v1/incidents/pubkey-mismatch`
     /// report carry the user-readable location, not just the pubkey
     /// fingerprint. ISO 3166 alpha-2 code, lower case (matches the
     /// signed relay-list `Location::country_code`).
     pub country_code: String,
-    /// Session H.6: free-form city label captured at selection time.
+    /// Free-form city label captured at selection time.
     pub city: String,
 
     /// ALPN tokens advertised by the selected exit's v6 ingress
@@ -130,7 +130,7 @@ impl DaemonWarrenRelaySelector {
     }
 
     /// Read access to the inner [`WarrenRelaySelector`]. Exposed so
-    /// callers (M5.B.2 failover) can invoke selector methods that the
+    /// callers (multi-exit failover) can invoke selector methods that the
     /// wrapper does not directly mirror (e.g.
     /// `select_failover_alternative`).
     #[must_use]
@@ -139,7 +139,7 @@ impl DaemonWarrenRelaySelector {
     }
 
     /// Returns the relay whose `endpoint_id` matches `pubkey`, or
-    /// `None` if the list has no such entry. M5.B.2 failover uses this
+    /// `None` if the list has no such entry. Failover uses this
     /// to resolve the "previously failed exit's pubkey" back into the
     /// full [`WarrenRelay`] needed by
     /// [`WarrenRelaySelector::select_failover_alternative`].
@@ -151,7 +151,7 @@ impl DaemonWarrenRelaySelector {
             .find(|r| r.endpoint_id() == *pubkey)
     }
 
-    /// Session H caveat C1: returns the relay whose `exit_id` matches
+    /// Returns the relay whose `exit_id` matches
     /// the supplied identifier, or `None` if the list has no such
     /// entry. Used by the multi-hop verify hook to recover the
     /// operator-curated `Location` for the exit identified by
@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     fn relay_by_exit_id_resolves_matching_entry_with_location() {
-        // Session H caveat C1: the multi-hop verify hook uses this
+        // The multi-hop verify hook uses this
         // accessor to recover the forensic snapshot (country/city)
         // for the exit identified by `MultiHopConfig.exit.exit_id`.
         // The relay's `Location` must come back intact so the TOFU

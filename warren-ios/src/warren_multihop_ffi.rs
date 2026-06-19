@@ -1,7 +1,7 @@
-//! Warren multi-hop FFI for iOS (HPKE handshake via warren-multihop).
+//! Warren multi-hop FFI for iOS (HPKE handshake via warrenguard-multihop).
 //!
-//! Skeleton: implementations land in C.4 + C.6 (PacketTunnelProvider
-//! multi-hop wiring + UI multi-hop view). The Swift side surfaces a
+//! Skeleton: implementations land with the PacketTunnelProvider
+//! multi-hop wiring + UI multi-hop view. The Swift side surfaces a
 //! `WarrenMultiHopConfig` that the user configures from settings
 //! (entry country + exit country pickers).
 //!
@@ -11,8 +11,8 @@
 //! - `warren_multihop_destroy_session(session: *mut WarrenMultiHopSession)`
 //!
 //! Underlying crates (path-deps to add when wiring):
-//! - `warren-multihop` (HPKE handshake, pre-HPKE padding marker `0xFF`
-//!   from M5.B.1 MultiHopClient)
+//! - `warrenguard-multihop` (HPKE handshake, pre-HPKE padding marker `0xFF`
+//!   from MultiHopClient)
 //! - `warren-relay-selector` (country picker, exposing `WarrenRelayList`
 //!   for the UI)
 //!

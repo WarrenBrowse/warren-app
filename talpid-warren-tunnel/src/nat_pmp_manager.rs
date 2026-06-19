@@ -1,11 +1,11 @@
-//! Daemon-side lifecycle wrapper around the `warren-natpmp-client`
+//! Daemon-side lifecycle wrapper around the `warrenguard-natpmp-client`
 //! refresh loop.
 //!
 //! [`NatPmpManager`] owns a [`RefreshLoopHandle`] plus a forwarding
 //! task that drains the loop's event channel and invokes a
 //! caller-supplied observer for each event. The forwarding indirection
 //! lets the daemon (which holds the `WarrenStatusCache`) stay decoupled
-//! from the warren-natpmp-client crate: only `talpid-warren-tunnel`
+//! from the warrenguard-natpmp-client crate: only `talpid-warren-tunnel`
 //! depends on it, and the daemon wires a closure that pushes events
 //! into the status cache.
 //!
@@ -28,7 +28,7 @@ use warrenguard_natpmp_client::{RefreshLoopHandle, spawn_refresh_loop_from_addr}
 use crate::NatPmpConfig;
 
 // Re-exported so consumers do not have to depend on
-// `warren-natpmp-client` directly. The forwarding observer signature is
+// `warrenguard-natpmp-client` directly. The forwarding observer signature is
 // `Fn(NatPmpEvent)`; the daemon wraps a `WarrenStatusCache` and pushes
 // each event into the cache for the Electron UI status stream.
 pub use warrenguard_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
@@ -40,7 +40,7 @@ pub use warrenguard_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
 pub type NatPmpEventObserver = Arc<dyn Fn(NatPmpEvent) + Send + Sync>;
 
 /// Owns the spawned tasks driving an active NAT-PMP mapping: the
-/// refresh loop itself (from warren-natpmp-client) and a forwarder
+/// refresh loop itself (from warrenguard-natpmp-client) and a forwarder
 /// that drains its event channel and dispatches to the observer.
 pub struct NatPmpManager {
     /// `None` once `cancel()` has been called. Wrapping in `Option`

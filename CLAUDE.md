@@ -73,6 +73,27 @@ A comment must explain the **why** behind a non-obvious choice, never narrate wh
 
 Write a comment **only** when it carries information the code cannot: a non-obvious invariant, the subtle reason for an unusual choice, or a warning that stops a future agent from reintroducing a known bug. Be very parsimonious, when in doubt, leave it out. When you encounter this kind of noise comment in code you are already editing, delete it.
 
+## Dependency layout: two Warren siblings (post-cutover)
+
+The fork consumes Warren crates by `path` from two sibling repos checked out next
+to `warren-app`:
+
+- **`../warren-core/`** (control-plane + tunnel keepers): `warren-identity`,
+  `warren-tunnel`, `warren-client`, `warren-config`, `warren-relay-selector`,
+  `warren-api`, `warren-api-client`. Its checkout SHA is pinned in
+  `.warren-core-version`. The quinn fork (`vendor/quinn-fork/`) also lives here and
+  is wired through `[patch.crates-io]` in `Cargo.toml`.
+- **`../warrenguard/`** (carved data-plane engine): `warrenguard-wire` (formerly
+  `warren-protocol`), `warrenguard-multihop`, `warrenguard-relay`,
+  `warrenguard-natpmp-client`, `warrenguard-natpmp-protocol`, `warrenguard-backoff`.
+  Its checkout SHA is pinned in `.warrenguard-version`.
+
+Both pins must move together with the `Cargo.lock` when bumping either sibling
+(keep the quinn fork patched so the GSO knobs stay present). Do NOT reintroduce the
+old shim names (`warren-protocol`, `warren-multihop`, `warren-natpmp-*`,
+`warren-backoff`, `warren-relay`); they were deleted from `warren-core` and the
+engine equivalents now live under `warrenguard-*`.
+
 ## Deployment rule: ALWAYS bump versions before redeploying exit nodes
 
 Non-negotiable rule (poka, 2026-06-11). Before ANY redeploy of a warren-exit

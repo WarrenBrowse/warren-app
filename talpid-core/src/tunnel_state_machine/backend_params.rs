@@ -28,7 +28,7 @@ pub(crate) struct WarrenBackendInfo {
 impl WarrenBackendInfo {
     pub fn from_params(p: &WarrenTunnelParameters) -> Self {
         // `mh.exit.endpoint` is `None` when the directory was served by the
-        // censorship-minimized client path (Phase 2): the client dials the
+        // censorship-minimized client path: the client dials the
         // entry relay, never the exit, so the exit egress IP is redacted.
         // The display fallback in `warren_tunnel_endpoint` handles `None`.
         let (relay_endpoint, exit_endpoint) = match &p.multi_hop {
@@ -132,7 +132,7 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
                 TransportProtocol::Udp,
             )),
         ),
-        // Multi-hop with a REDACTED exit IP (Phase 2): the client never
+        // Multi-hop with a REDACTED exit IP: the client never
         // learns the exit IP, so leave the exit endpoint unspecified (NOT a
         // misleading single-hop candidate) and show the entry relay as the
         // dialed peer. The GUI labels the exit by country/city, not by IP.
@@ -321,7 +321,7 @@ mod tests {
 
     #[test]
     fn warren_multi_hop_with_redacted_exit_shows_relay_entry_and_unspecified_exit() {
-        // Phase 2: the client-facing directory redacts the exit egress IP,
+        // The client-facing directory redacts the exit egress IP,
         // so `exit_endpoint` is `None` in multi-hop. The tunnel endpoint
         // must NOT fall back to a misleading single-hop candidate IP: it
         // shows the entry relay as the dialed peer and leaves the exit

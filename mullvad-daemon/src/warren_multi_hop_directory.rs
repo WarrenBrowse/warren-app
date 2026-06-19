@@ -215,7 +215,7 @@ pub(crate) fn assemble(
         exit: exit_node.exit.clone(),
         operational_pubkey: dir.operational_pubkey,
         // Carry the exit hop's attested geo from the directory: the exit
-        // egress IP is redacted (Phase 2) and an exit-only node is absent
+        // egress IP is redacted and an exit-only node is absent
         // from the single-hop list, so this is the only place the daemon
         // can learn the exit's country/city for the GUI location label.
         exit_country: exit_node.country.clone(),

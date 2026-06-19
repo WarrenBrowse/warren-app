@@ -162,7 +162,7 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         on_reconnect: None,
-        // NAT-PMP config originates from user settings (M4.H.F UI). The
+        // NAT-PMP config originates from user settings (UI). The
         // caller threads it as-is; `None` keeps the legacy behaviour
         // (no refresh loop spawned).
         nat_pmp,
@@ -177,13 +177,13 @@ pub fn assemble_for_attempt(
         // "params at start" behaviour for callers that don't opt
         // into live reconfig (tests, future non-daemon embedders).
         nat_pmp_control_rx: None,
-        // User-supplied bypass CIDRs (M4.H.G --bypass-cidr). The
+        // User-supplied bypass CIDRs (--bypass-cidr). The
         // daemon-side runtime in `talpid-warren-tunnel` consumes this
         // list to install extra `ip rule add to <cidr> lookup main`
         // rules alongside the standard split-default routes. Empty
-        // (default) preserves the M4.E.D behaviour.
+        // (default) preserves the prior behaviour.
         bypass_cidrs,
-        // M5.B.1 DAITA v2 opt-in. assemble() always starts at `false`;
+        // DAITA v2 opt-in. assemble() always starts at `false`;
         // the caller (`ParametersGenerator::produce_warren_tunnel_params`)
         // mutates this field post-assemble based on the live
         // `wireguard.daita.enabled` Mullvad setting. Mirrors the
@@ -193,7 +193,7 @@ pub fn assemble_for_attempt(
     })
 }
 
-/// M5.B.2 auto-failover variant: when the previous tunnel attempt is
+/// Auto-failover variant: when the previous tunnel attempt is
 /// known to have used `excluded_pubkey` and failed, pick an
 /// alternative relay via
 /// [`warren_relay_selector::WarrenRelaySelector::select_failover_alternative`]
@@ -608,7 +608,7 @@ mod tests {
         // installer sees the user's intent on the next tunnel start.
         // A regression that drops the field would silently route LAN
         // traffic through the tunnel and break inbound SSH on
-        // dual-NIC hosts (the exact M4.H.G fix).
+        // dual-NIC hosts.
         use std::net::Ipv4Addr;
         use talpid_warren_tunnel::BypassCidr;
 
@@ -646,7 +646,7 @@ mod tests {
     fn assemble_default_empty_bypass_cidrs_yields_empty_params_field() {
         // Caller passes an empty Vec (the daemon default before any
         // user supplies a bypass): params.bypass_cidrs must also be
-        // empty. This is the M4.E.D anti-regression: zero-bypass
+        // empty. This is the anti-regression: zero-bypass
         // callers must produce the historic "no extra rules" routing.
         let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
         let selector = DaemonWarrenRelaySelector::new(list);

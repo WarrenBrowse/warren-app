@@ -12,7 +12,7 @@
 //     key derived from the supplied mnemonic
 //
 // All three are stateless. The Kotlin caller is responsible for caching the
-// mnemonic in Android Keystore + EncryptedSharedPreferences (D.5) and
+// mnemonic in Android Keystore + EncryptedSharedPreferences and
 // passing it back per signing call. Holding the SigningKey long-living
 // inside the JNI library would put a wallet secret in app memory for the
 // entire session lifetime - we avoid that.

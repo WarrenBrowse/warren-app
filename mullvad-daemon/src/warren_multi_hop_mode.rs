@@ -9,7 +9,7 @@
 //! file alone is necessary but not sufficient.
 //!
 //! A user-facing UI toggle (Settings::warren_multi_hop_mode) is left
-//! for M4.H.C; this env var is the bench-time gate.
+//! for a future revision; this env var is the bench-time gate.
 
 /// Name of the env var read at boot. Convention frozen for the POC:
 /// renaming requires a migration in `docs/` and bench scripts.

@@ -204,7 +204,7 @@ fn warren_status_snapshot_to_proto(
         obfuscation_active: snap.obfuscation_active,
         failover_count: snap.failover_count,
         last_failover_age: snap.last_failover_age.map(duration_to_proto),
-        // Session H A.4: surface the pending mismatch to the UI.
+        // Surface the pending mismatch to the UI.
         // `None` (steady state) -> proto field unset -> renderer
         // sees `pubkeyMismatchPending: null`.
         pubkey_mismatch_pending: snap.pubkey_mismatch_pending.map(|m| {
@@ -635,7 +635,7 @@ impl ManagementService for ManagementServiceImpl {
         ))
     }
 
-    // Session H A.4: TOFU pubkey-pinning user actions.
+    // TOFU pubkey-pinning user actions.
     async fn trust_new_exit_key(
         &self,
         request: Request<types::TrustNewExitKeyRequest>,
@@ -2100,7 +2100,7 @@ fn map_rest_error(error: &RestError) -> Status {
         // as expired so the UI redirects to the "buy plan" screen
         // instead of letting the user click the now-broken Connect
         // button (which would otherwise trigger a doomed handshake
-        // and lock down the firewall - see the M5.D.x no-sub UX
+        // and lock down the firewall - see the no-sub UX
         // fix). Other 404-bearing REST surfaces (none today) would
         // need their own renderer-side mapping.
         RestError::ApiError(status, message) if *status == StatusCode::NOT_FOUND => {

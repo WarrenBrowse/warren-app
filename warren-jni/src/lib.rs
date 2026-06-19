@@ -7,7 +7,7 @@
 //   - [`android_jni`] (target_os = "android" only) - the actual JNI exports
 //     (`Java_com_warrenbrowse_vpn_jni_WarrenJni_*`). Calls into `wallet`
 //     for the mnemonic / signing surface; stubs out the tunnel surface
-//     until D.4 lands `warren_tunnel::PacketDevice::from_fd`.
+//     until `warren_tunnel::PacketDevice::from_fd` lands.
 
 pub mod wallet;
 

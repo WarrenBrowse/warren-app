@@ -28,7 +28,7 @@ use talpid_tunnel::{
 use talpid_types::net::AllowedTunnelTraffic;
 use warrenguard_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
-// can construct `MultiHopConfig` without depending on warren-multihop
+// can construct `MultiHopConfig` without depending on warrenguard-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
 pub use warrenguard_multihop::{
     ExitDescriptorSigned as MultiHopExitDescriptor, ExitId,
@@ -36,7 +36,7 @@ pub use warrenguard_multihop::{
 };
 // NAT-PMP wire protocol enum re-exported so daemon code constructs
 // `NatPmpConfig { protocol: NatPmpProto::Udp, .. }` without depending
-// directly on the warren-natpmp-protocol crate. The crate itself is a
+// directly on the warrenguard-natpmp-protocol crate. The crate itself is a
 // path-dep of this one (so the type lives in this binary's symbol
 // table) and is also referenced explicitly by the daemon-side
 // `warren_nat_pmp` module.
@@ -47,7 +47,7 @@ pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
 /// Re-export of the single-hop stable exit identifier from
-/// warren-protocol. Session A.4 pubkey pinning keys its TOFU lookup
+/// warrenguard-wire. Pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
 /// distinguishable from an exit-substitution attack.
 pub use warrenguard_wire::ExitId as RelayExitId;
@@ -56,7 +56,7 @@ pub use warrenguard_wire::ExitId as RelayExitId;
 /// only depend on `talpid-warren-tunnel` (e.g.
 /// `mullvad_daemon::warren_tunnel_params`) can OR them into
 /// [`WarrenTunnelParameters::features`] without taking a direct
-/// `warren-protocol` dependency.
+/// `warrenguard-wire` dependency.
 pub use warrenguard_wire::features;
 use warrenguard_wire::{WarrenExitAddr, WarrenTransportAddr};
 use warren_tunnel::{
@@ -113,7 +113,7 @@ pub struct WarrenTunnelParameters {
     /// from `exit-info.json` published by the exits.
     pub exit_addr: WarrenExitAddr,
 
-    /// Stable 16-byte exit identifier (Session A.4 anchor). Sourced
+    /// Stable 16-byte exit identifier (pubkey-pinning anchor). Sourced
     /// from `WarrenRelay::exit_id()` at selection time. The daemon's
     /// pubkey-pinning verify hook keys its lookup on this field so a
     /// legitimate Ed25519 rotation under the same `exit_id` triggers
@@ -121,13 +121,13 @@ pub struct WarrenTunnelParameters {
     /// `exit_id`) starts a fresh TOFU pin.
     pub exit_id: RelayExitId,
 
-    /// Session H.6: forensic snapshot of the exit's location at
-    /// selection time. Propagated to the Session A.4 TOFU pin row so
+    /// Forensic snapshot of the exit's location at
+    /// selection time. Propagated to the TOFU pin row so
     /// the modal + `/v1/incidents/pubkey-mismatch` report carry the
     /// user-readable location. Empty string when Warren-mode is off
     /// or the relay list lacked geo information.
     pub country_code: String,
-    /// Session H.6: free-form city label associated with the
+    /// Free-form city label associated with the
     /// selected exit. Empty string when no geo information is
     /// available.
     pub city: String,
@@ -229,7 +229,7 @@ pub struct WarrenTunnelParameters {
     /// SSH on a management interface, ...). Each entry becomes an
     /// `ip rule add to <cidr> lookup main pref 49` installed alongside
     /// the standard `0.0.0.0/1` + `128.0.0.0/1` split-default routes.
-    /// Empty (default) preserves the M4.E.D behaviour: the tunnel
+    /// Empty (default) preserves the prior behaviour: the tunnel
     /// captures all traffic except the exit IP itself.
     ///
     /// Linux-only at this layer: macOS and Windows daemon routing is
@@ -239,8 +239,8 @@ pub struct WarrenTunnelParameters {
     /// the gRPC + Redux glue, not a fresh daemon traversal.
     pub bypass_cidrs: Vec<BypassCidr>,
 
-    /// M5.B.1 DAITA v2 opt-in. When `true`, the client advertises
-    /// `Setup.daita_support = true` on the warren-protocol v3
+    /// DAITA v2 opt-in. When `true`, the client advertises
+    /// `Setup.daita_support = true` on the warrenguard-wire v3
     /// handshake. The exit may then respond with a
     /// `SetupAck.daita_spec` describing the negotiated `maybenot`
     /// machine. Driven by the Mullvad upstream `wireguard.daita`
@@ -331,7 +331,7 @@ pub type NatPmpMappingObserver = std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpEvent
 /// Wired by the Electron UI through the gRPC `SetNatPmpSettings` rpc.
 /// Default-disabled (the field is `None` upstream when `enabled =
 /// false`) so existing user installs see no change in behaviour after
-/// the M4.H.F upgrade.
+/// the upgrade.
 ///
 /// Multi-port: [`Self::rules`] is the source of truth for which forwards
 /// the controller maintains (one refresh loop per rule). The legacy
@@ -466,7 +466,7 @@ pub struct MultiHopConfig {
     /// ISO 3166-1 alpha-2 country code of the EXIT hop, taken from the
     /// signed+attested directory `NodeEntry`. Authoritative for the GUI
     /// location label: the exit egress IP is redacted from the client
-    /// directory (Phase 2), and an exit-only node is absent from the
+    /// directory, and an exit-only node is absent from the
     /// single-hop list, so the daemon cannot recover the exit geo from
     /// the IP or the relay list. Empty for the manual-config path (the
     /// caller then falls back to the single-hop relay-list lookup).
@@ -479,11 +479,11 @@ pub struct MultiHopConfig {
     /// (Hetzner Cloud / KVM guests) and on macOS where GSO is not
     /// supported.
     pub enable_gso: bool,
-    /// Opt into the full M4.0 wire-mimicry profile (Initial padding +
+    /// Opt into the full wire-mimicry profile (Initial padding +
     /// split ClientHello). `true` is the production default against a
-    /// real warren-relay; `false` is used for loopback benches where
+    /// real warrenguard-relay; `false` is used for loopback benches where
     /// the relay-inbound transport config does not mirror these knobs
-    /// (caveat M4.D #1 in `warren-client::multi_hop`).
+    /// (see `warren-client::multi_hop`).
     pub use_warren_obfuscation: bool,
 }
 
@@ -646,7 +646,7 @@ pub struct WarrenTunnelMonitor {
     /// the dedicated table). Installed in `start_single_hop` only when the
     /// exit allocated a tunnel v6 (`metadata.ipv6_gateway.is_some()`).
     /// `None` on the multi-hop path (IPv4-only `/v1`), when no v6 was
-    /// assigned, or on non-Linux (Phase E). Torn down in `wait()`
+    /// assigned, or on non-Linux. Torn down in `wait()`
     /// alongside the v4 guard; the firewall blocks native v6 regardless so
     /// a failed install never leaks.
     v6_route_guard: Option<default_route_split::DefaultRouteSplitV6Guard>,
@@ -1066,7 +1066,7 @@ impl WarrenTunnelMonitor {
         // dedicated table so the exit-allocated tunnel v6 actually carries
         // user traffic. Installed only when the exit allocated a v6
         // (`ipv6_gateway` set in `build_tun_config_for_kind`). The facade
-        // bails on non-Linux (Phase E). A failed install is non-fatal: the
+        // bails on non-Linux. A failed install is non-fatal: the
         // firewall keeps native IPv6 blocked, so v6 is non-functional but
         // never leaks. The exit's own v6 endpoint (if the transport is v6)
         // is passed as the self-poison bypass.
@@ -1149,13 +1149,10 @@ impl WarrenTunnelMonitor {
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();
-                    // M5.B.1: prefer the DAITA-enabled pump variant
+                    // Prefer the DAITA-enabled pump variant
                     // when the exit ships a `daita_spec` in the
                     // SetupAck. Falls back to the regular pump when
-                    // no DAITA was negotiated. Multi-conn variant of
-                    // the DAITA pump is not yet wired (cf. M5.B.1
-                    // open work) so multi-session paths keep the
-                    // regular pump even if a spec was returned.
+                    // no DAITA was negotiated.
                     let res = match session.daita_spec().cloned() {
                         Some(cfg) => {
                             match DaitaState::from_config(&cfg, std::time::Instant::now()) {
@@ -1185,7 +1182,7 @@ impl WarrenTunnelMonitor {
                     res
                 }
                 SessionKind::Multi(multi) => {
-                    // M5.B.1: prefer the DAITA-enabled multi-conn pump
+                    // Prefer the DAITA-enabled multi-conn pump
                     // when the primary's SetupAck shipped a spec. The
                     // exit guarantees every secondary inherits the
                     // same spec (cf. `attribute_session` sharing), so
@@ -1478,7 +1475,7 @@ impl WarrenTunnelMonitor {
         // Derivation: octet C, D = pubkey[0], pubkey[1].max(2). Skips
         // `10.66.X.0` (network) and `10.66.X.1` (gateway). Collision
         // odds across two clients on the same exit are ~1/65 000.
-        // Future M4.H.C will replace this with a coordinated allocator
+        // A future revision will replace this with a coordinated allocator
         // (subscription-bound, persisted exit-side).
         let pubkey_bytes = params.signing_key.verifying_key().to_bytes();
         // Prefer the exit-allocated IPv4 (published on the setup-stream
@@ -1945,8 +1942,8 @@ impl WarrenTunnelMonitor {
         // An earlier version dropped `nat_pmp_manager` + aborted
         // `nat_pmp_controller` right here, which killed the refresh
         // loop / controller microseconds after they were spawned -
-        // the controller's body never even got polled (M5.D.x bug:
-        // "Status: requesting forever"; the legacy manager had the
+        // the controller's body never even got polled (the
+        // "Status: requesting forever" bug; the legacy manager had the
         // same latent issue, surviving only the transient window
         // between `start()` and `wait()`, which is why the exit
         // sometimes showed a short-lived orphan allocation).
@@ -2228,7 +2225,7 @@ fn spawn_nat_pmp_runtime(
     runtime: &tokio::runtime::Handle,
     params: &WarrenTunnelParameters,
 ) -> NatPmpRuntimeArtifacts {
-    // Diagnostic (M5.D.x): trace which of the three NAT-PMP inputs is
+    // Diagnostic: trace which of the three NAT-PMP inputs is
     // present at tunnel start so a "nothing happens on toggle" report
     // can be triaged from the logs alone.
     log::info!(
@@ -3878,7 +3875,7 @@ mod tests {
     }
 
     // ===================================================================
-    // M5.D.x live-reconfig controller tests. Reproduces the exact user
+    // Live-reconfig controller tests. Reproduces the exact user
     // scenario: tunnel connected with NAT-PMP OFF, then the user
     // toggles it ON via the watch channel. The controller must spawn a
     // manager and the observer must see a Mapped event - all without a

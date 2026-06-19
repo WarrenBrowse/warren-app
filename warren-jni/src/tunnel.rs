@@ -43,12 +43,12 @@ use warren_tunnel::{
 /// JSON config parsed from the Kotlin side. Field names mirror
 /// `android/app/src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt`.
 /// Optional fields (multi-hop entry, DAITA spec, etc.) are accepted but not
-/// wired yet - they are placeholders for D.4 step 3+ surface alignment.
+/// wired yet - they are placeholders for later surface alignment.
 #[derive(Debug, Deserialize)]
 pub struct WarrenTunnelConfig {
     pub exit_pubkey_hex: String,
     pub exit_endpoint: String,
-    #[expect(dead_code, reason = "config field for D.4 step 3+ wiring")]
+    #[expect(dead_code, reason = "config field reserved for later wiring")]
     pub wallet_pubkey_hex: Option<String>,
     /// Multi-hop entry relay hint. When present, `run_session` routes through
     /// `MultiHopClient` (see `run_multi_hop_session`); the value carries an
@@ -132,7 +132,7 @@ pub enum SessionStatus {
     Disconnected = 0,
     Connecting = 1,
     Connected = 2,
-    #[expect(dead_code, reason = "config field for D.4 step 3+ wiring")]
+    #[expect(dead_code, reason = "config field reserved for later wiring")]
     Reconnecting = 3,
     /// The exit refused the setup with a policy rejection
     /// (`WarrenControlMessage::Rejected`): the account is not authorized,
@@ -152,7 +152,7 @@ pub enum SessionStatus {
 /// The `clippy::enum_variant_names` allow exists because the "what failed"
 /// narration is the variant's purpose; renaming each to drop the common
 /// `Mnemonic` / `Config` / `ExitPubkey` etc. suffixes would lose that.
-#[expect(dead_code, reason = "richer error reporting wired in D.4 step 3")]
+#[expect(dead_code, reason = "richer error reporting wired in a follow-up")]
 #[expect(
     clippy::enum_variant_names,
     reason = "shared `Invalid*` prefix is the variant's documentation purpose"
@@ -254,7 +254,7 @@ pub async fn run_session(
     );
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
 
-    // D.6 NAT-PMP wiring: if the client opted in, spawn the refresh
+    // NAT-PMP wiring: if the client opted in, spawn the refresh
     // loop with the assigned tunnel inner IPv4 as bind addr so the
     // request egresses through the tunnel. The loop runs alongside
     // the bidirectional pump and is cancelled implicitly when the

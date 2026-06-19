@@ -1,13 +1,13 @@
 //! Live Warren tunnel status surfaced to the gRPC management interface.
 //!
-//! Carries the M4.E.D auto-reconnect metrics (`reconnect_count` +
-//! `last_reconnect_age`) and the M4.0 obfuscation indicator that the
+//! Carries the auto-reconnect metrics (`reconnect_count` +
+//! `last_reconnect_age`) and the obfuscation indicator that the
 //! Electron UI displays in the connection details view. The values are
 //! held in a [`WarrenStatusCache`] shared between the daemon main loop
 //! and the multi-hop supervisor (when in multi-hop mode); for
 //! single-hop mode the `reconnect_count` stays at 0 and
 //! `obfuscation_active` is true per doctrine
-//! `warren_obfuscation_doctrine_v1` (M4.0 HTTP/3 mimicry always-on /v1).
+//! `warren_obfuscation_doctrine_v1` (HTTP/3 mimicry always-on /v1).
 
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -89,7 +89,7 @@ pub struct NatPmpMappingSnapshot {
     pub state: NatPmpStateSnapshot,
 }
 
-/// Session H A.4 surface: forensic payload pushed to the UI when the
+/// Forensic payload pushed to the UI when the
 /// TOFU verify hook refuses a connect. All fields are operator
 /// metadata (`exit_id` and the Ed25519 pubkeys are public via the
 /// signed relay-list; the location is the snapshot pinned at TOFU
@@ -123,7 +123,7 @@ pub struct WarrenStatusSnapshot {
     /// not been any reconnect yet (e.g. fresh session, single-hop, or
     /// connection currently failing).
     pub last_reconnect_age: Option<Duration>,
-    /// True when the M4.0 HTTP/3 mimicry obfuscation is active. /v1 has
+    /// True when the HTTP/3 mimicry obfuscation is active. /v1 has
     /// this always-on (doctrine), so this is true unless the daemon is
     /// in pure single-hop legacy mode with obfuscation disabled.
     pub obfuscation_active: bool,
@@ -132,7 +132,7 @@ pub struct WarrenStatusSnapshot {
     /// Empty when the user has not opted into port-forwarding (or all
     /// rules were removed).
     pub nat_pmp_mappings: Vec<NatPmpMappingSnapshot>,
-    /// M5.B.2 multi-exit failover counter. Bumped each time the
+    /// Multi-exit failover counter. Bumped each time the
     /// `assemble_failover_for_attempt` path is taken (retry > 0 with a
     /// memoized previous exit). The UI displays a toast when this
     /// counter increments so the user knows their exit was swapped.
@@ -141,7 +141,7 @@ pub struct WarrenStatusSnapshot {
     /// recorded in the current session. Matches `last_reconnect_age`
     /// semantics (computed against the calling thread's clock).
     pub last_failover_age: Option<Duration>,
-    /// Session H A.4: `None` (steady state) when no TOFU mismatch is
+    /// `None` (steady state) when no TOFU mismatch is
     /// pending review; `Some` while the verify hook refused a connect
     /// because the observed Ed25519 pubkey differs from the pinned
     /// baseline. The UI mounts the `WarrenPubKeyWarning` modal until
@@ -285,7 +285,7 @@ impl WarrenStatusCache {
         let _ = self.tx.send(snapshot);
     }
 
-    /// M5.B.2: bumps the failover counter and stamps the moment.
+    /// Bumps the failover counter and stamps the moment.
     /// Called from the tunnel-state-machine right when
     /// `assemble_failover_for_attempt` is dispatched, i.e. when a
     /// retry > 0 will exclude the previous exit. The UI toast layer
@@ -410,7 +410,7 @@ impl WarrenStatusCache {
         let _ = self.tx.send(snapshot);
     }
 
-    /// Session H A.4: surface a TOFU pubkey-mismatch event to the UI.
+    /// Surface a TOFU pubkey-mismatch event to the UI.
     /// Mounts the `WarrenPubKeyWarning` modal on the next watch tick.
     /// Idempotent: passing the same payload again does not re-push.
     pub fn set_pubkey_mismatch_pending(&self, pending: PubkeyMismatchPending) {
@@ -428,7 +428,7 @@ impl WarrenStatusCache {
         let _ = self.tx.send(snapshot);
     }
 
-    /// Session H A.4: clear the pending mismatch flag (= the user
+    /// Clear the pending mismatch flag (= the user
     /// picked Trust / Reject / Report from the modal). Idempotent.
     pub fn clear_pubkey_mismatch_pending(&self) {
         let snapshot = {
@@ -445,9 +445,9 @@ impl WarrenStatusCache {
         let _ = self.tx.send(snapshot);
     }
 
-    /// Toggle the obfuscation indicator. M4.0 always-on /v1 means this
+    /// Toggle the obfuscation indicator. Always-on /v1 means this
     /// stays true in production; the setter exists so a future /v2
-    /// toggle (M4.G+) can flip it without touching the cache shape.
+    /// toggle can flip it without touching the cache shape.
     pub fn set_obfuscation_active(&self, active: bool) {
         let snapshot = {
             let mut inner = self
@@ -479,7 +479,7 @@ mod tests {
         let s = WarrenStatusSnapshot::default();
         assert_eq!(s.reconnect_count, 0);
         assert_eq!(s.last_reconnect_age, None);
-        assert!(s.obfuscation_active, "M4.0 obfuscation always-on /v1");
+        assert!(s.obfuscation_active, "obfuscation always-on /v1");
     }
 
     #[test]
@@ -816,7 +816,7 @@ mod tests {
         assert!(!rx.has_changed().unwrap_or(false));
     }
 
-    // --- M5.B.2 failover surface ---------------------------------------
+    // --- Failover surface ---------------------------------------
 
     #[test]
     fn default_snapshot_has_failover_count_zero_and_age_none() {
@@ -869,7 +869,7 @@ mod tests {
         assert_eq!(s.failover_count, 1);
     }
 
-    // --- Session H A.4 pubkey-mismatch surface --------------------
+    // --- Pubkey-mismatch surface --------------------
 
     fn make_mismatch() -> PubkeyMismatchPending {
         PubkeyMismatchPending {
