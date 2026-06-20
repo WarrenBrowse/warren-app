@@ -1,0 +1,110 @@
+---
+# Warren: reusable test suite (the single source of truth for "the Warren tests").
+#
+# Called by:
+#   - warren-checks.yml  -> fast feedback on push to main/warren-base + PRs
+#   - release.yml        -> preliminary gate that must pass BEFORE any build job
+#                           runs on a version tag (tests-before-builds).
+#
+# Kept as a reusable workflow (workflow_call) so the test scope is defined once
+# and can never drift between the push/PR gate and the release gate.
+
+name: Warren tests (reusable)
+
+on:
+  workflow_call:
+
+jobs:
+  daemon-warren-tests:
+    name: Daemon Warren crates (cargo test)
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          # This job runs `cargo fmt --check` in addition to clippy, so the
+          # toolchain needs the rustfmt component (the action installs only
+          # clippy by default).
+          rustup-components: clippy rustfmt
+
+      - name: cargo fmt --check (Warren scope)
+        # Gate fmt in addition to clippy/test to avoid style drifts
+        # on the fork branch (= consistent with the warren-core ci.yml
+        # workflow which also gates fmt).
+        run: cargo fmt --all -- --check
+
+      - name: cargo test Warren scope
+        # Targets the Warren-specific crates. We avoid cargo test
+        # --workspace so we do not run Android / iOS / Windows
+        # specific tests on Linux (already covered by upstream daemon.yml).
+        run: |
+          cargo test --locked -p mullvad-daemon
+          cargo test --locked -p mullvad-api
+          cargo test --locked -p mullvad-types
+          cargo test --locked -p mullvad-management-interface
+          cargo test --locked -p mullvad-cli
+          cargo test --locked -p talpid-warren-tunnel
+          cargo test --locked -p talpid-core
+          cargo test --locked -p warren-jni
+          cargo check --locked -p warren-ios
+
+      - name: cargo clippy Warren scope
+        run: |
+          cargo clippy --locked -p mullvad-daemon -- -D warnings
+          cargo clippy --locked -p mullvad-api -- -D warnings
+          cargo clippy --locked -p mullvad-cli -- -D warnings
+          cargo clippy --locked -p talpid-warren-tunnel -- -D warnings
+          cargo clippy --locked -p talpid-core -- -D warnings
+          cargo clippy --locked -p warren-jni -- -D warnings
+
+  desktop-warren-typecheck:
+    name: Desktop Warren UI (type-check + lint)
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    defaults:
+      run:
+        working-directory: desktop/packages/mullvad-vpn
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: desktop/package.json
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies (workspace root)
+        working-directory: desktop
+        run: npm ci
+
+      # mullvad-vpn imports types from the sibling workspace packages
+      # `windows-utils` and `nseventforwarder`, whose `.d.cts` are emitted
+      # by their own `build-typescript` (pure tsc, no native build) into
+      # `lib/`. Without this, `tsc --noEmit` fails with TS2307 (cannot find
+      # module) on those imports.
+      - name: Build workspace package types
+        working-directory: desktop
+        run: npm run build-typescript -w windows-utils -w nseventforwarder
+
+      - name: TypeScript type-check
+        run: npm run type-check
+
+      - name: ESLint (zero warnings)
+        run: npm run lint
+
+      - name: Verify messages.pot is up-to-date
+        # If TS code calls pgettext/gettext without an update-translations
+        # re-run being committed, this check breaks. Prevents
+        # divergence between pot and source.
+        shell: bash
+        run: |
+          npm run update-translations
+          if ! git diff --quiet -- locales/messages.pot; then
+            echo "::error::messages.pot is stale. Run npm run update-translations and commit."
+            git --no-pager diff -- locales/messages.pot | head -50
+            exit 1
+          fi

@@ -36,6 +36,7 @@ on:
       - "Cargo.lock"
       - ".warren-core-version"
       - ".github/workflows/warren-checks.yml"
+      - ".github/workflows/warren-tests.yml"
       - ".github/actions/mullvad-build-env/**"
   pull_request:
     branches:
@@ -51,102 +52,11 @@ permissions:
   contents: read
 
 jobs:
-  daemon-warren-tests:
-    name: Daemon Warren crates (cargo test)
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/mullvad-build-env
-        with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-          # This job runs `cargo fmt --check` in addition to clippy, so the
-          # toolchain needs the rustfmt component (the action installs only
-          # clippy by default).
-          rustup-components: clippy rustfmt
-
-      - name: cargo fmt --check (Warren scope)
-        # Gate fmt in addition to clippy/test to avoid style drifts
-        # on the fork branch (= consistent with the warren-core ci.yml
-        # workflow which also gates fmt).
-        run: cargo fmt --all -- --check
-
-      - name: cargo test Warren scope
-        # Targets the Warren-specific crates. We avoid cargo test
-        # --workspace so we do not run Android / iOS / Windows
-        # specific tests on Linux (already covered by upstream daemon.yml).
-        # talpid-warren-tunnel + talpid-core + warren-jni added per
-        # AUDIT_COMPLET.md M-5 (warren-ios is cfg(target_os = "ios") so
-        # cargo check only on Linux).
-        run: |
-          cargo test --locked -p mullvad-daemon
-          cargo test --locked -p mullvad-api
-          cargo test --locked -p mullvad-types
-          cargo test --locked -p mullvad-management-interface
-          cargo test --locked -p mullvad-cli
-          cargo test --locked -p talpid-warren-tunnel
-          cargo test --locked -p talpid-core
-          cargo test --locked -p warren-jni
-          cargo check --locked -p warren-ios
-
-      - name: cargo clippy Warren scope
-        run: |
-          cargo clippy --locked -p mullvad-daemon -- -D warnings
-          cargo clippy --locked -p mullvad-api -- -D warnings
-          cargo clippy --locked -p mullvad-cli -- -D warnings
-          cargo clippy --locked -p talpid-warren-tunnel -- -D warnings
-          cargo clippy --locked -p talpid-core -- -D warnings
-          cargo clippy --locked -p warren-jni -- -D warnings
-
-  desktop-warren-typecheck:
-    name: Desktop Warren UI (type-check + lint)
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    defaults:
-      run:
-        working-directory: desktop/packages/mullvad-vpn
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: desktop/package.json
-          cache: 'npm'
-          cache-dependency-path: desktop/package-lock.json
-
-      - name: Install dependencies (workspace root)
-        working-directory: desktop
-        run: npm ci
-
-      # mullvad-vpn imports types from the sibling workspace packages
-      # `windows-utils` and `nseventforwarder`, whose `.d.cts` are emitted
-      # by their own `build-typescript` (pure tsc, no native build) into
-      # `lib/`. Without this, `tsc --noEmit` fails with TS2307 (cannot find
-      # module) on those imports.
-      - name: Build workspace package types
-        working-directory: desktop
-        run: npm run build-typescript -w windows-utils -w nseventforwarder
-
-      - name: TypeScript type-check
-        # Includes the manual TS Phase H patches for the gRPC bindings.
-        # Will regen automatically once we have executed the
-        # mullvadvpn-app-build-node-grpc-bindings container (see warren-architecture.md).
-        run: npm run type-check
-
-      - name: ESLint (zero warnings)
-        run: npm run lint
-
-      - name: Verify messages.pot is up-to-date
-        # If TS code calls pgettext/gettext without an update-translations
-        # re-run being committed, this check breaks. Prevents
-        # divergence between pot and source.
-        shell: bash
-        run: |
-          npm run update-translations
-          if ! git diff --quiet -- locales/messages.pot; then
-            echo "::error::messages.pot is stale. Run npm run update-translations and commit."
-            git --no-pager diff -- locales/messages.pot | head -50
-            exit 1
-          fi
+  # The Warren test scope (daemon cargo test/clippy/fmt + desktop UI
+  # type-check/lint) lives in the reusable warren-tests.yml so the exact same
+  # gate runs here (push/PR, fast feedback) and in release.yml (before any build
+  # on a version tag). secrets: inherit forwards WARREN_CORE_RO_TOKEN for the
+  # sibling warren-core/warrenguard checkout.
+  warren-tests:
+    uses: ./.github/workflows/warren-tests.yml
+    secrets: inherit

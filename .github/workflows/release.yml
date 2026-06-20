@@ -66,8 +66,17 @@ permissions:
   contents: write
 
 jobs:
+  # Preliminary gate: the full Warren test suite (daemon cargo test/clippy/fmt +
+  # desktop UI type-check/lint) must pass BEFORE any platform build runs. Every
+  # build-* job `needs: [tests]`, so a red test skips all builds and the publish.
+  # Same reusable suite as the push/PR warren-checks.yml (single source of truth).
+  tests:
+    uses: ./.github/workflows/warren-tests.yml
+    secrets: inherit
+
   build-macos:
     name: Build macOS DMG/PKG
+    needs: [tests]
     runs-on: [self-hosted, macOS, ARM64]
     env:
       WARREN_CSC_LINK_MACOS_B64: ${{ secrets.WARREN_CSC_LINK_MACOS }}
@@ -120,6 +129,7 @@ jobs:
 
   build-linux:
     name: Build Linux .deb/.rpm
+    needs: [tests]
     # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
     # The Debian LXC runner stays registered but lacks this label, so it is no
     # longer selected for this job.
@@ -159,6 +169,7 @@ jobs:
 
   build-windows:
     name: Build Windows MSI
+    needs: [tests]
     runs-on: [self-hosted, Windows, X64]
     # Windows binaries are signed with Azure Trusted Signing (cloud HSM).
     # Since 1 June 2023 (CA/Browser Forum Code Signing Baseline Requirements),
@@ -254,6 +265,7 @@ jobs:
     # 'true' (Settings -> Secrets and variables -> Actions -> Variables tab).
     # No code change needed; publish-release already treats iOS as non-blocking.
     if: ${{ vars.WARREN_ENABLE_IOS == 'true' }}
+    needs: [tests]
     runs-on: macos-15
     env:
       IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
@@ -369,13 +381,14 @@ jobs:
           retention-days: 1
 
   build-android:
-    name: Build Android AAB + Play Store internal-test upload
-    # Android is DISABLED for now: the Android app is not yet at feature parity
-    # with the desktop app (missing kill switch / custom DNS / IPv6 leak protection,
-    # reduced UI) and has no production signing. To RE-ENABLE, set the repository
-    # variable WARREN_ENABLE_ANDROID to 'true' (Settings -> Secrets and variables
-    # -> Actions -> Variables tab). publish-release gates on it conditionally below.
-    if: ${{ vars.WARREN_ENABLE_ANDROID == 'true' }}
+    name: Build Android APK/AAB + Play Store internal-test upload
+    # Android is a first-class release platform: it builds and publishes the APK
+    # (attached to the GitHub Release by publish-release) on every version tag,
+    # and it blocks the release like the desktop builds. Signing is opt-in: with
+    # ANDROID_KEYSTORE_BASE64 set it produces a signed release APK + AAB and
+    # uploads the AAB to the Play internal-test track; without it, an unsigned
+    # debug APK is built and published (same opt-in model as the desktop builds).
+    needs: [tests]
     runs-on: [self-hosted, macOS, ARM64]
     env:
       ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -459,18 +472,16 @@ jobs:
     name: Publish GitHub Release
     needs: [build-macos, build-linux, build-windows, build-ios, build-android]
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    # iOS and Android are non-blocking while disabled. Publish as long as it's a tag
-    # and the three desktop builds (macOS/Linux/Windows) succeed. build-ios/build-android
-    # stay in `needs` so we wait for them and include their artifacts when enabled+green.
-    # Android is gated conditionally: it only blocks the release when WARREN_ENABLE_ANDROID
-    # is 'true'. iOS is always non-blocking. Re-enable each via its repo variable.
+    # Publish as long as it's a tag and the desktop builds (macOS/Linux/Windows)
+    # AND Android all succeed. iOS stays non-blocking: it only builds when
+    # WARREN_ENABLE_IOS is 'true', and is never required for the release.
     if: >-
       !cancelled() &&
       startsWith(github.ref, 'refs/tags/') &&
       needs.build-macos.result == 'success' &&
       needs.build-linux.result == 'success' &&
       needs.build-windows.result == 'success' &&
-      (vars.WARREN_ENABLE_ANDROID != 'true' || needs.build-android.result == 'success')
+      needs.build-android.result == 'success'
     env:
       TAG_NAME: ${{ github.ref_name }}
     steps:
