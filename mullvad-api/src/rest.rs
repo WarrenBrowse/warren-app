@@ -1118,7 +1118,7 @@ impl_into_arc_err!(http::uri::InvalidUri);
 mod tests {
     use super::*;
     use crate::warren_auth::{
-        HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, WarrenAuthSigner,
+        HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, WarrenAuthSigner, ss58,
     };
     use ed25519_dalek::SigningKey;
 
@@ -1223,7 +1223,7 @@ mod tests {
     fn signed_post_json_bytes_with_warren_signer_injects_four_warren_headers() {
         // Phase 2.A.3 - happy path: a factory configured with a
         // signer must produce a request with the 4 X-Warren-*
-        // headers (pubkey 64ch, sig 128ch, timestamp u64, nonce
+        // headers (pubkey SS58, sig 128ch, timestamp u64, nonce
         // 32ch), **plus** the standard HTTP headers (content-length,
         // content-type=application/json).
         let factory =
@@ -1238,7 +1238,11 @@ mod tests {
         let sig = h.get(HEADER_SIGNATURE).expect("X-Warren-Sig present");
         let ts = h.get(HEADER_TIMESTAMP).expect("X-Warren-Timestamp present");
         let nonce = h.get(HEADER_NONCE).expect("X-Warren-Nonce present");
-        assert_eq!(pk.to_str().unwrap().len(), 64, "pubkey hex 64 chars");
+        assert_eq!(
+            pk.to_str().unwrap(),
+            fixed_signer().pubkey_ss58(),
+            "pubkey header must be the signer's SS58 address"
+        );
         assert_eq!(sig.to_str().unwrap().len(), 128, "sig hex 128 chars");
         assert_eq!(nonce.to_str().unwrap().len(), 32, "nonce hex 32 chars");
         ts.to_str()
@@ -1293,7 +1297,7 @@ mod tests {
         }
 
         // E2E verify with sha256(empty):
-        let pk_hex = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
+        let pk_ss58 = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
         let sig_hex = h.get(HEADER_SIGNATURE).unwrap().to_str().unwrap();
         let ts: u64 = h
             .get(HEADER_TIMESTAMP)
@@ -1303,7 +1307,7 @@ mod tests {
             .parse()
             .unwrap();
         let nonce_hex = h.get(HEADER_NONCE).unwrap().to_str().unwrap();
-        let pk_bytes: [u8; 32] = hex::decode(pk_hex).unwrap().try_into().unwrap();
+        let pk_bytes = ss58::decode(pk_ss58).expect("pubkey header must be valid SS58");
         let vk = VerifyingKey::from_bytes(&pk_bytes).unwrap();
         let sig_bytes: [u8; 64] = hex::decode(sig_hex).unwrap().try_into().unwrap();
         let sig = Signature::from_bytes(&sig_bytes);
@@ -1446,7 +1450,7 @@ mod tests {
         let h = req.headers();
 
         // Server-side extraction:
-        let pk_hex = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
+        let pk_ss58 = h.get(HEADER_PUBKEY).unwrap().to_str().unwrap();
         let sig_hex = h.get(HEADER_SIGNATURE).unwrap().to_str().unwrap();
         let ts: u64 = h
             .get(HEADER_TIMESTAMP)
@@ -1457,7 +1461,7 @@ mod tests {
             .unwrap();
         let nonce_hex = h.get(HEADER_NONCE).unwrap().to_str().unwrap();
 
-        let pk_bytes: [u8; 32] = hex::decode(pk_hex).unwrap().try_into().unwrap();
+        let pk_bytes = ss58::decode(pk_ss58).expect("pubkey header must be valid SS58");
         let vk = VerifyingKey::from_bytes(&pk_bytes).expect("valid pubkey");
         let sig_bytes: [u8; 64] = hex::decode(sig_hex).unwrap().try_into().unwrap();
         let sig = Signature::from_bytes(&sig_bytes);
