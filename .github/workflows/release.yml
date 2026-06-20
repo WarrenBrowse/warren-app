@@ -458,7 +458,7 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [build-macos, build-linux, build-windows, build-ios, build-android]
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     # iOS and Android are non-blocking while disabled. Publish as long as it's a tag
     # and the three desktop builds (macOS/Linux/Windows) succeed. build-ios/build-android
     # stay in `needs` so we wait for them and include their artifacts when enabled+green.
@@ -519,7 +519,7 @@ jobs:
   publish-update-metadata:
     name: Sign + publish update metadata
     needs: [publish-release]
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     # Signs the per-platform version manifests and serves them so existing apps
     # detect the new release. Gated on a signing key being present: without it
     # the whole step is a no-op (same opt-in philosophy as the build signing).

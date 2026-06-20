@@ -53,7 +53,7 @@ permissions:
 jobs:
   daemon-warren-tests:
     name: Daemon Warren crates (cargo test)
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -101,7 +101,7 @@ jobs:
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     defaults:
       run:
         working-directory: desktop/packages/mullvad-vpn
