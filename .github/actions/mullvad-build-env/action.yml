@@ -37,9 +37,11 @@ inputs:
   engine-token:
     description: >-
       PAT with read access to WarrenBrowse/warrenguard (the AGPL engine repo
-      that warren-core's keepers and the app's tunnel crates path-dep). Defaults
-      to warren-core-token, which is broad enough to cover both repos.
-    default: "${{ inputs.warren-core-token }}"
+      that warren-core's keepers and the app's tunnel crates path-dep). If left
+      empty, the warrenguard checkout falls back to warren-core-token (a
+      composite-action input default cannot reference another input, so the
+      fallback is applied in the checkout step).
+    default: ""
     required: false
 runs:
   using: "composite"
@@ -73,7 +75,7 @@ runs:
         ( cd "$dest" && ./bench/scripts/setup-quinn-fork.sh )
 
     - name: Read pinned warrenguard SHA
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       id: warrenguard-pin
       shell: bash
       run: echo "sha=$(cat .warrenguard-version)" >> "$GITHUB_OUTPUT"
@@ -84,10 +86,10 @@ runs:
       # clone pattern as warren-core. No quinn-fork setup here: the app builds
       # the engine against warren-core's patched quinn via the workspace
       # [patch.crates-io], so warrenguard's own gitignored vendor/ is not needed.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       shell: bash
       env:
-        ENGINE_TOKEN: ${{ inputs.engine-token }}
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
         WARRENGUARD_SHA: ${{ steps.warrenguard-pin.outputs.sha }}
       run: |
         set -euo pipefail
