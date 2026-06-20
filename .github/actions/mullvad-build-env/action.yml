@@ -46,6 +46,17 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Ensure rustup is on PATH
+      # The self-hosted Linux runner ships rustup preinstalled for the runner
+      # user (~/.cargo/bin) but does not export it to the job PATH, so the bare
+      # `rustup` calls below (override/component/target add) fail with exit 127.
+      # Prepend it here. Harmless where rustup is already on PATH (GitHub-hosted).
+      shell: bash
+      run: |
+        if [ -d "$HOME/.cargo/bin" ]; then
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        fi
+
     - name: Read pinned warren-core SHA
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       id: warren-core-pin
