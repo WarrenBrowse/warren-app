@@ -39,31 +39,22 @@ jobs:
         # workflow which also gates fmt).
         run: cargo fmt --all -- --check
 
-      # Compile all test binaries first (untimed within the job ceiling) so the
-      # per-crate run timeout below measures execution only, never compilation.
-      - name: Compile Warren test binaries
-        run: |
-          cargo test --locked --no-run \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli \
-            -p talpid-warren-tunnel -p talpid-core -p warren-jni
-
-      - name: cargo test Warren scope (bounded per crate)
+      - name: cargo test Warren scope
         # Targets the Warren-specific crates. We avoid cargo test --workspace so
         # we do not run Android / iOS / Windows specific tests on Linux (already
-        # covered by upstream daemon.yml). Each crate's test RUN is wrapped in a
-        # 5-min timeout (binaries already built) and forced single-threaded with
-        # --nocapture so a hang fails fast and the last "test ... " line names the
-        # exact culprit instead of silently burning the 6h job ceiling.
+        # covered by upstream daemon.yml). Tests run with the default parallel
+        # harness; the job-level timeout-minutes is the only guard (a genuine
+        # hang fails the job in minutes, never at the GitHub 6h max). Single-
+        # threaded runs were tried and are far too slow under Rosetta emulation.
         run: |
-          set -euo pipefail
-          for c in mullvad-daemon mullvad-api mullvad-types \
-                   mullvad-management-interface mullvad-cli \
-                   talpid-warren-tunnel talpid-core warren-jni; do
-            echo "::group::cargo test -p $c"
-            timeout 300 cargo test --locked -p "$c" -- --test-threads=1 --nocapture
-            echo "::endgroup::"
-          done
+          cargo test --locked -p mullvad-daemon
+          cargo test --locked -p mullvad-api
+          cargo test --locked -p mullvad-types
+          cargo test --locked -p mullvad-management-interface
+          cargo test --locked -p mullvad-cli
+          cargo test --locked -p talpid-warren-tunnel
+          cargo test --locked -p talpid-core
+          cargo test --locked -p warren-jni
           cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
