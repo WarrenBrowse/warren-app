@@ -1,0 +1,11 @@
+# Nextest config for the Warren test gate (warren-tests.yml). Upstream Mullvad
+# CI uses plain `cargo test`; this file only affects the Warren nextest runs.
+[profile.warren-ci]
+# Every Warren daemon-scope unit test finishes in well under 2s locally. A test
+# that blocks far longer is hanging under the x86_64-Rosetta CI sandbox (some
+# upstream daemon tests wait on time/IO that behaves differently under
+# emulation). Terminate it after 60s (period 30s x 2) so it is named and fails
+# fast, instead of silently burning the 60-min job timeout and getting cancelled.
+slow-timeout = { period = "30s", terminate-after = 2 }
+# A killed/flaky test gets one retry before it counts as a real failure.
+retries = 1

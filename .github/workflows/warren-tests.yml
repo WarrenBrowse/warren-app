@@ -39,22 +39,25 @@ jobs:
         # workflow which also gates fmt).
         run: cargo fmt --all -- --check
 
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
       - name: cargo test Warren scope
-        # Targets the Warren-specific crates. We avoid cargo test --workspace so
-        # we do not run Android / iOS / Windows specific tests on Linux (already
-        # covered by upstream daemon.yml). Tests run with the default parallel
-        # harness; the job-level timeout-minutes is the only guard (a genuine
-        # hang fails the job in minutes, never at the GitHub 6h max). Single-
-        # threaded runs were tried and are far too slow under Rosetta emulation.
+        # Targets the Warren-specific crates. We avoid --workspace so we do not
+        # run Android / iOS / Windows specific tests on Linux (already covered by
+        # upstream daemon.yml). Run via nextest with the `warren-ci` profile,
+        # whose slow-timeout TERMINATES a test that blocks > 60s and names it:
+        # some upstream daemon tests hang under the x86_64-Rosetta sandbox (they
+        # pass in seconds natively), and without a per-test kill the whole job sat
+        # until the 60-min timeout and got cancelled. cargo check warren-ios
+        # separately (it is cfg(target_os = "ios"), compile-only on Linux).
         run: |
-          cargo test --locked -p mullvad-daemon
-          cargo test --locked -p mullvad-api
-          cargo test --locked -p mullvad-types
-          cargo test --locked -p mullvad-management-interface
-          cargo test --locked -p mullvad-cli
-          cargo test --locked -p talpid-warren-tunnel
-          cargo test --locked -p talpid-core
-          cargo test --locked -p warren-jni
+          cargo nextest run --locked --profile warren-ci \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli \
+            -p talpid-warren-tunnel -p talpid-core -p warren-jni
           cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope

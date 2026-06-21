@@ -37,6 +37,7 @@ on:
       - ".warren-core-version"
       - ".github/workflows/warren-checks.yml"
       - ".github/workflows/warren-tests.yml"
+      - ".config/nextest.toml"
       - ".github/actions/mullvad-build-env/**"
   pull_request:
     branches:
