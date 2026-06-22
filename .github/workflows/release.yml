@@ -134,6 +134,15 @@ jobs:
     # The Debian LXC runner stays registered but lacks this label, so it is no
     # longer selected for this job.
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    # Build C dependencies (tikv-jemalloc-sys, etc.) with clang, not gcc: under
+    # the x86_64-Rosetta emulation gcc's cc1 intermittently SIGSEGVs mid-compile
+    # ("internal compiler error: Segmentation fault ... cc1"), failing the build
+    # nondeterministically. clang is stable under Rosetta (same fix warren-core
+    # CI uses for its vendored-OpenSSL build). cc-rs honours CC/CXX for all C/C++
+    # deps the Rust build shells out to.
+    env:
+      CC: clang
+      CXX: clang++
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
