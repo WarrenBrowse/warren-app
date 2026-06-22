@@ -288,15 +288,15 @@ pub(crate) struct RealWatchdogIo {
     pub route_events: tokio::sync::mpsc::UnboundedReceiver<()>,
     /// Kept alive for the platform subscriptions that are RAII-bound
     /// (Windows `CallbackHandle`); `None` elsewhere. Held only for its Drop,
-    /// so it reads as dead-code off macOS. cfg_attr-wrapped (not a bare
-    /// `#[allow]`) to satisfy the workspace `allow_attributes` lint, matching
-    /// the sibling field below.
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    /// so it is dead-code off macOS. `expect` (not `allow`) so the workspace
+    /// `allow_attributes` lint is satisfied on the platforms where it expands,
+    /// and the cfg keeps it off macOS where the field is read.
+    #[cfg_attr(not(target_os = "macos"), expect(dead_code))]
     pub _subscription_guard: Option<Box<dyn std::any::Any + Send>>,
     // Only macOS reads this (get_default_routes / refresh_routes); the
     // Linux and Windows nudge + has-route paths use free functions, so
     // the field is dead there but kept for a uniform struct shape.
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    #[cfg_attr(not(target_os = "macos"), expect(dead_code))]
     pub route_manager: RouteManagerHandle,
     pub client_rx: ClientWatch,
     pub supervisor: SupervisorHandle,
