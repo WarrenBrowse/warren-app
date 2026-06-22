@@ -202,8 +202,8 @@ fn load_or_create_mnemonic_via_storage(
 /// persists it via the storage backend, and returns it.
 ///
 /// This deliberately bypasses `warren_identity::load_or_create_mnemonic`
-/// because that helper unconditionally writes to its `path` argument
-/// - which would mean creating a plaintext copy at the legacy path
+/// because that helper unconditionally writes to its `path` argument -
+/// which would mean creating a plaintext copy at the legacy path
 /// every first launch, even on macOS / Windows where the active
 /// backend stores in the System Keychain / DPAPI. Time Machine or
 /// Windows Shadow Copy could snapshot that file during the brief

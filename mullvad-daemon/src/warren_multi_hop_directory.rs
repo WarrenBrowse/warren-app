@@ -97,8 +97,8 @@ pub(crate) enum RootPinMode {
 /// Resolves the root trust anchor: `WARREN_MULTIHOP_ROOT_PUBKEY` env
 /// override wins (the `INSECURE_TOFU` sentinel opts into TOFU; otherwise
 /// it is a comma-separated pin set), else the baked constant. An empty /
-/// whitespace / garbage configuration yields [`RootPinMode::Unconfigured`]
-/// - a deliberate **fail-closed** default so a missing or fat-fingered
+/// whitespace / garbage configuration yields [`RootPinMode::Unconfigured`] -
+/// a deliberate **fail-closed** default so a missing or fat-fingered
 /// pin disables multi-hop instead of degrading to trusting the server.
 #[must_use]
 pub(crate) fn root_pin_mode() -> RootPinMode {
@@ -578,23 +578,21 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // tampered/stale file is rejected (fail-closed). Skipped when
         // unconfigured (multi-hop disabled).
         let dir_cache_path = cfg.settings_dir.join(DIRECTORY_CACHE_FILE);
-        if !unconfigured {
-            if let Ok(body) = std::fs::read_to_string(&dir_cache_path) {
-                match verify_cached_directory(&body, &cfg.server_pins, &root_pins, now_unix()) {
-                    Ok(dir) => {
-                        log::info!(
-                            "Warren multi-hop: seeded directory from disk cache \
-                             (generation {})",
-                            dir.generation
-                        );
-                        highest_generation = dir.generation;
-                        cached_dir = Some(dir);
-                    }
-                    Err(e) => log::info!(
-                        "Warren multi-hop: on-disk directory cache unusable ({e}); \
-                         waiting for a live fetch"
-                    ),
+        if !unconfigured && let Ok(body) = std::fs::read_to_string(&dir_cache_path) {
+            match verify_cached_directory(&body, &cfg.server_pins, &root_pins, now_unix()) {
+                Ok(dir) => {
+                    log::info!(
+                        "Warren multi-hop: seeded directory from disk cache \
+                         (generation {})",
+                        dir.generation
+                    );
+                    highest_generation = dir.generation;
+                    cached_dir = Some(dir);
                 }
+                Err(e) => log::info!(
+                    "Warren multi-hop: on-disk directory cache unusable ({e}); \
+                     waiting for a live fetch"
+                ),
             }
         }
 

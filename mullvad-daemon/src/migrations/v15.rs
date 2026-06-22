@@ -43,10 +43,9 @@ fn disable_mullvad_access_methods(settings: &mut serde_json::Value) -> Option<()
     if let Some(bridges) = access_methods
         .get_mut("mullvad_bridges")
         .and_then(|method| method.as_object_mut())
+        && bridges.get("name").and_then(|name| name.as_str()) == Some("Mullvad Bridges")
     {
-        if bridges.get("name").and_then(|name| name.as_str()) == Some("Mullvad Bridges") {
-            bridges.insert("name".to_string(), serde_json::json!("Warren Bridges"));
-        }
+        bridges.insert("name".to_string(), serde_json::json!("Warren Bridges"));
     }
 
     Some(())

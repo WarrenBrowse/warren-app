@@ -7,7 +7,7 @@ mod android_dns;
 mod api;
 // Kept for upstream-rebase cleanliness but not spawned: the Warren backend has
 // no `app/v1/api-addrs` endpoint (see the fetcher call site in `start_daemon`).
-#[allow(dead_code)]
+#[expect(dead_code)]
 mod api_address_updater;
 #[cfg(not(target_os = "android"))]
 mod cleanup;

@@ -61,13 +61,17 @@ jobs:
           cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
+        # --no-deps: lint only these Warren crates, not their entire upstream
+        # Mullvad dependency tree. Without it, clippy -D warnings also fails on
+        # unrelated upstream crates (e.g. mullvad-relay-selector doc-style nits)
+        # that are not part of the Warren surface and carry their own upstream CI.
         run: |
-          cargo clippy --locked -p mullvad-daemon -- -D warnings
-          cargo clippy --locked -p mullvad-api -- -D warnings
-          cargo clippy --locked -p mullvad-cli -- -D warnings
-          cargo clippy --locked -p talpid-warren-tunnel -- -D warnings
-          cargo clippy --locked -p talpid-core -- -D warnings
-          cargo clippy --locked -p warren-jni -- -D warnings
+          cargo clippy --no-deps --locked -p mullvad-daemon -- -D warnings
+          cargo clippy --no-deps --locked -p mullvad-api -- -D warnings
+          cargo clippy --no-deps --locked -p mullvad-cli -- -D warnings
+          cargo clippy --no-deps --locked -p talpid-warren-tunnel -- -D warnings
+          cargo clippy --no-deps --locked -p talpid-core -- -D warnings
+          cargo clippy --no-deps --locked -p warren-jni -- -D warnings
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)

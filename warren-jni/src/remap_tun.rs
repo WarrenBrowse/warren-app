@@ -116,6 +116,7 @@ impl<T: PacketDevice + Clone> PacketDevice for RemapTun<T> {
     }
 }
 
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 #[derive(Clone, Copy)]
 enum Field {
     Source,
@@ -124,7 +125,7 @@ enum Field {
 
 /// IP version nibble (4 or 6), or `None` if the packet is too short.
 // Used only by the Android-gated `PacketDevice` impl; dead on the host test build.
-#[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn ip_version(packet: &[u8]) -> Option<u8> {
     packet.first().map(|b| b >> 4)
 }
@@ -134,6 +135,7 @@ fn ip_version(packet: &[u8]) -> Option<u8> {
 /// Rewrite an IPv4 source/destination from `from` to `to`, fixing the IPv4
 /// header checksum and (for the first fragment of TCP/UDP) the transport
 /// checksum incrementally. No-op for short packets or a non-matching field.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn rewrite_v4(packet: &mut [u8], field: Field, from: &[u8; 4], to: &[u8; 4]) {
     if packet.len() < 20 || (packet[0] >> 4) != 4 {
         return;
@@ -177,6 +179,7 @@ fn rewrite_v4(packet: &mut [u8], field: Field, from: &[u8; 4], to: &[u8; 4]) {
 /// header is directly an upper-layer protocol) fixes the L4 checksum; with
 /// extension headers the address is still rewritten (so the exit accepts it)
 /// but the L4 checksum is left alone (rare on this path; v6 is opt-in).
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn rewrite_v6(packet: &mut [u8], field: Field, from: &[u8; 16], to: &[u8; 16]) {
     if packet.len() < 40 || (packet[0] >> 4) != 6 {
         return;
@@ -206,6 +209,7 @@ fn rewrite_v6(packet: &mut [u8], field: Field, from: &[u8; 16], to: &[u8; 16]) {
 ///
 /// `udp` marks the UDP quirk where a literal `0x0000` means "no checksum"
 /// (left untouched) and a computed `0x0000` must be transmitted as `0xffff`.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn fix_l4_checksum(packet: &mut [u8], off: usize, from: &[u8], to: &[u8], udp: bool) {
     if packet.len() < off + 2 {
         return;
@@ -223,6 +227,7 @@ fn fix_l4_checksum(packet: &mut [u8], off: usize, from: &[u8], to: &[u8], udp: b
 
 /// RFC 1624 incremental checksum update for a changed field (4 or 16 bytes):
 /// `HC' = ~(~HC + sum(~m_i + m'_i))`, over the 16-bit halves of the change.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn checksum_replace(check: u16, old: &[u8], new: &[u8]) -> u16 {
     debug_assert_eq!(old.len(), new.len());
     debug_assert_eq!(old.len() % 2, 0);

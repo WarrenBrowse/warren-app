@@ -287,8 +287,11 @@ type PumpErrorTx = Arc<std::sync::Mutex<Option<tokio::sync::oneshot::Sender<Stri
 pub(crate) struct RealWatchdogIo {
     pub route_events: tokio::sync::mpsc::UnboundedReceiver<()>,
     /// Kept alive for the platform subscriptions that are RAII-bound
-    /// (Windows `CallbackHandle`); `None` elsewhere.
-    #[allow(dead_code)]
+    /// (Windows `CallbackHandle`); `None` elsewhere. Held only for its Drop,
+    /// so it reads as dead-code off macOS. cfg_attr-wrapped (not a bare
+    /// `#[allow]`) to satisfy the workspace `allow_attributes` lint, matching
+    /// the sibling field below.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub _subscription_guard: Option<Box<dyn std::any::Any + Send>>,
     // Only macOS reads this (get_default_routes / refresh_routes); the
     // Linux and Windows nudge + has-route paths use free functions, so

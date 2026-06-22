@@ -946,7 +946,7 @@ impl ParametersGenerator {
             .retain(|k, _| settings.warren_pinned_exit_pubkeys.entries.contains_key(k));
     }
 
-    #[allow(
+    #[expect(
         clippy::unused_async,
         reason = "kept async to match the `.await` call site in lib.rs and the upstream signature; the Warren tunnel has no server-override concept so the body is trivial"
     )]

@@ -1138,14 +1138,16 @@ impl WarrenTunnelMonitor {
             // QUIC path visibility (cwnd/rtt/loss/datagram buffer headroom),
             // 5s cadence, self-terminates when the connections close.
             // Opt-out via WARREN_PATH_PROBE=0; never logs IPs or keys.
-            let _ = match &session_kind {
+            // Detach the probe's JoinHandle: it is fire-and-forget and
+            // self-terminates when the connections close.
+            drop(match &session_kind {
                 SessionKind::Mono(session) => {
                     warren_tunnel::spawn_path_probe("client", vec![session.clone_conn()], None)
                 }
                 SessionKind::Multi(multi) => {
                     warren_tunnel::spawn_path_probe("client", multi.clone_connections(), None)
                 }
-            };
+            });
             let pump_result = match session_kind {
                 SessionKind::Mono(session) => {
                     let conn = session.clone_conn();

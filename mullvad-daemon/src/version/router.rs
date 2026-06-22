@@ -652,7 +652,6 @@ fn recommended_version_upgrade(
 /// event to the daemon.
 #[cfg(all(test, not(in_app_upgrade)))]
 mod no_updater_tests {
-    use futures::StreamExt;
     use futures::channel::mpsc::unbounded;
     use mullvad_types::version::AppVersionInfo;
     use std::path::PathBuf;
@@ -693,14 +692,19 @@ mod no_updater_tests {
             _phantom: std::marker::PhantomData::<()>,
         };
 
-        // Drop the daemon side - this closes the daemon_rx channel, causing router.run()
-        // to terminate immediately via the `else => ControlFlow::Break(())` branch.
+        // Drop the daemon side so the daemon channel is closed. With no updater
+        // and no daemon messages, run()'s select! still has an always-enabled
+        // `wait_for_update` branch, so it idles rather than returning - bound it
+        // with a timeout. The router must stay SILENT for the whole window; the
+        // timeout firing (and dropping run(), closing the sender) is expected.
+        // A fixed unbounded `.next().await` here hangs under a loaded CI runner.
         drop(daemon_tx);
-        router.run().await;
+        let _ = tokio::time::timeout(std::time::Duration::from_millis(500), router.run()).await;
 
-        // No version event should have been emitted.
+        // No version event must have been emitted. try_next is non-blocking:
+        // Ok(Some(_)) means an event was queued (failure); Ok(None)/Err mean none.
         assert!(
-            version_event_receiver.next().await.is_none(),
+            !matches!(version_event_receiver.try_next(), Ok(Some(_))),
             "expected no version event before any metadata is received"
         );
     }

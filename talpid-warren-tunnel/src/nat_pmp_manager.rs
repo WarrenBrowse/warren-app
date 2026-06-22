@@ -162,8 +162,8 @@ impl NatPmpManager {
     ///
     /// The observer will receive a fresh `Mapped` event for the new
     /// allocation, which the UI surfaces as the new public port. No
-    /// `Cancelled` is propagated to the observer for the *old* loop
-    /// - the daemon's UI state model treats the live-swap as "the
+    /// `Cancelled` is propagated to the observer for the *old* loop -
+    /// the daemon's UI state model treats the live-swap as "the
     /// mapping moved to new params" rather than "the mapping
     /// disappeared and reappeared".
     pub async fn reconfigure(&mut self, new_config: &NatPmpConfig) {
