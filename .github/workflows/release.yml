@@ -269,6 +269,31 @@ jobs:
           "WARREN_TS_METADATA=$metaPath" >> $env:GITHUB_ENV
           "WARREN_WIN_SIGN_BACKEND=trusted-signing" >> $env:GITHUB_ENV
 
+      # Self-heal a corrupt electron-builder winCodeSign cache on the persistent
+      # runner. A partial extraction (e.g. rcedit-x64.exe missing) is trusted and
+      # never re-downloaded, failing `pack:win` with ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+      # even for unsigned builds (rcedit stamps the .exe resources). Purge the
+      # winCodeSign cache when its rcedit is absent so electron-builder refetches.
+      - name: Heal electron-builder winCodeSign cache
+        shell: pwsh
+        run: |
+          $roots = @(
+            (Join-Path $env:WINDIR 'SystemTemp\electron-builder-cache\winCodeSign'),
+            (Join-Path $env:LOCALAPPDATA 'electron-builder\Cache\winCodeSign'),
+            (Join-Path $env:TEMP 'electron-builder-cache\winCodeSign')
+          )
+          foreach ($cache in $roots) {
+            if (Test-Path $cache) {
+              $rcedit = Get-ChildItem -Path $cache -Recurse -Filter 'rcedit-x64.exe' -ErrorAction SilentlyContinue
+              if (-not $rcedit) {
+                Write-Host "Purging corrupt winCodeSign cache (rcedit missing): $cache"
+                Remove-Item -Recurse -Force $cache -ErrorAction SilentlyContinue
+              } else {
+                Write-Host "winCodeSign cache OK: $cache"
+              }
+            }
+          }
+
       - name: Build (signed via Trusted Signing)
         if: env.AZURE_CLIENT_ID != ''
         shell: bash
