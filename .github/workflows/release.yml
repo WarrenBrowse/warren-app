@@ -177,8 +177,24 @@ jobs:
           done
           exit 1
 
+      # Publish straight to the GitHub Release (release-asset storage), which is
+      # NOT subject to the Actions artifact storage quota that blocks
+      # upload-artifact. Mirrors the macOS job; runs on every ref (draft keyed by
+      # github.ref_name) so a v* tag run assembles the full multi-platform draft.
+      - name: Publish Linux installers to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: |
+            dist/WarrenVPN-*.deb
+            dist/WarrenVPN-*.rpm
+            dist/warren-vpn-daemon_*.deb
+            dist/warren-vpn-daemon_*.rpm
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: linux-installers
           path: |
@@ -269,8 +285,20 @@ jobs:
           echo "::warning::AZURE_CLIENT_ID secret not set; producing unsigned dev build."
           ./build.sh --optimize --universal
 
+      # Release-asset storage is not subject to the Actions artifact quota (see
+      # the Linux job). Publish the installer straight to the draft release.
+      - name: Publish Windows installers to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: |
+            dist/WarrenVPN-*.exe
+            dist/WarrenVPN-*.msi
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: windows-installers
           path: |
@@ -480,8 +508,20 @@ jobs:
         run: |
           [ -n "${WARREN_KEYSTORE_PATH:-}" ] && rm -f "$WARREN_KEYSTORE_PATH" || true
 
+      # Release-asset storage is not subject to the Actions artifact quota (see
+      # the Linux job). Publish the APK/AAB straight to the draft release.
+      - name: Publish Android installers to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: |
+            android/app/build/outputs/apk/**/*.apk
+            android/app/build/outputs/bundle/**/*.aab
+
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: android-installers
           path: |
@@ -510,44 +550,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Flatten artifact layout
+      # The per-platform build jobs already uploaded their installers straight to
+      # the draft release via softprops (release-asset storage bypasses the
+      # Actions artifact quota). This job only FINALISES that draft: it pulls the
+      # assets back down, computes checksums, and sets the title/notes. It does
+      # NOT re-create the release (that would clash with the existing draft).
+      - name: Download release assets (assembled by the build jobs)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p release-files
-          find artifacts -type f \( \
-            -name 'WarrenVPN-*.dmg' -o \
-            -name 'WarrenVPN-*.pkg' -o \
-            -name 'WarrenVPN-*.deb' -o \
-            -name 'WarrenVPN-*.rpm' -o \
-            -name 'WarrenVPN-*.exe' -o \
-            -name 'WarrenVPN-*.msi' -o \
-            -name 'warren-vpn-daemon_*.deb' -o \
-            -name 'warren-vpn-daemon_*.rpm' -o \
-            -name '*.ipa' -o \
-            -name '*.aab' -o \
-            -name '*.apk' \
-          \) -exec cp {} release-files/ \;
+          gh release download "$TAG_NAME" --dir release-files --pattern '*' || true
           ls -lh release-files/ || true
 
       - name: Compute SHA-256 checksums
         run: |
           cd release-files
+          # Exclude a pre-existing checksum file from a re-run.
+          rm -f SHA256SUMS
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
 
-      - name: Create GitHub Release
+      - name: Finalise the draft release (checksums + title + notes)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$TAG_NAME" \
+          gh release upload "$TAG_NAME" release-files/SHA256SUMS --clobber
+          gh release edit "$TAG_NAME" \
             --title "Warren VPN $TAG_NAME" \
             --notes-file CHANGELOG.md \
-            --draft \
-            release-files/*
+            --draft
 
   publish-update-metadata:
     name: Sign + publish update metadata
