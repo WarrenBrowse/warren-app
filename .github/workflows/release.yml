@@ -162,7 +162,20 @@ jobs:
           rpm --version
 
       - name: Build
-        run: ./build.sh --optimize
+        # rustc/cc1 intermittently SIGSEGV under the x86_64-Rosetta emulation on a
+        # random crate (e.g. idna_adapter, tikv-jemalloc-sys); it is not a real
+        # build error and succeeds on a re-run. Retry the whole build on a crash
+        # signature; real compile errors still fail immediately on the first pass.
+        run: |
+          for attempt in 1 2 3; do
+            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux.log; then exit 0; fi
+            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux.log; then
+              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
+              continue
+            fi
+            exit 1
+          done
+          exit 1
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4

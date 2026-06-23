@@ -119,6 +119,30 @@ runs:
         echo "::warning::cargo commands relying on path-deps to ../warren-core/crates/* will fail."
         echo "::warning::Pass warren-core-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
 
+    - name: Ensure rustup is available (self-heal rust-cache cache-bin deletion)
+      shell: bash
+      run: |
+        if command -v rustup >/dev/null 2>&1; then
+          echo "rustup present: $(rustup --version 2>/dev/null | head -1)"
+          exit 0
+        fi
+        # Swatinem/rust-cache's cache-bin deletes ~/.cargo/bin/rustup on the
+        # persistent self-hosted runners (see the Setup Rust cache step). cache-bin
+        # is false here, but a runner can already be missing rustup from an earlier
+        # run, which surfaces as "rustup: command not found" in the steps below.
+        # Reinstall it for this job only (no machine-PATH change); the toolchain
+        # itself comes from rust-toolchain.toml on first cargo/rustup use.
+        echo "::warning::rustup not found on this runner; reinstalling for the job"
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          curl -sSfL https://win.rustup.rs/x86_64 -o "$RUNNER_TEMP/rustup-init.exe"
+          "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --no-modify-path --profile minimal
+          printf '%s\\.cargo\\bin\n' "$USERPROFILE" >> "$GITHUB_PATH"
+        else
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --default-toolchain none --no-modify-path --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        fi
+
     - name: Override Rust toolchain
       if: ${{ inputs.rust-toolchain != 'stable' }}
       shell: bash
