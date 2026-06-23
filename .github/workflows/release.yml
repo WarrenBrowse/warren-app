@@ -115,6 +115,9 @@ jobs:
         if: always() && env.WARREN_CSC_LINK_MACOS != ''
         run: rm -f "$WARREN_CSC_LINK_MACOS" || true
 
+      - name: Stage release assets (harmonized names)
+        run: bash ci/stage-release-assets.sh macos "${GITHUB_REF_NAME#v}"
+
       # Upload installers directly as GitHub Release assets instead of Actions
       # artifacts: release assets live in separate storage that is NOT subject to
       # the Actions artifact storage quota (which the artifact path kept hitting).
@@ -123,9 +126,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
-          files: |
-            dist/WarrenVPN-*.dmg
-            dist/WarrenVPN-*.pkg
+          files: release-assets/*
 
   build-linux:
     name: Build Linux .deb/.rpm
@@ -177,6 +178,9 @@ jobs:
           done
           exit 1
 
+      - name: Stage release assets (harmonized names)
+        run: bash ci/stage-release-assets.sh linux "${GITHUB_REF_NAME#v}"
+
       # Publish straight to the GitHub Release (release-asset storage), which is
       # NOT subject to the Actions artifact storage quota that blocks
       # upload-artifact. Mirrors the macOS job; runs on every ref (draft keyed by
@@ -186,22 +190,14 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
-          files: |
-            dist/WarrenVPN-*.deb
-            dist/WarrenVPN-*.rpm
-            dist/warren-vpn-daemon_*.deb
-            dist/warren-vpn-daemon_*.rpm
+          files: release-assets/*
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: linux-installers
-          path: |
-            dist/WarrenVPN-*.deb
-            dist/WarrenVPN-*.rpm
-            dist/warren-vpn-daemon_*.deb
-            dist/warren-vpn-daemon_*.rpm
+          path: release-assets/*
           if-no-files-found: warn
           retention-days: 1
 
@@ -285,6 +281,10 @@ jobs:
           echo "::warning::AZURE_CLIENT_ID secret not set; producing unsigned dev build."
           ./build.sh --optimize --universal
 
+      - name: Stage release assets (harmonized names)
+        shell: bash
+        run: bash ci/stage-release-assets.sh windows "${GITHUB_REF_NAME#v}"
+
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the installer straight to the draft release.
       - name: Publish Windows installers to GitHub Release
@@ -292,18 +292,14 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
-          files: |
-            dist/WarrenVPN-*.exe
-            dist/WarrenVPN-*.msi
+          files: release-assets/*
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: windows-installers
-          path: |
-            dist/WarrenVPN-*.exe
-            dist/WarrenVPN-*.msi
+          path: release-assets/*
           if-no-files-found: warn
           retention-days: 1
 
@@ -508,6 +504,9 @@ jobs:
         run: |
           [ -n "${WARREN_KEYSTORE_PATH:-}" ] && rm -f "$WARREN_KEYSTORE_PATH" || true
 
+      - name: Stage release assets (harmonized names)
+        run: bash ci/stage-release-assets.sh android "${GITHUB_REF_NAME#v}"
+
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the APK/AAB straight to the draft release.
       - name: Publish Android installers to GitHub Release
@@ -515,18 +514,14 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
-          files: |
-            android/app/build/outputs/apk/**/*.apk
-            android/app/build/outputs/bundle/**/*.aab
+          files: release-assets/*
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
           name: android-installers
-          path: |
-            android/app/build/outputs/apk/**/*.apk
-            android/app/build/outputs/bundle/**/*.aab
+          path: release-assets/*
           if-no-files-found: warn
           retention-days: 1
 

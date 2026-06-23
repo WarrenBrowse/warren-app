@@ -6,9 +6,12 @@ SHA-256, and emits `macos.json` / `windows.json` / `linux.json` in the exact
 `mullvad_update` Response schema, ready to be signed by
 `mullvad-version-metadata sign`.
 
-In-app installer per platform:
-  - macOS: the universal `.pkg` (one file, listed for both x86 and arm64).
-  - Windows: the per-arch `.exe` (`_x64` -> x86, `_arm64` -> arm64).
+In-app installer per platform (harmonized release-asset names, see
+ci/stage-release-assets.sh):
+  - macOS: the universal `-macos-universal.pkg` (one file, listed for both
+    x86 and arm64).
+  - Windows: the per-arch `-windows-x64.exe` -> x86, `-windows-arm64.exe` ->
+    arm64 (the `-windows-universal.exe` downloader is not listed per-arch).
   - Linux: none. The release is listed without installers (the daemon's
     `allow_empty` path); the GUI sends Linux users to the download page.
 
@@ -107,7 +110,7 @@ def installer_entry(path: Path, architecture: str, repo: str, tag: str) -> dict:
 
 
 def macos_installers(release_dir: Path, version: str, repo: str, tag: str) -> list:
-    pkg = find_one(release_dir, f"WarrenVPN-{version}.pkg")
+    pkg = find_one(release_dir, f"WarrenVPN-{version}-macos-universal.pkg")
     if pkg is None:
         return []
     # The macOS .pkg is universal: list it for both architectures so a client
@@ -120,11 +123,16 @@ def macos_installers(release_dir: Path, version: str, repo: str, tag: str) -> li
 
 def windows_installers(release_dir: Path, version: str, repo: str, tag: str) -> list:
     installers = []
-    for path in sorted(release_dir.glob(f"WarrenVPN-{version}_*.exe")):
-        match = re.search(rf"WarrenVPN-{re.escape(version)}_(\w+)\.exe$", path.name)
+    for path in sorted(release_dir.glob(f"WarrenVPN-{version}-windows-*.exe")):
+        match = re.search(rf"WarrenVPN-{re.escape(version)}-windows-(\w+)\.exe$", path.name)
         if not match:
             continue
-        architecture = WIN_ARCH_TOKENS.get(match.group(1))
+        token = match.group(1)
+        # The universal installer-downloader is not a per-arch payload; the
+        # metadata lists the concrete x64/arm64 installers only.
+        if token == "universal":
+            continue
+        architecture = WIN_ARCH_TOKENS.get(token)
         if architecture is None:
             print(f"  skipping unknown Windows arch token in {path.name}", file=sys.stderr)
             continue
