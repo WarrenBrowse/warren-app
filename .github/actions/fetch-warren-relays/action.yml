@@ -43,11 +43,30 @@ runs:
         echo "Verifying signature against pinned server pubkey (build-time gate)…"
         # warren-core is checked out as a sibling by the mullvad-build-env
         # action; the verifier reuses the daemon's exact canonicalization.
-        if ! cargo run --quiet \
+        #
+        # Building the verifier can SIGSEGV intermittently on the x86_64-Rosetta
+        # Linux runner (rustc crashes compiling e.g. libc); that is NOT a
+        # signature failure. Retry on a crash signature, but fail immediately on a
+        # genuine non-zero (an actually-invalid signature), so we never bake an
+        # unverifiable list nor wrongly reject a valid one over a compiler crash.
+        ok=0
+        for attempt in 1 2 3; do
+          cargo run --quiet \
             --manifest-path ../warren-core/Cargo.toml \
             -p warren-relay-selector --bin warren_relays_verify -- \
-            "$OUT" --expected-pubkey "${{ inputs.expected-pubkey }}"; then
+            "$OUT" --expected-pubkey "${{ inputs.expected-pubkey }}" 2>&1 | tee /tmp/warren-relays-verify.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -eq 0 ]; then ok=1; break; fi
+          if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/warren-relays-verify.log; then
+            echo "::warning title=Warren bootstrap::verifier build crashed under Rosetta (attempt $attempt/3); retrying"
+            continue
+          fi
           echo "::error title=Warren bootstrap::fetched exit list FAILED signature verification; refusing to bake into the release"
+          rm -f "$OUT"
+          exit 1
+        done
+        if [ "$ok" -ne 1 ]; then
+          echo "::error title=Warren bootstrap::verifier kept crashing under Rosetta; cannot validate the bootstrap list"
           rm -f "$OUT"
           exit 1
         fi
