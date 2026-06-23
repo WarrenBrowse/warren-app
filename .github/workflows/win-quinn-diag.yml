@@ -1,0 +1,26 @@
+name: win-quinn-diag
+# Throwaway diagnostic: run the quinn-fork setup on Windows and dump per-file
+# hashes so the cross-platform content-hash drift can be pinpointed. Delete once
+# the Windows hash matches the Unix baseline.
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - name: Clone warren-core, run quinn-fork setup, dump per-file hashes
+        shell: bash
+        run: |
+          set -x
+          rm -rf core
+          git clone --filter=blob:none \
+            "https://x-access-token:${{ secrets.WARREN_CORE_RO_TOKEN }}@github.com/WarrenBrowse/warren-core" core
+          cd core
+          echo "warren-core HEAD: $(git rev-parse HEAD)"
+          bash ./bench/scripts/setup-quinn-fork.sh || echo "SETUP_EXIT=$?"
+          echo "=====PERFILE_DUMP_BEGIN====="
+          find vendor/quinn-fork -type f \
+            \( ! -path '*/.git/*' ! -path '*/target/*' ! -name '.warren-*-patch-applied' \) \
+            -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+          echo "=====PERFILE_DUMP_END====="
