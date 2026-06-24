@@ -8284,7 +8284,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -8323,7 +8323,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-client"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "async-trait",
  "ed25519-dalek",
@@ -8345,7 +8345,7 @@ dependencies = [
 
 [[package]]
 name = "warren-api-types"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
@@ -8355,7 +8355,7 @@ dependencies = [
 
 [[package]]
 name = "warren-client"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "anyhow",
  "bytes",
@@ -8386,14 +8386,14 @@ dependencies = [
 
 [[package]]
 name = "warren-config"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "warrenguard-config",
 ]
 
 [[package]]
 name = "warren-identity"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "ed25519-dalek",
  "hex",
@@ -8483,7 +8483,7 @@ dependencies = [
 
 [[package]]
 name = "warren-relay-selector"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "ed25519-dalek",
  "hex",
@@ -8498,7 +8498,7 @@ dependencies = [
 
 [[package]]
 name = "warren-ss58"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "blake2",
  "bs58",
@@ -8507,8 +8507,9 @@ dependencies = [
 
 [[package]]
 name = "warren-tunnel"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
+ "warrenguard-config",
  "warrenguard-daita",
  "warrenguard-pump",
  "warrenguard-server",

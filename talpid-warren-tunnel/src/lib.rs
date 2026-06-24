@@ -48,7 +48,8 @@ pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 pub use warren_client::bypass_cidr::BypassCidr;
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
-    pump_bidirectional_with_daita, pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
+    pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover, pump_multi_bidirectional,
+    pump_multi_bidirectional_with_daita, pump_multi_bidirectional_with_idle_cover,
 };
 /// Re-export of the single-hop stable exit identifier from
 /// warrenguard-wire. Pubkey pinning keys its TOFU lookup
@@ -860,6 +861,14 @@ impl WarrenTunnelMonitor {
         let enable_daita = params.enable_daita;
         let alpn_protocols = params.alpn_protocols.clone();
         let mut event_hook = args.event_hook;
+        // ADR-0006 B2-lite: read `WARREN_IDLE_COVER` once and combine with
+        // the DAITA opt-in. This single bool drives BOTH the transport
+        // config (keep-alive PING off) and the pump choice below, so they
+        // can never disagree (a keep-alive-disabled config with a plain
+        // pump would lose all liveness). Default-off; turning it on by
+        // default is gated on a real-network bench (ADR-0006).
+        let idle_cover_active =
+            idle_cover_effective(warren_tunnel::knobs::idle_cover_enabled(), enable_daita);
 
         // Detect the outbound source IP (eth0 / wlan0) used to reach
         // the exit before the handshake, so we bind the QUIC `Endpoint`
@@ -907,6 +916,9 @@ impl WarrenTunnelMonitor {
                         .with_features(features)
                         .with_alpn_protocols(alpn_protocols)
                         .with_daita(enable_daita)
+                        // Keep-alive PING off when idle cover is armed; the
+                        // matching pump (below) emits cover instead (ADR-0006).
+                        .with_idle_cover(idle_cover_active)
                         // Stable per-install device id: every reconnect/retry
                         // reuses ONE device lease, so the account never trips
                         // the v2 device cap and gets locked out of connecting
@@ -1262,6 +1274,10 @@ impl WarrenTunnelMonitor {
                                 }
                             }
                         }
+                        None if idle_cover_active => {
+                            log::info!("{TRACE_PREFIX} pump=running variant=idle_cover");
+                            pump_bidirectional_with_idle_cover(packet_device, conn).await
+                        }
                         None => pump_bidirectional(packet_device, conn).await,
                     };
                     drop(session);
@@ -1297,6 +1313,13 @@ impl WarrenTunnelMonitor {
                                     Err(e.into())
                                 }
                             }
+                        }
+                        None if idle_cover_active => {
+                            log::info!(
+                                "{TRACE_PREFIX} pump=running variant=idle_cover_multi conns={}",
+                                multi.num_connections()
+                            );
+                            pump_multi_bidirectional_with_idle_cover(packet_device, multi).await
                         }
                         None => pump_multi_bidirectional(packet_device, multi).await,
                     }
@@ -2703,6 +2726,24 @@ fn select_session_request(n_connections: u8) -> SessionRequest {
     }
 }
 
+/// Decides whether ADR-0006 B2-lite idle cover is armed for this session.
+///
+/// `knob` is `WARREN_IDLE_COVER` (read once via
+/// `warren_tunnel::knobs::idle_cover_enabled`). `daita_requested` is the
+/// client's DAITA opt-in. Idle cover and DAITA are mutually exclusive
+/// cover mechanisms (DAITA carries its own padding), so idle cover is
+/// armed only when the knob is on AND DAITA is not requested.
+///
+/// The returned bool is the SINGLE source of truth that gates both the
+/// transport config (`ClientTunnel::with_idle_cover`, which disables the
+/// keep-alive PING) and the pump choice (`pump_*_with_idle_cover`). They
+/// MUST flip together: a keep-alive-disabled config with a plain pump has
+/// no liveness mechanism beyond the idle timeout.
+#[must_use]
+fn idle_cover_effective(knob: bool, daita_requested: bool) -> bool {
+    knob && !daita_requested
+}
+
 /// Derives a deterministic IPv4 in `warren_config::TUNNEL_POOL_CIDR`
 /// (`10.66.0.0/16`) from the client Ed25519 pubkey bytes.
 ///
@@ -3875,6 +3916,30 @@ mod tests {
         assert_eq!(select_session_request(2), SessionRequest::Multi(2));
         assert_eq!(select_session_request(4), SessionRequest::Multi(4));
         assert_eq!(select_session_request(8), SessionRequest::Multi(8));
+    }
+
+    #[test]
+    fn idle_cover_is_armed_only_when_knob_on_and_daita_off() {
+        // ADR-0006: idle cover and DAITA are mutually exclusive covers.
+        // The same bool gates BOTH the transport config (keep-alive off)
+        // and the pump choice, so this is the single source of truth that
+        // prevents the foot-gun (keep-alive disabled with no cover pump).
+        assert!(
+            idle_cover_effective(true, false),
+            "knob on + no DAITA => idle cover armed"
+        );
+        assert!(
+            !idle_cover_effective(true, true),
+            "DAITA requested => idle cover must yield (DAITA carries its own cover)"
+        );
+        assert!(
+            !idle_cover_effective(false, false),
+            "knob off => never arm idle cover (keep-alive beacon stays on)"
+        );
+        assert!(
+            !idle_cover_effective(false, true),
+            "knob off + DAITA => not idle cover"
+        );
     }
 
     #[test]
