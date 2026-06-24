@@ -703,7 +703,11 @@ fn spawn_multi_hop(
         let dn_watch = watch.clone();
         let dn_tun = tun.clone();
         tokio::spawn(async move {
-            if let Err(e) = run_downlink(dn_watch, dn_tun).await {
+            // `None`: iOS does not yet wire an ADR 36 drain reactor (the
+            // desktop talpid path does). Drains fall back to the exit's
+            // hard-close + the ambient relay-list refresh until the iOS
+            // FFI grows a drain consumer.
+            if let Err(e) = run_downlink(dn_watch, dn_tun, None).await {
                 tracing::error!(error = %e, "multi-hop downlink terminated");
             }
         });
