@@ -555,36 +555,6 @@ impl ConnectedState {
     }
 }
 
-#[cfg(test)]
-mod offline_grace_tests {
-    use super::{GraceAction, grace_action};
-
-    #[test]
-    fn online_always_cancels() {
-        // Whatever the backend and the armed state, an online edge
-        // clears the grace: the tunnel survived the window.
-        for multi in [false, true] {
-            for armed in [false, true] {
-                assert_eq!(grace_action(multi, armed, false), GraceAction::Cancel);
-            }
-        }
-    }
-
-    #[test]
-    fn single_hop_offline_blocks_immediately() {
-        // Single-hop has no migration nor supervisor redial: the
-        // pre-grace fail-closed behavior must be preserved verbatim.
-        assert_eq!(grace_action(false, false, true), GraceAction::Block);
-        assert_eq!(grace_action(false, true, true), GraceAction::Block);
-    }
-
-    #[test]
-    fn multi_hop_offline_arms_then_holds() {
-        assert_eq!(grace_action(true, false, true), GraceAction::Arm);
-        assert_eq!(grace_action(true, true, true), GraceAction::Hold);
-    }
-}
-
 impl TunnelState for ConnectedState {
     fn handle_event(
         mut self: Box<Self>,
@@ -636,5 +606,35 @@ impl TunnelState for ConnectedState {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod offline_grace_tests {
+    use super::{GraceAction, grace_action};
+
+    #[test]
+    fn online_always_cancels() {
+        // Whatever the backend and the armed state, an online edge
+        // clears the grace: the tunnel survived the window.
+        for multi in [false, true] {
+            for armed in [false, true] {
+                assert_eq!(grace_action(multi, armed, false), GraceAction::Cancel);
+            }
+        }
+    }
+
+    #[test]
+    fn single_hop_offline_blocks_immediately() {
+        // Single-hop has no migration nor supervisor redial: the
+        // pre-grace fail-closed behavior must be preserved verbatim.
+        assert_eq!(grace_action(false, false, true), GraceAction::Block);
+        assert_eq!(grace_action(false, true, true), GraceAction::Block);
+    }
+
+    #[test]
+    fn multi_hop_offline_arms_then_holds() {
+        assert_eq!(grace_action(true, false, true), GraceAction::Arm);
+        assert_eq!(grace_action(true, true, true), GraceAction::Hold);
     }
 }
