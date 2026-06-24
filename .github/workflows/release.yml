@@ -617,9 +617,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$TAG_NAME" release-files/SHA256SUMS --clobber
+          # Build the release body. Do NOT pass the whole CHANGELOG.md: it is
+          # well over GitHub's ~125k-char release-body limit and the edit fails
+          # with HTTP 422. Extract just this version's section; fall back to a
+          # short note if there is none; cap defensively below the limit.
+          version="${TAG_NAME#v}"
+          notes="$RUNNER_TEMP/release-notes.md"
+          # CHANGELOG headers look like:  ## [1.0.10] - 2026-06-24
+          awk -v ver="$version" '
+            /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
+            cap { print }
+          ' CHANGELOG.md > "$notes" || true
+          if [ ! -s "$notes" ]; then
+            printf 'Warren VPN %s\n\nInstaller checksums are in `SHA256SUMS`.\n' "$TAG_NAME" > "$notes"
+          fi
+          # GitHub caps the release body at 125000 chars; stay safely under it.
+          head -c 120000 "$notes" > "$notes.cut" && mv "$notes.cut" "$notes"
           gh release edit "$TAG_NAME" \
             --title "Warren VPN $TAG_NAME" \
-            --notes-file CHANGELOG.md \
+            --notes-file "$notes" \
             --draft
 
   publish-update-metadata:
