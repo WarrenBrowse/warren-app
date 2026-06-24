@@ -67,6 +67,7 @@ use warrenguard_wire::{WarrenExitAddr, WarrenTransportAddr};
 
 mod adapter;
 mod device_id;
+mod drain_reactor;
 mod migration_watchdog;
 use adapter::MullvadTunPacketDevice;
 
@@ -769,6 +770,9 @@ enum MonitorBackend {
         /// IpAssign drift guard: escalates when a reconnect republishes
         /// a different exit-allocated IPv4 than the one the TUN holds.
         assign_guard_handle: tokio::task::JoinHandle<()>,
+        /// ADR 36 drain reactor: proactively migrates off a draining exit
+        /// before its maintenance hard-close deadline.
+        drain_reactor_handle: tokio::task::JoinHandle<()>,
         /// Channel through which the pump task reports the first fatal
         /// error (uplink/downlink/supervisor death). `wait()` consumes
         /// it the same way the single-hop path consumes
@@ -1431,7 +1435,7 @@ impl WarrenTunnelMonitor {
     ) -> Result<Self, Error> {
         use std::{sync::Arc, time::Duration};
         use warren_client::{
-            supervised_pump::{IpAssignChannel, run_downlink, run_uplink},
+            supervised_pump::{ExitDrainingChannel, IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
         };
         use warrenguard_backoff::Backoff;
@@ -1477,6 +1481,11 @@ impl WarrenTunnelMonitor {
         // v4-only; the firewall keeps native v6 blocked either way.
         let wants_ipv6 = (params.features & features::IPV6) != 0;
         let ip_assign_channel = IpAssignChannel::new();
+        // ADR 36: the downlink pump publishes a mid-session `ExitDraining`
+        // advisory here when the exit is drained for maintenance; the drain
+        // reactor (spawned below) consumes it and proactively migrates off
+        // the draining exit before its hard-close deadline.
+        let exit_draining_channel = ExitDrainingChannel::new();
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
@@ -1895,9 +1904,11 @@ impl WarrenTunnelMonitor {
 
         let downlink_rx = client_rx.clone();
         let downlink_device = packet_device.clone();
+        let downlink_drain_channel = exit_draining_channel.clone();
         let downlink_handle = runtime.spawn(async move {
             log::info!("{TRACE_PREFIX} multi-hop downlink=running");
-            let res = run_downlink(downlink_rx, downlink_device).await;
+            let res =
+                run_downlink(downlink_rx, downlink_device, Some(downlink_drain_channel)).await;
             if let Err(ref e) = res {
                 let msg = format!("multi-hop downlink: {e:#}");
                 log::warn!("{TRACE_PREFIX} {msg}");
@@ -1991,6 +2002,26 @@ impl WarrenTunnelMonitor {
             })
         };
 
+        // ADR 36 drain reactor: when the exit signals it is draining for
+        // maintenance, proactively migrate off it (excluding it on the
+        // failover re-selection) before the hard-close deadline, spread
+        // across an anti-stampede jitter window. See `drain_reactor`.
+        let drain_reactor_handle = {
+            let mut drain_sub = exit_draining_channel.subscribe();
+            // Mark the initial `None` seen so `changed()` only fires on a
+            // real advisory publish.
+            let _ = drain_sub.borrow_and_update();
+            let pump_error_tx = pump_error_tx.clone();
+            runtime.spawn(async move {
+                let mut io = drain_reactor::RealDrainReactorIo {
+                    drain_sub,
+                    pump_error_tx,
+                };
+                drain_reactor::run_drain_reactor(&mut io).await;
+                log::debug!("{TRACE_PREFIX} drain reactor terminated");
+            })
+        };
+
         // Drop the local watch receiver. The uplink/downlink pumps and
         // the watchdog keep theirs alive; teardown aborts the watchdog
         // first, then the pumps, so the supervisor still observes
@@ -2019,6 +2050,7 @@ impl WarrenTunnelMonitor {
                 downlink_handle,
                 watchdog_handle,
                 assign_guard_handle,
+                drain_reactor_handle,
                 pump_error_rx,
                 supervisor_fatal_rx,
             },
@@ -2095,6 +2127,7 @@ impl WarrenTunnelMonitor {
                 downlink: tokio::task::JoinHandle<anyhow::Result<()>>,
                 watchdog: tokio::task::JoinHandle<()>,
                 assign_guard: tokio::task::JoinHandle<()>,
+                drain_reactor: tokio::task::JoinHandle<()>,
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
@@ -2118,6 +2151,7 @@ impl WarrenTunnelMonitor {
                 downlink_handle,
                 watchdog_handle,
                 assign_guard_handle,
+                drain_reactor_handle,
                 pump_error_rx,
                 supervisor_fatal_rx: fatal_rx,
             } => {
@@ -2130,6 +2164,7 @@ impl WarrenTunnelMonitor {
                         downlink: downlink_handle,
                         watchdog: watchdog_handle,
                         assign_guard: assign_guard_handle,
+                        drain_reactor: drain_reactor_handle,
                     },
                 )
             }
@@ -2267,6 +2302,7 @@ impl WarrenTunnelMonitor {
                     downlink,
                     watchdog,
                     assign_guard,
+                    drain_reactor,
                 } => {
                     // Watchdog first: it holds a supervisor watch
                     // receiver + control handle; dropping them before
@@ -2276,6 +2312,12 @@ impl WarrenTunnelMonitor {
                     let _ = watchdog.await;
                     assign_guard.abort();
                     let _ = assign_guard.await;
+                    // Drain reactor holds only an ExitDrainingChannel
+                    // receiver + a pump-error sender clone, neither of
+                    // which gates the supervisor shutdown; abort it
+                    // alongside the other guards.
+                    drain_reactor.abort();
+                    let _ = drain_reactor.await;
                     uplink.abort();
                     downlink.abort();
                     let _ = tokio::join!(uplink, downlink);
