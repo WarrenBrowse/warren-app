@@ -51,6 +51,17 @@ Line wrap the file at 100 chars.                                              Th
   and iOS apps (settings labels, info popups, translations). The required GPL/AGPL attribution to
   Mullvad in the iOS About screen is preserved.
 
+## [1.0.11] - 2026-06-24
+### Fixed
+- Make the connect handshake cancellable and bounded so a hung dial can no longer wedge the
+  daemon; an in-flight connection attempt is now interruptible and times out instead of pinning
+  the tunnel state machine.
+- Hide the multi-hop badge on 1-hop circuits by threading the single-node case through the tunnel
+  endpoint, so a direct (non-multihop) connection no longer falsely shows the multi-hop indicator.
+### Changed
+- Clear pre-existing clippy debt (doc comments, test-module ordering, dead code, unsafe-block docs,
+  iOS tracing dependency). No user-facing behavior change.
+
 ## [1.0.6] - 2026-06-08
 ### Added
 - Dynamic multi-hop directory client with toggle-driven, sticky 2-hop circuit selection and a
