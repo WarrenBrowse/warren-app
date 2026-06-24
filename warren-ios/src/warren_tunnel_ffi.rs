@@ -717,11 +717,14 @@ fn spawn_multi_hop(
                 tracing::error!(error = %e, "multi-hop downlink terminated");
             }
         });
-        // ADR 36 drain reactor: on the first in-band drain advisory, force the
+        // ADR 36 drain reactor: on each in-band drain advisory, force the
         // supervisor to redial (it reconnects through its own backoff, which
-        // also spreads the herd, so no extra jitter here). One-shot: the
-        // redial installs a fresh session; teardown drops the sender, ending
-        // this task.
+        // also spreads the herd, so no extra jitter here). NOT one-shot:
+        // `force_reconnect` keeps the same session/channel alive (it redials
+        // internally rather than rebuilding the pumps), so the loop must keep
+        // listening to catch a drain on the exit it lands on next. The exit
+        // re-emits dedup'd, so a repeat of the SAME advisory does not re-fire;
+        // teardown drops the sender, ending this task.
         {
             let mut drain_sub = exit_draining_channel.subscribe();
             let _ = drain_sub.borrow_and_update();
@@ -732,10 +735,10 @@ fn spawn_multi_hop(
                     }
                     if drain_sub.borrow_and_update().is_some() {
                         tracing::info!(
-                            "multi-hop exit draining; forcing reconnect (ADR 36 make-before-break)"
+                            "multi-hop exit draining; forcing reconnect (ADR 36 proactive \
+                             migration; exit-exclusion via the ambient relay-list refresh)"
                         );
                         drain_handle.force_reconnect();
-                        return;
                     }
                 }
             });

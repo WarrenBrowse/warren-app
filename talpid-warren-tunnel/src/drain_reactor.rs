@@ -126,12 +126,17 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
     let Some(advisory) = io.next_advisory().await else {
         return;
     };
+    // Record the drained exit in the avoid-set UNCONDITIONALLY, before the
+    // cooldown gate: even when the cooldown suppresses a second reconnect, the
+    // directory selection must still exclude this exit (a different exit that
+    // also drains within the cooldown window must not be re-picked).
+    io.report_drained_exit();
     let now = io.now_unix();
     if within_cooldown(now, io.last_drain_escalation_unix()) {
         log::info!(
-            "Warren drain reactor: a drain reconnect fired <{}s ago; deferring to \
-             the ambient relay-list drain + the exit hard-close backstop instead of \
-             reconnecting again (avoids a storm against a still-draining exit)",
+            "Warren drain reactor: a drain reconnect fired <{}s ago; recorded the \
+             exit in the avoid-set but deferring the reconnect to the exit hard-close \
+             backstop (avoids a storm against a still-draining exit)",
             DRAIN_RECONNECT_COOLDOWN.as_secs()
         );
         return;
@@ -148,10 +153,8 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
         delay
     );
     io.sleep(delay).await;
-    // Record the drained exit in the daemon avoid-set BEFORE escalating, so
-    // the reconnect the escalation triggers re-selects a circuit that already
-    // excludes it (true exit-exclusion, not just a proactive reconnect).
-    io.report_drained_exit();
+    // The drained exit was already recorded in the avoid-set above, so the
+    // reconnect this escalation triggers re-selects a circuit that excludes it.
     io.escalate(format!(
         "exit draining (reason={}); proactively reconnecting to a different exit \
          before the maintenance deadline",
@@ -382,9 +385,11 @@ mod tests {
             io.slept.is_empty(),
             "suppressed reactor must not even jitter"
         );
-        assert!(
-            io.reported.is_empty(),
-            "a cooldown-suppressed reactor must not report a drained exit either"
+        assert_eq!(
+            io.reported,
+            vec![FAKE_EXIT_ID],
+            "a cooldown-suppressed reactor must STILL record the exit in the avoid-set \
+             so the directory excludes it (only the reconnect is suppressed)"
         );
     }
 
