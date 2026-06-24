@@ -81,6 +81,20 @@ pub enum Error {
     },
 }
 
+/// ADR 36: how long a drained exit stays in the local avoid-set. Long enough
+/// to bridge a drain-triggered reconnect to the next ambient relay-list refresh
+/// (which becomes the long-term authority), short enough that a recovered exit
+/// is offered again without a daemon restart.
+const WARREN_DRAINED_EXIT_TTL_SECS: u64 = 300;
+
+/// Wall-clock unix seconds (0 on a pre-epoch clock; never panics).
+fn warren_now_unix_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
 #[derive(Clone)]
 pub(crate) struct ParametersGenerator(Arc<Mutex<InnerParametersGenerator>>);
 
@@ -148,6 +162,16 @@ struct InnerParametersGenerator {
     /// excludes the previously failed pubkey. `None` on the very
     /// first attempt after a daemon boot.
     warren_last_exit_pubkey: Option<warren_relay_selector::warren_types::WarrenPubkey>,
+    /// ADR 36 drain avoid-set: multi-hop exit ids that signalled an in-band
+    /// maintenance drain, each with the unix second it was recorded. The
+    /// drain reactor (in `talpid-warren-tunnel`) records the current exit via
+    /// the `on_exit_draining` callback when it sees the advisory; the
+    /// multi-hop directory updater consults the (TTL-pruned) snapshot so a
+    /// drain-triggered reconnect lands on a DIFFERENT exit instead of
+    /// re-picking the one that is leaving. Bridges the gap until the ambient
+    /// relay-list refresh marks the exit inactive; entries expire so a
+    /// recovered exit is offered again.
+    warren_drained_exits: Vec<([u8; 16], u64)>,
     /// Warren-api URL forwarded from `lib.rs` boot. Used
     /// fire-and-forget to POST `/v1/incidents/exit-down` whenever
     /// `assemble_failover_for_attempt` is dispatched, so the
@@ -295,6 +319,7 @@ impl ParametersGenerator {
             warren_enable_daita: false,
             warren_n_connections: None,
             warren_last_exit_pubkey: None,
+            warren_drained_exits: Vec::new(),
             warren_api_url,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
@@ -432,6 +457,43 @@ impl ParametersGenerator {
         // tunnel start will pick up the value via
         // `produce_warren_tunnel_params` → `Receiver::borrow()`.
         let _ = inner.nat_pmp_control_tx.send(cfg);
+    }
+
+    /// ADR 36: record that `exit_id` (a multi-hop exit) signalled an in-band
+    /// maintenance drain, so the multi-hop directory selection excludes it on
+    /// the next (drain-triggered) reconnect. Invoked by the drain reactor via
+    /// the `on_exit_draining` callback. Idempotent: a re-drain refreshes the
+    /// timestamp instead of duplicating the entry.
+    pub async fn record_warren_drained_exit(&self, exit_id: [u8; 16]) {
+        let now = warren_now_unix_secs();
+        let mut inner = self.0.lock().await;
+        if let Some(entry) = inner
+            .warren_drained_exits
+            .iter_mut()
+            .find(|(id, _)| *id == exit_id)
+        {
+            entry.1 = now;
+        } else {
+            inner.warren_drained_exits.push((exit_id, now));
+        }
+    }
+
+    /// ADR 36: snapshot of currently-excluded drained exit ids, pruning
+    /// entries older than [`WARREN_DRAINED_EXIT_TTL_SECS`] in place (a
+    /// recovered exit is offered again; the long-term authority is the
+    /// ambient relay-list refresh marking the exit inactive). Consulted by
+    /// the multi-hop directory updater before each circuit selection.
+    pub async fn warren_drained_exits_snapshot(&self) -> Vec<[u8; 16]> {
+        let now = warren_now_unix_secs();
+        let mut inner = self.0.lock().await;
+        inner
+            .warren_drained_exits
+            .retain(|(_, at)| now.saturating_sub(*at) < WARREN_DRAINED_EXIT_TTL_SECS);
+        inner
+            .warren_drained_exits
+            .iter()
+            .map(|(id, _)| *id)
+            .collect()
     }
 
     /// Hot-swaps the Warren relay selector with a freshly fetched +
@@ -839,6 +901,19 @@ impl ParametersGenerator {
         // supervisor in /v1 single-hop).
         let cache = inner.warren_status_cache.clone();
         params.on_reconnect = Some(Arc::new(move || cache.record_reconnect()));
+        // ADR 36: wire the drain avoid-set callback. When the multi-hop drain
+        // reactor reports a draining exit, record it so the next reconnect's
+        // directory selection excludes it (`warren_drained_exits_snapshot`).
+        // Harmless on single-hop (no reactor consumes the drain channel). The
+        // closure is sync (`Fn`), so it hops onto the runtime to run the async
+        // record; the reactor invokes it from a tokio task, so a runtime is live.
+        let drain_gen = self.clone();
+        params.on_exit_draining = Some(Arc::new(move |exit_id: [u8; 16]| {
+            let g = drain_gen.clone();
+            tokio::spawn(async move {
+                g.record_warren_drained_exit(exit_id).await;
+            });
+        }));
         // Wire the NAT-PMP observer that forwards every event from the
         // refresh loop into the same WarrenStatusCache. The cache
         // updates drive the gRPC `NatPmpStatusUpdates` stream the UI

@@ -230,6 +230,15 @@ pub struct WarrenTunnelParameters {
     /// supervisor in /v1).
     pub on_reconnect: Option<warren_client::supervisor::ReconnectObserver>,
 
+    /// ADR 36: invoked with the current multi-hop exit id when the exit
+    /// signals an in-band maintenance drain, so the daemon can add it to a
+    /// local avoid-set and the next (drain-triggered) reconnect migrates to a
+    /// different exit. `None` disables exit-exclusion (the drain then falls
+    /// back to a proactive reconnect + the ambient relay-list refresh).
+    /// Wired by the daemon's `ParametersGenerator` to a closure that calls
+    /// `record_warren_drained_exit`. Multi-hop only.
+    pub on_exit_draining: Option<std::sync::Arc<dyn Fn([u8; 16]) + Send + Sync>>,
+
     /// NAT-PMP port-forwarding configuration. `None` (default) disables
     /// the feature entirely; `Some` instructs the daemon-side
     /// `NatPmpManager` to spawn a `refresh_loop` against the exit's
@@ -2003,19 +2012,26 @@ impl WarrenTunnelMonitor {
         };
 
         // ADR 36 drain reactor: when the exit signals it is draining for
-        // maintenance, proactively migrate off it (excluding it on the
-        // failover re-selection) before the hard-close deadline, spread
-        // across an anti-stampede jitter window. See `drain_reactor`.
+        // maintenance, report the current exit to the daemon avoid-set (so the
+        // reconnect re-selects a circuit that excludes it) and proactively
+        // migrate off it before the hard-close deadline, spread across an
+        // anti-stampede jitter window. See `drain_reactor`.
         let drain_reactor_handle = {
             let mut drain_sub = exit_draining_channel.subscribe();
             // Mark the initial `None` seen so `changed()` only fires on a
             // real advisory publish.
             let _ = drain_sub.borrow_and_update();
             let pump_error_tx = pump_error_tx.clone();
+            // The advisory carries no identity; capture the exit this tunnel
+            // dialed so the reactor can name it to the avoid-set.
+            let current_exit_id = *cfg.exit.exit_id.as_bytes();
+            let on_exit_draining = params.on_exit_draining.clone();
             runtime.spawn(async move {
                 let mut io = drain_reactor::RealDrainReactorIo {
                     drain_sub,
                     pump_error_tx,
+                    current_exit_id,
+                    on_exit_draining,
                 };
                 drain_reactor::run_drain_reactor(&mut io).await;
                 log::debug!("{TRACE_PREFIX} drain reactor terminated");
@@ -3268,6 +3284,7 @@ mod tests {
             multi_hop: None,
             alpn_protocols: Vec::new(),
             on_reconnect: None,
+            on_exit_draining: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3303,6 +3320,7 @@ mod tests {
             multi_hop: None,
             alpn_protocols: Vec::new(),
             on_reconnect: None,
+            on_exit_draining: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3364,6 +3382,7 @@ mod tests {
             multi_hop: Some(mh),
             alpn_protocols: Vec::new(),
             on_reconnect: None,
+            on_exit_draining: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3412,6 +3431,7 @@ mod tests {
             multi_hop: None,
             alpn_protocols: Vec::new(),
             on_reconnect: None,
+            on_exit_draining: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,

@@ -162,6 +162,9 @@ pub fn assemble_for_attempt(
         // assembly so the relay-selection logic stays decoupled from
         // the daemon-side status cache.
         on_reconnect: None,
+        // ADR 36: set by `produce_warren_tunnel_params` post-assembly (it owns
+        // the generator handle the callback needs); `None` here is overwritten.
+        on_exit_draining: None,
         // NAT-PMP config originates from user settings (UI). The
         // caller threads it as-is; `None` keeps the legacy behaviour
         // (no refresh loop spawned).
@@ -250,6 +253,8 @@ pub fn assemble_failover_for_attempt(
         alpn_protocols,
         multi_hop,
         on_reconnect: None,
+        // ADR 36: set by `produce_warren_tunnel_params` post-assembly.
+        on_exit_draining: None,
         nat_pmp,
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,

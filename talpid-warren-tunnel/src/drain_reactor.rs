@@ -7,19 +7,18 @@
 //! hard-close deadline, so the drop happens in a controlled window instead of
 //! as an abrupt mid-use cut.
 //!
-//! Exit EXCLUSION (landing the reconnect on a DIFFERENT exit) is provided by
-//! the *ambient* drain path, NOT by this reactor. The backend marks the
-//! draining exit inactive; the signed relay-list / multi-hop directory refresh
-//! propagates `active=false`; the weighted selector then stops offering it.
-//! The state-machine failover is deliberately NOT relied upon here: a
-//! connected-tunnel close re-enters Connecting with `retry_attempt = 0`
-//! (`connected_state.rs`), so `is_failover` never arms, and even when it does
-//! `assemble_failover_for_attempt` only rewrites the single-hop fields and
-//! passes the multi-hop circuit through unchanged. Plumbing true in-band
-//! exit-exclusion into the multi-hop directory selection is a tracked
-//! follow-up (see `docs/36`); until then this reactor is a proactive nudge,
-//! and the ambient refresh + the exit's own hard close are the exclusion
-//! backstops.
+//! Exit EXCLUSION (landing the reconnect on a DIFFERENT exit) is driven by an
+//! IN-BAND avoid-set, NOT the state-machine failover. Before escalating, the
+//! reactor reports the current exit id through the `on_exit_draining` callback
+//! to the daemon, which records it in a TTL'd avoid-set that the multi-hop
+//! directory selection filters out (`warren_multi_hop_directory::valid_circuits`).
+//! So the reconnect re-selects a circuit that excludes the drained exit. The
+//! state-machine failover is deliberately NOT relied upon: a connected-tunnel
+//! close re-enters Connecting with `retry_attempt = 0` (`connected_state.rs`),
+//! so `is_failover` never arms, and `assemble_failover_for_attempt` only
+//! rewrites single-hop fields and passes the multi-hop circuit through
+//! unchanged. The ambient relay-list refresh (backend marks the exit inactive)
+//! remains the long-term authority + the backstop when no callback is wired.
 //!
 //! Storm guard: if the proactive reconnect re-lands on the SAME still-draining
 //! exit (the ambient refresh has not caught up yet), that tunnel's fresh
@@ -107,8 +106,13 @@ pub(crate) trait DrainReactorIo {
     /// Sleep for the jitter window.
     async fn sleep(&mut self, dur: Duration);
     /// Escalate to the state machine (surfaces as a pump error → tunnel
-    /// rebuild; exit exclusion is the ambient drain's job, see module docs).
+    /// rebuild that re-selects the multi-hop circuit).
     fn escalate(&mut self, msg: String);
+    /// Report the current (draining) exit id to the daemon avoid-set so the
+    /// reconnect triggered by [`Self::escalate`] excludes it and lands on a
+    /// DIFFERENT exit (ADR 36 true exit-exclusion). No-op when no callback is
+    /// wired (exclusion then relies on the ambient relay-list refresh).
+    fn report_drained_exit(&mut self);
 }
 
 /// Consume drain advisories and proactively reconnect off the draining exit.
@@ -144,8 +148,13 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
         delay
     );
     io.sleep(delay).await;
+    // Record the drained exit in the daemon avoid-set BEFORE escalating, so
+    // the reconnect the escalation triggers re-selects a circuit that already
+    // excludes it (true exit-exclusion, not just a proactive reconnect).
+    io.report_drained_exit();
     io.escalate(format!(
-        "exit draining (reason={}); proactively reconnecting before the maintenance deadline",
+        "exit draining (reason={}); proactively reconnecting to a different exit \
+         before the maintenance deadline",
         advisory.reason_code
     ));
 }
@@ -155,6 +164,12 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
 pub(crate) struct RealDrainReactorIo {
     pub drain_sub: tokio::sync::watch::Receiver<Option<ExitDrainAdvisory>>,
     pub pump_error_tx: PumpErrorTx,
+    /// The exit id this tunnel is currently connected to (the one that drains).
+    /// The advisory itself carries no identity, so the reactor captures the
+    /// current exit at spawn from the tunnel config.
+    pub current_exit_id: [u8; 16],
+    /// Daemon callback recording the drained exit in the avoid-set.
+    pub on_exit_draining: Option<std::sync::Arc<dyn Fn([u8; 16]) + Send + Sync>>,
 }
 
 impl DrainReactorIo for RealDrainReactorIo {
@@ -203,6 +218,12 @@ impl DrainReactorIo for RealDrainReactorIo {
             let _ = tx.send(msg);
         }
     }
+
+    fn report_drained_exit(&mut self) {
+        if let Some(cb) = self.on_exit_draining.as_ref() {
+            cb(self.current_exit_id);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -247,6 +268,8 @@ mod tests {
         assert!(within_cooldown(900, 1_000));
     }
 
+    const FAKE_EXIT_ID: [u8; 16] = [0xEE; 16];
+
     struct FakeIo {
         advisories: VecDeque<Option<ExitDrainAdvisory>>,
         now: u64,
@@ -254,6 +277,7 @@ mod tests {
         fraction: f64,
         slept: Vec<Duration>,
         escalations: Vec<String>,
+        reported: Vec<[u8; 16]>,
     }
 
     impl DrainReactorIo for FakeIo {
@@ -278,6 +302,9 @@ mod tests {
         fn escalate(&mut self, msg: String) {
             self.escalations.push(msg);
         }
+        fn report_drained_exit(&mut self) {
+            self.reported.push(FAKE_EXIT_ID);
+        }
     }
 
     fn fake_with(advisory: Option<ExitDrainAdvisory>, now: u64, last_escalation: u64) -> FakeIo {
@@ -288,6 +315,7 @@ mod tests {
             fraction: 0.5,
             slept: Vec::new(),
             escalations: Vec::new(),
+            reported: Vec::new(),
         }
     }
 
@@ -324,6 +352,11 @@ mod tests {
             io.last_escalation, 940,
             "the escalation must be recorded at decision time for the cooldown"
         );
+        assert_eq!(
+            io.reported,
+            vec![FAKE_EXIT_ID],
+            "the drained exit must be reported to the avoid-set so the reconnect excludes it"
+        );
     }
 
     #[tokio::test]
@@ -348,6 +381,10 @@ mod tests {
         assert!(
             io.slept.is_empty(),
             "suppressed reactor must not even jitter"
+        );
+        assert!(
+            io.reported.is_empty(),
+            "a cooldown-suppressed reactor must not report a drained exit either"
         );
     }
 

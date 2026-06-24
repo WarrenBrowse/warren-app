@@ -165,6 +165,7 @@ pub fn valid_circuits(
     dir: &VerifiedMultiHopDirectory,
     entry_country: &str,
     exit_country: &str,
+    exclude_exit_ids: &[[u8; 16]],
 ) -> Vec<(usize, usize)> {
     let as_req = as_diversity_required(dir);
     let mut pairs = Vec::new();
@@ -177,6 +178,12 @@ pub fn valid_circuits(
                 continue;
             }
             if !country_matches(exit_country, &x.country) {
+                continue;
+            }
+            // ADR 36: skip an exit that signalled it is draining for
+            // maintenance, so a drain-triggered reconnect lands on a
+            // different exit instead of re-picking the one that is leaving.
+            if exclude_exit_ids.contains(x.exit.exit_id.as_bytes()) {
                 continue;
             }
             // Distinct physical node (same routing tag = same node).
@@ -248,8 +255,9 @@ pub fn select_circuit(
     exit_country: &str,
     enable_gso: bool,
     use_warren_obfuscation: bool,
+    exclude_exit_ids: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
-    let pairs = valid_circuits(dir, entry_country, exit_country);
+    let pairs = valid_circuits(dir, entry_country, exit_country, exclude_exit_ids);
     if pairs.is_empty() {
         return None;
     }
@@ -285,8 +293,9 @@ fn pick_two_hop_circuit(
     enable_gso: bool,
     use_warren_obfuscation: bool,
     current: Option<&MultiHopConfig>,
+    exclude_exit_ids: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
-    let pairs = valid_circuits(dir, entry_country, exit_country);
+    let pairs = valid_circuits(dir, entry_country, exit_country, exclude_exit_ids);
     if pairs.is_empty() {
         return None;
     }
@@ -349,20 +358,30 @@ fn pick_one_hop_circuit(
     enable_gso: bool,
     use_warren_obfuscation: bool,
     current: Option<&MultiHopConfig>,
+    exclude_exit_ids: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
     if let Some(cur) = current {
         let (cur_relay, cur_exit) = circuit_identity(cur);
         // A 1-hop circuit's entry and exit resolve to the SAME directory
-        // node. Keep it when that node is still present and still matches
-        // the exit-country hint.
+        // node. Keep it when that node is still present, still matches the
+        // exit-country hint, and (ADR 36) is not draining: a draining exit
+        // must NOT be kept sticky, else a drain-triggered reconnect re-picks
+        // it instead of migrating away.
         if let (Some(ri), Some(xi)) = (relay_index(dir, &cur_relay), exit_index(dir, &cur_exit))
             && ri == xi
             && country_matches(exit_country, &dir.nodes[ri].country)
+            && !exclude_exit_ids.contains(&cur_exit)
         {
             return assemble(dir, ri, ri, enable_gso, use_warren_obfuscation);
         }
     }
-    select_one_hop_circuit(dir, exit_country, enable_gso, use_warren_obfuscation)
+    select_one_hop_circuit(
+        dir,
+        exit_country,
+        enable_gso,
+        use_warren_obfuscation,
+        exclude_exit_ids,
+    )
 }
 
 /// Selects a **1-hop** circuit: one node serves as both the entry relay
@@ -382,12 +401,17 @@ pub fn select_one_hop_circuit(
     exit_country: &str,
     enable_gso: bool,
     use_warren_obfuscation: bool,
+    exclude_exit_ids: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
     let candidates: Vec<usize> = dir
         .nodes
         .iter()
         .enumerate()
         .filter(|(_, n)| country_matches(exit_country, &n.country))
+        // ADR 36: a draining exit is skipped so a drain-triggered reconnect
+        // migrates to a different node (1-hop collapses entry+exit onto one
+        // node, so excluding the exit excludes the whole circuit).
+        .filter(|(_, n)| !exclude_exit_ids.contains(n.exit.exit_id.as_bytes()))
         .map(|(i, _)| i)
         .collect();
     if candidates.is_empty() {
@@ -738,6 +762,15 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 // the daemon blocks all traffic.
                 match cached_dir.as_ref() {
                     Some(dir) => {
+                        // ADR 36: exits that signalled a maintenance drain (via
+                        // the in-band advisory, recorded by the drain reactor)
+                        // are excluded from this selection so a drain-triggered
+                        // reconnect migrates to a different exit. Entries expire
+                        // on a TTL, so a recovered exit is offered again.
+                        let excluded = cfg
+                            .parameters_generator
+                            .warren_drained_exits_snapshot()
+                            .await;
                         let c = if settings.enabled {
                             pick_two_hop_circuit(
                                 dir,
@@ -746,6 +779,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 true,
                                 true,
                                 last_circuit.as_ref(),
+                                &excluded,
                             )
                         } else {
                             pick_one_hop_circuit(
@@ -754,6 +788,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 true,
                                 true,
                                 last_circuit.as_ref(),
+                                &excluded,
                             )
                         };
                         if c.is_none() {
@@ -961,7 +996,7 @@ mod tests {
             node(&op, 2, "fr", 0, 100),
             node(&op, 3, "de", 0, 100),
         ]);
-        let pairs = valid_circuits(&d, "", "");
+        let pairs = valid_circuits(&d, "", "", &[]);
         // Only cross-country ordered pairs: (fr,de) x2 + (de,fr) x2 = 4.
         // The two FR↔FR and self pairs are excluded.
         assert_eq!(pairs.len(), 4);
@@ -976,8 +1011,8 @@ mod tests {
         let d = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
         // User pinned both hops to FR → mandatory country diversity makes
         // it impossible → no circuit (single-hop fallback).
-        assert!(valid_circuits(&d, "fr", "fr").is_empty());
-        assert!(select_circuit(&d, "fr", "fr", true, true).is_none());
+        assert!(valid_circuits(&d, "fr", "fr", &[]).is_empty());
+        assert!(select_circuit(&d, "fr", "fr", true, true, &[]).is_none());
     }
 
     #[test]
@@ -989,7 +1024,7 @@ mod tests {
             node(&op, 3, "se", 0, 100),
         ]);
         // entry fr, exit se → exactly one pair (0,2).
-        let pairs = valid_circuits(&d, "fr", "se");
+        let pairs = valid_circuits(&d, "fr", "se", &[]);
         assert_eq!(pairs, vec![(0, 2)]);
     }
 
@@ -1002,7 +1037,7 @@ mod tests {
             node(&op, 2, "de", 100, 100), // same AS as node1
             node(&op, 3, "se", 200, 100),
         ]);
-        let pairs = valid_circuits(&d, "", "");
+        let pairs = valid_circuits(&d, "", "", &[]);
         // node1(fr,as100) ↔ node2(de,as100) excluded by AS rule despite
         // different countries; only pairs involving node3(as200) survive.
         for (i, j) in &pairs {
@@ -1018,7 +1053,7 @@ mod tests {
     fn select_assembles_distinct_entry_exit() {
         let op = op_key();
         let d = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
-        let cfg = select_circuit(&d, "", "", true, false).expect("circuit");
+        let cfg = select_circuit(&d, "", "", true, false, &[]).expect("circuit");
         assert_ne!(cfg.relay.relay_id, *cfg.exit.exit_id.as_bytes());
         assert_eq!(cfg.operational_pubkey, op.verifying_key());
         assert!(cfg.enable_gso);
@@ -1028,7 +1063,57 @@ mod tests {
     #[test]
     fn empty_directory_yields_no_circuit() {
         let d = dir(vec![]);
-        assert!(select_circuit(&d, "", "", true, true).is_none());
+        assert!(select_circuit(&d, "", "", true, true, &[]).is_none());
+    }
+
+    #[test]
+    fn drained_exit_is_excluded_from_selection() {
+        // ADR 36: an exit that signalled an in-band maintenance drain must be
+        // dropped from circuit selection so a drain-triggered reconnect lands
+        // on a DIFFERENT exit instead of re-picking the one that is leaving.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "fr", 0, 100),
+            node(&op, 2, "de", 0, 100),
+            node(&op, 3, "se", 0, 100),
+        ]);
+        let de_exit = *d.nodes[1].exit.exit_id.as_bytes();
+
+        // Baseline: DE is a reachable exit when nothing is excluded.
+        let all = valid_circuits(&d, "", "", &[]);
+        assert!(
+            all.iter()
+                .any(|&(_, x)| *d.nodes[x].exit.exit_id.as_bytes() == de_exit),
+            "DE must be a selectable exit before it drains"
+        );
+
+        // 2-hop: excluding the drained DE exit removes every pair that exits
+        // via it, while other exits remain selectable.
+        let pairs = valid_circuits(&d, "", "", &[de_exit]);
+        assert!(!pairs.is_empty(), "other exits must remain selectable");
+        for (_, x) in &pairs {
+            assert_ne!(
+                *d.nodes[*x].exit.exit_id.as_bytes(),
+                de_exit,
+                "a drained exit must never appear in a selected circuit"
+            );
+        }
+
+        // 1-hop: the drained node is dropped from the candidate set.
+        let one_hop = select_one_hop_circuit(&d, "", true, true, &[de_exit])
+            .expect("a non-drained node remains for the 1-hop circuit");
+        assert_ne!(one_hop.exit.exit_id.as_bytes(), &de_exit);
+
+        // Sticky path: a CURRENT circuit whose exit just drained must NOT be
+        // kept; the pick must migrate off it.
+        let de_circuit = assemble(&d, 0, 1, true, true).expect("fr->de circuit");
+        let repicked = pick_two_hop_circuit(&d, "", "", true, true, Some(&de_circuit), &[de_exit])
+            .expect("must migrate to a non-drained exit");
+        assert_ne!(
+            repicked.exit.exit_id.as_bytes(),
+            &de_exit,
+            "a drained current exit must not be kept sticky"
+        );
     }
 
     #[test]
@@ -1082,13 +1167,14 @@ mod tests {
             node(&op, 3, "se", 0, 100),
             node(&op, 4, "us", 0, 100),
         ]);
-        let first = pick_two_hop_circuit(&d, "", "", true, true, None).expect("circuit");
+        let first = pick_two_hop_circuit(&d, "", "", true, true, None, &[]).expect("circuit");
         let first_id = circuit_identity(&first);
         // 50 sticky picks with the current circuit fed back in must all keep
         // the SAME circuit (no churn), despite multiple valid alternatives.
         let mut cur = first;
         for _ in 0..50 {
-            let next = pick_two_hop_circuit(&d, "", "", true, true, Some(&cur)).expect("circuit");
+            let next =
+                pick_two_hop_circuit(&d, "", "", true, true, Some(&cur), &[]).expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "circuit must stick");
             cur = next;
         }
@@ -1108,8 +1194,8 @@ mod tests {
         let current = assemble(&d, fr_idx, de_idx, true, true).unwrap();
         // User pins exit to SG → the DE-exit circuit is no longer valid, so
         // the sticky pick must move to an SG-exit circuit deterministically.
-        let picked =
-            pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current)).expect("sg circuit");
+        let picked = pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current), &[])
+            .expect("sg circuit");
         assert_eq!(
             picked.exit.exit_id.as_bytes(),
             d.nodes[2].exit.exit_id.as_bytes()
@@ -1120,12 +1206,13 @@ mod tests {
     fn two_hop_repicks_when_current_node_left_directory() {
         let op = op_key();
         let d_before = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
-        let current = pick_two_hop_circuit(&d_before, "", "", true, true, None).expect("circuit");
+        let current =
+            pick_two_hop_circuit(&d_before, "", "", true, true, None, &[]).expect("circuit");
         // New directory no longer contains the current exit node; a fresh
         // pick must still produce a valid circuit (never keep a stale node).
         let d_after = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 3, "se", 0, 100)]);
-        let picked =
-            pick_two_hop_circuit(&d_after, "", "", true, true, Some(&current)).expect("circuit");
+        let picked = pick_two_hop_circuit(&d_after, "", "", true, true, Some(&current), &[])
+            .expect("circuit");
         let (r, x) = circuit_identity(&picked);
         assert!(relay_index(&d_after, &r).is_some());
         assert!(exit_index(&d_after, &x).is_some());
@@ -1139,11 +1226,11 @@ mod tests {
             node(&op, 2, "de", 0, 100),
             node(&op, 3, "se", 0, 100),
         ]);
-        let first = pick_one_hop_circuit(&d, "", true, true, None).expect("circuit");
+        let first = pick_one_hop_circuit(&d, "", true, true, None, &[]).expect("circuit");
         let first_id = circuit_identity(&first);
         let mut cur = first;
         for _ in 0..50 {
-            let next = pick_one_hop_circuit(&d, "", true, true, Some(&cur)).expect("circuit");
+            let next = pick_one_hop_circuit(&d, "", true, true, Some(&cur), &[]).expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "1-hop node must stick");
             cur = next;
         }
@@ -1160,10 +1247,12 @@ mod tests {
         // itself.
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 0, 100), node(&op, 2, "sg", 0, 100)]);
-        let first = circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
+        let first =
+            circuit_identity(&select_one_hop_circuit(&d, "", true, true, &[]).expect("circuit"));
         for _ in 0..50 {
-            let again =
-                circuit_identity(&select_one_hop_circuit(&d, "", true, true).expect("circuit"));
+            let again = circuit_identity(
+                &select_one_hop_circuit(&d, "", true, true, &[]).expect("circuit"),
+            );
             assert_eq!(
                 first, again,
                 "1-hop fallback selection must be stable across calls (no churn)"
