@@ -547,7 +547,9 @@ fn spawn_multi_hop(
 ) {
     use std::sync::atomic::Ordering;
 
-    use warren_client::supervised_pump::{IpAssignChannel, run_downlink, run_uplink};
+    use warren_client::supervised_pump::{
+        ExitDrainingChannel, IpAssignChannel, run_downlink, run_uplink,
+    };
     use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
     let arc_for_task = std::sync::Arc::clone(&arc);
@@ -682,6 +684,13 @@ fn spawn_multi_hop(
             n_connections: 1,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
+        // ADR 36: the downlink pump publishes a mid-session `ExitDraining`
+        // advisory here; the drain reactor below forces a supervisor redial so
+        // we migrate before the exit's hard close. iOS has no daemon avoid-set,
+        // so exit-exclusion is the ambient relay-list refresh's job; this is
+        // the proactive-reconnect half (mirrors the desktop talpid reactor).
+        let exit_draining_channel = ExitDrainingChannel::new();
+        let drain_handle = supervisor.handle();
         let tun = arc_for_task.tun.clone();
 
         // Plain pumps (no DAITA), structurally identical to the desktop
@@ -702,15 +711,35 @@ fn spawn_multi_hop(
         });
         let dn_watch = watch.clone();
         let dn_tun = tun.clone();
+        let dn_drain = exit_draining_channel.clone();
         tokio::spawn(async move {
-            // `None`: iOS does not yet wire an ADR 36 drain reactor (the
-            // desktop talpid path does). Drains fall back to the exit's
-            // hard-close + the ambient relay-list refresh until the iOS
-            // FFI grows a drain consumer.
-            if let Err(e) = run_downlink(dn_watch, dn_tun, None).await {
+            if let Err(e) = run_downlink(dn_watch, dn_tun, Some(dn_drain)).await {
                 tracing::error!(error = %e, "multi-hop downlink terminated");
             }
         });
+        // ADR 36 drain reactor: on the first in-band drain advisory, force the
+        // supervisor to redial (it reconnects through its own backoff, which
+        // also spreads the herd, so no extra jitter here). One-shot: the
+        // redial installs a fresh session; teardown drops the sender, ending
+        // this task.
+        {
+            let mut drain_sub = exit_draining_channel.subscribe();
+            let _ = drain_sub.borrow_and_update();
+            tokio::spawn(async move {
+                loop {
+                    if drain_sub.changed().await.is_err() {
+                        return;
+                    }
+                    if drain_sub.borrow_and_update().is_some() {
+                        tracing::info!(
+                            "multi-hop exit draining; forcing reconnect (ADR 36 make-before-break)"
+                        );
+                        drain_handle.force_reconnect();
+                        return;
+                    }
+                }
+            });
+        }
         tokio::spawn(async move {
             if let Err(e) = supervisor.run().await {
                 tracing::error!(error = %e, "multi-hop supervisor terminated");
