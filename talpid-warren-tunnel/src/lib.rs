@@ -89,6 +89,57 @@ pub use default_route_split::force_route_cleanup;
 // sequencing issue.
 const TRACE_PREFIX: &str = "[warren-trace]";
 
+/// Wall-clock ceiling on a tunnel handshake / first-dial wait.
+///
+/// A handshake that never completes (e.g. an exit that silently drops a
+/// protocol-incompatible `Setup` instead of resetting the connection)
+/// must never wedge the blocking tunnel thread forever: past this bound
+/// the dial surfaces a recoverable [`Error::Handshake`] and the state
+/// machine recovers on its own (retry, then a cancelable blocked state
+/// once the flap detector settles). Single-hop and multi-hop share it.
+const HANDSHAKE_WAIT_BOUND: std::time::Duration = std::time::Duration::from_secs(150);
+
+/// Outcome of racing a handshake future against the daemon close signal
+/// and the [`HANDSHAKE_WAIT_BOUND`] wall-clock ceiling.
+enum HandshakeRace<T> {
+    /// The handshake future resolved on its own.
+    Completed(T),
+    /// The daemon asked the tunnel to close (user pressed Cancel /
+    /// Disconnect) before the handshake finished. The dial MUST unwind
+    /// promptly so the blocking tunnel thread returns and the
+    /// `DisconnectingState`'s `tunnel_close_event` fires: otherwise the
+    /// disconnect wedges until the daemon is killed (the bug this guards).
+    Aborted,
+    /// The wall-clock ceiling elapsed before either of the above.
+    TimedOut,
+}
+
+/// Race a handshake `fut` against the daemon `close_rx` and a wall-clock
+/// `bound`.
+///
+/// `close_rx` is polled with priority (`biased`) so a Cancel is honored
+/// immediately even when the handshake is simultaneously ready. It is
+/// borrowed, not consumed: on [`HandshakeRace::Completed`] the caller
+/// still owns the receiver and hands it to the running monitor, whose
+/// `wait()` races it again for the steady-state close.
+async fn race_handshake<F>(
+    fut: F,
+    close_rx: &mut futures::channel::oneshot::Receiver<()>,
+    bound: std::time::Duration,
+) -> HandshakeRace<F::Output>
+where
+    F: std::future::Future,
+{
+    tokio::select! {
+        biased;
+        _ = &mut *close_rx => HandshakeRace::Aborted,
+        res = tokio::time::timeout(bound, fut) => match res {
+            Ok(v) => HandshakeRace::Completed(v),
+            Err(_) => HandshakeRace::TimedOut,
+        },
+    }
+}
+
 /// Parameters required to start a Warren tunnel.
 ///
 /// Field shape mirrors the inputs to [`ClientTunnel::connect`] /
@@ -830,31 +881,54 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
         let handshake_t = Instant::now();
-        let session_kind = runtime.block_on(async move {
-            let mut client = ClientTunnel::with_signing_key(&signing)
-                .with_features(features)
-                .with_alpn_protocols(alpn_protocols)
-                .with_daita(enable_daita)
-                // Stable per-install device id: every reconnect/retry reuses
-                // ONE device lease, so the account never trips the v2 device
-                // cap and gets locked out of connecting (see `device_id`).
-                .with_device_id(device_id::device_id());
-            if let Some(addr) = bind_local_ip {
-                client = client.with_bind_local_ip(addr);
-            }
-            match select_session_request(n_conns) {
-                SessionRequest::Mono => client
-                    .connect(exit_addr)
-                    .await
-                    .map(SessionKind::Mono)
-                    .map_err(map_handshake_error),
-                SessionRequest::Multi(n) => client
-                    .connect_multi(exit_addr, n)
-                    .await
-                    .map(SessionKind::Multi)
-                    .map_err(map_handshake_error),
-            }
-        })?;
+        // Move the daemon close receiver out of `args` so the handshake can
+        // be raced against it: a Cancel / Disconnect issued mid-dial must
+        // unwind this blocking thread at once. Otherwise `wait()` (which
+        // normally races this receiver) is never reached, the
+        // `tunnel_close_event` never fires, and the disconnect wedges until
+        // the daemon is force-killed. The receiver is handed to the running
+        // monitor below for the steady-state close.
+        let mut close_rx = args.tunnel_close_rx;
+        let session_kind = {
+            let close_ref = &mut close_rx;
+            runtime.block_on(async move {
+                let connect_fut = async move {
+                    let mut client = ClientTunnel::with_signing_key(&signing)
+                        .with_features(features)
+                        .with_alpn_protocols(alpn_protocols)
+                        .with_daita(enable_daita)
+                        // Stable per-install device id: every reconnect/retry
+                        // reuses ONE device lease, so the account never trips
+                        // the v2 device cap and gets locked out of connecting
+                        // (see `device_id`).
+                        .with_device_id(device_id::device_id());
+                    if let Some(addr) = bind_local_ip {
+                        client = client.with_bind_local_ip(addr);
+                    }
+                    match select_session_request(n_conns) {
+                        SessionRequest::Mono => client
+                            .connect(exit_addr)
+                            .await
+                            .map(SessionKind::Mono)
+                            .map_err(map_handshake_error),
+                        SessionRequest::Multi(n) => client
+                            .connect_multi(exit_addr, n)
+                            .await
+                            .map(SessionKind::Multi)
+                            .map_err(map_handshake_error),
+                    }
+                };
+                match race_handshake(connect_fut, close_ref, HANDSHAKE_WAIT_BOUND).await {
+                    HandshakeRace::Completed(res) => res,
+                    HandshakeRace::Aborted => Err(Error::Handshake(
+                        "single-hop dial aborted by the daemon close signal".to_owned(),
+                    )),
+                    HandshakeRace::TimedOut => Err(Error::Handshake(format!(
+                        "single-hop handshake did not complete within {HANDSHAKE_WAIT_BOUND:?}"
+                    ))),
+                }
+            })
+        }?;
         log::debug!(
             "{TRACE_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind={}",
             start_t.elapsed().as_millis(),
@@ -1285,7 +1359,9 @@ impl WarrenTunnelMonitor {
                 pump_error_rx,
             },
             event_hook,
-            close_rx: args.tunnel_close_rx,
+            // Handed off from the handshake race above (not re-taken from
+            // `args`, whose `tunnel_close_rx` was already moved out).
+            close_rx,
             default_route_guard,
             v6_route_guard,
             nat_pmp_managers,
@@ -1337,6 +1413,13 @@ impl WarrenTunnelMonitor {
 
         let runtime = args.runtime.clone();
         let mut event_hook = args.event_hook;
+        // Take the daemon close receiver out of `args` up front so the
+        // initial-dial wait below can race it: a Cancel / Disconnect issued
+        // before the first session comes up must unwind this blocking thread
+        // at once (otherwise the disconnect wedges until the daemon is
+        // killed). It is handed to the running monitor for the steady-state
+        // close once the dial succeeds.
+        let mut close_rx = args.tunnel_close_rx;
 
         let relay_endpoint = cfg.relay.endpoint;
         // Clear any leaked split before dialing so the relay dial is not
@@ -1416,10 +1499,10 @@ impl WarrenTunnelMonitor {
             "{TRACE_PREFIX} T1={}ms phase=handshake_start (block_on supervisor first dial)",
             start_t.elapsed().as_millis()
         );
-        // Bound the initial-dial wait to 5 * Backoff::HANDSHAKE.max
-        // (~150 s) so a permanently-unreachable relay surfaces as a
-        // clean Error::Handshake instead of hanging the state machine.
-        let initial_wait_bound = Duration::from_secs(150);
+        // Bound the initial-dial wait (5 * Backoff::HANDSHAKE.max, ~150 s)
+        // so a permanently-unreachable relay surfaces as a clean
+        // Error::Handshake instead of hanging the state machine.
+        let initial_wait_bound = HANDSHAKE_WAIT_BOUND;
         let initial_client: Arc<warren_client::bundle::MultiHopBundle> =
             runtime.block_on(async {
                 let deadline = tokio::time::Instant::now() + initial_wait_bound;
@@ -1440,9 +1523,17 @@ impl WarrenTunnelMonitor {
                             "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
                         )));
                     }
-                    // Wake on whichever fires first: a live session, a
-                    // rejection, or the timeout.
+                    // Wake on whichever fires first: a Cancel, a live session,
+                    // a rejection, or the timeout. The close signal is polled
+                    // first (`biased`) so a Disconnect aborts the dial without
+                    // waiting on the other branches.
                     tokio::select! {
+                        biased;
+                        _ = &mut close_rx => {
+                            return Err(Error::Handshake(
+                                "multi-hop first dial aborted by the daemon close signal".to_owned(),
+                            ));
+                        }
                         changed = tokio::time::timeout(remaining, client_rx.changed()) => {
                             if changed.is_err() {
                                 return Err(Error::Handshake(format!(
@@ -1899,7 +1990,9 @@ impl WarrenTunnelMonitor {
                 supervisor_fatal_rx,
             },
             event_hook,
-            close_rx: args.tunnel_close_rx,
+            // Handed off from the initial-dial race above (not re-taken from
+            // `args`, whose `tunnel_close_rx` was already moved out).
+            close_rx,
             default_route_guard,
             // Multi-hop `/v2` dual-stack: holds the `::/1`+`8000::/1` split
             // route when the exit allocated a v6; `None` keeps it v4-only.
@@ -2957,6 +3050,59 @@ fn detect_default_local_ip(target: std::net::SocketAddr) -> std::io::Result<std:
 mod tests {
     use super::*;
     use warrenguard_wire::WarrenPubkey;
+
+    #[tokio::test]
+    async fn race_handshake_surfaces_the_value_when_the_dial_completes_first() {
+        // Nominal path: the handshake resolves before any close / timeout.
+        let (_close_tx, mut close_rx) = futures::channel::oneshot::channel::<()>();
+        let out = race_handshake(
+            async { 42_u32 },
+            &mut close_rx,
+            std::time::Duration::from_secs(30),
+        )
+        .await;
+        assert!(
+            matches!(out, HandshakeRace::Completed(42)),
+            "a ready handshake must surface its own value"
+        );
+    }
+
+    #[tokio::test]
+    async fn race_handshake_aborts_immediately_when_the_close_signal_fired() {
+        // The bug this guards: a handshake that NEVER completes (exit
+        // silently drops an incompatible Setup) must not wedge the dial.
+        // A fired close signal wins even against an effectively infinite
+        // timeout, so Cancel always returns control.
+        let (close_tx, mut close_rx) = futures::channel::oneshot::channel::<()>();
+        close_tx.send(()).expect("receiver alive");
+        let out = race_handshake(
+            std::future::pending::<()>(),
+            &mut close_rx,
+            std::time::Duration::from_secs(3600),
+        )
+        .await;
+        assert!(
+            matches!(out, HandshakeRace::Aborted),
+            "a fired close signal must abort the dial regardless of the timeout"
+        );
+    }
+
+    #[tokio::test]
+    async fn race_handshake_times_out_when_neither_dial_nor_close_resolves() {
+        // Backstop path: no user action, handshake never completes -> the
+        // wall-clock bound fires so the blocking thread can never hang.
+        let (_close_tx, mut close_rx) = futures::channel::oneshot::channel::<()>();
+        let out = race_handshake(
+            std::future::pending::<()>(),
+            &mut close_rx,
+            std::time::Duration::from_millis(20),
+        )
+        .await;
+        assert!(
+            matches!(out, HandshakeRace::TimedOut),
+            "with no close and no completion the wall-clock bound must fire"
+        );
+    }
 
     #[test]
     fn multi_hop_bind_addr_is_always_wildcard() {
