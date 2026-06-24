@@ -536,6 +536,15 @@ pub struct MultiHopConfig {
     /// the relay-inbound transport config does not mirror these knobs
     /// (see `warren-client::multi_hop`).
     pub use_warren_obfuscation: bool,
+    /// `true` when the circuit's entry relay and exit resolve to the SAME
+    /// physical node: a 1-hop circuit (the multihop toggle is OFF). The
+    /// whole fleet speaks the multi-hop wire protocol, so toggle-OFF still
+    /// rides it but collapses the circuit onto one trusted node (classic
+    /// single-hop privacy). The GUI MUST then present a single hop (no
+    /// entry endpoint, no multihop badge): a 1-hop circuit has no distinct
+    /// first hop to disclose. `false` for a genuine 2-hop circuit (toggle
+    /// ON) and for the manual-config path (treated as 2-hop).
+    pub single_node: bool,
 }
 
 impl std::fmt::Debug for MultiHopConfig {
@@ -551,6 +560,7 @@ impl std::fmt::Debug for MultiHopConfig {
             .field("exit_city", &self.exit_city)
             .field("enable_gso", &self.enable_gso)
             .field("use_warren_obfuscation", &self.use_warren_obfuscation)
+            .field("single_node", &self.single_node)
             .finish()
     }
 }
@@ -3258,6 +3268,7 @@ mod tests {
             exit_city: "Stockholm".to_owned(),
             enable_gso: true,
             use_warren_obfuscation: true,
+            single_node: false,
         };
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
@@ -3469,6 +3480,7 @@ mod tests {
             exit_city: "Stockholm".to_owned(),
             enable_gso: false,
             use_warren_obfuscation: true,
+            single_node: false,
         };
         let s = format!("{mh:?}");
         assert!(s.contains("<redacted>"));

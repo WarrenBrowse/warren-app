@@ -23,6 +23,11 @@ pub(crate) struct WarrenBackendInfo {
     pub relay_endpoint: Option<SocketAddr>,
     pub exit_endpoint: Option<SocketAddr>,
     pub enable_daita: bool,
+    /// `true` when the multi-hop circuit collapses onto a single node (a
+    /// 1-hop circuit, multihop toggle OFF). The GUI then presents one hop
+    /// (no entry endpoint), even though the transport rides the multi-hop
+    /// wire protocol. See [`MultiHopConfig::single_node`].
+    pub single_node: bool,
 }
 
 impl WarrenBackendInfo {
@@ -40,6 +45,11 @@ impl WarrenBackendInfo {
             relay_endpoint,
             exit_endpoint,
             enable_daita: p.enable_daita,
+            // A 1-hop circuit (entry == exit node) must display as a single
+            // hop. A true single-hop tunnel (no multi_hop at all) is also
+            // "one node", so default `false` there is harmless: that path
+            // already has `relay_endpoint == None` and renders single-hop.
+            single_node: p.multi_hop.as_ref().is_some_and(|mh| mh.single_node),
         }
     }
 }
@@ -122,6 +132,28 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
     use std::net::{IpAddr, Ipv4Addr};
 
     let unspecified = || SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
+    // A 1-hop circuit (multihop toggle OFF) rides the multi-hop wire
+    // protocol but collapses onto one node, so `relay_endpoint` is `Some`
+    // and `exit_endpoint` is redacted (`None`). It must NOT be rendered as
+    // multi-hop: publish the single dialed node as the endpoint and NO
+    // entry endpoint (the GUI multihop badge keys off `entry_endpoint`).
+    // Checked before the redacted-exit arm below, which would otherwise
+    // mistake this 1-hop circuit for a 2-hop one with a hidden exit.
+    if info.single_node {
+        let endpoint_addr = info
+            .relay_endpoint
+            .or_else(|| info.exit_candidates.first().copied())
+            .unwrap_or_else(unspecified);
+        return TunnelEndpoint {
+            endpoint: Endpoint::from_socket_address(endpoint_addr, TransportProtocol::Udp),
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            daita: info.enable_daita,
+            tunnel_type: talpid_types::net::TunnelType::Warren,
+        };
+    }
     let (endpoint_addr, entry_endpoint) = match (info.exit_endpoint, info.relay_endpoint) {
         // Multi-hop with a disclosed exit IP (manual-config path): show it,
         // entry = relay.
@@ -183,6 +215,7 @@ mod tests {
             relay_endpoint: None,
             exit_endpoint: None,
             enable_daita: false,
+            single_node: false,
         }
     }
 
@@ -319,6 +352,34 @@ mod tests {
             entry.address,
             "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
             "`entry_endpoint` must surface the relay descriptor endpoint"
+        );
+    }
+
+    #[test]
+    fn warren_one_hop_circuit_shows_single_node_without_entry_endpoint() {
+        // Regression: the "multihop badge always on" bug. Toggle OFF
+        // assembles a 1-hop circuit (entry == exit node) that still rides
+        // the multi-hop wire protocol, so `relay_endpoint` is `Some` and the
+        // exit IP is redacted (`exit_endpoint == None`). Without the
+        // `single_node` flag this hit the redacted-exit arm and published a
+        // bogus `entry_endpoint`, so the GUI drew a multihop badge on a
+        // single-hop connection. A 1-hop circuit must publish NO entry
+        // endpoint and surface the one node the client dials.
+        let mut info = fixture_warren(&["203.0.113.99:443"]);
+        info.relay_endpoint = Some("198.51.100.10:443".parse().unwrap());
+        info.exit_endpoint = None; // redacted, same as a true 2-hop circuit
+        info.single_node = true; // ... but this is the SAME node (1 hop)
+        let backend = BackendParams::Warren(info);
+
+        let te = backend.get_tunnel_endpoint();
+        assert!(
+            te.entry_endpoint.is_none(),
+            "a 1-hop circuit must publish NO entry_endpoint, else the GUI shows a bogus multihop badge",
+        );
+        assert_eq!(
+            te.endpoint.address,
+            "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
+            "the single node the client dials must be the displayed endpoint",
         );
     }
 

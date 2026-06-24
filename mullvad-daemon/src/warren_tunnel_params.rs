@@ -527,6 +527,7 @@ mod tests {
             exit_city: "Paris".to_owned(),
             enable_gso: false,
             use_warren_obfuscation: true,
+            single_node: false,
         };
 
         let params = assemble_for_attempt(

@@ -122,6 +122,9 @@ pub fn load_from_settings_dir(settings_dir: &Path) -> Result<Option<MultiHopConf
         exit_city: String::new(),
         enable_gso: parsed.enable_gso,
         use_warren_obfuscation: parsed.use_warren_obfuscation,
+        // A manual multi-hop config file declares an explicit relay + exit
+        // pair: treat it as a genuine 2-hop circuit for display.
+        single_node: false,
     }))
 }
 

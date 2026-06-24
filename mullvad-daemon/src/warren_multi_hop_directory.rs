@@ -222,6 +222,11 @@ pub(crate) fn assemble(
         exit_city: exit_node.city.clone(),
         enable_gso,
         use_warren_obfuscation,
+        // A 1-hop circuit collapses entry and exit onto the same directory
+        // node (toggle OFF, assembled via `assemble(dir, idx, idx, ..)`).
+        // The GUI must then present a single hop. A genuine 2-hop circuit
+        // (toggle ON) picks two distinct nodes, so `entry_idx != exit_idx`.
+        single_node: entry_idx == exit_idx,
     })
 }
 
