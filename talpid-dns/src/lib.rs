@@ -228,6 +228,23 @@ impl DnsMonitor {
     }
 }
 
+trait DnsMonitorT: Sized {
+    type Error: std::error::Error;
+
+    fn new(
+        #[cfg(target_os = "linux")] handle: tokio::runtime::Handle,
+        #[cfg(target_os = "linux")] route_manager: RouteManagerHandle,
+    ) -> Result<Self, Self::Error>;
+
+    fn set(&mut self, interface: &str, servers: ResolvedDnsConfig) -> Result<(), Self::Error>;
+
+    fn reset(&mut self) -> Result<(), Self::Error>;
+
+    fn reset_before_interface_removal(&mut self) -> Result<(), Self::Error> {
+        self.reset()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -262,22 +279,5 @@ mod test {
         let resolved = resolve(&override_variant, &GATEWAY);
         assert!(resolved.allow_external_dns());
         assert_eq!(resolved.tunnel_config(), custom.as_slice());
-    }
-}
-
-trait DnsMonitorT: Sized {
-    type Error: std::error::Error;
-
-    fn new(
-        #[cfg(target_os = "linux")] handle: tokio::runtime::Handle,
-        #[cfg(target_os = "linux")] route_manager: RouteManagerHandle,
-    ) -> Result<Self, Self::Error>;
-
-    fn set(&mut self, interface: &str, servers: ResolvedDnsConfig) -> Result<(), Self::Error>;
-
-    fn reset(&mut self) -> Result<(), Self::Error>;
-
-    fn reset_before_interface_removal(&mut self) -> Result<(), Self::Error> {
-        self.reset()
     }
 }

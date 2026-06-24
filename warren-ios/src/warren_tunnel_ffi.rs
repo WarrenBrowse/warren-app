@@ -113,16 +113,17 @@ pub struct WarrenDaitaSpecC {
 
 /// Tunnel state enum surfaced via `warren_tunnel_status`. Variants
 /// other than `Disconnected` are constructed by the warren-tunnel
-/// dispatcher once the Quinn connection task is wired. On the
-/// `not(tunnel)` feature path the enum has no constructor at all,
-/// hence the `cfg_attr(expect)` suppression scoped to that path.
+/// dispatcher, which only compiles on the iOS target with the `tunnel`
+/// feature. Off that exact path - including every host (clippy / test)
+/// build, with or without `tunnel` - the enum has no constructor, hence
+/// the `cfg_attr(expect)` suppression scoped to `not(ios && tunnel)`.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(
-    not(feature = "tunnel"),
+    not(all(target_os = "ios", feature = "tunnel")),
     expect(
         dead_code,
-        reason = "FFI surface ; only constructed on tunnel feature path"
+        reason = "FFI surface ; only constructed on the iOS tunnel path"
     )
 )]
 pub enum WarrenTunnelStateC {

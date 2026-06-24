@@ -386,9 +386,11 @@ mod tests {
         let seed = test_seed();
         // SAFETY: `seed` is a valid 32-byte stack buffer.
         let p1 = unsafe { warren_wallet_pubkey_ss58(seed.as_ptr()) };
+        // SAFETY: `seed` is a valid 32-byte stack buffer.
         let p2 = unsafe { warren_wallet_pubkey_ss58(seed.as_ptr()) };
         // SAFETY: both pointers are valid C strings returned above.
         let a1 = unsafe { CStr::from_ptr(p1) }.to_str().unwrap().to_owned();
+        // SAFETY: both pointers are valid C strings returned above.
         let a2 = unsafe { CStr::from_ptr(p2) }.to_str().unwrap().to_owned();
         // SAFETY: each pointer freed exactly once.
         unsafe {

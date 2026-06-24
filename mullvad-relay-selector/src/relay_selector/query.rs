@@ -59,8 +59,8 @@ impl RelayQuery {
     ///
     /// Returns `None` when the retry's constraints are incompatible with the user's
     /// - e.g., the user pinned ip_version=v4 and the retry wants v6. The retry order
-    /// only ever modifies obfuscation and ip_version, both of which live in
-    /// [`EntrySpecificConstraints`], so this is the only kind of merging needed.
+    ///   only ever modifies obfuscation and ip_version, both of which live in
+    ///   [`EntrySpecificConstraints`], so this is the only kind of merging needed.
     pub fn merge_retry(mut self, retry: EntrySpecificConstraints) -> Option<Self> {
         let merged = self.entry_specific().clone().intersection(retry)?;
         *self.entry_specific_mut() = merged;

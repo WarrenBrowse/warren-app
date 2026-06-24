@@ -31,11 +31,14 @@ zeroize = { workspace = true }
 warren-identity = { path = "../../warren-core/crates/warren-identity" }
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
-# Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and its
-# pure-logic host tests build off the iOS target too. serde_json was iOS-only
-# before; it now also backs the pin store's JSON persistence on host tests.
+# Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and the
+# multi-hop generation store (`warren_multihop_generation`), plus their
+# pure-logic host tests, build off the iOS target too. serde_json + tracing
+# were iOS-only before; they now also back the stores' JSON persistence and
+# their `tracing::warn!` diagnostics on the host test build.
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+tracing = "0.1"
 
 [target.'cfg(target_os = "ios")'.dependencies]
 futures = { workspace = true }
@@ -61,7 +64,6 @@ talpid-types = { path = "../talpid-types" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
 tower = { workspace = true }
-tracing = "0.1"
 tracing-subscriber = { workspace = true }
 
 # Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,

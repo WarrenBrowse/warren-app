@@ -124,8 +124,9 @@ enum Field {
 }
 
 /// IP version nibble (4 or 6), or `None` if the packet is too short.
-// Used only by the Android-gated `PacketDevice` impl; dead on the host test build.
-#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+// Only the Android-gated `PacketDevice` impl calls this; gating it to `test`
+// as well would leave it unused (dead) on the host test build.
+#[cfg(all(target_os = "android", feature = "tunnel"))]
 fn ip_version(packet: &[u8]) -> Option<u8> {
     packet.first().map(|b| b >> 4)
 }
