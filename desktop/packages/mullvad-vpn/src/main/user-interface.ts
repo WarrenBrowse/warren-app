@@ -595,7 +595,9 @@ export default class UserInterface implements WindowControllerDelegate {
           );
           this.tray?.on('click', () => this.windowController.show());
         } else {
-          this.tray?.on('right-click', () => this.windowController.hide());
+          this.tray?.on('right-click', () =>
+            this.popUpContextMenu(this.delegate.isLoggedIn(), this.delegate.getTunnelState()),
+          );
           this.tray?.on('click', () => this.windowController.toggle());
         }
         break;
