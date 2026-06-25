@@ -2723,6 +2723,12 @@ async fn run_nat_pmp_controller(
 #[must_use]
 fn filter_endpoint_addr_for_wan(addr: WarrenExitAddr) -> WarrenExitAddr {
     let mut filtered = WarrenExitAddr::new(addr.id);
+    // This filter narrows the ADDRESS set only; the descriptor metadata
+    // (dns_disabled, the v6 X.509 cover_domain) must survive it, otherwise the
+    // per-exit cover domain would be silently dropped before the dial and the
+    // client would fall back to RPK / the env default.
+    filtered.dns_disabled = addr.dns_disabled;
+    filtered.cover_domain = addr.cover_domain.clone();
     for transport_addr in &addr.addrs {
         match transport_addr {
             WarrenTransportAddr::Ip(socket) if is_routable_internet(*socket) => {
