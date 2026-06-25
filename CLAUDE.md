@@ -111,3 +111,66 @@ binary to production (warren-exit-1, warren-exit-sin):
 
 Full procedure: `../warren-core/CLAUDE.md` section "Règles de déploiement des
 exit nodes".
+
+## Windows development (build + run/debug)
+
+Supported on Windows 10/11, x64 and ARM64 (a Parallels Windows-on-ARM VM is a
+valid target). All tooling lives in `scripts/dev/windows/`. Run the `.sh` helpers
+from **Git Bash** and the `.ps1` helpers from PowerShell.
+
+### Prerequisites (one-time, via winget; force `--source winget`, msstore has a cert error)
+
+- **VS 2022 Build Tools** with the C++ workload + the target ARM64 *and* x86/x64
+  toolsets + a Windows 11 SDK + clang (`Microsoft.VisualStudio.2022.BuildTools`).
+- **Rust** (`Rustlang.Rustup`), then `rustup target add aarch64-pc-windows-msvc
+  x86_64-pc-windows-msvc i686-pc-windows-msvc` (i686 is needed for the NSIS plugins).
+- **zig**, **Go**, **protoc** (`Google.Protobuf`), **volta** (provides the Node/npm
+  pinned in `desktop/package.json`), **Git for Windows**.
+- `git config --global core.longpaths true` is **required**: some renderer paths
+  exceed the 260-char limit and `git checkout` fails without it.
+- podman is NOT needed: the gRPC bindings are committed under
+  `desktop/packages/management-interface/dist`.
+
+### Siblings + quinn fork
+
+`../warren-core` and `../warrenguard` must be checked out next to this repo at the
+SHAs pinned in `.warren-core-version` / `.warrenguard-version` (see the dependency
+layout section above). The quinn fork is gitignored and must be regenerated once:
+`../warren-core/bench/scripts/setup-quinn-fork.sh`.
+
+### Build
+
+- Full app + NSIS installer: `scripts/dev/windows/build-app.sh [--optimize]`
+  (installer lands in `dist/`).
+- Daemon + CLI only, for fast dev iteration: `scripts/dev/windows/build-daemon.sh`.
+
+These wrappers source `scripts/vcvars.sh` (locates `vcvarsall.bat` via vswhere, so
+Community *or* Build Tools works) and put `msbuild.exe` on PATH (vcvarsall does
+not). `scripts/utils/host` detects the host arch from the OS architecture string
+**locale-independently** (it must match `*ARM*64*`; a French Windows reports
+"Processeur ARM 64 bits"). `build-app.sh` sets `TARGETS=<host triple>` so
+electron-builder packages for the host arch (its `pack-windows` defaults to x64
+otherwise). Native routing (the split-default that sends traffic through the TUN)
+runs through `warren-core`'s `warren-winroute` crate (Win32 IP Helper API), not
+PowerShell.
+
+### Run / debug
+
+The daemon MUST run as the SYSTEM user on Windows (it edits the WFP firewall and
+creates the WinTUN adapter). Use the dev service:
+
+```powershell
+# once (elevates via UAC): registers WarrenVPN as a SYSTEM service and delegates
+# start/stop to interactive users, so no further elevation is needed.
+powershell -ExecutionPolicy Bypass -File scripts/dev/windows/dev-service.ps1 -Action Install
+powershell -ExecutionPolicy Bypass -File scripts/dev/windows/dev-service.ps1 -Action Start   # / Stop / Restart / Status / Logs
+```
+
+Daemon logs: `dev-logs/daemon.log` (verbose). The Electron app (hot-reload):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/dev/windows/run-gui.ps1
+```
+
+`run-gui.ps1` must run in the logged-on user's interactive session (Chromium does
+not render from a background/non-interactive context, you get a white window).

@@ -68,3 +68,12 @@ android/.idea
 
 # Python bytecode cache from ci/ scripts.
 __pycache__/
+
+# Windows local-dev artefacts (scripts/dev/windows/*). The daemon dev-service
+# logs to dev-logs/ (SYSTEM-owned), the Electron dev launcher logs to dev-gui.log,
+# and build-daemon.sh stages generated relay resources into dist-assets/. All
+# per-machine, regenerated, never canonical source.
+/dev-logs/
+/dev-gui.log
+/dist-assets/relays.json
+/dist-assets/warren-relays.json
