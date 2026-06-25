@@ -24,11 +24,32 @@ esac
 # Target architecture. Use the host architecture if unspecified.
 TARGET=${TARGET:-"$HOST_TARGET"}
 
-# Path to vcvarsall. This assumes that VS 2022 Community is available
-VCVARSPATH="C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat"
+# Locate vcvarsall.bat. Prefer vswhere so any VS 2022 edition (Community,
+# Professional, Enterprise, Build Tools) at any install path is found, including
+# Build Tools under "Program Files (x86)" on ARM64 hosts; fall back to the
+# well-known fixed locations if vswhere is unavailable.
+VCVARSPATH=""
+VSWHERE="C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+if [[ -f "$VSWHERE" ]]; then
+    vs_install="$("$VSWHERE" -latest -products '*' -property installationPath 2>/dev/null | tr -d '\r')"
+    if [[ -n "$vs_install" && -f "$vs_install\\VC\\Auxiliary\\Build\\vcvarsall.bat" ]]; then
+        VCVARSPATH="$vs_install\\VC\\Auxiliary\\Build\\vcvarsall.bat"
+    fi
+fi
+if [[ -z "$VCVARSPATH" ]]; then
+    for cand in \
+        "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat" \
+        "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvarsall.bat" \
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvarsall.bat"; do
+        if [[ -f "$cand" ]]; then
+            VCVARSPATH="$cand"
+            break
+        fi
+    done
+fi
 
-if [[ ! -f "$VCVARSPATH" ]]; then
-    echo -e "vcvarsall.bat not found. Please update the path in the script (${BASH_SOURCE[0]})"
+if [[ -z "$VCVARSPATH" || ! -f "$VCVARSPATH" ]]; then
+    echo -e "vcvarsall.bat not found. Install VS 2022 (Community or Build Tools), or update ${BASH_SOURCE[0]}"
     exit 1
 fi
 
