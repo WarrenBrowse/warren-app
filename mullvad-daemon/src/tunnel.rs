@@ -6,7 +6,8 @@ use std::{
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{
-    MultiHopConfig, NatPmpConfig, NatPmpMappingObserver, WarrenTunnelParameters,
+    CircuitTarget, MigrateHandle, MultiHopConfig, NatPmpConfig, NatPmpMappingObserver,
+    WarrenTunnelParameters,
 };
 use tokio::sync::Mutex;
 
@@ -172,6 +173,15 @@ struct InnerParametersGenerator {
     /// relay-list refresh marks the exit inactive; entries expire so a
     /// recovered exit is offered again.
     warren_drained_exits: Vec<([u8; 16], u64)>,
+    /// ADR 36 (Option A): the current tunnel's migrate-only handle, registered
+    /// at tunnel start via the `warren_register_migrate_handle` params
+    /// callback. The directory updater calls [`ParametersGenerator::try_warren_migrate`]
+    /// on a drain-driven re-selection to swap the live supervisor onto a
+    /// non-drained exit GAP-FREE, instead of a break-before-make reconnect.
+    /// `None` until a multi-hop tunnel registers one; a stale handle (after
+    /// teardown) is a harmless no-op and holds no watch receiver, so it never
+    /// pins a dead supervisor alive.
+    warren_migrate_handle: Option<MigrateHandle>,
     /// Warren-api URL forwarded from `lib.rs` boot. Used
     /// fire-and-forget to POST `/v1/incidents/exit-down` whenever
     /// `assemble_failover_for_attempt` is dispatched, so the
@@ -320,6 +330,7 @@ impl ParametersGenerator {
             warren_n_connections: None,
             warren_last_exit_pubkey: None,
             warren_drained_exits: Vec::new(),
+            warren_migrate_handle: None,
             warren_api_url,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
@@ -494,6 +505,31 @@ impl ParametersGenerator {
             .iter()
             .map(|(id, _)| *id)
             .collect()
+    }
+
+    /// ADR 36 (Option A): store the current tunnel's migrate handle. Wired
+    /// from the `warren_register_migrate_handle` params callback, invoked once
+    /// at multi-hop tunnel start. A later tunnel overwrites it; the dropped
+    /// handle holds no watch receiver, so nothing leaks.
+    pub async fn set_warren_migrate_handle(&self, handle: MigrateHandle) {
+        self.0.lock().await.warren_migrate_handle = Some(handle);
+    }
+
+    /// ADR 36 (Option A): attempt a GAP-FREE cross-exit migration onto
+    /// `target` via the registered migrate handle. Returns `true` if a handle
+    /// was registered (the supervisor make-before-breaks onto the new circuit,
+    /// no tunnel rebuild), `false` if none is wired (caller falls back to a
+    /// break-before-make reconnect). A migrate on a stale handle (tunnel torn
+    /// down) is a harmless no-op, but the updater only calls this for the live
+    /// tunnel so that case does not arise in practice.
+    pub async fn try_warren_migrate(&self, target: CircuitTarget) -> bool {
+        match self.0.lock().await.warren_migrate_handle.as_ref() {
+            Some(handle) => {
+                handle.migrate_to(target);
+                true
+            }
+            None => false,
+        }
     }
 
     /// Hot-swaps the Warren relay selector with a freshly fetched +
@@ -912,6 +948,18 @@ impl ParametersGenerator {
             let g = drain_gen.clone();
             tokio::spawn(async move {
                 g.record_warren_drained_exit(exit_id).await;
+            });
+        }));
+        // ADR 36 (Option A): register this tunnel's migrate handle so the
+        // directory updater can swap the supervisor onto a non-drained exit
+        // GAP-FREE on a drain-driven re-selection. Sync closure hops onto the
+        // runtime to store the handle (the tunnel start path runs in a tokio
+        // task, so a runtime is live). Harmless on single-hop (no supervisor).
+        let migrate_gen = self.clone();
+        params.warren_register_migrate_handle = Some(Arc::new(move |handle: MigrateHandle| {
+            let g = migrate_gen.clone();
+            tokio::spawn(async move {
+                g.set_warren_migrate_handle(handle).await;
             });
         }));
         // Wire the NAT-PMP observer that forwards every event from the

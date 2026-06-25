@@ -667,6 +667,10 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             // failure): such cases must NEVER clear a good circuit nor
             // fall back to an unsigned local file.
             let mut skip_apply = false;
+            // The drained-exit avoid-set used for this selection, hoisted so the
+            // apply step below can tell a DRAIN-driven circuit change (old exit
+            // now excluded → gap-free migrate) from an ordinary one (reconnect).
+            let mut excluded: Vec<[u8; 16]> = Vec::new();
             let desired: Option<MultiHopConfig> = if unconfigured {
                 None
             } else {
@@ -767,7 +771,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         // are excluded from this selection so a drain-triggered
                         // reconnect migrates to a different exit. Entries expire
                         // on a TTL, so a recovered exit is offered again.
-                        let excluded = cfg
+                        excluded = cfg
                             .parameters_generator
                             .warren_drained_exits_snapshot()
                             .await;
@@ -845,17 +849,49 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 let desired_id = desired.as_ref().map(circuit_identity);
                 let last_id = last_circuit.as_ref().map(circuit_identity);
                 if desired_id != last_id {
+                    // Always store the new circuit so the NEXT cold (re)connect
+                    // uses it, regardless of how we apply the switch now.
                     cfg.parameters_generator
                         .set_warren_multi_hop(desired.clone())
                         .await;
+                    let prev_circuit = last_circuit.clone();
                     last_circuit = desired.clone();
-                    match &desired {
-                        Some(_) => log::info!("Warren multi-hop circuit changed; reconnecting"),
-                        None => {
-                            log::info!("Warren multi-hop circuit cleared; reconnecting single-hop")
+
+                    // ADR 36 (Option A) GAP-FREE cross-exit migration: if the
+                    // circuit changed BECAUSE the previously-active exit is now
+                    // in the avoid-set (a maintenance drain), and a new circuit
+                    // is available, swap the LIVE supervisor onto it
+                    // (make-before-break) instead of a reconnect — the tunnel
+                    // never drops. Any other change (directory refresh, settings
+                    // edit, no live supervisor) keeps the break-before-make
+                    // reconnect.
+                    let drain_driven = prev_circuit
+                        .as_ref()
+                        .is_some_and(|c| excluded.contains(c.exit.exit_id.as_bytes()));
+                    let migrated = match (drain_driven, desired.as_ref()) {
+                        (true, Some(new_cfg)) => {
+                            cfg.parameters_generator
+                                .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
+                                .await
                         }
+                        _ => false,
+                    };
+                    if migrated {
+                        log::info!(
+                            "Warren multi-hop: gap-free cross-exit migration off the drained \
+                             exit (make-before-break, no reconnect)"
+                        );
+                    } else {
+                        match &desired {
+                            Some(_) => {
+                                log::info!("Warren multi-hop circuit changed; reconnecting")
+                            }
+                            None => log::info!(
+                                "Warren multi-hop circuit cleared; reconnecting single-hop"
+                            ),
+                        }
+                        (cfg.request_reconnect)();
                     }
-                    (cfg.request_reconnect)();
                 }
             }
 

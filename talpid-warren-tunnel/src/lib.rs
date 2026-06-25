@@ -46,6 +46,22 @@ pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
 pub use warren_client::bypass_cidr::BypassCidr;
+// ADR 36 (Option A): the daemon stores a per-tunnel migrate handle and builds
+// migration targets from the directory's selected circuit, so re-export both
+// types from this crate (it owns `MultiHopConfig` and depends on warren-core).
+pub use warren_client::supervisor::{CircuitTarget, MigrateHandle};
+
+/// Project a [`MultiHopConfig`] (a circuit the directory selected) into the
+/// [`CircuitTarget`] the supervisor migrates onto: the relay + exit identity,
+/// nothing else (the operational key + client identity are circuit-invariant).
+#[must_use]
+pub fn migration_target(cfg: &MultiHopConfig) -> CircuitTarget {
+    CircuitTarget {
+        relay: std::sync::Arc::new(cfg.relay.clone()),
+        exit_id: cfg.exit.exit_id,
+        exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
+    }
+}
 use warren_tunnel::{
     ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
     pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover, pump_multi_bidirectional,
@@ -238,6 +254,15 @@ pub struct WarrenTunnelParameters {
     /// Wired by the daemon's `ParametersGenerator` to a closure that calls
     /// `record_warren_drained_exit`. Multi-hop only.
     pub on_exit_draining: Option<std::sync::Arc<dyn Fn([u8; 16]) + Send + Sync>>,
+
+    /// ADR 36 (Option A): invoked once at tunnel start with this tunnel's
+    /// [`MigrateHandle`], so the daemon can store it and later trigger a
+    /// GAP-FREE cross-exit migration (`migrate_to`) off a draining exit
+    /// instead of a break-before-make reconnect. The handle holds NO watch
+    /// receiver, so storing it does not pin the supervisor alive across
+    /// teardown. `None` disables gap-free migration (the drain then falls
+    /// back to the proactive reconnect). Multi-hop only.
+    pub warren_register_migrate_handle: Option<std::sync::Arc<dyn Fn(MigrateHandle) + Send + Sync>>,
 
     /// NAT-PMP port-forwarding configuration. `None` (default) disables
     /// the feature entirely; `Some` instructs the daemon-side
@@ -1560,6 +1585,14 @@ impl WarrenTunnelMonitor {
         // Control handle for the migration watchdog's forced-reconnect
         // fallback; must be taken before `run()` consumes the supervisor.
         let supervisor_control = supervisor.handle();
+        // ADR 36 (Option A): hand the daemon a migrate-only handle so a
+        // drain-driven directory re-selection can swap this supervisor onto a
+        // non-drained exit gap-free. Taken before `run()` consumes the
+        // supervisor; the handle holds no watch receiver, so it never pins
+        // this supervisor alive after teardown.
+        if let Some(register) = params.warren_register_migrate_handle.as_ref() {
+            register(supervisor.migrate_handle());
+        }
         let supervisor_handle = runtime.spawn(async move {
             if let Err(e) = supervisor.run().await {
                 log::warn!(
@@ -3314,6 +3347,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            warren_register_migrate_handle: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3350,6 +3384,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            warren_register_migrate_handle: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3412,6 +3447,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            warren_register_migrate_handle: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3461,6 +3497,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            warren_register_migrate_handle: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,

@@ -165,6 +165,9 @@ pub fn assemble_for_attempt(
         // ADR 36: set by `produce_warren_tunnel_params` post-assembly (it owns
         // the generator handle the callback needs); `None` here is overwritten.
         on_exit_draining: None,
+        // ADR 36 (Option A): set by `produce_warren_tunnel_params` for
+        // multi-hop (it owns the generator the register callback stores into).
+        warren_register_migrate_handle: None,
         // NAT-PMP config originates from user settings (UI). The
         // caller threads it as-is; `None` keeps the legacy behaviour
         // (no refresh loop spawned).
@@ -255,6 +258,9 @@ pub fn assemble_failover_for_attempt(
         on_reconnect: None,
         // ADR 36: set by `produce_warren_tunnel_params` post-assembly.
         on_exit_draining: None,
+        // ADR 36 (Option A): set by `produce_warren_tunnel_params` for
+        // multi-hop (it owns the generator the register callback stores into).
+        warren_register_migrate_handle: None,
         nat_pmp,
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
