@@ -917,10 +917,10 @@ impl WarrenTunnelMonitor {
         // handshake. Read at the binary boundary (infrastructure config, not a
         // data-plane tuning knob). The exit must run in matching X.509 mode
         // (lockstep): an X.509 exit and an RPK client do not interoperate.
-        let cover_domain = std::env::var("WARREN_COVER_DOMAIN")
-            .ok()
-            .map(|s| s.trim().to_owned())
-            .filter(|s| !s.is_empty());
+        let cover_domain = resolve_cover_domain(
+            exit_addr.cover_domain.as_deref(),
+            std::env::var("WARREN_COVER_DOMAIN").ok(),
+        );
         if let Some(ref d) = cover_domain {
             log::info!("Warren: v6 X.509 mode active, cover-domain SNI = {d}");
         }
@@ -2753,6 +2753,26 @@ async fn run_nat_pmp_controller(
 /// hardens against malformed exit metadata that would carry a private
 /// address (e.g. a RFC1918 `10.66.0.1` candidate or similar tunnel
 /// gateway leak) as an exit candidate.
+/// Resolves the v6 X.509 cover-domain SNI for a dial (wg-0005).
+///
+/// The signed roster's per-exit `cover_domain` is authoritative and wins:
+/// it lets each exit advertise its own real certificate hostname for
+/// cover-domain rotation. The `WARREN_COVER_DOMAIN` env is the
+/// deployment-wide fallback (a single shared cover domain, ADR-0005 Stage
+/// 1), also used for exits whose roster entry carries no domain. Both are
+/// trimmed; empty / whitespace-only is treated as absent. `None` keeps the
+/// RPK-via-SNI handshake.
+#[must_use]
+fn resolve_cover_domain(per_exit: Option<&str>, env: Option<String>) -> Option<String> {
+    fn clean(s: &str) -> Option<String> {
+        let t = s.trim();
+        (!t.is_empty()).then(|| t.to_owned())
+    }
+    per_exit
+        .and_then(clean)
+        .or_else(|| env.as_deref().and_then(clean))
+}
+
 #[must_use]
 fn filter_endpoint_addr_for_wan(addr: WarrenExitAddr) -> WarrenExitAddr {
     let mut filtered = WarrenExitAddr::new(addr.id);
@@ -4176,6 +4196,68 @@ mod tests {
         let filtered = filter_endpoint_addr_for_wan(addr);
         assert_eq!(filtered.ip_addrs().count(), 0, "all dropped");
         assert_eq!(filtered.id, id);
+    }
+
+    #[test]
+    fn filter_endpoint_addr_for_wan_preserves_cover_domain() {
+        // wg-0005: the per-exit cover domain is metadata, not an address.
+        // The WAN address filter must not drop it, otherwise the dial would
+        // silently fall back to RPK / the env default instead of the
+        // exit's real certificate hostname.
+        let id = WarrenPubkey::from_bytes([7u8; 32]);
+        let addr = WarrenExitAddr::new(id)
+            .with_ip_addr("198.51.100.1:443".parse().unwrap())
+            .with_cover_domain("nl-1.cover.example.com");
+
+        let filtered = filter_endpoint_addr_for_wan(addr);
+        assert_eq!(filtered.ip_addrs().count(), 1, "routable IP kept");
+        assert_eq!(
+            filtered.cover_domain.as_deref(),
+            Some("nl-1.cover.example.com"),
+            "cover domain must survive the WAN address filter"
+        );
+    }
+
+    #[test]
+    fn resolve_cover_domain_prefers_per_exit_roster_over_env() {
+        // The signed roster's per-exit domain is authoritative: it wins over
+        // the deployment-wide env so per-exit cover-domain rotation works.
+        assert_eq!(
+            resolve_cover_domain(
+                Some("exit.cover.example.com"),
+                Some("shared.example.com".into())
+            ),
+            Some("exit.cover.example.com".to_owned())
+        );
+    }
+
+    #[test]
+    fn resolve_cover_domain_falls_back_to_env_when_roster_silent() {
+        // ADR-0005 Stage 1: a single shared cover domain via the env, used
+        // for exits whose roster entry carries no per-exit domain.
+        assert_eq!(
+            resolve_cover_domain(None, Some("shared.example.com".into())),
+            Some("shared.example.com".to_owned())
+        );
+    }
+
+    #[test]
+    fn resolve_cover_domain_none_keeps_rpk() {
+        // No per-exit domain and no env keeps the RPK-via-SNI handshake.
+        assert_eq!(resolve_cover_domain(None, None), None);
+    }
+
+    #[test]
+    fn resolve_cover_domain_treats_blank_as_absent() {
+        // Whitespace-only values (a misconfigured env or roster field) must
+        // not arm X.509 mode with an empty SNI; they read as absent and the
+        // fallback chain continues.
+        assert_eq!(
+            resolve_cover_domain(Some("   "), Some("shared.example.com".into())),
+            Some("shared.example.com".to_owned()),
+            "blank per-exit falls through to env"
+        );
+        assert_eq!(resolve_cover_domain(Some("  "), Some("  ".into())), None);
     }
 
     #[test]
