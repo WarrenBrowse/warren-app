@@ -46,6 +46,30 @@ export default function StateTriggeredNavigation() {
       return;
     }
 
+    // While the user is inside the onboarding wizard, account state churns by
+    // design: minting and crediting the first subscription flips `expiredState`
+    // from `expired` to `time_added` to `undefined`, and each change makes
+    // `getNavigationBase` return `expired`, then `timeAdded`, then
+    // `onboardingWelcome`. Letting those drive navigation yanks the user out of
+    // whatever step they are on and dumps them back on step 1 (welcome), so they
+    // can never reach the final step that persists `onboardingCompletedUnix` -
+    // an inescapable loop (observed on Windows). The wizard owns its forward
+    // navigation (each view pushes the next and the final step routes to `main`),
+    // so ignore these state-triggered redirects while the user is within it.
+    // Genuine interrupts (logout -> login, daemon disconnect -> launch, device
+    // revoked) are not in this set and still go through.
+    const inOnboarding =
+      currentPath === RoutePath.onboardingWelcome ||
+      currentPath.startsWith(`${RoutePath.onboardingWelcome}/`);
+    if (
+      inOnboarding &&
+      (nextPath === RoutePath.expired ||
+        nextPath === RoutePath.timeAdded ||
+        nextPath === RoutePath.onboardingWelcome)
+    ) {
+      return;
+    }
+
     if (currentPath !== nextPath) {
       delayScheduler.cancel();
 
