@@ -8386,6 +8386,7 @@ dependencies = [
  "warren-config",
  "warren-identity",
  "warren-tunnel",
+ "warren-winroute",
  "warrenguard-backoff",
  "warrenguard-killswitch-os",
  "warrenguard-multihop",
@@ -8524,6 +8525,15 @@ dependencies = [
  "warrenguard-server",
  "warrenguard-transport",
  "warrenguard-transport-core",
+]
+
+[[package]]
+name = "warren-winroute"
+version = "0.3.23"
+dependencies = [
+ "anyhow",
+ "tracing",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
