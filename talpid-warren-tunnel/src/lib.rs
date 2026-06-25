@@ -883,6 +883,23 @@ impl WarrenTunnelMonitor {
         let idle_cover_active =
             idle_cover_effective(warren_tunnel::knobs::idle_cover_enabled(), enable_daita);
 
+        // v6 X.509 cover-domain mode (wg-0005 / ADR-0005 Stage 1). When
+        // `WARREN_COVER_DOMAIN` is set the client validates the exit's real
+        // certificate via WebPKI (Mozilla roots) and dials this domain as SNI
+        // instead of pinning the exit's Ed25519 raw public key in the SNI; the
+        // exit identity is still verified in-band, so a wrong domain cannot
+        // admit a foreign exit. Unset (default) keeps the RPK-via-SNI
+        // handshake. Read at the binary boundary (infrastructure config, not a
+        // data-plane tuning knob). The exit must run in matching X.509 mode
+        // (lockstep): an X.509 exit and an RPK client do not interoperate.
+        let cover_domain = std::env::var("WARREN_COVER_DOMAIN")
+            .ok()
+            .map(|s| s.trim().to_owned())
+            .filter(|s| !s.is_empty());
+        if let Some(ref d) = cover_domain {
+            log::info!("Warren: v6 X.509 mode active, cover-domain SNI = {d}");
+        }
+
         // Detect the outbound source IP (eth0 / wlan0) used to reach
         // the exit before the handshake, so we bind the QUIC `Endpoint`
         // explicitly to that IP instead of `0.0.0.0:0`. Defense in depth
@@ -939,6 +956,12 @@ impl WarrenTunnelMonitor {
                         .with_device_id(device_id::device_id());
                     if let Some(addr) = bind_local_ip {
                         client = client.with_bind_local_ip(addr);
+                    }
+                    if let Some(domain) = cover_domain {
+                        // Validate the exit chain against the Mozilla roots and
+                        // dial the cover domain as SNI (v6 X.509). The exit
+                        // identity stays in-band-verified, independent of TLS.
+                        client = client.with_x509_webpki(domain);
                     }
                     match select_session_request(n_conns) {
                         SessionRequest::Mono => client
