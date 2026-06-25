@@ -728,6 +728,7 @@ fn spawn_multi_hop(
         {
             let mut drain_sub = exit_draining_channel.subscribe();
             let _ = drain_sub.borrow_and_update();
+            let drain_arc = std::sync::Arc::clone(&arc_for_task);
             tokio::spawn(async move {
                 loop {
                     if drain_sub.changed().await.is_err() {
@@ -738,6 +739,11 @@ fn spawn_multi_hop(
                             "multi-hop exit draining; forcing reconnect (ADR 36 proactive \
                              migration; exit-exclusion via the ambient relay-list refresh)"
                         );
+                        // Surface the maintenance migration to Swift so the UI
+                        // reflects it. Reuses `EventReconnecting` (no new C-ABI
+                        // tag): the app already renders it as a transient
+                        // reconnect, which is exactly what a drain migration is.
+                        drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
                         drain_handle.force_reconnect();
                     }
                 }
