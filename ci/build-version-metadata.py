@@ -24,6 +24,11 @@ and `suggested_upgrade` keeps working.
 stdlib only (runs on a stock python3); no third-party dependencies.
 """
 
+# PEP 604 unions (`Path | None`) appear in annotations below; the CI runner
+# ships Python 3.9, which evaluates annotations eagerly. Defer them to keep the
+# script runnable on 3.9+ without rewriting to typing.Optional.
+from __future__ import annotations
+
 import argparse
 import datetime
 import hashlib
