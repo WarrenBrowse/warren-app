@@ -113,6 +113,18 @@ pub(crate) trait DrainReactorIo {
     /// DIFFERENT exit (ADR 36 true exit-exclusion). No-op when no callback is
     /// wired (exclusion then relies on the ambient relay-list refresh).
     fn report_drained_exit(&mut self);
+    /// Attempt a GAP-FREE cross-exit migration off the draining exit (ADR 36):
+    /// select a non-drained circuit and swap the supervisor onto it via
+    /// `SupervisorHandle::migrate_to` (make-before-break, NO tunnel rebuild).
+    /// Returns `true` if the migration was initiated (the tunnel stays up, so
+    /// the reactor skips [`Self::escalate`]), `false` to fall back to the
+    /// break-before-make escalation. Default `false`: with no migration wired,
+    /// the reactor behaves exactly as before (escalate). The avoid-set
+    /// recorded by [`Self::report_drained_exit`] is what the migration's
+    /// circuit selection excludes, so the swap lands on a different exit.
+    async fn try_migrate(&mut self) -> bool {
+        false
+    }
 }
 
 /// Consume drain advisories and proactively reconnect off the draining exit.
@@ -153,6 +165,18 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
         delay
     );
     io.sleep(delay).await;
+    // Prefer a GAP-FREE cross-exit migration (ADR 36): the supervisor
+    // make-before-breaks onto a non-drained circuit (the avoid-set recorded
+    // above excludes the draining exit), so the tunnel never drops. Only if
+    // that is not possible (no migration wired, or no non-drained exit
+    // available) do we fall back to the break-before-make rebuild.
+    if io.try_migrate().await {
+        log::info!(
+            "Warren drain reactor: gap-free cross-exit migration initiated \
+             (make-before-break); tunnel stays up, no rebuild"
+        );
+        return;
+    }
     // The drained exit was already recorded in the avoid-set above, so the
     // reconnect this escalation triggers re-selects a circuit that excludes it.
     io.escalate(format!(
@@ -281,6 +305,10 @@ mod tests {
         slept: Vec<Duration>,
         escalations: Vec<String>,
         reported: Vec<[u8; 16]>,
+        /// What `try_migrate` returns (default false = no gap-free migration).
+        migrate_succeeds: bool,
+        /// Records that `try_migrate` was attempted.
+        migrate_attempts: u32,
     }
 
     impl DrainReactorIo for FakeIo {
@@ -308,6 +336,10 @@ mod tests {
         fn report_drained_exit(&mut self) {
             self.reported.push(FAKE_EXIT_ID);
         }
+        async fn try_migrate(&mut self) -> bool {
+            self.migrate_attempts += 1;
+            self.migrate_succeeds
+        }
     }
 
     fn fake_with(advisory: Option<ExitDrainAdvisory>, now: u64, last_escalation: u64) -> FakeIo {
@@ -319,6 +351,8 @@ mod tests {
             slept: Vec::new(),
             escalations: Vec::new(),
             reported: Vec::new(),
+            migrate_succeeds: false,
+            migrate_attempts: 0,
         }
     }
 
@@ -359,6 +393,49 @@ mod tests {
             io.reported,
             vec![FAKE_EXIT_ID],
             "the drained exit must be reported to the avoid-set so the reconnect excludes it"
+        );
+        assert_eq!(
+            io.migrate_attempts, 1,
+            "the reactor must attempt a gap-free migration before escalating"
+        );
+    }
+
+    #[tokio::test]
+    async fn gap_free_migration_skips_escalation() {
+        // When a gap-free cross-exit migration succeeds, the reactor must NOT
+        // escalate (no break-before-make tunnel rebuild) - the tunnel stays up.
+        let mut io = fake_with(
+            Some(ExitDrainAdvisory {
+                deadline_unix_secs: 1_000,
+                reason_code: 7,
+            }),
+            940,
+            0,
+        );
+        io.migrate_succeeds = true;
+
+        run_drain_reactor(&mut io).await;
+
+        assert_eq!(
+            io.migrate_attempts, 1,
+            "a gap-free migration must be attempted on drain"
+        );
+        assert!(
+            io.escalations.is_empty(),
+            "a successful gap-free migration must NOT escalate (no tunnel rebuild): {:?}",
+            io.escalations
+        );
+        // The avoid-set is still recorded (the migration excludes the drained
+        // exit) and the anti-stampede jitter still applies.
+        assert_eq!(
+            io.reported,
+            vec![FAKE_EXIT_ID],
+            "the drained exit must still be recorded in the avoid-set"
+        );
+        assert_eq!(
+            io.slept,
+            vec![Duration::from_secs(10)],
+            "the anti-stampede jitter must still apply before migrating"
         );
     }
 
