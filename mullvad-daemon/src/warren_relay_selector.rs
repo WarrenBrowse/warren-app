@@ -409,6 +409,7 @@ mod tests {
             vec![SignedJsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe1; 16]),
+                cover_domain: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
@@ -467,6 +468,7 @@ mod tests {
             vec![SignedJsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([0xe2; 16]),
+                cover_domain: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),

@@ -819,6 +819,7 @@ mod tests {
             vec![JsonNode {
                 id: relay_pubkey_hex,
                 exit_id: ExitId::from_bytes([seed; 16]),
+                cover_domain: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
