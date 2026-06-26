@@ -1,6 +1,6 @@
 {
   "name": "mullvad-vpn",
-  "version": "0.0.0",
+  "version": "2026.3.0-beta3",
   "productName": "Warren VPN",
   "private": true,
   "description": "Warren VPN client",
