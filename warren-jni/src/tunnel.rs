@@ -220,7 +220,8 @@ pub async fn run_session(
     let exit_socket: SocketAddr = match config.exit_endpoint.parse() {
         Ok(s) => s,
         Err(e) => {
-            log::error!("invalid exit endpoint {:?}: {e}", config.exit_endpoint);
+            // No-logs: do not record the exit address even on a parse error.
+            log::error!("invalid exit endpoint: {e}");
             status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
             return;
         }
@@ -230,12 +231,11 @@ pub async fn run_session(
     let daita_requested = config.daita.is_some();
     let client = ClientTunnel::with_signing_key(&signing).with_daita(daita_requested);
 
-    log::info!(
-        "Quinn connect: {} via {} (daita_requested={})",
-        exit_socket,
-        config.exit_pubkey_hex,
-        daita_requested
-    );
+    // No-logs: never record the chosen exit's address or identity pubkey - that
+    // is exactly the user-linkable metadata a no-logs VPN must not retain (and
+    // this log tag is captured into user-submitted problem reports). Generic
+    // connection state only.
+    log::info!("Quinn connect (daita_requested={daita_requested})");
     let session = match client.connect(target).await {
         Ok(s) => s,
         Err(e) => {
@@ -245,10 +245,10 @@ pub async fn run_session(
         }
     };
 
+    // No-logs: never record the exit-assigned inner tunnel IPs (user-linkable).
+    // Log only non-identifying transport state.
     log::info!(
-        "Tunnel up: assigned ipv4={} ipv6={:?} mtu={} daita_spec={}",
-        session.assigned_ipv4(),
-        session.assigned_ipv6(),
+        "Tunnel up: mtu={} daita_spec={}",
         session.assigned_max_mtu(),
         session.daita_spec().is_some()
     );
@@ -425,11 +425,12 @@ async fn run_multi_hop_session(
     };
 
     let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
+    // No-logs: never record the entry-relay address or the exit identity pubkey -
+    // that pair would deanonymize the chosen circuit (and this tag is captured
+    // into user-submitted problem reports). Generic state only.
     log::info!(
-        "multi-hop connect: entry {} -> exit {} (daita_requested={})",
-        entry_node.relay.endpoint,
-        config.exit_pubkey_hex,
-        config.daita.is_some(),
+        "multi-hop connect (daita_requested={})",
+        config.daita.is_some()
     );
     let mh = match warren_client::multi_hop::MultiHopClient::connect_with_warren_obfuscation(
         &entry_node.relay,
@@ -493,7 +494,8 @@ async fn run_multi_hop_session(
             }
         };
 
-    log::info!("multi-hop tunnel up (assigned inner ipv4={assigned_ipv4} ipv6={assigned_ipv6:?})");
+    // No-logs: the exit-assigned inner IPs are user-linkable; log success only.
+    log::info!("multi-hop tunnel up");
     status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
 
     // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4/IPV6 (set in Kotlin
