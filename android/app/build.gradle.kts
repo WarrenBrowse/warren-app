@@ -323,6 +323,11 @@ cargo {
     val enableApiOverride = !isReleaseBuild || appVersion.isDev || appVersion.isAlpha
     module = repoRootPath
     libname = "warren-jni"
+    // The rust-android-gradle linker wrapper shells out to this command; default
+    // "python" no longer exists on modern macOS/CI (only "python3"), which makes
+    // the Android native link fail with exit 127. The wrapper script is python3
+    // compatible, so pin python3 explicitly.
+    pythonCommand = "python3"
     // All available targets:
     // https://github.com/mozilla/rust-android-gradle/tree/master?tab=readme-ov-file#targets
     targets = getStringListProperty("warren.app.build.cargo.targets")
