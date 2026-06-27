@@ -6,15 +6,15 @@ pub async fn print() -> Result<()> {
 
     let mut rpc = MullvadProxyClient::new()
         .await
-        .context("Failed to connect to mullvad-daemon")?;
+        .context("Failed to connect to the Warren daemon")?;
 
     let daemon_version = rpc
         .get_current_version()
         .await
-        .context("Failed to get current mullvad-daemon version")?;
+        .context("Failed to get current Warren daemon version")?;
 
     if daemon_version != mullvad_version::VERSION {
-        println!("{:22}: {}", "mullvad-daemon version", daemon_version);
+        println!("{:22}: {}", "Warren daemon version", daemon_version);
     };
 
     let version_info = rpc

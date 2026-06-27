@@ -56,5 +56,5 @@ private fun Context.createCacheFile(directory: ProviderCacheDirectory, fileName:
 
 fun createShareLogFileName(): String {
     val datetime = DateTimeFormatter.ofPattern("yyyyDDD'T'HHmmssZ").format(ZonedDateTime.now())
-    return "mullvad_log-${datetime}.txt"
+    return "warren_log-${datetime}.txt"
 }

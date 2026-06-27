@@ -35,10 +35,10 @@ pub fn parse_relays_from_file(
             // debug so it does not alarm the operator. The caller maps the
             // returned `Err` to `None` and proceeds.
             log::debug!(
-                "Mullvad bundled relays unavailable (Warren tunnel active, unused): {bundled_error}"
+                "Bundled relays unavailable (Warren tunnel active, unused): {bundled_error}"
             );
             log::debug!(
-                "Mullvad cached relays unavailable (Warren tunnel active, unused): {cached_error}"
+                "Cached relays unavailable (Warren tunnel active, unused): {cached_error}"
             );
             return Err(bundled_error);
         }

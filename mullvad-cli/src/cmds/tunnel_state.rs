@@ -115,6 +115,6 @@ fn print_account_loggedout(state: &DeviceState) {
 1. Login to a Warren account with available time/credits.
 2. Disconnect from Warren VPN. This can either be done from the CLI or the Warren App.
 
-For more information, try 'mullvad account -h' or 'mullvad disconnect -h'"
+For more information, try 'warren account -h' or 'warren disconnect -h'"
     );
 }

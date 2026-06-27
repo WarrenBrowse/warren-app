@@ -22,7 +22,7 @@ class ProblemReportSubmissionOverlayView: UIView {
         case failure(Error)
 
         var supportEmail: String {
-            "support@mullvadvpn.net"
+            "support@warrenbrowse.com"
         }
 
         var title: String? {

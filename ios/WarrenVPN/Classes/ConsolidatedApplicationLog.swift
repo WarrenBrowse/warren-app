@@ -19,7 +19,7 @@ class ConsolidatedApplicationLog: TextOutputStreamable, @unchecked Sendable {
 
     enum MetadataKey: String {
         case id, os
-        case productVersion = "mullvad-product-version"
+        case productVersion = "warren-product-version"
     }
 
     struct LogAttachment {

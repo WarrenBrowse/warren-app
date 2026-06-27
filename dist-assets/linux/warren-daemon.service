@@ -13,7 +13,7 @@ RequiresMountsFor=/opt/Warren\x20VPN/resources/
 Restart=always
 RestartSec=1
 ExecStart=/usr/bin/warren-daemon -vv --disable-stdout-timestamps
-Environment="MULLVAD_RESOURCE_DIR=/opt/Warren VPN/resources/"
+Environment="WARREN_RESOURCE_DIR=/opt/Warren VPN/resources/"
 
 [Install]
 WantedBy=multi-user.target

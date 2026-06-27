@@ -1,6 +1,6 @@
 use tracing_subscriber::filter::LevelFilter;
 
-const LOG_FILENAME: &str = "mullvad-loader.log";
+const LOG_FILENAME: &str = "warren-loader.log";
 const DATE_TIME_FORMAT_STR: &str = "[%Y-%m-%d %H:%M:%S%.3f]";
 
 pub fn init() {

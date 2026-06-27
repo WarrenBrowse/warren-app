@@ -943,7 +943,7 @@ impl Daemon {
         let initial_relay_list = parse_relays_from_file(&config.cache_dir, &config.resource_dir)
             .inspect_err(|err| {
                 log::debug!(
-                    "Mullvad relays.json unavailable (Warren tunnel active, list unused): {err}"
+                    "relays.json unavailable (Warren tunnel active, list unused): {err}"
                 );
             })
             .ok();

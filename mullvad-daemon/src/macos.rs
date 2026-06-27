@@ -59,7 +59,7 @@ pub async fn handle_app_bundle_removal(
 
     /// Path to extract the uninstall script to.
     /// This directory must be owned by root to prevent privilege escalation.
-    const UNINSTALL_SCRIPT_PATH: &str = "/var/root/uninstall_mullvad.sh";
+    const UNINSTALL_SCRIPT_PATH: &str = "/var/root/uninstall_warren.sh";
 
     let mullvad_daemon = std::env::current_exe().context("Failed to get daemon path")?;
     let daemon_path = mullvad_daemon.clone();

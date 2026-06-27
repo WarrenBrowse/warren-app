@@ -145,9 +145,9 @@ impl Warren {
         rpc.set_warren_api_url(url.clone()).await?;
         match url {
             Some(u) => {
-                println!("Warren api URL persisted: {u} (restart `mullvad-daemon` to apply)")
+                println!("Warren api URL persisted: {u} (restart the Warren daemon to apply)")
             }
-            None => println!("Warren api URL unset (restart `mullvad-daemon` to apply)"),
+            None => println!("Warren api URL unset (restart the Warren daemon to apply)"),
         }
         Ok(())
     }
