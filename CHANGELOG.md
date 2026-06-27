@@ -924,7 +924,7 @@ This release is identical to 2024.3-beta1.
 - Update Electron from 26.3.0 to 28.1.3.
 - Improve the "Connecting to system service"-view with information about the situation and
   troubleshooting tips.
-- Update support email address to new email address, support@mullvadvpn.net.
+- Update support email address to new email address, support@warrenbrowse.com.
 
 #### Linux
 - Enable quantum-resistant tunnels by default (when set to `auto`). On other platforms, `auto` still

@@ -545,7 +545,7 @@ Identical to `android/2024.3-beta1` except for updated translations.
 - Set auto-connect setting as legacy on platforms with system vpn settings.
 - Change default obfuscation setting to `auto`.
 - Migrate obfuscation settings for existing users from `off` to `auto`.
-- Update support email address to new email address, support@mullvadvpn.net.
+- Update support email address to new email address, support@warrenbrowse.com.
 
 ### Fixed
 - Improve DPAD navigation.
