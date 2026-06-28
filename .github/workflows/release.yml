@@ -736,7 +736,11 @@ jobs:
         run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded (see the update-metadata artifact)."
 
       - name: Attach signed metadata to the run (audit + manual upload fallback)
+        # Best-effort audit copy. The manifests are already published to the
+        # update host by the SSH step above, so a failure here (e.g. the GitHub
+        # artifact-storage quota) must NOT fail the release.
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: update-metadata
