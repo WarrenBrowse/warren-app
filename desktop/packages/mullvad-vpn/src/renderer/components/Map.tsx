@@ -17,11 +17,15 @@ import { useSelector } from '../redux/store';
 // Default to Gothenburg when we don't know the actual location.
 const defaultLocation: Coordinate = { latitude: 57.70887, longitude: 11.97456 };
 
-const StyledCanvas = styled.canvas({
+const StyledCanvas = styled.canvas<{ $connected?: boolean }>(({ $connected }) => ({
   position: 'absolute',
   width: '100%',
   height: '100%',
-});
+  // Gently lift the map once connected to celebrate the secured state. Kept
+  // subtle on purpose; brightness preserves the land/ocean contrast.
+  filter: $connected ? 'brightness(1.25)' : 'brightness(1)',
+  transition: 'filter 600ms ease',
+}));
 
 interface MapParams {
   location: Coordinate;
@@ -204,7 +208,14 @@ function MapInner(props: MapInnerProps) {
 
   const combinedCanvasRef = useCombinedRefs(canvasRef, canvasCallback);
 
-  return <StyledCanvas ref={combinedCanvasRef} width={width} height={height} />;
+  return (
+    <StyledCanvas
+      ref={combinedCanvasRef}
+      width={width}
+      height={height}
+      $connected={props.connectionState === ConnectionState.connected}
+    />
+  );
 }
 
 function getPixelRatio(): number {

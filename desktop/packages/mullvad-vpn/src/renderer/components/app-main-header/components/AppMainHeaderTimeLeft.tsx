@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { closeToExpiry, formatRemainingTime, hasExpired } from '../../../../shared/account-expiry';
 import { messages } from '../../../../shared/gettext';
-import { FootnoteMini } from '../../../lib/components';
+import { FootnoteMini, useMainHeaderTone } from '../../../lib/components';
 import { useInterval } from '../../../lib/hooks';
 import { useSelector } from '../../../redux/store';
 
@@ -23,6 +23,7 @@ const StyledTimeLeftLabel = styled(FootnoteMini)({
 export const AppMainHeaderTimeLeft = () => {
   const accountExpiry = useSelector((state) => state.account.expiry);
   const isOutOfTime = accountExpiry ? hasExpired(accountExpiry) : false;
+  const dark = useMainHeaderTone() === 'dark';
 
   const [timeLeft, setTimeLeft] = useState(formatTimeLeft(accountExpiry));
 
@@ -41,7 +42,7 @@ export const AppMainHeaderTimeLeft = () => {
   }
 
   return (
-    <StyledTimeLeftLabel color="whiteAlpha80">
+    <StyledTimeLeftLabel color={dark ? 'blackAlpha80' : 'whiteAlpha80'}>
       {sprintf(
         // TRANSLATORS: Label in the main header showing the remaining
         // TRANSLATORS: subscription time.

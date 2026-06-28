@@ -8,7 +8,10 @@ export const colorPrimitives = {
   '--color-white-alpha20': colorTokens.whiteAlpha20,
 
   '--color-black': colorTokens.black,
+  '--color-black-alpha80': colorTokens.blackAlpha80,
+  '--color-black-alpha60': colorTokens.blackAlpha60,
   '--color-black-alpha50': colorTokens.blackAlpha50,
+  '--color-black-alpha40': colorTokens.blackAlpha40,
 
   '--color-red': colorTokens.red,
   '--color-new-red': colorTokens.newRed,
@@ -73,7 +76,10 @@ export const colors: Record<keyof typeof colorTokens, `var(${keyof typeof colorP
   whiteAlpha20: 'var(--color-white-alpha20)',
 
   black: 'var(--color-black)',
+  blackAlpha80: 'var(--color-black-alpha80)',
+  blackAlpha60: 'var(--color-black-alpha60)',
   blackAlpha50: 'var(--color-black-alpha50)',
+  blackAlpha40: 'var(--color-black-alpha40)',
 
   red: 'var(--color-red)',
   newRed: 'var(--color-new-red)',
