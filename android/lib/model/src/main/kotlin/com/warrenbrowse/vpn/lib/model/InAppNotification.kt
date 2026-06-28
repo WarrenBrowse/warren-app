@@ -40,4 +40,9 @@ sealed class InAppNotification {
         override val statusLevel = StatusLevel.Info
         override val priority: Long = 1000
     }
+
+    data class UpdateAvailable(val version: String) : InAppNotification() {
+        override val statusLevel = StatusLevel.Info
+        override val priority: Long = 1001
+    }
 }

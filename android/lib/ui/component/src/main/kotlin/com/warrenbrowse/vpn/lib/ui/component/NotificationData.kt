@@ -102,6 +102,18 @@ fun InAppNotification.toNotificationData(
                         stringResource(id = R.string.open_url),
                     ),
             )
+        is InAppNotification.UpdateAvailable ->
+            NotificationData(
+                title = stringResource(id = R.string.update_available),
+                message = stringResource(id = R.string.update_available_description, version),
+                statusLevel = statusLevel,
+                action =
+                    NotificationAction(
+                        Icons.AutoMirrored.Rounded.OpenInNew,
+                        openAppListing,
+                        stringResource(id = R.string.open_url),
+                    ),
+            )
         is InAppNotification.NewVersionChangelog ->
             NotificationData(
                 title = stringResource(id = R.string.new_changelog_notification_title),

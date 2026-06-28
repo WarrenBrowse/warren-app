@@ -48,4 +48,13 @@ interface WarrenJniBridge {
      * a network fetch, so callers must invoke it off the main thread.
      */
     fun checkVersionSupported(currentVersion: String): Boolean
+
+    /**
+     * Return the newest stable version newer than [currentVersion], or `null`
+     * when there is none / on any error, based on the same signed `android.json`
+     * manifest (Ed25519-verified). Fail-closed: a false "update available" is
+     * never reported. Blocks on a network fetch, so callers must invoke it off
+     * the main thread.
+     */
+    fun latestAvailableVersion(currentVersion: String): String?
 }

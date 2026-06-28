@@ -44,6 +44,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarning
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.UpdateAvailableNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
 import com.warrenbrowse.vpn.receiver.AutoStartVpnBootCompletedReceiver
 import com.warrenbrowse.vpn.screen.privacy.PrivacyDisclaimerViewModel
@@ -94,6 +95,14 @@ val uiModule = module {
         InAppNotificationUseCase::class
     single {
         VersionNotificationUseCase(get(), BuildConfig.ENABLE_IN_APP_VERSION_NOTIFICATIONS)
+    } bind InAppNotificationUseCase::class
+    single {
+        val installSourceProvider = get<InstallSourceProvider>()
+        UpdateAvailableNotificationUseCase(
+            appVersionInfoRepository = get(),
+            isVersionInfoNotificationEnabled = BuildConfig.ENABLE_IN_APP_VERSION_NOTIFICATIONS,
+            isInstalledFromStore = installSourceProvider::isInstalledFromStore,
+        )
     } bind InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.BAKLAVA) {

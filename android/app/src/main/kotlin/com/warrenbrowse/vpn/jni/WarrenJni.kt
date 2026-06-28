@@ -227,4 +227,20 @@ object WarrenJni {
      * @param currentVersion the running app version string (`BuildConfig.VERSION_NAME`).
      */
     external fun checkVersionSupported(currentVersion: String): Int
+
+    /**
+     * Return the version string of the newest stable release strictly newer
+     * than [currentVersion], or an empty string when there is none / on any
+     * error. Drives the sideload-only "update available" in-app notification.
+     *
+     * Same signed-manifest fetch + Ed25519 verification as
+     * [checkVersionSupported]. Unlike that call (which is fail-open so a flaky
+     * network never locks the user out), this one is fail-closed: every failure
+     * path returns `""` so a false "update available" prompt is never shown. An
+     * empty result means "no update known". Blocks on a network fetch, so it
+     * must be invoked off the main thread.
+     *
+     * @param currentVersion the running app version string (`BuildConfig.VERSION_NAME`).
+     */
+    external fun latestAvailableVersion(currentVersion: String): String
 }

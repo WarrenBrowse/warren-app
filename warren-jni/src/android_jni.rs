@@ -841,6 +841,85 @@ fn check_app_version_supported(current_version: &str) -> bool {
     is_current_version_supported(&current, &response.signed)
 }
 
+/// Return the version STRING of the newest stable release strictly greater than
+/// `current_version`, or an EMPTY string when there is none / on ANY error.
+///
+/// This drives the sideload-only "update available" in-app notification. Unlike
+/// [`checkVersionSupported`] (which is fail-OPEN so a flaky network never locks
+/// a user out), this prompt is fail-CLOSED: we would rather show no update than
+/// a false one, so every failure path collapses to `""`. The Kotlin side maps
+/// `""` to "no update known".
+///
+/// The fetch + verify discipline mirrors `checkVersionSupported`: same pinned
+/// host, same ed25519 verification against the embedded trusted pubkey, same
+/// shared tokio runtime.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_latestAvailableVersion<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    current_version: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let current = String::from_java(&jnix_env, current_version);
+    let latest = latest_available_version(&current).unwrap_or_default();
+    match jnix_env.new_string(latest) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Fetch + verify the signed manifest and return the newest stable version
+/// strictly above `current_version`, or `None` on any error / when none exists.
+fn latest_available_version(current_version: &str) -> Option<String> {
+    use mullvad_update::api::{HttpVersionInfoProvider, MetaRepositoryPlatform};
+    use mullvad_update::version::MIN_VERIFY_METADATA_VERSION;
+
+    let runtime = match RUNTIME.get() {
+        Some(rt) => rt,
+        None => {
+            log::warn!("latestAvailableVersion called before initLogger; no update");
+            return None;
+        }
+    };
+    let current: mullvad_version::Version = match current_version.parse() {
+        Ok(version) => version,
+        Err(err) => {
+            log::warn!("latestAvailableVersion: unparseable version '{current_version}': {err}");
+            return None;
+        }
+    };
+    let response = match runtime.block_on(HttpVersionInfoProvider::get_versions_for_platform(
+        MetaRepositoryPlatform::Android,
+        MIN_VERIFY_METADATA_VERSION,
+    )) {
+        Ok(response) => response,
+        Err(_) => {
+            log::warn!("latestAvailableVersion: manifest fetch/verify failed; no update");
+            return None;
+        }
+    };
+    newest_stable_above(&current, &response.signed).map(|v| v.to_string())
+}
+
+/// Pure selector: the maximum release version in `signed` that is stable
+/// (no pre-stable qualifier, not a dev build) AND strictly greater than
+/// `current`. Returns `None` when no such release exists.
+///
+/// Kept free of any I/O so it is unit-testable without a network or runtime.
+fn newest_stable_above(
+    current: &mullvad_version::Version,
+    signed: &mullvad_update::format::response::Response,
+) -> Option<mullvad_version::Version> {
+    signed
+        .releases
+        .iter()
+        .map(|release| &release.version)
+        .filter(|version| version.pre_stable.is_none() && !version.is_dev())
+        .filter(|version| *version > current)
+        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+        .cloned()
+}
+
 /// Submit a problem report. Called by the Android
 /// `ProblemReportRepository` once the user taps "Send". The Kotlin
 /// side passes:
@@ -1244,4 +1323,69 @@ fn collect_native_logs() -> String {
 
 fn pathbuf_from_java(env: &JnixEnv<'_>, path: JObject<'_>) -> PathBuf {
     PathBuf::from(String::from_java(env, path))
+}
+
+#[cfg(test)]
+mod version_select_tests {
+    use super::newest_stable_above;
+    use mullvad_update::format::release::Release;
+    use mullvad_update::format::response::Response;
+
+    fn version(s: &str) -> mullvad_version::Version {
+        s.parse().expect("test version must parse")
+    }
+
+    fn release(s: &str) -> Release {
+        Release {
+            version: version(s),
+            changelog: String::new(),
+            installers: Vec::new(),
+            rollout: mullvad_update::version::rollout::Rollout::complete(),
+        }
+    }
+
+    fn response(versions: &[&str]) -> Response {
+        Response {
+            releases: versions.iter().map(|v| release(v)).collect(),
+            ..Response::default()
+        }
+    }
+
+    #[test]
+    fn newer_stable_present_returns_some() {
+        let signed = response(&["1.0.0", "1.2.0", "1.3.0"]);
+        let got = newest_stable_above(&version("1.0.0"), &signed);
+        assert_eq!(got, Some(version("1.3.0")));
+    }
+
+    #[test]
+    fn only_same_or_older_returns_none() {
+        let signed = response(&["1.0.0", "0.9.0"]);
+        assert_eq!(newest_stable_above(&version("1.0.0"), &signed), None);
+    }
+
+    #[test]
+    fn empty_release_list_returns_none() {
+        let signed = response(&[]);
+        assert_eq!(newest_stable_above(&version("1.0.0"), &signed), None);
+    }
+
+    #[test]
+    fn pre_release_and_dev_above_current_are_ignored() {
+        // A higher beta and a higher dev build are present, but neither is a
+        // stable release, so no update should be reported.
+        let signed = response(&["1.1.0-beta1", "1.2.0-dev-abc123"]);
+        assert_eq!(newest_stable_above(&version("1.0.0"), &signed), None);
+    }
+
+    #[test]
+    fn picks_max_stable_ignoring_higher_prerelease() {
+        // 1.4.0-beta1 sorts above 1.3.0 but is not stable; the newest STABLE
+        // strictly above current is 1.3.0.
+        let signed = response(&["1.3.0", "1.4.0-beta1", "1.1.0"]);
+        assert_eq!(
+            newest_stable_above(&version("1.0.0"), &signed),
+            Some(version("1.3.0"))
+        );
+    }
 }

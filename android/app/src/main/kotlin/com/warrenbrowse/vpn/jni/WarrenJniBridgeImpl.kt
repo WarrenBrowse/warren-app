@@ -21,4 +21,7 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
 
     override fun checkVersionSupported(currentVersion: String): Boolean =
         WarrenJni.checkVersionSupported(currentVersion) == 1
+
+    override fun latestAvailableVersion(currentVersion: String): String? =
+        WarrenJni.latestAvailableVersion(currentVersion).ifEmpty { null }
 }
