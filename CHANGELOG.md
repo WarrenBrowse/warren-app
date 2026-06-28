@@ -22,6 +22,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-06-28
+### Added
+- Android: show an in-app "update available" notification for sideloaded installs. Google Play
+  installs keep updating through Play (no in-app prompt), per Play policy.
+- Re-sign the update metadata monthly so its expiry never lapses and update detection keeps working
+  between releases.
 ### Security
 - Restrict the daemon management socket to root plus a dedicated `warren` group (created by the
   installer) instead of leaving it world-accessible, and authorize wallet/secret RPCs
@@ -33,6 +40,12 @@ Line wrap the file at 100 chars.                                              Th
 - macOS: when "allow external DNS" is enabled together with "allow local network", keep DNS
   queries inside the tunnel instead of letting them leak to a LAN resolver.
 ### Fixed
+- Stamp the product version from the release tag at build time so every release reports its true
+  version. A forgotten manual bump previously shipped a desktop build labelled as a development
+  version, which silently disabled the update notification, and an Android build that reported the
+  previous version, which read as a false "update available".
+- Publish and serve the signed update manifests at the update endpoint so the in-app update check
+  resolves instead of returning 404 (the CI publish step could not upload them before).
 - Enable TLS SNI when connecting to the Warren API. The endpoint sits behind a reverse proxy that
   needs the SNI hostname to present its certificate; without it the handshake failed with a TLS
   `InternalError` alert.
