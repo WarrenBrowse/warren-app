@@ -57,6 +57,28 @@ runs:
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
         fi
 
+    - name: Stamp product version from the release tag
+      # The daemon and the Android app bake their version at COMPILE time from
+      # dist-assets/{desktop-product-version,android-version-name}.txt (see
+      # mullvad-version/build.rs + src/main.rs). On a tag build, force those files
+      # to the tag so the shipped binary reports its true version. Without this a
+      # forgotten manual bump ships a version-mismatched build with two failure
+      # modes that both break update detection: desktop gets a "-dev-<hash>"
+      # suffix (build.rs adds it when HEAD is not the file-derived tag) and a dev
+      # version disables the update notification entirely; Android reports the
+      # stale version, which then reads as a false "update available". Tag builds
+      # only; dev/PR/scheduled builds keep the committed value.
+      shell: bash
+      run: |
+        if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && printf '%s' "${GITHUB_REF_NAME:-}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+'; then
+          v="${GITHUB_REF_NAME#v}"
+          printf '%s\n' "$v" > dist-assets/desktop-product-version.txt
+          printf '%s\n' "$v" > dist-assets/android-version-name.txt
+          echo "Stamped product version '$v' from tag '${GITHUB_REF_NAME}'"
+        else
+          echo "Not a vX.Y.Z tag build (ref_type='${GITHUB_REF_TYPE:-}' ref='${GITHUB_REF_NAME:-}'); keeping committed product version."
+        fi
+
     - name: Read pinned warren-core SHA
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       id: warren-core-pin
