@@ -318,7 +318,9 @@ fn print_error_state(error_state: &ErrorState) {
             );
             println!();
             println!("Restart the Warren daemon for the change to take effect:");
-            println!("launchctl unload -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist");
+            println!(
+                "launchctl unload -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
+            );
             println!("launchctl load -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist");
         }
         talpid_types::tunnel::ErrorStateCause::AuthFailed(Some(auth_failed)) => {

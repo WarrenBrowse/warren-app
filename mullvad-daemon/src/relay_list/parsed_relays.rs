@@ -37,9 +37,7 @@ pub fn parse_relays_from_file(
             log::debug!(
                 "Bundled relays unavailable (Warren tunnel active, unused): {bundled_error}"
             );
-            log::debug!(
-                "Cached relays unavailable (Warren tunnel active, unused): {cached_error}"
-            );
+            log::debug!("Cached relays unavailable (Warren tunnel active, unused): {cached_error}");
             return Err(bundled_error);
         }
     };
