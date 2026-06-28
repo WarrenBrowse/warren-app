@@ -1,0 +1,134 @@
+name: Refresh update metadata
+
+# Re-signs and re-publishes the signed version manifests for the CURRENT latest
+# release, refreshing `metadata_expiry`, WITHOUT cutting a new app release.
+#
+# Why this exists: every signed manifest carries a 6-month `metadata_expiry`
+# (ci/build-version-metadata.py --expiry-months). Once it passes, EVERY client on
+# EVERY platform rejects the manifest ("Version metadata has expired") and update
+# detection silently stops fleet-wide until something re-signs. Coupling re-signing
+# to releases is not enough (a quiet quarter would lapse). This scheduled job keeps
+# the manifests fresh on its own. It signs the SAME release content with a fresh
+# expiry (and a bumped metadata_version via the previous-manifest fetch), so the
+# anti-rollback floor only ever moves forward.
+#
+# Mirrors the `publish-update-metadata` job in release.yml but resolves the latest
+# published release instead of a pushed tag. The actual signing/metadata logic is
+# shared (ci/build-version-metadata.py + the mullvad-version-metadata signer).
+
+on:
+  schedule:
+    # 03:17 UTC on the 1st of every month. Well inside the 6-month expiry window,
+    # so a single missed run never lapses the manifests.
+    - cron: '17 3 1 * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to re-sign (default: latest published release)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-update-metadata:
+    name: Re-sign + republish latest update metadata
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    env:
+      WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+      WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
+      WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
+      WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
+      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
+      WARREN_UPDATE_METADATA_BASE: https://api.warrenbrowse.com/updates/desktop
+      WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+    steps:
+      - name: Skip if no signing key
+        if: env.WARREN_UPDATE_SIGNING_KEY == ''
+        run: echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; cannot refresh update metadata."
+
+      - name: Checkout repository
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: actions/checkout@v4
+
+      - name: Set up build env (Rust + warren-core)
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Resolve the release tag to re-sign
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            # Latest published (non-draft) release.
+            tag="$(gh release view --json tagName --jq .tagName)"
+          fi
+          [ -n "$tag" ] || { echo "::error::could not resolve a release tag to re-sign"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Re-signing metadata for $tag"
+
+      - name: Download installers from the release
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p release-files
+          gh release download "$TAG_NAME" --dir release-files --pattern 'WarrenVPN-*'
+          ls -lh release-files
+
+      - name: Build the metadata signer
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: cargo build --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
+
+      - name: Generate unsigned metadata (fresh expiry)
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+        run: |
+          version="${TAG_NAME#v}"
+          python3 ci/build-version-metadata.py \
+            --tag "$TAG_NAME" \
+            --version "$version" \
+            --release-dir release-files \
+            --repo "$GITHUB_REPOSITORY" \
+            --changelog CHANGELOG.md \
+            --metadata-base-url "$WARREN_UPDATE_METADATA_BASE" \
+            --out-dir unsigned \
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            ${WARREN_UPDATE_MIN_VERSION:+--min-version "$WARREN_UPDATE_MIN_VERSION"}
+
+      - name: Sign metadata
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          mkdir -p signed
+          signer=target/release/mullvad-version-metadata
+          for platform in macos windows linux android ios; do
+            [ -f "unsigned/${platform}.json" ] || continue
+            "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
+              > "signed/${platform}.json"
+          done
+          ls -lh signed
+
+      - name: Upload metadata to the update host
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          key="$RUNNER_TEMP/updates_ssh_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            signed/*.json \
+            "${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}:${WARREN_UPDATES_SSH_PATH}/"
+          rm -f "$key"
+
+      - name: Warn when upload is skipped
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY == ''
+        run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded."
