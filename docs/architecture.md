@@ -188,6 +188,29 @@ metadata that might be useful.
 
 ### System DNS management
 
+While connected, the daemon sets the system resolver to a Warren address reached
+through the tunnel, and the firewall blocks DNS to anything else (unless the
+advanced `allow_external_dns` toggle is on, which lets a chosen external resolver
+through; queries still egress through the tunnel).
+
+**DNS content blockers.** The optional content blockers (ads, trackers, malware,
+adult content, gambling, social media) are not filtered on the device. The daemon
+encodes the user's selected categories as a bitmask in the last octet of a magic
+resolver IP `100.64.0.X` (CGNAT range, RFC 6598): ads=1, trackers=2, malware=4,
+adult=8, gambling=16, social=32, OR-combined. That address becomes the system DNS.
+On the exit, Warren's resolver (kresd, in the sibling `warren-core` repo) decodes
+the octet and applies the matching public RPZ blocklists, returning NXDOMAIN for a
+blocked name and otherwise resolving normally. With no category selected the octet
+is 0 and nothing is blocked (off by default).
+
+- Client mapping: `mullvad-daemon/src/dns.rs` (`addresses_from_options`),
+  `mullvad-types/src/settings/dns.rs` (`DefaultDnsOptions`, `allow_external_dns`).
+- Server side, scope, no-log, and transparency: see `warren-core`
+  `docs/37-DNS-CONTENT-BLOCKING.md` and `infra/dns/`.
+
+This mapping is inherited unchanged from upstream Mullvad; the only Warren
+addition here is `allow_external_dns`.
+
 ### Firewall integration
 
 ### Connection logic
