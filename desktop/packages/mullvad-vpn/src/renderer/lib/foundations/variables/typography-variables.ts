@@ -3,11 +3,13 @@ import { FontFamilyTokens, FontSizeTokens, FontWeightTokens, LineHeightTokens } 
 export const fontFamilies = {
   '--font-family-open-sans': FontFamilyTokens.openSans,
   '--font-family-source-sans-pro': FontFamilyTokens.sourceSansPro,
+  '--font-family-nunito': FontFamilyTokens.nunito,
 };
 
 export enum FontFamilies {
   openSans = 'var(--font-family-open-sans)',
   sourceSansPro = 'var(--font-family-source-sans-pro)',
+  nunito = 'var(--font-family-nunito)',
 }
 
 export const fontWeights = {

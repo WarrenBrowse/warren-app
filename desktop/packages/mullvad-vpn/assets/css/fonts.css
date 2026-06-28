@@ -4,6 +4,15 @@
   src: url('../fonts/SourceSansPro-Bold.ttf') format('truetype');
 }
 
+/* Brand display face, used only by the WARREN wordmark (see Logo.tsx), never by
+   the UI typography. Nunito is a variable font; we draw its Black (900) end for a
+   rounded wordmark that echoes the Bula mascot. */
+@font-face {
+  font-family: 'Nunito';
+  font-weight: 100 900;
+  src: url('../fonts/Nunito-Variable.ttf') format('truetype');
+}
+
 @font-face {
   font-family: 'Noto Sans Myanmar';
   font-weight: 700;

@@ -22,9 +22,11 @@ const iconSizes = {
   '2': 106,
 };
 
+// The wordmark is set in Nunito Black (heavy + rounded, echoing Bula). Sizes are
+// tuned to feel fat and prominent while still fitting the 68px header (size 1).
 const textFontSizes = {
-  '1': 22,
-  '2': 44,
+  '1': 30,
+  '2': 56,
 };
 
 // Per state, which mark file Bula shows. The black master sits on coloured/light
@@ -61,10 +63,10 @@ const Mark = ({
 const Wordmark = ({ fontSize, tone }: { fontSize: number; tone: 'light' | 'dark' }) => (
   <span
     style={{
-      fontFamily: FontFamilies.sourceSansPro,
-      fontWeight: 700,
+      fontFamily: FontFamilies.nunito,
+      fontWeight: 900,
       fontSize,
-      letterSpacing: '0.04em',
+      letterSpacing: '0.01em',
       lineHeight: 1,
       color: tone === 'dark' ? colors.darkerBlue10 : colors.whiteOnDarkBlue80,
       whiteSpace: 'nowrap',
