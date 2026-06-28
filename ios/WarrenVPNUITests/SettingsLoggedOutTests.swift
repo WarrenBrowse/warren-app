@@ -27,7 +27,7 @@ class SettingsLoggedOutTests: LoggedOutUITestCase {
 
         ProblemReportPage(app)
             .tapEmailTextField()
-            .enterText("cookie@mullvad.net")
+            .enterText("cookie@warrenbrowse.com")
             .tapMessageTextView()
             .enterText(
                 """
