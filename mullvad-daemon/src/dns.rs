@@ -101,6 +101,95 @@ mod test {
         );
     }
 
+    /// Compose default-state options with the given category flags and assert
+    /// the resolver is `100.64.0.{octet}`. This locks the wire contract the
+    /// exit's kresd listeners decode (`100.64.0.1..63`): the last octet is a
+    /// bitmask OR of the per-category bits, so changing any value here is a
+    /// server-incompatible break.
+    fn assert_blocks_to(default_options: DefaultDnsOptions, octet: u8) {
+        let cfg = DnsOptions {
+            state: DnsState::Default,
+            custom_options: CustomDnsOptions::default(),
+            default_options,
+            allow_external_dns: false,
+        };
+        assert_eq!(
+            addresses_from_options(&cfg),
+            DnsConfig::from_addresses(&[format!("100.64.0.{octet}").parse().unwrap()], &[]),
+        );
+    }
+
+    #[test]
+    fn test_each_category_maps_to_its_bit() {
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_ads: true,
+                ..DefaultDnsOptions::default()
+            },
+            1,
+        );
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_trackers: true,
+                ..DefaultDnsOptions::default()
+            },
+            2,
+        );
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_malware: true,
+                ..DefaultDnsOptions::default()
+            },
+            4,
+        );
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_adult_content: true,
+                ..DefaultDnsOptions::default()
+            },
+            8,
+        );
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_gambling: true,
+                ..DefaultDnsOptions::default()
+            },
+            16,
+        );
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_social_media: true,
+                ..DefaultDnsOptions::default()
+            },
+            32,
+        );
+    }
+
+    #[test]
+    fn test_categories_combine_as_bitmask() {
+        // ads(1) | malware(4) = 5: distinct bits OR together, never collide.
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_ads: true,
+                block_malware: true,
+                ..DefaultDnsOptions::default()
+            },
+            5,
+        );
+        // All six categories = 1|2|4|8|16|32 = 63, the highest listener address.
+        assert_blocks_to(
+            DefaultDnsOptions {
+                block_ads: true,
+                block_trackers: true,
+                block_malware: true,
+                block_adult_content: true,
+                block_gambling: true,
+                block_social_media: true,
+            },
+            63,
+        );
+    }
+
     // Public IPs should be tunneled, but most private IPs should not be
     #[test]
     fn test_custom_dns() {
