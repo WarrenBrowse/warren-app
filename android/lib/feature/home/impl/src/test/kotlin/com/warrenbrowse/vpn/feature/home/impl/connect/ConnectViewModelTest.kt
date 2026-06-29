@@ -29,6 +29,8 @@ import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -64,6 +66,11 @@ class ConnectViewModelTest {
     private val tunnelState = MutableStateFlow<TunnelState>(TunnelState.Disconnected())
     private val selectedRelayItemFlow = MutableStateFlow<String?>(null)
     private val lastKnownLocationFlow = MutableStateFlow<GeoIpLocation?>(null)
+    private val selectedExitIdFlow = MutableStateFlow<String?>(null)
+
+    // Warren relay catalogue + local settings (map-marker location source)
+    private val mockRelayProvider: WarrenRelayProvider = mockk(relaxed = true)
+    private val mockWarrenLocalSettings: WarrenLocalSettingsRepository = mockk()
 
     // Last known location
     private val mockLastKnownLocationUseCase: LastKnownLocationUseCase = mockk()
@@ -84,6 +91,9 @@ class ConnectViewModelTest {
         every { mockLastKnownLocationUseCase.lastKnownDisconnectedLocation } returns
             lastKnownLocationFlow
 
+        every { mockWarrenLocalSettings.selectedExitId } returns selectedExitIdFlow
+        every { mockRelayProvider.list() } returns emptyList()
+
         every { mockLocation.country } returns "dummy country"
 
         // Flows
@@ -103,6 +113,8 @@ class ConnectViewModelTest {
                 warrenReconnect = mockk(relaxed = true),
                 isPlayBuild = false,
                 resolveAppListing = mockk(),
+                relayProvider = mockRelayProvider,
+                localSettings = mockWarrenLocalSettings,
             )
     }
 

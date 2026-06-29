@@ -71,7 +71,15 @@ class WarrenSubscriptionUseCase(
                         e.message ?: "JNI getSubscription threw",
                     )
                 }
-                parseOutcome(rawJson)
+                parseOutcome(rawJson).also { outcome ->
+                    // Cache the freshly fetched expiry into the shared StateFlow so
+                    // every observer (account "Paid until", home header "Time
+                    // left") refreshes. A 404 resolves to 0 (no subscription),
+                    // which correctly clears a stale cached value.
+                    if (outcome is WarrenSubscriptionOutcome.Success) {
+                        localSettings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                    }
+                }
             }
         }
     }

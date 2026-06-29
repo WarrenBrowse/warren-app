@@ -97,8 +97,10 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectResult
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
@@ -124,6 +126,9 @@ import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
+import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoState
+import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
+import com.warrenbrowse.vpn.lib.ui.component.dialog.NegativeConfirmationDialog
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenSnackbar
@@ -182,6 +187,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val warrenConnect = koinInject<WarrenQuinnConnectInvoker>()
     val warrenDisconnect = koinInject<WarrenQuinnDisconnectInvoker>()
     val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
+    val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val localSettings = koinInject<WarrenLocalSettingsRepository>()
     val cachedExpiry by localSettings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -191,6 +197,10 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
 
     val warrenScope = rememberCoroutineScope()
+    // TOFU: when the exit's key changed since it was pinned, the use case
+    // refuses to dispatch and returns ExitKeyMismatch; hold it here to raise the
+    // warning dialog so the user explicitly trusts or rejects the new key.
+    var pubkeyMismatch by remember { mutableStateOf<WarrenConnectResult.ExitKeyMismatch?>(null) }
     // Route the user-initiated Connect button through the Warren Quinn
     // use-case. The Quinn path requires a FragmentActivity host for
     // BiometricPrompt; the app's MainActivity extends FragmentActivity.
@@ -198,6 +208,11 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         (context as? FragmentActivity)?.let { activity ->
             warrenScope.launch {
                 runCatching { warrenConnect.connect(activity) }
+                    .onSuccess { result ->
+                        if (result is WarrenConnectResult.ExitKeyMismatch) {
+                            pubkeyMismatch = result
+                        }
+                    }
                     .onFailure { e -> co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" } }
             }
         }
@@ -214,6 +229,21 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         is WalletState.Ready -> s.pubkey.value
         is WalletState.Locked -> s.pubkey.value
         WalletState.Absent -> null
+    }
+    // Proactively refresh the subscription expiry once the wallet is present, so
+    // the header "Time left" and the account "Paid until" reflect the server
+    // state without waiting for a purchase/voucher. fetch() caches the result;
+    // it reads the mnemonic silently (no prompt) and is a no-op when Absent.
+    // Mirrors the desktop daemon keeping account.expiry fresh.
+    LaunchedEffect(fullPubkey) {
+        if (fullPubkey != null) {
+            (context as? FragmentActivity)?.let { activity ->
+                runCatching { subscriptionInvoker.fetch(activity) }
+                    .onFailure { e ->
+                        co.touchlab.kermit.Logger.w(throwable = e) { "subscription fetch failed" }
+                    }
+            }
+        }
     }
     val copyPubkey = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
     val pubkeyCopiedMsg = stringResource(R.string.wallet_settings_pubkey_copied)
@@ -391,6 +421,29 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             onClickShowAndroid16UpgradeInfo =
                 dropUnlessResumed { navigator.navigate(Android16UpgradeInfoNavKey) },
             )
+
+            pubkeyMismatch?.let { mismatch ->
+                val exitLabel = relays.firstOrNull { it.exitId == mismatch.exitId }
+                    ?.let { it.city.ifBlank { it.country } } ?: mismatch.exitId
+                NegativeConfirmationDialog(
+                    message = stringResource(
+                        R.string.warren_pubkey_warning_message,
+                        exitLabel,
+                        truncatePubkeyHex(mismatch.pinnedPubkeyHex),
+                        truncatePubkeyHex(mismatch.observedPubkeyHex),
+                    ),
+                    confirmationText = stringResource(R.string.warren_pubkey_warning_trust),
+                    cancelText = stringResource(R.string.warren_pubkey_warning_reject),
+                    onConfirm = {
+                        // Operator key rotation accepted: overwrite the pin with
+                        // the newly observed key, then re-dispatch the connect.
+                        localSettings.trustExitKey(mismatch.exitId, mismatch.observedPubkeyHex)
+                        pubkeyMismatch = null
+                        onWarrenConnectClick()
+                    },
+                    onBack = { pubkeyMismatch = null },
+                )
+            }
         }
     }
 }
@@ -471,6 +524,12 @@ fun ConnectScreen(
             accountTimeLeft = accountTimeLeft,
             onCopyPubkey = onCopyPubkey,
             snackbarHostState = snackbarHostState,
+            // Bula ducks into the burrow (ears only) once secured; dark mark on
+            // the coloured connect header, matching the desktop AppMainHeader.
+            logoState =
+                if (state.tunnelState is TunnelState.Connected) WarrenLogoState.Hidden
+                else WarrenLogoState.Exposed,
+            logoTone = WarrenLogoTone.Dark,
         ) {
             content(it)
         }
@@ -610,7 +669,9 @@ internal fun connectExpiryWarning(
     expiryUnixSecs <= 0L -> null
     expiryUnixSecs <= nowSecs ->
         context.getString(R.string.connect_subscription_expired)
-    expiryUnixSecs - nowSecs <= 7L * 86_400 -> {
+    // Mirror the desktop close-to-expiry threshold (closeToExpiry, 3 days): the
+    // banner nags only inside the same window where the header "Time left" hides.
+    expiryUnixSecs - nowSecs <= 3L * 86_400 -> {
         val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400
         if (days == 1L) {
             context.getString(R.string.connect_subscription_expires_in_day, days)
@@ -624,9 +685,9 @@ internal fun connectExpiryWarning(
 /**
  * The remaining subscription time for the home header ("Time left: N days"),
  * mirroring the desktop AppMainHeaderTimeLeft. Hidden when there is no
- * subscription, when expired, and within the last 7 days, where the dedicated
- * [connectExpiryWarning] banner surfaces the remaining time instead (same
- * behaviour as upstream/desktop).
+ * subscription, when expired, and within the last 3 days (desktop closeToExpiry
+ * threshold), where the dedicated [connectExpiryWarning] banner surfaces the
+ * remaining time instead.
  */
 internal fun accountTimeLeftLabel(
     context: android.content.Context,
@@ -634,7 +695,7 @@ internal fun accountTimeLeftLabel(
     nowSecs: Long = System.currentTimeMillis() / 1000,
 ): String? = when {
     expiryUnixSecs <= 0L -> null
-    expiryUnixSecs - nowSecs <= 7L * 86_400 -> null
+    expiryUnixSecs - nowSecs <= 3L * 86_400 -> null
     else -> {
         val days = ((expiryUnixSecs - nowSecs) + 86_399) / 86_400
         context.getString(R.string.account_time_left, days)
@@ -982,3 +1043,9 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.CUSTOM_DNS,
         FeatureIndicator.CUSTOM_MTU -> WarrenTunnelSettingsNavKey
     }
+
+// Shortens a 64-hex ed25519 key to "head8…tail8" for the pubkey-mismatch
+// dialog, mirroring the desktop truncatePubkeyHex helper. Keys shorter than
+// 20 chars are returned unchanged.
+private fun truncatePubkeyHex(hex: String): String =
+    if (hex.length <= 20) hex else "${hex.take(8)}…${hex.takeLast(8)}"

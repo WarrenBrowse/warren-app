@@ -12,6 +12,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.ExitKeyVerdict
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectResult
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.app.service.toWireJson
 
@@ -39,24 +40,31 @@ class WarrenConnectUseCase(
         data object WalletNotReady : Outcome
         data object AuthorizationDenied : Outcome
         /** The exit presented a key different from the pinned one (TOFU). */
-        data object ExitKeyMismatch : Outcome
+        data class ExitKeyMismatch(
+            val exitId: String,
+            val pinnedPubkeyHex: String,
+            val observedPubkeyHex: String,
+        ) : Outcome
         data class Failure(val message: String) : Outcome
     }
 
     /**
-     * `WarrenQuinnConnectInvoker` impl: returns a human-readable status
-     * string so UI layers in `lib/feature/<x>` modules (which cannot import
-     * the app-private [Outcome] sealed type) can render result inline.
+     * `WarrenQuinnConnectInvoker` impl: maps the app-private [Outcome] to the
+     * lib-side [WarrenConnectResult] so UI layers in `lib/feature/<x>` (which
+     * cannot import [Outcome]) can raise the pubkey-mismatch dialog.
      */
-    override suspend fun connect(activity: FragmentActivity): String =
+    override suspend fun connect(activity: FragmentActivity): WarrenConnectResult =
         when (val outcome = invoke(activity)) {
-            Outcome.Success -> "Quinn connect dispatched"
-            Outcome.WalletNotReady -> "Wallet not ready"
-            Outcome.AuthorizationDenied -> "Biometric authentication denied"
-            Outcome.ExitKeyMismatch ->
-                "Exit key changed since last use. If this is expected, reset " +
-                    "pinned exit keys in Tunnel settings, then reconnect."
-            is Outcome.Failure -> outcome.message
+            Outcome.Success -> WarrenConnectResult.Dispatched
+            Outcome.WalletNotReady -> WarrenConnectResult.WalletNotReady
+            Outcome.AuthorizationDenied -> WarrenConnectResult.AuthorizationDenied
+            is Outcome.ExitKeyMismatch ->
+                WarrenConnectResult.ExitKeyMismatch(
+                    exitId = outcome.exitId,
+                    pinnedPubkeyHex = outcome.pinnedPubkeyHex,
+                    observedPubkeyHex = outcome.observedPubkeyHex,
+                )
+            is Outcome.Failure -> WarrenConnectResult.Failure(outcome.message)
         }
 
     suspend fun invoke(activity: FragmentActivity): Outcome {
@@ -96,10 +104,14 @@ class WarrenConnectUseCase(
         // the exit's key changed since we last pinned it; refuse to connect so
         // the user can decide (reset pins in settings to accept a rotation).
         built.exitId?.let { exitId ->
-            when (localSettings.exitKeyVerdict(exitId, built.exitPubkeyHex)) {
+            when (val verdict = localSettings.exitKeyVerdict(exitId, built.exitPubkeyHex)) {
                 is ExitKeyVerdict.Mismatch -> {
                     Logger.w("WarrenConnectUseCase: exit key mismatch for $exitId, refusing")
-                    return Outcome.ExitKeyMismatch
+                    return Outcome.ExitKeyMismatch(
+                        exitId = exitId,
+                        pinnedPubkeyHex = verdict.pinned,
+                        observedPubkeyHex = built.exitPubkeyHex,
+                    )
                 }
                 ExitKeyVerdict.FirstSeen ->
                     localSettings.trustExitKey(exitId, built.exitPubkeyHex)

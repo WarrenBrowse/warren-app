@@ -144,6 +144,8 @@ val uiModule = module {
             warrenReconnect = get(),
             isPlayBuild = IS_PLAY_BUILD,
             resolveAppListing = get(),
+            relayProvider = get(),
+            localSettings = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

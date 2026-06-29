@@ -90,9 +90,13 @@ internal class LocationMarker(val colors: LocationMarkerColors) {
 
         var offset = 0
         for (ringSize in ringSizes) {
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, offset, ringSize)
-            // Add number off vertices in the ring to the offset
-            offset += ringSize / VERTEX_COMPONENT_SIZE
+            // ringSize is a float count (vertices * VERTEX_COMPONENT_SIZE); glDrawArrays
+            // wants a VERTEX count, so divide. Passing the raw float count made each fan
+            // read 3x past its ring into the next buffers, drawing stray triangles (the
+            // "yellow cone" artifact once a marker is actually plotted).
+            val vertexCount = ringSize / VERTEX_COMPONENT_SIZE
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, offset, vertexCount)
+            offset += vertexCount
         }
     }
 

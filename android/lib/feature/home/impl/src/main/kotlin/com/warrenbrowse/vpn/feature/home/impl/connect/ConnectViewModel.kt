@@ -22,14 +22,17 @@ import com.warrenbrowse.vpn.lib.common.util.combine
 import com.warrenbrowse.vpn.lib.common.util.withPrev
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.DeviceState
+import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -48,6 +51,8 @@ class ConnectViewModel(
     private val warrenReconnect: WarrenQuinnReconnectInvoker,
     private val isPlayBuild: Boolean,
     private val resolveAppListing: ResolveAppListingUseCase,
+    private val relayProvider: WarrenRelayProvider,
+    private val localSettings: WarrenLocalSettingsRepository,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -61,11 +66,20 @@ class ConnectViewModel(
                 inAppNotificationController.notifications,
                 connectionProxy.tunnelState.withPrev(),
                 lastKnownLocationUseCase.lastKnownDisconnectedLocation,
+                localSettings.selectedExitId,
             ) {
                 selectedRelayItemTitle,
                 notifications,
                 (tunnelState, prevTunnelState),
-                lastKnownDisconnectedLocation ->
+                lastKnownDisconnectedLocation,
+                selectedExitId ->
+                // Warren's relay list carries no coordinates and there is no
+                // device-GeoIP service, so the Warren tunnel state never reports
+                // a location. Derive one from the selected (or first active) exit
+                // relay's country centroid so the map plots a marker in both
+                // states, mirroring the desktop (which also falls back to the
+                // selected relay while disconnected).
+                val relayLocation = selectedExitLocation(selectedExitId)
                 ConnectUiState(
                     location =
                         when (tunnelState) {
@@ -85,7 +99,7 @@ class ConnectViewModel(
                                 }
 
                             is TunnelState.Error -> lastKnownDisconnectedLocation
-                        },
+                        } ?: relayLocation,
                     selectedRelayItemTitle =
                         if (tunnelState is TunnelState.Disconnected) {
                             selectedRelayItemTitle
@@ -105,6 +119,30 @@ class ConnectViewModel(
 
     init {
         viewModelScope.launch { deviceRepository.updateDevice() }
+    }
+
+    /**
+     * Build a [GeoIpLocation] for the map marker from the selected exit relay
+     * (or the first active relay when none is pinned, i.e. "Automatic"), using
+     * the country centroid since the relay list carries no coordinates. Returns
+     * null when the catalogue is empty or the country has no centroid.
+     */
+    private fun selectedExitLocation(selectedExitId: String?): GeoIpLocation? {
+        val relays = relayProvider.list()
+        val exit = relays.firstOrNull { it.exitId == selectedExitId }
+            ?: relays.firstOrNull { it.active }
+            ?: return null
+        val (lat, lon) = CountryCentroid.of(exit.country) ?: return null
+        return GeoIpLocation(
+            ipv4 = null,
+            ipv6 = null,
+            country = exit.country,
+            city = exit.city.ifBlank { null },
+            latitude = lat,
+            longitude = lon,
+            hostname = null,
+            entryHostname = null,
+        )
     }
 
     fun onDisconnectClick() {

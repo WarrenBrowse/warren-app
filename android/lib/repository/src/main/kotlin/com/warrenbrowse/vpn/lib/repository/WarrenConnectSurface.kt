@@ -12,13 +12,42 @@ import kotlinx.coroutines.flow.StateFlow
  * can consume the surface without depending on the `app` module
  * (forbidden dependency arrow).
  */
+/**
+ * Typed outcome of a Warren connect attempt, so the UI can react to a TOFU
+ * exit-key mismatch with a warning dialog instead of swallowing a string.
+ */
+sealed interface WarrenConnectResult {
+    /** Connect intent dispatched (or the wallet is busy); nothing to surface. */
+    data object Dispatched : WarrenConnectResult
+    data object WalletNotReady : WarrenConnectResult
+    data object AuthorizationDenied : WarrenConnectResult
+
+    /**
+     * The exit advertises a public key different from the one pinned on first
+     * use (TOFU). The tunnel was NOT dispatched; the user must explicitly trust
+     * the new key (operator rotation) or reject it.
+     *
+     * NOTE: the compared key comes from the signed relay directory, not the live
+     * QUIC handshake, so this is a directory-level advisory (catches operator
+     * rotations / a tampered directory), not handshake-time pinning.
+     */
+    data class ExitKeyMismatch(
+        val exitId: String,
+        val pinnedPubkeyHex: String,
+        val observedPubkeyHex: String,
+    ) : WarrenConnectResult
+
+    /** Build/IO failure; [message] is loggable + may be shown inline. */
+    data class Failure(val message: String) : WarrenConnectResult
+}
+
 interface WarrenQuinnConnectInvoker {
     /**
-     * Authenticate, build config, stash mnemonic, dispatch the Quinn
-     * connect intent. Returns a human-readable status string suitable
-     * for inline display.
+     * Authenticate, build config, stash mnemonic, dispatch the Quinn connect
+     * intent. Returns a typed [WarrenConnectResult] so the caller can raise the
+     * pubkey-mismatch warning instead of silently dropping the outcome.
      */
-    suspend fun connect(activity: FragmentActivity): String
+    suspend fun connect(activity: FragmentActivity): WarrenConnectResult
 }
 
 /**
