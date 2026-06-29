@@ -23,6 +23,16 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-29
+### Changed
+- Redesign the desktop app around Warren's own visual identity: a neutral-dark theme with warm
+  ocre/olive/terracotta accents in place of the Mullvad blue, the Bula rabbit logo, and the WARREN
+  wordmark set in Nunito Black with an oversized initial "W".
+- Recolour the header, the tray/menubar icons and the 3D world map to match, and drive them by the
+  connection state: terracotta when disconnected, a calm ocre while connecting, and olive once
+  connected. The map gently brightens when the tunnel is up, and Bula ducks into his burrow (only
+  his ears show) while connected.
+
 ## [1.2.1] - 2026-06-28
 ### Added
 - Android: show an in-app "update available" notification for sideloaded installs. Google Play
