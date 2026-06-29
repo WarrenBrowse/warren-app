@@ -167,7 +167,7 @@ class WarrenTunInterfacePlanTest {
         assertTrue(plan.coversV4("172.15.255.1"), "just below 172.16/12")
         assertTrue(plan.coversV4("172.32.0.1"), "just above 172.16/12")
         assertTrue(plan.coversV4("192.167.255.1"), "just below 192.168/16")
-        // The exit DNS forwarder (10.66.0.1, inside 10/8) is re-added as /32
+        // The exit DNS resolver (10.66.0.1, inside 10/8) is re-added as /32
         // so DNS never leaks to the LAN resolver.
         assertTrue(plan.coversV4("10.66.0.1"), "exit DNS resolver must stay tunnelled")
         // IPv6 is still fully captured.
@@ -212,7 +212,7 @@ class WarrenTunInterfacePlanTest {
             blockGambling = gambling,
             blockSocialMedia = social,
         )
-        // No blockers => vanilla exit forwarder.
+        // No blockers => vanilla exit resolver.
         assertEquals(
             listOf(WarrenTunDefaults.EXIT_DNS_RESOLVER),
             planTunInterface(config(dns = blocking())).dnsServers,

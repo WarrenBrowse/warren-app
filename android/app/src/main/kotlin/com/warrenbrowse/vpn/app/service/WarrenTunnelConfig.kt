@@ -50,7 +50,7 @@ data class WarrenTunnelConfig(
     // place if the tunnel drops instead of returning traffic to the
     // physical network. Mirrors the desktop `lockdownMode`.
     @SerialName("lockdown_mode") val lockdownMode: Boolean = false,
-    // DNS routing. `null` => use the exit's in-tunnel forwarder (10.66.0.1).
+    // DNS routing. `null` => use the exit's in-tunnel resolver (10.66.0.1).
     // Set to route DNS through the tunnel (anti-leak) and/or push custom
     // resolvers and exit-side content-blocking flags.
     @SerialName("dns") val dns: DnsConfig? = null,
@@ -98,11 +98,11 @@ data class WarrenTunnelConfig(
 
     /**
      * DNS options handed to the tunnel. Mirrors the desktop `IDnsOptions`
-     * split between a `default` mode (exit forwarder + optional content
+     * split between a `default` mode (exit resolver + optional content
      * blocking) and a `custom` mode (explicit resolver addresses).
      *
      * Content-blocking flags are honoured exit-side by the Warren DNS
-     * forwarder; the client only routes DNS into the tunnel so the
+     * resolver; the client only routes DNS into the tunnel so the
      * queries never leak to the LAN resolver.
      */
     @Serializable

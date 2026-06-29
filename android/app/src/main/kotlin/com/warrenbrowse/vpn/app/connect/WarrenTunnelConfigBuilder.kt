@@ -105,7 +105,7 @@ class WarrenTunnelConfigBuilder(
     /**
      * Compose the [WarrenTunnelConfig.DnsConfig] from the persisted DNS
      * settings. Returns `null` when DNS is in default mode with no content
-     * blocking, so the tunnel uses the exit forwarder with no extra payload.
+     * blocking, so the tunnel uses the exit resolver with no extra payload.
      */
     private fun buildDnsConfig(): WarrenTunnelConfig.DnsConfig? {
         val state = localSettings.dnsState.value

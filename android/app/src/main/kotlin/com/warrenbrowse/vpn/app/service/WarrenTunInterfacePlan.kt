@@ -41,7 +41,7 @@ object WarrenTunDefaults {
     const val IPV6_DEFAULT_ROUTE = "::"
 
     /**
-     * Warren exit DNS forwarder address (`10.66.0.1:53`). Used as the
+     * Warren exit DNS resolver address (`10.66.0.1:53`). Used as the
      * default in-tunnel resolver so DNS queries egress through the tunnel
      * instead of the LAN resolver. See `warren-exit --dns-listen`.
      */
@@ -65,7 +65,7 @@ object WarrenTunDefaults {
  *    dropped). When true, the ULA address is assigned and IPv6 is carried
  *    through the tunnel.
  *  - DNS always points at an in-tunnel resolver (custom servers when the
- *    user provides them, otherwise the exit forwarder) so DNS cannot leak.
+ *    user provides them, otherwise the exit resolver) so DNS cannot leak.
  *
  * @param blocking when true, returns a kill-switch blackhole plan: full
  *   capture, no DNS, no pump. Used while the real tunnel is down under
@@ -109,7 +109,7 @@ fun planTunInterface(
     // IPv4 capture. By default the whole internet (0.0.0.0/0) is tunnelled.
     // With "allow LAN", the RFC1918 / link-local ranges are excluded so LAN
     // hosts are reachable directly; the in-tunnel resolver(s) (the exit
-    // forwarder 10.66.0.1, inside 10/8, or a content-blocking 100.64.0.x) are
+    // resolver 10.66.0.1, inside 10/8, or a content-blocking 100.64.0.x) are
     // re-added as /32 routes so DNS still travels through the tunnel and never
     // leaks to the LAN resolver.
     val ipv4Routes =
@@ -213,20 +213,20 @@ private fun longToIpv4(value: Long): String =
 
 /**
  * Resolve the DNS servers to install. Custom valid resolvers win; otherwise
- * the exit forwarder is used so DNS always travels through the tunnel.
+ * the exit resolver is used so DNS always travels through the tunnel.
  */
 private fun resolveDnsServers(dns: WarrenTunnelConfig.DnsConfig?): List<String> {
     if (dns != null && dns.state == WarrenTunnelConfig.DnsConfig.STATE_CUSTOM) {
         val valid = dns.customServers.filter { isValidIpLiteral(it) }
         if (valid.isNotEmpty()) return valid
         // Custom mode with no usable address: fall back to the in-tunnel
-        // forwarder rather than leaving DNS unset (which would leak to the
+        // resolver rather than leaving DNS unset (which would leak to the
         // LAN resolver).
     }
     // Default mode with content blocking on: point DNS at the exit's encoded
     // per-category resolver (100.64.0.<mask>), which serves the blocklists.
     // Mirrors mullvad-daemon::dns::addresses_from_options; the exit owns
-    // 100.64.0.x (warren-exit main.rs). No blockers => the vanilla forwarder.
+    // 100.64.0.x (warren-exit main.rs). No blockers => the vanilla resolver.
     if (dns != null && dns.state == WarrenTunnelConfig.DnsConfig.STATE_DEFAULT) {
         val mask = contentBlockingMask(dns)
         if (mask != 0) return listOf("$DNS_BLOCKING_IP_PREFIX$mask")

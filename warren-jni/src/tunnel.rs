@@ -115,15 +115,16 @@ pub struct WarrenTunnelConfig {
         )
     )]
     pub lockdown_mode: Option<bool>,
-    /// DNS options. DNS routing into the tunnel is enforced Android-side via
-    /// `VpnService.Builder.addDnsServer`; content-blocking flags are honoured
-    /// by the exit DNS forwarder. Accepted here for schema parity.
+    /// DNS options. On Android the magic-IP DNS (`100.64.0.X`) is composed and
+    /// applied client-side via `VpnService.Builder.addDnsServer`, and the
+    /// per-category blocking is done by the exit's kresd resolver. This field is
+    /// therefore unused here; it is accepted only for schema parity with desktop.
     #[serde(default)]
     #[cfg_attr(
         not(test),
         expect(
             dead_code,
-            reason = "DNS routing enforced Android-side; exit-side blocking is a follow-up"
+            reason = "DNS applied Android-side via VpnService; exit blocking done by kresd"
         )
     )]
     pub dns: Option<serde_json::Value>,
