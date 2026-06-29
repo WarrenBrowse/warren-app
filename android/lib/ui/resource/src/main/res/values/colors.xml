@@ -1,6 +1,6 @@
 <resources>
-    <color name="colorPrimary">#1B2737</color>
-    <color name="darkBlue">#0F1A28</color>
-    <color name="warrenYellow">#F5C518</color>
+    <color name="colorPrimary">#1F1F20</color>
+    <color name="darkBlue">#1F1F20</color>
+    <color name="warrenYellow">#CA963C</color>
     <color name="icon_background">@color/darkBlue</color>
 </resources>

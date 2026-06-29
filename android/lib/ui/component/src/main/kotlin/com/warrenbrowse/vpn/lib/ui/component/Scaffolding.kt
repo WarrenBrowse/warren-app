@@ -31,6 +31,8 @@ fun ScaffoldWithTopBar(
     onCopyPubkey: (() -> Unit)? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     enabled: Boolean = true,
+    logoState: WarrenLogoState = WarrenLogoState.Exposed,
+    logoTone: WarrenLogoTone = WarrenLogoTone.Light,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -44,6 +46,8 @@ fun ScaffoldWithTopBar(
                     onAccountClicked = onAccountClicked,
                     isIconAndLogoVisible = isIconAndLogoVisible,
                     enabled = enabled,
+                    logoState = logoState,
+                    logoTone = logoTone,
                 )
                 // Desktop AppMainHeader second row: pubkey (copyable) + time left.
                 if (accountShortPubkey != null || accountTimeLeft != null) {

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -32,7 +31,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +43,10 @@ import androidx.tv.material3.NavigationDrawerItem
 import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.NavigationDrawerScope
 import androidx.tv.material3.rememberDrawerState
+import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoMark
+import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoState
+import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
+import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmark
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 
@@ -180,19 +182,13 @@ private fun NavigationDrawerTvHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimens.tvMullvadLogoTextStartPadding),
         ) {
-            Icon(
-                modifier = Modifier.size(Dimens.mediumIconSize),
-                painter = painterResource(id = R.drawable.logo_icon),
-                contentDescription = null, // No meaningful user info or action.
-                tint = Color.Unspecified, // Logo should not be tinted
+            WarrenLogoMark(
+                state = WarrenLogoState.Exposed,
+                tone = WarrenLogoTone.Light,
+                height = Dimens.mediumIconSize,
             )
             if (isExpanded) {
-                Icon(
-                    modifier = Modifier.height(Dimens.tvMullvadLogoTextHeight),
-                    painter = painterResource(id = R.drawable.logo_text),
-                    contentDescription = null, // No meaningful user info or action.
-                    tint = Color.Unspecified, // Logo should not be tinted
-                )
+                WarrenWordmark(color = Color.White)
             }
         }
         Spacer(Modifier.height(8.dp))

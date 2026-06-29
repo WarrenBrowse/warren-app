@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -29,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -104,41 +102,25 @@ fun WarrenTopBar(
     enabled: Boolean = true,
     iconTintColor: Color,
     isIconAndLogoVisible: Boolean = true,
+    logoState: WarrenLogoState = WarrenLogoState.Exposed,
+    logoTone: WarrenLogoTone = WarrenLogoTone.Light,
 ) {
     TopAppBar(
         modifier = modifier.testTag(TOP_BAR_TEST_TAG),
         title = {
             if (isIconAndLogoVisible) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.logo_icon),
-                        contentDescription = null, // No meaningful user info or action.
-                        modifier = Modifier.size(40.dp),
-                        tint = Color.Unspecified, // Logo should not be tinted
-                    )
-                    // Dynamically show Mullvad VPN Text if it fits, to avoid overlapping icons.
+                    // Bula ears-in-burrow mark, stateful (ears only when connected),
+                    // mirroring the desktop AppMainHeader logo.
+                    WarrenLogoMark(state = logoState, tone = logoTone, height = 40.dp)
+                    // Show the "WARREN" wordmark only when it fits, to avoid
+                    // crowding the action icons on narrow widths.
                     BoxWithConstraints {
-                        val logoTextPainter = painterResource(id = R.drawable.logo_text)
-                        val logoHeight = Dimens.mediumPadding
-                        val logoStartEndPadding = Dimens.smallPadding
-
-                        val shouldShowText =
-                            remember(maxWidth) {
-                                val logoHeightWidthRatio =
-                                    logoTextPainter.intrinsicSize.width /
-                                        logoTextPainter.intrinsicSize.height
-                                val expectedLength = logoHeightWidthRatio * logoHeight.value
-                                maxWidth > (expectedLength + logoStartEndPadding.value * 2).dp
-                            }
-
+                        val shouldShowText = remember(maxWidth) { maxWidth > 120.dp }
                         if (shouldShowText) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.logo_text),
-                                tint = iconTintColor,
-                                contentDescription = null, // No meaningful user info or action.
-                                modifier =
-                                    Modifier.padding(horizontal = logoStartEndPadding)
-                                        .height(logoHeight),
+                            WarrenWordmark(
+                                color = iconTintColor,
+                                modifier = Modifier.padding(horizontal = Dimens.smallPadding),
                             )
                         }
                     }
