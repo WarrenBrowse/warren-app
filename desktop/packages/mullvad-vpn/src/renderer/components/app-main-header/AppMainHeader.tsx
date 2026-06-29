@@ -43,7 +43,7 @@ const AppMainHeader = ({
 
   return (
     <MainHeader variant={variant} size={size} {...props}>
-      <Flex justifyContent="space-between">
+      <Flex justifyContent="space-between" alignItems="center">
         <InitialFocus>
           {logoVariant !== 'none' ? (
             <Logo variant={logoVariant} tone={logoTone} state={logoState} />

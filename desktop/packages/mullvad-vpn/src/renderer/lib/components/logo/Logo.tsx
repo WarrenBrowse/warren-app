@@ -25,8 +25,8 @@ const iconSizes = {
 // The wordmark is set in Nunito Black (heavy + rounded, echoing Bula). Sizes are
 // tuned to feel fat and prominent while still fitting the 68px header (size 1).
 const textFontSizes = {
-  '1': 30,
-  '2': 56,
+  '1': 26,
+  '2': 48,
 };
 
 // Per state, which mark file Bula shows. The black master sits on coloured/light
@@ -66,12 +66,17 @@ const Wordmark = ({ fontSize, tone }: { fontSize: number; tone: 'light' | 'dark'
       fontFamily: FontFamilies.nunito,
       fontWeight: 900,
       fontSize,
-      letterSpacing: '0.01em',
       lineHeight: 1,
       color: tone === 'dark' ? colors.darkerBlue10 : colors.whiteOnDarkBlue80,
       whiteSpace: 'nowrap',
     }}>
-    WARREN
+    {/* Oversized initial "W" (drop cap) echoing Bula's rounded forms. "ARREN" is
+        pulled in under it with a small negative margin, leaving only a slight
+        space. Sizes/margins are in em so the lettering scales as one unit between
+        the header and the launch screen, and the two spans share the text baseline
+        so the W and ARREN stay bottom-aligned. */}
+    <span style={{ fontSize: '1.35em' }}>W</span>
+    <span style={{ marginLeft: '-0.28em', letterSpacing: '0.01em' }}>ARREN</span>
   </span>
 );
 
@@ -86,24 +91,20 @@ export const Logo = ({
       return <Mark size={iconSizes[sizeProp]} tone={tone} state={state} />;
     case 'text':
       return <Wordmark fontSize={textFontSizes[sizeProp]} tone={tone} />;
-    case 'both': {
-      // Lift the mark and drop the wordmark a touch so the logo reads slightly
-      // higher than the text. This brings the low-sitting "hidden" ears up to
-      // WARREN's height while letting the "exposed" rabbit peek just above it.
-      // Both states keep the exact same mark size: this is only a visual offset
-      // (transform, no layout reflow), so nothing shifts on a state change.
-      const lift = Math.round(iconSizes[sizeProp] * 0.12);
-      const drop = Math.round(iconSizes[sizeProp] * 0.05);
+    case 'both':
+      // Align on the baseline so the bottom of the mark (the static burrow line,
+      // shared by every state's PNG) sits exactly on WARREN's baseline. The mark
+      // is taller than the text, so it rises above the wordmark while staying
+      // bottom-aligned with it, no matter the connection state.
       return (
-        <Flex alignItems="center" gap="small">
-          <span style={{ display: 'flex', transform: `translateY(-${lift}px)` }}>
-            <Mark size={iconSizes[sizeProp]} tone={tone} state={state} />
-          </span>
-          <span style={{ display: 'inline-flex', transform: `translateY(${drop}px)` }}>
-            <Wordmark fontSize={textFontSizes[sizeProp]} tone={tone} />
-          </span>
+        // The mark is taller than the header icons, so when the row is centred
+        // the logo + wordmark sit a touch lower than the account/settings icons.
+        // Lift the block so its bottom (burrow + WARREN baseline) lines up with
+        // the bottom of those icons.
+        <Flex alignItems="baseline" gap="tiny" style={{ transform: 'translateY(-7px)' }}>
+          <Mark size={iconSizes[sizeProp]} tone={tone} state={state} />
+          <Wordmark fontSize={textFontSizes[sizeProp]} tone={tone} />
         </Flex>
       );
-    }
   }
 };
