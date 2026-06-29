@@ -218,6 +218,8 @@
     <string name="wallet_import_title">Restore from recovery phrase</string>
     <string name="wallet_import_description">Enter the 12 words exactly in the order you backed them up.</string>
     <string name="wallet_import_cta">Restore wallet</string>
+    <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
+    <string name="wallet_import_word_count">%1$d / %2$d words</string>
     <string name="wallet_import_error_invalid">This recovery phrase is not valid. Check the words and spelling.</string>
     <string name="wallet_backup_title">Write down your recovery phrase</string>
     <string name="wallet_backup_warning">Anyone with these 12 words can access your account. Never share them or store them online.</string>
@@ -231,6 +233,7 @@
     <string name="wallet_settings_erase">Erase wallet</string>
     <string name="wallet_settings_erase_confirm_title">Erase this wallet?</string>
     <string name="wallet_settings_erase_confirm_description">This cannot be undone. You will need your recovery phrase to access this account again.</string>
+    <string name="wallet_settings_erase_backup_ack">I have backed up my recovery phrase.</string>
     <string name="tunnel_settings_title">Warren tunnel</string>
     <string name="tunnel_state_line">Tunnel: %1$s</string>
     <string name="tunnel_changes_apply_next_connect">Changes apply on next connect.</string>
@@ -261,9 +264,14 @@
     <string name="tunnel_exit_key_pinning_section">Exit key pinning</string>
     <string name="tunnel_exit_key_pinning_desc">Warren pins each exit\'s key on first use and refuses to connect if it changes. Reset the pins only if you expect a legitimate key rotation; the next connect re-pins.</string>
     <string name="tunnel_reset_pinned_keys">Reset pinned exit keys</string>
+    <string name="warren_pubkey_warning_message">The exit \"%1$s\" is presenting a different identity key than the one pinned on this device.\n\nPinned: %2$s\nNew: %3$s\n\nThis can be a legitimate key rotation, or someone impersonating the exit. Only trust the new key if you expected a rotation.</string>
+    <string name="warren_pubkey_warning_trust">Trust new key</string>
+    <string name="warren_pubkey_warning_reject">Reject</string>
     <string name="tunnel_exit_relay">Exit relay…</string>
     <string name="tunnel_multihop_title">Multi-hop is always on.</string>
-    <string name="tunnel_multihop_desc">Multi-hop routes traffic through a separate entry relay so the exit never sees your IP. Warren on Android always connects multi-hop: a distinct entry relay forwards your traffic to the chosen exit, so the "Multihop" indicator is shown while connected.</string>
+    <string name="tunnel_multihop_desc">Multi-hop routes traffic through a separate entry relay so the exit never sees your IP. Pick the entry and exit countries below, or leave them automatic to let Warren choose.</string>
+    <string name="tunnel_entry_country_label">Entry country</string>
+    <string name="tunnel_exit_country_picker_label">Exit country</string>
     <string name="tunnel_obfuscation_title">HTTP/3 mimicry obfuscation is always-on for Warren tunnels.</string>
     <string name="tunnel_obfuscation_desc">Warren tunnels masquerade as standard browser HTTP/3 traffic: ALPN h3, SNI warrenbrowse.com, Initial-packet split, UDP/443. This is not togglable because disabling it would make Warren clients immediately recognisable on the network.</string>
     <string name="tunnel_obfuscation_legacy">Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply to Warren tunnels.</string>
@@ -334,7 +342,7 @@
     <string name="location_new_list_name">New list name</string>
     <string name="location_create_and_add">Create &amp; add</string>
     <string name="wallet_login_title">Warren VPN</string>
-    <string name="wallet_login_import_prompt">Enter your 12-word recovery phrase</string>
+    <string name="wallet_login_import_prompt">Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device.</string>
     <string name="wallet_login_subtitle">Create a new wallet or restore from an existing recovery phrase</string>
     <string name="wallet_backup_clipboard_note">Warren does not provide a \'copy to clipboard\' button on purpose - clipboard contents leak to other apps. Use pen and paper, or an offline password manager.</string>
     <string name="onboarding_welcome_title">Welcome to Warren</string>

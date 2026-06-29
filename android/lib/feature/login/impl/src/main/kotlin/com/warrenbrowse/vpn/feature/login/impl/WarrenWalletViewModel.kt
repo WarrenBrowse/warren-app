@@ -57,7 +57,14 @@ class WarrenWalletViewModel(
             val mnemonic = try {
                 Mnemonic(phrase)
             } catch (e: IllegalArgumentException) {
-                _events.send(WarrenWalletEvent.Error("Invalid recovery phrase"))
+                // Wrong word count: the phrase is not 12 or 24 words. Distinct
+                // from a checksum/spelling failure, which the daemon catches
+                // below during importWallet.
+                _events.send(
+                    WarrenWalletEvent.Error(
+                        "Enter exactly 12 (or 24) words, separated by spaces.",
+                    ),
+                )
                 return@launch
             }
             // `use { }` closes the Mnemonic at scope exit so the
@@ -71,7 +78,14 @@ class WarrenWalletViewModel(
                     _events.send(WarrenWalletEvent.WalletReady)
                 } catch (e: Exception) {
                     Logger.w(throwable = e) { "wallet import failed" }
-                    _events.send(WarrenWalletEvent.Error(e.message ?: "Wallet import failed"))
+                    // Daemon rejected the BIP39 checksum/wordlist: a typo or a
+                    // wrong word order. Mirror the desktop copy instead of the
+                    // raw JNI message.
+                    _events.send(
+                        WarrenWalletEvent.Error(
+                            "Invalid recovery phrase. Check the words and their order, then try again.",
+                        ),
+                    )
                 }
             }
         }

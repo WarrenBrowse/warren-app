@@ -27,6 +27,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
+import com.warrenbrowse.vpn.lib.ui.component.wallet.countMnemonicWords
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
@@ -134,11 +135,12 @@ fun WarrenWalletLoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
                 ) {
+                    val importWordCount = countMnemonicWords(importPhrase)
                     VariantButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { vm.importWallet(importPhrase, authorizer) },
                         text = stringResource(R.string.wallet_import_cta),
-                        isEnabled = importPhrase.isNotBlank(),
+                        isEnabled = importWordCount == 12 || importWordCount == 24,
                     )
                     PrimaryTextButton(
                         onClick = { importMode = false; inlineError = null },
