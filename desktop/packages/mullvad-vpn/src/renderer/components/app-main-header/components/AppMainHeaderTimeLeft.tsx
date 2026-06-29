@@ -15,11 +15,6 @@ const StyledTimeLeftLabel = styled(FootnoteMini)({
   whiteSpace: 'nowrap',
 });
 
-// Warren has no per-device concept (removed in the Option A3 refactor), so
-// this restores ONLY the "Time left" subscription readout that lived in the
-// upstream Mullvad header's device-info row. Near/past expiry the dedicated
-// notification banner surfaces the remaining time, so the header label hides
-// then (same behaviour as upstream).
 export const AppMainHeaderTimeLeft = () => {
   const accountExpiry = useSelector((state) => state.account.expiry);
   const isOutOfTime = accountExpiry ? hasExpired(accountExpiry) : false;
@@ -27,12 +22,8 @@ export const AppMainHeaderTimeLeft = () => {
 
   const [timeLeft, setTimeLeft] = useState(formatTimeLeft(accountExpiry));
 
-  // The time-left value must be recomputed recurringly since it changes as
-  // time passes.
   useInterval(() => setTimeLeft(formatTimeLeft(accountExpiry)), 60 * 60 * 1_000);
 
-  // ...and whenever the account expiry itself changes (e.g. after redeeming
-  // a voucher).
   useEffect(() => {
     setTimeLeft(formatTimeLeft(accountExpiry));
   }, [accountExpiry]);

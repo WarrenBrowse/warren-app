@@ -1,8 +1,5 @@
 // Warren dark palette.
 //
-// The token KEYS are inherited from the upstream Mullvad theme (darkBlue, blue*,
-// whiteOnDarkBlue*, ...); their VALUES are remapped for Warren.
-//
 // HARD RULE (learned the hard way): the NEUTRALS are truly NEUTRAL grey
 // (backgrounds, surfaces, text/icon greys, the map). They carry essentially no
 // hue. If the neutrals lean warm, the whole screen reads as a yellow/sepia

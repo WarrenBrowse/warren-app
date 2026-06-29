@@ -7,8 +7,6 @@ import { IconButtonIcon, StyledIconButtonIcon } from './components';
 import { IconButtonProvider } from './IconButtonContext';
 
 export type IconButtonVariant = 'primary' | 'secondary';
-// 'dark' is used on top of the coloured app header (green/red) so the icon
-// reads as ink rather than a washed-out light glyph.
 export type IconButtonTone = 'light' | 'dark';
 
 export type IconButtonProps = React.ComponentPropsWithRef<'button'> & {
@@ -62,8 +60,6 @@ const StyledButton = styled.button<{
   ${({ $size = 'medium', $variant = 'primary', $tone = 'light' }) => {
     const size = iconSizes[$size];
     const variant = toneVariants[$tone][$variant];
-    // The focus ring follows the tone so it reads as ink on the coloured
-    // header instead of a stray white circle around the dark icon.
     const focusRingColor = $tone === 'dark' ? colors.black : colors.white;
     return css`
       --size: ${size}px;

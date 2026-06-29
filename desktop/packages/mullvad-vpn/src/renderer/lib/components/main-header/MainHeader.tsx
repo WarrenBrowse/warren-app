@@ -41,10 +41,9 @@ const StyledHeader = styled.header<TransientProps<HeaderProps>>(
 );
 
 const MainHeader = ({ size = '1', variant = 'default', children, ...props }: HeaderProps) => {
-  const tone = variant === 'default' ? 'light' : 'dark';
   return (
     <StyledHeader $size={size} $variant={variant} {...props}>
-      <MainHeaderToneProvider value={tone}>
+      <MainHeaderToneProvider value="light">
         <Flex
           flexDirection="column"
           justifyContent="center"
