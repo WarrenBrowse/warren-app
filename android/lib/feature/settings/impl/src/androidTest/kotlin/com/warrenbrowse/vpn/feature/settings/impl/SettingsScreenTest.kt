@@ -24,7 +24,6 @@ class SettingsScreenTest {
 
     private fun ComposeContext.initScreen(
         state: Lc<Unit, SettingsUiState>,
-        onVpnSettingCellClick: () -> Unit = {},
         onSplitTunnelingCellClick: () -> Unit = {},
         onAppInfoClick: () -> Unit = {},
         onReportProblemCellClick: () -> Unit = {},
@@ -37,7 +36,6 @@ class SettingsScreenTest {
         setContentWithTheme {
             SettingsScreen(
                 state = state,
-                onVpnSettingCellClick = onVpnSettingCellClick,
                 onSplitTunnelingCellClick = onSplitTunnelingCellClick,
                 onAppInfoClick = onAppInfoClick,
                 onReportProblemCellClick = onReportProblemCellClick,

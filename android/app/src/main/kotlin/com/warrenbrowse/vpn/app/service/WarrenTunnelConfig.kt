@@ -25,6 +25,12 @@ data class WarrenTunnelConfig(
     // without issuing its own fetch (which would be blackholed by the
     // half-open tunnel). `null` only when multi-hop is not in play.
     @SerialName("multihop_directory_raw") val multihopDirectoryRaw: String? = null,
+    // Preferred entry-relay country (ISO 3166-1 alpha-2, case-insensitive).
+    // null/blank => native auto-picks the entry. Matched against the multi-hop
+    // directory's NodeEntry.country in `run_multi_hop_session`. Older native
+    // libs ignore this unknown field (no deny_unknown_fields) and keep
+    // auto-selecting, so this is forward-compatible.
+    @SerialName("entry_country") val entryCountry: String? = null,
     @SerialName("daita") val daita: DaitaSpec? = null,
     @SerialName("nat_pmp_enabled") val natPmpEnabled: Boolean = false,
     // NAT-PMP / port-forwarding parameters. Honoured by the refresh loop in

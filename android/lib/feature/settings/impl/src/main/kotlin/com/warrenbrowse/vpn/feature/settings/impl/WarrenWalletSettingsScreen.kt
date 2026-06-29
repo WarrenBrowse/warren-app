@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -14,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -100,6 +102,10 @@ fun WarrenWalletSettings(navigator: Navigator) {
     var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
     var viewError by remember { mutableStateOf<String?>(null) }
     var confirmErase by remember { mutableStateOf(false) }
+    // Erasing the wallet is irreversible: gate the destructive action behind an
+    // explicit "I backed up my phrase" acknowledgement, matching the desktop
+    // logout checkbox gate (AccountView).
+    var eraseBackupAck by remember { mutableStateOf(false) }
     // wpid awaiting its redeem poll: set when the user opens the checkout, then
     // consumed on the next return to the app (see LifecycleResumeEffect below).
     var pendingPurchaseWpid by remember { mutableStateOf<String?>(null) }
@@ -309,24 +315,51 @@ fun WarrenWalletSettings(navigator: Navigator) {
 
     if (confirmErase) {
         AlertDialog(
-            onDismissRequest = { confirmErase = false },
+            onDismissRequest = {
+                confirmErase = false
+                eraseBackupAck = false
+            },
             title = { Text(stringResource(R.string.wallet_settings_erase_confirm_title)) },
-            text = { Text(stringResource(R.string.wallet_settings_erase_confirm_description)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmErase = false
-                    scope.launch {
-                        walletRepository.erase()
-                        // Sign-out: route back to the wallet login screen,
-                        // clearing the stack (mirrors Mullvad logout ->
-                        // NavigateToLogin). Without this the user is stranded on
-                        // an empty account screen after erasing.
-                        navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding)) {
+                    Text(stringResource(R.string.wallet_settings_erase_confirm_description))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { eraseBackupAck = !eraseBackupAck },
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = eraseBackupAck,
+                            onCheckedChange = { eraseBackupAck = it },
+                        )
+                        Text(stringResource(R.string.wallet_settings_erase_backup_ack))
                     }
-                }) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = eraseBackupAck,
+                    onClick = {
+                        confirmErase = false
+                        eraseBackupAck = false
+                        scope.launch {
+                            walletRepository.erase()
+                            // Sign-out: route back to the wallet login screen,
+                            // clearing the stack (mirrors Mullvad logout ->
+                            // NavigateToLogin). Without this the user is stranded
+                            // on an empty account screen after erasing.
+                            navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                        }
+                    },
+                ) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmErase = false }) {
+                TextButton(onClick = {
+                    confirmErase = false
+                    eraseBackupAck = false
+                }) {
                     Text(stringResource(R.string.cancel))
                 }
             },

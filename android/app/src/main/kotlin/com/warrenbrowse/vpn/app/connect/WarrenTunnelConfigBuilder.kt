@@ -81,6 +81,9 @@ class WarrenTunnelConfigBuilder(
             exitId = exit.exitId,
             walletPubkeyHex = walletPubkey.value,
             entryHop = WarrenTunnelConfig.EntryHop(),
+            // Preferred entry country (null = auto). Honoured natively by
+            // run_multi_hop_session once the .so carries the entry_country field.
+            entryCountry = localSettings.entryCountry.value,
             multihopDirectoryRaw = multihopDirectory,
             daita = if (daitaEnabled) {
                 WarrenTunnelConfig.DaitaSpec(

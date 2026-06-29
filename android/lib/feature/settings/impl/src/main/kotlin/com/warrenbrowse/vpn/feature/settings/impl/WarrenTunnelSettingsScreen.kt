@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -31,6 +35,7 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -66,6 +71,13 @@ fun WarrenTunnelSettings(navigator: Navigator) {
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
     val natPmpStatusProvider = koinInject<WarrenNatPmpStatusProvider>()
+    val relayProvider = koinInject<WarrenRelayProvider>()
+    // Distinct relay countries for the entry/exit pickers, sourced from the same
+    // signed relay catalogue the location picker uses. list() is in-memory.
+    val countryOptions = remember {
+        relayProvider.list().map { it.country }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+    val entryCountry by repo.entryCountry.collectAsStateWithLifecycle()
     val natPmpStatusJson by natPmpStatusProvider.natPmpStatus.collectAsStateWithLifecycle()
     val daita by repo.daitaEnabled.collectAsStateWithLifecycle()
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
@@ -233,13 +245,26 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                 )
             }
 
-            CountryField(
-                label = stringResource(R.string.tunnel_exit_country_label),
-                initial = exitCountry.orEmpty(),
-                onCommit = repo::setExitCountry,
+            SectionHeader(stringResource(R.string.tunnel_multihop_title))
+            Text(
+                text = stringResource(R.string.tunnel_multihop_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
-            MultiHopIndicator()
+            CountryDropdown(
+                label = stringResource(R.string.tunnel_entry_country_label),
+                automaticLabel = stringResource(R.string.automatic),
+                options = countryOptions,
+                selected = entryCountry,
+                onSelect = repo::setEntryCountry,
+            )
+            CountryDropdown(
+                label = stringResource(R.string.tunnel_exit_country_picker_label),
+                automaticLabel = stringResource(R.string.automatic),
+                options = countryOptions,
+                selected = exitCountry,
+                onSelect = repo::setExitCountry,
+            )
 
             SectionHeader(stringResource(R.string.tunnel_anti_censorship_section))
             ObfuscationIndicator()
@@ -266,21 +291,54 @@ fun WarrenTunnelSettings(navigator: Navigator) {
 }
 
 /**
- * Read-only multi-hop status. Warren currently routes single-hop through the
- * selected exit; multi-hop entry selection is not user-configurable here.
+ * Entry/exit country picker, driven by the signed relay catalogue. "Automatic"
+ * (the first option) stores null so the native selector auto-picks. The chosen
+ * country is matched case-insensitively against the relay list at connect time
+ * (exit: [WarrenTunnelConfigBuilder]; entry: native `run_multi_hop_session`).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MultiHopIndicator() {
-    Column(modifier = Modifier.padding(top = Dimens.smallPadding)) {
-        Text(
-            text = stringResource(R.string.tunnel_multihop_title),
-            style = MaterialTheme.typography.titleSmall,
+private fun CountryDropdown(
+    label: String,
+    automaticLabel: String,
+    options: List<String>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
+    ) {
+        OutlinedTextField(
+            value = selected?.takeIf { it.isNotBlank() } ?: automaticLabel,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
         )
-        Text(
-            text = stringResource(R.string.tunnel_multihop_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(automaticLabel) },
+                onClick = {
+                    onSelect(null)
+                    expanded = false
+                },
+            )
+            options.forEach { country ->
+                DropdownMenuItem(
+                    text = { Text(country) },
+                    onClick = {
+                        onSelect(country)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -470,22 +528,6 @@ internal fun jsonField(json: String, key: String): String? {
     val regex = Regex("\"" + Regex.escape(key) + "\"\\s*:\\s*(?:\"([^\"]*)\"|([^,}\\s]+))")
     val match = regex.find(json) ?: return null
     return match.groupValues[1].ifEmpty { match.groupValues[2] }.ifEmpty { null }
-}
-
-@Composable
-private fun CountryField(label: String, initial: String, onCommit: (String?) -> Unit) {
-    var text by remember { mutableStateOf(initial) }
-    OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it.filter(Char::isLetter).take(2).uppercase()
-            onCommit(text.ifBlank { null })
-        },
-        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
-        label = { Text(label) },
-        placeholder = { Text(stringResource(R.string.tunnel_exit_country_hint)) },
-        singleLine = true,
-    )
 }
 
 /**

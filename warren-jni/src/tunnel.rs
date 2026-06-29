@@ -60,6 +60,12 @@ pub struct WarrenTunnelConfig {
     /// directory itself, which would be blackholed by the half-open tunnel.
     #[serde(default)]
     pub multihop_directory_raw: Option<String>,
+    /// Preferred entry-relay country (ISO 3166-1 alpha-2, case-insensitive).
+    /// `None`/empty selects automatically. Matched against `NodeEntry.country`
+    /// in `run_multi_hop_session`; an explicit `entry_hop.relay_pubkey_hex`
+    /// pubkey hint takes precedence over the country.
+    #[serde(default)]
+    pub entry_country: Option<String>,
     /// Client-side toggle: when present we opt the handshake into DAITA via
     /// `ClientTunnel::with_daita(true)`. The exit decides whether to honour
     /// the request by shipping a `SetupAck::daita_spec`; if it does, we
@@ -402,20 +408,33 @@ async fn run_multi_hop_session(
             return;
         }
     };
-    let entry_node = match dir
-        .nodes
-        .iter()
-        .filter(|n| n.relay.relay_id != exit_node.relay.relay_id)
-        .find(|n| {
-            want_entry
-                .as_ref()
-                .is_none_or(|w| WarrenPubkey::from_bytes(n.relay.relay_ed25519_pubkey) == *w)
-        })
-        .or_else(|| {
+    // Entry selection precedence (all restricted to nodes distinct from the
+    // exit): explicit pubkey hint (entry_hop.relay_pubkey_hex) > preferred
+    // country (config.entry_country, case-insensitive) > first distinct node.
+    let exit_relay_id = exit_node.relay.relay_id;
+    let want_country = config
+        .entry_country
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+    let entry_node = want_entry
+        .as_ref()
+        .and_then(|w| {
             dir.nodes
                 .iter()
-                .find(|n| n.relay.relay_id != exit_node.relay.relay_id)
-        }) {
+                .filter(|n| n.relay.relay_id != exit_relay_id)
+                .find(|n| WarrenPubkey::from_bytes(n.relay.relay_ed25519_pubkey) == *w)
+        })
+        .or_else(|| {
+            want_country.and_then(|c| {
+                dir.nodes
+                    .iter()
+                    .filter(|n| n.relay.relay_id != exit_relay_id)
+                    .find(|n| n.country.eq_ignore_ascii_case(c))
+            })
+        })
+        .or_else(|| dir.nodes.iter().find(|n| n.relay.relay_id != exit_relay_id));
+    let entry_node = match entry_node {
         Some(n) => n,
         None => {
             log::error!("multi-hop: no distinct entry relay available; failing closed");

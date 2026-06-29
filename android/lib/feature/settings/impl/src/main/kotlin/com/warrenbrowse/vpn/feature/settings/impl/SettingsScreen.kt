@@ -48,7 +48,6 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.tag.DAITA_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.MULTIHOP_CELL_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.VPN_SETTINGS_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
@@ -64,7 +63,6 @@ private fun PreviewSettingsScreen(
     AppTheme {
         SettingsScreen(
             state = state,
-            onVpnSettingCellClick = {},
             onSplitTunnelingCellClick = {},
             onAppInfoClick = {},
             onReportProblemCellClick = {},
@@ -92,12 +90,6 @@ fun Settings(navigator: Navigator) {
 
     SettingsScreen(
         state = state,
-        onVpnSettingCellClick =
-            // "VPN settings" routes to WarrenTunnelSettings for the
-            // Warren-native obfuscation/multihop/DAITA toggles.
-            dropUnlessResumed {
-                navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey)
-            },
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },
         onAppInfoClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppInfoNavKey) },
@@ -127,7 +119,6 @@ fun Settings(navigator: Navigator) {
 @Composable
 fun SettingsScreen(
     state: Lc<Unit, SettingsUiState>,
-    onVpnSettingCellClick: () -> Unit,
     onSplitTunnelingCellClick: () -> Unit,
     onAppInfoClick: () -> Unit,
     onReportProblemCellClick: () -> Unit,
@@ -163,7 +154,6 @@ fun SettingsScreen(
                 is Lc.Content -> {
                     content(
                         state = state.value,
-                        onVpnSettingCellClick = onVpnSettingCellClick,
                         onSplitTunnelingCellClick = onSplitTunnelingCellClick,
                         onAppInfoClick = onAppInfoClick,
                         onReportProblemCellClick = onReportProblemCellClick,
@@ -183,7 +173,6 @@ fun SettingsScreen(
 
 private fun LazyListScope.content(
     state: SettingsUiState,
-    onVpnSettingCellClick: () -> Unit,
     onSplitTunnelingCellClick: () -> Unit,
     onAppInfoClick: () -> Unit,
     onReportProblemCellClick: () -> Unit,
@@ -220,14 +209,6 @@ private fun LazyListScope.content(
         }
         itemWithDivider {
             MultihopCell(onMultihopClick = onMultihopClick)
-        }
-        itemWithDivider {
-            NavigationListItem(
-                title = stringResource(id = R.string.settings_vpn),
-                onClick = onVpnSettingCellClick,
-                testTag = VPN_SETTINGS_CELL_TEST_TAG,
-                position = Position.Bottom,
-            )
         }
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
         item { SplitTunneling(onSplitTunnelingCellClick) }
@@ -344,15 +325,16 @@ private fun DaitaListItem(isDaitaEnabled: Boolean, onDaitaClick: () -> Unit) {
 
 @Composable
 private fun MultihopCell(onMultihopClick: () -> Unit) {
-    // Multi-hop is not wired on Android (single-hop tunnel only); the cell
-    // always reads "off" and tapping it opens the tunnel settings, which
-    // explain that multi-hop is desktop-only for now. Keep the cell so the
-    // settings layout stays aligned with upstream for future wiring.
+    // The Warren tunnel always routes through an entry hop before the exit
+    // (see WarrenTunnelConfigBuilder + WarrenQuinnAdapter, multiHop = true), so
+    // the cell must read "on" to match reality and the home feature indicators.
+    // Do NOT revert this to "off": it previously contradicted the active tunnel
+    // and the connect screen's multi-hop indicator.
     NavigationListItem(
         title = stringResource(id = R.string.multihop),
-        subtitle = stringResource(R.string.off),
+        subtitle = stringResource(R.string.on),
         onClick = onMultihopClick,
-        position = Position.Middle,
+        position = Position.Bottom,
         testTag = MULTIHOP_CELL_TEST_TAG,
     )
 }
