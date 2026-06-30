@@ -244,8 +244,13 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     statusLabel = natPmpStatusLabel(LocalContext.current, natPmpStatusJson),
                     portConflict = natPmpIsPortConflict(natPmpStatusJson),
                     // "Assign a free port" drops the pin to 0 so the exit picks
-                    // any free one (live remap, no reconnect).
-                    onAssignFreePort = { repo.setNatPmpExternalPort(0) },
+                    // any free one. NAT-PMP config applies on (re)connect on
+                    // Android (no live control channel, unlike desktop), so
+                    // reconnect to apply it and clear the conflict now.
+                    onAssignFreePort = {
+                        repo.setNatPmpExternalPort(0)
+                        reconnectInvoker.reconnect()
+                    },
                     onChooseAnotherExit = { navigator.navigate(WarrenLocationPickerNavKey) },
                 )
             }
