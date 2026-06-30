@@ -185,8 +185,8 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        if ! grep -Eq 'version = "[0-9.]+-warren\.[0-9]+"' Cargo.lock; then
-          echo "::error::Cargo.lock does not pin the Warren quinn fork (…-warren.N); the [patch.crates-io] is not locked. Regenerate Cargo.lock with the quinn-fork present and commit it."
+        if ! grep -Eq 'warren-quinn' Cargo.lock; then
+          echo "::error::Cargo.lock does not pin the warren-quinn fork; the [patch.crates-io] git-dep is not locked. Regenerate Cargo.lock with the quinn-fork present and commit it."
           exit 1
         fi
         if ! cargo metadata --locked --format-version=1 >/dev/null; then

@@ -8,6 +8,7 @@ import {
   QuantumResistantSetting,
 } from '../../../features/tunnel/components';
 import { WarrenCustomExitSetting } from '../../../features/warren-custom-exit/components/WarrenCustomExitSetting';
+import { useShowWarrenCustomExit } from '../../../features/warren-custom-exit/hooks/use-show-warren-custom-exit';
 // `warren-mode` settings (failover, API URL) are deliberately NOT
 // surfaced in the UI: they are developer/self-hosting toggles whose
 // defaults are the only sensible choice for end users. Power users can
@@ -34,6 +35,7 @@ import {
 
 export function VpnSettingsView() {
   const { pop } = useHistory();
+  const showCustomExit = useShowWarrenCustomExit();
 
   return (
     <View backgroundColor="darkBlue">
@@ -76,7 +78,7 @@ export function VpnSettingsView() {
                   <MtuSetting />
                   <IpOverrideSettings position="solo" />
                   <ResetPinnedExitKeys position="solo" />
-                  <WarrenCustomExitSetting position="solo" />
+                  {showCustomExit ? <WarrenCustomExitSetting position="solo" /> : null}
                 </FlexColumn>
               </View.Container>
             </View.Content>

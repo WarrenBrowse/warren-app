@@ -175,7 +175,7 @@ ignored = ["prost"]
 
 # Warren consumes the local quinn fork that lives in warren-core
 # (`vendor/quinn-fork/`). Rebased 2026-06 onto upstream 0.11.x tip +
-# quinn-udp 0.6.1 (quinn 0.11.10 / quinn-proto 0.11.14-warren.3 / quinn-udp
+# quinn-udp 0.6.1 (quinn 0.11.10 / quinn-proto 0.11.14-fork.4 / quinn-udp
 # 0.6.1): GSO patch (MAX_TRANSMIT_DATAGRAMS 20→80, MAX_TRANSMIT_SEGMENTS
 # 10→40, ~25% more downlink), obfuscation knobs, socket-buffer sizing on
 # unix + windows, the GHSA-6xvm-j4wr-6v98 DoS fix, and the quinn-udp 0.6.1
@@ -185,12 +185,12 @@ ignored = ["prost"]
 # path-dep ties warren-app's resolution to it. The required warren-core SHA
 # is pinned in `.warren-core-version` at the repo root.
 [patch.crates-io]
-quinn = { path = "../warren-core/vendor/quinn-fork/quinn" }
-quinn-proto = { path = "../warren-core/vendor/quinn-fork/quinn-proto" }
+quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.14-fork.4", package = "warren-quinn" }
+quinn-proto = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.14-fork.4", package = "warren-quinn-proto" }
 # warren-tunnel/-client/-relay depend on quinn-udp directly (not only through
-# quinn), so without this patch they resolve the unpatched crates.io copy and
-# miss the fork's dlsym Apple fast path and per-socket Windows GSO sizing.
-quinn-udp = { path = "../warren-core/vendor/quinn-fork/quinn-udp" }
+# quinn), so it is patched too. Lib names stay quinn/quinn_proto/quinn_udp, so
+# every `use quinn` and the mullvad-logging crate-name filters are unchanged.
+quinn-udp = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.14-fork.4", package = "warren-quinn-udp" }
 
 [profile.release]
 opt-level = "s"
