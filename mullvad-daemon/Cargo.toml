@@ -15,6 +15,7 @@ OriginalFilename = "warren-daemon.exe"
 
 [package.metadata.deb]
 name = "warren-vpn-daemon"
+description = "Warren VPN daemon and CLI (headless, no GUI). Runs and controls the VPN tunnels."
 conflicts = ["warren-vpn", "mullvad-vpn"]
 maintainer = "Warren contributors <hello@warrenbrowse.com>"
 copyright = "2026, Warren contributors <hello@warrenbrowse.com>"
@@ -42,8 +43,11 @@ assets = [
 
 [package.metadata.generate-rpm]
 name = "warren-vpn-daemon"
+summary = "Warren VPN daemon and CLI (headless, no GUI). Runs and controls the VPN tunnels."
 vendor = "Warren contributors <hello@warrenbrowse.com>"
-auto-req = "yes"
+# Disabled: the headless packages are built on a Debian-based runner that lacks
+# rpm's find-requires, which makes auto-req = "yes" fail and drops the .rpm.
+auto-req = "no"
 pre_install_script = "../dist-assets/linux/daemon/preinst"
 pre_uninstall_script = "../dist-assets/linux/daemon/prerm"
 post_install_script = "../dist-assets/linux/daemon/postinst"
