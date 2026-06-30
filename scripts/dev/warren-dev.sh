@@ -67,6 +67,55 @@ check_app_deps() {
     warn "node_modules looks incomplete, running npm install"
     (cd "$ELECTRON_DIR" && npm install)
   fi
+  ensure_electron_binary
+}
+
+# The `electron` npm package downloads its platform binary in a postinstall
+# step (node_modules/electron/install.js, which writes path.txt and unpacks
+# dist/). ROOT CAUSE of the recurring "Electron failed to install correctly":
+# desktop/.npmrc sets `ignore-scripts=true` (a deliberate Mullvad security
+# choice), so EVERY `npm install` / `npm ci` skips that postinstall and the
+# binary is never fetched automatically. Nothing else in the repo installs it
+# explicitly, so a fresh install always leaves Electron broken until repaired
+# by hand. (An inherited ELECTRON_SKIP_BINARY_DOWNLOAD, an interrupted/partial
+# install, or a proxy hiccup produce the same state.) Fix it for good here:
+# detect the missing binary and run the installer DIRECTLY with `node`
+# (bypassing the npm ignore-scripts gate), forcing the download, before every
+# dev launch. Idempotent and a no-op once the binary is in place.
+ensure_electron_binary() {
+  local pkg=""
+  local candidate
+  for candidate in "$REPO_ROOT/desktop/node_modules/electron" \
+                   "$ELECTRON_DIR/node_modules/electron"; do
+    if [[ -d "$candidate" ]]; then
+      pkg="$candidate"
+      break
+    fi
+  done
+  # Package absent entirely: the node_modules check above (npm install) owns
+  # that case; nothing to repair here.
+  [[ -n "$pkg" ]] || return 0
+
+  # "Correctly installed" == path.txt names a binary that actually exists
+  # under dist/ (this mirrors electron's own getElectronPath()).
+  if [[ -f "$pkg/path.txt" ]]; then
+    local rel
+    rel="$(cat "$pkg/path.txt" 2>/dev/null)"
+    if [[ -n "$rel" && -e "$pkg/dist/$rel" ]]; then
+      return 0
+    fi
+  fi
+
+  warn "Electron binary missing or incomplete, re-running its installer"
+  # Repair path: force the download even if the caller exported the skip flag
+  # (that flag is the most common cause of the breakage in the first place).
+  if [[ -f "$pkg/install.js" ]] \
+     && (cd "$pkg" && env -u ELECTRON_SKIP_BINARY_DOWNLOAD node install.js); then
+    ok "Electron binary installed"
+  else
+    die "Electron binary install failed (network/proxy?). Manual fix:
+        rm -rf \"$pkg\" && (cd \"$ELECTRON_DIR\" && npm install)"
+  fi
 }
 
 # The daemon's [patch.crates-io] points at ../warren-core/vendor/quinn-fork,
