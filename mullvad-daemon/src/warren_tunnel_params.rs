@@ -524,6 +524,7 @@ mod tests {
                 relay_ed25519_pubkey: [0xa2; 32],
                 endpoint: "198.51.100.10:443".parse().unwrap(),
                 signature: [0xa3; 64],
+                cover_domain: None,
             },
             exit: MultiHopExitDescriptor {
                 exit_id: ExitId::from_bytes([0xb1; 16]),
@@ -532,6 +533,7 @@ mod tests {
                 endpoint: Some("198.51.100.20:443".parse().unwrap()),
                 signature: [0xb4; 64],
                 dns_disabled: false,
+                cover_domain: None,
             },
             operational_pubkey: SigningKey::from_bytes(&[0xc1; 32]).verifying_key(),
             exit_country: "fr".to_owned(),

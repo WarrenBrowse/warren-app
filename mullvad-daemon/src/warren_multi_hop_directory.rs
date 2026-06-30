@@ -993,6 +993,7 @@ mod tests {
                 relay_ed25519_pubkey: relay_ed,
                 endpoint,
                 signature: relay_sig,
+                cover_domain: None,
             },
             exit: ExitDescriptorSigned {
                 exit_id,
@@ -1001,6 +1002,7 @@ mod tests {
                 endpoint: Some(endpoint),
                 signature: exit_sig,
                 dns_disabled: false,
+                cover_domain: None,
             },
             country: country.to_owned(),
             city: "City".to_owned(),
