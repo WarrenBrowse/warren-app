@@ -407,8 +407,7 @@ function PortRuleRow({
   // user a way out instead of leaving the mapping silently dead. Editing
   // the port field above is the third option (pick a specific new port).
   const portConflict =
-    mapping?.status.state === 'failed' &&
-    mapping.status.errorReason === 'suggested-port-in-use';
+    mapping?.status.state === 'failed' && mapping.status.errorReason === 'suggested-port-in-use';
 
   return (
     <FlexColumn gap="tiny">
