@@ -1112,6 +1112,65 @@ enum SubscriptionFetchError {
     Setup(String),
 }
 
+/// Withdraw from the consumer contract (signed `POST /v1/subscription/withdraw`).
+/// EU CRD art. 11a withdrawal button: the authenticated consumer declares
+/// withdrawal and the server ends the current subscription term immediately.
+/// Returns a JSON object `{"ok": true, "withdrawn": <bool>, "expires_at":
+/// <unix secs>}` on success (`expires_at` only present when `withdrawn` is
+/// true) or `{"ok": false, "error": "..."}` on failure. The mnemonic derives
+/// the signing key at the boundary; it is not retained. Idempotent: withdrawing
+/// with no subscription on file still returns `ok: true, withdrawn: false`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_withdrawSubscription<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let json = match withdraw_subscription_inner(&phrase) {
+        Ok((withdrawn, expires_at)) => {
+            let mut obj = serde_json::Map::new();
+            obj.insert("ok".to_owned(), serde_json::Value::Bool(true));
+            obj.insert("withdrawn".to_owned(), serde_json::Value::Bool(withdrawn));
+            if let Some(expires_at) = expires_at {
+                obj.insert("expires_at".to_owned(), serde_json::json!(expires_at));
+            }
+            serde_json::Value::Object(obj).to_string()
+        }
+        Err(e) => {
+            // Do not log the error chain: a 4xx body could echo request
+            // context. The structured envelope still returns to Kotlin.
+            log::warn!("withdrawSubscription failed");
+            serde_json::json!({"ok": false, "error": e}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn withdraw_subscription_inner(mnemonic: &str) -> Result<(bool, Option<u64>), String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before withdrawSubscription".to_owned())?;
+    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|e| format!("invalid mnemonic: {e}"))?;
+    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    let resp = runtime
+        .block_on(client.withdraw_subscription())
+        .map_err(|e| format!("withdraw_subscription failed: {e}"))?;
+    Ok((resp.withdrawn, resp.expires_at))
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn withdraw_subscription_inner(_mnemonic: &str) -> Result<(bool, Option<u64>), String> {
+    Err("withdrawSubscription is Android-only".to_owned())
+}
+
 // Device list/remove JNI exports were dropped: Warren's identity is the
 // BIP39 wallet (one wallet = one pubkey), not a Mullvad-style per-account
 // device registry. The backend has no `/v1/devices` list/delete endpoint;

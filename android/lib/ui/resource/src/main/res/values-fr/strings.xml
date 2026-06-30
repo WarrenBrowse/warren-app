@@ -310,6 +310,14 @@
     <string name="subscription_expired_on">Abonnement expiré le %1$s</string>
     <string name="subscription_expires_in_day">L\'abonnement expire dans %1$d jour (%2$s)</string>
     <string name="subscription_expires_in_days">L\'abonnement expire dans %1$d jours (%2$s)</string>
+    <string name="subscription_withdraw">Se rétracter du contrat</string>
+    <string name="subscription_withdraw_confirm_title">Se rétracter du contrat ?</string>
+    <string name="subscription_withdraw_confirm_description">Droit de rétractation (directive européenne relative aux droits des consommateurs, art. 11 bis). Votre abonnement en cours prend fin immédiatement. Si vous y êtes éligible, vous pouvez demander le remboursement au prorata du temps non utilisé selon notre politique de remboursement.</string>
+    <string name="subscription_withdraw_confirm_action">Me rétracter</string>
+    <string name="subscription_withdrawing">Rétractation en cours…</string>
+    <string name="subscription_withdrawn">Abonnement résilié. Vous pouvez demander un remboursement au prorata du temps non utilisé selon la politique de remboursement.</string>
+    <string name="subscription_withdraw_none">Aucun abonnement actif à résilier.</string>
+    <string name="subscription_withdraw_failed">Rétractation impossible. Veuillez réessayer.</string>
     <string name="location_exit_relay_title">Relais de sortie</string>
     <string name="location_no_relays_available">Aucun relais disponible. L\'API Warren est injoignable ou le catalogue est vide.</string>
     <string name="location_search_hint">Rechercher un pays, une ville ou une adresse</string>

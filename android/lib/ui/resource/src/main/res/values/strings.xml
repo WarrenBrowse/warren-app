@@ -331,6 +331,14 @@
     <string name="subscription_expired_on">Subscription expired on %1$s</string>
     <string name="subscription_expires_in_day">Subscription expires in %1$d day (%2$s)</string>
     <string name="subscription_expires_in_days">Subscription expires in %1$d days (%2$s)</string>
+    <string name="subscription_withdraw">Withdraw from contract</string>
+    <string name="subscription_withdraw_confirm_title">Withdraw from contract?</string>
+    <string name="subscription_withdraw_confirm_description">Right of withdrawal (EU Consumer Rights Directive, art. 11a). This ends your current subscription immediately. If you are eligible, you may request a pro-rata refund of the unused time under our Refund Policy.</string>
+    <string name="subscription_withdraw_confirm_action">Withdraw</string>
+    <string name="subscription_withdrawing">Withdrawing…</string>
+    <string name="subscription_withdrawn">Subscription ended. You may request a pro-rata refund of unused time under the Refund Policy.</string>
+    <string name="subscription_withdraw_none">No active subscription to withdraw from.</string>
+    <string name="subscription_withdraw_failed">Couldn\'t withdraw. Please try again.</string>
     <string name="location_exit_relay_title">Exit relay</string>
     <string name="location_no_relays_available">No relays available. The Warren API is unreachable or the catalogue is empty.</string>
     <string name="location_search_hint">Search country, city or address</string>
