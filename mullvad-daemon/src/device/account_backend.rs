@@ -29,21 +29,6 @@ use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 /// each trait impl must clone its deps before `Box::pin(async move {…})`.
 pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 
-/// Outcome of a consumer contract withdrawal (EU CRD art. 11a).
-///
-/// Mirrors `warren_api_types::WithdrawSubscriptionResponse` but lives in
-/// the daemon layer so neither the management-interface nor the GUI
-/// depends on the warren-api wire crate directly.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct WithdrawOutcome {
-    /// `true` when a subscription was on file and has been ended now.
-    /// `false` when there was nothing to withdraw (idempotent / benign).
-    pub withdrawn: bool,
-    /// Unix epoch seconds the subscription was set to expire at. Only
-    /// `Some` when `withdrawn` is `true`.
-    pub expires_at: Option<u64>,
-}
-
 /// Abstract backend for the MVP critical account-level operations.
 ///
 /// All methods return `Result<_, rest::Error>` to
@@ -82,14 +67,6 @@ pub trait WarrenAccountBackend: Send + Sync {
         account: AccountNumber,
         voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>>;
-
-    /// Withdraws from the consumer contract (EU CRD art. 11a).
-    /// In warren remote mode: calls signed `POST /v1/subscription/withdraw`,
-    /// which ends the current subscription term immediately. The signing
-    /// identity is the only thing the server trusts, so no account
-    /// argument is needed (a client can only withdraw its own contract).
-    /// In legacy Mullvad mode: delegates to `AccountsProxy::withdraw_subscription`.
-    fn withdraw_subscription(&self) -> BoxFut<Result<WithdrawOutcome, rest::Error>>;
 }
 
 /// Thin wrap of the legacy Mullvad `AccountsProxy`. Delegates each
@@ -133,17 +110,6 @@ impl WarrenAccountBackend for RemoteAccountBackend {
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
         let proxy = self.proxy.clone();
         Box::pin(async move { proxy.submit_voucher(account, voucher).await })
-    }
-
-    fn withdraw_subscription(&self) -> BoxFut<Result<WithdrawOutcome, rest::Error>> {
-        let proxy = self.proxy.clone();
-        Box::pin(async move {
-            let resp = proxy.withdraw_subscription().await?;
-            Ok(WithdrawOutcome {
-                withdrawn: resp.withdrawn,
-                expires_at: resp.expires_at,
-            })
-        })
     }
 }
 
@@ -204,20 +170,6 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
     fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
         let client = self.client.clone();
         Box::pin(async move { client.delete_account().await.map_err(map_client_error) })
-    }
-
-    fn withdraw_subscription(&self) -> BoxFut<Result<WithdrawOutcome, rest::Error>> {
-        let client = self.client.clone();
-        Box::pin(async move {
-            let resp = client
-                .withdraw_subscription()
-                .await
-                .map_err(map_client_error)?;
-            Ok(WithdrawOutcome {
-                withdrawn: resp.withdrawn,
-                expires_at: resp.expires_at,
-            })
-        })
     }
 
     fn submit_voucher(
@@ -568,58 +520,6 @@ mod tests {
             state.subscriptions.get_expiry(&pubkey_ss58).is_none(),
             "sub must have disappeared server-side after delete_account"
         );
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_account_withdraw_ends_subscription() {
-        // EU CRD art. 11a: a registered consumer withdraws. The backend
-        // must report `withdrawn: true` and the server must bring the
-        // expiry forward to ~now (the exit evicts on its next poll).
-        let (api_url, state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[70u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
-        state.subscriptions.insert(&pubkey_ss58, 9_999_999_999);
-
-        let client = WarrenApiClient::new(api_url, key);
-        let backend = WarrenRemoteAccountBackend::new(client);
-        let outcome = backend.withdraw_subscription().await.expect("withdraw OK");
-
-        assert!(outcome.withdrawn, "active sub must report withdrawn: true");
-        let expires_at = outcome.expires_at.expect("expires_at present");
-        assert!(
-            expires_at < 9_999_999_999,
-            "withdrawal must bring expiry forward to ~now, got {expires_at}"
-        );
-        // Server-side: the sub is now expired (expiry <= now), so the
-        // allowlist no longer lists it as active.
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert!(
-            state
-                .subscriptions
-                .get_expiry(&pubkey_ss58)
-                .is_some_and(|e| e <= now),
-            "subscription expiry must have been brought forward to now"
-        );
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_account_withdraw_is_benign_without_sub() {
-        // The withdrawal button must never error in the consumer's face:
-        // withdrawing with no sub on file returns withdrawn: false.
-        let (api_url, _state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[71u8; 32]);
-        let client = WarrenApiClient::new(api_url, key);
-        let backend = WarrenRemoteAccountBackend::new(client);
-
-        let outcome = backend
-            .withdraw_subscription()
-            .await
-            .expect("withdraw must be benign without a sub");
-        assert!(!outcome.withdrawn, "no sub must report withdrawn: false");
-        assert!(outcome.expires_at.is_none(), "no expires_at without a sub");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

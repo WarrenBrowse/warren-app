@@ -80,13 +80,6 @@ export function AccountView() {
     history.push(RoutePath.keys);
   }, [history]);
 
-  // EU CRD art. 11a: open the dedicated two-step withdrawal confirmation
-  // screen. Withdrawal only ends the subscription term; unlike logout it
-  // does NOT erase the identity, so no recovery-phrase gate is needed.
-  const goToWithdraw = useCallback(() => {
-    history.push(RoutePath.withdrawContract);
-  }, [history]);
-
   const goBackupPhrase = useCallback(() => {
     setLogoutConfirmOpen(false);
     history.push(RoutePath.keys);
@@ -138,17 +131,6 @@ export function AccountView() {
                     // TRANSLATORS: Button label that opens the Keys
                     // TRANSLATORS: backup view (= reveal/copy BIP39 mnemonic).
                     messages.pgettext('account-view', 'Backup keys')
-                  }
-                </Button.Text>
-              </Button>
-
-              <Button onClick={goToWithdraw}>
-                <Button.Text>
-                  {
-                    // TRANSLATORS: Button label that opens the contract
-                    // TRANSLATORS: withdrawal confirmation screen (EU CRD
-                    // TRANSLATORS: art. 11a right of withdrawal).
-                    messages.pgettext('account-view', 'Withdraw from your contract')
                   }
                 </Button.Text>
               </Button>

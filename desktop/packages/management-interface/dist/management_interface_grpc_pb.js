@@ -569,17 +569,6 @@ function deserialize_mullvad_daemon_management_interface_WarrenStatus(buffer_arg
   return management_interface_pb.WarrenStatus.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_mullvad_daemon_management_interface_WithdrawSubscriptionResponse(arg) {
-  if (!(arg instanceof management_interface_pb.WithdrawSubscriptionResponse)) {
-    throw new Error('Expected argument of type mullvad_daemon.management_interface.WithdrawSubscriptionResponse');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_mullvad_daemon_management_interface_WithdrawSubscriptionResponse(buffer_arg) {
-  return management_interface_pb.WithdrawSubscriptionResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 
 var ManagementServiceService = exports.ManagementServiceService = {
   // Control and get tunnel state
@@ -954,12 +943,11 @@ getSettings: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Persistent URL of the warren-api server (consumed by
+  // URL persistante du serveur warren-api (consumed par
 // WarrenRemote{Account,Device}Backend). Format
-// `http(s)://host:port` without a trailing slash. Empty string means
-// unset (= None on the Settings side, falls back to Mullvad upstream).
-// Overridable via the `WARREN_API_URL` env var. A daemon restart is
-// required to apply the change.
+// `http(s)://host:port` sans trailing slash. Empty string → unset
+// (= None côté Settings, fallback Mullvad upstream). Override via
+// env var `WARREN_API_URL`. Restart requis pour appliquer.
 setWarrenApiUrl: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenApiUrl',
     requestStream: false,
@@ -988,13 +976,13 @@ setWarrenNConnections: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
-// user back it up. Empty string if the identity has never been
-// bootstrapped (= legacy Mullvad mode or first boot before
-// warren_signer).
-// **Sensitive**: the GUI caller must display it with a safety warning
-// and explicit user confirmation. The returned string is a
-// cryptographic secret, never logged by the daemon (no-log policy).
+  // Retourne la mnémonique BIP39 utilisateur (12 mots) pour permettre
+// backup user-side via le GUI. Empty string si l'identité n'a
+// jamais été bootstrappée (= mode Mullvad legacy ou premier boot
+// avant warren_signer).
+// **Sensible** : caller GUI doit afficher avec warning safety +
+// confirmation user explicite. La string retournée est secret
+// cryptographique, jamais loggée par le daemon (politique no-log).
 getWarrenMnemonic: {
     path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenMnemonic',
     requestStream: false,
@@ -1006,13 +994,13 @@ getWarrenMnemonic: {
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
   },
-  // Replaces the user identity with the supplied BIP39 mnemonic.
-// **Irreversible**: any subscription tied to the current identity is
-// lost. The GUI caller must display a strong confirmation before
-// calling. No restart is needed: the daemon hot-swaps the in-memory
-// signer (reload_signer_from_disk) and triggers an auto-login so the
-// new identity takes effect in the running process. The payload is
-// BIP39-validated before being written to disk (= atomic rejection).
+  // Remplace l'identité utilisateur par la mnémonique BIP39 fournie.
+// **Irréversible** : toute subscription liée à l'identité actuelle
+// est perdue. Le caller GUI doit afficher une confirmation strong
+// avant d'appeler. Le daemon doit être restart manuellement après
+// pour que la nouvelle identité soit prise en compte par le signer
+// (signing key dérivée au boot uniquement). Le payload est validé
+// BIP39 avant écriture sur disque (= rejet atomique).
 setWarrenMnemonic: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMnemonic',
     requestStream: false,
@@ -1287,19 +1275,6 @@ createNewAccount: {
     requestDeserialize: deserialize_google_protobuf_StringValue,
     responseSerialize: serialize_mullvad_daemon_management_interface_VoucherSubmission,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_VoucherSubmission,
-  },
-  // Withdraw from the consumer contract (EU CRD art. 11a). Signed by the
-// active Warren identity; ends the current subscription term now.
-withdrawSubscription: {
-    path: '/mullvad_daemon.management_interface.ManagementService/WithdrawSubscription',
-    requestStream: false,
-    responseStream: false,
-    requestType: google_protobuf_empty_pb.Empty,
-    responseType: management_interface_pb.WithdrawSubscriptionResponse,
-    requestSerialize: serialize_google_protobuf_Empty,
-    requestDeserialize: deserialize_google_protobuf_Empty,
-    responseSerialize: serialize_mullvad_daemon_management_interface_WithdrawSubscriptionResponse,
-    responseDeserialize: deserialize_mullvad_daemon_management_interface_WithdrawSubscriptionResponse,
   },
   // Android only
 deleteAccount: {

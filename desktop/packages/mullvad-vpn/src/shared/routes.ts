@@ -11,7 +11,6 @@ export enum RoutePath {
   settings = '/settings',
   selectLanguage = '/settings/language',
   account = '/account',
-  withdrawContract = '/account/withdraw',
   keys = '/account/keys',
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',

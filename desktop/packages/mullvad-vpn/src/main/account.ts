@@ -84,16 +84,6 @@ export default class Account {
 
       return response;
     });
-    IpcMainEventChannel.account.handleWithdrawSubscription(async () => {
-      const response = await this.daemonRpc.withdrawSubscription();
-      // On a successful withdrawal the subscription expiry moved to
-      // ~now; refresh the cached account data so the UI reflects the
-      // ended term without waiting for the next poll.
-      if (response.type === 'success' && response.withdrawn) {
-        await this.updateAccountData();
-      }
-      return response;
-    });
     IpcMainEventChannel.account.handleUpdateData(() => this.updateAccountData());
   }
 

@@ -782,12 +782,6 @@ export type VoucherResponse =
   | { type: 'success'; newExpiry: string; secondsAdded: number }
   | { type: 'invalid' | 'already_used' | 'error' };
 
-// Outcome of the consumer contract withdrawal (EU CRD art. 11a).
-// `withdrawn` is `false` (benign) when no subscription was on file.
-export type WithdrawResponse =
-  | { type: 'success'; withdrawn: boolean; expiresAt?: number }
-  | { type: 'error' };
-
 export interface SocksAuth {
   username: string;
   password: string;

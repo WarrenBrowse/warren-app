@@ -369,10 +369,6 @@ pub enum DaemonCommand {
     ),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
-    /// Withdraw from the consumer contract (EU CRD art. 11a). Signed by
-    /// the active Warren identity; ends the current subscription term
-    /// immediately. Idempotent and benign when no subscription is on file.
-    WithdrawSubscription(ResponseTx<device::WithdrawOutcome, mullvad_api::rest::Error>),
     /// Request account history
     GetAccountHistory(oneshot::Sender<Option<AccountNumber>>),
     /// Remove the last used account, if there is one
@@ -2313,7 +2309,6 @@ impl Daemon {
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
-            WithdrawSubscription(tx) => self.on_withdraw_subscription(tx),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
@@ -2790,23 +2785,6 @@ impl Daemon {
             let pubkey = device::account_number_to_warren_pubkey(&account_number);
             let result = account.get_data(pubkey).await;
             Self::oneshot_send(tx, result, "account data");
-        });
-    }
-
-    fn on_withdraw_subscription(
-        &mut self,
-        tx: ResponseTx<device::WithdrawOutcome, mullvad_api::rest::Error>,
-    ) {
-        // EU CRD art. 11a withdrawal button. The signing identity is the
-        // only thing the server trusts, so no pubkey argument is needed:
-        // the request is signed by the active Warren identity and ends
-        // that identity's own subscription term. Spawn off the command
-        // loop like `on_get_account_data` so a slow network round-trip
-        // does not stall the daemon.
-        let account = self.account_manager.warren_identity_service.clone();
-        tokio::spawn(async move {
-            let result = account.withdraw_subscription().await;
-            Self::oneshot_send(tx, result, "withdraw subscription");
         });
     }
 

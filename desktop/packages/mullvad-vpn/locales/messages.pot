@@ -152,9 +152,6 @@ msgstr ""
 msgid "DISCONNECTING..."
 msgstr ""
 
-msgid "Done"
-msgstr ""
-
 msgid "Edit"
 msgstr ""
 
@@ -513,14 +510,6 @@ msgid "Backup keys"
 msgstr ""
 
 msgctxt "account-view"
-msgid "Confirm withdrawal"
-msgstr ""
-
-msgctxt "account-view"
-msgid "Could not withdraw right now. Check your connection and try again."
-msgstr ""
-
-msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr ""
 
@@ -555,35 +544,6 @@ msgstr ""
 
 msgctxt "account-view"
 msgid "Public key"
-msgstr ""
-
-msgctxt "account-view"
-msgid "This exercises your right of withdrawal from the contract. Your identity and recovery phrase stay on this device, so you can subscribe again later."
-msgstr ""
-
-#. Title label in navigation bar for the
-#. contract withdrawal confirmation screen.
-msgctxt "account-view"
-msgid "Withdraw from contract"
-msgstr ""
-
-#. Button label that opens the contract
-#. withdrawal confirmation screen (EU CRD
-#. art. 11a right of withdrawal).
-msgctxt "account-view"
-msgid "Withdraw from your contract"
-msgstr ""
-
-msgctxt "account-view"
-msgid "Withdrawing ends your current subscription immediately. Your access will stop shortly after."
-msgstr ""
-
-msgctxt "account-view"
-msgid "Withdrawing..."
-msgstr ""
-
-msgctxt "account-view"
-msgid "You have withdrawn from your contract. Your subscription has ended. Access stops shortly and you will not be charged again."
 msgstr ""
 
 #. Page title for anti censorship settings view

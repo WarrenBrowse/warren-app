@@ -50,7 +50,6 @@ import {
   UserInterfaceSettingsView,
   VpnSettingsView,
   WarrenMultiHopSettingsView,
-  WithdrawContractView,
 } from './views';
 
 export default function AppRouter() {
@@ -76,7 +75,6 @@ export default function AppRouter() {
           <Route exact path={RoutePath.timeAdded} component={TimeAdded} />
           <Route exact path={RoutePath.setupFinished} component={SetupFinished} />
           <Route exact path={RoutePath.account} component={AccountView} />
-          <Route exact path={RoutePath.withdrawContract} component={WithdrawContractView} />
           <Route exact path={RoutePath.keys} component={KeysView} />
           <Route exact path={RoutePath.restoreKeys} component={RestoreMnemonicView} />
           <Route exact path={RoutePath.settings} component={SettingsView} />
