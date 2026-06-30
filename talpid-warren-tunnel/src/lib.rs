@@ -510,6 +510,42 @@ impl NatPmpConfig {
         }
     }
 
+    /// Returns a copy of this config with each auto rule's
+    /// `suggested_external_port` overridden by the last-granted port from
+    /// `sticky` (keyed by [`NatPmpRuleId`]), so an auto-mode forward keeps
+    /// the same public port when the client moves to a new exit (the port
+    /// "follows" the client). An explicit user pin
+    /// (`suggested_external_port != 0`) is always preserved, and a sticky
+    /// entry of `0` is ignored (the exit never grants port 0).
+    ///
+    /// The result expresses every forward through [`Self::rules`] (the
+    /// legacy flat fields are reset to disabled defaults) so the
+    /// controller drives it uniformly via [`Self::effective_rules`].
+    #[must_use]
+    pub fn with_sticky_ports(&self, sticky: &std::collections::HashMap<NatPmpRuleId, u16>) -> Self {
+        let rules = self
+            .effective_rules()
+            .into_iter()
+            .map(|mut rule| {
+                if rule.suggested_external_port == 0
+                    && let Some(&port) = sticky.get(&rule.id())
+                    && port != 0
+                {
+                    rule.suggested_external_port = port;
+                }
+                rule
+            })
+            .collect();
+        Self {
+            enabled: self.enabled,
+            lifetime_secs: self.lifetime_secs,
+            rules,
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        }
+    }
+
     /// Default enabled configuration for first-time users: UDP, 1 hour
     /// lifetime, server picks the external port. Internal port is 0
     /// (UI must set the bind port before any application can actually
@@ -3439,6 +3475,7 @@ mod tests {
                 relay_ed25519_pubkey: [0xbb; 32],
                 endpoint: "192.0.2.10:443".parse().unwrap(),
                 signature: [0xcc; 64],
+                cover_domain: None,
             },
             exit: ExitDescriptorSigned {
                 exit_id: warrenguard_multihop::ExitId::from_bytes([0xdd; 16]),
@@ -3447,6 +3484,7 @@ mod tests {
                 endpoint: Some("192.0.2.20:443".parse().unwrap()),
                 signature: [0x11; 64],
                 dns_disabled: false,
+                cover_domain: None,
             },
             operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
             exit_country: "se".to_owned(),
@@ -3554,6 +3592,164 @@ mod tests {
     }
 
     #[test]
+    fn with_sticky_ports_re_suggests_last_granted_port_for_an_auto_rule() {
+        // An auto rule (suggested == 0) whose port was granted on the
+        // previous exit must be re-suggested to the next exit, so the
+        // public port "follows" the client across an exit change instead
+        // of silently changing.
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![NatPmpRule {
+                protocol: NatPmpProto::Udp,
+                suggested_external_port: 0,
+                internal_port: 51820,
+            }],
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let mut sticky = std::collections::HashMap::new();
+        sticky.insert(
+            NatPmpRuleId {
+                internal_port: 51820,
+                protocol: NatPmpProto::Udp,
+            },
+            49200,
+        );
+
+        let effective = cfg.with_sticky_ports(&sticky);
+
+        let rules = effective.effective_rules();
+        assert_eq!(rules.len(), 1);
+        assert_eq!(
+            rules[0].suggested_external_port, 49200,
+            "auto rule must re-suggest the last-granted port"
+        );
+    }
+
+    #[test]
+    fn with_sticky_ports_preserves_an_explicit_user_pin() {
+        // A rule the user explicitly pinned (suggested != 0) is their
+        // intent: never override it with a sticky value, even if one
+        // exists for that rule id.
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![NatPmpRule {
+                protocol: NatPmpProto::Tcp,
+                suggested_external_port: 50000,
+                internal_port: 50000,
+            }],
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let mut sticky = std::collections::HashMap::new();
+        sticky.insert(
+            NatPmpRuleId {
+                internal_port: 50000,
+                protocol: NatPmpProto::Tcp,
+            },
+            49200,
+        );
+
+        let effective = cfg.with_sticky_ports(&sticky);
+
+        assert_eq!(
+            effective.effective_rules()[0].suggested_external_port, 50000,
+            "an explicit pin must win over the sticky port"
+        );
+    }
+
+    #[test]
+    fn with_sticky_ports_leaves_an_auto_rule_at_zero_when_no_sticky_entry() {
+        // No remembered port (first connect, or after an explicit reset
+        // to auto): the rule stays auto so the exit picks a fresh port.
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![NatPmpRule {
+                protocol: NatPmpProto::Udp,
+                suggested_external_port: 0,
+                internal_port: 51820,
+            }],
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let sticky = std::collections::HashMap::new();
+
+        let effective = cfg.with_sticky_ports(&sticky);
+
+        assert_eq!(
+            effective.effective_rules()[0].suggested_external_port, 0,
+            "without a sticky entry the rule must stay on auto"
+        );
+    }
+
+    #[test]
+    fn with_sticky_ports_ignores_a_zero_sticky_entry() {
+        // A sticky value of 0 carries no information (the exit never
+        // grants port 0); it must not turn an auto rule into a request
+        // for the invalid port 0.
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![NatPmpRule {
+                protocol: NatPmpProto::Udp,
+                suggested_external_port: 0,
+                internal_port: 51820,
+            }],
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let mut sticky = std::collections::HashMap::new();
+        sticky.insert(
+            NatPmpRuleId {
+                internal_port: 51820,
+                protocol: NatPmpProto::Udp,
+            },
+            0,
+        );
+
+        let effective = cfg.with_sticky_ports(&sticky);
+
+        assert_eq!(effective.effective_rules()[0].suggested_external_port, 0);
+    }
+
+    #[test]
+    fn with_sticky_ports_synthesizes_rules_from_legacy_flat_fields() {
+        // A single-port (legacy flat) config must still follow: the
+        // sticky override applies to the rule synthesized from the flat
+        // fields, and the result expresses it through `rules`.
+        let cfg = NatPmpConfig {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: Vec::new(),
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 6881,
+        };
+        let mut sticky = std::collections::HashMap::new();
+        sticky.insert(
+            NatPmpRuleId {
+                internal_port: 6881,
+                protocol: NatPmpProto::Udp,
+            },
+            49300,
+        );
+
+        let effective = cfg.with_sticky_ports(&sticky);
+
+        let rules = effective.effective_rules();
+        assert_eq!(rules.len(), 1);
+        assert_eq!(rules[0].internal_port, 6881);
+        assert_eq!(rules[0].suggested_external_port, 49300);
+    }
+
+    #[test]
     fn derive_multi_hop_tun_ip_is_deterministic_for_same_pubkey() {
         // Same identity must land on the same TUN IP across reconnects
         // so subscriptions and exit-side state stay attached to a
@@ -3655,6 +3851,7 @@ mod tests {
                 relay_ed25519_pubkey: [0xbb; 32],
                 endpoint: "192.0.2.10:443".parse().unwrap(),
                 signature: [0xcc; 64],
+                cover_domain: None,
             },
             exit: ExitDescriptorSigned {
                 exit_id: warrenguard_multihop::ExitId::from_bytes([0xdd; 16]),
@@ -3663,6 +3860,7 @@ mod tests {
                 endpoint: Some("192.0.2.20:443".parse().unwrap()),
                 signature: [0x11; 64],
                 dns_disabled: false,
+                cover_domain: None,
             },
             operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
             exit_country: "se".to_owned(),

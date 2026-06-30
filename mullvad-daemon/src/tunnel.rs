@@ -6,8 +6,8 @@ use std::{
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{
-    CircuitTarget, MigrateHandle, MultiHopConfig, NatPmpConfig, NatPmpMappingObserver,
-    WarrenTunnelParameters,
+    CircuitTarget, MigrateHandle, MultiHopConfig, NatPmpConfig, NatPmpEvent, NatPmpMappingObserver,
+    NatPmpRuleId, WarrenTunnelParameters,
 };
 use tokio::sync::Mutex;
 
@@ -133,6 +133,17 @@ struct InnerParametersGenerator {
     /// the user toggles the setting from the Electron UI; the next
     /// tunnel reconnect picks up the new value.
     warren_nat_pmp: Option<NatPmpConfig>,
+    /// Last NAT-PMP external port granted per rule, so an auto-mode
+    /// forward keeps the same public port across an exit change: on the
+    /// next tunnel the daemon re-suggests this port to the new exit (the
+    /// port "follows" the client) via [`NatPmpConfig::with_sticky_ports`].
+    /// Updated by the NAT-PMP observer on every `Mapped`/`Renewed`; read
+    /// in `produce_warren_tunnel_params`. Shared (`Arc`) because the
+    /// observer outlives a single param-generation call. An explicit user
+    /// pin is unaffected (the override only touches auto rules); the
+    /// conflict-resolution "reset to auto" action clears the matching
+    /// entry so the user gets a fresh port instead of the dead one.
+    warren_nat_pmp_sticky: Arc<std::sync::Mutex<std::collections::HashMap<NatPmpRuleId, u16>>>,
     /// User-supplied IPv4 CIDRs that should bypass the tunnel and
     /// reach the host's main routing table (LAN, SSH inbound). Plumbed
     /// down to [`talpid_warren_tunnel::WarrenTunnelParameters::bypass_cidrs`].
@@ -325,6 +336,7 @@ impl ParametersGenerator {
             warren_multi_hop,
             warren_status_cache,
             warren_nat_pmp: None,
+            warren_nat_pmp_sticky: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
             warren_n_connections: None,
@@ -632,7 +644,18 @@ impl ParametersGenerator {
             .expect("signing-key RwLock poisoned")
             .clone();
         let multi_hop = inner.warren_multi_hop.clone();
-        let nat_pmp = inner.warren_nat_pmp.clone();
+        // Apply the "follow the port" override: re-suggest the last-granted
+        // external port to this (possibly new) exit so an auto-mode forward
+        // keeps a stable public port across a server change. No-op when the
+        // sticky map is empty (first connect) or the rule is an explicit pin.
+        let nat_pmp = inner.warren_nat_pmp.as_ref().map(|cfg| {
+            cfg.with_sticky_ports(
+                &inner
+                    .warren_nat_pmp_sticky
+                    .lock()
+                    .expect("warren nat-pmp sticky mutex poisoned"),
+            )
+        });
         let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let enable_daita = inner.warren_enable_daita;
         let n_connections_setting = inner.warren_n_connections;
@@ -982,7 +1005,19 @@ impl ParametersGenerator {
         // disconnect and reconnect"). Always-wired closes that gap.
         {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
+            let sticky = inner.warren_nat_pmp_sticky.clone();
             let observer: NatPmpMappingObserver = Arc::new(move |id, event| {
+                // Remember the granted external port per rule so the next
+                // exit is asked for the SAME port (port follows the client
+                // across a server change). Only Mapped/Renewed carry a
+                // grant; a zero port is never granted so it is ignored.
+                if let NatPmpEvent::Mapped { external_port, .. }
+                | NatPmpEvent::Renewed { external_port, .. } = &event
+                    && *external_port != 0
+                    && let Ok(mut map) = sticky.lock()
+                {
+                    map.insert(id, *external_port);
+                }
                 cache_for_nat_pmp.record_nat_pmp_event(id, event);
             });
             params.nat_pmp_observer = Some(observer);
