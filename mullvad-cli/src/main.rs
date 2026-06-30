@@ -8,6 +8,7 @@ use cmds::*;
 pub const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 
 #[derive(Debug, Parser)]
+#[command(name = "warren", bin_name = "warren")]
 #[command(version = mullvad_version::VERSION, about, long_about = None)]
 #[command(propagate_version = true)]
 enum Cli {

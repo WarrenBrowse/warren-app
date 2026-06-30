@@ -1,0 +1,166 @@
+---
+# Warren VPN — HEADLESS (daemon + CLI) release pipeline
+#
+# Produces the GUI-less artifacts consumed by the `warren-cli` distribution repo:
+#   - Linux:   warren-vpn-daemon_<ver>_<arch>.deb / .rpm  (via build.sh --daemon-only)
+#   - macOS:   warren-headless-macos-<arch>.tar.gz         (binaries + resources + launchd)
+#   - Windows: warren-headless-windows-x64.zip             (exes + resources + service script)
+#
+# This complements the full GUI `release.yml`; it reuses the same self-hosted
+# runners and the `mullvad-build-env` composite action. Linux is the primary,
+# high-confidence target; macOS/Windows headless bundles are best-effort (the
+# Warren tunnel is not validated on Windows).
+#
+# Trigger: push a `daemon-v*` tag, or run manually.
+#
+# Required secret: WARREN_CORE_RO_TOKEN (read access to warren-core + warrenguard),
+# same as release.yml.
+
+name: release-daemon
+
+on:
+  push:
+    tags: ["daemon-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux .deb/.rpm (daemon-only)
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+      - name: Verify packaging deps
+        run: rpm --version
+      - name: Build daemon-only packages
+        # Retry on the Rosetta compiler-crash signature (not a real build error).
+        run: |
+          for attempt in 1 2 3; do
+            if ./build.sh --daemon-only --optimize 2>&1 | tee /tmp/build-daemon.log; then exit 0; fi
+            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-daemon.log; then
+              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
+              continue
+            fi
+            exit 1
+          done
+          exit 1
+      - name: Collect artifacts
+        run: |
+          mkdir -p release-assets
+          cp dist/warren-vpn-daemon_* release-assets/
+          ls -lh release-assets
+      - name: Publish to GitHub Release (draft)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: warren-headless-linux
+          path: release-assets/*
+          retention-days: 7
+
+  macos:
+    name: macOS headless bundle
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Checkout warren-cli (install assets)
+        uses: actions/checkout@v4
+        with:
+          repository: WarrenBrowse/warren-cli
+          path: warren-cli
+          token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Build daemon + CLI (release)
+        run: |
+          cargo build --release \
+            -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
+      - name: Assemble bundle
+        run: |
+          arch="$(uname -m)"   # arm64 / x86_64
+          out="warren-headless-macos-${arch}"
+          mkdir -p "$out/bin" "$out/resources"
+          cp target/release/warren target/release/warren-daemon \
+             target/release/warren-setup target/release/warren-problem-report "$out/bin/"
+          cp dist-assets/ca.crt "$out/resources/"
+          cp -R dist-assets/maybenot_machines "$out/resources/" 2>/dev/null || true
+          cp warren-cli/macos/com.warren.daemon.plist "$out/"
+          cp warren-cli/macos/install-macos.sh "$out/"
+          chmod +x "$out/install-macos.sh"
+          tar czf "${out}.tar.gz" "$out"
+          ls -lh "${out}.tar.gz"
+      - name: Publish to GitHub Release (draft)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: warren-headless-macos-*.tar.gz
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: warren-headless-macos
+          path: warren-headless-macos-*.tar.gz
+          retention-days: 7
+
+  windows:
+    name: Windows headless bundle (experimental)
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Checkout warren-cli (install assets)
+        uses: actions/checkout@v4
+        with:
+          repository: WarrenBrowse/warren-cli
+          path: warren-cli
+          token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Build Windows C modules (winfw)
+        shell: bash
+        run: ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
+      - name: Build daemon + CLI (release)
+        shell: bash
+        run: cargo build --release -p mullvad-daemon -p mullvad-cli
+      - name: Assemble bundle
+        shell: bash
+        run: |
+          out="warren-headless-windows-x64"
+          mkdir -p "$out/bin" "$out/resources"
+          cp target/release/warren.exe target/release/warren-daemon.exe "$out/bin/"
+          cp dist-assets/ca.crt "$out/resources/"
+          cp -R dist-assets/maybenot_machines "$out/resources/" 2>/dev/null || true
+          cp warren-cli/windows/install-windows.ps1 "$out/"
+          powershell -Command "Compress-Archive -Path '$out' -DestinationPath '${out}.zip' -Force"
+          ls -lh "${out}.zip"
+      - name: Publish to GitHub Release (draft)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: warren-headless-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: warren-headless-windows
+          path: warren-headless-windows-x64.zip
+          retention-days: 7

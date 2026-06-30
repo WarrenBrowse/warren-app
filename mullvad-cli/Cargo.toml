@@ -2,7 +2,7 @@
 name = "mullvad-cli"
 edition.workspace = true
 rust-version.workspace = true
-description = "Manage the Mullvad VPN daemon via a convenient CLI"
+description = "Manage the Warren VPN daemon from the command line"
 repository.workspace = true
 license.workspace = true
 
