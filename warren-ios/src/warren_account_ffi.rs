@@ -274,3 +274,42 @@ pub unsafe extern "C" fn warren_account_delete(seed: *const u8) -> *mut c_char {
         }
     })
 }
+
+/// Signed `POST /v1/subscription/withdraw` (EU CRD art. 11a withdrawal
+/// button). The authenticated consumer declares withdrawal and the server
+/// ends the current subscription term immediately. Idempotent: withdrawing
+/// with no subscription on file still returns `ok:true` with
+/// `withdrawn:false`. Returns
+/// `{"ok":true,"withdrawn":<bool>,"expires_at":<u64>}` (`expires_at` only
+/// present when `withdrawn` is true) or an error envelope.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes. The
+/// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_withdraw_subscription(seed: *const u8) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        let signing_key = derive_node_key(&seed);
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        match handle.block_on(client.withdraw_subscription()) {
+            Ok(resp) => {
+                let mut obj = serde_json::Map::new();
+                obj.insert("ok".to_owned(), json!(true));
+                obj.insert("withdrawn".to_owned(), json!(resp.withdrawn));
+                if let Some(expires_at) = resp.expires_at {
+                    obj.insert("expires_at".to_owned(), json!(expires_at));
+                }
+                into_cstring(serde_json::Value::Object(obj).to_string())
+            }
+            Err(error) => err_client_json(&error),
+        }
+    })
+}

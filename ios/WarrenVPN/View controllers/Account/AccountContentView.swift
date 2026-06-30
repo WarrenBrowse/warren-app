@@ -30,6 +30,16 @@ class AccountContentView: UIView {
         return button
     }()
 
+    let withdrawalButton: AppButton = {
+        let button = AppButton(style: .danger)
+        button.setAccessibilityIdentifier(.withdrawalButton)
+        button.setTitle(
+            NSLocalizedString("Withdraw from contract", comment: "EU CRD art. 11a withdrawal button"),
+            for: .normal
+        )
+        return button
+    }()
+
     let deleteButton: AppButton = {
         let button = AppButton(style: .danger)
         button.setAccessibilityIdentifier(.deleteButton)
@@ -65,6 +75,7 @@ class AccountContentView: UIView {
         arrangedSubviews.append(contentsOf: [
             purchaseButton,
             logoutButton,
+            withdrawalButton,
             deleteButton,
         ])
         arrangedSubviews.forEach { $0.isExclusiveTouch = true }

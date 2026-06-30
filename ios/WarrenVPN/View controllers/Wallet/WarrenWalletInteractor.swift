@@ -298,6 +298,33 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         }
     }
 
+    /// Exercises the EU right of withdrawal (CRD art. 11a) on the wallet's
+    /// subscription via a signed `POST /v1/subscription/withdraw`. The server
+    /// ends the current term immediately. Idempotent: `withdrawn` is false
+    /// when there was nothing on file. Does not touch the local Keychain.
+    public func withdrawSubscription(
+        completion: @escaping @Sendable (
+            Result<(withdrawn: Bool, expiresAt: Date?), WarrenWalletInteractorError>
+        ) -> Void
+    ) {
+        queue.async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                completion(.failure(.noWallet))
+                return
+            }
+            defer { wallet.forgetSecret() }
+            switch WarrenAccountClient.withdrawSubscription(seed: wallet.seed) {
+            case let .success(result):
+                completion(.success(result))
+            case let .failure(error):
+                self?.logger.error("subscription withdrawal failed: \(error)")
+                completion(.failure(.account(error)))
+            }
+        }
+    }
+
     /// Mints an Apple StoreKit payment session (signed
     /// `POST /v1/payments/apple/init`) bound to this wallet and returns
     /// the session UUID to use as the StoreKit `appAccountToken`. The
