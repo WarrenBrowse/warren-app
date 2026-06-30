@@ -3750,7 +3750,6 @@ dependencies = [
  "warren-config",
  "warren-identity",
  "warren-relay-selector",
- "warren-tunnel",
  "warrenguard-multihop",
  "winapi",
  "windows 0.62.2",
@@ -5336,7 +5335,9 @@ dependencies = [
 
 [[package]]
 name = "quinn"
-version = "0.11.10"
+version = "0.11.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c1a41e437b6bbd489372cd4971de128e85c855f56c57f283d20ff016cf7c0a8"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -5354,10 +5355,11 @@ dependencies = [
 
 [[package]]
 name = "quinn-proto"
-version = "0.11.14-fork.4"
+version = "0.11.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fcb935c5bec503c2f0e306bdd3e58bb9029dcb14fa8d9ac76e3a5256ac0763e"
 dependencies = [
  "bytes",
- "fastbloom",
  "getrandom 0.3.4",
  "lru-slab",
  "rand 0.9.4",
@@ -5365,7 +5367,6 @@ dependencies = [
  "rustc-hash 2.1.2",
  "rustls",
  "rustls-pki-types",
- "rustls-platform-verifier",
  "slab",
  "thiserror 2.0.18",
  "tinyvec",
@@ -5375,15 +5376,16 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.6.1"
+version = "0.5.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "addec6a0dcad8a8d96a771f815f0eaf55f9d1805756410b39f5fa81332574cbd"
 dependencies = [
  "cfg_aliases",
  "libc",
- "log",
- "parking_lot",
+ "once_cell",
  "socket2 0.5.10",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -8376,7 +8378,6 @@ dependencies = [
  "mimalloc",
  "parking_lot",
  "postcard",
- "quinn",
  "rand 0.9.4",
  "rand_core 0.9.5",
  "serde_json",
@@ -8387,6 +8388,7 @@ dependencies = [
  "tracing-subscriber",
  "warren-config",
  "warren-identity",
+ "warren-quinn",
  "warren-tunnel",
  "warren-winroute",
  "warrenguard-backoff",
@@ -8491,6 +8493,61 @@ dependencies = [
  "warrenguard-natpmp-client",
  "warrenguard-wire",
  "zeroize",
+]
+
+[[package]]
+name = "warren-quinn"
+version = "0.11.10"
+source = "git+ssh://git@github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.14-fork.4#2d33493ff3fb90407a140708a79b55034c682aec"
+dependencies = [
+ "bytes",
+ "cfg_aliases",
+ "pin-project-lite",
+ "rustc-hash 2.1.2",
+ "rustls",
+ "socket2 0.5.10",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "warren-quinn-proto",
+ "warren-quinn-udp",
+ "web-time",
+]
+
+[[package]]
+name = "warren-quinn-proto"
+version = "0.11.14-fork.4"
+source = "git+ssh://git@github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.14-fork.4#2d33493ff3fb90407a140708a79b55034c682aec"
+dependencies = [
+ "bytes",
+ "fastbloom",
+ "getrandom 0.3.4",
+ "lru-slab",
+ "rand 0.9.4",
+ "ring",
+ "rustc-hash 2.1.2",
+ "rustls",
+ "rustls-pki-types",
+ "rustls-platform-verifier",
+ "slab",
+ "thiserror 2.0.18",
+ "tinyvec",
+ "tracing",
+ "web-time",
+]
+
+[[package]]
+name = "warren-quinn-udp"
+version = "0.6.1"
+source = "git+ssh://git@github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.14-fork.4#2d33493ff3fb90407a140708a79b55034c682aec"
+dependencies = [
+ "cfg_aliases",
+ "libc",
+ "log",
+ "parking_lot",
+ "socket2 0.5.10",
+ "tracing",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -8636,9 +8693,9 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "parking_lot",
- "quinn",
  "tokio",
  "tracing",
+ "warren-quinn",
  "warrenguard-config",
  "warrenguard-daita",
  "warrenguard-ratelimit",
@@ -8661,12 +8718,12 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "parking_lot",
- "quinn",
  "serde",
  "thiserror 2.0.18",
  "tokio",
  "toml 0.8.23",
  "tracing",
+ "warren-quinn",
  "warrenguard-config",
  "warrenguard-multihop",
  "warrenguard-tls",
@@ -8681,7 +8738,6 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "parking_lot",
- "quinn",
  "rand 0.10.1",
  "rand 0.9.4",
  "rustls",
@@ -8689,6 +8745,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+ "warren-quinn",
  "warrenguard-config",
  "warrenguard-daita",
  "warrenguard-pump",
@@ -8704,10 +8761,10 @@ version = "0.1.0"
 dependencies = [
  "data-encoding",
  "ed25519-dalek",
- "quinn",
  "rustls",
  "rustls-pemfile",
  "thiserror 2.0.18",
+ "warren-quinn",
  "warrenguard-wire",
  "webpki-root-certs",
 ]
@@ -8720,12 +8777,12 @@ dependencies = [
  "ed25519-dalek",
  "nix 0.31.2",
  "postcard",
- "quinn",
- "quinn-udp",
  "rand 0.10.1",
  "tokio",
  "tracing",
  "tun-rs",
+ "warren-quinn",
+ "warren-quinn-udp",
  "warrenguard-config",
  "warrenguard-pump",
  "warrenguard-tls",
@@ -8739,10 +8796,10 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "parking_lot",
- "quinn",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "warren-quinn",
  "warrenguard-config",
  "warrenguard-daita",
  "warrenguard-wire",
