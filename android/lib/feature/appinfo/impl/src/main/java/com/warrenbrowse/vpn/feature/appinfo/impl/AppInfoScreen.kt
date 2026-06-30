@@ -35,6 +35,7 @@ import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.component.listitem.ExternalLinkListItem
 import com.warrenbrowse.vpn.lib.ui.component.listitem.NavigationListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.Position
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -155,22 +156,45 @@ private fun AppVersionRow(state: AppInfoUiState, openAppListing: () -> Unit) {
             onClick = openAppListing,
         )
 
-        if (!state.version.isSupported) {
-            Text(
-                text = stringResource(id = R.string.unsupported_version_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier =
-                    Modifier.fillMaxWidth()
+        val upgrade = state.version.availableUpgrade
+        when {
+            !state.version.isSupported ->
+                VersionHint(stringResource(id = R.string.unsupported_version_description))
+            upgrade != null -> {
+                VersionHint(stringResource(id = R.string.app_info_update_available, upgrade))
+                PrimaryButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(
                             start = Dimens.cellStartPadding,
                             end = Dimens.cellStartPadding,
-                            top = Dimens.smallPadding,
                             bottom = Dimens.mediumPadding,
                         ),
-            )
+                    onClick = openAppListing,
+                    text = stringResource(id = R.string.update_now),
+                )
+            }
+            // Mirrors the desktop "You are using the latest version" success copy.
+            else -> VersionHint(stringResource(id = R.string.app_info_up_to_date))
         }
     }
+}
+
+@Composable
+private fun VersionHint(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(
+                    start = Dimens.cellStartPadding,
+                    end = Dimens.cellStartPadding,
+                    top = Dimens.smallPadding,
+                    bottom = Dimens.mediumPadding,
+                ),
+    )
 }
 
 @Composable

@@ -171,6 +171,8 @@
     <string name="app_info">App info</string>
     <string name="changelog_title">What’s new</string>
     <string name="version">Version</string>
+    <string name="app_info_update_available">Update available: %1$s</string>
+    <string name="app_info_up_to_date">You are using the latest version.</string>
     <string name="connection_details_out">Out</string>
     <string name="multihop">Multihop</string>
     <string name="x_via_x">%1$s via %2$s</string>
@@ -354,6 +356,14 @@
     <string name="onboarding_prop_keys_title">You hold the keys</string>
     <string name="onboarding_prop_keys_body">A 12-word recovery phrase is your only credential. Back it up safely.</string>
     <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_subscription_title">Your subscription</string>
+    <string name="onboarding_subscription_body">Warren needs an active subscription to connect. Get one now, or restore an existing subscription. You can also do this later from your account.</string>
+    <string name="onboarding_subscription_active">You have an active subscription. You are all set.</string>
+    <string name="onboarding_subscription_restore">I already have a subscription</string>
+    <string name="onboarding_subscription_skip">Skip for now</string>
+    <string name="onboarding_done_title">All set</string>
+    <string name="onboarding_done_body">Your wallet is ready. Pick a country and connect whenever you want.</string>
+    <string name="onboarding_done_cta">Connect</string>
     <string name="connect_legacy_app_name">Legacy app</string>
     <string name="connect_subscription_expired">Your subscription has expired. Tap to renew.</string>
     <string name="connect_subscription_expires_in_day">Your subscription expires in %1$d day. Tap to renew.</string>
