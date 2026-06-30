@@ -85,10 +85,16 @@ jobs:
           mkdir -p release-assets
           cp dist/warren-vpn-daemon_* release-assets/
           ls -lh release-assets
-      - name: Publish to GitHub Release (draft)
+      - name: Publish artifacts to the warren-cli release (draft)
+        # Publish to the public-facing distribution repo (warren-cli), not this
+        # one, so the public install one-liner only needs warren-cli to be public.
+        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          repository: WarrenBrowse/warren-cli
+          token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+          target_commitish: main
           tag_name: ${{ github.ref_name }}
           draft: true
           files: release-assets/*
@@ -147,10 +153,16 @@ jobs:
           chmod +x "$out/install-macos.sh"
           tar czf "${out}.tar.gz" "$out"
           ls -lh "${out}.tar.gz"
-      - name: Publish to GitHub Release (draft)
+      - name: Publish artifacts to the warren-cli release (draft)
+        # Publish to the public-facing distribution repo (warren-cli), not this
+        # one, so the public install one-liner only needs warren-cli to be public.
+        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          repository: WarrenBrowse/warren-cli
+          token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+          target_commitish: main
           tag_name: ${{ github.ref_name }}
           draft: true
           files: warren-headless-macos-*.tar.gz
@@ -218,10 +230,16 @@ jobs:
           cp warren-cli/windows/install-windows.ps1 "$out/"
           powershell -Command "Compress-Archive -Path '$out' -DestinationPath '${out}.zip' -Force"
           ls -lh "${out}.zip"
-      - name: Publish to GitHub Release (draft)
+      - name: Publish artifacts to the warren-cli release (draft)
+        # Publish to the public-facing distribution repo (warren-cli), not this
+        # one, so the public install one-liner only needs warren-cli to be public.
+        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          repository: WarrenBrowse/warren-cli
+          token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+          target_commitish: main
           tag_name: ${{ github.ref_name }}
           draft: true
           files: warren-headless-windows-x64.zip
