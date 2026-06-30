@@ -36,6 +36,22 @@ jobs:
       CXX: clang++
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp clean release version (daemon-vX.Y.Z)
+        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
+        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
+        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
+        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
+        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            ver="${BASH_REMATCH[1]}"
+            echo "$ver" > dist-assets/desktop-product-version.txt
+            git tag -f "v$ver"
+            echo "stamped clean version v$ver (no -dev suffix)"
+          else
+            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
+          fi
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
@@ -88,6 +104,22 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp clean release version (daemon-vX.Y.Z)
+        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
+        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
+        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
+        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
+        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            ver="${BASH_REMATCH[1]}"
+            echo "$ver" > dist-assets/desktop-product-version.txt
+            git tag -f "v$ver"
+            echo "stamped clean version v$ver (no -dev suffix)"
+          else
+            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
+          fi
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
@@ -138,6 +170,22 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp clean release version (daemon-vX.Y.Z)
+        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
+        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
+        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
+        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
+        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            ver="${BASH_REMATCH[1]}"
+            echo "$ver" > dist-assets/desktop-product-version.txt
+            git tag -f "v$ver"
+            echo "stamped clean version v$ver (no -dev suffix)"
+          else
+            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
+          fi
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
