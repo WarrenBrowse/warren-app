@@ -20,7 +20,7 @@
 #![cfg(all(target_os = "android", feature = "tunnel"))]
 
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::sync::atomic::{AtomicI32, AtomicU16, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU16, Ordering};
 use std::time::Instant;
 
 /// Tunnel-inner addresses the Android `VpnService` interface is configured
@@ -630,6 +630,12 @@ impl Drop for NatPmpGuard {
 /// Updated on every `Mapped`/`Renewed`; read when spawning a session.
 static LAST_GRANTED_NATPMP_EXTERNAL_PORT: AtomicU16 = AtomicU16::new(0);
 
+/// Transport the [`LAST_GRANTED_NATPMP_EXTERNAL_PORT`] was granted for
+/// (`true` = TCP). The follow only re-suggests the remembered port when the
+/// new session uses the same transport, so a UDP-to-TCP switch does not
+/// collide with the client's own still-leased UDP mapping on that port.
+static LAST_GRANTED_NATPMP_IS_TCP: AtomicBool = AtomicBool::new(false);
+
 fn maybe_spawn_nat_pmp(
     config: &WarrenTunnelConfig,
     bind_ipv4: std::net::Ipv4Addr,
@@ -649,14 +655,17 @@ fn maybe_spawn_nat_pmp(
         Some("tcp") | Some("TCP") => warrenguard_natpmp_client::MapProtocol::Tcp,
         _ => warrenguard_natpmp_client::MapProtocol::Udp,
     };
+    let is_tcp = matches!(proto, warrenguard_natpmp_client::MapProtocol::Tcp);
     // The internal port is informative only on the PCP/NAT-PMP wire; the
     // client does not own a specific local port, so request 0. The
     // suggested external port is the user's pin, or (auto) the last port an
     // exit granted us this process so it follows the client across an exit
-    // change.
+    // change (only when the transport matches; see the static's doc).
     let suggested_external_port = crate::natpmp_follow::effective_natpmp_suggested(
         config.nat_pmp_external_port.unwrap_or(0),
+        is_tcp,
         LAST_GRANTED_NATPMP_EXTERNAL_PORT.load(Ordering::Relaxed),
+        LAST_GRANTED_NATPMP_IS_TCP.load(Ordering::Relaxed),
     );
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
@@ -684,6 +693,7 @@ fn maybe_spawn_nat_pmp(
                 && *external_port != 0
             {
                 LAST_GRANTED_NATPMP_EXTERNAL_PORT.store(*external_port, Ordering::Relaxed);
+                LAST_GRANTED_NATPMP_IS_TCP.store(is_tcp, Ordering::Relaxed);
             }
             if let Some(json) = natpmp_event_json(&event) {
                 crate::android_jni::set_natpmp_status(json);
