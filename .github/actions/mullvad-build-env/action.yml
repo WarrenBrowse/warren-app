@@ -174,6 +174,23 @@ runs:
       shell: bash
       run: rustup component add ${{ inputs.rustup-components }}
 
+    - name: Authorize cargo to fetch the private warren-quinn git-dep over HTTPS
+      # [patch.crates-io] points quinn at the private warren-quinn fork via an
+      # ssh:// git-dep (devs auth with SSH keys). CI authenticates to GitHub
+      # with an HTTPS token, not an SSH key, so cargo's git fetch of warren-quinn
+      # fails ("unable to update ssh://..."). Rewrite ssh -> https+token for
+      # cargo's git CLI (its built-in fetcher ignores url.insteadOf, hence
+      # CARGO_NET_GIT_FETCH_WITH_CLI). Scoped to the WarrenBrowse org only, and
+      # the bundled runner git is 2.30.x so GIT_CONFIG_* env is unavailable;
+      # `git config --global` is the portable form.
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+      run: |
+        git config --global url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
+        echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
+
     - name: Assert Cargo.lock <-> warren-core coherence (prevents silent quinn-patch drop)
       # GUARD: the warren-app Cargo.lock and the pinned warren-core (.warren-core-version)
       # must stay in lockstep. If they drift, cargo silently re-resolves on unsigned builds

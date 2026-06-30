@@ -2705,6 +2705,18 @@ msgctxt "vpn-settings-view"
 msgid "Automatically connect to a server when the app launches."
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr ""
+
 #. This is displayed when the custom DNS setting is turned on which makes the block
 #. ads/trackers settings disabled. The text enclosed in "<b></b>" will appear bold.
 #. Available placeholders:
@@ -2740,11 +2752,19 @@ msgid "Enable to allow IPv6 traffic through the tunnel."
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Enter IP"
 msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2800,6 +2820,10 @@ msgctxt "vpn-settings-view"
 msgid "Pin table cleared"
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr ""
+
 #. CTA opening the confirmation modal that
 #. wipes the TOFU pin table.
 msgctxt "vpn-settings-view"
@@ -2828,6 +2852,10 @@ msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr ""
+
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -2847,6 +2875,10 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
 msgstr ""
 
 msgctxt "vpn-settings-view"
