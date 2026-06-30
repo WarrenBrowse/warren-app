@@ -45,7 +45,6 @@ import com.warrenbrowse.vpn.core.rememberResultStore
 import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
 import com.warrenbrowse.vpn.core.scene.rememberListDetailSceneStrategy
 import com.warrenbrowse.vpn.core.toEntries
-import com.warrenbrowse.vpn.feature.appearance.impl.navigation.appearanceEntry
 import com.warrenbrowse.vpn.feature.appinfo.impl.navigation.changelogEntry
 import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
@@ -121,7 +120,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     }
 
     val entryProvider = entryProvider {
-        appearanceEntry(nav3)
         autoConnectEntry(nav3)
         changelogEntry(nav3)
         homeEntry(nav3)

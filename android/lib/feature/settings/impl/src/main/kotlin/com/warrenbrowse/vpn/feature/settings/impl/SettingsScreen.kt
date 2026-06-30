@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +28,8 @@ import com.warrenbrowse.vpn.common.compose.createUriHook
 import com.warrenbrowse.vpn.common.compose.itemWithDivider
 import com.warrenbrowse.vpn.common.compose.navigateReplaceIfDetailPane
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.appearance.api.AppearanceNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
+import com.warrenbrowse.vpn.feature.language.api.LanguageNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
 import com.warrenbrowse.vpn.feature.problemreport.api.ProblemReportNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
@@ -106,8 +107,16 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenTunnelSettingsNavKey) },
         onNotificationSettingsCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(NotificationSettingsNavKey) },
-        onAppObfuscationClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppearanceNavKey) },
+        // Language is the only user-interface setting that applies to Android
+        // (desktop's "User interface settings" group). Surfaced as a direct
+        // cell instead of a single-item "Appearance" passthrough; per-app
+        // language requires API 33, so it is hidden below that.
+        onLanguageClick =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                dropUnlessResumed { navigator.navigateReplaceIfDetailPane(LanguageNavKey) }
+            } else {
+                null
+            },
         onWalletClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
         onWarrenTunnelClick =
@@ -127,7 +136,7 @@ fun SettingsScreen(
     onDaitaClick: () -> Unit,
     onBackClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
-    onAppObfuscationClick: () -> Unit = {},
+    onLanguageClick: (() -> Unit)? = null,
     onWalletClick: () -> Unit = {},
     onWarrenTunnelClick: () -> Unit = {},
 ) {
@@ -161,7 +170,7 @@ fun SettingsScreen(
                         onMultihopClick = onMultihopClick,
                         onDaitaClick = onDaitaClick,
                         onNotificationSettingsCellClick = onNotificationSettingsCellClick,
-                        onAppObfuscationClick = onAppObfuscationClick,
+                        onLanguageClick = onLanguageClick,
                         onWalletClick = onWalletClick,
                         onWarrenTunnelClick = onWarrenTunnelClick,
                     )
@@ -180,7 +189,7 @@ private fun LazyListScope.content(
     onMultihopClick: () -> Unit,
     onDaitaClick: () -> Unit,
     onNotificationSettingsCellClick: () -> Unit,
-    onAppObfuscationClick: () -> Unit = {},
+    onLanguageClick: (() -> Unit)? = null,
     onWalletClick: () -> Unit = {},
     onWarrenTunnelClick: () -> Unit = {},
 ) {
@@ -215,19 +224,21 @@ private fun LazyListScope.content(
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
     }
 
-    itemWithDivider {
-        NavigationListItem(
-            title = stringResource(id = R.string.appearance),
-            onClick = onAppObfuscationClick,
-            position = Position.Top,
-        )
+    if (onLanguageClick != null) {
+        itemWithDivider {
+            NavigationListItem(
+                title = stringResource(id = R.string.language),
+                onClick = onLanguageClick,
+                position = Position.Top,
+            )
+        }
     }
 
     itemWithDivider {
         NavigationListItem(
             title = stringResource(id = R.string.settings_notifications),
             onClick = onNotificationSettingsCellClick,
-            position = Position.Middle,
+            position = if (onLanguageClick != null) Position.Middle else Position.Top,
         )
     }
 

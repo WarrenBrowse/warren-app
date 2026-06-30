@@ -11,7 +11,9 @@ android { namespace = "com.warrenbrowse.vpn.feature.settings.impl" }
 dependencies {
     // D.4 step 34: anticensorship.api dep dropped.
     // D.4 step 33: apiaccess.api dep dropped (NavKey unused).
-    implementation(projects.lib.feature.appearance.api)
+    // Language is surfaced directly in Settings (the only Android-applicable
+    // user-interface setting); the single-item Appearance screen was dropped.
+    implementation(projects.lib.feature.language.api)
     // Wallet erase routes back to the login screen (WarrenWalletNavKey).
     implementation(projects.lib.feature.login.api)
     implementation(projects.lib.feature.appinfo.api)

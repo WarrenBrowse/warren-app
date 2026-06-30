@@ -45,8 +45,6 @@ include(
     ":lib:feature:appinfo:api",
     ":lib:feature:applisting:impl",
     ":lib:feature:applisting:api",
-    ":lib:feature:appearance:impl",
-    ":lib:feature:appearance:api",
     ":lib:feature:autoconnect:impl",
     ":lib:feature:autoconnect:api",
     // D.4 step 27: customlist + filter + location modules deleted

@@ -429,7 +429,6 @@ dependencies {
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.impl)
     implementation(projects.lib.feature.applisting.api)
-    implementation(projects.lib.feature.appearance.impl)
     implementation(projects.lib.feature.autoconnect.impl)
     // D.4 step 27: customlist + filter + location modules deleted
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
