@@ -39,15 +39,21 @@ to `warren-app`:
 - **`../warren-core/`** (control-plane + tunnel keepers): `warren-identity`,
   `warren-tunnel`, `warren-client`, `warren-config`, `warren-relay-selector`,
   `warren-api`, `warren-api-client`. Its checkout SHA is pinned in
-  `.warren-core-version`. The quinn fork (`vendor/quinn-fork/`) also lives here and
-  is wired through `[patch.crates-io]` in `Cargo.toml`.
+  `.warren-core-version`. The quinn fork is the published `WarrenBrowse/warren-quinn`
+  git-dep (pinned by tag `v0.11.14-fork.4`), wired through `[patch.crates-io]` in
+  this repo's root `Cargo.toml` pointing at that git source. The crates are renamed
+  (`warren-quinn`/`-proto`/`-udp`) but their lib names stay `quinn`/`quinn_proto`/`quinn_udp`,
+  so every `use quinn` and the mullvad-logging crate-name filters are unchanged.
+  warren-core and warrenguard consume the same fork. There is no vendored tree and
+  no setup script.
 - **`../warrenguard/`** (carved data-plane engine): `warrenguard-wire` (formerly
   `warren-protocol`), `warrenguard-multihop`, `warrenguard-relay`,
   `warrenguard-natpmp-client`, `warrenguard-natpmp-protocol`, `warrenguard-backoff`.
   Its checkout SHA is pinned in `.warrenguard-version`.
 
 Both pins must move together with the `Cargo.lock` when bumping either sibling
-(keep the quinn fork patched so the GSO knobs stay present). Do NOT reintroduce the
+(keep the warren-quinn patch in place so the GSO knobs and the Initial-fragmentation
+obfuscation knobs stay present). Do NOT reintroduce the
 old shim names (`warren-protocol`, `warren-multihop`, `warren-natpmp-*`,
 `warren-backoff`, `warren-relay`); they were deleted from `warren-core` and the
 engine equivalents now live under `warrenguard-*`.
@@ -93,8 +99,10 @@ from **Git Bash** and the `.ps1` helpers from PowerShell.
 
 `../warren-core` and `../warrenguard` must be checked out next to this repo at the
 SHAs pinned in `.warren-core-version` / `.warrenguard-version` (see the dependency
-layout section above). The quinn fork is gitignored and must be regenerated once:
-`../warren-core/bench/scripts/setup-quinn-fork.sh`.
+layout section above). The quinn fork needs no local setup: it is the published
+`WarrenBrowse/warren-quinn` git-dep pinned by tag in this repo's root
+`[patch.crates-io]`, fetched by cargo like any other git dependency. There is no
+vendored tree to regenerate and no setup script to run.
 
 ### Build
 

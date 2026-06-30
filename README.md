@@ -17,9 +17,9 @@ preserved. See [`docs/warren-architecture.md`](docs/warren-architecture.md) for 
 ## TL;DR: run the app in dev
 
 Prerequisites: clone **`warren-core` next to `warren-app`** (same parent directory), plus
-`cargo` + `protoc` (daemon) and `node` + `npm` (GUI). On the first run, the launcher
-automatically rebuilds the local Quinn fork (`../warren-core/vendor/quinn-fork`), with no manual
-step.
+`cargo` + `protoc` (daemon) and `node` + `npm` (GUI). The Quinn fork is the published
+`WarrenBrowse/warren-quinn` git-dep pinned by tag in the root `[patch.crates-io]`, so cargo
+fetches it automatically; there is no local fork to rebuild and no manual step.
 
 ```bash
 # Terminal 1: Rust daemon in release (real tunnel performance)
@@ -142,7 +142,9 @@ The fork pulls Warren crates by path from two sibling repos:
   [`.warrenguard-version`](.warrenguard-version).
 
 The workspace crate [`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine
-and these crates. The quinn fork is consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml).
+and these crates. The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag),
+consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml); warren-core and warrenguard use the
+same fork.
 
 ## Building the app
 
@@ -157,9 +159,9 @@ To iterate locally without packaging, the repo provides a dev launcher:
 (`warren-daemon`, with sudo) and the Electron GUI (Vite hot-reload), handling the lifecycle cleanly
 (Ctrl+C, socket cleanup, macOS DNS restore if the daemon is killed before restoring it).
 
-Prerequisites: **`warren-core` cloned next to `warren-app`** (the daemon consumes its local Quinn
-fork, rebuilt automatically on the first run), `cargo` + `protoc` for the daemon, `node` + `npm` for
-the GUI (Linux/macOS).
+Prerequisites: **`warren-core` cloned next to `warren-app`** (the daemon consumes its path crates;
+the Quinn fork is the published `WarrenBrowse/warren-quinn` git-dep fetched automatically by cargo),
+`cargo` + `protoc` for the daemon, `node` + `npm` for the GUI (Linux/macOS).
 
 ### Two-terminal workflow
 
@@ -391,8 +393,9 @@ Like upstream, the code splits into two families:
 
 Files worth knowing:
 
-- **Cargo.toml**: workspace root. Lists the 52 member crates + `[patch.crates-io]` to point the
-  `warren-*` crates at `../warren-core/`.
+- **Cargo.toml**: workspace root. Lists the 52 member crates, the `warren-*`/`warrenguard-*` path
+  deps on the two siblings, and a `[patch.crates-io]` that points `quinn`/`quinn-proto`/`quinn-udp`
+  at the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag).
 - **mullvad-daemon/**: crate that builds the `warren-daemon` binary.
 - **mullvad-cli/**: crate that builds the `warren` binary (CLI frontend).
 - **talpid-core/**: core of the VPN implementation, Mullvad/Warren agnostic.

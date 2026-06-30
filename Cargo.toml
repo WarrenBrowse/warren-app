@@ -173,17 +173,16 @@ unused_macro_rules = "warn"
 # usage checkers to see that it's not unused
 ignored = ["prost"]
 
-# Warren consumes the local quinn fork that lives in warren-core
-# (`vendor/quinn-fork/`). Rebased 2026-06 onto upstream 0.11.x tip +
-# quinn-udp 0.6.1 (quinn 0.11.10 / quinn-proto 0.11.14-fork.4 / quinn-udp
-# 0.6.1): GSO patch (MAX_TRANSMIT_DATAGRAMS 20→80, MAX_TRANSMIT_SEGMENTS
-# 10→40, ~25% more downlink), obfuscation knobs, socket-buffer sizing on
-# unix + windows, the GHSA-6xvm-j4wr-6v98 DoS fix, and the quinn-udp 0.6.1
-# dlsym Apple fast path / per-socket Windows GSO sizing. quinn-udp resolves
-# transitively through the quinn path dep. The fork is gitignored in
-# warren-core and seeded via `bench/scripts/setup-quinn-fork.sh`; this
-# path-dep ties warren-app's resolution to it. The required warren-core SHA
-# is pinned in `.warren-core-version` at the repo root.
+# Warren consumes the published warren-quinn fork (WarrenBrowse/warren-quinn),
+# pinned by tag. It carries the GSO transmit constants (MAX_TRANSMIT_DATAGRAMS
+# 20 to 80, MAX_TRANSMIT_SEGMENTS 10 to 40, ~25% more downlink), the
+# Initial-fragmentation obfuscation knobs, socket-buffer sizing on unix +
+# windows, the GHSA-6xvm-j4wr-6v98 DoS fix, and the quinn-udp dlsym Apple fast
+# path / per-socket Windows GSO sizing. The crates are renamed (warren-quinn /
+# -proto / -udp) but their lib names stay quinn/quinn_proto/quinn_udp, so every
+# `use quinn` and the mullvad-logging crate-name filters are unchanged. This is
+# the same fork warren-core and warrenguard consume; the patch unifies the
+# transitive graph onto it (no vendored tree, no setup script).
 [patch.crates-io]
 quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.14-fork.4", package = "warren-quinn" }
 quinn-proto = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.14-fork.4", package = "warren-quinn-proto" }
