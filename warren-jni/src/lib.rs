@@ -18,6 +18,10 @@ mod tunnel;
 // `PacketDevice` impl inside is Android-gated.
 mod remap_tun;
 
+// "Port follows the client" suggestion logic (host-testable); the stateful
+// wiring that consumes it is Android-gated in `tunnel`.
+mod natpmp_follow;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

@@ -20,7 +20,7 @@
 #![cfg(all(target_os = "android", feature = "tunnel"))]
 
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicU16, Ordering};
 use std::time::Instant;
 
 /// Tunnel-inner addresses the Android `VpnService` interface is configured
@@ -623,6 +623,13 @@ impl Drop for NatPmpGuard {
     }
 }
 
+/// Last NAT-PMP external port granted by an exit in this process, so an
+/// auto-mode forward keeps the same public port when the user changes exit:
+/// the next session re-suggests it (the port "follows" the client). Mirrors
+/// the desktop daemon's sticky map. `0` means nothing remembered yet.
+/// Updated on every `Mapped`/`Renewed`; read when spawning a session.
+static LAST_GRANTED_NATPMP_EXTERNAL_PORT: AtomicU16 = AtomicU16::new(0);
+
 fn maybe_spawn_nat_pmp(
     config: &WarrenTunnelConfig,
     bind_ipv4: std::net::Ipv4Addr,
@@ -644,8 +651,13 @@ fn maybe_spawn_nat_pmp(
     };
     // The internal port is informative only on the PCP/NAT-PMP wire; the
     // client does not own a specific local port, so request 0. The
-    // suggested external port comes from the user (0 = gateway picks).
-    let suggested_external_port = config.nat_pmp_external_port.unwrap_or(0);
+    // suggested external port is the user's pin, or (auto) the last port an
+    // exit granted us this process so it follows the client across an exit
+    // change.
+    let suggested_external_port = crate::natpmp_follow::effective_natpmp_suggested(
+        config.nat_pmp_external_port.unwrap_or(0),
+        LAST_GRANTED_NATPMP_EXTERNAL_PORT.load(Ordering::Relaxed),
+    );
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
@@ -664,6 +676,15 @@ fn maybe_spawn_nat_pmp(
     let drain = tokio::spawn(async move {
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
+            // Remember the granted external port so the next session (after
+            // an exit change) re-suggests it: the public port follows the
+            // client. Only a grant carries a port; 0 is never granted.
+            if let warrenguard_natpmp_client::NatPmpEvent::Mapped { external_port, .. }
+            | warrenguard_natpmp_client::NatPmpEvent::Renewed { external_port, .. } = &event
+                && *external_port != 0
+            {
+                LAST_GRANTED_NATPMP_EXTERNAL_PORT.store(*external_port, Ordering::Relaxed);
+            }
             if let Some(json) = natpmp_event_json(&event) {
                 crate::android_jni::set_natpmp_status(json);
             }
