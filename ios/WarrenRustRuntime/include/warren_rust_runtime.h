@@ -21,7 +21,7 @@ typedef uint8_t SwiftAccessMethodKind;
 /**
  * Event tag for the variant union below. Variants are constructed by
  * the warren-tunnel dispatcher once the Quinn connection task is
- * wired (C.4.1).
+ * wired.
  */
 typedef enum WarrenTunnelEventTagC {
   EventConnected = 0,
@@ -44,9 +44,10 @@ typedef enum WarrenTunnelEventTagC {
 /**
  * Tunnel state enum surfaced via `warren_tunnel_status`. Variants
  * other than `Disconnected` are constructed by the warren-tunnel
- * dispatcher once the Quinn connection task is wired (C.4.1). On the
- * `not(tunnel)` feature path the enum has no constructor at all,
- * hence the `cfg_attr(expect)` suppression scoped to that path.
+ * dispatcher, which only compiles on the iOS target with the `tunnel`
+ * feature. Off that exact path - including every host (clippy / test)
+ * build, with or without `tunnel` - the enum has no constructor, hence
+ * the `cfg_attr(expect)` suppression scoped to `not(ios && tunnel)`.
  */
 typedef enum WarrenTunnelStateC {
   Disconnected = 0,
@@ -96,8 +97,7 @@ typedef struct WarrenRelayConfigC {
 } WarrenRelayConfigC;
 
 /**
- * DAITA defensive shaping spec (cf. memory `warren_session_b_delivered`
- * M5.B.1 / `warren_daita_doctrine_v1`).
+ * DAITA defensive shaping spec (cf. `warren_daita_doctrine_v1`).
  */
 typedef struct WarrenDaitaSpecC {
   /**
@@ -146,7 +146,7 @@ typedef struct WarrenTunnelParametersC {
   uint8_t nat_pmp_enabled;
   /**
    * Pointer to an array of null-terminated UTF-8 CIDRs to bypass
-   * (see M4.H.G `--bypass-cidr`). Length given by `bypass_cidrs_count`.
+   * (see `--bypass-cidr`). Length given by `bypass_cidrs_count`.
    */
   const char *const *bypass_cidrs;
   /**
@@ -210,7 +210,7 @@ typedef struct WarrenTunnelStatusC {
    */
   uint64_t connected_duration_seconds;
   /**
-   * Cumulative failover count this session (cf. M5.B.2).
+   * Cumulative failover count this session.
    */
   uint32_t failover_count;
 } WarrenTunnelStatusC;
@@ -426,7 +426,7 @@ int warren_tunnel_resume(struct WarrenTunnelHandle *handle);
 
 /**
  * Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
- * Uses `warren_backoff::Backoff::HANDSHAKE` (15s, cf. M4.H.G).
+ * Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s).
  *
  * Returns `0` on success, `-3` if the tunnel is not connected.
  *
