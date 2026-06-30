@@ -735,21 +735,6 @@ char *warren_account_redeem_voucher(const uint8_t *seed, const char *voucher);
 char *warren_account_delete(const uint8_t *seed);
 
 /**
- * Signed `POST /v1/subscription/withdraw` (EU CRD art. 11a withdrawal
- * button). The authenticated consumer declares withdrawal and the server
- * ends the current subscription term immediately. Idempotent: withdrawing
- * with no subscription on file still returns `ok:true` with
- * `withdrawn:false`. Returns
- * `{"ok":true,"withdrawn":<bool>,"expires_at":<u64>}` (`expires_at` only
- * present when `withdrawn` is true) or an error envelope.
- *
- * # Safety
- * `seed`, when non-null, must point to at least 32 readable bytes. The
- * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
- */
-char *warren_account_withdraw_subscription(const uint8_t *seed);
-
-/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,

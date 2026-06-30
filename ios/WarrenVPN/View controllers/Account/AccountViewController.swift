@@ -95,7 +95,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         contentView.purchaseButton.addTarget(self, action: #selector(requestStoreProducts), for: .touchUpInside)
         contentView.logoutButton.addTarget(self, action: #selector(logOut), for: .touchUpInside)
         contentView.deleteButton.addTarget(self, action: #selector(deleteAccount), for: .touchUpInside)
-        contentView.withdrawalButton.addTarget(self, action: #selector(withdrawSubscription), for: .touchUpInside)
         contentView.debugOptionsButton.addTarget(self, action: #selector(showDebugOptions), for: .touchUpInside)
     }
 
@@ -119,7 +118,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         contentView.accountTokenRowView.setButtons(enabled: isInteractionEnabled)
         contentView.logoutButton.isEnabled = isInteractionEnabled
         contentView.deleteButton.isEnabled = isInteractionEnabled
-        contentView.withdrawalButton.isEnabled = isInteractionEnabled
         contentView.debugOptionsButton.isEnabled = isInteractionEnabled
         navigationItem.rightBarButtonItem?.isEnabled = isInteractionEnabled
 
@@ -157,79 +155,6 @@ class AccountViewController: UIViewController, @unchecked Sendable {
 
     @objc private func requestStoreProducts() {
         actionHandler?(.showPurchaseOptions)
-    }
-
-    /// EU right of withdrawal (CRD art. 11a). Presents a confirmation, then
-    /// signs `POST /v1/subscription/withdraw` via the wallet interactor and
-    /// reports the outcome. Handled in-place (no coordinator) because the
-    /// action is a single binary request with no extra input.
-    @objc private func withdrawSubscription() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("Withdraw from contract?", comment: "EU CRD art. 11a"),
-            message: NSLocalizedString(
-                """
-                Right of withdrawal (EU Consumer Rights Directive, art. 11a). \
-                This ends your current subscription immediately. If you are \
-                eligible, you may request a pro-rata refund of the unused time \
-                under our Refund Policy.
-                """,
-                comment: "EU CRD art. 11a withdrawal confirmation"
-            ),
-            preferredStyle: .alert
-        )
-        alert.overrideUserInterfaceStyle = .dark
-        alert.view.tintColor = .AlertController.tintColor
-
-        alert.addAction(UIAlertAction(
-            title: NSLocalizedString("Cancel", comment: ""),
-            style: .cancel
-        ))
-        alert.addAction(UIAlertAction(
-            title: NSLocalizedString("Withdraw", comment: "EU CRD art. 11a confirm"),
-            style: .destructive,
-            handler: { [weak self] _ in self?.performWithdrawal() }
-        ))
-        present(alert, animated: true)
-    }
-
-    private func performWithdrawal() {
-        // Retained by the closure until completion.
-        let walletInteractor = WarrenWalletInteractor()
-        walletInteractor.withdrawSubscription { [weak self] result in
-            Task { @MainActor in
-                guard let self else { return }
-                let message: String
-                switch result {
-                case let .success((withdrawn, _)):
-                    message = withdrawn
-                        ? NSLocalizedString(
-                            "Subscription ended. You may request a pro-rata refund of unused time under the Refund Policy.",
-                            comment: "EU CRD art. 11a withdrawal success"
-                        )
-                        : NSLocalizedString(
-                            "No active subscription to withdraw from.",
-                            comment: "EU CRD art. 11a withdrawal no-op"
-                        )
-                case .failure:
-                    message = NSLocalizedString(
-                        "Couldn't withdraw. Please try again.",
-                        comment: "EU CRD art. 11a withdrawal failure"
-                    )
-                }
-                self.presentWithdrawalResult(message)
-            }
-        }
-    }
-
-    @MainActor private func presentWithdrawalResult(_ message: String) {
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.overrideUserInterfaceStyle = .dark
-        alert.view.tintColor = .AlertController.tintColor
-        alert.addAction(UIAlertAction(
-            title: NSLocalizedString("OK", comment: ""),
-            style: .default
-        ))
-        present(alert, animated: true)
     }
 
     @objc func showDebugOptions() {

@@ -75,7 +75,7 @@ public enum WarrenAccountClient {
                     return .success(.none)
                 }
                 return .failure(error)
-            case .okVoid, .okToken, .okWithdrawal:
+            case .okVoid, .okToken:
                 return .failure(.transport("subscription response missing expires_at"))
             }
         }
@@ -98,7 +98,7 @@ public enum WarrenAccountClient {
                 return .success(expiry)
             case let .failure(error):
                 return .failure(error)
-            case .okVoid, .okToken, .okWithdrawal:
+            case .okVoid, .okToken:
                 return .failure(.transport("voucher response missing expires_at"))
             }
         }
@@ -114,34 +114,10 @@ public enum WarrenAccountClient {
         }
         return parseEnvelope(raw).flatMap { envelope in
             switch envelope {
-            case .okVoid, .okExpiry, .okToken, .okWithdrawal:
+            case .okVoid, .okExpiry, .okToken:
                 return .success(())
             case let .failure(error):
                 return .failure(error)
-            }
-        }
-    }
-
-    /// Signed `POST /v1/subscription/withdraw`. Exercises the EU right of
-    /// withdrawal (CRD art. 11a): the server ends the wallet's current
-    /// subscription term immediately. Idempotent: with no subscription on
-    /// file it still succeeds with `withdrawn == false`. `expiresAt` is set
-    /// only when `withdrawn` is true.
-    public static func withdrawSubscription(seed: Data)
-        -> Result<(withdrawn: Bool, expiresAt: Date?), WarrenAccountError> {
-        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
-        let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
-            guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
-            return warren_account_withdraw_subscription(base)
-        }
-        return parseEnvelope(raw).flatMap { envelope in
-            switch envelope {
-            case let .okWithdrawal(withdrawn, expiresAt):
-                return .success((withdrawn, expiresAt))
-            case let .failure(error):
-                return .failure(error)
-            case .okExpiry, .okVoid, .okToken:
-                return .failure(.transport("withdraw response missing withdrawal status"))
             }
         }
     }
@@ -163,7 +139,7 @@ public enum WarrenAccountClient {
                 return .success(token)
             case let .failure(error):
                 return .failure(error)
-            case .okExpiry, .okVoid, .okWithdrawal:
+            case .okExpiry, .okVoid:
                 return .failure(.transport("storekit init response missing app_account_token"))
             }
         }
@@ -187,7 +163,7 @@ public enum WarrenAccountClient {
                 return .success(expiry)
             case let .failure(error):
                 return .failure(error)
-            case .okToken, .okVoid, .okWithdrawal:
+            case .okToken, .okVoid:
                 return .failure(.transport("storekit check response missing expires_at"))
             }
         }
@@ -200,10 +176,6 @@ public enum WarrenAccountClient {
         case okExpiry(Date)
         case okToken(String)
         case okVoid
-        /// Withdrawal result (EU CRD art. 11a): `withdrawn` is false on a
-        /// benign no-op (no subscription on file); `expiresAt` is set only
-        /// when `withdrawn` is true.
-        case okWithdrawal(withdrawn: Bool, expiresAt: Date?)
         case failure(WarrenAccountError)
     }
 
@@ -222,14 +194,6 @@ public enum WarrenAccountClient {
 
         let ok = object["ok"] as? Bool ?? false
         if ok {
-            // Checked before `expires_at`: a successful withdrawal carries both
-            // `withdrawn: true` and `expires_at`, so the withdrawal shape must
-            // win over the plain-expiry shape to keep the `withdrawn` flag.
-            if let withdrawn = object["withdrawn"] as? Bool {
-                let expiry = (object["expires_at"] as? NSNumber)
-                    .map { Date(timeIntervalSince1970: $0.doubleValue) }
-                return .success(.okWithdrawal(withdrawn: withdrawn, expiresAt: expiry))
-            }
             if let expiresAt = object["expires_at"] as? NSNumber {
                 let date = Date(timeIntervalSince1970: expiresAt.doubleValue)
                 return .success(.okExpiry(date))
