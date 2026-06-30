@@ -90,9 +90,9 @@ impl Account {
         if phrase.is_empty() {
             anyhow::bail!("no recovery phrase provided");
         }
-        rpc.set_warren_mnemonic(phrase)
-            .await
-            .context("could not restore identity — the recovery phrase must be 12 or 24 BIP39 words")?;
+        rpc.set_warren_mnemonic(phrase).await.context(
+            "could not restore identity — the recovery phrase must be 12 or 24 BIP39 words",
+        )?;
         println!("Warren identity restored and active.");
         Self::get(rpc, false).await
     }
@@ -128,10 +128,7 @@ impl Account {
                     // No subscription bound to this identity yet (warren-api 404),
                     // or the API was unreachable. Either way, nothing to connect with.
                     Err(_) => {
-                        println!(
-                            "{:<14}none — redeem a voucher to activate",
-                            "Subscription:"
-                        );
+                        println!("{:<14}none — redeem a voucher to activate", "Subscription:");
                     }
                 }
             }

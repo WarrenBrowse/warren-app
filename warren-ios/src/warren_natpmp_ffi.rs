@@ -54,9 +54,15 @@ pub(crate) fn effective_natpmp_suggested(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum NatPmpEventKind {
     /// Initial mapping obtained from the exit gateway.
-    Mapped { external_port: u16, lifetime_secs: u32 },
+    Mapped {
+        external_port: u16,
+        lifetime_secs: u32,
+    },
     /// Mapping renewed at `lifetime / 2`.
-    Renewed { external_port: u16, lifetime_secs: u32 },
+    Renewed {
+        external_port: u16,
+        lifetime_secs: u32,
+    },
     /// Last request failed: `reason` is the stable category only.
     Failed { reason: String },
     /// Event with no FFI representation (the C surface exposes only
@@ -117,9 +123,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        NatPmpEventKind, effective_natpmp_suggested, project_natpmp_event,
-    };
+    use super::{NatPmpEventKind, effective_natpmp_suggested, project_natpmp_event};
     use crate::warren_tunnel_ffi::WarrenTunnelEventTagC;
 
     #[test]

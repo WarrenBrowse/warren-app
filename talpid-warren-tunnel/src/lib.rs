@@ -3657,7 +3657,8 @@ mod tests {
         let effective = cfg.with_sticky_ports(&sticky);
 
         assert_eq!(
-            effective.effective_rules()[0].suggested_external_port, 50000,
+            effective.effective_rules()[0].suggested_external_port,
+            50000,
             "an explicit pin must win over the sticky port"
         );
     }
@@ -3683,7 +3684,8 @@ mod tests {
         let effective = cfg.with_sticky_ports(&sticky);
 
         assert_eq!(
-            effective.effective_rules()[0].suggested_external_port, 0,
+            effective.effective_rules()[0].suggested_external_port,
+            0,
             "without a sticky entry the rule must stay on auto"
         );
     }
