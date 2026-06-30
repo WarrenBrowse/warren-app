@@ -242,6 +242,11 @@ fun WarrenTunnelSettings(navigator: Navigator) {
                     lifetimeSecs = natPmpLifetime,
                     onLifetimeChange = repo::setNatPmpLifetimeSecs,
                     statusLabel = natPmpStatusLabel(LocalContext.current, natPmpStatusJson),
+                    portConflict = natPmpIsPortConflict(natPmpStatusJson),
+                    // "Assign a free port" drops the pin to 0 so the exit picks
+                    // any free one (live remap, no reconnect).
+                    onAssignFreePort = { repo.setNatPmpExternalPort(0) },
+                    onChooseAnotherExit = { navigator.navigate(WarrenLocationPickerNavKey) },
                 )
             }
 
@@ -435,6 +440,9 @@ private fun PortForwardingAdvanced(
     lifetimeSecs: Int,
     onLifetimeChange: (Int) -> Unit,
     statusLabel: String,
+    portConflict: Boolean,
+    onAssignFreePort: () -> Unit,
+    onChooseAnotherExit: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(start = Dimens.mediumPadding),
@@ -445,6 +453,22 @@ private fun PortForwardingAdvanced(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
         )
+
+        // The followed port is taken on this exit: offer the two recoveries
+        // (let the exit pick a free port, or switch exit). Editing the port
+        // field below is the third option.
+        if (portConflict) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
+                SmallPrimaryButton(
+                    onClick = onAssignFreePort,
+                    text = stringResource(R.string.tunnel_natpmp_conflict_assign_free),
+                )
+                SmallPrimaryButton(
+                    onClick = onChooseAnotherExit,
+                    text = stringResource(R.string.tunnel_natpmp_conflict_change_exit),
+                )
+            }
+        }
 
         Text(stringResource(R.string.tunnel_protocol_label), style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
@@ -528,6 +552,15 @@ internal fun natPmpStatusLabel(context: android.content.Context, json: String): 
                 }
         else -> context.getString(R.string.tunnel_natpmp_status_idle)
     }
+
+/**
+ * True when the live NAT-PMP status reports a followed-port conflict: the
+ * port the client asked to keep is already in use by another client on this
+ * exit (the exit applies strict honour-or-error). The settings screen then
+ * offers the user a way out (let the exit pick a free port, or switch exit).
+ */
+internal fun natPmpIsPortConflict(json: String): Boolean =
+    jsonField(json, "state") == "failed" && jsonField(json, "reason") == "SuggestedPortInUse"
 
 /** Extract a flat JSON string/number value by key, unquoted, or null. */
 internal fun jsonField(json: String, key: String): String? {

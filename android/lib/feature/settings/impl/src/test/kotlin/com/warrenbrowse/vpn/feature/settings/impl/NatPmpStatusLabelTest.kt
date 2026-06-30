@@ -83,6 +83,18 @@ class NatPmpStatusLabelTest {
     }
 
     @Test
+    fun `port conflict is detected only for a failed suggested-port-in-use status`() {
+        assertEquals(
+            true,
+            natPmpIsPortConflict("""{"state":"failed","reason":"SuggestedPortInUse"}"""),
+        )
+        // A different failure is not a port conflict.
+        assertEquals(false, natPmpIsPortConflict("""{"state":"failed","reason":"Unreachable"}"""))
+        // A healthy mapping is not a conflict.
+        assertEquals(false, natPmpIsPortConflict("""{"state":"mapped","external_port":51820}"""))
+    }
+
+    @Test
     fun `jsonField extracts strings and numbers and returns null when absent`() {
         val json = """{"state":"mapped","external_port":51820,"reason":"x"}"""
         assertEquals("mapped", jsonField(json, "state"))
