@@ -377,7 +377,7 @@ export class DaemonRpc extends GrpcClient {
     await this.callString(this.client.setWarrenApiUrl, url);
   }
 
-  // Warren multi-hop settings (M4.E.D). Restart daemon required to
+  // Warren multi-hop settings. Restart daemon required to
   // apply (the supervisor is wired once at boot from the env-var +
   // settings-file path).
   public async getWarrenMultiHopSettings(): Promise<WarrenMultiHopSettings> {
@@ -422,7 +422,7 @@ export class DaemonRpc extends GrpcClient {
     await this.call<grpcTypes.NatPmpSettings, Empty>(this.client.setNatPmpSettings, proto);
   }
 
-  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+  // TOFU pubkey-pinning user actions. The daemon-side
   // verify hook keeps the in-memory pin table; these RPCs let the
   // user resolve a pending mismatch from the modal.
   public async trustNewExitKey(input: {

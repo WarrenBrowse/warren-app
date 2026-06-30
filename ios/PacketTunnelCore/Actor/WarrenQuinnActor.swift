@@ -2,7 +2,7 @@
 //  WarrenQuinnActor.swift
 //  PacketTunnelCore
 //
-//  Created by Warren on 2026-05-21 (C.4.3).
+//  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  `PacketTunnelActorProtocol`-conforming actor for the Warren Quinn
@@ -128,10 +128,10 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     public init() {
-        logger.info("WarrenQuinnActor initialized (C.4.3.X wired)")
+        logger.info("WarrenQuinnActor initialized")
     }
 
-    // MARK: - Binding + event dispatch (C.4.3.X)
+    // MARK: - Binding + event dispatch
 
     /// Bind a `WarrenQuinnAdapter` instance owned by the parent
     /// `WarrenQuinnTunnelImplementation`. Called once during the

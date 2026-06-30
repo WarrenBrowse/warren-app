@@ -5,7 +5,7 @@ import { SettingsListItem } from '../../../../components/settings-list-item';
 import { ListItemProps } from '../../../../lib/components/list-item';
 import { WarrenMultiHopSwitch } from '../WarrenMultiHopSwitch';
 
-// Toggle entry for `Settings::warren_multi_hop` (M4.E.D two-relayed
+// Toggle entry for `Settings::warren_multi_hop` (two-relayed
 // QUIC). Surfaces in the dedicated Warren multi-hop view. A daemon
 // restart is required for a change to take effect (the supervisor is
 // wired at boot from the settings file + WARREN_MULTI_HOP env var).

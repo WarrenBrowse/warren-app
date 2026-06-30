@@ -11,9 +11,9 @@ import kotlinx.serialization.json.Json
  *
  * Today the catalogue is sourced from
  * [com.warrenbrowse.vpn.jni.WarrenJni.listRelays], which currently
- * returns a hardcoded list (one entry: warren-exit-1 prod). D.6 will
- * swap the JNI implementation for a real signed-relay-list fetch via
- * warren-api-client; the Kotlin shape stays unchanged.
+ * returns a hardcoded list (one entry: warren-exit-1 prod). A future
+ * change will swap the JNI implementation for a real signed-relay-list
+ * fetch via warren-api-client; the Kotlin shape stays unchanged.
  *
  * Held as a Koin `single` so future consumers (location picker,
  * relay selector, connect button) can share the same instance and

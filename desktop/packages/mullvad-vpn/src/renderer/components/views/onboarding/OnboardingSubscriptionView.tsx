@@ -16,7 +16,7 @@ import { OnboardingLayout } from './components';
 // coupled to the marketing page lifecycle (the page changes on every
 // pricing tier review).
 //
-// G-4: "I already have a subscription" now verifies enrollment via
+// "I already have a subscription" verifies enrollment via
 // updateAccountData() before advancing. If the daemon reports no
 // active subscription, an inline error is shown.
 export function OnboardingSubscriptionView() {

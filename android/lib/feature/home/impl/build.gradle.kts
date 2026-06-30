@@ -9,21 +9,13 @@ plugins {
 android { namespace = "com.warrenbrowse.vpn.feature.home.impl" }
 
 dependencies {
-    // D.4 step 18: home/impl no longer depends on account/addtime/redeemvoucher
-    // modules ; WelcomeScreen + OutOfTimeScreen (sole consumers) are gone.
-    // D.4 step 34: anticensorship.api dep dropped.
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.login.api)
-    // D.4 step 32: daita.api + multihop.api dropped.
-    // D.4 step 35: serveripoverride.api dropped (SERVER_IP_OVERRIDE
-    // FeatureIndicator routes to WarrenTunnelSettings).
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
-    // D.4 step 53: feature.vpnsettings.api dropped (module deleted).
     implementation(projects.lib.map)
-    // D.4 step 36: lib.payment dropped (Mullvad billing dead on Warren).
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.repository)
     implementation(projects.lib.tv)

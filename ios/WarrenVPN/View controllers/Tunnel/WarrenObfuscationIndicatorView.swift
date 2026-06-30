@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  M4.0 obfuscation indicator banner.
+//  Obfuscation indicator banner.
 //  Surfaces the always-on HTTP/3 mimicry in connection-details so
 //  users understand that Warren traffic is indistinguishable from
 //  regular HTTPS by default (no toggle, always-on baseline). Also
@@ -15,7 +15,7 @@
 
 import SwiftUI
 
-/// Always-on obfuscation banner. M4.0 HTTP/3 mimicry is the Warren
+/// Always-on obfuscation banner. HTTP/3 mimicry is the Warren
 /// baseline (no Mullvad-style bridge/Shadowsocks rotation needed).
 /// Shown in the connection-details panel below the relay info.
 public struct WarrenObfuscationIndicatorView: View {
@@ -53,7 +53,7 @@ public struct WarrenObfuscationIndicatorView: View {
 
 /// Read-only obfuscation settings screen for Warren tunnels.
 ///
-/// Warren runs warren-core's QUIC transport, whose M4.0 HTTP/3 mimicry is
+/// Warren runs warren-core's QUIC transport, whose HTTP/3 mimicry is
 /// always-on and not togglable (disabling it would make Warren clients
 /// immediately recognisable on the network). The legacy Mullvad obfuscation
 /// methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) are WireGuard-only and do

@@ -31,7 +31,7 @@ mod android_jni;
 
 #[cfg(test)]
 mod security_tests {
-    /// Fix M-3: `parking_lot::Mutex` must remain usable on the calling thread
+    /// `parking_lot::Mutex` must remain usable on the calling thread
     /// after another thread panics while holding the lock.
     ///
     /// With `std::sync::Mutex` this test would fail because the panic poisons
@@ -66,7 +66,7 @@ mod security_tests {
         assert_eq!(*mutex.lock(), Some(42));
     }
 
-    /// Fix L-2: the mnemonic string must be zeroized (all bytes set to 0)
+    /// The mnemonic string must be zeroized (all bytes set to 0)
     /// immediately after key derivation - it must not survive into the
     /// returned value or any heap allocation the caller still holds.
     ///

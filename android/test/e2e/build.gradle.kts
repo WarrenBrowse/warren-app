@@ -35,7 +35,7 @@ android {
         }
     }
 
-    // D.4 step 64: BILLING flavor dropped.
+    // BILLING flavor dropped.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {

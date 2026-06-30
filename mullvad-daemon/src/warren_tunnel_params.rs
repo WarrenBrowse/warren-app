@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn in_tunnel_ipv6_negotiated_only_when_exit_attests_egress() {
-        // Blackhole guard (FDC incident, 2026-06-12): a v4-only exit
+        // Blackhole guard (incident, 2026-06-12): a v4-only exit
         // that gets the IPV6 feature allocates an in-tunnel v6 the
         // client routes ::/0 into, but the exit cannot egress it, so
         // every v6 packet is dropped with no error. The client must

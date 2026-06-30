@@ -30,7 +30,7 @@ use warren_relay_selector::{
 };
 
 /// Splits a pinned-pubkey config value (single key, or comma-separated
-/// set for F3 key rotation) into the slice the `_any` verifiers take.
+/// set for key rotation) into the slice the `_any` verifiers take.
 /// Empty/`None` → empty (TOFU).
 fn split_pins(pin: Option<&str>) -> Vec<&str> {
     pin.map(|p| {
@@ -185,7 +185,7 @@ pub fn freshness_check(
 }
 
 /// Outcome of applying the offline-admin roster to a signature-verified
-/// live list (audit F1).
+/// live list.
 #[derive(Debug)]
 pub struct RosterEnforcement {
     /// The list actually published to the selector.
@@ -202,7 +202,7 @@ pub struct RosterEnforcement {
 /// With a verified roster present, only roster-authorized exits survive:
 /// a compromised online backend cannot inject a new exit, relocate one to
 /// another country, or swap its pubkey - all such relays are dropped
-/// (audit F1, the core anti-backend-compromise property).
+/// (the core anti-backend-compromise property).
 ///
 /// When **no** roster is available (never fetched and none baked - i.e.
 /// during the rollout before rosters are deployed), the list passes
@@ -229,7 +229,7 @@ pub fn enforce_roster(list: WarrenRelayList, roster: Option<&VerifiedRoster>) ->
     }
 }
 
-/// F6 availability guard: whether to publish a freshly resolved list.
+/// Availability guard: whether to publish a freshly resolved list.
 /// Refuses to replace a known-good non-empty served list with an empty
 /// one (transient drain / roster all-dropped). The *first* empty (before
 /// any non-empty was ever served) is allowed so the UI can show "no exits
@@ -399,9 +399,9 @@ pub struct WarrenRelayListUpdater {
     /// When `false`, the updater never fetches or enforces a roster: the
     /// online-signed `/v1/exits` list is published as-is. When `true`, it
     /// fetches `/v1/exits/roster`, verifies it against `roster_pin`, and
-    /// drops any live-list exit the roster does not authorize (audit F1).
+    /// drops any live-list exit the roster does not authorize.
     roster_enabled: bool,
-    /// Pinned **offline admin** pubkey for verifying the roster (F1). Only
+    /// Pinned **offline admin** pubkey for verifying the roster. Only
     /// consulted when `roster_enabled`. Empty = TOFU (accepts any
     /// self-consistent roster signature) - operators enabling the feature
     /// should pin it via `WARREN_ADMIN_ROSTER_PUBKEY`.
@@ -414,7 +414,7 @@ pub struct WarrenRelayListUpdater {
     highest_roster_generation: u64,
     /// `ETag` of the last roster fetch.
     roster_etag: Option<String>,
-    /// F6: whether a non-empty list was ever published. Once true, a
+    /// Whether a non-empty list was ever published. Once true, a
     /// subsequently *empty* result (transient registry drain, or a roster
     /// that dropped every live exit) is NOT published - we keep the
     /// last-good list rather than cut the user to zero exits (= no
@@ -717,8 +717,8 @@ impl WarrenRelayListUpdater {
                 }
                 self.etag = etag;
                 self.highest_generation = verified.generation;
-                // F1: drop any live-list exit the offline-admin roster
-                // does not authorize before publishing to the selector.
+                // Drop any live-list exit the offline-admin roster does
+                // not authorize before publishing to the selector.
                 let enf = enforce_roster(verified.relays, self.roster.as_ref());
                 if !enf.enforced {
                     if self.roster_enabled {
@@ -739,7 +739,7 @@ impl WarrenRelayListUpdater {
                         enf.dropped
                     );
                 }
-                // F6 availability guard: never replace a known-good
+                // Availability guard: never replace a known-good
                 // non-empty served list with an empty result (transient
                 // registry drain, or a roster that dropped every exit).
                 if should_publish(enf.list.relays().is_empty(), self.published_nonempty) {
@@ -1102,7 +1102,7 @@ mod tests {
 
     #[test]
     fn enforce_roster_drops_exit_absent_from_roster() {
-        // The core F1 property at the client edge: a live-list exit that
+        // The core property at the client edge: a live-list exit that
         // the offline roster does not authorize (e.g. injected by a
         // compromised backend) is dropped before reaching the selector.
         let key = SigningKey::from_bytes(&[0xab; 32]);

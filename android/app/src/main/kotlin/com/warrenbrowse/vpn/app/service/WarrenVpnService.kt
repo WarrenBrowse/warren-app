@@ -124,7 +124,7 @@ class WarrenVpnService : LifecycleVpnService() {
         migrateSplitTunneling.migrate()
 
         // Log any API endpoint override seeded by mockapi tests so the
-        // future warren-api-client can pick it up (D.6 wiring).
+        // future warren-api-client can pick it up.
         val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
         if (BuildConfig.DEBUG && intentApiOverride != null) {
             Logger.i("API endpoint override present: $intentApiOverride")

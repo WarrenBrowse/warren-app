@@ -40,7 +40,7 @@ data class WarrenTunnelConfig(
     @SerialName("nat_pmp_protocol") val natPmpProtocol: String = "udp",
     @SerialName("nat_pmp_external_port") val natPmpExternalPort: Int = 0,
     @SerialName("nat_pmp_lifetime_secs") val natPmpLifetimeSecs: Int = 3600,
-    // Privacy-leak controls (P0). All default to the leak-safe value so an
+    // Privacy-leak controls. All default to the leak-safe value so an
     // older builder that omits them stays protected.
     //
     // `enableIpv6 = false` mirrors the desktop default: IPv6 is captured by

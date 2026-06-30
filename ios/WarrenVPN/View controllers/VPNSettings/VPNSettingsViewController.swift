@@ -52,7 +52,7 @@ class VPNSettingsViewController: UITableViewController {
         tableView.estimatedSectionHeaderHeight = tableView.estimatedRowHeight
         tableView.allowsMultipleSelection = true
 
-        // Warren tunnels use always-on M4.0 HTTP/3 mimicry; the legacy
+        // Warren tunnels use always-on HTTP/3 mimicry; the legacy
         // WireGuard obfuscation methods do not apply. The dedicated
         // obfuscation screen therefore shows a read-only indicator instead
         // of the interactive method picker (mirrors the desktop view).

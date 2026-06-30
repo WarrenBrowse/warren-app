@@ -66,7 +66,7 @@ android {
     }
 
     playConfigs {
-        // D.4 step 64: BILLING flavor collapsed - variant is now `prodRelease`.
+        // BILLING flavor collapsed - variant is now `prodRelease`.
         register("prodRelease") {
             enabled = !appVersion.isDev
             releaseStatus.set(ReleaseStatus.DRAFT)
@@ -89,7 +89,7 @@ android {
         generateLocaleConfig = false
     }
 
-    // D.7 release signing: opt-in via Gradle properties OR env vars.
+    // Release signing: opt-in via Gradle properties OR env vars.
     // The Gradle-property path is preferred (`-Pwarren.keystore.path=...`)
     // because env-var reads happen at configure time and a long-lived
     // Gradle daemon's environment is FROZEN at daemon start; a CI job
@@ -149,7 +149,7 @@ android {
         getByName(BuildTypes.DEBUG) { isPseudoLocalesEnabled = true }
     }
 
-    // D.4 step 64: BILLING flavor dimension (OSS/PLAY) collapsed (Mullvad
+    // BILLING flavor dimension (OSS/PLAY) collapsed (Mullvad
     // Play Store in-app purchase billing dead on Warren - single Warren
     // build, no Play VPN-time subscriptions). INFRASTRUCTURE (PROD-only)
     // kept for the API endpoint override slot used by debug/staging builds.
@@ -243,7 +243,7 @@ androidComponents {
         val buildType = it.buildType
 
         val artifactSuffix = buildString {
-            // D.4 step 64: BILLING flavor dropped, single Warren build.
+            // BILLING flavor dropped, single Warren build.
 
             productFlavors[FlavorDimensions.INFRASTRUCTURE]?.let { infrastructureFlavorName ->
                 if (infrastructureFlavorName != Flavors.PROD) {
@@ -418,41 +418,41 @@ play {
 dependencies {
     implementation(projects.lib.common)
     implementation(project(":lib:common-compose"))
-    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
+    // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.endpoint)
-    // D.4 step 18: account/addtime/deleteaccount/managedevices/redeemvoucher
+    // account/addtime/deleteaccount/managedevices/redeemvoucher
     // modules deleted (Mullvad-account features without Warren equivalent).
-    // D.4 step 34: anticensorship module deleted.
-    // D.4 step 33: apiaccess module deleted.
-    // D.4 step 61: feature.appicon dropped (Mullvad obfuscation dead).
+    // anticensorship module deleted.
+    // apiaccess module deleted.
+    // feature.appicon dropped (Mullvad obfuscation dead).
     implementation(projects.lib.feature.appinfo.impl)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.impl)
     implementation(projects.lib.feature.applisting.api)
     implementation(projects.lib.feature.autoconnect.impl)
-    // D.4 step 27: customlist + filter + location modules deleted
+    // customlist + filter + location modules deleted
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
-    // D.4 step 32: daita module deleted (DAITA via WarrenTunnelSettings).
+    // daita module deleted (DAITA via WarrenTunnelSettings).
     implementation(projects.lib.feature.home.impl)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.language.impl)
     implementation(projects.lib.feature.login.impl)
     implementation(projects.lib.feature.login.api)
-    // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
+    // multihop module deleted (multi-hop via WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.impl)
     implementation(projects.lib.feature.problemreport.impl)
-    // D.4 step 35: serveripoverride module deleted (Warren exit fleet
+    // serveripoverride module deleted (Warren exit fleet
     // is sovereign, no per-relay IP overrides).
     implementation(projects.lib.feature.settings.impl)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.impl)
-    // D.4 step 53: feature.vpnsettings module deleted (Mullvad daemon
+    // feature.vpnsettings module deleted (Mullvad daemon
     // settings sync dead - Warren-native settings live in feature.settings).
     implementation(projects.lib.map)
     implementation(projects.lib.model)
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.navigation)
-    // D.4 step 36: lib.payment + lib.billing dropped (Mullvad Play Store
+    // lib.payment + lib.billing dropped (Mullvad Play Store
     // billing dead on Warren - BIP39 wallet replaces VPN subscriptions).
     implementation(projects.lib.repository)
     implementation(projects.lib.talpid)
@@ -471,7 +471,7 @@ dependencies {
     // Baseline profile
     baselineProfile(projects.test.baselineprofile)
 
-    // D.4 step 36: playImplementation(projects.lib.billing) dropped.
+    // playImplementation(projects.lib.billing) dropped.
 
     // This dependency can be replaced when minimum SDK is 29 or higher.
     // It can then be replaced with InetAddress.isNumericAddress
@@ -485,7 +485,7 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
-    // FragmentActivity baseline for MainActivity (BiometricPrompt host, D.5).
+    // FragmentActivity baseline for MainActivity (BiometricPrompt host).
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.coresplashscreen)

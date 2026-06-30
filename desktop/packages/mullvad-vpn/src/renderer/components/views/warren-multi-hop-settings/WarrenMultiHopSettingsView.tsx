@@ -24,7 +24,7 @@ const StyledIllustration = styled(Image)({
   width: '100%',
 });
 
-// Dedicated Warren two-relayed QUIC multi-hop settings view (M4.E.D).
+// Dedicated Warren two-relayed QUIC multi-hop settings view.
 // Doctrine `warren_multihop_doctrine_v1`: opt-in privacy with the
 // Apple Private Relay two-hop HPKE pattern. Toggle defaults to OFF
 // because single-hop is materially faster and the entry-side

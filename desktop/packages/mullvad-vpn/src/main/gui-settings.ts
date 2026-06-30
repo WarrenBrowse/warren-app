@@ -139,7 +139,7 @@ export default class GuiSettings {
     return this.stateValue.animateMap;
   }
 
-  // M5.B.3: onboarding-completion timestamp. `undefined` clears the
+  // Onboarding-completion timestamp. `undefined` clears the
   // flag so the wizard re-runs on next boot (Settings "Replay
   // onboarding" CTA). The renderer-side AppRouter consults
   // `onboardingCompletedUnix` via `getNavigationBase` and redirects

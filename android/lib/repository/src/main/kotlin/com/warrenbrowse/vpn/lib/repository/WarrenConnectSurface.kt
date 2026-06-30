@@ -198,7 +198,7 @@ sealed interface WarrenSupportReportOutcome {
 }
 
 /**
- * Lib-side surface for submitting a D.6 problem report. The concrete
+ * Lib-side surface for submitting a problem report. The concrete
  * impl lives in `app/connect/WarrenSendProblemReportUseCase` and is
  * bound to this interface in `di/AppModule`. The submission flow is
  * Activity-coupled (mirror of [WarrenQuinnConnectInvoker]) because it

@@ -508,7 +508,7 @@ export interface ISettings {
   // Persistent warren-api URL. `undefined` if unset (= fallback to
   // upstream Mullvad). Daemon restart required.
   warrenApiUrl?: string;
-  // Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
+  // Warren two-relayed QUIC multi-hop settings.
   // Default = OFF per doctrine `warren_multihop_doctrine_v1`.
   // Daemon restart required to apply.
   warrenMultiHop: WarrenMultiHopSettings;
@@ -516,7 +516,7 @@ export interface ISettings {
   // live via `setNatPmpSettings` (no daemon restart required: the
   // next tunnel reconnect picks up the new config).
   warrenNatPmp: NatPmpSettings;
-  // Note on DAITA v2 (M5.B.1): Warren reuses Mullvad upstream's
+  // Note on DAITA v2: Warren reuses Mullvad upstream's
   // existing `wireguard.daita.enabled` toggle rather than introducing
   // a redundant `warrenDaita` field. The daemon-side adapter
   // (talpid-warren-tunnel) reads that boolean and wires it into
@@ -525,7 +525,7 @@ export interface ISettings {
   // (Quinn datagrams + warren-protocol v3 vs WireGuard +
   // maybenot-ffi) but the user surface stays a single switch.
   //
-  // Note on multi-exit failover (M5.B.2): the daemon performs failover
+  // Note on multi-exit failover: the daemon performs failover
   // unconditionally (no settings field). The renderer surfaces it via
   // the live `WarrenStatus.failoverCount` banner; there is no toggle.
 }
@@ -660,7 +660,7 @@ export interface WarrenMultiHopSettings {
   hpkeEpochRotationMs: number;
 }
 
-// Session A.4 TOFU pubkey-pinning mismatch event surfaced to the UI.
+// TOFU pubkey-pinning mismatch event surfaced to the UI.
 // When the daemon-side verify hook detects that the Ed25519 pubkey
 // served for a known `exit_id` differs from the locally pinned value,
 // it sets this field so the renderer can mount the
@@ -677,7 +677,7 @@ export interface WarrenPubkeyMismatch {
   // observed key from the signed relay-list.
   observedPubkeyHex: string;
   // Forensic snapshot of the pin's location at first-seen time.
-  // Empty string when the pin pre-dates the H.6 enrichment.
+  // Empty string when the pin pre-dates the country/city enrichment.
   countryCode: string;
   city: string;
 }
@@ -691,14 +691,14 @@ export interface WarrenStatus {
   // if no reconnect has been observed yet (fresh session, single-hop).
   lastReconnectAgeMs: number | null;
   obfuscationActive: boolean;
-  // M5.B.2 multi-exit failover: number of times the daemon picked an
+  // Multi-exit failover: number of times the daemon picked an
   // alternative exit after the previous one became unreachable. The
   // renderer surfaces an increment as a toast "Switched to <country>".
   failoverCount: number;
   // Time since the last failover in milliseconds. `null` if no
   // failover has been observed yet.
   lastFailoverAgeMs: number | null;
-  // Session A.4 TOFU pubkey-pinning: `null` (steady state) when no
+  // TOFU pubkey-pinning: `null` (steady state) when no
   // mismatch is pending review, populated when the daemon-side
   // verify hook refused a connect because the served Ed25519
   // pubkey differs from the locally pinned value. The renderer

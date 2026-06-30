@@ -11,11 +11,11 @@ import { OnboardingLayout } from './components';
 // surfaced as part of the first-run flow so the user understands the
 // stack from the start:
 //
-// - **Multi-hop** (M4.E.D): OFF default - costs ~half the
+// - **Multi-hop**: OFF default - costs ~half the
 //   single-hop bandwidth in exchange for entry-exit unlinkability.
-// - **DAITA v2** (M5.B.1): OFF default - ~5-15% bandwidth overhead
+// - **DAITA v2**: OFF default - ~5-15% bandwidth overhead
 //   in exchange for traffic-analysis fingerprinting resistance.
-// - **Always-on obfuscation** (M4.0): ON default - HTTP/3 mimicry,
+// - **Always-on obfuscation**: ON default - HTTP/3 mimicry,
 //   no bandwidth cost, no reason to disable in nominal use.
 //
 // The toggles can also be changed later from Settings; this view is

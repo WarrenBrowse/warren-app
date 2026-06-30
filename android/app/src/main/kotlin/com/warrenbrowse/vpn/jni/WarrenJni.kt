@@ -26,7 +26,7 @@ object WarrenJni {
     // primitives are stateless: the mnemonic is passed in per signing call
     // rather than cached in JNI memory, so the secret never lives in the
     // Rust process beyond the call boundary. Kotlin owns the
-    // Keystore-encrypted persistence (D.5 wallet feature module).
+    // Keystore-encrypted persistence (wallet feature module).
 
     /** Generate a fresh 12-word BIP39 English mnemonic. */
     external fun generateMnemonic(): String
@@ -139,7 +139,7 @@ object WarrenJni {
      *   - `active`         : whether the relay accepts new sessions today
      *   - `weight`         : selector-weight hint (higher = preferred)
      *
-     * D.6 wired: fetches `GET /v1/exits` via warren-api-client and
+     * Fetches `GET /v1/exits` via warren-api-client and
      * verifies the embedded server signature. On network / signature
      * failure, falls back to a hardcoded warren-exit-1 entry so the
      * picker UI is never empty (a `WarrenJni` warning is logged).
@@ -196,7 +196,7 @@ object WarrenJni {
      */
     external fun withdrawSubscription(mnemonic: String): String
 
-    // -- Problem report (D.6) ----------------------------------------------
+    // -- Problem report ----------------------------------------------------
 
     /**
      * Submit a problem report bundle to the operator's support inbox.

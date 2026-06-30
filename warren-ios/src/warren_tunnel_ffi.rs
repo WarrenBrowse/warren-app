@@ -102,7 +102,7 @@ pub struct WarrenRelayConfigC {
     pub country_code: *const c_char,
 }
 
-/// DAITA defensive shaping spec (cf. `warren_daita_doctrine_v1`).
+/// DAITA defensive shaping spec.
 #[repr(C)]
 pub struct WarrenDaitaSpecC {
     /// 32-byte Maybenot machine seed.

@@ -1028,8 +1028,7 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.SERVER_IP_OVERRIDE -> WarrenTunnelSettingsNavKey
 
         // Anti-censorship transport indicators route to the unified
-        // WarrenTunnelSettings; Warren uses a native Quinn + M4.0 obfuscation
-        // toggle.
+        // WarrenTunnelSettings; Warren uses a native Quinn obfuscation toggle.
         FeatureIndicator.UDP_2_TCP,
         FeatureIndicator.QUIC,
         FeatureIndicator.SHADOWSOCKS,

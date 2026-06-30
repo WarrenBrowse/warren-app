@@ -70,7 +70,7 @@ class MnemonicCacheTest {
 
     @Test
     fun `put overwrites and closes the previously staged mnemonic`() {
-        // Audit invariant: the previous stash must be zeroed when
+        // Invariant: the previous stash must be zeroed when
         // overwritten so its CharArray does not linger on the heap.
         val orphan = Mnemonic(
             "legal winner thank year wave sausage worth useful legal winner thank yellow"

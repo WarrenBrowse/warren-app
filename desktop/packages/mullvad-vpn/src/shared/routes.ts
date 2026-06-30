@@ -17,7 +17,7 @@ export enum RoutePath {
   userInterfaceSettings = '/settings/interface',
   multihopSettings = '/settings/multihop',
   warrenMultiHopSettings = '/settings/warren-multi-hop',
-  // Warren NAT-PMP port-forwarding (M4.H.F differentiator vs Mullvad
+  // Warren NAT-PMP port-forwarding (differentiator vs Mullvad
   // / IVPN abandon 2023). View opens from the settings home view.
   portForwardingSettings = '/settings/port-forwarding',
   vpnSettings = '/settings/vpn',
@@ -39,7 +39,7 @@ export enum RoutePath {
   appUpgrade = '/settings/app-upgrade',
   antiCensorship = '/settings/advanced/anti-censorship',
   lwo = '/settings/advanced/lwo',
-  // M5.B.3 onboarding wizard (first-launch welcome + wallet
+  // Onboarding wizard (first-launch welcome + wallet
   // generate/import + subscription pointer + privacy preferences +
   // done). Re-triggerable from Settings ("Replay onboarding"). Uses
   // a route-based flow (vs modal overlay) so demo links and support

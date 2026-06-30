@@ -30,7 +30,7 @@ sealed interface BiometricResult {
  * `activity` must be a [FragmentActivity] because that is what
  * `BiometricPrompt` requires; the typical caller is `MainActivity`. The
  * `reason` should be a short i18n string lifted from the relevant
- * `wallet_biometric_*` resource (D.5).
+ * `wallet_biometric_*` resource.
  *
  * The function is cancellable: tear-down on the calling coroutine
  * `cancel()` propagates to `BiometricPrompt.cancelAuthentication()`.

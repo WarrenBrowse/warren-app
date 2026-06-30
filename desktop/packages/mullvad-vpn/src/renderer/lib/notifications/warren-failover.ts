@@ -14,7 +14,7 @@ interface WarrenFailoverNotificationContext {
   close: () => void;
 }
 
-// M5.B.2 multi-exit failover banner. Shown on the connect view whenever
+// Multi-exit failover banner. Shown on the connect view whenever
 // the daemon reports a new failover (an alternative exit was picked
 // after the previous one became unreachable). Auto-dismisses next
 // time the user closes it; reappears on the next failover. Doctrine

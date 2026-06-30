@@ -18,7 +18,7 @@
 //      dispatcher task ; Swift forwards each packet to
 //      `packetFlow.writePackets`.
 //
-//  The Quinn handshake / pump itself is wired in C.4.1 ; this file is
+//  The Quinn handshake / pump itself runs Rust-side ; this file is
 //  the Swift transport plumbing required for that step.
 //
 
@@ -40,12 +40,12 @@ public struct WarrenTunnelConfig: Sendable {
     /// is single-hop directly to `exitEndpoint`.
     public let multiHopRelay: WarrenRelayConfig?
     /// Optional DAITA defensive shaping spec. When nil, DAITA is off
-    /// (default per memory `warren_daita_doctrine_v1`).
+    /// (the default).
     public let daitaSpec: WarrenDaitaSpec?
     /// Enables NAT-PMP port mapping request through the tunnel after
-    /// the Quinn connection is established (M4.H.F differentiator).
+    /// the Quinn connection is established.
     public let natPmpEnabled: Bool
-    /// CIDRs to bypass the tunnel routing (M4.H.G `--bypass-cidr`).
+    /// CIDRs to bypass the tunnel routing (`--bypass-cidr`).
     public let bypassCidrs: [String]
     /// Signed multi-hop directory JSON (fetched from
     /// `GET {api}/v1/multihop/directory`). When non-nil the tunnel rides
@@ -150,8 +150,7 @@ public struct WarrenRelayConfig: Sendable {
     }
 }
 
-/// DAITA defensive shaping spec carried in `SetupAck.daita_spec`
-/// (cf. memory `warren_session_b_delivered` M5.B.1).
+/// DAITA defensive shaping spec carried in `SetupAck.daita_spec`.
 public struct WarrenDaitaSpec: Sendable {
     public let machineSeedHex: String  // 32-byte hex Maybenot machine seed
     public let padding: UInt32  // padding budget in packets/sec
@@ -177,7 +176,7 @@ public struct WarrenTunnelStatus: Sendable {
     /// Seconds since the current connection was established. `nil` when
     /// `state != .connected`.
     public let connectedDurationSeconds: UInt64?
-    /// Cumulative failover count this session (cf. M5.B.2).
+    /// Cumulative failover count this session.
     public let failoverCount: UInt32
 }
 

@@ -41,7 +41,7 @@ export default function StateTriggeredNavigation() {
     // Without this guard the user is bounced from `voucherSuccess`
     // to the generic `timeAdded` view a moment after seeing the
     // voucher-specific one - observed as "the success screen appears
-    // twice in a row" (M5.C.x bug report 2026-05-28).
+    // twice in a row".
     if (nextPath === RoutePath.timeAdded && currentPath.startsWith('/main/voucher/success/')) {
       return;
     }

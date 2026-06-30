@@ -16,7 +16,6 @@
 //! - `warren-relay-selector` (country picker, exposing `WarrenRelayList`
 //!   for the UI)
 //!
-//! Note: multi-hop is OFF by default in the UI (memory
-//! `warren_daita_doctrine_v1`). The exported FFI must therefore accept
+//! Note: multi-hop is OFF by default in the UI. The exported FFI must therefore accept
 //! a "single-hop" mode where only the exit relay is used and the
 //! multi-hop handshake is bypassed.

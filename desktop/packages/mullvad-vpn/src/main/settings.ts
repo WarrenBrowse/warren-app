@@ -108,7 +108,7 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetDaitaDirectOnly((value) => {
       return this.daemonRpc.setDaitaDirectOnly(value);
     });
-    // Session H A.4 UI follow-up: pubkey-pinning user actions.
+    // Pubkey-pinning user actions.
     IpcMainEventChannel.settings.handleTrustNewExitKey((input) =>
       this.daemonRpc.trustNewExitKey(input),
     );
@@ -211,7 +211,7 @@ export default class Settings implements Readonly<ISettings> {
   public get warrenApiUrl() {
     return this.settingsValue.warrenApiUrl;
   }
-  // Warren multi-hop settings (M4.E.D). Daemon restart required to
+  // Warren multi-hop settings. Daemon restart required to
   // apply.
   public get warrenMultiHop() {
     return this.settingsValue.warrenMultiHop;

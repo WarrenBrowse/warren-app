@@ -553,7 +553,7 @@ class WarrenQuinnAdapter(
             statusPollJob?.cancel()
             statusPollJob = null
             WarrenJni.disconnectTunnel()
-            // Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G).
+            // Backoff::HANDSHAKE = 15 s.
             delay(HANDOVER_GRACE_MS)
             // Re-acquire the lock through `connect` itself; first drop
             // local state so it re-initialises cleanly.
@@ -594,7 +594,7 @@ class WarrenQuinnAdapter(
         const val STATUS_POLL_INTERVAL_MS = 250L
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
 
-        /** Backoff::HANDSHAKE = 15 s (cf. warren-core M4.H.G). */
+        /** Backoff::HANDSHAKE = 15 s. */
         const val HANDOVER_GRACE_MS = 15_000L
     }
 }

@@ -32,7 +32,7 @@ export type ScrollToAnchorId =
   | 'quantum-resistant-setting'
   // Anchor for the warren-api URL input.
   | 'warren-api-url-setting'
-  // Anchors for the Warren multi-hop view (M4.H.C).
+  // Anchors for the Warren multi-hop view.
   | 'warren-multi-hop-setting'
   | 'warren-multi-hop-entry-country'
   | 'warren-multi-hop-exit-country'

@@ -35,7 +35,7 @@ android {
         }
     }
 
-    // D.4 step 64: BILLING flavor dimension dropped (Mullvad OSS/PLAY split
+    // BILLING flavor dimension dropped (Mullvad OSS/PLAY split
     // dead on Warren). Keep INFRASTRUCTURE.PROD for the baseline profile module.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
@@ -53,7 +53,7 @@ androidComponents {
 dependencies {
     implementation(projects.lib.endpoint)
     implementation(projects.lib.ui.tag)
-    // D.4 step 58: lib.grpc dropped (Mullvad daemon gRPC bridge dead).
+    // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.model)
 
     implementation(libs.arrow)

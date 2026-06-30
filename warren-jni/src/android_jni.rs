@@ -26,7 +26,7 @@ use std::{
     sync::OnceLock,
 };
 
-// Fix M-3: parking_lot::Mutex never poisons on panic, unlike std::sync::Mutex.
+// parking_lot::Mutex never poisons on panic, unlike std::sync::Mutex.
 // If a JNI thread panics while holding ACTIVE_TUNNEL, subsequent calls can
 // still acquire the lock rather than crashing with "ACTIVE_TUNNEL poisoned".
 use parking_lot::Mutex;
@@ -375,7 +375,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     {
         use std::os::fd::{FromRawFd, OwnedFd};
         use std::sync::atomic::Ordering;
-        // Fix L-2: wrap the raw mnemonic in Zeroizing so its heap allocation is
+        // Wrap the raw mnemonic in Zeroizing so its heap allocation is
         // wiped when it goes out of scope (guaranteed even on early-return paths).
         use zeroize::Zeroizing;
 
@@ -419,7 +419,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             }
         };
 
-        // Fix L-2: derive the signing key synchronously at the JNI boundary,
+        // Derive the signing key synchronously at the JNI boundary,
         // before any async task is spawned.  The mnemonic is wrapped in
         // Zeroizing so it is wiped immediately after key derivation - it never
         // enters the async task nor persists for the session lifetime.
@@ -574,7 +574,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
 /// available Warren exits. The Kotlin side parses this into a list of
 /// `RelayInfo` and feeds the relay selector / location picker UI.
 ///
-/// D.6 wired: fetches `GET /v1/exits` via `warren-api-client`, verifies
+/// Fetches `GET /v1/exits` via `warren-api-client`, verifies
 /// the embedded signature against the pinned server pubkey, and
 /// projects each `JsonRelay` to the JSON shape Kotlin expects. The
 /// fetch runs on the shared Tokio runtime initialised by `initLogger`.

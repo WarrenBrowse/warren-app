@@ -96,8 +96,8 @@ impl PacketDevice for MullvadTunPacketDevice {
         // default `recv_batch` (single blocking `recv()`), losing the
         // batched coalescing optimization but staying correct.
         //
-        // AUDIT_COMPLET.md M-18 investigation: implementing this on
-        // top of the tun 0.8.7 public API requires going around the
+        // Implementing this on top of the tun 0.8.7 public API
+        // requires going around the
         // `tokio::AsyncFd` wrapper that backs `AsyncDevice`. The
         // `Deref<Target = Device>` impl does expose the sync
         // `Device::recv` (set to non-blocking by

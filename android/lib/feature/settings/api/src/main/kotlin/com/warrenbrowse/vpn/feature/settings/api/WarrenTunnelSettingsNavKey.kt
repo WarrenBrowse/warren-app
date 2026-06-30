@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 /**
  * Navigation key for the Warren tunnel settings screen. Hosts the
- * DAITA / NAT-PMP / multi-hop / M4.0 toggles read by
+ * DAITA / NAT-PMP / multi-hop / obfuscation toggles read by
  * `WarrenTunnelConfigBuilder` at connect time.
  */
 @Parcelize data object WarrenTunnelSettingsNavKey : NavKey2

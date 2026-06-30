@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 /**
- * Orchestrates the D.5 wallet onboarding flow:
+ * Orchestrates the wallet onboarding flow:
  *   - [createWallet]: generate a fresh mnemonic and emit a
  *     [WarrenWalletEvent.BackupGeneratedMnemonic] so the host
  *     NavController can route to [WarrenWalletBackupScreen].
@@ -69,9 +69,9 @@ class WarrenWalletViewModel(
             }
             // `use { }` closes the Mnemonic at scope exit so the
             // CharArray is zeroed once the persist + pubkey-derive
-            // round-trip completes (or fails). Audit follow-up:
-            // without this the Mnemonic constructed from the
-            // user-typed phrase lingered on the heap until GC.
+            // round-trip completes (or fails). Without this the Mnemonic
+            // constructed from the user-typed phrase would linger on the
+            // heap until GC.
             mnemonic.use { m ->
                 try {
                     walletRepository.importWallet(m, authorizer)

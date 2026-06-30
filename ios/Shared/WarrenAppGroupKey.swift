@@ -2,7 +2,7 @@
 //  WarrenAppGroupKey.swift
 //  Shared
 //
-//  Created by Warren on 2026-05-22 (C.4.3.X follow-up).
+//  Created by Warren on 2026-05-22.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  Single source of truth for the App Group `UserDefaults` keys used
@@ -33,9 +33,9 @@ public enum WarrenAppGroupKey: String, CaseIterable {
     /// `WarrenFailoverEvent.isFresh`.
     case lastFailoverAt = "WarrenTunnel.lastFailoverAt"
 
-    /// `Bool`. `true` when the M4.0 HTTP/3 mimicry obfuscation layer
+    /// `Bool`. `true` when the HTTP/3 mimicry obfuscation layer
     /// is active on the current tunnel. Drives
-    /// `WarrenObfuscationIndicatorView` visibility (M4.0 always-on,
+    /// `WarrenObfuscationIndicatorView` visibility (always-on,
     /// but reserve the flag for future toggle).
     case obfuscationActive = "WarrenTunnel.obfuscationActive"
 

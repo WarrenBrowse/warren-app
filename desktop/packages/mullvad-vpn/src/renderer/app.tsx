@@ -565,7 +565,7 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
-  // M5.B.3 onboarding wizard: persists the completion timestamp via
+  // Onboarding wizard: persists the completion timestamp via
   // the main-process GUI settings file. Pass `undefined` to clear it
   // (replay flow). The renderer side is kept in sync through the
   // existing `guiSettings.''` notifyRenderer broadcast.
@@ -687,7 +687,7 @@ export default class AppRenderer {
     actions.settings.updateWarrenApiUrl(warrenApiUrl === '' ? undefined : warrenApiUrl);
   };
 
-  // Warren multi-hop settings (M4.E.D). Daemon restart is required
+  // Warren multi-hop settings. Daemon restart is required
   // for a settings change to take effect because the supervisor is
   // wired once at boot from the env-var + settings-file path.
   public setWarrenMultiHop = async (settings: WarrenMultiHopSettings) => {
@@ -696,7 +696,7 @@ export default class AppRenderer {
     actions.settings.updateWarrenMultiHop(settings);
   };
 
-  // Session H A.4: trust the new pubkey for the given `exitIdHex`,
+  // Trust the new pubkey for the given `exitIdHex`,
   // replacing the pinned baseline. The daemon clears
   // `WarrenStatus.pubkeyMismatchPending` on success so the modal
   // unmounts automatically through the existing WarrenStatusUpdates

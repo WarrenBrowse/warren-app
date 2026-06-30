@@ -46,7 +46,7 @@ android {
 
     targetProjectPath = ":app"
 
-    // D.4 step 64: BILLING flavor dropped (Mullvad OSS/PLAY split dead).
+    // BILLING flavor dropped (Mullvad OSS/PLAY split dead).
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {

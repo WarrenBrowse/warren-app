@@ -186,8 +186,8 @@ pub enum TunnelStartError {
 /// in a `static AtomicI32`; this keeps `run_session` `'static`-bounded
 /// for `runtime.spawn(...)` without an extra `Arc` allocation.
 ///
-/// Fix L-2: the function now accepts a pre-derived `signing_key` instead of
-/// a raw mnemonic string.  Key derivation happens at the JNI boundary
+/// The function accepts a pre-derived `signing_key` rather than a raw
+/// mnemonic string: key derivation happens at the JNI boundary
 /// (synchronously, before this task is spawned) and the mnemonic is
 /// zeroized there - it never crosses into the async lifetime.
 pub async fn run_session(

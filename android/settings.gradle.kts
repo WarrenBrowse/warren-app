@@ -28,56 +28,56 @@ rootProject.name = "WarrenVPN"
 include(":app")
 
 include(
-    // D.4 step 36: lib:billing deleted (Mullvad Play Store VPN billing
+    // lib:billing deleted (Mullvad Play Store VPN billing
     // dead on Warren - BIP39 wallet replaces VPN subscriptions).
     ":lib:common",
     ":lib:common-compose",
     ":lib:common-test",
-    // D.4 step 58: lib:grpc deleted (Mullvad daemon gRPC bridge dead).
+    // lib:grpc deleted (Mullvad daemon gRPC bridge dead).
     ":lib:endpoint",
-    // D.4 step 18: account / addtime modules removed (Mullvad-account
+    // account / addtime modules removed (Mullvad-account
     // identity model ; Warren uses BIP39 wallet via the login/wallet
     // module instead).
-    // D.4 step 34: anticensorship module deleted.
-    // D.4 step 33: apiaccess module deleted.
-    // D.4 step 61: feature.appicon module deleted (Mullvad obfuscation dead).
+    // anticensorship module deleted.
+    // apiaccess module deleted.
+    // feature.appicon module deleted (Mullvad obfuscation dead).
     ":lib:feature:appinfo:impl",
     ":lib:feature:appinfo:api",
     ":lib:feature:applisting:impl",
     ":lib:feature:applisting:api",
     ":lib:feature:autoconnect:impl",
     ":lib:feature:autoconnect:api",
-    // D.4 step 27: customlist + filter + location modules deleted
+    // customlist + filter + location modules deleted
     // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
-    // D.4 step 32: daita module deleted (DAITA via WarrenTunnelSettings).
-    // D.4 step 18: deleteaccount module removed (no Mullvad account on Warren).
+    // daita module deleted (DAITA via WarrenTunnelSettings).
+    // deleteaccount module removed (no Mullvad account on Warren).
     ":lib:feature:home:impl",
     ":lib:feature:home:api",
     ":lib:feature:language:impl",
     ":lib:feature:language:api",
     ":lib:feature:login:impl",
     ":lib:feature:login:api",
-    // D.4 step 18: managedevices module removed (Mullvad multi-device
+    // managedevices module removed (Mullvad multi-device
     // accounting model ; Warren manages devices via the wallet).
-    // D.4 step 32: multihop module deleted (multi-hop via WarrenTunnelSettings).
+    // multihop module deleted (multi-hop via WarrenTunnelSettings).
     ":lib:feature:notification:impl",
     ":lib:feature:notification:api",
     ":lib:feature:problemreport:impl",
     ":lib:feature:problemreport:api",
-    // D.4 step 18: redeemvoucher module removed (Mullvad voucher
+    // redeemvoucher module removed (Mullvad voucher
     // subscription model ; Warren billing model is different).
-    // D.4 step 35: serveripoverride module deleted (Warren exit fleet
+    // serveripoverride module deleted (Warren exit fleet
     // is sovereign ; no per-relay IP overrides).
     ":lib:feature:settings:impl",
     ":lib:feature:settings:api",
     ":lib:feature:splittunneling:impl",
     ":lib:feature:splittunneling:api",
-    // D.4 step 53: feature.vpnsettings module deleted (Mullvad daemon
+    // feature.vpnsettings module deleted (Mullvad daemon
     // MTU/DNS/QuantumResistant/etc. settings sync dead on Warren).
     ":lib:map",
     ":lib:model",
     ":lib:navigation",
-    // D.4 step 36: lib:payment deleted (Mullvad PaymentProvider abstraction
+    // lib:payment deleted (Mullvad PaymentProvider abstraction
     // is dead alongside lib:billing on Warren).
     ":lib:push-notification",
     ":lib:repository",
@@ -100,7 +100,7 @@ include(
     ":test:common",
     ":test:e2e",
     // ":test:mockapi" - dropped: simulates the Mullvad API for tests Warren
-    //   no longer runs. Warren-API-backed tests land in D.6 alongside the
+    //   no longer runs. Warren-API-backed tests land alongside the
     //   warren-api-client integration.
     ":test:detekt",
     ":test:baselineprofile",

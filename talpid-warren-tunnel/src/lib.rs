@@ -3885,7 +3885,7 @@ mod tests {
         assert!(e.is_recoverable());
     }
 
-    // --- M-7: BackendTransient / BackendFatal split ---
+    // --- BackendTransient / BackendFatal split ---
 
     #[test]
     fn backend_transient_error_is_recoverable() {
@@ -3997,7 +3997,7 @@ mod tests {
         );
     }
 
-    // --- M-4: WarrenTunnelParameters must not implement Clone ---
+    // --- WarrenTunnelParameters must not implement Clone ---
 
     /// Compile-time assertion: `WarrenTunnelParameters` must NOT
     /// implement `Clone`. The `signing_key` field carries secret Ed25519
@@ -4011,7 +4011,7 @@ mod tests {
         static_assertions::assert_not_impl_any!(WarrenTunnelParameters: Clone);
     }
 
-    // --- M-1: startup event ordering ---
+    // --- startup event ordering ---
 
     /// Verifies the documented startup ordering invariant:
     /// InterfaceUp BEFORE routes BEFORE TunnelEvent::Up.
@@ -4068,7 +4068,7 @@ mod tests {
             .expect("routes_added must be in the phase list");
         assert!(
             up_idx > routes_idx,
-            "M-1: up_emit (idx={up_idx}) must come AFTER routes_added (idx={routes_idx}) \
+            "up_emit (idx={up_idx}) must come AFTER routes_added (idx={routes_idx}) \
              to prevent a window where the UI shows Connected but traffic bypasses the tunnel"
         );
     }

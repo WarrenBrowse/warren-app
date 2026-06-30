@@ -390,7 +390,7 @@ extension PacketTunnelProvider: WarrenTunnelIPReassigning {
     /// Re-applies the tunnel settings with the exit-allocated IPv4. The
     /// Warren multi-hop exit hands each wallet a sticky IPv4 over the
     /// setup stream; until it is applied the TUN keeps the bootstrap
-    /// placeholder and the exit drops return traffic (the Session N
+    /// placeholder and the exit drops return traffic (the
     /// "connected but no bytes" bug). Re-applying `NEPacketTunnelNetwork`
     /// settings is supported mid-session and leaves `packetFlow` valid.
     func reapplyWarrenTunnelIPv4(address: String, prefixLength: Int) async {

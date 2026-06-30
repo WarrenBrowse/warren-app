@@ -36,7 +36,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * D.5 wallet entry-point screen. Mirrors the desktop login UX: the Warren mark
+ * Wallet entry-point screen. Mirrors the desktop login UX: the Warren mark
  * sits in the top bar (like the desktop AppMainHeader), then a short intro and
  * two full-width choices.
  *

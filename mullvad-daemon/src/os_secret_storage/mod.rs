@@ -117,10 +117,9 @@ pub trait SecretStorage: Send + Sync {
 /// call and is only paid on `set_warren_mnemonic` / `get_warren_mnemonic`
 /// (user-triggered operations, rare) and at `load_or_create_signer`
 /// (once per boot). Caching the backend on the `Daemon` struct is a
-/// future optimization tracked as F-5 in the security review; it
-/// requires threading `&dyn SecretStorage` through several public
-/// functions in `warren_signer` and is deferred until that surface
-/// stabilizes.
+/// future optimization; it requires threading `&dyn SecretStorage`
+/// through several public functions in `warren_signer` and is deferred
+/// until that surface stabilizes.
 /// Env var that, when set to any non-empty value, forces the
 /// plaintext file backend regardless of OS-native availability.
 ///
@@ -143,8 +142,8 @@ const PLAINTEXT_OVERRIDE_ENV: &str = "WARREN_USE_PLAINTEXT_STORAGE";
 pub fn get_storage(settings_dir: &std::path::Path) -> Box<dyn SecretStorage> {
     if std::env::var_os(PLAINTEXT_OVERRIDE_ENV).is_some_and(|v| !v.is_empty()) {
         // `get_storage` is called multiple times during a single
-        // daemon boot (once per call site in `warren_signer` - see
-        // F-5 deferred optimization). Logging the override notice
+        // daemon boot (once per call site in `warren_signer`).
+        // Logging the override notice
         // every time would drown the boot log in three or four
         // identical lines. `std::sync::Once` guarantees at most one
         // INFO line per process lifetime; subsequent calls take the

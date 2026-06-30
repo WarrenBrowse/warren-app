@@ -88,13 +88,13 @@ export interface ISettingsReduxState {
   showBetaReleases: boolean;
   // Persistent warren-api URL.
   warrenApiUrl?: string;
-  // Warren two-relayed QUIC multi-hop settings (M4.E.D).
+  // Warren two-relayed QUIC multi-hop settings.
   warrenMultiHop: WarrenMultiHopSettings;
   // Live Warren tunnel status (reconnect_count, last_reconnect_age,
   // obfuscation_active). Undefined until the first push from the
   // daemon WarrenStatusUpdates stream.
   warrenStatus?: WarrenStatus;
-  // Persistent NAT-PMP port-forwarding settings (M4.H.F).
+  // Persistent NAT-PMP port-forwarding settings.
   warrenNatPmp: NatPmpSettings;
   // Live NAT-PMP refresh-loop status. Undefined until the first push
   // from the daemon NatPmpStatusUpdates stream; treat undefined as

@@ -34,7 +34,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * D.5 backup screen shown immediately after [WarrenWalletLoginScreen]
+ * Backup screen shown immediately after [WarrenWalletLoginScreen]
  * generates a fresh mnemonic via `WalletRepository.createWallet`. Mirrors the
  * desktop backup view: the phrase is shown in full alongside a copy action, and
  * a confirmation checkbox gates the Continue button. The top bar exposes a back

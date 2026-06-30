@@ -8,7 +8,7 @@ import { SettingsListItem, SettingsListItemProps } from '../../../../settings-li
 
 export type ReplayOnboardingListItemProps = Omit<SettingsListItemProps, 'children'>;
 
-// M5.B.3 Settings entry that clears `onboardingCompletedUnix` and
+// Settings entry that clears `onboardingCompletedUnix` and
 // navigates back to the wizard's first step. Reachable from the
 // Settings home view so a user can re-run the wizard on demand.
 // The flag is cleared *before* the navigation so the redirect logic

@@ -26,7 +26,7 @@ sealed interface ExitKeyVerdict {
  *   1. Mullvad's protobuf schema cannot grow without coordinated
  *      migration of the dead `mullvad-daemon` consumers.
  *   2. Warren's set of toggles (DAITA on/off, NAT-PMP on/off,
- *      multi-hop entry hop pubkey, M4.0 obfuscation flag, bypass CIDRs)
+ *      multi-hop entry hop pubkey, obfuscation flag, bypass CIDRs)
  *      is orthogonal to the upstream Mullvad surface and lives in its
  *      own namespace so we can drop the legacy layer without touching
  *      these.
@@ -134,7 +134,7 @@ class WarrenLocalSettingsRepository(context: Context) {
      * User-selected exit relay identifier (16-byte stable exit_id hex).
      * `null` = picker has not been used yet; the builder falls back to
      * the first active entry in [com.warrenbrowse.vpn.app.connect.RelayCatalog].
-     * Wired by the D.6 location picker UI.
+     * Wired by the location picker UI.
      */
     private val _selectedExitId = MutableStateFlow(prefs.getString(KEY_SELECTED_EXIT_ID, null))
     val selectedExitId: StateFlow<String?> = _selectedExitId.asStateFlow()

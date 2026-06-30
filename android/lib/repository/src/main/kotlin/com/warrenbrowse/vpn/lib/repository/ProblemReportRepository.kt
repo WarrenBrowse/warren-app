@@ -54,7 +54,7 @@ class ProblemReportRepository(
         withContext(dispatcher) {
             collectReportMutex.withLock {
                 deleteLogs()
-                // D.6: WarrenJniBridge.collectReport returns the redacted
+                // WarrenJniBridge.collectReport returns the redacted
                 // bundle as a single string (empty until the file-appender
                 // lands). We mirror it into the legacy on-disk path so the
                 // existing ViewLogs screen + readLogs API continue to

@@ -147,7 +147,7 @@ impl WarrenAccountBackend for RemoteAccountBackend {
     }
 }
 
-/// Warren-Remote backend - Phase G.3 - implements
+/// Warren-Remote backend - implements
 /// [`WarrenAccountBackend`] via the signed HTTP `warren-api-client`
 /// client that talks to the warren-api server (= alternative to the
 /// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
@@ -470,7 +470,7 @@ mod tests {
     use super::*;
 
     // ===================================================================
-    // WarrenRemoteAccountBackend - Phase G.3 tests E2E.
+    // WarrenRemoteAccountBackend - E2E tests.
     //
     // Strategy: spawn warren-api in-process (axum::serve loopback),
     // build an Ed25519-signed `WarrenApiClient`, instantiate the backend,
@@ -486,7 +486,7 @@ mod tests {
     /// Spawns warren-api in-process and returns (URL, AppState).
     /// The `AppState` lets tests inspect / pre-populate the
     /// server stores (= shortcut equivalent to the signed admin
-    /// endpoints coming in M5).
+    /// endpoints).
     async fn spawn_warren_api() -> (String, TestArc<warren_api::AppState>) {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await

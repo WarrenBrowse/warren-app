@@ -11,7 +11,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
  *
  * Reads the user's toggles from [WarrenLocalSettingsRepository] and
  * resolves the actual exit / entry relays via [RelayCatalog] (which is
- * itself backed by `WarrenJni.listRelays()`). The picker UI (D.6) will
+ * itself backed by `WarrenJni.listRelays()`). The picker UI will
  * eventually let the user pick an exit by `exit_id` and persist that
  * choice; until then the builder falls back to the first active entry
  * in the catalogue, so the connect flow keeps working without a

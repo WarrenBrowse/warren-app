@@ -10,7 +10,7 @@ import { colors } from '../../../lib/foundations';
 import { useSelector } from '../../../redux/store';
 import { truncatePubkeyHex } from '../lib/truncate-pubkey';
 
-// Session A.4 TOFU pubkey-pinning mismatch surface. Mounts a modal
+// TOFU pubkey-pinning mismatch surface. Mounts a modal
 // overlay when the daemon-side verify hook refuses a connect because
 // the Ed25519 pubkey served for a known `exit_id` differs from the
 // locally pinned value. The user picks one of three actions:

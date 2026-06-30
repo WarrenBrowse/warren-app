@@ -55,7 +55,7 @@ class WarrenQuinnStateProxyTest {
                 daita = false,
             )
         )
-        // M4.0 HTTP/3 mimicry is always-on for Warren tunnels, so the
+        // HTTP/3 mimicry is always-on for Warren tunnels, so the
         // connection summary surfaces it even with every other flag off.
         assertEquals("Connected (mimicry)", proxy.state.value)
     }

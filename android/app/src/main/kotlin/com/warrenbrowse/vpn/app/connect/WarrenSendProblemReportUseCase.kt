@@ -17,7 +17,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * End-to-end Warren support-report orchestrator (D.6).
+ * End-to-end Warren support-report orchestrator.
  *
  * Mirrors [WarrenConnectUseCase]:
  *   1. Require a wallet on device (only Absent blocks).

@@ -203,8 +203,8 @@ export const ipcSchema = {
     disconnect: invoke<DisconnectSource, void>(),
     reconnect: invoke<void, void>(),
   },
-  // Warren live status (M4.E.D auto-reconnect counter + age, M4.0
-  // obfuscation indicator). The main process subscribes to the daemon
+  // Warren live status (auto-reconnect counter + age, obfuscation
+  // indicator). The main process subscribes to the daemon
   // WarrenStatusUpdates push stream and forwards every snapshot via
   // this channel; the renderer dispatches it into the redux store.
   warrenStatus: {
@@ -227,7 +227,7 @@ export const ipcSchema = {
     // Persistent warren-api URL (empty string = unset). Daemon restart
     // required to apply.
     setWarrenApiUrl: invoke<string, void>(),
-    // Warren multi-hop settings (M4.E.D). Daemon restart required.
+    // Warren multi-hop settings. Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
     // Warren NAT-PMP port-forwarding settings. Daemon picks up the
     // new value on the NEXT tunnel reconnect (no restart needed).
@@ -250,7 +250,7 @@ export const ipcSchema = {
     setEnableDaita: invoke<boolean, void>(),
     setDaitaDirectOnly: invoke<boolean, void>(),
     setEnableRecents: invoke<boolean, void>(),
-    // Session H A.4: trust the new pubkey served for the
+    // Trust the new pubkey served for the
     // `exitIdHex` so future connects to that exit accept it as the
     // baseline. The daemon clears the pending mismatch from
     // WarrenStatus on success.
@@ -277,7 +277,7 @@ export const ipcSchema = {
     setPreferredLocale: invoke<string, ITranslations>(),
     setUnpinnedWindow: send<boolean>(),
     setAnimateMap: send<boolean>(),
-    // M5.B.3 onboarding wizard: persist the completion timestamp.
+    // Onboarding wizard: persist the completion timestamp.
     // Passing `undefined` clears it so the wizard re-runs on the next
     // boot (used by the Settings "Replay onboarding" entry).
     setOnboardingCompletedUnix: send<number | undefined>(),

@@ -82,7 +82,7 @@ export default function NotificationArea(props: IProps) {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // M5.B.2 failover banner state. Local to the renderer process: the
+  // Failover banner state. Local to the renderer process: the
   // daemon counter resets on restart, and so should the
   // "acknowledged" mark (so a fresh boot's first failover always
   // surfaces). The banner stays visible while

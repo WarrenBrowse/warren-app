@@ -508,7 +508,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
       : undefined;
   // Warren multi-hop is a nested message in proto3; the daemon always
   // populates it (default = enabled:false), so a missing field here
-  // means the daemon is a pre-M4.H.C build and we fall back to OFF.
+  // means the daemon is an older build and we fall back to OFF.
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
   return {
@@ -531,7 +531,7 @@ function convertFromWarrenMultiHopSettings(
   settings: grpcTypes.WarrenMultiHopSettings | undefined,
 ): WarrenMultiHopSettings {
   if (!settings) {
-    // Pre-M4.H.C daemon: assume OFF / 4h rotation defaults so the UI
+    // Older daemon: assume OFF / 4h rotation defaults so the UI
     // stays consistent even when talking to an older binary.
     return {
       enabled: false,
@@ -569,7 +569,7 @@ export function convertToWarrenMultiHopSettings(
 export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
   const durationToMs = (d: google_protobuf_duration_pb.Duration | undefined): number | null =>
     d ? d.getSeconds() * 1000 + Math.floor(d.getNanos() / 1e6) : null;
-  // Session H A.4: gRPC client bindings predate the
+  // gRPC client bindings predate the
   // `pubkey_mismatch_pending` field. Until the bindings are
   // regenerated (Tools/protoc round-trip), we feature-detect the
   // getter so the type-checker stays happy and old daemons keep
@@ -608,7 +608,7 @@ export function convertFromNatPmpSettings(
   settings: grpcTypes.NatPmpSettings | undefined,
 ): NatPmpSettings {
   if (!settings) {
-    // Pre-M4.H.F daemon: assume OFF / UDP / 1 h defaults so the UI
+    // Older daemon: assume OFF / UDP / 1 h defaults so the UI
     // stays consistent even when talking to an older binary.
     return {
       enabled: false,

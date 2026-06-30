@@ -56,7 +56,7 @@ import org.koin.compose.koinInject
  *   - Privacy: kill switch (lockdown), IPv6, local network, MTU
  *   - DNS: custom resolvers + content blocking
  *   - DAITA padding (Tamaraw), NAT-PMP port forwarding, exit country, multi-hop
- *   - Anti-censorship (read-only: M4.0 HTTP/3 mimicry is always-on)
+ *   - Anti-censorship (read-only: HTTP/3 mimicry is always-on)
  *   - Exit key pinning reset
  *
  * The layout mirrors the upstream Mullvad VPN settings UX: section headers and
@@ -354,7 +354,7 @@ private fun CountryDropdown(
 
 /**
  * Read-only anti-censorship status. Warren tunnels masquerade as standard
- * browser HTTP/3 traffic (ALPN h3, SNI warrenbrowse.com, UDP/443). This M4.0
+ * browser HTTP/3 traffic (ALPN h3, SNI warrenbrowse.com, UDP/443). This
  * mimicry is always-on and not togglable: disabling it would make Warren
  * clients immediately recognisable on the network. The legacy Mullvad
  * obfuscation methods are WireGuard-only and do not apply, so no picker is

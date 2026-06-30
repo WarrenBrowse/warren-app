@@ -139,7 +139,7 @@ pub struct Settings {
     /// env var `WARREN_N_CONNECTIONS` (takes priority over Settings).
     #[serde(default)]
     pub warren_n_connections: Option<u8>,
-    /// Warren two-relayed QUIC multi-hop settings (M4.E.D stack).
+    /// Warren two-relayed QUIC multi-hop settings.
     /// Default = OFF per doctrine `warren_multihop_doctrine_v1`
     /// (opt-in privacy, full bandwidth single-hop). The env var
     /// `WARREN_MULTI_HOP=1` overrides this for POC.
@@ -164,7 +164,7 @@ pub struct Settings {
     pub warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys,
 }
 
-/// Warren two-relayed QUIC multi-hop settings (M4.E.D). Persisted in
+/// Warren two-relayed QUIC multi-hop settings. Persisted in
 /// [`Settings::warren_multi_hop`] and surfaced via the
 /// `GetWarrenMultiHopSettings` gRPC rpc. The `entry_country` and
 /// `exit_country` are ISO 3166 alpha-2 codes; empty string means

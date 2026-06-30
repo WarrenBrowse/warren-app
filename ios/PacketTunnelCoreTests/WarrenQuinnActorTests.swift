@@ -5,7 +5,7 @@
 //  Created by Warren on 2026-05-22.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Lifecycle tests for the C.4.3.X wire-up : verify `applyEvent`
+//  Lifecycle tests : verify `applyEvent`
 //  drives the observedState snapshot + observedStates AsyncStream,
 //  that `waitUntilDisconnected` blocks until a `.disconnected` event
 //  fires, and that NAT-PMP events leave the tunnel state unchanged.

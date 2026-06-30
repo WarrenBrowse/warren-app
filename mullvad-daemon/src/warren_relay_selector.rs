@@ -32,7 +32,7 @@ pub enum LoadError {
 
     /// The JSON is invalid, does not have the supported version, or
     /// the server signature does not verify. Wire format v2 mandatory
-    /// post-F3 fork audit (see `warren_relay_selector::signed`).
+    /// post fork audit (see `warren_relay_selector::signed`).
     #[error("invalid warren-relays.json at {0}: {1}")]
     Json(String, #[source] SignedError),
 }
@@ -190,7 +190,7 @@ impl DaemonWarrenRelaySelector {
     ///
     /// Expected format: v2 signed Ed25519 (see
     /// [`warren_relay_selector::verify_signed_relay_list`]). The
-    /// unsigned v1 format is **rejected** post-F3 audit (anti-downgrade
+    /// unsigned v1 format is **rejected** post fork audit (anti-downgrade
     /// attack - an attacker serving an unsigned v1 could
     /// substitute the list without detection).
     ///
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn load_from_cache_dir_parses_v2_signed_json_emitted_by_warren_api() {
-        // F3 fork audit: warren-api `/v1/exits` returns a
+        // Fork audit: warren-api `/v1/exits` returns a
         // **signed v2** format (`SignedRelayList` with server_pubkey + Ed25519
         // signature). The daemon must parse it and verify the signature
         // - not accept unsigned v1. Frozen format: if serde changes
@@ -512,7 +512,7 @@ mod tests {
     #[test]
     fn load_from_cache_dir_rejects_v1_unsigned_legacy_format() {
         // Anti-rollback: an attacker serving an unsigned v1 must
-        // be rejected. v1 has been deprecated (see F3 fork audit) and
+        // be rejected. v1 has been deprecated (see fork audit) and
         // the daemon must refuse to ingest it (otherwise downgrade attack).
         let dir = isolated_tempdir();
         let pubkey_hex = hex::encode(WarrenPubkey::from_bytes([5u8; 32]).as_bytes());

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
  * The single source of truth for the device's Warren wallet (mnemonic
  * encrypted by Android Keystore + EncryptedSharedPreferences). The
  * concrete `AndroidKeystoreWalletRepository` impl lives in
- * `lib/feature/wallet/impl/` (D.5).
+ * `lib/feature/wallet/impl/`.
  *
  * All methods that touch the mnemonic in cleartext are suspending so
  * callers must opt in to the I/O cost; the suspending boundary also

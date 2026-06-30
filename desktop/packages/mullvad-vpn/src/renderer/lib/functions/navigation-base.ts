@@ -21,7 +21,7 @@ export function getNavigationBase(
     } else if (loginState.type === 'ok' && loginState.expiredState === 'time_added') {
       return RoutePath.timeAdded;
     } else if (loginState.type === 'ok' && onboardingCompletedUnix === undefined) {
-      // M5.B.3: first launch on a freshly-logged-in account routes
+      // First launch on a freshly-logged-in account routes
       // to the onboarding wizard. Once the user finishes (or skips)
       // the wizard, `onboardingCompletedUnix` is persisted in
       // `IGuiSettingsState`, and subsequent boots fall through to

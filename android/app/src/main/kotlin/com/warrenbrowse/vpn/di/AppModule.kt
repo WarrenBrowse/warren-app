@@ -67,7 +67,7 @@ val appModule = module {
     // ConnectionProxy reads live tunnel state from WarrenTunnelStateProvider.
     single { ConnectionProxy(tunnelStateProvider = get()) }
 
-    // D.6 audit follow-up: lib/repository consumes the JNI surface via
+    // lib/repository consumes the JNI surface via
     // this interface (lives in lib/repository). The concrete impl
     // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/<x>` modules
     // never reach into `:app`.
@@ -77,7 +77,7 @@ val appModule = module {
         AndroidKeystoreWalletRepository(context = androidContext(), jni = get())
     }
 
-    // Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0), kept
+    // Warren-side tunnel toggles (DAITA / NAT-PMP / multi-hop), kept
     // separate from the proto-backed UserPreferencesRepository.
     single { WarrenLocalSettingsRepository(androidContext()) }
 
@@ -108,7 +108,7 @@ val appModule = module {
     single { WarrenReconnectUseCase(context = androidContext()) } bind
         WarrenQuinnReconnectInvoker::class
 
-    // D.6 support-report submission orchestrator: biometric unlock + JNI
+    // Support-report submission orchestrator: biometric unlock + JNI
     // sign + POST /v1/support. Activity-coupled because of the biometric
     // prompt; the lib-side ReportProblemScreen invokes this via the
     // WarrenSupportReportInvoker surface and feeds it the FragmentActivity.

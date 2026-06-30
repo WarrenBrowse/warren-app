@@ -137,7 +137,7 @@ export function ConnectionDetails() {
   );
 }
 
-// Warren status block: reconnect counter + age + M4.0 obfuscation
+// Warren status block: reconnect counter + age + obfuscation
 // indicator. Reads from `state.settings.warrenStatus` which is fed by
 // the daemon WarrenStatusUpdates push stream.
 function WarrenStatusRows() {

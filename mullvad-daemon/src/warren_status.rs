@@ -105,10 +105,10 @@ pub struct PubkeyMismatchPending {
     /// 64-character lower-case hex of the newly observed key.
     pub observed_pubkey_hex: String,
     /// ISO 3166 alpha-2 country code captured at TOFU time. Empty
-    /// when the pin pre-dates the H.6 forensic enrichment.
+    /// when the pin pre-dates the forensic enrichment.
     pub country_code: String,
     /// City label captured at TOFU time. Empty when the pin pre-dates
-    /// the H.6 forensic enrichment.
+    /// the forensic enrichment.
     pub city: String,
 }
 

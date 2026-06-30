@@ -193,7 +193,7 @@ private fun LazyListScope.content(
     onWalletClick: () -> Unit = {},
     onWarrenTunnelClick: () -> Unit = {},
 ) {
-    // D.5 wallet entry - shown at the very top so it's prominent
+    // Wallet entry shown at the very top so it's prominent
     // (Warren's identity model = the wallet, not a Mullvad account).
     itemWithDivider {
         NavigationListItem(
@@ -202,7 +202,7 @@ private fun LazyListScope.content(
             position = Position.Top,
         )
     }
-    // Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / M4.0).
+    // Warren tunnel toggles (DAITA / NAT-PMP / multi-hop / obfuscation).
     itemWithDivider {
         NavigationListItem(
             title = stringResource(id = R.string.settings_warren_tunnel),

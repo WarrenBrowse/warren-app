@@ -2,7 +2,7 @@ package com.warrenbrowse.vpn.lib.model.wallet
 
 /**
  * Persisted wallet state, observable from the UI. The
- * `com.warrenbrowse.vpn.lib.repository.WalletRepository` (D.5 impl) emits
+ * `com.warrenbrowse.vpn.lib.repository.WalletRepository` emits
  * a `StateFlow<WalletState>` that the login / settings / signup screens
  * collect on.
  */

@@ -2,7 +2,7 @@
 //  WarrenQuinnTunnelImplementation.swift
 //  PacketTunnelCore
 //
-//  Created by Warren on 2026-05-21 (C.4.3).
+//  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  `TunnelImplementation`-conforming class for the Warren Quinn tunnel
@@ -31,7 +31,7 @@ import WarrenRustRuntime
 /// `PacketTunnelProvider` (the concrete `NEPacketTunnelProvider`) conforms
 /// to it; the Warren Quinn implementation calls it when the multi-hop
 /// circuit reports a fresh `IpAssign`, so the TUN source IP matches what
-/// the exit expects (else return traffic is dropped, the Session N bug).
+/// the exit expects (else return traffic is dropped).
 /// Defined here so `PacketTunnelCore` can drive the reassign without
 /// depending on the `PacketTunnel` target's concrete provider type.
 public protocol WarrenTunnelIPReassigning: AnyObject, Sendable {

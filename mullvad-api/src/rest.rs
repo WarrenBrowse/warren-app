@@ -633,11 +633,9 @@ impl RequestFactory {
     /// non-test factory built by
     /// [`crate::Runtime::mullvad_rest_handle_with_warren_signer`]).
     /// Production daemon paths require this invariant so that
-    /// [`Request::account`] does not return [`Error::NoAccessTokenStore`]:
-    /// the M4.H.A bench v1 caveat about that error against
-    /// `api.warrenbrowse.com` was traced back to a dispatch issue
-    /// (Phase G.4 routes Warren-Remote through `WarrenApiClient`, which
-    /// bypasses this chain entirely). This getter exists so the
+    /// [`Request::account`] does not return [`Error::NoAccessTokenStore`].
+    /// The Warren-Remote dispatch routes through `WarrenApiClient`, which
+    /// bypasses this chain entirely. This getter exists so the
     /// invariant can be asserted in a regression test instead of being
     /// implicit in the call shape at lib.rs.
     #[must_use]
@@ -1128,9 +1126,9 @@ mod tests {
 
     #[test]
     fn has_access_token_store_reports_constructor_value() {
-        // M4.H.E.2 anti-regression for the bench v1 caveat
+        // Anti-regression for the
         // "Set account number on factory with no access token store"
-        // observed against `api.warrenbrowse.com`. The production
+        // error. The production
         // `mullvad_rest_handle_with_warren_signer` always passes
         // `Some(token_store)` to `RequestFactory::new`, and the
         // dispatch in `mullvad-daemon/src/device/mod.rs` routes
@@ -1147,11 +1145,11 @@ mod tests {
 
     #[test]
     fn account_returns_no_access_token_store_when_factory_lacks_store() {
-        // Documents the exact error shape that the M4.H.A bench v1
-        // observed. Any future regression that calls `.account()` on
-        // a factory without a token store would still surface this
-        // error verbatim - the test ensures the user-facing message
-        // does not silently drift away from the documented caveat.
+        // Documents the exact error shape observed. Any future
+        // regression that calls `.account()` on a factory without a
+        // token store would still surface this error verbatim - the
+        // test ensures the user-facing message does not silently
+        // drift away from the documented caveat.
         let bare = RequestFactory::new("api.example.test", None);
         let req: Request<Empty<Bytes>> = bare.get("auth/v1/anything").expect("bare get builds");
         let err = req
@@ -1165,7 +1163,7 @@ mod tests {
 
     #[test]
     fn get_or_signed_dispatches_on_has_warren_signer() {
-        // Phase 2.A.4 V5 - `get_or_signed(path)` must return a signed
+        // `get_or_signed(path)` must return a signed
         // request (X-Warren-* headers) when a signer is configured,
         // and a bare request (no X-Warren-*) otherwise. The caller
         // (e.g. RelayListProxy) calls this helper without having to
@@ -1191,7 +1189,7 @@ mod tests {
 
     #[test]
     fn has_warren_signer_reflects_factory_state() {
-        // Phase 2.B Wave 3 - a caller (e.g. mullvad-daemon or an
+        // A caller (e.g. mullvad-daemon or an
         // integration test) must be able to query the factory to know
         // whether it is configured in Warren auth mode (to decide
         // between `signed_*` and legacy Bearer helpers).
@@ -1208,7 +1206,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_without_warren_signer_returns_error() {
-        // Phase 2.A.3 - a caller that invokes a `signed_*` helper on
+        // A caller that invokes a `signed_*` helper on
         // a factory with no Warren signer configured must receive an
         // explicit error (no panic, no silent header injection).
         let factory = RequestFactory::new("api.example.test", None);
@@ -1221,7 +1219,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_with_warren_signer_injects_four_warren_headers() {
-        // Phase 2.A.3 - happy path: a factory configured with a
+        // Happy path: a factory configured with a
         // signer must produce a request with the 4 X-Warren-*
         // headers (pubkey SS58, sig 128ch, timestamp u64, nonce
         // 32ch), **plus** the standard HTTP headers (content-length,
@@ -1265,7 +1263,7 @@ mod tests {
 
     #[test]
     fn signed_get_signs_with_empty_body_hash() {
-        // Phase 2.A.3 - for body-less requests (GET, DELETE, HEAD),
+        // For body-less requests (GET, DELETE, HEAD),
         // the `body_hash` in canonical_message is sha256(b"") =
         // `e3b0c44...` (frozen test vector in warren_auth.rs). This
         // test verifies that `signed_get` produces a request whose
@@ -1368,7 +1366,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_serializes_serde_value_then_signs_canonical_bytes() {
-        // Phase 2.A.3 - `signed_post_json<S: Serialize>` must produce
+        // `signed_post_json<S: Serialize>` must produce
         // exactly the same request as `signed_post_json_bytes` once
         // the body has been serialized via `serde_json::to_vec`.
         // Test: sign the same payload through both helpers while
@@ -1432,7 +1430,7 @@ mod tests {
 
     #[test]
     fn signed_post_json_bytes_signature_verifies_e2e_via_pubkey() {
-        // Phase 2.A.3 - E2E test that mimics what the axum middleware
+        // E2E test that mimics what the axum middleware
         // in `warren-api` would do: extract pubkey/sig/nonce/timestamp
         // from the headers, rebuild the `canonical_message` from
         // (method, path-and-query, body sha256), and verify the
@@ -1477,7 +1475,7 @@ mod tests {
             .expect("signature must verify - otherwise the wire format has diverged");
     }
 
-    /// Critical Phase D.1 regression: the 4 new `*_or_signed`
+    /// Critical regression: the 4 new `*_or_signed`
     /// dispatchers (`delete`, `post`, `post_json`, `put_json`) MUST
     /// sign when a Warren signer is configured, and MUST NOT sign
     /// otherwise. Without this property, the 10 critical REST
@@ -1544,7 +1542,7 @@ mod tests {
         assert_eq!(warren_req.method(), hyper::Method::PUT);
     }
 
-    /// Phase D.1 cross-method anti-replay regression: the canonical
+    /// Cross-method anti-replay regression: the canonical
     /// message of a `signed_put_json` request must carry `PUT` (not
     /// `POST`). If someone copy-pastes the body of
     /// `signed_post_json_bytes` without changing the method, a signed

@@ -6,7 +6,7 @@ import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
 
 // Hook exposing the persisted Warren two-relayed QUIC multi-hop
-// settings (M4.E.D). A daemon restart is required for a change to
+// settings. A daemon restart is required for a change to
 // take effect (the supervisor is wired at boot from the
 // settings-file path + WARREN_MULTI_HOP env var). Default values
 // follow `warren_multihop_doctrine_v1`: OFF, no preferred countries,

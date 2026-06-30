@@ -8,7 +8,7 @@
 //  staticlib - Warren tunnels via Quinn over Ed25519 wallet identity,
 //  not WireGuard X25519).
 //
-//  Reimplemented (2026-05-22, C.4.5) on top of `CryptoKit.Curve25519`
+//  Reimplemented (2026-05-22) on top of `CryptoKit.Curve25519`
 //  so it stays pure Swift (no Rust FFI dependency) yet still produces
 //  WireGuard-compatible X25519 keypairs for the legacy code paths
 //  that consume `WireGuard.PrivateKey()` + `.publicKey` (Mullvad

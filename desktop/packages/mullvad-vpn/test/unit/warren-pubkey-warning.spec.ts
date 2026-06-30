@@ -121,7 +121,7 @@ describe('settings reducer - pubkeyMismatchPending slice', () => {
     expect(MISMATCH.countryCode).toHaveLength(2);
   });
 
-  it('empty forensic fields are accepted (pre-H.6 pin)', () => {
+  it('empty forensic fields are accepted', () => {
     const initial = makeState(undefined);
     const stripped: WarrenPubkeyMismatch = {
       ...MISMATCH,
@@ -140,7 +140,7 @@ describe('settings reducer - pubkeyMismatchPending slice', () => {
   });
 });
 
-// H.3 caveat behavioural tests: confirm the IPC payload contract used
+// Behavioural tests: confirm the IPC payload contract used
 // by the renderer when the user picks Trust / Reject / Report from
 // the modal. We don't render the React tree (no jsdom in the test
 // harness) but we exercise the exact callbacks the component invokes

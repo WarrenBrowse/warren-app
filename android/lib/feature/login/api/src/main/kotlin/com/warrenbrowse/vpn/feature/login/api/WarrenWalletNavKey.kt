@@ -10,8 +10,7 @@ import kotlinx.parcelize.Parcelize
  * Replaces the legacy [LoginNavKey] flow for first-launch onboarding when
  * no wallet has been persisted (Warren has no account-number model;
  * identity = BIP39 mnemonic). Existing [LoginNavKey] entries remain
- * routed for backward-compat while D.5 is co-existing with the Mullvad
- * account-number scaffold being deleted.
+ * routed for backward-compat.
  */
 @Parcelize
 data class WarrenWalletNavKey(

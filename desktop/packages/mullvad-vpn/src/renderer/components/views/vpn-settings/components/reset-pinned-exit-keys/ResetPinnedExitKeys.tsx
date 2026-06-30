@@ -10,7 +10,7 @@ import { SettingsListItem } from '../../../../settings-list-item';
 
 export type ResetPinnedExitKeysProps = Omit<ListItemProps, 'children'>;
 
-// Settings entry that lets the user wipe the Session A.4 TOFU pin
+// Settings entry that lets the user wipe the TOFU pin
 // table. Useful in two scenarios:
 //
 //  * The user switched account / device and wants a fresh TOFU

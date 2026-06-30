@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn key_path_rejects_path_traversal_in_release_builds() {
-        // F-2 regression: ensures the path-traversal guard fires
+        // Regression: ensures the path-traversal guard fires
         // even in release builds (i.e. no `debug_assert!` reliance).
         let dir = isolated_tempdir();
         let storage = PlaintextStorage::new(&dir);

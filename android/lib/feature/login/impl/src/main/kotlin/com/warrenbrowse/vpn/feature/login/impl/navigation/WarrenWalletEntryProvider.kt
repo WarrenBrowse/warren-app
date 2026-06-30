@@ -11,7 +11,7 @@ import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletLoginScreen
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 
 /**
- * NavGraph entries for the D.5 wallet onboarding flow.
+ * NavGraph entries for the wallet onboarding flow.
  *
  * Routing contract:
  *   - [WarrenWalletNavKey] hosts the Generate/Restore branching screen.

@@ -3,7 +3,7 @@
 //  WarrenRustRuntime
 //
 //  Originally created by Marco Nikic on 2024-06-20 for the Mullvad fork.
-//  Renamed during the Warren rebrand (C.2 + C.4.0 cleanup, 2026-05-21).
+//  Renamed during the Warren rebrand (2026-05-21).
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  Umbrella header for the WarrenRustRuntime framework. Re-exports the

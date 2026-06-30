@@ -11,7 +11,7 @@ import { HeaderTitle } from '../../SettingsHeader';
 
 export function AntiCensorshipView() {
   const { pop } = useHistory();
-  // Warren uses its own M4.0 HTTP/3 mimicry obfuscation (ALPN h3 + SNI
+  // Warren uses its own HTTP/3 mimicry obfuscation (ALPN h3 + SNI
   // warrenbrowse.com + Initial split + UDP 443) which is always-on
   // per /v1 doctrine `warren_obfuscation_doctrine_v1`. We surface
   // this as an info-only indicator instead of a togglable picker so
@@ -45,7 +45,7 @@ export function AntiCensorshipView() {
   );
 }
 
-// Warren M4.0 obfuscation: always-on /v1 info banner. The state is
+// Warren obfuscation: always-on /v1 info banner. The state is
 // pulled from `warrenStatus.obfuscationActive` (pushed by the daemon
 // WarrenStatusUpdates stream); a missing snapshot defaults to true so
 // the UI never flashes an alarming OFF state during boot. This view
