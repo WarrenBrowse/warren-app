@@ -1091,6 +1091,14 @@ msgid "Port forwarding: %(ports)s"
 msgstr "Redirection de port : %(ports)s"
 
 msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "Redirection de port : port occupé"
+
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "Redirection de port : bloqué"
+
+msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Félicitations !"
 
@@ -2272,6 +2280,23 @@ msgstr "application…"
 msgctxt "port-forwarding-view"
 msgid "port in use"
 msgstr "port occupé"
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "Attribuer un port libre"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "Choisir un autre serveur de sortie"
+
+msgctxt "port-forwarding-view"
+msgid ""
+"This public port is already in use on this exit. Keep your port by switching "
+"exit, let the exit assign a free public port, or type another port above."
+msgstr ""
+"Ce port public est déjà utilisé sur ce serveur de sortie. Conservez votre "
+"port en changeant de serveur de sortie, laissez le serveur attribuer un port "
+"public libre, ou saisissez un autre port ci-dessus."
 
 msgctxt "port-forwarding-view"
 msgid "no port available"
