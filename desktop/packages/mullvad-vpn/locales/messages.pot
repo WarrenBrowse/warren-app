@@ -1086,6 +1086,16 @@ msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
 msgstr ""
 
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr ""
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr ""
+
 #. Button label for navigating to the voucher redemption view.
 msgctxt "connect-view"
 msgid "Redeem voucher"
@@ -1945,6 +1955,14 @@ msgid "applying…"
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr ""
 
@@ -2026,6 +2044,10 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "This port is already in your list."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
 msgstr ""
 
 msgctxt "port-forwarding-view"

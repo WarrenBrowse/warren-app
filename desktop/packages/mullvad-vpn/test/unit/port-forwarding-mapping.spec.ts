@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { mappingForRule, rulePort } from '../../src/renderer/features/port-forwarding/mapping';
+import {
+  appliedPort,
+  mappingForRule,
+  rulePort,
+} from '../../src/renderer/features/port-forwarding/mapping';
 import { NatPmpMapping, NatPmpProto, NatPmpRule } from '../../src/shared/daemon-rpc-types';
 
 function mappedMapping(
@@ -65,6 +69,58 @@ describe('mappingForRule', () => {
     };
 
     expect(mappingForRule([], rule)).toBeUndefined();
+  });
+});
+
+describe('appliedPort', () => {
+  // After "assign a free port" a rule becomes { internalPort: P, suggested: 0 }
+  // and the exit grants a NEW public port Q. The input must show Q (the applied
+  // port), not P, so it can never diverge from the status on its right.
+  it('shows the granted external port for an auto rule that is mapped', () => {
+    const rule: NatPmpRule = {
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 50000,
+    };
+    const mappings = [mappedMapping(50000, NatPmpProto.udp, 51234)];
+
+    expect(appliedPort(rule, mappingForRule(mappings, rule))).toBe(51234);
+  });
+
+  it('falls back to the rule port for an auto rule not yet mapped', () => {
+    const rule: NatPmpRule = {
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 50000,
+    };
+
+    expect(appliedPort(rule, undefined)).toBe(50000);
+  });
+
+  it('shows the manual rule own port even when mapped (never the granted port)', () => {
+    const rule: NatPmpRule = {
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 52000,
+      internalPort: 52000,
+    };
+    const mappings = [mappedMapping(52000, NatPmpProto.udp, 52000)];
+
+    expect(appliedPort(rule, mappingForRule(mappings, rule))).toBe(52000);
+  });
+
+  it('falls back to the rule port for an auto rule whose mapping failed', () => {
+    const rule: NatPmpRule = {
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 50000,
+    };
+    const failed: NatPmpMapping = {
+      internalPort: 50000,
+      protocol: NatPmpProto.udp,
+      status: { state: 'failed', errorMessage: 'taken', errorReason: 'suggested-port-in-use' },
+    };
+
+    expect(appliedPort(rule, failed)).toBe(50000);
   });
 });
 

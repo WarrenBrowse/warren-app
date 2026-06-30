@@ -1,8 +1,11 @@
+import { useCallback } from 'react';
 import styled from 'styled-components';
 
 import { isMultihopTunnelState } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../../shared/gettext';
+import { RoutePath } from '../../../../../../../../shared/routes';
 import { FeatureIndicator } from '../../../../../../../lib/components';
+import { TransitionType, useHistory } from '../../../../../../../lib/history';
 import { useSelector } from '../../../../../../../redux/store';
 
 const StyledWrapper = styled.div({
@@ -20,6 +23,14 @@ const StyledWrapper = styled.div({
  */
 export function MultihopIndicator() {
   const tunnelState = useSelector((state) => state.connection.status);
+  const history = useHistory();
+  // Clicking the chip opens the multi-hop settings screen, mirroring the
+  // upstream feature chips (e.g. connection sharing -> VPN settings). Defined
+  // before the early return so the hook order stays stable.
+  const openSettings = useCallback(
+    () => history.push(RoutePath.warrenMultiHopSettings, { transition: TransitionType.show }),
+    [history],
+  );
 
   if (!isMultihopTunnelState(tunnelState)) {
     return null;
@@ -27,7 +38,7 @@ export function MultihopIndicator() {
 
   return (
     <StyledWrapper>
-      <FeatureIndicator>
+      <FeatureIndicator onClick={openSettings}>
         <FeatureIndicator.Text>
           {messages.pgettext('connection-info', 'Multihop (2 hops)')}
         </FeatureIndicator.Text>

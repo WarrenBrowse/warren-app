@@ -24,3 +24,19 @@ export function mappingForRule(
 ): NatPmpMapping | undefined {
   return mappings.find((m) => m.protocol === rule.protocol && m.internalPort === rule.internalPort);
 }
+
+/** The port to SHOW in a rule's input - the single source of truth that cannot
+ * diverge from the live status displayed on its right.
+ *
+ * For an AUTO rule (`suggestedExternalPort === 0`: the user let the exit pick
+ * the public port) that the exit has GRANTED, the applied port is that granted
+ * external port, NOT the device port the rule started from. Without this, after
+ * "assign a free port" the input keeps showing the old port P while the status
+ * shows the granted port Q - a confusing divergence. For a manual rule (or one
+ * that is not yet mapped) it is the rule's own committed port. */
+export function appliedPort(rule: NatPmpRule, mapping: NatPmpMapping | undefined): number {
+  if (rule.suggestedExternalPort === 0 && mapping?.status.state === 'mapped') {
+    return mapping.status.externalPort;
+  }
+  return rulePort(rule);
+}

@@ -21,7 +21,7 @@ import {
   useNatPmpPortBlock,
   usePortForwarding,
 } from '../../hooks';
-import { mappingForRule, rulePort } from '../../mapping';
+import { appliedPort, mappingForRule, rulePort } from '../../mapping';
 
 const StyledRow = styled.div({
   display: 'flex',
@@ -99,10 +99,19 @@ const StyledStatus = styled.div({
   textAlign: 'right',
 });
 
+// Wraps the conflict explanation + actions with breathing room so they do
+// not sit flush against the rule row above and the next row below.
+const StyledConflictBlock = styled.div({
+  paddingTop: '6px',
+  paddingBottom: '8px',
+  paddingLeft: '2px',
+});
+
 const StyledConflictActions = styled.div({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '16px',
+  paddingTop: '4px',
 });
 
 const StyledLinkButton = styled.button<{ $disabled: boolean }>(({ $disabled }) => ({
@@ -125,10 +134,24 @@ const StyledLinkButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =
 const MIN_PORT = 49152;
 const MAX_PORT = 65535;
 
-/** First port in range not already used by another rule of the same
- * protocol - a sensible, valid default for a freshly-added row. */
+/** A RANDOM port in range not already used by another rule of the same
+ * protocol - a valid, non-predictable default for a freshly-added row.
+ *
+ * Random (not lowest-free): if every client defaulted to 49152 they would
+ * all request the same port, maximising cross-client conflicts and making
+ * the allocation table trivially predictable. The pool (~16k ports) dwarfs
+ * the handful of rules, so a random draw almost always hits free on the
+ * first try; the lowest-free scan is only a fallback for the pathological
+ * all-colliding case. */
 function nextFreePort(rules: NatPmpRule[], protocol: NatPmpProto): number {
   const used = new Set(rules.filter((r) => r.protocol === protocol).map((r) => rulePort(r)));
+  const span = MAX_PORT - MIN_PORT + 1;
+  for (let i = 0; i < 64; i++) {
+    const candidate = MIN_PORT + Math.floor(Math.random() * span);
+    if (!used.has(candidate)) {
+      return candidate;
+    }
+  }
   for (let p = MIN_PORT; p <= MAX_PORT; p++) {
     if (!used.has(p)) {
       return p;
@@ -328,7 +351,9 @@ function PortRuleRow({
   onResolveAuto,
   onChangeExit,
 }: PortRuleRowProps) {
-  const committedPort = rulePort(rule);
+  // Single source of truth for the input value, so the form can never diverge
+  // from the live status on its right (see {@link appliedPort}).
+  const committedPort = appliedPort(rule, mapping);
   const [portDraft, setPortDraft] = React.useState<string>(
     committedPort === 0 ? '' : String(committedPort),
   );
@@ -443,26 +468,28 @@ function PortRuleRow({
         </Text>
       ) : null}
       {portConflict ? (
-        <FlexColumn gap="tiny">
-          <Text variant="labelTiny" color="whiteAlpha60">
-            {messages.pgettext(
-              'port-forwarding-view',
-              'This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above.',
-            )}
-          </Text>
-          <StyledConflictActions>
-            <StyledLinkButton
-              type="button"
-              $disabled={disabled}
-              disabled={disabled}
-              onClick={handleResolveAutoClick}>
-              {messages.pgettext('port-forwarding-view', 'Assign a free port')}
-            </StyledLinkButton>
-            <StyledLinkButton type="button" $disabled={false} onClick={onChangeExit}>
-              {messages.pgettext('port-forwarding-view', 'Choose another exit')}
-            </StyledLinkButton>
-          </StyledConflictActions>
-        </FlexColumn>
+        <StyledConflictBlock>
+          <FlexColumn gap="tiny">
+            <Text variant="labelTiny" color="whiteAlpha60">
+              {messages.pgettext(
+                'port-forwarding-view',
+                'This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above.',
+              )}
+            </Text>
+            <StyledConflictActions>
+              <StyledLinkButton
+                type="button"
+                $disabled={disabled}
+                disabled={disabled}
+                onClick={handleResolveAutoClick}>
+                {messages.pgettext('port-forwarding-view', 'Assign a free port')}
+              </StyledLinkButton>
+              <StyledLinkButton type="button" $disabled={false} onClick={onChangeExit}>
+                {messages.pgettext('port-forwarding-view', 'Choose another exit')}
+              </StyledLinkButton>
+            </StyledConflictActions>
+          </FlexColumn>
+        </StyledConflictBlock>
       ) : null}
     </FlexColumn>
   );
