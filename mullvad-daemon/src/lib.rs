@@ -412,6 +412,13 @@ pub enum DaemonCommand {
     /// compiled default. Applied on the next (re)connect; reconnects
     /// when the tunnel is up.
     SetWarrenNConnections(ResponseTx<(), settings::Error>, Option<u8>),
+    /// Persist the advanced Warren "custom exit" override
+    /// (`Settings::warren_custom_exit`). Applied on the next (re)connect;
+    /// reconnects when the tunnel is up so the user sees it take effect.
+    SetWarrenCustomExit(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenCustomExitSettings,
+    ),
     /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
     /// Restart required to apply (read at boot only).
     SetWarrenMultiHopSettings(
@@ -1332,6 +1339,20 @@ impl Daemon {
             tokio::spawn(async move {
                 pg_for_nconns_boot
                     .set_warren_n_connections(initial_n_connections)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted advanced "custom exit" override at boot,
+        // mirroring the n_connections snapshot above: without it, the
+        // first connect after a daemon restart would ignore a persisted
+        // custom exit and fall back to roster selection.
+        {
+            let initial_custom_exit = settings.warren_custom_exit.clone();
+            let pg_for_custom_exit_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_custom_exit_boot
+                    .set_warren_custom_exit(initial_custom_exit)
                     .await;
             });
         }
@@ -2306,6 +2327,7 @@ impl Daemon {
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
             SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
             SetWarrenNConnections(tx, n) => self.on_set_warren_n_connections(tx, n).await,
+            SetWarrenCustomExit(tx, custom) => self.on_set_warren_custom_exit(tx, custom).await,
             SetWarrenMultiHopSettings(tx, settings) => {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
@@ -3662,6 +3684,41 @@ impl Daemon {
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
                 Self::oneshot_send(tx, Err(e), "set_warren_n_connections response");
+            }
+        }
+    }
+
+    /// Persists the advanced `Settings::warren_custom_exit` override and
+    /// mirrors it onto the parameters generator so the next (re)connect
+    /// dials it. Field-content validation (parseable endpoint, well-formed
+    /// pubkey) happens at parameter-production time in `assemble_custom`;
+    /// here we only persist and propagate, mirroring
+    /// [`Self::on_set_warren_n_connections`]. Reconnects when the tunnel is
+    /// up so the user observes the switch take effect.
+    async fn on_set_warren_custom_exit(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        custom: mullvad_types::settings::WarrenCustomExitSettings,
+    ) {
+        let value = custom.clone();
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_custom_exit = value)
+            .await;
+        match result {
+            Ok(settings_changed) => {
+                Self::oneshot_send(tx, Ok(()), "set_warren_custom_exit response");
+                self.parameters_generator
+                    .set_warren_custom_exit(custom)
+                    .await;
+                if settings_changed {
+                    log::info!("Reconnecting because the Warren custom-exit setting changed");
+                    self.reconnect_tunnel();
+                }
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_warren_custom_exit response");
             }
         }
     }

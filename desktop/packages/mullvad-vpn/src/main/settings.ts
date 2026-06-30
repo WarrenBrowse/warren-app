@@ -39,6 +39,10 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetWarrenMultiHop((settings) =>
       this.daemonRpc.setWarrenMultiHopSettings(settings),
     );
+    // IPC handler for the advanced Warren custom-exit override.
+    IpcMainEventChannel.settings.handleSetWarrenCustomExit((settings) =>
+      this.daemonRpc.setWarrenCustomExit(settings),
+    );
     // IPC handler for the NAT-PMP port-forwarding settings.
     IpcMainEventChannel.settings.handleSetNatPmpSettings((settings) =>
       this.daemonRpc.setNatPmpSettings(settings),
@@ -215,6 +219,11 @@ export default class Settings implements Readonly<ISettings> {
   // apply.
   public get warrenMultiHop() {
     return this.settingsValue.warrenMultiHop;
+  }
+  // Advanced custom-exit override. Live push: the daemon reconnects on
+  // change.
+  public get warrenCustomExit() {
+    return this.settingsValue.warrenCustomExit;
   }
   // NAT-PMP port-forwarding settings. Live push: no daemon restart
   // needed.

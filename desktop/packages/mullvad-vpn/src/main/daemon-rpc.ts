@@ -29,6 +29,7 @@ import {
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -55,6 +56,7 @@ import {
   convertToNewApiAccessMethodSetting,
   convertToNewCustomList,
   convertToRelayConstraints,
+  convertToWarrenCustomExitSettings,
   convertToWarrenMultiHopSettings,
   ensureExists,
 } from './grpc-type-convertions';
@@ -399,6 +401,14 @@ export class DaemonRpc extends GrpcClient {
     const proto = convertToWarrenMultiHopSettings(settings);
     await this.call<grpcTypes.WarrenMultiHopSettings, Empty>(
       this.client.setWarrenMultiHopSettings,
+      proto,
+    );
+  }
+
+  public async setWarrenCustomExit(settings: WarrenCustomExitSettings): Promise<void> {
+    const proto = convertToWarrenCustomExitSettings(settings);
+    await this.call<grpcTypes.WarrenCustomExitSettings, Empty>(
+      this.client.setWarrenCustomExit,
       proto,
     );
   }

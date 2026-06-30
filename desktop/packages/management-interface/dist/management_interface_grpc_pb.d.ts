@@ -51,6 +51,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     setWarrenMnemonic: IManagementServiceService_ISetWarrenMnemonic;
     getWarrenMultiHopSettings: IManagementServiceService_IGetWarrenMultiHopSettings;
     setWarrenMultiHopSettings: IManagementServiceService_ISetWarrenMultiHopSettings;
+    setWarrenCustomExit: IManagementServiceService_ISetWarrenCustomExit;
     getWarrenStatus: IManagementServiceService_IGetWarrenStatus;
     warrenStatusUpdates: IManagementServiceService_IWarrenStatusUpdates;
     trustNewExitKey: IManagementServiceService_ITrustNewExitKey;
@@ -471,6 +472,15 @@ interface IManagementServiceService_ISetWarrenMultiHopSettings extends grpc.Meth
     responseStream: false;
     requestSerialize: grpc.serialize<management_interface_pb.WarrenMultiHopSettings>;
     requestDeserialize: grpc.deserialize<management_interface_pb.WarrenMultiHopSettings>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_ISetWarrenCustomExit extends grpc.MethodDefinition<management_interface_pb.WarrenCustomExitSettings, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/SetWarrenCustomExit";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<management_interface_pb.WarrenCustomExitSettings>;
+    requestDeserialize: grpc.deserialize<management_interface_pb.WarrenCustomExitSettings>;
     responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
     responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
 }
@@ -1147,6 +1157,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     setWarrenMnemonic: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
     getWarrenMultiHopSettings: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenMultiHopSettings>;
     setWarrenMultiHopSettings: grpc.handleUnaryCall<management_interface_pb.WarrenMultiHopSettings, google_protobuf_empty_pb.Empty>;
+    setWarrenCustomExit: grpc.handleUnaryCall<management_interface_pb.WarrenCustomExitSettings, google_protobuf_empty_pb.Empty>;
     getWarrenStatus: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenStatus>;
     warrenStatusUpdates: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenStatus>;
     trustNewExitKey: grpc.handleUnaryCall<management_interface_pb.TrustNewExitKeyRequest, management_interface_pb.TrustNewExitKeyResponse>;
@@ -1336,6 +1347,9 @@ export interface IManagementServiceClient {
     setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     getWarrenStatus(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
@@ -1661,6 +1675,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenMultiHopSettings(request: management_interface_pb.WarrenMultiHopSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setWarrenCustomExit(request: management_interface_pb.WarrenCustomExitSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public getWarrenStatus(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     public getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     public getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;

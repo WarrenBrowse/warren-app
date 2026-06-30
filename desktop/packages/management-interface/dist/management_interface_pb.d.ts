@@ -1854,6 +1854,11 @@ export class Settings extends jspb.Message {
     getWarrenNConnections(): number;
     setWarrenNConnections(value: number): Settings;
 
+    hasWarrenCustomExit(): boolean;
+    clearWarrenCustomExit(): void;
+    getWarrenCustomExit(): WarrenCustomExitSettings | undefined;
+    setWarrenCustomExit(value?: WarrenCustomExitSettings): Settings;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
     static toObject(includeInstance: boolean, msg: Settings): Settings.AsObject;
@@ -1883,6 +1888,42 @@ export namespace Settings {
         warrenMultiHop?: WarrenMultiHopSettings.AsObject,
         warrenNatPmp?: NatPmpSettings.AsObject,
         warrenNConnections: number,
+        warrenCustomExit?: WarrenCustomExitSettings.AsObject,
+    }
+}
+
+export class WarrenCustomExitSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): WarrenCustomExitSettings;
+    getEndpoint(): string;
+    setEndpoint(value: string): WarrenCustomExitSettings;
+    getPubkeyHex(): string;
+    setPubkeyHex(value: string): WarrenCustomExitSettings;
+
+    hasCoverDomain(): boolean;
+    clearCoverDomain(): void;
+    getCoverDomain(): string | undefined;
+    setCoverDomain(value: string): WarrenCustomExitSettings;
+    getLabel(): string;
+    setLabel(value: string): WarrenCustomExitSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenCustomExitSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenCustomExitSettings): WarrenCustomExitSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenCustomExitSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenCustomExitSettings;
+    static deserializeBinaryFromReader(message: WarrenCustomExitSettings, reader: jspb.BinaryReader): WarrenCustomExitSettings;
+}
+
+export namespace WarrenCustomExitSettings {
+    export type AsObject = {
+        enabled: boolean,
+        endpoint: string,
+        pubkeyHex: string,
+        coverDomain?: string,
+        label: string,
     }
 }
 

@@ -20,6 +20,7 @@ import {
   RelayLocation,
   RelayOverride,
   RelayProtocol,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
@@ -90,6 +91,8 @@ export interface ISettingsReduxState {
   warrenApiUrl?: string;
   // Warren two-relayed QUIC multi-hop settings.
   warrenMultiHop: WarrenMultiHopSettings;
+  // Advanced Warren custom-exit override.
+  warrenCustomExit: WarrenCustomExitSettings;
   // Live Warren tunnel status (reconnect_count, last_reconnect_age,
   // obfuscation_active). Undefined until the first push from the
   // daemon WarrenStatusUpdates stream.
@@ -155,6 +158,13 @@ const initialState: ISettingsReduxState = {
     entryCountry: '',
     exitCountry: '',
     hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+  },
+  warrenCustomExit: {
+    enabled: false,
+    endpoint: '',
+    pubkeyHex: '',
+    coverDomain: undefined,
+    label: '',
   },
   warrenStatus: undefined,
   warrenNatPmp: {
@@ -252,6 +262,12 @@ export default function (
       return {
         ...state,
         warrenMultiHop: action.warrenMultiHop,
+      };
+
+    case 'UPDATE_WARREN_CUSTOM_EXIT':
+      return {
+        ...state,
+        warrenCustomExit: action.warrenCustomExit,
       };
 
     case 'UPDATE_WARREN_STATUS':

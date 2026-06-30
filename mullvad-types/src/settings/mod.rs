@@ -162,6 +162,18 @@ pub struct Settings {
     /// `exit_id` field at the warren-core/backend level (deferred).
     #[serde(default)]
     pub warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys,
+    /// Advanced escape hatch: dial a single user-supplied exit directly,
+    /// bypassing the signed relay registry. Lets a power user point the
+    /// app at a self-hosted exit (e.g. a plain `warrenguard serve` node)
+    /// whose `(endpoint, pubkey)` it learned out of band. Default OFF and
+    /// not surfaced in the main UI; gated behind an advanced toggle.
+    ///
+    /// When `enabled` (and the fields validate) it short-circuits relay
+    /// selection in `produce_warren_tunnel_params`: no roster lookup, no
+    /// country/city query, no multi-hop, and the TOFU pin is skipped
+    /// because the user pinned the key explicitly by typing it.
+    #[serde(default)]
+    pub warren_custom_exit: WarrenCustomExitSettings,
 }
 
 /// Warren two-relayed QUIC multi-hop settings. Persisted in
@@ -190,6 +202,56 @@ impl Default for WarrenMultiHopSettings {
             exit_country: String::new(),
             hpke_epoch_rotation: std::time::Duration::from_secs(4 * 60 * 60),
         }
+    }
+}
+
+/// Advanced "custom exit" escape hatch. Persisted in
+/// [`Settings::warren_custom_exit`] and surfaced via the
+/// `Get/SetWarrenCustomExit` gRPC rpcs.
+///
+/// Fields are stored as plain strings (not `warrenguard-wire` types) so
+/// `mullvad-types` stays decoupled from the engine crates; the daemon
+/// parses and validates them at the gRPC boundary, mirroring how
+/// `warren_n_connections` range-checks late. An invalid persisted value
+/// is treated as "not active" rather than rejected, so a hand-edited
+/// `settings.json` can never wedge the tunnel.
+///
+/// Default = OFF (`enabled = false`, empty fields), so a fresh install
+/// and every roster-driven connect are unaffected.
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub struct WarrenCustomExitSettings {
+    /// Master toggle. When `false` the other fields are ignored and the
+    /// app uses normal roster-based selection.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Exit UDP endpoint as `host:port` (e.g. `203.0.113.5:443`). IPv6
+    /// must be bracketed (`[2001:db8::1]:443`). Parsed to a `SocketAddr`
+    /// daemon-side.
+    #[serde(default)]
+    pub endpoint: String,
+    /// Hex-encoded 32-byte Ed25519 server public key of the exit (64 hex
+    /// chars, the `keygen` output of a `warrenguard` node). Pins the exit
+    /// identity in-band; a wrong key cannot complete the handshake.
+    #[serde(default)]
+    pub pubkey_hex: String,
+    /// Optional X.509 cover domain (SNI). `Some` selects v6 X.509 mode
+    /// (the exit must run a matching public certificate); `None` keeps
+    /// the default RPK-via-SNI handshake. Must match the exit's mode.
+    #[serde(default)]
+    pub cover_domain: Option<String>,
+    /// Optional human label shown in the UI ("My home exit"). Cosmetic.
+    #[serde(default)]
+    pub label: String,
+}
+
+impl WarrenCustomExitSettings {
+    /// Whether this config should override roster selection: enabled and
+    /// the two required fields are non-empty. Field *content* validity
+    /// (parseable endpoint, well-formed pubkey) is checked downstream;
+    /// this is the cheap gate read on the hot connect path.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.enabled && !self.endpoint.trim().is_empty() && !self.pubkey_hex.trim().is_empty()
     }
 }
 
@@ -526,6 +588,7 @@ impl Default for Settings {
             warren_multi_hop: WarrenMultiHopSettings::default(),
             warren_nat_pmp: WarrenNatPmpSettings::default(),
             warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys::default(),
+            warren_custom_exit: WarrenCustomExitSettings::default(),
         }
     }
 }
@@ -626,6 +689,83 @@ impl Default for TunnelOptions {
             },
             dns_options: DnsOptions::default(),
         }
+    }
+}
+
+#[cfg(test)]
+mod warren_custom_exit_tests {
+    use super::*;
+
+    /// Default is OFF and inactive: a fresh install must keep using the
+    /// signed roster, never a half-configured custom exit.
+    #[test]
+    fn default_is_disabled_and_inactive() {
+        let custom = WarrenCustomExitSettings::default();
+        assert!(!custom.enabled);
+        assert!(!custom.is_active());
+    }
+
+    /// `is_active` requires the toggle AND both mandatory fields. A
+    /// toggle flipped on with empty fields (e.g. user enabled then
+    /// cleared) must not divert the tunnel to a bogus exit.
+    #[test]
+    fn is_active_requires_toggle_and_required_fields() {
+        let base = WarrenCustomExitSettings {
+            enabled: true,
+            endpoint: "203.0.113.5:443".to_owned(),
+            pubkey_hex: "aa".repeat(32),
+            cover_domain: None,
+            label: String::new(),
+        };
+        assert!(base.is_active());
+
+        assert!(
+            !WarrenCustomExitSettings {
+                enabled: false,
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                endpoint: "   ".to_owned(),
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                pubkey_hex: String::new(),
+                ..base
+            }
+            .is_active()
+        );
+    }
+
+    /// Forward-compat: a `settings.json` written by an older build (no
+    /// `warren_custom_exit` key) must deserialise to the disabled
+    /// default, never fail the whole Settings parse.
+    #[test]
+    fn absent_field_deserialises_to_default() {
+        let json = r#"{}"#;
+        let custom: WarrenCustomExitSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(custom, WarrenCustomExitSettings::default());
+    }
+
+    /// Round-trip keeps the optional cover-domain (X.509 mode marker)
+    /// intact, so a v6 X.509 custom exit survives a daemon restart.
+    #[test]
+    fn round_trip_preserves_cover_domain() {
+        let custom = WarrenCustomExitSettings {
+            enabled: true,
+            endpoint: "[2001:db8::1]:443".to_owned(),
+            pubkey_hex: "bb".repeat(32),
+            cover_domain: Some("cdn.example.com".to_owned()),
+            label: "Home".to_owned(),
+        };
+        let json = serde_json::to_string(&custom).unwrap();
+        let back: WarrenCustomExitSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, custom);
     }
 }
 

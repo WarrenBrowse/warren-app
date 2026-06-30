@@ -67,6 +67,9 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 &settings.warren_multi_hop,
             )),
             warren_nat_pmp: Some(proto::NatPmpSettings::from(&settings.warren_nat_pmp)),
+            warren_custom_exit: Some(proto::WarrenCustomExitSettings::from(
+                &settings.warren_custom_exit,
+            )),
         }
     }
 }
@@ -105,6 +108,34 @@ impl TryFrom<proto::WarrenMultiHopSettings> for mullvad_types::settings::WarrenM
             exit_country: value.exit_country,
             hpke_epoch_rotation,
         })
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenCustomExitSettings> for proto::WarrenCustomExitSettings {
+    fn from(value: &mullvad_types::settings::WarrenCustomExitSettings) -> Self {
+        proto::WarrenCustomExitSettings {
+            enabled: value.enabled,
+            endpoint: value.endpoint.clone(),
+            pubkey_hex: value.pubkey_hex.clone(),
+            cover_domain: value.cover_domain.clone(),
+            label: value.label.clone(),
+        }
+    }
+}
+
+impl From<proto::WarrenCustomExitSettings> for mullvad_types::settings::WarrenCustomExitSettings {
+    /// Infallible: all fields are opaque strings here. Content validity
+    /// (parseable endpoint, well-formed pubkey) is checked downstream in
+    /// `assemble_custom`, so a bad value persists as "inactive" rather
+    /// than failing the whole settings conversion.
+    fn from(value: proto::WarrenCustomExitSettings) -> Self {
+        mullvad_types::settings::WarrenCustomExitSettings {
+            enabled: value.enabled,
+            endpoint: value.endpoint,
+            pubkey_hex: value.pubkey_hex,
+            cover_domain: value.cover_domain,
+            label: value.label,
+        }
     }
 }
 
@@ -366,6 +397,10 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .warren_nat_pmp
                 .map(mullvad_types::settings::WarrenNatPmpSettings::try_from)
                 .transpose()?
+                .unwrap_or_default(),
+            warren_custom_exit: settings
+                .warren_custom_exit
+                .map(mullvad_types::settings::WarrenCustomExitSettings::from)
                 .unwrap_or_default(),
             // A.4 pinning storage is daemon-internal: never round-trip
             // through gRPC `SetSettings` (would let a gRPC client wipe

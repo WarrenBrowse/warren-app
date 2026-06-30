@@ -32,6 +32,7 @@ import {
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -696,6 +697,14 @@ export default class AppRenderer {
     actions.settings.updateWarrenMultiHop(settings);
   };
 
+  // Advanced custom-exit override. The daemon reconnects on change, so
+  // no restart is required for it to take effect.
+  public setWarrenCustomExit = async (settings: WarrenCustomExitSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenCustomExit(settings);
+    actions.settings.updateWarrenCustomExit(settings);
+  };
+
   // Trust the new pubkey for the given `exitIdHex`,
   // replacing the pinned baseline. The daemon clears
   // `WarrenStatus.pubkeyMismatchPending` on success so the modal
@@ -973,6 +982,7 @@ export default class AppRenderer {
     reduxSettings.updateAllowLan(newSettings.allowLan);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
+    reduxSettings.updateWarrenCustomExit(newSettings.warrenCustomExit);
     reduxSettings.updateNatPmpSettings(newSettings.warrenNatPmp);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);

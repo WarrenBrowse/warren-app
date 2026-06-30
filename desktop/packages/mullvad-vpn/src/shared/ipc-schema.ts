@@ -27,6 +27,7 @@ import {
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenPubKey,
   WarrenPubkeyMismatch,
@@ -229,6 +230,9 @@ export const ipcSchema = {
     setWarrenApiUrl: invoke<string, void>(),
     // Warren multi-hop settings. Daemon restart required.
     setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
+    // Advanced Warren "custom exit" override. The daemon reconnects on
+    // change (no restart needed).
+    setWarrenCustomExit: invoke<WarrenCustomExitSettings, void>(),
     // Warren NAT-PMP port-forwarding settings. Daemon picks up the
     // new value on the NEXT tunnel reconnect (no restart needed).
     setNatPmpSettings: invoke<NatPmpSettings, void>(),

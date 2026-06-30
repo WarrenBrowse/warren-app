@@ -553,6 +553,29 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    /// Persist the advanced Warren "custom exit" override. Field-content
+    /// validation (parseable endpoint, well-formed pubkey) is deferred to
+    /// parameter-production time (`assemble_custom`), so this handler only
+    /// persists and propagates; the daemon reconnects when the tunnel is
+    /// up so the change takes effect.
+    async fn set_warren_custom_exit(
+        &self,
+        request: Request<types::WarrenCustomExitSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_warren_custom_exit(enabled={}, endpoint={:?}, cover_domain={:?})",
+            proto_value.enabled,
+            proto_value.endpoint,
+            proto_value.cover_domain
+        );
+        let new_value = mullvad_types::settings::WarrenCustomExitSettings::from(proto_value);
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenCustomExit(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
     /// Snapshot of the live Warren tunnel status read directly from
     /// the daemon-shared cache.
     async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {

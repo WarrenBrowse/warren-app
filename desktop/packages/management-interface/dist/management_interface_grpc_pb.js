@@ -536,6 +536,17 @@ function deserialize_mullvad_daemon_management_interface_VoucherSubmission(buffe
   return management_interface_pb.VoucherSubmission.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenCustomExitSettings(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenCustomExitSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenCustomExitSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenCustomExitSettings(buffer_arg) {
+  return management_interface_pb.WarrenCustomExitSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(arg) {
   if (!(arg instanceof management_interface_pb.WarrenMultiHopSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenMultiHopSettings');
@@ -1037,6 +1048,23 @@ getWarrenMultiHopSettings: {
     responseType: google_protobuf_empty_pb.Empty,
     requestSerialize: serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
     requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Advanced "custom exit" override (Settings.warren_custom_exit). When
+// enabled with a valid endpoint+pubkey the daemon dials it directly,
+// bypassing the signed registry, failover, multi-hop and the TOFU
+// pin. Applied on the next (re)connect; the daemon reconnects
+// automatically when the tunnel is up. The current value is read back
+// through the Settings message (warren_custom_exit field).
+setWarrenCustomExit: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenCustomExit',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WarrenCustomExitSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WarrenCustomExitSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenCustomExitSettings,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },

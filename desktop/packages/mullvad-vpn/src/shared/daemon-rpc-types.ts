@@ -516,6 +516,11 @@ export interface ISettings {
   // live via `setNatPmpSettings` (no daemon restart required: the
   // next tunnel reconnect picks up the new config).
   warrenNatPmp: NatPmpSettings;
+  // Advanced "custom exit" override. Default OFF. When enabled with a
+  // valid endpoint+pubkey the daemon dials it directly, bypassing the
+  // signed registry. Pushed live via `setWarrenCustomExit` (the daemon
+  // reconnects on the next change).
+  warrenCustomExit: WarrenCustomExitSettings;
   // Note on DAITA v2: Warren reuses Mullvad upstream's
   // existing `wireguard.daita.enabled` toggle rather than introducing
   // a redundant `warrenDaita` field. The daemon-side adapter
@@ -646,6 +651,24 @@ export interface NatPmpMapping {
 // entry per active rule (empty == nothing mapped).
 export interface NatPmpStatus {
   mappings: NatPmpMapping[];
+}
+
+// Advanced "custom exit" override persisted in
+// Settings.warren_custom_exit. When `enabled` with a valid
+// `endpoint`+`pubkeyHex` the daemon dials this single hand-entered exit
+// directly, bypassing the signed registry, failover, multi-hop and the
+// TOFU pin. `coverDomain` set = v6 X.509 mode (the exit must run a
+// matching public certificate); omitted = RPK-via-SNI.
+export interface WarrenCustomExitSettings {
+  enabled: boolean;
+  // Exit UDP endpoint as `host:port` (IPv6 bracketed).
+  endpoint: string;
+  // Hex-encoded 32-byte Ed25519 server public key (64 hex chars).
+  pubkeyHex: string;
+  // Optional X.509 cover domain (SNI). Undefined = RPK-via-SNI mode.
+  coverDomain?: string;
+  // Optional cosmetic UI label.
+  label: string;
 }
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and

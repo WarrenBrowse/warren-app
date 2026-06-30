@@ -11,6 +11,7 @@ import {
   ObfuscationSettings,
   type Recents,
   RelayOverride,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
@@ -52,6 +53,12 @@ export interface IUpdateWarrenApiUrlAction {
 export interface IUpdateWarrenMultiHopAction {
   type: 'UPDATE_WARREN_MULTI_HOP';
   warrenMultiHop: WarrenMultiHopSettings;
+}
+
+// Update action for the advanced Warren custom-exit override.
+export interface IUpdateWarrenCustomExitAction {
+  type: 'UPDATE_WARREN_CUSTOM_EXIT';
+  warrenCustomExit: WarrenCustomExitSettings;
 }
 
 // Update action for the live Warren status (reconnect_count + age).
@@ -175,6 +182,7 @@ export type SettingsAction =
   | IUpdateAllowLanAction
   | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMultiHopAction
+  | IUpdateWarrenCustomExitAction
   | IUpdateWarrenStatusAction
   | IUpdateNatPmpSettingsAction
   | IUpdateNatPmpStatusAction
@@ -246,6 +254,15 @@ function updateWarrenMultiHop(warrenMultiHop: WarrenMultiHopSettings): IUpdateWa
   return {
     type: 'UPDATE_WARREN_MULTI_HOP',
     warrenMultiHop,
+  };
+}
+
+function updateWarrenCustomExit(
+  warrenCustomExit: WarrenCustomExitSettings,
+): IUpdateWarrenCustomExitAction {
+  return {
+    type: 'UPDATE_WARREN_CUSTOM_EXIT',
+    warrenCustomExit,
   };
 }
 
@@ -404,6 +421,7 @@ export default {
   updateAllowLan,
   updateWarrenApiUrl,
   updateWarrenMultiHop,
+  updateWarrenCustomExit,
   updateWarrenStatus,
   updateNatPmpSettings,
   updateNatPmpStatus,

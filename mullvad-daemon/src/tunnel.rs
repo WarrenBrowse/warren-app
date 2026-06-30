@@ -165,6 +165,13 @@ struct InnerParametersGenerator {
     /// parameter-production time and forwarded onto
     /// [`talpid_warren_tunnel::WarrenTunnelParameters::n_connections`].
     warren_n_connections: Option<u8>,
+    /// Advanced "custom exit" override (`Settings::warren_custom_exit`).
+    /// When `is_active()` it diverts `produce_warren_tunnel_params` to a
+    /// hand-entered exit, bypassing roster selection, failover, multi-hop
+    /// and the TOFU pin. Seeded at boot from settings and hot-swapped at
+    /// runtime by [`ParametersGenerator::set_warren_custom_exit`] when the
+    /// user edits the advanced form; the next (re)connect picks it up.
+    warren_custom_exit: mullvad_types::settings::WarrenCustomExitSettings,
     /// Multi-exit auto-failover: pubkey of the most recently
     /// assembled Warren exit. The state machine increments
     /// `retry_attempt` after every connection failure; on the next
@@ -336,10 +343,13 @@ impl ParametersGenerator {
             warren_multi_hop,
             warren_status_cache,
             warren_nat_pmp: None,
-            warren_nat_pmp_sticky: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
+            warren_nat_pmp_sticky: Arc::new(
+                std::sync::Mutex::new(std::collections::HashMap::new()),
+            ),
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
             warren_n_connections: None,
+            warren_custom_exit: mullvad_types::settings::WarrenCustomExitSettings::default(),
             warren_last_exit_pubkey: None,
             warren_drained_exits: Vec::new(),
             warren_migrate_handle: None,
@@ -584,6 +594,19 @@ impl ParametersGenerator {
         self.0.lock().await.warren_n_connections = n;
     }
 
+    /// Sets the advanced "custom exit" override. When the stored value
+    /// `is_active()` the next tunnel (re)connect dials the hand-entered
+    /// exit instead of a roster-selected one. Wired from
+    /// `on_set_warren_custom_exit` (live edit from the advanced UI form)
+    /// and from the daemon boot routine (initial snapshot of the
+    /// persisted setting). Mirrors [`Self::set_warren_n_connections`].
+    pub async fn set_warren_custom_exit(
+        &self,
+        custom: mullvad_types::settings::WarrenCustomExitSettings,
+    ) {
+        self.0.lock().await.warren_custom_exit = custom;
+    }
+
     /// Sets the user's Warren multi-hop config. `Some(cfg)`
     /// turns the next tunnel (re)connect into a two-relay HPKE
     /// multi-hop path; `None` keeps it single-hop. The signed
@@ -675,9 +698,22 @@ impl ParametersGenerator {
         // any same-country alternative first, then global. On the
         // first attempt after boot (`retry_attempt == 0` or no
         // last-pubkey memo) we use the normal weighted selector.
+        // Advanced "custom exit" override: when active it short-circuits
+        // the whole roster path (no selection, no failover, no multi-hop).
+        // Read once here so the failover gate and the TOFU-skip below see
+        // a consistent value within this call.
+        let custom_exit = inner.warren_custom_exit.clone();
         let last_pubkey = inner.warren_last_exit_pubkey;
-        let is_failover = retry_attempt > 0 && last_pubkey.is_some();
-        let assemble_result = if let Some(excluded) = last_pubkey.filter(|_| is_failover) {
+        // A custom exit never enters the failover pool: there is only the
+        // one hand-entered node, so retrying it is correct, not a failover.
+        let is_failover = !custom_exit.is_active() && retry_attempt > 0 && last_pubkey.is_some();
+        let assemble_result = if custom_exit.is_active() {
+            log::info!(
+                "Warren: custom-exit override active ({}); bypassing roster selection",
+                custom_exit.endpoint
+            );
+            warren_tunnel_params::assemble_custom(&custom_exit, signing_key, nat_pmp, bypass_cidrs)
+        } else if let Some(excluded) = last_pubkey.filter(|_| is_failover) {
             warren_tunnel_params::assemble_failover_for_attempt(
                 &selector,
                 signing_key,
@@ -771,7 +807,11 @@ impl ParametersGenerator {
                 params.city.clone(),
             )
         };
-        {
+        // TOFU pubkey pinning is skipped for a custom exit: typing the key
+        // out of band IS the pin, and a synthetic exit_id would raise a
+        // spurious mismatch when the user rotates their own node's key.
+        // Roster-selected exits still go through the pin gate.
+        if !custom_exit.is_active() {
             let now_unix = warren_config::unix_now();
             let pin_outcome = self::warren_pin_verify(
                 &mut inner.warren_pinned_exit_pubkeys,
@@ -1262,8 +1302,8 @@ fn record_granted_external_port(
     id: NatPmpRuleId,
     event: &NatPmpEvent,
 ) {
-    if let NatPmpEvent::Mapped { external_port, .. }
-    | NatPmpEvent::Renewed { external_port, .. } = event
+    if let NatPmpEvent::Mapped { external_port, .. } | NatPmpEvent::Renewed { external_port, .. } =
+        event
         && *external_port != 0
         && let Ok(mut map) = sticky.lock()
     {

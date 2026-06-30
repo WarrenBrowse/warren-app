@@ -94,6 +94,13 @@ service ManagementService {
   // auto-pick.
   rpc GetWarrenMultiHopSettings(google.protobuf.Empty) returns (WarrenMultiHopSettings) {}
   rpc SetWarrenMultiHopSettings(WarrenMultiHopSettings) returns (google.protobuf.Empty) {}
+  // Advanced "custom exit" override (Settings.warren_custom_exit). When
+  // enabled with a valid endpoint+pubkey the daemon dials it directly,
+  // bypassing the signed registry, failover, multi-hop and the TOFU
+  // pin. Applied on the next (re)connect; the daemon reconnects
+  // automatically when the tunnel is up. The current value is read back
+  // through the Settings message (warren_custom_exit field).
+  rpc SetWarrenCustomExit(WarrenCustomExitSettings) returns (google.protobuf.Empty) {}
   // Warren live tunnel status (reconnect_count + last_reconnect_age
   // surface the M4.E.D auto-reconnect supervisor; obfuscation_active
   // is always-true for /v1 per `warren_obfuscation_doctrine_v1`).
@@ -674,6 +681,29 @@ message Settings {
   NatPmpSettings warren_nat_pmp = 19;
   // 0 = unset (compiled default, 8). Cf. SetWarrenNConnections rpc.
   uint32 warren_n_connections = 20;
+  // Advanced "custom exit" override. Cf. SetWarrenCustomExit rpc.
+  // Absent / enabled=false = normal roster selection.
+  WarrenCustomExitSettings warren_custom_exit = 21;
+}
+
+// Advanced "custom exit" override persisted in
+// Settings.warren_custom_exit. Default = enabled:false + empty fields
+// (normal roster selection). When enabled with a valid endpoint+pubkey
+// the daemon dials this single hand-entered exit directly, bypassing
+// the signed registry, failover, multi-hop and the TOFU pin (typing the
+// key out of band IS the pin).
+message WarrenCustomExitSettings {
+  bool enabled = 1;
+  // Exit UDP endpoint as host:port. IPv6 must be bracketed
+  // ([2001:db8::1]:443). Parsed to a SocketAddr daemon-side.
+  string endpoint = 2;
+  // Hex-encoded 32-byte Ed25519 server public key (64 hex chars).
+  string pubkey_hex = 3;
+  // Optional X.509 cover domain (SNI). Absent = RPK-via-SNI mode; set
+  // it only when the exit runs a matching public certificate.
+  optional string cover_domain = 4;
+  // Optional cosmetic UI label ("My home exit").
+  string label = 5;
 }
 
 // Warren multi-hop settings persisted in Settings.warren_multi_hop and

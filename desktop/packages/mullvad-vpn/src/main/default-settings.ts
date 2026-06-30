@@ -82,6 +82,14 @@ export function getDefaultSettings(): ISettings {
       exitCountry: '',
       hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
     },
+    // Advanced custom-exit override OFF by default (roster selection).
+    warrenCustomExit: {
+      enabled: false,
+      endpoint: '',
+      pubkeyHex: '',
+      coverDomain: undefined,
+      label: '',
+    },
     // NAT-PMP port-forwarding OFF by default. UDP / 1 h lifetime
     // baseline; the user toggles ON from the port-forwarding view.
     warrenNatPmp: {

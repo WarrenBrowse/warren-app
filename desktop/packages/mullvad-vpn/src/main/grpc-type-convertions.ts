@@ -61,6 +61,7 @@ import {
   TunnelParameterError,
   TunnelState,
   TunnelType,
+  WarrenCustomExitSettings,
   WarrenMultiHopSettings,
   WarrenStatus,
   wrapConstraint,
@@ -511,6 +512,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   // means the daemon is an older build and we fall back to OFF.
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
+  const warrenCustomExit = convertFromWarrenCustomExitSettings(settings.getWarrenCustomExit());
   return {
     ...settings.toObject(),
     relaySettings,
@@ -524,7 +526,42 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     warrenApiUrl,
     warrenMultiHop,
     warrenNatPmp,
+    warrenCustomExit,
   };
+}
+
+function convertFromWarrenCustomExitSettings(
+  settings: grpcTypes.WarrenCustomExitSettings | undefined,
+): WarrenCustomExitSettings {
+  if (!settings) {
+    // Older daemon without the field: assume OFF so the UI stays
+    // consistent when talking to an older binary.
+    return { enabled: false, endpoint: '', pubkeyHex: '', coverDomain: undefined, label: '' };
+  }
+  return {
+    enabled: settings.getEnabled(),
+    endpoint: settings.getEndpoint(),
+    pubkeyHex: settings.getPubkeyHex(),
+    // proto3 `optional`: absent stays undefined (= RPK-via-SNI mode).
+    coverDomain: settings.hasCoverDomain() ? settings.getCoverDomain() : undefined,
+    label: settings.getLabel(),
+  };
+}
+
+export function convertToWarrenCustomExitSettings(
+  settings: WarrenCustomExitSettings,
+): grpcTypes.WarrenCustomExitSettings {
+  const proto = new grpcTypes.WarrenCustomExitSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setEndpoint(settings.endpoint);
+  proto.setPubkeyHex(settings.pubkeyHex);
+  // Only set the optional cover domain when present, so an unset value
+  // round-trips as "absent" (RPK-via-SNI) rather than an empty string.
+  if (settings.coverDomain !== undefined && settings.coverDomain !== '') {
+    proto.setCoverDomain(settings.coverDomain);
+  }
+  proto.setLabel(settings.label);
+  return proto;
 }
 
 function convertFromWarrenMultiHopSettings(

@@ -9,9 +9,12 @@
 //! Caller: [`crate::tunnel::ParametersGenerator::produce_warren_tunnel_params`],
 //! invoked from the tunnel state machine when Warren mode is active.
 
+use std::net::SocketAddr;
+
 use ed25519_dalek::SigningKey;
+use mullvad_types::settings::WarrenCustomExitSettings;
 use talpid_warren_tunnel::{BypassCidr, MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
-use warren_relay_selector::warren_types::WarrenPubkey;
+use warren_relay_selector::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
 use warren_relay_selector::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
@@ -22,6 +25,13 @@ pub enum AssembleError {
     /// No Warren relay matched the query (or the list was empty).
     #[error("warren relay selection failed: {0}")]
     Selector(#[from] SelectorError),
+
+    /// The persisted/advanced custom-exit override is malformed (bad
+    /// endpoint or pubkey). Surfaced instead of silently falling back to
+    /// the roster so the user learns their override is wrong rather than
+    /// connecting somewhere they did not intend.
+    #[error("invalid custom exit: {0}")]
+    CustomExit(String),
 }
 
 /// Number of parallel QUIC connections. `8` captures ~95% of the
@@ -260,6 +270,83 @@ pub fn assemble_failover_for_attempt(
         on_exit_draining: None,
         // ADR 36 (Option A): set by `produce_warren_tunnel_params` for
         // multi-hop (it owns the generator the register callback stores into).
+        warren_register_migrate_handle: None,
+        nat_pmp,
+        nat_pmp_observer: None,
+        nat_pmp_control_rx: None,
+        bypass_cidrs,
+        enable_daita: false,
+    })
+}
+
+/// Assembles [`WarrenTunnelParameters`] for the advanced "custom exit"
+/// override, bypassing the relay selector entirely.
+///
+/// The user supplied an `(endpoint, pubkey, cover_domain?)` out of band
+/// (e.g. a self-hosted `warrenguard serve` node). We dial it directly:
+/// no roster lookup, no location query, no failover pool, and always
+/// single-hop (`multi_hop = None`) - a hand-entered exit has no relay to
+/// pair with. The TOFU pin is skipped by the caller because typing the
+/// key *is* the pin.
+///
+/// The `exit_id` is synthesised from the first 16 bytes of the pubkey:
+/// custom exits are not in the signed roster, so there is no operator
+/// `exit_id`, but the downstream params field is non-optional and the
+/// pin path is disabled for this branch anyway. `country_code` is empty
+/// and `city` carries the user's cosmetic label, if any.
+///
+/// # Errors
+///
+/// Returns [`AssembleError::CustomExit`] if the endpoint does not parse
+/// as a `host:port` socket address or the pubkey is not 64 hex chars.
+pub fn assemble_custom(
+    custom: &WarrenCustomExitSettings,
+    signing_key: SigningKey,
+    nat_pmp: Option<NatPmpConfig>,
+    bypass_cidrs: Vec<BypassCidr>,
+) -> Result<WarrenTunnelParameters, AssembleError> {
+    let endpoint: SocketAddr = custom.endpoint.trim().parse().map_err(|_| {
+        AssembleError::CustomExit(format!(
+            "endpoint {:?} is not a valid host:port (bracket IPv6, e.g. [2001:db8::1]:443)",
+            custom.endpoint
+        ))
+    })?;
+    let pubkey = WarrenPubkey::from_hex(custom.pubkey_hex.trim())
+        .map_err(|e| AssembleError::CustomExit(format!("pubkey: {e}")))?;
+
+    // Synthetic stable id from the pubkey prefix (see fn doc).
+    let mut id_bytes = [0u8; 16];
+    id_bytes.copy_from_slice(&pubkey.as_bytes()[..16]);
+    let exit_id = ExitId::from_bytes(id_bytes);
+
+    let mut exit_addr = WarrenExitAddr::from_ip_addrs(pubkey, [endpoint]);
+    if let Some(domain) = custom
+        .cover_domain
+        .as_deref()
+        .map(str::trim)
+        .filter(|d| !d.is_empty())
+    {
+        exit_addr = exit_addr.with_cover_domain(domain);
+    }
+
+    Ok(WarrenTunnelParameters {
+        exit_addr,
+        exit_id,
+        country_code: String::new(),
+        city: custom.label.clone(),
+        signing_key,
+        n_connections: DEFAULT_N_CONNECTIONS,
+        features: DEFAULT_FEATURES,
+        // Empty -> client offers the `ALPN_H3` default inside
+        // `ClientTunnel`, which is exactly what a plain `warrenguard
+        // serve` exit speaks. The roster-driven path threads exit-attested
+        // ALPNs here; a hand-entered exit advertises none.
+        alpn_protocols: Vec::new(),
+        // A custom exit is a single hand-entered node: no relay to pair
+        // with, so multi-hop is structurally impossible here.
+        multi_hop: None,
+        on_reconnect: None,
+        on_exit_draining: None,
         warren_register_migrate_handle: None,
         nat_pmp,
         nat_pmp_observer: None,
@@ -711,5 +798,83 @@ mod tests {
         let cfg = NatPmpConfig::default_enabled();
         assert!(cfg.enabled);
         assert_eq!(cfg.lifetime_secs, 3600);
+    }
+
+    fn fixture_custom(endpoint: &str, pubkey_hex: &str) -> WarrenCustomExitSettings {
+        WarrenCustomExitSettings {
+            enabled: true,
+            endpoint: endpoint.to_owned(),
+            pubkey_hex: pubkey_hex.to_owned(),
+            cover_domain: None,
+            label: String::new(),
+        }
+    }
+
+    #[test]
+    fn assemble_custom_dials_the_user_supplied_exit() {
+        // A valid custom exit must produce params pointed at exactly the
+        // entered endpoint + pubkey, single-hop, with no ALPN override
+        // (so the client speaks the ALPN_H3 default a plain `warrenguard
+        // serve` exit understands).
+        let pubkey_hex = "ab".repeat(32);
+        let custom = fixture_custom("198.51.100.7:443", &pubkey_hex);
+        let params =
+            assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).expect("valid");
+
+        assert_eq!(
+            params.exit_addr.id,
+            WarrenPubkey::from_hex(&pubkey_hex).unwrap()
+        );
+        assert_eq!(
+            params.exit_addr.ip_addrs().collect::<Vec<_>>(),
+            vec!["198.51.100.7:443".parse().unwrap()]
+        );
+        assert!(
+            params.multi_hop.is_none(),
+            "custom exit is always single-hop"
+        );
+        assert!(
+            params.alpn_protocols.is_empty(),
+            "no exit-attested ALPN override"
+        );
+        assert!(
+            params.exit_addr.cover_domain.is_none(),
+            "RPK mode when no cover domain"
+        );
+    }
+
+    #[test]
+    fn assemble_custom_applies_cover_domain_for_x509_mode() {
+        // A non-empty cover domain selects v6 X.509 mode: it must land on
+        // the exit_addr so `resolve_cover_domain` downstream dials it as
+        // SNI instead of pinning the raw pubkey.
+        let custom = WarrenCustomExitSettings {
+            cover_domain: Some("cdn.example.com".to_owned()),
+            ..fixture_custom("198.51.100.7:443", &"cd".repeat(32))
+        };
+        let params =
+            assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).expect("valid");
+        assert_eq!(
+            params.exit_addr.cover_domain.as_deref(),
+            Some("cdn.example.com")
+        );
+    }
+
+    #[test]
+    fn assemble_custom_rejects_unparseable_endpoint() {
+        // A bad endpoint must error loudly, never silently fall back to
+        // the roster (which would connect the user somewhere they did not
+        // choose).
+        let custom = fixture_custom("not-a-socket-addr", &"ab".repeat(32));
+        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
+    }
+
+    #[test]
+    fn assemble_custom_rejects_malformed_pubkey() {
+        // Wrong-length / non-hex pubkey is a hard error.
+        let custom = fixture_custom("198.51.100.7:443", "deadbeef");
+        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
     }
 }
