@@ -1007,17 +1007,10 @@ impl ParametersGenerator {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
             let sticky = inner.warren_nat_pmp_sticky.clone();
             let observer: NatPmpMappingObserver = Arc::new(move |id, event| {
-                // Remember the granted external port per rule so the next
-                // exit is asked for the SAME port (port follows the client
-                // across a server change). Only Mapped/Renewed carry a
-                // grant; a zero port is never granted so it is ignored.
-                if let NatPmpEvent::Mapped { external_port, .. }
-                | NatPmpEvent::Renewed { external_port, .. } = &event
-                    && *external_port != 0
-                    && let Ok(mut map) = sticky.lock()
-                {
-                    map.insert(id, *external_port);
-                }
+                // Remember the granted external port per rule so the next exit
+                // is asked for the SAME port (the port follows the client
+                // across a server change).
+                record_granted_external_port(&sticky, id, &event);
                 cache_for_nat_pmp.record_nat_pmp_event(id, event);
             });
             params.nat_pmp_observer = Some(observer);
@@ -1256,6 +1249,99 @@ fn warren_pin_verify(
         Some(existing) => WarrenPinOutcome::Mismatch {
             pinned: existing.pubkey_hex.clone(),
         },
+    }
+}
+
+/// Records the granted external port for `id` into the sticky map so the next
+/// tunnel re-suggests it (the port follows the client across an exit change).
+/// Only a `Mapped`/`Renewed` carries a grant; a zero port is never granted,
+/// and a poisoned lock is skipped (the follow is a best-effort hint, not a
+/// correctness requirement).
+fn record_granted_external_port(
+    sticky: &std::sync::Mutex<std::collections::HashMap<NatPmpRuleId, u16>>,
+    id: NatPmpRuleId,
+    event: &NatPmpEvent,
+) {
+    if let NatPmpEvent::Mapped { external_port, .. }
+    | NatPmpEvent::Renewed { external_port, .. } = event
+        && *external_port != 0
+        && let Ok(mut map) = sticky.lock()
+    {
+        map.insert(id, *external_port);
+    }
+}
+
+#[cfg(test)]
+mod warren_nat_pmp_sticky_tests {
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    use talpid_warren_tunnel::{NatPmpEvent, NatPmpFailureReason, NatPmpProto, NatPmpRuleId};
+
+    use super::record_granted_external_port;
+
+    fn udp_rule() -> NatPmpRuleId {
+        NatPmpRuleId {
+            internal_port: 51820,
+            protocol: NatPmpProto::Udp,
+        }
+    }
+
+    fn mapped(external_port: u16) -> NatPmpEvent {
+        NatPmpEvent::Mapped {
+            external_port,
+            lifetime_secs: 3600,
+            attempts_remaining: None,
+            window_reset_secs: 0,
+        }
+    }
+
+    #[test]
+    fn mapped_event_records_the_granted_port() {
+        let sticky = Mutex::new(HashMap::new());
+        let id = udp_rule();
+        record_granted_external_port(&sticky, id, &mapped(49200));
+        assert_eq!(sticky.lock().unwrap().get(&id), Some(&49200));
+    }
+
+    #[test]
+    fn renewed_event_updates_the_recorded_port() {
+        let sticky = Mutex::new(HashMap::new());
+        let id = udp_rule();
+        record_granted_external_port(&sticky, id, &mapped(49200));
+        record_granted_external_port(
+            &sticky,
+            id,
+            &NatPmpEvent::Renewed {
+                external_port: 49300,
+                lifetime_secs: 3600,
+                attempts_remaining: None,
+                window_reset_secs: 0,
+            },
+        );
+        assert_eq!(sticky.lock().unwrap().get(&id), Some(&49300));
+    }
+
+    #[test]
+    fn failed_event_does_not_record_anything() {
+        let sticky = Mutex::new(HashMap::new());
+        let id = udp_rule();
+        record_granted_external_port(
+            &sticky,
+            id,
+            &NatPmpEvent::Failed {
+                error: "x".to_owned(),
+                reason: NatPmpFailureReason::SuggestedPortInUse,
+            },
+        );
+        assert!(sticky.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_zero_granted_port_is_not_recorded() {
+        let sticky = Mutex::new(HashMap::new());
+        record_granted_external_port(&sticky, udp_rule(), &mapped(0));
+        assert!(sticky.lock().unwrap().is_empty());
     }
 }
 
