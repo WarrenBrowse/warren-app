@@ -54,7 +54,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
-import com.warrenbrowse.vpn.lib.repository.WarrenWithdrawalOutcome
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
@@ -103,11 +102,6 @@ fun WarrenWalletSettings(navigator: Navigator) {
     var viewMnemonic by remember { mutableStateOf<Mnemonic?>(null) }
     var viewError by remember { mutableStateOf<String?>(null) }
     var confirmErase by remember { mutableStateOf(false) }
-    // EU CRD art. 11a withdrawal: a confirmation gate plus an inline status line
-    // for the outcome, kept separate from the voucher status so the two actions
-    // do not clobber each other's message.
-    var confirmWithdraw by remember { mutableStateOf(false) }
-    var withdrawStatus by remember { mutableStateOf<String?>(null) }
     // Erasing the wallet is irreversible: gate the destructive action behind an
     // explicit "I backed up my phrase" acknowledgement, matching the desktop
     // logout checkbox gate (AccountView).
@@ -132,7 +126,6 @@ fun WarrenWalletSettings(navigator: Navigator) {
     }
 
     val redeemingVoucherStatus = stringResource(R.string.subscription_redeeming_voucher)
-    val withdrawingStatus = stringResource(R.string.subscription_withdrawing)
     val viewPhraseReason = stringResource(R.string.wallet_biometric_view_phrase_reason)
     val authRequiredError = stringResource(R.string.wallet_settings_auth_required_view_phrase)
     val unableToReadPrefix = stringResource(R.string.wallet_settings_unable_to_read)
@@ -299,56 +292,12 @@ fun WarrenWalletSettings(navigator: Navigator) {
                 text = stringResource(R.string.wallet_settings_view_phrase),
             )
 
-            // EU CRD art. 11a withdrawal button. Only meaningful with a
-            // subscription on file, so it is shown when a paid-until date is
-            // known; the call itself is idempotent regardless.
-            if (paidUntil != null) {
-                withdrawStatus?.let { msg ->
-                    Text(
-                        text = msg,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-                    )
-                }
-                NegativeOutlinedButton(
-                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
-                    onClick = { confirmWithdraw = true },
-                    text = stringResource(R.string.subscription_withdraw),
-                )
-            }
-
             NegativeOutlinedButton(
                 modifier = Modifier.fillMaxWidth().padding(top = Dimens.mediumPadding),
                 onClick = { confirmErase = true },
                 text = stringResource(R.string.wallet_settings_erase),
             )
         }
-    }
-
-    if (confirmWithdraw) {
-        AlertDialog(
-            onDismissRequest = { confirmWithdraw = false },
-            title = { Text(stringResource(R.string.subscription_withdraw_confirm_title)) },
-            text = { Text(stringResource(R.string.subscription_withdraw_confirm_description)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmWithdraw = false
-                        scope.launch {
-                            withdrawStatus = withdrawingStatus
-                            val outcome = subscriptionInvoker.withdrawSubscription(activity)
-                            withdrawStatus = withdrawalLabel(activity, outcome)
-                        }
-                    },
-                ) { Text(stringResource(R.string.subscription_withdraw_confirm_action)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmWithdraw = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
-        )
     }
 
     viewMnemonic?.let { mnemonic ->
@@ -493,26 +442,6 @@ internal fun voucherLabel(
         context.getString(R.string.subscription_wallet_not_ready)
     is WarrenVoucherOutcome.Failure ->
         context.getString(R.string.subscription_voucher_redeem_failed)
-}
-
-/** Render a [WarrenWithdrawalOutcome] (EU CRD art. 11a) as a user-facing line. */
-internal fun withdrawalLabel(
-    context: android.content.Context,
-    outcome: WarrenWithdrawalOutcome,
-): String = when (outcome) {
-    is WarrenWithdrawalOutcome.Success ->
-        if (outcome.withdrawn) {
-            context.getString(R.string.subscription_withdrawn)
-        } else {
-            // Idempotent / benign: nothing was on file to withdraw.
-            context.getString(R.string.subscription_withdraw_none)
-        }
-    WarrenWithdrawalOutcome.AuthorizationDenied ->
-        context.getString(R.string.subscription_authorization_cancelled)
-    WarrenWithdrawalOutcome.WalletNotReady ->
-        context.getString(R.string.subscription_wallet_not_ready)
-    is WarrenWithdrawalOutcome.Failure ->
-        context.getString(R.string.subscription_withdraw_failed)
 }
 
 /**

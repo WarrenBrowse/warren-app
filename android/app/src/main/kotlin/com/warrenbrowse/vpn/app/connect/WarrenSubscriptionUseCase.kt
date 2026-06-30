@@ -9,7 +9,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
-import com.warrenbrowse.vpn.lib.repository.WarrenWithdrawalOutcome
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -113,44 +112,6 @@ class WarrenSubscriptionUseCase(
         }
     }
 
-    override suspend fun withdrawSubscription(
-        activity: FragmentActivity,
-    ): WarrenWithdrawalOutcome {
-        if (walletRepository.state.value is WalletState.Absent) {
-            Logger.w("WarrenSubscriptionUseCase.withdraw: no wallet on device")
-            return WarrenWithdrawalOutcome.WalletNotReady
-        }
-        // Routine signing: read silently, no prompt (mirrors fetch/redeem).
-        val mnemonic = try {
-            walletRepository.readMnemonic()
-        } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenSubscriptionUseCase.withdraw: mnemonic read failed" }
-            return WarrenWithdrawalOutcome.Failure(e.message ?: "wallet read failed")
-        }
-
-        return withContext(Dispatchers.IO) {
-            mnemonic.use { m ->
-                val rawJson = try {
-                    WarrenJni.withdrawSubscription(m.phrase)
-                } catch (e: Exception) {
-                    Logger.e(throwable = e) { "WarrenJni.withdrawSubscription threw" }
-                    return@use WarrenWithdrawalOutcome.Failure(
-                        e.message ?: "JNI withdrawSubscription threw",
-                    )
-                }
-                parseWithdrawalJson(rawJson).also { outcome ->
-                    // On a successful withdrawal the server set the expiry to now,
-                    // so refresh the shared cache to the new (past) expiry so every
-                    // observer renders "no active subscription" immediately. A
-                    // benign no-op (withdrawn=false) leaves the cache untouched.
-                    if (outcome is WarrenWithdrawalOutcome.Success && outcome.withdrawn) {
-                        outcome.expiresAtUnixSecs?.let { localSettings.setCachedSubscriptionExpiry(it) }
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * App-initiated purchase auto-credit (warren-core doc 35), the Android
      * counterpart of the desktop `buyCredit` poll. The caller opens the
@@ -218,24 +179,6 @@ class WarrenSubscriptionUseCase(
         }
     } catch (e: Exception) {
         WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
-    }
-
-    private fun parseWithdrawalJson(rawJson: String): WarrenWithdrawalOutcome = try {
-        val root = Json.parseToJsonElement(rawJson).jsonObject
-        if (root["ok"]?.jsonPrimitive?.boolean == true) {
-            // `expires_at` is present only when `withdrawn` is true; a benign
-            // no-op (no subscription on file) returns withdrawn=false with no
-            // expiry, which is still a success the UI reports as "nothing to do".
-            val withdrawn = root["withdrawn"]?.jsonPrimitive?.boolean ?: false
-            val expiresAt = root["expires_at"]?.jsonPrimitive?.long
-            WarrenWithdrawalOutcome.Success(withdrawn, expiresAt)
-        } else {
-            WarrenWithdrawalOutcome.Failure(
-                root["error"]?.jsonPrimitive?.content ?: "withdrawal failed",
-            )
-        }
-    } catch (e: Exception) {
-        WarrenWithdrawalOutcome.Failure("invalid JNI response: ${e.message}")
     }
 
     private fun parseOutcome(rawJson: String): WarrenSubscriptionOutcome = try {

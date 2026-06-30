@@ -237,37 +237,11 @@ sealed interface WarrenVoucherOutcome {
     data class Failure(val message: String) : WarrenVoucherOutcome
 }
 
-/**
- * Outcome of withdrawing from the consumer contract (EU CRD art. 11a). The
- * server ends the current subscription term immediately.
- */
-sealed interface WarrenWithdrawalOutcome {
-    /**
-     * The server accepted the withdrawal. [withdrawn] is true when a
-     * subscription term was on file and has been ended now; false when there
-     * was nothing to withdraw (idempotent / benign). [expiresAtUnixSecs] is the
-     * Unix epoch seconds the term was set to expire at, present only when
-     * [withdrawn] is true.
-     */
-    data class Success(val withdrawn: Boolean, val expiresAtUnixSecs: Long?) :
-        WarrenWithdrawalOutcome
-    data object AuthorizationDenied : WarrenWithdrawalOutcome
-    data object WalletNotReady : WarrenWithdrawalOutcome
-    data class Failure(val message: String) : WarrenWithdrawalOutcome
-}
-
 interface WarrenSubscriptionInvoker {
     suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome
 
     /** Redeem a Crockford-32 voucher and bind it to the wallet. */
     suspend fun redeemVoucher(activity: FragmentActivity, voucher: String): WarrenVoucherOutcome
-
-    /**
-     * Withdraw from the consumer contract (EU CRD art. 11a withdrawal button):
-     * signs a `POST /v1/subscription/withdraw` with the wallet pubkey, ending
-     * the current subscription term immediately. Idempotent.
-     */
-    suspend fun withdrawSubscription(activity: FragmentActivity): WarrenWithdrawalOutcome
 
     /**
      * Auto-credit an app-initiated purchase (warren-core doc 35): unlock once,

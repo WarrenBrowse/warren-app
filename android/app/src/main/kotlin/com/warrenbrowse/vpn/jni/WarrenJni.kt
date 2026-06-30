@@ -179,23 +179,6 @@ object WarrenJni {
      */
     external fun redeemVoucher(mnemonic: String, voucher: String): String
 
-    /**
-     * Withdraw from the consumer contract via a signed
-     * `POST /v1/subscription/withdraw` (EU CRD art. 11a withdrawal button).
-     * The server ends the current subscription term immediately. The
-     * [mnemonic] derives the signing key at the JNI boundary and is not
-     * retained.
-     *
-     * Returns a JSON object:
-     *   - `{"ok": true, "withdrawn": <Boolean>, "expires_at": <unix seconds>}`
-     *     on success (`expires_at` present only when `withdrawn` is true)
-     *   - `{"ok": false, "error": "..."}` on failure
-     *
-     * Idempotent: withdrawing with no subscription on file still returns
-     * `{"ok": true, "withdrawn": false}`.
-     */
-    external fun withdrawSubscription(mnemonic: String): String
-
     // -- Problem report ----------------------------------------------------
 
     /**
