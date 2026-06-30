@@ -556,8 +556,11 @@ function build_daemon_packages {
 
         if cargo generate-rpm --help &> /dev/null ; then
             log_info "Packaging Fedora (*.rpm) package for ${arch}..."
+            # RPM versions forbid '-'; dev builds carry "-dev-<sha>". Map '-' to
+            # '~' (a valid RPM pre-release separator) so dev/rc builds package too.
+            local rpm_version="${PRODUCT_VERSION//-/\~}"
             if cargo generate-rpm "${pkg_args[@]}" \
-                     -s "version = \"${PRODUCT_VERSION}\"" \
+                     -s "version = \"${rpm_version}\"" \
                      -o "${rpm_file}" ; then
                 log_info "Packaged $rpm_file"
                 pkg_success=1

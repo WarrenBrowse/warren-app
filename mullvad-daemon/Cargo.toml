@@ -2,7 +2,7 @@
 name = "mullvad-daemon"
 edition.workspace = true
 rust-version.workspace = true
-description = "Mullvad VPN daemon. Runs and controls the VPN tunnels"
+description = "Warren VPN daemon. Runs and controls the VPN tunnels"
 repository.workspace = true
 license.workspace = true
 
@@ -15,7 +15,7 @@ OriginalFilename = "warren-daemon.exe"
 
 [package.metadata.deb]
 name = "warren-vpn-daemon"
-description = "Warren VPN daemon and CLI (headless, no GUI). Runs and controls the VPN tunnels."
+extended-description = "Headless (no GUI) Warren VPN: the warren daemon and CLI for servers and SSH-only machines."
 conflicts = ["warren-vpn", "mullvad-vpn"]
 maintainer = "Warren contributors <hello@warrenbrowse.com>"
 copyright = "2026, Warren contributors <hello@warrenbrowse.com>"
