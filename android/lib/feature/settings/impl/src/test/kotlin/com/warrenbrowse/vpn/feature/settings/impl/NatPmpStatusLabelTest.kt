@@ -26,6 +26,8 @@ class NatPmpStatusLabelTest {
         every { getString(R.string.tunnel_natpmp_status_mapped) } returns "Status: mapped"
         every { getString(R.string.tunnel_natpmp_status_rate_limited) } returns "Status: rate-limited"
         every { getString(R.string.tunnel_natpmp_status_failed) } returns "Status: failed"
+        every { getString(R.string.tunnel_natpmp_status_failed_port_in_use) } returns
+            " - this public port is already in use on this exit. Switch exit or change the port."
         every { getString(eq(R.string.tunnel_natpmp_status_mapped_port), any()) } answers
             { " - external port ${fmtArgs()[0]}" }
         every { getString(eq(R.string.tunnel_natpmp_status_mapped_lifetime), any()) } answers
@@ -66,6 +68,17 @@ class NatPmpStatusLabelTest {
         assertEquals(
             "Status: failed - Unreachable",
             natPmpStatusLabel(context, """{"state":"failed","reason":"Unreachable"}"""),
+        )
+    }
+
+    @Test
+    fun `failed with a port conflict renders a friendly actionable message`() {
+        // A followed port taken by another client on a new exit must not
+        // surface the raw enum name; show what happened and how to recover.
+        assertEquals(
+            "Status: failed - this public port is already in use on this exit. " +
+                "Switch exit or change the port.",
+            natPmpStatusLabel(context, """{"state":"failed","reason":"SuggestedPortInUse"}"""),
         )
     }
 

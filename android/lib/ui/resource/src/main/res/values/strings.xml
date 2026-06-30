@@ -296,6 +296,7 @@
     <string name="tunnel_natpmp_status_rate_limited_retry">" - retry in %1$ss"</string>
     <string name="tunnel_natpmp_status_failed">Status: failed</string>
     <string name="tunnel_natpmp_status_failed_reason">" - %1$s"</string>
+    <string name="tunnel_natpmp_status_failed_port_in_use">" - this public port is already in use on this exit. Switch exit or change the port."</string>
     <string name="tunnel_natpmp_status_idle">Status: idle (no active mapping)</string>
     <string name="wallet_settings_pubkey_copied">Pubkey copied to clipboard</string>
     <string name="wallet_settings_pubkey_tap_to_copy">Pubkey: %1$s  (tap to copy)</string>

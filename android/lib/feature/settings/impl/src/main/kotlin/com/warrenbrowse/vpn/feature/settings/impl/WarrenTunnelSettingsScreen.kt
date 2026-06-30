@@ -517,9 +517,15 @@ internal fun natPmpStatusLabel(context: android.content.Context, json: String): 
                 } ?: "")
         "failed" ->
             context.getString(R.string.tunnel_natpmp_status_failed) +
-                (jsonField(json, "reason")?.let {
-                    context.getString(R.string.tunnel_natpmp_status_failed_reason, it)
-                } ?: "")
+                when (val reason = jsonField(json, "reason")) {
+                    // A followed port taken by another client on a new exit:
+                    // surface a friendly, actionable line instead of the raw
+                    // enum name (the exit applies strict honour-or-error).
+                    "SuggestedPortInUse" ->
+                        context.getString(R.string.tunnel_natpmp_status_failed_port_in_use)
+                    null -> ""
+                    else -> context.getString(R.string.tunnel_natpmp_status_failed_reason, reason)
+                }
         else -> context.getString(R.string.tunnel_natpmp_status_idle)
     }
 
