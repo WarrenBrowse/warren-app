@@ -81,7 +81,7 @@ pub enum WarrenMnemonic {
 /// wordlist is lowercase), and rejoins with single spaces. Mirrors the
 /// GUI `RestoreMnemonicView` normalisation so both entry paths derive
 /// the same identity from the same phrase.
-fn normalize_mnemonic_words(words: &[String]) -> String {
+pub(crate) fn normalize_mnemonic_words(words: &[String]) -> String {
     words
         .iter()
         .flat_map(|w| w.split_whitespace())
