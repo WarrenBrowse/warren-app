@@ -21,6 +21,7 @@ import {
   useNatPmpPortBlock,
   usePortForwarding,
 } from '../../hooks';
+import { mappingForRule, rulePort } from '../../mapping';
 
 const StyledRow = styled.div({
   display: 'flex',
@@ -123,18 +124,6 @@ const StyledLinkButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =
 // honoured by the exit, so we reject it client-side.
 const MIN_PORT = 49152;
 const MAX_PORT = 65535;
-
-/** The user-facing port of a rule (internal == suggested external in the
- * "same port on your device" model; fall back to either if one is 0). */
-function rulePort(rule: NatPmpRule): number {
-  return rule.internalPort !== 0 ? rule.internalPort : rule.suggestedExternalPort;
-}
-
-/** Find the live mapping matching a rule by `(port, protocol)`. */
-function mappingForRule(mappings: NatPmpMapping[], rule: NatPmpRule): NatPmpMapping | undefined {
-  const port = rulePort(rule);
-  return mappings.find((m) => m.protocol === rule.protocol && m.internalPort === port);
-}
 
 /** First port in range not already used by another rule of the same
  * protocol - a sensible, valid default for a freshly-added row. */
