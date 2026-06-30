@@ -323,6 +323,34 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Read the persisted Warren NAT-PMP port-forwarding settings plus
+    /// the daemon's last-known refresh-loop status (the embedded
+    /// `mappings`). Returns the prost-generated type directly: NAT-PMP
+    /// has no richer `mullvad_types` mirror, so the CLI works the wire
+    /// message.
+    pub async fn get_nat_pmp_settings(&mut self) -> Result<types::NatPmpSettings> {
+        Ok(self.0.get_nat_pmp_settings(()).await?.into_inner())
+    }
+
+    /// Replace the Warren NAT-PMP settings wholesale (toggle, lifetime
+    /// and the full rule list). The daemon validates and applies live
+    /// when the tunnel is up, otherwise persists for the next connect.
+    pub async fn set_nat_pmp_settings(&mut self, settings: types::NatPmpSettings) -> Result<()> {
+        self.0.set_nat_pmp_settings(settings).await?;
+        Ok(())
+    }
+
+    /// Subscribe to the live NAT-PMP status stream: one `NatPmpStatus`
+    /// per refresh-loop transition (Requesting to Mapped, renewals,
+    /// failures, rate limits), carrying the granted public port. The
+    /// stream ends when the daemon shuts down.
+    pub async fn nat_pmp_status_updates(
+        &mut self,
+    ) -> Result<impl Stream<Item = Result<types::NatPmpStatus>>> {
+        let listener = self.0.nat_pmp_status_updates(()).await?.into_inner();
+        Ok(listener.map(|item| item.map_err(Error::from)))
+    }
+
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
         self.0
             .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))

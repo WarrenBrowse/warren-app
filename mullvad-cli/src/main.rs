@@ -106,6 +106,12 @@ enum Cli {
     #[clap(subcommand)]
     Tunnel(tunnel::Tunnel),
 
+    /// Configure Warren NAT-PMP port forwarding (headless equivalent of
+    /// the GUI port-forward panel): enable/disable, manage forward
+    /// rules, and observe the granted public port.
+    #[clap(subcommand)]
+    PortForward(port_forward::PortForward),
+
     /// Show information about the current Warren version
     /// and available versions
     Version,
@@ -189,6 +195,7 @@ async fn main() -> Result<()> {
         Cli::ResetSettings { assume_yes } => reset::handle_settings_reset(assume_yes).await,
         Cli::Relay(cmd) => cmd.handle().await,
         Cli::Tunnel(cmd) => cmd.handle().await,
+        Cli::PortForward(cmd) => cmd.handle().await,
         Cli::SplitTunnel(cmd) => cmd.handle().await,
         Cli::Status { cmd, args } => status::handle(cmd, args).await,
         Cli::CustomList(cmd) => cmd.handle().await,
