@@ -43,7 +43,7 @@ mod account_backend;
 mod api;
 mod service;
 pub(crate) use account_backend::{
-    RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
+    RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend, WithdrawOutcome,
 };
 pub(crate) use service::WarrenIdentityService;
 

@@ -33,6 +33,7 @@ import {
   WarrenPubKey,
   WarrenPubkeyMismatch,
   WarrenStatus,
+  WithdrawResponse,
 } from '../shared/daemon-rpc-types';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -307,6 +308,26 @@ export class DaemonRpc extends GrpcClient {
             return { type: 'already_used' };
         }
       }
+      return { type: 'error' };
+    }
+  }
+
+  // EU CRD art. 11a consumer withdrawal. The daemon signs the request
+  // with the active Warren identity and ends the current subscription
+  // term. The endpoint is idempotent and benign: withdrawing with no
+  // subscription on file still resolves successfully with
+  // `withdrawn: false`.
+  public async withdrawSubscription(): Promise<WithdrawResponse> {
+    try {
+      const response = await this.callEmpty<grpcTypes.WithdrawSubscriptionResponse>(
+        this.client.withdrawSubscription,
+      );
+      return {
+        type: 'success',
+        withdrawn: response.getWithdrawn(),
+        expiresAt: response.getExpiresAt(),
+      };
+    } catch {
       return { type: 'error' };
     }
   }

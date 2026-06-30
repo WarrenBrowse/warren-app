@@ -335,6 +335,32 @@ export namespace VoucherSubmission {
     }
 }
 
+export class WithdrawSubscriptionResponse extends jspb.Message { 
+    getWithdrawn(): boolean;
+    setWithdrawn(value: boolean): WithdrawSubscriptionResponse;
+
+    hasExpiresAt(): boolean;
+    clearExpiresAt(): void;
+    getExpiresAt(): number | undefined;
+    setExpiresAt(value: number): WithdrawSubscriptionResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WithdrawSubscriptionResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: WithdrawSubscriptionResponse): WithdrawSubscriptionResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WithdrawSubscriptionResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WithdrawSubscriptionResponse;
+    static deserializeBinaryFromReader(message: WithdrawSubscriptionResponse, reader: jspb.BinaryReader): WithdrawSubscriptionResponse;
+}
+
+export namespace WithdrawSubscriptionResponse {
+    export type AsObject = {
+        withdrawn: boolean,
+        expiresAt?: number,
+    }
+}
+
 export class ErrorState extends jspb.Message { 
     getCause(): ErrorState.Cause;
     setCause(value: ErrorState.Cause): ErrorState;

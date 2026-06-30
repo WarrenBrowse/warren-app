@@ -620,6 +620,19 @@ impl<B: AddressCacheBacking> Runtime<B> {
     }
 }
 
+/// Response body of `POST /v1/subscription/withdraw` (warren-api), the
+/// EU CRD art. 11a consumer withdrawal endpoint. Deserialized from the
+/// JSON `{ "withdrawn": bool, "expires_at"?: u64 }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+pub struct WithdrawSubscription {
+    /// `true` when a subscription was on file and has been ended now.
+    pub withdrawn: bool,
+    /// Unix epoch seconds the subscription was set to expire at. Absent
+    /// when `withdrawn` is `false`.
+    #[serde(default)]
+    pub expires_at: Option<u64>,
+}
+
 #[derive(Clone)]
 pub struct AccountsProxy {
     handle: rest::MullvadRestHandle,
@@ -728,6 +741,29 @@ impl AccountsProxy {
 
             let _ = service.request(request).await?;
             Ok(())
+        }
+    }
+
+    /// Signed `POST /v1/subscription/withdraw` against warren-api: the
+    /// EU CRD art. 11a consumer withdrawal button. The signing identity
+    /// (the 4 `X-Warren-*` headers injected by `post_or_signed` when a
+    /// [`crate::warren_auth::WarrenAuthSigner`] is configured) is the
+    /// only thing the server trusts, so there is no body and no account
+    /// argument: a client can only withdraw its own contract.
+    ///
+    /// The server always answers 200 (idempotent / benign): `withdrawn`
+    /// is `false` with no `expires_at` when nothing was on file.
+    pub fn withdraw_subscription(
+        &self,
+    ) -> impl Future<Output = Result<WithdrawSubscription, rest::Error>> + use<> {
+        let service = self.handle.service.clone();
+        let factory = self.handle.factory.clone();
+
+        async move {
+            let request = factory
+                .post_or_signed("v1/subscription/withdraw")?
+                .expected_status(&[StatusCode::OK]);
+            service.request(request).await?.deserialize().await
         }
     }
 

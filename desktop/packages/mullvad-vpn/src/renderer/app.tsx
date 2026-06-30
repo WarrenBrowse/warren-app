@@ -454,6 +454,9 @@ export default class AppRenderer {
   public setWarrenMnemonic = (mnemonic: string) =>
     IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
+  // EU CRD art. 11a consumer withdrawal: ends the current subscription
+  // term. Idempotent and benign daemon-side.
+  public withdrawSubscription = () => IpcRendererEventChannel.account.withdrawSubscription();
 
   // App-initiated purchase flow (warren-core doc 35): generate a random
   // 128-bit purchase id (wpid), open the checkout site bound to it, and

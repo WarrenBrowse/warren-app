@@ -31,6 +31,7 @@ import {
   WarrenPubKey,
   WarrenPubkeyMismatch,
   WarrenStatus,
+  WithdrawResponse,
 } from './daemon-rpc-types';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
@@ -302,6 +303,9 @@ export const ipcSchema = {
     // identity and logs in without requiring a restart.
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
+    // EU CRD art. 11a consumer withdrawal: ends the current
+    // subscription term immediately. Idempotent and benign.
+    withdrawSubscription: invoke<void, WithdrawResponse>(),
     updateData: invoke<void, void>(),
   },
   accountHistory: {

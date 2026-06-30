@@ -1036,6 +1036,30 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(map_daemon_error)
     }
 
+    async fn withdraw_subscription(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::WithdrawSubscriptionResponse> {
+        log::debug!("withdraw_subscription");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::WithdrawSubscription(tx))?;
+        let result = self.wait_for_result(rx).await?;
+        result
+            .map(|outcome| {
+                Response::new(types::WithdrawSubscriptionResponse {
+                    withdrawn: outcome.withdrawn,
+                    expires_at: outcome.expires_at,
+                })
+            })
+            .map_err(|error: RestError| {
+                log::error!(
+                    "Unable to withdraw subscription via API: {}",
+                    error.display_chain()
+                );
+                map_rest_error(&error)
+            })
+    }
+
     // Device management
     async fn get_device(&self, _: Request<()>) -> ServiceResult<types::DeviceState> {
         log::debug!("get_device");

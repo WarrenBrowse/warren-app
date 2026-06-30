@@ -147,6 +147,9 @@ service ManagementService {
   rpc ClearAccountHistory(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc GetWwwAuthToken(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc SubmitVoucher(google.protobuf.StringValue) returns (VoucherSubmission) {}
+  // Withdraw from the consumer contract (EU CRD art. 11a). Signed by the
+  // active Warren identity; ends the current subscription term now.
+  rpc WithdrawSubscription(google.protobuf.Empty) returns (WithdrawSubscriptionResponse) {}
   // Android only
   rpc DeleteAccount(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -293,6 +296,16 @@ message AccountHistory { google.protobuf.StringValue number = 1; }
 message VoucherSubmission {
   uint64 seconds_added = 1;
   google.protobuf.Timestamp new_expiry = 2;
+}
+
+// Result of WithdrawSubscription (EU CRD art. 11a consumer withdrawal).
+message WithdrawSubscriptionResponse {
+  // true when a subscription was on file and has been ended now; false
+  // when there was nothing to withdraw (idempotent / benign).
+  bool withdrawn = 1;
+  // Unix epoch seconds the subscription was set to expire at. Only set
+  // when withdrawn is true.
+  optional uint64 expires_at = 2;
 }
 
 enum AfterDisconnect {

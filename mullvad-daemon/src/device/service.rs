@@ -8,7 +8,7 @@ use mullvad_types::{
     warren_pubkey::WarrenPubKey,
 };
 
-use super::{Error, WarrenAccountBackend};
+use super::{Error, WarrenAccountBackend, WithdrawOutcome};
 use mullvad_api::{
     AccountsProxy,
     availability::ApiAvailability,
@@ -92,6 +92,26 @@ impl WarrenIdentityService {
             self.api_availability.resume_background();
         }
         result.map_err(map_rest_error)
+    }
+
+    /// Withdraws from the consumer contract (EU CRD art. 11a). Routes
+    /// through [`WarrenAccountBackend`] so the call is signed by the
+    /// active Warren identity; the server ends the current subscription
+    /// term immediately. Returns the [`WithdrawOutcome`] (whether a
+    /// subscription was on file and, if so, the new expiry).
+    ///
+    /// Uses the user-initiated retry strategy so a transient network
+    /// blip does not surface as a withdrawal failure to the consumer.
+    /// The server endpoint is idempotent, so retrying is always safe.
+    pub async fn withdraw_subscription(&self) -> Result<WithdrawOutcome, rest::Error> {
+        let backend = self.backend.clone();
+        let api_handle = self.api_availability.clone();
+        retry_future(
+            move || backend.withdraw_subscription(),
+            move |result| should_retry(result, &api_handle),
+            RETRY_ACTION_STRATEGY,
+        )
+        .await
     }
 
     #[cfg(target_os = "android")]
