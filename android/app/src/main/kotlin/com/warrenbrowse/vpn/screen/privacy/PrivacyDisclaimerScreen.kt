@@ -38,7 +38,6 @@ import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
@@ -47,6 +46,7 @@ import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
+import com.warrenbrowse.vpn.screen.navigation.OnboardingNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.splash.DAEMON_READY_TIMEOUT_MS
 import org.koin.androidx.compose.koinViewModel
@@ -71,10 +71,11 @@ fun PrivacyDisclaimer(navigator: Navigator) {
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) {
         when (it) {
             PrivacyDisclaimerUiSideEffect.NavigateToLogin ->
-                // Post-privacy routes straight to the wallet onboarding. The
-                // wallet flow self-routes to ConnectNavKey on completion via
-                // the `WarrenWalletEvent.WalletReady` channel.
-                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                // Post-privacy (first run) enters the onboarding welcome, which
+                // hands off to the wallet flow with onboarding = true so the
+                // subscription -> done wizard runs before Connect. Privacy is
+                // only shown before acceptance, i.e. effectively first launch.
+                navigator.navigate(OnboardingNavKey, clearBackStack = true)
             PrivacyDisclaimerUiSideEffect.StartService ->
                 launch {
                     try {

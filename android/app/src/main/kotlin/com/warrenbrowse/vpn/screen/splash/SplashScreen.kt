@@ -49,7 +49,7 @@ fun Splash(navigator: Navigator) {
             SplashUiSideEffect.NavigateToPrivacyDisclaimer ->
                 navigator.navigate(PrivacyDisclaimerNavKey, clearBackStack = true)
             SplashUiSideEffect.NavigateToWallet ->
-                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                navigator.navigate(WarrenWalletNavKey(), clearBackStack = true)
             SplashUiSideEffect.NavigateToOnboarding ->
                 navigator.navigate(OnboardingNavKey, clearBackStack = true)
         }

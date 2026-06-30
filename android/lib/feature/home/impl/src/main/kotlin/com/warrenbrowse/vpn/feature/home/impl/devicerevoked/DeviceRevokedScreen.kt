@@ -53,7 +53,7 @@ fun DeviceRevoked(navigator: Navigator) {
         when (sideEffect) {
             DeviceRevokedSideEffect.NavigateToLogin ->
                 // Route to the wallet flow so the user can re-onboard.
-                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                navigator.navigate(WarrenWalletNavKey(), clearBackStack = true)
         }
     }
 

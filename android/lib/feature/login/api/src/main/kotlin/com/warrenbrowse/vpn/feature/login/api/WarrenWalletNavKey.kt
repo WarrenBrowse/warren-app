@@ -13,4 +13,11 @@ import kotlinx.parcelize.Parcelize
  * routed for backward-compat while D.5 is co-existing with the Mullvad
  * account-number scaffold being deleted.
  */
-@Parcelize data object WarrenWalletNavKey : NavKey2
+@Parcelize
+data class WarrenWalletNavKey(
+    // True when reached via first-run onboarding (OnboardingScreen): the host
+    // routes the post-wallet step into the onboarding wizard (subscription ->
+    // done -> connect) instead of straight to Connect. Default false for every
+    // other entry (splash, privacy, switch-wallet, device-revoked).
+    val onboarding: Boolean = false,
+) : NavKey2

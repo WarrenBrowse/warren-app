@@ -33,23 +33,29 @@ import com.warrenbrowse.vpn.lib.repository.MnemonicCache
  * the login screen (the user has to re-trigger create-or-import
  * after a process death anyway).
  */
-fun EntryProviderScope<NavKey2>.walletEntry(navigator: Navigator) {
-    entry<WarrenWalletNavKey> {
+fun EntryProviderScope<NavKey2>.walletEntry(
+    navigator: Navigator,
+    // Host-supplied post-wallet destination. Defaults to Connect; on first-run
+    // onboarding the app passes the wizard's first step. Kept as a callback so
+    // this module does not depend on the app-module onboarding NavKeys.
+    postWalletDestination: (onboarding: Boolean) -> NavKey2 = { ConnectNavKey },
+) {
+    entry<WarrenWalletNavKey> { key ->
         WarrenWalletLoginScreen(
             onWalletCreated = { mnemonic ->
                 MnemonicCache.put(mnemonic)
-                navigator.navigate(WarrenWalletBackupNavKey)
+                navigator.navigate(WarrenWalletBackupNavKey(onboarding = key.onboarding))
             },
             onWalletReady = {
-                navigator.navigate(ConnectNavKey, clearBackStack = true)
+                navigator.navigate(postWalletDestination(key.onboarding), clearBackStack = true)
             },
         )
     }
 
-    entry<WarrenWalletBackupNavKey> {
+    entry<WarrenWalletBackupNavKey> { key ->
         WarrenWalletBackupScreen(
             onConfirmed = {
-                navigator.navigate(ConnectNavKey, clearBackStack = true)
+                navigator.navigate(postWalletDestination(key.onboarding), clearBackStack = true)
             },
             onNavigateBack = {
                 // Return to the create-or-restore choice. The freshly generated
@@ -62,7 +68,7 @@ fun EntryProviderScope<NavKey2>.walletEntry(navigator: Navigator) {
                 // out-of-band drain). Navigate back to the wallet
                 // login screen so the user can re-trigger
                 // create-or-import.
-                navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                navigator.navigate(WarrenWalletNavKey(), clearBackStack = true)
             },
         )
     }

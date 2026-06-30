@@ -78,7 +78,9 @@ fun OnboardingScreen(navigator: Navigator) {
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 onClick = {
                     settings.setOnboardingCompleted(true)
-                    navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                    // onboarding = true so the post-wallet step continues into the
+                    // subscription -> done wizard before reaching Connect.
+                    navigator.navigate(WarrenWalletNavKey(onboarding = true), clearBackStack = true)
                 },
                 text = stringResource(R.string.onboarding_get_started),
             )

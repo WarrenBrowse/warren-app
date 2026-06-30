@@ -62,7 +62,11 @@ import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
+import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
+import com.warrenbrowse.vpn.screen.navigation.OnboardingSubscriptionNavKey
+import com.warrenbrowse.vpn.screen.navigation.onboardingDoneEntry
 import com.warrenbrowse.vpn.screen.navigation.onboardingEntry
+import com.warrenbrowse.vpn.screen.navigation.onboardingSubscriptionEntry
 import com.warrenbrowse.vpn.screen.navigation.privacyDisclaimerEntry
 import com.warrenbrowse.vpn.screen.navigation.splashEntry
 import com.warrenbrowse.vpn.screen.unsupportedversion.UnsupportedVersionBlocked
@@ -124,13 +128,19 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             languageEntry(nav3)
         }
-        walletEntry(nav3)
+        // First-run onboarding continues the post-wallet step into the
+        // subscription -> done wizard; every other wallet entry goes to Connect.
+        walletEntry(nav3) { onboarding ->
+            if (onboarding) OnboardingSubscriptionNavKey else ConnectNavKey
+        }
         walletSettingsEntry(nav3)
         warrenTunnelSettingsEntry(nav3)
         warrenLocationPickerEntry(nav3)
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         onboardingEntry(nav3)
+        onboardingSubscriptionEntry(nav3)
+        onboardingDoneEntry(nav3)
         privacyDisclaimerEntry(nav3)
         problemReportEntry(nav3)
         settingsEntry(nav3)

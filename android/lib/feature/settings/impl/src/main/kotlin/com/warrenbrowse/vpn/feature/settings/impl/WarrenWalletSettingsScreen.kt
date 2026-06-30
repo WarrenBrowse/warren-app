@@ -350,7 +350,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                             // clearing the stack (mirrors Mullvad logout ->
                             // NavigateToLogin). Without this the user is stranded
                             // on an empty account screen after erasing.
-                            navigator.navigate(WarrenWalletNavKey, clearBackStack = true)
+                            navigator.navigate(WarrenWalletNavKey(), clearBackStack = true)
                         }
                     },
                 ) { Text(stringResource(R.string.wallet_settings_erase_confirm_action)) }

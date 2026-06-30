@@ -18,4 +18,8 @@ import kotlinx.parcelize.Parcelize
  * after a process death anyway).
  */
 @Parcelize
-data object WarrenWalletBackupNavKey : NavKey2
+data class WarrenWalletBackupNavKey(
+    // Carried from [WarrenWalletNavKey] so the post-backup step routes into the
+    // onboarding wizard on first run, or straight to Connect otherwise.
+    val onboarding: Boolean = false,
+) : NavKey2
