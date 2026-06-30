@@ -147,8 +147,14 @@ jobs:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
           token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-      - name: Build Windows C modules (winfw)
+      - name: Build Windows C modules (winfw, Release)
         shell: bash
+        # winfw must be built in Release: talpid-core links the release cargo
+        # build against windows/winfw/bin/x64-Release/winfw.lib. The script
+        # defaults to Debug, which left x64-Release/winfw.lib missing -> LNK1181.
+        env:
+          CPP_BUILD_MODES: Release
+          CPP_BUILD_TARGETS: x64
         run: ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
       - name: Build daemon + CLI (release)
         shell: bash
