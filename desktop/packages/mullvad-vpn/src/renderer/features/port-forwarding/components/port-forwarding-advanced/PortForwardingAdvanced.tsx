@@ -9,10 +9,12 @@ import {
   NatPmpRule,
 } from '../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../shared/gettext';
+import { RoutePath } from '../../../../../shared/routes';
 import { SettingsListItem } from '../../../../components/settings-list-item';
 import { Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
 import { spacings } from '../../../../lib/foundations';
+import { useHistory } from '../../../../lib/history';
 import {
   formatCountdown,
   NATPMP_MAX_RULES,
@@ -96,6 +98,26 @@ const StyledStatus = styled.div({
   textAlign: 'right',
 });
 
+const StyledConflictActions = styled.div({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '16px',
+});
+
+const StyledLinkButton = styled.button<{ $disabled: boolean }>(({ $disabled }) => ({
+  background: 'transparent',
+  border: 'none',
+  color: $disabled ? 'rgba(255,255,255,0.3)' : '#44ad4d',
+  cursor: $disabled ? 'not-allowed' : 'pointer',
+  fontFamily: 'inherit',
+  fontSize: '13px',
+  padding: 0,
+  textAlign: 'left',
+  '&:hover': {
+    textDecoration: $disabled ? 'none' : 'underline',
+  },
+}));
+
 // Must match the exit allocator's range (warren-config
 // NATPMP_EXTERNAL_PORT_MIN/MAX). A port outside this range can never be
 // honoured by the exit, so we reject it client-side.
@@ -145,6 +167,7 @@ function nextFreePort(rules: NatPmpRule[], protocol: NatPmpProto): number {
 export function PortForwardingAdvanced() {
   const { rules, mappings, addRule, updateRule, removeRule } = usePortForwarding();
   const block = useNatPmpPortBlock();
+  const history = useHistory();
   const controlsDisabled = block.blocked;
 
   const handleAdd = React.useCallback(() => {
@@ -190,6 +213,26 @@ export function PortForwardingAdvanced() {
     [removeRule],
   );
 
+  // Conflict resolution "let the exit pick a free port": keep the local
+  // (internal) port the app listens on, but drop the suggested external
+  // port to 0 so the exit allocates any free one. Decouples internal from
+  // external for this rule; the granted public port shows in the row
+  // status. The remap is live (no reconnect).
+  const handleResolveAuto = React.useCallback(
+    (index: number) => {
+      const { protocol } = rules[index];
+      const port = rulePort(rules[index]);
+      void updateRule(index, { protocol, suggestedExternalPort: 0, internalPort: port });
+    },
+    [rules, updateRule],
+  );
+
+  // Conflict resolution "choose another exit": the followed port was taken
+  // on this exit; send the user to the location picker to switch.
+  const handleChangeExit = React.useCallback(() => {
+    history.push(RoutePath.selectLocation);
+  }, [history]);
+
   return (
     <FlexColumn gap="small">
       <SettingsListItem anchorId="port-forwarding-advanced">
@@ -214,6 +257,8 @@ export function PortForwardingAdvanced() {
                   onChangeProtocol={handleRuleProtocol}
                   onChangePort={handleRulePort}
                   onRemove={handleRuleRemove}
+                  onResolveAuto={handleResolveAuto}
+                  onChangeExit={handleChangeExit}
                 />
               ))
             )}
@@ -278,6 +323,8 @@ interface PortRuleRowProps {
   onChangeProtocol: (index: number, protocol: NatPmpProto) => void;
   onChangePort: (index: number, port: number) => void;
   onRemove: (index: number) => void;
+  onResolveAuto: (index: number) => void;
+  onChangeExit: () => void;
 }
 
 function PortRuleRow({
@@ -289,6 +336,8 @@ function PortRuleRow({
   onChangeProtocol,
   onChangePort,
   onRemove,
+  onResolveAuto,
+  onChangeExit,
 }: PortRuleRowProps) {
   const committedPort = rulePort(rule);
   const [portDraft, setPortDraft] = React.useState<string>(
@@ -349,6 +398,18 @@ function PortRuleRow({
     onRemove(index);
   }, [onRemove, index]);
 
+  const handleResolveAutoClick = React.useCallback(() => {
+    onResolveAuto(index);
+  }, [onResolveAuto, index]);
+
+  // A followed port can be taken by another client on a new exit: the
+  // exit rejects the suggested port (strict honour-or-error). Offer the
+  // user a way out instead of leaving the mapping silently dead. Editing
+  // the port field above is the third option (pick a specific new port).
+  const portConflict =
+    mapping?.status.state === 'failed' &&
+    mapping.status.errorReason === 'suggested-port-in-use';
+
   return (
     <FlexColumn gap="tiny">
       <StyledRow>
@@ -392,6 +453,28 @@ function PortRuleRow({
         <Text variant="labelTiny" color="red">
           {error}
         </Text>
+      ) : null}
+      {portConflict ? (
+        <FlexColumn gap="tiny">
+          <Text variant="labelTiny" color="whiteAlpha60">
+            {messages.pgettext(
+              'port-forwarding-view',
+              'This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above.',
+            )}
+          </Text>
+          <StyledConflictActions>
+            <StyledLinkButton
+              type="button"
+              $disabled={disabled}
+              disabled={disabled}
+              onClick={handleResolveAutoClick}>
+              {messages.pgettext('port-forwarding-view', 'Assign a free port')}
+            </StyledLinkButton>
+            <StyledLinkButton type="button" $disabled={false} onClick={onChangeExit}>
+              {messages.pgettext('port-forwarding-view', 'Choose another exit')}
+            </StyledLinkButton>
+          </StyledConflictActions>
+        </FlexColumn>
       ) : null}
     </FlexColumn>
   );
