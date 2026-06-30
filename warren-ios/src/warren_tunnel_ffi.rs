@@ -498,6 +498,48 @@ mod handle_impl {
             }
         }
 
+        /// Fire a NAT-PMP event (Mapped / Renewed / Failed) on the registered
+        /// callback, populating the `data_nat_pmp_*` fields that the generic
+        /// [`Self::fire_event`] leaves zeroed. The failure-reason C-string
+        /// (Failed only) is kept alive for the whole callback invocation.
+        /// No-log: `ffi.reason` is the stable failure category only, produced
+        /// by the drain; this method never sees a raw error string or any
+        /// identity material.
+        pub fn fire_natpmp_event(&self, ffi: &crate::warren_natpmp_ffi::NatPmpFfiEvent) {
+            // Keep the reason CString in a local so its buffer outlives the
+            // callback call (the pointer below borrows into it).
+            let reason_c = ffi
+                .reason
+                .as_deref()
+                .and_then(|r| std::ffi::CString::new(r).ok());
+            let reason_ptr = reason_c.as_ref().map_or(std::ptr::null(), |c| c.as_ptr());
+            let event = super::WarrenTunnelEventC {
+                tag: ffi.tag,
+                data_failover_country_code: std::ptr::null(),
+                data_nat_pmp_external_port: ffi.external_port,
+                // The client never owns a specific local port (it requests
+                // internal port 0), so the internal port is always 0.
+                data_nat_pmp_internal_port: 0,
+                data_nat_pmp_lifetime_seconds: ffi.lifetime_secs,
+                data_nat_pmp_failure_reason: reason_ptr,
+            };
+            let Ok(cb_entry) = self.event_callback.lock() else {
+                return;
+            };
+            let Some(entry) = cb_entry.as_ref() else {
+                return;
+            };
+            // SAFETY: callback + context come from Swift via
+            // `warren_tunnel_set_event_callback`. Swift owns the context
+            // pointer lifecycle; we just pass it back. The event pointer (and
+            // the borrowed reason C-string) are valid for the duration of the
+            // call; Swift must copy any strings before returning.
+            unsafe {
+                (entry.callback)(&raw const event, entry.context);
+            }
+            // `reason_c` drops here, after the callback has returned.
+        }
+
         /// Snapshot of the current state discriminant.
         pub fn state_snapshot(&self) -> WarrenTunnelStateC {
             match self.state.load(Ordering::Relaxed) {
@@ -543,6 +585,7 @@ fn spawn_multi_hop(
     exit_country: String,
     generation_state_path: Option<String>,
     pin_store_path: Option<String>,
+    nat_pmp_enabled: bool,
     signing_key: ed25519_dalek::SigningKey,
 ) {
     use std::sync::atomic::Ordering;
@@ -772,6 +815,19 @@ fn spawn_multi_hop(
         let reassign_arc = std::sync::Arc::clone(&arc_for_task);
         tokio::spawn(async move {
             let mut current: Option<std::net::Ipv4Addr> = None;
+            // NAT-PMP port forwarding for the multi-hop path. The refresh loop
+            // binds to the exit-assigned inner IPv4 (the iOS equivalent of the
+            // Android `bind_ipv4`), known only once the first `IpAssign`
+            // arrives, and is re-bound if that sticky address ever changes.
+            // The guard lives on this task's stack and is dropped (cancel loop
+            // + abort drain) when the task ends at teardown (the supervisor
+            // drops the IpAssign sender). It is deliberately NOT parked in a
+            // TunnelImpl field: the drain task holds an Arc clone of the handle
+            // to fire NAT-PMP events, so a field would form a strong reference
+            // cycle (field -> drain JoinHandle, drain task -> Arc -> field)
+            // that blocks teardown. This stack ownership mirrors how the
+            // Android session task holds its `_nat_pmp_guard`.
+            let mut nat_pmp_guard: Option<NatPmpGuard> = None;
             loop {
                 let cached = *reassign_rx.borrow_and_update();
                 if let Some(spec) = cached
@@ -779,11 +835,20 @@ fn spawn_multi_hop(
                 {
                     reassign_arc.fire_ip_assign(spec.assigned, spec.prefix_len, spec.gateway);
                     current = Some(spec.assigned);
+                    // Drop any prior loop before binding the new address so a
+                    // re-bind never leaves two refresh loops racing the same
+                    // mapping.
+                    drop(nat_pmp_guard.take());
+                    nat_pmp_guard =
+                        maybe_spawn_nat_pmp(&reassign_arc, nat_pmp_enabled, spec.assigned);
                 }
                 if reassign_rx.changed().await.is_err() {
                     break;
                 }
             }
+            // Explicit: the guard drops here when the task ends, tearing down
+            // the refresh loop + drain.
+            drop(nat_pmp_guard);
         });
 
         // Surface connection state from the session watch: a `Some` value
@@ -824,6 +889,163 @@ fn spawn_multi_hop(
         arc_for_task.set_state(WarrenTunnelStateC::Disconnected);
         arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
     });
+}
+
+// ---- NAT-PMP port forwarding (feature-gated) ----
+
+/// Last NAT-PMP external port granted by an exit in this process, so an
+/// auto-mode forward keeps the same public port when the user changes exit:
+/// the next session re-suggests it (the port "follows" the client). Mirrors
+/// the Android `warren-jni` sticky statics and the desktop daemon's sticky
+/// map. `0` means nothing remembered yet. Updated on every Mapped/Renewed;
+/// read when spawning a session.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+static LAST_GRANTED_NATPMP_EXTERNAL_PORT: std::sync::atomic::AtomicU16 =
+    std::sync::atomic::AtomicU16::new(0);
+
+/// Transport the [`LAST_GRANTED_NATPMP_EXTERNAL_PORT`] was granted for
+/// (`true` = TCP). The follow only re-suggests the remembered port when the
+/// new session uses the same transport, so a UDP-to-TCP switch does not
+/// collide with the client's own still-leased mapping on that port.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+static LAST_GRANTED_NATPMP_IS_TCP: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Guard returned by [`maybe_spawn_nat_pmp`]. Drops the NAT-PMP refresh loop
+/// AND aborts the event-drain task on drop, matching the Android `NatPmpGuard`
+/// and the daemon-side `NatPmpManager` pattern. `None` from
+/// [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled for this session.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+struct NatPmpGuard {
+    refresh: warrenguard_natpmp_client::RefreshLoopHandle,
+    drain: tokio::task::JoinHandle<()>,
+}
+
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+impl Drop for NatPmpGuard {
+    fn drop(&mut self) {
+        // Cancel the refresh loop (closes its event sender) then abort the
+        // drain eagerly so no NAT-PMP task lingers past teardown. There is no
+        // separate "cleared" FFI event tag and no NAT-PMP status atomic to
+        // reset (the mapping is surfaced purely through events), so the
+        // tunnel session teardown is what clears the user-visible state.
+        self.refresh.cancel();
+        self.drain.abort();
+    }
+}
+
+/// Spawn the NAT-PMP refresh loop bound to the tunnel's inner IPv4 when the
+/// client opted in, plus a task that drains the event stream onto the FFI
+/// event callback. Returns a guard that tears both down on drop; `None` when
+/// NAT-PMP is disabled.
+///
+/// `bind_ipv4` is the exit-assigned inner address (the iOS equivalent of the
+/// Android `bind_ipv4`): binding the refresh socket to it routes the request
+/// through the tunnel to the exit gateway rather than the underlying
+/// cellular/Wi-Fi interface. On the multi-hop path this is the address the
+/// exit announced via `IpAssign` (which Swift also applied to the TUN); on the
+/// single-hop dev path it is `ClientSession::assigned_ipv4`.
+///
+/// The iOS C ABI carries only `nat_pmp_enabled`; the protocol / external-port
+/// / lifetime knobs the Android JSON config exposes are not on the
+/// `WarrenTunnelParametersC` surface, so this defaults to UDP / auto external
+/// port / 1h lifetime (the Android defaults). The auto external port still
+/// follows the client across exit changes via the process-global statics.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn maybe_spawn_nat_pmp(
+    arc: &std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
+    enabled: bool,
+    bind_ipv4: std::net::Ipv4Addr,
+) -> Option<NatPmpGuard> {
+    use std::sync::atomic::Ordering;
+
+    if !enabled {
+        return None;
+    }
+    let server = warrenguard_natpmp_client::default_server_addr();
+    let bind_addr = std::net::IpAddr::V4(bind_ipv4);
+    // UDP default (see fn doc). `is_tcp` scopes the remembered port to this
+    // transport so a future TCP toggle would not re-suggest a UDP-granted port.
+    let proto = warrenguard_natpmp_client::MapProtocol::Udp;
+    let is_tcp = false;
+    // Auto external port (no C-ABI pin field): re-suggest the last port an
+    // exit granted us this process so it follows the client across an exit
+    // change, but only when the transport matches.
+    let suggested_external_port = crate::warren_natpmp_ffi::effective_natpmp_suggested(
+        0,
+        is_tcp,
+        LAST_GRANTED_NATPMP_EXTERNAL_PORT.load(Ordering::Relaxed),
+        LAST_GRANTED_NATPMP_IS_TCP.load(Ordering::Relaxed),
+    );
+    let lifetime_secs: u32 = 3600;
+    let (tx, mut rx) =
+        tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
+    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
+        server,
+        proto,
+        0,
+        suggested_external_port,
+        lifetime_secs,
+        tx,
+        Some(bind_addr),
+    );
+    let drain_arc = std::sync::Arc::clone(arc);
+    let drain = tokio::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            // Remember the granted external port (and its transport) so the
+            // next session after an exit change re-suggests it: the public
+            // port follows the client. Only a grant carries a port; 0 is
+            // never granted.
+            if let warrenguard_natpmp_client::NatPmpEvent::Mapped { external_port, .. }
+            | warrenguard_natpmp_client::NatPmpEvent::Renewed { external_port, .. } = &event
+                && *external_port != 0
+            {
+                LAST_GRANTED_NATPMP_EXTERNAL_PORT.store(*external_port, Ordering::Relaxed);
+                LAST_GRANTED_NATPMP_IS_TCP.store(is_tcp, Ordering::Relaxed);
+            }
+            let kind = natpmp_event_to_kind(&event);
+            if let Some(ffi) = crate::warren_natpmp_ffi::project_natpmp_event(&kind) {
+                drain_arc.fire_natpmp_event(&ffi);
+            }
+        }
+    });
+    Some(NatPmpGuard { refresh, drain })
+}
+
+/// Reduce a `warrenguard_natpmp_client::NatPmpEvent` to the host-available
+/// [`crate::warren_natpmp_ffi::NatPmpEventKind`]. No-log: a failure surfaces
+/// ONLY the stable category (the Debug name of `NatPmpFailureReason`, e.g.
+/// "SuggestedPortInUse"), never the raw `error` diagnostic string or any
+/// identity material. `RateLimited` / `Cancelled` have no FFI tag and map to
+/// `Ignored`.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn natpmp_event_to_kind(
+    event: &warrenguard_natpmp_client::NatPmpEvent,
+) -> crate::warren_natpmp_ffi::NatPmpEventKind {
+    use crate::warren_natpmp_ffi::NatPmpEventKind;
+    use warrenguard_natpmp_client::NatPmpEvent;
+    match event {
+        NatPmpEvent::Mapped {
+            external_port,
+            lifetime_secs,
+            ..
+        } => NatPmpEventKind::Mapped {
+            external_port: *external_port,
+            lifetime_secs: *lifetime_secs,
+        },
+        NatPmpEvent::Renewed {
+            external_port,
+            lifetime_secs,
+            ..
+        } => NatPmpEventKind::Renewed {
+            external_port: *external_port,
+            lifetime_secs: *lifetime_secs,
+        },
+        NatPmpEvent::Failed { reason, .. } => NatPmpEventKind::Failed {
+            reason: format!("{reason:?}"),
+        },
+        NatPmpEvent::RateLimited { .. } | NatPmpEvent::Cancelled => NatPmpEventKind::Ignored,
+    }
 }
 
 // ---- Public FFI entry points ----
@@ -875,6 +1097,11 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // already enabled in `warren-ios/Cargo.toml`.
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
 
+        // Client opt-in for NAT-PMP port forwarding. Consumed by both the
+        // multi-hop and single-hop paths below; the loop binds to the
+        // tunnel's inner IPv4 once it is known.
+        let nat_pmp_enabled = params.nat_pmp_enabled != 0;
+
         // Multi-hop path (production). The fleet is multi-hop only: the
         // exits no longer serve the legacy single-hop Setup/SetupAck, so a
         // supplied verified directory drives a MultiHopClient circuit
@@ -909,6 +1136,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 exit_country,
                 generation_state_path,
                 pin_store_path,
+                nat_pmp_enabled,
                 signing_key,
             );
             let boxed = Box::new(arc);
@@ -930,7 +1158,6 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // passed from Swift is irrelevant to the client (mirrors the Android
         // warren-jni path) - only its presence toggles the request.
         let daita_requested = !params.daita_spec.is_null();
-        let _ = params.nat_pmp_enabled;
         let _ = params.bypass_cidrs;
         let _ = params.bypass_cidrs_count;
 
@@ -981,6 +1208,13 @@ pub unsafe extern "C" fn warren_tunnel_start(
                 .connected_at_secs
                 .store(now_secs(), std::sync::atomic::Ordering::Relaxed);
             arc_for_task.fire_event(WarrenTunnelEventTagC::EventConnected);
+
+            // NAT-PMP port forwarding: bind the refresh loop to the
+            // exit-assigned inner IPv4 so the request egresses through the
+            // tunnel. Held on this task's stack until the pump exits, exactly
+            // like the Android single-hop path's `_nat_pmp_guard`.
+            let _nat_pmp_guard =
+                maybe_spawn_nat_pmp(&arc_for_task, nat_pmp_enabled, session.assigned_ipv4());
 
             // Drive the bidirectional pump. `pump_bidirectional` takes
             // the `PacketDevice` (our `IosTun` clone) + the Quinn

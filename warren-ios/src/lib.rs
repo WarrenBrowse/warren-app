@@ -32,14 +32,18 @@ mod warren_multihop_generation;
 mod warren_pin_store;
 #[cfg(any(target_os = "ios", test))]
 mod warren_wallet_ffi;
+// Pure, host-testable NAT-PMP helpers (port-follow resolution + event
+// projection). Compiled under `test` so the host suite runs them, and on the
+// iOS tunnel path where `warren_tunnel_ffi` consumes them. Same gating as
+// `warren_multihop_generation`.
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+mod warren_natpmp_ffi;
 
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
 mod warren_account_ffi;
 #[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
-#[cfg(target_os = "ios")]
-mod warren_natpmp_ffi;
 
 // Upstream Mullvad API client retained transitionally. Each call site here
 // still calls into `mullvad-api` (account number flows, device management,
