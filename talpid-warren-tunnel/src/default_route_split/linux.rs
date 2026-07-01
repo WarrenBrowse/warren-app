@@ -29,7 +29,9 @@ const SPLIT_TUNNEL_FWMARK: &str = "0x6d6f6c65";
 /// `install(Ipv4Addr, &str)` / `uninstall(self)` / `Drop` shape as the
 /// macOS/Windows guards so the parent facade stays OS-agnostic.
 #[derive(Debug)]
-pub struct DefaultRouteSplitGuard(warrenguard_route_split::default_route_split::DefaultRouteSplitGuard);
+pub struct DefaultRouteSplitGuard(
+    warrenguard_route_split::default_route_split::DefaultRouteSplitGuard,
+);
 
 impl DefaultRouteSplitGuard {
     /// Install the split-default routing for `tun_name`, with the exit-IP
@@ -59,19 +61,22 @@ impl DefaultRouteSplitGuard {
 /// TUN. Same `install(Option<Ipv6Addr>, &str)` shape as the macOS/Windows v6
 /// guards so the parent facade stays OS-agnostic.
 #[derive(Debug)]
-pub struct DefaultRouteSplitV6Guard(warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard);
+pub struct DefaultRouteSplitV6Guard(
+    warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard,
+);
 
 impl DefaultRouteSplitV6Guard {
     /// Install the v6 split-default routing for `tun_name`, plus the
     /// split-tunnel fwmark bypass on the v6 rule database. Teardown on `Drop`
     /// comes from the wrapped warrenguard-route-split guard.
     pub async fn install(exit_ip_v6: Option<Ipv6Addr>, tun_name: &str) -> Result<Self> {
-        let inner = warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard::install(
-            exit_ip_v6,
-            tun_name,
-            Some(SPLIT_TUNNEL_FWMARK),
-        )
-        .await?;
+        let inner =
+            warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard::install(
+                exit_ip_v6,
+                tun_name,
+                Some(SPLIT_TUNNEL_FWMARK),
+            )
+            .await?;
         Ok(Self(inner))
     }
 

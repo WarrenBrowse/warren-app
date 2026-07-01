@@ -119,8 +119,7 @@ pub fn sign_canonical_request(
     nonce_hex: &str,
     body_hash_hex: &str,
 ) -> Result<[u8; 64], WalletError> {
-    let msg =
-        warren_identity::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
+    let msg = warren_identity::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
     sign_message(mnemonic, msg.as_bytes())
 }
 

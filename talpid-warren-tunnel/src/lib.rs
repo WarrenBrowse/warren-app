@@ -943,8 +943,10 @@ impl WarrenTunnelMonitor {
         // can never disagree (a keep-alive-disabled config with a plain
         // pump would lose all liveness). Default-off; turning it on by
         // default is gated on a real-network bench (ADR-0006).
-        let idle_cover_active =
-            idle_cover_effective(warrenguard_config::knobs::idle_cover_enabled(), enable_daita);
+        let idle_cover_active = idle_cover_effective(
+            warrenguard_config::knobs::idle_cover_enabled(),
+            enable_daita,
+        );
 
         // v6 X.509 cover-domain mode (wg-0005 / ADR-0005 Stage 1). When
         // `WARREN_COVER_DOMAIN` is set the client validates the exit's real
@@ -1529,11 +1531,11 @@ impl WarrenTunnelMonitor {
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
         use std::{sync::Arc, time::Duration};
+        use warrenguard_backoff::Backoff;
         use warrenguard_transport::{
             supervised_pump::{ExitDrainingChannel, IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
         };
-        use warrenguard_backoff::Backoff;
 
         let start_t = Instant::now();
         log::debug!(
@@ -3943,7 +3945,8 @@ mod tests {
         // non-recoverable so the state machine stops retrying and the app
         // surfaces a precise "device limit reached" message instead of
         // the misleading "no matching relay" / "no exit available".
-        let mapped = map_handshake_error(warrenguard_transport_core::TunnelError::DeviceLimitReached);
+        let mapped =
+            map_handshake_error(warrenguard_transport_core::TunnelError::DeviceLimitReached);
         assert!(
             matches!(mapped, Error::BackendFatal(_)),
             "DeviceLimitReached must map to BackendFatal, got: {mapped:?}"

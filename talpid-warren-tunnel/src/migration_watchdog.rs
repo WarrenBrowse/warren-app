@@ -435,7 +435,10 @@ impl WatchdogIo for RealWatchdogIo {
         {
             if let Some(relay) = self.relay_ipv4
                 && let Err(e) =
-                    warrenguard_route_split::default_route_split_windows::refresh_host_exception(relay).await
+                    warrenguard_route_split::default_route_split_windows::refresh_host_exception(
+                        relay,
+                    )
+                    .await
             {
                 log::debug!("watchdog: refresh_host_exception nudge failed: {e}");
             }
