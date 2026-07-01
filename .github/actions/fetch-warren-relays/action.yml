@@ -2,7 +2,7 @@ name: Fetch + verify Warren exit list bootstrap
 description: >
   Fetches the live signed Warren exit list from GET {warren-api-url}/v1/exits,
   verifies its Ed25519 signature against the pinned production server pubkey
-  (build-time, authoritative canonicalization via warren-core's
+  (build-time, authoritative canonicalization via warren-discovery-core's
   warren_relays_verify), and writes it to dist-assets/warren-relays.json so the
   packaged client ships with an up-to-date bootstrap cache. Freshly installed
   clients then start pre-populated; the daemon's WarrenRelayListUpdater keeps it
@@ -20,8 +20,8 @@ inputs:
     default: https://api.warrenbrowse.com
   expected-pubkey:
     description: >
-      Pinned Ed25519 server pubkey (64-char hex). MUST mirror
-      warren_config::WARREN_SERVER_PUBKEY_HEX in warren-core.
+      Pinned Ed25519 server pubkey (64-char hex). MUST mirror the production
+      warren-api server signing key.
     required: false
     default: 4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e
 
@@ -41,8 +41,9 @@ runs:
           exit 0
         fi
         echo "Verifying signature against pinned server pubkey (build-time gate)…"
-        # warren-core is checked out as a sibling by the mullvad-build-env
-        # action; the verifier reuses the daemon's exact canonicalization.
+        # warren-contract is checked out as a sibling by the mullvad-build-env
+        # action; warren-discovery-core carries the same verify_signed_relay_list
+        # the daemon uses at runtime, so the canonicalization cannot drift.
         #
         # Building the verifier can SIGSEGV intermittently on the x86_64-Rosetta
         # Linux runner (rustc crashes compiling e.g. libc); that is NOT a
@@ -52,8 +53,8 @@ runs:
         ok=0
         for attempt in 1 2 3; do
           cargo run --quiet \
-            --manifest-path ../warren-core/Cargo.toml \
-            -p warren-relay-selector --bin warren_relays_verify -- \
+            --manifest-path ../warren-contract/warren-discovery/Cargo.toml \
+            -p warren-discovery-core --bin warren_relays_verify -- \
             "$OUT" --expected-pubkey "${{ inputs.expected-pubkey }}" 2>&1 | tee /tmp/warren-relays-verify.log
           rc=${PIPESTATUS[0]}
           if [ "$rc" -eq 0 ]; then ok=1; break; fi
