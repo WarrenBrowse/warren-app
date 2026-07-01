@@ -53,9 +53,10 @@ The release pipeline requires the following secrets to be configured at
 
 ### Required for any build (even unsigned)
 
-* **`WARREN_CORE_RO_TOKEN`** - PAT with read access to
-  `WarrenBrowse/warren-core`. Used by every build job to checkout the
-  warren-core sibling repository (Warren's path-deps live there).
+* **`WARREN_CORE_RO_TOKEN`** - PAT with read access to the private Warren
+  repos. Used by every build job to checkout the sibling repos the fork
+  path-depends on: `warrenguard`, `warren-sdk-rs`, `warren-contract`. (The
+  secret name is historical; it no longer refers to warren-core.)
 
 ### Required for signed macOS builds
 

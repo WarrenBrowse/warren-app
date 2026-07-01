@@ -122,8 +122,8 @@ not). `scripts/utils/host` detects the host arch from the OS architecture string
 "Processeur ARM 64 bits"). `build-app.sh` sets `TARGETS=<host triple>` so
 electron-builder packages for the host arch (its `pack-windows` defaults to x64
 otherwise). Native routing (the split-default that sends traffic through the TUN)
-runs through `warren-core`'s `warren-winroute` crate (Win32 IP Helper API), not
-PowerShell.
+runs through the engine's `warrenguard-winroute` crate (Win32 IP Helper API),
+not PowerShell.
 
 ### Run / debug
 

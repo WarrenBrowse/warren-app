@@ -1,5 +1,5 @@
-//! Abstract trait for the account-level operations that used to go
-//! through `AccountsProxy` to `api.mullvad.net`.
+//! Abstract trait for the account-level operations, so the daemon drives
+//! them against the Warren backend instead of `AccountsProxy`/`api.mullvad.net`.
 //!
 //! Lets us dispatch at boot between:
 //! - [`WarrenRemoteAccountBackend`]: signed HTTP backend talking to

@@ -1,38 +1,39 @@
 These are instructions on how to build the app on desktop platforms. See the
 [readme](./README.md#building-the-app) for help building on other platforms.
 
-# Pré-requis Warren fork : repo voisin `warren-core/`
+# Pré-requis Warren fork : trois repos voisins
 
 > ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
 
-Le fork Warren consomme plusieurs crates via des **path-deps cross-repo**
-(`warren-tunnel`, `warren-identity`, `warren-config`, `warren-relay-selector`,
-`warren-api-client`, `warren-api`). Elles vivent dans le repo voisin
-[`warren-core`](https://github.com/WarrenBrowse/warren-core) et **doivent être
-checkout-ées en parallèle** de `warren-app`.
+Le fork Warren consomme des crates via des **path-deps cross-repo** depuis trois
+repos voisins, checkout-és en parallèle de `warren-app` (le fork n'a **aucune
+dépendance sur `warren-core`**) :
+
+- [`warrenguard`](https://github.com/WarrenBrowse/warrenguard) : moteur data-plane
+  (`warrenguard-transport`, `-config`, `-wire`, `-multihop`, `-relay`, …). Pin
+  dans `.warrenguard-version`.
+- [`warren-sdk-rs`](https://github.com/WarrenBrowse/warren-sdk-rs) : SDK client
+  (`warren-api`, `warren-identity`). Pin dans `.warren-sdk-version`.
+- [`warren-contract`](https://github.com/WarrenBrowse/warren-contract) : contrat
+  client/serveur (`warren-contract`, `warren-discovery-core`). Pin dans
+  `.warren-contract-version`.
 
 Layout attendu :
 
 ```
 warrenBros/
-├── warren-app/      ← ce repo (fork Mullvad)
-└── warren-core/     ← repo des crates Warren
-    └── crates/
-        ├── warren-tunnel/
-        ├── warren-identity/
-        ├── warren-config/
-        ├── warren-relay-selector/
-        ├── warren-api-client/
-        ├── warren-api/
-        └── …
+├── warren-app/        ← ce repo (fork Mullvad)
+├── warrenguard/       ← moteur data-plane (crates warrenguard-*)
+├── warren-sdk-rs/     ← SDK client (warren-api, warren-identity)
+└── warren-contract/   ← contrat (warren-contract, warren-discovery-core)
 ```
 
-Si `warren-core/` est absent ou à un autre path, `cargo metadata` /
+Si un des siblings est absent ou à un autre path, `cargo metadata` /
 `./build.sh` échouent avec :
 
 ```
-error: failed to load manifest for dependency `warren-tunnel`
-Caused by: failed to read `../../warren-core/crates/warren-tunnel/Cargo.toml`
+error: failed to load manifest for dependency `warrenguard-transport`
+Caused by: failed to read `../warrenguard/crates/warrenguard-transport/Cargo.toml`
 Caused by: No such file or directory (os error 2)
 ```
 
@@ -40,26 +41,19 @@ Setup minimal :
 
 ```bash
 cd /path/to/warrenBros
-git clone git@github.com:WarrenBrowse/warren-core.git
+git clone git@github.com:WarrenBrowse/warrenguard.git
+git clone git@github.com:WarrenBrowse/warren-sdk-rs.git
+git clone git@github.com:WarrenBrowse/warren-contract.git
 git clone git@github.com:WarrenBrowse/warren-app.git
 cd warren-app && git submodule update --init
 ```
 
-Les path-deps sont déclarés dans :
-
-- [`Cargo.toml`](Cargo.toml) (workspace root : pas de `[patch.crates-io]`,
-  les path-deps sont posés au niveau crate)
-- [`mullvad-daemon/Cargo.toml`](mullvad-daemon/Cargo.toml) (`warren-config`,
-  `warren-identity`, `warren-relay-selector`, `warren-api-client`,
-  `warren-api` en dev-dep)
-- [`talpid-warren-tunnel/Cargo.toml`](talpid-warren-tunnel/Cargo.toml)
-  (`warren-tunnel`)
-- [`Cross.toml`](Cross.toml) (mount additionnel `../warren-core` pour les
-  builds Docker `cross`)
-
-Si vous travaillez à un autre layout que `warrenBros/warren-{app,core}/`,
-vous devez patcher les `path = "../../warren-core/..."` dans les 3 manifestes
-ci-dessus.
+Les path-deps sont déclarés dans les manifestes crate (`talpid-core`,
+`talpid-warren-tunnel`, `mullvad-daemon`, `mullvad-types`, `warren-jni`,
+`warren-ios`) et le `[patch."https://github.com/WarrenBrowse/warrenguard.git"]`
+du `Cargo.toml` racine. La fork quinn est le git-dep publié
+`WarrenBrowse/warren-quinn` (pin par tag), câblé via `[patch.crates-io]`. Les
+builds Docker `cross` montent les trois siblings (voir [`Cross.toml`](Cross.toml)).
 
 # Install toolchains and dependencies
 
@@ -131,7 +125,7 @@ sudo apt install gcc libdbus-1-dev
 sudo apt install rpm
 ```
 
-#### Warren fork : extra deps Linux (F4 fork audit)
+#### Warren fork : extra deps Linux
 
 Le fork Warren ajoute des dépendances natives au-delà des
 besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :
@@ -153,36 +147,19 @@ sudo apt install \
 - `libnl-3-dev` + extensions : netlink helpers utilisés par
   `talpid-routing::linux`.
 - `build.rs` de `mullvad-daemon` invoque `git log` pour embedder la
-  date du commit. Sur un VPS sans `.git/`, il faut soit installer
-  `git` + `git init` une fake repo, soit appliquer le workaround
-  bench (cf. `scripts/build-on-vps-linux.sh` côté warren-core).
+  date du commit. Sur un VPS sans `.git/`, installer `git` puis
+  `git init` un dépôt vide (`git commit --allow-empty`).
 
-#### Cross-compile macOS → Linux (F1 fork audit)
+#### Cross-compile macOS vers Linux
 
-Le `cross` (Docker-based) **n'est pas supporté pour le fork Warren**
-car le path-dep cross-repo `warren-app/talpid-warren-tunnel →
-../../warren-core/crates/warren-tunnel` n'est pas montable dans
-le container `cross-rs/x86_64-unknown-linux-gnu` standard.
+Le `cross` (Docker-based) est supporté : [`Cross.toml`](Cross.toml) monte les
+trois siblings (`../warrenguard`, `../warren-sdk-rs`, `../warren-contract`) dans
+le container `cross-rs/x86_64-unknown-linux-gnu:edge`, donc les path-deps
+cross-repo se résolvent comme sur un hôte natif. Il faut que les trois siblings
+soient checkout-és aux SHAs pin (voir la section pré-requis en tête de doc).
 
-**Workaround** : build natif sur un VPS Linux via le script
-warren-core `scripts/build-on-vps-linux.sh`, ou directement :
-
-```bash
-# Sur un VPS Debian 12 fresh
-sudo apt install -y <deps ci-dessus> rsync
-rsync -az --exclude target/ --exclude .git/ \
-  /path/to/warren-core/ vps:/home/warren/warren-core/
-rsync -az --exclude target/ --exclude node_modules/ \
-  /path/to/warren-app/ vps:/home/warren/warren-app/
-ssh vps 'cd /home/warren/warren-app && git init -q && \
-  git commit -q --allow-empty -m d && \
-  cargo build --release -p mullvad-daemon -p mullvad-cli'
-```
-
-Pour CI release builds, soit (a) déclencher le job sur un runner
-Linux x86_64 directement (pas de cross), soit (b) écrire un
-`Cross.toml` custom avec un Dockerfile qui fait un mount additionnel
-de warren-core (non implémenté dans cette version du fork).
+Alternative sans Docker : build natif sur un runner/VPS Linux x86_64 (c'est ce
+que fait la CI release, pas de cross).
 
 ### Fedora/RHEL
 

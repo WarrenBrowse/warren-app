@@ -1,15 +1,13 @@
 //! Warren PRODUCT/deployment constants owned by the app.
 //!
 //! The app (not the backend) is the Warren product, so it owns its own
-//! deployment constants instead of depending on warren-core's
-//! `warren-config` crate (Phase 5 client convergence). Values copied
-//! verbatim from `warren-core/crates/warren-config/src/lib.rs`; keep in
-//! lockstep with `warren-ios::warren_product_config` and warren-jni's
-//! `PROD_API_URL` / `PROD_SERVER_PUBKEY_HEX`.
+//! deployment constants. These must match the production warren-api
+//! deployment (its URL and signing pubkey); keep them in lockstep with
+//! `warren-ios::warren_product_config` and warren-jni's `PROD_API_URL` /
+//! `PROD_SERVER_PUBKEY_HEX`.
 //!
-//! The generic (non-product) helper `unix_now` that `warren-config` used to
-//! re-export lives in the neutral engine crate `warrenguard_config` and is
-//! consumed directly from there.
+//! The generic (non-product) `unix_now` helper lives in the neutral engine
+//! crate `warrenguard_config` and is consumed directly from there.
 
 /// URL of the production Warren HTTP API.
 pub const WARREN_API_URL: &str = "https://api.warrenbrowse.com";

@@ -16,7 +16,8 @@ preserved. See [`docs/warren-architecture.md`](docs/warren-architecture.md) for 
 
 ## TL;DR: run the app in dev
 
-Prerequisites: clone **`warren-core` next to `warren-app`** (same parent directory), plus
+Prerequisites: clone the three sibling repos **`warrenguard`, `warren-sdk-rs`, `warren-contract`
+next to `warren-app`** (same parent directory), plus
 `cargo` + `protoc` (daemon) and `node` + `npm` (GUI). The Quinn fork is the published
 `WarrenBrowse/warren-quinn` git-dep pinned by tag in the root `[patch.crates-io]`, so cargo
 fetches it automatically; there is no local fork to rebuild and no manual step.
@@ -145,14 +146,13 @@ The fork pulls Warren crates by path from three sibling repos (no `warren-core`)
 
 The workspace crate [`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine
 and these crates. The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag),
-consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml); warren-core and warrenguard use the
-same fork.
+consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml); warrenguard uses the same fork.
 
 ## Building the app
 
-See the [build instructions](BuildInstructions.md). Fork-specific notes in
-[`docs/warren-architecture.md`](docs/warren-architecture.md) and in commit `f6a850ba58` (Linux native
-deps + cross-compile workaround).
+See the [build instructions](BuildInstructions.md) (three-sibling layout, Linux native deps,
+cross-compile via `Cross.toml`). Fork-specific notes in
+[`docs/warren-architecture.md`](docs/warren-architecture.md).
 
 ## Running the app from source (dev)
 
@@ -161,8 +161,9 @@ To iterate locally without packaging, the repo provides a dev launcher:
 (`warren-daemon`, with sudo) and the Electron GUI (Vite hot-reload), handling the lifecycle cleanly
 (Ctrl+C, socket cleanup, macOS DNS restore if the daemon is killed before restoring it).
 
-Prerequisites: **`warren-core` cloned next to `warren-app`** (the daemon consumes its path crates;
-the Quinn fork is the published `WarrenBrowse/warren-quinn` git-dep fetched automatically by cargo),
+Prerequisites: **`warrenguard`, `warren-sdk-rs`, `warren-contract` cloned next to `warren-app`**
+(the daemon consumes their path crates; the Quinn fork is the published
+`WarrenBrowse/warren-quinn` git-dep fetched automatically by cargo),
 `cargo` + `protoc` for the daemon, `node` + `npm` for the GUI (Linux/macOS).
 
 ### Two-terminal workflow
