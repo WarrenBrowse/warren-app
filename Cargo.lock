@@ -8425,6 +8425,7 @@ dependencies = [
  "sha2",
  "thiserror 2.0.18",
  "warren-config",
+ "warren-contract",
  "warren-ss58",
  "warrenguard-identity",
 ]
@@ -8577,9 +8578,7 @@ dependencies = [
 name = "warren-ss58"
 version = "0.3.26"
 dependencies = [
- "blake2",
- "bs58",
- "thiserror 2.0.18",
+ "warren-contract",
 ]
 
 [[package]]
