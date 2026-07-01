@@ -22,10 +22,8 @@ inputs:
     required: false
   warren-core-token:
     description: >-
-      PAT with read access to the WarrenBrowse org, used to clone the sibling
-      path-dep targets (warrenguard, warren-sdk-rs, warren-contract). Named for
-      historical reasons; the app no longer depends on warren-core. Configure
-      as secrets.WARREN_CORE_RO_TOKEN in workflow callers.
+      Deprecated alias for engine-token, kept for back-compat with any call-site
+      not yet migrated. Prefer engine-token. If both are set, engine-token wins.
     default: ""
     required: false
   skip-warren-core:
@@ -37,11 +35,13 @@ inputs:
     required: false
   engine-token:
     description: >-
-      PAT with read access to WarrenBrowse/warrenguard (the AGPL engine repo
-      the app's tunnel crates path-dep). If left
-      empty, the warrenguard checkout falls back to warren-core-token (a
-      composite-action input default cannot reference another input, so the
-      fallback is applied in the checkout step).
+      Primary token: a PAT with read access to the WarrenBrowse org, used to
+      clone the sibling path-dep repos (warrenguard, warren-sdk-rs,
+      warren-contract). Configure as secrets.WARREN_CORE_RO_TOKEN in workflow
+      callers (the secret name is historical; the app no longer depends on
+      warren-core). Falls back to the deprecated warren-core-token input when
+      left empty (a composite-action input default cannot reference another
+      input, so the fallback is applied in the checkout steps).
     default: ""
     required: false
 runs:
@@ -81,7 +81,7 @@ runs:
         fi
 
     - name: Read pinned warrenguard SHA
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       id: warrenguard-pin
       shell: bash
       run: echo "sha=$(cat .warrenguard-version)" >> "$GITHUB_OUTPUT"
@@ -91,7 +91,7 @@ runs:
       # ../warrenguard/crates/*. No quinn-fork setup here: the app builds the
       # engine against the warren-quinn git-dep via the workspace
       # [patch.crates-io], so warrenguard's own gitignored vendor/ is not needed.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
@@ -106,7 +106,7 @@ runs:
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warrenguard.git"
 
     - name: Read pinned warren-contract SHA
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       id: warren-contract-pin
       shell: bash
       run: echo "sha=$(cat .warren-contract-version)" >> "$GITHUB_OUTPUT"
@@ -115,7 +115,7 @@ runs:
       # The app path-deps ../warren-contract (the shared SS58 codec + X-Warren
       # signing + HTTP /v1 DTOs) and ../warren-contract/warren-discovery. Same
       # sibling clone pattern as warrenguard.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
@@ -130,7 +130,7 @@ runs:
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-contract.git"
 
     - name: Read pinned warren-sdk-rs SHA
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       id: warren-sdk-pin
       shell: bash
       run: echo "sha=$(cat .warren-sdk-version)" >> "$GITHUB_OUTPUT"
@@ -138,7 +138,7 @@ runs:
     - name: Checkout warren-sdk-rs (sibling SDK repo, path-dep target)
       # The app path-deps ../warren-sdk-rs/crates/{warren-api,warren-identity}
       # (signed account client + identity). Same sibling clone pattern.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
@@ -153,12 +153,12 @@ runs:
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-sdk-rs.git"
 
     - name: Warn if the sibling checkout was skipped
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token == '' && inputs.warren-core-token == '' }}
       shell: bash
       run: |
-        echo "::warning::sibling repos were not checked out (no warren-core-token input)."
+        echo "::warning::sibling repos were not checked out (no engine-token input)."
         echo "::warning::cargo commands relying on path-deps to ../warrenguard, ../warren-sdk-rs or ../warren-contract will fail."
-        echo "::warning::Pass warren-core-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
+        echo "::warning::Pass engine-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
 
     - name: Ensure rustup is available (self-heal rust-cache cache-bin deletion)
       shell: bash
@@ -203,7 +203,7 @@ runs:
       # CARGO_NET_GIT_FETCH_WITH_CLI). Scoped to the WarrenBrowse org only, and
       # the bundled runner git is 2.30.x so GIT_CONFIG_* env is unavailable;
       # `git config --global` is the portable form.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
@@ -216,7 +216,7 @@ runs:
       # [patch.crates-io]. If the lock re-resolves to upstream quinn (cargo only
       # enforces --locked on signed builds), the patch is silently dropped and
       # the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly.
-      if: ${{ inputs.warren-core-token != '' }}
+      if: ${{ inputs.engine-token != '' || inputs.warren-core-token != '' }}
       shell: bash
       run: |
         set -euo pipefail
