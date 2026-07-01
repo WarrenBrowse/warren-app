@@ -23,6 +23,14 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 
+## [1.3.7] - 2026-07-01
+### Security
+- Update the bundled QUIC engine to warren-quinn 0.11.15-fork.5, fixing RUSTSEC-2026-0185 (a
+  denial-of-service in out-of-order QUIC stream reassembly).
+### Changed
+- Move the client control plane and datapath fully onto the warrenguard engine, warren-sdk-rs and
+  the neutral warren-contract crate, removing the runtime dependency on warren-core.
+
 ## [1.3.0] - 2026-06-29
 ### Changed
 - Redesign the desktop app around Warren's own visual identity: a neutral-dark theme with warm
