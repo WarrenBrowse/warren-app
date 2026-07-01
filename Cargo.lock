@@ -8414,6 +8414,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "warren-discovery"
+version = "0.0.1"
+dependencies = [
+ "ed25519-dalek",
+ "hex",
+ "rand 0.10.1",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "warren-contract",
+ "warrenguard-multihop",
+ "warrenguard-wire",
+]
+
+[[package]]
 name = "warren-identity"
 version = "0.3.26"
 dependencies = [
@@ -8566,11 +8581,8 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "rand 0.10.1",
- "serde",
  "serde_json",
- "thiserror 2.0.18",
- "warren-ss58",
- "warrenguard-multihop",
+ "warren-discovery",
  "warrenguard-wire",
 ]
 
