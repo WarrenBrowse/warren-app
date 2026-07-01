@@ -132,6 +132,29 @@ runs:
         git -C "$dest" checkout --detach "$WARRENGUARD_SHA"
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warrenguard.git"
 
+    - name: Read pinned warren-contract SHA
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      id: warren-contract-pin
+      shell: bash
+      run: echo "sha=$(cat .warren-contract-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warren-contract (sibling contract repo, path-dep target)
+      # warren-core's warren-api-types path-deps ../warren-contract (the shared
+      # SS58 codec + HTTP /v1 DTOs). Same sibling clone pattern as warrenguard.
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+        WARREN_CONTRACT_SHA: ${{ steps.warren-contract-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-contract"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-contract.git" "$dest"
+        git -C "$dest" checkout --detach "$WARREN_CONTRACT_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-contract.git"
+
     - name: Warn if warren-core checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
       shell: bash

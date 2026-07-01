@@ -8360,10 +8360,7 @@ dependencies = [
 name = "warren-api-types"
 version = "0.3.26"
 dependencies = [
- "serde",
- "thiserror 2.0.18",
- "warren-identity",
- "warrenguard-wire",
+ "warren-contract",
 ]
 
 [[package]]
@@ -8403,6 +8400,17 @@ name = "warren-config"
 version = "0.3.26"
 dependencies = [
  "warrenguard-config",
+]
+
+[[package]]
+name = "warren-contract"
+version = "0.0.1"
+dependencies = [
+ "blake2",
+ "bs58",
+ "serde",
+ "thiserror 2.0.18",
+ "warrenguard-wire",
 ]
 
 [[package]]
