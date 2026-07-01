@@ -215,6 +215,14 @@ warrenguard-transport = { path = "../warrenguard/crates/warrenguard-transport" }
 warrenguard-transport-core = { path = "../warrenguard/crates/warrenguard-transport-core" }
 warrenguard-config = { path = "../warrenguard/crates/warrenguard-config" }
 
+# The SDK (warren-api/-identity/-discovery) declares warren-contract as a
+# git-dep so it self-resolves for downstream consumers with no sibling; here we
+# override it to the local checkout, matching the path-deps mullvad-types and
+# the daemon already use, so warren-contract stays a single unified package.
+[patch."https://github.com/WarrenBrowse/warren-contract.git"]
+warren-contract = { path = "../warren-contract" }
+warren-discovery-core = { path = "../warren-contract/warren-discovery" }
+
 [profile.release]
 opt-level = "s"
 strip = true
