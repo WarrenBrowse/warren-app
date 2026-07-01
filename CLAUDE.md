@@ -49,7 +49,7 @@ warren-core itself (`warren-core/conformance/`), so nothing here needs it.
   `.warren-contract-version`.
 
 The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by
-tag `v0.11.14-fork.4`), wired through `[patch.crates-io]` in this repo's root
+tag `v0.11.15-fork.6`), wired through `[patch.crates-io]` in this repo's root
 `Cargo.toml`. The crates are renamed (`warren-quinn`/`-proto`/`-udp`) but their
 lib names stay `quinn`/`quinn_proto`/`quinn_udp`, so every `use quinn` and the
 mullvad-logging crate-name filters are unchanged; warrenguard consumes the same
