@@ -167,11 +167,13 @@ ensure_sudo() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# Network safety net (macOS)
+# Network safety net (macOS + Linux)
 #
 # A daemon killed before it can tear down (SIGKILL, crash, hard Ctrl+C) leaves
-# the host without working name resolution in one of three ways, all repaired
-# after it exits by `repair_network_if_leaked`:
+# the host without working name resolution, all repaired after it exits by
+# `repair_network_if_leaked`.
+#
+# macOS:
 #   1. DNS pinned at a resolver the daemon set and that dies with it: a loopback
 #      (127/8, ::1) or a Warren tunnel resolver (10.64.0.0/10 e.g. 10.66.0.1,
 #      the `fdcc:` ULA e.g. fdcc:f:1::1), left in the Setup layer. We snapshot
@@ -184,13 +186,23 @@ ensure_sudo() {
 #      (dual-homed box: the tunnel restored only the dial interface's default).
 #      The primary-scoped DNS resolver then has no route via its interface and
 #      mDNSResponder stops resolving.
+# Linux:
+#   4. The static /etc/resolv.conf backend leaves resolv.conf on the dead tunnel
+#      resolver with the original saved to /etc/resolv.conf.mullvadbackup.
+#      (systemd-resolved / NetworkManager / resolvconf backends are per-link or
+#      self-restoring and leave no persistent leak.)
 # (The daemon self-heals on its next startup too; this covers the dev loop where
 # it is killed and not immediately restarted.)
 # ─────────────────────────────────────────────────────────────────────
 readonly OS_NAME="$(uname -s)"
 readonly DNS_SNAPSHOT_FILE="/tmp/warren-dns-snapshot.txt"
+# talpid's static-resolv.conf backend (used when /etc/resolv.conf is a plain
+# file, i.e. no systemd-resolved/NM/resolvconf) backs the original up here.
+readonly LINUX_RESOLV_CONF="/etc/resolv.conf"
+readonly LINUX_RESOLV_BACKUP="/etc/resolv.conf.mullvadbackup"
 
 is_macos() { [[ "$OS_NAME" == "Darwin" ]]; }
+is_linux() { [[ "$OS_NAME" == "Linux" ]]; }
 
 # True if the active system DNS points at a resolver the daemon leaves behind on
 # an unclean exit and that dies with it: a loopback (127.x / ::1) OR a Warren
@@ -299,20 +311,47 @@ repair_stranded_primary_v6_default() {
   ok "Restored primary-interface IPv6 default route"
 }
 
-# Repair the ways a killed daemon can leave the host without working name
-# resolution: (1) DNS pinned at a dead resolver it set (loopback OR a Warren
-# tunnel resolver like 10.66.0.1 / fdcc:f:1::1, in the Setup layer), (2) a
-# leaked IPv6 split-default blackholing the box's IPv6-only resolver, (3) the
-# primary interface's scoped IPv6 default route dropped on teardown. All safe
-# no-ops when nothing leaked.
-repair_network_if_leaked() {
-  is_macos || return 0
-  if dns_is_leaked; then
-    warn "Stale DNS detected (daemon exited without restoring its resolver), repairing"
-    restore_dns_snapshot
+# Linux: talpid's static /etc/resolv.conf backend (used only when resolv.conf is
+# a plain file, i.e. no systemd-resolved/NM/resolvconf) backs the original up to
+# /etc/resolv.conf.mullvadbackup and overwrites resolv.conf with the tunnel DNS.
+# A hard kill skips its reset(), leaving resolv.conf pointing at the dead tunnel
+# resolver with the backup still on disk. Restore it (the daemon does the same
+# via restore_from_backup() on its next startup; this covers the dev loop where
+# it is not restarted). The other backends are per-link or self-restoring and
+# leave no such file, so the backup's presence is the exact static-backend
+# signature. We do NOT match `127.` here: on Linux that is the legitimate
+# systemd-resolved stub (127.0.0.53), not a leak.
+repair_linux_dns_leak() {
+  is_linux || return 0
+  [[ -f "$LINUX_RESOLV_BACKUP" ]] || return 0
+  if grep -qE '^[[:space:]]*nameserver[[:space:]]+(10\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.|fdcc:)' \
+       "$LINUX_RESOLV_CONF" 2>/dev/null; then
+    warn "Stale Warren tunnel DNS in $LINUX_RESOLV_CONF (daemon killed before restore), restoring backup"
+    if sudo cp -f "$LINUX_RESOLV_BACKUP" "$LINUX_RESOLV_CONF" 2>/dev/null; then
+      sudo rm -f "$LINUX_RESOLV_BACKUP" 2>/dev/null || true
+      ok "Restored $LINUX_RESOLV_CONF from backup"
+    fi
   fi
-  repair_leaked_v6_split
-  repair_stranded_primary_v6_default
+}
+
+# Repair the ways a killed daemon can leave the host without working name
+# resolution. macOS: (1) DNS pinned at a dead resolver it set (loopback OR a
+# Warren tunnel resolver like 10.66.0.1 / fdcc:f:1::1, in the Setup layer),
+# (2) a leaked IPv6 split-default blackholing the box's IPv6-only resolver,
+# (3) the primary interface's scoped IPv6 default route dropped on teardown.
+# Linux: the static-resolv.conf backend leaves resolv.conf on the dead tunnel
+# resolver with its backup on disk. All safe no-ops when nothing leaked.
+repair_network_if_leaked() {
+  if is_macos; then
+    if dns_is_leaked; then
+      warn "Stale DNS detected (daemon exited without restoring its resolver), repairing"
+      restore_dns_snapshot
+    fi
+    repair_leaked_v6_split
+    repair_stranded_primary_v6_default
+  elif is_linux; then
+    repair_linux_dns_leak
+  fi
 }
 
 # ─────────────────────────────────────────────────────────────────────
