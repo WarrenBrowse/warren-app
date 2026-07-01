@@ -13,8 +13,8 @@
 #
 # Trigger: push a `daemon-v*` tag, or run manually.
 #
-# Required secret: WARREN_CORE_RO_TOKEN (read access to warren-core + warrenguard),
-# same as release.yml.
+# Required secret: WARREN_CORE_RO_TOKEN (read access to the sibling repos:
+# warrenguard, warren-sdk-rs, warren-contract), same as release.yml.
 
 name: release-daemon
 
@@ -54,7 +54,7 @@ jobs:
           fi
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
       - name: Verify packaging deps
@@ -128,7 +128,7 @@ jobs:
           fi
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
         uses: actions/checkout@v4
         with:
@@ -200,7 +200,7 @@ jobs:
           fi
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
         uses: actions/checkout@v4
         with:

@@ -14,8 +14,10 @@
 # > Secrets and variables > Actions):
 #
 #   WARREN_CORE_RO_TOKEN
-#     PAT with read access to WarrenBrowse/warren-core. Used by all build
-#     jobs to checkout the path-dep sibling repo.
+#     PAT with read access to the WarrenBrowse org sibling repos (warrenguard,
+#     warren-sdk-rs, warren-contract). Used by all build jobs to checkout the
+#     path-dep sibling repos (the secret name is historical; the app no longer
+#     depends on warren-core).
 #
 #   WARREN_CSC_LINK_MACOS, WARREN_CSC_KEY_PASSWORD_MACOS
 #     macOS Developer ID Application certificate (.p12 base64-encoded) and
@@ -89,7 +91,7 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
@@ -150,7 +152,7 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
@@ -229,7 +231,7 @@ jobs:
       - uses: ./.github/actions/mullvad-build-env
         with:
           rust-cache-targets: "true"
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
@@ -486,7 +488,7 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Add Android Rust targets
         run: |
@@ -672,11 +674,11 @@ jobs:
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
         uses: actions/checkout@v4
 
-      - name: Set up build env (Rust + warren-core)
+      - name: Set up build env (Rust + siblings)
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
         uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Download installers from the release
         if: env.WARREN_UPDATE_SIGNING_KEY != ''

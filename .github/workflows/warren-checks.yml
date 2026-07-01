@@ -59,7 +59,7 @@ jobs:
   # type-check/lint) lives in the reusable warren-tests.yml so the exact same
   # gate runs here (push/PR, fast feedback) and in release.yml (before any build
   # on a version tag). secrets: inherit forwards WARREN_CORE_RO_TOKEN for the
-  # sibling warren-core/warrenguard checkout.
+  # sibling repos checkout (warrenguard, warren-sdk-rs, warren-contract).
   warren-tests:
     uses: ./.github/workflows/warren-tests.yml
     secrets: inherit

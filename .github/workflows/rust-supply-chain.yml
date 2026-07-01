@@ -16,7 +16,7 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Run cargo deny
         uses: EmbarkStudios/cargo-deny-action@v2

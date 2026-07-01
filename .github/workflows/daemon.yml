@@ -19,7 +19,7 @@ jobs:
       # and sets up the toolchain, mirroring the macOS/Windows jobs below.
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Test crates
         run: ci/cargo-ci.sh test --workspace
@@ -32,7 +32,7 @@ jobs:
 
       - uses: ./.github/actions/mullvad-build-env
         with:
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Test crates
         run: ci/cargo-ci.sh test --workspace
@@ -60,7 +60,7 @@ jobs:
       - uses: ./.github/actions/mullvad-build-env
         with:
           rust-cache-targets: "true"
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Build Windows modules (x86_64)
         if: ${{ matrix.config.arch == 'x64' }}

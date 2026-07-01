@@ -47,7 +47,7 @@ jobs:
         with:
           rustup-components: clippy
           rust-cache-targets: ${{ runner.os == 'Windows' }}
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Clippy check
         shell: bash
@@ -71,13 +71,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Checks out the ../warren-core path-dep target so cargo can resolve it,
+      # Checks out the sibling path-dep repos so cargo can resolve them,
       # mirroring clippy-check-desktop above. Without the token cargo fails on
-      # the ../warren-core path-deps.
+      # the ../warrenguard, ../warren-sdk-rs and ../warren-contract path-deps.
       - uses: ./.github/actions/mullvad-build-env
         with:
           rustup-components: clippy
-          warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Clippy check
         # Crate renamed mullvad-jni -> warren-jni in this fork.
