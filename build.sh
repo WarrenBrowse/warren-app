@@ -127,41 +127,32 @@ function assert_clean_working_directory {
     fi
 }
 
-# Guard against the silent warren-core drift that once shipped a build without
-# the quinn GSO/obfuscation patches: the local ../warren-core checkout must be
-# clean and its HEAD must match the SHA pinned in .warren-core-version.
-function assert_warren_core_pin {
-    local pin_file="$SCRIPT_DIR/.warren-core-version"
-    local core_dir="$SCRIPT_DIR/../warren-core"
-    if [[ ! -f "$pin_file" ]]; then
-        log_error "Missing $pin_file: cannot verify the warren-core pin."
+# Guard against the silent quinn de-patch that once shipped a build without the
+# Warren GSO/obfuscation patches. The app consumes the fork directly as the
+# `warren-quinn` git-dep via `[patch.crates-io]`; if the lock ever re-resolves
+# to upstream quinn the patch is silently dropped. Assert the lock still pins
+# the fork before an expensive release/signed build (the SDK/engine/contract
+# siblings are plain path-deps and need no pin here).
+function assert_quinn_fork_locked {
+    local lock_file="$SCRIPT_DIR/Cargo.lock"
+    if [[ ! -f "$lock_file" ]]; then
+        log_error "Missing $lock_file: cannot verify the quinn fork is locked."
         exit 1
     fi
-    if [[ ! -d "$core_dir/.git" ]]; then
-        log_error "warren-core checkout not found at $core_dir."
+    if ! grep -q 'warren-quinn' "$lock_file"; then
+        log_error "Cargo.lock does not pin the warren-quinn fork: the"
+        log_error "[patch.crates-io] git-dep is not locked and the build would"
+        log_error "ship upstream quinn WITHOUT the Warren GSO/obfuscation patches."
+        log_error "Regenerate Cargo.lock with the quinn-fork present and commit it."
         exit 1
     fi
-    local pinned actual
-    pinned="$(tr -d '[:space:]' < "$pin_file")"
-    actual="$(git -C "$core_dir" rev-parse HEAD)"
-    if [[ -n "$(git -C "$core_dir" status --porcelain)" ]]; then
-        log_error "warren-core working directory is dirty at $core_dir."
-        log_error "Release builds must use the exact pinned warren-core commit."
-        exit 1
-    fi
-    if [[ "$pinned" != "$actual" ]]; then
-        log_error "warren-core HEAD ($actual) does not match the pin in"
-        log_error ".warren-core-version ($pinned). Check out the pinned commit"
-        log_error "or update the pin before building."
-        exit 1
-    fi
-    log_info "warren-core pin verified: $pinned"
+    log_info "quinn fork verified: Cargo.lock pins warren-quinn"
 }
 
 if [[ "$OPTIMIZE" == "true" || "$SIGN" == "true" ]]; then
-    # Release/signed builds must embed the exact pinned warren-core (data plane
-    # + quinn fork). Verify before doing the expensive build, not only in CI.
-    assert_warren_core_pin
+    # Release/signed builds must embed the quinn fork. Verify before the
+    # expensive build, not only in CI.
+    assert_quinn_fork_locked
 fi
 
 if [[ "$SIGN" == "true" ]]; then

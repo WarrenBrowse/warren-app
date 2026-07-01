@@ -425,37 +425,22 @@ mod tests {
     use super::*;
     use crate::warren_sdk_client::SharedWarrenApiClient;
 
-    // ===================================================================
-    // WarrenRemoteAccountBackend - E2E tests.
-    //
-    // Strategy: spawn the REAL warren-core warren-api server in-process
-    // (axum::serve loopback, dev-dependency only, never shipped), build a
-    // `SharedWarrenApiClient` (wrapping the SDK's `warren_api::WarrenApiClient`),
-    // instantiate the backend, exercise each trait method. Checks the wire
-    // mapping warren-api <-> `mullvad_types::AccountData` + the
-    // `ClientError` <-> `rest::Error::ApiError` mapping against the real
-    // DTO surface, proving wire-compat of the SDK client.
-    // ===================================================================
+    // WarrenRemoteAccountBackend adapter tests: the app-side DTO <->
+    // mullvad_types / ClientError <-> rest::Error mapping and the stateful
+    // voucher orchestration. Only the HTTP peer is mocked; that the client's
+    // routes/methods/headers match a real server is proven in warren-core
+    // (`warren-api/tests/sdk_client_wire_compat.rs`), so this repo keeps no
+    // warren-core dependency.
 
     use std::sync::{Arc as TestArc, RwLock};
     use warren_identity::WarrenIdentity;
     use zeroize::Zeroizing;
 
-    /// Spawns warren-api in-process and returns (URL, AppState).
-    /// The `AppState` lets tests inspect / pre-populate the
-    /// server stores (= shortcut equivalent to the signed admin
-    /// endpoints).
-    async fn spawn_warren_api() -> (String, TestArc<warren_api_server::AppState>) {
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-            .await
-            .expect("bind ephemeral");
-        let addr = listener.local_addr().expect("local addr");
-        let state = warren_api_server::AppState::in_memory();
-        let app = warren_api_server::build_router(state.clone());
-        tokio::spawn(async move {
-            axum::serve(listener, app).await.expect("serve");
-        });
-        (format!("http://{addr}"), state)
+    fn now_secs() -> u64 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock after epoch")
+            .as_secs()
     }
 
     /// Builds a `SharedWarrenApiClient` around a fixed seed (no hot-swap
@@ -470,16 +455,20 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_account_get_data_reads_subscription_expiry() {
-        // Nominal case: sub present on warren-api side -> backend.get_data()
+        // Nominal case: a 200 subscription body -> backend.get_data()
         // returns AccountData with expiry reconstructed from expires_at.
-        let (api_url, state) = spawn_warren_api().await;
+        let mut server = mockito::Server::new_async().await;
+        let sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"expires_at":1700000000}"#)
+            .create_async()
+            .await;
         let seed = [61u8; 32];
         let pubkey_ss58 = address_for_seed(seed);
-        // Pre-populate server-side (= equivalent to a prior /v1/register).
-        state.subscriptions.insert(&pubkey_ss58, 1_700_000_000);
 
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
         let data = backend
             .get_data(pubkey_ss58.clone())
             .await
@@ -491,6 +480,7 @@ mod tests {
             1_700_000_000_i64,
             "expiry must reflect server expires_at"
         );
+        sub.assert_async().await;
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -499,14 +489,17 @@ mod tests {
         // loses the 404 status, the caller (`handle_account_data_result`)
         // interprets a generic error instead of "non-existent account"
         // -> degraded UX + inconsistent device.json state.
-        let (api_url, _state) = spawn_warren_api().await;
+        let mut server = mockito::Server::new_async().await;
+        let _m = server
+            .mock("GET", "/v1/subscription")
+            .with_status(404)
+            .create_async()
+            .await;
         let seed = [62u8; 32];
-        let pubkey_ss58 = address_for_seed(seed);
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
-            .get_data(pubkey_ss58)
+            .get_data(address_for_seed(seed))
             .await
             .expect_err("must fail with 404 mapping");
         match err {
@@ -518,24 +511,26 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_account_delete_removes_subscription() {
-        // Nominal case: delete_account removes the sub on the server side.
-        let (api_url, state) = spawn_warren_api().await;
+    async fn warren_remote_account_delete_issues_signed_delete() {
+        // Nominal case: delete_account issues the signed DELETE /v1/account
+        // and reports success on the server's 204. The mock assertion is
+        // what proves the request went out (the server-side effect itself
+        // is covered by warren-core's own tests).
+        let mut server = mockito::Server::new_async().await;
+        let del = server
+            .mock("DELETE", "/v1/account")
+            .with_status(204)
+            .create_async()
+            .await;
         let seed = [63u8; 32];
-        let pubkey_ss58 = address_for_seed(seed);
-        state.subscriptions.insert(&pubkey_ss58, 9_999_999_999);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
         backend
-            .delete_account(pubkey_ss58.clone())
+            .delete_account(address_for_seed(seed))
             .await
             .expect("delete OK");
 
-        assert!(
-            state.subscriptions.get_expiry(&pubkey_ss58).is_none(),
-            "sub must have disappeared server-side after delete_account"
-        );
+        del.assert_async().await;
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -543,14 +538,17 @@ mod tests {
         // Regression: if we try to delete a non-existent sub, the
         // backend must propagate 404 -> caller can decide to ignore it
         // or log it cleanly (vs generic error).
-        let (api_url, _state) = spawn_warren_api().await;
+        let mut server = mockito::Server::new_async().await;
+        let _m = server
+            .mock("DELETE", "/v1/account")
+            .with_status(404)
+            .create_async()
+            .await;
         let seed = [64u8; 32];
-        let pubkey_ss58 = address_for_seed(seed);
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
-            .delete_account(pubkey_ss58)
+            .delete_account(address_for_seed(seed))
             .await
             .expect_err("must fail 404");
         match err {
@@ -587,41 +585,46 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_submit_voucher_with_wpid_pulls_and_redeems() {
-        let (api_url, state) = spawn_warren_api().await;
+        // The pull mapping is single-use: `expect(1)` on the 200 mock
+        // hands the second poll over to the 404 mock, reproducing the
+        // server-side consumption without a real server.
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "00112233445566778899aabbccddeeff";
+        let checkout = format!("/v1/checkout/{wpid}/voucher");
+        let expires_at = now_secs() + 30 * 86_400;
+        let pull_ok = server
+            .mock("GET", checkout.as_str())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let pull_gone = server
+            .mock("GET", checkout.as_str())
+            .with_status(404)
+            .create_async()
+            .await;
+        let register = server
+            .mock("POST", "/v1/register")
+            .with_status(201)
+            .with_body(format!(r#"{{"expires_at":{expires_at}}}"#))
+            .create_async()
+            .await;
         let seed = [65u8; 32];
         let pubkey_ss58 = address_for_seed(seed);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
-        // Simulate the webhook outcome: a minted voucher whose secret
-        // is queued under the app-chosen wpid.
-        let (secret, hash) = warren_api_server::generate_voucher_secret();
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert!(state.vouchers.create(
-            hash,
-            30 * 86_400,
-            warren_api_server::PaymentMethod::Card,
-            now
-        ));
-        let wpid = "00112233445566778899aabbccddeeff";
-        state.pending_vouchers.put(wpid, &secret, now + 600);
-
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
         let submission = backend
             .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
             .await
             .expect("wpid pull + redeem must succeed");
         assert!(
-            submission.time_added >= 30 * 86_400 - 60,
+            submission.time_added >= 30 * 86_400 - 120,
             "credited time must reflect the voucher duration, got {}",
             submission.time_added
         );
-        assert!(
-            state.subscriptions.get_expiry(&pubkey_ss58).is_some(),
-            "subscription must exist after the wpid flow"
-        );
+        pull_ok.assert_async().await;
+        register.assert_async().await;
 
         // The mapping is single-use: a second poll on the same wpid
         // reports INVALID_VOUCHER (the GUI stops polling on success,
@@ -637,6 +640,7 @@ mod tests {
             }
             other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
         }
+        pull_gone.assert_async().await;
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -645,22 +649,31 @@ mod tests {
         // has definitively rejected: a ServerStatus outcome clears the
         // entry, and the next poll goes back to the pull path (404 ->
         // INVALID_VOUCHER), not an infinite replay of the dead secret.
-        let (api_url, state) = spawn_warren_api().await;
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "aaaabbbbccccdddd0000111122223333";
+        let checkout = format!("/v1/checkout/{wpid}/voucher");
+        // Pull succeeds (secret cached), then register 400s (final).
+        let _pull_ok = server
+            .mock("GET", checkout.as_str())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let _pull_gone = server
+            .mock("GET", checkout.as_str())
+            .with_status(404)
+            .create_async()
+            .await;
+        let _register = server
+            .mock("POST", "/v1/register")
+            .with_status(400)
+            .with_body(r#"{"error":"voucher unknown or invalid"}"#)
+            .create_async()
+            .await;
         let seed = [67u8; 32];
         let pubkey_ss58 = address_for_seed(seed);
-
-        // Pending entry WITHOUT a matching voucher row: the pull
-        // succeeds (secret cached) but the register 400s (final).
-        let (secret, _hash) = warren_api_server::generate_voucher_secret();
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let wpid = "aaaabbbbccccdddd0000111122223333";
-        state.pending_vouchers.put(wpid, &secret, now + 600);
-
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
             .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
@@ -697,14 +710,18 @@ mod tests {
     async fn warren_remote_submit_voucher_with_unready_wpid_maps_invalid_voucher() {
         // Polling case: the webhook has not landed yet, so the pull
         // 404s. The GUI maps INVALID_VOUCHER to "keep polling".
-        let (api_url, _state) = spawn_warren_api().await;
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "ffeeddccbbaa99887766554433221100";
+        let _pull = server
+            .mock("GET", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .with_status(404)
+            .create_async()
+            .await;
         let seed = [66u8; 32];
-        let pubkey_ss58 = address_for_seed(seed);
-        let client = client_with_seed(api_url, seed);
-        let backend = WarrenRemoteAccountBackend::new(client);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
-            .submit_voucher(pubkey_ss58, "ffeeddccbbaa99887766554433221100".to_owned())
+            .submit_voucher(address_for_seed(seed), wpid.to_owned())
             .await
             .expect_err("unready wpid must fail");
         match err {

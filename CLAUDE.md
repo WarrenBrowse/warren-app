@@ -31,31 +31,35 @@ em-dash ban, and "why not what" comments. For this repo specifically:
 - Opportunistic cleanup: when you touch a file, translate stray French comments
   to English and replace stray dashes.
 
-## Dependency layout: two Warren siblings (post-cutover)
+## Dependency layout: three Warren siblings (fully off warren-core)
 
-The fork consumes Warren crates by `path` from two sibling repos checked out next
-to `warren-app`:
+The fork consumes Warren crates by `path` from three sibling repos checked out
+next to `warren-app`. It has **no dependency on `warren-core`** (the private
+backend), not even in tests: the SDK-client-to-server wire conformance lives in
+warren-core itself (`warren-core/conformance/`), so nothing here needs it.
 
-- **`../warren-core/`** (control-plane + tunnel keepers): `warren-identity`,
-  `warren-tunnel`, `warren-client`, `warren-config`, `warren-relay-selector`,
-  `warren-api`, `warren-api-client`. Its checkout SHA is pinned in
-  `.warren-core-version`. The quinn fork is the published `WarrenBrowse/warren-quinn`
-  git-dep (pinned by tag `v0.11.14-fork.4`), wired through `[patch.crates-io]` in
-  this repo's root `Cargo.toml` pointing at that git source. The crates are renamed
-  (`warren-quinn`/`-proto`/`-udp`) but their lib names stay `quinn`/`quinn_proto`/`quinn_udp`,
-  so every `use quinn` and the mullvad-logging crate-name filters are unchanged.
-  warren-core and warrenguard consume the same fork. There is no vendored tree and
-  no setup script.
-- **`../warrenguard/`** (carved data-plane engine): `warrenguard-wire` (formerly
-  `warren-protocol`), `warrenguard-multihop`, `warrenguard-relay`,
-  `warrenguard-natpmp-client`, `warrenguard-natpmp-protocol`, `warrenguard-backoff`.
-  Its checkout SHA is pinned in `.warrenguard-version`.
+- **`../warrenguard/`** (AGPL data-plane engine): `warrenguard-transport`,
+  `-transport-core`, `-route-split`, `-config`, `-wire`, `-multihop`, `-relay`,
+  `-natpmp-client`, `-natpmp-protocol`, `-backoff`, `-daita`, `-pump`. Pinned in
+  `.warrenguard-version`.
+- **`../warren-sdk-rs/`** (client SDK): `warren-api` (signed account client),
+  `warren-identity`. Pinned in `.warren-sdk-version`.
+- **`../warren-contract/`** (neutral client<->server contract): `warren-contract`
+  (SS58, X-Warren signing, `/v1` DTOs) and `warren-discovery-core`. Pinned in
+  `.warren-contract-version`.
 
-Both pins must move together with the `Cargo.lock` when bumping either sibling
-(keep the warren-quinn patch in place so the GSO knobs and the Initial-fragmentation
-obfuscation knobs stay present). Do NOT reintroduce the
-old shim names (`warren-protocol`, `warren-multihop`, `warren-natpmp-*`,
-`warren-backoff`, `warren-relay`); they were deleted from `warren-core` and the
+The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by
+tag `v0.11.14-fork.4`), wired through `[patch.crates-io]` in this repo's root
+`Cargo.toml`. The crates are renamed (`warren-quinn`/`-proto`/`-udp`) but their
+lib names stay `quinn`/`quinn_proto`/`quinn_udp`, so every `use quinn` and the
+mullvad-logging crate-name filters are unchanged; warrenguard consumes the same
+fork. There is no vendored tree and no setup script.
+
+Sibling pins move together with the `Cargo.lock` when bumping any of them (keep
+the warren-quinn patch in place so the GSO and Initial-fragmentation obfuscation
+knobs stay present; `build.sh` and CI fail loudly if the lock stops pinning the
+fork). Do NOT reintroduce the old shim names (`warren-protocol`,
+`warren-multihop`, `warren-natpmp-*`, `warren-backoff`, `warren-relay`); the
 engine equivalents now live under `warrenguard-*`.
 
 ## Deployment rule: ALWAYS bump versions before redeploying exit nodes
@@ -97,9 +101,10 @@ from **Git Bash** and the `.ps1` helpers from PowerShell.
 
 ### Siblings + quinn fork
 
-`../warren-core` and `../warrenguard` must be checked out next to this repo at the
-SHAs pinned in `.warren-core-version` / `.warrenguard-version` (see the dependency
-layout section above). The quinn fork needs no local setup: it is the published
+`../warrenguard`, `../warren-sdk-rs` and `../warren-contract` must be checked out
+next to this repo at the SHAs pinned in `.warrenguard-version` /
+`.warren-sdk-version` / `.warren-contract-version` (see the dependency layout
+section above). The quinn fork needs no local setup: it is the published
 `WarrenBrowse/warren-quinn` git-dep pinned by tag in this repo's root
 `[patch.crates-io]`, fetched by cargo like any other git dependency. There is no
 vendored tree to regenerate and no setup script to run.

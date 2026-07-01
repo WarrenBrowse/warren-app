@@ -22,16 +22,17 @@ inputs:
     required: false
   warren-core-token:
     description: >-
-      PAT with read access to WarrenBrowse/warren-core. Required because
-      warren-app's Cargo.toml has path-deps to ../warren-core/crates/*.
-      Configure as secrets.WARREN_CORE_RO_TOKEN in workflow callers.
+      PAT with read access to the WarrenBrowse org, used to clone the sibling
+      path-dep targets (warrenguard, warren-sdk-rs, warren-contract). Named for
+      historical reasons; the app no longer depends on warren-core. Configure
+      as secrets.WARREN_CORE_RO_TOKEN in workflow callers.
     default: ""
     required: false
   skip-warren-core:
     description: >-
-      Set to 'true' to skip checking out the sibling repos (warren-core +
-      warrenguard). Only safe for jobs that do not invoke cargo (e.g.,
-      shellcheck, yamllint).
+      Set to 'true' to skip checking out the sibling repos (warrenguard,
+      warren-sdk-rs, warren-contract). Only safe for jobs that do not invoke
+      cargo (e.g., shellcheck, yamllint).
     default: "false"
     required: false
   engine-token:
@@ -79,33 +80,6 @@ runs:
           echo "Not a vX.Y.Z tag build (ref_type='${GITHUB_REF_TYPE:-}' ref='${GITHUB_REF_NAME:-}'); keeping committed product version."
         fi
 
-    - name: Read pinned warren-core SHA
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
-      id: warren-core-pin
-      shell: bash
-      run: echo "sha=$(cat .warren-core-version)" >> "$GITHUB_OUTPUT"
-
-    - name: Checkout warren-core (sibling repo, path-dep target)
-      # Cloned manually instead of actions/checkout: the path-dep target lives at
-      # ../warren-core (sibling of the workspace), which actions/checkout refuses
-      # to write to ("not under $GITHUB_WORKSPACE"). git clone has no such limit.
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
-      shell: bash
-      env:
-        WARREN_CORE_TOKEN: ${{ inputs.warren-core-token }}
-        WARREN_CORE_SHA: ${{ steps.warren-core-pin.outputs.sha }}
-      run: |
-        set -euo pipefail
-        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-core"
-        rm -rf "$dest"
-        git clone --filter=blob:none \
-          "https://x-access-token:${WARREN_CORE_TOKEN}@github.com/WarrenBrowse/warren-core.git" "$dest"
-        git -C "$dest" checkout --detach "$WARREN_CORE_SHA"
-        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-core.git"
-        # The patched Quinn is consumed as the warren-quinn git-dep via the
-        # workspace [patch.crates-io] (renamed crates, lib names unchanged), so
-        # cargo fetches it directly: no vendored fork to regenerate here.
-
     - name: Read pinned warrenguard SHA
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       id: warrenguard-pin
@@ -113,10 +87,9 @@ runs:
       run: echo "sha=$(cat .warrenguard-version)" >> "$GITHUB_OUTPUT"
 
     - name: Checkout warrenguard (sibling engine repo, path-dep target)
-      # The AGPL engine lives in its own repo; warren-core's keeper crates and
-      # the app's tunnel crates path-dep ../warrenguard/crates/*. Same sibling
-      # clone pattern as warren-core. No quinn-fork setup here: the app builds
-      # the engine against warren-core's patched quinn via the workspace
+      # The AGPL engine lives in its own repo; the app's tunnel crates path-dep
+      # ../warrenguard/crates/*. No quinn-fork setup here: the app builds the
+      # engine against the warren-quinn git-dep via the workspace
       # [patch.crates-io], so warrenguard's own gitignored vendor/ is not needed.
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       shell: bash
@@ -139,8 +112,9 @@ runs:
       run: echo "sha=$(cat .warren-contract-version)" >> "$GITHUB_OUTPUT"
 
     - name: Checkout warren-contract (sibling contract repo, path-dep target)
-      # warren-core's warren-api-types path-deps ../warren-contract (the shared
-      # SS58 codec + HTTP /v1 DTOs). Same sibling clone pattern as warrenguard.
+      # The app path-deps ../warren-contract (the shared SS58 codec + X-Warren
+      # signing + HTTP /v1 DTOs) and ../warren-contract/warren-discovery. Same
+      # sibling clone pattern as warrenguard.
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
       shell: bash
       env:
@@ -155,12 +129,35 @@ runs:
         git -C "$dest" checkout --detach "$WARREN_CONTRACT_SHA"
         git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-contract.git"
 
-    - name: Warn if warren-core checkout was skipped
+    - name: Read pinned warren-sdk-rs SHA
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      id: warren-sdk-pin
+      shell: bash
+      run: echo "sha=$(cat .warren-sdk-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warren-sdk-rs (sibling SDK repo, path-dep target)
+      # The app path-deps ../warren-sdk-rs/crates/{warren-api,warren-identity}
+      # (signed account client + identity). Same sibling clone pattern.
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+        WARREN_SDK_SHA: ${{ steps.warren-sdk-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-sdk-rs"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-sdk-rs.git" "$dest"
+        git -C "$dest" checkout --detach "$WARREN_SDK_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-sdk-rs.git"
+
+    - name: Warn if the sibling checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token == '' }}
       shell: bash
       run: |
-        echo "::warning::warren-core was not checked out (no warren-core-token input)."
-        echo "::warning::cargo commands relying on path-deps to ../warren-core/crates/* will fail."
+        echo "::warning::sibling repos were not checked out (no warren-core-token input)."
+        echo "::warning::cargo commands relying on path-deps to ../warrenguard, ../warren-sdk-rs or ../warren-contract will fail."
         echo "::warning::Pass warren-core-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
 
     - name: Ensure rustup is available (self-heal rust-cache cache-bin deletion)
@@ -214,26 +211,24 @@ runs:
         git config --global url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
         echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
 
-    - name: Assert Cargo.lock <-> warren-core coherence (prevents silent quinn-patch drop)
-      # GUARD: the warren-app Cargo.lock and the pinned warren-core (.warren-core-version)
-      # must stay in lockstep. If they drift, cargo silently re-resolves on unsigned builds
-      # (build.sh only enforces --locked when signing) and DROPS the [patch.crates-io] quinn
-      # fork -> the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly here
-      # instead of building the wrong artifact. (Root-caused 2026-05-29.)
-      if: ${{ inputs.skip-warren-core != 'true' && inputs.warren-core-token != '' }}
+    - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
+      # GUARD: the app consumes the quinn fork as the `warren-quinn` git-dep via
+      # [patch.crates-io]. If the lock re-resolves to upstream quinn (cargo only
+      # enforces --locked on signed builds), the patch is silently dropped and
+      # the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly.
+      if: ${{ inputs.warren-core-token != '' }}
       shell: bash
       run: |
         set -euo pipefail
         if ! grep -Eq 'warren-quinn' Cargo.lock; then
-          echo "::error::Cargo.lock does not pin the warren-quinn fork; the [patch.crates-io] git-dep is not locked. Regenerate Cargo.lock with the quinn-fork present and commit it."
+          echo "::error::Cargo.lock does not pin the warren-quinn fork; the [patch.crates-io] git-dep is not locked. Regenerate Cargo.lock with the quinn-fork present (cargo update -p quinn -p quinn-proto -p quinn-udp) and commit it."
           exit 1
         fi
         if ! cargo metadata --locked --format-version=1 >/dev/null; then
-          echo "::error::Cargo.lock is out of sync with the pinned warren-core (.warren-core-version=$(cat .warren-core-version))."
-          echo "::error::Fix: bump .warren-core-version to the warren-core commit Cargo.lock was generated against, OR regenerate Cargo.lock with the quinn-fork present (cargo update -p quinn -p quinn-proto -p quinn-udp) and commit it."
+          echo "::error::Cargo.lock is out of sync with the workspace; regenerate it (cargo update -w) with the quinn-fork present and commit it."
           exit 1
         fi
-        echo "coherence OK: Cargo.lock pins the Warren quinn fork and matches the pinned warren-core."
+        echo "coherence OK: Cargo.lock pins the Warren quinn fork."
 
     # x86 for NSIS plugins; aarch64 for the --universal (x64+ARM64) Windows build
     - name: Install Rust Windows targets

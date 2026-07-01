@@ -79,23 +79,13 @@ if git tag --list 'v0.1.0-beta.*' | grep -q .; then
     git tag --list 'v0.1.0-beta.*' | sed 's/^/    /'
 fi
 
-section "Pin warren-core matches HEAD"
+section "quinn fork is locked"
 
-if [[ ! -f .warren-core-version ]]; then
-    record_fail ".warren-core-version missing"
+# A silent re-resolve to upstream quinn would drop the GSO/obfuscation patches.
+if grep -q 'warren-quinn' Cargo.lock; then
+    record_pass "Cargo.lock pins the warren-quinn fork"
 else
-    pinned=$(cat .warren-core-version)
-    warren_core_path="${WARREN_CORE_PATH:-../warren-core}"
-    if [[ -d "$warren_core_path/.git" ]]; then
-        head_warren_core=$(git -C "$warren_core_path" rev-parse HEAD)
-        if [[ "$pinned" == "$head_warren_core" ]]; then
-            record_pass "pin $pinned matches warren-core HEAD"
-        else
-            record_fail "pin $pinned != warren-core HEAD $head_warren_core (bump pin or rollback warren-core)"
-        fi
-    else
-        yellow "  SKIP: warren-core sibling repo not found at $warren_core_path"
-    fi
+    record_fail "Cargo.lock does not pin the warren-quinn fork (regenerate with the fork present)"
 fi
 
 section "Rust workspace: warren-app"

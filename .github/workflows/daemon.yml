@@ -14,10 +14,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # mullvad-build-env checks out the ../warren-core path-dep target (needed for
-      # `cargo metadata` to resolve) and sets up the toolchain, mirroring the
-      # macOS/Windows jobs below. Without the warren-core checkout this job fails
-      # at `cargo metadata`.
+      # mullvad-build-env checks out the sibling path-dep targets (warrenguard,
+      # warren-sdk-rs, warren-contract) needed for `cargo metadata` to resolve,
+      # and sets up the toolchain, mirroring the macOS/Windows jobs below.
       - uses: ./.github/actions/mullvad-build-env
         with:
           warren-core-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}

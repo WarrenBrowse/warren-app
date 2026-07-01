@@ -131,15 +131,17 @@ mirror.
 
 ### Warren crates consumed via `path`
 
-The fork pulls Warren crates by path from two sibling repos:
+The fork pulls Warren crates by path from three sibling repos (no `warren-core`):
 
-- Control-plane + tunnel crates from [`warren-core/`](../warren-core/): `warren-identity`,
-  `warren-tunnel`, `warren-client`, `warren-config`, `warren-relay-selector`, `warren-api`,
-  `warren-api-client`. The checkout SHA is pinned in [`.warren-core-version`](.warren-core-version).
-- Data-plane engine crates from [`warrenguard/`](../warrenguard/): `warrenguard-wire`,
-  `warrenguard-multihop`, `warrenguard-relay`, `warrenguard-natpmp-client`,
-  `warrenguard-natpmp-protocol`, `warrenguard-backoff`. The checkout SHA is pinned in
+- Data-plane engine crates from [`warrenguard/`](../warrenguard/):
+  `warrenguard-transport`, `-route-split`, `-config`, `-wire`, `-multihop`,
+  `-relay`, `-natpmp-client`, `-natpmp-protocol`, `-backoff`. Pinned in
   [`.warrenguard-version`](.warrenguard-version).
+- Client SDK crates from [`warren-sdk-rs/`](../warren-sdk-rs/): `warren-api`,
+  `warren-identity`. Pinned in [`.warren-sdk-version`](.warren-sdk-version).
+- Neutral contract crates from [`warren-contract/`](../warren-contract/):
+  `warren-contract`, `warren-discovery-core`. Pinned in
+  [`.warren-contract-version`](.warren-contract-version).
 
 The workspace crate [`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine
 and these crates. The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag),

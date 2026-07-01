@@ -20,9 +20,10 @@ DMG/PKG/.deb/.rpm/MSI/EXE artifacts are uploaded to a draft GitHub Release.
    `[<VERSION>] - <DATE>` and add a new `[Unreleased]` header at the top.
    Push this, get it reviewed and merged to `main`.
 
-3. Make sure `.warren-core-version` pins the warren-core HEAD you want to
-   ship. The CI build jobs checkout this SHA from
-   `github.com/WarrenBrowse/warren-core`.
+3. Make sure `.warrenguard-version`, `.warren-sdk-version` and
+   `.warren-contract-version` pin the sibling HEADs you want to ship, and that
+   `Cargo.lock` still pins the `warren-quinn` fork (`build.sh` and CI fail
+   loudly otherwise).
 
 ## Tag the release
 

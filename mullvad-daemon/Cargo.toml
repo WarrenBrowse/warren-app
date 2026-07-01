@@ -177,22 +177,16 @@ tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["chrono"] }
 
 [dev-dependencies]
-# Phase G.3: axum 0.8 used to spawn warren-api in-process inside the
-# E2E tests. Hard-pinned (not in workspace.dependencies) because axum
-# is not a prod dep of warren-app.
-axum = "0.8"
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
-# Test-only, never shipped: the E2E suite spawns the REAL warren-core HTTP
-# server in-process to prove wire-compat of the SDK's `warren-api` (client,
-# regular dep below) against the actual DTO surface. Aliased to
-# `warren-api-server` because the SDK client crate is also named
-# `warren-api` and Cargo cannot resolve two different packages under one
-# name. This is the one remaining warren-core reference in this manifest,
-# scoped to `[dev-dependencies]`.
-warren-api-server = { package = "warren-api", path = "../../warren-core/crates/warren-api" }
+# `WarrenRemoteAccountBackend`'s adapter mapping is tested against a mocked
+# HTTP peer (network boundary), not a real server: the SDK client <-> real
+# warren-core server wire-compat is proven in warren-core itself
+# (`warren-api/tests/sdk_client_wire_compat.rs`), so this repo carries no
+# dependency on warren-core.
+mockito = { workspace = true }
 
 [target.'cfg(any(unix, windows))'.dependencies]
 mullvad-update = { path = "../mullvad-update", features = ["client"] }
