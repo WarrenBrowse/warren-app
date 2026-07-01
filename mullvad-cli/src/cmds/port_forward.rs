@@ -374,7 +374,10 @@ mod tests {
         let mut rules = vec![rule(Protocol::Udp, 51820, 0), rule(Protocol::Tcp, 80, 0)];
         assert!(remove_rule(&mut rules, Protocol::Udp, 51820));
         assert_eq!(rules.len(), 1);
-        assert!(!remove_rule(&mut rules, Protocol::Udp, 51820), "already gone");
+        assert!(
+            !remove_rule(&mut rules, Protocol::Udp, 51820),
+            "already gone"
+        );
         // A protocol mismatch on the same port must not remove anything.
         assert!(!remove_rule(&mut rules, Protocol::Udp, 80));
         assert_eq!(rules.len(), 1);
