@@ -172,8 +172,11 @@ ensure_sudo() {
 # A daemon killed before it can tear down (SIGKILL, crash, hard Ctrl+C) leaves
 # the host without working name resolution in one of three ways, all repaired
 # after it exits by `repair_network_if_leaked`:
-#   1. DNS pinned at a local resolver (127/8 or ::1) that dies with the daemon.
-#      We snapshot the DNS before launch and restore it on a loopback leak.
+#   1. DNS pinned at a resolver the daemon set and that dies with it: a loopback
+#      (127/8, ::1) or a Warren tunnel resolver (10.64.0.0/10 e.g. 10.66.0.1,
+#      the `fdcc:` ULA e.g. fdcc:f:1::1), left in the Setup layer. We snapshot
+#      the DNS before launch and restore it (`networksetup ... empty` clears the
+#      Setup override so the box's own RA/DHCP resolver takes over again).
 #   2. A leaked IPv6 split-default (`::/1`+`8000::/1` via a now-gone `utun`) that
 #      blackholes all native IPv6. On a network whose ONLY resolver is reached
 #      over IPv6 (RA/RDNSS), that kills DNS while IPv4 still pings, until reboot.
@@ -189,18 +192,25 @@ readonly DNS_SNAPSHOT_FILE="/tmp/warren-dns-snapshot.txt"
 
 is_macos() { [[ "$OS_NAME" == "Darwin" ]]; }
 
-# True if the active system DNS points at a loopback (127.x / ::1) resolver.
-dns_is_loopback() {
+# True if the active system DNS points at a resolver the daemon leaves behind on
+# an unclean exit and that dies with it: a loopback (127.x / ::1) OR a Warren
+# tunnel resolver. Warren's tunnel DNS is the Mullvad-style CGNAT range
+# 10.64.0.0/10 (e.g. 10.66.0.1) for v4 and the `fdcc:` ULA (e.g. fdcc:f:1::1)
+# for v6 - distinct from the box's own `fd0f:` resolver. macOS ignores
+# /etc/resolv.conf (editing it does nothing), so `scutil --dns` is the only
+# truth; the daemon's leak sits in the Setup layer (which overrides State), and
+# `restore_dns_snapshot`'s `networksetup ... empty` clears exactly that layer.
+dns_is_leaked() {
   is_macos || return 1
   scutil --dns 2>/dev/null \
-    | grep -qE 'nameserver\[[0-9]+\][[:space:]]*:[[:space:]]*(127\.|::1)'
+    | grep -qE 'nameserver\[[0-9]+\][[:space:]]*:[[:space:]]*(127\.|::1|10\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.|fdcc:)'
 }
 
 # Save each network service's current DNS, unless DNS is already poisoned.
 snapshot_dns() {
   is_macos || return 0
-  if dns_is_loopback; then
-    warn "System DNS already points at a loopback resolver, skipping snapshot"
+  if dns_is_leaked; then
+    warn "System DNS already points at a leaked resolver, skipping snapshot"
     return 0
   fi
   : > "$DNS_SNAPSHOT_FILE"
@@ -290,14 +300,15 @@ repair_stranded_primary_v6_default() {
 }
 
 # Repair the ways a killed daemon can leave the host without working name
-# resolution: (1) DNS pinned at a dead loopback resolver, (2) a leaked IPv6
-# split-default blackholing the box's IPv6-only resolver, (3) the primary
-# interface's scoped IPv6 default route dropped on teardown. All safe no-ops
-# when nothing leaked.
+# resolution: (1) DNS pinned at a dead resolver it set (loopback OR a Warren
+# tunnel resolver like 10.66.0.1 / fdcc:f:1::1, in the Setup layer), (2) a
+# leaked IPv6 split-default blackholing the box's IPv6-only resolver, (3) the
+# primary interface's scoped IPv6 default route dropped on teardown. All safe
+# no-ops when nothing leaked.
 repair_network_if_leaked() {
   is_macos || return 0
-  if dns_is_loopback; then
-    warn "Stale loopback DNS detected (daemon exited without restoring it), repairing"
+  if dns_is_leaked; then
+    warn "Stale DNS detected (daemon exited without restoring its resolver), repairing"
     restore_dns_snapshot
   fi
   repair_leaked_v6_split
