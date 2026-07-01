@@ -14,8 +14,8 @@
 //! re-validation downstream; (3) replace `AccountNumber` across the
 //! API + daemon chain (see `warren-core/docs/06-auth-wallet.md`).
 //!
-//! **Codec note**: the canonical SS58 codec lives in
-//! `warren_identity::ss58` (warren-core) and is byte-for-byte compatible
+//! **Codec note**: the canonical SS58 codec lives in `warren_contract::ss58`
+//! (the shared client<->server contract crate) and is byte-for-byte compatible
 //! with `@polkadot/util-crypto` v14. To keep this foundational crate
 //! free of the heavy identity/keyring dependency, the minimal
 //! encode/decode is mirrored here in [`ss58`]; both are pinned to the
@@ -26,12 +26,12 @@ use std::str::FromStr;
 
 /// Warren SS58 network prefix (`13295`), re-exported from the shared
 /// codec crate. Chosen so every address starts with `wb`.
-pub use warren_ss58::WARREN_SS58_PREFIX;
+pub use warren_contract::ss58::WARREN_SS58_PREFIX;
 
-// The SS58 codec is the shared `warren-ss58` leaf crate - the single
+// The SS58 codec is the shared `warren-contract` crate - the single
 // source of truth, also re-exported as `warren_identity::ss58` on the
 // backend. No checksum logic is duplicated in this crate.
-use warren_ss58 as ss58;
+use warren_contract::ss58;
 
 /// Warren pubkey - validated wrapper around a Warren SS58 address
 /// (`wb…`) representing an Ed25519 pubkey (32 bytes).

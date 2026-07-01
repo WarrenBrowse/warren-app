@@ -7,7 +7,7 @@
 //! the tunnel lifecycle.
 //!
 //! Underneath, [`WarrenTunnelMonitor::start`] performs the QUIC
-//! handshake through [`warren_tunnel::ClientTunnel`], opens a TUN via
+//! handshake through [`warrenguard_transport::ClientTunnel`], opens a TUN via
 //! the talpid `TunProvider`, emits `TunnelEvent::InterfaceUp` / `Up`
 //! and spawns the bidirectional pump (TUN <-> QUIC datagrams).
 //! `wait()` blocks on the close-signal, drops the routing-table
@@ -45,11 +45,11 @@ pub use warrenguard_natpmp_protocol::MapProto as NatPmpProto;
 // settings plumbing. Re-exported so callers (mullvad-daemon, gRPC
 // conversions, settings persistence) consume one canonical type
 // instead of duplicating it across crates.
-pub use warren_client::bypass_cidr::BypassCidr;
+pub use warrenguard_route_split::bypass_cidr::BypassCidr;
 // ADR 36 (Option A): the daemon stores a per-tunnel migrate handle and builds
 // migration targets from the directory's selected circuit, so re-export both
-// types from this crate (it owns `MultiHopConfig` and depends on warren-core).
-pub use warren_client::supervisor::{CircuitTarget, MigrateHandle};
+// types from this crate (it owns `MultiHopConfig`).
+pub use warrenguard_transport::supervisor::{CircuitTarget, MigrateHandle};
 
 /// Project a [`MultiHopConfig`] (a circuit the directory selected) into the
 /// [`CircuitTarget`] the supervisor migrates onto: the relay + exit identity,
@@ -62,11 +62,13 @@ pub fn migration_target(cfg: &MultiHopConfig) -> CircuitTarget {
         exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
     }
 }
-use warren_tunnel::{
-    ClientSession, ClientTunnel, DaitaState, MultiSession, pump_bidirectional,
-    pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover, pump_multi_bidirectional,
-    pump_multi_bidirectional_with_daita, pump_multi_bidirectional_with_idle_cover,
+use warrenguard_daita::DaitaState;
+use warrenguard_pump::{
+    pump_bidirectional, pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover,
+    pump_multi_bidirectional, pump_multi_bidirectional_with_daita,
+    pump_multi_bidirectional_with_idle_cover,
 };
+use warrenguard_transport::{ClientSession, ClientTunnel, MultiSession};
 /// Re-export of the single-hop stable exit identifier from
 /// warrenguard-wire. Pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
@@ -220,14 +222,14 @@ pub struct WarrenTunnelParameters {
     /// ALPN protocols (as bytes) offered in the QUIC/TLS handshake, in
     /// preference order, sourced from the selected exit's v6 listener(s).
     /// Empty falls back to the `ALPN_H3` default inside
-    /// [`warren_tunnel::ClientTunnel`]. Single-hop only; the multi-hop
+    /// [`warrenguard_transport::ClientTunnel`]. Single-hop only; the multi-hop
     /// path negotiates ALPN from its own signed relay descriptor.
     pub alpn_protocols: Vec<Vec<u8>>,
 
     /// Multi-hop configuration. `None` (default) selects the legacy
-    /// single-hop path through [`warren_tunnel::ClientTunnel`]; `Some`
+    /// single-hop path through [`warrenguard_transport::ClientTunnel`]; `Some`
     /// dispatches to a multi-hop session driven by
-    /// `warren_client::supervisor::MultiHopSupervisor` against the
+    /// `warrenguard_transport::supervisor::MultiHopSupervisor` against the
     /// supplied first-hop relay.
     ///
     /// Selecting multi-hop changes the firewall surface (the daemon
@@ -244,7 +246,7 @@ pub struct WarrenTunnelParameters {
     /// `WarrenStatusCache` so the Electron UI counter advances.
     /// Ignored on the single-hop path (single-hop has no auto-reconnect
     /// supervisor in /v1).
-    pub on_reconnect: Option<warren_client::supervisor::ReconnectObserver>,
+    pub on_reconnect: Option<warrenguard_transport::supervisor::ReconnectObserver>,
 
     /// ADR 36: invoked with the current multi-hop exit id when the exit
     /// signals an in-band maintenance drain, so the daemon can add it to a
@@ -383,7 +385,7 @@ pub struct NatPmpRuleId {
 }
 
 /// One port-forward rule the user wants active. The client may hold up
-/// to the exit-enforced quota (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`)
+/// to the exit-enforced quota (`warrenguard_config::NATPMP_QUOTA_PER_CLIENT_IP`)
 /// of these at once.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NatPmpRule {
@@ -714,7 +716,7 @@ fn reject_error(reason: RejectionReason) -> Error {
 /// Maps a `warren_tunnel` handshake error to the talpid backend [`Error`].
 ///
 /// An explicit auth rejection from the exit
-/// ([`warren_tunnel::TunnelError::AuthRejected`] - the client's identity
+/// ([`warrenguard_transport_core::TunnelError::AuthRejected`] - the client's identity
 /// is not authorized: no active subscription / not enrolled) is FATAL
 /// and non-retryable: retrying re-derives the same outcome, and the
 /// state machine would otherwise loop and surface a misleading "no
@@ -722,7 +724,7 @@ fn reject_error(reason: RejectionReason) -> Error {
 /// Every other handshake failure is treated as a (recoverable)
 /// [`Error::Handshake`] - a transient network glitch is the common case
 /// and the next attempt usually succeeds.
-fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
+fn map_handshake_error(e: warrenguard_transport_core::TunnelError) -> Error {
     // The `[TOKEN]` prefix is parsed by `mullvad_types::auth_failed::AuthFailed`
     // (via `ErrorStateCause::AuthFailed`) into a `proto::AuthFailedError`, which
     // the GUI renders as a precise, already-localized message. Reusing the
@@ -732,14 +734,14 @@ fn map_handshake_error(e: warren_tunnel::TunnelError) -> Error {
     //   [EXPIRED_ACCOUNT]      -> "Blocking internet: account is out of time"
     // Both are non-retryable business rejections (see `map`-arm rationale).
     match e {
-        warren_tunnel::TunnelError::AuthRejected => Error::BackendFatal(
+        warrenguard_transport_core::TunnelError::AuthRejected => Error::BackendFatal(
             "[EXPIRED_ACCOUNT] exit rejected the handshake: no active subscription for this account"
                 .to_owned(),
         ),
         // Device cap (v2): account already at its max simultaneous devices.
         // Maps to TOO_MANY_CONNECTIONS - the GUI string is an exact fit
         // ("disconnect another device or try again shortly").
-        warren_tunnel::TunnelError::DeviceLimitReached => Error::BackendFatal(
+        warrenguard_transport_core::TunnelError::DeviceLimitReached => Error::BackendFatal(
             "[TOO_MANY_CONNECTIONS] exit rejected the handshake: device limit reached for this account"
                 .to_owned(),
         ),
@@ -811,7 +813,7 @@ pub struct WarrenTunnelMonitor {
 /// Backend-specific task ownership.
 ///
 /// - [`MonitorBackend::SingleHop`] owns a single bidirectional pump spawned by
-///   `warren_tunnel::pump_bidirectional` / `pump_multi_bidirectional` and an oneshot channel to
+///   `warrenguard_pump::pump_bidirectional` / `pump_multi_bidirectional` and an oneshot channel to
 ///   surface abnormal pump terminations.
 /// - [`MonitorBackend::MultiHop`] owns a 3-task fanout: the `MultiHopSupervisor` future (drives
 ///   connect+reconnect), the uplink pump (TUN -> multi-hop) and the downlink pump (multi-hop ->
@@ -861,9 +863,9 @@ enum MonitorBackend {
 
 impl WarrenTunnelMonitor {
     /// Starts a Warren tunnel from `params`, dispatching to the
-    /// single-hop path through `warren_tunnel::ClientTunnel` (when
+    /// single-hop path through `warrenguard_transport::ClientTunnel` (when
     /// `params.multi_hop` is `None`) or the multi-hop path through
-    /// `warren_client::supervisor::MultiHopSupervisor` (when `Some`).
+    /// `warrenguard_transport::supervisor::MultiHopSupervisor` (when `Some`).
     ///
     /// Both paths block the current thread until the underlying QUIC
     /// session is established and the TUN is up.
@@ -886,7 +888,7 @@ impl WarrenTunnelMonitor {
     }
 
     /// Single-hop path: dial the exit directly through
-    /// `warren_tunnel::ClientTunnel`, open a TUN, install routing
+    /// `warrenguard_transport::ClientTunnel`, open a TUN, install routing
     /// guards, then spawn the bidirectional pump.
     ///
     /// Sequence:
@@ -942,7 +944,7 @@ impl WarrenTunnelMonitor {
         // pump would lose all liveness). Default-off; turning it on by
         // default is gated on a real-network bench (ADR-0006).
         let idle_cover_active =
-            idle_cover_effective(warren_tunnel::knobs::idle_cover_enabled(), enable_daita);
+            idle_cover_effective(warrenguard_config::knobs::idle_cover_enabled(), enable_daita);
 
         // v6 X.509 cover-domain mode (wg-0005 / ADR-0005 Stage 1). When
         // `WARREN_COVER_DOMAIN` is set the client validates the exit's real
@@ -1166,7 +1168,7 @@ impl WarrenTunnelMonitor {
         };
         #[cfg(target_os = "macos")]
         let routes = build_warren_tunnel_routes_macos(&metadata.interface, &exit_ips);
-        // Windows owns its routing entirely from the warren-core
+        // Windows owns its routing entirely from the warrenguard-route-split
         // PowerShell port (`DefaultRouteSplitGuard::install` below):
         // host-route exception + `0.0.0.0/1` + `128.0.0.0/1` via the
         // WinTUN adapter. talpid-routing is therefore handed an empty
@@ -1210,7 +1212,7 @@ impl WarrenTunnelMonitor {
         // - Linux: dedicated table 100 + `ip rule` bypass for the exit IP (in-crate impl, see
         //   `default_route_split::linux`).
         // - macOS: host-route exception + `/1` split-default on the global table, ported from
-        //   `warren_client::default_route_split_macos`.
+        //   `warrenguard_route_split::default_route_split_macos`.
         // - Other platforms: stub that fails to install (operator sees "Internet traffic will NOT
         //   route via tunnel" warning).
         //
@@ -1335,10 +1337,10 @@ impl WarrenTunnelMonitor {
             // self-terminates when the connections close.
             drop(match &session_kind {
                 SessionKind::Mono(session) => {
-                    warren_tunnel::spawn_path_probe("client", vec![session.clone_conn()], None)
+                    warrenguard_transport_core::spawn_path_probe("client", vec![session.clone_conn()], None)
                 }
                 SessionKind::Multi(multi) => {
-                    warren_tunnel::spawn_path_probe("client", multi.clone_connections(), None)
+                    warrenguard_transport_core::spawn_path_probe("client", multi.clone_connections(), None)
                 }
             });
             let pump_result = match session_kind {
@@ -1527,7 +1529,7 @@ impl WarrenTunnelMonitor {
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
         use std::{sync::Arc, time::Duration};
-        use warren_client::{
+        use warrenguard_transport::{
             supervised_pump::{ExitDrainingChannel, IpAssignChannel, run_downlink, run_uplink},
             supervisor::{MultiHopSupervisor, SupervisorConfig},
         };
@@ -1646,7 +1648,7 @@ impl WarrenTunnelMonitor {
         // so a permanently-unreachable relay surfaces as a clean
         // Error::Handshake instead of hanging the state machine.
         let initial_wait_bound = HANDSHAKE_WAIT_BOUND;
-        let initial_client: Arc<warren_client::bundle::MultiHopBundle> =
+        let initial_client: Arc<warrenguard_transport::bundle::MultiHopBundle> =
             runtime.block_on(async {
                 let deadline = tokio::time::Instant::now() + initial_wait_bound;
                 loop {
@@ -1706,7 +1708,7 @@ impl WarrenTunnelMonitor {
         // client pubkey. Multi-hop /v1 has no server-side IP allocator
         // (the relay never holds the HPKE key, the exit talks ciphertext
         // only), so the client picks its own slot inside
-        // `warren_config::TUNNEL_POOL_CIDR` (`10.66.0.0/16`).
+        // `warrenguard_config::TUNNEL_POOL_CIDR` (`10.66.0.0/16`).
         //
         // Derivation: octet C, D = pubkey[0], pubkey[1].max(2). Skips
         // `10.66.X.0` (network) and `10.66.X.1` (gateway). Collision
@@ -1833,8 +1835,8 @@ impl WarrenTunnelMonitor {
                 gateway_v4,
             )
         };
-        // Windows: routing fully owned by the warren-core PowerShell
-        // port via `DefaultRouteSplitGuard::install` below; talpid-
+        // Windows: routing fully owned by the warrenguard-route-split
+        // PowerShell port via `DefaultRouteSplitGuard::install` below; talpid-
         // routing gets an empty set to avoid double-install.
         #[cfg(target_os = "windows")]
         let routes: Vec<RequiredRoute> = Vec::new();
@@ -2905,7 +2907,7 @@ fn select_session_request(n_connections: u8) -> SessionRequest {
 /// Decides whether ADR-0006 B2-lite idle cover is armed for this session.
 ///
 /// `knob` is `WARREN_IDLE_COVER` (read once via
-/// `warren_tunnel::knobs::idle_cover_enabled`). `daita_requested` is the
+/// `warrenguard_config::knobs::idle_cover_enabled`). `daita_requested` is the
 /// client's DAITA opt-in. Idle cover and DAITA are mutually exclusive
 /// cover mechanisms (DAITA carries its own padding), so idle cover is
 /// armed only when the knob is on AND DAITA is not requested.
@@ -2920,7 +2922,7 @@ fn idle_cover_effective(knob: bool, daita_requested: bool) -> bool {
     knob && !daita_requested
 }
 
-/// Derives a deterministic IPv4 in `warren_config::TUNNEL_POOL_CIDR`
+/// Derives a deterministic IPv4 in `warrenguard_config::TUNNEL_POOL_CIDR`
 /// (`10.66.0.0/16`) from the client Ed25519 pubkey bytes.
 ///
 /// Multi-hop /v1 has no server-side IP allocator (the relay is
@@ -3002,7 +3004,7 @@ fn build_tun_config_for_kind(session: &SessionKind) -> TunConfig {
         // direct path-dep.
         ipv4_gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
         // Warren convention: the IPv6 gateway is `fdcc:f:1::1`
-        // (`warren_config::TUNNEL_GATEWAY_IPV6`), set only when the exit
+        // (`warrenguard_config::TUNNEL_GATEWAY_IPV6`), set only when the exit
         // actually allocated a tunnel v6 (i.e. the client advertised
         // `features::IPV6` on the single-hop path). `None` keeps the
         // interface v4-only so the firewall blocks native IPv6 with no
@@ -3426,7 +3428,7 @@ mod tests {
         // constructs `WarrenTunnelParameters` without specifying
         // `multi_hop` (single-hop = legacy path) must keep yielding
         // `None` so the dispatcher dispatches to
-        // `warren_tunnel::ClientTunnel`. Mutation = silent multi-hop
+        // `warrenguard_transport::ClientTunnel`. Mutation = silent multi-hop
         // by default = breaks every existing deployment.
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
@@ -3922,7 +3924,7 @@ mod tests {
         // machine stops retrying. Retrying re-derives the same outcome
         // and surfaces a misleading "no matching relay" instead of the
         // real "subscription required" cause.
-        let mapped = map_handshake_error(warren_tunnel::TunnelError::AuthRejected);
+        let mapped = map_handshake_error(warrenguard_transport_core::TunnelError::AuthRejected);
         assert!(
             matches!(mapped, Error::BackendFatal(_)),
             "AuthRejected must map to BackendFatal, got: {mapped:?}"
@@ -3941,7 +3943,7 @@ mod tests {
         // non-recoverable so the state machine stops retrying and the app
         // surfaces a precise "device limit reached" message instead of
         // the misleading "no matching relay" / "no exit available".
-        let mapped = map_handshake_error(warren_tunnel::TunnelError::DeviceLimitReached);
+        let mapped = map_handshake_error(warrenguard_transport_core::TunnelError::DeviceLimitReached);
         assert!(
             matches!(mapped, Error::BackendFatal(_)),
             "DeviceLimitReached must map to BackendFatal, got: {mapped:?}"
@@ -3957,7 +3959,7 @@ mod tests {
         // A non-auth handshake failure (e.g. a transient connection
         // loss) must remain a recoverable `Error::Handshake` so a single
         // glitch does not enter the kill-switch error state.
-        let mapped = map_handshake_error(warren_tunnel::TunnelError::NoExitAddr);
+        let mapped = map_handshake_error(warrenguard_transport_core::TunnelError::NoExitAddr);
         assert!(
             matches!(mapped, Error::Handshake(_)) && mapped.is_recoverable(),
             "non-auth handshake errors must stay recoverable, got: {mapped:?}"

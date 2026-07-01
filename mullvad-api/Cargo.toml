@@ -51,10 +51,10 @@ mullvad-fs = { path = "../mullvad-fs" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 # Warren fork: consume the canonical HEADER_* + canonical_message wire
-# format from warren-api-client (re-exported from warren-identity::auth)
+# format from warren-identity (re-exported from its `signing` module)
 # rather than duplicating them locally - a silent divergence would
 # break every signed API request.
-warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
 rustls-pki-types.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }

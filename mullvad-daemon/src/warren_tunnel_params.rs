@@ -14,8 +14,8 @@ use std::net::SocketAddr;
 use ed25519_dalek::SigningKey;
 use mullvad_types::settings::WarrenCustomExitSettings;
 use talpid_warren_tunnel::{BypassCidr, MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
-use warren_relay_selector::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
-use warren_relay_selector::{SelectorError, WarrenRelayQuery};
+use warren_discovery_core::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
+use warren_discovery_core::{SelectorError, WarrenRelayQuery};
 
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 
@@ -212,7 +212,7 @@ pub fn assemble_for_attempt(
 /// Auto-failover variant: when the previous tunnel attempt is
 /// known to have used `excluded_pubkey` and failed, pick an
 /// alternative relay via
-/// [`warren_relay_selector::WarrenRelaySelector::select_failover_alternative`]
+/// [`warren_discovery_core::WarrenRelaySelector::select_failover_alternative`]
 /// (same-country preference, global fallback). The rest of the
 /// returned [`WarrenTunnelParameters`] is identical to
 /// [`assemble_for_attempt`] - the failover only affects relay
@@ -359,8 +359,8 @@ pub fn assemble_custom(
 #[cfg(test)]
 mod tests {
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::warren_types::WarrenPubkey;
-    use warren_relay_selector::{
+    use warren_discovery_core::warren_types::WarrenPubkey;
+    use warren_discovery_core::{
         Addr, Ingress, Listener, Location, LocationConstraint, WarrenRelay, WarrenRelayList,
     };
 
@@ -374,7 +374,7 @@ mod tests {
     fn fixture_relay(seed: u8, country: &str) -> WarrenRelay {
         WarrenRelay::from_public(
             WarrenPubkey::from_bytes([seed; 32]),
-            warren_relay_selector::warren_types::ExitId::from_bytes([seed; 16]),
+            warren_discovery_core::warren_types::ExitId::from_bytes([seed; 16]),
             Location::new(country, "_"),
             100,
             true,

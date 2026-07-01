@@ -11,10 +11,10 @@ chrono = { workspace = true, features = ["clock", "serde"] }
 clap = { workspace = true, optional = true }
 either = "1.11"
 # Warren fork: `WarrenPubKey` validates an SS58 address (prefix 13295,
-# `wb…`). Uses the shared `warren-ss58` leaf crate from warren-core - the
+# `wb…`). Uses the shared `warren-contract` codec crate directly - the
 # single source of truth for the codec, also re-exported as
 # `warren_identity::ss58` on the backend. No duplicated checksum logic.
-warren-ss58 = { path = "../../warren-core/crates/warren-ss58" }
+warren-contract = { path = "../../warren-contract" }
 intersection-derive = { path = "intersection-derive" }
 ipnetwork = { workspace = true }
 log = { workspace = true }

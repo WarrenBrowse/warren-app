@@ -1,6 +1,6 @@
 //! `PacketDevice` adapter that bridges Mullvad TUN devices
 //! ([`tun08::AsyncDevice`]) onto the Warren trait
-//! ([`warren_tunnel::PacketDevice`]).
+//! ([`warrenguard_transport_core::PacketDevice`]).
 //!
 //! Required because Warren and Mullvad use different versions of the
 //! `tun` crate:
@@ -16,7 +16,7 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
-use warren_tunnel::PacketDevice;
+use warrenguard_transport_core::PacketDevice;
 
 /// Per-`recv()` allocation size. 65 535 = theoretical IPv4 MTU max.
 /// Most packets will be < 1500 bytes, and `Vec::truncate` after the

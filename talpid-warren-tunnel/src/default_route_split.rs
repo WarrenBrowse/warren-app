@@ -6,21 +6,21 @@
 //! routing primitives differ:
 //!
 //! - **Linux**: dedicated table 100 + `ip rule` priorities + an exit-IP bypass exception. The
-//!   recipe lives once in `warren_client::default_route_split` (table 100, the `0.0.0.0/1` +
+//!   recipe lives once in `warrenguard_route_split::default_route_split` (table 100, the `0.0.0.0/1` +
 //!   `128.0.0.0/1` halves, exit-IP bypass at pref 50, TUN lookup at pref 51, synchronous `Drop`
 //!   teardown, ownership-scoped crash recovery). The thin [`linux`] wrapper only injects the
 //!   desktop daemon's split-tunnel **fwmark** bypass (`fwmark <TUNNEL_FWMARK> lookup main pref
-//!   49`, so excluded apps egress the physical NIC) via warren-core's `split_tunnel_fwmark`
+//!   49`, so excluded apps egress the physical NIC) via warrenguard-route-split's `split_tunnel_fwmark`
 //!   parameter. The standalone CLI passes `--bypass-cidr` (a `to <cidr> lookup main pref 49`
 //!   rule) through the same parameter slot instead; both coexist at pref 49 with distinct
 //!   selectors. No part of the recipe is duplicated.
 //! - **macOS**: route-specificity ordering in the global table - `<exit_ip>/32 -interface
 //!   <default_iface>` (host-route exception) then `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>`.
-//!   Implementation re-exported verbatim from `warren_client::default_route_split_macos` so the
+//!   Implementation re-exported verbatim from `warrenguard_route_split::default_route_split_macos` so the
 //!   adapter stays a thin wrapper.
 //! - **Windows**: PowerShell `New-NetRoute` recipe - host-route exception on the captured default
 //!   `(ifindex, NextHop)` pair, then `0.0.0.0/1` + `128.0.0.0/1 -InterfaceAlias <tun>`. Re-exported
-//!   from `warren_client::default_route_split_windows`.
+//!   from `warrenguard_route_split::default_route_split_windows`.
 //! - **Other** (any target that is not Linux, macOS or Windows): a [`stub`] that always fails to
 //!   install. Lets the `default_route_guard` field type exist so the crate compiles on every target
 //!   while making it visible at runtime that traffic is **not** being captured by the tunnel
@@ -38,20 +38,20 @@ mod linux;
 #[cfg(target_os = "linux")]
 pub use linux::DefaultRouteSplitGuard;
 
-// macOS uses the upstream warren-core port directly. Identical install
+// macOS uses the upstream warrenguard-route-split port directly. Identical install
 // signature (`install(Ipv4Addr, &str) -> Result<Self>`) so the lib.rs
 // dispatch is OS-agnostic at the call site. See
-// `warren_client::default_route_split_macos` for the recipe + tests.
+// `warrenguard_route_split::default_route_split_macos` for the recipe + tests.
 #[cfg(target_os = "macos")]
-pub use warren_client::default_route_split_macos::DefaultRouteSplitGuard;
+pub use warrenguard_route_split::default_route_split_macos::DefaultRouteSplitGuard;
 
 // Windows: same `install(Ipv4Addr, &str) -> Result<Self>` shape as
-// Linux + macOS, exposed by the warren-core PowerShell port. The
+// Linux + macOS, exposed by the warrenguard-route-split PowerShell port. The
 // recipe is `New-NetRoute` host-route exception + the two /1 routes
 // landing on the WinTUN interface alias. See
-// `warren_client::default_route_split_windows` for the recipe + tests.
+// `warrenguard_route_split::default_route_split_windows` for the recipe + tests.
 #[cfg(target_os = "windows")]
-pub use warren_client::default_route_split_windows::DefaultRouteSplitGuard;
+pub use warrenguard_route_split::default_route_split_windows::DefaultRouteSplitGuard;
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 mod stub;
@@ -59,7 +59,7 @@ mod stub;
 pub use stub::DefaultRouteSplitGuard;
 
 // IPv6 split-default routing. Each desktop OS now ships a real leak-safe
-// v6 guard from `warren_client` (Linux: `::/1` + `8000::/1` in the
+// v6 guard from `warrenguard_route_split` (Linux: `::/1` + `8000::/1` in the
 // dedicated table; macOS: `route -inet6` halves; Windows: `New-NetRoute`
 // halves), all with the same `install(Option<Ipv6Addr>, &str)` shape so
 // this facade stays OS-agnostic at the call site. Truly exotic targets
@@ -68,9 +68,9 @@ pub use stub::DefaultRouteSplitGuard;
 #[cfg(target_os = "linux")]
 pub use linux::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "macos")]
-pub use warren_client::default_route_split_macos::DefaultRouteSplitV6Guard;
+pub use warrenguard_route_split::default_route_split_macos::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "windows")]
-pub use warren_client::default_route_split_windows::DefaultRouteSplitV6Guard;
+pub use warrenguard_route_split::default_route_split_windows::DefaultRouteSplitV6Guard;
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use v6_stub::DefaultRouteSplitV6Guard;
@@ -125,11 +125,11 @@ mod v6_stub {
 /// the Windows `/1` halves), so a co-resident VPN's routing is never disturbed.
 pub fn force_route_cleanup() {
     #[cfg(target_os = "macos")]
-    warren_client::default_route_split_macos::force_cleanup_all();
+    warrenguard_route_split::default_route_split_macos::force_cleanup_all();
     #[cfg(target_os = "linux")]
-    warren_client::default_route_split::force_cleanup_all();
+    warrenguard_route_split::default_route_split::force_cleanup_all();
     #[cfg(target_os = "windows")]
-    warren_client::default_route_split_windows::force_cleanup_all();
+    warrenguard_route_split::default_route_split_windows::force_cleanup_all();
 }
 
 #[cfg(test)]
@@ -141,7 +141,7 @@ mod facade_tests {
     // (Ipv4Addr, &str) -> Result<Self>` shape and a `uninstall(self)
     // -> Result<()>` shape, so the OS-agnostic call site in `lib.rs`
     // stays compatible. If the per-OS impl signature drifts (e.g. an
-    // extra arg lands in `warren_client::default_route_split_macos::install`),
+    // extra arg lands in `warrenguard_route_split::default_route_split_macos::install`),
     // this test fails at compile time and the operator gets a clear
     // signal that the facade needs to be re-aligned.
     //
@@ -153,7 +153,7 @@ mod facade_tests {
             let exit_ip: Ipv4Addr = "10.0.0.1".parse().unwrap();
             let tun_name = "tun0";
             // Mirrors the lib.rs v4 call site verbatim. Fails to compile if
-            // the Linux wrapper or the warren-core macOS/Windows ports diverge
+            // the Linux wrapper or the warrenguard-route-split macOS/Windows ports diverge
             // from the (Ipv4Addr, &str) signature.
             let guard: anyhow::Result<DefaultRouteSplitGuard> =
                 DefaultRouteSplitGuard::install(exit_ip, tun_name).await;

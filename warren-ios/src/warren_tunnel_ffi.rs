@@ -207,7 +207,7 @@ pub type WarrenTunnelEventCallback =
     unsafe extern "C" fn(event: *const WarrenTunnelEventC, context: *mut c_void);
 
 /// Outbound packet callback signature. Called from a Tokio task that
-/// drains [`warren_tunnel::IosTun`] after each `PacketDevice::send` from
+/// drains [`warrenguard_transport::IosTun`] after each `PacketDevice::send` from
 /// the downlink pump. The Swift side bridges to
 /// `NEPacketTunnelFlow.writePackets(_:withProtocols:)`.
 ///
@@ -273,7 +273,7 @@ const RC_TUNNEL_FEATURE_DISABLED: c_int = -10;
 mod handle_impl {
     //! Real handle implementation when the `tunnel` feature is on.
     //!
-    //! Owns the Tokio runtime + [`warren_tunnel::IosTun`] bridge +
+    //! Owns the Tokio runtime + [`warrenguard_transport::IosTun`] bridge +
     //! callback registration. The Quinn connection task is spawned
     //! lazily in [`WarrenTunnelHandleImpl::run`].
 
@@ -285,7 +285,7 @@ mod handle_impl {
     use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, AtomicU64, Ordering};
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime;
-    use warren_tunnel::IosTun;
+    use warrenguard_transport::IosTun;
 
     /// Pointer + opaque context pair tracked as a single unit. Both
     /// fields move together so the borrow checker enforces atomic
@@ -590,10 +590,10 @@ fn spawn_multi_hop(
 ) {
     use std::sync::atomic::Ordering;
 
-    use warren_client::supervised_pump::{
+    use warrenguard_transport::supervised_pump::{
         ExitDrainingChannel, IpAssignChannel, run_downlink, run_uplink,
     };
-    use warren_client::supervisor::{MultiHopSupervisor, SupervisorConfig};
+    use warrenguard_transport::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
     let arc_for_task = std::sync::Arc::clone(&arc);
     arc.runtime.spawn(async move {
@@ -1187,7 +1187,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             };
             arc_for_task.fire_event(connecting_event);
 
-            let client = warren_tunnel::ClientTunnel::with_signing_key(&signing_key)
+            let client = warrenguard_transport::ClientTunnel::with_signing_key(&signing_key)
                 .with_daita(daita_requested);
             let session = match client.connect(exit_target).await {
                 Ok(session) => session,
@@ -1230,14 +1230,14 @@ pub unsafe extern "C" fn warren_tunnel_start(
             // Falls back to the plain pump otherwise. Mirrors warren-jni.
             let daita_state = match session.daita_spec() {
                 Some(spec) if daita_requested => {
-                    warren_tunnel::DaitaState::from_config(spec, std::time::Instant::now()).ok()
+                    warrenguard_daita::DaitaState::from_config(spec, std::time::Instant::now()).ok()
                 }
                 _ => None,
             };
             let pump_result = if let Some(state) = daita_state {
-                warren_tunnel::pump_bidirectional_with_daita(tun, conn, state).await
+                warrenguard_pump::pump_bidirectional_with_daita(tun, conn, state).await
             } else {
-                warren_tunnel::pump_bidirectional(tun, conn).await
+                warrenguard_pump::pump_bidirectional(tun, conn).await
             };
             drop(session);
             let _ = pump_result; // pump logs errors via tracing

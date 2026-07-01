@@ -4,10 +4,10 @@
 //! mirrors [`crate::warren_relay_list_updater`] (periodic fetch of a
 //! signed artifact from warren-api, verified before use) but targets
 //! `GET {api_url}/v1/multihop/directory`, a
-//! [`warren_relay_selector::SignedMultiHopDirectory`].
+//! [`warren_discovery_core::SignedMultiHopDirectory`].
 //!
 //! Trust chain enforced on every fetch (see
-//! [`warren_relay_selector::verify_multihop_directory_any`]):
+//! [`warren_discovery_core::verify_multihop_directory_any`]):
 //! server envelope (pinned server key, freshness/anti-rollback) → root
 //! certificate (pinned **root** key) → operational-signed node
 //! descriptors. warren-api can never forge a node.
@@ -25,7 +25,7 @@ use std::time::Duration;
 
 use futures::FutureExt;
 use talpid_warren_tunnel::MultiHopConfig;
-use warren_relay_selector::{
+use warren_discovery_core::{
     DirectoryError, VerifiedMultiHopDirectory, verify_multihop_directory_any,
 };
 
@@ -963,7 +963,7 @@ mod tests {
     use std::net::SocketAddr;
 
     use ed25519_dalek::{Signer, SigningKey};
-    use warren_relay_selector::NodeEntry;
+    use warren_discovery_core::NodeEntry;
     use warrenguard_multihop::{
         ExitDescriptorSigned, ExitId, RelayDescriptorSigned, exit_descriptor_signing_payload,
         relay_descriptor_signing_payload, sign_node_attestation,

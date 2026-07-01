@@ -47,12 +47,12 @@ const fn _assert_signing_key_zeroize_on_drop() {
     const fn _require<T: zeroize::ZeroizeOnDrop>() {}
     _require::<SigningKey>();
 }
-// Re-exported from warren-identity::auth via warren-api-client: the
-// canonical wire format constants and the canonical_message builder
-// MUST be identical on both sides (signer here, verifier server-side),
-// otherwise no signature ever verifies. Consuming the single source of
-// truth prevents silent /v1 wire divergence.
-pub use warren_api_client::{
+// Re-exported from warren-identity: the canonical wire format constants
+// and the canonical_message builder MUST be identical on both sides
+// (signer here, verifier server-side), otherwise no signature ever
+// verifies. Consuming the single source of truth prevents silent /v1
+// wire divergence.
+pub use warren_identity::{
     HEADER_NONCE, HEADER_PUBKEY, HEADER_SIGNATURE, HEADER_TIMESTAMP, canonical_message, ss58,
 };
 
@@ -602,12 +602,12 @@ mod tests {
     }
 
     /// Wire format regression - any divergence between the local
-    /// canonical_message (pre-refactor) and the warren-identity::auth
+    /// canonical_message (pre-refactor) and the warren-identity
     /// canonical_message (post-refactor) would cause every signed API
     /// request to be rejected server-side. The hardcoded expected
     /// string below was captured against the pre-refactor local impl;
     /// it MUST keep producing the same bytes after wiring through
-    /// warren-api-client.
+    /// warren-identity.
     #[test]
     fn canonical_message_matches_hardcoded_reference_vector() {
         let method = "POST";

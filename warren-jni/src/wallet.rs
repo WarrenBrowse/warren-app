@@ -99,7 +99,7 @@ pub fn sign_message(mnemonic: &str, message: &[u8]) -> Result<[u8; 64], WalletEr
 /// `X-Warren-Signature` header, then sign it with `mnemonic`.
 ///
 /// The canonical bytes are produced by
-/// `warren_identity::auth::canonical_message` so this helper is the
+/// `warren_identity::canonical_message` so this helper is the
 /// single source of truth on the client side: Kotlin (or Swift, on iOS)
 /// callers do not duplicate the byte-stable string concatenation, which
 /// keeps wire-format drift impossible from the app layer.
@@ -120,7 +120,7 @@ pub fn sign_canonical_request(
     body_hash_hex: &str,
 ) -> Result<[u8; 64], WalletError> {
     let msg =
-        warren_identity::auth::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
+        warren_identity::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
     sign_message(mnemonic, msg.as_bytes())
 }
 
@@ -230,7 +230,7 @@ mod tests {
         // Reconstruct the canonical message exactly as warren-identity
         // builds it, then verify against the pubkey.
         let expected =
-            warren_identity::auth::canonical_message("GET", "/v1/exits", 42, "abcd1234", "ff00");
+            warren_identity::canonical_message("GET", "/v1/exits", 42, "abcd1234", "ff00");
         pubkey.verify(expected.as_bytes(), &sig).expect(
             "canonical-request signature must verify against the warren-identity-built message",
         );

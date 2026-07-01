@@ -1,6 +1,6 @@
 //! No-op default-route split guard for exotic targets with no Warren-specific
 //! routing recipe. Linux, macOS AND Windows are all wired in the parent module
-//! (Windows via the warren-core port), so this stub is only reached on targets
+//! (Windows via the warrenguard-route-split port), so this stub is only reached on targets
 //! that are none of those three.
 //!
 //! The type exists purely so the `WarrenTunnelMonitor::default_route_guard`

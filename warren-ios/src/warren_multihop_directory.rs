@@ -34,7 +34,7 @@
 //! selected circuit, mirroring the daemon's timer-driven updater.
 
 use ed25519_dalek::VerifyingKey;
-use warren_relay_selector::{
+use warren_discovery_core::{
     DirectoryError, VerifiedMultiHopDirectory, verify_multihop_directory_any,
 };
 use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};

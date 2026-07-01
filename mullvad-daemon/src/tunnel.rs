@@ -180,7 +180,7 @@ struct InnerParametersGenerator {
     /// [`warren_tunnel_params::assemble_failover_for_attempt`] that
     /// excludes the previously failed pubkey. `None` on the very
     /// first attempt after a daemon boot.
-    warren_last_exit_pubkey: Option<warren_relay_selector::warren_types::WarrenPubkey>,
+    warren_last_exit_pubkey: Option<warren_discovery_core::warren_types::WarrenPubkey>,
     /// ADR 36 drain avoid-set: multi-hop exit ids that signalled an in-band
     /// maintenance drain, each with the unix second it was recorded. The
     /// drain reactor (in `talpid-warren-tunnel`) records the current exit via
@@ -981,7 +981,7 @@ impl ParametersGenerator {
                 });
                 sel.relay_by_exit_id(&exit_id)
             })
-            .is_some_and(warren_relay_selector::WarrenRelay::egress_v6);
+            .is_some_and(warren_discovery_core::WarrenRelay::egress_v6);
         if enable_ipv6 && !exit_attests_ipv6_egress {
             log::info!(
                 "Warren: IPv6 is enabled but the selected exit does not attest IPv6 \

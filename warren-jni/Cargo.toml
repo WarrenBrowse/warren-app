@@ -23,7 +23,7 @@ hex = "0.4"
 # cf. AUDIT_COMPLET.md M-3.
 bip39 = { version = "2", features = ["rand"] }
 ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
-warren-identity = { path = "../../warren-core/crates/warren-identity" }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
 # Fix L-2: wrap the mnemonic string in Zeroizing<String> so it is wiped
 # from memory immediately after the signing key is derived.
 zeroize = { workspace = true }
@@ -49,7 +49,14 @@ serde_json = { workspace = true }
 
 # Warren auth wallet + relay selector + HTTP API client - these crates build
 # cleanly for `target_os = "android"` today.
-warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
+# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
+# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on, and its method
+# surface diverges (`subscription` vs `get_subscription`, `register` vs
+# `register_with_voucher`, `address()` vs `pubkey_ss58()`, no `new_unsigned`).
+# Needs a cross-repo decision (extend the SDK client or carve out a shared
+# account-client crate), not an app-side workaround.
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 
 # Signed app-update manifest fetch + ed25519 verification, reused as-is from the
@@ -63,15 +70,17 @@ talpid-platform-metadata = { path = "../talpid-platform-metadata" }
 talpid-types = { path = "../talpid-types" }
 
 # Quinn tunnel + multi-hop + NAT-PMP are wired behind the `tunnel` feature.
-# Warren-tunnel ships an `AndroidTun` PacketDevice impl since warren-core
-# `d59fd15` (cf. `crates/warren-tunnel/src/android_tun.rs`).
-warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
+# The client transport ships an `AndroidTun` PacketDevice impl (cf.
+# `warrenguard/crates/warrenguard-transport/src/android_tun.rs`).
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core", optional = true }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita", optional = true }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump", optional = true }
 warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
-warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
 warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
 warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
-# Aliased rand 0.9 (matching `warren-tunnel`'s `rand_v9`) so the DAITA pool
-# pick's `Rng + RngCore` trait bounds line up; used only to seed a local
+# Aliased rand 0.9 (matching `warrenguard-transport`'s `rand_v9`) so the DAITA
+# pool pick's `Rng + RngCore` trait bounds line up; used only to seed a local
 # DaitaState for the multi-hop DAITA pump.
 rand_v9 = { package = "rand", version = "0.9", optional = true }
 
@@ -79,12 +88,14 @@ rand_v9 = { package = "rand", version = "0.9", optional = true }
 default = ["tunnel"]
 # Allow the API endpoint URL to be overridden at runtime (dev/staging).
 api-override = []
-# Pull in the Quinn tunnel stack. Enabled by default now that warren-core
-# `d59fd15+` ships `warren_tunnel::AndroidTun` (wraps the VpnService TUN fd).
+# Pull in the Quinn tunnel stack. Enabled by default: ships
+# `warrenguard_transport::AndroidTun` (wraps the VpnService TUN fd).
 tunnel = [
-  "dep:warren-tunnel",
+  "dep:warrenguard-transport",
+  "dep:warrenguard-transport-core",
+  "dep:warrenguard-daita",
+  "dep:warrenguard-pump",
   "dep:warrenguard-wire",
-  "dep:warren-client",
   "dep:warrenguard-multihop",
   "dep:warrenguard-natpmp-client",
   "dep:rand_v9",

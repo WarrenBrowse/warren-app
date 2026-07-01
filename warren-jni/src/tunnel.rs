@@ -34,10 +34,9 @@ use ed25519_dalek::SigningKey;
 use rand_v9::SeedableRng;
 use serde::Deserialize;
 use tokio::sync::oneshot;
-use warren_tunnel::{
-    AndroidTun, ClientTunnel, DaitaPool, DaitaState, pump_bidirectional,
-    pump_bidirectional_with_daita,
-};
+use warrenguard_daita::{DaitaPool, DaitaState};
+use warrenguard_pump::{pump_bidirectional, pump_bidirectional_with_daita};
+use warrenguard_transport::{AndroidTun, ClientTunnel};
 use warrenguard_wire::{WarrenExitAddr, WarrenPubkey};
 
 /// JSON config parsed from the Kotlin side. Field names mirror
@@ -382,7 +381,7 @@ async fn run_multi_hop_session(
     let server_pins: Vec<&str> = crate::android_jni::PROD_SERVER_PUBKEY_HEX
         .into_iter()
         .collect();
-    let dir = match warren_relay_selector::verify_multihop_directory_any(
+    let dir = match warren_discovery_core::verify_multihop_directory_any(
         &raw,
         &server_pins,
         &[WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
@@ -452,7 +451,7 @@ async fn run_multi_hop_session(
         "multi-hop connect (daita_requested={})",
         config.daita.is_some()
     );
-    let mh = match warren_client::multi_hop::MultiHopClient::connect_with_warren_obfuscation(
+    let mh = match warrenguard_transport::multihop::MultiHopClient::connect_with_warren_obfuscation(
         &entry_node.relay,
         exit_node.exit.exit_id,
         &exit_node.exit.exit_x25519_multihop_pubkey,
@@ -542,7 +541,7 @@ async fn run_multi_hop_session(
             log::info!("multi-hop tunnel cancelled by Kotlin");
             Ok(())
         }
-        result = warren_client::multi_hop_pump::pump_multi_hop_bidirectional_with_daita(
+        result = warrenguard_transport::multi_hop_pump::pump_multi_hop_bidirectional_with_daita(
             pump, tun, daita_state,
         ) => result,
     };

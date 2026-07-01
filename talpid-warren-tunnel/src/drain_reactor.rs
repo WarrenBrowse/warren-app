@@ -1,7 +1,7 @@
 //! ADR 36 client-side drain reactor: proactive reconnect on exit maintenance.
 //!
 //! When an operator drains an exit, the exit emits a sealed `ExitDraining`
-//! advisory mid-session; warren-core decodes it in the downlink pump and
+//! advisory mid-session; warrenguard-transport decodes it in the downlink pump and
 //! publishes it on the supervisor's `ExitDrainingChannel`. This reactor
 //! consumes it and PROACTIVELY triggers a tunnel reconnect before the exit's
 //! hard-close deadline, so the drop happens in a controlled window instead of
@@ -35,7 +35,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
-use warren_client::supervised_pump::ExitDrainAdvisory;
+use warrenguard_transport::supervised_pump::ExitDrainAdvisory;
 
 /// Pump-error escalation channel, shared with the pumps and the migration
 /// watchdog: the first task to take the `oneshot` reports the fatal/transient

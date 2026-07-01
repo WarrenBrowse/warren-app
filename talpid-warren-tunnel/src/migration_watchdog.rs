@@ -29,8 +29,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use talpid_routing::RouteManagerHandle;
-use warren_client::bundle::MultiHopBundle;
-use warren_client::supervisor::SupervisorHandle;
+use warrenguard_transport::bundle::MultiHopBundle;
+use warrenguard_transport::supervisor::SupervisorHandle;
 
 /// Coalescing window for bursts of route events (an interface flap
 /// emits several within milliseconds). This is event coalescing, not
@@ -435,7 +435,7 @@ impl WatchdogIo for RealWatchdogIo {
         {
             if let Some(relay) = self.relay_ipv4
                 && let Err(e) =
-                    warren_client::default_route_split_windows::refresh_host_exception(relay).await
+                    warrenguard_route_split::default_route_split_windows::refresh_host_exception(relay).await
             {
                 log::debug!("watchdog: refresh_host_exception nudge failed: {e}");
             }

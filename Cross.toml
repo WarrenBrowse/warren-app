@@ -2,15 +2,18 @@
 # aws-lc-sys (dependency of the QUIC/TLS stack via tls-aws-lc-rs).
 # Mirror of /Users/poka/dev/warrenBros/warren-core/Cross.toml.
 #
-# The additional `../warren-core` mount is required to resolve the
-# cross-repo path-deps (= warren-tunnel, warren-relay-selector,
-# warren-api-client, etc. consumed by mullvad-daemon via
-# ../../warren-core/crates/...).
-
+# The additional sibling mounts are required to resolve the cross-repo
+# path-deps: `../warren-core` for the still-warren-core-backed pieces
+# (warren-api-client, warren-config; see mullvad-daemon/Cargo.toml for why),
+# `../warrenguard` for the client transport engine, `../warren-contract` for
+# the SS58/DTO/discovery contract, `../warren-sdk-rs` for warren-identity.
 [target.x86_64-unknown-linux-gnu]
 image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge"
 volumes = [
     "/Users/poka/dev/warrenBros/warren-core:/Users/poka/dev/warrenBros/warren-core",
+    "/Users/poka/dev/warrenBros/warrenguard:/Users/poka/dev/warrenBros/warrenguard",
+    "/Users/poka/dev/warrenBros/warren-contract:/Users/poka/dev/warrenBros/warren-contract",
+    "/Users/poka/dev/warrenBros/warren-sdk-rs:/Users/poka/dev/warrenBros/warren-sdk-rs",
 ]
 
 [build]

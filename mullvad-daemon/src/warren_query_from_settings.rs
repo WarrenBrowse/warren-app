@@ -22,7 +22,7 @@ use mullvad_types::relay_constraints::{
     GeographicLocationConstraint, LocationConstraint as MullvadLocation, RelaySettings,
 };
 use talpid_types::net::IpVersion;
-use warren_relay_selector::{
+use warren_discovery_core::{
     IpAvailability, LocationConstraint as WarrenLocation, WarrenRelayQuery,
 };
 

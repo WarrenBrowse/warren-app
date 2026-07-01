@@ -68,7 +68,7 @@ pub mod warren_relay_list_updater;
 /// country/city selector.
 pub mod warren_relay_list_view;
 /// Daemon-side wrapper around
-/// `warren_relay_selector::WarrenRelaySelector`: loads the
+/// `warren_discovery_core::WarrenRelaySelector`: loads the
 /// `WarrenRelayList` from `cache_dir`, selects the endpoint
 /// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
@@ -1231,7 +1231,7 @@ impl Daemon {
         let warren_bootstrap_generation = warren_bootstrap.generation;
         let (warren_relay_selector, warren_signing_key) = {
             let selector =
-                warren_relay_selector::DaemonWarrenRelaySelector::new(warren_bootstrap.relays);
+                crate::warren_relay_selector::DaemonWarrenRelaySelector::new(warren_bootstrap.relays);
             // Share the SAME swappable key handle with the tunnel (read
             // live at connect) instead of a frozen disk re-read, so a
             // restore/create takes effect on the next connect.

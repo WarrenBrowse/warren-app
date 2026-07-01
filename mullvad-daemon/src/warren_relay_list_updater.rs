@@ -24,7 +24,7 @@ use futures::future::{Fuse, FusedFuture};
 use futures::{FutureExt, SinkExt, StreamExt};
 
 use talpid_future::retry::{ExponentialBackoff, Jittered, retry_future};
-use warren_relay_selector::{
+use warren_discovery_core::{
     SignedError, VerifiedRelayList, VerifiedRoster, WarrenRelayList, verify_roster_any,
     verify_signed_relay_list_any,
 };
@@ -363,6 +363,7 @@ pub fn load_bootstrap(
         generation: 0,
         signed_at: 0,
         expires_at: 0,
+        server_pubkey_hex: String::new(),
     }
 }
 
@@ -771,8 +772,8 @@ impl WarrenRelayListUpdater {
 mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::warren_types::{ExitId, WarrenPubkey};
-    use warren_relay_selector::{
+    use warren_discovery_core::warren_types::{ExitId, WarrenPubkey};
+    use warren_discovery_core::{
         JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
     };
 
@@ -1061,13 +1062,13 @@ mod tests {
     }
 
     fn roster_with(admin: &SigningKey, seed: u8) -> VerifiedRoster {
-        let entry = warren_relay_selector::RosterEntry {
+        let entry = warren_discovery_core::RosterEntry {
             endpoint_id: hex::encode(WarrenPubkey::from_bytes([seed; 32]).as_bytes()),
             exit_id: ExitId::from_bytes([seed; 16]),
             country: "se".to_owned(),
             city: "Stockholm".to_owned(),
         };
-        let signed = warren_relay_selector::sign_roster(vec![entry], admin, 1, 1_000, FAR_FUTURE);
+        let signed = warren_discovery_core::sign_roster(vec![entry], admin, 1, 1_000, FAR_FUTURE);
         verify_roster_any(&serde_json::to_string(&signed).unwrap(), &[]).expect("roster verify")
     }
 

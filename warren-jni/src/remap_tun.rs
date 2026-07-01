@@ -22,7 +22,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]
-use warren_tunnel::PacketDevice;
+use warrenguard_transport_core::PacketDevice;
 
 /// Wraps a [`PacketDevice`] and rewrites the tunnel-inner client addresses so
 /// the kernel-fixed Android TUN addresses are presented to the exit as the

@@ -101,10 +101,15 @@ rand = { workspace = true }
 reqwest = { workspace = true }
 # Warren fork - Phase 2 auth wallet: the BIP39 mnemonic stored in
 # `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
-# SigningKey at daemon boot via these two cross-repo path-dep crates
-# (see `../../warren-core/crates/warren-identity/`).
+# SigningKey at daemon boot via these two cross-repo path-dep crates.
+# `warren-config` stays on warren-core: `WARREN_API_URL` /
+# `WARREN_SERVER_PUBKEY_HEX` are Warren-product constants with no
+# non-core home yet (not part of the neutral `warrenguard-config` engine
+# crate). `warren-identity` moves to the SDK (warren-sdk-rs), a
+# behaviorally-identical re-export of the same `warrenguard-identity`
+# engine primitives.
 warren-config = { path = "../../warren-core/crates/warren-config" }
-warren-identity = { path = "../../warren-core/crates/warren-identity" }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
 # Phase 4.F: `warren_signer` now exposes a raw `SigningKey` used to
 # assemble `WarrenTunnelParameters`. Version pin aligned with
 # `mullvad-api/Cargo.toml`.
@@ -123,8 +128,10 @@ bip39 = { version = "2", features = ["rand", "zeroize"] }
 # Warren exit selector (equivalent to `mullvad-relay-selector` for the
 # Warren backend). Does not depend on `talpid-warren-tunnel` API: it
 # just returns `(WarrenPubkey, WarrenExitAddr)`; the caller assembles
-# the full `WarrenTunnelParameters` downstream.
-warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
+# the full `WarrenTunnelParameters` downstream. Neutral home: the
+# `warren-discovery-core` crate in `warren-contract` (warren-core's
+# `warren-relay-selector` is a pure re-export of the same crate).
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 # Multi-hop PKI verification (`verify_relay_descriptor`,
 # `verify_exit_descriptor`) consumed by the daemon-side multi-hop
 # config loader. Direct dep is preferred over a re-export through
@@ -135,6 +142,13 @@ warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" 
 # `WarrenRemoteAccountBackend` + `WarrenRemoteDeviceBackend` to replace
 # `mullvad_api::AccountsProxy/DevicesProxy` when
 # `warren_mode = true && warren_local_account = false`).
+# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
+# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
+# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on (no
+# `new_shared`), and its method surface diverges (`subscription` vs
+# `get_subscription`, `register` vs `register_with_voucher`, `address()` vs
+# `pubkey_ss58()`, no `new_unsigned`). Needs a cross-repo decision, not an
+# app-side workaround.
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 # Encode/decode wg_pubkey 32 bytes <-> hex 64 chars in
 # `WarrenRemoteDeviceBackend::map_device_response`.

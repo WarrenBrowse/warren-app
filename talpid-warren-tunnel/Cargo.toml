@@ -2,7 +2,7 @@
 name = "talpid-warren-tunnel"
 edition.workspace = true
 rust-version.workspace = true
-description = "Warren adapter for the talpid tunnel state machine, on top of warren-tunnel (Quinn upstream)"
+description = "Warren adapter for the talpid tunnel state machine, on top of the WarrenGuard client transport engine (Quinn upstream)"
 repository.workspace = true
 license.workspace = true
 
@@ -38,12 +38,18 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
   "async",
 ] }
 
-# Warren crates consumed as path-deps cross-repo. The expected
-# warren-core checkout SHA is pinned in `.warren-core-version` at the
-# warren-app repo root. Long-term the plan is to switch to a git
-# submodule under `vendor/warren-core/` then to a private cargo registry
-# (see docs/warren-app-quinn-migration-plan.md § "Sharing strategy").
-warren-tunnel = { path = "../../warren-core/crates/warren-tunnel" }
+# WarrenGuard engine crates consumed as path-deps cross-repo (the client
+# transport datapath, carved out of warren-core into the neutral engine).
+# The expected warrenguard checkout SHA is pinned in `.warrenguard-version`
+# at the warren-app repo root.
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport" }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump" }
+# `knobs` (env-tuning registry, e.g. `WARREN_IDLE_COVER`).
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
+# Privileged system-VPN routing: default-route split + bypass CIDR.
+warrenguard-route-split = { path = "../../warrenguard/crates/warrenguard-route-split" }
 warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
 # NAT-PMP client + RFC 6886 wire types. The client crate exposes the
 # `refresh_loop` helper consumed by `mullvad-daemon::warren_nat_pmp` to
@@ -56,12 +62,10 @@ warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-nat
 # Multi-hop stack (M4.B/C/D/E.D) consumed by the dispatcher in
 # `lib.rs` to spin up a `MultiHopSupervisor`-driven session when the
 # user opts into multi-hop. Single-hop dispatch keeps using
-# `warren_tunnel::ClientTunnel` directly.
+# `ClientTunnel` directly.
 warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
-warren-client = { path = "../../warren-core/crates/warren-client" }
 warrenguard-relay = { path = "../../warrenguard/crates/warrenguard-relay" }
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
-warren-config = { path = "../../warren-core/crates/warren-config" }
 
 # Stable per-install device identifier for the v2 device cap. Persisted
 # under the daemon settings dir so reconnects / retries / restarts reuse

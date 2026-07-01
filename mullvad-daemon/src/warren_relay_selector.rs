@@ -1,5 +1,5 @@
 //! Daemon-side wrapper around the
-//! [`warren_relay_selector::WarrenRelaySelector`] crate.
+//! [`warren_discovery_core::WarrenRelaySelector`] crate.
 //!
 //! Encapsulates the state of the `WarrenRelayList` on the daemon side
 //! (will later be populated by a periodic fetch to the API; for the
@@ -16,8 +16,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use warren_relay_selector::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
-use warren_relay_selector::{
+use warren_discovery_core::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
+use warren_discovery_core::{
     SelectorError, SignedError, WarrenRelay, WarrenRelayList, WarrenRelayQuery,
     WarrenRelaySelector, verify_signed_relay_list,
 };
@@ -32,7 +32,7 @@ pub enum LoadError {
 
     /// The JSON is invalid, does not have the supported version, or
     /// the server signature does not verify. Wire format v2 mandatory
-    /// post fork audit (see `warren_relay_selector::signed`).
+    /// post fork audit (see `warren_discovery_core::signed`).
     #[error("invalid warren-relays.json at {0}: {1}")]
     Json(String, #[source] SignedError),
 }
@@ -189,7 +189,7 @@ impl DaemonWarrenRelaySelector {
     /// self-consistent signature (useful for the first fetch or tests).
     ///
     /// Expected format: v2 signed Ed25519 (see
-    /// [`warren_relay_selector::verify_signed_relay_list`]). The
+    /// [`warren_discovery_core::verify_signed_relay_list`]). The
     /// unsigned v1 format is **rejected** post fork audit (anti-downgrade
     /// attack - an attacker serving an unsigned v1 could
     /// substitute the list without detection).
@@ -250,7 +250,7 @@ impl DaemonWarrenRelaySelector {
 
 #[cfg(test)]
 mod tests {
-    use warren_relay_selector::{
+    use warren_discovery_core::{
         Addr, Ingress, Listener, Location, LocationConstraint, WarrenRelay,
     };
 
@@ -393,7 +393,7 @@ mod tests {
         // the order of v2 fields, this test (and any existing
         // installation) breaks -> `/v3` rotation mandatory.
         use ed25519_dalek::SigningKey;
-        use warren_relay_selector::{
+        use warren_discovery_core::{
             JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode,
             sign_relay_list,
         };
@@ -455,7 +455,7 @@ mod tests {
         // tunnel remains impossible rather than connecting to an
         // attacker).
         use ed25519_dalek::SigningKey;
-        use warren_relay_selector::{
+        use warren_discovery_core::{
             JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode as SignedJsonNode,
             sign_relay_list,
         };

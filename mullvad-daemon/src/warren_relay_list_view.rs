@@ -31,7 +31,7 @@ use mullvad_types::relay_list::{
     WireguardRelayEndpointData,
 };
 use talpid_types::net::wireguard;
-use warren_relay_selector::{WarrenRelay, WarrenRelayList};
+use warren_discovery_core::{WarrenRelay, WarrenRelayList};
 
 /// Builds a [`RelayList`] (upstream Mullvad format) from a
 /// [`WarrenRelayList`].
@@ -270,15 +270,15 @@ pub(crate) fn country_display_name_pub(code: &str) -> String {
 mod tests {
     use super::*;
     use ed25519_dalek::SigningKey;
-    use warren_relay_selector::warren_types::WarrenPubkey;
-    use warren_relay_selector::{Addr, Ingress, Listener, Location as WLocation, WarrenRelay};
+    use warren_discovery_core::warren_types::WarrenPubkey;
+    use warren_discovery_core::{Addr, Ingress, Listener, Location as WLocation, WarrenRelay};
 
     fn make_warren_relay(country: &str, city: &str, ipv4: &str, byte_seed: u8) -> WarrenRelay {
         let sk = SigningKey::from_bytes(&[byte_seed; 32]);
         let endpoint_id = WarrenPubkey::from_bytes(sk.verifying_key().to_bytes());
         WarrenRelay::from_public(
             endpoint_id,
-            warren_relay_selector::warren_types::ExitId::from_bytes([byte_seed; 16]),
+            warren_discovery_core::warren_types::ExitId::from_bytes([byte_seed; 16]),
             WLocation::new(country, city),
             100,
             true,

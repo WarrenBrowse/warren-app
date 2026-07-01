@@ -410,7 +410,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         // from_fd back before this guard, it crashes the whole process.
         let tun = {
             let _runtime_guard = runtime.enter();
-            match warren_tunnel::AndroidTun::from_fd(owned) {
+            match warrenguard_transport::AndroidTun::from_fd(owned) {
                 Ok(t) => t,
                 Err(e) => {
                     let _ = jnix_env.throw(format!("AndroidTun::from_fd failed: {e}"));
@@ -474,7 +474,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     }
 }
 
-/// Installs the process-wide [`warren_tunnel::socket_protect`] protector
+/// Installs the process-wide [`warrenguard_transport::socket_protect`] protector
 /// backed by `VpnService.protect`. The protector captures the JVM handle
 /// and a global ref to the service so the tunnel's Quinn socket can be
 /// protected from any tokio worker thread: it attaches that thread to the
@@ -491,7 +491,7 @@ fn register_socket_protector(
 
     let vm = env.get_java_vm()?;
     let service_ref = env.new_global_ref(vpn_service)?;
-    let protector: warren_tunnel::socket_protect::SocketProtector =
+    let protector: warrenguard_transport::socket_protect::SocketProtector =
         Arc::new(move |fd: RawFd| -> bool {
             let guard = match vm.attach_current_thread() {
                 Ok(g) => g,
@@ -513,7 +513,7 @@ fn register_socket_protector(
                 }
             }
         });
-    warren_tunnel::socket_protect::set_protector(protector);
+    warrenguard_transport::socket_protect::set_protector(protector);
     Ok(())
 }
 
@@ -722,7 +722,7 @@ fn fetch_relays_or_fallback() -> String {
         }
     };
 
-    let signed = match warren_relay_selector::verify_signed_relay_list(&raw, PROD_SERVER_PUBKEY_HEX)
+    let signed = match warren_discovery_core::verify_signed_relay_list(&raw, PROD_SERVER_PUBKEY_HEX)
     {
         Ok(s) => s,
         Err(_) => {

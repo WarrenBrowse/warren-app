@@ -28,9 +28,16 @@ ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 # direct dep makes the version coupling explicit and prevents it from being
 # silently removed if ed25519-dalek changes its dep tree.
 zeroize = { workspace = true }
-warren-identity = { path = "../../warren-core/crates/warren-identity" }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
+# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
+# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on, and its method
+# surface diverges (`subscription` vs `get_subscription`, `register` vs
+# `register_with_voucher`, `address()` vs `pubkey_ss58()`, no `new_unsigned`).
+# Needs a cross-repo decision (extend the SDK client or carve out a shared
+# account-client crate), not an app-side workaround.
 warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
-warren-relay-selector = { path = "../../warren-core/crates/warren-relay-selector" }
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 # Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and the
 # multi-hop generation store (`warren_multihop_generation`), plus their
 # pure-logic host tests, build off the iOS target too. serde_json + tracing
@@ -68,16 +75,18 @@ tracing-subscriber = { workspace = true }
 
 # Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,
 # enabled by the iOS Xcode build phase (build-rust-library.sh warren-ios
-# "api-override tunnel"). warren-tunnel bridges the iOS packet flow via
+# "api-override tunnel"). The client transport bridges the iOS packet flow via
 # `IosTun` (`NEPacketTunnelFlow.readPackets/writePackets`, cf.
 # `.planning/c4-packet-tunnel-provider-quinn-design.md` §3.2), so it no
 # longer depends on a tun-rs iOS backend.
-warren-tunnel = { path = "../../warren-core/crates/warren-tunnel", optional = true }
-warren-client = { path = "../../warren-core/crates/warren-client", optional = true }
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core", optional = true }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita", optional = true }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump", optional = true }
 warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
 warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
 # Direct dep on `warrenguard-wire` for `WarrenExitAddr` + `WarrenPubkey`
-# types passed to `warren_tunnel::ClientTunnel::connect`. Optional so
+# types passed to `ClientTunnel::connect`. Optional so
 # the no-tunnel build path stays minimal.
 warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
 # Multi-hop supervisor + pump support (the iOS data plane rides the
@@ -86,7 +95,9 @@ warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optiona
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff", optional = true }
 # Canonical baked API server pin (`WARREN_SERVER_PUBKEY_HEX`), reused as
 # the multi-hop directory's server-key pin so the value never drifts from
-# the daemon's. Already in the iOS dep tree via warren-client/-tunnel.
+# the daemon's. BLOCKED off warren-core: `WARREN_SERVER_PUBKEY_HEX` /
+# `WARREN_API_URL` are Warren-product constants with no non-core home yet
+# (not part of the neutral `warrenguard-config` engine crate).
 warren-config = { path = "../../warren-core/crates/warren-config", optional = true }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
@@ -99,7 +110,7 @@ api-override = ["mullvad-api/api-override"]
 # Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
 # has landed, so the iOS Xcode build phase enables this feature. It stays
 # off the crate default so a no-tunnel host build path remains minimal.
-tunnel = ["dep:warren-tunnel", "dep:warren-client", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff", "dep:warren-config"]
+tunnel = ["dep:warrenguard-transport", "dep:warrenguard-transport-core", "dep:warrenguard-daita", "dep:warrenguard-pump", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff", "dep:warren-config"]
 
 [lints]
 workspace = true
