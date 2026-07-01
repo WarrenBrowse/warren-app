@@ -54,6 +54,10 @@ pub mod warren_multi_hop_directory;
 /// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
 /// (POC switch - no UI/CLI toggle for now).
 pub mod warren_multi_hop_mode;
+/// Warren PRODUCT/deployment constants (`WARREN_API_URL`,
+/// `WARREN_SERVER_PUBKEY_HEX`) the app owns directly instead of depending
+/// on warren-core's `warren-config` crate.
+mod warren_product_config;
 /// Conversion `RelaySettings` (Mullvad UI) -> `WarrenRelayQuery`
 /// (filtering on the warren-relay-selector side). Maps country/city, fallback
 /// `Any` for unsupported cases (custom lists, custom endpoint).
@@ -76,6 +80,11 @@ pub mod warren_relay_selector;
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
+/// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
+/// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
+/// seed on every call (see the module doc for why a raw shared
+/// `SigningKey` cannot be reused directly).
+mod warren_sdk_client;
 /// Loads or generates the user's BIP39 mnemonic from
 /// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
@@ -893,6 +902,12 @@ pub struct Daemon {
     /// Warren auth could not be initialized at boot (= legacy Bearer
     /// fallback path).
     warren_signer: Option<Arc<mullvad_api::warren_auth::WarrenAuthSigner>>,
+    /// Companion shared, hot-swappable BIP39 seed handle for the SDK-backed
+    /// `warren_api::WarrenApiClient` (`warren_sdk_client::SharedWarrenApiClient`).
+    /// Kept alongside `warren_signer` so `on_set_warren_mnemonic` and
+    /// `on_logout_account` can keep both in lockstep. `None` under the same
+    /// conditions as `warren_signer`.
+    warren_identity_seed: Option<crate::warren_sdk_client::SharedWarrenSeed>,
     /// `true` when the Warren multi-hop directory updater is wired and owns
     /// the reconnect for circuit changes. While active, the standard
     /// "relay settings changed" restart path must not reconnect on its own
@@ -1043,17 +1058,30 @@ impl Daemon {
         // identity.
         let warren_signer = warren_signer::load_or_create_signer(&config.settings_dir);
         let warren_signer_for_daemon = warren_signer.clone();
-        // Single source of truth for the active Warren identity: the
+        // Single source of truth for the raw-`SigningKey` consumers: the
         // SAME `Arc<RwLock<SigningKey>>` that `WarrenAuthSigner` wraps is
-        // shared with the account backend, the tunnel, and the incidents
-        // client below. A `reload_signer_from_disk` (create/restore) or
-        // `clear_signer` (logout) on `warren_signer_for_daemon` therefore
-        // propagates to every consumer without a daemon restart, instead
-        // of leaving frozen per-consumer copies signing as the old/erased
-        // identity.
+        // shared with the tunnel (RPK identity + legacy REST signing). A
+        // `reload_signer_from_disk` (create/restore) or `clear_signer`
+        // (logout) on `warren_signer_for_daemon` therefore propagates to
+        // every consumer without a daemon restart, instead of leaving
+        // frozen per-consumer copies signing as the old/erased identity.
         let warren_shared_key = warren_signer_for_daemon
             .as_ref()
             .map(|signer| signer.shared());
+        // Companion shared, hot-swappable BIP39 seed for the SDK-backed
+        // `warren_api::WarrenApiClient` (account backend + best-effort
+        // incident reports, via `warren_sdk_client::SharedWarrenApiClient`).
+        // The SDK's `WarrenIdentity` only builds from this pre-HKDF seed,
+        // never from an already-derived `SigningKey` (see
+        // `warren_sdk_client` module doc), so it is captured separately
+        // here and kept in lockstep with `warren_shared_key` at every
+        // derivation event (boot here, hot-swap in `on_set_warren_mnemonic`,
+        // clear in `on_logout_account`). Reads the on-disk mnemonic once
+        // more at boot (cheap, one-time, same source as `warren_signer`
+        // above); both always agree because they derive from the same file.
+        let warren_shared_seed: Option<crate::warren_sdk_client::SharedWarrenSeed> =
+            warren_signer::load_or_create_seed(&config.settings_dir)
+                .map(|seed| Arc::new(std::sync::RwLock::new(seed)));
         let api_handle =
             api_runtime.mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer);
 
@@ -1085,7 +1113,7 @@ impl Daemon {
         let warren_api_config = warren_remote_config::resolve(
             settings.warren_api_url.clone(),
             env_url,
-            warren_shared_key.clone(),
+            warren_shared_seed.clone(),
         );
         match &warren_api_config {
             Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
@@ -1197,14 +1225,14 @@ impl Daemon {
             .ok()
             .filter(|s| !s.is_empty())
             .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
-            .unwrap_or_else(|| warren_config::WARREN_API_URL.to_owned());
+            .unwrap_or_else(|| warren_product_config::WARREN_API_URL.to_owned());
         // Pinned server pubkey: env override for dev/staging, else the
         // baked production key. Pinning is mandatory in prod.
         let warren_server_pubkey: Option<String> = Some(
             std::env::var("WARREN_SERVER_PUBKEY")
                 .ok()
                 .filter(|s| !s.is_empty())
-                .unwrap_or_else(|| warren_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
+                .unwrap_or_else(|| warren_product_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
         );
         // Audit F1 roster: opt-in (off by default), no pubkey baked in.
         // When enabled, the operator supplies the offline-admin pin via
@@ -1230,8 +1258,9 @@ impl Daemon {
         // bootstrap so a later fetch cannot roll back below the baked list.
         let warren_bootstrap_generation = warren_bootstrap.generation;
         let (warren_relay_selector, warren_signing_key) = {
-            let selector =
-                crate::warren_relay_selector::DaemonWarrenRelaySelector::new(warren_bootstrap.relays);
+            let selector = crate::warren_relay_selector::DaemonWarrenRelaySelector::new(
+                warren_bootstrap.relays,
+            );
             // Share the SAME swappable key handle with the tunnel (read
             // live at connect) instead of a frozen disk re-read, so a
             // restore/create takes effect on the next connect.
@@ -1305,6 +1334,7 @@ impl Daemon {
             settings.tunnel_options.clone(),
             warren_relay_selector,
             warren_signing_key,
+            warren_shared_seed.clone(),
             warren_multi_hop,
             warren_status_cache.clone(),
             warren_api_url_for_params,
@@ -1773,6 +1803,7 @@ impl Daemon {
             settings_dir: config.settings_dir,
             warren_status_cache,
             warren_signer: warren_signer_for_daemon,
+            warren_identity_seed: warren_shared_seed,
             warren_multi_hop_directory_active,
         };
 
@@ -2883,6 +2914,29 @@ impl Daemon {
             }
         };
 
+        // Step 1 bis - hot-swap the companion SDK-facing seed handle
+        // (`warren_identity_seed`) in lockstep with the signer above (see
+        // that field's doc for why the account backend + incident
+        // reporters need the pre-HKDF seed, not the derived SigningKey).
+        // Read-after-write: `set_warren_mnemonic` above already persisted
+        // the new mnemonic, so this loads the freshly derived seed.
+        match self.warren_identity_seed.as_ref() {
+            Some(seed_handle) => match warren_signer::load_or_create_seed(&self.settings_dir) {
+                Some(new_seed) => {
+                    *seed_handle.write().expect("warren seed RwLock poisoned") = new_seed;
+                }
+                None => log::warn!(
+                    "on_set_warren_mnemonic: seed handle present but reload failed; \
+                     SDK-backed account/incident clients keep signing with the \
+                     pre-swap identity"
+                ),
+            },
+            None => log::warn!(
+                "on_set_warren_mnemonic: no in-memory seed handle to hot-swap \
+                 (legacy Bearer mode) - restart required to pick up new identity"
+            ),
+        }
+
         // Step 2 - determine whether a `login()` under the new pubkey
         // is needed before acknowledging, so the GUI does not observe a
         // `set_mnemonic` Ok while the daemon is still mid-swap.
@@ -3111,6 +3165,12 @@ impl Daemon {
                 // can keep authenticating as the just-erased identity.
                 if let Some(signer) = self.warren_signer.as_ref() {
                     warren_signer::clear_signer(signer);
+                }
+                // Companion neutralization of the SDK-facing seed handle,
+                // mirroring `clear_signer` above (see `warren_identity_seed`).
+                if let Some(seed_handle) = self.warren_identity_seed.as_ref() {
+                    *seed_handle.write().expect("warren seed RwLock poisoned") =
+                        crate::warren_sdk_client::sentinel_seed();
                 }
 
                 let history = self
@@ -3850,21 +3910,19 @@ impl Daemon {
         city: String,
     ) {
         self.warren_status_cache.clear_pubkey_mismatch_pending();
-        if let (Some(api_url), Some(signing_key)) = (
+        if let (Some(api_url), Some(seed)) = (
             self.warren_api_url_for_incidents(),
-            self.parameters_generator
-                .warren_signing_key_for_incidents()
-                .await,
+            self.parameters_generator.warren_seed_for_incidents().await,
         ) {
             tokio::spawn(async move {
-                let client = warren_api_client::WarrenApiClient::new(api_url, signing_key);
-                let req = warren_api_client::IncidentPubkeyMismatchRequest {
+                let client = crate::warren_sdk_client::SharedWarrenApiClient::new(api_url, seed);
+                let req = warren_api::IncidentPubkeyMismatchRequest {
                     exit_id_hex,
                     old_pubkey_hex,
                     new_pubkey_hex,
                     country_code,
                     city,
-                    ts_unix: warren_config::unix_now(),
+                    ts_unix: warrenguard_config::unix_now(),
                 };
                 if let Err(e) = client.report_pubkey_mismatch(&req).await {
                     log::debug!(
@@ -3873,9 +3931,7 @@ impl Daemon {
                 }
             });
         } else {
-            log::debug!(
-                "pubkey-mismatch report suppressed: no warren_api_url or signing key configured"
-            );
+            log::debug!("pubkey-mismatch report suppressed: no warren_api_url or seed configured");
         }
         Self::oneshot_send(tx, (), "report_pubkey_mismatch response");
     }
@@ -3894,7 +3950,7 @@ impl Daemon {
         if let Some(url) = url.filter(|s| !s.is_empty()) {
             return Some(url);
         }
-        Some(warren_config::WARREN_API_URL.to_owned())
+        Some(warren_product_config::WARREN_API_URL.to_owned())
     }
 
     async fn on_set_show_beta_releases(

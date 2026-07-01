@@ -3,10 +3,12 @@
 # Mirror of /Users/poka/dev/warrenBros/warren-core/Cross.toml.
 #
 # The additional sibling mounts are required to resolve the cross-repo
-# path-deps: `../warren-core` for the still-warren-core-backed pieces
-# (warren-api-client, warren-config; see mullvad-daemon/Cargo.toml for why),
-# `../warrenguard` for the client transport engine, `../warren-contract` for
-# the SS58/DTO/discovery contract, `../warren-sdk-rs` for warren-identity.
+# path-deps: `../warren-core` only for `mullvad-daemon`'s dev-dependency
+# `warren-api-server` (the real warren-api HTTP server, spawned in-process
+# by the account-backend E2E tests to prove wire-compat; never a prod dep -
+# see mullvad-daemon/Cargo.toml), `../warrenguard` for the client transport
+# engine, `../warren-contract` for the SS58/DTO/discovery contract,
+# `../warren-sdk-rs` for warren-identity and warren-api.
 [target.x86_64-unknown-linux-gnu]
 image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge"
 volumes = [

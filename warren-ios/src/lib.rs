@@ -20,6 +20,11 @@ mod warren_tunnel_ffi;
 // consumed only by the tunnel data plane, so it is gated the same way.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 mod warren_multihop_directory;
+// Warren PRODUCT/deployment constants (`WARREN_SERVER_PUBKEY_HEX`) the app
+// owns directly instead of depending on warren-core's `warren-config`
+// crate. Only consumed by `warren_multihop_directory`, gated the same way.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+mod warren_product_config;
 // Persistent anti-rollback high-water mark for the multi-hop directory
 // generation. Backs the iOS tunnel path; also compiled under `test` so its
 // pure std::fs round-trip tests run on the host (`cargo test`).
@@ -47,11 +52,11 @@ mod warren_multihop_ffi;
 
 // Upstream Mullvad API client retained transitionally. Each call site here
 // still calls into `mullvad-api` (account number flows, device management,
-// problem reports, StoreKit). Migrating those flows to `warren-api-client`
-// is a dedicated follow-up (~16 source files): the Warren wallet auth uses
-// `X-Warren-*` canonical-message signatures (see warren-core/crates/warren-
-// identity::auth), which is a separate flow from Mullvad's account-number
-// token model.
+// problem reports, StoreKit). Migrating those flows to the SDK's
+// `warren-api` client (warren-sdk-rs) is a dedicated follow-up (~16 source
+// files): the Warren wallet auth uses `X-Warren-*` canonical-message
+// signatures (see warren-sdk-rs/crates/warren-identity::signing), which is
+// a separate flow from Mullvad's account-number token model.
 #[cfg(target_os = "ios")]
 mod api_client;
 #[cfg(target_os = "ios")]

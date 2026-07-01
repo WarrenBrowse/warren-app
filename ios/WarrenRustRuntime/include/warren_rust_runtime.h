@@ -97,7 +97,7 @@ typedef struct WarrenRelayConfigC {
 } WarrenRelayConfigC;
 
 /**
- * DAITA defensive shaping spec (cf. `warren_daita_doctrine_v1`).
+ * DAITA defensive shaping spec.
  */
 typedef struct WarrenDaitaSpecC {
   /**
@@ -254,7 +254,7 @@ typedef void (*WarrenTunnelEventCallback)(const struct WarrenTunnelEventC *event
 
 /**
  * Outbound packet callback signature. Called from a Tokio task that
- * drains [`warren_tunnel::IosTun`] after each `PacketDevice::send` from
+ * drains [`warrenguard_transport::IosTun`] after each `PacketDevice::send` from
  * the downlink pump. The Swift side bridges to
  * `NEPacketTunnelFlow.writePackets(_:withProtocols:)`.
  *

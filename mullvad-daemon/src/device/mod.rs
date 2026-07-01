@@ -50,19 +50,23 @@ pub(crate) use service::WarrenIdentityService;
 /// Config needed to instantiate the Warren-Remote account backend
 /// (= warren-api path). Built by the caller (`Daemon::start`) at boot.
 /// `None` falls back to the legacy [`RemoteAccountBackend`] (no
-/// mnemonic/signing key available).
+/// mnemonic/seed available).
 ///
 /// Convention:
 /// - `url`: `http(s)://host:port`, without trailing slash.
-/// - `signing_key`: Warren identity loaded from the mnemonic
-///   (`warren_signer::load_or_create_signing_key`).
+/// - `seed`: the BIP39-derived pre-HKDF seed backing the Warren identity
+///   (`warren_signer::load_or_create_seed`). Kept as a seed rather than a
+///   `SigningKey` because the account-backend client is built around the
+///   SDK's `warren_api::WarrenApiClient`, whose owned `WarrenIdentity` only
+///   constructs from this pre-derivation input (see
+///   `warren_sdk_client` for why).
 #[derive(Clone)]
 pub(crate) struct WarrenApiConfig {
     pub url: String,
-    // Shared, hot-swappable key handle (cloned from the daemon's
-    // `WarrenAuthSigner::shared`). The account-backend client built from
-    // it tracks create/restore/logout identity changes without a restart.
-    pub signing_key: std::sync::Arc<std::sync::RwLock<ed25519_dalek::SigningKey>>,
+    // Shared, hot-swappable seed handle. The account-backend client built
+    // from it tracks create/restore/logout identity changes without a
+    // daemon restart.
+    pub seed: crate::warren_sdk_client::SharedWarrenSeed,
 }
 
 /// File that stores the account login state.
@@ -340,19 +344,16 @@ impl AccountManager {
         //    from `GET /v1/subscription`.
         // 2. Otherwise (no mnemonic/signing key) -> [`RemoteAccountBackend`]
         //    (legacy Mullvad upstream path).
-        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> =
-            if let Some(cfg) = warren_api_config {
-                let client = warren_api_client::WarrenApiClient::new_shared(
-                    cfg.url,
-                    Vec::new(),
-                    cfg.signing_key,
-                );
-                std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
-            } else {
-                std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
-                    rest_handle.clone(),
-                )))
-            };
+        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if let Some(cfg) =
+            warren_api_config
+        {
+            let client = crate::warren_sdk_client::SharedWarrenApiClient::new(cfg.url, cfg.seed);
+            std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
+        } else {
+            std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
+                rest_handle.clone(),
+            )))
+        };
         let warren_identity_service = service::spawn_warren_identity_service(
             rest_handle.clone(),
             number,

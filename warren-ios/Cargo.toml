@@ -10,10 +10,10 @@ license.workspace = true
 bench = false
 crate-type = ["staticlib"]
 
-# Cross-platform Warren deps. The pure-rust `warren-identity` and
-# `warren-api-client` build cleanly on host + iOS targets, so they live
-# outside the `cfg(target_os = "ios")` gate to keep host unit tests
-# building. Same pattern as `warren-jni` for Android.
+# Cross-platform Warren deps. The pure-rust `warren-identity` builds
+# cleanly on host + iOS targets, so it lives outside the
+# `cfg(target_os = "ios")` gate to keep host unit tests building. Same
+# pattern as `warren-jni` for Android.
 [dependencies]
 thiserror = { workspace = true }
 hex = "0.4"
@@ -29,14 +29,6 @@ ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 # silently removed if ed25519-dalek changes its dep tree.
 zeroize = { workspace = true }
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
-# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
-# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
-# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on, and its method
-# surface diverges (`subscription` vs `get_subscription`, `register` vs
-# `register_with_voucher`, `address()` vs `pubkey_ss58()`, no `new_unsigned`).
-# Needs a cross-repo decision (extend the SDK client or carve out a shared
-# account-client crate), not an app-side workaround.
-warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
 warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 # Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and the
 # multi-hop generation store (`warren_multihop_generation`), plus their
@@ -55,8 +47,8 @@ libc = "0.2"
 log = { workspace = true }
 mockito = { workspace = true }
 # Mullvad API client retained transitionally for legacy account-number flows
-# in `src/api_client/`. To be replaced by `warren-api-client` in the
-# C.3 deep-step-2 follow-up (cf. `.planning/session-c-followup-briefs.md`).
+# in `src/api_client/`. To be replaced by the SDK's `warren-api` client in
+# the C.3 deep-step-2 follow-up (cf. `.planning/session-c-followup-briefs.md`).
 mullvad-api = { path = "../mullvad-api", default-features = false }
 mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-logging = { path = "../mullvad-logging" }
@@ -72,6 +64,10 @@ tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
 tower = { workspace = true }
 tracing-subscriber = { workspace = true }
+# Signed HTTP client for warren-api (`warren_account_ffi`), consumed with
+# the bundled reqwest transport. iOS-only: the module's only consumer is
+# `#[cfg(target_os = "ios")]`.
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
 
 # Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,
 # enabled by the iOS Xcode build phase (build-rust-library.sh warren-ios
@@ -93,12 +89,6 @@ warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optiona
 # multi-hop wire protocol; see `warren_multihop_directory`). `Backoff`
 # is a `SupervisorConfig` field.
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff", optional = true }
-# Canonical baked API server pin (`WARREN_SERVER_PUBKEY_HEX`), reused as
-# the multi-hop directory's server-key pin so the value never drifts from
-# the daemon's. BLOCKED off warren-core: `WARREN_SERVER_PUBKEY_HEX` /
-# `WARREN_API_URL` are Warren-product constants with no non-core home yet
-# (not part of the neutral `warrenguard-config` engine crate).
-warren-config = { path = "../../warren-core/crates/warren-config", optional = true }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
 cbindgen = { version = "0.28.0", default-features = false }
@@ -110,7 +100,7 @@ api-override = ["mullvad-api/api-override"]
 # Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
 # has landed, so the iOS Xcode build phase enables this feature. It stays
 # off the crate default so a no-tunnel host build path remains minimal.
-tunnel = ["dep:warrenguard-transport", "dep:warrenguard-transport-core", "dep:warrenguard-daita", "dep:warrenguard-pump", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff", "dep:warren-config"]
+tunnel = ["dep:warrenguard-transport", "dep:warrenguard-transport-core", "dep:warrenguard-daita", "dep:warrenguard-pump", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff"]
 
 [lints]
 workspace = true

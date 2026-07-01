@@ -101,15 +101,14 @@ rand = { workspace = true }
 reqwest = { workspace = true }
 # Warren fork - Phase 2 auth wallet: the BIP39 mnemonic stored in
 # `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
-# SigningKey at daemon boot via these two cross-repo path-dep crates.
-# `warren-config` stays on warren-core: `WARREN_API_URL` /
-# `WARREN_SERVER_PUBKEY_HEX` are Warren-product constants with no
-# non-core home yet (not part of the neutral `warrenguard-config` engine
-# crate). `warren-identity` moves to the SDK (warren-sdk-rs), a
+# SigningKey at daemon boot. `warren-identity` is the SDK (warren-sdk-rs), a
 # behaviorally-identical re-export of the same `warrenguard-identity`
-# engine primitives.
-warren-config = { path = "../../warren-core/crates/warren-config" }
+# engine primitives. `WARREN_API_URL` / `WARREN_SERVER_PUBKEY_HEX` are
+# Warren-product constants the app owns directly (`warren_product_config`);
+# the generic `unix_now` helper comes from the neutral engine crate
+# `warrenguard-config` below.
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
 # Phase 4.F: `warren_signer` now exposes a raw `SigningKey` used to
 # assemble `WarrenTunnelParameters`. Version pin aligned with
 # `mullvad-api/Cargo.toml`.
@@ -141,15 +140,13 @@ warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" 
 # Signed HTTP client for warren-api (consumed by
 # `WarrenRemoteAccountBackend` + `WarrenRemoteDeviceBackend` to replace
 # `mullvad_api::AccountsProxy/DevicesProxy` when
-# `warren_mode = true && warren_local_account = false`).
-# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
-# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
-# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on (no
-# `new_shared`), and its method surface diverges (`subscription` vs
-# `get_subscription`, `register` vs `register_with_voucher`, `address()` vs
-# `pubkey_ss58()`, no `new_unsigned`). Needs a cross-repo decision, not an
-# app-side workaround.
-warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
+# `warren_mode = true && warren_local_account = false`). The SDK's
+# `WarrenApiClient` (warren-sdk-rs) owns its `WarrenIdentity` instead of
+# sharing a hot-swappable key, so `warren_sdk_client::SharedWarrenApiClient`
+# rebuilds a fresh client per call from a shared, hot-swappable BIP39 seed
+# (see that module's doc for why the seed, not the daemon's already-derived
+# `SigningKey`, is the thing that has to be shared).
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
 # Encode/decode wg_pubkey 32 bytes <-> hex 64 chars in
 # `WarrenRemoteDeviceBackend::map_device_response`.
 hex = "0.4"
@@ -188,9 +185,14 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
-# Phase G.3: E2E tests spawn warren-api in-process to validate the
-# `WarrenRemote*Backend` → warren-api-client → warren-api round-trip.
-warren-api = { path = "../../warren-core/crates/warren-api" }
+# Test-only, never shipped: the E2E suite spawns the REAL warren-core HTTP
+# server in-process to prove wire-compat of the SDK's `warren-api` (client,
+# regular dep below) against the actual DTO surface. Aliased to
+# `warren-api-server` because the SDK client crate is also named
+# `warren-api` and Cargo cannot resolve two different packages under one
+# name. This is the one remaining warren-core reference in this manifest,
+# scoped to `[dev-dependencies]`.
+warren-api-server = { package = "warren-api", path = "../../warren-core/crates/warren-api" }
 
 [target.'cfg(any(unix, windows))'.dependencies]
 mullvad-update = { path = "../mullvad-update", features = ["client"] }

@@ -22,6 +22,8 @@ use mullvad_api::AccountsProxy;
 use mullvad_api::rest;
 use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 
+use crate::warren_sdk_client::SharedWarrenApiClient;
+
 /// Type alias for the futures returned by the trait. `Pin<Box<dyn …>>`
 /// is required by object-safety (`Arc<dyn WarrenAccountBackend>`).
 /// `'static` is required by `retry_future` compatibility (which
@@ -114,8 +116,9 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 }
 
 /// Warren-Remote backend - implements
-/// [`WarrenAccountBackend`] via the signed HTTP `warren-api-client`
-/// client that talks to the warren-api server (= alternative to the
+/// [`WarrenAccountBackend`] via the signed HTTP client
+/// ([`SharedWarrenApiClient`], wrapping the SDK's `warren_api::WarrenApiClient`)
+/// that talks to the warren-api server (= alternative to the
 /// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
 ///
 /// The standard Warren account backend (= the warren-remote branch of
@@ -128,7 +131,7 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 /// - `delete_account(account)`: signed `DELETE /v1/account`.
 #[derive(Clone)]
 pub struct WarrenRemoteAccountBackend {
-    client: Arc<warren_api_client::WarrenApiClient>,
+    client: Arc<SharedWarrenApiClient>,
     /// Secrets pulled from `GET /v1/checkout/{wpid}/voucher` whose
     /// `POST /v1/register` has not succeeded yet, keyed by wpid. The
     /// pull consumes the server-side single-use mapping, so a register
@@ -142,11 +145,11 @@ pub struct WarrenRemoteAccountBackend {
 }
 
 impl WarrenRemoteAccountBackend {
-    /// Builds a backend from a `WarrenApiClient` configured at
-    /// boot. The client carries the Ed25519 `SigningKey` (= Warren
-    /// identity) and the `warren-api` URL.
+    /// Builds a backend from a [`SharedWarrenApiClient`] configured at
+    /// boot. The client carries the shared, hot-swappable Warren identity
+    /// seed and the `warren-api` URL.
     #[must_use]
-    pub fn new(client: warren_api_client::WarrenApiClient) -> Self {
+    pub fn new(client: SharedWarrenApiClient) -> Self {
         Self {
             client: Arc::new(client),
             pulled_unregistered: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
@@ -178,7 +181,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
         let client = self.client.clone();
-        let pubkey_ss58 = client.pubkey_ss58();
+        let pubkey_ss58 = client.address();
         let pulled_unregistered = self.pulled_unregistered.clone();
         Box::pin(async move {
             // App-initiated purchase (doc 35): the GUI polls this same
@@ -228,8 +231,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 None => voucher,
             };
 
-            let req = warren_api_client::RegisterAccountRequest {
-                pubkey_ss58: warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
+            let req = warren_api::RegisterAccountRequest {
+                pubkey_ss58: warren_api::PubkeySs58::try_from(pubkey_ss58.as_str())
                     .map_err(|_| rest::Error::Aborted)?,
                 voucher_secret: voucher,
                 referral_code: None,
@@ -251,7 +254,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                         resp = Some(r);
                         break;
                     }
-                    Err(e @ warren_api_client::ClientError::ServerStatus { .. }) => {
+                    Err(e @ warren_api::ClientError::ServerStatus { .. }) => {
                         // Final server-side verdict. AlreadyRedeemed on a
                         // cached secret means a previous attempt DID land
                         // server-side: drop the cache entry so the poll
@@ -307,7 +310,7 @@ fn as_wpid(input: &str) -> Option<String> {
     }
 }
 
-/// Maps a warren-api-client error specifically for the voucher
+/// Maps a warren-api error specifically for the voucher
 /// redemption path (`POST /v1/register`).
 ///
 /// The downstream Mullvad legacy pipeline (`device::service::map_rest_error`
@@ -334,8 +337,8 @@ fn as_wpid(input: &str) -> Option<String> {
 /// rewrite ever break the substring, the fallback preserves the raw
 /// body in the error log for diagnostics - and the user gets the
 /// generic toast rather than a silent failure.
-fn map_voucher_register_error(err: warren_api_client::ClientError) -> rest::Error {
-    use warren_api_client::ClientError;
+fn map_voucher_register_error(err: warren_api::ClientError) -> rest::Error {
+    use warren_api::ClientError;
     match err {
         ClientError::ServerStatus { status, ref body } => {
             let code = rest::StatusCode::from_u16(status)
@@ -391,7 +394,7 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
     chrono::DateTime::from_timestamp(secs_i64, 0).ok_or(rest::Error::Aborted)
 }
 
-/// Maps a [`warren_api_client::ClientError`] to a Mullvad
+/// Maps a [`warren_api::ClientError`] to a Mullvad
 /// [`rest::Error`] to preserve the contract of the
 /// [`WarrenAccountBackend`] trait.
 ///
@@ -399,8 +402,8 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
 /// (mappable on the caller side via `map_rest_error`). Everything
 /// else (transport down, serde, clock) -> `Aborted` - consistent with
 /// the Mullvad pattern for infrastructure failures.
-pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Error {
-    use warren_api_client::ClientError;
+pub(super) fn map_client_error(err: warren_api::ClientError) -> rest::Error {
+    use warren_api::ClientError;
     match err {
         ClientError::ServerStatus { status, body } => {
             let code = rest::StatusCode::from_u16(status)
@@ -420,36 +423,49 @@ pub(super) fn map_client_error(err: warren_api_client::ClientError) -> rest::Err
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::warren_sdk_client::SharedWarrenApiClient;
 
     // ===================================================================
     // WarrenRemoteAccountBackend - E2E tests.
     //
-    // Strategy: spawn warren-api in-process (axum::serve loopback),
-    // build an Ed25519-signed `WarrenApiClient`, instantiate the backend,
-    // exercise each trait method. Checks the wire mapping warren-api
-    // <-> `mullvad_types::AccountData` + the `ClientError` <->
-    // `rest::Error::ApiError` mapping.
+    // Strategy: spawn the REAL warren-core warren-api server in-process
+    // (axum::serve loopback, dev-dependency only, never shipped), build a
+    // `SharedWarrenApiClient` (wrapping the SDK's `warren_api::WarrenApiClient`),
+    // instantiate the backend, exercise each trait method. Checks the wire
+    // mapping warren-api <-> `mullvad_types::AccountData` + the
+    // `ClientError` <-> `rest::Error::ApiError` mapping against the real
+    // DTO surface, proving wire-compat of the SDK client.
     // ===================================================================
 
-    use ed25519_dalek::SigningKey;
-    use std::sync::Arc as TestArc;
-    use warren_api_client::WarrenApiClient;
+    use std::sync::{Arc as TestArc, RwLock};
+    use warren_identity::WarrenIdentity;
+    use zeroize::Zeroizing;
 
     /// Spawns warren-api in-process and returns (URL, AppState).
     /// The `AppState` lets tests inspect / pre-populate the
     /// server stores (= shortcut equivalent to the signed admin
     /// endpoints).
-    async fn spawn_warren_api() -> (String, TestArc<warren_api::AppState>) {
+    async fn spawn_warren_api() -> (String, TestArc<warren_api_server::AppState>) {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind ephemeral");
         let addr = listener.local_addr().expect("local addr");
-        let state = warren_api::AppState::in_memory();
-        let app = warren_api::build_router(state.clone());
+        let state = warren_api_server::AppState::in_memory();
+        let app = warren_api_server::build_router(state.clone());
         tokio::spawn(async move {
             axum::serve(listener, app).await.expect("serve");
         });
         (format!("http://{addr}"), state)
+    }
+
+    /// Builds a `SharedWarrenApiClient` around a fixed seed (no hot-swap
+    /// needed in these tests: the identity never changes mid-test).
+    fn client_with_seed(api_url: String, seed: [u8; 32]) -> SharedWarrenApiClient {
+        SharedWarrenApiClient::new(api_url, TestArc::new(RwLock::new(Zeroizing::new(seed))))
+    }
+
+    fn address_for_seed(seed: [u8; 32]) -> String {
+        WarrenIdentity::from_seed(&seed).address()
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -457,12 +473,12 @@ mod tests {
         // Nominal case: sub present on warren-api side -> backend.get_data()
         // returns AccountData with expiry reconstructed from expires_at.
         let (api_url, state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[61u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        let seed = [61u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
         // Pre-populate server-side (= equivalent to a prior /v1/register).
         state.subscriptions.insert(&pubkey_ss58, 1_700_000_000);
 
-        let client = WarrenApiClient::new(api_url, key);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
         let data = backend
             .get_data(pubkey_ss58.clone())
@@ -484,9 +500,9 @@ mod tests {
         // interprets a generic error instead of "non-existent account"
         // -> degraded UX + inconsistent device.json state.
         let (api_url, _state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[62u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
-        let client = WarrenApiClient::new(api_url, key);
+        let seed = [62u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
@@ -505,11 +521,11 @@ mod tests {
     async fn warren_remote_account_delete_removes_subscription() {
         // Nominal case: delete_account removes the sub on the server side.
         let (api_url, state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[63u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        let seed = [63u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
         state.subscriptions.insert(&pubkey_ss58, 9_999_999_999);
 
-        let client = WarrenApiClient::new(api_url, key);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
         backend
             .delete_account(pubkey_ss58.clone())
@@ -528,9 +544,9 @@ mod tests {
         // backend must propagate 404 -> caller can decide to ignore it
         // or log it cleanly (vs generic error).
         let (api_url, _state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[64u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
-        let client = WarrenApiClient::new(api_url, key);
+        let seed = [64u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
@@ -572,25 +588,26 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn warren_remote_submit_voucher_with_wpid_pulls_and_redeems() {
         let (api_url, state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[65u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        let seed = [65u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
 
         // Simulate the webhook outcome: a minted voucher whose secret
         // is queued under the app-chosen wpid.
-        let (secret, hash) = warren_api::generate_voucher_secret();
+        let (secret, hash) = warren_api_server::generate_voucher_secret();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        assert!(
-            state
-                .vouchers
-                .create(hash, 30 * 86_400, warren_api::PaymentMethod::Card, now)
-        );
+        assert!(state.vouchers.create(
+            hash,
+            30 * 86_400,
+            warren_api_server::PaymentMethod::Card,
+            now
+        ));
         let wpid = "00112233445566778899aabbccddeeff";
         state.pending_vouchers.put(wpid, &secret, now + 600);
 
-        let client = WarrenApiClient::new(api_url, key);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
         let submission = backend
             .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
@@ -629,12 +646,12 @@ mod tests {
         // entry, and the next poll goes back to the pull path (404 ->
         // INVALID_VOUCHER), not an infinite replay of the dead secret.
         let (api_url, state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[67u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
+        let seed = [67u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
 
         // Pending entry WITHOUT a matching voucher row: the pull
         // succeeds (secret cached) but the register 400s (final).
-        let (secret, _hash) = warren_api::generate_voucher_secret();
+        let (secret, _hash) = warren_api_server::generate_voucher_secret();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -642,7 +659,7 @@ mod tests {
         let wpid = "aaaabbbbccccdddd0000111122223333";
         state.pending_vouchers.put(wpid, &secret, now + 600);
 
-        let client = WarrenApiClient::new(api_url, key);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
@@ -681,9 +698,9 @@ mod tests {
         // Polling case: the webhook has not landed yet, so the pull
         // 404s. The GUI maps INVALID_VOUCHER to "keep polling".
         let (api_url, _state) = spawn_warren_api().await;
-        let key = SigningKey::from_bytes(&[66u8; 32]);
-        let pubkey_ss58 = warren_api_client::ss58::encode(&key.verifying_key().to_bytes());
-        let client = WarrenApiClient::new(api_url, key);
+        let seed = [66u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let client = client_with_seed(api_url, seed);
         let backend = WarrenRemoteAccountBackend::new(client);
 
         let err = backend
@@ -707,8 +724,8 @@ mod tests {
     // the substrings in `map_voucher_register_error`.
     // ===================================================================
 
-    fn server_status(status: u16, body: &str) -> warren_api_client::ClientError {
-        warren_api_client::ClientError::ServerStatus {
+    fn server_status(status: u16, body: &str) -> warren_api::ClientError {
+        warren_api::ClientError::ServerStatus {
             status,
             body: body.to_owned(),
         }
@@ -789,12 +806,12 @@ mod tests {
 
     #[test]
     fn map_voucher_register_error_bad_clock_maps_aborted() {
-        // Any non-`ServerStatus` warren-api-client error (transport,
-        // serde, system clock pre-epoch, …) is infra down - must
-        // map to `Aborted` to align with the convention of
-        // [`map_client_error`]. `BadClock` is a convenient no-arg
-        // variant for unit testing the catch-all arm.
-        let err = super::map_voucher_register_error(warren_api_client::ClientError::BadClock);
+        // Any non-`ServerStatus` warren-api error (transport, serde,
+        // system clock pre-epoch, …) is infra down - must map to
+        // `Aborted` to align with the convention of [`map_client_error`].
+        // `BadClock` is a convenient no-arg variant for unit testing the
+        // catch-all arm.
+        let err = super::map_voucher_register_error(warren_api::ClientError::BadClock);
         match err {
             rest::Error::Aborted => {}
             other => panic!("expected Aborted, got {other:?}"),

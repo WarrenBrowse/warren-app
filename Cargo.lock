@@ -3745,11 +3745,11 @@ dependencies = [
  "tokio-stream",
  "tracing-appender",
  "tracing-subscriber",
- "warren-api",
- "warren-api-client",
- "warren-config",
+ "warren-api 0.0.1",
+ "warren-api 0.3.26",
  "warren-discovery-core",
  "warren-identity 0.0.1",
+ "warrenguard-config",
  "warrenguard-multihop",
  "winapi",
  "windows 0.62.2",
@@ -5621,6 +5621,7 @@ dependencies = [
  "base64",
  "bytes",
  "futures-core",
+ "h2",
  "http",
  "http-body",
  "http-body-util",
@@ -8299,6 +8300,20 @@ dependencies = [
 
 [[package]]
 name = "warren-api"
+version = "0.0.1"
+dependencies = [
+ "hex",
+ "rand 0.8.6",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "warren-contract",
+ "warren-identity 0.0.1",
+]
+
+[[package]]
+name = "warren-api"
 version = "0.3.26"
 dependencies = [
  "aes-gcm",
@@ -8335,27 +8350,6 @@ dependencies = [
  "warrenguard-ratelimit",
  "warrenguard-wire",
  "zeroize",
-]
-
-[[package]]
-name = "warren-api-client"
-version = "0.3.26"
-dependencies = [
- "async-trait",
- "ed25519-dalek",
- "hex",
- "rand 0.10.1",
- "reqwest",
- "rustls",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "tokio-util 0.7.18",
- "tracing",
- "warren-api-types",
- "warren-identity 0.3.26",
- "webpki-roots 1.0.7",
 ]
 
 [[package]]
@@ -8458,8 +8452,7 @@ dependencies = [
  "tower",
  "tracing",
  "tracing-subscriber",
- "warren-api-client",
- "warren-config",
+ "warren-api 0.0.1",
  "warren-discovery-core",
  "warren-identity 0.0.1",
  "warrenguard-backoff",
@@ -8494,7 +8487,7 @@ dependencies = [
  "talpid-types",
  "thiserror 2.0.18",
  "tokio",
- "warren-api-client",
+ "warren-api 0.0.1",
  "warren-discovery-core",
  "warren-identity 0.0.1",
  "warrenguard-daita",

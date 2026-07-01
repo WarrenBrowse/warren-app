@@ -50,14 +50,11 @@ serde_json = { workspace = true }
 # Warren auth wallet + relay selector + HTTP API client - these crates build
 # cleanly for `target_os = "android"` today.
 warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
-# BLOCKED off warren-core: the SDK's `warren-api` client (warren-sdk-rs) does
-# not support the shared/hot-swappable `Arc<RwLock<SigningKey>>` identity that
-# `WarrenAuthSigner`/`on_set_warren_mnemonic` hot-swap relies on, and its method
-# surface diverges (`subscription` vs `get_subscription`, `register` vs
-# `register_with_voucher`, `address()` vs `pubkey_ss58()`, no `new_unsigned`).
-# Needs a cross-repo decision (extend the SDK client or carve out a shared
-# account-client crate), not an app-side workaround.
-warren-api-client = { path = "../../warren-core/crates/warren-api-client" }
+# Signed HTTP client for warren-api, consumed with the bundled reqwest
+# transport. Every call site here is stateless (mnemonic passed in fresh
+# from Kotlin), so a plain owned `WarrenIdentity` per call is enough - no
+# hot-swap wrapper needed (contrast `mullvad-daemon::warren_sdk_client`).
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
 
 # Signed app-update manifest fetch + ed25519 verification, reused as-is from the
 # desktop path so the mobile version check applies the exact same verified rule

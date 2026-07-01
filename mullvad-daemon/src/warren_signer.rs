@@ -67,17 +67,20 @@ pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner
     Some(Arc::new(WarrenAuthSigner::new(signing_key)))
 }
 
-/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives
-/// it into an Ed25519 [`SigningKey`], without the wrapper.
+/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives it
+/// into the 32-byte pre-HKDF seed (the input to
+/// `warren_identity::derive_node_key` / `WarrenIdentity::from_seed`).
 ///
-/// Sibling of [`load_or_create_signer`]: exposes the raw
-/// cryptographic material needed to assemble
-/// [`talpid_warren_tunnel::WarrenTunnelParameters`].
+/// Sibling of [`load_or_create_signing_key`], extracted so a caller that
+/// needs the SDK's `warren_identity::WarrenIdentity` (which only builds
+/// from this seed, never from an already-derived `SigningKey`) does not
+/// have to re-implement the mnemonic-loading logic. Both functions derive
+/// from the same on-disk mnemonic and therefore always agree.
 ///
-/// **No-log policy**: NEVER log the returned `SigningKey`
-/// (see Warren rule). The caller must consume it then drop it.
+/// **No-log policy**: NEVER log the returned seed. The caller must
+/// consume it then drop it.
 #[must_use]
-pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
+pub fn load_or_create_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
     let storage = get_storage(settings_dir);
     if storage.is_plaintext() {
         log::warn!(
@@ -90,7 +93,7 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
     let mnemonic = load_or_create_mnemonic_via_storage(&*storage, settings_dir)?;
 
     match warren_identity::seed_from_mnemonic(&mnemonic) {
-        Ok(seed) => Some(warren_identity::derive_node_key(&seed)),
+        Ok(seed) => Some(seed),
         Err(e) => {
             log::warn!(
                 "Warren auth disabled: persisted mnemonic failed BIP39 validation \
@@ -100,6 +103,20 @@ pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
             None
         }
     }
+}
+
+/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives
+/// it into an Ed25519 [`SigningKey`], without the wrapper.
+///
+/// Sibling of [`load_or_create_signer`]: exposes the raw
+/// cryptographic material needed to assemble
+/// [`talpid_warren_tunnel::WarrenTunnelParameters`].
+///
+/// **No-log policy**: NEVER log the returned `SigningKey`
+/// (see Warren rule). The caller must consume it then drop it.
+#[must_use]
+pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
+    load_or_create_seed(settings_dir).map(|seed| warren_identity::derive_node_key(&seed))
 }
 
 /// Migrates a legacy `<settings_dir>/warren_mnemonic.txt` (pre-secret
@@ -591,6 +608,29 @@ mod tests {
         assert_eq!(
             pubkey_via_signer, pubkey_via_export,
             "exported mnemonic MUST re-derive identical pubkey, else backup is broken"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn load_or_create_seed_agrees_with_load_or_create_signing_key() {
+        // `load_or_create_signing_key` now delegates to `load_or_create_seed`
+        // internally; this pins the observable contract (same on-disk
+        // mnemonic -> the seed re-derives the exact same SigningKey via
+        // `derive_node_key`) so a future refactor cannot silently desync the
+        // two, which would break the SDK-backed `warren_api::WarrenApiClient`
+        // callers that only have the seed.
+        let dir = isolated_tempdir();
+
+        let signing_key = load_or_create_signing_key(&dir).expect("bootstrap key");
+        let seed = load_or_create_seed(&dir).expect("seed must be present after bootstrap");
+        let re_derived = warren_identity::derive_node_key(&seed);
+
+        assert_eq!(
+            signing_key.verifying_key().to_bytes(),
+            re_derived.verifying_key().to_bytes(),
+            "load_or_create_seed MUST re-derive to the same key as load_or_create_signing_key"
         );
 
         let _ = std::fs::remove_dir_all(&dir);

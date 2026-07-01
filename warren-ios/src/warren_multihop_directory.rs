@@ -23,10 +23,10 @@
 //! Group file, since iOS has no long-lived daemon to hold it in memory).
 //!
 //! Defense-in-depth: the directory envelope is signature-checked against the
-//! baked API **server** pin (`warren_config::WARREN_SERVER_PUBKEY_HEX`, the
-//! same value the daemon pins), on top of the root-anchored operational
-//! certificate. Sourced from `warren-config` so it never drifts from the
-//! daemon's pin.
+//! baked API **server** pin
+//! (`crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX`, the same
+//! value the daemon pins), on top of the root-anchored operational
+//! certificate.
 //!
 //! Periodic refresh: Swift re-fetches every 30 min and calls
 //! [`verify_generation`]; when the trusted generation advances (a fleet
@@ -142,7 +142,7 @@ fn verify_fresh(
     // signed by a different envelope key.
     let dir = verify_multihop_directory_any(
         json,
-        &[warren_config::WARREN_SERVER_PUBKEY_HEX],
+        &[crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX],
         &[WARREN_MULTIHOP_ROOT_PUBKEY_BAKED],
     )?;
     if dir.is_expired(now_unix) {

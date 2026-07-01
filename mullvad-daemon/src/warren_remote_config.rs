@@ -1,20 +1,17 @@
 //! Testable extraction of `WarrenApiConfig` resolution from
-//! Settings + env var + signing key loader.
+//! Settings + env var + seed loader.
 //!
 //! Pure function: no side effects, no I/O. The caller
-//! (`Daemon::start` in `lib.rs`) loads env + signing_key + settings
+//! (`Daemon::start` in `lib.rs`) loads env + seed + settings
 //! then calls [`resolve`] with those already-resolved values.
 //!
 //! Covers these cases (see tests):
-//! 1. `Some(url) && Some(key)` -> Some.
+//! 1. `Some(url) && Some(seed)` -> Some.
 //! 2. URL absent from both env AND settings -> compiled default.
-//! 3. signing_key absent (mnemonic not bootstrapped) -> None.
-
-use std::sync::{Arc, RwLock};
-
-use ed25519_dalek::SigningKey;
+//! 3. seed absent (mnemonic not bootstrapped) -> None.
 
 use crate::device::WarrenApiConfig;
+use crate::warren_sdk_client::SharedWarrenSeed;
 
 /// Compiled production warren-api base URL. Used when neither the
 /// `WARREN_API_URL` env var nor the persisted `Settings::warren_api_url`
@@ -31,10 +28,11 @@ use crate::device::WarrenApiConfig;
 /// operate.
 pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 
-/// Resolves the warren-api config based on flags + URL sources and
-/// signing key. Pure function: the caller injects `env_url` (= via
-/// `std::env::var("WARREN_API_URL").ok()`) and `signing_key` (=
-/// `warren_signer::load_or_create_signing_key(...)`) already resolved.
+/// Resolves the warren-api config based on flags + URL sources and the
+/// BIP39-derived seed. Pure function: the caller injects `env_url` (=
+/// via `std::env::var("WARREN_API_URL").ok()`) and `seed` (=
+/// `warren_signer::load_or_create_seed(...)`, wrapped in a shared handle)
+/// already resolved.
 ///
 /// URL priority: first non-empty of `env_url` > `settings_url`,
 /// otherwise the compiled [`DEFAULT_WARREN_API_URL`]. An empty value
@@ -45,7 +43,7 @@ pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 pub(crate) fn resolve(
     settings_url: Option<String>,
     env_url: Option<String>,
-    signing_key: Option<Arc<RwLock<SigningKey>>>,
+    seed: Option<SharedWarrenSeed>,
 ) -> Option<WarrenApiConfig> {
     // First non-empty of [env, settings], else the compiled prod
     // default - so remote mode never silently falls back to the
@@ -55,29 +53,31 @@ pub(crate) fn resolve(
         .flatten()
         .find(|s| !s.is_empty())
         .unwrap_or_else(|| DEFAULT_WARREN_API_URL.to_owned());
-    let signing_key = signing_key?;
+    let seed = seed?;
 
-    Some(WarrenApiConfig { url, signing_key })
+    Some(WarrenApiConfig { url, seed })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Arc, RwLock};
+    use zeroize::Zeroizing;
 
-    fn fixed_signing_key() -> Arc<RwLock<SigningKey>> {
-        Arc::new(RwLock::new(SigningKey::from_bytes(&[7u8; 32])))
+    fn fixed_seed() -> SharedWarrenSeed {
+        Arc::new(RwLock::new(Zeroizing::new([7u8; 32])))
     }
 
     #[test]
-    fn happy_path_returns_config_with_url_and_key() {
+    fn happy_path_returns_config_with_url_and_seed() {
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
-            Some(fixed_signing_key()),
+            Some(fixed_seed()),
         );
         let cfg = cfg.expect("must produce a config");
         assert_eq!(cfg.url, "https://api.warrenbrowse.com");
-        assert_eq!(cfg.signing_key.read().unwrap().to_bytes(), [7u8; 32]);
+        assert_eq!(*cfg.seed.read().unwrap(), Zeroizing::new([7u8; 32]));
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             Some("http://127.0.0.1:8080".to_owned()),
-            Some(fixed_signing_key()),
+            Some(fixed_seed()),
         );
         let cfg = cfg.expect("must produce a config");
         assert_eq!(
@@ -103,7 +103,7 @@ mod tests {
         // back to the Mullvad upstream API (`api.mullvad.net`, which
         // Warren does not operate), we use the compiled production
         // default so the remote backend works out-of-the-box.
-        let cfg = resolve(None, None, Some(fixed_signing_key()));
+        let cfg = resolve(None, None, Some(fixed_seed()));
         let cfg = cfg.expect("no URL MUST now produce a config with the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -117,7 +117,7 @@ mod tests {
         // persists `Some("")`. We treat that as "not provided" and
         // fall through to the compiled default, not as a hard disable
         // of the Warren remote backend.
-        let cfg = resolve(Some(String::new()), None, Some(fixed_signing_key()));
+        let cfg = resolve(Some(String::new()), None, Some(fixed_seed()));
         let cfg = cfg.expect("empty URL MUST fall through to the compiled default");
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
@@ -132,7 +132,7 @@ mod tests {
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             Some(String::new()),
-            Some(fixed_signing_key()),
+            Some(fixed_seed()),
         );
         let cfg = cfg.expect("must produce a config");
         assert_eq!(
@@ -142,15 +142,15 @@ mod tests {
     }
 
     #[test]
-    fn no_signing_key_returns_none() {
+    fn no_seed_returns_none() {
         // Edge case: URL configured but no mnemonic loaded (= identity
-        // absent). We MUST NOT build a client with a dummy key: we fall
+        // absent). We MUST NOT build a client with a dummy seed: we fall
         // back with a warn and no remote config.
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             None,
-            None, // signing_key absent
+            None, // seed absent
         );
-        assert!(cfg.is_none(), "no signing_key MUST return None");
+        assert!(cfg.is_none(), "no seed MUST return None");
     }
 }

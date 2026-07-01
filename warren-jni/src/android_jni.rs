@@ -574,7 +574,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
 /// available Warren exits. The Kotlin side parses this into a list of
 /// `RelayInfo` and feeds the relay selector / location picker UI.
 ///
-/// Fetches `GET /v1/exits` via `warren-api-client`, verifies
+/// Fetches `GET /v1/exits` via the SDK's `warren-api` client, verifies
 /// the embedded signature against the pinned server pubkey, and
 /// projects each `JsonRelay` to the JSON shape Kotlin expects. The
 /// fetch runs on the shared Tokio runtime initialised by `initLogger`.
@@ -617,6 +617,21 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
     }
 }
 
+/// Builds a `WarrenApiClient` for the unsigned, no-mnemonic-available
+/// endpoints (`GET /v1/exits`, `GET /v1/multihop/directory`). The identity
+/// is only used by SIGNED methods, so a fixed placeholder is harmless here
+/// and documents the no-sign contract (mirrors warren-core's
+/// `WarrenApiClient::new_unsigned` zero-key sentinel).
+#[cfg(target_os = "android")]
+fn unsigned_warren_client()
+-> warren_api::WarrenApiClient<warren_api::reqwest_transport::ReqwestTransport> {
+    warren_api::WarrenApiClient::new(
+        PROD_API_URL.to_owned(),
+        warren_identity::WarrenIdentity::from_seed(&[0u8; 32]),
+        warren_api::reqwest_transport::ReqwestTransport::new(),
+    )
+}
+
 /// Raw signed multi-hop directory, or empty string on failure.
 #[cfg(target_os = "android")]
 fn fetch_multihop_directory_raw() -> String {
@@ -624,8 +639,8 @@ fn fetch_multihop_directory_raw() -> String {
         log::warn!("fetchMultihopDirectory called before initLogger; returning empty");
         return String::new();
     };
-    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
-    match runtime.block_on(client.get_multihop_directory()) {
+    let client = unsigned_warren_client();
+    match runtime.block_on(client.fetch_multihop_directory()) {
         Ok(Some(raw)) => raw,
         Ok(None) => {
             log::warn!("fetchMultihopDirectory: no directory published (404)");
@@ -709,10 +724,9 @@ fn fetch_relays_or_fallback() -> String {
     };
 
     // `/v1/exits` is unsigned (response is server-signed); use the
-    // unsigned-only client constructor so the API surface documents
-    // the no-sign contract and we never accidentally emit a request
-    // signed with a deterministic zero key.
-    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
+    // placeholder-identity client so the code path never accidentally
+    // relies on a real mnemonic being available here.
+    let client = unsigned_warren_client();
 
     let raw = match runtime.block_on(client.list_exits()) {
         Ok(s) => s,
@@ -988,10 +1002,14 @@ fn send_problem_report_inner(
     let runtime = RUNTIME
         .get()
         .ok_or_else(|| "initLogger must be called before sendProblemReport".to_owned())?;
-    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+    let identity = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
         .map_err(|e| format!("invalid mnemonic: {e}"))?;
-    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
-    let req = warren_api_client::SupportReportRequest {
+    let client = warren_api::WarrenApiClient::new(
+        PROD_API_URL.to_owned(),
+        identity,
+        warren_api::reqwest_transport::ReqwestTransport::new(),
+    );
+    let req = warren_api::SupportReportRequest {
         user_message: user_message.to_owned(),
         redacted_logs: redacted_logs.to_owned(),
         app_version: app_version.to_owned(),
@@ -1052,7 +1070,7 @@ enum SubscriptionFetchError {
     Setup(String),
     /// The signed request reached the server and it answered non-2xx (or a
     /// transport error occurred). `ServerStatus` carries the HTTP status.
-    Client(warren_api_client::ClientError),
+    Client(warren_api::ClientError),
 }
 
 /// Build the `{"ok":false,...}` envelope, surfacing `status` on a server
@@ -1060,7 +1078,7 @@ enum SubscriptionFetchError {
 /// failure. Mirrors the iOS `err_client_json` (warren-ios account FFI).
 #[cfg(target_os = "android")]
 fn subscription_error_envelope(err: &SubscriptionFetchError) -> String {
-    use warren_api_client::ClientError;
+    use warren_api::ClientError;
     match err {
         SubscriptionFetchError::Client(client_err) => {
             let mut obj = serde_json::Map::new();
@@ -1087,11 +1105,15 @@ fn get_subscription_inner(mnemonic: &str) -> Result<u64, SubscriptionFetchError>
     let runtime = RUNTIME.get().ok_or_else(|| {
         SubscriptionFetchError::Setup("initLogger must be called before getSubscription".to_owned())
     })?;
-    let signing_key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+    let identity = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
         .map_err(|e| SubscriptionFetchError::Setup(format!("invalid mnemonic: {e}")))?;
-    let client = warren_api_client::WarrenApiClient::new(PROD_API_URL.to_owned(), signing_key);
+    let client = warren_api::WarrenApiClient::new(
+        PROD_API_URL.to_owned(),
+        identity,
+        warren_api::reqwest_transport::ReqwestTransport::new(),
+    );
     let resp = runtime
-        .block_on(client.get_subscription())
+        .block_on(client.subscription())
         .map_err(SubscriptionFetchError::Client)?;
     Ok(resp.expires_at)
 }
@@ -1196,9 +1218,9 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
         .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
     let pubkey_ss58 = crate::wallet::pubkey_ss58_from_mnemonic(mnemonic)
         .map_err(|e| format!("invalid mnemonic: {e}"))?;
-    let pubkey = warren_api_client::PubkeySs58::try_from(pubkey_ss58.as_str())
+    let pubkey = warren_api::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
-    let client = warren_api_client::WarrenApiClient::new_unsigned(PROD_API_URL.to_owned());
+    let client = unsigned_warren_client();
     let wpid = as_wpid(voucher_or_wpid);
 
     runtime.block_on(async move {
@@ -1229,7 +1251,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
             None => voucher_or_wpid.to_owned(),
         };
 
-        let req = warren_api_client::RegisterAccountRequest {
+        let req = warren_api::RegisterAccountRequest {
             pubkey_ss58: pubkey,
             voucher_secret,
             referral_code: None,
@@ -1243,14 +1265,14 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
             if attempt > 0 {
                 tokio::time::sleep(std::time::Duration::from_secs(2)).await;
             }
-            match client.register_with_voucher(&req).await {
+            match client.register(&req).await {
                 Ok(resp) => {
                     if let Some(wpid) = &wpid {
                         PULLED_UNREGISTERED.lock().remove(wpid);
                     }
                     return Ok(resp.expires_at);
                 }
-                Err(e @ warren_api_client::ClientError::ServerStatus { .. }) => {
+                Err(e @ warren_api::ClientError::ServerStatus { .. }) => {
                     // Final server verdict (e.g. already-redeemed means a prior
                     // attempt landed): drop the cache so the poll stops replaying.
                     if let Some(wpid) = &wpid {

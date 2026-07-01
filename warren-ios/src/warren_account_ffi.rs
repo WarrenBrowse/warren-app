@@ -1,15 +1,18 @@
 //! Warren account / subscription FFI for iOS.
 //!
-//! Real implementations over `warren-api-client`, the same signed
-//! warren-api client Android drives via `warren-jni` and the desktop
-//! daemon drives via `WarrenRemoteAccountBackend`. These replace the
-//! legacy Mullvad account-number REST flows under `src/api_client/`:
-//! the Warren identity is the wallet, not a Mullvad account number.
+//! Real implementations over the SDK's `warren_api::WarrenApiClient`
+//! (warren-sdk-rs), the same signed warren-api client Android drives via
+//! `warren-jni` and the desktop daemon drives via
+//! `WarrenRemoteAccountBackend`. These replace the legacy Mullvad
+//! account-number REST flows under `src/api_client/`: the Warren identity
+//! is the wallet, not a Mullvad account number.
 //!
-//! Identity model: every call derives the Ed25519 signing key from the
-//! 32-byte wallet seed at the FFI boundary (`derive_node_key`), mirroring
-//! the seed-centric shape of `warren_wallet_ffi`. The seed never escapes
-//! Rust and its stack copy is wrapped in `Zeroizing`.
+//! Identity model: every call derives the `WarrenIdentity` from the
+//! 32-byte wallet seed at the FFI boundary (`WarrenIdentity::from_seed`),
+//! mirroring the seed-centric shape of `warren_wallet_ffi`. The seed never
+//! escapes Rust and its stack copy is wrapped in `Zeroizing`. Each call
+//! builds a fresh client (stateless FFI boundary, no hot-swap needed: the
+//! caller always hands in the current seed).
 //!
 //! Wire model (lockstep with Android `warren-jni` + daemon backend):
 //! - subscription: signed `GET /v1/subscription`  -> `{ expires_at }`
@@ -24,9 +27,9 @@
 //! - `{"ok":true}`                               (delete)
 //! - `{"ok":false,"error":"<msg>"}`              (input / transport error)
 //! - `{"ok":false,"error":"<msg>","status":<u16>}` (server non-2xx; the
-//!    Swift side maps `status` to a localized message; the response body
-//!    is deliberately NOT surfaced because a 4xx body can echo request
-//!    context).
+//!   Swift side maps `status` to a localized message; the response body
+//!   is deliberately NOT surfaced because a 4xx body can echo request
+//!   context).
 //!
 //! Blocking: each call `block_on`s the shared iOS tokio runtime. The
 //! Swift facade (`WarrenAccountClient`) invokes them off the main thread.
@@ -37,16 +40,17 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 use serde_json::json;
-use warren_api_client::{ClientError, PubkeySs58, RegisterAccountRequest, WarrenApiClient};
-use warren_identity::{derive_node_key, ss58};
+use warren_api::reqwest_transport::ReqwestTransport;
+use warren_api::{ClientError, PubkeySs58, RegisterAccountRequest, WarrenApiClient};
+use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
 
 const SEED_LEN: usize = 32;
 
 /// Production warren-api base URL (no trailing slash). Kept in lockstep
 /// with Android's `PROD_API_URL` (`warren-jni`) and the daemon's
-/// `DEFAULT_WARREN_API_URL` so a signed request a phone makes is
-/// verifiable by the same backend the other platforms talk to.
+/// `warren_product_config::WARREN_API_URL` so a signed request a phone
+/// makes is verifiable by the same backend the other platforms talk to.
 const WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 
 /// Reads a 32-byte seed into a zeroizing buffer. Returns `None` when
@@ -99,6 +103,17 @@ fn err_client_json(err: &ClientError) -> *mut c_char {
     into_cstring(value.to_string())
 }
 
+/// Builds a `WarrenApiClient` around the seed-derived identity. Cheap: no
+/// hot-swap to worry about since the FFI boundary is stateless (the
+/// caller hands in the current seed on every call).
+fn client_for_seed(seed: &[u8; SEED_LEN]) -> WarrenApiClient<ReqwestTransport> {
+    WarrenApiClient::new(
+        WARREN_API_URL.to_owned(),
+        WarrenIdentity::from_seed(seed),
+        ReqwestTransport::new(),
+    )
+}
+
 /// Signed `GET /v1/subscription`. Returns the wallet's subscription
 /// expiry as `{"ok":true,"expires_at":<unix secs>}` or an error envelope.
 ///
@@ -112,13 +127,12 @@ pub unsafe extern "C" fn warren_account_get_subscription(seed: *const u8) -> *mu
         let Some(seed) = (unsafe { read_seed(seed) }) else {
             return err_input_json("null seed");
         };
-        let signing_key = derive_node_key(&seed);
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
             Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
         };
-        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
-        match handle.block_on(client.get_subscription()) {
+        let client = client_for_seed(&seed);
+        match handle.block_on(client.subscription()) {
             Ok(resp) => ok_expiry_json(resp.expires_at),
             Err(error) => err_client_json(&error),
         }
@@ -140,12 +154,11 @@ pub unsafe extern "C" fn warren_account_storekit_init(seed: *const u8) -> *mut c
         let Some(seed) = (unsafe { read_seed(seed) }) else {
             return err_input_json("null seed");
         };
-        let signing_key = derive_node_key(&seed);
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
             Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
         };
-        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        let client = client_for_seed(&seed);
         match handle.block_on(client.init_apple_payment()) {
             Ok(resp) => into_cstring(
                 json!({ "ok": true, "app_account_token": resp.app_account_token }).to_string(),
@@ -183,12 +196,11 @@ pub unsafe extern "C" fn warren_account_storekit_check(
             Ok(s) => s.to_owned(),
             Err(_) => return err_input_json("jws is not valid UTF-8"),
         };
-        let signing_key = derive_node_key(&seed);
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
             Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
         };
-        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        let client = client_for_seed(&seed);
         match handle.block_on(client.check_apple_payment(&jws_transaction)) {
             Ok(resp) => ok_expiry_json(resp.expires_at),
             Err(error) => err_client_json(&error),
@@ -224,11 +236,8 @@ pub unsafe extern "C" fn warren_account_redeem_voucher(
             Ok(s) => s.to_owned(),
             Err(_) => return err_input_json("voucher is not valid UTF-8"),
         };
-        // The pubkey travels in the request body (the endpoint is unsigned),
-        // so we derive only the SS58 address, never sending a signature.
-        let signing_key = derive_node_key(&seed);
-        let address = ss58::encode(&signing_key.verifying_key().to_bytes());
-        let pubkey_ss58 = match PubkeySs58::try_from(address.as_str()) {
+        let identity = WarrenIdentity::from_seed(&seed);
+        let pubkey_ss58 = match PubkeySs58::try_from(identity.address().as_str()) {
             Ok(pubkey) => pubkey,
             Err(error) => return err_input_json(&format!("invalid pubkey: {error}")),
         };
@@ -236,13 +245,17 @@ pub unsafe extern "C" fn warren_account_redeem_voucher(
             Ok(handle) => handle,
             Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
         };
-        let client = WarrenApiClient::new_unsigned(WARREN_API_URL.to_owned());
+        // `register` is unsigned (the pubkey travels in the body); the
+        // client identity is only used by SIGNED methods, so building it
+        // from the real seed here is harmless and avoids a separate
+        // unsigned-only client type.
+        let client = client_for_seed(&seed);
         let req = RegisterAccountRequest {
             pubkey_ss58,
             voucher_secret,
             referral_code: None,
         };
-        match handle.block_on(client.register_with_voucher(&req)) {
+        match handle.block_on(client.register(&req)) {
             Ok(resp) => ok_expiry_json(resp.expires_at),
             Err(error) => err_client_json(&error),
         }
@@ -262,12 +275,11 @@ pub unsafe extern "C" fn warren_account_delete(seed: *const u8) -> *mut c_char {
         let Some(seed) = (unsafe { read_seed(seed) }) else {
             return err_input_json("null seed");
         };
-        let signing_key = derive_node_key(&seed);
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
             Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
         };
-        let client = WarrenApiClient::new(WARREN_API_URL.to_owned(), signing_key);
+        let client = client_for_seed(&seed);
         match handle.block_on(client.delete_account()) {
             Ok(()) => into_cstring(json!({ "ok": true }).to_string()),
             Err(error) => err_client_json(&error),

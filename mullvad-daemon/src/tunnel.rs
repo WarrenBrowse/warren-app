@@ -25,6 +25,7 @@ use crate::device::Error as DeviceError;
 use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_list_view::country_centroid_for;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
+use crate::warren_sdk_client::SharedWarrenSeed;
 use crate::warren_status::WarrenStatusCache;
 use crate::warren_tunnel_params::{self, AssembleError};
 
@@ -112,6 +113,15 @@ struct InnerParametersGenerator {
     // create/restore/logout that swaps the key takes effect on the next
     // tunnel without a daemon restart.
     warren_signing_key: Option<Arc<RwLock<SigningKey>>>,
+    /// Companion shared, hot-swappable BIP39 seed for the SDK-backed
+    /// `warren_api::WarrenApiClient` used by the best-effort exit-down
+    /// incident report below. Kept separate from `warren_signing_key`
+    /// because the SDK's `WarrenIdentity` only builds from this
+    /// pre-HKDF seed, never from an already-derived `SigningKey` (see
+    /// `warren_sdk_client` module doc); both are re-derived from the
+    /// same on-disk mnemonic at every hot-swap event so they always
+    /// agree.
+    warren_identity_seed: Option<SharedWarrenSeed>,
     /// Multi-hop config. `Some` only when the `warren_multi_hop.enabled`
     /// UI toggle is on AND a valid signed
     /// `<settings_dir>/warren-multihop.json` is present; `None`
@@ -330,6 +340,7 @@ impl ParametersGenerator {
         tunnel_options: TunnelOptions,
         warren_relay_selector: Option<DaemonWarrenRelaySelector>,
         warren_signing_key: Option<Arc<RwLock<SigningKey>>>,
+        warren_identity_seed: Option<SharedWarrenSeed>,
         warren_multi_hop: Option<MultiHopConfig>,
         warren_status_cache: WarrenStatusCache,
         warren_api_url: Option<String>,
@@ -340,6 +351,7 @@ impl ParametersGenerator {
             relay_settings,
             warren_relay_selector,
             warren_signing_key,
+            warren_identity_seed,
             warren_multi_hop,
             warren_status_cache,
             warren_nat_pmp: None,
@@ -395,7 +407,7 @@ impl ParametersGenerator {
         else {
             return TrustNewExitKeyOutcome::ExitNotFound;
         };
-        let now_unix = warren_config::unix_now();
+        let now_unix = warrenguard_config::unix_now();
         existing.pubkey_hex = new_pubkey_hex.to_owned();
         existing.first_seen_unix = now_unix;
         existing.last_seen_unix = now_unix;
@@ -409,18 +421,13 @@ impl ParametersGenerator {
         TrustNewExitKeyOutcome::Ok
     }
 
-    /// Borrow the signing key used by the daemon for
-    /// signing forensic incident reports. Returns `None` if Warren
-    /// mode is off / the BIP39 identity was never bootstrapped.
-    pub async fn warren_signing_key_for_incidents(&self) -> Option<SigningKey> {
-        // Snapshot the CURRENT key (read lock) so a post-restore incident
-        // report is signed by the active identity, not the boot one.
-        self.0
-            .lock()
-            .await
-            .warren_signing_key
-            .as_ref()
-            .map(|k| k.read().expect("signing-key RwLock poisoned").clone())
+    /// The shared, hot-swappable BIP39 seed handle backing the SDK-facing
+    /// incident-report clients (`warren_sdk_client::SharedWarrenApiClient`).
+    /// Returns `None` if Warren mode is off / the BIP39 identity was never
+    /// bootstrapped. See `warren_identity_seed`'s field doc for why a seed
+    /// handle rather than a `SigningKey` handle.
+    pub async fn warren_seed_for_incidents(&self) -> Option<SharedWarrenSeed> {
+        self.0.lock().await.warren_identity_seed.clone()
     }
 
     /// Clear every entry from the in-memory pin table.
@@ -812,7 +819,7 @@ impl ParametersGenerator {
         // spurious mismatch when the user rotates their own node's key.
         // Roster-selected exits still go through the pin gate.
         if !custom_exit.is_active() {
-            let now_unix = warren_config::unix_now();
+            let now_unix = warrenguard_config::unix_now();
             let pin_outcome = self::warren_pin_verify(
                 &mut inner.warren_pinned_exit_pubkeys,
                 &exit_id_hex,
@@ -900,30 +907,27 @@ impl ParametersGenerator {
         // path is NOT affected - we just lose one telemetry point.
         if is_failover {
             inner.warren_status_cache.record_failover();
-            if let (Some(api_url), Some(signing_key), Some(excluded)) = (
+            if let (Some(api_url), Some(seed), Some(excluded)) = (
                 inner.warren_api_url.clone(),
-                inner.warren_signing_key.clone(),
+                inner.warren_identity_seed.clone(),
                 last_pubkey,
             ) {
                 tokio::spawn(async move {
-                    let client = warren_api_client::WarrenApiClient::new_shared(
-                        api_url,
-                        Vec::new(),
-                        signing_key,
-                    );
+                    let client =
+                        crate::warren_sdk_client::SharedWarrenApiClient::new(api_url, seed);
                     let hex_pubkey = hex::encode(excluded.as_bytes());
-                    let exit_pubkey_hex =
-                        match warren_api_client::PubkeyHex::try_from(hex_pubkey.as_str()) {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::debug!(
-                                    "exit-down report suppressed: failed to wrap pubkey \
+                    let exit_pubkey_hex = match warren_api::PubkeyHex::try_from(hex_pubkey.as_str())
+                    {
+                        Ok(v) => v,
+                        Err(e) => {
+                            log::debug!(
+                                "exit-down report suppressed: failed to wrap pubkey \
                                      {hex_pubkey} into PubkeyHex ({e})"
-                                );
-                                return;
-                            }
-                        };
-                    let req = warren_api_client::IncidentExitDownRequest {
+                            );
+                            return;
+                        }
+                    };
+                    let req = warren_api::IncidentExitDownRequest {
                         exit_pubkey_hex,
                         // We do not know the precise failure cause
                         // from this call site (the tunnel-state
@@ -931,8 +935,8 @@ impl ParametersGenerator {
                         // failed"). `HandshakeFail` is the closest
                         // semantic match since exit-down typically
                         // surfaces as a pre-tunnel exchange failure.
-                        reason_code: warren_api_client::IncidentReason::HandshakeFail,
-                        ts_unix: warren_config::unix_now(),
+                        reason_code: warren_api::IncidentReason::HandshakeFail,
+                        ts_unix: warrenguard_config::unix_now(),
                     };
                     if let Err(e) = client.report_exit_down(&req).await {
                         log::debug!(
