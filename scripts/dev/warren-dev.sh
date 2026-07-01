@@ -57,7 +57,7 @@ require_cmd() {
 check_daemon_deps() {
   require_cmd cargo
   require_cmd protoc
-  ensure_warren_core
+  ensure_engine_siblings
 }
 
 check_app_deps() {
@@ -118,17 +118,19 @@ ensure_electron_binary() {
   fi
 }
 
-# The daemon consumes Warren crates by `path` from the ../warren-core sibling
-# (mullvad-daemon -> warren-api), so cargo needs it checked out next door or it
-# fails to resolve the path dep with a cryptic error. The quinn fork needs no
-# local setup: it is the published WarrenBrowse/warren-quinn git-dep pinned by
-# tag in the root [patch.crates-io], fetched by cargo like any other git dep
-# (no vendored tree, no setup script).
-ensure_warren_core() {
-  local core_dir="$REPO_ROOT/../warren-core"
-  [[ -d "$core_dir/.git" ]] || die "warren-core not found at $core_dir
-        The daemon consumes Warren crates by path from this sibling. Clone it
-        next to warren-app: git clone <warren-core-url> \"$core_dir\""
+# The daemon builds against three sibling repos it path-deps: the warrenguard
+# engine (datapath), warren-sdk-rs (account client + identity), and
+# warren-contract (SS58 + /v1 DTOs). cargo fails with a cryptic "path does not
+# exist" if any is missing, so check up front. The quinn fork needs no local
+# setup: it is the WarrenBrowse/warren-quinn git-dep pinned by tag in the root
+# [patch.crates-io], fetched by cargo like any other git dep.
+ensure_engine_siblings() {
+  local sib
+  for sib in warrenguard warren-sdk-rs warren-contract; do
+    [[ -d "$REPO_ROOT/../$sib/.git" ]] || die "$sib not found at $REPO_ROOT/../$sib
+        The daemon path-deps this sibling. Clone it next to warren-app, or run
+        the workspace onboarding (mani sync)."
+  done
 }
 
 # ─────────────────────────────────────────────────────────────────────
