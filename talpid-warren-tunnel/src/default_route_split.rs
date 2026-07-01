@@ -125,7 +125,15 @@ mod v6_stub {
 /// the Windows `/1` halves), so a co-resident VPN's routing is never disturbed.
 pub fn force_route_cleanup() {
     #[cfg(target_os = "macos")]
-    warrenguard_route_split::default_route_split_macos::force_cleanup_all();
+    {
+        warrenguard_route_split::default_route_split_macos::force_cleanup_all();
+        warrenguard_route_split::default_route_split_macos::force_cleanup_all_v6();
+        // Dual-homed macOS: talpid restores only the best UNSCOPED default per
+        // family, never the primary interface's IFSCOPE default. When those
+        // differ, the primary-scoped system DNS resolver is stranded. Re-add it
+        // (leak-guarded: a no-op while a tunnel still carries traffic).
+        warrenguard_route_split::default_route_split_macos::restore_primary_scoped_default_v6();
+    }
     #[cfg(target_os = "linux")]
     warrenguard_route_split::default_route_split::force_cleanup_all();
     #[cfg(target_os = "windows")]
