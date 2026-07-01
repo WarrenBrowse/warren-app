@@ -34,6 +34,11 @@ ignore = [
 
   # Paste unmaintained, but considered complete and trusted by the community.
   "RUSTSEC-2024-0436",
+
+  # rustls-pemfile unmaintained (archived, folded into rustls-pki-types). Reached
+  # via warren-core's warrenguard-tls; parses only local PEM cert/key material at
+  # startup, never attacker-controlled bytes. Security-clean, no CVE.
+  "RUSTSEC-2025-0134",
 ]
 
 # This section is considered when running `cargo deny check licenses`
