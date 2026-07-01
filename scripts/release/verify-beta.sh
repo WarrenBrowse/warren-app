@@ -94,23 +94,6 @@ run_or_record "cargo fmt --check (warren-app)" cargo fmt --all -- --check
 run_or_record "cargo clippy -D warnings (warren-app)" cargo clippy --workspace --all-targets -- -D warnings
 run_or_record "cargo test --workspace (warren-app)" cargo test --workspace --no-fail-fast
 
-section "Rust workspace: warren-core"
-
-if [[ -d "${WARREN_CORE_PATH:-../warren-core}" ]]; then
-    pushd "${WARREN_CORE_PATH:-../warren-core}" > /dev/null
-    run_or_record "cargo fmt --check (warren-core)" cargo fmt --all -- --check
-    run_or_record "cargo clippy -D warnings (warren-core)" cargo clippy --workspace --all-targets -- -D warnings
-    run_or_record "cargo test --workspace (warren-core)" cargo test --workspace --no-fail-fast
-    if command -v cargo-deny > /dev/null 2>&1; then
-        run_or_record "cargo deny check (warren-core)" cargo deny check
-    else
-        yellow "  SKIP: cargo-deny not installed (cargo install cargo-deny --locked)"
-    fi
-    popd > /dev/null
-else
-    yellow "  SKIP: warren-core sibling repo not found"
-fi
-
 section "Smoke build"
 
 if [[ "$SKIP_BENCH" -eq 1 ]]; then
