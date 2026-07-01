@@ -42,7 +42,7 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # transport datapath, carved out of warren-core into the neutral engine).
 # The expected warrenguard checkout SHA is pinned in `.warrenguard-version`
 # at the warren-app repo root.
-warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport" }
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", features = ["system-vpn"] }
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
 warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
 warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump" }

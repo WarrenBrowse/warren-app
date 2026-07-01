@@ -75,7 +75,7 @@ warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqw
 # `IosTun` (`NEPacketTunnelFlow.readPackets/writePackets`, cf.
 # `.planning/c4-packet-tunnel-provider-quinn-design.md` §3.2), so it no
 # longer depends on a tun-rs iOS backend.
-warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true }
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true, features = ["system-vpn"] }
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core", optional = true }
 warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita", optional = true }
 warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump", optional = true }
