@@ -167,15 +167,22 @@ ensure_sudo() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# DNS safety net (macOS)
+# Network safety net (macOS)
 #
-# While (re)connecting, the daemon points the system DNS at a local resolver
-# in the 127/8 range. If it is killed before restoring the DNS (SIGKILL,
-# crash), the system is left pointing at a dead resolver and name resolution
-# breaks until a tunnel takes over again. We snapshot the DNS before launching
-# the daemon and restore it if a loopback leak is detected after it exits.
-# (The daemon itself also self-heals on its next startup; this covers the dev
-# loop where the daemon is killed and not immediately restarted.)
+# A daemon killed before it can tear down (SIGKILL, crash, hard Ctrl+C) leaves
+# the host without working name resolution in one of three ways, all repaired
+# after it exits by `repair_network_if_leaked`:
+#   1. DNS pinned at a local resolver (127/8 or ::1) that dies with the daemon.
+#      We snapshot the DNS before launch and restore it on a loopback leak.
+#   2. A leaked IPv6 split-default (`::/1`+`8000::/1` via a now-gone `utun`) that
+#      blackholes all native IPv6. On a network whose ONLY resolver is reached
+#      over IPv6 (RA/RDNSS), that kills DNS while IPv4 still pings, until reboot.
+#   3. The PRIMARY interface's scoped IPv6 default route dropped on teardown
+#      (dual-homed box: the tunnel restored only the dial interface's default).
+#      The primary-scoped DNS resolver then has no route via its interface and
+#      mDNSResponder stops resolving.
+# (The daemon self-heals on its next startup too; this covers the dev loop where
+# it is killed and not immediately restarted.)
 # ─────────────────────────────────────────────────────────────────────
 readonly OS_NAME="$(uname -s)"
 readonly DNS_SNAPSHOT_FILE="/tmp/warren-dns-snapshot.txt"
@@ -225,13 +232,76 @@ restore_dns_snapshot() {
   ok "DNS restored from snapshot"
 }
 
-# Restore DNS only if the daemon left it pointing at a dead loopback resolver.
-restore_dns_if_leaked() {
+# Delete any Warren IPv6 split-default half (`::/1` / `8000::/1`) the daemon
+# left behind pointing at a now-gone `utun`. Such a dangling half blackholes
+# ALL native IPv6; on a network whose only DNS resolver is reached over IPv6
+# (RA/RDNSS, e.g. a Freebox handing out `fd0f:…::1`), that silently kills name
+# resolution while IPv4 still pings ("ping IP ok, DNS dead") until reboot. This
+# mirrors `warrenguard_route_split::default_route_split_macos::force_cleanup_all_v6`
+# as a dev-loop backstop for when the daemon was hard-killed before its own
+# teardown ran. Ownership-scoped: only a half egressing a `utun` that no longer
+# exists is reclaimed, so a co-resident VPN's live split is never touched.
+repair_leaked_v6_split() {
+  is_macos || return 0
+  local net iface repaired=0
+  for net in "::/1" "8000::/1"; do
+    iface="$(route -n get -inet6 "$net" 2>/dev/null | awk '/interface:/{print $2; exit}')"
+    [[ "$iface" == utun* ]] || continue          # not a tunnel half → not ours
+    ifconfig "$iface" >/dev/null 2>&1 && continue # utun still alive → leave it
+    warn "Stale Warren IPv6 split-default route $net via gone $iface, deleting"
+    sudo route -n delete -inet6 -net "$net" >/dev/null 2>&1 || true
+    repaired=1
+  done
+  if (( repaired )); then
+    sudo dscacheutil -flushcache 2>/dev/null || true
+    sudo killall -HUP mDNSResponder 2>/dev/null || true
+    ok "Repaired leaked IPv6 split-default routing"
+  fi
+}
+
+# Restore the primary interface's scoped IPv6 default route if the daemon's
+# teardown dropped it. THE observed root cause on a dual-homed macOS box: the
+# tunnel captures the default route and on teardown restores only the dial
+# interface's scoped default (e.g. en0), losing the PRIMARY service's one
+# (e.g. en1/Wi-Fi). Because the system DNS resolver is scoped to the primary
+# interface, it then has no route via that interface: `scutil --dns` marks it
+# Not Reachable and mDNSResponder refuses to query it, so ALL name resolution
+# dies even though `ping`/`dig` still work unscoped via the surviving default.
+# Deterministic repair: re-add the scoped default from SC's own PrimaryInterface
+# + Router (the exact route a healthy dual-homed box carries). Acts only on the
+# bug's fingerprint (primary interface has no v6 default while another interface
+# does), so a healthy single-homed box is never touched.
+repair_stranded_primary_v6_default() {
+  is_macos || return 0
+  local pif router
+  pif="$(echo 'show State:/Network/Global/IPv6' | scutil 2>/dev/null | awk '/PrimaryInterface/{print $3}')"
+  router="$(echo 'show State:/Network/Global/IPv6' | scutil 2>/dev/null | awk '/Router/{print $3}')"
+  [[ -n "$pif" && -n "$router" ]] || return 0
+  # Already have a v6 default via the primary interface → healthy, nothing to do.
+  netstat -rn -f inet6 2>/dev/null | grep -qE "^default[[:space:]].*%${pif}[[:space:]]" && return 0
+  # Only act on the bug's fingerprint: a default survives via another interface.
+  netstat -rn -f inet6 2>/dev/null | grep -qE "^default[[:space:]]" || return 0
+  [[ "$router" == *%* ]] || router="${router}%${pif}"
+  warn "Primary interface $pif lost its IPv6 default route (daemon teardown), restoring via $router"
+  sudo route -n add -inet6 default -ifscope "$pif" "$router" >/dev/null 2>&1 || true
+  sudo dscacheutil -flushcache 2>/dev/null || true
+  sudo killall -HUP mDNSResponder 2>/dev/null || true
+  ok "Restored primary-interface IPv6 default route"
+}
+
+# Repair the ways a killed daemon can leave the host without working name
+# resolution: (1) DNS pinned at a dead loopback resolver, (2) a leaked IPv6
+# split-default blackholing the box's IPv6-only resolver, (3) the primary
+# interface's scoped IPv6 default route dropped on teardown. All safe no-ops
+# when nothing leaked.
+repair_network_if_leaked() {
   is_macos || return 0
   if dns_is_loopback; then
     warn "Stale loopback DNS detected (daemon exited without restoring it), repairing"
     restore_dns_snapshot
   fi
+  repair_leaked_v6_split
+  repair_stranded_primary_v6_default
 }
 
 # ─────────────────────────────────────────────────────────────────────
@@ -301,8 +371,9 @@ stop_daemon() {
 
   rm -f "$PID_FILE"
 
-  # If the daemon died before restoring the system DNS, repair it now.
-  restore_dns_if_leaked
+  # If the daemon died before restoring the network (dead loopback DNS, a leaked
+  # IPv6 split-default, or a stranded primary scoped default), repair it now.
+  repair_network_if_leaked
 
   ok "Daemon stopped"
 }
@@ -332,7 +403,7 @@ start_daemon_foreground() {
   # foreground child (NOT `exec`) so the EXIT trap can fire after it stops and
   # repair the DNS if the daemon was killed before it could restore it itself.
   snapshot_dns
-  trap restore_dns_if_leaked EXIT
+  trap repair_network_if_leaked EXIT
 
   sudo -E env WARREN_USE_PLAINTEXT_STORAGE=1 \
     "$DAEMON_BIN" "${DAEMON_RUN_FLAGS[@]}" || true
