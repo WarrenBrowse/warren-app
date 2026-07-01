@@ -162,7 +162,8 @@ authentication.
 ### Added
 - Multi-hop two-relayed QUIC + HPKE (X25519): anonymity layer where no single server sees both
   the user's IP and the destination, modeled after Apple iCloud Private Relay (RFC 9180).
-- DAITA padding via `maybenot` 2.2.2 framework with Tamaraw and Scrambler default machines: obfuscates traffic timing patterns against passive ML-based fingerprinting.
+- DAITA padding via `maybenot` 2.2.2 framework with Tamaraw and Scrambler default machines:
+  obfuscates traffic timing patterns against passive ML-based fingerprinting.
 - HTTP/3 mimicry baseline obfuscation (ALPN `h3`, SNI `.exits.warrenbrowse.com`, port 443,
   Initial datagram split >= 1500 B), always on, no toggle.
 - NAT-PMP port-forwarding for inbound peer connections (qBittorrent, etc.): restored after
