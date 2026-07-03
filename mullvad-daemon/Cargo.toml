@@ -76,6 +76,7 @@ mullvad-vpn = "*"
 [dependencies]
 anyhow = { workspace = true }
 chrono = { workspace = true }
+iana-time-zone = "0.1"
 clap = { workspace = true }
 either = "1.11"
 futures = { workspace = true }

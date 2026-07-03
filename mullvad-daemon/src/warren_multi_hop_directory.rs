@@ -244,8 +244,76 @@ fn circuit_identity(cfg: &MultiHopConfig) -> ([u8; 16], [u8; 16]) {
     (cfg.relay.relay_id, *cfg.exit.exit_id.as_bytes())
 }
 
+/// Coarse continent grouping for the latency-aware entry ranking.
+/// Continent-level is deliberate: it is derivable from purely local
+/// signals (no probe, no geolocation call, nothing observable on the
+/// wire) and it already separates the pathological picks (an
+/// intercontinental entry hop taxes every serialized connect round
+/// trip and every steady-state packet with ~10x the RTT).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Continent {
+    Europe,
+    Americas,
+    Asia,
+    Africa,
+    Oceania,
+}
+
+/// Continent of an ISO 3166-1 alpha-2 country code, covering plausible
+/// fleet countries. `None` (unknown code) disables the proximity
+/// preference for that node rather than guessing.
+fn continent_of_country(cc: &str) -> Option<Continent> {
+    let mut buf = [0u8; 2];
+    let bytes = cc.as_bytes();
+    if bytes.len() != 2 {
+        return None;
+    }
+    buf[0] = bytes[0].to_ascii_lowercase();
+    buf[1] = bytes[1].to_ascii_lowercase();
+    match &buf {
+        b"at" | b"be" | b"bg" | b"ch" | b"cz" | b"de" | b"dk" | b"ee" | b"es" | b"fi" | b"fr"
+        | b"gb" | b"gr" | b"hr" | b"hu" | b"ie" | b"is" | b"it" | b"lt" | b"lu" | b"lv" | b"md"
+        | b"mt" | b"nl" | b"no" | b"pl" | b"pt" | b"ro" | b"rs" | b"se" | b"si" | b"sk" | b"ua" => {
+            Some(Continent::Europe)
+        }
+        b"ar" | b"br" | b"ca" | b"cl" | b"co" | b"mx" | b"pe" | b"us" => Some(Continent::Americas),
+        b"ae" | b"hk" | b"id" | b"il" | b"in" | b"jp" | b"kr" | b"my" | b"ph" | b"sg" | b"th"
+        | b"tr" | b"tw" | b"vn" => Some(Continent::Asia),
+        b"eg" | b"ke" | b"ma" | b"ng" | b"za" => Some(Continent::Africa),
+        b"au" | b"nz" => Some(Continent::Oceania),
+        _ => None,
+    }
+}
+
+/// Continent from an IANA timezone name's area prefix
+/// (`Europe/Paris` → Europe). Ambiguous areas (`Etc`, `UTC`,
+/// `Atlantic`, `Indian`) return `None` so they never steer the pick.
+fn continent_of_timezone(tz: &str) -> Option<Continent> {
+    match tz.split('/').next()? {
+        "Europe" => Some(Continent::Europe),
+        "America" => Some(Continent::Americas),
+        "Asia" => Some(Continent::Asia),
+        "Africa" => Some(Continent::Africa),
+        "Australia" | "Pacific" => Some(Continent::Oceania),
+        _ => None,
+    }
+}
+
+/// Client continent from the SYSTEM timezone: a purely local signal
+/// (zero network I/O, so nothing for an on-path observer to
+/// fingerprint) that is correct whenever the machine is sanely
+/// configured. A wrong or unset timezone only degrades to the pure
+/// weight order, never to a worse pick than before.
+#[must_use]
+pub fn detect_client_continent() -> Option<Continent> {
+    iana_time_zone::get_timezone()
+        .ok()
+        .as_deref()
+        .and_then(continent_of_timezone)
+}
+
 /// Selects a circuit from a verified directory honoring the country
-/// hints, weighting the random pick by `entry.weight * exit.weight`.
+/// hints, ranking entries by client proximity then weight.
 /// Returns `None` when no pair satisfies the rules (the caller then
 /// stays single-hop).
 #[must_use]
@@ -256,12 +324,13 @@ pub fn select_circuit(
     enable_gso: bool,
     use_warren_obfuscation: bool,
     exclude_exit_ids: &[[u8; 16]],
+    client_continent: Option<Continent>,
 ) -> Option<MultiHopConfig> {
     let pairs = valid_circuits(dir, entry_country, exit_country, exclude_exit_ids);
     if pairs.is_empty() {
         return None;
     }
-    let (entry_idx, exit_idx) = weighted_pick_pair(dir, &pairs);
+    let (entry_idx, exit_idx) = weighted_pick_pair(dir, &pairs, client_continent);
     assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
 }
 
@@ -286,6 +355,9 @@ fn exit_index(dir: &VerifiedMultiHopDirectory, exit_id: &[u8; 16]) -> Option<usi
 /// pick made. A fresh pick is therefore a ONE-TIME event that then sticks
 /// until invalidated, instead of re-randomizing on every updater wake.
 #[must_use]
+// Mirrors `select_circuit`'s surface plus the stickiness inputs; a param
+// struct would obscure that 1:1 mapping without removing any argument.
+#[allow(clippy::too_many_arguments)]
 fn pick_two_hop_circuit(
     dir: &VerifiedMultiHopDirectory,
     entry_country: &str,
@@ -294,24 +366,39 @@ fn pick_two_hop_circuit(
     use_warren_obfuscation: bool,
     current: Option<&MultiHopConfig>,
     exclude_exit_ids: &[[u8; 16]],
+    client_continent: Option<Continent>,
 ) -> Option<MultiHopConfig> {
     let pairs = valid_circuits(dir, entry_country, exit_country, exclude_exit_ids);
     if pairs.is_empty() {
         return None;
     }
+    let (entry_idx, exit_idx) = weighted_pick_pair(dir, &pairs, client_continent);
     if let Some(cur) = current {
         let (cur_relay, cur_exit) = circuit_identity(cur);
         if let (Some(ei), Some(xi)) = (relay_index(dir, &cur_relay), exit_index(dir, &cur_exit))
             && pairs.contains(&(ei, xi))
         {
-            return assemble(dir, ei, xi, enable_gso, use_warren_obfuscation);
+            // Proximity exception to stickiness: a sticky entry OFF the
+            // client's continent is upgraded (once, deterministically -
+            // the upgraded pick is itself on-continent and then sticks)
+            // when the fresh ranking found an on-continent entry. An
+            // intercontinental entry hop taxes every packet with ~10x
+            // the RTT, which is worth the one-time reconnect.
+            let cur_local = client_continent.is_some()
+                && continent_of_country(&dir.nodes[ei].country) == client_continent;
+            let best_local = client_continent.is_some()
+                && continent_of_country(&dir.nodes[entry_idx].country) == client_continent;
+            if cur_local || !best_local {
+                return assemble(dir, ei, xi, enable_gso, use_warren_obfuscation);
+            }
         }
     }
-    let (entry_idx, exit_idx) = weighted_pick_pair(dir, &pairs);
     assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
 }
 
-/// Deterministic `(entry_idx, exit_idx)` pick over `pairs`: highest combined
+/// Deterministic `(entry_idx, exit_idx)` pick over `pairs`: entries on
+/// the client's continent first (the entry hop's RTT dominates both
+/// connect latency and steady-state latency), then highest combined
 /// `entry.weight * exit.weight`, ties broken by `(relay_id, exit_id)`.
 /// `pairs` must be non-empty.
 ///
@@ -320,17 +407,33 @@ fn pick_two_hop_circuit(
 /// the same reconnect loop fixed for the 1-hop path. A stable pick means the
 /// updater only reconnects on a real change. Do NOT reintroduce per-call
 /// randomness here.
-fn weighted_pick_pair(dir: &VerifiedMultiHopDirectory, pairs: &[(usize, usize)]) -> (usize, usize) {
+fn weighted_pick_pair(
+    dir: &VerifiedMultiHopDirectory,
+    pairs: &[(usize, usize)],
+    client_continent: Option<Continent>,
+) -> (usize, usize) {
     let weight = |&(i, j): &(usize, usize)| {
         dir.nodes[i]
             .weight
             .max(1)
             .saturating_mul(dir.nodes[j].weight.max(1))
     };
+    // 0 = entry on the client's continent, 1 = elsewhere or unknown.
+    // Unknown client location (or unknown node country) never steers.
+    let distance = |&(i, _): &(usize, usize)| -> u8 {
+        match (
+            client_continent,
+            continent_of_country(&dir.nodes[i].country),
+        ) {
+            (Some(client), Some(entry)) if client == entry => 0,
+            _ => 1,
+        }
+    };
     let mut ranked: Vec<(usize, usize)> = pairs.to_vec();
     ranked.sort_by(|a, b| {
-        weight(b)
-            .cmp(&weight(a))
+        distance(a)
+            .cmp(&distance(b))
+            .then_with(|| weight(b).cmp(&weight(a)))
             .then_with(|| {
                 dir.nodes[a.0]
                     .relay
@@ -784,6 +887,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 true,
                                 last_circuit.as_ref(),
                                 &excluded,
+                                detect_client_continent(),
                             )
                         } else {
                             pick_one_hop_circuit(
@@ -1026,6 +1130,116 @@ mod tests {
     }
 
     #[test]
+    fn entry_prefers_the_client_continent_over_server_weight() {
+        let op = op_key();
+        // Heavy SG entry, light DE entry, NL exit. A European client
+        // dialing an NL exit must not cross the planet to enter: the
+        // entry hop's RTT taxes every serialized connect round trip
+        // AND every steady-state packet (France→SG→NL measured ~2.1 s
+        // connects vs ~0.7 s via a European entry, 2026-07-03).
+        let d = dir(vec![
+            node(&op, 1, "sg", 0, 100),
+            node(&op, 2, "de", 0, 1),
+            node(&op, 3, "nl", 0, 50),
+        ]);
+        let cfg = select_circuit(&d, "", "nl", true, false, &[], Some(Continent::Europe))
+            .expect("circuit");
+        assert_eq!(
+            cfg.relay.relay_id, [2; 16],
+            "same-continent entry must win over a heavier cross-continent one"
+        );
+    }
+
+    #[test]
+    fn entry_falls_back_to_weight_without_a_client_continent() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "sg", 0, 100),
+            node(&op, 2, "de", 0, 1),
+            node(&op, 3, "nl", 0, 50),
+        ]);
+        let cfg = select_circuit(&d, "", "nl", true, false, &[], None).expect("circuit");
+        assert_eq!(
+            cfg.relay.relay_id, [1; 16],
+            "unknown client location must preserve the pure weight order"
+        );
+    }
+
+    #[test]
+    fn sticky_cross_continent_entry_is_repicked_once_a_local_one_exists() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "sg", 0, 100),
+            node(&op, 2, "de", 0, 1),
+            node(&op, 3, "nl", 0, 50),
+        ]);
+        // Sticky circuit from the weight-only era: SG entry, NL exit.
+        let current = select_circuit(&d, "", "nl", true, true, &[], None).expect("legacy circuit");
+        assert_eq!(current.relay.relay_id, [1; 16], "precondition: SG entry");
+        // A European client must not stay pinned across the planet: the
+        // proximity upgrade wins over stickiness, exactly once (the
+        // repicked DE entry is itself stable afterwards).
+        let repicked = pick_two_hop_circuit(
+            &d,
+            "",
+            "nl",
+            true,
+            true,
+            Some(&current),
+            &[],
+            Some(Continent::Europe),
+        )
+        .expect("circuit");
+        assert_eq!(
+            repicked.relay.relay_id, [2; 16],
+            "off-continent sticky entry must upgrade to the local one"
+        );
+        // And the upgraded circuit is sticky: no churn on the next tick.
+        let kept = pick_two_hop_circuit(
+            &d,
+            "",
+            "nl",
+            true,
+            true,
+            Some(&repicked),
+            &[],
+            Some(Continent::Europe),
+        )
+        .expect("circuit");
+        assert_eq!(kept.relay.relay_id, [2; 16], "same-continent entry sticks");
+    }
+
+    #[test]
+    fn continent_mappings_cover_the_fleet_and_stay_conservative() {
+        assert_eq!(continent_of_country("de"), Some(Continent::Europe));
+        assert_eq!(continent_of_country("NL"), Some(Continent::Europe));
+        assert_eq!(continent_of_country("sg"), Some(Continent::Asia));
+        assert_eq!(continent_of_country("us"), Some(Continent::Americas));
+        assert_eq!(
+            continent_of_country("zz"),
+            None,
+            "an unknown country must disable the preference, not guess"
+        );
+        assert_eq!(
+            continent_of_timezone("Europe/Paris"),
+            Some(Continent::Europe)
+        );
+        assert_eq!(
+            continent_of_timezone("America/New_York"),
+            Some(Continent::Americas)
+        );
+        assert_eq!(
+            continent_of_timezone("Asia/Singapore"),
+            Some(Continent::Asia)
+        );
+        assert_eq!(
+            continent_of_timezone("Etc/UTC"),
+            None,
+            "ambiguous areas must not steer the pick"
+        );
+    }
+
+    #[test]
     fn distinct_country_pairs_only() {
         let op = op_key();
         // 2 FR + 1 DE, single AS (asn 0 everywhere) → AS rule relaxed.
@@ -1050,7 +1264,7 @@ mod tests {
         // User pinned both hops to FR → mandatory country diversity makes
         // it impossible → no circuit (single-hop fallback).
         assert!(valid_circuits(&d, "fr", "fr", &[]).is_empty());
-        assert!(select_circuit(&d, "fr", "fr", true, true, &[]).is_none());
+        assert!(select_circuit(&d, "fr", "fr", true, true, &[], None).is_none());
     }
 
     #[test]
@@ -1091,7 +1305,7 @@ mod tests {
     fn select_assembles_distinct_entry_exit() {
         let op = op_key();
         let d = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
-        let cfg = select_circuit(&d, "", "", true, false, &[]).expect("circuit");
+        let cfg = select_circuit(&d, "", "", true, false, &[], None).expect("circuit");
         assert_ne!(cfg.relay.relay_id, *cfg.exit.exit_id.as_bytes());
         assert_eq!(cfg.operational_pubkey, op.verifying_key());
         assert!(cfg.enable_gso);
@@ -1101,7 +1315,7 @@ mod tests {
     #[test]
     fn empty_directory_yields_no_circuit() {
         let d = dir(vec![]);
-        assert!(select_circuit(&d, "", "", true, true, &[]).is_none());
+        assert!(select_circuit(&d, "", "", true, true, &[], None).is_none());
     }
 
     #[test]
@@ -1145,8 +1359,9 @@ mod tests {
         // Sticky path: a CURRENT circuit whose exit just drained must NOT be
         // kept; the pick must migrate off it.
         let de_circuit = assemble(&d, 0, 1, true, true).expect("fr->de circuit");
-        let repicked = pick_two_hop_circuit(&d, "", "", true, true, Some(&de_circuit), &[de_exit])
-            .expect("must migrate to a non-drained exit");
+        let repicked =
+            pick_two_hop_circuit(&d, "", "", true, true, Some(&de_circuit), &[de_exit], None)
+                .expect("must migrate to a non-drained exit");
         assert_ne!(
             repicked.exit.exit_id.as_bytes(),
             &de_exit,
@@ -1205,14 +1420,14 @@ mod tests {
             node(&op, 3, "se", 0, 100),
             node(&op, 4, "us", 0, 100),
         ]);
-        let first = pick_two_hop_circuit(&d, "", "", true, true, None, &[]).expect("circuit");
+        let first = pick_two_hop_circuit(&d, "", "", true, true, None, &[], None).expect("circuit");
         let first_id = circuit_identity(&first);
         // 50 sticky picks with the current circuit fed back in must all keep
         // the SAME circuit (no churn), despite multiple valid alternatives.
         let mut cur = first;
         for _ in 0..50 {
-            let next =
-                pick_two_hop_circuit(&d, "", "", true, true, Some(&cur), &[]).expect("circuit");
+            let next = pick_two_hop_circuit(&d, "", "", true, true, Some(&cur), &[], None)
+                .expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "circuit must stick");
             cur = next;
         }
@@ -1232,7 +1447,7 @@ mod tests {
         let current = assemble(&d, fr_idx, de_idx, true, true).unwrap();
         // User pins exit to SG → the DE-exit circuit is no longer valid, so
         // the sticky pick must move to an SG-exit circuit deterministically.
-        let picked = pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current), &[])
+        let picked = pick_two_hop_circuit(&d, "", "sg", true, true, Some(&current), &[], None)
             .expect("sg circuit");
         assert_eq!(
             picked.exit.exit_id.as_bytes(),
@@ -1245,11 +1460,11 @@ mod tests {
         let op = op_key();
         let d_before = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
         let current =
-            pick_two_hop_circuit(&d_before, "", "", true, true, None, &[]).expect("circuit");
+            pick_two_hop_circuit(&d_before, "", "", true, true, None, &[], None).expect("circuit");
         // New directory no longer contains the current exit node; a fresh
         // pick must still produce a valid circuit (never keep a stale node).
         let d_after = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 3, "se", 0, 100)]);
-        let picked = pick_two_hop_circuit(&d_after, "", "", true, true, Some(&current), &[])
+        let picked = pick_two_hop_circuit(&d_after, "", "", true, true, Some(&current), &[], None)
             .expect("circuit");
         let (r, x) = circuit_identity(&picked);
         assert!(relay_index(&d_after, &r).is_some());
