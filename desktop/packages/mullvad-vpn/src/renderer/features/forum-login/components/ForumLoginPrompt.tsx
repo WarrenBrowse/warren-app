@@ -4,7 +4,11 @@ import { IForumLoginRequest } from '../../../../shared/forum-login';
 import { messages } from '../../../../shared/gettext';
 import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { Button } from '../../../lib/components';
-import { IpcRendererEventChannel } from '../../../lib/ipc-event-channel';
+
+// The renderer reaches IPC through the contextBridge-exposed `window.ipc`, never
+// by importing `lib/ipc-event-channel` directly: that module imports the
+// `electron` package, which Vite pre-bundles into the (sandboxed, node-less)
+// renderer and crashes it on load with `__dirname is not defined`.
 
 // Consent prompt for the community-forum wallet login (doc 55). Mounts a modal
 // when a `warren://forum-login` deep link arrives (via the `forumLogin.request`
@@ -17,7 +21,7 @@ export function ForumLoginPrompt() {
   const [notice, setNotice] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    return IpcRendererEventChannel.forumLogin.listenRequest((req) => {
+    return window.ipc.forumLogin.listenRequest((req) => {
       setNotice(undefined);
       setBusy(false);
       setRequest(req);
@@ -36,7 +40,7 @@ export function ForumLoginPrompt() {
     }
     setBusy(true);
     setNotice(undefined);
-    const result = await IpcRendererEventChannel.forumLogin.approve(request);
+    const result = await window.ipc.forumLogin.approve(request);
     setBusy(false);
     if (result === 'approved') {
       close();
@@ -54,7 +58,7 @@ export function ForumLoginPrompt() {
 
   const handleCancel = useCallback(() => {
     if (request) {
-      void IpcRendererEventChannel.forumLogin.cancel(request);
+      void window.ipc.forumLogin.cancel(request);
     }
     close();
   }, [request, close]);
