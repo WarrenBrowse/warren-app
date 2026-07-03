@@ -1,0 +1,42 @@
+---
+# Windows-only smoke build for fast iteration on the macstudio-win runner.
+# Manually triggered (workflow_dispatch): builds the Windows installers via
+# build.sh WITHOUT the tests gate, signing, or publishing, so the Windows
+# toolchain / cross-x64 path can be validated in isolation without a full
+# release. Not part of any release flow.
+name: Windows smoke build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows-smoke:
+    name: Build Windows (smoke)
+    runs-on: [self-hosted, Windows, macstudio-win]
+    steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+
+      - name: Build (unsigned)
+        shell: bash
+        run: ./build.sh --optimize --universal
+
+      - name: List produced installers
+        shell: bash
+        run: |
+          echo "=== dist/ artifacts ==="
+          ls -la dist/ 2>/dev/null || true
+          find dist -type f \( -name '*.exe' -o -name '*.msi' \) 2>/dev/null | while read f; do
+            echo "-> $f"
+          done
