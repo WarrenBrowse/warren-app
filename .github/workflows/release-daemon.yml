@@ -175,7 +175,7 @@ jobs:
 
   windows:
     name: Windows headless bundle (experimental)
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [self-hosted, Windows, macstudio-win]
     # Experimental: a bare `cargo build` misses the C lib search paths that
     # build.sh exports (winfw etc.), so linking can fail (LNK1181). The Warren
     # tunnel is untested on Windows anyway — don't fail the whole release on it.

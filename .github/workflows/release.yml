@@ -206,7 +206,7 @@ jobs:
   build-windows:
     name: Build Windows MSI
     needs: [tests]
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [self-hosted, Windows, macstudio-win]
     # Windows binaries are signed with Azure Trusted Signing (cloud HSM).
     # Since 1 June 2023 (CA/Browser Forum Code Signing Baseline Requirements),
     # OV/EV code-signing private keys must live on FIPS 140-2 hardware, so the
