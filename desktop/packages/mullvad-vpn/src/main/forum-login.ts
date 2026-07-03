@@ -8,7 +8,7 @@ import { DaemonRpc } from './daemon-rpc';
  * Community-forum wallet login (warren-core doc 55).
  *
  * The forum (`forum.warrenbrowse.com`) authenticates users through
- * DiscourseConnect against our `warren-forum-auth` provider. When the user
+ * DiscourseConnect against our `warren-connect` provider. When the user
  * signs in on the forum, the provider shows an approval page carrying a
  * `warren://forum-login?sid=..&host=..` deep link. The OS hands that link to
  * this app; we ask the daemon to sign the fixed `POST /v1/forum/login`

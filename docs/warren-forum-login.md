@@ -27,7 +27,7 @@ platform (a deep-link GUI flow cannot be verified without a real device).
 ```
 
 The signature is byte-identical to the daemon's existing API auth. Reference
-implementation proven end to end: `warren-forum-auth/examples/e2e_sign.rs`.
+implementation proven end to end: `warren-connect/examples/e2e_sign.rs`.
 
 ## Daemon: one new gRPC method (the only new Rust)
 
