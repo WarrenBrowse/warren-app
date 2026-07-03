@@ -1,4 +1,4 @@
-import { net } from 'electron';
+import { Session, session } from 'electron';
 
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
@@ -21,6 +21,16 @@ import { DaemonRpc } from './daemon-rpc';
  */
 
 export const FORUM_DEEP_LINK_SCHEME = 'warren';
+
+// The forum-login POST must NOT ride `session.defaultSession`: that session is
+// hardened to cancel every outbound web request (the renderer never phones
+// home). This is a deliberate, user-initiated request to our own connect host,
+// so it uses an isolated session that the default block filter does not touch.
+let forumSession: Session | undefined;
+function getForumSession(): Session {
+  forumSession ??= session.fromPartition('warren-forum-login');
+  return forumSession;
+}
 
 /** The host we accept in the deep link. Hard allowlist: a hostile link must
  * not be able to point a signed request at an attacker-controlled server. */
@@ -95,7 +105,7 @@ export async function performForumLogin(rawUrl: string, daemonRpc: DaemonRpc): P
   }
 
   try {
-    const response = await net.fetch(`https://${parsed.host}/v1/forum/login`, {
+    const response = await getForumSession().fetch(`https://${parsed.host}/v1/forum/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
