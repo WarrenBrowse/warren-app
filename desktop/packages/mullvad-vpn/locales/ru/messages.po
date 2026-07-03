@@ -4557,3 +4557,39 @@ msgstr "URL-адрес Warren api"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Запрошен вход на форум сообщества Warren. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Подтвердить вход"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Отмена"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Доступ к форуму требует подписки Warren. С этого кошелька подписка никогда не оформлялась."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Электронная почта и пароль не используются. Вы отображаетесь под анонимным именем, которое нельзя связать с вашей учётной записью Warren. Подтверждайте вход, только если вы сами его начали."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Войти на форум сообщества Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Не удалось войти. Повторите попытку через мгновение."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Подписываем, подождите."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Форум сообщества"

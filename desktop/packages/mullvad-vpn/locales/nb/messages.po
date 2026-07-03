@@ -4529,3 +4529,39 @@ msgstr "Warren api-URL"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Det ble bedt om en innlogging på Warren-fellesskapsforumet. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Godkjenn innlogging"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Tilgang til forumet krever et Warren-abonnement. Denne lommeboken har aldri hatt et abonnement."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Verken e-post eller passord brukes. Du vises under et anonymt kallenavn som ikke kan knyttes til Warren-kontoen din. Godkjenn bare hvis du selv startet denne innloggingen."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Logge inn på Warren-fellesskapsforumet?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Innloggingen mislyktes. Prøv igjen om et øyeblikk."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Signerer, vennligst vent."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Fellesskapsforum"

@@ -4529,3 +4529,39 @@ msgstr "URL da API Warren"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Foi solicitado um início de sessão no fórum da comunidade Warren. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Aprovar início de sessão"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "O acesso ao fórum requer uma subscrição Warren. Esta carteira nunca teve uma subscrição."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Não são usados e-mail nem palavra-passe. Aparece sob um pseudónimo anónimo que não pode ser associado à sua conta Warren. Aprove apenas se foi você que iniciou este início de sessão."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Iniciar sessão no fórum da comunidade Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Falha no início de sessão. Tente novamente dentro de momentos."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "A assinar, aguarde."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Fórum da comunidade"

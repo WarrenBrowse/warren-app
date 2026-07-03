@@ -4502,3 +4502,39 @@ msgstr "ไม่ทำงาน"
 msgctxt "warren-status-view"
 msgid "never"
 msgstr "ไม่เคย"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "มีการร้องขอเข้าสู่ระบบฟอรัมชุมชน Warren แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ"
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "อนุมัติการเข้าสู่ระบบ"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "การเข้าถึงฟอรัมต้องมีการสมัครสมาชิก Warren กระเป๋าเงินนี้ไม่เคยสมัครสมาชิกมาก่อน"
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "ไม่มีการใช้อีเมลและรหัสผ่าน คุณจะปรากฏภายใต้ชื่อผู้ใช้นิรนามที่ไม่สามารถเชื่อมโยงกับบัญชี Warren ของคุณได้ อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการเข้าสู่ระบบนี้เท่านั้น"
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "เข้าสู่ระบบฟอรัมชุมชน Warren หรือไม่?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "กำลังลงนาม โปรดรอสักครู่"
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "ฟอรัมชุมชน"

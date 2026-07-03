@@ -3744,3 +3744,39 @@ msgstr "Pour les utilisateurs avancés. Lorsque cette option est activée, le pa
 msgctxt "vpn-settings-view"
 msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
 msgstr "Les requêtes transitent malgré tout par le tunnel VPN, mais le résolveur que vous choisissez les verra. Laissez cette option désactivée, sauf si vous testez la résolution DNS distante."
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Une connexion au forum communautaire Warren a été demandée. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c'est bien vous."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Approuver la connexion"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Annuler"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "L'accès au forum nécessite un abonnement Warren. Ce portefeuille n'a jamais souscrit."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Aucun e-mail ni mot de passe n'est utilisé. Vous apparaissez sous un pseudonyme anonyme qui ne peut pas être relié à votre compte Warren. N'approuvez que si vous êtes à l'origine de cette connexion."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Se connecter au forum communautaire Warren ?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Échec de la connexion. Veuillez réessayer dans un instant."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Signature en cours, veuillez patienter."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Forum communautaire"

@@ -4529,3 +4529,39 @@ msgstr "Warren-rajapinnan URL"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warrenin yhteisöfoorumille pyydettiin kirjautumista. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Hyväksy kirjautuminen"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Peruuta"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Foorumin käyttö edellyttää Warren-tilausta. Tällä lompakolla ei ole koskaan ollut tilausta."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Sähköpostia tai salasanaa ei käytetä. Näyt anonyymillä nimimerkillä, jota ei voi yhdistää Warren-tiliisi. Hyväksy vain, jos aloitit tämän kirjautumisen itse."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Kirjaudutaanko Warrenin yhteisöfoorumille?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Kirjautuminen epäonnistui. Yritä hetken kuluttua uudelleen."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Allekirjoitetaan, odota hetki."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Yhteisöfoorumi"

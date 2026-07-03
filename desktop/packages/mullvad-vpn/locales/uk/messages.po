@@ -4557,3 +4557,39 @@ msgstr "URL-адреса Warren api"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Запитано вхід на форум спільноти Warren. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Підтвердити вхід"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Доступ до форуму потребує підписки Warren. З цього гаманця підписку ніколи не оформлювали."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Увійти на форум спільноти Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Не вдалося увійти. Повторіть спробу за мить."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Підписуємо, зачекайте."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Форум спільноти"

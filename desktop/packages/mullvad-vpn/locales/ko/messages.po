@@ -4502,3 +4502,39 @@ msgstr "비활성"
 msgctxt "warren-status-view"
 msgid "never"
 msgstr "없음"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren 커뮤니티 포럼 로그인이 요청되었습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "로그인 승인"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "취소"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "포럼을 이용하려면 Warren 구독이 필요합니다. 이 지갑은 구독한 적이 없습니다."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "이메일과 비밀번호를 사용하지 않습니다. Warren 계정과 연결할 수 없는 익명 핸들로 표시됩니다. 직접 이 로그인을 시작한 경우에만 승인하세요."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Warren 커뮤니티 포럼에 로그인하시겠습니까?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "서명 중입니다. 잠시 기다려 주세요."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "커뮤니티 포럼"

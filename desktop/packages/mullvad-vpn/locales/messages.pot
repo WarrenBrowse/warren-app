@@ -1306,6 +1306,38 @@ msgctxt "filter-view"
 msgid "Warren owned only"
 msgstr ""
 
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr ""
+
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
 msgstr ""
@@ -2402,6 +2434,11 @@ msgstr ""
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
+msgstr ""
+
+#. Link to the community + support forum
+msgctxt "support-view"
+msgid "Community forum"
 msgstr ""
 
 #. Button label for continuing problem report submission with an outdated app version.

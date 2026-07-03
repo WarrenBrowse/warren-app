@@ -4516,3 +4516,39 @@ msgstr "غیرفعال"
 msgctxt "warren-status-view"
 msgid "never"
 msgstr "هرگز"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "درخواست ورود به انجمن جامعه Warren ثبت شد. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "تأیید ورود"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "لغو"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "دسترسی به انجمن نیازمند اشتراک Warren است. این کیف پول هرگز اشتراک نداشته است."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار ناشناس نمایش داده می‌شوید که قابل ارتباط با حساب Warren شما نیست. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "ورود به انجمن جامعه Warren؟"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "ورود ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "در حال امضا، لطفاً صبر کنید."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "انجمن جامعه"

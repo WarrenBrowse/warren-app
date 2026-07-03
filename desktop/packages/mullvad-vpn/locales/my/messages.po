@@ -4505,3 +4505,39 @@ msgstr "မတက်ကြွ"
 msgctxt "warren-status-view"
 msgid "never"
 msgstr "ဘယ်တော့မှ"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်ရန် တောင်းဆိုမှုတစ်ခု ရှိပါသည်။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။"
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "ဝင်ရောက်ခြင်းကို အတည်ပြုရန်"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "ပယ်ဖျက်ရန်"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "ဖိုရမ်ကို အသုံးပြုရန် Warren subscription လိုအပ်ပါသည်။ ဤပိုက်ဆံအိတ်သည် တစ်ခါမျှ subscription မဝယ်ယူဖူးပါ။"
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။ သင်သည် သင့် Warren အကောင့်နှင့် ချိတ်ဆက်၍မရသော အမည်ဝှက်ဖြင့် ပေါ်လာပါမည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။"
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မလား?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။"
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "လက်မှတ်ရေးထိုးနေသည်၊ ခေတ္တစောင့်ပါ။"
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "အသိုက်အဝန်း ဖိုရမ်"

@@ -4502,3 +4502,39 @@ msgstr "未启用"
 msgctxt "warren-status-view"
 msgid "never"
 msgstr "从未"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "已请求登录 Warren 社区论坛。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。"
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "批准登录"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "取消"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "访问论坛需要 Warren 订阅。此钱包从未订阅过。"
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。"
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "登录 Warren 社区论坛？"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "登录失败。请稍后重试。"
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "正在签名，请稍候。"
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "社区论坛"

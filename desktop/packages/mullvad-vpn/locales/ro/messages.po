@@ -3677,3 +3677,39 @@ msgstr "Redirecționare porturi"
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Aprobă autentificarea"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Anulează"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Te autentifici pe forumul comunității Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Se semnează, te rugăm să aștepți."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Forumul comunității"
