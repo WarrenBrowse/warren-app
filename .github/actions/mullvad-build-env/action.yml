@@ -216,7 +216,13 @@ runs:
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
       run: |
-        git config --global url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
+        # Idempotent across runs: ~/.gitconfig PERSISTS on a self-hosted runner,
+        # so a plain `git config` (overwrite) on a key a prior run already made
+        # multi-valued fails "cannot overwrite multiple values". Reset the key
+        # first (--unset-all, tolerate absent on the very first run), then --add
+        # both rewrites.
+        git config --global --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
+        git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
         git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
         echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
 
