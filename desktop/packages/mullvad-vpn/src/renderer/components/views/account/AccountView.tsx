@@ -103,7 +103,8 @@ export function AccountView() {
               </Text>
 
               <FlexColumn gap="large">
-                <LabelledRow label={messages.pgettext('account-view', 'Public key')}>
+                <LabelledRow
+                  label={messages.pgettext('account-view', 'Public key (account number)')}>
                   <WarrenPubKeyRow />
                 </LabelledRow>
 

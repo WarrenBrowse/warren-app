@@ -591,8 +591,8 @@ msgid "Paid until"
 msgstr "Payé jusqu'au"
 
 msgctxt "account-view"
-msgid "Public key"
-msgstr "Clé publique"
+msgid "Public key (account number)"
+msgstr "Clé publique (numéro de compte)"
 
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"

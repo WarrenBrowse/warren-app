@@ -393,12 +393,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr ""
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the public key.
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr ""
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -479,12 +473,6 @@ msgctxt "accessibility"
 msgid "Shadowsocks settings"
 msgstr ""
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the public key.
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr ""
-
 msgctxt "accessibility"
 msgid "UDP-over-TCP settings"
 msgstr ""
@@ -543,7 +531,7 @@ msgid "Paid until"
 msgstr ""
 
 msgctxt "account-view"
-msgid "Public key"
+msgid "Public key (account number)"
 msgstr ""
 
 #. Page title for anti censorship settings view

@@ -138,7 +138,7 @@ function WelcomeView() {
       <StyledWarrenPubKeyMessage>
         {messages.pgettext('connect-view', 'Here’s your public key. Save it!')}
         <StyledWarrenPubKeyContainer>
-          <StyledWarrenPubKeyLabel pubkey={account.pubkey || ''} obscureValue={false} />
+          <StyledWarrenPubKeyLabel pubkey={account.pubkey || ''} />
         </StyledWarrenPubKeyContainer>
       </StyledWarrenPubKeyMessage>
 

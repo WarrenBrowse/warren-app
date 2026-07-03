@@ -12,7 +12,6 @@ const COPIED_ICON_DURATION = 2000;
 interface IProps extends React.HTMLAttributes<HTMLElement> {
   value: string;
   displayValue?: string;
-  obscureValue?: boolean;
   message?: string;
 }
 
@@ -28,9 +27,8 @@ const StyledLabel = styled.span({
 });
 
 export default function ClipboardLabel(props: IProps) {
-  const { value, obscureValue, displayValue, message, ...otherProps } = props;
+  const { value, displayValue, message, ...otherProps } = props;
 
-  const [obscured, , , toggleObscured] = useBoolean(obscureValue ?? true);
   const [justCopied, setJustCopied, resetJustCopied] = useBoolean(false);
 
   const copiedScheduler = useScheduler();
@@ -48,27 +46,8 @@ export default function ClipboardLabel(props: IProps) {
 
   return (
     <StyledLabelContainer>
-      <StyledLabel aria-hidden={obscured} {...otherProps}>
-        {obscured ? '●●●● ●●●● ●●●● ●●●●' : (displayValue ?? value)}
-      </StyledLabel>
+      <StyledLabel {...otherProps}>{displayValue ?? value}</StyledLabel>
       <Flex gap="medium">
-        {obscureValue !== false && (
-          <IconButton
-            onClick={toggleObscured}
-            aria-label={
-              obscured
-                ? // This line is here to prevent the following one to be moved up here by prettier
-                  // TRANSLATORS: Provided to accessibility tools such as screenreaders to describe
-                  // TRANSLATORS: the button which unobscures the public key.
-                  messages.pgettext('accessibility', 'Show public key')
-                : // This line is here to prevent the following one to be moved up here by prettier
-                  // TRANSLATORS: Provided to accessibility tools such as screenreaders to describe
-                  // TRANSLATORS: the button which obscures the public key.
-                  messages.pgettext('accessibility', 'Hide public key')
-            }>
-            {obscured ? <IconButton.Icon icon="show" /> : <IconButton.Icon icon="hide" />}
-          </IconButton>
-        )}
         {justCopied ? (
           <Icon icon="checkmark" color="green"></Icon>
         ) : (
