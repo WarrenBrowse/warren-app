@@ -79,21 +79,39 @@ The daemon does the HTTP so the wallet key never leaves the daemon process
   pre-launch `basic_auth` gate is up, prefill it or instruct the user
   (user `warren`).
 
-## Android (Kotlin)
+## Status
+
+- **Desktop (Electron): DONE.** Deep-link handler (`src/main/forum-login.ts`),
+  `warren://` scheme registration, `SignForumLogin` daemon RPC, and the
+  "Community forum" button (Support view) are shipped and verified at compile
+  level (tsc/eslint/vitest + daemon cargo check/clippy). A device click-through
+  remains.
+- **Android + iOS: BLOCKED on a prerequisite (2026-07-03 finding).** These
+  apps have NOT yet integrated the Warren gRPC management service at all: no
+  `getWarrenMnemonic`/`setWarrenApiUrl`/`WarrenStatus` calls exist, the
+  repositories are stubbed (`managementService: Any? = null`), and there is no
+  generated Kotlin/Swift ManagementService stub. Forum login cannot be built
+  before the mobile apps wire the Warren management service (a separate epic).
+  The daemon-side `SignForumLogin` RPC is already shipped and ready for that
+  work. When the mobile Warren integration lands, implement as below.
+
+## Android (Kotlin) - once the Warren management service is wired
 
 - Add an intent filter for the deep link in `AndroidManifest.xml`:
   `<data android:scheme="warren" android:host="forum-login"/>` on a
   lightweight Activity.
-- The Activity extracts `sid`+`host`, calls the daemon over the existing
-  management-interface (gRPC/AIDL bridge), finishes silently (or shows a
-  toast). "Community" button opens the forum URL in a Custom Tab.
+- The Activity extracts `sid`+`host`, validates the host allowlist + sid shape,
+  calls `signForumLogin(sid)` over the management-interface, POSTs the headers
+  to the connect host, finishes silently (or shows a toast). "Community" button
+  opens the forum URL in a Custom Tab.
 
-## iOS (Swift)
+## iOS (Swift) - once the Warren management service is wired
 
 - Add `warren` to `CFBundleURLSchemes` and handle it in
   `application(_:open:options:)` / the SwiftUI `.onOpenURL`.
-- Parse `sid`+`host`, call the daemon (packet-tunnel/management bridge),
-  present a toast. "Community" opens the forum in `SFSafariViewController`.
+- Parse+validate `sid`+`host`, call `signForumLogin` over the management
+  bridge, POST to the connect host, present a toast. "Community" opens the
+  forum in `SFSafariViewController`.
 
 ## Security checklist (all platforms)
 
