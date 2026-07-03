@@ -109,6 +109,38 @@ pub use default_route_split::force_route_cleanup;
 // sequencing issue.
 const TRACE_PREFIX: &str = "[warren-trace]";
 
+/// INFO-level one-line connect summary. The per-phase T0-T8 traces stay
+/// at debug; this single line is what production logs carry so connect
+/// latency is attributable in the field without a debug rebuild.
+fn connect_summary_line(
+    mode: &str,
+    prep_ms: u128,
+    handshake_ms: u128,
+    tun_ms: u128,
+    routes_up_ms: u128,
+    total_ms: u128,
+) -> String {
+    format!(
+        "Warren connected in {total_ms}ms (mode={mode} prep={prep_ms}ms \
+         handshake={handshake_ms}ms tun={tun_ms}ms routes+up={routes_up_ms}ms)"
+    )
+}
+
+/// INFO-level one-line disconnect summary; total is the sum of the
+/// phases (the teardown has no single wall-clock anchor).
+fn disconnect_summary_line(
+    down_event_ms: u128,
+    natpmp_ms: u128,
+    routes_ms: u128,
+    tasks_ms: u128,
+) -> String {
+    let total = down_event_ms + natpmp_ms + routes_ms + tasks_ms;
+    format!(
+        "Warren disconnected in {total}ms (down_event={down_event_ms}ms \
+         natpmp={natpmp_ms}ms routes={routes_ms}ms tasks={tasks_ms}ms)"
+    )
+}
+
 /// Wall-clock ceiling on a tunnel handshake / first-dial wait.
 ///
 /// A handshake that never completes (e.g. an exit that silently drops a
@@ -1473,6 +1505,17 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis(),
             pump_spawn_t.duration_since(start_t).as_millis()
         );
+        log::info!(
+            "{}",
+            connect_summary_line(
+                "single_hop",
+                handshake_t.duration_since(start_t).as_millis(),
+                tun_t.duration_since(handshake_t).as_millis(),
+                events_t.duration_since(tun_t).as_millis(),
+                pump_spawn_t.duration_since(events_t).as_millis(),
+                pump_spawn_t.duration_since(start_t).as_millis(),
+            )
+        );
 
         let _ = metadata; // kept for future MTU-change re-emission
 
@@ -2140,9 +2183,21 @@ impl WarrenTunnelMonitor {
         // `tx.closed()` and terminates cleanly.
         drop(client_rx);
 
+        let pump_spawn_t = Instant::now();
         log::debug!(
             "{TRACE_PREFIX} T8={}ms phase=pump_spawned mode=multi_hop (uplink + downlink + supervisor live)",
             start_t.elapsed().as_millis()
+        );
+        log::info!(
+            "{}",
+            connect_summary_line(
+                "multi_hop",
+                handshake_t.duration_since(start_t).as_millis(),
+                tun_t.duration_since(handshake_t).as_millis(),
+                events_t.duration_since(tun_t).as_millis(),
+                pump_spawn_t.duration_since(events_t).as_millis(),
+                pump_spawn_t.duration_since(start_t).as_millis(),
+            )
         );
 
         // Spawn the NAT-PMP runtime once the data plane is up. The
@@ -2344,9 +2399,11 @@ impl WarrenTunnelMonitor {
                     }
                 }
             };
+            let down_t = Instant::now();
             event_hook.on_event(TunnelEvent::Down).await;
-            outcome
+            (outcome, down_t.elapsed().as_millis())
         });
+        let (result, down_event_ms) = result;
 
         // NAT-PMP teardown (the tunnel is now closing).
         // Now that the `block_on` returned (external close or pump
@@ -2360,30 +2417,39 @@ impl WarrenTunnelMonitor {
         //   managers on the way out (manager `Drop` fires). The daemon's watch sender will then see
         //   its receiver gone on the next push, which `on_set_nat_pmp_settings` treats as a no-op
         //   (tunnel dying - nothing to apply).
+        let natpmp_t = Instant::now();
         drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
             h.abort();
         }
+        let natpmp_ms = natpmp_t.elapsed().as_millis();
 
         // Uninstall the split-default policy routing before aborting
         // the pump, mirroring the install order. Best-effort: log a
-        // warning but do not fail teardown.
+        // warning but do not fail teardown. The v4 and v6 guards touch
+        // disjoint route entries (and the firewall keeps native v6
+        // blocked throughout), so they tear down concurrently: each
+        // one shells out to `route`/`ip`, and serializing them doubled
+        // the user-visible disconnect time for nothing.
+        let routes_t = Instant::now();
         runtime.block_on(async {
-            if let Some(guard) = default_route_guard
-                && let Err(e) = guard.uninstall().await
-            {
-                log::warn!("Warren default-route split cleanup failed: {e}");
-            }
-            // Tear down the IPv6 split-default after the v4 one. `None` on
-            // the multi-hop / no-v6 / non-Linux paths, so this is a no-op
-            // there. The firewall keeps native v6 blocked throughout, so
-            // there is no teardown window where v6 could leak.
-            if let Some(guard) = v6_route_guard
-                && let Err(e) = guard.uninstall().await
-            {
-                log::warn!("Warren IPv6 split-default cleanup failed: {e}");
-            }
+            let v4 = async {
+                if let Some(guard) = default_route_guard
+                    && let Err(e) = guard.uninstall().await
+                {
+                    log::warn!("Warren default-route split cleanup failed: {e}");
+                }
+            };
+            let v6 = async {
+                if let Some(guard) = v6_route_guard
+                    && let Err(e) = guard.uninstall().await
+                {
+                    log::warn!("Warren IPv6 split-default cleanup failed: {e}");
+                }
+            };
+            tokio::join!(v4, v6);
         });
+        let routes_ms = routes_t.elapsed().as_millis();
 
         // Abort backend tasks to release the TUN device and the QUIC
         // session(s) they hold. `JoinHandle::abort` triggers a clean
@@ -2396,6 +2462,7 @@ impl WarrenTunnelMonitor {
         // first (release their watch receivers), then the supervisor
         // (whose `tx.closed()` would otherwise race with the pump
         // teardown).
+        let tasks_t = Instant::now();
         runtime.block_on(async {
             match handles {
                 BackendHandles::SingleHop { pump, metrics } => {
@@ -2438,6 +2505,15 @@ impl WarrenTunnelMonitor {
                 }
             }
         });
+        log::info!(
+            "{}",
+            disconnect_summary_line(
+                down_event_ms,
+                natpmp_ms,
+                routes_ms,
+                tasks_t.elapsed().as_millis()
+            )
+        );
 
         result
     }
@@ -3332,6 +3408,33 @@ mod tests {
         assert!(
             matches!(out, HandshakeRace::TimedOut),
             "with no close and no completion the wall-clock bound must fire"
+        );
+    }
+
+    #[test]
+    fn connect_summary_names_every_phase_with_its_duration() {
+        // Ops grep this exact line shape to attribute connect latency
+        // (phase names + ms values); a silent rename breaks fleet-wide
+        // log tooling, so the shape is pinned here.
+        let line = connect_summary_line("multi_hop", 252, 1619, 14, 191, 2077);
+        assert_eq!(
+            line,
+            "Warren connected in 2077ms (mode=multi_hop prep=252ms \
+             handshake=1619ms tun=14ms routes+up=191ms)"
+        );
+    }
+
+    #[test]
+    fn disconnect_summary_totals_its_phases() {
+        // The total must be the sum of the phases: the wait()-side
+        // teardown has no single wall-clock anchor (the select races
+        // signals for the whole session lifetime), so a drifting total
+        // would mean a phase is unaccounted for.
+        let line = disconnect_summary_line(120, 3, 180, 45);
+        assert_eq!(
+            line,
+            "Warren disconnected in 348ms (down_event=120ms natpmp=3ms \
+             routes=180ms tasks=45ms)"
         );
     }
 
