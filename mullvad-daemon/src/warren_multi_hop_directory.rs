@@ -442,7 +442,7 @@ fn exit_index(dir: &VerifiedMultiHopDirectory, exit_id: &[u8; 16]) -> Option<usi
 #[must_use]
 // Mirrors `select_circuit`'s surface plus the stickiness inputs; a param
 // struct would obscure that 1:1 mapping without removing any argument.
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn pick_two_hop_circuit(
     dir: &VerifiedMultiHopDirectory,
     entry_country: &str,
