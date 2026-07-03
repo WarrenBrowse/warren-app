@@ -277,8 +277,13 @@ fn continent_of_country(cc: &str) -> Option<Continent> {
             Some(Continent::Europe)
         }
         b"ar" | b"br" | b"ca" | b"cl" | b"co" | b"mx" | b"pe" | b"us" => Some(Continent::Americas),
+        // `tr` sits with Europe to stay consistent with the IANA area
+        // of its timezone (`Europe/Istanbul`): the tz side of the match
+        // must agree with the country side or Turkish clients would
+        // never see a TR entry as local.
+        b"tr" => Some(Continent::Europe),
         b"ae" | b"hk" | b"id" | b"il" | b"in" | b"jp" | b"kr" | b"my" | b"ph" | b"sg" | b"th"
-        | b"tr" | b"tw" | b"vn" => Some(Continent::Asia),
+        | b"tw" | b"vn" => Some(Continent::Asia),
         b"eg" | b"ke" | b"ma" | b"ng" | b"za" => Some(Continent::Africa),
         b"au" | b"nz" => Some(Continent::Oceania),
         _ => None,
@@ -304,6 +309,16 @@ fn continent_of_timezone(tz: &str) -> Option<Continent> {
 /// fingerprint) that is correct whenever the machine is sanely
 /// configured. A wrong or unset timezone only degrades to the pure
 /// weight order, never to a worse pick than before.
+///
+/// Anonymity trade, stated plainly: the pre-existing pick was globally
+/// deterministic (pure server weight) and carried zero client
+/// information; a continent-preferring pick partitions clients by
+/// continent, so the exit learns ~1-2 bits of client location from
+/// which entry fronts the circuit. Accepted deliberately: the entry
+/// hop's RTT taxes every packet, and the current fleet's anonymity
+/// sets barely change at continent granularity. It also caps server
+/// weight steering to within-continent for entries; cross-continent
+/// steering requires removing the node from the directory.
 #[must_use]
 pub fn detect_client_continent() -> Option<Continent> {
     iana_time_zone::get_timezone()
@@ -390,6 +405,20 @@ fn pick_two_hop_circuit(
                 && continent_of_country(&dir.nodes[entry_idx].country) == client_continent;
             if cur_local || !best_local {
                 return assemble(dir, ei, xi, enable_gso, use_warren_obfuscation);
+            }
+            // Only the ENTRY hop has a latency justification: keep the
+            // still-valid exit when a local entry can front it, so the
+            // upgrade never churns the user's public egress IP.
+            let keep_exit: Vec<(usize, usize)> = pairs
+                .iter()
+                .copied()
+                .filter(|&(e, x)| {
+                    x == xi && continent_of_country(&dir.nodes[e].country) == client_continent
+                })
+                .collect();
+            if !keep_exit.is_empty() {
+                let (e2, x2) = weighted_pick_pair(dir, &keep_exit, client_continent);
+                return assemble(dir, e2, x2, enable_gso, use_warren_obfuscation);
             }
         }
     }
@@ -1207,6 +1236,43 @@ mod tests {
         )
         .expect("circuit");
         assert_eq!(kept.relay.relay_id, [2; 16], "same-continent entry sticks");
+    }
+
+    #[test]
+    fn proximity_upgrade_keeps_the_current_exit_when_still_valid() {
+        let op = op_key();
+        // Two European entries + the sticky exit (us) + an alternate
+        // exit (nl) that outweighs it. Upgrading the SG entry must not
+        // also churn the user's exit (their public egress IP): only the
+        // entry hop had a latency justification.
+        let d = dir(vec![
+            node(&op, 1, "sg", 0, 100),
+            node(&op, 2, "de", 0, 1),
+            node(&op, 3, "us", 0, 1),
+            node(&op, 4, "nl", 0, 90),
+        ]);
+        let current = select_circuit(&d, "", "us", true, true, &[], None).expect("legacy circuit");
+        assert_eq!(current.relay.relay_id, [1; 16], "precondition: SG entry");
+        let repicked = pick_two_hop_circuit(
+            &d,
+            "",
+            "",
+            true,
+            true,
+            Some(&current),
+            &[],
+            Some(Continent::Europe),
+        )
+        .expect("circuit");
+        assert_eq!(
+            repicked.relay.relay_id, [4; 16],
+            "entry must upgrade to a local one (heaviest local entry wins the tiebreak)"
+        );
+        assert_eq!(
+            repicked.exit.exit_id.as_bytes(),
+            &[3; 16],
+            "the still-valid sticky exit must be preserved through the entry upgrade"
+        );
     }
 
     #[test]

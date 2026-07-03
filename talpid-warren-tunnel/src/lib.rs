@@ -2427,27 +2427,29 @@ impl WarrenTunnelMonitor {
         // Uninstall the split-default policy routing before aborting
         // the pump, mirroring the install order. Best-effort: log a
         // warning but do not fail teardown. The v4 and v6 guards touch
-        // disjoint route entries (and the firewall keeps native v6
-        // blocked throughout), so they tear down concurrently: each
-        // one shells out to `route`/`ip`, and serializing them doubled
-        // the user-visible disconnect time for nothing.
+        // disjoint route entries and disjoint registries (and the
+        // firewall keeps native v6 blocked throughout), so they tear
+        // down concurrently. Each runs on its own spawned task, NOT a
+        // same-task join!: the macOS v4 uninstall is synchronous
+        // subprocess work with no await points, which would run to
+        // completion before a joined v6 arm was ever polled.
         let routes_t = Instant::now();
         runtime.block_on(async {
-            let v4 = async {
+            let v4 = tokio::spawn(async move {
                 if let Some(guard) = default_route_guard
                     && let Err(e) = guard.uninstall().await
                 {
                     log::warn!("Warren default-route split cleanup failed: {e}");
                 }
-            };
-            let v6 = async {
+            });
+            let v6 = tokio::spawn(async move {
                 if let Some(guard) = v6_route_guard
                     && let Err(e) = guard.uninstall().await
                 {
                     log::warn!("Warren IPv6 split-default cleanup failed: {e}");
                 }
-            };
-            tokio::join!(v4, v6);
+            });
+            let _ = tokio::join!(v4, v6);
         });
         let routes_ms = routes_t.elapsed().as_millis();
 
