@@ -1,0 +1,114 @@
+# Warren forum login: app integration spec
+
+Wire the Warren app so a user signs into the community forum
+(`forum.warrenbrowse.com`) with their existing wallet key, no email, no
+password. Server side is live and E2E-proven (warren-core
+`docs/55-FORUM-DISCOURSE-SUPPORT.md`); this is the last-mile app glue.
+
+Desktop is Electron/TypeScript/React, Android is Kotlin, iOS is Swift. Each
+needs the deep-link handler + a "Community" entry; all three call one new
+daemon gRPC method. Every step below must be built AND device-tested per
+platform (a deep-link GUI flow cannot be verified without a real device).
+
+## The flow (already working server side)
+
+```
+1. User taps "Community" -> app opens https://forum.warrenbrowse.com in the
+   system browser.
+2. User clicks "Log In" on the forum -> Discourse 302s to
+   connect.warrenbrowse.com/sso (DiscourseConnect), which shows an approval
+   page and a deep link:  warren://forum-login?sid=<32hex>&host=connect.warrenbrowse.com
+3. The browser invokes the deep link -> the OS hands it to the Warren app.
+4. The app signs POST https://<host>/v1/forum/login with body {"sid":"<sid>"}
+   using the SAME canonical X-Warren-* signature it already uses for the API,
+   and sends it.
+5. The browser's approval page (polling) sees "approved" and completes the
+   DiscourseConnect redirect: the user is logged in under an opaque handle.
+```
+
+The signature is byte-identical to the daemon's existing API auth. Reference
+implementation proven end to end: `warren-forum-auth/examples/e2e_sign.rs`.
+
+## Daemon: one new gRPC method (the only new Rust)
+
+No new crypto: reuse `mullvad_api::warren_auth::WarrenAuthSigner`, which the
+daemon already holds. It exposes exactly the primitive needed:
+
+```rust
+// mullvad-api/src/warren_auth.rs
+signer.sign_request("POST", "/v1/forum/login", body) -> WarrenAuthHeaders
+```
+
+Add a management-interface RPC:
+
+```proto
+// mullvad-management-interface/proto/management_interface.proto
+rpc ForumLogin(ForumLoginRequest) returns (google.protobuf.Empty);
+message ForumLoginRequest {
+  string sid  = 1;  // opaque session id from the deep link
+  string host = 2;  // connect host from the deep link (validate allowlist)
+}
+```
+
+Daemon handler:
+1. Validate `host` against an allowlist (`connect.warrenbrowse.com`; plus a
+   dev host if a debug build) so a hostile deep link cannot point the signed
+   request at an attacker.
+2. `body = format!("{{\"sid\":\"{sid}\"}}")` with `sid` validated as 32 lowercase
+   hex chars (reject otherwise: it is attacker-influenced).
+3. `let headers = signer.sign_request("POST", "/v1/forum/login", body.as_bytes());`
+4. POST `https://{host}/v1/forum/login` with the 4 `X-Warren-*` headers +
+   `Content-Type: application/json` + `body`. A plain `reqwest`/hyper client
+   is fine here (public endpoint; this call does not need the censorship
+   transport, though routing it through the daemon's outbound path is
+   acceptable too).
+5. Map a non-2xx to a typed error surfaced to the UI as a toast.
+
+The daemon does the HTTP so the wallet key never leaves the daemon process
+(the renderer/native UI only passes `sid`+`host`).
+
+## Desktop (Electron)
+
+- Register the `warren://` scheme: `app.setAsDefaultProtocolClient('warren')`
+  and handle `open-url` (macOS) / `second-instance` argv (Windows/Linux) in
+  the main process. Parse `warren://forum-login?sid=..&host=..`.
+- On receipt, call the new `ForumLogin` gRPC via the existing
+  management-interface client, then show a success/failure toast.
+- "Community" entry (e.g. in the main menu / settings): open
+  `https://forum.warrenbrowse.com` with `shell.openExternal`. While the
+  pre-launch `basic_auth` gate is up, prefill it or instruct the user
+  (user `warren`).
+
+## Android (Kotlin)
+
+- Add an intent filter for the deep link in `AndroidManifest.xml`:
+  `<data android:scheme="warren" android:host="forum-login"/>` on a
+  lightweight Activity.
+- The Activity extracts `sid`+`host`, calls the daemon over the existing
+  management-interface (gRPC/AIDL bridge), finishes silently (or shows a
+  toast). "Community" button opens the forum URL in a Custom Tab.
+
+## iOS (Swift)
+
+- Add `warren` to `CFBundleURLSchemes` and handle it in
+  `application(_:open:options:)` / the SwiftUI `.onOpenURL`.
+- Parse `sid`+`host`, call the daemon (packet-tunnel/management bridge),
+  present a toast. "Community" opens the forum in `SFSafariViewController`.
+
+## Security checklist (all platforms)
+
+- Validate `host` against a hard allowlist before signing anything.
+- Validate `sid` shape (32 lowercase hex) before building the body.
+- The signed request is single-use server side (nonce anti-replay) and the
+  session expires in 10 min; no additional client-side replay guard needed.
+- Never log `sid`, the pubkey, or the signature in the clear (Warren no-log).
+- The deep link carries no secret (only an opaque session id), so an
+  intercepted link cannot log anyone in without the wallet key held by the
+  daemon.
+
+## Definition of done (per platform)
+
+Built, `warren://forum-login` registered, deep link round-trips to a real
+`ForumLogin` daemon call, and a device test shows the browser landing logged
+in under an opaque handle with the subscriber group applied for a subscribed
+wallet. Track in warren-core `docs/55-GOAL-STATE.md`.
