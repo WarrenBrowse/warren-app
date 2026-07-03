@@ -437,9 +437,11 @@ export default class AppRenderer {
                               <AppRouter />
                             </BlockingUpdateGate>
                           </MotionConfig>
+                          {/* Inside KeyboardNavigation so the modal's BackAction
+                              finds its BackActionContext (Escape closes it). */}
+                          <ForumLoginPrompt />
                         </KeyboardNavigation>
                         <WarrenPubKeyWarning />
-                        <ForumLoginPrompt />
                         {window.env.platform === 'darwin' && <MacOsScrollbarDetection />}
                       </ModalContainer>
                     </ErrorBoundary>
