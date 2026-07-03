@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
+import styled from 'styled-components';
 
 import { IForumLoginRequest } from '../../../../shared/forum-login';
 import { messages } from '../../../../shared/gettext';
 import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { Button } from '../../../lib/components';
+import { colors } from '../../../lib/foundations';
+
+// Readable red for the refusal/error notice: the default modal message color
+// (whiteAlpha60) is too dim to read on the dark modal background.
+const NoticeText = styled.span({
+  display: 'block',
+  marginTop: '12px',
+  color: colors.red,
+  fontSize: '13px',
+  lineHeight: 1.4,
+});
 
 // The renderer reaches IPC through the contextBridge-exposed `window.ipc`, never
 // by importing `lib/ipc-event-channel` directly: that module imports the
@@ -98,9 +110,9 @@ export function ForumLoginPrompt() {
       ]}
       close={handleCancel}>
       {notice && (
-        <div role="alert" aria-live="assertive">
+        <NoticeText role="alert" aria-live="assertive">
           {notice}
-        </div>
+        </NoticeText>
       )}
       <div role="status" aria-live="polite">
         {busy ? messages.pgettext('forum-login', 'Signing, please wait.') : ''}

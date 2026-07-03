@@ -28,9 +28,9 @@ export function SupportView() {
               <View.Container horizontalMargin="medium" flexDirection="column" gap="medium">
                 <HeaderTitle>{messages.pgettext('support-view', 'Support')}</HeaderTitle>
                 <FlexColumn>
+                  <CommunityButton />
                   <ProblemReportButton />
                   <FaqButton />
-                  <CommunityButton />
                 </FlexColumn>
               </View.Container>
             </View.Content>
